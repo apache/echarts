@@ -172,11 +172,11 @@ class Grid implements CoordinateSystemMaster {
             if (axis.type !== 'value') {
                 return;
             }
-
             const isHorizontal = axis.isHorizontal();
             const gridExtent = isHorizontal ? this._rect.width : this._rect.height;
             const unionExtent = gridExtent / finalSplitNumber;
             const extent = axis.scale.getExtent();
+            axis.setGridExtent(0, gridExtent);
             axis.setExtent(0, unionExtent * (extent[1] - extent[0]) / ((axis.scale) as IntervalScale).getInterval());
         });
     }

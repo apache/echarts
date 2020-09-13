@@ -372,7 +372,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         const textStyleModel = axisModel.getModel('nameTextStyle');
         const gap = axisModel.get('nameGap') || 0;
 
-        const extent = axisModel.axis.getExtent();
+        const extent = axisModel.axis.getGridExtent();
         const gapSignal = extent[0] > extent[1] ? -1 : 1;
         const pos = [
             nameLocation === 'start'
