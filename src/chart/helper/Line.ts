@@ -219,7 +219,7 @@ class Line extends graphic.Group {
             const symbol = this.childOfName(symbolCategory) as ECSymbol;
             if (symbol) {
                 // Share opacity and color with line.
-                symbol.setColor(visualColor);
+                symbol.style.fill = visualColor;
                 symbol.style.opacity = lineStyle.opacity;
 
                 for (let i = 0; i < SPECIAL_STATES.length; i++) {
@@ -230,7 +230,7 @@ class Line extends graphic.Group {
                         const state = symbol.ensureState(stateName);
                         const stateStyle = state.style || (state.style = {});
                         if (lineStateStyle.stroke != null) {
-                            stateStyle[symbol.__isEmptyBrush ? 'stroke' : 'fill'] = lineStateStyle.stroke;
+                            stateStyle.fill = lineStateStyle.stroke;
                         }
                         if (lineStateStyle.opacity != null) {
                             stateStyle.opacity = lineStateStyle.opacity;

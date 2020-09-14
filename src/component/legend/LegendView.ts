@@ -44,8 +44,6 @@ import Displayable, { DisplayableState } from 'zrender/src/graphic/Displayable';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { parse, stringify } from 'zrender/src/tool/color';
 import SeriesModel from '../../model/Series';
-import {LineStyleMixin} from '../../model/mixin/lineStyle';
-import {LineDrawModelOption} from '../../chart/helper/LineDraw';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -172,6 +170,7 @@ class LegendView extends ComponentView {
         const contentGroup = this.getContentGroup();
         const legendDrawnMap = zrUtil.createHashMap();
         const selectMode = legendModel.get('selectedMode');
+        const legendItemStyle = legendModel.get('itemStyle');
 
         const excludeSeriesId: string[] = [];
         ecModel.eachRawSeries(function (seriesModel) {
@@ -204,19 +203,24 @@ class LegendView extends ComponentView {
                 const data = seriesModel.getData();
                 const style = data.getVisual('style');
                 const color = style[data.getVisual('drawType')] || style.fill;
+                const fillColor = style.fill;
                 const borderColor = style.stroke;
                 const borderWidth = style.lineWidth;
 
                 // Using rect symbol defaultly
                 const legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
-                const legendSymbolStyle = data.getVisual('legendSymbolStyle') || {};
+                const legendSymbolStyle = zrUtil.defaults(
+                    data.getVisual('legendSymbolStyle'),
+                    legendItemStyle,
+                    true
+                );
                 const symbolType = data.getVisual('symbol');
                 const symbolSize = seriesModel.get('symbolSize');
 
                 const itemGroup = this._createItem(
                     name, dataIndex, itemModel, legendModel,
                     legendSymbolType, symbolType, symbolSize,
-                    itemAlign, color, borderColor, borderWidth,
+                    itemAlign, color, fillColor, borderColor, borderWidth,
                     legendSymbolStyle, selectMode
                 );
 
@@ -261,7 +265,7 @@ class LegendView extends ComponentView {
                         const itemGroup = this._createItem(
                             name, dataIndex, itemModel, legendModel,
                             legendSymbolType, null, null,
-                            itemAlign, color, borderColor, borderWidth,
+                            itemAlign, color, color, borderColor, borderWidth,
                             {}, selectMode
                         );
 
@@ -343,6 +347,7 @@ class LegendView extends ComponentView {
         symbolSize: number | number[],
         itemAlign: LegendOption['align'],
         color: ZRColor,
+        fillColor: ZRColor,
         borderColor: ZRColor,
         borderWidth: number,
         legendSymbolStyle: ItemStyleOption,
@@ -408,7 +413,7 @@ class LegendView extends ComponentView {
                 (itemHeight - size) / 2,
                 size,
                 size,
-                isSelected ? color : inactiveColor,
+                isSelected ? fillColor : inactiveColor,
                 // symbolKeepAspect default true for legend
                 symbolKeepAspect == null ? true : symbolKeepAspect
             );
@@ -575,17 +580,12 @@ function setSymbolStyle(
     isSelected: boolean
 ) {
     let itemStyle;
-    if (symbolType.indexOf('empty') < 0) {
-        itemStyle = legendModelItemStyle.getItemStyle();
-        itemStyle.lineWidth = borderWidth;
-        // itemStyle.
-        itemStyle.stroke = borderColor;
-        if (!isSelected) {
-            itemStyle.stroke = inactiveBorderColor;
-        }
-    }
-    else {
-        itemStyle = legendModelItemStyle.getItemStyle(['borderWidth', 'borderColor']);
+    itemStyle = legendModelItemStyle.getItemStyle();
+    itemStyle.lineWidth = borderWidth;
+    // itemStyle.
+    itemStyle.stroke = borderColor;
+    if (!isSelected) {
+        itemStyle.stroke = inactiveBorderColor;
     }
     (symbol as Displayable).setStyle(itemStyle);
     return symbol;

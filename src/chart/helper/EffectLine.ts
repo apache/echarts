@@ -98,8 +98,6 @@ class EffectLine extends graphic.Group {
         symbol.scaleX = size[0];
         symbol.scaleY = size[1];
 
-        symbol.setColor(color);
-
         this._symbolType = symbolType;
         this._symbolScale = size;
 

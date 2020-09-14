@@ -800,7 +800,6 @@ function giveSymbol(
         callback && callback.onCreate(symbol);
     }
     else {
-        symbol.setColor(color);
         group.add(symbol); // Group may be new, also need to add.
         callback && callback.onUpdate(symbol);
     }

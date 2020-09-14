@@ -548,6 +548,10 @@ class LineView extends ChartView {
             }
         ));
 
+        if (polyline.style.stroke === 'auto') {
+            polyline.style.stroke = seriesModel.getColorFromPalette(name, null);
+        }
+
         setStatesStylesFromModel(polyline, seriesModel, 'lineStyle');
 
         const shouldBolderOnEmphasis = seriesModel.get(['emphasis', 'lineStyle', 'width']) === 'bolder';

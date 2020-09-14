@@ -68,8 +68,6 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
         return new LargeSymbolPathShape();
     }
 
-    setColor: ECSymbol['setColor'];
-
     buildPath(path: PathProxy | CanvasRenderingContext2D, shape: LargeSymbolPathShape) {
         const points = shape.points;
         const size = shape.size;
@@ -274,8 +272,6 @@ class LargeSymbolDraw {
         symbolEl.symbolProxy = createSymbol(
             data.getVisual('symbol'), 0, 0, 0, 0
         );
-        // Use symbolProxy setColor method
-        symbolEl.setColor = symbolEl.symbolProxy.setColor;
 
         const extrudeShadow = symbolEl.shape.size[0] < BOOST_SIZE_THRESHOLD;
         symbolEl.useStyle(
@@ -284,12 +280,6 @@ class LargeSymbolDraw {
                 extrudeShadow ? ['color', 'shadowBlur', 'shadowColor'] : ['color']
             )
         );
-
-        const globalStyle = data.getVisual('style');
-        const visualColor = globalStyle && globalStyle.fill;
-        if (visualColor) {
-            symbolEl.setColor(visualColor);
-        }
 
         if (!isIncremental) {
             const ecData = getECData(symbolEl);

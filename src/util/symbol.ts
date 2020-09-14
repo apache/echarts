@@ -26,11 +26,7 @@ import {calculateTextPosition} from 'zrender/src/contain/text';
 import { Dictionary } from 'zrender/src/core/types';
 import { ZRColor } from './types';
 
-type ECSymbol = graphic.Path & {
-    __isEmptyBrush?: boolean
-    setColor: (color: ZRColor, innerColor?: string) => void
-    getColor: () => ZRColor
-};
+type ECSymbol = graphic.Path;
 type SymbolCtor = { new(): ECSymbol };
 type SymbolShapeMaker = (x: number, y: number, w: number, h: number, shape: Dictionary<any>) => void;
 
@@ -304,21 +300,6 @@ const SymbolClz = graphic.Path.extend({
     }
 });
 
-// Provide setColor helper method to avoid determine if set the fill or stroke outside
-function symbolPathSetColor(this: ECSymbol, color: ZRColor, innerColor?: string) {
-    if (this.type !== 'image') {
-        const symbolStyle = this.style;
-        if (this.__isEmptyBrush) {
-            symbolStyle.stroke = color;
-            symbolStyle.fill = innerColor || '#fff';
-        }
-        else {
-            symbolStyle.fill = color;
-        }
-        this.markRedraw();
-    }
-}
-
 /**
  * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
  */
@@ -342,7 +323,8 @@ export function createSymbol(
     }
     let symbolPath: ECSymbol | graphic.Image;
 
-    if (symbolType.indexOf('image://') === 0) {
+    const isImage = symbolType.indexOf('image://') === 0;
+    if (isImage) {
         symbolPath = graphic.makeImage(
             symbolType.slice(8),
             new BoundingRect(x, y, w, h),
@@ -369,13 +351,8 @@ export function createSymbol(
         }) as unknown as ECSymbol;
     }
 
-    (symbolPath as ECSymbol).__isEmptyBrush = isEmpty;
-
-    // TODO Should deprecate setColor
-    (symbolPath as ECSymbol).setColor = symbolPathSetColor;
-
-    if (color) {
-        (symbolPath as ECSymbol).setColor(color);
+    if (color && !isImage) {
+        (symbolPath as ECSymbol).style.fill = color;
     }
 
     return symbolPath as ECSymbol;

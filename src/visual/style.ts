@@ -88,8 +88,14 @@ const seriesStyleTask: StageHandler = {
                 // TODO series count changed.
                 seriesModel.name, null, ecModel.getSeriesCount()
             );
+
             globalStyle.fill = globalStyle.fill === 'auto' ? colorPalette : globalStyle.fill;
             globalStyle.stroke = globalStyle.stroke === 'auto' ? colorPalette : globalStyle.stroke;
+
+            if (!globalStyle[colorKey]) {
+                globalStyle[colorKey] = colorPalette;
+            }
+
             data.setVisual('colorFromPalette', true);
         }
 

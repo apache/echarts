@@ -272,18 +272,8 @@ class Symbol extends graphic.Group {
             }, symbolStyle));
         }
         else {
-            if (symbolPath.__isEmptyBrush) {
-                // fill and stroke will be swapped if it's empty.
-                // So we cloned a new style to avoid it affecting the original style in visual storage.
-                // TODO Better implementation. No empty logic!
-                symbolPath.useStyle(extend({}, symbolStyle));
-            }
-            else {
-                symbolPath.useStyle(symbolStyle);
-            }
-            symbolPath.setColor(visualColor, opts && opts.symbolInnerColor);
+            symbolPath.useStyle(symbolStyle);
             symbolPath.style.strokeNoScale = true;
-
         }
         const liftZ = data.getItemVisual(idx, 'liftZ');
         const z2Origin = this._z2;

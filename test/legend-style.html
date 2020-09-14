@@ -37,7 +37,8 @@ under the License.
 
 
         <div id="main1"></div>
-
+        <div id="main2"></div>
+<!--
         <script>
         require(['echarts'], function (echarts) {
             var getData = function (seriesId) {
@@ -62,7 +63,12 @@ under the License.
                 series: [{
                     data: getData(0),
                     type: 'line',
-                    name: 'Default Line'
+                    name: 'Default Line',
+                    emphasis: {
+                        itemStyle: {
+                            color: 'red'
+                        }
+                    }
                 }, {
                     data: getData(1),
                     type: 'line',
@@ -88,7 +94,7 @@ under the License.
                         symbolSize: 25
                     },
                     lineStyle: {
-                        color: 'red',
+                        color: 'auto',
                         width: 4
                     }
                 }, {
@@ -114,7 +120,12 @@ under the License.
                             color: 'blue'
                         }
                     }],
-                    center: ['80%', '50%']
+                    center: ['80%', '50%'],
+                    emphasis: {
+                        itemStyle: {
+                            color: 'red'
+                        }
+                    }
                 }],
                 grid: {
                     left: 60,
@@ -135,6 +146,123 @@ under the License.
             var chart = testHelper.create(echarts, 'main1', {
                 title: [
                     'Legend icon being more intuitive'
+                ],
+                option: option
+            });
+        });
+        </script> -->
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var getData = function (seriesId) {
+                var data = [];
+                for (var i = 0; i < 7; ++i) {
+                    data.push(Math.random() * 100 + (seriesId + 1) * 200);
+                }
+                return data;
+            };
+
+            var option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                legend: {
+                    data: ['Default Line', 'Line with emptyCircle', 'Line with emptyCircle and color', 'Line with style', 'Line with visualMap', 'Pie A', 'Pie B', 'Pie C'],
+                    itemStyle: {
+                        borderWidth: 4
+                    }
+                },
+                series: [{
+                    data: getData(0),
+                    type: 'line',
+                    name: 'Default Line',
+                    emphasis: {
+                        itemStyle: {
+                            color: 'red'
+                        }
+                    }
+                }, {
+                    data: getData(1),
+                    type: 'line',
+                    name: 'Line with emptyCircle',
+                    symbol: 'emptyCircle'
+                }, {
+                    data: getData(2),
+                    type: 'line',
+                    name: 'Line with emptyCircle and color',
+                    symbol: 'emptyCircle',
+                    itemStyle: {
+                        color: 'auto'
+                    }
+                }, {
+                    data: getData(3),
+                    type: 'line',
+                    name: 'Line with style',
+                    symbolSize: 12,
+                    itemStyle: {
+                        color: 'auto',
+                        borderColor: 'blue',
+                        borderWidth: 2,
+                        symbolSize: 25
+                    },
+                    lineStyle: {
+                        color: 'auto',
+                        width: 4
+                    }
+                }, {
+                    data: getData(4),
+                    type: 'line',
+                    name: 'Line with visualMap',
+                    symbolSize: 30,
+                    itemStyle: {
+                        borderColor: 'green'
+                    }
+                }, {
+                    type: 'pie',
+                    data: [{
+                        name: 'Pie A',
+                        value: 10
+                    }, {
+                        name: 'Pie B',
+                        value: 8
+                    }, {
+                        name: 'Pie C',
+                        value: 14,
+                        itemStyle: {
+                            color: 'blue'
+                        }
+                    }],
+                    center: ['80%', '50%'],
+                    emphasis: {
+                        itemStyle: {
+                            color: 'red'
+                        }
+                    }
+                }],
+                grid: {
+                    left: 60,
+                    width: '55%'
+                },
+                visualMap: {
+                    type: 'continuous',
+                    min: 1000,
+                    max: 1100,
+                    inRange: {
+                        color: ['green', 'yellow', 'red']
+                    },
+                    show: false,
+                    seriesIndex: 4
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'Styles of **legend** are prioritized',
+                    'All border width of the legend items should be 4'
                 ],
                 option: option
             });
