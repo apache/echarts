@@ -125,7 +125,7 @@ type ShapeMorphingOption = {
      * If do shape morphing animation when type is changed.
      * Only available on path.
      */
-    shapeMorphing?: boolean
+    morph?: boolean
 };
 
 interface CustomBaseElementOption extends Partial<Pick<
@@ -1564,7 +1564,7 @@ function createOrUpdateItem(
 function applyShapeMorphingAnimation(oldEl: Element, el: Element, seriesModel: SeriesModel, dataIndex: number) {
     if (!((oldEl instanceof graphicUtil.Path) && (el instanceof graphicUtil.Path))) {
         if (__DEV__) {
-            logError('shapeMorphing can only be applied on two paths.');
+            logError('`morph` can only be applied on two paths.');
         }
         return;
     }
@@ -1620,9 +1620,9 @@ function doCreateOrUpdateEl(
     }
 
     // Do shape morphing
-    if ((elOption as CustomZRPathOption).shapeMorphing && el && oldEl && (el !== oldEl)) {
+    if ((elOption as CustomZRPathOption).morph && el && oldEl && (el !== oldEl)) {
         needsMorphing = true;
-        // Use update animation when shapeMorphing is enabled.
+        // Use update animation when morph is enabled.
         isInit = false;
     }
 

@@ -159,7 +159,7 @@ under the License.
                                     }
                                     return {
                                         type: 'polygon',
-                                        shapeMorphing: true,
+                                        morph: true,
                                         shape: {
                                             points: newPoints
                                         },
@@ -181,7 +181,7 @@ under the License.
                         const width = 20;
                         return {
                             type: 'rect',
-                            shapeMorphing: true,
+                            morph: true,
                             shape: {
                                 x: start[0] - width / 2,
                                 y: start[1],
@@ -202,7 +202,7 @@ under the License.
                         const center = api.coord([params.dataIndex, api.value(1)]);
                         return {
                             type: 'circle',
-                            shapeMorphing: true,
+                            morph: true,
                             shape: {
                                 cx: center[0],
                                 cy: center[1],
@@ -256,7 +256,7 @@ under the License.
                                     const height = myChart.getHeight();
                                     return {
                                         type: 'sector',
-                                        shapeMorphing: true,
+                                        morph: true,
                                         shape: {
                                             cx: width / 2,
                                             cy: height / 2,
