@@ -19,7 +19,7 @@
 
 import {
     hasOwn, assert, isString, retrieve2, retrieve3, defaults, each,
-    keys, isArrayLike, bind, logError, isFunction, eqNaN
+    keys, isArrayLike, bind, isFunction, eqNaN
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
 import { setDefaultStateProxy, enableHoverEmphasis } from '../util/states';
@@ -81,7 +81,7 @@ import {
 import Transformable from 'zrender/src/core/Transformable';
 import { ItemStyleProps } from '../model/mixin/itemStyle';
 import { cloneValue } from 'zrender/src/animation/Animator';
-import { warn } from '../util/log';
+import { warn, error } from '../util/log';
 import { morphPath } from 'zrender/src/tool/morphPath';
 
 
@@ -1571,7 +1571,7 @@ function createOrUpdateItem(
 function applyShapeMorphingAnimation(oldEl: Element, el: Element, seriesModel: SeriesModel, dataIndex: number) {
     if (!((oldEl instanceof graphicUtil.Path) && (el instanceof graphicUtil.Path))) {
         if (__DEV__) {
-            logError('`morph` can only be applied on two paths.');
+            error('`morph` can only be applied on two paths.');
         }
         return;
     }
