@@ -628,8 +628,9 @@ class TooltipView extends ComponentView {
             this._tooltipModel
         ]);
 
+        // fix 10537
         const tooltipTrigger = tooltipModel.get('trigger');
-        if (tooltipTrigger != null && tooltipTrigger !== 'item') {
+        if (!tooltipTrigger || tooltipTrigger === 'none') {
             return;
         }
 
