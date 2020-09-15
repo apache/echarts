@@ -18,7 +18,8 @@
 */
 
 import {
-    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike, bind, eqNaN
+    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each,
+    keys, isArrayLike, bind, logError, isFunction, eqNaN
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
 import { setDefaultStateProxy, enableHoverEmphasis } from '../util/states';
@@ -81,6 +82,7 @@ import Transformable from 'zrender/src/core/Transformable';
 import { ItemStyleProps } from '../model/mixin/itemStyle';
 import { cloneValue } from 'zrender/src/animation/Animator';
 import { warn } from '../util/log';
+import { morphPath } from 'zrender/src/tool/morphPath';
 
 
 const inner = makeInner<{
@@ -119,6 +121,13 @@ type TransitionTransformOption = {
     transition?: TransitionTransformProps;
     enterFrom?: Dictionary<unknown>;
     leaveTo?: Dictionary<unknown>;
+};
+type ShapeMorphingOption = {
+    /**
+     * If do shape morphing animation when type is changed.
+     * Only available on path.
+     */
+    morph?: boolean
 };
 
 interface CustomBaseElementOption extends Partial<Pick<
@@ -168,10 +177,10 @@ interface CustomGroupOption extends CustomBaseElementOption {
     children: Omit<CustomElementOption, 'focus' | 'blurScope'>[];
     $mergeChildren: false | 'byName' | 'byIndex';
 }
-interface CustomZRPathOption extends CustomDisplayableOption {
+interface CustomZRPathOption extends CustomDisplayableOption, ShapeMorphingOption {
     shape?: PathProps['shape'] & TransitionAnyOption;
 }
-interface CustomSVGPathOption extends CustomDisplayableOption {
+interface CustomSVGPathOption extends CustomDisplayableOption, ShapeMorphingOption {
     type: 'path';
     shape?: {
         // SVG Path, like 'M0,0 L0,-20 L70,-1 L70,0 Z'
@@ -645,6 +654,7 @@ function createEl(elOption: CustomElementOption): Element {
  */
 function updateElNormal(
     el: Element,
+    morphingFromEl: Element,
     dataIndex: number,
     elOption: CustomElementOption,
     styleOpt: CustomElementOption['style'],
@@ -657,9 +667,10 @@ function updateElNormal(
     const allProps = {} as ElementProps;
     const elDisplayable = el.isGroup ? null : el as Displayable;
 
-    prepareShapeOrExtraUpdate('shape', el, elOption, allProps, transFromProps, isInit);
-    prepareShapeOrExtraUpdate('extra', el, elOption, allProps, transFromProps, isInit);
-    prepareTransformUpdate(el, elOption, allProps, transFromProps, isInit);
+
+    prepareShapeOrExtraUpdate('shape', el, morphingFromEl, elOption, allProps, transFromProps, isInit);
+    prepareShapeOrExtraUpdate('extra', el, morphingFromEl, elOption, allProps, transFromProps, isInit);
+    prepareTransformUpdate(el, morphingFromEl, elOption, allProps, transFromProps, isInit);
 
     const txCfgOpt = attachedTxInfo && attachedTxInfo.normal.cfg;
     if (txCfgOpt) {
@@ -679,7 +690,7 @@ function updateElNormal(
         );
     }
 
-    prepareStyleUpdate(el, styleOpt, transFromProps, isInit);
+    prepareStyleUpdate(el, morphingFromEl, styleOpt, transFromProps, isInit);
 
     if (elDisplayable) {
         // PENDING: here the input style object is used directly.
@@ -744,6 +755,10 @@ function updateElNormal(
     }
 
     styleOpt ? el.dirty() : el.markRedraw();
+
+    if (morphingFromEl) {
+        applyShapeMorphingAnimation(morphingFromEl, el, seriesModel, dataIndex);
+    }
 }
 
 
@@ -751,6 +766,7 @@ function updateElNormal(
 function prepareShapeOrExtraUpdate(
     mainAttr: 'shape' | 'extra',
     el: Element,
+    morphingFromEl: Element,
     elOption: CustomElementOption,
     allProps: LooseElementProps,
     transFromProps: LooseElementProps,
@@ -778,7 +794,9 @@ function prepareShapeOrExtraUpdate(
         }
     }
 
-    if (!isInit && elPropsInAttr && attrOpt.transition) {
+    if (!isInit && elPropsInAttr && attrOpt.transition
+        && !(morphingFromEl && mainAttr === 'shape')    // Just ignore shape animation in morphing.
+    ) {
         !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
         const transitionKeys = normalizeToArray(attrOpt.transition);
         for (let i = 0; i < transitionKeys.length; i++) {
@@ -816,12 +834,14 @@ function prepareShapeOrExtraUpdate(
 // See [STRATEGY_TRANSITION].
 function prepareTransformUpdate(
     el: Element,
+    morphingFromEl: Element,
     elOption: CustomElementOption,
     allProps: ElementProps,
     transFromProps: ElementProps,
     isInit: boolean
 ): void {
     const enterFrom = elOption.enterFrom;
+    const fromEl = morphingFromEl || el;
     if (isInit && enterFrom) {
         const enterFromKeys = keys(enterFrom);
         for (let i = 0; i < enterFromKeys.length; i++) {
@@ -839,7 +859,7 @@ function prepareTransformUpdate(
             const transitionKeys = normalizeToArray(elOption.transition);
             for (let i = 0; i < transitionKeys.length; i++) {
                 const key = transitionKeys[i];
-                const elVal = el[key];
+                const elVal = fromEl[key];
                 if (__DEV__) {
                     checkTransformPropRefer(key, 'el.transition');
                     checkTansitionRefer(key, elOption[key], elVal);
@@ -850,9 +870,9 @@ function prepareTransformUpdate(
         }
         // This default transition see [STRATEGY_TRANSITION]
         else {
-            setLagecyProp(elOption, transFromProps, 'position', el);
-            setTransProp(elOption, transFromProps, 'x', el);
-            setTransProp(elOption, transFromProps, 'y', el);
+            setLagecyProp(elOption, transFromProps, 'position', fromEl);
+            setTransProp(elOption, transFromProps, 'x', fromEl);
+            setTransProp(elOption, transFromProps, 'y', fromEl);
         }
     }
 
@@ -884,6 +904,7 @@ function prepareTransformUpdate(
 // See [STRATEGY_TRANSITION].
 function prepareStyleUpdate(
     el: Element,
+    morphingFromEl: Element,
     styleOpt: CustomElementOption['style'],
     transFromProps: LooseElementProps,
     isInit: boolean
@@ -892,7 +913,9 @@ function prepareStyleUpdate(
         return;
     }
 
-    const elStyle = (el as LooseElementProps).style as LooseElementProps['style'];
+    const fromEl = morphingFromEl || el;
+
+    const fromElStyle = (fromEl as LooseElementProps).style as LooseElementProps['style'];
     let transFromStyleProps: LooseElementProps['style'];
 
     const enterFrom = styleOpt.enterFrom;
@@ -906,12 +929,12 @@ function prepareStyleUpdate(
         }
     }
 
-    if (!isInit && elStyle && styleOpt.transition) {
+    if (!isInit && fromElStyle && styleOpt.transition) {
         const transitionKeys = normalizeToArray(styleOpt.transition);
         !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
         for (let i = 0; i < transitionKeys.length; i++) {
             const key = transitionKeys[i];
-            const elVal = (elStyle as any)[key];
+            const elVal = (fromElStyle as any)[key];
             if (__DEV__) {
                 checkTansitionRefer(key, (styleOpt as any)[key], elVal);
             }
@@ -1545,6 +1568,28 @@ function createOrUpdateItem(
     return el;
 }
 
+function applyShapeMorphingAnimation(oldEl: Element, el: Element, seriesModel: SeriesModel, dataIndex: number) {
+    if (!((oldEl instanceof graphicUtil.Path) && (el instanceof graphicUtil.Path))) {
+        if (__DEV__) {
+            logError('`morph` can only be applied on two paths.');
+        }
+        return;
+    }
+    if (seriesModel.isAnimationEnabled()) {
+        const duration = seriesModel.get('animationDurationUpdate');
+        const delay = seriesModel.get('animationDelayUpdate');
+        const easing = seriesModel.get('animationEasingUpdate');
+        const durationNumber = isFunction(duration) ? duration(dataIndex) : duration;
+        if (durationNumber > 0) {
+            morphPath(oldEl, el, {
+                duration: durationNumber,
+                delay: isFunction(delay) ? delay(dataIndex) : delay,
+                easing: easing
+            });
+        }
+    }
+}
+
 function doCreateOrUpdateEl(
     el: Element,
     dataIndex: number,
@@ -1559,14 +1604,17 @@ function doCreateOrUpdateEl(
     }
 
     let toBeReplacedIdx = -1;
+    let oldEl: Element;
 
     if (el && doesElNeedRecreate(el, elOption)) {
         // Should keep at the original index, otherwise "merge by index" will be incorrect.
         toBeReplacedIdx = group.childrenRef().indexOf(el);
+        oldEl = el;
         el = null;
     }
 
-    const isInit = !el;
+    let isInit = !el;
+    let needsMorphing = false;
 
     if (!el) {
         el = createEl(elOption);
@@ -1576,6 +1624,13 @@ function doCreateOrUpdateEl(
         // If in some case the performance issue arised, consider
         // do not clearState but update cached normal state directly.
         el.clearStates();
+    }
+
+    // Do shape morphing
+    if ((elOption as CustomZRPathOption).morph && el && oldEl && (el !== oldEl)) {
+        needsMorphing = true;
+        // Use update animation when morph is enabled.
+        isInit = false;
     }
 
     attachedTxInfoTmp.normal.cfg = attachedTxInfoTmp.normal.conOpt =
@@ -1593,7 +1648,17 @@ function doCreateOrUpdateEl(
         el, dataIndex, elOption, seriesModel, isInit
     );
 
-    updateElNormal(el, dataIndex, elOption, elOption.style, attachedTxInfoTmp, seriesModel, isInit, false);
+    updateElNormal(
+        el,
+        needsMorphing ? oldEl : null,
+        dataIndex,
+        elOption,
+        elOption.style,
+        attachedTxInfoTmp,
+        seriesModel,
+        isInit,
+        false
+    );
 
     for (let i = 0; i < STATES.length; i++) {
         const stateName = STATES[i];
@@ -1679,7 +1744,7 @@ function doCreateOrUpdateClipPath(
             el.setClipPath(clipPath);
         }
         updateElNormal(
-            clipPath, dataIndex, clipPathOpt, null, null, seriesModel, isInit, false
+            clipPath, null, dataIndex, clipPathOpt, null, null, seriesModel, isInit, false
         );
     }
     // If not define `clipPath` in option, do nothing unnecessary.
@@ -1732,7 +1797,7 @@ function doCreateOrUpdateAttachedTx(
             const txConStlOptNormal = txConOptNormal && txConOptNormal.style;
 
             updateElNormal(
-                textContent, dataIndex, txConOptNormal, txConStlOptNormal, null, seriesModel, isInit, true
+                textContent, null, dataIndex, txConOptNormal, txConStlOptNormal, null, seriesModel, isInit, true
             );
             for (let i = 0; i < STATES.length; i++) {
                 const stateName = STATES[i];
