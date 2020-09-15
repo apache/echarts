@@ -154,6 +154,8 @@ class TooltipView extends ComponentView {
 
     private _lastDataByCoordSys: DataByCoordSys[];
 
+    private _tooltipFormatterCache: {[propName: string]: any}
+
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         if (env.node) {
             return;
@@ -714,6 +716,17 @@ class TooltipView extends ComponentView {
         });
     }
 
+    private _getTooltipCache(key: string): any {
+        return this._tooltipFormatterCache && this._tooltipFormatterCache[key];
+    }
+
+    private _setTooltipCache(key: string, value: any) {
+        if (!key) return;
+
+        this._tooltipFormatterCache = this._tooltipFormatterCache || {};
+        this._tooltipFormatterCache[key] = value;
+    }
+
     private _showTooltipContent(
         // Use Model<TooltipOption> insteadof TooltipModel because this model may be from series or other options.
         // Instead of top level tooltip.
@@ -749,6 +762,18 @@ class TooltipView extends ComponentView {
             html = formatUtil.formatTpl(formatter, params, true);
         }
         else if (zrUtil.isFunction(formatter)) {
+            // formatter cache
+            let formatterCache = null as any;
+            let key: string;
+            const useFormatterCache = tooltipModel.get('useFormatterCache');
+            const hitFormatterCache = tooltipModel.get('hitFormatterCache');
+
+            if(useFormatterCache && params) {
+                const p = zrUtil.isArray(params) ? params[0] : params;
+                key = [p.seriesId, p.componentIndex, p.seriesName, p.name, p.dataIndex].join('-');
+                formatterCache = this._getTooltipCache(key);
+            }
+
             const callback = bind(function (cbTicket: string, html: string) {
                 if (cbTicket === this._ticket) {
                     tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPoint.color, positionExpr);
@@ -758,7 +783,10 @@ class TooltipView extends ComponentView {
                 }
             }, this);
             this._ticket = asyncTicket;
-            html = formatter(params, asyncTicket, callback);
+
+            html = formatterCache || formatter(params, asyncTicket, callback);
+            formatterCache && zrUtil.isFunction(hitFormatterCache) && hitFormatterCache(key, formatterCache);
+            key && this._setTooltipCache(key, html);
         }
 
         tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPoint.color, positionExpr);

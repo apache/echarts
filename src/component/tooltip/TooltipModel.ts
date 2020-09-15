@@ -66,6 +66,10 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
     appendToBody?: boolean
 
     order?: TooltipOrderMode
+
+    useFormatterCache?: boolean
+
+    hitFormatterCache?: (key: string, cacheObj: any) => void
 }
 
 class TooltipModel extends ComponentModel<TooltipOption> {
