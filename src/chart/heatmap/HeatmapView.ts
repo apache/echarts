@@ -215,8 +215,12 @@ class HeatmapView extends ChartView {
                 const dataDimY = data.get(dataDims[1], idx);
 
                 // Ignore empty data and out of extent data
-                if (isNaN(data.get(dataDims[2], idx) as number) || dataDimX < xAxisExtent[0] || dataDimX > xAxisExtent[1]
-                    || dataDimY < yAxisExtent[0] || dataDimY > yAxisExtent[1]) {
+                if (isNaN(data.get(dataDims[2], idx) as number)
+                    || dataDimX < xAxisExtent[0]
+                    || dataDimX > xAxisExtent[1]
+                    || dataDimY < yAxisExtent[0]
+                    || dataDimY > yAxisExtent[1]
+                ) {
                     continue;
                 }
 
