@@ -25,7 +25,6 @@ import type Displayable from 'zrender/src/graphic/Displayable';
 import {
     StageHandlerProgressParams,
     LabelOption,
-    ColorString,
     SymbolOptionMixin,
     ItemStyleOption,
     ZRColor,
@@ -42,6 +41,7 @@ import { getLabelStatesModels } from '../../label/labelStyle';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
+    getSymbolPoint?(idx: number): number[]
     clipShape?: CoordinateSystemClipArea
 }
 
@@ -157,6 +157,8 @@ class SymbolDraw {
 
     private _seriesScope: SymbolDrawSeriesScope;
 
+    private _getSymbolPoint: UpdateOpt['getSymbolPoint'];
+
     constructor(SymbolCtor?: SymbolLikeCtor) {
         this._SymbolCtor = SymbolCtor || SymbolClz;
     }
@@ -174,6 +176,11 @@ class SymbolDraw {
 
         const seriesScope = makeSeriesScope(data);
 
+        const getSymbolPoint = opt.getSymbolPoint || function (idx: number) {
+            return data.getItemLayout(idx);
+        };
+
+
         // There is no oldLineData only when first rendering or switching from
         // stream mode to normal mode, where previous elements should be removed.
         if (!oldData) {
@@ -182,7 +189,7 @@ class SymbolDraw {
 
         data.diff(oldData)
             .add(function (newIdx) {
-                const point = data.getItemLayout(newIdx) as number[];
+                const point = getSymbolPoint(newIdx);
                 if (symbolNeedsDraw(data, point, newIdx, opt)) {
                     const symbolEl = new SymbolCtor(data, newIdx, seriesScope);
                     symbolEl.setPosition(point);
@@ -193,7 +200,7 @@ class SymbolDraw {
             .update(function (newIdx, oldIdx) {
                 let symbolEl = oldData.getItemGraphicEl(oldIdx) as SymbolLike;
 
-                const point = data.getItemLayout(newIdx) as number[];
+                const point = getSymbolPoint(newIdx) as number[];
                 if (!symbolNeedsDraw(data, point, newIdx, opt)) {
                     group.remove(symbolEl);
                     return;
@@ -223,6 +230,7 @@ class SymbolDraw {
             })
             .execute();
 
+        this._getSymbolPoint = getSymbolPoint;
         this._data = data;
     };
 
@@ -234,8 +242,8 @@ class SymbolDraw {
         const data = this._data;
         if (data) {
             // Not use animation
-            data.eachItemGraphicEl(function (el, idx) {
-                const point = data.getItemLayout(idx);
+            data.eachItemGraphicEl((el, idx) => {
+                const point = this._getSymbolPoint(idx);
                 el.setPosition(point);
                 el.markRedraw();
             });

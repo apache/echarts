@@ -22,6 +22,7 @@ import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 import { LineSeriesOption } from './LineSeries';
+import { createFloat32Array } from '../../util/vendor';
 
 interface DiffItem {
     cmd: '+' | '=' | '-'
@@ -49,7 +50,7 @@ function diffData(oldData: List, newData: List) {
 
 export default function (
     oldData: List, newData: List,
-    oldStackedOnPoints: number[][], newStackedOnPoints: number[][],
+    oldStackedOnPoints: ArrayLike<number>, newStackedOnPoints: ArrayLike<number>,
     oldCoordSys: Cartesian2D | Polar, newCoordSys: Cartesian2D | Polar,
     oldValueOrigin: LineSeriesOption['areaStyle']['origin'],
     newValueOrigin: LineSeriesOption['areaStyle']['origin']
@@ -64,11 +65,11 @@ export default function (
     // // FIXME One data ?
     // diff = arrayDiff(oldIdList, newIdList);
 
-    const currPoints: number[][] = [];
-    const nextPoints: number[][] = [];
+    const currPoints: number[] = [];
+    const nextPoints: number[] = [];
     // Points for stacking base line
-    const currStackedPoints: number[][] = [];
-    const nextStackedPoints: number[][] = [];
+    const currStackedPoints: number[] = [];
+    const nextStackedPoints: number[] = [];
 
     const status = [];
     const sortedIndices: number[] = [];
@@ -77,62 +78,78 @@ export default function (
     const newDataOldCoordInfo = prepareDataCoordInfo(oldCoordSys, newData, oldValueOrigin);
     const oldDataNewCoordInfo = prepareDataCoordInfo(newCoordSys, oldData, newValueOrigin);
 
+    const oldPoints = oldData.getLayout('points') as number[] || [];
+    const newPoints = newData.getLayout('points') as number[] || [];
+
     for (let i = 0; i < diff.length; i++) {
         const diffItem = diff[i];
         let pointAdded = true;
+
+        let oldIdx2: number;
+        let newIdx2: number;
 
         // FIXME, animation is not so perfect when dataZoom window moves fast
         // Which is in case remvoing or add more than one data in the tail or head
         switch (diffItem.cmd) {
             case '=':
-                let currentPt = oldData.getItemLayout(diffItem.idx) as number[];
-                const nextPt = newData.getItemLayout(diffItem.idx1) as number[];
-                // If previous data is NaN, use next point directly
-                if (isNaN(currentPt[0]) || isNaN(currentPt[1])) {
-                    currentPt = nextPt.slice();
-                }
-                currPoints.push(currentPt);
-                nextPoints.push(nextPt);
+                oldIdx2 = diffItem.idx * 2;
+                newIdx2 = diffItem.idx1 * 2;
+                let currentX = oldPoints[oldIdx2];
+                let currentY = oldPoints[oldIdx2 + 1];
+                const nextX = newPoints[newIdx2];
+                const nextY = newPoints[newIdx2 + 1];
 
-                currStackedPoints.push(oldStackedOnPoints[diffItem.idx]);
-                nextStackedPoints.push(newStackedOnPoints[diffItem.idx1]);
+                // If previous data is NaN, use next point directly
+                if (isNaN(currentX) || isNaN(currentY)) {
+                    currentX = nextX;
+                    currentY = nextY;
+                }
+                currPoints.push(currentX, currentY);
+                nextPoints.push(nextX, nextY);
+
+                currStackedPoints.push(oldStackedOnPoints[oldIdx2], oldStackedOnPoints[oldIdx2 + 1]);
+                nextStackedPoints.push(newStackedOnPoints[newIdx2], newStackedOnPoints[newIdx2 + 1]);
 
                 rawIndices.push(newData.getRawIndex(diffItem.idx1));
                 break;
             case '+':
-                const idxAdd = diffItem.idx;
-                currPoints.push(
-                    oldCoordSys.dataToPoint([
-                        newData.get(newDataOldCoordInfo.dataDimsForPoint[0], idxAdd),
-                        newData.get(newDataOldCoordInfo.dataDimsForPoint[1], idxAdd)
-                    ])
-                );
+                const newIdx = diffItem.idx;
+                const newDataDimsForPoint = newDataOldCoordInfo.dataDimsForPoint;
+                const oldPt = oldCoordSys.dataToPoint([
+                    newData.get(newDataDimsForPoint[0], newIdx),
+                    newData.get(newDataDimsForPoint[1], newIdx)
+                ]);
+                newIdx2 = newIdx * 2;
+                currPoints.push(oldPt[0], oldPt[1]);
 
-                nextPoints.push((newData.getItemLayout(idxAdd) as number[]).slice());
+                nextPoints.push(newPoints[newIdx2], newPoints[newIdx2 + 1]);
 
-                currStackedPoints.push(
-                    getStackedOnPoint(newDataOldCoordInfo, oldCoordSys, newData, idxAdd)
-                );
-                nextStackedPoints.push(newStackedOnPoints[idxAdd]);
+                const stackedOnPoint = getStackedOnPoint(newDataOldCoordInfo, oldCoordSys, newData, newIdx);
 
-                rawIndices.push(newData.getRawIndex(idxAdd));
+                currStackedPoints.push(stackedOnPoint[0], stackedOnPoint[1]);
+                nextStackedPoints.push(newStackedOnPoints[newIdx2], newStackedOnPoints[newIdx2 + 1]);
+
+                rawIndices.push(newData.getRawIndex(newIdx));
                 break;
             case '-':
-                const idxMinus = diffItem.idx;
-                const rawIndex = oldData.getRawIndex(idxMinus);
+                const oldIdx = diffItem.idx;
+                const rawIndex = oldData.getRawIndex(oldIdx);
+                const oldDataDimsForPoint = oldDataNewCoordInfo.dataDimsForPoint;
+                oldIdx2 = oldIdx * 2;
                 // Data is replaced. In the case of dynamic data queue
                 // FIXME FIXME FIXME
-                if (rawIndex !== idxMinus) {
-                    currPoints.push(oldData.getItemLayout(idxMinus) as number[]);
-                    nextPoints.push(newCoordSys.dataToPoint([
-                        oldData.get(oldDataNewCoordInfo.dataDimsForPoint[0], idxMinus),
-                        oldData.get(oldDataNewCoordInfo.dataDimsForPoint[1], idxMinus)
-                    ]));
+                if (rawIndex !== oldIdx) {
+                    const newPt = newCoordSys.dataToPoint([
+                        oldData.get(oldDataDimsForPoint[0], oldIdx),
+                        oldData.get(oldDataDimsForPoint[1], oldIdx)
+                    ]);
+                    const newStackedOnPt = getStackedOnPoint(oldDataNewCoordInfo, newCoordSys, oldData, oldIdx);
 
-                    currStackedPoints.push(oldStackedOnPoints[idxMinus]);
-                    nextStackedPoints.push(
-                        getStackedOnPoint(oldDataNewCoordInfo, newCoordSys, oldData, idxMinus)
-                    );
+                    currPoints.push(oldPoints[oldIdx2], oldPoints[oldIdx2 + 1]);
+                    nextPoints.push(newPt[0], newPt[1]);
+
+                    currStackedPoints.push(oldStackedOnPoints[oldIdx2], oldStackedOnPoints[oldIdx2 + 1]);
+                    nextStackedPoints.push(newStackedOnPt[0], newStackedOnPt[1]);
 
                     rawIndices.push(rawIndex);
                 }
@@ -154,20 +171,27 @@ export default function (
         return rawIndices[a] - rawIndices[b];
     });
 
-    const sortedCurrPoints = [];
-    const sortedNextPoints = [];
+    const len = currPoints.length;
+    const sortedCurrPoints = createFloat32Array(len);
+    const sortedNextPoints = createFloat32Array(len);
 
-    const sortedCurrStackedPoints = [];
-    const sortedNextStackedPoints = [];
+    const sortedCurrStackedPoints = createFloat32Array(len);
+    const sortedNextStackedPoints = createFloat32Array(len);
 
     const sortedStatus = [];
     for (let i = 0; i < sortedIndices.length; i++) {
         const idx = sortedIndices[i];
-        sortedCurrPoints[i] = currPoints[idx];
-        sortedNextPoints[i] = nextPoints[idx];
+        const i2 = i * 2;
+        const idx2 = idx * 2;
+        sortedCurrPoints[i2] = currPoints[idx2];
+        sortedCurrPoints[i2 + 1] = currPoints[idx2 + 1];
+        sortedNextPoints[i2] = nextPoints[idx2];
+        sortedNextPoints[i2 + 1] = nextPoints[idx2 + 1];
 
-        sortedCurrStackedPoints[i] = currStackedPoints[idx];
-        sortedNextStackedPoints[i] = nextStackedPoints[idx];
+        sortedCurrStackedPoints[i2] = currStackedPoints[idx2];
+        sortedCurrStackedPoints[i2 + 1] = currStackedPoints[idx2 + 1];
+        sortedNextStackedPoints[i2] = nextStackedPoints[idx2];
+        sortedNextStackedPoints[i2 + 1] = nextStackedPoints[idx2 + 1];
 
         sortedStatus[i] = status[idx];
     }

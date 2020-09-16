@@ -24,8 +24,10 @@ import createRenderPlanner from '../chart/helper/createRenderPlanner';
 import {isDimensionStacked} from '../data/helper/dataStackHelper';
 import SeriesModel from '../model/Series';
 import { StageHandler, ParsedValueNumeric } from '../util/types';
+import { createFloat32Array } from '../util/vendor';
 
-export default function (seriesType?: string): StageHandler {
+
+export default function (seriesType: string, forceStoreInTypedArray?: boolean): StageHandler {
     return {
         seriesType: seriesType,
 
@@ -35,7 +37,7 @@ export default function (seriesType?: string): StageHandler {
             const data = seriesModel.getData();
             const coordSys = seriesModel.coordinateSystem;
             const pipelineContext = seriesModel.pipelineContext;
-            const isLargeRender = pipelineContext.large;
+            const useTypedArray = forceStoreInTypedArray || pipelineContext.large;
 
             if (!coordSys) {
                 return;
@@ -58,7 +60,7 @@ export default function (seriesType?: string): StageHandler {
             return dimLen && {
                 progress(params, data) {
                     const segCount = params.end - params.start;
-                    const points = isLargeRender && new Float32Array(segCount * dimLen);
+                    const points = useTypedArray && createFloat32Array(segCount * dimLen);
 
                     const tmpIn: ParsedValueNumeric[] = [];
                     const tmpOut: number[] = [];
@@ -76,7 +78,7 @@ export default function (seriesType?: string): StageHandler {
                             point = !isNaN(x) && !isNaN(y) && coordSys.dataToPoint(tmpIn, null, tmpOut);
                         }
 
-                        if (isLargeRender) {
+                        if (useTypedArray) {
                             points[offset++] = point ? point[0] : NaN;
                             points[offset++] = point ? point[1] : NaN;
                         }
@@ -85,7 +87,7 @@ export default function (seriesType?: string): StageHandler {
                         }
                     }
 
-                    isLargeRender && data.setLayout('symbolPoints', points);
+                    useTypedArray && data.setLayout('points', points);
                 }
             };
         }

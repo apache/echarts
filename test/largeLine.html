@@ -47,8 +47,8 @@ under the License.
             ], function (echarts) {
                 var myChart;
                 var lineCount = 20;
-                var pointCount = 1000;
-                var chartCount = 50;
+                var pointCount = 10000;
+                var chartCount = 20;
 
                 var option = {
                     tooltip : {
@@ -92,8 +92,7 @@ under the License.
                 var oneDay = 24 * 3600 * 1000;
                 var base = +new Date(1897, 9, 3);
                 for (var j = 0; j < pointCount; j++) {
-                    var now = new Date(base += oneDay);
-                    date.push([now.getFullYear(), now.getMonth() + 1, now.getDate()].join('-'));
+                    date.push(base += oneDay);
                 }
                 for (var i = 0; i < lineCount; i++) {
                     var y = Math.random() * 1000;
@@ -101,11 +100,9 @@ under the License.
                     for (var j = 0; j < pointCount; j++) {
                         y += Math.round(10 + Math.random() * (-10 - 10));
                         values.push(
-                            [
-                                date[j],
-                                // Math.random() < 0.1 ? '-' : y
-                                y
-                            ]
+                            date[j],
+                            // Math.random() < 0.1 ? '-' : y
+                            y
                         );
                     }
 
@@ -113,10 +110,14 @@ under the License.
                   option.series.push({
                     name: 'line' + i,
                     type: 'line',
-                    sampling: 'average',
                     hoverAnimation: false,
                     showSymbol: false,
-                    data: values,
+                    dimensions: ['date', 'value'],
+                    encode: {
+                        x: 'date',
+                        y: 'value'
+                    },
+                    data: new Float64Array(values),
                     lineStyle: lineStyle
                   });
                 }
@@ -131,9 +132,10 @@ under the License.
                       myChart = echarts.init(document.getElementById('chart'+n));
                       myChart.setOption(option, true);
                     }
-                    var end = new Date();
-
-                    document.getElementById('timing').innerHTML = 'Graphs loaded in ' + ( end - start ) + ' ms.';
+                    setTimeout(function () {
+                        var end = new Date();
+                        document.getElementById('timing').innerHTML = 'Graphs loaded in ' + ( end - start ) + ' ms.';
+                    });
                 };
 
                 refresh();

@@ -20,163 +20,21 @@
 // Poly path support NaN point
 
 import Path, { PathProps } from 'zrender/src/graphic/Path';
-import * as vec2 from 'zrender/src/core/vector';
 
-const vec2Min = vec2.min;
-const vec2Max = vec2.max;
+const mathMin = Math.min;
+const mathMax = Math.max;
 
-const scaleAndAdd = vec2.scaleAndAdd;
-const v2Copy = vec2.copy;
-
-// Temporary variable
-const v: number[] = [];
-const cp0: number[] = [];
-const cp1: number[] = [];
-
-function isPointNull(p: number[]) {
-    return isNaN(p[0]) || isNaN(p[1]);
+function isPointNull(x: number, y: number) {
+    return isNaN(x) || isNaN(y);
 }
-
-function drawSegment(
-    ctx: CanvasRenderingContext2D,
-    points: number[][],
-    start: number,
-    segLen: number,
-    allLen: number,
-    dir: number,
-    smoothMin: number[],
-    smoothMax: number[],
-    smooth: number,
-    smoothMonotone: 'x' | 'y' | 'none',
-    connectNulls: boolean
-) {
-    return ((smoothMonotone === 'none' || !smoothMonotone) ? drawNonMono : drawMono)(
-        ctx,
-        points,
-        start,
-        segLen,
-        allLen,
-        dir,
-        smoothMin,
-        smoothMax,
-        smooth,
-        smoothMonotone,
-        connectNulls
-    );
-}
-
-/**
- * Check if points is in monotone.
- *
- * @param {number[][]} points         Array of points which is in [x, y] form
- * @param {string}     smoothMonotone 'x', 'y', or 'none', stating for which
- *                                    dimension that is checking.
- *                                    If is 'none', `drawNonMono` should be
- *                                    called.
- *                                    If is undefined, either being monotone
- *                                    in 'x' or 'y' will call `drawMono`.
- */
-// function isMono(points, smoothMonotone) {
-//     if (points.length <= 1) {
-//         return true;
-//     }
-
-//     let dim = smoothMonotone === 'x' ? 0 : 1;
-//     let last = points[0][dim];
-//     let lastDiff = 0;
-//     for (let i = 1; i < points.length; ++i) {
-//         let diff = points[i][dim] - last;
-//         if (!isNaN(diff) && !isNaN(lastDiff)
-//             && diff !== 0 && lastDiff !== 0
-//             && ((diff >= 0) !== (lastDiff >= 0))
-//         ) {
-//             return false;
-//         }
-//         if (!isNaN(diff) && diff !== 0) {
-//             lastDiff = diff;
-//             last = points[i][dim];
-//         }
-//     }
-//     return true;
-// }
-
-/**
- * Draw smoothed line in monotone, in which only vertical or horizontal bezier
- * control points will be used. This should be used when points are monotone
- * either in x or y dimension.
- */
-function drawMono(
-    ctx: CanvasRenderingContext2D,
-    points: number[][],
-    start: number,
-    segLen: number,
-    allLen: number,
-    dir: number,
-    smoothMin: number[],
-    smoothMax: number[],
-    smooth: number,
-    smoothMonotone: 'x' | 'y' | 'none',
-    connectNulls: boolean
-) {
-    let prevIdx = 0;
-    let idx = start;
-    let k = 0;
-    for (; k < segLen; k++) {
-        const p = points[idx];
-        if (idx >= allLen || idx < 0) {
-            break;
-        }
-        if (isPointNull(p)) {
-            if (connectNulls) {
-                idx += dir;
-                continue;
-            }
-            break;
-        }
-
-        if (idx === start) {
-            ctx[dir > 0 ? 'moveTo' : 'lineTo'](p[0], p[1]);
-        }
-        else {
-            if (smooth > 0) {
-                const prevP = points[prevIdx];
-                const dim = smoothMonotone === 'y' ? 1 : 0;
-
-                // Length of control point to p, either in x or y, but not both
-                const ctrlLen = (p[dim] - prevP[dim]) * smooth;
-
-                v2Copy(cp0, prevP);
-                cp0[dim] = prevP[dim] + ctrlLen;
-
-                v2Copy(cp1, p);
-                cp1[dim] = p[dim] - ctrlLen;
-
-                ctx.bezierCurveTo(
-                    cp0[0], cp0[1],
-                    cp1[0], cp1[1],
-                    p[0], p[1]
-                );
-            }
-            else {
-                ctx.lineTo(p[0], p[1]);
-            }
-        }
-
-        prevIdx = idx;
-        idx += dir;
-    }
-
-    return k;
-}
-
 /**
  * Draw smoothed line in non-monotone, in may cause undesired curve in extreme
  * situations. This should be used when points are non-monotone neither in x or
  * y dimension.
  */
-function drawNonMono(
+function drawSegment(
     ctx: CanvasRenderingContext2D,
-    points: number[][],
+    points: ArrayLike<number>,
     start: number,
     segLen: number,
     allLen: number,
@@ -187,15 +45,23 @@ function drawNonMono(
     smoothMonotone: 'x' | 'y' | 'none',
     connectNulls: boolean
 ) {
-    let prevIdx = 0;
+    let px: number;
+    let py: number;
+    let cpx0: number;
+    let cpy0: number;
+    let cpx1: number;
+    let cpy1: number;
     let idx = start;
     let k = 0;
     for (; k < segLen; k++) {
-        const p = points[idx];
+
+        const x = points[idx * 2];
+        const y = points[idx * 2 + dir];
+
         if (idx >= allLen || idx < 0) {
             break;
         }
-        if (isPointNull(p)) {
+        if (isPointNull(x, y)) {
             if (connectNulls) {
                 idx += dir;
                 continue;
@@ -204,96 +70,118 @@ function drawNonMono(
         }
 
         if (idx === start) {
-            ctx[dir > 0 ? 'moveTo' : 'lineTo'](p[0], p[1]);
-            v2Copy(cp0, p);
+            ctx[dir > 0 ? 'moveTo' : 'lineTo'](x, y);
+            cpx0 = x;
+            cpy0 = y;
         }
         else {
+            const dx = x - px;
+            const dy = y - py;
+
+            // Ignore tiny segment.
+            if ((dx * dx + dy * dy) < 1) {
+                idx += dir;
+                continue;
+            }
+
             if (smooth > 0) {
                 let nextIdx = idx + dir;
-                let nextP = points[nextIdx];
+                let nextX = points[nextIdx * 2];
+                let nextY = points[nextIdx * 2 + 1];
                 if (connectNulls) {
                     // Find next point not null
-                    while (nextP && isPointNull(points[nextIdx])) {
+                    while (isPointNull(nextX, nextY) && (nextIdx < (segLen + start)) || (dir < 0 && nextIdx >= start)) {
                         nextIdx += dir;
-                        nextP = points[nextIdx];
+                        nextX = points[nextIdx * 2];
+                        nextY = points[nextIdx * 2 + 1];
                     }
                 }
 
                 let ratioNextSeg = 0.5;
-                const prevP = points[prevIdx];
-                nextP = points[nextIdx];
-                // Last point
-                if (!nextP || isPointNull(nextP)) {
-                    v2Copy(cp1, p);
+                let vx: number = 0;
+                let vy: number = 0;
+                // Is last point
+                if ((dir > 0 && nextIdx >= (segLen + start)) || (dir < 0 && nextIdx < start)) {
+                    cpx1 = x;
+                    cpy1 = y;
                 }
                 else {
-                    // If next data is null in not connect case
-                    if (isPointNull(nextP) && !connectNulls) {
-                        nextP = p;
-                    }
+                    vx = nextX - px;
+                    vy = nextY - py;
 
-                    vec2.sub(v, nextP, prevP);
-
+                    const dx0 = x - px;
+                    const dx1 = nextX - x;
+                    const dy0 = y - py;
+                    const dy1 = nextY - y;
                     let lenPrevSeg;
                     let lenNextSeg;
-                    if (smoothMonotone === 'x' || smoothMonotone === 'y') {
-                        const dim = smoothMonotone === 'x' ? 0 : 1;
-                        lenPrevSeg = Math.abs(p[dim] - prevP[dim]);
-                        lenNextSeg = Math.abs(p[dim] - nextP[dim]);
+                    if (smoothMonotone === 'x') {
+                        lenPrevSeg = Math.abs(dx0);
+                        lenNextSeg = Math.abs(dx1);
+                    }
+                    else if (smoothMonotone === 'y') {
+                        lenPrevSeg = Math.abs(dy0);
+                        lenNextSeg = Math.abs(dy1);
                     }
                     else {
-                        lenPrevSeg = vec2.dist(p, prevP);
-                        lenNextSeg = vec2.dist(p, nextP);
+                        lenPrevSeg = Math.sqrt(dx0 * dx0 + dy0 * dy0);
+                        lenNextSeg = Math.sqrt(dx1 * dx1 + dy1 * dy1);
                     }
 
                     // Use ratio of seg length
                     ratioNextSeg = lenNextSeg / (lenNextSeg + lenPrevSeg);
 
-                    scaleAndAdd(cp1, p, v, -smooth * (1 - ratioNextSeg));
+                    cpx1 = x - vx * smooth * (1 - ratioNextSeg);
+                    cpy1 = y - vy * smooth * (1 - ratioNextSeg);
                 }
                 // Smooth constraint
-                vec2Min(cp0, cp0, smoothMax);
-                vec2Max(cp0, cp0, smoothMin);
-                vec2Min(cp1, cp1, smoothMax);
-                vec2Max(cp1, cp1, smoothMin);
+                cpx0 = mathMin(cpx0, smoothMax[0]);
+                cpy0 = mathMin(cpy0, smoothMax[1]);
+                cpx0 = mathMax(cpx0, smoothMin[0]);
+                cpy0 = mathMax(cpy0, smoothMin[1]);
 
-                ctx.bezierCurveTo(
-                    cp0[0], cp0[1],
-                    cp1[0], cp1[1],
-                    p[0], p[1]
-                );
+                cpx1 = mathMin(cpx1, smoothMax[0]);
+                cpy1 = mathMin(cpy1, smoothMax[1]);
+                cpx1 = mathMax(cpx1, smoothMin[0]);
+                cpy1 = mathMax(cpy1, smoothMin[1]);
+
+                ctx.bezierCurveTo(cpx0, cpy0, cpx1, cpy1, x, y);
+
                 // cp0 of next segment
-                scaleAndAdd(cp0, p, v, smooth * ratioNextSeg);
+                cpx0 = x + vx * smooth * ratioNextSeg;
+                cpy0 = y + vy * smooth * ratioNextSeg;
             }
             else {
-                ctx.lineTo(p[0], p[1]);
+                ctx.lineTo(x, y);
             }
         }
 
-        prevIdx = idx;
+        px = x;
+        py = y;
         idx += dir;
     }
 
     return k;
 }
 
-function getBoundingBox(points: number[][], smoothConstraint?: boolean) {
+function getBoundingBox(points: ArrayLike<number>, smoothConstraint?: boolean) {
     const ptMin = [Infinity, Infinity];
     const ptMax = [-Infinity, -Infinity];
     if (smoothConstraint) {
-        for (let i = 0; i < points.length; i++) {
-            const pt = points[i];
-            if (pt[0] < ptMin[0]) {
-                ptMin[0] = pt[0];
+        for (let i = 0; i < points.length;) {
+            const x = points[i++];
+            const y = points[i++];
+            if (x < ptMin[0]) {
+                ptMin[0] = x;
             }
-            if (pt[1] < ptMin[1]) {
-                ptMin[1] = pt[1];
+            if (y < ptMin[1]) {
+                ptMin[1] = y;
             }
-            if (pt[0] > ptMax[0]) {
-                ptMax[0] = pt[0];
+            if (x > ptMax[0]) {
+                ptMax[0] = x;
             }
-            if (pt[1] > ptMax[1]) {
-                ptMax[1] = pt[1];
+            if (y > ptMax[1]) {
+                ptMax[1] = y;
             }
         }
     }
@@ -304,7 +192,7 @@ function getBoundingBox(points: number[][], smoothConstraint?: boolean) {
 }
 
 class ECPolylineShape {
-    points: number[][];
+    points: ArrayLike<number>;
     smooth = 0;
     smoothConstraint = true;
     smoothMonotone: 'x' | 'y' | 'none';
@@ -346,13 +234,13 @@ export class ECPolyline extends Path<ECPolylineProps> {
 
         if (shape.connectNulls) {
             // Must remove first and last null values avoid draw error in polygon
-            for (; len > 0; len--) {
-                if (!isPointNull(points[len - 1])) {
+            for (; len > 0; len -= 2) {
+                if (!isPointNull(points[len - 2], points[len - 1])) {
                     break;
                 }
             }
-            for (; i < len; i++) {
-                if (!isPointNull(points[i])) {
+            for (; i < len; i += 2) {
+                if (!isPointNull(points[i], points[i + 1])) {
                     break;
                 }
             }
@@ -368,7 +256,7 @@ export class ECPolyline extends Path<ECPolylineProps> {
 }
 class ECPolygonShape extends ECPolylineShape {
     // Offset between stacked base points and points
-    stackedOnPoints: number[][];
+    stackedOnPoints: ArrayLike<number>;
     stackedOnSmooth: number;
 }
 
@@ -401,13 +289,13 @@ export class ECPolygon extends Path {
 
         if (shape.connectNulls) {
             // Must remove first and last null values avoid draw error in polygon
-            for (; len > 0; len--) {
-                if (!isPointNull(points[len - 1])) {
+            for (; len > 0; len -= 2) {
+                if (!isPointNull(points[len - 2], points[len - 1])) {
                     break;
                 }
             }
-            for (; i < len; i++) {
-                if (!isPointNull(points[i])) {
+            for (; i < len; i += 2) {
+                if (!isPointNull(points[i], points[i + 1])) {
                     break;
                 }
             }
@@ -425,7 +313,7 @@ export class ECPolygon extends Path {
             );
             i += k + 1;
 
-            ctx.closePath();
+            // ctx.closePath();
         }
     }
 }
