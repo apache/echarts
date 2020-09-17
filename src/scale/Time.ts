@@ -232,7 +232,7 @@ class TimeScale extends IntervalScale {
 
     parse(val: number | string | Date): number {
         // val might be float.
-        return +numberUtil.parseDate(val);
+        return typeof val === 'number' ? val : +numberUtil.parseDate(val);
     }
 
     contain(val: number): boolean {
