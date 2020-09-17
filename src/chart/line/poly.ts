@@ -56,7 +56,7 @@ function drawSegment(
     for (; k < segLen; k++) {
 
         const x = points[idx * 2];
-        const y = points[idx * 2 + dir];
+        const y = points[idx * 2 + 1];
 
         if (idx >= allLen || idx < 0) {
             break;
@@ -88,9 +88,11 @@ function drawSegment(
                 let nextIdx = idx + dir;
                 let nextX = points[nextIdx * 2];
                 let nextY = points[nextIdx * 2 + 1];
+                let tmpK = k + 1;
                 if (connectNulls) {
                     // Find next point not null
-                    while (isPointNull(nextX, nextY) && (nextIdx < (segLen + start)) || (dir < 0 && nextIdx >= start)) {
+                    while (isPointNull(nextX, nextY) && tmpK < segLen) {
+                        tmpK++;
                         nextIdx += dir;
                         nextX = points[nextIdx * 2];
                         nextY = points[nextIdx * 2 + 1];
@@ -101,7 +103,7 @@ function drawSegment(
                 let vx: number = 0;
                 let vy: number = 0;
                 // Is last point
-                if ((dir > 0 && nextIdx >= (segLen + start)) || (dir < 0 && nextIdx < start)) {
+                if (tmpK >= segLen || isPointNull(nextX, nextY)) {
                     cpx1 = x;
                     cpy1 = y;
                 }
@@ -228,19 +230,19 @@ export class ECPolyline extends Path<ECPolylineProps> {
         const points = shape.points;
 
         let i = 0;
-        let len = points.length;
+        let len = points.length / 2;
 
         const result = getBoundingBox(points, shape.smoothConstraint);
 
         if (shape.connectNulls) {
             // Must remove first and last null values avoid draw error in polygon
-            for (; len > 0; len -= 2) {
-                if (!isPointNull(points[len - 2], points[len - 1])) {
+            for (; len > 0; len--) {
+                if (!isPointNull(points[len * 2 - 2], points[len * 2 - 1])) {
                     break;
                 }
             }
-            for (; i < len; i += 2) {
-                if (!isPointNull(points[i], points[i + 1])) {
+            for (; i < len; i++) {
+                if (!isPointNull(points[i * 2], points[i * 2 + 1])) {
                     break;
                 }
             }
@@ -282,20 +284,20 @@ export class ECPolygon extends Path {
         const stackedOnPoints = shape.stackedOnPoints;
 
         let i = 0;
-        let len = points.length;
+        let len = points.length / 2;
         const smoothMonotone = shape.smoothMonotone;
         const bbox = getBoundingBox(points, shape.smoothConstraint);
         const stackedOnBBox = getBoundingBox(stackedOnPoints, shape.smoothConstraint);
 
         if (shape.connectNulls) {
             // Must remove first and last null values avoid draw error in polygon
-            for (; len > 0; len -= 2) {
-                if (!isPointNull(points[len - 2], points[len - 1])) {
+            for (; len > 0; len--) {
+                if (!isPointNull(points[len * 2 - 2], points[len * 2 - 1])) {
                     break;
                 }
             }
-            for (; i < len; i += 2) {
-                if (!isPointNull(points[i], points[i + 1])) {
+            for (; i < len; i++) {
+                if (!isPointNull(points[i * 2], points[i * 2 + 1])) {
                     break;
                 }
             }
@@ -313,7 +315,7 @@ export class ECPolygon extends Path {
             );
             i += k + 1;
 
-            // ctx.closePath();
+            ctx.closePath();
         }
     }
 }
