@@ -43,7 +43,6 @@ import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
 import { getECData } from '../../util/ecData';
 import { createFloat32Array } from '../../util/vendor';
-import { createSymbol } from '../../util/symbol';
 
 
 type PolarArea = ReturnType<Polar['getArea']>;
@@ -433,7 +432,7 @@ class LineView extends ChartView {
         const valueOrigin = areaStyleModel.get('origin');
         const dataCoordInfo = prepareDataCoordInfo(coordSys, data, valueOrigin);
 
-        let stackedOnPoints = getStackedOnPoints(coordSys, data, dataCoordInfo);
+        let stackedOnPoints = isAreaChart && getStackedOnPoints(coordSys, data, dataCoordInfo);
 
         const showSymbol = seriesModel.get('showSymbol');
 
@@ -490,7 +489,10 @@ class LineView extends ChartView {
             if (step) {
                 // TODO If stacked series is not step
                 points = turnPointsIntoStep(points, coordSys, step);
-                stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+
+                if (stackedOnPoints) {
+                    stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+                }
             }
 
             polyline = this._newPolyline(points);
@@ -548,7 +550,9 @@ class LineView extends ChartView {
                     if (step) {
                         // TODO If stacked series is not step
                         points = turnPointsIntoStep(points, coordSys, step);
-                        stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+                        if (stackedOnPoints) {
+                            stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+                        }
                     }
 
                     polyline.setShape({

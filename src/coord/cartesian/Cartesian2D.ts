@@ -25,8 +25,15 @@ import Axis2D from './Axis2D';
 import { CoordinateSystem } from '../CoordinateSystem';
 import GridModel from './GridModel';
 import Grid from './Grid';
+import Scale from '../../scale/Scale';
+import { invert } from 'zrender/src/core/matrix';
+import { applyTransform } from 'zrender/src/core/vector';
 
 export const cartesian2DDimensions = ['x', 'y'];
+
+function canCalculateAffineTransform(scale: Scale) {
+    return scale.type === 'interval' || scale.type === 'time';
+}
 
 class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
 
@@ -37,6 +44,45 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
     model: GridModel;
 
     master: Grid;
+
+    private _transform: number[];
+    private _invTransform: number[];
+
+    /**
+     * Calculate an affine transform matrix if two axes are time or value.
+     * It's mainly for accelartion on the large time series data.
+     */
+    calcAffineTransform() {
+        this._transform = this._invTransform = null;
+
+        const xAxisScale = this.getAxis('x').scale;
+        const yAxisScale = this.getAxis('y').scale;
+
+        if (!canCalculateAffineTransform(xAxisScale) || !canCalculateAffineTransform(yAxisScale)) {
+            return;
+        }
+
+        const xScaleExtent = xAxisScale.getExtent();
+        const yScaleExtent = yAxisScale.getExtent();
+
+        const start = this.dataToPoint([xScaleExtent[0], yScaleExtent[0]]);
+        const end = this.dataToPoint([xScaleExtent[1], yScaleExtent[1]]);
+
+        const xScaleSpan = xScaleExtent[1] - xScaleExtent[0];
+        const yScaleSpan = yScaleExtent[1] - yScaleExtent[0];
+
+        if (!xScaleSpan || !yScaleSpan) {
+            return;
+        }
+        // Accelerate data to point calculation on the special large time series data.
+        const scaleX = (end[0] - start[0]) / xScaleSpan;
+        const scaleY = (end[1] - start[1]) / yScaleSpan;
+        const translateX = start[0] - xScaleExtent[0] * scaleX;
+        const translateY = start[1] - yScaleExtent[0] * scaleY;
+
+        const m = this._transform = [scaleX, 0, 0, scaleY, translateX, translateY];
+        this._invTransform = invert([], m);
+    }
 
     /**
      * Base axis will be used on stacking.
@@ -60,6 +106,9 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
     }
 
     dataToPoint(data: ScaleDataValue[], reserved?: unknown, out?: number[]): number[] {
+        if (this._transform) {
+            return applyTransform(out || [], data as number[], this._transform);
+        }
         const xAxis = this.getAxis('x');
         const yAxis = this.getAxis('y');
         out = out || [];
@@ -89,6 +138,9 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
     }
 
     pointToData(point: number[], out?: number[]): number[] {
+        if (this._invTransform) {
+            return applyTransform(out, point, this._invTransform);
+        }
         const xAxis = this.getAxis('x');
         const yAxis = this.getAxis('y');
         out = out || [];
