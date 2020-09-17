@@ -749,24 +749,6 @@ class List<
 
         const chunkStore = storage[dim][chunkIndex];
         const value = chunkStore[chunkOffset];
-        // FIXME ordinal data type is not stackable
-        // if (stack) {
-        //     let dimensionInfo = this._dimensionInfos[dim];
-        //     if (dimensionInfo && dimensionInfo.stackable) {
-        //         let stackedOn = this.stackedOn;
-        //         while (stackedOn) {
-        //             // Get no stacked data of stacked on
-        //             let stackedValue = stackedOn.get(dim, idx);
-        //             // Considering positive stack, negative stack and empty data
-        //             if ((value >= 0 && stackedValue > 0)  // Positive stack
-        //                 || (value <= 0 && stackedValue < 0) // Negative stack
-        //             ) {
-        //                 value += stackedValue;
-        //             }
-        //             stackedOn = stackedOn.stackedOn;
-        //         }
-        //     }
-        // }
 
         return value;
     }
