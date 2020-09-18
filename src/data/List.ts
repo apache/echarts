@@ -446,6 +446,7 @@ class List<
 
         // Clear
         this._storage = {};
+        this._storageArr = [];
         this._indices = null;
 
         this._nameList = nameList || [];
@@ -517,6 +518,7 @@ class List<
     appendValues(values: any[][], names?: string[]): void {
         const chunkSize = this._chunkSize;
         const storage = this._storage;
+        const storageArr = this._storageArr;
         const dimensions = this.dimensions;
         const dimLen = dimensions.length;
         const rawExtent = this._rawExtent;
@@ -531,11 +533,17 @@ class List<
                 rawExtent[dim] = getInitialExtent();
             }
             if (!storage[dim]) {
-                storage[dim] = [];
+                const store: DataValueChunk[] = [];
+                storage[dim] = store;
+                storageArr.push(store);
             }
             prepareChunks(storage, this._dimensionInfos[dim], chunkSize, originalChunkCount, end);
             this._chunkCount = storage[dim].length;
         }
+
+        const rawExtentArr = zrUtil.map(dimensions, (dim) => {
+            return rawExtent[dim];
+        });
 
         const emptyDataItem = new Array(dimLen);
         for (let idx = start; idx < end; idx++) {
@@ -544,14 +552,14 @@ class List<
             const chunkOffset = idx % chunkSize;
 
             // Store the data by dimensions
-            for (let k = 0; k < dimLen; k++) {
-                const dim = dimensions[k];
+            for (let dimIdx = 0; dimIdx < dimLen; dimIdx++) {
+                const dim = dimensions[dimIdx];
                 const val = this._dimValueGetterArrayRows(
-                    values[sourceIdx] || emptyDataItem, dim, sourceIdx, k
+                    values[sourceIdx] || emptyDataItem, dim, sourceIdx, dimIdx
                 ) as ParsedValueNumeric;
-                storage[dim][chunkIndex][chunkOffset] = val;
+                storageArr[dimIdx][chunkIndex][chunkOffset] = val;
 
-                const dimRawExtent = rawExtent[dim];
+                const dimRawExtent = rawExtentArr[dimIdx];
                 val < dimRawExtent[0] && (dimRawExtent[0] = val);
                 val > dimRawExtent[1] && (dimRawExtent[1] = val);
             }
@@ -577,6 +585,7 @@ class List<
         const chunkSize = this._chunkSize;
         const rawData = this._rawData;
         const storage = this._storage;
+        const storageArr = this._storageArr;
         const dimensions = this.dimensions;
         const dimLen = dimensions.length;
         const dimensionInfoMap = this._dimensionInfos;
@@ -587,6 +596,7 @@ class List<
         let nameDimIdx;
 
         const originalChunkCount = this._chunkCount;
+
         for (let i = 0; i < dimLen; i++) {
             const dim = dimensions[i];
             if (!rawExtent[dim]) {
@@ -602,7 +612,9 @@ class List<
             }
 
             if (!storage[dim]) {
-                storage[dim] = [];
+                const store: DataValueChunk[] = [];
+                storage[dim] = store;
+                storageArr.push(store);
             }
 
             prepareChunks(storage, dimInfo, chunkSize, originalChunkCount, end);
@@ -610,13 +622,9 @@ class List<
             this._chunkCount = storage[dim].length;
         }
 
-        const storageArr: DataValueChunk[][] = this._storageArr = [];
-        const rawExtentArr = [];
-        for (let k = 0; k < dimLen; k++) {
-            const dim = dimensions[k];
-            storageArr.push(storage[dim]);
-            rawExtentArr.push(rawExtent[dim]);
-        }
+        const rawExtentArr = zrUtil.map(dimensions, (dim) => {
+            return rawExtent[dim];
+        });
 
         let dataItem = [] as OptionDataItem;
         for (let idx = start; idx < end; idx++) {
@@ -632,14 +640,14 @@ class List<
             const chunkOffset = idx % chunkSize;
 
             // Store the data by dimensions
-            for (let k = 0; k < dimLen; k++) {
-                const dim = dimensions[k];
-                const dimStorage = storageArr[k][chunkIndex];
+            for (let dimIdx = 0; dimIdx < dimLen; dimIdx++) {
+                const dim = dimensions[dimIdx];
+                const dimStorage = storageArr[dimIdx][chunkIndex];
                 // PENDING NULL is empty or zero
-                const val = this._dimValueGetter(dataItem, dim, idx, k) as ParsedValueNumeric;
+                const val = this._dimValueGetter(dataItem, dim, idx, dimIdx) as ParsedValueNumeric;
                 dimStorage[chunkOffset] = val;
 
-                const dimRawExtent = rawExtentArr[k];
+                const dimRawExtent = rawExtentArr[dimIdx];
                 val < dimRawExtent[0] && (dimRawExtent[0] = val);
                 val > dimRawExtent[1] && (dimRawExtent[1] = val);
             }
@@ -741,6 +749,10 @@ class List<
     // Because in v8 access array by number variable is faster than access object by string variable
     // Not sure why but the optimization just works.
     getByDimIdx(dimIdx: number, idx: number): ParsedValue {
+        if (!(idx >= 0 && idx < this._count)) {
+            return NaN;
+        }
+
         const dimStore = this._storageArr[dimIdx];
         const chunkSize = this._chunkSize;
         if (!dimStore) {
