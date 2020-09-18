@@ -618,7 +618,7 @@ class List<
             rawExtentArr.push(rawExtent[dim]);
         }
 
-        let dataItem = new Array(dimLen) as OptionDataItem;
+        let dataItem = [] as OptionDataItem;
         for (let idx = start; idx < end; idx++) {
             // NOTICE: Try not to write things into dataItem
             dataItem = rawData.getItem(idx, dataItem);
@@ -800,12 +800,11 @@ class List<
      * FIXME Use `get` on chrome maybe slow(in filterSelf and selectRange).
      * Hack a much simpler _getFast
      */
-    private _getFast(dim: DimensionName, rawIdx: number): ParsedValue {
+    private _getFast(dimIdx: number, rawIdx: number): ParsedValue {
         const chunkSize = this._chunkSize;
         const chunkIndex = mathFloor(rawIdx / chunkSize);
         const chunkOffset = rawIdx % chunkSize;
-        const chunkStore = this._storage[dim][chunkIndex];
-        return chunkStore[chunkOffset];
+        return this._storageArr[dimIdx][chunkIndex][chunkOffset];
     }
 
     /**
@@ -855,6 +854,7 @@ class List<
         dim = this.getDimension(dim);
         const dimData = this._storage[dim];
         const initialExtent = getInitialExtent();
+        const chunkSize = this._chunkSize;
 
         // stack = !!((stack || false) && this.getCalculationInfo(dim));
 
@@ -886,8 +886,10 @@ class List<
         let max = dimExtent[1];
 
         for (let i = 0; i < currEnd; i++) {
-            // let value = stack ? this.get(dim, i, true) : this._getFast(dim, this.getRawIndex(i));
-            const value = this._getFast(dim, this.getRawIndex(i)) as ParsedValueNumeric;
+            const rawIdx = this.getRawIndex(i);
+            const chunkIndex = mathFloor(rawIdx / chunkSize);
+            const chunkOffset = rawIdx % chunkSize;
+            const value = dimData[chunkIndex][chunkOffset] as ParsedValueNumeric;
             value < min && (min = value);
             value > max && (max = value);
         }
@@ -1240,6 +1242,9 @@ class List<
         }
 
         const dimSize = dimNames.length;
+        const dimIndices = zrUtil.map(dimNames, (dimName) => {
+            return this._dimensionInfos[dimName].index;
+        });
 
         for (let i = 0; i < this.count(); i++) {
             // Simple optimization
@@ -1248,16 +1253,18 @@ class List<
                     (cb as EachCb0<Ctx>).call(fCtx, i);
                     break;
                 case 1:
-                    (cb as EachCb1<Ctx>).call(fCtx, this.get(dimNames[0], i), i);
+                    (cb as EachCb1<Ctx>).call(fCtx, this._getFast(dimIndices[0], i), i);
                     break;
                 case 2:
-                    (cb as EachCb2<Ctx>).call(fCtx, this.get(dimNames[0], i), this.get(dimNames[1], i), i);
+                    (cb as EachCb2<Ctx>).call(
+                        fCtx, this._getFast(dimIndices[0], i), this._getFast(dimIndices[1], i), i
+                    );
                     break;
                 default:
                     let k = 0;
                     const value = [];
                     for (; k < dimSize; k++) {
-                        value[k] = this.get(dimNames[k], i);
+                        value[k] = this._getFast(dimIndices[k], i);
                     }
                     // Index
                     value[k] = i;
@@ -1312,7 +1319,10 @@ class List<
         const dimSize = dimNames.length;
 
         let offset = 0;
-        const dim0 = dimNames[0];
+        const dimIndices = zrUtil.map(dimNames, (dimName) => {
+            return this._dimensionInfos[dimName].index;
+        });
+        const dim0 = dimIndices[0];
 
         for (let i = 0; i < count; i++) {
             let keep;
@@ -1328,7 +1338,7 @@ class List<
             else {
                 let k = 0;
                 for (; k < dimSize; k++) {
-                    value[k] = this._getFast(dim0, rawIdx);
+                    value[k] = this._getFast(dimIndices[k], rawIdx);
                 }
                 value[k] = i;
                 keep = (cb as FilterCb<Ctx>).apply(fCtx, value);
@@ -1384,6 +1394,9 @@ class List<
 
         let offset = 0;
         const dim0 = dimensions[0];
+        const dimIndices = zrUtil.map(dimensions, (dimName) => {
+            return this._dimensionInfos[dimName].index;
+        });
 
         const min = range[dim0][0];
         const max = range[dim0][1];
@@ -1393,7 +1406,7 @@ class List<
             // Extreme optimization for common case. About 2x faster in chrome.
             let idx = 0;
             if (dimSize === 1) {
-                const dimStorage = this._storage[dimensions[0]];
+                const dimStorage = this._storage[dim0];
                 for (let k = 0; k < this._chunkCount; k++) {
                     const chunkStorage = dimStorage[k];
                     const len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
@@ -1446,7 +1459,7 @@ class List<
             if (dimSize === 1) {
                 for (let i = 0; i < originalCount; i++) {
                     const rawIndex = this.getRawIndex(i);
-                    const val = this._getFast(dim0, rawIndex);
+                    const val = this._getFast(dimIndices[0], rawIndex);
                     // Do not filter NaN, see comment above.
                     if (
                         (val >= min && val <= max) || isNaN(val as any)
@@ -1461,7 +1474,7 @@ class List<
                     const rawIndex = this.getRawIndex(i);
                     for (let k = 0; k < dimSize; k++) {
                         const dimk = dimensions[k];
-                        const val = this._getFast(dimk, rawIndex);
+                        const val = this._getFast(dimIndices[k], rawIndex);
                         // Do not filter NaN, see comment above.
                         if (val < range[dimk][0] || val > range[dimk][1]) {
                             keep = false;
@@ -2141,6 +2154,7 @@ class List<
 
             const storage = list._storage = {} as DataStorage;
             const originalStorage = original._storage;
+            const storageArr: DataValueChunk[][] = list._storageArr = [];
 
             // Init storage
             for (let i = 0; i < allDimensions.length; i++) {
@@ -2157,6 +2171,7 @@ class List<
                         // Direct reference for other dimensions
                         storage[dim] = originalStorage[dim];
                     }
+                    storageArr.push(storage[dim]);
                 }
             }
             return list;

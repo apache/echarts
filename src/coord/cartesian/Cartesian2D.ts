@@ -106,12 +106,13 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
     }
 
     dataToPoint(data: ScaleDataValue[], reserved?: unknown, out?: number[]): number[] {
-        if (this._transform) {
-            return applyTransform(out || [], data as number[], this._transform);
+        out = out || [];
+        if (this._transform && !isNaN(data[0] as number) && !isNaN(data[1] as number)) {
+            // Fast path
+            return applyTransform(out, data as number[], this._transform);
         }
         const xAxis = this.getAxis('x');
         const yAxis = this.getAxis('y');
-        out = out || [];
         out[0] = xAxis.toGlobalCoord(xAxis.dataToCoord(data[0]));
         out[1] = yAxis.toGlobalCoord(yAxis.dataToCoord(data[1]));
         return out;

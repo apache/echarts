@@ -56,8 +56,8 @@ export default function (seriesType: string, forceStoreInTypedArray?: boolean): 
                 dims[1] = stackResultDim;
             }
 
-            const dimInfo0 = data.getDimensionInfo(0);
-            const dimInfo1 = data.getDimensionInfo(1);
+            const dimInfo0 = data.getDimensionInfo(dims[0]);
+            const dimInfo1 = data.getDimensionInfo(dims[1]);
 
             const dimIdx0 = dimInfo0 && dimInfo0.index;
             const dimIdx1 = dimInfo1 && dimInfo1.index;
@@ -75,21 +75,21 @@ export default function (seriesType: string, forceStoreInTypedArray?: boolean): 
 
                         if (dimLen === 1) {
                             const x = data.getByDimIdx(dimIdx0, i) as ParsedValueNumeric;
-                            point = !isNaN(x) && coordSys.dataToPoint(x, null, tmpOut);
+                            point = coordSys.dataToPoint(x, 0, tmpOut);
                         }
                         else {
-                            const x = tmpIn[0] = data.getByDimIdx(dimIdx0, i) as ParsedValueNumeric;
-                            const y = tmpIn[1] = data.getByDimIdx(dimIdx1, i) as ParsedValueNumeric;
-                            // Also {Array.<number>}, not undefined to avoid if...else... statement
-                            point = !isNaN(x) && !isNaN(y) && coordSys.dataToPoint(tmpIn, null, tmpOut);
+                            tmpIn[0] = data.getByDimIdx(dimIdx0, i) as ParsedValueNumeric;
+                            tmpIn[1] = data.getByDimIdx(dimIdx1, i) as ParsedValueNumeric;
+                            // Let coordinate system to handle the NaN data.
+                            point = coordSys.dataToPoint(tmpIn, 0, tmpOut);
                         }
 
                         if (useTypedArray) {
-                            points[offset++] = point ? point[0] : NaN;
-                            points[offset++] = point ? point[1] : NaN;
+                            points[offset++] = point[0];
+                            points[offset++] = point[1];
                         }
                         else {
-                            data.setItemLayout(i, (point && point.slice()) || [NaN, NaN]);
+                            data.setItemLayout(i, point.slice());
                         }
                     }
 
