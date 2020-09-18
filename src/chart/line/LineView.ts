@@ -594,10 +594,12 @@ class LineView extends ChartView {
         enableHoverEmphasis(polyline, focus, blurScope);
 
         const smooth = getSmooth(seriesModel.get('smooth'));
+        const smoothMonotone = seriesModel.get('smoothMonotone');
+        const connectNulls = seriesModel.get('connectNulls');
         polyline.setShape({
-            smooth: smooth,
-            smoothMonotone: seriesModel.get('smoothMonotone'),
-            connectNulls: seriesModel.get('connectNulls')
+            smooth,
+            smoothMonotone,
+            connectNulls
         });
 
         if (polygon) {
@@ -618,10 +620,10 @@ class LineView extends ChartView {
             }
 
             polygon.setShape({
-                smooth: smooth,
-                stackedOnSmooth: stackedOnSmooth,
-                smoothMonotone: seriesModel.get('smoothMonotone'),
-                connectNulls: seriesModel.get('connectNulls')
+                smooth,
+                stackedOnSmooth,
+                smoothMonotone,
+                connectNulls
             });
 
             setStatesStylesFromModel(polygon, seriesModel, 'areaStyle');

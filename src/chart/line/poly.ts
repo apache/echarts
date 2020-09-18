@@ -39,14 +39,12 @@ function drawSegment(
     segLen: number,
     allLen: number,
     dir: number,
-    smoothMin: number[],
-    smoothMax: number[],
     smooth: number,
     smoothMonotone: 'x' | 'y' | 'none',
     connectNulls: boolean
 ) {
-    let px: number;
-    let py: number;
+    let prevX: number;
+    let prevY: number;
     let cpx0: number;
     let cpy0: number;
     let cpx1: number;
@@ -75,8 +73,8 @@ function drawSegment(
             cpy0 = y;
         }
         else {
-            const dx = x - px;
-            const dy = y - py;
+            const dx = x - prevX;
+            const dy = y - prevY;
 
             // Ignore tiny segment.
             if ((dx * dx + dy * dy) < 1) {
@@ -102,95 +100,97 @@ function drawSegment(
                 let ratioNextSeg = 0.5;
                 let vx: number = 0;
                 let vy: number = 0;
+                let nextCpx0;
+                let nextCpy0;
                 // Is last point
                 if (tmpK >= segLen || isPointNull(nextX, nextY)) {
                     cpx1 = x;
                     cpy1 = y;
                 }
                 else {
-                    vx = nextX - px;
-                    vy = nextY - py;
+                    vx = nextX - prevX;
+                    vy = nextY - prevY;
 
-                    const dx0 = x - px;
+                    const dx0 = x - prevX;
                     const dx1 = nextX - x;
-                    const dy0 = y - py;
+                    const dy0 = y - prevY;
                     const dy1 = nextY - y;
                     let lenPrevSeg;
                     let lenNextSeg;
                     if (smoothMonotone === 'x') {
                         lenPrevSeg = Math.abs(dx0);
                         lenNextSeg = Math.abs(dx1);
+                        cpx1 = x - lenPrevSeg * smooth;
+                        cpy1 = y;
+                        nextCpx0 = x + lenPrevSeg * smooth;
+                        nextCpy0 = y;
                     }
                     else if (smoothMonotone === 'y') {
                         lenPrevSeg = Math.abs(dy0);
                         lenNextSeg = Math.abs(dy1);
+                        cpx1 = x;
+                        cpy1 = y - lenPrevSeg * smooth;
+                        nextCpx0 = x;
+                        nextCpy0 = y + lenPrevSeg * smooth;
                     }
                     else {
                         lenPrevSeg = Math.sqrt(dx0 * dx0 + dy0 * dy0);
                         lenNextSeg = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+
+                        // Use ratio of seg length
+                        ratioNextSeg = lenNextSeg / (lenNextSeg + lenPrevSeg);
+
+                        cpx1 = x - vx * smooth * (1 - ratioNextSeg);
+                        cpy1 = y - vy * smooth * (1 - ratioNextSeg);
+
+                        // cp0 of next segment
+                        nextCpx0 = x + vx * smooth * ratioNextSeg;
+                        nextCpy0 = y + vy * smooth * ratioNextSeg;
+
+                        // Smooth constraint between point and next point.
+                        // Avoid exceeding extreme after smoothing.
+                        nextCpx0 = mathMin(nextCpx0, mathMax(nextX, x));
+                        nextCpy0 = mathMin(nextCpy0, mathMax(nextY, y));
+                        nextCpx0 = mathMax(nextCpx0, mathMin(nextX, x));
+                        nextCpy0 = mathMax(nextCpy0, mathMin(nextY, y));
+                        // Reclaculate cp1 based on the adjusted cp0 of next seg.
+                        vx = nextCpx0 - x;
+                        vy = nextCpy0 - y;
+
+                        cpx1 = x - vx * lenPrevSeg / lenNextSeg;
+                        cpy1 = y - vy * lenPrevSeg / lenNextSeg;
+
+                        // Smooth constraint between point and prev point.
+                        // Avoid exceeding extreme after smoothing.
+                        cpx1 = mathMin(cpx1, mathMax(prevX, x));
+                        cpy1 = mathMin(cpy1, mathMax(prevY, y));
+                        cpx1 = mathMax(cpx1, mathMin(prevX, x));
+                        cpy1 = mathMax(cpy1, mathMin(prevY, y));
+
+                        // Adjust next cp0 again.
+                        vx = x - cpx1;
+                        vy = y - cpy1;
+                        nextCpx0 = x + vx * lenNextSeg / lenPrevSeg;
+                        nextCpy0 = y + vy * lenNextSeg / lenPrevSeg;
                     }
-
-                    // Use ratio of seg length
-                    ratioNextSeg = lenNextSeg / (lenNextSeg + lenPrevSeg);
-
-                    cpx1 = x - vx * smooth * (1 - ratioNextSeg);
-                    cpy1 = y - vy * smooth * (1 - ratioNextSeg);
                 }
-                // Smooth constraint
-                cpx0 = mathMin(cpx0, smoothMax[0]);
-                cpy0 = mathMin(cpy0, smoothMax[1]);
-                cpx0 = mathMax(cpx0, smoothMin[0]);
-                cpy0 = mathMax(cpy0, smoothMin[1]);
-
-                cpx1 = mathMin(cpx1, smoothMax[0]);
-                cpy1 = mathMin(cpy1, smoothMax[1]);
-                cpx1 = mathMax(cpx1, smoothMin[0]);
-                cpy1 = mathMax(cpy1, smoothMin[1]);
 
                 ctx.bezierCurveTo(cpx0, cpy0, cpx1, cpy1, x, y);
 
-                // cp0 of next segment
-                cpx0 = x + vx * smooth * ratioNextSeg;
-                cpy0 = y + vy * smooth * ratioNextSeg;
+                cpx0 = nextCpx0;
+                cpy0 = nextCpy0;
             }
             else {
                 ctx.lineTo(x, y);
             }
         }
 
-        px = x;
-        py = y;
+        prevX = x;
+        prevY = y;
         idx += dir;
     }
 
     return k;
-}
-
-function getBoundingBox(points: ArrayLike<number>, smoothConstraint?: boolean) {
-    const ptMin = [Infinity, Infinity];
-    const ptMax = [-Infinity, -Infinity];
-    if (smoothConstraint) {
-        for (let i = 0; i < points.length;) {
-            const x = points[i++];
-            const y = points[i++];
-            if (x < ptMin[0]) {
-                ptMin[0] = x;
-            }
-            if (y < ptMin[1]) {
-                ptMin[1] = y;
-            }
-            if (x > ptMax[0]) {
-                ptMax[0] = x;
-            }
-            if (y > ptMax[1]) {
-                ptMax[1] = y;
-            }
-        }
-    }
-    return {
-        min: smoothConstraint ? ptMin : ptMax,
-        max: smoothConstraint ? ptMax : ptMin
-    };
 }
 
 class ECPolylineShape {
@@ -198,7 +198,7 @@ class ECPolylineShape {
     smooth = 0;
     smoothConstraint = true;
     smoothMonotone: 'x' | 'y' | 'none';
-    connectNulls = false;
+    connectNulls: boolean;
 }
 
 interface ECPolylineProps extends PathProps {
@@ -232,7 +232,7 @@ export class ECPolyline extends Path<ECPolylineProps> {
         let i = 0;
         let len = points.length / 2;
 
-        const result = getBoundingBox(points, shape.smoothConstraint);
+        // const result = getBoundingBox(points, shape.smoothConstraint);
 
         if (shape.connectNulls) {
             // Must remove first and last null values avoid draw error in polygon
@@ -250,7 +250,9 @@ export class ECPolyline extends Path<ECPolylineProps> {
         while (i < len) {
             i += drawSegment(
                 ctx, points, i, len, len,
-                1, result.min, result.max, shape.smooth,
+                1,
+                // result.min, result.max,
+                shape.smooth,
                 shape.smoothMonotone, shape.connectNulls
             ) + 1;
         }
@@ -286,8 +288,6 @@ export class ECPolygon extends Path {
         let i = 0;
         let len = points.length / 2;
         const smoothMonotone = shape.smoothMonotone;
-        const bbox = getBoundingBox(points, shape.smoothConstraint);
-        const stackedOnBBox = getBoundingBox(stackedOnPoints, shape.smoothConstraint);
 
         if (shape.connectNulls) {
             // Must remove first and last null values avoid draw error in polygon
@@ -305,12 +305,16 @@ export class ECPolygon extends Path {
         while (i < len) {
             const k = drawSegment(
                 ctx, points, i, len, len,
-                1, bbox.min, bbox.max, shape.smooth,
+                1,
+                // bbox.min, bbox.max,
+                shape.smooth,
                 smoothMonotone, shape.connectNulls
             );
             drawSegment(
                 ctx, stackedOnPoints, i + k - 1, k, len,
-                -1, stackedOnBBox.min, stackedOnBBox.max, shape.stackedOnSmooth,
+                -1,
+                // stackedOnBBox.min, stackedOnBBox.max,
+                shape.stackedOnSmooth,
                 smoothMonotone, shape.connectNulls
             );
             i += k + 1;
