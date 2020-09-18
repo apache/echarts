@@ -56,6 +56,11 @@ export default function (seriesType: string, forceStoreInTypedArray?: boolean): 
                 dims[1] = stackResultDim;
             }
 
+            const dimInfo0 = data.getDimensionInfo(0);
+            const dimInfo1 = data.getDimensionInfo(1);
+
+            const dimIdx0 = dimInfo0 && dimInfo0.index;
+            const dimIdx1 = dimInfo1 && dimInfo1.index;
 
             return dimLen && {
                 progress(params, data) {
@@ -64,16 +69,17 @@ export default function (seriesType: string, forceStoreInTypedArray?: boolean): 
 
                     const tmpIn: ParsedValueNumeric[] = [];
                     const tmpOut: number[] = [];
+
                     for (let i = params.start, offset = 0; i < params.end; i++) {
                         let point;
 
                         if (dimLen === 1) {
-                            const x = data.get(dims[0], i) as ParsedValueNumeric;
+                            const x = data.getByDimIdx(dimIdx0, i) as ParsedValueNumeric;
                             point = !isNaN(x) && coordSys.dataToPoint(x, null, tmpOut);
                         }
                         else {
-                            const x = tmpIn[0] = data.get(dims[0], i) as ParsedValueNumeric;
-                            const y = tmpIn[1] = data.get(dims[1], i) as ParsedValueNumeric;
+                            const x = tmpIn[0] = data.getByDimIdx(dimIdx0, i) as ParsedValueNumeric;
+                            const y = tmpIn[1] = data.getByDimIdx(dimIdx1, i) as ParsedValueNumeric;
                             // Also {Array.<number>}, not undefined to avoid if...else... statement
                             point = !isNaN(x) && !isNaN(y) && coordSys.dataToPoint(tmpIn, null, tmpOut);
                         }
