@@ -1704,6 +1704,105 @@ listProto.map = function (dimensions, cb, context, contextCompat) {
 };
 
 /**
+ * Large data down sampling using largest-triangle-three-buckets
+ * copied from https://github.com/pingec/downsample-lttb with some modifications
+ * @param {string} baseDimension
+ * @param {string} valueDimension
+ * @param {number} threshold target counts
+ */
+listProto.lttbDownSample = function(baseDimension, valueDimension, threshold) {
+    var floor = Math.floor,
+	abs = Math.abs;
+
+    var list = cloneListForMapAndSample(this, [baseDimension, valueDimension]);
+    var targetStorage = list._storage;
+    var baseDimStore = targetStorage[baseDimension];
+    var valueDimStore = targetStorage[valueDimension];
+    var len = this.count();
+    var chunkSize = this._chunkSize;
+    var newIndices = new (getIndicesCtor(this))(len);
+    function getPair(i) {
+        var originalChunkIndex = Math.floor(i / chunkSize);
+        var originalChunkOffset = i % chunkSize;
+        return [
+            baseDimStore[originalChunkIndex][originalChunkOffset],
+            valueDimStore[originalChunkIndex][originalChunkOffset]
+        ];
+    }
+	if (threshold >= len || threshold === 0) {
+		return list; // Nothing to do
+	}
+
+	// var sampled = [],
+	var sampledIndex = 0;
+
+	// Bucket size. Leave room for start and end data points
+	var every = (len - 2) / (threshold - 2);
+
+	var a = 0,  // Initially a is the first point in the triangle
+		maxAreaPoint,
+		maxArea,
+		area,
+		nextA;
+
+    newIndices[sampledIndex++] = a;
+	// sampled[ sampledIndex++ ] = getPair(0); // Always add the first point
+	for (var i = 0; i < threshold - 2; i++) {
+
+		// Calculate point average for next bucket (containing c)
+		var avgX = 0,
+			avgY = 0,
+			avgRangeStart  = floor((i + 1) * every) + 1,
+			avgRangeEnd    = floor((i + 2) * every) + 1;
+		avgRangeEnd = avgRangeEnd < len ? avgRangeEnd : len;
+
+		var avgRangeLength = avgRangeEnd - avgRangeStart;
+
+		for (; avgRangeStart<avgRangeEnd; avgRangeStart++) {
+		  avgX += getPair(avgRangeStart)[0] * 1; // * 1 enforces Number (value may be Date)
+          avgY += getPair(avgRangeStart)[1] * 1;
+		}
+		avgX /= avgRangeLength;
+		avgY /= avgRangeLength;
+
+		// Get the range for this bucket
+		var rangeOffs = floor((i + 0) * every) + 1,
+			rangeTo   = floor((i + 1) * every) + 1;
+
+		// Point a
+		var pointAX = getPair(a)[0] * 1, // enforce Number (value may be Date)
+			pointAY = getPair(a)[1] * 1;
+
+		maxArea = area = -1;
+
+		for (; rangeOffs < rangeTo; rangeOffs++) {
+			// Calculate triangle area over three buckets
+			area = abs((pointAX - avgX) * (getPair(rangeOffs)[1] - pointAY) -
+						(pointAX - getPair(rangeOffs)[0]) * (avgY - pointAY)
+					) * 0.5;
+			if (area > maxArea) {
+				maxArea = area;
+                maxAreaPoint = getPair(rangeOffs);
+				nextA = rangeOffs; // Next a is this b
+			}
+		}
+
+        newIndices[sampledIndex++] = nextA;
+        // sampled[ sampledIndex++ ] = maxAreaPoint; // Pick this point from the bucket
+
+		a = nextA; // This a is the next a (chosen b)
+	}
+
+    newIndices[sampledIndex++] = len - 1;
+	// sampled[ sampledIndex++ ] = getPair(len - 1); // Always add last
+    list._count = sampledIndex;
+    list._indices = newIndices;
+
+    list.getRawIndex = getRawIndexWithIndices;
+    return list;
+}
+
+/**
  * Large data down sampling on given dimension
  * @param {string} dimension
  * @param {number} rate

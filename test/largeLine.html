@@ -47,7 +47,7 @@ under the License.
             ], function (echarts) {
                 var myChart;
                 var lineCount = 20;
-                var pointCount = 1000;
+                var pointCount = 2000;
                 var chartCount = 50;
 
                 var option = {
@@ -113,7 +113,8 @@ under the License.
                   option.series.push({
                     name: 'line' + i,
                     type: 'line',
-                    sampling: 'average',
+                    // sampling: 'average',
+                    sampling: 'lttb',
                     hoverAnimation: false,
                     showSymbol: false,
                     data: values,

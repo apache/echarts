@@ -91,7 +91,7 @@ export default SeriesModel.extend({
         // Whether to connect break point.
         connectNulls: false,
 
-        // Sampling for large data. Can be: 'average', 'max', 'min', 'sum'.
+        // Sampling for large data. Can be: 'average', 'max', 'min', 'sum', 'lttb'.
         sampling: 'none',
 
         animationEasing: 'linear',

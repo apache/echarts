@@ -86,6 +86,11 @@ export default function (seriesType) {
                 var size = Math.abs(extent[1] - extent[0]);
                 var rate = Math.round(data.count() / size);
                 if (rate > 1) {
+                    if (sampling === 'lttb') {
+                        seriesModel.setData(data.lttbDownSample(
+                            data.mapDimension(baseAxis.dim), data.mapDimension(valueAxis.dim), size
+                        ));
+                    }
                     var sampler;
                     if (typeof sampling === 'string') {
                         sampler = samplers[sampling];
