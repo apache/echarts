@@ -139,12 +139,12 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
     }
 
     pointToData(point: number[], out?: number[]): number[] {
+        out = out || [];
         if (this._invTransform) {
             return applyTransform(out, point, this._invTransform);
         }
         const xAxis = this.getAxis('x');
         const yAxis = this.getAxis('y');
-        out = out || [];
         out[0] = xAxis.coordToData(xAxis.toLocalCoord(point[0]));
         out[1] = yAxis.coordToData(yAxis.toLocalCoord(point[1]));
         return out;
