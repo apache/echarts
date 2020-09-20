@@ -188,6 +188,10 @@ interface SetOptionOpts {
     replaceMerge?: GlobalModelSetOptionOpts['replaceMerge']
 };
 
+interface PostIniter {
+    (chart: EChartsType): void
+}
+
 type EventMethodName = 'on' | 'off';
 function createRegisterEventWithLowercaseECharts(method: EventMethodName) {
     return function (this: ECharts, ...args: any): ECharts {
@@ -2330,6 +2334,8 @@ const dataProcessorFuncs: StageHandlerInternal[] = [];
 
 const optionPreprocessorFuncs: OptionPreprocessor[] = [];
 
+const postInitFuncs: PostIniter[] = [];
+
 const postUpdateFuncs: PostUpdater[] = [];
 
 const visualFuncs: StageHandlerInternal[] = [];
@@ -2401,6 +2407,10 @@ export function init(
     modelUtil.setAttribute(dom, DOM_ATTRIBUTE_KEY, chart.id);
 
     enableConnect(chart);
+
+    each(postInitFuncs, (postInitFunc) => {
+        postInitFunc(chart);
+    });
 
     return chart;
 }
@@ -2499,12 +2509,21 @@ export function registerProcessor(
     normalizeRegister(dataProcessorFuncs, priority, processor, PRIORITY_PROCESSOR_DEFAULT);
 }
 
+
+/**
+ * Register postIniter
+ * @param {Function} postInitFunc
+ */
+export function registerPostInit(postInitFunc: PostIniter): void {
+    postInitFunc && postInitFuncs.push(postInitFunc);
+}
+
 /**
  * Register postUpdater
  * @param {Function} postUpdateFunc
  */
 export function registerPostUpdate(postUpdateFunc: PostUpdater): void {
-    postUpdateFuncs.push(postUpdateFunc);
+    postUpdateFunc && postUpdateFuncs.push(postUpdateFunc);
 }
 
 /**
