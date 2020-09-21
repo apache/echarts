@@ -97,6 +97,8 @@ abstract class Scale {
 
     /**
      * Get extent
+     *
+     * Extent is always in increase order.
      */
     getExtent(): [number, number] {
         return this._extent.slice() as [number, number];

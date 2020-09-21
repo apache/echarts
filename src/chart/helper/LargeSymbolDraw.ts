@@ -190,7 +190,7 @@ class LargeSymbolDraw {
         });
 
         symbolEl.setShape({
-            points: data.getLayout('symbolPoints')
+            points: data.getLayout('points')
         });
         this._setCommon(symbolEl, data, false, opt);
         this.group.add(symbolEl);
@@ -203,7 +203,7 @@ class LargeSymbolDraw {
             return;
         }
 
-        let points = data.getLayout('symbolPoints');
+        let points = data.getLayout('points');
         this.group.eachChild(function (child: LargeSymbolPath) {
             if (child.startIndex != null) {
                 const len = (child.endIndex - child.startIndex) * 2;
@@ -251,7 +251,7 @@ class LargeSymbolDraw {
         }
 
         symbolEl.setShape({
-            points: data.getLayout('symbolPoints')
+            points: data.getLayout('points')
         });
         this._setCommon(symbolEl, data, !!this._incremental, opt);
     }

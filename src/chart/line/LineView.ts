@@ -20,7 +20,6 @@
 // FIXME step not support polar
 
 import * as zrUtil from 'zrender/src/core/util';
-import {fromPoints} from 'zrender/src/core/bbox';
 import SymbolDraw from '../helper/SymbolDraw';
 import SymbolClz from '../helper/Symbol';
 import lineAnimationDiff from './lineAnimationDiff';
@@ -43,6 +42,7 @@ import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
 import { getECData } from '../../util/ecData';
+import { createFloat32Array } from '../../util/vendor';
 
 
 type PolarArea = ReturnType<Polar['getArea']>;
@@ -52,29 +52,46 @@ interface SymbolExtended extends SymbolClz {
     __temp: boolean
 }
 
-function isPointsSame(points1: number[][], points2: number[][]) {
+function isPointsSame(points1: ArrayLike<number>, points2: ArrayLike<number>) {
     if (points1.length !== points2.length) {
         return;
     }
     for (let i = 0; i < points1.length; i++) {
-        const p1 = points1[i];
-        const p2 = points2[i];
-        if (p1[0] !== p2[0] || p1[1] !== p2[1]) {
+        if (points1[i] !== points2[i]) {
             return;
         }
     }
     return true;
 }
 
-function getBoundingDiff(points1: number[][], points2: number[][]): number {
-    const min1 = [] as number[];
-    const max1 = [] as number[];
+function bboxFromPoints(points: ArrayLike<number>) {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
 
-    const min2 = [] as number[];
-    const max2 = [] as number[];
+    for (let i = 0; i < points.length;) {
+        const x = points[i++];
+        const y = points[i++];
+        if (!isNaN(x)) {
+            minX = Math.min(x, minX);
+            maxX = Math.max(x, maxX);
+        }
+        if (!isNaN(y)) {
+            minY = Math.min(y, minY);
+            maxY = Math.max(y, maxY);
+        }
+    }
+    return [
+        [minX, minY],
+        [maxX, maxY]
+    ];
+}
 
-    fromPoints(points1, min1, max1);
-    fromPoints(points2, min2, max2);
+function getBoundingDiff(points1: ArrayLike<number>, points2: ArrayLike<number>): number {
+
+    const [min1, max1] = bboxFromPoints(points1);
+    const [min2, max2] = bboxFromPoints(points2);
 
     // Get a max value from each corner of two boundings.
     return Math.max(
@@ -99,56 +116,61 @@ function getStackedOnPoints(
         return [];
     }
 
-    const points = [];
-    for (let idx = 0, len = data.count(); idx < len; idx++) {
-        points.push(getStackedOnPoint(dataCoordInfo, coordSys, data, idx));
+    const len = data.count();
+    const points = createFloat32Array(len * 2);
+    for (let idx = 0; idx < len; idx++) {
+        const pt = getStackedOnPoint(dataCoordInfo, coordSys, data, idx);
+        points[idx * 2] = pt[0];
+        points[idx * 2 + 1] = pt[1];
     }
 
     return points;
 }
 
 function turnPointsIntoStep(
-    points: number[][],
+    points: ArrayLike<number>,
     coordSys: Cartesian2D | Polar,
     stepTurnAt: 'start' | 'end' | 'middle'
-) {
+): number[] {
     const baseAxis = coordSys.getBaseAxis();
     const baseIndex = baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1;
 
-    const stepPoints = [];
+    const stepPoints: number[] = [];
     let i = 0;
-    for (; i < points.length - 1; i++) {
-        const nextPt = points[i + 1];
-        const pt = points[i];
-        stepPoints.push(pt);
+    const stepPt: number[] = [];
+    const pt: number[] = [];
+    const nextPt: number[] = [];
+    for (; i < points.length - 2; i += 2) {
+        nextPt[0] = points[i + 2];
+        nextPt[1] = points[i + 3];
+        pt[0] = points[i];
+        pt[1] = points[i + 1];
+        stepPoints.push(pt[0], pt[1]);
 
-        const stepPt = [];
         switch (stepTurnAt) {
             case 'end':
                 stepPt[baseIndex] = nextPt[baseIndex];
                 stepPt[1 - baseIndex] = pt[1 - baseIndex];
-                // default is start
-                stepPoints.push(stepPt);
+                stepPoints.push(stepPt[0], stepPt[1]);
                 break;
             case 'middle':
-                // default is start
                 const middle = (pt[baseIndex] + nextPt[baseIndex]) / 2;
                 const stepPt2 = [];
                 stepPt[baseIndex] = stepPt2[baseIndex] = middle;
                 stepPt[1 - baseIndex] = pt[1 - baseIndex];
                 stepPt2[1 - baseIndex] = nextPt[1 - baseIndex];
-                stepPoints.push(stepPt);
-                stepPoints.push(stepPt2);
+                stepPoints.push(stepPt[0], stepPt[1]);
+                stepPoints.push(stepPt2[0], stepPt[1]);
                 break;
             default:
+                // default is start
                 stepPt[baseIndex] = pt[baseIndex];
                 stepPt[1 - baseIndex] = nextPt[1 - baseIndex];
-                // default is start
-                stepPoints.push(stepPt);
+                stepPoints.push(stepPt[0], stepPt[1]);
         }
     }
     // Last points
-    points[i] && stepPoints.push(points[i]);
+    stepPoints.push(points[i++], points[i++]);
     return stepPoints;
 }
 
@@ -365,8 +387,8 @@ class LineView extends ChartView {
     _polyline: ECPolyline;
     _polygon: ECPolygon;
 
-    _stackedOnPoints: number[][];
-    _points: number[][];
+    _stackedOnPoints: ArrayLike<number>;
+    _points: ArrayLike<number>;
 
     _step: LineSeriesOption['step'];
     _valueOrigin: LineSeriesOption['areaStyle']['origin'];
@@ -392,7 +414,7 @@ class LineView extends ChartView {
         const lineStyleModel = seriesModel.getModel('lineStyle');
         const areaStyleModel = seriesModel.getModel('areaStyle');
 
-        let points = data.mapArray(data.getItemLayout);
+        let points = data.getLayout('points') as number[] || [];
 
         const isCoordSysPolar = coordSys.type === 'polar';
         const prevCoordSys = this._coordSys;
@@ -410,7 +432,7 @@ class LineView extends ChartView {
         const valueOrigin = areaStyleModel.get('origin');
         const dataCoordInfo = prepareDataCoordInfo(coordSys, data, valueOrigin);
 
-        let stackedOnPoints = getStackedOnPoints(coordSys, data, dataCoordInfo);
+        let stackedOnPoints = isAreaChart && getStackedOnPoints(coordSys, data, dataCoordInfo);
 
         const showSymbol = seriesModel.get('showSymbol');
 
@@ -458,13 +480,19 @@ class LineView extends ChartView {
         ) {
             showSymbol && symbolDraw.updateData(data, {
                 isIgnore: isIgnoreFunc,
-                clipShape: clipShapeForSymbol
+                clipShape: clipShapeForSymbol,
+                getSymbolPoint(idx) {
+                    return [points[idx * 2], points[idx * 2 + 1]];
+                }
             });
 
             if (step) {
                 // TODO If stacked series is not step
                 points = turnPointsIntoStep(points, coordSys, step);
-                stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+
+                if (stackedOnPoints) {
+                    stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+                }
             }
 
             polyline = this._newPolyline(points);
@@ -495,7 +523,10 @@ class LineView extends ChartView {
             // because points are not changed
             showSymbol && symbolDraw.updateData(data, {
                 isIgnore: isIgnoreFunc,
-                clipShape: clipShapeForSymbol
+                clipShape: clipShapeForSymbol,
+                getSymbolPoint(idx) {
+                    return [points[idx * 2], points[idx * 2 + 1]];
+                }
             });
 
             // Stop symbol animation and sync with line points
@@ -519,7 +550,9 @@ class LineView extends ChartView {
                     if (step) {
                         // TODO If stacked series is not step
                         points = turnPointsIntoStep(points, coordSys, step);
-                        stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+                        if (stackedOnPoints) {
+                            stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+                        }
                     }
 
                     polyline.setShape({
@@ -561,10 +594,12 @@ class LineView extends ChartView {
         enableHoverEmphasis(polyline, focus, blurScope);
 
         const smooth = getSmooth(seriesModel.get('smooth'));
+        const smoothMonotone = seriesModel.get('smoothMonotone');
+        const connectNulls = seriesModel.get('connectNulls');
         polyline.setShape({
-            smooth: smooth,
-            smoothMonotone: seriesModel.get('smoothMonotone'),
-            connectNulls: seriesModel.get('connectNulls')
+            smooth,
+            smoothMonotone,
+            connectNulls
         });
 
         if (polygon) {
@@ -585,10 +620,10 @@ class LineView extends ChartView {
             }
 
             polygon.setShape({
-                smooth: smooth,
-                stackedOnSmooth: stackedOnSmooth,
-                smoothMonotone: seriesModel.get('smoothMonotone'),
-                connectNulls: seriesModel.get('connectNulls')
+                smooth,
+                stackedOnSmooth,
+                smoothMonotone,
+                connectNulls
             });
 
             setStatesStylesFromModel(polygon, seriesModel, 'areaStyle');
@@ -629,25 +664,27 @@ class LineView extends ChartView {
         this._changePolyState('emphasis');
 
         if (!(dataIndex instanceof Array) && dataIndex != null && dataIndex >= 0) {
+            const points = data.getLayout('points');
             let symbol = data.getItemGraphicEl(dataIndex) as SymbolClz;
             if (!symbol) {
                 // Create a temporary symbol if it is not exists
-                const pt = data.getItemLayout(dataIndex) as number[];
-                if (!pt) {
+                const x = points[dataIndex * 2];
+                const y = points[dataIndex * 2 + 1];
+                if (isNaN(x) || isNaN(y)) {
                     // Null data
                     return;
                 }
                 // fix #11360: should't draw symbol outside clipShapeForSymbol
-                if (this._clipShapeForSymbol && !this._clipShapeForSymbol.contain(pt[0], pt[1])) {
+                if (this._clipShapeForSymbol && !this._clipShapeForSymbol.contain(x, y)) {
                     return;
                 }
                 symbol = new SymbolClz(data, dataIndex);
-                symbol.setPosition(pt);
+                symbol.x = x;
+                symbol.y = y;
                 symbol.setZ(
                     seriesModel.get('zlevel'),
                     seriesModel.get('z')
                 );
-                symbol.ignore = isNaN(pt[0]) || isNaN(pt[1]);
                 (symbol as SymbolExtended).__temp = true;
                 data.setItemGraphicEl(dataIndex, symbol);
 
@@ -705,7 +742,7 @@ class LineView extends ChartView {
         polygon && setStatesFlag(polygon, toState);
     }
 
-    _newPolyline(points: number[][]) {
+    _newPolyline(points: ArrayLike<number>) {
         let polyline = this._polyline;
         // Remove previous created polyline
         if (polyline) {
@@ -714,7 +751,7 @@ class LineView extends ChartView {
 
         polyline = new ECPolyline({
             shape: {
-                points: points
+                points
             },
             segmentIgnoreThreshold: 2,
             z2: 10
@@ -727,7 +764,7 @@ class LineView extends ChartView {
         return polyline;
     }
 
-    _newPolygon(points: number[][], stackedOnPoints: number[][]) {
+    _newPolygon(points: ArrayLike<number>, stackedOnPoints: ArrayLike<number>) {
         let polygon = this._polygon;
         // Remove previous created polygon
         if (polygon) {
@@ -736,7 +773,7 @@ class LineView extends ChartView {
 
         polygon = new ECPolygon({
             shape: {
-                points: points,
+                points,
                 stackedOnPoints: stackedOnPoints
             },
             segmentIgnoreThreshold: 2
@@ -754,7 +791,7 @@ class LineView extends ChartView {
     // FIXME Two value axis
     _updateAnimation(
         data: List,
-        stackedOnPoints: number[][],
+        stackedOnPoints: ArrayLike<number>,
         coordSys: Cartesian2D | Polar,
         api: ExtensionAPI,
         step: LineSeriesOption['step'],
@@ -855,9 +892,12 @@ class LineView extends ChartView {
 
         if (polyline.animators && polyline.animators.length) {
             polyline.animators[0].during(function () {
+                const points = (polyline.shape as any).__points;
                 for (let i = 0; i < updatedDataInfo.length; i++) {
                     const el = updatedDataInfo[i].el;
-                    el.setPosition((polyline.shape as any).__points[updatedDataInfo[i].ptIdx]);
+                    const offset = updatedDataInfo[i].ptIdx * 2;
+                    el.x = points[offset];
+                    el.y = points[offset + 1];
                     el.markRedraw();
                 }
             });
