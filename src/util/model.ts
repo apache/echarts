@@ -862,24 +862,25 @@ export const MULTIPLE_REFERRING: QueryReferringOpt = { useDefault: false, enable
 
 export type QueryReferringOpt = {
     // Whether to use the first componet as the default if none of index/id/name are specified.
-    useDefault: boolean;
+    useDefault?: boolean;
     // Whether to enable `'all'` on index option.
-    enableAll: boolean;
+    enableAll?: boolean;
     // Whether to enable `'none'`/`false` on index option.
-    enableNone: boolean;
+    enableNone?: boolean;
 };
 
 export function queryReferringComponents(
     ecModel: GlobalModel,
     mainType: ComponentMainType,
     userOption: QueryReferringUserOption,
-    opt: QueryReferringOpt
+    opt?: QueryReferringOpt
 ): {
     // Always be array rather than null/undefined, which is convenient to use.
     models: ComponentModel[];
     // Whether there is indexOption/id/name specified
     specified: boolean;
 } {
+    opt = opt || SINGLE_REFERRING as QueryReferringOpt;
     let indexOption = userOption.index;
     let idOption = userOption.id;
     let nameOption = userOption.name;

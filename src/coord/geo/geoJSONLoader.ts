@@ -27,7 +27,7 @@ import fixTextCoord from './fix/textCoord';
 import fixGeoCoord from './fix/geoCoord';
 import fixDiaoyuIsland from './fix/diaoyuIsland';
 import { GeoJSONMapRecord } from './mapDataStorage';
-import { BoundingRect } from 'zrender/src/export';
+import BoundingRect from 'zrender/src/core/BoundingRect';
 import Region from './Region';
 
 type MapRecordInner = {
