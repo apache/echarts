@@ -1694,15 +1694,15 @@ class List<
 
     /**
      * Large data down sampling using largest-triangle-three-buckets
-     * copied from https://github.com/pingec/downsample-lttb with some modifications
+     * https://github.com/pingec/downsample-lttb
      * @param {string} baseDimension
      * @param {string} valueDimension
      * @param {number} threshold target counts
      */
     lttbDownSample(
-            baseDimension: DimensionName,
-            valueDimension: DimensionName,
-            threshold: number
+        baseDimension: DimensionName,
+        valueDimension: DimensionName,
+        threshold: number
     ) {
         const list = cloneListForMapAndSample(this, [baseDimension, valueDimension]);
         const targetStorage = list._storage;
@@ -1721,38 +1721,31 @@ class List<
                 valueDimStore[originalChunkIndex][originalChunkOffset]
             ];
         };
-        if (threshold >= len || threshold === 0) {
-            return list; // Nothing to do
-        }
 
-        // let sampled = [],
         let sampledIndex = 0;
 
-        // Bucket size. Leave room for start and end data points
         const every = (len - 2) / (threshold - 2);
 
-        let a = 0;  // Initially a is the first point in the triangle
-            // maxAreaPoint,
-            let maxArea;
-            let area;
-            let nextA;
+        let a = 0;
+        let maxArea;
+        let area;
+        let nextA;
 
         newIndices[sampledIndex++] = a;
-        // sampled[ sampledIndex++ ] = getPair(0); // Always add the first point
         for (let i = 0; i < threshold - 2; i++) {
 
-            // Calculate point average for next bucket (containing c)
             let avgX = 0;
-                let avgY = 0;
-                let avgRangeStart = mathFloor((i + 1) * every) + 1;
-                let avgRangeEnd = mathFloor((i + 2) * every) + 1;
+            let avgY = 0;
+            let avgRangeStart = mathFloor((i + 1) * every) + 1;
+            let avgRangeEnd = mathFloor((i + 2) * every) + 1;
+
             avgRangeEnd = avgRangeEnd < len ? avgRangeEnd : len;
 
             const avgRangeLength = avgRangeEnd - avgRangeStart;
 
             for (; avgRangeStart < avgRangeEnd; avgRangeStart++) {
-            avgX += getPair(avgRangeStart)[0] * 1; // * 1 enforces Number (value may be Date)
-            avgY += getPair(avgRangeStart)[1] * 1;
+                avgX += getPair(avgRangeStart)[0] * 1; // * 1 enforces Number (value may be Date)
+                avgY += getPair(avgRangeStart)[1] * 1;
             }
             avgX /= avgRangeLength;
             avgY /= avgRangeLength;
@@ -1774,19 +1767,16 @@ class List<
                         ) * 0.5;
                 if (area > maxArea) {
                     maxArea = area;
-                    // maxAreaPoint = getPair(rangeOffs);
                     nextA = rangeOffs; // Next a is this b
                 }
             }
 
             newIndices[sampledIndex++] = nextA;
-            // sampled[ sampledIndex++ ] = maxAreaPoint; // Pick this point from the bucket
 
             a = nextA; // This a is the next a (chosen b)
         }
 
         newIndices[sampledIndex++] = len - 1;
-        // sampled[ sampledIndex++ ] = getPair(len - 1); // Always add last
         list._count = sampledIndex;
         list._indices = newIndices;
 

@@ -1,0 +1,182 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>ECharts Demo</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+	</head>
+	<body>
+		<h2 id="wait">Loading lib....</h2>
+
+		<div id="container" style="height: 600px; width: 100%;"></div>
+
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+		<script>
+            require([
+                'echarts'
+                // 'echarts/chart/sankey',
+                // 'echarts/component/tooltip'
+                ], function (echarts) {
+                    function round2(val) {
+				return Math.round(val * 100) / 100;
+			}
+
+			function round3(val) {
+				return Math.round(val * 1000) / 1000;
+			}
+
+			function prepData(packed) {
+				// console.time('prep');
+
+				// epoch,idl,recv,send,read,writ,used,free
+
+				const numFields = packed[0];
+				packed = packed.slice(numFields + 1);
+
+				var cpu = Array(packed.length/numFields);
+
+				for (let i = 0, j = 0; i < packed.length; i += numFields, j++) {
+					let date = packed[i] * 60 * 1000;
+					cpu[j] = [date, round3(100 - packed[i+1])];
+				}
+
+				// console.timeEnd('prep');
+
+				return [cpu];
+			}
+
+			function makeChart(data) {
+				console.time('chart');
+
+				var dom = document.getElementById("container");
+				var myChart = echarts.init(dom);
+
+				let opts = {
+					grid: {
+						left: 40,
+						top: 0,
+						right: 0,
+						bottom: 30,
+					},
+					xAxis: {
+						type: 'time',
+						splitLine: {
+							show: false
+						},
+						data: data[0],
+					},
+					yAxis: {
+						type: 'value'
+                    },
+                    legend: {
+                    },
+					series: [
+                        {
+							name: 'none',
+							type: 'line',
+							showSymbol: false,
+							hoverAnimation: false,
+                            data: data[0],
+                            lineStyle: {
+                                normal: {
+                                    opacity: 0.5,
+                                    width: 1
+                                }
+                            }
+						},
+						{
+							name: 'lttb',
+							type: 'line',
+							showSymbol: false,
+							hoverAnimation: false,
+                            data: data[0],
+                            sampling: 'lttb',
+                            lineStyle: {
+                                normal: {
+                                    opacity: 0.5,
+                                    width: 1
+                                }
+                            }
+                        },
+						{
+							name: 'average',
+							type: 'line',
+							showSymbol: false,
+							hoverAnimation: false,
+                            data: data[0],
+                            sampling: 'average',
+                            lineStyle: {
+                                normal: {
+                                    opacity: 0.5,
+                                    width: 1
+                                }
+                            }
+                        },
+						{
+							name: 'max',
+							type: 'line',
+							showSymbol: false,
+							hoverAnimation: false,
+                            data: data[0],
+                            sampling: 'max',
+                            lineStyle: {
+                                normal: {
+                                    opacity: 0.5,
+                                    width: 1
+                                }
+                            }
+                        },
+						{
+							name: 'min',
+							type: 'line',
+							showSymbol: false,
+							hoverAnimation: false,
+                            data: data[0],
+                            sampling: 'min',
+                            lineStyle: {
+                                normal: {
+                                    opacity: 0.5,
+                                    width: 1
+                                }
+                            }
+                        },
+					]
+				};
+
+				myChart.setOption(opts, true);
+
+				wait.textContent = "Done!";
+				console.timeEnd('chart');
+			}
+
+			let wait = document.getElementById("wait");
+			wait.textContent = "Fetching data.json (2.07MB)....";
+			fetch("./data/large-data.json").then(r => r.json()).then(packed => {
+				wait.textContent = "Rendering...";
+				let data = prepData(packed);
+				setTimeout(() => makeChart(data), 0);
+			});
+      });
+		</script>
+	</body>
+</html>
