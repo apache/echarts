@@ -57,7 +57,7 @@ export interface LineDataItemOption extends SymbolOptionMixin,
     value?: LineDataValue
 }
 
-interface LineEndLabelOption extends LabelOption {
+export interface LineEndLabelOption extends LabelOption {
     valueAnimation: boolean
 }
 
@@ -148,7 +148,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         endLabel: {
             show: false,
-            valueAnimation: false,
+            valueAnimation: true,
             distance: 8
         },
 

@@ -1,3 +1,4 @@
+import { LineEndLabelOption } from './LineSeries';
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -38,7 +39,7 @@ import type ExtensionAPI from '../../ExtensionAPI';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import Polar from '../../coord/polar/Polar';
 import type List from '../../data/List';
-import type {Payload, Dictionary, ColorString, ECElement, DisplayState} from '../../util/types';
+import type {Payload, Dictionary, ColorString, ECElement, DisplayState, LabelOption, ParsedValue} from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
@@ -47,6 +48,9 @@ import { getECData } from '../../util/ecData';
 import Displayable from 'zrender/src/graphic/Displayable';
 import {makeInner} from '../../util/model';
 import Model from '../../model/Model';
+import {getLabelText} from '../../label/labelStyle';
+import {getDefaultLabel} from '../helper/labelHelper';
+import SeriesModel from '../../model/Series';
 
 const inner = makeInner<{
     lastSplitId: number,
@@ -342,10 +346,11 @@ function createLineClipPath(
     if (coordSys.type === 'cartesian2d') {
         const endLabelModel = seriesModel.getModel('endLabel');
         let showDuringLabel = endLabelModel.get('show');
+        const valueAnimation = endLabelModel.get('valueAnimation');
 
         const during = showDuringLabel
             ? (percent: number, clipRect: graphic.Rect) => {
-                lineView._endLabelOnDuring(percent, clipRect, lineView._data);
+                lineView._endLabelOnDuring(percent, clipRect, lineView._data, valueAnimation, endLabelModel);
             }
             : null;
 
@@ -379,21 +384,22 @@ function createLineClipPath(
 
 }
 
-function getDataItemDetail(coordSys: Cartesian2D, data: List, idx: number) {
+function getDataItemDetail(
+    coordSys: Cartesian2D,
+    seriesModel: SeriesModel,
+    data: List,
+    idx: number
+) {
     const xDim = data.mapDimension('x');
     const yDim = data.mapDimension('y');
     const x = data.get(xDim, idx);
     const y = data.get(yDim, idx);
     const point = coordSys.dataToPoint([x, y]);
 
-    const baseAxis = coordSys.getBaseAxis();
-    const isHorizontal = baseAxis.isHorizontal();
-    const value = isHorizontal ? y : x;
-
     return {
         x: point[0],
         y: point[1],
-        value: typeof value === 'number' ? value : parseFloat(value)
+        value: seriesModel.getRawValue(idx) as ParsedValue | ParsedValue[]
     };
 }
 
@@ -1012,14 +1018,19 @@ class LineView extends ChartView {
                 // Find last non-NaN data to display data
                 let lastFound = false;
                 for (let idx = data.count() - 1; idx >= 0; --idx) {
-                    const info = getDataItemDetail(coordSys, data, idx);
-                    if (!isNaN(info.value)) {
-                        const text = numberUtil.round(info.value, precision) + '';
+                    const info = getDataItemDetail(coordSys, seriesModel, data, idx);
+                    if (info.value != null) {
+                        const labelText = getLabelText({
+                            labelDataIndex: idx,
+                            labelFetcher: seriesModel,
+                            defaultText: getDefaultLabel(seriesModel.getData(), idx, info.value)
+                        }, {normal: endLabelModel}, info.value);
+
                         setEndLabelStyle(
                             this._endLabel,
                             info.x,
                             info.y,
-                            text,
+                            labelText.normal,
                             coordSys,
                             seriesModel
                         );
@@ -1044,7 +1055,9 @@ class LineView extends ChartView {
     _endLabelOnDuring(
         percent: number,
         clipRect: graphic.Rect,
-        data: List
+        data: List,
+        valueAnimation: boolean,
+        endLabelModel: Model<LabelOption>
     ) {
         if (this._endLabel) {
             const host = inner(this._endLabel);
@@ -1052,7 +1065,7 @@ class LineView extends ChartView {
                 return;
             }
 
-            const seriesModel = data.hostModel;
+            const seriesModel = data.hostModel as LineSeriesModel;
             const connectNulls = seriesModel.get('connectNulls');
 
             const coordSys = this._coordSys as Cartesian2D;
@@ -1063,8 +1076,8 @@ class LineView extends ChartView {
             let splitFound = false;
             let lx: number = null;
             let ly: number = null;
-            let lValue: number = null;
-            const that = this;
+            let lValue: ParsedValue | ParsedValue[] = null;
+            const endLabel = this._endLabel;
 
             const cx = clipRect.shape.x;
             const cy = clipRect.shape.y;
@@ -1073,8 +1086,8 @@ class LineView extends ChartView {
 
             let lastNonNullId: number = null;
             data.each(function (idx) {
-                const detail = getDataItemDetail(coordSys, data, idx);
-                if (!isNaN(detail.value)) {
+                const detail = getDataItemDetail(coordSys, seriesModel, data, idx);
+                if (detail.value != null) {
                     lastNonNullId = idx;
                 }
             });
@@ -1084,7 +1097,7 @@ class LineView extends ChartView {
                     return;
                 }
 
-                const rightItem = getDataItemDetail(coordSys, data, idx);
+                const rightItem = getDataItemDetail(coordSys, seriesModel, data, idx);
                 const rx = rightItem.x;
                 const ry = rightItem.y;
                 const rValue = rightItem.value;
@@ -1094,8 +1107,8 @@ class LineView extends ChartView {
                     : (isBaseInversed ? cy2 : cy);
 
                 // Find the split point on the two sides of current clipRect
-                const valueNotNull = !isNaN(lValue)
-                    && (!connectNulls || !isNaN(rValue));
+                const valueNotNull = lValue != null
+                    && (!connectNulls || rValue != null);
                 const inClipRange = isHorizontal
                     ? valueNotNull && lx != null
                         && (isBaseInversed
@@ -1111,15 +1124,6 @@ class LineView extends ChartView {
                 let ratio = isHorizontal
                     ? (rx === lx ? 0 : (clipPos - lx) / (rx - lx))
                     : (ry === ly ? 0 : (clipPos - ly) / (ry - ly));
-
-                const splitValue = ratio * (rValue - lValue) + lValue;
-                const splitStr = numberUtil.round(splitValue, host.precision) + '';
-                const textX = isHorizontal
-                    ? clipPos
-                    : (ratio * (rx - lx) + lx);
-                const textY = isHorizontal
-                    ? (ratio * (ry - ly) + ly)
-                    : clipPos;
 
                 const isAnimationNotStarted = idx === 0
                     && (isHorizontal
@@ -1138,12 +1142,35 @@ class LineView extends ChartView {
                     );
 
                 if (inClipRange || isAnimationFinished) {
-                    if (connectNulls || !isNaN(lValue) && !isNaN(rValue)) {
+                    if (connectNulls || lValue != null && rValue != null) {
+                        const valueRatio = valueAnimation ? ratio : 0;
+                        const interpolated = isAnimationFinished
+                            ? rValue
+                            : (lValue == null
+                                ? null
+                                : graphic.interpolateRawValues(
+                                    data, endLabelModel, lValue, rValue, valueRatio
+                                )
+                            );
+
+                        const labelText = getLabelText({
+                            labelDataIndex: idx,
+                            labelFetcher: seriesModel,
+                            defaultText: getDefaultLabel(seriesModel.getData(), idx, interpolated)
+                        }, {normal: endLabelModel}, interpolated);
+
+                        const textX = isHorizontal
+                            ? clipPos
+                            : (ratio * (rx - lx) + lx);
+                        const textY = isHorizontal
+                            ? (ratio * (ry - ly) + ly)
+                            : clipPos;
+
                         setEndLabelStyle(
-                            that._endLabel,
+                            endLabel,
                             textX,
                             textY,
-                            splitStr,
+                            labelText.normal,
                             coordSys,
                             seriesModel
                         );
@@ -1151,7 +1178,7 @@ class LineView extends ChartView {
 
                     splitFound = true;
                 }
-                else if (!connectNulls || !isNaN(rValue)) {
+                else if (!connectNulls || rValue != null) {
                     lx = rx;
                     ly = ry;
                     lValue = rValue;

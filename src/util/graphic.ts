@@ -82,8 +82,8 @@ type ExtendShapeOpt = Parameters<typeof Path.extend>[0];
 type ExtendShapeReturn = ReturnType<typeof Path.extend>;
 
 const innerLabel = makeInner<{
-    startValue: number | (string | number)[],
-    nextValue: number | (string | number)[]
+    startValue: ParsedValue | ParsedValue[],
+    nextValue: ParsedValue | ParsedValue[]
 }, ZRText>();
 
 /**
@@ -551,36 +551,17 @@ function animateOrSetLabel<Props extends PathProps>(
 ) {
     const valueAnimationEnabled = labelModel && labelModel.get('valueAnimation');
     if (valueAnimationEnabled) {
-        const precisionOption = labelModel.get('precision');
-        const precision: number = !precisionOption || precisionOption === 'auto'
-            ? 0
-            : precisionOption;
-
-        let interpolateValues: (number | string)[] | (number | string);
-        const rawValues = seriesModel.getRawValue(dataIndex);
-        let isRawValueNumber = false;
-        if (typeof rawValues === 'number') {
-            isRawValueNumber = true;
-            interpolateValues = rawValues;
-        }
-        else {
-            interpolateValues = [];
-            for (let i = 0; i < (rawValues as []).length; ++i) {
-                const info = data.getDimensionInfo(i);
-                if (info.type !== 'ordinal') {
-                    interpolateValues.push((rawValues as [])[i]);
-                }
-            }
-        }
-
         const text = el.getTextContent();
         const host = text && innerLabel(text);
         host && (host.startValue = host.nextValue);
 
+        const sourceValue = host.startValue;
+        const targetValue = seriesModel.getRawValue(dataIndex) as ParsedValue[] | ParsedValue;
+
         const duration = animatableModel.get('animationDuration');
         if (!duration && host) {
             // No animation for the first frame
-            host.nextValue = interpolateValues;
+            host.nextValue = interpolateRawValues(data, labelModel, 0, targetValue, 1);
         }
 
         const during = (percent: number) => {
@@ -589,42 +570,7 @@ function animateOrSetLabel<Props extends PathProps>(
                 return;
             }
 
-            let interpolated;
-            if (isRawValueNumber) {
-                const value = interpolateNumber(
-                    host.startValue as number || 0,
-                    interpolateValues as number,
-                    percent
-                );
-                interpolated = numberUtil.round(value, precision);
-            }
-            else {
-                interpolated = [];
-                for (let i = 0; i < (rawValues as []).length; ++i) {
-                    const info = data.getDimensionInfo(i);
-                    // Don't interpolate ordinal dims
-                    if (info.type === 'ordinal') {
-                        interpolated[i] = (rawValues as [])[i];
-                    }
-                    else {
-                        /**
-                         * startValues may be undefined if no data in last setOption but
-                         * have data in this setOption. Use the data in this setOption
-                         * as interpolated value.
-                         */
-                        const startValues = host.startValue as number[];
-                        const value = startValues == null
-                            ? (rawValues as [])[i]
-                            : interpolateNumber(
-                                startValues && startValues[i] ? startValues[i] : 0,
-                                (interpolateValues as number[])[i],
-                                percent
-                            );
-                        interpolated[i] = numberUtil.round(value), precision;
-                    }
-                }
-            }
-            host.nextValue = interpolated;
+            const interpolated = interpolateRawValues(data, labelModel, sourceValue, targetValue, percent);
 
             const labelText = getLabelText({
                 labelDataIndex: dataIndex,
@@ -639,6 +585,65 @@ function animateOrSetLabel<Props extends PathProps>(
 
         const props: ElementProps = {};
         animateOrSetProps(animationType, el, props, animatableModel, dataIndex, null, during);
+    }
+}
+
+/**
+ * Interpolate raw values of a series with percent
+ *
+ * @param data         data
+ * @param labelModel   label model of the text element
+ * @param sourceValue  start value
+ * @param targetValue  end value
+ * @param percent      0~1 percentage; 0 uses start value while 1 uses end value
+ * @return             interpolated values
+ */
+export function interpolateRawValues<Props extends PathProps>(
+    data: List,
+    labelModel: Model<LabelOption>,
+    sourceValue: ParsedValue[] | ParsedValue,
+    targetValue: ParsedValue[] | ParsedValue,
+    percent: number
+): (string | number)[] | string | number {
+    const precisionOption = labelModel.get('precision');
+    const precision: number = !precisionOption || precisionOption === 'auto'
+        ? 0
+        : precisionOption;
+
+    if (typeof targetValue === 'number') {
+        const value = interpolateNumber(
+            sourceValue as number || 0,
+            targetValue as number,
+            percent
+        );
+        return numberUtil.round(value, precision);
+    }
+    else if (typeof targetValue === 'string') {
+        return percent < 1 ? sourceValue : targetValue;
+    }
+    else {
+        const interpolated = [];
+        const leftArr = sourceValue as (string | number)[];
+        const rightArr = targetValue as (string | number[]);
+        const length = Math.max(leftArr.length, rightArr.length);
+        for (let i = 0; i < length; ++i) {
+            const info = data.getDimensionInfo(i);
+            // Don't interpolate ordinal dims
+            if (info.type === 'ordinal') {
+                interpolated[i] = (percent < 1 ? leftArr : rightArr)[i] as number;
+            }
+            else {
+                const value = leftArr == null
+                    ? (targetValue as [])[i]
+                    : interpolateNumber(
+                        leftArr && leftArr[i] ? leftArr[i] as number : 0,
+                        rightArr[i] as number,
+                        percent
+                    );
+                interpolated[i] = numberUtil.round(value, precision);
+            }
+        }
+        return interpolated;
     }
 }
 
