@@ -948,6 +948,10 @@ export interface LineLabelOption extends Omit<LabelOption, 'distance' | 'positio
 
 export interface LabelLineOption {
     show?: boolean
+    /**
+     * If displayed above other elements
+     */
+    showAbove?: boolean
     length?: number
     length2?: number
     smooth?: boolean | number
