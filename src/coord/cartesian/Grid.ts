@@ -49,6 +49,7 @@ import { ScaleDataValue } from '../../util/types';
 import List from '../../data/List';
 import OrdinalScale from '../../scale/Ordinal';
 import { isCartesian2DSeries, findAxisModels } from './cartesianAxisHelper';
+import { round } from '../../util/number';
 
 
 type Cartesian2DDimensionName = 'x' | 'y';
@@ -120,14 +121,17 @@ class Grid implements CoordinateSystemMaster {
 
             const extent = axis.scale.getExtent();
             const interval = (axis.scale as IntervalScale).getInterval();
-            if (((extent[1] - extent[0]) % interval) === 0) {
+            const splitNum = (extent[1] - extent[0]) / interval;
+
+            if ((Math.abs(Math.round(splitNum) - splitNum)) < 1e-8) {
                 extent[1] = extent[1] + (maxSplitNumber - splitNumber[index]) * interval;
                 niceScaleExtent(axis.scale, axis.model, extent, maxSplitNumber);
             }
             else {
+                const extentRound = round(extent[1] - extent[0]);
                 (axis.scale as IntervalScale).niceTicks(
                     maxSplitNumber + 1, null, null,
-                    ((extent[1] - extent[0]) - ((extent[1] - extent[0]) % maxSplitNumber)) / maxSplitNumber
+                    (extentRound - (extentRound % maxSplitNumber)) / maxSplitNumber
                 );
             }
             const finalScaleExtent = axis.scale.getExtent();
