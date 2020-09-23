@@ -286,12 +286,12 @@ const DATA_MIN_MAX_ATTR = { min: '_dataMin', max: '_dataMax' } as const;
  * Scale extent info probably be required multiple times during a workflow.
  * For example:
  * (1) `dataZoom` depends it to get the axis extent in "100%" state.
- * (2) `processor/extentCalculator` depends it to make sure whethe axis extent is specified.
+ * (2) `processor/extentCalculator` depends it to make sure whether axis extent is specified.
  * (3) `coordSys.update` use it to finally decide the scale extent.
- * But the callback of `min`/`max` should not be called multiple time.
- * The code should not be duplicated either.
- * So we cache the result in the scale instance, which will be recreated in the begining
- * of the workflow.
+ * But the callback of `min`/`max` should not be called multiple times.
+ * The code below should not be implemented repeatedly either.
+ * So we cache the result in the scale instance, which will be recreated at the begining
+ * of the workflow (because `scale` instance will be recreated each round of the workflow).
  */
 export function ensureScaleRawExtentInfo(
     scale: Scale,

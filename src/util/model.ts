@@ -27,7 +27,9 @@ import {
     assert,
     isString,
     indexOf,
-    isStringSafe
+    isStringSafe,
+    hasOwn,
+    defaults
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import GlobalModel from '../model/Global';
@@ -750,6 +752,7 @@ let innerUniqueIndex = getRandomIdBase();
 export type ModelFinderIndexQuery = number | number[] | 'all' | 'none' | false;
 export type ModelFinderIdQuery = OptionId | OptionId[];
 export type ModelFinderNameQuery = OptionId | OptionId[];
+// If string, like 'series', means { seriesIndex: 0 }.
 export type ModelFinder = string | ModelFinderObject;
 export type ModelFinderObject = {
     seriesIndex?: ModelFinderIndexQuery, seriesId?: ModelFinderIdQuery, seriesName?: ModelFinderNameQuery
@@ -793,7 +796,13 @@ export type ParsedModelFinder = ParsedModelFinderKnown & {
 export function parseFinder(
     ecModel: GlobalModel,
     finderInput: ModelFinder,
-    opt?: {defaultMainType?: ComponentMainType, includeMainTypes?: ComponentMainType[]}
+    opt?: {
+        includeMainTypes?: ComponentMainType[];
+        // The `mainType` listed will set `useDefault: true`.
+        useDefaultMainType?: ComponentMainType[];
+        enableAll?: boolean;
+        enableNone?: boolean;
+    }
 ): ParsedModelFinder {
     let finder: ModelFinderObject;
     if (isString(finderInput)) {
@@ -805,7 +814,6 @@ export function parseFinder(
         finder = finderInput;
     }
 
-    const defaultMainType = opt ? opt.defaultMainType : null;
     const queryOptionMap = createHashMap<QueryReferringUserOption, ComponentMainType>();
     const result = {} as ParsedModelFinder;
 
@@ -823,7 +831,6 @@ export function parseFinder(
         if (
             !mainType
             || !queryType
-            || (mainType !== defaultMainType && value == null)
             || (opt && opt.includeMainTypes && indexOf(opt.includeMainTypes, mainType) < 0)
         ) {
             return;
@@ -833,15 +840,20 @@ export function parseFinder(
         queryOption[queryType] = value as any;
     });
 
+    const useDefaultMainType = opt && opt.useDefaultMainType || [];
+    each(useDefaultMainType, function (mainType) {
+        !queryOptionMap.get(mainType) && queryOptionMap.set(mainType, {});
+    });
+
     queryOptionMap.each(function (queryOption, mainType) {
         const queryResult = queryReferringComponents(
             ecModel,
             mainType,
             queryOption,
             {
-                useDefault: mainType === defaultMainType,
-                enableAll: true,
-                enableNone: true
+                useDefault: indexOf(useDefaultMainType, mainType) >= 0,
+                enableAll: (opt && opt.enableAll != null) ? opt.enableAll : true,
+                enableNone: (opt && opt.enableNone != null) ? opt.enableNone : true
             }
         );
         result[mainType + 'Models'] = queryResult.models;

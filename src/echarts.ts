@@ -88,14 +88,15 @@ import {
     ComponentMainType,
     ComponentSubType,
     ColorString,
-    SelectChangedPayload
+    SelectChangedPayload,
+    DimensionLoose
 } from './util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import { seriesSymbolTask, dataSymbolTask } from './visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from './visual/helper';
 import LabelManager from './label/LabelManager';
-import { deprecateLog } from './util/log';
+import { deprecateLog, throwError } from './util/log';
 import { handleLegacySelectEvents } from './legacy/dataSelectAction';
 
 // At least canvas renderer.
@@ -185,8 +186,18 @@ interface SetOptionOpts {
     silent?: boolean;
     // Rule: only `id` mapped will be merged,
     // other components of the certain `mainType` will be removed.
-    replaceMerge?: GlobalModelSetOptionOpts['replaceMerge']
+    replaceMerge?: GlobalModelSetOptionOpts['replaceMerge'];
+    transition?: SetOptionTransitionOptItem | SetOptionTransitionOptItem[];
 };
+
+interface SetOptionTransitionOptItem {
+    from: SetOptionTransitionOptFinder | DimensionLoose;
+    to: SetOptionTransitionOptFinder | DimensionLoose;
+}
+interface SetOptionTransitionOptFinder extends modelUtil.ModelFinderObject {
+    dimension: DimensionLoose;
+}
+
 
 type EventMethodName = 'on' | 'off';
 function createRegisterEventWithLowercaseECharts(method: EventMethodName) {
@@ -254,6 +265,10 @@ let renderSeries: (
 let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI) => void;
 let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
 let enableConnect: (ecIns: ECharts) => void;
+let setTransitionOpt: (
+    chart: ECharts,
+    transitionOpt: SetOptionTransitionOptItem | SetOptionTransitionOptItem[]
+) => void;
 
 let markStatusToUpdate: (ecIns: ECharts) => void;
 let applyChangedStates: (ecIns: ECharts) => void;
@@ -308,6 +323,7 @@ class ECharts extends Eventful {
     private _loadingFX: LoadingEffect;
 
     private _labelManager: LabelManager;
+
 
     private [OPTION_UPDATED_KEY]: boolean | {silent: boolean};
     private [IN_MAIN_PROCESS_KEY]: boolean;
@@ -502,10 +518,12 @@ class ECharts extends Eventful {
 
         let silent;
         let replaceMerge;
+        let transitionOpt;
         if (isObject(notMerge)) {
             lazyUpdate = notMerge.lazyUpdate;
             silent = notMerge.silent;
             replaceMerge = notMerge.replaceMerge;
+            transitionOpt = notMerge.transition;
             notMerge = notMerge.notMerge;
         }
 
@@ -519,7 +537,9 @@ class ECharts extends Eventful {
             ecModel.init(null, null, null, theme, this._locale, optionManager);
         }
 
-        this._model.setOption(option as ECOption, {replaceMerge: replaceMerge}, optionPreprocessorFuncs);
+        this._model.setOption(option as ECOption, { replaceMerge }, optionPreprocessorFuncs);
+
+        setTransitionOpt(this, transitionOpt);
 
         if (lazyUpdate) {
             this[OPTION_UPDATED_KEY] = {silent: silent};
@@ -852,7 +872,7 @@ class ECharts extends Eventful {
         const ecModel = this._model;
 
         const parsedFinder = modelUtil.parseFinder(ecModel, finder, {
-            defaultMainType: 'series'
+            useDefaultMainType: ['series']
         });
 
         const seriesModel = parsedFinder.seriesModel;
@@ -1926,6 +1946,8 @@ class ECharts extends Eventful {
                     unfinished = true;
                 }
 
+                seriesModel.__transientTransitionOpt = null;
+
                 chartView.group.silent = !!seriesModel.get('silent');
                 // Should not call markRedraw on group, because it will disable zrender
                 // increamental render (alway render from the __startIndex each frame)
@@ -2257,6 +2279,70 @@ class ECharts extends Eventful {
                         updateConnectedChartsStatus(otherCharts, CONNECT_STATUS_UPDATED);
                     }
                 });
+            });
+        };
+
+        setTransitionOpt = function (
+            chart: ECharts,
+            transitionOpt: SetOptionTransitionOptItem | SetOptionTransitionOptItem[]
+        ): void {
+            const ecModel = chart._model;
+            zrUtil.each(modelUtil.normalizeToArray(transitionOpt), transOpt => {
+
+                function normalizeFromTo(fromTo: DimensionLoose | SetOptionTransitionOptFinder) {
+                    return (zrUtil.isString(fromTo) || zrUtil.isNumber(fromTo))
+                        ? { dimension: fromTo }
+                        : fromTo;
+                }
+
+                let errMsg;
+                const fromOpt = normalizeFromTo(transOpt.from);
+                const toOpt = normalizeFromTo(transOpt.to);
+
+                if (fromOpt == null || toOpt == null) {
+                    if (__DEV__) {
+                        errMsg = '`transition.from` and `transition.to` must be specified.';
+                    }
+                    throwError(errMsg);
+                }
+
+                const finderOpt = {
+                    useDefaultMainType: ['series'],
+                    includeMainTypes: ['series'],
+                    enableAll: false,
+                    enableNone: false
+                };
+                const fromResult = modelUtil.parseFinder(ecModel, fromOpt, finderOpt);
+                const toResult = modelUtil.parseFinder(ecModel, toOpt, finderOpt);
+                const toSeries = toResult.seriesModel;
+
+                if (toSeries == null) {
+                    errMsg = '';
+                    if (__DEV__) {
+                        errMsg = '`transition` is only supported on series.';
+                    }
+                }
+                if (fromResult.seriesModel !== toSeries) {
+                    errMsg = '';
+                    if (__DEV__) {
+                        errMsg = '`transition.from` and `transition.to` must be specified to the same series.';
+                    }
+                }
+                if (fromOpt.dimension == null || toOpt.dimension == null) {
+                    errMsg = '';
+                    if (__DEV__) {
+                        errMsg = '`dimension` must be specified in `transition`.';
+                    }
+                }
+                if (errMsg != null) {
+                    throwError(errMsg);
+                }
+
+                // Just a temp solution: mount them on series.
+                toSeries.__transientTransitionOpt = {
+                    from: fromOpt.dimension,
+                    to: toOpt.dimension
+                };
             });
         };
 

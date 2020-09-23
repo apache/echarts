@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src='lib/esl.js'></script>
+        <script src='lib/config.js'></script>
+        <script src='lib/jquery.min.js'></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+        <div id="main0"></div>
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                const COLORS = [
+                    '#37A2DA', '#e06343', '#37a354', '#b55dba', '#b5bd48', '#8378EA', '#96BFFF'
+                ];
+                var COUNT = 50;
+                var CONTENT_COLOR = '#37A2DA';
+
+                function makeRandomValue(range, precision) {
+                    return +(
+                        Math.random() * (range[1] - range[0]) + range[0]
+                    ).toFixed(precision);
+                }
+
+                var M_TAG_LIST = ['MA', 'MB', 'MC', 'MD'];
+                var Z_TAG_LIST = ['ZA', 'ZB', 'ZC', 'ZD', 'ZE'];
+                var ANIMATION_DURATION_UPDATE = 1500;
+
+                function initRawData() {
+                    var DIMENSION = {
+                        DATE: 0,
+                        ATA: 1,
+                        STE: 2,
+                        CTZ: 3,
+                        M_TAG: 4,
+                        Z_TAG: 5,
+                        ID: 6
+                    };
+                    var data = [];
+                    var currDate = +new Date(2015, 2, 1);
+                    var ONE_DAY = 3600 * 24 * 1000;
+                    for (var i = 0; i < COUNT; i++, currDate += ONE_DAY) {
+                        var line = [];
+                        data.push(line);
+                        line[DIMENSION.DATE] = currDate;
+                        line[DIMENSION.ATA] = makeRandomValue([10, 40], 0);
+                        line[DIMENSION.STE] = makeRandomValue([0.01, 0.99], 2);
+                        line[DIMENSION.CTZ] = makeRandomValue([1, 10], 1);
+                        line[DIMENSION.M_TAG] = M_TAG_LIST[makeRandomValue([0, M_TAG_LIST.length - 1], 0)];
+                        line[DIMENSION.Z_TAG] = Z_TAG_LIST[makeRandomValue([0, Z_TAG_LIST.length - 1], 0)];
+                        line[DIMENSION.ID] = 'P' + i;
+                    }
+                    return {
+                        DIMENSION: DIMENSION,
+                        data: data
+                    };
+                }
+                function aggregateSum(rawDataWrap, byDimProp, RESULT_DIMENSION) {
+                    var map = {};
+                    var result = [];
+                    var data = rawDataWrap.data;
+
+                    for (var i = 0; i < data.length; i++) {
+                        var line = data[i];
+                        var byVal = line[rawDataWrap.DIMENSION[byDimProp]];
+                        if (!map.hasOwnProperty(byVal)) {
+                            var newLine = [];
+                            map[byVal] = newLine;
+                            result.push(newLine);
+                            newLine[RESULT_DIMENSION.ATA] = 0;
+                            newLine[RESULT_DIMENSION.STE] = 0;
+                            newLine[RESULT_DIMENSION.CTZ] = 0;
+                            newLine[RESULT_DIMENSION[byDimProp]] = byVal;
+                        }
+                        else {
+                            var newLine = map[byVal];
+                            newLine[RESULT_DIMENSION.ATA] += line[rawDataWrap.DIMENSION.ATA];
+                            newLine[RESULT_DIMENSION.STE] += line[rawDataWrap.DIMENSION.STE];
+                            newLine[RESULT_DIMENSION.CTZ] += line[rawDataWrap.DIMENSION.CTZ];
+                        }
+                    }
+
+                    return {
+                        DIMENSION: RESULT_DIMENSION,
+                        data: result,
+                        uniqueKey: 'M_TAG'
+                    };
+                }
+
+                var rawDataWrap = initRawData();
+                // console.log(JSON.stringify(rawDataWrap.data));
+                rawDataWrap.data = [[1425139200000,34,0.13,2,"MD","ZD","P0"],[1425225600000,28,0.71,1.5,"MB","ZD","P1"],[1425312000000,23,0.9,2.8,"MA","ZC","P2"],[1425398400000,21,0.58,6,"MB","ZC","P3"],[1425484800000,14,0.1,1.6,"MC","ZA","P4"],[1425571200000,21,0.6,7.7,"MC","ZA","P5"],[1425657600000,23,0.31,2.6,"MC","ZC","P6"],[1425744000000,34,0.74,2.4,"MD","ZE","P7"],[1425830400000,14,0.59,2.3,"MB","ZD","P8"],[1425916800000,18,0.85,5.1,"MB","ZB","P9"],[1426003200000,36,0.96,1.2,"MC","ZC","P10"],[1426089600000,18,0.28,2.5,"MA","ZC","P11"],[1426176000000,20,0.62,6,"MB","ZD","P12"],[1426262400000,32,0.79,1.7,"MB","ZA","P13"],[1426348800000,17,0.58,4.4,"MD","ZB","P14"],[1426435200000,23,0.77,3,"MB","ZA","P15"],[1426521600000,39,0.87,4.6,"MC","ZA","P16"],[1426608000000,15,0.7,6,"MB","ZC","P17"],[1426694400000,21,0.94,2.7,"MB","ZD","P18"],[1426780800000,28,0.48,4.5,"MC","ZC","P19"],[1426867200000,31,0.49,9.8,"MA","ZC","P20"],[1426953600000,27,0.87,7.7,"MB","ZB","P21"],[1427040000000,27,0.82,5.5,"MC","ZB","P22"],[1427126400000,11,0.53,2.7,"MD","ZC","P23"],[1427212800000,13,0.7,7.6,"MB","ZD","P24"],[1427299200000,39,0.99,4.8,"MB","ZD","P25"],[1427385600000,32,0.91,2.1,"MB","ZE","P26"],[1427472000000,20,0.97,5,"MB","ZA","P27"],[1427558400000,36,0.01,8.9,"MB","ZD","P28"],[1427644800000,22,0.08,9.2,"MB","ZE","P29"],[1427731200000,21,0.36,3.1,"MD","ZC","P30"],[1427817600000,11,0.15,5.8,"MD","ZB","P31"],[1427904000000,39,0.02,1.4,"MC","ZD","P32"],[1427990400000,20,0.86,8.7,"MB","ZD","P33"],[1428076800000,23,0.24,7.2,"MD","ZB","P34"],[1428163200000,12,0.06,2,"MD","ZB","P35"],[1428249600000,36,0.42,8.2,"MA","ZB","P36"],[1428336000000,17,0.48,7.5,"MB","ZC","P37"],[1428422400000,19,0.12,6.6,"MB","ZB","P38"],[1428508800000,39,0.58,3.1,"MC","ZE","P39"],[1428595200000,10,0.18,6.6,"MC","ZD","P40"],[1428681600000,22,0.28,2.1,"MB","ZE","P41"],[1428768000000,27,0.33,1.9,"MC","ZB","P42"],[1428854400000,37,0.46,9.4,"MD","ZE","P43"],[1428940800000,18,0.96,5.5,"MB","ZA","P44"],[1429027200000,11,0.61,8.2,"MD","ZC","P45"],[1429113600000,15,0.88,4.6,"MD","ZA","P46"],[1429200000000,38,0.89,7.2,"MD","ZC","P47"],[1429286400000,20,0.39,5.4,"MB","ZB","P48"],[1429372800000,30,0.71,5.5,"MA","ZA","P49"]];
+                var mTagSumDataWrap = aggregateSum(rawDataWrap, 'M_TAG', {
+                    ATA: 0,
+                    STE: 1,
+                    CTZ: 2,
+                    M_TAG: 3
+                });
+                var zTagSumDataWrap = aggregateSum(rawDataWrap, 'Z_TAG', {
+                    ATA: 0,
+                    STE: 1,
+                    CTZ: 2,
+                    Z_TAG: 3
+                });
+
+
+                function create_Scatter_ATA_STE() {
+                    var option = {
+                        tooltip: {},
+                        grid: {
+                            containLabel: true
+                        },
+                        xAxis: {
+                            name: 'STE'
+                        },
+                        yAxis: {
+                            name: 'ATA'
+                        },
+                        dataZoom: [{
+                            type: 'slider',
+                        }, {
+                            type: 'inside'
+                        }],
+                        series: {
+                            type: 'custom',
+                            coordinateSystem: 'cartesian2d',
+                            animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                            data: rawDataWrap.data,
+                            encode: {
+                                itemName: rawDataWrap.DIMENSION.ID,
+                                x: rawDataWrap.DIMENSION.STE,
+                                y: rawDataWrap.DIMENSION.ATA,
+                                tooltip: [rawDataWrap.DIMENSION.STE, rawDataWrap.DIMENSION.ATA]
+                            },
+                            renderItem: function (params, api) {
+                                var pos = api.coord([
+                                    api.value(rawDataWrap.DIMENSION.STE),
+                                    api.value(rawDataWrap.DIMENSION.ATA)
+                                ]);
+                                return {
+                                    type: 'circle',
+                                    // x: pos[0],
+                                    // y: pos[1],
+                                    morph: true,
+                                    shape: {
+                                        // cx: 0,
+                                        // cy: 0,
+                                        cx: pos[0],
+                                        cy: pos[1],
+                                        r: 10,
+                                        transition: ['cx', 'cy', 'r']
+                                    },
+                                    style: {
+                                        transition: 'lineWidth',
+                                        fill: CONTENT_COLOR,
+                                        stroke: '#555',
+                                        lineWidth: 1
+                                    }
+                                };
+                            }
+                        }
+                    };
+
+                    return {
+                        option: option,
+                        dataWrap: rawDataWrap
+                    };
+                }
+
+                function create_Bar_mSum_ATA(mTagSumDataWrap) {
+                    var option = {
+                        tooltip: {},
+                        grid: {
+                            containLabel: true
+                        },
+                        xAxis: {
+                            type: 'category'
+                        },
+                        yAxis: {
+                        },
+                        dataZoom: [{
+                            type: 'slider',
+                        }, {
+                            type: 'inside'
+                        }],
+                        series: {
+                            type: 'custom',
+                            coordinateSystem: 'cartesian2d',
+                            animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                            data: mTagSumDataWrap.data,
+                            encode: {
+                                x: mTagSumDataWrap.DIMENSION.M_TAG,
+                                y: mTagSumDataWrap.DIMENSION.ATA,
+                                tooltip: [mTagSumDataWrap.DIMENSION.M_TAG, mTagSumDataWrap.DIMENSION.ATA]
+                            },
+                            renderItem: function (params, api) {
+                                var mTagVal = api.value(mTagSumDataWrap.DIMENSION.M_TAG);
+                                var ataVal = api.value(mTagSumDataWrap.DIMENSION.ATA);
+                                var tarPos = api.coord([mTagVal, ataVal]);
+                                var zeroPos = api.coord([mTagVal, 0]);
+                                var size = api.size([mTagVal, ataVal]);
+                                var width = size[0] * 0.4;
+                                return {
+                                    type: 'rect',
+                                    morph: true,
+                                    shape: {
+                                        x: tarPos[0] - width / 2,
+                                        y: tarPos[1],
+                                        height: zeroPos[1] - tarPos[1],
+                                        width: width,
+                                        transition: ['x', 'y', 'width', 'height']
+                                    },
+                                    style: {
+                                        transition: 'lineWidth',
+                                        fill: CONTENT_COLOR,
+                                        stroke: '#555',
+                                        lineWidth: 0
+                                    }
+                                };
+                            }
+                        }
+                    };
+
+                    return {
+                        option: option,
+                        dataWrap: mTagSumDataWrap
+                    };
+                }
+
+                function create_Pie_mSum_ATA(mTagSumDataWrap) {
+                    var totalValue = mTagSumDataWrap.data.reduce(function (val, item) {
+                        return val + item[mTagSumDataWrap.DIMENSION.ATA];
+                    }, 0);
+                    let angles = [];
+                    let currentAngle = -Math.PI / 2;
+                    for (let i = 0; i < mTagSumDataWrap.data.length; i++) {
+                        const angle = mTagSumDataWrap.data[i][mTagSumDataWrap.DIMENSION.ATA] / totalValue * Math.PI * 2;
+                        angles.push([currentAngle, angle + currentAngle]);
+                        currentAngle += angle;
+                    }
+
+                    var option = {
+                        tooltip: {},
+                        series: {
+                            type: 'custom',
+                            coordinateSystem: 'none',
+                            animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                            data: mTagSumDataWrap.data,
+                            encode: {
+                                itemName: mTagSumDataWrap.DIMENSION.M_TAG,
+                                value: mTagSumDataWrap.DIMENSION.ATA,
+                                tooltip: [mTagSumDataWrap.DIMENSION.ATA]
+                            },
+                            renderItem: function (params, api) {
+                                const width = chart.getWidth();
+                                const height = chart.getHeight();
+                                return {
+                                    type: 'sector',
+                                    morph: true,
+                                    shape: {
+                                        cx: width / 2,
+                                        cy: height / 2,
+                                        r: Math.min(width, height) / 3,
+                                        r0: Math.min(width, height) / 5,
+                                        startAngle: angles[params.dataIndex][0],
+                                        endAngle: angles[params.dataIndex][1],
+                                        clockwise: true
+                                    },
+                                    style: {
+                                        fill: CONTENT_COLOR,
+                                        stroke: '#555',
+                                        strokeNoScale: true
+                                    },
+                                };
+                            }
+                        }
+                    };
+
+                    return {
+                        option: option,
+                        dataWrap: mTagSumDataWrap
+                    };
+                }
+
+                function createScatter_zSum_ATA(zTagSumDataWrap) {
+                }
+
+
+                var currOptionName = 'Scatter_ATA_STE';
+                var optionInfoList = {
+                    'Scatter_ATA_STE': create_Scatter_ATA_STE(rawDataWrap),
+                    'Bar_mTagSum_ATA': create_Bar_mSum_ATA(mTagSumDataWrap),
+                    'Pie_mTagSum_ATA': create_Pie_mSum_ATA(mTagSumDataWrap),
+                };
+
+                function next(nextOptionName) {
+                    const lastOptionInfo = optionInfoList[currOptionName];
+                    const nextOptionInfo = optionInfoList[nextOptionName];
+
+                    const commonDimension = findCommonDimension(lastOptionInfo, nextOptionInfo)
+                        || findCommonDimension(nextOptionInfo, lastOptionInfo);
+                    const fromDimension = lastOptionInfo.dataWrap.DIMENSION[commonDimension];
+                    const toDimension = nextOptionInfo.dataWrap.DIMENSION[commonDimension];
+                    const transitionOpt = (fromDimension != null && toDimension != null)
+                        ? { from: fromDimension, to: toDimension } : null;
+
+                    currOptionName = nextOptionName;
+
+                    chart.setOption(nextOptionInfo.option, {
+                        replaceMerge: ['xAxis', 'yAxis'],
+                        transition: transitionOpt
+                    });
+                }
+
+                function findCommonDimension(optionInfoA, optionInfoB) {
+                    var uniqueKey = optionInfoB.dataWrap.uniqueKey;
+                    if (uniqueKey != null && optionInfoA.dataWrap.DIMENSION[uniqueKey] != null) {
+                        return uniqueKey;
+                    }
+                }
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Test: buttons, should morph animation merge/split.',
+                        'Test: click buttons **before animation finished**, should no blink.',
+                        'Test: click buttons **twice**, should no blink.',
+                        'Test: use dataZoom, update animation should exist'
+                    ],
+                    option: optionInfoList[currOptionName].option,
+                    height: 600,
+                    buttons: [{
+                        text: 'ToBar',
+                        onclick: function () {
+                            next('Bar_mTagSum_ATA');
+                        }
+                    }, {
+                        text: 'ToScatter',
+                        onclick: function () {
+                            next('Scatter_ATA_STE');
+                        }
+                    }, {
+                        text: 'ToPie',
+                        onclick: function () {
+                            next('Pie_mTagSum_ATA');
+                        }
+                    }]
+                });
+
+            });
+
+        </script>
+
+
+
+    </body>
+</html>

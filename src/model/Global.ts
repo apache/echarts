@@ -141,7 +141,7 @@ class GlobalModel extends Model<ECUnitOption> {
             'please use chart.getOption()'
         );
 
-        const innerOpt = normalizeReplaceMergeInput(opts);
+        const innerOpt = normalizeSetOptionInput(opts);
 
         this._optionManager.setOption(option, optionPreprocessorFuncs, innerOpt);
 
@@ -157,9 +157,9 @@ class GlobalModel extends Model<ECUnitOption> {
      */
     resetOption(
         type: 'recreate' | 'timeline' | 'media',
-        opt?: GlobalModelSetOptionOpts
+        opt?: Pick<GlobalModelSetOptionOpts, 'replaceMerge'>
     ): boolean {
-        return this._resetOption(type, normalizeReplaceMergeInput(opt));
+        return this._resetOption(type, normalizeSetOptionInput(opt));
     }
 
     private _resetOption(
@@ -933,7 +933,7 @@ function filterBySubType(
         : components;
 }
 
-function normalizeReplaceMergeInput(opts: GlobalModelSetOptionOpts): InnerSetOptionOpts {
+function normalizeSetOptionInput(opts: GlobalModelSetOptionOpts): InnerSetOptionOpts {
     const replaceMergeMainTypeMap = createHashMap<boolean, string>();
     opts && each(modelUtil.normalizeToArray(opts.replaceMerge), function (mainType) {
         if (__DEV__) {
