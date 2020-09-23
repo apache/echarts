@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../util/graphic';
-import {getECData} from '../util/ecData';
+import {getECData} from '../util/innerStore';
 import {createTextStyle} from '../label/labelStyle';
 import {getLayoutRect} from '../util/layout';
 import ComponentModel from '../model/Component';

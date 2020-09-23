@@ -36,7 +36,7 @@ import SeriesModel, { SeriesModelConstructor } from './model/Series';
 import ComponentView, {ComponentViewConstructor} from './view/Component';
 import ChartView, {ChartViewConstructor} from './view/Chart';
 import * as graphic from './util/graphic';
-import {getECData} from './util/ecData';
+import {getECData} from './util/innerStore';
 import {
     enterEmphasisWhenMouseOver,
     leaveEmphasisWhenMouseOut,
@@ -2091,7 +2091,7 @@ class ECharts extends Eventful {
                         label.zlevel = el.zlevel;
                         // lift z2 of text content
                         // TODO if el.emphasis.z2 is spcefied, what about textContent.
-                        label.z2 = el.z2 + 1;
+                        label.z2 = el.z2 + 2;
                     }
                     if (labelLine) {
                         labelLine.z = el.z;

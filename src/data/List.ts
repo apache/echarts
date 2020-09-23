@@ -37,7 +37,7 @@ import {
     ModelOption, SeriesDataType, OrdinalRawValue
 } from '../util/types';
 import {isDataItemOption, convertOptionIdName} from '../util/model';
-import { getECData } from '../util/ecData';
+import { getECData } from '../util/innerStore';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import type Graph from './Graph';
 import type Tree from './Tree';

@@ -49,7 +49,7 @@ import TooltipModel, {TooltipOption} from './TooltipModel';
 import Element from 'zrender/src/Element';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 // import { isDimensionStacked } from '../../data/helper/dataStackHelper';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 import { shouldTooltipConfine } from './helper';
 import { DataByCoordSys, DataByAxis } from '../axisPointer/axisTrigger';
 import { normalizeTooltipFormatResult } from '../../model/mixin/dataFormat';

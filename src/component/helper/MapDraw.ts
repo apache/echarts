@@ -37,7 +37,7 @@ import Geo from '../../coord/geo/Geo';
 import Model from '../../model/Model';
 import Transformable from 'zrender/src/core/Transformable';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 
 
 interface RegionsGroup extends graphic.Group {

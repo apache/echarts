@@ -41,7 +41,7 @@ import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 import { createFloat32Array } from '../../util/vendor';
 
 

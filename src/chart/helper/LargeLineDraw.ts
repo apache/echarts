@@ -27,7 +27,7 @@ import { PathProps } from 'zrender/src/graphic/Path';
 import List from '../../data/List';
 import { StageHandlerProgressParams, LineStyleOption, ColorString } from '../../util/types';
 import Model from '../../model/Model';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 
 class LargeLinesPathShape {
     polyline = false;

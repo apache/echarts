@@ -30,7 +30,7 @@ import PathProxy from 'zrender/src/core/PathProxy';
 import SeriesModel from '../../model/Series';
 import { StageHandlerProgressParams } from '../../util/types';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 
 const BOOST_SIZE_THRESHOLD = 4;
 

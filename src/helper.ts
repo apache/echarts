@@ -35,7 +35,7 @@ import {
 } from './data/helper/dataStackHelper';
 import SeriesModel from './model/Series';
 import { AxisBaseModel } from './coord/AxisBaseModel';
-import { getECData } from './util/ecData';
+import { getECData } from './util/innerStore';
 
 /**
  * Create a muti dimension List structure from seriesModel.
