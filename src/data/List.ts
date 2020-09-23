@@ -1694,15 +1694,14 @@ class List<
 
     /**
      * Large data down sampling using largest-triangle-three-buckets
-     * https://github.com/pingec/downsample-lttb
      * @param {string} baseDimension
      * @param {string} valueDimension
-     * @param {number} threshold target counts
+     * @param {number} rate
      */
     lttbDownSample(
         baseDimension: DimensionName,
         valueDimension: DimensionName,
-        threshold: number
+        rate: number
     ) {
         const list = cloneListForMapAndSample(this, [baseDimension, valueDimension]);
         const targetStorage = list._storage;
@@ -1711,72 +1710,84 @@ class List<
         const len = this.count();
         const chunkSize = this._chunkSize;
         const newIndices = new (getIndicesCtor(this))(len);
-        const getPair = (
-            i: number
-            ) : Array<any> => {
-            const originalChunkIndex = mathFloor(i / chunkSize);
-            const originalChunkOffset = i % chunkSize;
-            return [
-                baseDimStore[originalChunkIndex][originalChunkOffset],
-                valueDimStore[originalChunkIndex][originalChunkOffset]
-            ];
-        };
 
         let sampledIndex = 0;
 
-        const every = (len - 2) / (threshold - 2);
+        const frameSize = mathFloor(1 / rate);
 
-        let a = 0;
+        let currentSelectedIdx = 0;
         let maxArea;
         let area;
-        let nextA;
+        let nextSelectedIdx;
 
-        newIndices[sampledIndex++] = a;
-        for (let i = 0; i < threshold - 2; i++) {
+        for (let chunkIdx = 0; chunkIdx < this._chunkCount; chunkIdx++) {
+            const chunkOffset = chunkSize * chunkIdx;
+            const selfChunkSize = Math.min(len - chunkOffset, chunkSize);
+            const chunkFrameCount = Math.ceil((selfChunkSize - 2) / frameSize);
+            const baseDimChunk = baseDimStore[chunkIdx];
+            const valueDimChunk = valueDimStore[chunkIdx];
 
-            let avgX = 0;
-            let avgY = 0;
-            let avgRangeStart = mathFloor((i + 1) * every) + 1;
-            let avgRangeEnd = mathFloor((i + 2) * every) + 1;
+            // The first frame is the first data.
+            newIndices[sampledIndex++] = currentSelectedIdx;
 
-            avgRangeEnd = avgRangeEnd < len ? avgRangeEnd : len;
+            for (let frame = 0; frame < chunkFrameCount - 2; frame++) {
+                let avgX = 0;
+                let avgY = 0;
+                let avgRangeStart = (frame + 1) * frameSize + 1 + chunkOffset;
+                const avgRangeEnd = Math.min((frame + 2) * frameSize + 1, selfChunkSize) + chunkOffset;
 
-            const avgRangeLength = avgRangeEnd - avgRangeStart;
+                const avgRangeLength = avgRangeEnd - avgRangeStart;
 
-            for (; avgRangeStart < avgRangeEnd; avgRangeStart++) {
-                avgX += getPair(avgRangeStart)[0] * 1; // * 1 enforces Number (value may be Date)
-                avgY += getPair(avgRangeStart)[1] * 1;
-            }
-            avgX /= avgRangeLength;
-            avgY /= avgRangeLength;
-
-            // Get the range for this bucket
-            let rangeOffs = mathFloor((i + 0) * every) + 1;
-                const rangeTo = mathFloor((i + 1) * every) + 1;
-
-            // Point a
-            const pointAX = getPair(a)[0] * 1; // enforce Number (value may be Date)
-                const pointAY = getPair(a)[1] * 1;
-
-            maxArea = area = -1;
-
-            for (; rangeOffs < rangeTo; rangeOffs++) {
-                // Calculate triangle area over three buckets
-                area = Math.abs((pointAX - avgX) * (getPair(rangeOffs)[1] - pointAY)
-                            - (pointAX - getPair(rangeOffs)[0]) * (avgY - pointAY)
-                        ) * 0.5;
-                if (area > maxArea) {
-                    maxArea = area;
-                    nextA = rangeOffs; // Next a is this b
+                for (; avgRangeStart < avgRangeEnd; avgRangeStart++) {
+                    const x = baseDimChunk[avgRangeStart] as number;
+                    const y = valueDimChunk[avgRangeStart] as number;
+                    if (isNaN(x) || isNaN(y)) {
+                        continue;
+                    }
+                    avgX += x;
+                    avgY += y;
                 }
+                avgX /= avgRangeLength;
+                avgY /= avgRangeLength;
+
+                // Get the range for this bucket
+                let rangeOffs = (frame) * frameSize + 1 + chunkOffset;
+                const rangeTo = (frame + 1) * frameSize + 1 + chunkOffset;
+
+                // Point A
+                const pointAX = baseDimChunk[currentSelectedIdx] as number;
+                const pointAY = valueDimChunk[currentSelectedIdx] as number;
+                let allNaN = true;
+
+                maxArea = area = -1;
+
+                for (; rangeOffs < rangeTo; rangeOffs++) {
+                    const y = valueDimChunk[rangeOffs] as number;
+                    const x = baseDimChunk[rangeOffs] as number;
+                    if (isNaN(x) || isNaN(y)) {
+                        continue;
+                    }
+                    allNaN = false;
+                    // Calculate triangle area over three buckets
+                    area = Math.abs((pointAX - avgX) * (y - pointAY)
+                                - (pointAX - x) * (avgY - pointAY)
+                            );
+                    if (area > maxArea) {
+                        maxArea = area;
+                        nextSelectedIdx = rangeOffs; // Next a is this b
+                    }
+                }
+
+                if (!allNaN) {
+                    newIndices[sampledIndex++] = nextSelectedIdx;
+                }
+
+                currentSelectedIdx = nextSelectedIdx; // This a is the next a (chosen b)
             }
-
-            newIndices[sampledIndex++] = nextA;
-
-            a = nextA; // This a is the next a (chosen b)
+            // The last frame is the last data.
+            newIndices[sampledIndex++] = selfChunkSize - 1;
         }
 
-        newIndices[sampledIndex++] = len - 1;
         list._count = sampledIndex;
         list._indices = newIndices;
 

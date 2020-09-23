@@ -95,7 +95,7 @@ export default function (seriesType: string): StageHandler {
                 if (rate > 1) {
                     if (sampling === 'lttb') {
                         seriesModel.setData(data.lttbDownSample(
-                            data.mapDimension(baseAxis.dim), data.mapDimension(valueAxis.dim), size
+                            data.mapDimension(baseAxis.dim), data.mapDimension(valueAxis.dim), 1 / rate
                         ));
                     }
                     let sampler;
