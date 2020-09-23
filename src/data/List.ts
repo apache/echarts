@@ -283,10 +283,10 @@ class List<
 
     // Methods that create a new list based on this list should be listed here.
     // Notice that those method should `RETURN` the new list.
-    TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'] as const;
+    TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'lttbDownSample', 'map'] as const;
     // Methods that change indices of this list should be listed here.
     CHANGABLE_METHODS = ['filterSelf', 'selectRange'] as const;
-
+    DOWNSAMPLE_METHODS = ['downSample', 'lttbDownSample'] as const;
 
     /**
      * @param dimensions
