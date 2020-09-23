@@ -215,7 +215,7 @@ class IntervalScale extends Scale {
     /**
      * @param splitNumber By default `5`.
      */
-    niceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number, interval?: number): void {
+    niceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number, preferredInterval?: number): void {
         splitNumber = splitNumber || 5;
         const extent = this._extent;
         let span = extent[1] - extent[0];
@@ -230,7 +230,7 @@ class IntervalScale extends Scale {
         }
 
         const result = helper.intervalScaleNiceTicks(
-            extent, splitNumber, minInterval, maxInterval, interval
+            extent, splitNumber, minInterval, maxInterval, preferredInterval
         );
 
         this._intervalPrecision = result.intervalPrecision;
