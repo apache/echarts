@@ -1138,7 +1138,8 @@ class List<
         // Check the test case of `test/ut/spec/data/List.js`.
         for (let i = 0, len = this.count(); i < len; i++) {
             const chunkIndex = mathFloor(i / chunkSize);
-            const chunkOffset = i % chunkSize;
+            const dataIndex = this.getRawIndex(i);
+            const chunkOffset = dataIndex % chunkSize;
             const diff = value - (dimData[chunkIndex][chunkOffset] as number);
             const dist = Math.abs(diff);
             if (dist <= maxDistance) {
