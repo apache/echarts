@@ -1697,12 +1697,12 @@ class List<
      * Large data down sampling using largest-triangle-three-buckets
      * @param {string} baseDimension
      * @param {string} valueDimension
-     * @param {number} rate
+     * @param {number} targetCount
      */
     lttbDownSample(
         baseDimension: DimensionName,
         valueDimension: DimensionName,
-        rate: number
+        targetCount: number
     ) {
         const list = cloneListForMapAndSample(this, [baseDimension, valueDimension]);
         const targetStorage = list._storage;
@@ -1714,81 +1714,74 @@ class List<
 
         let sampledIndex = 0;
 
-        const frameSize = mathFloor(1 / rate);
+        const frameSize = (len - 2) / (targetCount - 2);
 
-        let currentSelectedIdx = 0;
+        let currentRawIndex = this.getRawIndex(0);
         let maxArea;
         let area;
-        let nextSelectedIdx;
+        let nextRawIndex;
 
-        for (let chunkIdx = 0; chunkIdx < this._chunkCount; chunkIdx++) {
-            const chunkOffset = chunkSize * chunkIdx;
-            const selfChunkSize = Math.min(len - chunkOffset, chunkSize);
-            const chunkFrameCount = Math.ceil((selfChunkSize - 2) / frameSize);
-            const baseDimChunk = baseDimStore[chunkIdx];
-            const valueDimChunk = valueDimStore[chunkIdx];
+        newIndices[sampledIndex++] = currentRawIndex;
+        for (let i = 0; i < targetCount - 2; i++) {
+            let avgX = 0;
+            let avgY = 0;
+            const avgRangeStart = mathFloor((i + 1) * frameSize) + 1;
+            const avgRangeEnd = Math.min(mathFloor((i + 2) * frameSize) + 1, len);
 
-            // The first frame is the first data.
-            newIndices[sampledIndex++] = currentSelectedIdx;
+            const avgRangeLength = avgRangeEnd - avgRangeStart;
 
-            for (let frame = 0; frame < chunkFrameCount - 2; frame++) {
-                let avgX = 0;
-                let avgY = 0;
-                let avgRangeStart = (frame + 1) * frameSize + 1 + chunkOffset;
-                const avgRangeEnd = Math.min((frame + 2) * frameSize + 1, selfChunkSize) + chunkOffset;
-
-                const avgRangeLength = avgRangeEnd - avgRangeStart;
-
-                for (; avgRangeStart < avgRangeEnd; avgRangeStart++) {
-                    const x = baseDimChunk[avgRangeStart] as number;
-                    const y = valueDimChunk[avgRangeStart] as number;
-                    if (isNaN(x) || isNaN(y)) {
-                        continue;
-                    }
-                    avgX += x;
-                    avgY += y;
+            for (let idx = avgRangeStart; idx < avgRangeEnd; idx++) {
+                const rawIndex = this.getRawIndex(idx);
+                const chunkIndex = mathFloor(rawIndex / chunkSize);
+                const chunkOffset = rawIndex % chunkSize;
+                const x = baseDimStore[chunkIndex][chunkOffset] as number;
+                const y = valueDimStore[chunkIndex][chunkOffset] as number;
+                if (isNaN(x) || isNaN(y)) {
+                    continue;
                 }
-                avgX /= avgRangeLength;
-                avgY /= avgRangeLength;
-
-                // Get the range for this bucket
-                let rangeOffs = (frame) * frameSize + 1 + chunkOffset;
-                const rangeTo = (frame + 1) * frameSize + 1 + chunkOffset;
-
-                // Point A
-                const pointAX = baseDimChunk[currentSelectedIdx] as number;
-                const pointAY = valueDimChunk[currentSelectedIdx] as number;
-                let allNaN = true;
-
-                maxArea = area = -1;
-
-                for (; rangeOffs < rangeTo; rangeOffs++) {
-                    const y = valueDimChunk[rangeOffs] as number;
-                    const x = baseDimChunk[rangeOffs] as number;
-                    if (isNaN(x) || isNaN(y)) {
-                        continue;
-                    }
-                    allNaN = false;
-                    // Calculate triangle area over three buckets
-                    area = Math.abs((pointAX - avgX) * (y - pointAY)
-                                - (pointAX - x) * (avgY - pointAY)
-                            );
-                    if (area > maxArea) {
-                        maxArea = area;
-                        nextSelectedIdx = rangeOffs; // Next a is this b
-                    }
-                }
-
-                if (!allNaN) {
-                    newIndices[sampledIndex++] = nextSelectedIdx;
-                }
-
-                currentSelectedIdx = nextSelectedIdx; // This a is the next a (chosen b)
+                avgX += baseDimStore[chunkIndex][chunkOffset] as number;
+                avgY += valueDimStore[chunkIndex][chunkOffset] as number;
             }
-            // The last frame is the last data.
-            newIndices[sampledIndex++] = selfChunkSize - 1;
+            avgX /= avgRangeLength;
+            avgY /= avgRangeLength;
+
+            const rangeOffs = mathFloor((i) * frameSize) + 1;
+            const rangeTo = mathFloor((i + 1) * frameSize) + 1;
+
+            const chunkIndex = mathFloor(currentRawIndex / chunkSize);
+            const chunkOffset = currentRawIndex % chunkSize;
+            const pointAX = baseDimStore[chunkIndex][chunkOffset] as number;
+            const pointAY = valueDimStore[chunkIndex][chunkOffset] as number;
+
+            maxArea = area = -1;
+
+            // Find a point from current frame that construct a triangel with largest area with previous selected point
+            // And the average of next frame.
+            for (let idx = rangeOffs; idx < rangeTo; idx++) {
+                const rawIndex = this.getRawIndex(idx);
+                const chunkIndex = mathFloor(rawIndex / chunkSize);
+                const chunkOffset = rawIndex % chunkSize;
+                const x = baseDimStore[chunkIndex][chunkOffset] as number;
+                const y = valueDimStore[chunkIndex][chunkOffset] as number;
+                if (isNaN(x) || isNaN(y)) {
+                    continue;
+                }
+                // Calculate triangle area over three buckets
+                area = Math.abs((pointAX - avgX) * (y - pointAY)
+                    - (pointAX - x) * (avgY - pointAY)
+                );
+                if (area > maxArea) {
+                    maxArea = area;
+                    nextRawIndex = rawIndex; // Next a is this b
+                }
+            }
+
+            newIndices[sampledIndex++] = nextRawIndex;
+
+            currentRawIndex = nextRawIndex; // This a is the next a (chosen b)
         }
 
+        newIndices[sampledIndex++] = this.getRawIndex(len - 1);
         list._count = sampledIndex;
         list._indices = newIndices;
 
