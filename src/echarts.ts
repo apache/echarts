@@ -1935,8 +1935,6 @@ class ECharts extends Eventful {
                 // increamental render (alway render from the __startIndex each frame)
                 // chartView.group.markRedraw();
 
-                updateZ(seriesModel, chartView);
-
                 updateBlend(seriesModel, chartView);
 
                 updateSeriesElementSelection(seriesModel);
@@ -1953,6 +1951,9 @@ class ECharts extends Eventful {
 
             ecModel.eachSeries(function (seriesModel) {
                 const chartView = ecIns._chartsMap[seriesModel.__viewId];
+                // Update Z after labels updated. Before applying states.
+                updateZ(seriesModel, chartView);
+
                 // NOTE: Update states after label is updated.
                 // label should be in normal status when layouting.
                 updateStates(seriesModel, chartView);
@@ -2094,9 +2095,10 @@ class ECharts extends Eventful {
                         label.z2 = el.z2 + 2;
                     }
                     if (labelLine) {
+                        const showAbove = el.textGuideLineConfig && el.textGuideLineConfig.showAbove;
                         labelLine.z = el.z;
                         labelLine.zlevel = el.zlevel;
-                        labelLine.z2 = el.z2 - 1;
+                        labelLine.z2 = el.z2 + (showAbove ? 1 : -1);
                     }
                 }
             });
