@@ -87,9 +87,10 @@ class Grid implements CoordinateSystemMaster {
         return this._rect;
     }
 
-    calAxisNiceSplitNumber(axes: Axis2D[]) {
-        const splitNumber: number[] = [];
+    calAxisNiceSplitNumber(axes: Axis2D[]): [number[], number] {
+        const splitNumArr: number[] = [];
         const niceAxisExtents: number[] = [];
+        let maxSplitNumber = 0;
         each(axes, axis => {
             niceScaleExtent(axis.scale, axis.model);
             if (axis.type !== 'value') {
@@ -97,31 +98,31 @@ class Grid implements CoordinateSystemMaster {
             }
             const extent = axis.scale.getExtent();
             const interval = (axis.scale as IntervalScale).getInterval();
-            splitNumber.push(
-                Math.floor((extent[1] - extent[0]) / interval)
-            );
+            const splitNumber = round(extent[1] - extent[0]) / interval;
+            splitNumArr.push(splitNumber);
+            maxSplitNumber = (splitNumber > maxSplitNumber) ? splitNumber : maxSplitNumber;
             const axisExtent = axis.getExtent();
             niceAxisExtents.push((axisExtent[1] - axisExtent[0]) * interval / extent[1]);
         });
 
-        return splitNumber;
+        return [splitNumArr, maxSplitNumber];
     }
 
-    resetAxisExtent(axes: Axis2D[], splitNumber: number[], maxSplitNumber: number): number[] {
-        const finalSplitNumber: number[] = [];
+    resetAxisExtent(axes: Axis2D[], splitNumber: number[], maxSplitNumber: number) {
+        let finalSplitNum: number = 0;
         each(axes, function (axis, index) {
             if (axis.type !== 'value') {
                 return;
             }
 
             if (!(maxSplitNumber - splitNumber[index])) {
-                finalSplitNumber.push(maxSplitNumber);
+                finalSplitNum = maxSplitNumber > finalSplitNum ? maxSplitNumber : finalSplitNum;
                 return;
             };
 
             const extent = axis.scale.getExtent();
             const interval = (axis.scale as IntervalScale).getInterval();
-            const splitNum = (extent[1] - extent[0]) / interval;
+            let splitNum = round(extent[1] - extent[0]) / interval;
 
             if ((Math.abs(Math.round(splitNum) - splitNum)) < 1e-8) {
                 extent[1] = extent[1] + (maxSplitNumber - splitNumber[index]) * interval;
@@ -136,10 +137,11 @@ class Grid implements CoordinateSystemMaster {
             }
             const finalScaleExtent = axis.scale.getExtent();
             const finalInterval = (axis.scale as IntervalScale).getInterval();
-            finalSplitNumber.push(Math.ceil((finalScaleExtent[1] - finalScaleExtent[0]) / finalInterval));
+            splitNum = round(finalScaleExtent[1] - finalScaleExtent[0]) / finalInterval;
+            finalSplitNum = splitNum > finalSplitNum ? splitNum : finalSplitNum;
         });
 
-        return finalSplitNumber;
+        return finalSplitNum;
     }
 
     update(ecModel: GlobalModel, api: ExtensionAPI): void {
@@ -148,10 +150,10 @@ class Grid implements CoordinateSystemMaster {
 
         this._updateScale(ecModel, this.model);
 
-        const niceSplitNumX = this.calAxisNiceSplitNumber(axesMap.x);
-        const niceSplitNumY = this.calAxisNiceSplitNumber(axesMap.y);
-        const finalSplitNumberY = this.resetAxisExtent(axesMap.y, niceSplitNumY, Math.max(...niceSplitNumY));
-        const finalSplitNumberX = this.resetAxisExtent(axesMap.x, niceSplitNumX, Math.max(...niceSplitNumX));
+        const [niceSplitNumX, maxNiceSplitNumX] = this.calAxisNiceSplitNumber(axesMap.x);
+        const [niceSplitNumY, maxNiceSplitNumY] = this.calAxisNiceSplitNumber(axesMap.y);
+        const finalSplitNumberY = this.resetAxisExtent(axesMap.y, niceSplitNumY, maxNiceSplitNumY);
+        const finalSplitNumberX = this.resetAxisExtent(axesMap.x, niceSplitNumX, maxNiceSplitNumX);
 
         // Key: axisDim_axisIndex, value: boolean, whether onZero target.
         const onZeroRecords = {} as Dictionary<boolean>;
@@ -167,8 +169,8 @@ class Grid implements CoordinateSystemMaster {
         // FIXME It may cause getting wrong grid size in data processing stage
         this.resize(this.model, api);
 
-        this.adjustValueAxes(axesMap.y, Math.max(...finalSplitNumberY));
-        this.adjustValueAxes(axesMap.x, Math.max(...finalSplitNumberX));
+        this.adjustValueAxes(axesMap.y, finalSplitNumberY);
+        this.adjustValueAxes(axesMap.x, finalSplitNumberX);
     }
 
     adjustValueAxes(axesList: Axis2D[], finalSplitNumber: number) {
