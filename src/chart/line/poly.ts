@@ -77,7 +77,7 @@ function drawSegment(
             const dy = y - prevY;
 
             // Ignore tiny segment.
-            if ((dx * dx + dy * dy) < 1) {
+            if ((dx * dx + dy * dy) < 0.5) {
                 idx += dir;
                 continue;
             }

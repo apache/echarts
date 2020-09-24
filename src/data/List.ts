@@ -1625,73 +1625,67 @@ class List<
 
     /**
      * Large data down sampling using largest-triangle-three-buckets
-     * @param {string} baseDimension
      * @param {string} valueDimension
      * @param {number} targetCount
      */
     lttbDownSample(
-        baseDimension: DimensionName,
         valueDimension: DimensionName,
-        targetCount: number
+        rate: number
     ) {
         const list = cloneListForMapAndSample(this, []);
         const targetStorage = list._storage;
-        const baseDimStore = targetStorage[baseDimension];
-        const valueDimStore = targetStorage[valueDimension];
+        const dimStore = targetStorage[valueDimension];
         const len = this.count();
         const newIndices = new (getIndicesCtor(this))(len);
 
         let sampledIndex = 0;
 
-        const frameSize = (len - 2) / (targetCount - 2);
+        const frameSize = mathFloor(1 / rate);
 
         let currentRawIndex = this.getRawIndex(0);
         let maxArea;
         let area;
         let nextRawIndex;
 
+        // First frame use the first data.
         newIndices[sampledIndex++] = currentRawIndex;
-        for (let i = 0; i < targetCount - 2; i++) {
-            let avgX = 0;
+        for (let i = 1; i < len - 1; i += frameSize) {
+            const nextFrameStart = Math.min(i + frameSize, len - 1);
+            const nextFrameEnd = Math.min(i + frameSize * 2, len);
+
+            const avgX = (nextFrameEnd + nextFrameStart) / 2;
             let avgY = 0;
-            const avgRangeStart = mathFloor((i + 1) * frameSize) + 1;
-            const avgRangeEnd = Math.min(mathFloor((i + 2) * frameSize) + 1, len);
 
-            const avgRangeLength = avgRangeEnd - avgRangeStart;
-
-            for (let idx = avgRangeStart; idx < avgRangeEnd; idx++) {
+            for (let idx = nextFrameStart; idx < nextFrameEnd; idx++) {
                 const rawIndex = this.getRawIndex(idx);
-                const x = baseDimStore[rawIndex] as number;
-                const y = valueDimStore[rawIndex] as number;
-                if (isNaN(x) || isNaN(y)) {
+                const y = dimStore[rawIndex] as number;
+                if (isNaN(y)) {
                     continue;
                 }
-                avgX += x as number;
                 avgY += y as number;
             }
-            avgX /= avgRangeLength;
-            avgY /= avgRangeLength;
+            avgY /= (nextFrameEnd - nextFrameStart);
 
-            const rangeOffs = mathFloor((i) * frameSize) + 1;
-            const rangeTo = mathFloor((i + 1) * frameSize) + 1;
+            const frameStart = i;
+            const frameEnd = Math.min(i + frameSize, len);
 
-            const pointAX = baseDimStore[currentRawIndex] as number;
-            const pointAY = valueDimStore[currentRawIndex] as number;
+            const pointAX = i - 1;
+            const pointAY = dimStore[currentRawIndex] as number;
 
             maxArea = -1;
 
+            nextRawIndex = frameStart;
             // Find a point from current frame that construct a triangel with largest area with previous selected point
             // And the average of next frame.
-            for (let idx = rangeOffs; idx < rangeTo; idx++) {
+            for (let idx = frameStart; idx < frameEnd; idx++) {
                 const rawIndex = this.getRawIndex(idx);
-                const x = baseDimStore[rawIndex] as number;
-                const y = valueDimStore[rawIndex] as number;
-                if (isNaN(x) || isNaN(y)) {
+                const y = dimStore[rawIndex] as number;
+                if (isNaN(y)) {
                     continue;
                 }
                 // Calculate triangle area over three buckets
                 area = Math.abs((pointAX - avgX) * (y - pointAY)
-                    - (pointAX - x) * (avgY - pointAY)
+                    - (pointAX - idx) * (avgY - pointAY)
                 );
                 if (area > maxArea) {
                     maxArea = area;
@@ -1704,6 +1698,7 @@ class List<
             currentRawIndex = nextRawIndex; // This a is the next a (chosen b)
         }
 
+        // First frame use the last data.
         newIndices[sampledIndex++] = this.getRawIndex(len - 1);
         list._count = sampledIndex;
         list._indices = newIndices;
