@@ -283,10 +283,10 @@ class List<
 
     // Methods that create a new list based on this list should be listed here.
     // Notice that those method should `RETURN` the new list.
-    TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'] as const;
+    TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'lttbDownSample', 'map'] as const;
     // Methods that change indices of this list should be listed here.
     CHANGABLE_METHODS = ['filterSelf', 'selectRange'] as const;
-
+    DOWNSAMPLE_METHODS = ['downSample', 'lttbDownSample'] as const;
 
     /**
      * @param dimensions
@@ -1137,8 +1137,9 @@ class List<
 
         // Check the test case of `test/ut/spec/data/List.js`.
         for (let i = 0, len = this.count(); i < len; i++) {
-            const chunkIndex = mathFloor(i / chunkSize);
-            const chunkOffset = i % chunkSize;
+            const dataIndex = this.getRawIndex(i);
+            const chunkIndex = mathFloor(dataIndex / chunkSize);
+            const chunkOffset = dataIndex % chunkSize;
             const diff = value - (dimData[chunkIndex][chunkOffset] as number);
             const dist = Math.abs(diff);
             if (dist <= maxDistance) {
@@ -1691,6 +1692,103 @@ class List<
 
         return list as List<HostModel>;
     }
+
+    /**
+     * Large data down sampling using largest-triangle-three-buckets
+     * @param {string} baseDimension
+     * @param {string} valueDimension
+     * @param {number} targetCount
+     */
+    lttbDownSample(
+        baseDimension: DimensionName,
+        valueDimension: DimensionName,
+        targetCount: number
+    ) {
+        const list = cloneListForMapAndSample(this, [baseDimension, valueDimension]);
+        const targetStorage = list._storage;
+        const baseDimStore = targetStorage[baseDimension];
+        const valueDimStore = targetStorage[valueDimension];
+        const len = this.count();
+        const chunkSize = this._chunkSize;
+        const newIndices = new (getIndicesCtor(this))(len);
+
+        let sampledIndex = 0;
+
+        const frameSize = (len - 2) / (targetCount - 2);
+
+        let currentRawIndex = this.getRawIndex(0);
+        let maxArea;
+        let area;
+        let nextRawIndex;
+
+        newIndices[sampledIndex++] = currentRawIndex;
+        for (let i = 0; i < targetCount - 2; i++) {
+            let avgX = 0;
+            let avgY = 0;
+            const avgRangeStart = mathFloor((i + 1) * frameSize) + 1;
+            const avgRangeEnd = Math.min(mathFloor((i + 2) * frameSize) + 1, len);
+
+            const avgRangeLength = avgRangeEnd - avgRangeStart;
+
+            for (let idx = avgRangeStart; idx < avgRangeEnd; idx++) {
+                const rawIndex = this.getRawIndex(idx);
+                const chunkIndex = mathFloor(rawIndex / chunkSize);
+                const chunkOffset = rawIndex % chunkSize;
+                const x = baseDimStore[chunkIndex][chunkOffset] as number;
+                const y = valueDimStore[chunkIndex][chunkOffset] as number;
+                if (isNaN(x) || isNaN(y)) {
+                    continue;
+                }
+                avgX += baseDimStore[chunkIndex][chunkOffset] as number;
+                avgY += valueDimStore[chunkIndex][chunkOffset] as number;
+            }
+            avgX /= avgRangeLength;
+            avgY /= avgRangeLength;
+
+            const rangeOffs = mathFloor((i) * frameSize) + 1;
+            const rangeTo = mathFloor((i + 1) * frameSize) + 1;
+
+            const chunkIndex = mathFloor(currentRawIndex / chunkSize);
+            const chunkOffset = currentRawIndex % chunkSize;
+            const pointAX = baseDimStore[chunkIndex][chunkOffset] as number;
+            const pointAY = valueDimStore[chunkIndex][chunkOffset] as number;
+
+            maxArea = area = -1;
+
+            // Find a point from current frame that construct a triangel with largest area with previous selected point
+            // And the average of next frame.
+            for (let idx = rangeOffs; idx < rangeTo; idx++) {
+                const rawIndex = this.getRawIndex(idx);
+                const chunkIndex = mathFloor(rawIndex / chunkSize);
+                const chunkOffset = rawIndex % chunkSize;
+                const x = baseDimStore[chunkIndex][chunkOffset] as number;
+                const y = valueDimStore[chunkIndex][chunkOffset] as number;
+                if (isNaN(x) || isNaN(y)) {
+                    continue;
+                }
+                // Calculate triangle area over three buckets
+                area = Math.abs((pointAX - avgX) * (y - pointAY)
+                    - (pointAX - x) * (avgY - pointAY)
+                );
+                if (area > maxArea) {
+                    maxArea = area;
+                    nextRawIndex = rawIndex; // Next a is this b
+                }
+            }
+
+            newIndices[sampledIndex++] = nextRawIndex;
+
+            currentRawIndex = nextRawIndex; // This a is the next a (chosen b)
+        }
+
+        newIndices[sampledIndex++] = this.getRawIndex(len - 1);
+        list._count = sampledIndex;
+        list._indices = newIndices;
+
+        list.getRawIndex = getRawIndexWithIndices;
+        return list;
+    }
+
 
     /**
      * Get model of one data item.
