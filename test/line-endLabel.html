@@ -199,7 +199,16 @@ under the License.
                                             show: false
                                         },
                                         endLabel: {
-                                            show: true
+                                            show: true,
+                                            formatter: function (param) {
+                                                return '$' + param.value;
+                                            },
+                                            fontSize: 14
+                                        },
+                                        emphasis: {
+                                            endLabel: {
+                                                color: 'red'
+                                            }
                                         },
                                         xAxisIndex: i,
                                         yAxisIndex: i
@@ -212,17 +221,17 @@ under the License.
                         };
                         chart.setOption(option);
 
-                        setTimeout(function () {
-                            data.push(1000);
-                            data.push('-');
-                            data.push('-');
+                        // setTimeout(function () {
+                        //     data.push(1000);
+                        //     data.push('-');
+                        //     data.push('-');
 
-                            xData.push('12');
-                            xData.push('13');
-                            xData.push('14');
+                        //     xData.push('12');
+                        //     xData.push('13');
+                        //     xData.push('14');
 
-                            chart.setOption(option);
-                        }, 12000);
+                        //     chart.setOption(option);
+                        // }, 12000);
                     })(cid);
 
                 }
