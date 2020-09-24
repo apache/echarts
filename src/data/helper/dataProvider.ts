@@ -38,7 +38,6 @@ import {
 } from '../../util/types';
 import List from '../List';
 
-
 export interface DataProvider {
     // If data is pure without style configuration
     pure: boolean;
@@ -48,6 +47,10 @@ export interface DataProvider {
     getSource(): Source;
     count(): number;
     getItem(idx: number, out?: OptionDataItem): OptionDataItem;
+    getStorage?(start: number, end: number): {
+        storage: ArrayLike<number>[]
+        extent: number[][]
+    }
     appendData(newData: ArrayLike<OptionDataItem>): void;
     clean(): void;
 }
@@ -56,6 +59,12 @@ export interface DataProvider {
 let providerMethods: Dictionary<any>;
 let mountMethods: (provider: DefaultDataProvider, data: OptionSourceData, source: Source) => void;
 
+export interface DefaultDataProvider {
+    getStorage?(start: number, end: number): {
+        storage: ArrayLike<number>[],
+        extent: number[][]
+    }
+}
 /**
  * If normal array used, mutable chunk size is supported.
  * If typed array used, chunk size must be fixed.
@@ -144,6 +153,7 @@ export class DefaultDataProvider implements DataProvider {
             if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
                 provider.getItem = getItemForTypedArray;
                 provider.count = countForTypedArray;
+                provider.getStorage = getStorageForTypedArray;
             }
             else {
                 const rawItemGetter = getRawSourceItemGetter(sourceFormat, seriesLayoutBy);
@@ -165,6 +175,40 @@ export class DefaultDataProvider implements DataProvider {
                 out[i] = (data as ArrayLike<number>)[offset + i];
             }
             return out;
+        };
+
+        const getStorageForTypedArray: DefaultDataProvider['getStorage'] = function (
+            this: DefaultDataProvider, start: number, end: number
+        ) {
+            const data = this._data as ArrayLike<number>;
+            const Ctor = data.constructor;
+            const dimSize = this._dimSize;
+            const offset = this._offset;
+            const storage: ArrayLike<number>[] = [];
+            const extent = [];
+
+            start -= offset;
+            end -= offset;
+
+            for (let dim = 0; dim < dimSize; dim++) {
+                let min = Infinity;
+                let max = -Infinity;
+                const count = end - start;
+                const arr = new (Ctor as any)(count);
+                for (let i = 0; i < count; i++) {
+                    const val = data[(offset + start + i) * dimSize + dim];
+                    arr[i] = val;
+                    val < min && (min = val);
+                    val > max && (max = val);
+                }
+                storage.push(arr);
+                extent.push([min, max]);
+            }
+
+            return {
+                storage,
+                extent
+            };
         };
 
         const countForTypedArray: DefaultDataProvider['count'] = function (
