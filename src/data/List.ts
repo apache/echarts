@@ -491,7 +491,7 @@ class List<
         if (!rawData.persistent) {
             end += start;
         }
-        this._initDataFromProvider(start, end);
+        this._initDataFromProvider(start, end, true);
     }
 
     /**
@@ -563,7 +563,7 @@ class List<
         prepareInvertedIndex(this);
     }
 
-    private _initDataFromProvider(start: number, end: number): void {
+    private _initDataFromProvider(start: number, end: number, append?: boolean): void {
         if (start >= end) {
             return;
         }
@@ -593,9 +593,7 @@ class List<
                 this._idDimIdx = i;
             }
 
-            if (!rawData.getStorage) {
-                prepareStorage(storage, dimInfo, end);
-            }
+            prepareStorage(storage, dimInfo, end, append);
         }
 
         const storageArr = this._storageArr = map(dimensions, (dim) => {
@@ -607,14 +605,7 @@ class List<
         });
 
         if (rawData.getStorage) {
-            const ret = rawData.getStorage(start, end);
-            const rawStorage = ret.storage;
-            const extent = ret.extent;
-            for (let dimIdx = 0; dimIdx < rawStorage.length; dimIdx++) {
-                storage[dimensions[dimIdx]] = storageArr[dimIdx] = rawStorage[dimIdx];
-                rawExtentArr[dimIdx][0] = Math.min(rawExtentArr[dimIdx][0], extent[dimIdx][0]);
-                rawExtentArr[dimIdx][1] = Math.max(rawExtentArr[dimIdx][1], extent[dimIdx][1]);
-            }
+            rawData.getStorage(start, end, storageArr, rawExtentArr);
         }
         else {
             let dataItem = [] as OptionDataItem;
@@ -2104,8 +2095,8 @@ class List<
 
             if (append) {
                 const oldStore = storage[dim];
-                const oldLen = oldStore.length;
-                if (oldStore && oldLen < end) {
+                const oldLen = oldStore && oldStore.length;
+                if (!(oldLen === end)) {
                     const newStore = new DataCtor(end);
                     // The cost of the copy is probably inconsiderable
                     // within the initial chunkSize.

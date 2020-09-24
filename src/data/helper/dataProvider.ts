@@ -34,7 +34,7 @@ import {
     SERIES_LAYOUT_BY_COLUMN,
     SERIES_LAYOUT_BY_ROW,
     DimensionName, DimensionIndex, OptionSourceData,
-    DimensionIndexLoose, OptionDataItem, OptionDataValue, SourceFormat, SeriesLayoutBy
+    DimensionIndexLoose, OptionDataItem, OptionDataValue, SourceFormat, SeriesLayoutBy, ParsedValue
 } from '../../util/types';
 import List from '../List';
 
@@ -47,10 +47,12 @@ export interface DataProvider {
     getSource(): Source;
     count(): number;
     getItem(idx: number, out?: OptionDataItem): OptionDataItem;
-    getStorage?(start: number, end: number): {
-        storage: ArrayLike<number>[]
+    getStorage?(
+        start: number,
+        end: number,
+        out: ArrayLike<ParsedValue>[],
         extent: number[][]
-    }
+    ): void
     appendData(newData: ArrayLike<OptionDataItem>): void;
     clean(): void;
 }
@@ -60,10 +62,12 @@ let providerMethods: Dictionary<any>;
 let mountMethods: (provider: DefaultDataProvider, data: OptionSourceData, source: Source) => void;
 
 export interface DefaultDataProvider {
-    getStorage?(start: number, end: number): {
-        storage: ArrayLike<number>[],
+    getStorage?(
+        start: number,
+        end: number,
+        out: ArrayLike<ParsedValue>[],
         extent: number[][]
-    }
+    ): void
 }
 /**
  * If normal array used, mutable chunk size is supported.
@@ -178,37 +182,26 @@ export class DefaultDataProvider implements DataProvider {
         };
 
         const getStorageForTypedArray: DefaultDataProvider['getStorage'] = function (
-            this: DefaultDataProvider, start: number, end: number
+            this: DefaultDataProvider, start: number, end: number, storage: ArrayLike<ParsedValue>[], extent: number[][]
         ) {
             const data = this._data as ArrayLike<number>;
-            const Ctor = data.constructor;
             const dimSize = this._dimSize;
-            const offset = this._offset;
-            const storage: ArrayLike<number>[] = [];
-            const extent = [];
-
-            start -= offset;
-            end -= offset;
 
             for (let dim = 0; dim < dimSize; dim++) {
-                let min = Infinity;
-                let max = -Infinity;
+                const dimExtent = extent[dim];
+                let min = dimExtent[0] == null ? Infinity : dimExtent[0];
+                let max = dimExtent[1] == null ? -Infinity : dimExtent[1];
                 const count = end - start;
-                const arr = new (Ctor as any)(count);
+                const arr = storage[dim];
                 for (let i = 0; i < count; i++) {
-                    const val = data[(offset + start + i) * dimSize + dim];
-                    arr[i] = val;
+                    const val = data[(start + i) * dimSize + dim];
+                    arr[start + i] = val;
                     val < min && (min = val);
                     val > max && (max = val);
                 }
-                storage.push(arr);
-                extent.push([min, max]);
+                dimExtent[0] = min;
+                dimExtent[1] = max;
             }
-
-            return {
-                storage,
-                extent
-            };
         };
 
         const countForTypedArray: DefaultDataProvider['count'] = function (
