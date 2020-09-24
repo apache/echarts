@@ -1,4 +1,5 @@
 github:
+  description: A powerful, interactive charting and data visualization library for browser
   homepage: https://echarts.apache.org/
   labels:
     - echarts
