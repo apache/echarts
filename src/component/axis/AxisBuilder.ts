@@ -372,7 +372,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         const gap = axisModel.get('nameGap') || 0;
 
         let extent: [number, number];
-        if (~axisModel.axis.dim.indexOf('x') || ~axisModel.axis.dim.indexOf('y')) {
+        if (~['x', 'y'].indexOf(axisModel.axis.dim)) {
             extent = (axisModel.axis as Axis2D).getGridExtent();
         }
         else {
