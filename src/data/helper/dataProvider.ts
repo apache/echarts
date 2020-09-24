@@ -23,7 +23,7 @@
 
 import {isTypedArray, extend, assert, each, isObject, bind} from 'zrender/src/core/util';
 import {getDataItemValue} from '../../util/model';
-import Source from '../Source';
+import { createSourceFromSeriesDataOption, Source, isSourceInstance } from '../Source';
 import {ArrayLike, Dictionary} from 'zrender/src/core/types';
 import {
     SOURCE_FORMAT_ORIGINAL,
@@ -34,7 +34,7 @@ import {
     SERIES_LAYOUT_BY_COLUMN,
     SERIES_LAYOUT_BY_ROW,
     DimensionName, DimensionIndex, OptionSourceData,
-    DimensionIndexLoose, OptionDataItem, OptionDataValue, DimensionDefinition, SourceFormat, SeriesLayoutBy
+    DimensionIndexLoose, OptionDataItem, OptionDataValue, SourceFormat, SeriesLayoutBy
 } from '../../util/types';
 import List from '../List';
 
@@ -85,8 +85,8 @@ export class DefaultDataProvider implements DataProvider {
 
     constructor(sourceParam: Source | OptionSourceData, dimSize?: number) {
         // let source: Source;
-        const source: Source = !(sourceParam instanceof Source)
-            ? Source.seriesDataToSource(sourceParam as OptionSourceData)
+        const source: Source = !isSourceInstance(sourceParam)
+            ? createSourceFromSeriesDataOption(sourceParam as OptionSourceData)
             : sourceParam as Source;
 
         // declare source is Source;
@@ -158,9 +158,11 @@ export class DefaultDataProvider implements DataProvider {
         ): ArrayLike<number> {
             idx = idx - this._offset;
             out = out || [];
-            const offset = this._dimSize * idx;
-            for (let i = 0; i < this._dimSize; i++) {
-                out[i] = (this._data as ArrayLike<number>)[offset + i];
+            const data = this._data;
+            const dimSize = this._dimSize;
+            const offset = dimSize * idx;
+            for (let i = 0; i < dimSize; i++) {
+                out[i] = (data as ArrayLike<number>)[offset + i];
             }
             return out;
         };
@@ -243,7 +245,7 @@ export class DefaultDataProvider implements DataProvider {
 type RawSourceItemGetter = (
     rawData: OptionSourceData,
     startIndex: number,
-    dimsDef: DimensionDefinition[],
+    dimsDef: { name?: DimensionName }[],
     idx: number
 ) => OptionDataItem;
 
@@ -277,7 +279,13 @@ const rawSourceItemGetterMap: Dictionary<RawSourceItemGetter> = {
     ): OptionDataValue[] {
         const item = [];
         for (let i = 0; i < dimsDef.length; i++) {
-            const col = (rawData as Dictionary<OptionDataValue[]>)[dimsDef[i].name];
+            const dimName = dimsDef[i].name;
+            if (__DEV__) {
+                if (dimName == null) {
+                    throw new Error();
+                }
+            }
+            const col = (rawData as Dictionary<OptionDataValue[]>)[dimName];
             item.push(col ? col[idx] : null);
         }
         return item;
@@ -301,7 +309,7 @@ export function getRawSourceItemGetter(
 type RawSourceDataCounter = (
     rawData: OptionSourceData,
     startIndex: number,
-    dimsDef: DimensionDefinition[]
+    dimsDef: { name?: DimensionName }[]
 ) => number;
 
 const countSimply: RawSourceDataCounter = function (
@@ -327,6 +335,11 @@ const rawSourceDataCounterMap: Dictionary<RawSourceDataCounter> = {
         rawData, startIndex, dimsDef
     ) {
         const dimName = dimsDef[0].name;
+        if (__DEV__) {
+            if (dimName == null) {
+                throw new Error();
+            }
+        }
         const col = (rawData as Dictionary<OptionDataValue[]>)[dimName];
         return col ? col.length : 0;
     },

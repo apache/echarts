@@ -17,6 +17,10 @@
 * under the License.
 */
 
+/**
+ * This module exposes helper functions for developing extensions.
+ */
+
 import * as zrUtil from 'zrender/src/core/util';
 import createListFromArray from './chart/helper/createListFromArray';
 // import createGraphFromNodeEdge from './chart/helper/createGraphFromNodeEdge';
@@ -31,6 +35,7 @@ import {
 } from './data/helper/dataStackHelper';
 import SeriesModel from './model/Series';
 import { AxisBaseModel } from './coord/AxisBaseModel';
+import { getECData } from './util/innerStore';
 
 /**
  * Create a muti dimension List structure from seriesModel.
@@ -106,3 +111,5 @@ export function createScale(dataExtent: number[], option: object | AxisBaseModel
 export function mixinAxisModelCommonMethods(Model: Model) {
     zrUtil.mixin(Model, AxisModelCommonMixin);
 }
+
+export {getECData};

@@ -41,7 +41,7 @@ interface DataIndex {
 
 type BatchItem = DataIndex;
 
-interface DataByAxis {
+export interface DataByAxis {
     // TODO: TYPE Value type
     value: string | number
     axisIndex: number
@@ -56,7 +56,7 @@ interface DataByAxis {
         formatter: AxisPointerOption['label']['formatter']
     }
 }
-interface DataByCoordSys {
+export interface DataByCoordSys {
     coordSysId: string
     coordSysIndex: number
     coordSysType: string

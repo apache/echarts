@@ -25,7 +25,7 @@
 import {createHashMap, each, isString, defaults, extend, isObject, clone, HashMap} from 'zrender/src/core/util';
 import {normalizeToArray} from '../../util/model';
 import {guessOrdinal, BE_ORDINAL} from './sourceHelper';
-import Source from '../Source';
+import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../Source';
 import {
     VISUAL_DIMENSIONS, DimensionDefinitionLoose, OptionSourceData,
     EncodeDefaulter, OptionEncodeValue, OptionEncode, DimensionName, DimensionIndex, DataVisualDimensions
@@ -85,8 +85,8 @@ function completeDimensions(
         generateCoordCount?: number;
     }
 ): DataDimensionInfo[] {
-    if (!(source instanceof Source)) {
-        source = Source.seriesDataToSource(source as OptionSourceData);
+    if (!isSourceInstance(source)) {
+        source = createSourceFromSeriesDataOption(source as OptionSourceData);
     }
 
     opt = opt || {};
@@ -295,7 +295,7 @@ function getDimCount(
     // Note that the result dimCount should not small than columns count
     // of data, otherwise `dataDimNameMap` checking will be incorrect.
     let dimCount = Math.max(
-        source.dimensionsDetectCount || 1,
+        source.dimensionsDetectedCount || 1,
         sysDims.length,
         dimsDef.length,
         optDimCount || 0

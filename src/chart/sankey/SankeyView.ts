@@ -28,7 +28,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 
 interface FocusNodeAdjacencyPayload extends Payload {
     dataIndex?: number

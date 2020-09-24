@@ -18,7 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
-import {getECData} from '../../util/ecData';
+import {getECData} from '../../util/innerStore';
 import * as layout from '../../util/layout';
 import {wrapTreePathInfo} from '../helper/treeHelper';
 import TreemapSeriesModel, { TreemapSeriesNodeItemOption, TreemapSeriesOption } from './TreemapSeries';

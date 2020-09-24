@@ -20,7 +20,7 @@
 import { DatasetModel } from '../../component/dataset';
 import SeriesModel from '../../model/Series';
 import { setAsPrimitive, map, isTypedArray, assert, each } from 'zrender/src/core/util';
-import Source, { SourceMetaRawOption } from '../Source';
+import { SourceMetaRawOption, Source, createSource, cloneSourceShallow } from '../Source';
 import {
     SeriesEncodableModel, OptionSourceData,
     SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL,
@@ -28,7 +28,7 @@ import {
 } from '../../util/types';
 import {
     querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels,
-    createSource, cloneSourceShallow, inheritSourceMetaRawOption
+    inheritSourceMetaRawOption
 } from './sourceHelper';
 import { applyDataTransform } from './transform';
 
@@ -264,17 +264,39 @@ export class SourceManager {
         const datasetModel = this._sourceHost as DatasetModel;
         const transformOption = datasetModel.get('transform', true);
         const fromTransformResult = datasetModel.get('fromTransformResult', true);
+
+        if (__DEV__) {
+            assert(fromTransformResult != null || transformOption != null);
+        }
+
+        if (fromTransformResult != null) {
+            let errMsg = '';
+            if (upMgrList.length !== 1) {
+                if (__DEV__) {
+                    errMsg = 'When using `fromTransformResult`, there should be only one upstream dataset';
+                }
+                doThrow(errMsg);
+            }
+        }
+
         let sourceList: Source[];
-        let upstreamSignList: string[];
+        const upSourceList: Source[] = [];
+        const upstreamSignList: string[] = [];
+        each(upMgrList, upMgr => {
+            upMgr.prepareSource();
+            const upSource = upMgr.getSource(fromTransformResult || 0);
+            let errMsg = '';
+            if (fromTransformResult != null && !upSource) {
+                if (__DEV__) {
+                    errMsg = 'Can not retrieve result by `fromTransformResult`: ' + fromTransformResult;
+                }
+                doThrow(errMsg);
+            }
+            upSourceList.push(upSource);
+            upstreamSignList.push(upMgr._getVersionSign());
+        });
 
         if (transformOption) {
-            const upSourceList: Source[] = [];
-            upstreamSignList = [];
-            each(upMgrList, upMgr => {
-                upMgr.prepareSource();
-                upSourceList.push(upMgr.getSource());
-                upstreamSignList.push(upMgr._getVersionSign());
-            });
             sourceList = applyDataTransform(
                 transformOption,
                 upSourceList,
@@ -282,18 +304,7 @@ export class SourceManager {
             );
         }
         else if (fromTransformResult != null) {
-            if (upMgrList.length !== 1) {
-                let errMsg = '';
-                if (__DEV__) {
-                    errMsg = 'When using `fromTransformResult`, there should be only one upstream dataset';
-                }
-                doThrow(errMsg);
-            }
-            const upMgr = upMgrList[0];
-            upMgr.prepareSource();
-            const upSource = upMgr.getSource(fromTransformResult);
-            upstreamSignList = [upMgr._getVersionSign()];
-            sourceList = [cloneSourceShallow(upSource)];
+            sourceList = [cloneSourceShallow(upSourceList[0])];
         }
 
         return { sourceList, upstreamSignList };

@@ -21,11 +21,6 @@ import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import Tree, { TreeNode } from '../../data/Tree';
 import Model from '../../model/Model';
-import {
-    addCommas,
-    concatTooltipHtml,
-    encodeHTML
-} from '../../util/format';
 import {wrapTreePathInfo} from '../helper/treeHelper';
 import {
     SeriesOption,
@@ -33,7 +28,6 @@ import {
     ItemStyleOption,
     LabelOption,
     RoamOptionMixin,
-    TooltipRenderMode,
     CallbackDataParams,
     ColorString,
     StatesOptionMixin
@@ -42,6 +36,7 @@ import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
 import List from '../../data/List';
 import { normalizeToArray } from '../../util/model';
+import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
 // Only support numberic value.
 type TreemapSeriesDataValue = number | number[];
@@ -377,21 +372,13 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
     formatTooltip(
         dataIndex: number,
         multipleSeries: boolean,
-        dataType: string,
-        renderMode: TooltipRenderMode
+        dataType: string
     ) {
         const data = this.getData();
         const value = this.getRawValue(dataIndex) as TreemapSeriesDataValue;
-        const formattedValue = zrUtil.isArray(value)
-            ? addCommas(value[0] as number) : addCommas(value as number);
         const name = data.getName(dataIndex);
 
-        if (renderMode === 'richText') {
-            return encodeHTML(name) + ': ' + formattedValue;
-        }
-        return '<div style="line-height:1">'
-            + concatTooltipHtml(name, formattedValue)
-            + '</div>';
+        return createTooltipMarkup('nameValue', { name: name, value: value });
     }
 
     /**

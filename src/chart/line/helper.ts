@@ -111,7 +111,7 @@ export function getStackedOnPoint(
     coordSys: Cartesian2D | Polar,
     data: List,
     idx: number
-    ) {
+) {
     let value = NaN;
     if (dataCoordInfo.stacked) {
         value = data.get(data.getCalculationInfo('stackedOverDimension'), idx) as number;

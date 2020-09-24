@@ -38,7 +38,7 @@ import { parsePercent } from 'zrender/src/contain/text';
 import { setAsHighDownDispatcher } from '../../util/states';
 import { createSymbol } from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 
 const linearMap = numberUtil.linearMap;
 const each = zrUtil.each;

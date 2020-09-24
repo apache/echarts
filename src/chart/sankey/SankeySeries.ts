@@ -19,7 +19,6 @@
 
 import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
-import {concatTooltipHtml, encodeHTML} from '../../util/format';
 import Model from '../../model/Model';
 import {
     SeriesOption,
@@ -33,12 +32,13 @@ import {
     StatesOptionMixin,
     OptionDataItemObject,
     GraphEdgeItemObject,
-    OptionDataValueNumeric,
-    TooltipRenderMode
+    OptionDataValueNumeric
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { LayoutRect } from '../../util/layout';
+import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
 
@@ -225,38 +225,37 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         return this.getGraph().edgeData;
     }
 
-    /**
-     * @override
-     */
     formatTooltip(
         dataIndex: number,
         multipleSeries: boolean,
-        dataType: 'node' | 'edge',
-        renderMode: TooltipRenderMode
+        dataType: 'node' | 'edge'
     ) {
+        function noValue(val: unknown): boolean {
+            return isNaN(val as number) || val == null;
+        }
         // dataType === 'node' or empty do not show tooltip by default
         if (dataType === 'edge') {
             const params = this.getDataParams(dataIndex, dataType);
             const rawDataOpt = params.data;
-            if (renderMode === 'richText') {
-                return encodeHTML(rawDataOpt.source + ' -- ' + rawDataOpt.target) + params.value;
-            }
-            return '<div style="line-height:1">'
-                + concatTooltipHtml(rawDataOpt.source + ' -- ' + rawDataOpt.target, params.value || '')
-                + '</div>';
+            const edgeValue = params.value;
+            const edgeName = rawDataOpt.source + ' -- ' + rawDataOpt.target;
+            return createTooltipMarkup('nameValue', {
+                name: edgeName,
+                value: edgeValue,
+                noValue: noValue(edgeValue)
+            });
         }
-        else if (dataType === 'node') {
+        // dataType === 'node'
+        else {
             const node = this.getGraph().getNodeByIndex(dataIndex);
             const value = node.getLayout().value;
             const name = this.getDataParams(dataIndex, dataType).data.name;
-            if (renderMode === 'richText') {
-                return encodeHTML(value ? name : '') + ': ' + (value || '');
-            }
-            return '<div style="line-height:1">'
-                + concatTooltipHtml(value ? name : '', value || '')
-                + '</div>';
+            return createTooltipMarkup('nameValue', {
+                name: name,
+                value: value,
+                noValue: noValue(value)
+            });
         }
-        return super.formatTooltip(dataIndex, multipleSeries, dataType, renderMode);
     }
 
     optionUpdated() {

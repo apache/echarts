@@ -23,7 +23,6 @@ import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
 import {groupData, SINGLE_REFERRING} from '../../util/model';
-import {concatTooltipHtml, encodeHTML} from '../../util/format';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
     SeriesOption,
@@ -33,12 +32,12 @@ import {
     OptionDataValueNumeric,
     ItemStyleOption,
     BoxLayoutOptionMixin,
-    ZRColor,
-    TooltipRenderMode
+    ZRColor
 } from '../../util/types';
 import SingleAxis from '../../coord/single/SingleAxis';
 import GlobalModel from '../../model/Global';
 import Single from '../../coord/single/Single';
+import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
 const DATA_NAME_INDEX = 2;
 
@@ -285,29 +284,16 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
         return {dataIndices: indices, nestestValue: nestestValue};
     }
 
-    /**
-     * @override
-     * @param {number} dataIndex  index of data
-     */
     formatTooltip(
         dataIndex: number,
         multipleSeries: boolean,
-        dataType: string,
-        renderMode: TooltipRenderMode
-    ): string {
+        dataType: string
+    ) {
         const data = this.getData();
-        const htmlName = data.getName(dataIndex);
-        let htmlValue = data.get(data.mapDimension('value'), dataIndex);
-        if (isNaN(htmlValue as number) || htmlValue == null) {
-            htmlValue = '-';
-        }
+        const name = data.getName(dataIndex);
+        const value = data.get(data.mapDimension('value'), dataIndex);
 
-        if (renderMode === 'richText') {
-            return encodeHTML(htmlName) + ': ' + htmlValue;
-        }
-        return '<div style="margin: 11px 0 0;line-height:1">'
-            + concatTooltipHtml(htmlName, htmlValue)
-            + '</div>';
+        return createTooltipMarkup('nameValue', { name: name, value: value });
     }
 
     static defaultOption: ThemeRiverSeriesOption = {

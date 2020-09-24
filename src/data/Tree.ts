@@ -26,8 +26,12 @@ import Model from '../model/Model';
 import linkList from './helper/linkList';
 import List from './List';
 import createDimensions from './helper/createDimensions';
-import { DimensionLoose, ParsedValue } from '../util/types';
+import {
+    DimensionLoose, ParsedValue, OptionId, OptionDataValue,
+    OptionDataItemObject
+} from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
+import { convertOptionIdName } from '../util/model';
 
 type TreeTraverseOrder = 'preorder' | 'postorder';
 type TreeTraverseCallback<Ctx> = (this: Ctx, node: TreeNode) => boolean | void;
@@ -36,10 +40,8 @@ type TreeTraverseOption = {
     attr?: 'children' | 'viewChildren'
 };
 
-interface TreeNodeData {
-    name?: string
-    value?: any
-    children?: TreeNodeData[]
+interface TreeNodeOption extends Pick<OptionDataItemObject<OptionDataValue>, 'name' | 'value'> {
+    children?: TreeNodeOption[];
 }
 
 export class TreeNode {
@@ -405,7 +407,7 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
      *     ]
      * }
      */
-    static createTree<T extends TreeNodeData, HostModel extends Model, LevelOption>(
+    static createTree<T extends TreeNodeOption, HostModel extends Model, LevelOption>(
         dataRoot: T,
         hostModel: HostModel,
         treeOptions?: {
@@ -415,18 +417,18 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
     ) {
 
         const tree = new Tree(hostModel, treeOptions && treeOptions.levels);
-        const listData: TreeNodeData[] = [];
+        const listData: TreeNodeOption[] = [];
         let dimMax = 1;
 
         buildHierarchy(dataRoot);
 
-        function buildHierarchy(dataNode: TreeNodeData, parentNode?: TreeNode) {
+        function buildHierarchy(dataNode: TreeNodeOption, parentNode?: TreeNode) {
             const value = dataNode.value;
             dimMax = Math.max(dimMax, zrUtil.isArray(value) ? value.length : 1);
 
             listData.push(dataNode);
 
-            const node = new TreeNode(dataNode.name, tree);
+            const node = new TreeNode(convertOptionIdName(dataNode.name, ''), tree);
             parentNode
                 ? addChild(node, parentNode)
                 : (tree.root = node);

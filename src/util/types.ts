@@ -27,7 +27,7 @@
 
 import Group from 'zrender/src/graphic/Group';
 import Element, {ElementEvent, ElementTextConfig} from 'zrender/src/Element';
-import DataFormatMixin from '../model/mixin/dataFormat';
+import { DataFormatMixin } from '../model/mixin/dataFormat';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
 import SeriesModel from '../model/Series';
@@ -36,7 +36,6 @@ import { TaskPlanCallbackReturn, TaskProgressParams } from '../stream/task';
 import List, {ListDimensionType} from '../data/List';
 import { Dictionary, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
-import Source from '../data/Source';
 import { TooltipMarker } from './format';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
@@ -46,6 +45,7 @@ import { TSpanStyleProps } from 'zrender/src/graphic/TSpan';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
+import { Source } from '../data/Source';
 
 
 
@@ -275,6 +275,12 @@ export interface LoadingEffect extends Element {
     resize: () => void;
 }
 
+/**
+ * 'html' is used for rendering tooltip in extra DOM form, and the result
+ * string is used as DOM HTML content.
+ * 'richText' is used for rendering tooltip in rich text form, for those where
+ * DOM operation is not supported.
+ */
 export type TooltipRenderMode = 'html' | 'richText';
 
 export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'seriesAsc' | 'seriesDesc';
@@ -511,11 +517,15 @@ export type OptionDataItem =
     | OptionDataItemObject<OptionDataValue>;
 // Only for `SOURCE_FORMAT_KEYED_ORIGINAL`
 export type OptionDataItemObject<T> = {
-    id?: string | number;
-    name?: string;
+    id?: OptionId;
+    name?: OptionName;
     value?: T[] | T;
     selected?: boolean;
 };
+// Compat number because it is usually used and not easy to
+// restrict it in practise.
+export type OptionId = string | number;
+export type OptionName = string | number;
 export interface GraphEdgeItemObject<
     VAL extends OptionDataValue
 > extends OptionDataItemObject<VAL> {
@@ -938,6 +948,10 @@ export interface LineLabelOption extends Omit<LabelOption, 'distance' | 'positio
 
 export interface LabelLineOption {
     show?: boolean
+    /**
+     * If displayed above other elements
+     */
+    showAbove?: boolean
     length?: number
     length2?: number
     smooth?: boolean | number
@@ -1241,8 +1255,8 @@ export interface CommonAxisPointerOption {
 export interface ComponentOption {
     type?: string;
 
-    id?: string;
-    name?: string;
+    id?: OptionId;
+    name?: OptionName;
 
     z?: number;
     zlevel?: number;
@@ -1404,7 +1418,7 @@ export interface SeriesStackOptionMixin {
 type SamplingFunc = (frame: ArrayLike<number>) => number;
 
 export interface SeriesSamplingOptionMixin {
-    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | SamplingFunc
+    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | 'lttb' | SamplingFunc
 }
 
 export interface SeriesEncodeOptionMixin {

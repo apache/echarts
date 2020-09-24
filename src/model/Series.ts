@@ -19,21 +19,15 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import {
-    formatTime,
-    encodeHTML,
-    addCommas,
-    getTooltipMarker
-} from '../util/format';
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
-    SeriesOption, TooltipRenderMode, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, ColorString, OptionDataItemObject, SeriesDataType
+    SeriesOption, ZRColor, BoxLayoutOptionMixin,
+    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {ColorPaletteMixin} from './mixin/colorPalette';
-import DataFormatMixin from '../model/mixin/dataFormat';
+import { DataFormatMixin } from '../model/mixin/dataFormat';
 import Model from '../model/Model';
 import {
     getLayoutParams,
@@ -41,19 +35,18 @@ import {
     fetchLayoutMode
 } from '../util/layout';
 import {createTask} from '../stream/task';
-import {retrieveRawValue} from '../data/helper/dataProvider';
 import GlobalModel from './Global';
 import { CoordinateSystem } from '../coord/CoordinateSystem';
 import { ExtendableConstructor, mountExtend, Constructor } from '../util/clazz';
 import { PipelineContext, SeriesTaskContext, GeneralTask, OverallTask, SeriesTask } from '../stream/Scheduler';
 import LegendVisualProvider from '../visual/LegendVisualProvider';
 import List from '../data/List';
-import Source from '../data/Source';
 import Axis from '../coord/Axis';
-import { GradientObject } from 'zrender/src/graphic/Gradient';
 import type { BrushCommonSelectorsForSeries, BrushSelectableArea } from '../component/brush/selector';
 import makeStyleMapper from './mixin/makeStyleMapper';
 import { SourceManager } from '../data/helper/sourceManager';
+import { Source } from '../data/Source';
+import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatTooltip';
 
 const inner = modelUtil.makeInner<{
     data: List
@@ -399,7 +392,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         return coordSys && coordSys.getBaseAxis && coordSys.getBaseAxis();
     }
 
-    // FIXME
     /**
      * Default tooltip formatter
      *
@@ -412,178 +404,18 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      *        'richText' is used for rendering tooltip in rich text form, for those where
      *        DOM operation is not supported.
      * @return formatted tooltip with `html` and `markers`
+     *        Notice: The override method can also return string
      */
     formatTooltip(
         dataIndex: number,
         multipleSeries?: boolean,
-        dataType?: SeriesDataType,
-        renderMode?: TooltipRenderMode
-    ): {
-        html: string,
-        markers: Dictionary<ColorString>
-    } | string { // The override method can also return string
-
-        const series = this;
-        renderMode = renderMode || 'html';
-        const newLine = renderMode === 'html' ? '' : '\n';
-        const isRichText = renderMode === 'richText';
-        const markers: Dictionary<ColorString> = {};
-        let markerId = 0;
-
-        function formatArrayValue(value: any[]) {
-            // ??? TODO refactor these logic.
-            // check: category-no-encode-has-axis-data in dataset.html
-            const vertially = zrUtil.reduce(value, function (vertially, val, idx) {
-                const dimItem = data.getDimensionInfo(idx);
-                return vertially |= (dimItem && dimItem.tooltip !== false && dimItem.displayName != null) as any;
-            }, 0);
-
-            const result: string[] = [];
-
-            tooltipDims.length
-                ? zrUtil.each(tooltipDims, function (dim) {
-                    setEachItem(retrieveRawValue(data, dataIndex, dim), dim);
-                })
-                // By default, all dims is used on tooltip.
-                : zrUtil.each(value, setEachItem);
-
-            function setEachItem(val: any, dim: DimensionName | number): void {
-                const dimInfo = data.getDimensionInfo(dim);
-                // If `dimInfo.tooltip` is not set, show tooltip.
-                if (!dimInfo || dimInfo.otherDims.tooltip === false) {
-                    return;
-                }
-                const dimType = dimInfo.type;
-                const markName = 'sub' + series.seriesIndex + 'at' + markerId;
-                const dimHead = getTooltipMarker({
-                    color: colorStr,
-                    type: 'subItem',
-                    renderMode: renderMode,
-                    markerId: markName
-                });
-
-                const dimHeadStr = typeof dimHead === 'string' ? dimHead : dimHead.content;
-                const valStr = (vertially
-                        ? '<span style="font-size:12px;color:#6e7079;">'
-                            + dimHeadStr + encodeHTML(dimInfo.displayName || '-')
-                            + '</span>'
-                        : ''
-                    )
-                    // FIXME should not format time for raw data?
-                    + '<span style="float:right;margin-left:20px;color:#000;font-weight:900">'
-                    + encodeHTML(dimType === 'ordinal'
-                        ? val + ''
-                        : dimType === 'time'
-                        ? (multipleSeries ? '' : formatTime('yyyy/MM/dd hh:mm:ss', val))
-                        : addCommas(val)
-                    )
-                    + '</span>';
-                valStr && result.push(`<div style="margin: 11px 0 0;line-height:1;">${valStr}</div>`);
-
-                if (isRichText) {
-                    markers[markName] = colorStr;
-                    ++markerId;
-                }
-            }
-
-            const newLine = vertially ? (isRichText ? '\n' : '') : '';
-            const content = newLine + result.join(newLine || '');
-            return {
-                renderMode: renderMode,
-                content: content,
-                style: markers
-            };
-        }
-
-        function formatSingleValue(val: any) {
-            // return encodeHTML(addCommas(val));
-            return {
-                renderMode: renderMode,
-                content: encodeHTML(addCommas(val)),
-                style: markers
-            };
-        }
-
-        const data = this.getData();
-        const tooltipDims = data.mapDimensionsAll('defaultedTooltip');
-        const tooltipDimLen = tooltipDims.length;
-        const value = this.getRawValue(dataIndex) as any;
-        const isValueArr = zrUtil.isArray(value);
-
-        const style = data.getItemVisual(dataIndex, 'style');
-        const color = style[this.visualDrawType];
-        let colorStr: ColorString;
-        if (zrUtil.isString(color)) {
-            colorStr = color;
-        }
-        else if (color && (color as GradientObject).colorStops) {
-            colorStr = ((color as GradientObject).colorStops[0] || {}).color;
-        }
-        colorStr = colorStr || 'transparent';
-
-        // Complicated rule for pretty tooltip.
-        const formattedValue = (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
-            ? formatArrayValue(value)
-            : tooltipDimLen
-            ? formatSingleValue(retrieveRawValue(data, dataIndex, tooltipDims[0]))
-            : formatSingleValue(isValueArr ? value[0] : value);
-        const content = isRichText
-            ? formattedValue.content
-            : (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
-            ? '<div>'
-                + formattedValue.content + '</div>'
-            : '<span style="float:right;margin-left:20px;color:#464646;font-weight:bold">'
-                + formattedValue.content + '</span>';
-
-        const markName = series.seriesIndex + 'at' + markerId;
-        const colorEl = getTooltipMarker({
-            color: colorStr,
-            type: 'item',
-            renderMode,
-            markerId: markName
+        dataType?: SeriesDataType
+    ): ReturnType<DataFormatMixin['formatTooltip']> {
+        return defaultSeriesFormatTooltip({
+            series: this,
+            dataIndex: dataIndex,
+            multipleSeries: multipleSeries
         });
-        markers[markName] = colorStr;
-        ++markerId;
-
-        const name = data.getName(dataIndex);
-
-        let seriesName = this.name;
-        if (!modelUtil.isNameSpecified(this)) {
-            seriesName = '';
-        }
-        seriesName = seriesName
-            ? encodeHTML(seriesName) + (!multipleSeries ? newLine : ' ')
-            : '';
-
-        colorStr = zrUtil.isString(colorEl) ? colorEl : colorEl.content;
-        let html = '';
-        if (!isRichText) {
-            seriesName = seriesName
-                ? !multipleSeries
-                ? `<div style="font-size:12px;color:#6e7079;line-height:1;margin-top:-4px;">${seriesName}</div>`
-                : `<span style="font-size:12px;color:#6e7079;line-height:1">${seriesName}</span>`
-                : '';
-            html = !multipleSeries
-                ? seriesName + `<div style="margin: ${seriesName ? 8 : 0}px 0 0;line-height:1">`
-                    + colorStr
-                    + (name
-                        ? `<span style="font-size:12px;color:#6e7079;">${encodeHTML(name)}</span>${content}`
-                        : content
-                    ) + '</div>'
-                : `<div style="margin: 11px 0 0;line-height:1;">${colorStr}${seriesName}${content}</div>`;
-        }
-        else {
-            html = !multipleSeries
-                ? seriesName + (seriesName ? '\n' : '') + ''
-                    + colorStr
-                    + (name
-                        ? `${encodeHTML(name)}: ${content}`
-                        : content
-                    ) + ''
-                : `${colorStr}${seriesName}: ${content}`;
-        }
-
-        return {html, markers};
     }
 
     isAnimationEnabled(): boolean {
@@ -811,17 +643,18 @@ function dataTaskProgress(param: StageHandlerProgressParams, context: SeriesTask
 
 // TODO refactor
 function wrapData(data: List, seriesModel: SeriesModel): void {
-    zrUtil.each(data.CHANGABLE_METHODS, function (methodName) {
-        data.wrapMethod(methodName as any, zrUtil.curry(onDataSelfChange, seriesModel));
+    zrUtil.each([...data.CHANGABLE_METHODS, ...data.DOWNSAMPLE_METHODS], function (methodName) {
+        data.wrapMethod(methodName as any, zrUtil.curry(onDataChange, seriesModel));
     });
 }
 
-function onDataSelfChange(this: List, seriesModel: SeriesModel): void {
+function onDataChange(this: List, seriesModel: SeriesModel, newList: List): List {
     const task = getCurrentTask(seriesModel);
     if (task) {
         // Consider case: filter, selectRange
-        task.setOutputEnd(this.count());
+        task.setOutputEnd((newList || this).count());
     }
+    return newList;
 }
 
 function getCurrentTask(seriesModel: SeriesModel): GeneralTask {
@@ -841,5 +674,6 @@ function getCurrentTask(seriesModel: SeriesModel): GeneralTask {
         return task;
     }
 }
+
 
 export default SeriesModel;

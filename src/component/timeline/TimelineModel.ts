@@ -19,7 +19,6 @@
 
 import ComponentModel from '../../model/Component';
 import List from '../../data/List';
-import * as modelUtil from '../../util/model';
 import {
     ComponentOption,
     BoxLayoutOptionMixin,
@@ -38,6 +37,7 @@ import {
 import Model from '../../model/Model';
 import GlobalModel, { GlobalModelSetOptionOpts } from '../../model/Global';
 import { each, isObject, clone, isString } from 'zrender/src/core/util';
+import { convertOptionIdName, getDataItemValue } from '../../util/model';
 
 
 export interface TimelineControlStyle extends ItemStyleOption {
@@ -247,7 +247,7 @@ class TimelineModel extends ComponentModel<TimelineOption> {
         if (axisType === 'category') {
             processedDataArr = [];
             each(dataArr, function (item, index) {
-                let value = modelUtil.getDataItemValue(item);
+                const value = convertOptionIdName(getDataItemValue(item), '');
                 let newItem;
 
                 if (isObject(item)) {
@@ -260,11 +260,7 @@ class TimelineModel extends ComponentModel<TimelineOption> {
 
                 processedDataArr.push(newItem);
 
-                if (!isString(value) && (value == null || isNaN(value as number))) {
-                    value = '';
-                }
-
-                names.push(value + '');
+                names.push(value);
             });
         }
         else {

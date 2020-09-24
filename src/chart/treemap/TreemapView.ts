@@ -19,7 +19,7 @@
 
 import {bind, each, indexOf, curry, extend, retrieve, normalizeCssArray} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import {getECData} from '../../util/ecData';
+import {getECData} from '../../util/innerStore';
 import {
     isHighDownDispatcher,
     setAsHighDownDispatcher,

@@ -21,6 +21,7 @@ under the License.
 
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="lib/esl.js"></script>
     <script src="lib/config.js"></script>
 </head>
@@ -30,98 +31,192 @@ under the License.
         margin: 0;
         padding: 0;
     }
+    .chart {
+        width: 100vw;
+        height: 40vh;
+        margin: 30px auto 0 auto;
+    }
+    #stateConsole {
+        position: fixed;
+        top: 5px;
+        left: 5px;
+        background: #333;
+        color: #eee;
+        font-size: 18px;
+        padding: 10px;
+        font-family: Monaco, monospace;
+        box-shadow: #000 0 0 5px;
+        z-index: 99999;
+    }
+    #stateConsole input {
+        margin-left: 15px;
+    }
+    #stateConsole .checked {
+        color: yellow;
+        font-size: 30px;
+    }
+    h1 {
+        margin-top: 40px;
+        margin-left: 10px;
+        font-size: 20px;
+        font-family: Arial, Helvetica, sans-serif;
+    }
 </style>
 
 <body>
-    <h1>Tooltip in Line Chart</h1>
-    <div id="main1" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+
+    <div id="stateConsole">
+        <span>tooltip.renderMode: </span>
+        <span id="stateConsoleSelect"></span>
+    </div>
+    <br>
+    <br>
+    <br>
+    <br>
+
+    <h1>Hover point, show item tooltip (with arrow in renderMode 'html')</h1>
+    <div id="main1" class="chart"></div>
     <h1>Tooltip in Radar Chart</h1>
-    <div id="main2" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main2" class="chart"></div>
     <h1>Tooltip in Pie Chart</h1>
-    <div id="main3" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main3" class="chart"></div>
     <h1>Tooltip in Sankey Chart</h1>
-    <div id="main4" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main4" class="chart"></div>
     <h1>Tooltip in Graph Chart</h1>
-    <div id="main5" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main5" class="chart"></div>
+    <h1>Simple 2 value axis scatter (trigger: 'item' | 'axis')</h1>
+    <div id="main6" class="chart"></div>
     <h1>Tooltip in Tree Chart</h1>
-    <div id="main7" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main7" class="chart"></div>
     <h1>Tooltip in Multiple Chart</h1>
-    <div id="main8" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main8" class="chart"></div>
     <h1>Tooltip in Line Chart axis Y is main axis</h1>
-    <div id="main9" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main9" class="chart"></div>
     <h1>Tooltip in Treemap Chart</h1>
-    <div id="main10" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main10" class="chart"></div>
     <h1>Tooltip in Bar Chart</h1>
-    <div id="main11" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
-    <h1>Tooltip in Stacked Line Chart</h1>
-    <div id="main12" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main11" class="chart"></div>
+    <h1>Tooltip in Stacked Line Chart (and legend)</h1>
+    <div id="main12" class="chart"></div>
     <h1>Tooltip in Scatter Line Chart</h1>
-    <div id="main13" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
-    <h1>Tooltip in Boxplot Chart</h1>
-    <div id="main14" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main13" class="chart"></div>
+    <h1>Tooltip both in Candlestick (show dims vertically) and Line</h1>
+    <div id="main14" class="chart"></div>
+    <h1>Tooltip in Map Series</h1>
+    <div id="main15" class="chart"></div>
     <h1>Tooltip in Continuous Heatmap Chart</h1>
-    <div id="main16" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main16" class="chart"></div>
     <h1>Tooltip in Piecewise Heatmap Chart</h1>
-    <div id="main17" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main17" class="chart"></div>
     <h1>Tooltip in Gradien Line Chart</h1>
-    <div id="main18" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main18" class="chart"></div>
     <h1>Tooltip in Multiple X Axis Line Chart</h1>
-    <div id="main19" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main19" class="chart"></div>
     <h1>Tooltip in Gradient Bar Chart</h1>
-    <div id="main20" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
-    <h1>Tooltip in Stacked Bar Chart</h1>
-    <div id="main21" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main20" class="chart"></div>
+    <h1>Tooltip in Stacked Bar Chart (check MarkPoint)</h1>
+    <div id="main21" class="chart"></div>
     <h1>Tooltip in Stacked Bar Chart Horizontal</h1>
-    <div id="main22" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main22" class="chart"></div>
     <h1>Tooltip in Stacked Line Chart Horizontal</h1>
-    <div id="main23" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main23" class="chart"></div>
     <h1>Tooltip order valueAsc</h1>
-    <div id="main24" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
-    <h1>Tooltip order valueDesc</h1>
-    <div id="main25" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main24" class="chart"></div>
+    <h1>'value' xAxis, valueDesc</h1>
+    <div id="main25" class="chart"></div>
     <h1>Tooltip order seriesDesc</h1>
-    <div id="main26" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main26" class="chart"></div>
     <h1>Tooltip order seriesAsc</h1>
-    <div id="main27" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
-    <h1>Tooltip Rich text in Radar</h1>
-    <div id="main28" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
-    <h1>Tooltip Rich text in Line and valueDesc</h1>
-    <div id="main29" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <div id="main27" class="chart"></div>
+    <h1>Tooltip Radar and valueAsc</h1>
+    <div id="main28" class="chart"></div>
+    <h1>Tooltip 'category' xAxis with number value and valueDesc</h1>
+    <div id="main29" class="chart"></div>
+    <h1>Tooltip Line 'time' xAxis</h1>
+    <div id="main30" class="chart"></div>
+    <h1>tooltip.formatter callback. Markers should be displayed.</h1>
+    <div id="main31" class="chart"></div>
+
 
     <script>
+
+        var CURRENT_RENDER_MODE;
+        function initStateConsole() {
+            var TOOLTIP_RENDER_MODE_KEY = '__EC_TEST_TOOLTIP_RENDER_MODE__';
+            var RENDER_MODE_LIST = ['html', 'richText'];
+
+            CURRENT_RENDER_MODE = window.localStorage.getItem(TOOLTIP_RENDER_MODE_KEY);
+            if (!CURRENT_RENDER_MODE) {
+                CURRENT_RENDER_MODE = RENDER_MODE_LIST[0];
+            }
+
+            var containerDom = document.getElementById('stateConsoleSelect');
+            var html = [];
+            for (var i = 0; i < RENDER_MODE_LIST.length; i++) {
+                var modeVal = RENDER_MODE_LIST[i];
+                var checkedAttr = CURRENT_RENDER_MODE === modeVal ? ' checked="checked" ' : '';
+                var checkedStyle = CURRENT_RENDER_MODE === modeVal ? ' class="checked" ' : '';
+                html.push(
+                    '<input type="radio" name="renderMode" ' + checkedAttr + ' value="' + modeVal + '">',
+                    '<label ' + checkedStyle + 'for="' + modeVal + '">' + modeVal + '</label>'
+                );
+            }
+            containerDom.innerHTML = html.join('');
+            containerDom.onclick = function (e) {
+                var target = e.target;
+                if (target.tagName === 'INPUT') {
+                    var newRenderMode = target.value;
+                    window.localStorage.setItem(TOOLTIP_RENDER_MODE_KEY, newRenderMode);
+                    location.reload();
+                }
+            };
+        }
+        initStateConsole();
+
+
         require([
-            'echarts'
+            'echarts', 'map/js/province/jiangsu'
         ], function (echarts) {
-            var chart1 = echarts.init(document.getElementById('main1'));
-            var chart2 = echarts.init(document.getElementById('main2'));
-            var chart3 = echarts.init(document.getElementById('main3'));
-            var chart4 = echarts.init(document.getElementById('main4'));
-            var chart5 = echarts.init(document.getElementById('main5'));
-            var chart7 = echarts.init(document.getElementById('main7'));
-            var chart8 = echarts.init(document.getElementById('main8'));
-            var chart9 = echarts.init(document.getElementById('main9'));
-            var chart10 = echarts.init(document.getElementById('main10'));
-            var chart11 = echarts.init(document.getElementById('main11'));
-            var chart12 = echarts.init(document.getElementById('main12'));
-            var chart13 = echarts.init(document.getElementById('main13'));
-            var chart14 = echarts.init(document.getElementById('main14'));
-            var chart16 = echarts.init(document.getElementById('main16'));
-            var chart17 = echarts.init(document.getElementById('main17'));
-            var chart18 = echarts.init(document.getElementById('main18'));
-            var chart19 = echarts.init(document.getElementById('main19'));
-            var chart20 = echarts.init(document.getElementById('main20'));
-            var chart21 = echarts.init(document.getElementById('main21'));
-            var chart22 = echarts.init(document.getElementById('main22'));
-            var chart23 = echarts.init(document.getElementById('main23'));
-            var chart24 = echarts.init(document.getElementById('main24'));
-            var chart25 = echarts.init(document.getElementById('main25'));
-            var chart26 = echarts.init(document.getElementById('main26'));
-            var chart27 = echarts.init(document.getElementById('main27'));
-            var chart28 = echarts.init(document.getElementById('main28'));
-            var chart29 = echarts.init(document.getElementById('main29'));
+            function createChart(domId) {
+                // Make some of the html able to be commented.
+                var dom = document.getElementById(domId);
+                return dom ? echarts.init(dom) : null;
+            }
+            var chart1 = createChart('main1');
+            var chart2 = createChart('main2');
+            var chart3 = createChart('main3');
+            var chart4 = createChart('main4');
+            var chart5 = createChart('main5');
+            var chart6 = createChart('main6');
+            var chart7 = createChart('main7');
+            var chart8 = createChart('main8');
+            var chart9 = createChart('main9');
+            var chart10 = createChart('main10');
+            var chart11 = createChart('main11');
+            var chart12 = createChart('main12');
+            var chart13 = createChart('main13');
+            var chart14 = createChart('main14');
+            var chart15 = createChart('main15');
+            var chart16 = createChart('main16');
+            var chart17 = createChart('main17');
+            var chart18 = createChart('main18');
+            var chart19 = createChart('main19');
+            var chart20 = createChart('main20');
+            var chart21 = createChart('main21');
+            var chart22 = createChart('main22');
+            var chart23 = createChart('main23');
+            var chart24 = createChart('main24');
+            var chart25 = createChart('main25');
+            var chart26 = createChart('main26');
+            var chart27 = createChart('main27');
+            var chart28 = createChart('main28');
+            var chart29 = createChart('main29');
+            var chart30 = createChart('main30');
+            var chart31 = createChart('main31');
 
             option1 = {
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     trigger: 'item',
                     position: 'bottom',
                     axisPointer: {
@@ -162,10 +257,8 @@ under the License.
             };
 
             option2 = {
-                title: {
-                    text: '基础雷达图'
-                },
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     // attachToPoint: true
                 },
                 radar: {
@@ -222,6 +315,7 @@ under the License.
 
             option3 = {
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     trigger: 'item',
                     // formatter: '{a} <br/>{b}: {c} ({d}%)'
                 },
@@ -269,7 +363,9 @@ under the License.
             };
 
             option4 = {
-                tooltip: {},
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                },
                 series: {
                     type: 'sankey',
                     layout: 'none',
@@ -316,17 +412,16 @@ under the License.
             };
 
             option5 = {
-                title: {
-                    text: 'Graph 简单示例'
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                 },
-                tooltip: {},
                 animationDurationUpdate: 1500,
                 animationEasingUpdate: 'quinticInOut',
                 series: [{
                     type: 'graph',
                     layout: 'none',
                     symbolSize: 50,
-                    roam: true,
+                    roam: false,
                     label: {
                         show: true
                     },
@@ -397,8 +492,69 @@ under the License.
                 }]
             };
 
+            option6 = {
+                xAxis: {},
+                yAxis: {
+                    name: 'Should display multi-dim of an item in one line',
+                    nameTextStyle: {
+                        align: 'left'
+                    }
+                },
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                    trigger: 'axis'
+                },
+                series: [{
+                    type: 'scatter',
+                    encode: {
+                        tooltip: [0, 1],
+                        label: 2
+                    },
+                    label: {
+                        show: true,
+                        position: 'top'
+                    },
+                    data: [
+                        [121, 1222, 'trigger: axis\nshow 2 dim value\nheader: x value']
+                    ]
+                }, {
+                    type: 'scatter',
+                    encode: {
+                        tooltip: [1],
+                        label: [2]
+                    },
+                    label: {
+                        show: true,
+                        position: 'top'
+                    },
+                    data: [
+                        [121, 3444, 'trigger: axis\nshow 1 dim value\nheader: x value'],
+                        [666, 4122, 'trigger: axis\nshow 1 dim value\nheader: x value']
+                    ]
+                }, {
+                    type: 'scatter',
+                    encode: {
+                        tooltip: [0, 1],
+                        label: 2
+                    },
+                    tooltip: {
+                        trigger: 'item'
+                    },
+                    label: {
+                        show: true,
+                        position: 'top'
+                    },
+                    data: [
+                        [321, 0, 'trigger: item\nshow 2 dim value'],
+                        [466, 4122, 'trigger: item\nshow 2 dim value']
+                    ]
+                }]
+            };
+
             option7 = {
-                tooltip: {},
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                },
                 series: [{
                     type: "tree",
                     data: [{
@@ -423,7 +579,7 @@ under the License.
                                 value: 25,
                             }]
                         }, {
-                            name: "Child B",
+                            name: "Child B (should no value)",
                             children: [{
                                 name: "Leaf G",
                                 value: 26,
@@ -1164,12 +1320,8 @@ under the License.
             });
 
             option8 = {
-                title: {
-                    text: '雨量流量关系图',
-                    subtext: '数据来自西安兰特水电测控技术有限公司',
-                    left: 'center'
-                },
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     trigger: 'axis',
                     axisPointer: {
                         animation: false
@@ -1720,6 +1872,7 @@ under the License.
 
             option9 = {
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
@@ -1759,9 +1912,12 @@ under the License.
             };
 
             option10 = {
-                tooltip: {},
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                },
                 series: [{
                     type: 'treemap',
+                    roam: false,
                     data: [{
                         name: 'nodeA', // First tree
                         value: 10,
@@ -1788,7 +1944,9 @@ under the License.
             };
 
             option11 = {
-                tooltip: {},
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                },
                 dataset: {
                     source: [
                         ['product', '2015', '2016', '2017'],
@@ -1818,6 +1976,7 @@ under the License.
 
             option12 = {
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
@@ -1827,6 +1986,9 @@ under the License.
                     }
                 },
                 legend: {
+                    tooltip: {
+                        show: true
+                    },
                     data: ['邮件营销', '联盟广告', '视频广告', '直接访问', '搜索引擎']
                 },
                 grid: {
@@ -1848,17 +2010,6 @@ under the License.
                         type: 'line',
                         stack: '总量',
                         areaStyle: {},
-                        // markPoint: {
-                        //     data: [{
-                        //             type: 'max',
-                        //             name: '最大值'
-                        //         },
-                        //         {
-                        //             type: 'min',
-                        //             name: '最小值'
-                        //         }
-                        //     ]
-                        // },
                         data: [150, 232, 201, 154, 190, 330, 410]
                     },
                     {
@@ -1866,17 +2017,6 @@ under the License.
                         type: 'line',
                         stack: '总量',
                         areaStyle: {},
-                        // markPoint: {
-                        //     data: [{
-                        //             type: 'max',
-                        //             name: '最大值'
-                        //         },
-                        //         {
-                        //             type: 'min',
-                        //             name: '最小值'
-                        //         }
-                        //     ]
-                        // },
                         data: [320, 332, 301, 334, 390, 430, 320]
                     },
                     {
@@ -2005,6 +2145,7 @@ under the License.
                     }
                 ],
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     formatter: 'Group {a}: ({c})'
                 },
                 xAxis: [{
@@ -2085,24 +2226,66 @@ under the License.
             };
 
             option14 = {
-                tooltip: {},
+                tooltip: {
+                    trigger: 'axis',
+                    renderMode: CURRENT_RENDER_MODE,
+                },
                 xAxis: {
                     data: ['2017-10-24', '2017-10-25', '2017-10-26', '2017-10-27']
                 },
                 yAxis: {},
                 series: [{
-                    type: 'k',
+                    type: 'candlestick',
                     data: [
                         [20, 30, 10, 35],
                         [40, 35, 30, 55],
                         [33, 38, 33, 40],
                         [40, 40, 32, 42]
                     ]
+                }, {
+                    type: 'line',
+                    data: [
+                        4, 5, 1, 3
+                    ]
+                }]
+            };
+
+            option15 = {
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                },
+                legend: {},
+                series: [{
+                    name: '<A>',
+                    type: 'map',
+                    mapType: '江苏',
+                    showLegendSymbol: true,
+                    selectedMap: {
+                        '南京市': true
+                    },
+                    data: [
+                        { name: '南京市', value: 100 },
+                        { name: '苏州市', value: null },
+                    ]
+                }, {
+                    name: '<B>',
+                    type: 'map',
+                    mapType: '江苏',
+                    showLegendSymbol: true,
+                    selectedMap: {
+                        '南京市': true
+                    },
+                    data: [
+                        { name: '南京市', value: 50 },
+                        { name: '苏州市', value: 30 },
+                    ]
                 }]
             };
 
             option16 = {
-                tooltip: {},
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                },
                 xAxis: {
                     type: "category",
                     data: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
@@ -2265,7 +2448,9 @@ under the License.
             }
 
             option17 = {
-                tooltip: {},
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                },
                 xAxis: {
                     type: "category",
                     data: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
@@ -2517,6 +2702,7 @@ under the License.
                     text: 'Gradient along the x axis'
                 }],
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     trigger: 'axis'
                 },
                 xAxis: [{
@@ -2559,13 +2745,13 @@ under the License.
                 color: colors,
 
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross'
                     }
                 },
                 legend: {
-                    data: ['2015 降水量', '2016 降水量']
                 },
                 grid: {
                     top: 70,
@@ -2609,8 +2795,8 @@ under the License.
                         axisPointer: {
                             label: {
                                 formatter: function (params) {
-                                    return '降水量  ' + params.value +
-                                        (params.seriesData.length ? '：' + params.seriesData[0]
+                                    return 'precipitation  ' + params.value +
+                                        (params.seriesData.length ? ': ' + params.seriesData[0]
                                             .data : '');
                                 }
                             }
@@ -2624,13 +2810,14 @@ under the License.
                     type: 'value'
                 }],
                 series: [{
-                        name: '2015 降水量',
+                        name: '2015 precipitation',
                         type: 'line',
                         xAxisIndex: 1,
                         smooth: true,
                         data: [2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3]
                     },
                     {
+                        // Make the length of name different with the previous one.
                         name: '2016 降水量',
                         type: 'line',
                         smooth: true,
@@ -2653,7 +2840,9 @@ under the License.
             }
 
             option20 = {
-                tooltip: {},
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                },
                 xAxis: {
                     data: dataAxis,
                     axisLabel: {
@@ -2743,72 +2932,91 @@ under the License.
 
             option21 = {
                 legend: {},
-                tooltip: {},
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                },
                 dataset: {
                     source: [
-                        ['product', '2012', '2013', '2014', '2015'],
+                        // ['product', '2012', '2013', '2014', '2015'],
                         ['Matcha Latte', 41.1, 130.4, 65.1, 53.3],
                         ['Milk Tea', 86.5, 92.1, 85.7, 83.1],
                         ['Cheese Cocoa', 124.1, 67.2, 79.5, 86.4]
-                    ]
+                    ],
+                    sourceHeader: false
                 },
-                xAxis: {
+                grid: [{
+                    right: '55%'
+                }, {
+                    left: '55%'
+                }],
+                xAxis: [{
                     type: 'category',
-                },
-                yAxis: {},
+                    axisLabel: { interval: 0 }
+                }, {
+                    gridIndex: 1
+                }],
+                yAxis: [{
+                }, {
+                    name: 'left markPoint no name, should align center',
+                    nameTextStyle: { align: 'left' },
+                    gridIndex: 1
+                }],
                 series: [{
-                        type: 'bar',
-                        seriesLayoutBy: 'row',
-                        stack: '1',
-                        markPoint: {
-                            data: [{
-                                    type: 'max',
-                                    name: '最大值'
-                                },
-                                {
-                                    type: 'min',
-                                    name: '最小值'
-                                }
-                            ]
-                        },
+                    type: 'bar',
+                    seriesLayoutBy: 'column',
+                    stack: '1',
+                    markPoint: {
+                        data: [{
+                                type: 'max',
+                                name: '最大值'
+                            },
+                            {
+                                type: 'min',
+                                name: '最小值'
+                            }
+                        ]
                     },
-                    {
-                        type: 'bar',
-                        seriesLayoutBy: 'row',
-                        stack: '1',
-                        markPoint: {
-                            data: [{
-                                    type: 'max',
-                                    name: '最大值'
-                                },
-                                {
-                                    type: 'min',
-                                    name: '最小值'
-                                }
-                            ]
-                        },
+                }, {
+                    type: 'bar',
+                    seriesLayoutBy: 'column',
+                    stack: '1',
+                    markPoint: {
+                        data: [{
+                                type: 'max',
+                                // test if no name
+                                // name: '最大值'
+                            },
+                            {
+                                type: 'min',
+                                name: '最小值'
+                            }
+                        ]
                     },
-                    {
-                        type: 'bar',
-                        seriesLayoutBy: 'row',
-                        stack: '1',
-                        markPoint: {
-                            data: [{
-                                    type: 'max',
-                                    name: '最大值'
-                                },
-                                {
-                                    type: 'min',
-                                    name: '最小值'
-                                }
-                            ]
-                        },
-                    }
-                ]
+                }, {
+                    name: 'series long long name',
+                    type: 'line',
+                    encode: { x: 1, y: 2 },
+                    markPoint: {
+                        data: [{
+                                type: 'max',
+                                // test if no name
+                                // name: '最大值'
+                            },
+                            {
+                                type: 'min',
+                                name: '最小值'
+                            }
+                        ]
+                    },
+                    xAxisIndex: 1,
+                    yAxisIndex: 1
+                }]
             }
 
             option22 = {
-                tooltip: {},
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                },
                 legend: {
                     data: ['直接访问', '邮件营销', '联盟广告', '视频广告', '搜索引擎']
                 },
@@ -2826,60 +3034,56 @@ under the License.
                     data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
                 },
                 series: [{
-                        name: '直接访问',
-                        type: 'bar',
-                        stack: '总量',
-                        label: {
-                            show: true,
-                            position: 'insideRight'
-                        },
-                        data: [320, 302, 301, 334, 390, 330, 320]
+                    name: '直接访问',
+                    type: 'bar',
+                    stack: '总量',
+                    label: {
+                        show: true,
+                        position: 'insideRight'
                     },
-                    {
-                        name: '邮件营销',
-                        type: 'bar',
-                        stack: '总量',
-                        label: {
-                            show: true,
-                            position: 'insideRight'
-                        },
-                        data: [120, 132, 101, 134, 90, 230, 210]
+                    data: [320, 302, 301, 334, 390, 330, 320]
+                }, {
+                    name: '邮件营销',
+                    type: 'bar',
+                    stack: '总量',
+                    label: {
+                        show: true,
+                        position: 'insideRight'
                     },
-                    {
-                        name: '联盟广告',
-                        type: 'bar',
-                        stack: '总量',
-                        label: {
-                            show: true,
-                            position: 'insideRight'
-                        },
-                        data: [220, 182, 191, 234, 290, 330, 310]
+                    data: [120, 132, 101, 134, 90, 230, 210]
+                }, {
+                    name: '联盟广告',
+                    type: 'bar',
+                    stack: '总量',
+                    label: {
+                        show: true,
+                        position: 'insideRight'
                     },
-                    {
-                        name: '视频广告',
-                        type: 'bar',
-                        stack: '总量',
-                        label: {
-                            show: true,
-                            position: 'insideRight'
-                        },
-                        data: [150, 212, 201, 154, 190, 330, 410]
+                    data: [220, 182, 191, 234, 290, 330, 310]
+                }, {
+                    name: '视频广告',
+                    type: 'bar',
+                    stack: '总量',
+                    label: {
+                        show: true,
+                        position: 'insideRight'
                     },
-                    {
-                        name: '搜索引擎',
-                        type: 'bar',
-                        stack: '总量',
-                        label: {
-                            show: true,
-                            position: 'insideRight'
-                        },
-                        data: [820, 832, 901, 934, 1290, 1330, 1320]
-                    }
-                ]
+                    data: [150, 212, 201, 154, 190, 330, 410]
+                }, {
+                    name: '搜索引擎',
+                    type: 'bar',
+                    stack: '总量',
+                    label: {
+                        show: true,
+                        position: 'insideRight'
+                    },
+                    data: [820, 832, 901, 934, 1290, 1330, 1320]
+                }]
             };
 
             option23 = {
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
@@ -2906,42 +3110,29 @@ under the License.
                     type: 'value'
                 }],
                 series: [{
-                        name: '视频广告',
-                        type: 'line',
-                        stack: '总量',
-                        areaStyle: {},
-                        data: [150, 232, 201, 154, 190, 330, 410]
-                    },
-                    {
-                        name: '直接访问',
-                        type: 'line',
-                        stack: '总量',
-                        areaStyle: {},
-                        data: [320, 332, 301, 334, 390, 430, 320]
-                    },
-                    {
-                        name: '搜索引擎',
-                        type: 'line',
-                        stack: '总量',
-                        areaStyle: {},
-                        markPoint: {
-                            data: [{
-                                    type: 'max',
-                                    name: '最大值'
-                                },
-                                {
-                                    type: 'min',
-                                    name: '最小值'
-                                }
-                            ]
-                        },
-                        data: [820, 932, 901, 934, 1290, 1330, 1320]
-                    }
-                ]
+                    name: '视频广告',
+                    type: 'line',
+                    stack: '总量',
+                    areaStyle: {},
+                    data: [150, 232, 201, 154, 190, 330, 410]
+                }, {
+                    name: '直接访问',
+                    type: 'line',
+                    stack: '总量',
+                    areaStyle: {},
+                    data: [320, 332, 301, 334, 390, 430, 320]
+                }, {
+                    name: '搜索引擎',
+                    type: 'line',
+                    stack: '总量',
+                    areaStyle: {},
+                    data: [820, 932, 901, 934, 1290, 1330, 1320]
+                }]
             };
 
             option24 = {
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
@@ -2990,6 +3181,7 @@ under the License.
 
             option25 = {
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
@@ -3000,44 +3192,49 @@ under the License.
                     order: 'valueDesc'
                 },
                 xAxis: [{
-                    type: 'category',
-                    boundaryGap: false,
-                    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
                 }],
                 yAxis: [{
-                    type: 'value'
                 }],
-                series: [
-                    {
-                        name: '邮件营销',
-                        type: 'line',
-                        data: [120, 132, 101, 134, 90, 230, 210]
-                    },
-                    {
-                        name: '联盟广告',
-                        type: 'line',
-                        data: [220, 182, 191, 234, 290, 630, 310]
-                    },
-                    {
-                        name: '视频广告',
-                        type: 'line',
-                        data: [150, 232, 201, 154, 190, 430, 410]
-                    },
-                    {
-                        name: '直接访问',
-                        type: 'line',
-                        data: [320, 332, 301, 334, 390, 330, 320]
-                    },
-                    {
-                        name: '搜索引擎',
-                        type: 'line',
-                        data: [820, 932, 901, 934, 1290, 1330, 1320]
-                    }
-                ]
+                legend: {},
+                series: [{
+                    name: 'AA',
+                    type: 'scatter',
+                    encode: { tooltip: [1, 2] },
+                    data: [
+                        [1903, 15, 0.332],
+                        [2277, 231, 0.142],
+                        [1000, 89, 1.552],
+                        [2000, 194, 0.998],
+                        [1800, 105, 1.291]
+                    ]
+                }, {
+                    name: 'BB',
+                    type: 'scatter',
+                    encode: { tooltip: [1, 2] },
+                    data: [
+                        [1903, 99, 0.552],
+                        [2277, 23, 0.981],
+                        [1000, 98, 1.455],
+                        [2000, 71, 0.311],
+                        [1800, 157, 0.891]
+                    ]
+                }, {
+                    name: 'CC',
+                    type: 'scatter',
+                    encode: { tooltip: [1, 2] },
+                    data: [
+                        [1903, 81, 0.111],
+                        [2277, 71, 1.000],
+                        [1000, 125, 0.998],
+                        [2000, 20, 0.512],
+                        [1800, 78, 1.001]
+                    ]
+                }]
             };
 
             option26 = {
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
@@ -3047,6 +3244,7 @@ under the License.
                     },
                     order: 'seriesDesc'
                 },
+                legend: {},
                 xAxis: [{
                     type: 'category',
                     boundaryGap: false,
@@ -3058,27 +3256,32 @@ under the License.
                 series: [
                     {
                         name: '邮件营销',
-                        type: 'line',
+                        type: 'bar',
+                        stack: 'a',
                         data: [120, 132, 101, 134, 90, 230, 210]
                     },
                     {
                         name: '联盟广告',
-                        type: 'line',
+                        type: 'bar',
+                        stack: 'a',
                         data: [220, 182, 191, 234, 290, 630, 310]
                     },
                     {
                         name: '视频广告',
-                        type: 'line',
+                        type: 'bar',
+                        stack: 'a',
                         data: [150, 232, 201, 154, 190, 430, 410]
                     },
                     {
                         name: '直接访问',
-                        type: 'line',
+                        type: 'bar',
+                        stack: 'a',
                         data: [320, 332, 301, 334, 390, 330, 320]
                     },
                     {
                         name: '搜索引擎',
-                        type: 'line',
+                        type: 'bar',
+                        stack: 'a',
                         data: [820, 932, 901, 934, 1290, 1330, 1320]
                     }
                 ]
@@ -3086,6 +3289,7 @@ under the License.
 
             option27 = {
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
@@ -3095,6 +3299,7 @@ under the License.
                     },
                     order: 'seriesAsc'
                 },
+                legend: {},
                 xAxis: [{
                     type: 'category',
                     boundaryGap: false,
@@ -3107,39 +3312,46 @@ under the License.
                     {
                         name: '邮件营销',
                         type: 'line',
+                        stack: 'a',
+                        areaStyle: {},
                         data: [120, 132, 101, 134, 90, 230, 210]
                     },
                     {
                         name: '联盟广告',
                         type: 'line',
+                        stack: 'a',
+                        areaStyle: {},
                         data: [220, 182, 191, 234, 290, 630, 310]
                     },
                     {
                         name: '视频广告',
                         type: 'line',
+                        stack: 'a',
+                        areaStyle: {},
                         data: [150, 232, 201, 154, 190, 430, 410]
                     },
                     {
                         name: '直接访问',
                         type: 'line',
+                        stack: 'a',
+                        areaStyle: {},
                         data: [320, 332, 301, 334, 390, 330, 320]
                     },
                     {
                         name: '搜索引擎',
                         type: 'line',
+                        stack: 'a',
+                        areaStyle: {},
                         data: [820, 932, 901, 934, 1290, 1330, 1320]
                     }
                 ]
             };
 
             option28 = {
-                title: {
-                    text: '基础雷达图'
-                },
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     order: 'valueAsc',
-                    position: 'top',
-                    renderMode: 'richText'
+                    // position: 'top',
                 },
                 radar: {
                     // shape: 'circle',
@@ -3195,6 +3407,7 @@ under the License.
 
             option29 = {
                 tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
                     trigger: 'axis',
                     position: 'top',
                     axisPointer: {
@@ -3204,12 +3417,12 @@ under the License.
                         }
                     },
                     order: 'valueDesc',
-                    renderMode: 'richText'
                 },
+                legend: {},
                 xAxis: [{
                     type: 'category',
                     boundaryGap: false,
-                    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                    data: [2001, 2002, 2003, 2004, 2005, 2006, 2007]
                 }],
                 yAxis: [{
                     type: 'value'
@@ -3243,33 +3456,138 @@ under the License.
                 ]
             };
 
-            chart1.setOption(option1);
-            chart2.setOption(option2);
-            chart3.setOption(option3);
-            chart4.setOption(option4);
-            chart5.setOption(option5);
-            chart7.setOption(option7);
-            chart8.setOption(option8);
-            chart9.setOption(option9);
-            chart10.setOption(option10);
-            chart11.setOption(option11);
-            chart12.setOption(option12);
-            chart13.setOption(option13);
-            chart14.setOption(option14);
-            chart16.setOption(option16);
-            chart17.setOption(option17);
-            chart18.setOption(option18);
-            chart19.setOption(option19);
-            chart20.setOption(option20);
-            chart21.setOption(option21);
-            chart22.setOption(option22);
-            chart23.setOption(option23);
-            chart24.setOption(option24);
-            chart25.setOption(option25);
-            chart26.setOption(option26);
-            chart27.setOption(option27);
-            chart28.setOption(option28);
-            chart29.setOption(option29);
+            option30 = {
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                    trigger: 'axis',
+                    position: 'top',
+                    axisPointer: {
+                        type: 'cross',
+                        label: {
+                            backgroundColor: '#6a7985'
+                        }
+                    }
+                },
+                xAxis: [{
+                    type: 'time'
+                }],
+                yAxis: [{
+                }],
+                series: [
+                    {
+                        type: 'line',
+                        data: [
+                            ['2012-05-19', 120],
+                            [new Date(2012, 4, 20), 132],
+                            [+new Date(2012, 4, 21), 101],
+                            ['2012-05-22 00:00:00', 134],
+                            ['2012-05-23T00:00:00', 90]
+                        ]
+                    },
+                    {
+                        type: 'line',
+                        data: [
+                            ['2012-05-19', 220],
+                            ['2012-05-21', 182],
+                            ['2012-05-22', 191],
+                            ['2012-05-23', 234],
+                            ['2012-05-24', 290]
+                        ]
+                    }
+                ]
+            };
+
+            option31 = {
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                    trigger: 'axis',
+                    position: 'top',
+                    axisPointer: {
+                        type: 'cross',
+                        label: {
+                            backgroundColor: '#6a7985'
+                        }
+                    },
+                    formatter: function (params) {
+                        if (CURRENT_RENDER_MODE === 'richText') {
+                            var content = ['Formatter Result:'];
+                            for (var i = 0; i < params.length; i++) {
+                                var param = params[i];
+                                content.push(param.marker + ' ' + param.value.join(' '));
+                            }
+                            return content.join('\n');
+                        }
+                        else {
+                            var content = ['<div>Formatter Result:</div>'];
+                            for (var i = 0; i < params.length; i++) {
+                                var param = params[i];
+                                content.push('<div>' + param.marker + param.value.join(' ') + '</div>');
+                            }
+                            return content.join('');
+                        }
+                    }
+                },
+                xAxis: [{
+                    type: 'time'
+                }],
+                yAxis: [{
+                }],
+                series: [
+                    {
+                        type: 'line',
+                        data: [
+                            ['2012-05-19', 120],
+                            [new Date(2012, 4, 20), 132],
+                            [+new Date(2012, 4, 21), 101],
+                            ['2012-05-22 00:00:00', 134],
+                            ['2012-05-23T00:00:00', 90]
+                        ]
+                    },
+                    {
+                        type: 'line',
+                        data: [
+                            ['2012-05-19', 220],
+                            ['2012-05-21', 182],
+                            ['2012-05-22', 191],
+                            ['2012-05-23', 234],
+                            ['2012-05-24', 290]
+                        ]
+                    }
+                ]
+            };
+
+
+            chart1 && chart1.setOption(option1);
+            chart2 && chart2.setOption(option2);
+            chart3 && chart3.setOption(option3);
+            chart4 && chart4.setOption(option4);
+            chart5 && chart5.setOption(option5);
+            chart6 && chart6.setOption(option6);
+            chart7 && chart7.setOption(option7);
+            chart8 && chart8.setOption(option8);
+            chart9 && chart9.setOption(option9);
+            chart10 && chart10.setOption(option10);
+            chart11 && chart11.setOption(option11);
+            chart12 && chart12.setOption(option12);
+            chart13 && chart13.setOption(option13);
+            chart14 && chart14.setOption(option14);
+            chart15 && chart15.setOption(option15);
+            chart16 && chart16.setOption(option16);
+            chart17 && chart17.setOption(option17);
+            chart18 && chart18.setOption(option18);
+            chart19 && chart19.setOption(option19);
+            chart20 && chart20.setOption(option20);
+            chart21 && chart21.setOption(option21);
+            chart22 && chart22.setOption(option22);
+            chart23 && chart23.setOption(option23);
+            chart24 && chart24.setOption(option24);
+            chart25 && chart25.setOption(option25);
+            chart26 && chart26.setOption(option26);
+            chart27 && chart27.setOption(option27);
+            chart28 && chart28.setOption(option28);
+            chart29 && chart29.setOption(option29);
+            chart30 && chart30.setOption(option30);
+            chart31 && chart31.setOption(option31);
 
 
         });

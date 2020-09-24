@@ -26,7 +26,6 @@ import TimelineView from './TimelineView';
 import TimelineAxis from './TimelineAxis';
 import {createSymbol} from '../../util/symbol';
 import * as numberUtil from '../../util/number';
-import {encodeHTML} from '../../util/format';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { merge, each, extend, clone, isString, bind, defaults, retrieve2 } from 'zrender/src/core/util';
@@ -44,8 +43,9 @@ import IntervalScale from '../../scale/Interval';
 import { VectorArray } from 'zrender/src/core/vector';
 import { parsePercent } from 'zrender/src/contain/text';
 import { makeInner } from '../../util/model';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis } from '../../util/states';
+import { createTooltipMarkup } from '../tooltip/tooltipMarkup';
 
 const PI = Math.PI;
 
@@ -129,7 +129,8 @@ class SliderTimelineView extends TimelineView {
             const axis = this._axis = this._createAxis(layoutInfo, timelineModel);
 
             timelineModel.formatTooltip = function (dataIndex: number) {
-                return encodeHTML(axis.scale.getLabel({value: dataIndex}));
+                const name = axis.scale.getLabel({value: dataIndex});
+                return createTooltipMarkup('nameValue', { noName: true, value: name });
             };
 
             each(
