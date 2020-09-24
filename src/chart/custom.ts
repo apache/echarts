@@ -19,7 +19,7 @@
 
 import {
     hasOwn, assert, isString, retrieve2, retrieve3, defaults, each,
-    keys, isArrayLike, bind, isFunction, eqNaN, isArray
+    keys, isArrayLike, bind, isFunction, eqNaN, noop
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
 import { setDefaultStateProxy, enableHoverEmphasis } from '../util/states';
@@ -27,7 +27,7 @@ import * as labelStyleHelper from '../label/labelStyle';
 import {getDefaultLabel} from './helper/labelHelper';
 import createListFromArray from './helper/createListFromArray';
 import {getLayoutOnAxis} from '../layout/barGrid';
-import DataDiffer from '../data/DataDiffer';
+import DataDiffer, { DataDiffCallbackMode } from '../data/DataDiffer';
 import SeriesModel from '../model/Series';
 import Model from '../model/Model';
 import ChartView from '../view/Chart';
@@ -462,56 +462,69 @@ class CustomSeriesView extends ChartView {
         // roam or data zoom according to `actionType`.
 
         const transOpt = customSeries.__transientTransitionOpt;
+        const cbMode: DataDiffCallbackMode = transOpt ? 'multiple' : 'single';
 
-        (new DataDiffer(
-            oldData ? oldData.getIndices() : [],
-            data.getIndices(),
-            createGetKey(oldData, transOpt && transOpt.from),
-            createGetKey(data, transOpt && transOpt.to),
-            null,
-            transOpt ? 'multiple' : 'single'
-        ))
-        .add(function (newIdx) {
-            createOrUpdateItem(
-                null, newIdx, renderItem(newIdx, payload), customSeries, group, data, null
-            );
-        })
-        .update(function (newIdx, oldIdx) {
-            createOrUpdateItem(
-                oldData.getItemGraphicEl(oldIdx),
-                newIdx, renderItem(newIdx, payload), customSeries, group, data, null
-            );
-        })
-        .remove(function (oldIdx) {
-            doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
-        })
-        .updateManyToOne(function (newIdx, oldIndices) {
-            const oldElsToMerge: graphicUtil.Path[] = [];
-            for (let i = 0; i < oldIndices.length; i++) {
-                const oldEl = oldData.getItemGraphicEl(oldIndices[i]);
-                if (elCanMorph(oldEl)) {
-                    oldElsToMerge.push(oldEl);
-                }
-                removeElementDirectly(oldEl, group);
-            }
-            createOrUpdateItem(
-                null, newIdx, renderItem(newIdx, payload), customSeries,
-                group, data, oldElsToMerge
-            );
-        })
-        .updateOneToMany(function (newIndices, oldIdx) {
-            const newLen = newIndices.length;
-            const oldEl = oldData.getItemGraphicEl(oldIdx);
-            const oldElSplitted = elCanMorph(oldEl) ? splitShapeForMorphingFrom(oldEl, newLen) : [];
-            removeElementDirectly(oldEl, group);
-            for (let i = 0; i < newLen; i++) {
+        if (transOpt && (transOpt.from == null || transOpt.to == null)) {
+            oldData && oldData.each(function (oldIdx) {
+                doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
+            });
+            data.each(function (newIdx) {
                 createOrUpdateItem(
-                    null, newIndices[i], renderItem(newIndices[i], payload), customSeries,
-                    group, data, oldElSplitted[i]
+                    null, newIdx, renderItem(newIdx, payload), customSeries, group, data, null
                 );
-            }
-        })
-        .execute();
+            });
+        }
+        else {
+            (new DataDiffer(
+                oldData ? oldData.getIndices() : [],
+                data.getIndices(),
+                createGetKey(oldData, cbMode, transOpt && transOpt.from),
+                createGetKey(data, cbMode, transOpt && transOpt.to),
+                null,
+                cbMode
+            ))
+            .add(function (newIdx) {
+                createOrUpdateItem(
+                    null, newIdx, renderItem(newIdx, payload), customSeries, group, data, null
+                );
+            })
+            .update(function (newIdx, oldIdx) {
+                createOrUpdateItem(
+                    oldData.getItemGraphicEl(oldIdx),
+                    newIdx, renderItem(newIdx, payload), customSeries, group, data, null
+                );
+            })
+            .remove(function (oldIdx) {
+                doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
+            })
+            .updateManyToOne(function (newIdx, oldIndices) {
+                const oldElsToMerge: graphicUtil.Path[] = [];
+                for (let i = 0; i < oldIndices.length; i++) {
+                    const oldEl = oldData.getItemGraphicEl(oldIndices[i]);
+                    if (elCanMorph(oldEl)) {
+                        oldElsToMerge.push(oldEl);
+                    }
+                    removeElementDirectly(oldEl, group);
+                }
+                createOrUpdateItem(
+                    null, newIdx, renderItem(newIdx, payload), customSeries,
+                    group, data, oldElsToMerge
+                );
+            })
+            .updateOneToMany(function (newIndices, oldIdx) {
+                const newLen = newIndices.length;
+                const oldEl = oldData.getItemGraphicEl(oldIdx);
+                const oldElSplitted = elCanMorph(oldEl) ? splitShapeForMorphingFrom(oldEl, newLen) : [];
+                removeElementDirectly(oldEl, group);
+                for (let i = 0; i < newLen; i++) {
+                    createOrUpdateItem(
+                        null, newIndices[i], renderItem(newIndices[i], payload), customSeries,
+                        group, data, oldElSplitted[i]
+                    );
+                }
+            })
+            .execute();
+        }
 
         // Do clipping
         const clipPath = customSeries.get('clip', true)
@@ -582,20 +595,24 @@ class CustomSeriesView extends ChartView {
 ChartView.registerClass(CustomSeriesView);
 
 
-function createGetKey(data: List, dimension: DimensionLoose) {
+function createGetKey(
+    data: List,
+    cbMode: DataDiffCallbackMode,
+    dimension: DimensionLoose
+) {
     if (!data) {
         return;
     }
 
-    const diffBy = data.getDimension(dimension);
-
-    if (diffBy == null) {
+    if (cbMode === 'single') {
         return function (rawIdx: number, dataIndex: number) {
             return data.getId(dataIndex);
         };
     }
 
-    const dimInfo = data.getDimensionInfo(diffBy);
+    const diffByDimName = data.getDimension(dimension);
+    const dimInfo = data.getDimensionInfo(diffByDimName);
+
     if (!dimInfo) {
         let errMsg = '';
         if (__DEV__) {
@@ -605,7 +622,7 @@ function createGetKey(data: List, dimension: DimensionLoose) {
     }
     const ordinalMeta = dimInfo.ordinalMeta;
     return function (rawIdx: number, dataIndex: number) {
-        let key = data.get(diffBy, dataIndex);
+        let key = data.get(diffByDimName, dataIndex);
         if (ordinalMeta) {
             key = ordinalMeta.categories[key as number];
         }

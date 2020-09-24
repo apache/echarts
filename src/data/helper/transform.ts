@@ -47,15 +47,6 @@ export interface DataTransformOption {
     print?: boolean;
 }
 
-export interface DataTransformResult {
-    source: Source;
-}
-
-export interface DataTransform {
-    (sourceList: Source[], config: DataTransformConfig): {
-    }
-}
-
 export interface ExternalDataTransform<TO extends DataTransformOption = DataTransformOption> {
     // Must include namespace like: 'ecStat:regression'
     type: string,
@@ -73,7 +64,21 @@ interface ExternalDataTransformParam<TO extends DataTransformOption = DataTransf
 }
 export interface ExternalDataTransformResultItem {
     data: OptionSourceData;
+    /**
+     * A `transform` can optionally return a dimensions definition.
+     * If the `transform` make sure the dimensions of the result data, it can make that return.
+     * Otherwise, it's recommanded not to make such a `dimensions`. In this case, echarts will
+     * inherit dimensions definition from the upstream. If there is no dimensions definition
+     * of the upstream, the echarts will left it undefined.
+     * Notice: return a incorrect dimensions definition will cause the downstream can not use
+     * the values under that dimensions correctly.
+     *
+     * @see also `source.isDimensionsDefined`.
+     */
     dimensions?: DimensionDefinitionLoose[];
+    /**
+     * Similar to `dimensions`, a `transform` can return that optionally.
+     */
     sourceHeader?: OptionSourceHeader;
 }
 interface ExternalDimensionDefinition extends Partial<DimensionDefinition> {
@@ -97,11 +102,30 @@ class ExternalSource {
     sourceFormat: SourceFormat;
     sourceHeaderCount: number;
 
+    /**
+     * @return If dimension not found, return null/undefined.
+     */
     getDimensionInfo(dim: DimensionLoose): ExternalDimensionDefinition {
         return;
     }
 
+    /**
+     * If dimensions are defined (see `isDimensionsDefined`), `dimensionInfoAll` is corresponding to
+     * the defined dimensions.
+     * Otherwise, `dimensionInfoAll` is determined by data columns.
+     * @return Always return an array (even empty array).
+     */
     getDimensionInfoAll(): ExternalDimensionDefinition[] {
+        return;
+    }
+
+    /**
+     * dimensions defined if and only if:
+     * (a) dataset.dimensions are declared.
+     * or
+     * (b) dataset data include dimensions definitions in data (detected or via specified `sourceHeader`)
+     */
+    isDimensionsDefined(): boolean {
         return;
     }
 
@@ -210,6 +234,7 @@ function createExternalSource(internalSource: Source): ExternalSource {
 
     extSource.getDimensionInfo = bind(getDimensionInfo, null, dimensions, dimsByName);
     extSource.getDimensionInfoAll = bind(getDimensionInfoAll, null, dimensions);
+    extSource.isDimensionsDefined = bind(isDimensionsDefined, null, !!dimsDef);
 
     return extSource;
 }
@@ -235,10 +260,12 @@ function getDimensionInfo(
     }
 }
 
-function getDimensionInfoAll(
-    dimensions: ExternalDimensionDefinition[]
-): ExternalDimensionDefinition[] {
+function getDimensionInfoAll(dimensions: ExternalDimensionDefinition[]): ExternalDimensionDefinition[] {
     return dimensions;
+}
+
+function isDimensionsDefined(defined: boolean): boolean {
+    return defined;
 }
 
 

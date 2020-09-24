@@ -187,16 +187,20 @@ interface SetOptionOpts {
     // Rule: only `id` mapped will be merged,
     // other components of the certain `mainType` will be removed.
     replaceMerge?: GlobalModelSetOptionOpts['replaceMerge'];
-    transition?: SetOptionTransitionOptItem | SetOptionTransitionOptItem[];
+    transition?: SetOptionTransitionOpt
 };
 
 interface SetOptionTransitionOptItem {
-    from: SetOptionTransitionOptFinder | DimensionLoose;
-    to: SetOptionTransitionOptFinder | DimensionLoose;
+    // If `from` not given, it means that do not make series transition mandatorily.
+    // There might be transition mapping dy default. Sometimes we do not need them,
+    // which might bring about misleading.
+    from?: SetOptionTransitionOptFinder;
+    to: SetOptionTransitionOptFinder;
 }
 interface SetOptionTransitionOptFinder extends modelUtil.ModelFinderObject {
     dimension: DimensionLoose;
 }
+type SetOptionTransitionOpt = SetOptionTransitionOptItem | SetOptionTransitionOptItem[];
 
 
 type EventMethodName = 'on' | 'off';
@@ -267,7 +271,7 @@ let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
 let enableConnect: (ecIns: ECharts) => void;
 let setTransitionOpt: (
     chart: ECharts,
-    transitionOpt: SetOptionTransitionOptItem | SetOptionTransitionOptItem[]
+    transitionOpt: SetOptionTransitionOpt
 ) => void;
 
 let markStatusToUpdate: (ecIns: ECharts) => void;
@@ -518,7 +522,7 @@ class ECharts extends Eventful {
 
         let silent;
         let replaceMerge;
-        let transitionOpt;
+        let transitionOpt: SetOptionTransitionOpt;
         if (isObject(notMerge)) {
             lazyUpdate = notMerge.lazyUpdate;
             silent = notMerge.silent;
@@ -2284,24 +2288,18 @@ class ECharts extends Eventful {
 
         setTransitionOpt = function (
             chart: ECharts,
-            transitionOpt: SetOptionTransitionOptItem | SetOptionTransitionOptItem[]
+            transitionOpt: SetOptionTransitionOpt
         ): void {
             const ecModel = chart._model;
+
             zrUtil.each(modelUtil.normalizeToArray(transitionOpt), transOpt => {
-
-                function normalizeFromTo(fromTo: DimensionLoose | SetOptionTransitionOptFinder) {
-                    return (zrUtil.isString(fromTo) || zrUtil.isNumber(fromTo))
-                        ? { dimension: fromTo }
-                        : fromTo;
-                }
-
                 let errMsg;
-                const fromOpt = normalizeFromTo(transOpt.from);
-                const toOpt = normalizeFromTo(transOpt.to);
+                const fromOpt = transOpt.from;
+                const toOpt = transOpt.to;
 
-                if (fromOpt == null || toOpt == null) {
+                if (toOpt == null) {
                     if (__DEV__) {
-                        errMsg = '`transition.from` and `transition.to` must be specified.';
+                        errMsg = '`transition.to` must be specified.';
                     }
                     throwError(errMsg);
                 }
@@ -2312,7 +2310,7 @@ class ECharts extends Eventful {
                     enableAll: false,
                     enableNone: false
                 };
-                const fromResult = modelUtil.parseFinder(ecModel, fromOpt, finderOpt);
+                const fromResult = fromOpt ? modelUtil.parseFinder(ecModel, fromOpt, finderOpt) : null;
                 const toResult = modelUtil.parseFinder(ecModel, toOpt, finderOpt);
                 const toSeries = toResult.seriesModel;
 
@@ -2322,16 +2320,10 @@ class ECharts extends Eventful {
                         errMsg = '`transition` is only supported on series.';
                     }
                 }
-                if (fromResult.seriesModel !== toSeries) {
+                if (fromResult && fromResult.seriesModel !== toSeries) {
                     errMsg = '';
                     if (__DEV__) {
                         errMsg = '`transition.from` and `transition.to` must be specified to the same series.';
-                    }
-                }
-                if (fromOpt.dimension == null || toOpt.dimension == null) {
-                    errMsg = '';
-                    if (__DEV__) {
-                        errMsg = '`dimension` must be specified in `transition`.';
                     }
                 }
                 if (errMsg != null) {
@@ -2340,7 +2332,7 @@ class ECharts extends Eventful {
 
                 // Just a temp solution: mount them on series.
                 toSeries.__transientTransitionOpt = {
-                    from: fromOpt.dimension,
+                    from: fromOpt ? fromOpt.dimension : null,
                     to: toOpt.dimension
                 };
             });

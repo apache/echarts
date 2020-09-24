@@ -135,6 +135,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         // [MEMO] Currently only support single "from". If intending to
         // support multiple "from", if not hard to implement "merge morph",
         // but correspondingly not easy to implement "split morph".
+
+        // Both from and to can be null/undefined, which meams no transform mapping.
         from: DimensionLoose;
         to: DimensionLoose;
     };

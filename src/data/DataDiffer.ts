@@ -266,12 +266,12 @@ class DataDiffer<CTX = unknown> {
         keyArr: string[],
         keyGetterName: '_oldKeyGetter' | '_newKeyGetter'
     ): void {
-        const cbModeByKey = this._cbModeMultiple;
+        const cbModeMultiple = this._cbModeMultiple;
 
         for (let i = 0; i < arr.length; i++) {
             // Add prefix to avoid conflict with Object.prototype.
             const key = '_ec_' + this[keyGetterName](arr[i], i);
-            if (!cbModeByKey) {
+            if (!cbModeMultiple) {
                 keyArr[i] = key;
             }
             if (!map) {
@@ -285,7 +285,7 @@ class DataDiffer<CTX = unknown> {
                 // Simple optimize: in most cases, one index has one key,
                 // do not need array.
                 map[key] = i;
-                if (cbModeByKey) {
+                if (cbModeMultiple) {
                     keyArr.push(key);
                 }
             }

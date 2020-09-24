@@ -2100,7 +2100,7 @@ class List<
             dimensions: ItrParamDims
         ): Array<DimensionLoose> {
             if (!zrUtil.isArray(dimensions)) {
-                dimensions = [dimensions];
+                dimensions = dimensions != null ? [dimensions] : [];
             }
             return dimensions;
         };
