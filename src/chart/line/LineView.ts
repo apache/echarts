@@ -442,8 +442,6 @@ function setEndLabelStyle(
         endLabel,
         getLabelStatesModels(seriesModel, 'endLabel'),
         {
-            labelFetcher: seriesModel,
-            labelDataIndex: dataIndex,
             defaultText: getDefaultLabel(seriesModel.getData(), dataIndex, dataValue)
         },
         stateSpecified
@@ -1238,7 +1236,6 @@ class LineView extends ChartView {
                                 : graphic.interpolateRawValues(
                                     data, endLabelModel, lValue, rValue, valueRatio
                                 );
-                            console.log(lValue, rValue, interpolated);
                         }
 
                         if (interpolated == null) {
