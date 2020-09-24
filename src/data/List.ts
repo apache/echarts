@@ -116,7 +116,7 @@ type MapCb<Ctx> = (this: CtxOrList<Ctx>, ...args: any) => ParsedValue | ParsedVa
 
 const TRANSFERABLE_PROPERTIES = [
     'hasItemOption', '_nameList', '_idList', '_invertedIndicesMap',
-    '_rawData', '_chunkSize', '_chunkCount', '_dimValueGetter',
+    '_rawData', '_dimValueGetter',
     '_count', '_rawCount', '_nameDimIdx', '_idDimIdx'
 ];
 const CLONE_PROPERTIES = [
