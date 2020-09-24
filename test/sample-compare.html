@@ -25,9 +25,14 @@ under the License.
 		<meta name='viewport' content='width=device-width, initial-scale=1'>
 	</head>
 	<body>
-		<h2 id='wait'>Loading lib....</h2>
-
-		<div id='container' style='height: 600px; width: 1200px;'></div>
+		<style>
+			.chart {
+				width: 800px;
+				height: 400px;
+			}
+		</style>
+		<h2 id='status'>Loading lib....</h2>
+		<div id='container'></div>
 
         <script src='lib/esl.js'></script>
         <script src='lib/config.js'></script>
@@ -53,7 +58,7 @@ under the License.
 						var numFields = packed[0];
 						packed = packed.slice(numFields + 1);
 
-						var repeatTimes = 1;
+						var repeatTimes = 5;
 
 						var data = new Float64Array((packed.length / numFields) * 4 * repeatTimes);
 
@@ -75,9 +80,21 @@ under the License.
 						return data;
 					}
 
-					function makeChart(data) {
-						var dom = document.getElementById('container');
-						var myChart = echarts.init(dom);
+					function makeChart(data, title, sampling) {
+						var container = document.getElementById('container');
+						var dom = document.createElement('div');
+						var titleDom = document.createElement('h3');
+						dom.classList.add('chart');
+						if (title !== 'warmup') {
+							container.appendChild(titleDom);
+							container.appendChild(dom);
+						}
+						var myChart = echarts.init(dom, null, {
+							width: 800,
+							height: 400
+						});
+
+						titleDom.innerHTML = title;
 
 						let opts = {
 							animation: false,
@@ -116,7 +133,7 @@ under the License.
 								name: 'CPU',
 								type: 'line',
 								showSymbol: false,
-								sampling: 'lttb',
+								sampling: sampling,
 								lineStyle: { width: 1 },
 								emphasis: { lineStyle: { width: 1 } },
 								encode: {
@@ -128,7 +145,7 @@ under the License.
 								type: 'line',
 								yAxisIndex: 1,
 								showSymbol: false,
-								sampling: 'lttb',
+								sampling: sampling,
 								lineStyle: { width: 1 },
 								emphasis: { lineStyle: { width: 1 } },
 								encode: {
@@ -140,7 +157,7 @@ under the License.
 								type: 'line',
 								yAxisIndex: 1,
 								showSymbol: false,
-								sampling: 'lttb',
+								sampling: sampling,
 								lineStyle: { width: 1 },
 								emphasis: { lineStyle: { width: 1 } },
 								encode: {
@@ -152,17 +169,28 @@ under the License.
 						const startTime = performance.now();
 						myChart.setOption(opts, true);
 						const endTime = performance.now();
-						wait.textContent = 'Done! ' + (endTime - startTime).toFixed(0) + 'ms';
+						titleDom.innerHTML = `${title}(${data.length / 4}) ${(endTime - startTime).toFixed(0)} ms`;
 					}
+					let status = document.getElementById('status');
+					status.textContent = 'Fetching data.json (2.07MB)....';
 
-					let wait = document.getElementById('wait');
-					wait.textContent = 'Fetching data.json (2.07MB)....';
 					fetch('data/large-data.json')
 						.then(r => r.json())
 						.then(packed => {
-							wait.textContent = 'Rendering...';
+							status.textContent = 'Warming up';
 							let data = prepData(packed);
-							setTimeout(() => makeChart(data), 200);
+
+							setTimeout(function () {
+								for (let i = 0; i < 5; i++) {
+									makeChart(data, 'warmup');
+									makeChart(data, 'warmup', 'lttb');
+									makeChart(data, 'warmup', 'average');
+								}
+								status.textContent = 'Running';
+								setTimeout(() => makeChart(data, 'No Sampling', null), 500);
+								setTimeout(() => makeChart(data, 'LTTB Sampling', 'lttb'), 1000);
+								setTimeout(() => makeChart(data, 'Average Sampling', 'average'), 1500);
+							});
 						});
       });
 		</script>
