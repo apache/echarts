@@ -59,7 +59,6 @@ class Axis {
     scale: Scale;
 
     private _extent: [number, number];
-    private _gridExtent: [number, number];
 
     // Injected outside
     model: AxisBaseModel;
@@ -105,14 +104,6 @@ class Axis {
             dataExtent || this.scale.getExtent(),
             this._extent
         );
-    }
-
-    setGridExtent(start: number, end: number) {
-        this._gridExtent = [start, end];
-    }
-
-    getGridExtent(): [number, number] {
-        return this._gridExtent.slice() as [number, number];
     }
 
     /**

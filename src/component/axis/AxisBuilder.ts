@@ -33,8 +33,7 @@ import { AxisBaseOption } from '../../coord/axisCommonTypes';
 import Element from 'zrender/src/Element';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import OrdinalScale from '../../scale/Ordinal';
-
-
+import Axis2D from '../../coord/cartesian/Axis2D';
 const PI = Math.PI;
 
 type AxisIndexKey = 'xAxisIndex' | 'yAxisIndex' | 'radiusAxisIndex'
@@ -372,7 +371,13 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         const textStyleModel = axisModel.getModel('nameTextStyle');
         const gap = axisModel.get('nameGap') || 0;
 
-        const extent = axisModel.axis.getGridExtent();
+        let extent: [number, number];
+        if (~axisModel.axis.dim.indexOf('x') || ~axisModel.axis.dim.indexOf('y')) {
+            extent = (axisModel.axis as Axis2D).getGridExtent();
+        }
+        else {
+            extent = axisModel.axis.getExtent();
+        }
         const gapSignal = extent[0] > extent[1] ? -1 : 1;
         const pos = [
             nameLocation === 'start'
