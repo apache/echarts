@@ -158,9 +158,11 @@ export class DefaultDataProvider implements DataProvider {
         ): ArrayLike<number> {
             idx = idx - this._offset;
             out = out || [];
-            const offset = this._dimSize * idx;
-            for (let i = 0; i < this._dimSize; i++) {
-                out[i] = (this._data as ArrayLike<number>)[offset + i];
+            const data = this._data;
+            const dimSize = this._dimSize;
+            const offset = dimSize * idx;
+            for (let i = 0; i < dimSize; i++) {
+                out[i] = (data as ArrayLike<number>)[offset + i];
             }
             return out;
         };

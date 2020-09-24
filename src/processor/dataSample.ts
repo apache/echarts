@@ -89,9 +89,15 @@ export default function (seriesType: string): StageHandler {
                 const valueAxis = coordSys.getOtherAxis(baseAxis);
                 const extent = baseAxis.getExtent();
                 // Coordinste system has been resized
-                const size = extent[1] - extent[0];
+                const size = Math.abs(extent[1] - extent[0]);
                 const rate = Math.round(data.count() / size);
+
                 if (rate > 1) {
+                    if (sampling === 'lttb') {
+                        seriesModel.setData(data.lttbDownSample(
+                            data.mapDimension(baseAxis.dim), data.mapDimension(valueAxis.dim), size
+                        ));
+                    }
                     let sampler;
                     if (typeof sampling === 'string') {
                         sampler = samplers[sampling];

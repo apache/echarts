@@ -37,7 +37,7 @@ import {
     ModelOption, SeriesDataType, OrdinalRawValue
 } from '../util/types';
 import {isDataItemOption, convertOptionIdName} from '../util/model';
-import { getECData } from '../util/ecData';
+import { getECData } from '../util/innerStore';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import type Graph from './Graph';
 import type Tree from './Tree';
@@ -45,7 +45,7 @@ import type { VisualMeta } from '../component/visualMap/VisualMapModel';
 import { parseDataValue } from './helper/dataValueHelper';
 import { isSourceInstance } from './Source';
 
-
+const mathFloor = Math.floor;
 const isObject = zrUtil.isObject;
 
 const UNDEFINED = 'undefined';
@@ -213,6 +213,7 @@ class List<
     private _count: number = 0;
     private _rawCount: number = 0;
     private _storage: DataStorage = {};
+    private _storageArr: DataValueChunk[][] = [];
     private _nameList: string[] = [];
     private _idList: string[] = [];
 
@@ -282,10 +283,10 @@ class List<
 
     // Methods that create a new list based on this list should be listed here.
     // Notice that those method should `RETURN` the new list.
-    TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'] as const;
+    TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'lttbDownSample', 'map'] as const;
     // Methods that change indices of this list should be listed here.
     CHANGABLE_METHODS = ['filterSelf', 'selectRange'] as const;
-
+    DOWNSAMPLE_METHODS = ['downSample', 'lttbDownSample'] as const;
 
     /**
      * @param dimensions
@@ -445,6 +446,7 @@ class List<
 
         // Clear
         this._storage = {};
+        this._storageArr = [];
         this._indices = null;
 
         this._nameList = nameList || [];
@@ -516,6 +518,7 @@ class List<
     appendValues(values: any[][], names?: string[]): void {
         const chunkSize = this._chunkSize;
         const storage = this._storage;
+        const storageArr = this._storageArr;
         const dimensions = this.dimensions;
         const dimLen = dimensions.length;
         const rawExtent = this._rawExtent;
@@ -530,27 +533,33 @@ class List<
                 rawExtent[dim] = getInitialExtent();
             }
             if (!storage[dim]) {
-                storage[dim] = [];
+                const store: DataValueChunk[] = [];
+                storage[dim] = store;
+                storageArr.push(store);
             }
             prepareChunks(storage, this._dimensionInfos[dim], chunkSize, originalChunkCount, end);
             this._chunkCount = storage[dim].length;
         }
 
+        const rawExtentArr = zrUtil.map(dimensions, (dim) => {
+            return rawExtent[dim];
+        });
+
         const emptyDataItem = new Array(dimLen);
         for (let idx = start; idx < end; idx++) {
             const sourceIdx = idx - start;
-            const chunkIndex = Math.floor(idx / chunkSize);
+            const chunkIndex = mathFloor(idx / chunkSize);
             const chunkOffset = idx % chunkSize;
 
             // Store the data by dimensions
-            for (let k = 0; k < dimLen; k++) {
-                const dim = dimensions[k];
+            for (let dimIdx = 0; dimIdx < dimLen; dimIdx++) {
+                const dim = dimensions[dimIdx];
                 const val = this._dimValueGetterArrayRows(
-                    values[sourceIdx] || emptyDataItem, dim, sourceIdx, k
+                    values[sourceIdx] || emptyDataItem, dim, sourceIdx, dimIdx
                 ) as ParsedValueNumeric;
-                storage[dim][chunkIndex][chunkOffset] = val;
+                storageArr[dimIdx][chunkIndex][chunkOffset] = val;
 
-                const dimRawExtent = rawExtent[dim];
+                const dimRawExtent = rawExtentArr[dimIdx];
                 val < dimRawExtent[0] && (dimRawExtent[0] = val);
                 val > dimRawExtent[1] && (dimRawExtent[1] = val);
             }
@@ -576,6 +585,7 @@ class List<
         const chunkSize = this._chunkSize;
         const rawData = this._rawData;
         const storage = this._storage;
+        const storageArr = this._storageArr;
         const dimensions = this.dimensions;
         const dimLen = dimensions.length;
         const dimensionInfoMap = this._dimensionInfos;
@@ -586,6 +596,7 @@ class List<
         let nameDimIdx;
 
         const originalChunkCount = this._chunkCount;
+
         for (let i = 0; i < dimLen; i++) {
             const dim = dimensions[i];
             if (!rawExtent[dim]) {
@@ -601,7 +612,9 @@ class List<
             }
 
             if (!storage[dim]) {
-                storage[dim] = [];
+                const store: DataValueChunk[] = [];
+                storage[dim] = store;
+                storageArr.push(store);
             }
 
             prepareChunks(storage, dimInfo, chunkSize, originalChunkCount, end);
@@ -609,7 +622,11 @@ class List<
             this._chunkCount = storage[dim].length;
         }
 
-        let dataItem = new Array(dimLen) as OptionDataItem;
+        const rawExtentArr = zrUtil.map(dimensions, (dim) => {
+            return rawExtent[dim];
+        });
+
+        let dataItem = [] as OptionDataItem;
         for (let idx = start; idx < end; idx++) {
             // NOTICE: Try not to write things into dataItem
             dataItem = rawData.getItem(idx, dataItem);
@@ -619,18 +636,18 @@ class List<
             // Bar chart, line chart which uses category axis
             // only gives the 'y' value. 'x' value is the indices of category
             // Use a tempValue to normalize the value to be a (x, y) value
-            const chunkIndex = Math.floor(idx / chunkSize);
+            const chunkIndex = mathFloor(idx / chunkSize);
             const chunkOffset = idx % chunkSize;
 
             // Store the data by dimensions
-            for (let k = 0; k < dimLen; k++) {
-                const dim = dimensions[k];
-                const dimStorage = storage[dim][chunkIndex];
+            for (let dimIdx = 0; dimIdx < dimLen; dimIdx++) {
+                const dim = dimensions[dimIdx];
+                const dimStorage = storageArr[dimIdx][chunkIndex];
                 // PENDING NULL is empty or zero
-                const val = this._dimValueGetter(dataItem, dim, idx, k) as ParsedValueNumeric;
+                const val = this._dimValueGetter(dataItem, dim, idx, dimIdx) as ParsedValueNumeric;
                 dimStorage[chunkOffset] = val;
 
-                const dimRawExtent = rawExtent[dim];
+                const dimRawExtent = rawExtentArr[dimIdx];
                 val < dimRawExtent[0] && (dimRawExtent[0] = val);
                 val > dimRawExtent[1] && (dimRawExtent[1] = val);
             }
@@ -728,6 +745,27 @@ class List<
         return newIndices;
     }
 
+    // Get data by index of dimension.
+    // Because in v8 access array by number variable is faster than access object by string variable
+    // Not sure why but the optimization just works.
+    getByDimIdx(dimIdx: number, idx: number): ParsedValue {
+        if (!(idx >= 0 && idx < this._count)) {
+            return NaN;
+        }
+
+        const dimStore = this._storageArr[dimIdx];
+        const chunkSize = this._chunkSize;
+        if (!dimStore) {
+            return NaN;
+        }
+        idx = this.getRawIndex(idx);
+
+        const chunkIndex = mathFloor(idx / chunkSize);
+        const chunkOffset = idx % chunkSize;
+
+        return dimStore[chunkIndex][chunkOffset];
+    }
+
     /**
      * Get value. Return NaN if idx is out of range.
      * @param dim Dim must be concrete name.
@@ -736,39 +774,18 @@ class List<
         if (!(idx >= 0 && idx < this._count)) {
             return NaN;
         }
-        const storage = this._storage;
-        if (!storage[dim]) {
-            // TODO Warn ?
+        const dimStore = this._storage[dim];
+        const chunkSize = this._chunkSize;
+        if (!dimStore) {
             return NaN;
         }
 
         idx = this.getRawIndex(idx);
 
-        const chunkIndex = Math.floor(idx / this._chunkSize);
-        const chunkOffset = idx % this._chunkSize;
+        const chunkIndex = mathFloor(idx / chunkSize);
+        const chunkOffset = idx % chunkSize;
 
-        const chunkStore = storage[dim][chunkIndex];
-        const value = chunkStore[chunkOffset];
-        // FIXME ordinal data type is not stackable
-        // if (stack) {
-        //     let dimensionInfo = this._dimensionInfos[dim];
-        //     if (dimensionInfo && dimensionInfo.stackable) {
-        //         let stackedOn = this.stackedOn;
-        //         while (stackedOn) {
-        //             // Get no stacked data of stacked on
-        //             let stackedValue = stackedOn.get(dim, idx);
-        //             // Considering positive stack, negative stack and empty data
-        //             if ((value >= 0 && stackedValue > 0)  // Positive stack
-        //                 || (value <= 0 && stackedValue < 0) // Negative stack
-        //             ) {
-        //                 value += stackedValue;
-        //             }
-        //             stackedOn = stackedOn.stackedOn;
-        //         }
-        //     }
-        // }
-
-        return value;
+        return dimStore[chunkIndex][chunkOffset];
     }
 
     /**
@@ -779,13 +796,14 @@ class List<
             return NaN;
         }
         const dimStore = this._storage[dim];
+        const chunkSize = this._chunkSize;
         if (!dimStore) {
             // TODO Warn ?
             return NaN;
         }
 
-        const chunkIndex = Math.floor(rawIdx / this._chunkSize);
-        const chunkOffset = rawIdx % this._chunkSize;
+        const chunkIndex = mathFloor(rawIdx / chunkSize);
+        const chunkOffset = rawIdx % chunkSize;
         const chunkStore = dimStore[chunkIndex];
         return chunkStore[chunkOffset];
     }
@@ -794,11 +812,11 @@ class List<
      * FIXME Use `get` on chrome maybe slow(in filterSelf and selectRange).
      * Hack a much simpler _getFast
      */
-    private _getFast(dim: DimensionName, rawIdx: number): ParsedValue {
-        const chunkIndex = Math.floor(rawIdx / this._chunkSize);
-        const chunkOffset = rawIdx % this._chunkSize;
-        const chunkStore = this._storage[dim][chunkIndex];
-        return chunkStore[chunkOffset];
+    private _getFast(dimIdx: number, rawIdx: number): ParsedValue {
+        const chunkSize = this._chunkSize;
+        const chunkIndex = mathFloor(rawIdx / chunkSize);
+        const chunkOffset = rawIdx % chunkSize;
+        return this._storageArr[dimIdx][chunkIndex][chunkOffset];
     }
 
     /**
@@ -848,6 +866,7 @@ class List<
         dim = this.getDimension(dim);
         const dimData = this._storage[dim];
         const initialExtent = getInitialExtent();
+        const chunkSize = this._chunkSize;
 
         // stack = !!((stack || false) && this.getCalculationInfo(dim));
 
@@ -879,8 +898,10 @@ class List<
         let max = dimExtent[1];
 
         for (let i = 0; i < currEnd; i++) {
-            // let value = stack ? this.get(dim, i, true) : this._getFast(dim, this.getRawIndex(i));
-            const value = this._getFast(dim, this.getRawIndex(i)) as ParsedValueNumeric;
+            const rawIdx = this.getRawIndex(i);
+            const chunkIndex = mathFloor(rawIdx / chunkSize);
+            const chunkOffset = rawIdx % chunkSize;
+            const value = dimData[chunkIndex][chunkOffset] as ParsedValueNumeric;
             value < min && (min = value);
             value > max && (max = value);
         }
@@ -1003,7 +1024,7 @@ class List<
     //     let chunkSize = this._chunkSize;
     //     if (dimData) {
     //         for (let i = 0, len = this.count(); i < len; i++) {
-    //             let chunkIndex = Math.floor(i / chunkSize);
+    //             let chunkIndex = mathFloor(i / chunkSize);
     //             let chunkOffset = i % chunkSize;
     //             if (dimData[chunkIndex][chunkOffset] === value) {
     //                 return i;
@@ -1099,6 +1120,7 @@ class List<
         const storage = this._storage;
         const dimData = storage[dim];
         const nearestIndices: number[] = [];
+        const chunkSize = this._chunkSize;
 
         if (!dimData) {
             return nearestIndices;
@@ -1112,9 +1134,13 @@ class List<
         let minDiff = -1;
         let nearestIndicesLen = 0;
 
+
         // Check the test case of `test/ut/spec/data/List.js`.
         for (let i = 0, len = this.count(); i < len; i++) {
-            const diff = value - (this.get(dim, i) as number);
+            const dataIndex = this.getRawIndex(i);
+            const chunkIndex = mathFloor(dataIndex / chunkSize);
+            const chunkOffset = dataIndex % chunkSize;
+            const diff = value - (dimData[chunkIndex][chunkOffset] as number);
             const dist = Math.abs(diff);
             if (dist <= maxDistance) {
                 // When the `value` is at the middle of `this.get(dim, i)` and `this.get(dim, i+1)`,
@@ -1229,6 +1255,9 @@ class List<
         }
 
         const dimSize = dimNames.length;
+        const dimIndices = zrUtil.map(dimNames, (dimName) => {
+            return this._dimensionInfos[dimName].index;
+        });
 
         for (let i = 0; i < this.count(); i++) {
             // Simple optimization
@@ -1237,16 +1266,18 @@ class List<
                     (cb as EachCb0<Ctx>).call(fCtx, i);
                     break;
                 case 1:
-                    (cb as EachCb1<Ctx>).call(fCtx, this.get(dimNames[0], i), i);
+                    (cb as EachCb1<Ctx>).call(fCtx, this._getFast(dimIndices[0], i), i);
                     break;
                 case 2:
-                    (cb as EachCb2<Ctx>).call(fCtx, this.get(dimNames[0], i), this.get(dimNames[1], i), i);
+                    (cb as EachCb2<Ctx>).call(
+                        fCtx, this._getFast(dimIndices[0], i), this._getFast(dimIndices[1], i), i
+                    );
                     break;
                 default:
                     let k = 0;
                     const value = [];
                     for (; k < dimSize; k++) {
-                        value[k] = this.get(dimNames[k], i);
+                        value[k] = this._getFast(dimIndices[k], i);
                     }
                     // Index
                     value[k] = i;
@@ -1301,7 +1332,10 @@ class List<
         const dimSize = dimNames.length;
 
         let offset = 0;
-        const dim0 = dimNames[0];
+        const dimIndices = zrUtil.map(dimNames, (dimName) => {
+            return this._dimensionInfos[dimName].index;
+        });
+        const dim0 = dimIndices[0];
 
         for (let i = 0; i < count; i++) {
             let keep;
@@ -1317,7 +1351,7 @@ class List<
             else {
                 let k = 0;
                 for (; k < dimSize; k++) {
-                    value[k] = this._getFast(dim0, rawIdx);
+                    value[k] = this._getFast(dimIndices[k], rawIdx);
                 }
                 value[k] = i;
                 keep = (cb as FilterCb<Ctx>).apply(fCtx, value);
@@ -1373,6 +1407,9 @@ class List<
 
         let offset = 0;
         const dim0 = dimensions[0];
+        const dimIndices = zrUtil.map(dimensions, (dimName) => {
+            return this._dimensionInfos[dimName].index;
+        });
 
         const min = range[dim0][0];
         const max = range[dim0][1];
@@ -1382,7 +1419,7 @@ class List<
             // Extreme optimization for common case. About 2x faster in chrome.
             let idx = 0;
             if (dimSize === 1) {
-                const dimStorage = this._storage[dimensions[0]];
+                const dimStorage = this._storage[dim0];
                 for (let k = 0; k < this._chunkCount; k++) {
                     const chunkStorage = dimStorage[k];
                     const len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
@@ -1435,7 +1472,7 @@ class List<
             if (dimSize === 1) {
                 for (let i = 0; i < originalCount; i++) {
                     const rawIndex = this.getRawIndex(i);
-                    const val = this._getFast(dim0, rawIndex);
+                    const val = this._getFast(dimIndices[0], rawIndex);
                     // Do not filter NaN, see comment above.
                     if (
                         (val >= min && val <= max) || isNaN(val as any)
@@ -1450,7 +1487,7 @@ class List<
                     const rawIndex = this.getRawIndex(i);
                     for (let k = 0; k < dimSize; k++) {
                         const dimk = dimensions[k];
-                        const val = this._getFast(dimk, rawIndex);
+                        const val = this._getFast(dimIndices[k], rawIndex);
                         // Do not filter NaN, see comment above.
                         if (val < range[dimk][0] || val > range[dimk][1]) {
                             keep = false;
@@ -1567,7 +1604,7 @@ class List<
                 }
 
                 const rawIndex = this.getRawIndex(dataIndex);
-                const chunkIndex = Math.floor(rawIndex / chunkSize);
+                const chunkIndex = mathFloor(rawIndex / chunkSize);
                 const chunkOffset = rawIndex % chunkSize;
 
                 for (let i = 0; i < retValue.length; i++) {
@@ -1607,7 +1644,7 @@ class List<
         const targetStorage = list._storage;
 
         const frameValues = [];
-        let frameSize = Math.floor(1 / rate);
+        let frameSize = mathFloor(1 / rate);
 
         const dimStore = targetStorage[dimension];
         const len = this.count();
@@ -1625,7 +1662,7 @@ class List<
             }
             for (let k = 0; k < frameSize; k++) {
                 const dataIdx = this.getRawIndex(i + k);
-                const originalChunkIndex = Math.floor(dataIdx / chunkSize);
+                const originalChunkIndex = mathFloor(dataIdx / chunkSize);
                 const originalChunkOffset = dataIdx % chunkSize;
                 frameValues[k] = dimStore[originalChunkIndex][originalChunkOffset];
             }
@@ -1633,7 +1670,7 @@ class List<
             const sampleFrameIdx = this.getRawIndex(
                 Math.min(i + sampleIndex(frameValues, value) || 0, len - 1)
             );
-            const sampleChunkIndex = Math.floor(sampleFrameIdx / chunkSize);
+            const sampleChunkIndex = mathFloor(sampleFrameIdx / chunkSize);
             const sampleChunkOffset = sampleFrameIdx % chunkSize;
             // Only write value on the filtered data
             dimStore[sampleChunkIndex][sampleChunkOffset] = value;
@@ -1655,6 +1692,103 @@ class List<
 
         return list as List<HostModel>;
     }
+
+    /**
+     * Large data down sampling using largest-triangle-three-buckets
+     * @param {string} baseDimension
+     * @param {string} valueDimension
+     * @param {number} targetCount
+     */
+    lttbDownSample(
+        baseDimension: DimensionName,
+        valueDimension: DimensionName,
+        targetCount: number
+    ) {
+        const list = cloneListForMapAndSample(this, [baseDimension, valueDimension]);
+        const targetStorage = list._storage;
+        const baseDimStore = targetStorage[baseDimension];
+        const valueDimStore = targetStorage[valueDimension];
+        const len = this.count();
+        const chunkSize = this._chunkSize;
+        const newIndices = new (getIndicesCtor(this))(len);
+
+        let sampledIndex = 0;
+
+        const frameSize = (len - 2) / (targetCount - 2);
+
+        let currentRawIndex = this.getRawIndex(0);
+        let maxArea;
+        let area;
+        let nextRawIndex;
+
+        newIndices[sampledIndex++] = currentRawIndex;
+        for (let i = 0; i < targetCount - 2; i++) {
+            let avgX = 0;
+            let avgY = 0;
+            const avgRangeStart = mathFloor((i + 1) * frameSize) + 1;
+            const avgRangeEnd = Math.min(mathFloor((i + 2) * frameSize) + 1, len);
+
+            const avgRangeLength = avgRangeEnd - avgRangeStart;
+
+            for (let idx = avgRangeStart; idx < avgRangeEnd; idx++) {
+                const rawIndex = this.getRawIndex(idx);
+                const chunkIndex = mathFloor(rawIndex / chunkSize);
+                const chunkOffset = rawIndex % chunkSize;
+                const x = baseDimStore[chunkIndex][chunkOffset] as number;
+                const y = valueDimStore[chunkIndex][chunkOffset] as number;
+                if (isNaN(x) || isNaN(y)) {
+                    continue;
+                }
+                avgX += baseDimStore[chunkIndex][chunkOffset] as number;
+                avgY += valueDimStore[chunkIndex][chunkOffset] as number;
+            }
+            avgX /= avgRangeLength;
+            avgY /= avgRangeLength;
+
+            const rangeOffs = mathFloor((i) * frameSize) + 1;
+            const rangeTo = mathFloor((i + 1) * frameSize) + 1;
+
+            const chunkIndex = mathFloor(currentRawIndex / chunkSize);
+            const chunkOffset = currentRawIndex % chunkSize;
+            const pointAX = baseDimStore[chunkIndex][chunkOffset] as number;
+            const pointAY = valueDimStore[chunkIndex][chunkOffset] as number;
+
+            maxArea = area = -1;
+
+            // Find a point from current frame that construct a triangel with largest area with previous selected point
+            // And the average of next frame.
+            for (let idx = rangeOffs; idx < rangeTo; idx++) {
+                const rawIndex = this.getRawIndex(idx);
+                const chunkIndex = mathFloor(rawIndex / chunkSize);
+                const chunkOffset = rawIndex % chunkSize;
+                const x = baseDimStore[chunkIndex][chunkOffset] as number;
+                const y = valueDimStore[chunkIndex][chunkOffset] as number;
+                if (isNaN(x) || isNaN(y)) {
+                    continue;
+                }
+                // Calculate triangle area over three buckets
+                area = Math.abs((pointAX - avgX) * (y - pointAY)
+                    - (pointAX - x) * (avgY - pointAY)
+                );
+                if (area > maxArea) {
+                    maxArea = area;
+                    nextRawIndex = rawIndex; // Next a is this b
+                }
+            }
+
+            newIndices[sampledIndex++] = nextRawIndex;
+
+            currentRawIndex = nextRawIndex; // This a is the next a (chosen b)
+        }
+
+        newIndices[sampledIndex++] = this.getRawIndex(len - 1);
+        list._count = sampledIndex;
+        list._indices = newIndices;
+
+        list.getRawIndex = getRawIndexWithIndices;
+        return list;
+    }
+
 
     /**
      * Get model of one data item.
@@ -1895,6 +2029,7 @@ class List<
 
         // FIXME
         list._storage = this._storage;
+        list._storageArr = this._storageArr;
 
         transferProperties(list, this);
 
@@ -2023,7 +2158,7 @@ class List<
             let val;
             if (dimIndex != null) {
                 const chunkSize = list._chunkSize;
-                const chunkIndex = Math.floor(rawIndex / chunkSize);
+                const chunkIndex = mathFloor(rawIndex / chunkSize);
                 const chunkOffset = rawIndex % chunkSize;
                 const dim = list.dimensions[dimIndex];
                 const chunk = list._storage[dim][chunkIndex];
@@ -2129,6 +2264,7 @@ class List<
 
             const storage = list._storage = {} as DataStorage;
             const originalStorage = original._storage;
+            const storageArr: DataValueChunk[][] = list._storageArr = [];
 
             // Init storage
             for (let i = 0; i < allDimensions.length; i++) {
@@ -2145,6 +2281,7 @@ class List<
                         // Direct reference for other dimensions
                         storage[dim] = originalStorage[dim];
                     }
+                    storageArr.push(storage[dim]);
                 }
             }
             return list;

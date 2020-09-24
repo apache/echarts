@@ -17,21 +17,18 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import { isArray } from 'zrender/src/core/util';
 
-import './line/LineSeries';
-import './line/LineView';
+/* global Float32Array */
+const supportFloat32Array = typeof Float32Array !== 'undefined';
 
-import layoutPoints from '../layout/points';
-import dataSample from '../processor/dataSample';
+const Float32ArrayCtor = !supportFloat32Array ? Array : Float32Array;
 
-// In case developer forget to include grid component
-import '../component/gridSimple';
-
-echarts.registerLayout(layoutPoints('line', true));
-
-// Down sample after filter
-echarts.registerProcessor(
-    echarts.PRIORITY.PROCESSOR.STATISTIC,
-    dataSample('line')
-);
+export function createFloat32Array(arg: number | number[]): number[] | Float32Array {
+    if (isArray(arg)) {
+        // Return self directly if don't support TypedArray.
+        return supportFloat32Array ? new Float32Array(arg) : arg;
+    }
+    // Else is number
+    return new Float32ArrayCtor(arg);
+}

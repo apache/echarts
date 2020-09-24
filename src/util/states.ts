@@ -18,7 +18,7 @@ import {
     DownplayPayload
 } from './types';
 import { extend, indexOf, isArrayLike, isObject, keys, isArray, each } from 'zrender/src/core/util';
-import { getECData } from './ecData';
+import { getECData } from './innerStore';
 import * as colorTool from 'zrender/src/tool/color';
 import { EChartsType } from '../echarts';
 import List from '../data/List';

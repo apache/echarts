@@ -30,7 +30,7 @@ import {
     initLabel,
     removeElementWithFadeOut
 } from '../../util/graphic';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import {throttle} from '../../util/throttle';

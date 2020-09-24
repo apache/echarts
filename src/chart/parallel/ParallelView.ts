@@ -27,6 +27,8 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { StageHandlerProgressParams, ParsedValue, Payload } from '../../util/types';
 import Parallel from '../../coord/parallel/Parallel';
 import { OptionAxisType } from '../../coord/axisCommonTypes';
+import { numericToNumber } from '../../util/number';
+import { eqNaN } from 'zrender/src/core/util';
 
 const DEFAULT_SMOOTH = 0.3;
 
@@ -126,9 +128,6 @@ class ParallelView extends ChartView {
         }
     }
 
-    /**
-     * @override
-     */
     remove() {
         this._dataGroup && this._dataGroup.removeAll();
         this._data = null;
@@ -185,10 +184,10 @@ function addEl(data: List, dataGroup: graphic.Group, dataIndex: number, dimensio
 function makeSeriesScope(seriesModel: ParallelSeriesModel): ParallelDrawSeriesScope {
     let smooth = seriesModel.get('smooth', true);
     smooth === true && (smooth = DEFAULT_SMOOTH);
+    smooth = numericToNumber(smooth);
+    eqNaN(smooth) && (smooth = 0);
 
-    return {
-        smooth: smooth != null ? +smooth : DEFAULT_SMOOTH
-    };
+    return { smooth };
 }
 
 function updateElCommon(
@@ -199,7 +198,7 @@ function updateElCommon(
 ) {
     el.useStyle(data.getItemVisual(dataIndex, 'style'));
     el.style.fill = null;
-    seriesScope.smooth && (el.shape.smooth = seriesScope.smooth);
+    el.setShape('smooth', seriesScope.smooth);
 
     const itemModel = data.getItemModel<ParallelSeriesDataItemOption>(dataIndex);
     const emphasisModel = itemModel.getModel('emphasis');
