@@ -130,7 +130,8 @@ class Grid implements CoordinateSystemMaster {
             }
             else {
                 const extentRound = round(extent[1] - extent[0]);
-                const preferredInterval = axis.model.get('interval') || (extentRound - (extentRound % maxSplitNumber)) / maxSplitNumber;
+                const preferredInterval = axis.model.get('interval')
+                    || (extentRound - (extentRound % maxSplitNumber)) / maxSplitNumber;
                 (axis.scale as IntervalScale).niceTicks(
                     maxSplitNumber + 1, null, null,
                     preferredInterval
