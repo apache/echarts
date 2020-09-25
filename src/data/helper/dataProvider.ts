@@ -47,7 +47,7 @@ export interface DataProvider {
     getSource(): Source;
     count(): number;
     getItem(idx: number, out?: OptionDataItem): OptionDataItem;
-    getStorage?(
+    fillStorage?(
         start: number,
         end: number,
         out: ArrayLike<ParsedValue>[],
@@ -62,7 +62,7 @@ let providerMethods: Dictionary<any>;
 let mountMethods: (provider: DefaultDataProvider, data: OptionSourceData, source: Source) => void;
 
 export interface DefaultDataProvider {
-    getStorage?(
+    fillStorage?(
         start: number,
         end: number,
         out: ArrayLike<ParsedValue>[],
@@ -157,7 +157,7 @@ export class DefaultDataProvider implements DataProvider {
             if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
                 provider.getItem = getItemForTypedArray;
                 provider.count = countForTypedArray;
-                provider.getStorage = getStorageForTypedArray;
+                provider.fillStorage = fillStorageForTypedArray;
             }
             else {
                 const rawItemGetter = getRawSourceItemGetter(sourceFormat, seriesLayoutBy);
@@ -181,7 +181,7 @@ export class DefaultDataProvider implements DataProvider {
             return out;
         };
 
-        const getStorageForTypedArray: DefaultDataProvider['getStorage'] = function (
+        const fillStorageForTypedArray: DefaultDataProvider['fillStorage'] = function (
             this: DefaultDataProvider, start: number, end: number, storage: ArrayLike<ParsedValue>[], extent: number[][]
         ) {
             const data = this._data as ArrayLike<number>;

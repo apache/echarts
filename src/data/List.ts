@@ -608,8 +608,8 @@ class List<
             return rawExtent[dim];
         });
 
-        if (rawData.getStorage) {
-            rawData.getStorage(start, end, storageArr, rawExtentArr);
+        if (rawData.fillStorage) {
+            rawData.fillStorage(start, end, storageArr, rawExtentArr);
         }
         else {
             let dataItem = [] as OptionDataItem;
