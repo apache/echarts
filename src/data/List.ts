@@ -213,6 +213,10 @@ class List<
     private _count: number = 0;
     private _rawCount: number = 0;
     private _storage: DataStorage = {};
+    // We have an extra array store here. It's faster to be acessed than KV structured `_storage`.
+    // We profile the code `storage[dim]` and it seems to be KeyedLoadIC_Megamorphic instead of fast property access.
+    // Not sure why this happens. But using an extra array seems leads to faster `initData`
+    // See https://github.com/apache/incubator-echarts/pull/13314 for more explaination.
     private _storageArr: DataValueChunk[] = [];
     private _nameList: string[] = [];
     private _idList: string[] = [];
