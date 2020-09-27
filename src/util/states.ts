@@ -85,12 +85,10 @@ function liftColor(color: string): string {
 }
 
 function doChangeHoverState(el: ECElement, stateName: DisplayState, hoverStateEnum: 0 | 1 | 2) {
-    if (el.onHoverStateChange) {
-        if ((el.hoverState || 0) !== hoverStateEnum) {
-            el.onHoverStateChange(stateName);
-        }
+    if (el.onHoverStateChange && (el.hoverState || 0) !== hoverStateEnum) {
+        el.hoverState = hoverStateEnum;
+        el.onHoverStateChange(stateName);
     }
-    el.hoverState = hoverStateEnum;
 }
 
 function singleEnterEmphasis(el: ECElement) {
@@ -142,13 +140,13 @@ function traverseUpdateState<T>(
 export function setStatesFlag(el: ECElement, stateName: DisplayState) {
     switch (stateName) {
         case 'emphasis':
-            el.hoverState = HOVER_STATE_EMPHASIS;
+            doChangeHoverState(el, stateName, HOVER_STATE_EMPHASIS);
             break;
         case 'normal':
-            el.hoverState = HOVER_STATE_NORMAL;
+            doChangeHoverState(el, stateName, HOVER_STATE_NORMAL);
             break;
         case 'blur':
-            el.hoverState = HOVER_STATE_BLUR;
+            doChangeHoverState(el, stateName, HOVER_STATE_BLUR);
             break;
         case 'select':
             el.selected = true;

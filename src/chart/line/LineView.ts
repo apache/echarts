@@ -1,4 +1,3 @@
-import { LineEndLabelOption } from './LineSeries';
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -37,20 +36,27 @@ import type ExtensionAPI from '../../ExtensionAPI';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import Polar from '../../coord/polar/Polar';
 import type List from '../../data/List';
-import type {Payload, Dictionary, ColorString, ECElement, DisplayState, LabelOption, ParsedValue} from '../../util/types';
+import type {
+    Payload,
+    Dictionary,
+    ColorString,
+    ECElement,
+    DisplayState,
+    LabelOption,
+    ParsedValue
+} from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
 import Displayable from 'zrender/src/graphic/Displayable';
-import {makeInner} from '../../util/model';
 import Model from '../../model/Model';
 import {setLabelStyle, getLabelStatesModels} from '../../label/labelStyle';
 import {getDefaultLabel} from '../helper/labelHelper';
 import SeriesModel from '../../model/Series';
 import {TextStyleProps} from 'zrender/src/graphic/Text';
 
-const inner = makeInner<{
+const inner = modelUtil.makeInner<{
     lastSplitId: number,
     precision: number,
     isStopped: boolean
@@ -367,7 +373,7 @@ function createLineClipPath(
 ) {
     if (coordSys.type === 'cartesian2d') {
         const endLabelModel = seriesModel.getModel('endLabel');
-        let showDuringLabel = endLabelModel.get('show');
+        const showDuringLabel = endLabelModel.get('show');
         const valueAnimation = endLabelModel.get('valueAnimation');
 
         const during = showDuringLabel
@@ -396,7 +402,7 @@ function createLineClipPath(
     else {
         if (__DEV__) {
             const endLabelModel = seriesModel.getModel('endLabel');
-            let showDuringLabel = endLabelModel.get('show');
+            const showDuringLabel = endLabelModel.get('show');
             if (showDuringLabel) {
                 console.warn('showDuringLabel is not supported for lines in polar systems.');
             }
@@ -745,9 +751,6 @@ class LineView extends ChartView {
         }
 
         const changePolyState = (toState: DisplayState) => {
-            if (this._endLabel) {
-                setStatesFlag(this._endLabel, toState);
-            }
             this._changePolyState(toState);
         };
 
@@ -756,8 +759,14 @@ class LineView extends ChartView {
             el && ((el as ECElement).onHoverStateChange = changePolyState);
         });
 
+        (this._polyline as ECElement).onHoverStateChange = changePolyState;
+
         if (!isCoordSysPolar) {
             this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D, data, !!oldData);
+            if (this._endLabel) {
+                enableHoverEmphasis(this._endLabel, focus, blurScope);
+                (this._endLabel as ECElement).onHoverStateChange = changePolyState;
+            }
         }
 
         this._data = data;
@@ -857,8 +866,10 @@ class LineView extends ChartView {
 
     _changePolyState(toState: DisplayState) {
         const polygon = this._polygon;
+        const endLabel = this._endLabel;
         setStatesFlag(this._polyline, toState);
         polygon && setStatesFlag(polygon, toState);
+        endLabel && setStatesFlag(endLabel, toState);
     }
 
     _newPolyline(points: ArrayLike<number>) {
@@ -936,7 +947,9 @@ class LineView extends ChartView {
             const el = (symbol as SymbolClz).childAt(0) as Displayable;
             if (el) {
                 const point = [symbol.x, symbol.y];
-                let start, end, current;
+                let start;
+                let end;
+                let current;
                 if (isCoordSysPolar) {
                     const polarClip = clipShape as PolarArea;
                     const coord = (coordSys as Polar).pointToCoord(point);
@@ -955,7 +968,7 @@ class LineView extends ChartView {
                     const gridClip = clipShape as Cartesian2DArea;
                     if (isHorizontalOrRadial) {
                         start = gridClip.x;
-                        end =  gridClip.x + gridClip.width;
+                        end = gridClip.x + gridClip.width;
                         current = symbol.x;
                     }
                     else {
@@ -1042,28 +1055,23 @@ class LineView extends ChartView {
         isUpdate: boolean
     ) {
         const endLabelModel = seriesModel.getModel('endLabel');
-        let showDuringLabel = endLabelModel.get('show');
+        const showDuringLabel = endLabelModel.get('show');
 
         if (showDuringLabel) {
-            if (!this._endLabel) {
-                this._endLabel = new graphic.Text({
+            let endLabel = this._endLabel;
+            if (!endLabel) {
+                endLabel = this._endLabel = new graphic.Text({
                     ignore: true,
                     z2: 200 // should be higher than item symbol
                 });
-                this.group.add(this._endLabel);
-
-                if (this._polyline) {
-                    (this._polyline as ECElement).onHoverStateChange = (toState: DisplayState) => {
-                        setStatesFlag(this._endLabel, toState);
-                    };
-                }
+                this.group.add(endLabel);
             }
 
             const precisionOption = endLabelModel.get('precision');
             const precision: number = !precisionOption || precisionOption === 'auto'
                 ? 0
                 : precisionOption;
-            const host = inner(this._endLabel);
+            const host = inner(endLabel);
             host.precision = precision;
             host.isStopped = false;
 
@@ -1075,7 +1083,7 @@ class LineView extends ChartView {
                     const info = getDataItemDetail(coordSys, seriesModel, data, idx);
                     if (info.value != null && info.value !== '-') {
                         setLabelStyle(
-                            this._endLabel,
+                            endLabel,
                             getLabelStatesModels(seriesModel, 'endLabel'),
                             {
                                 labelFetcher: seriesModel,
@@ -1099,7 +1107,7 @@ class LineView extends ChartView {
                     // Show endLabel on the first data
                     const info = getDataItemDetail(coordSys, seriesModel, data, 0);
                     setEndLabelStyle(
-                        this._endLabel,
+                        endLabel,
                         seriesModel,
                         0,
                         info.value,
@@ -1110,22 +1118,18 @@ class LineView extends ChartView {
                 }
                 else {
                     // No data, hide end label
-                    this._endLabel.attr({
+                    endLabel.attr({
                         ignore: true
                     });
                 }
             }
-            this._endLabel.attr({
+            endLabel.attr({
                 ignore: ignore
             });
         }
         else if (this._endLabel) {
             this.group.remove(this._endLabel);
             this._endLabel = null;
-
-            if (this._polyline) {
-                (this._polyline as ECElement).onHoverStateChange = null;
-            }
         }
     }
 
@@ -1198,7 +1202,7 @@ class LineView extends ChartView {
                             : ly > cy && ry <= cy
                         );
 
-                let ratio = isHorizontal
+                const ratio = isHorizontal
                     ? (rx === lx ? 0 : (clipPos - lx) / (rx - lx))
                     : (ry === ly ? 0 : (clipPos - ly) / (ry - ly));
 
