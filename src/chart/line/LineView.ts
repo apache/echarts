@@ -985,11 +985,8 @@ class LineView extends ChartView {
                     delay = (seriesDuration * ratio) + seriesDalayValue;
                 }
                 el.animateFrom({
-                    scaleX: 1,
-                    scaleY: 1,
-                    style: {
-                        lineWidth: 0
-                    }
+                    scaleX: 0,
+                    scaleY: 0
                 }, {
                     duration: 200,
                     delay: delay
