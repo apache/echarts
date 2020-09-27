@@ -588,12 +588,13 @@ class LineView extends ChartView {
             showSymbol && symbolDraw.updateData(data, {
                 isIgnore: isIgnoreFunc,
                 clipShape: clipShapeForSymbol,
+                disableAnimation: true,
                 getSymbolPoint(idx) {
                     return [points[idx * 2], points[idx * 2 + 1]];
                 }
             });
 
-            this._initEndLabelAnimation(
+            this._initSymbolLabelAnimation(
                 data,
                 coordSys,
                 clipShapeForSymbol
@@ -641,16 +642,10 @@ class LineView extends ChartView {
             showSymbol && symbolDraw.updateData(data, {
                 isIgnore: isIgnoreFunc,
                 clipShape: clipShapeForSymbol,
-                forceUseUpdateAnimation: true,
+                disableAnimation: true,
                 getSymbolPoint(idx) {
                     return [points[idx * 2], points[idx * 2 + 1]];
                 }
-            });
-
-            // Stop symbol animation and sync with line points
-            // FIXME performance?
-            data.eachItemGraphicEl(function (el) {
-                el && el.stopAnimation(null, true);
             });
 
             // In the case data zoom triggerred refreshing frequently
@@ -915,7 +910,7 @@ class LineView extends ChartView {
         return polygon;
     }
 
-    _initEndLabelAnimation(
+    _initSymbolLabelAnimation(
         data: List,
         coordSys: Polar | Cartesian2D,
         clipShape: PolarArea | Cartesian2DArea
@@ -989,29 +984,11 @@ class LineView extends ChartView {
                 else {
                     delay = (seriesDuration * ratio) + seriesDalayValue;
                 }
-
-                el.stopAnimation();
-
-                const symbolSize = data.getItemVisual(
-                    idx,
-                    'symbolSize'
-                );
-                const symbolSizeArr = zrUtil.isArray(symbolSize)
-                    ? symbolSize : [symbolSize, symbolSize];
-                const lineWidth = el.style.lineWidth;
-
-                el.attr({
+                el.animateFrom({
                     scaleX: 1,
                     scaleY: 1,
                     style: {
                         lineWidth: 0
-                    }
-                });
-                el.animateTo({
-                    scaleX: symbolSizeArr[0] / 2,
-                    scaleY: symbolSizeArr[1] / 2,
-                    style: {
-                        lineWidth: lineWidth
                     }
                 }, {
                     duration: 200,
@@ -1020,18 +997,9 @@ class LineView extends ChartView {
 
                 const text = el.getTextContent();
                 if (text) {
-                    const textOpacity = !text.style || text.style.opacity == null
-                        ? 1
-                        : text.style.opacity;
-                    text.stopAnimation();
-                    text.attr({
+                    text.animateFrom({
                         style: {
                             opacity: 0
-                        }
-                    });
-                    text.animateTo({
-                        style: {
-                            opacity: textOpacity
                         }
                     }, {
                         duration: 300,

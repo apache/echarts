@@ -174,7 +174,6 @@ class BarView extends ChartView {
         api: ExtensionAPI,
         isReorder: boolean
     ): void {
-        const that = this;
         const group = this.group;
         const data = seriesModel.getData();
         const oldData = this._data;
