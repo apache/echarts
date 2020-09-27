@@ -82,8 +82,11 @@ under the License.
                 echarts.registerTransform(ecStat.transform.clustering);
 
 
-                const COLORS = [
-                    '#37A2DA', '#e06343', '#37a354', '#b55dba', '#b5bd48', '#8378EA', '#96BFFF'
+                const PIE_COLORS = [
+                    '#e06343', '#37a354', '#b55dba', '#b5bd48', '#8378EA', '#96BFFF'
+                ];
+                const CLUSTER_COLORS = [
+                    '#cc5664', '#9bd6ec', '#ea946e', '#8acaaa', '#f1ec64', '#ee8686', '#a48dc1', '#5da6bc', '#b9dcae'
                 ];
                 var COUNT = 50;
                 var CONTENT_COLOR = '#37A2DA';
@@ -203,16 +206,15 @@ under the License.
                                         shape: {
                                             cx: pos[0],
                                             cy: pos[1],
-                                            r: 10,
-                                            transition: ['cx', 'cy', 'r']
+                                            r: 10
                                         },
                                         style: {
-                                            transition: 'lineWidth',
                                             fill: CONTENT_COLOR,
-                                            // fill: COLORS[clusterIndex],
+                                            // fill: PIE_COLORS[clusterIndex],
                                             stroke: '#555',
                                             lineWidth: 1
-                                        }
+                                        },
+                                        transition: ['shape', 'style']
                                     };
                                 }
                             }
@@ -259,14 +261,13 @@ under the License.
                                             y: tarPos[1],
                                             height: zeroPos[1] - tarPos[1],
                                             width: width,
-                                            transition: ['x', 'y', 'width', 'height']
                                         },
                                         style: {
-                                            transition: 'lineWidth',
                                             fill: CONTENT_COLOR,
                                             stroke: '#555',
                                             lineWidth: 0
-                                        }
+                                        },
+                                        transition: ['shape', 'style']
                                     };
                                 }
                             }
@@ -294,13 +295,16 @@ under the License.
                                             totalValue += api.value('ATA', i);
                                         }
                                         var angles = [];
+                                        var colors = [];
                                         var currentAngle = -Math.PI / 2;
                                         for (var i = 0; i < params.dataInsideLength; i++) {
+                                            colors.push(PIE_COLORS[i]);
                                             var angle = api.value('ATA', i) / totalValue * Math.PI * 2;
                                             angles.push([currentAngle, angle + currentAngle - 0.01]);
                                             currentAngle += angle;
                                         }
                                         context.angles = angles;
+                                        context.colors = colors;
                                     }
 
                                     var width = chart.getWidth();
@@ -318,12 +322,13 @@ under the License.
                                             clockwise: true
                                         },
                                         style: {
-                                            transition: 'lineWidth',
-                                            fill: CONTENT_COLOR,
+                                            // fill: CONTENT_COLOR,
+                                            fill: context.colors[params.dataIndex],
                                             stroke: '#555',
                                             lineWidth: 0,
                                             strokeNoScale: true
                                         },
+                                        transition: ['shape', 'style']
                                     };
                                 }
                             }
@@ -379,14 +384,14 @@ under the License.
                                             cx: pos[0],
                                             cy: pos[1],
                                             r: radius,
-                                            transition: ['cx', 'cy', 'r']
                                         },
                                         style: {
-                                            transition: 'lineWidth',
-                                            fill: CONTENT_COLOR,
+                                            // fill: CONTENT_COLOR,
+                                            fill: CLUSTER_COLORS[params.dataIndex],
                                             stroke: '#555',
                                             lineWidth: 0
-                                        }
+                                        },
+                                        transition: ['shape', 'style']
                                     };
                                 }
                             }

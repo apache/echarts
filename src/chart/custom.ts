@@ -19,7 +19,7 @@
 
 import {
     hasOwn, assert, isString, retrieve2, retrieve3, defaults, each,
-    keys, isArrayLike, bind, isFunction, eqNaN
+    keys, isArrayLike, bind, isFunction, eqNaN, isArray, indexOf
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
 import { setDefaultStateProxy, enableHoverEmphasis } from '../util/states';
@@ -106,22 +106,22 @@ const TRANSFORM_PROPS = {
     originY: 1,
     rotation: 1
 } as const;
-type TransformProps = keyof typeof TRANSFORM_PROPS;
+type TransformProp = keyof typeof TRANSFORM_PROPS;
 const transformPropNamesStr = keys(TRANSFORM_PROPS).join(', ');
 
-type TransitionAnyProps = string | string[];
-type TransitionTransformProps = TransformProps | TransformProps[];
 // Do not declare "Dictionary" in TransitionAnyOption to restrict the type check.
 type TransitionAnyOption = {
     transition?: TransitionAnyProps;
     enterFrom?: Dictionary<unknown>;
     leaveTo?: Dictionary<unknown>;
 };
+type TransitionAnyProps = string | string[];
 type TransitionTransformOption = {
-    transition?: TransitionTransformProps;
+    transition?: ElementRootTransitionProp | ElementRootTransitionProp[];
     enterFrom?: Dictionary<unknown>;
     leaveTo?: Dictionary<unknown>;
 };
+type ElementRootTransitionProp = TransformProp | 'shape' | 'extra' | 'style';
 type ShapeMorphingOption = {
     /**
      * If do shape morphing animation when type is changed.
@@ -131,7 +131,7 @@ type ShapeMorphingOption = {
 };
 
 interface CustomBaseElementOption extends Partial<Pick<
-    Element, TransformProps | 'silent' | 'ignore' | 'textConfig'
+    Element, TransformProp | 'silent' | 'ignore' | 'textConfig'
 >>, TransitionTransformOption {
     // element type, mandatory.
     type: string;
@@ -162,7 +162,7 @@ interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<
     select?: CustomDisplayableOptionOnState;
 }
 interface CustomDisplayableOptionOnState extends Partial<Pick<
-    Displayable, TransformProps | 'textConfig' | 'z2'
+    Displayable, TransformProp | 'textConfig' | 'z2'
 >> {
     // `false` means remove emphasis trigger.
     style?: (ZRStyleProps & TransitionAnyOption) | false;
@@ -781,7 +781,7 @@ function updateElNormal(
         );
     }
 
-    prepareStyleUpdate(el, morphingFromEl, styleOpt, transFromProps, isInit);
+    prepareStyleUpdate(el, morphingFromEl, elOption, styleOpt, transFromProps, isInit);
 
     if (elDisplayable) {
         // PENDING: here the input style object is used directly.
@@ -885,19 +885,34 @@ function prepareShapeOrExtraUpdate(
         }
     }
 
-    if (!isInit && elPropsInAttr && attrOpt.transition
-        && !(morphingFromEl && mainAttr === 'shape')    // Just ignore shape animation in morphing.
+    if (!isInit
+        && elPropsInAttr
+        // Just ignore shape animation in morphing.
+        && !(morphingFromEl && mainAttr === 'shape')
     ) {
-        !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
-        const transitionKeys = normalizeToArray(attrOpt.transition);
-        for (let i = 0; i < transitionKeys.length; i++) {
-            const key = transitionKeys[i];
-            const elVal = elPropsInAttr[key];
-            if (__DEV__) {
-                checkTansitionRefer(key, (attrOpt as any)[key], elVal);
+        if (attrOpt.transition) {
+            !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
+            const transitionKeys = normalizeToArray(attrOpt.transition);
+            for (let i = 0; i < transitionKeys.length; i++) {
+                const key = transitionKeys[i];
+                const elVal = elPropsInAttr[key];
+                if (__DEV__) {
+                    checkNonStyleTansitionRefer(key, (attrOpt as any)[key], elVal);
+                }
+                // Do not clone, see `checkNonStyleTansitionRefer`.
+                transFromPropsInAttr[key] = elVal;
             }
-            // Do not clone, see `checkTansitionRefer`.
-            transFromPropsInAttr[key] = elVal;
+        }
+        else if (indexOf(elOption.transition, mainAttr) >= 0) {
+            !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
+            const elPropsInAttrKeys = keys(elPropsInAttr);
+            for (let i = 0; i < elPropsInAttrKeys.length; i++) {
+                const key = elPropsInAttrKeys[i];
+                const elVal = elPropsInAttr[key];
+                if (isNonStyleTransitionEnabled((attrOpt as any)[key], elVal)) {
+                    transFromPropsInAttr[key] = elVal;
+                }
+            }
         }
     }
 
@@ -936,7 +951,7 @@ function prepareTransformUpdate(
     if (isInit && enterFrom) {
         const enterFromKeys = keys(enterFrom);
         for (let i = 0; i < enterFromKeys.length; i++) {
-            const key = enterFromKeys[i] as TransformProps;
+            const key = enterFromKeys[i] as TransformProp;
             if (__DEV__) {
                 checkTransformPropRefer(key, 'el.enterFrom');
             }
@@ -950,12 +965,15 @@ function prepareTransformUpdate(
             const transitionKeys = normalizeToArray(elOption.transition);
             for (let i = 0; i < transitionKeys.length; i++) {
                 const key = transitionKeys[i];
+                if (key === 'style' || key === 'shape' || key === 'extra') {
+                    continue;
+                }
                 const elVal = fromEl[key];
                 if (__DEV__) {
                     checkTransformPropRefer(key, 'el.transition');
-                    checkTansitionRefer(key, elOption[key], elVal);
+                    checkNonStyleTansitionRefer(key, elOption[key], elVal);
                 }
-                // Do not clone, see `checkTansitionRefer`.
+                // Do not clone, see `checkNonStyleTansitionRefer`.
                 transFromProps[key] = elVal;
             }
         }
@@ -983,7 +1001,7 @@ function prepareTransformUpdate(
         const leaveToProps = getOrCreateLeaveToPropsFromEl(el);
         const leaveToKeys = keys(leaveTo);
         for (let i = 0; i < leaveToKeys.length; i++) {
-            const key = leaveToKeys[i] as TransformProps;
+            const key = leaveToKeys[i] as TransformProp;
             if (__DEV__) {
                 checkTransformPropRefer(key, 'el.leaveTo');
             }
@@ -996,6 +1014,7 @@ function prepareTransformUpdate(
 function prepareStyleUpdate(
     el: Element,
     morphingFromEl: graphicUtil.Path | graphicUtil.Path[],
+    elOption: CustomElementOption,
     styleOpt: CustomElementOption['style'],
     transFromProps: LooseElementProps,
     isInit: boolean
@@ -1004,7 +1023,9 @@ function prepareStyleUpdate(
         return;
     }
 
-    const fromEl = (morphingFromEl instanceof graphicUtil.Path) && morphingFromEl || el;
+    // At present in "many-to-one"/"one-to-many" case, to not support "many" have
+    // different styles and make style transitions. That might be a rare case.
+    const fromEl = (isArray(morphingFromEl) ? morphingFromEl[0] : morphingFromEl) || el;
 
     const fromElStyle = (fromEl as LooseElementProps).style as LooseElementProps['style'];
     let transFromStyleProps: LooseElementProps['style'];
@@ -1020,17 +1041,34 @@ function prepareStyleUpdate(
         }
     }
 
-    if (!isInit && fromElStyle && styleOpt.transition) {
-        const transitionKeys = normalizeToArray(styleOpt.transition);
-        !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
-        for (let i = 0; i < transitionKeys.length; i++) {
-            const key = transitionKeys[i];
-            const elVal = (fromElStyle as any)[key];
-            if (__DEV__) {
-                checkTansitionRefer(key, (styleOpt as any)[key], elVal);
+    if (!isInit && fromElStyle) {
+        if (styleOpt.transition) {
+            const transitionKeys = normalizeToArray(styleOpt.transition);
+            !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
+            for (let i = 0; i < transitionKeys.length; i++) {
+                const key = transitionKeys[i];
+                const elVal = (fromElStyle as any)[key];
+                // Do not clone, see `checkNonStyleTansitionRefer`.
+                (transFromStyleProps as any)[key] = elVal;
             }
-            // Do not clone, see `checkTansitionRefer`.
-            (transFromStyleProps as any)[key] = elVal;
+        }
+        else if (
+            (el as Displayable).getAnimationStyleProps
+            && indexOf(elOption.transition, 'style') >= 0
+        ) {
+            const animationProps = (el as Displayable).getAnimationStyleProps();
+            const animationStyleProps = animationProps ? animationProps.style : null;
+            if (animationStyleProps) {
+                !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
+                const styleKeys = keys(styleOpt);
+                for (let i = 0; i < styleKeys.length; i++) {
+                    const key = styleKeys[i];
+                    if ((animationStyleProps as Dictionary<unknown>)[key]) {
+                        const elVal = (fromElStyle as any)[key];
+                        (transFromStyleProps as any)[key] = elVal;
+                    }
+                }
+            }
         }
     }
 
@@ -1046,26 +1084,41 @@ function prepareStyleUpdate(
     }
 }
 
-function checkTansitionRefer(propName: string, optVal: unknown, elVal: unknown): void {
-    const isArrLike = isArrayLike(optVal);
-    assert(
-        isArrLike || (optVal != null && isFinite(optVal as number)),
-        'Prop `' + propName + '` must refer to a finite number or ArrayLike for transition.'
-    );
-    // Try not to copy array for performance, but if user use the same object in different
-    // call of `renderItem`, it will casue animation transition fail.
-    assert(
-        !isArrLike || optVal !== elVal,
-        'Prop `' + propName + '` must use different Array object each time for transition.'
-    );
+let checkNonStyleTansitionRefer: (propName: string, optVal: unknown, elVal: unknown) => void;
+if (__DEV__) {
+    checkNonStyleTansitionRefer = function (propName: string, optVal: unknown, elVal: unknown): void {
+        if (!isArrayLike(optVal)) {
+            assert(
+                optVal != null && isFinite(optVal as number),
+                'Prop `' + propName + '` must refer to a finite number or ArrayLike for transition.'
+            );
+        }
+        else {
+            // Try not to copy array for performance, but if user use the same object in different
+            // call of `renderItem`, it will casue animation transition fail.
+            assert(
+                optVal !== elVal,
+                'Prop `' + propName + '` must use different Array object each time for transition.'
+            );
+        }
+    };
+}
+function isNonStyleTransitionEnabled(optVal: unknown, elVal: unknown): boolean {
+    // The same as `checkNonStyleTansitionRefer`.
+    return !isArrayLike(optVal)
+        ? (optVal != null && isFinite(optVal as number))
+        : optVal !== elVal;
 }
 
-function checkTransformPropRefer(key: string, usedIn: string): void {
-    assert(
-        hasOwn(TRANSFORM_PROPS, key),
-        'Prop `' + key + '` is not a permitted in `' + usedIn + '`. '
-            + 'Only `' + keys(TRANSFORM_PROPS).join('`, `') + '` are permitted.'
-    );
+let checkTransformPropRefer: (key: string, usedIn: string) => void;
+if (__DEV__) {
+    checkTransformPropRefer = function (key: string, usedIn: string): void {
+        assert(
+            hasOwn(TRANSFORM_PROPS, key),
+            'Prop `' + key + '` is not a permitted in `' + usedIn + '`. '
+                + 'Only `' + keys(TRANSFORM_PROPS).join('`, `') + '` are permitted.'
+        );
+    };
 }
 
 function getOrCreateLeaveToPropsFromEl(el: Element): LooseElementProps {
@@ -1081,14 +1134,14 @@ const tmpDuringScope = {} as {
 };
 const customDuringAPI = {
     // Usually other props do not need to be changed in animation during.
-    setTransform(key: TransformProps, val: unknown) {
+    setTransform(key: TransformProp, val: unknown) {
         if (__DEV__) {
             assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `setTransform`.');
         }
         tmpDuringScope.el[key] = val as number;
         return this;
     },
-    getTransform(key: TransformProps): unknown {
+    getTransform(key: TransformProp): unknown {
         if (__DEV__) {
             assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `getTransform`.');
         }
@@ -1302,7 +1355,7 @@ function updateZForEachState(
 
 function setLagecyProp(
     elOption: CustomElementOption,
-    targetProps: Partial<Pick<Transformable, TransformProps>>,
+    targetProps: Partial<Pick<Transformable, TransformProp>>,
     legacyName: LegacyTransformProp,
     fromEl?: Element // If provided, retrieve from the element.
 ): void {
@@ -1322,8 +1375,8 @@ function setLagecyProp(
 
 function setTransProp(
     elOption: CustomElementOption,
-    targetProps: Partial<Pick<Transformable, TransformProps>>,
-    name: TransformProps,
+    targetProps: Partial<Pick<Transformable, TransformProp>>,
+    name: TransformProp,
     fromEl?: Element // If provided, retrieve from the element.
 ): void {
     if (elOption[name] != null) {
