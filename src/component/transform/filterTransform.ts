@@ -40,7 +40,7 @@ export const filterTransform: ExternalDataTransform<FilterTransformOption> = {
         // For example, if no condition specified by mistake, return an empty result
         // is better than return the entire raw soruce for user to find the mistake.
 
-        const source = params.source;
+        const upstream = params.upstream;
         let rawItem: OptionDataItem;
 
         const condition = parseConditionalExpression<{ dimIdx: DimensionIndex }>(params.config, {
@@ -60,12 +60,12 @@ export const filterTransform: ExternalDataTransform<FilterTransformOption> = {
                     throwError(errMsg);
                 }
 
-                const dimInfo = source.getDimensionInfo(dimLoose);
+                const dimInfo = upstream.getDimensionInfo(dimLoose);
                 if (!dimInfo) {
                     if (__DEV__) {
                         errMsg = makePrintable(
                             'Can not find dimension info via: ' + dimLoose + '.\n',
-                            'Existing dimensions: ', source.getDimensionInfoAll(), '.\n',
+                            'Existing dimensions: ', upstream.cloneAllDimensionInfo(), '.\n',
                             'Illegal condition:', exprOption, '.\n'
                         );
                     }
@@ -76,17 +76,13 @@ export const filterTransform: ExternalDataTransform<FilterTransformOption> = {
             },
 
             getValue: function (param) {
-                return source.retrieveItemValue(rawItem, param.dimIdx);
+                return upstream.retrieveValueFromItem(rawItem, param.dimIdx);
             }
         });
 
-        const sourceHeaderCount = source.sourceHeaderCount;
         const resultData = [];
-        for (let i = 0; i < sourceHeaderCount; i++) {
-            resultData.push(source.getRawHeaderItem(i));
-        }
-        for (let i = 0, len = source.count(); i < len; i++) {
-            rawItem = source.getRawDataItem(i);
+        for (let i = 0, len = upstream.count(); i < len; i++) {
+            rawItem = upstream.getRawDataItem(i);
             if (condition.evaluate()) {
                 resultData.push(rawItem);
             }

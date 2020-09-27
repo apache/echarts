@@ -2305,7 +2305,6 @@ class ECharts extends Eventful {
                 }
 
                 const finderOpt = {
-                    useDefaultMainType: ['series'],
                     includeMainTypes: ['series'],
                     enableAll: false,
                     enableNone: false

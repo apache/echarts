@@ -22,11 +22,13 @@ under the License.
     <head>
         <meta charset='utf-8'>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src='lib/jquery.min.js'></script>
         <script src="../dist/echarts.js"></script>
         <script src="lib/testHelper.js"></script>
-        <!-- <script src="lib/ecStat.min.js"></script> -->
-        <script src="../../echarts-stat/dist/ecStat.js"></script>
+        <script src="lib/myTransform/aggregate.js"></script>
+        <script src="lib/transitionPlayer.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
@@ -38,101 +40,6 @@ under the License.
 
 
         <script>
-
-            /**
-             * @usage
-             *
-             * dataset: [{
-             *     source: [
-             *         ['aa', 'bb', 'cc', 'tag'],
-             *         [12, 0.33, 5200, 'AA'],
-             *         [21, 0.65, 8100, 'AA'],
-             *         ...
-             *     ]
-             * }, {
-             *     transform: {
-             *         type: 'my:aggregate',
-             *         config: {
-             *             resultDimensions: [
-             *                 // by default, use the same name with `from`.
-             *                 { from: 'aa', method: 'sum' },
-             *                 { from: 'bb', method: 'count' },
-             *                 { from: 'cc' }, // method by default: use the first value.
-             *                 { from: 'tag' }
-             *             ],
-             *             groupBy: 'tag'
-             *         }
-             *     }
-             * }]
-             */
-            var sumTransform = {
-                type: 'my:aggregate',
-                transform: function (params) {
-                    var source = params.source;
-                    var config = params.config;
-                    var resultDimensionsConfig = config.resultDimensions;
-                    var groupBy = config.groupBy;
-
-                    var calcMap = {};
-                    var resultData = [];
-
-                    var groupByDimInfo = source.getDimensionInfo(groupBy);
-                    var resultDimInfoList = [];
-                    var resultDimensions = [];
-                    for (var i = 0; i < resultDimensionsConfig.length; i++) {
-                        var resultDimInfoConfig = resultDimensionsConfig[i];
-                        var resultDimInfo = source.getDimensionInfo(resultDimInfoConfig.from);
-                        resultDimInfo.method = resultDimInfoConfig.method;
-                        resultDimInfoList.push(resultDimInfo);
-                        if (resultDimInfoConfig.name != null) {
-                            resultDimInfo.name = resultDimInfoConfig.name;
-                        }
-                        resultDimensions.push(resultDimInfo.name);
-                    }
-
-                    for (var i = 0; i < source.count(); i++) {
-                        var line = source.getRawDataItem(i);
-                        var groupByVal = source.retrieveItemValue(line, groupByDimInfo.index);
-
-                        if (!calcMap.hasOwnProperty(groupByVal)) {
-                            var newLine = [];
-                            calcMap[groupByVal] = newLine;
-                            resultData.push(newLine);
-                            for (var j = 0; j < resultDimInfoList.length; j++) {
-                                var resultDimInfo = resultDimInfoList[j];
-                                var method = resultDimInfo.method;
-                                newLine[j] = resultDimInfo.index === groupByDimInfo.index
-                                    ? groupByVal
-                                    : (method === 'sum' || method === 'count')
-                                    ? 0
-                                    // By default, method: 'first'
-                                    : source.retrieveItemValue(line, resultDimInfo.index);
-                            }
-                        }
-                        else {
-                            var newLine = calcMap[groupByVal];
-                            for (var j = 0; j < resultDimInfoList.length; j++) {
-                                var resultDimInfo = resultDimInfoList[j];
-                                var method = resultDimInfo.method;
-                                if (resultDimInfo.index !== groupByDimInfo.index) {
-                                    if (method === 'sum') {
-                                        newLine[j] += line[resultDimInfo.index];
-                                    }
-                                    else if (method === 'count') {
-                                        newLine[j] += 1;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    return {
-                        dimensions: resultDimensions,
-                        data: resultData
-                    };
-                }
-            };
-
 
             function initRawData(count) {
                 var M_TAG_LIST = ['MA', 'MB', 'MC', 'MD'];
@@ -168,9 +75,10 @@ under the License.
 
 
         <script>
-            (function () {
 
-                echarts.registerTransform(sumTransform);
+            require(['echarts', 'ecStat'], function (echarts, ecStat) {
+
+                echarts.registerTransform(window.myTransform.aggregate);
                 echarts.registerTransform(ecStat.transform.clustering);
 
 
@@ -191,23 +99,6 @@ under the License.
                 var RAW_CLUSTER_DIMENSIONS = ['DATE', 'ATA', 'STE', 'CTZ', 'M_TAG', 'Z_TAG', 'ID', 'CLUSTER_IDX', 'CLUSTER_CENTER_ATA', 'CLUSTER_CENTER_STE'];
                 var RAW_CLUSTER_CENTERS_DIMENSIONS = ['COUNT', 'CLUSTER_IDX', 'CLUSTER_CENTER_ATA', 'CLUSTER_CENTER_STE'];
 
-                // Key: datasetId
-                var TRANSITION_INFO = {
-                    raw: {
-                        dimensions: RAW_DATA_DIMENSIONS
-                    },
-                    mTagSum: {
-                        dimensions: M_TAG_SUM_DIMENSIONS,
-                        uniqueKeyDimension: 'M_TAG',
-                    },
-                    rawClusters: {
-                        dimensions: RAW_CLUSTER_DIMENSIONS
-                    },
-                    rawClusterCenters: {
-                        dimensions: RAW_CLUSTER_CENTERS_DIMENSIONS,
-                        uniqueKeyDimension: 'CLUSTER_IDX'
-                    }
-                };
 
                 var baseOption = {
                     dataset: [{
@@ -218,7 +109,7 @@ under the License.
                         id: 'mTagSum',
                         fromDatasetId: 'raw',
                         transform: {
-                            type: 'my:aggregate',
+                            type: 'myTransform:aggregate',
                             config: {
                                 resultDimensions: [
                                     { from: 'ATA', method: 'sum' },
@@ -255,7 +146,7 @@ under the License.
                         id: 'rawClusterCenters',
                         fromDatasetId: 'rawClusters',
                         transform: {
-                            type: 'my:aggregate',
+                            type: 'myTransform:aggregate',
                             print: true,
                             config: {
                                 resultDimensions: [
@@ -267,314 +158,283 @@ under the License.
                                 groupBy: 'CLUSTER_IDX'
                             }
                         }
-                    }]
+                    }],
+                    tooltip: {}
                 };
 
+                var optionCreators = {
 
-                function create_Scatter_ATA_STE() {
-                    // var datasetId = 'raw';
-                    var datasetId = 'rawClusters';
-                    var option = {
-                        tooltip: {},
-                        grid: {
-                            containLabel: true
-                        },
-                        xAxis: {
-                            name: 'STE'
-                        },
-                        yAxis: {
-                            name: 'ATA'
-                        },
-                        dataZoom: [{
-                            type: 'slider',
-                        }, {
-                            type: 'inside'
-                        }],
-                        series: {
-                            type: 'custom',
-                            coordinateSystem: 'cartesian2d',
-                            animationDurationUpdate: ANIMATION_DURATION_UPDATE,
-                            datasetId: datasetId,
-                            encode: {
-                                itemName: 'ID',
-                                x: 'STE',
-                                y: 'ATA',
-                                tooltip: ['STE', 'ATA']
+                    'Scatter_ATA_STE': function (datasetId) {
+                        return {
+                            grid: {
+                                containLabel: true
                             },
-                            renderItem: function (params, api) {
-                                var pos = api.coord([
-                                    api.value('STE'),
-                                    api.value('ATA')
-                                ]);
-                                // var clusterIndex = api.value('CLUSTER_IDX');
-                                return {
-                                    type: 'circle',
-                                    morph: true,
-                                    shape: {
-                                        cx: pos[0],
-                                        cy: pos[1],
-                                        r: 10,
-                                        transition: ['cx', 'cy', 'r']
-                                    },
-                                    style: {
-                                        transition: 'lineWidth',
-                                        fill: CONTENT_COLOR,
-                                        // fill: COLORS[clusterIndex],
-                                        stroke: '#555',
-                                        lineWidth: 1
-                                    }
-                                };
-                            }
-                        }
-                    };
-
-                    return {
-                        option: option,
-                        datasetId: datasetId
-                    };
-                }
-
-                function create_Bar_mSum_ATA() {
-                    var datasetId = 'mTagSum';
-                    var option = {
-                        tooltip: {},
-                        grid: {
-                            containLabel: true
-                        },
-                        xAxis: {
-                            type: 'category'
-                        },
-                        yAxis: {
-                        },
-                        dataZoom: [{
-                            type: 'slider',
-                        }, {
-                            type: 'inside'
-                        }],
-                        series: {
-                            type: 'custom',
-                            coordinateSystem: 'cartesian2d',
-                            animationDurationUpdate: ANIMATION_DURATION_UPDATE,
-                            datasetId: datasetId,
-                            encode: {
-                                x: 'M_TAG',
-                                y: 'ATA',
-                                tooltip: ['M_TAG', 'ATA']
+                            xAxis: {
+                                name: 'STE'
                             },
-                            renderItem: function (params, api) {
-                                var mTagVal = api.value('M_TAG');
-                                var ataVal = api.value('ATA');
-                                var tarPos = api.coord([mTagVal, ataVal]);
-                                var zeroPos = api.coord([mTagVal, 0]);
-                                var size = api.size([mTagVal, ataVal]);
-                                var width = size[0] * 0.4;
-                                return {
-                                    type: 'rect',
-                                    morph: true,
-                                    shape: {
-                                        x: tarPos[0] - width / 2,
-                                        y: tarPos[1],
-                                        height: zeroPos[1] - tarPos[1],
-                                        width: width,
-                                        transition: ['x', 'y', 'width', 'height']
-                                    },
-                                    style: {
-                                        transition: 'lineWidth',
-                                        fill: CONTENT_COLOR,
-                                        stroke: '#555',
-                                        lineWidth: 0
-                                    }
-                                };
-                            }
-                        }
-                    };
-
-                    return {
-                        option: option,
-                        datasetId: datasetId
-                    };
-                }
-
-
-                function create_Pie_mSum_ATA() {
-                    var datasetId = 'mTagSum';
-                    var option = {
-                        tooltip: {},
-                        series: {
-                            type: 'custom',
-                            coordinateSystem: 'none',
-                            animationDurationUpdate: ANIMATION_DURATION_UPDATE,
-                            datasetId: datasetId,
-                            encode: {
-                                itemName: 'M_TAG',
-                                value: 'ATA',
-                                tooltip: 'ATA'
+                            yAxis: {
+                                name: 'ATA'
                             },
-                            renderItem: function (params, api) {
-                                var context = params.context;
-                                if (!context.layout) {
-                                    context.layout = true;
-                                    var totalValue = 0;
-                                    for (var i = 0; i < params.dataInsideLength; i++) {
-                                        totalValue += api.value('ATA', i);
-                                    }
-                                    var angles = [];
-                                    var currentAngle = -Math.PI / 2;
-                                    for (var i = 0; i < params.dataInsideLength; i++) {
-                                        var angle = api.value('ATA', i) / totalValue * Math.PI * 2;
-                                        angles.push([currentAngle, angle + currentAngle]);
-                                        currentAngle += angle;
-                                    }
-                                    context.angles = angles;
-                                }
-
-                                var width = chart.getWidth();
-                                var height = chart.getHeight();
-                                return {
-                                    type: 'sector',
-                                    morph: true,
-                                    shape: {
-                                        cx: width / 2,
-                                        cy: height / 2,
-                                        r: Math.min(width, height) / 3,
-                                        r0: Math.min(width, height) / 5,
-                                        startAngle: context.angles[params.dataIndex][0],
-                                        endAngle: context.angles[params.dataIndex][1],
-                                        clockwise: true
-                                    },
-                                    style: {
-                                        fill: CONTENT_COLOR,
-                                        stroke: '#555',
-                                        strokeNoScale: true
-                                    },
-                                };
-                            }
-                        }
-                    };
-
-                    return {
-                        option: option,
-                        datasetId: datasetId
-                    };
-                }
-
-                function create_Scatter_ATA_STE_Cluster_Center() {
-                    var datasetId = 'rawClusterCenters';
-                    var option = {
-                        tooltip: {},
-                        grid: {
-                            containLabel: true
-                        },
-                        xAxis: {
-                            name: 'STE'
-                        },
-                        yAxis: {
-                            name: 'ATA'
-                        },
-                        dataZoom: [{
-                            type: 'slider',
-                        }, {
-                            type: 'inside'
-                        }],
-                        series: {
-                            type: 'custom',
-                            coordinateSystem: 'cartesian2d',
-                            animationDurationUpdate: ANIMATION_DURATION_UPDATE,
-                            datasetId: datasetId,
-                            encode: {
-                                x: 'CLUSTER_CENTER_STE',
-                                y: 'CLUSTER_CENTER_ATA',
-                                tooltip: ['CLUSTER_CENTER_STE', 'CLUSTER_CENTER_ATA']
-                            },
-                            renderItem: function (params, api) {
-                                var context = params.context;
-                                if (!context.layout) {
-                                    context.layout = true;
-                                    context.totalCount = 0;
-                                    for (var i = 0; i < params.dataInsideLength; i++) {
-                                        context.totalCount += api.value('COUNT', i);
-                                    }
-                                }
-
-                                var pos = api.coord([
-                                    api.value('CLUSTER_CENTER_STE'),
-                                    api.value('CLUSTER_CENTER_ATA')
-                                ]);
-                                var count = api.value('COUNT');
-                                var radius = count / context.totalCount * 100 + 10;
-                                return {
-                                    type: 'circle',
-                                    morph: true,
-                                    shape: {
-                                        cx: pos[0],
-                                        cy: pos[1],
-                                        r: radius,
-                                        transition: ['cx', 'cy', 'r']
-                                    },
-                                    style: {
-                                        transition: 'lineWidth',
-                                        fill: CONTENT_COLOR,
-                                        stroke: '#555',
-                                        lineWidth: 0
-                                    }
-                                };
-                            }
-                        }
-                    };
-
-                    return {
-                        option: option,
-                        datasetId: datasetId
-                    };
-                }
-
-                var optionInfoList = {
-                    'Scatter_ATA_STE': create_Scatter_ATA_STE(),
-                    'Bar_mTagSum_ATA': create_Bar_mSum_ATA(),
-                    'Pie_mTagSum_ATA': create_Pie_mSum_ATA(),
-                    'Scatter_ATA_STE_Cluster_Center': create_Scatter_ATA_STE_Cluster_Center()
-                };
-
-                var currOptionName;
-                function next(nextOptionName) {
-                    var lastOptionInfo = optionInfoList[currOptionName];
-                    var nextOptionInfo = optionInfoList[nextOptionName];
-                    var transitionOpt = {
-                        to: { seriesIndex: 0 }
-                    };
-
-                    if (lastOptionInfo) {
-                        var commonDimension = findCommonDimension(lastOptionInfo, nextOptionInfo)
-                            || findCommonDimension(nextOptionInfo, lastOptionInfo);
-                        if (commonDimension != null) {
-                            transitionOpt = {
-                                from: {
-                                    seriesIndex: 0,
-                                    dimension: commonDimension
+                            dataZoom: [{
+                                type: 'slider',
+                            }, {
+                                type: 'inside'
+                            }],
+                            series: {
+                                type: 'custom',
+                                coordinateSystem: 'cartesian2d',
+                                animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                                datasetId: datasetId,
+                                encode: {
+                                    itemName: 'ID',
+                                    x: 'STE',
+                                    y: 'ATA',
+                                    tooltip: ['STE', 'ATA']
                                 },
-                                to: {
-                                    seriesIndex: 0,
-                                    dimension: commonDimension
+                                renderItem: function (params, api) {
+                                    var pos = api.coord([
+                                        api.value('STE'),
+                                        api.value('ATA')
+                                    ]);
+                                    // var clusterIndex = api.value('CLUSTER_IDX');
+                                    return {
+                                        type: 'circle',
+                                        morph: true,
+                                        shape: {
+                                            cx: pos[0],
+                                            cy: pos[1],
+                                            r: 10,
+                                            transition: ['cx', 'cy', 'r']
+                                        },
+                                        style: {
+                                            transition: 'lineWidth',
+                                            fill: CONTENT_COLOR,
+                                            // fill: COLORS[clusterIndex],
+                                            stroke: '#555',
+                                            lineWidth: 1
+                                        }
+                                    };
                                 }
-                            };
-                        }
+                            }
+                        };
+                    },
+
+                    'Bar_mSum_ATA': function (datasetId) {
+                        return {
+                            grid: {
+                                containLabel: true
+                            },
+                            xAxis: {
+                                type: 'category'
+                            },
+                            yAxis: {
+                            },
+                            dataZoom: [{
+                                type: 'slider',
+                            }, {
+                                type: 'inside'
+                            }],
+                            series: {
+                                type: 'custom',
+                                coordinateSystem: 'cartesian2d',
+                                animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                                datasetId: datasetId,
+                                encode: {
+                                    x: 'M_TAG',
+                                    y: 'ATA',
+                                    tooltip: ['M_TAG', 'ATA']
+                                },
+                                renderItem: function (params, api) {
+                                    var mTagVal = api.value('M_TAG');
+                                    var ataVal = api.value('ATA');
+                                    var tarPos = api.coord([mTagVal, ataVal]);
+                                    var zeroPos = api.coord([mTagVal, 0]);
+                                    var size = api.size([mTagVal, ataVal]);
+                                    var width = size[0] * 0.4;
+                                    return {
+                                        type: 'rect',
+                                        morph: true,
+                                        shape: {
+                                            x: tarPos[0] - width / 2,
+                                            y: tarPos[1],
+                                            height: zeroPos[1] - tarPos[1],
+                                            width: width,
+                                            transition: ['x', 'y', 'width', 'height']
+                                        },
+                                        style: {
+                                            transition: 'lineWidth',
+                                            fill: CONTENT_COLOR,
+                                            stroke: '#555',
+                                            lineWidth: 0
+                                        }
+                                    };
+                                }
+                            }
+                        };
+                    },
+
+                    'Pie_mSum_ATA': function (datasetId) {
+                        return {
+                            series: {
+                                type: 'custom',
+                                coordinateSystem: 'none',
+                                animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                                datasetId: datasetId,
+                                encode: {
+                                    itemName: 'M_TAG',
+                                    value: 'ATA',
+                                    tooltip: 'ATA'
+                                },
+                                renderItem: function (params, api) {
+                                    var context = params.context;
+                                    if (!context.layout) {
+                                        context.layout = true;
+                                        var totalValue = 0;
+                                        for (var i = 0; i < params.dataInsideLength; i++) {
+                                            totalValue += api.value('ATA', i);
+                                        }
+                                        var angles = [];
+                                        var currentAngle = -Math.PI / 2;
+                                        for (var i = 0; i < params.dataInsideLength; i++) {
+                                            var angle = api.value('ATA', i) / totalValue * Math.PI * 2;
+                                            angles.push([currentAngle, angle + currentAngle - 0.01]);
+                                            currentAngle += angle;
+                                        }
+                                        context.angles = angles;
+                                    }
+
+                                    var width = chart.getWidth();
+                                    var height = chart.getHeight();
+                                    return {
+                                        type: 'sector',
+                                        morph: true,
+                                        shape: {
+                                            cx: width / 2,
+                                            cy: height / 2,
+                                            r: Math.min(width, height) / 3,
+                                            r0: Math.min(width, height) / 5,
+                                            startAngle: context.angles[params.dataIndex][0],
+                                            endAngle: context.angles[params.dataIndex][1],
+                                            clockwise: true
+                                        },
+                                        style: {
+                                            transition: 'lineWidth',
+                                            fill: CONTENT_COLOR,
+                                            stroke: '#555',
+                                            lineWidth: 0,
+                                            strokeNoScale: true
+                                        },
+                                    };
+                                }
+                            }
+                        };
+                    },
+
+                    'Scatter_ATA_STE_Cluster_Center': function (datasetId) {
+                        return {
+                            grid: {
+                                containLabel: true
+                            },
+                            xAxis: {
+                                name: 'STE'
+                            },
+                            yAxis: {
+                                name: 'ATA'
+                            },
+                            dataZoom: [{
+                                type: 'slider',
+                            }, {
+                                type: 'inside'
+                            }],
+                            series: {
+                                type: 'custom',
+                                coordinateSystem: 'cartesian2d',
+                                animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                                datasetId: datasetId,
+                                encode: {
+                                    x: 'CLUSTER_CENTER_STE',
+                                    y: 'CLUSTER_CENTER_ATA',
+                                    tooltip: ['CLUSTER_CENTER_STE', 'CLUSTER_CENTER_ATA']
+                                },
+                                renderItem: function (params, api) {
+                                    var context = params.context;
+                                    if (!context.layout) {
+                                        context.layout = true;
+                                        context.totalCount = 0;
+                                        for (var i = 0; i < params.dataInsideLength; i++) {
+                                            context.totalCount += api.value('COUNT', i);
+                                        }
+                                    }
+
+                                    var pos = api.coord([
+                                        api.value('CLUSTER_CENTER_STE'),
+                                        api.value('CLUSTER_CENTER_ATA')
+                                    ]);
+                                    var count = api.value('COUNT');
+                                    var radius = count / context.totalCount * 100 + 10;
+                                    return {
+                                        type: 'circle',
+                                        morph: true,
+                                        shape: {
+                                            cx: pos[0],
+                                            cy: pos[1],
+                                            r: radius,
+                                            transition: ['cx', 'cy', 'r']
+                                        },
+                                        style: {
+                                            transition: 'lineWidth',
+                                            fill: CONTENT_COLOR,
+                                            stroke: '#555',
+                                            lineWidth: 0
+                                        }
+                                    };
+                                }
+                            }
+                        };
                     }
+                };
 
-                    currOptionName = nextOptionName;
 
-                    chart.setOption(nextOptionInfo.option, {
-                        replaceMerge: ['xAxis', 'yAxis'],
-                        transition: transitionOpt
-                    });
-
-                    function findCommonDimension(optionInfoA, optionInfoB) {
-                        var metaA = TRANSITION_INFO[optionInfoA.datasetId];
-                        var metaB = TRANSITION_INFO[optionInfoB.datasetId];
-                        if (metaA.dimensions.indexOf(metaB.uniqueKeyDimension) >= 0) {
-                            return metaB.uniqueKeyDimension;
+                var player = transitionPlayer.create({
+                    chart: function () {
+                        return chart;
+                    },
+                    seriesIndex: 0,
+                    replaceMerge: ['xAxis', 'yAxis'],
+                    dataMeta: {
+                        raw: {
+                            dimensions: RAW_DATA_DIMENSIONS
+                        },
+                        mTagSum: {
+                            dimensions: M_TAG_SUM_DIMENSIONS,
+                            uniqueDimension: 'M_TAG',
+                        },
+                        rawClusters: {
+                            dimensions: RAW_CLUSTER_DIMENSIONS
+                        },
+                        rawClusterCenters: {
+                            dimensions: RAW_CLUSTER_CENTERS_DIMENSIONS,
+                            uniqueDimension: 'CLUSTER_IDX'
                         }
-                    }
-                }
+                    },
+                    optionList: [{
+                        key: 'Scatter_ATA_STE',
+                        dataMetaKey: 'rawClusters',
+                        option: optionCreators['Scatter_ATA_STE']('rawClusters')
+                    }, {
+                        key: 'Bar_mTagSum_ATA',
+                        dataMetaKey: 'mTagSum',
+                        option: optionCreators['Bar_mSum_ATA']('mTagSum')
+                    }, {
+                        key: 'Pie_mTagSum_ATA',
+                        dataMetaKey: 'mTagSum',
+                        option: optionCreators['Pie_mSum_ATA']('mTagSum')
+                    }, {
+                        key: 'Scatter_ATA_STE_Cluster_Center',
+                        dataMetaKey: 'rawClusterCenters',
+                        option: optionCreators['Scatter_ATA_STE_Cluster_Center']('rawClusterCenters')
+                    }]
+                });
 
 
                 var chart = testHelper.create(echarts, 'main0', {
@@ -590,29 +450,29 @@ under the License.
                     buttons: [{
                         text: 'Bar_mTagSum_ATA',
                         onclick: function () {
-                            next('Bar_mTagSum_ATA');
+                            player.go('Bar_mTagSum_ATA');
                         }
                     }, {
                         text: 'Scatter_ATA_STE',
                         onclick: function () {
-                            next('Scatter_ATA_STE');
+                            player.go('Scatter_ATA_STE');
                         }
                     }, {
                         text: 'Pie_mTagSum_ATA',
                         onclick: function () {
-                            next('Pie_mTagSum_ATA');
+                            player.go('Pie_mTagSum_ATA');
                         }
                     }, {
                         text: 'Scatter_ATA_STE_Cluster_Center',
                         onclick: function () {
-                            next('Scatter_ATA_STE_Cluster_Center');
+                            player.go('Scatter_ATA_STE_Cluster_Center');
                         }
                     }]
                 });
 
-                next('Scatter_ATA_STE');
+                player.go('Scatter_ATA_STE');
 
-            })();
+            });
 
         </script>
 

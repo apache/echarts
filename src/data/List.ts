@@ -1963,7 +1963,7 @@ class List<
                 // Performance sensitive, do not use modelUtil.getDataItemValue.
                 // If dataItem is an plain object with no value field, the let `value`
                 // will be assigned with the object, but it will be tread correctly
-                // in the `convertDataValue`.
+                // in the `convertValue`.
                 const value = dataItem && (dataItem.value == null ? dataItem : dataItem.value);
 
                 // If any dataItem is like { value: 10 }

@@ -19,7 +19,7 @@
 
 import {
     isTypedArray, HashMap, clone, createHashMap, isArray, isObject, isArrayLike,
-    hasOwn, assert, each, extend, map, isNumber, isString
+    hasOwn, assert, each, map, isNumber, isString, isFunction
 } from 'zrender/src/core/util';
 import {
     SourceFormat, SeriesLayoutBy, DimensionDefinition,
@@ -146,6 +146,8 @@ class SourceImpl {
      */
     readonly metaRawOption: SourceMetaRawOption;
 
+    readonly frozen: boolean;
+
 
     constructor(fields: {
         data: OptionSourceData,
@@ -180,6 +182,35 @@ class SourceImpl {
         this.metaRawOption = fields.metaRawOption;
     }
 
+    /**
+     * When expose the source to thrid-party transform, it probably better to
+     * freeze to make sure immutability.
+     * If a third-party transform modify the raw upstream data structure, it might bring about
+     * "uncertain effect" when using multiple transforms with different combinations.
+     *
+     * [Caveat]
+     * `OptionManager.ts` have perform `clone` in `setOption`.
+     * The original user input object should better not be frozen in case they
+     * make other usages.
+     */
+    freeze() {
+        assert(sourceFormatCanBeExposed(this));
+
+        const data = this.data as OptionSourceDataArrayRows;
+        if (this.frozen || !data || !isFunction(Object.freeze)) {
+            return;
+        }
+        // @ts-ignore
+        this.frozen = true;
+        // PENDING:
+        // There is a flaw that there might be non-primitive values like `Date`.
+        // Is it worth handling that?
+        for (let i = 0; i < data.length; i++) {
+            Object.freeze(data[i]);
+        }
+        Object.freeze(data);
+    }
+
 }
 
 export function isSourceInstance(val: unknown): val is Source {
@@ -194,10 +225,11 @@ export function createSource(
     encodeDefine: OptionEncode  // can be null
 ): Source {
     sourceFormat = sourceFormat || detectSourceFormat(sourceData);
+    const seriesLayoutBy = thisMetaRawOption.seriesLayoutBy;
     const determined = determineSourceDimensions(
         sourceData,
         sourceFormat,
-        thisMetaRawOption.seriesLayoutBy,
+        seriesLayoutBy,
         thisMetaRawOption.sourceHeader,
         thisMetaRawOption.dimensions
     );
@@ -205,7 +237,7 @@ export function createSource(
         data: sourceData,
         sourceFormat: sourceFormat,
 
-        seriesLayoutBy: thisMetaRawOption.seriesLayoutBy,
+        seriesLayoutBy: seriesLayoutBy,
         dimensionsDefine: determined.dimensionsDefine,
         startIndex: determined.startIndex,
         dimensionsDetectedCount: determined.dimensionsDetectedCount,
@@ -242,6 +274,15 @@ export function cloneSourceShallow(source: Source): Source {
         dimensionsDetectedCount: source.dimensionsDetectedCount,
         encodeDefine: makeEncodeDefine(source.encodeDefine)
     });
+}
+
+export function sourceFormatCanBeExposed(source: Source): boolean {
+    const sourceFormat = source.sourceFormat;
+    const data = source.data;
+    return sourceFormat === SOURCE_FORMAT_ARRAY_ROWS
+        || sourceFormat === SOURCE_FORMAT_OBJECT_ROWS
+        || !data
+        || (isArray(data) && !data.length);
 }
 
 function makeEncodeDefine(
@@ -425,13 +466,19 @@ function normalizeDimensionsOption(dimensionsDefine: DimensionDefinitionLoose[])
         return;
     }
     const nameMap = createHashMap<{ count: number }, string>();
-    return map(dimensionsDefine, function (item, index) {
-        item = extend({}, isObject(item) ? item : {name: item});
+    return map(dimensionsDefine, function (rawItem, index) {
+        rawItem = isObject(rawItem) ? rawItem : { name: rawItem };
+        // Other fields will be discarded.
+        const item: DimensionDefinition = {
+            name: rawItem.name,
+            displayName: rawItem.displayName,
+            type: rawItem.type
+        };
 
         // User can set null in dimensions.
         // We dont auto specify name, othewise a given name may
         // cause it be refered unexpectedly.
-        if (item.name == null) {
+        if (name == null) {
             return item;
         }
 

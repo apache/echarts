@@ -18,7 +18,7 @@
 */
 
 import {
-    Dictionary, OptionSourceData, DimensionDefinitionLoose, OptionSourceHeader,
+    Dictionary, OptionSourceData, DimensionDefinitionLoose,
     SourceFormat, DimensionDefinition, OptionDataItem, DimensionIndex,
     OptionDataValue, DimensionLoose, DimensionName, ParsedValue, SERIES_LAYOUT_BY_COLUMN
 } from '../../util/types';
@@ -33,7 +33,7 @@ import {
 import { parseDataValue } from './dataValueHelper';
 import { inheritSourceMetaRawOption } from './sourceHelper';
 import { consoleLog, makePrintable, throwError } from '../../util/log';
-import { createSource, Source } from '../Source';
+import { createSource, Source, sourceFormatCanBeExposed } from '../Source';
 
 
 export type PipedDataTransformOption = DataTransformOption[];
@@ -49,37 +49,34 @@ export interface DataTransformOption {
 
 export interface ExternalDataTransform<TO extends DataTransformOption = DataTransformOption> {
     // Must include namespace like: 'ecStat:regression'
-    type: string,
-    transform?: (
+    type: string;
+    transform: (
         param: ExternalDataTransformParam<TO>
-    ) => ExternalDataTransformResultItem | ExternalDataTransformResultItem[]
+    ) => ExternalDataTransformResultItem | ExternalDataTransformResultItem[];
 }
 
 interface ExternalDataTransformParam<TO extends DataTransformOption = DataTransformOption> {
-    // This is the first source in sourceList. In most cases,
+    // This is the first source in upstreamList. In most cases,
     // there is only one upstream source.
-    source: ExternalSource;
-    sourceList: ExternalSource[];
+    upstream: ExternalSource;
+    upstreamList: ExternalSource[];
     config: TO['config'];
 }
 export interface ExternalDataTransformResultItem {
+    /**
+     * If `data` is null/undefined, inherit upstream data.
+     */
     data: OptionSourceData;
     /**
      * A `transform` can optionally return a dimensions definition.
-     * If the `transform` make sure the dimensions of the result data, it can make that return.
-     * Otherwise, it's recommanded not to make such a `dimensions`. In this case, echarts will
-     * inherit dimensions definition from the upstream. If there is no dimensions definition
-     * of the upstream, the echarts will left it undefined.
-     * Notice: return a incorrect dimensions definition will cause the downstream can not use
-     * the values under that dimensions correctly.
-     *
-     * @see also `source.isDimensionsDefined`.
+     * The rule:
+     * If this `transform result` have different dimensions from the upstream, it should return
+     * a new dimension definition. For example, this transform inherit the upstream data totally
+     * but add a extra dimension.
+     * Otherwise, do not need to return that dimension definition. echarts will inherit dimension
+     * definition from the upstream.
      */
     dimensions?: DimensionDefinitionLoose[];
-    /**
-     * Similar to `dimensions`, a `transform` can return that optionally.
-     */
-    sourceHeader?: OptionSourceHeader;
 }
 interface ExternalDimensionDefinition extends Partial<DimensionDefinition> {
     // Mandatory
@@ -90,17 +87,26 @@ interface ExternalDimensionDefinition extends Partial<DimensionDefinition> {
  * TODO: disable writable.
  * This structure will be exposed to users.
  */
-class ExternalSource {
+export class ExternalSource {
     /**
      * [Caveat]
      * This instance is to be exposed to users.
-     * DO NOT mount private members on this instance directly.
+     * (1) DO NOT mount private members on this instance directly.
      * If we have to use private members, we can make them in closure or use `makeInner`.
+     * (2) "soruce header count" is not provided to transform, because it's complicated to manage
+     * header and dimensions definition in each transfrom. Source header are all normalized to
+     * dimensions definitions in transforms and their downstreams.
      */
 
-    data: OptionSourceData;
     sourceFormat: SourceFormat;
-    sourceHeaderCount: number;
+
+    getRawData(): Source['data'] {
+        return;
+    }
+
+    getRawDataItem(dataIndex: number): OptionDataItem {
+        return;
+    }
 
     /**
      * @return If dimension not found, return null/undefined.
@@ -110,30 +116,15 @@ class ExternalSource {
     }
 
     /**
-     * If dimensions are defined (see `isDimensionsDefined`), `dimensionInfoAll` is corresponding to
+     * dimensions defined if and only if either:
+     * (a) dataset.dimensions are declared.
+     * (b) dataset data include dimensions definitions in data (detected or via specified `sourceHeader`).
+     * If dimensions are defined, `dimensionInfoAll` is corresponding to
      * the defined dimensions.
      * Otherwise, `dimensionInfoAll` is determined by data columns.
      * @return Always return an array (even empty array).
      */
-    getDimensionInfoAll(): ExternalDimensionDefinition[] {
-        return;
-    }
-
-    /**
-     * dimensions defined if and only if:
-     * (a) dataset.dimensions are declared.
-     * or
-     * (b) dataset data include dimensions definitions in data (detected or via specified `sourceHeader`)
-     */
-    isDimensionsDefined(): boolean {
-        return;
-    }
-
-    getRawDataItem(dataIndex: number): OptionDataItem {
-        return;
-    }
-
-    getRawHeaderItem(dataIndex: number): OptionDataItem {
+    cloneAllDimensionInfo(): ExternalDimensionDefinition[] {
         return;
     }
 
@@ -146,21 +137,26 @@ class ExternalSource {
      * No need to support by dimension name in transform function,
      * becuase transform function is not case-specific, no need to use name literally.
      */
-    retrieveItemValue(rawItem: OptionDataItem, dimIndex: DimensionIndex): OptionDataValue {
+    retrieveValue(dataIndex: number, dimIndex: DimensionIndex): OptionDataValue {
         return;
     }
 
-    convertDataValue(rawVal: unknown, dimInfo: ExternalDimensionDefinition): ParsedValue {
+    retrieveValueFromItem(dataItem: OptionDataItem, dimIndex: DimensionIndex): OptionDataValue {
+        return;
+    }
+
+    convertValue(rawVal: unknown, dimInfo: ExternalDimensionDefinition): ParsedValue {
         return parseDataValue(rawVal, dimInfo);
     }
 }
 
-function createExternalSource(internalSource: Source): ExternalSource {
+
+function createExternalSource(internalSource: Source, externalTransform: ExternalDataTransform): ExternalSource {
     const extSource = new ExternalSource();
 
-    const data = extSource.data = internalSource.data;
+    const data = internalSource.data;
     const sourceFormat = extSource.sourceFormat = internalSource.sourceFormat;
-    const sourceHeaderCount = extSource.sourceHeaderCount = internalSource.startIndex;
+    const sourceHeaderCount = internalSource.startIndex;
 
     // [MEMO]
     // Create a new dimensions structure for exposing.
@@ -210,35 +206,52 @@ function createExternalSource(internalSource: Source): ExternalSource {
 
     // Implement public methods:
     const rawItemGetter = getRawSourceItemGetter(sourceFormat, SERIES_LAYOUT_BY_COLUMN);
-    extSource.getRawDataItem = bind(rawItemGetter, null, data, sourceHeaderCount, dimensions);
-    extSource.getRawHeaderItem = function (dataIndex: number) {
-        if (dataIndex < sourceHeaderCount) {
-            return rawItemGetter(data, 0, dimensions, dataIndex);
-        }
+    extSource.getRawDataItem = function (dataIndex) {
+        !internalSource.frozen && (internalSource.freeze());
+        return rawItemGetter(data, sourceHeaderCount, dimensions, dataIndex);
     };
+
+    extSource.getRawData = bind(getRawData, null, internalSource);
 
     const rawCounter = getRawSourceDataCounter(sourceFormat, SERIES_LAYOUT_BY_COLUMN);
     extSource.count = bind(rawCounter, null, data, sourceHeaderCount, dimensions);
 
     const rawValueGetter = getRawSourceValueGetter(sourceFormat);
-    extSource.retrieveItemValue = function (rawItem, dimIndex) {
-        if (rawItem == null) {
+    extSource.retrieveValue = function (dataIndex, dimIndex) {
+        const rawItem = rawItemGetter(data, sourceHeaderCount, dimensions, dataIndex);
+        return retrieveValueFromItem(rawItem, dimIndex);
+    };
+    const retrieveValueFromItem = extSource.retrieveValueFromItem = function (dataItem, dimIndex) {
+        if (dataItem == null) {
             return;
         }
         const dimDef = dimensions[dimIndex];
         // When `dimIndex` is `null`, `rawValueGetter` return the whole item.
         if (dimDef) {
-            return rawValueGetter(rawItem, dimIndex, dimDef.name) as OptionDataValue;
+            return rawValueGetter(dataItem, dimIndex, dimDef.name) as OptionDataValue;
         }
     };
 
     extSource.getDimensionInfo = bind(getDimensionInfo, null, dimensions, dimsByName);
-    extSource.getDimensionInfoAll = bind(getDimensionInfoAll, null, dimensions);
-    extSource.isDimensionsDefined = bind(isDimensionsDefined, null, !!dimsDef);
+    extSource.cloneAllDimensionInfo = bind(cloneAllDimensionInfo, null, dimensions);
 
     return extSource;
 }
 
+function getRawData(upstream: Source): Source['data'] {
+    let errMsg = '';
+    const sourceFormat = upstream.sourceFormat;
+    const upstreamData = upstream.data;
+    if (!sourceFormatCanBeExposed(upstream)) {
+        if (__DEV__) {
+            errMsg = '`getRawData` is not supported in source format ' + sourceFormat;
+        }
+        throwError(errMsg);
+    }
+
+    upstream.freeze();
+    return upstreamData;
+}
 
 function getDimensionInfo(
     dimensions: ExternalDimensionDefinition[],
@@ -260,14 +273,9 @@ function getDimensionInfo(
     }
 }
 
-function getDimensionInfoAll(dimensions: ExternalDimensionDefinition[]): ExternalDimensionDefinition[] {
-    return dimensions;
+function cloneAllDimensionInfo(dimensions: ExternalDimensionDefinition[]): ExternalDimensionDefinition[] {
+    return clone(dimensions);
 }
-
-function isDimensionsDefined(defined: boolean): boolean {
-    return defined;
-}
-
 
 
 const externalTransformMap = createHashMap<ExternalDataTransform, string>();
@@ -360,12 +368,12 @@ function applySingleDataTransform(
     }
 
     // Prepare source
-    const sourceList = map(upSourceList, createExternalSource);
+    const extUpSourceList = map(upSourceList, upSource => createExternalSource(upSource, externalTransform));
 
     const resultList = normalizeToArray(
         externalTransform.transform({
-            source: sourceList[0],
-            sourceList: sourceList,
+            upstream: extUpSourceList[0],
+            upstreamList: extUpSourceList,
             config: clone(transOption.config)
         })
     );
@@ -379,9 +387,7 @@ function applySingleDataTransform(
                     '- transform result data:',
                     makePrintable(extSource.data),
                     '- transform result dimensions:',
-                    makePrintable(extSource.dimensions),
-                    '- transform result sourceHeader: ',
-                    makePrintable(extSource.sourceHeader)
+                    makePrintable(extSource.dimensions)
                 ].join('\n');
             }).join('\n');
             consoleLog(printStrArr);
@@ -396,24 +402,31 @@ function applySingleDataTransform(
             }
             throwError(errMsg);
         }
-        if (!isObject(result.data) && !isArrayLike(result.data)) {
-            if (__DEV__) {
-                errMsg = 'Result data should be object or array in data transform.';
+        let resultData = result.data;
+        if (resultData != null) {
+            if (!isObject(resultData) && !isArrayLike(resultData)) {
+                if (__DEV__) {
+                    errMsg = 'Result data should be object or array in data transform.';
+                }
+                throwError(errMsg);
             }
-            throwError(errMsg);
+        }
+        else {
+            // Inherit from upstream[0]
+            resultData = upSourceList[0].data;
         }
 
-        const resultMetaRawOption = inheritSourceMetaRawOption({
-            parent: upSourceList[0].metaRawOption,
-            thisNew: {
+        const resultMetaRawOption = inheritSourceMetaRawOption(
+            upSourceList[0],
+            {
                 seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN,
-                sourceHeader: result.sourceHeader,
+                sourceHeader: 0,
                 dimensions: result.dimensions
             }
-        });
+        );
 
         return createSource(
-            result.data,
+            resultData,
             resultMetaRawOption,
             null,
             null

@@ -325,7 +325,7 @@ export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'seriesAsc' | 'seriesD
 // `Date` will be parsed to timestamp.
 // Ordinal/category data will be parsed to its index if possible, otherwise
 // keep its original string in list._storage.
-// Check `convertDataValue` for more details.
+// Check `convertValue` for more details.
 export type OrdinalRawValue = string | number;
 export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
 export type OrdinalSortInfo = {
@@ -531,9 +531,9 @@ export type OptionSourceDataOriginal<
     ORIITEM extends OptionDataItemOriginal<VAL> = OptionDataItemOriginal<VAL>
 > = ArrayLike<ORIITEM>;
 export type OptionSourceDataObjectRows<VAL extends OptionDataValue = OptionDataValue> =
-    ArrayLike<Dictionary<VAL>>;
+    Array<Dictionary<VAL>>;
 export type OptionSourceDataArrayRows<VAL extends OptionDataValue = OptionDataValue> =
-    ArrayLike<ArrayLike<VAL>>;
+    Array<Array<VAL>>;
 export type OptionSourceDataKeyedColumns<VAL extends OptionDataValue = OptionDataValue> =
     Dictionary<ArrayLike<VAL>>;
 export type OptionSourceDataTypedArray = ArrayLike<number>;
