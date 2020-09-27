@@ -1798,8 +1798,13 @@ class ECharts extends Eventful {
         };
 
         bindMouseEvent = function (zr: zrender.ZRenderType, ecIns: ECharts): void {
+            // Find a dispatcher that's on the most top.
             function getDispatcher(target: Element, det: (target: Element) => boolean) {
-                while (target && !det(target)) {
+                let found;
+                while (target) {
+                    if (det(target)) {
+                        found = target;
+                    }
                     if (target.__hostTarget) {
                         target = target.__hostTarget;
                     }
@@ -1807,7 +1812,7 @@ class ECharts extends Eventful {
                         target = target.parent;
                     }
                 }
-                return target;
+                return found;
             }
             zr.on('mouseover', function (e) {
                 const el = e.target;

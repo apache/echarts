@@ -55,7 +55,7 @@ export interface RadarSeriesDataItemOption extends SymbolOptionMixin,
 export interface RadarSeriesOption extends SeriesOption<RadarSeriesStateOption>, RadarSeriesStateOption,
     SymbolOptionMixin {
     type?: 'radar'
-    coordinateSystem: 'radar'
+    coordinateSystem?: 'radar'
 
     radarIndex?: number
     radarId?: string
