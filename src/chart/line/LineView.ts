@@ -51,16 +51,9 @@ import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
-import {setLabelStyle, getLabelStatesModels} from '../../label/labelStyle';
+import {setLabelStyle, getLabelStatesModels, labelInner} from '../../label/labelStyle';
 import {getDefaultLabel} from '../helper/labelHelper';
-import SeriesModel from '../../model/Series';
-import {TextStyleProps} from 'zrender/src/graphic/Text';
 
-const inner = modelUtil.makeInner<{
-    lastSplitId: number,
-    precision: number,
-    isStopped: boolean
-}, graphic.Text>();
 import { getECData } from '../../util/innerStore';
 import { createFloat32Array } from '../../util/vendor';
 
@@ -373,12 +366,21 @@ function createLineClipPath(
 ) {
     if (coordSys.type === 'cartesian2d') {
         const endLabelModel = seriesModel.getModel('endLabel');
-        const showDuringLabel = endLabelModel.get('show');
+        const showEndLabel = endLabelModel.get('show');
         const valueAnimation = endLabelModel.get('valueAnimation');
 
-        const during = showDuringLabel
+        const labelAnimationRecord = { lastFrameIndex: 0 };
+
+        const during = showEndLabel
             ? (percent: number, clipRect: graphic.Rect) => {
-                lineView._endLabelOnDuring(percent, clipRect, lineView._data, valueAnimation, endLabelModel);
+                lineView._endLabelOnDuring(
+                    percent,
+                    clipRect,
+                    lineView._data,
+                    labelAnimationRecord,
+                    valueAnimation,
+                    endLabelModel
+                );
             }
             : null;
 
@@ -401,63 +403,13 @@ function createLineClipPath(
     }
     else {
         if (__DEV__) {
-            const endLabelModel = seriesModel.getModel('endLabel');
-            const showDuringLabel = endLabelModel.get('show');
-            if (showDuringLabel) {
-                console.warn('showDuringLabel is not supported for lines in polar systems.');
+            if (seriesModel.get(['endLabel', 'show'])) {
+                console.warn('endLabel is not supported for lines in polar systems.');
             }
         }
         return createPolarClipPath(coordSys, hasAnimation, seriesModel);
     }
 
-}
-
-function getDataItemDetail(
-    coordSys: Cartesian2D,
-    seriesModel: SeriesModel,
-    data: List,
-    idx: number
-) {
-    const xDim = data.mapDimension('x');
-    const yDim = data.mapDimension('y');
-    const x = data.get(xDim, idx);
-    const y = data.get(yDim, idx);
-    const point = coordSys.dataToPoint([x, y]);
-
-    return {
-        x: point[0],
-        y: point[1],
-        value: seriesModel.getRawValue(idx) as ParsedValue | ParsedValue[]
-    };
-}
-
-function setEndLabelStyle(
-    endLabel: graphic.Text,
-    seriesModel: LineSeriesModel,
-    dataIndex: number,
-    dataValue: ParsedValue | ParsedValue[],
-    x: number,
-    y: number,
-    stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
-) {
-    if (!endLabel) {
-        return;
-    }
-
-    setLabelStyle(
-        endLabel,
-        getLabelStatesModels(seriesModel, 'endLabel'),
-        {
-            defaultText: getDefaultLabel(seriesModel.getData(), dataIndex, dataValue)
-        },
-        stateSpecified
-    );
-
-    endLabel.attr({
-        x: x,
-        y: y,
-        ignore: false
-    });
 }
 
 function getEndLabelStateSpecified(endLabelModel: Model, coordSys: Cartesian2D) {
@@ -654,7 +606,7 @@ class LineView extends ChartView {
                 || !isPointsSame(this._points, points)
             ) {
                 if (hasAnimation) {
-                    this._updateAnimation(
+                    this._doUpdateAnimation(
                         data, stackedOnPoints, coordSys, api, step, valueOrigin
                     );
                 }
@@ -757,7 +709,7 @@ class LineView extends ChartView {
         (this._polyline as ECElement).onHoverStateChange = changePolyState;
 
         if (!isCoordSysPolar) {
-            this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D, data, !!oldData);
+            this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D);
             if (this._endLabel) {
                 enableHoverEmphasis(this._endLabel, focus, blurScope);
                 (this._endLabel as ECElement).onHoverStateChange = changePolyState;
@@ -977,13 +929,9 @@ class LineView extends ChartView {
                     ratio = 1 - ratio;
                 }
 
-                let delay;
-                if (typeof seriesDalay === 'function') {
-                    delay = seriesDalay(idx);
-                }
-                else {
-                    delay = (seriesDuration * ratio) + seriesDalayValue;
-                }
+                const delay = typeof seriesDalay === 'function' ? seriesDalay(idx)
+                    : (seriesDuration * ratio) + seriesDalayValue;
+
                 el.animateFrom({
                     scaleX: 0,
                     scaleY: 0
@@ -1009,20 +957,13 @@ class LineView extends ChartView {
         });
     }
 
-    _updateEndLabelAnimation() {
-
-    }
-
     _initOrUpdateEndLabel(
         seriesModel: LineSeriesModel,
-        coordSys: Cartesian2D,
-        data: List,
-        isUpdate: boolean
+        coordSys: Cartesian2D
     ) {
         const endLabelModel = seriesModel.getModel('endLabel');
-        const showDuringLabel = endLabelModel.get('show');
 
-        if (showDuringLabel) {
+        if (endLabelModel.get('show')) {
             let endLabel = this._endLabel;
             if (!endLabel) {
                 endLabel = this._endLabel = new graphic.Text({
@@ -1032,65 +973,21 @@ class LineView extends ChartView {
                 this.group.add(endLabel);
             }
 
-            const precisionOption = endLabelModel.get('precision');
-            const precision: number = !precisionOption || precisionOption === 'auto'
-                ? 0
-                : precisionOption;
-            const host = inner(endLabel);
-            host.precision = precision;
-            host.isStopped = false;
-
-            let ignore = true;
-            if (isUpdate) {
-                // Find last non-NaN data to display data
-                let lastFound = false;
-                for (let idx = data.count() - 1; idx >= 0; --idx) {
-                    const info = getDataItemDetail(coordSys, seriesModel, data, idx);
-                    if (info.value != null && info.value !== '-') {
-                        setLabelStyle(
-                            endLabel,
-                            getLabelStatesModels(seriesModel, 'endLabel'),
-                            {
-                                labelFetcher: seriesModel,
-                                labelDataIndex: idx,
-                                defaultText: getDefaultLabel(seriesModel.getData(), idx, info.value)
-                            },
-                            getEndLabelStateSpecified(endLabelModel, coordSys)
-                        );
-                        lastFound = true;
-                        break;
-                    }
-                }
-
-                if (lastFound) {
-                    // No data, hide end label
-                    ignore = false;
-                }
+            // Find last non-NaN data to display data
+            const dataIndex = this._polyline.getLastIndexNotNull();
+            if (dataIndex >= 0) {
+                setLabelStyle(
+                    endLabel,
+                    getLabelStatesModels(seriesModel, 'endLabel'),
+                    {
+                        labelFetcher: seriesModel,
+                        labelDataIndex: dataIndex,
+                        defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
+                        enableTextSetter: true
+                    },
+                    getEndLabelStateSpecified(endLabelModel, coordSys)
+                );
             }
-            else {
-                if (data.count() > 0) {
-                    // Show endLabel on the first data
-                    const info = getDataItemDetail(coordSys, seriesModel, data, 0);
-                    setEndLabelStyle(
-                        endLabel,
-                        seriesModel,
-                        0,
-                        info.value,
-                        info.x,
-                        info.y,
-                        getEndLabelStateSpecified(endLabelModel, coordSys)
-                    );
-                }
-                else {
-                    // No data, hide end label
-                    endLabel.attr({
-                        ignore: true
-                    });
-                }
-            }
-            endLabel.attr({
-                ignore: ignore
-            });
         }
         else if (this._endLabel) {
             this.group.remove(this._endLabel);
@@ -1102,152 +999,64 @@ class LineView extends ChartView {
         percent: number,
         clipRect: graphic.Rect,
         data: List,
+        animationRecord: { lastFrameIndex: number },
         valueAnimation: boolean,
         endLabelModel: Model<LabelOption>
     ) {
-        if (this._endLabel) {
-            const host = inner(this._endLabel);
-            if (host.isStopped) {
-                return;
-            }
+        const endLabel = this._endLabel;
+        const polyline = this._polyline;
 
+        if (endLabel) {
             const seriesModel = data.hostModel as LineSeriesModel;
             const connectNulls = seriesModel.get('connectNulls');
+            const precision = endLabelModel.get('precision');
 
             const coordSys = this._coordSys as Cartesian2D;
             const baseAxis = coordSys.getBaseAxis();
             const isHorizontal = baseAxis.isHorizontal();
             const isBaseInversed = baseAxis.inverse;
+            const clipShape = clipRect.shape;
 
-            let splitFound = false;
-            let lx: number = null;
-            let ly: number = null;
-            let lValue: ParsedValue | ParsedValue[] = null;
-            const endLabel = this._endLabel;
+            const xOrY = isBaseInversed
+                ? isHorizontal ? clipShape.x : (clipShape.y + clipShape.height)
+                : isHorizontal ? (clipShape.x + clipShape.width) : clipShape.y;
+            const dim = isHorizontal ? 'x' : 'y';
 
-            const cx = clipRect.shape.x;
-            const cy = clipRect.shape.y;
-            const cx2 = clipRect.shape.width + cx;
-            const cy2 = clipRect.shape.height + cy;
+            const dataIndexRange = polyline.getIndexRange(xOrY, dim);
+            const indices = dataIndexRange.range;
 
-            let lastNonNullId: number = null;
-            data.each(function (idx) {
-                const detail = getDataItemDetail(coordSys, seriesModel, data, idx);
-                if (detail.value != null) {
-                    lastNonNullId = idx;
+            const diff = indices[1] - indices[0];
+            let value: ParsedValue;
+            if (diff >= 1) {
+                // diff > 1 && connectNulls, which is on the null data.
+                if (diff > 1 && !connectNulls) {
+                    const pt = polyline.getPointAtIndex(indices[0]);
+                    endLabel.attr({ x: pt[0], y: pt[1] });
+                    valueAnimation && (value = seriesModel.getRawValue(indices[0]) as ParsedValue);
                 }
-            });
+                else {
+                    const pt = polyline.getPointOn(xOrY, dim);
+                    pt && endLabel.attr({ x: pt[0], y: pt[1] });
 
-            data.each(function (idx) {
-                if (splitFound) {
-                    return;
+                    const startValue = seriesModel.getRawValue(indices[0]) as ParsedValue;
+                    const endValue = seriesModel.getRawValue(indices[1]) as ParsedValue;
+                    valueAnimation && (value = modelUtil.interpolateRawValues(
+                        data, precision, startValue, endValue, dataIndexRange.t
+                    ) as ParsedValue);
                 }
-
-                const rightItem = getDataItemDetail(coordSys, seriesModel, data, idx);
-                const rx = rightItem.x;
-                const ry = rightItem.y;
-                const rValue = rightItem.value === '-' ? null : rightItem.value;
-
-                const clipPos = isHorizontal
-                    ? (isBaseInversed ? cx : cx2)
-                    : (isBaseInversed ? cy2 : cy);
-
-                // Find the split point on the two sides of current clipRect
-                const valueNotNull = lValue != null
-                    && (!connectNulls || rValue != null);
-                const inClipRange = isHorizontal
-                    ? valueNotNull && lx != null
-                        && (isBaseInversed
-                            ? lx > cx && rx <= cx
-                            : lx < cx2 && rx >= cx2
-                        )
-                    : valueNotNull && ly != null
-                        && (isBaseInversed
-                            ? ly < cy2 && ry >= cy2
-                            : ly > cy && ry <= cy
-                        );
-
-                const ratio = isHorizontal
-                    ? (rx === lx ? 0 : (clipPos - lx) / (rx - lx))
-                    : (ry === ly ? 0 : (clipPos - ly) / (ry - ly));
-
-                const isAnimationNotStarted = idx === 0
-                    && (isHorizontal
-                        ? (isBaseInversed ? rx < clipPos : rx > clipPos)
-                        : (isBaseInversed ? ry > clipPos : ry < clipPos)
-                    );
-                if (isAnimationNotStarted) {
-                    splitFound = true;
-                    return;
-                }
-
-                const isAnimationFinished = idx === lastNonNullId
-                    && (isHorizontal
-                        ? (isBaseInversed ? rx > clipPos : rx < clipPos)
-                        : (isBaseInversed ? ry < clipPos : ry > clipPos)
-                    );
-
-                if (inClipRange || isAnimationFinished) {
-                    if (connectNulls || lValue != null && rValue != null) {
-                        const valueRatio = valueAnimation ? ratio : 0;
-                        let interpolated = null;
-                        if (isAnimationFinished) {
-                            // Show label of last data if not all data is null
-                            if (lastNonNullId != null) {
-                                const lastNonNull = getDataItemDetail(coordSys, seriesModel, data, lastNonNullId);
-                                interpolated = lastNonNull.value;
-                            }
-                        }
-                        else {
-                            // Show label of interpolated value with left and right
-                            interpolated = lValue == null
-                                ? null
-                                : graphic.interpolateRawValues(
-                                    data, endLabelModel, lValue, rValue, valueRatio
-                                );
-                        }
-
-                        if (interpolated == null) {
-                            // No data, hide label
-                            endLabel.attr({
-                                ignore: true
-                            });
-                        }
-                        else {
-                            const labelDataId = isAnimationFinished
-                                ? lastNonNullId
-                                : idx;
-                            const textX = isHorizontal
-                                ? clipPos
-                                : (ratio * (rx - lx) + lx);
-                            const textY = isHorizontal
-                                ? (ratio * (ry - ly) + ly)
-                                : clipPos;
-
-                            setEndLabelStyle(
-                                endLabel,
-                                seriesModel,
-                                labelDataId,
-                                interpolated,
-                                textX,
-                                textY,
-                                getEndLabelStateSpecified(endLabelModel, coordSys)
-                            );
-                        }
-                    }
-
-                    splitFound = true;
-                }
-                else if (!connectNulls || rValue != null) {
-                    lx = rx;
-                    ly = ry;
-                    lValue = rValue;
-                }
-
-                if (isAnimationFinished) {
-                    host.isStopped = true;
-                }
-            });
+                animationRecord.lastFrameIndex = indices[0];
+            }
+            else {
+                // If diff <= 0, which is the range is not found(Include NaN)
+                // Choose the first point or last point.
+                const idx = animationRecord.lastFrameIndex > 0 ? indices[0] : 0;
+                const pt = polyline.getPointAtIndex(idx);
+                valueAnimation && (value = seriesModel.getRawValue(idx) as ParsedValue);
+                endLabel.attr({ x: pt[0], y: pt[1] });
+            }
+            if (valueAnimation) {
+                labelInner(endLabel).setLabelText(value);
+            }
         }
     }
 
@@ -1255,7 +1064,7 @@ class LineView extends ChartView {
      * @private
      */
     // FIXME Two value axis
-    _updateAnimation(
+    _doUpdateAnimation(
         data: List,
         stackedOnPoints: ArrayLike<number>,
         coordSys: Cartesian2D | Polar,

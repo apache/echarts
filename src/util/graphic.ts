@@ -64,13 +64,11 @@ import {
     isObject
 } from 'zrender/src/core/util';
 import SeriesModel from '../model/Series';
-import {interpolateNumber} from 'zrender/src/animation/Animator';
 import List from '../data/List';
 import { getLabelText } from '../label/labelStyle';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import { getECData } from './innerStore';
-import {makeInner} from './model';
-import { round, getPrecisionSafe } from './number';
+import {makeInner, interpolateRawValues} from './model';
 
 
 const mathMax = Math.max;
@@ -551,6 +549,7 @@ function animateOrSetLabel<Props extends PathProps>(
 ) {
     const valueAnimationEnabled = labelModel && labelModel.get('valueAnimation');
     if (valueAnimationEnabled) {
+        const precision = labelModel ? labelModel.get('precision') : null;
         const text = el.getTextContent();
         const host = text && innerLabel(text);
         host && (host.startValue = host.nextValue);
@@ -561,7 +560,7 @@ function animateOrSetLabel<Props extends PathProps>(
         const duration = animatableModel.get('animationDuration');
         if (!duration && host) {
             // No animation for the first frame
-            host.nextValue = interpolateRawValues(data, labelModel, 0, targetValue, 1);
+            host.nextValue = interpolateRawValues(data, precision, 0, targetValue, 1);
         }
 
         const during = (percent: number) => {
@@ -570,7 +569,7 @@ function animateOrSetLabel<Props extends PathProps>(
                 return;
             }
 
-            const interpolated = interpolateRawValues(data, labelModel, sourceValue, targetValue, percent);
+            const interpolated = interpolateRawValues(data, precision, sourceValue, targetValue, percent);
 
             const labelText = getLabelText({
                 labelDataIndex: dataIndex,
@@ -588,74 +587,6 @@ function animateOrSetLabel<Props extends PathProps>(
     }
 }
 
-/**
- * Interpolate raw values of a series with percent
- *
- * @param data         data
- * @param labelModel   label model of the text element
- * @param sourceValue  start value
- * @param targetValue  end value
- * @param percent      0~1 percentage; 0 uses start value while 1 uses end value
- * @return             interpolated values
- */
-export function interpolateRawValues<Props extends PathProps>(
-    data: List,
-    labelModel: Model<LabelOption>,
-    sourceValue: ParsedValue[] | ParsedValue,
-    targetValue: ParsedValue[] | ParsedValue,
-    percent: number
-): (string | number)[] | string | number {
-    const precision = labelModel.get('precision');
-    const isAutoPrecision = precision == null || precision === 'auto';
-
-    if (typeof targetValue === 'number') {
-        const value = interpolateNumber(
-            sourceValue as number || 0,
-            targetValue as number,
-            percent
-        );
-        return round(
-            value,
-            isAutoPrecision ? Math.max(
-                getPrecisionSafe(sourceValue as number),
-                getPrecisionSafe(targetValue as number)
-            )
-            : precision as number
-        );
-    }
-    else if (typeof targetValue === 'string') {
-        return percent < 1 ? sourceValue : targetValue;
-    }
-    else {
-        const interpolated = [];
-        const leftArr = sourceValue as (string | number)[];
-        const rightArr = targetValue as (string | number[]);
-        const length = Math.max(leftArr.length, rightArr.length);
-        for (let i = 0; i < length; ++i) {
-            const info = data.getDimensionInfo(i);
-            // Don't interpolate ordinal dims
-            if (info.type === 'ordinal') {
-                interpolated[i] = (percent < 1 ? leftArr : rightArr)[i] as number;
-            }
-            else {
-                const leftVal = leftArr && leftArr[i] ? leftArr[i] as number : 0;
-                const rightVal = rightArr[i] as number;
-                const value = leftArr == null
-                    ? (targetValue as [])[i]
-                    : interpolateNumber(leftVal, rightVal, percent);
-                interpolated[i] = round(
-                    value,
-                    isAutoPrecision ? Math.max(
-                        getPrecisionSafe(leftVal),
-                        getPrecisionSafe(rightVal)
-                    )
-                    : precision as number
-                );
-            }
-        }
-        return interpolated;
-    }
-}
 
 export function updateLabel<Props>(
     el: Element<Props>,
