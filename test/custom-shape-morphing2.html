@@ -165,18 +165,41 @@ under the License.
                     tooltip: {}
                 };
 
+
+                var AXIS_STYLE = {
+                    splitLine: {
+                        lineStyle: {
+                            color: '#333'
+                        }
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#777'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#999',
+                        fontSize: 20,
+                        fontFamily: 'Lato'
+                    }
+                };
+                var BG_COLOR = '#000';
+
                 var optionCreators = {
 
                     'Scatter_ATA_STE': function (datasetId) {
                         return {
+                            backgroundColor: BG_COLOR,
                             grid: {
                                 containLabel: true
                             },
                             xAxis: {
-                                name: 'STE'
+                                name: 'STE',
+                                ...AXIS_STYLE
                             },
                             yAxis: {
-                                name: 'ATA'
+                                name: 'ATA',
+                                ...AXIS_STYLE
                             },
                             dataZoom: [{
                                 type: 'slider',
@@ -212,7 +235,8 @@ under the License.
                                             fill: CONTENT_COLOR,
                                             // fill: PIE_COLORS[clusterIndex],
                                             stroke: '#555',
-                                            lineWidth: 1
+                                            // lineWidth: 1
+                                            lineWidth: 0
                                         },
                                         transition: ['shape', 'style']
                                     };
@@ -223,13 +247,16 @@ under the License.
 
                     'Bar_mSum_ATA': function (datasetId) {
                         return {
+                            backgroundColor: BG_COLOR,
                             grid: {
                                 containLabel: true
                             },
                             xAxis: {
-                                type: 'category'
+                                type: 'category',
+                                ...AXIS_STYLE
                             },
                             yAxis: {
+                                ...AXIS_STYLE
                             },
                             dataZoom: [{
                                 type: 'slider',
@@ -276,6 +303,7 @@ under the License.
 
                     'Pie_mSum_ATA': function (datasetId) {
                         return {
+                            backgroundColor: BG_COLOR,
                             series: {
                                 type: 'custom',
                                 coordinateSystem: 'none',
@@ -337,14 +365,17 @@ under the License.
 
                     'Scatter_ATA_STE_Cluster_Center': function (datasetId) {
                         return {
+                            backgroundColor: BG_COLOR,
                             grid: {
                                 containLabel: true
                             },
                             xAxis: {
-                                name: 'STE'
+                                name: 'STE',
+                                ...AXIS_STYLE
                             },
                             yAxis: {
-                                name: 'ATA'
+                                name: 'ATA',
+                                ...AXIS_STYLE
                             },
                             dataZoom: [{
                                 type: 'slider',

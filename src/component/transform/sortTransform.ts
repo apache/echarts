@@ -76,7 +76,7 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
 
     type: 'echarts:sort',
 
-    transform: function transform(params) {
+    transform: function (params) {
         const upstream = params.upstream;
         const config = params.config;
         let errMsg = '';

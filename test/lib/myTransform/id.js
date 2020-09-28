@@ -32,7 +32,7 @@
      *     ]
      * }, {
      *     transform: {
-     *         type: 'my:identifier',
+     *         type: 'my:id',
      *         config: {
      *             dimensionIndex: 4,
      *             dimensionName: 'ID'
@@ -50,7 +50,7 @@
      */
     var transform = {
 
-        type: 'myTransform:identifier',
+        type: 'myTransform:id',
 
         /**
          * @param params.config.dimensionIndex DimensionIndex
@@ -80,7 +80,7 @@
     };
 
     var myTransform = exports.myTransform = exports.myTransform || {};
-    myTransform.identifier = transform;
+    myTransform.id = transform;
 
 })(this);
 

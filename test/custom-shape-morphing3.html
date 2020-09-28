@@ -28,7 +28,7 @@ under the License.
         <script src="../dist/echarts.js"></script>
         <script src="lib/testHelper.js"></script>
         <script src="lib/myTransform/aggregate.js"></script>
-        <script src="lib/myTransform/identifier.js"></script>
+        <script src="lib/myTransform/id.js"></script>
         <script src="lib/transitionPlayer.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
@@ -46,7 +46,7 @@ under the License.
             $.get('data/life-expectancy-table.json', function (rawData) {
 
                 echarts.registerTransform(window.myTransform.aggregate);
-                echarts.registerTransform(window.myTransform.identifier);
+                echarts.registerTransform(window.myTransform.id);
 
                 const COLORS = [
                     '#37A2DA', '#e06343', '#37a354', '#b55dba', '#b5bd48', '#8378EA', '#96BFFF'
@@ -69,13 +69,19 @@ under the License.
                         source: rawData
                     }, {
                         id: 'IdRawData',
-                        transform: {
-                            type: 'myTransform:identifier',
+                        fromDatasetId: 'RawData',
+                        transform: [{
+                            type: 'filter',
+                            config: {
+                                dimension: 'Year', gte: 1950
+                            }
+                        }, {
+                            type: 'myTransform:id',
                             config: {
                                 dimensionIndex: ID_RAW_DATA_DIMENSIONS.indexOf('Id'),
                                 dimensionName: 'Id'
                             }
-                        }
+                        }]
                     }, {
                         id: 'GermanyData',
                         fromDatasetId: 'IdRawData',
@@ -117,12 +123,12 @@ under the License.
                                     var width = api.size([1, 0])[0] * 0.9;
                                     return {
                                         type: 'rect',
+                                        transition: ['shape', 'style'],
                                         shape: {
                                             x: basePos[0],
                                             y: basePos[1],
                                             width: width,
-                                            height: valPos[1] - basePos[1],
-                                            transition: ['x', 'y', 'width', 'height']
+                                            height: valPos[1] - basePos[1]
                                         },
                                         style: {
                                             fill: CONTENT_COLOR
@@ -139,7 +145,7 @@ under the License.
                                 type: 'category'
                             },
                             yAxis: {
-                                name: 'Income',
+                                name: 'Population',
                                 nameGap: 25,
                                 nameTextStyle: {
                                     fontSize: 25
@@ -159,12 +165,12 @@ under the License.
                                     var width = api.size([1, 0])[0] * 0.9;
                                     return {
                                         type: 'rect',
+                                        transition: ['shape', 'style'],
                                         shape: {
                                             x: basePos[0],
                                             y: basePos[1],
                                             width: width,
-                                            height: valPos[1] - basePos[1],
-                                            transition: ['x', 'y', 'width', 'height']
+                                            height: valPos[1] - basePos[1]
                                         },
                                         style: {
                                             fill: CONTENT_COLOR
@@ -173,7 +179,10 @@ under the License.
                                 }
                             }
                         };
-                    }
+                    },
+
+                    // 'Country_A_Year_Population_Bar': function (datasetId) {
+                    // }
 
                 };
 

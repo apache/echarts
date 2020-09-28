@@ -34,7 +34,7 @@ export const filterTransform: ExternalDataTransform<FilterTransformOption> = {
     type: 'echarts:filter',
 
     // PEDING: enhance to filter by index rather than create new data
-    transform: function transform(params) {
+    transform: function (params) {
         // [Caveat] Fail-Fast:
         // Do not return the whole dataset unless user config indicate it explicitly.
         // For example, if no condition specified by mistake, return an empty result
