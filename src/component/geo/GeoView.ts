@@ -24,7 +24,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import GeoModel from '../../coord/geo/GeoModel';
 import { Payload, ZRElementEvent, ECEventData } from '../../util/types';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 import { enterSelect, leaveSelect } from '../../util/states';
 
 class GeoView extends ComponentView {

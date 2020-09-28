@@ -27,7 +27,7 @@ import GlobalModel from '../../model/Global';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ColorString } from '../../util/types';
 import Model from '../../model/Model';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 
 const DEFAULT_SECTOR_Z = 2;
 const DEFAULT_TEXT_Z = 4;

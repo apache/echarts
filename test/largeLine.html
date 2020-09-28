@@ -47,8 +47,8 @@ under the License.
             ], function (echarts) {
                 var myChart;
                 var lineCount = 20;
-                var pointCount = 1000;
-                var chartCount = 50;
+                var pointCount = 10000;
+                var chartCount = 20;
 
                 var option = {
                     tooltip : {
@@ -64,7 +64,7 @@ under the License.
                         show: true,
                         realtime: true,
                         // showDataShadow: false,
-                        start: 50,
+                        start: 10,
                         end: 60
                     }],
                     xAxis : [
@@ -88,34 +88,33 @@ under the License.
                     }
                 };
 
-                var date = [];
+                var date = new Float64Array(pointCount)
                 var oneDay = 24 * 3600 * 1000;
-                var base = +new Date(1897, 9, 3);
+                var base = +new Date(1987, 9, 3);
                 for (var j = 0; j < pointCount; j++) {
-                    var now = new Date(base += oneDay);
-                    date.push([now.getFullYear(), now.getMonth() + 1, now.getDate()].join('-'));
+                    date[j] = base += oneDay;
                 }
                 for (var i = 0; i < lineCount; i++) {
                     var y = Math.random() * 1000;
-                    var values = [];
+                    var values = new Float64Array(pointCount * 2);
+                    var off = 0;
                     for (var j = 0; j < pointCount; j++) {
                         y += Math.round(10 + Math.random() * (-10 - 10));
-                        values.push(
-                            [
-                                date[j],
-                                // Math.random() < 0.1 ? '-' : y
-                                y
-                            ]
-                        );
+                        values[off++] = date[j];
+                        values[off++] = y;
                     }
 
                   option.legend.data.push( 'line' + i );
                   option.series.push({
                     name: 'line' + i,
                     type: 'line',
-                    sampling: 'average',
                     hoverAnimation: false,
                     showSymbol: false,
+                    dimensions: ['date', 'value'],
+                    encode: {
+                        x: 'date',
+                        y: 'value'
+                    },
                     data: values,
                     lineStyle: lineStyle
                   });
@@ -123,6 +122,7 @@ under the License.
 
                 function refresh(isBtnRefresh){
                     var start = new Date();
+                    console.profile('render');
                     for( var n = 0; n < chartCount; n++ ) {
                         var el = document.createElement('div');
                       el.innerHTML = '<h1>'+n+'</h1><div id="chart'+n+'" style="width: 860px; height: 320px"></div>';
@@ -131,9 +131,11 @@ under the License.
                       myChart = echarts.init(document.getElementById('chart'+n));
                       myChart.setOption(option, true);
                     }
-                    var end = new Date();
-
-                    document.getElementById('timing').innerHTML = 'Graphs loaded in ' + ( end - start ) + ' ms.';
+                    console.profileEnd('render');
+                    setTimeout(function () {
+                        var end = new Date();
+                        document.getElementById('timing').innerHTML = 'Graphs loaded in ' + ( end - start ) + ' ms.';
+                    });
                 };
 
                 refresh();

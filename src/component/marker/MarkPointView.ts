@@ -31,7 +31,7 @@ import GlobalModel from '../../model/Global';
 import MarkerModel from './MarkerModel';
 import ExtensionAPI from '../../ExtensionAPI';
 import { HashMap, isFunction, map, defaults, filter, curry } from 'zrender/src/core/util';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 import { getVisualFromData } from '../../visual/helper';
 import { ZRColor } from '../../util/types';
 

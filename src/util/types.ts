@@ -978,6 +978,10 @@ export interface LineLabelOption extends Omit<LabelOption, 'distance' | 'positio
 
 export interface LabelLineOption {
     show?: boolean
+    /**
+     * If displayed above other elements
+     */
+    showAbove?: boolean
     length?: number
     length2?: number
     smooth?: boolean | number
@@ -1444,7 +1448,7 @@ export interface SeriesStackOptionMixin {
 type SamplingFunc = (frame: ArrayLike<number>) => number;
 
 export interface SeriesSamplingOptionMixin {
-    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | SamplingFunc
+    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | 'lttb' | SamplingFunc
 }
 
 export interface SeriesEncodeOptionMixin {

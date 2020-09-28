@@ -34,6 +34,8 @@ import {throttle} from './util/throttle';
 import * as ecHelper from './helper';
 import parseGeoJSON from './coord/geo/parseGeoJson';
 
+// Only for GL
+export {brushSingle as innerDrawElementOnCanvas} from 'zrender/src/canvas/graphic';
 
 export {zrender};
 export {default as List} from './data/List';
@@ -48,7 +50,6 @@ export {default as env} from 'zrender/src/core/env';
 
 export {parseGeoJSON};
 export const parseGeoJson = parseGeoJSON;
-
 
 export const number = {};
 zrUtil.each(

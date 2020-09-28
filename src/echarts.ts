@@ -36,7 +36,7 @@ import SeriesModel, { SeriesModelConstructor } from './model/Series';
 import ComponentView, {ComponentViewConstructor} from './view/Component';
 import ChartView, {ChartViewConstructor} from './view/Chart';
 import * as graphic from './util/graphic';
-import {getECData} from './util/ecData';
+import {getECData} from './util/innerStore';
 import {
     enterEmphasisWhenMouseOver,
     leaveEmphasisWhenMouseOut,
@@ -202,6 +202,9 @@ interface SetOptionTransitionOptFinder extends modelUtil.ModelFinderObject {
 }
 type SetOptionTransitionOpt = SetOptionTransitionOptItem | SetOptionTransitionOptItem[];
 
+interface PostIniter {
+    (chart: EChartsType): void
+}
 
 type EventMethodName = 'on' | 'off';
 function createRegisterEventWithLowercaseECharts(method: EventMethodName) {
@@ -1818,8 +1821,13 @@ class ECharts extends Eventful {
         };
 
         bindMouseEvent = function (zr: zrender.ZRenderType, ecIns: ECharts): void {
+            // Find a dispatcher that's on the most top.
             function getDispatcher(target: Element, det: (target: Element) => boolean) {
-                while (target && !det(target)) {
+                let found;
+                while (target) {
+                    if (det(target)) {
+                        found = target;
+                    }
                     if (target.__hostTarget) {
                         target = target.__hostTarget;
                     }
@@ -1827,7 +1835,7 @@ class ECharts extends Eventful {
                         target = target.parent;
                     }
                 }
-                return target;
+                return found;
             }
             zr.on('mouseover', function (e) {
                 const el = e.target;
@@ -1957,8 +1965,6 @@ class ECharts extends Eventful {
                 // increamental render (alway render from the __startIndex each frame)
                 // chartView.group.markRedraw();
 
-                updateZ(seriesModel, chartView);
-
                 updateBlend(seriesModel, chartView);
 
                 updateSeriesElementSelection(seriesModel);
@@ -1975,6 +1981,9 @@ class ECharts extends Eventful {
 
             ecModel.eachSeries(function (seriesModel) {
                 const chartView = ecIns._chartsMap[seriesModel.__viewId];
+                // Update Z after labels updated. Before applying states.
+                updateZ(seriesModel, chartView);
+
                 // NOTE: Update states after label is updated.
                 // label should be in normal status when layouting.
                 updateStates(seriesModel, chartView);
@@ -2113,12 +2122,13 @@ class ECharts extends Eventful {
                         label.zlevel = el.zlevel;
                         // lift z2 of text content
                         // TODO if el.emphasis.z2 is spcefied, what about textContent.
-                        label.z2 = el.z2 + 1;
+                        label.z2 = el.z2 + 2;
                     }
                     if (labelLine) {
+                        const showAbove = el.textGuideLineConfig && el.textGuideLineConfig.showAbove;
                         labelLine.z = el.z;
                         labelLine.zlevel = el.zlevel;
-                        labelLine.z2 = el.z2 - 1;
+                        labelLine.z2 = el.z2 + (showAbove ? 1 : -1);
                     }
                 }
             });
@@ -2407,6 +2417,8 @@ const dataProcessorFuncs: StageHandlerInternal[] = [];
 
 const optionPreprocessorFuncs: OptionPreprocessor[] = [];
 
+const postInitFuncs: PostIniter[] = [];
+
 const postUpdateFuncs: PostUpdater[] = [];
 
 const visualFuncs: StageHandlerInternal[] = [];
@@ -2478,6 +2490,10 @@ export function init(
     modelUtil.setAttribute(dom, DOM_ATTRIBUTE_KEY, chart.id);
 
     enableConnect(chart);
+
+    each(postInitFuncs, (postInitFunc) => {
+        postInitFunc(chart);
+    });
 
     return chart;
 }
@@ -2576,12 +2592,21 @@ export function registerProcessor(
     normalizeRegister(dataProcessorFuncs, priority, processor, PRIORITY_PROCESSOR_DEFAULT);
 }
 
+
+/**
+ * Register postIniter
+ * @param {Function} postInitFunc
+ */
+export function registerPostInit(postInitFunc: PostIniter): void {
+    postInitFunc && postInitFuncs.push(postInitFunc);
+}
+
 /**
  * Register postUpdater
  * @param {Function} postUpdateFunc
  */
 export function registerPostUpdate(postUpdateFunc: PostUpdater): void {
-    postUpdateFuncs.push(postUpdateFunc);
+    postUpdateFunc && postUpdateFuncs.push(postUpdateFunc);
 }
 
 /**

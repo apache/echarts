@@ -77,8 +77,8 @@ class ThemeRiverView extends ChartView {
                 group.remove(oldLayersGroups[idx]);
                 return;
             }
-            const points0 = [];
-            const points1 = [];
+            const points0: number[] = [];
+            const points1: number[] = [];
             let style;
             const indices = layersSeries[idx].indices;
             let j = 0;
@@ -88,8 +88,8 @@ class ThemeRiverView extends ChartView {
                 const y0 = layout.y0;
                 const y = layout.y;
 
-                points0.push([x, y0]);
-                points1.push([x, y0 + y]);
+                points0.push(x, y0);
+                points1.push(x, y0 + y);
 
                 style = data.getItemVisual(indices[j], 'style');
             }

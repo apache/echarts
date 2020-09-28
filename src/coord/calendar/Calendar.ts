@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
-import { BoundingRect } from 'zrender/src/export';
+import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
 import CalendarModel from './CalendarModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -35,7 +35,6 @@ import { ParsedModelFinder } from '../../util/model';
 import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import SeriesModel from '../../model/Series';
 import CoordinateSystemManager from '../../CoordinateSystem';
-import { RectLike } from 'zrender/src/core/BoundingRect';
 
 // (24*60*60*1000)
 const PROXIMATE_ONE_DAY = 86400000;

@@ -69,7 +69,7 @@ import {interpolateNumber} from 'zrender/src/animation/Animator';
 import List from '../data/List';
 import { getLabelText } from '../label/labelStyle';
 import { AnimationEasing } from 'zrender/src/animation/easing';
-import { getECData } from './ecData';
+import { getECData } from './innerStore';
 import {makeInner} from './model';
 
 

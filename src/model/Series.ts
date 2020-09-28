@@ -654,17 +654,18 @@ function dataTaskProgress(param: StageHandlerProgressParams, context: SeriesTask
 
 // TODO refactor
 function wrapData(data: List, seriesModel: SeriesModel): void {
-    zrUtil.each(data.CHANGABLE_METHODS, function (methodName) {
-        data.wrapMethod(methodName as any, zrUtil.curry(onDataSelfChange, seriesModel));
+    zrUtil.each([...data.CHANGABLE_METHODS, ...data.DOWNSAMPLE_METHODS], function (methodName) {
+        data.wrapMethod(methodName as any, zrUtil.curry(onDataChange, seriesModel));
     });
 }
 
-function onDataSelfChange(this: List, seriesModel: SeriesModel): void {
+function onDataChange(this: List, seriesModel: SeriesModel, newList: List): List {
     const task = getCurrentTask(seriesModel);
     if (task) {
         // Consider case: filter, selectRange
-        task.setOutputEnd(this.count());
+        task.setOutputEnd((newList || this).count());
     }
+    return newList;
 }
 
 function getCurrentTask(seriesModel: SeriesModel): GeneralTask {

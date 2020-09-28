@@ -40,7 +40,7 @@ import MarkerModel from './MarkerModel';
 import { makeInner } from '../../util/model';
 import { getVisualFromData } from '../../visual/helper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 
 interface MarkAreaDrawGroup {
     group: graphic.Group
