@@ -63,7 +63,6 @@ import {
     defaults,
     isObject
 } from 'zrender/src/core/util';
-import * as numberUtil from './number';
 import SeriesModel from '../model/Series';
 import {interpolateNumber} from 'zrender/src/animation/Animator';
 import List from '../data/List';
@@ -71,6 +70,7 @@ import { getLabelText } from '../label/labelStyle';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import { getECData } from './innerStore';
 import {makeInner} from './model';
+import { round, getPrecisionSafe } from './number';
 
 
 const mathMax = Math.max;
@@ -605,10 +605,8 @@ export function interpolateRawValues<Props extends PathProps>(
     targetValue: ParsedValue[] | ParsedValue,
     percent: number
 ): (string | number)[] | string | number {
-    const precisionOption = labelModel.get('precision');
-    const precision: number = !precisionOption || precisionOption === 'auto'
-        ? 0
-        : precisionOption;
+    const precision = labelModel.get('precision');
+    const isAutoPrecision = precision == null || precision === 'auto';
 
     if (typeof targetValue === 'number') {
         const value = interpolateNumber(
@@ -616,7 +614,14 @@ export function interpolateRawValues<Props extends PathProps>(
             targetValue as number,
             percent
         );
-        return numberUtil.round(value, precision);
+        return round(
+            value,
+            isAutoPrecision ? Math.max(
+                getPrecisionSafe(sourceValue as number),
+                getPrecisionSafe(targetValue as number)
+            )
+            : precision as number
+        );
     }
     else if (typeof targetValue === 'string') {
         return percent < 1 ? sourceValue : targetValue;
@@ -633,14 +638,19 @@ export function interpolateRawValues<Props extends PathProps>(
                 interpolated[i] = (percent < 1 ? leftArr : rightArr)[i] as number;
             }
             else {
+                const leftVal = leftArr && leftArr[i] ? leftArr[i] as number : 0;
+                const rightVal = rightArr[i] as number;
                 const value = leftArr == null
                     ? (targetValue as [])[i]
-                    : interpolateNumber(
-                        leftArr && leftArr[i] ? leftArr[i] as number : 0,
-                        rightArr[i] as number,
-                        percent
-                    );
-                interpolated[i] = numberUtil.round(value, precision);
+                    : interpolateNumber(leftVal, rightVal, percent);
+                interpolated[i] = round(
+                    value,
+                    isAutoPrecision ? Math.max(
+                        getPrecisionSafe(leftVal),
+                        getPrecisionSafe(rightVal)
+                    )
+                    : precision as number
+                );
             }
         }
         return interpolated;
