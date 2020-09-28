@@ -18,7 +18,6 @@ import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 import { deprecateReplaceLog } from '../util/log';
 import { makeInner } from '../util/model';
-import { exportAllDeclaration } from '@babel/types';
 
 type TextCommonParams = {
     /**
@@ -488,7 +487,9 @@ function setTokenTextStyle(
     if (textBorderType != null) {
         textStyle.lineDash = textBorderType as any;
     }
-    const textBorderDashOffset = retrieve2(textStyleModel.getShallow('textBorderDashOffset'), globalTextStyle.textBorderDashOffset);
+    const textBorderDashOffset = retrieve2(
+        textStyleModel.getShallow('textBorderDashOffset'), globalTextStyle.textBorderDashOffset
+    );
     if (textBorderDashOffset != null) {
         textStyle.lineDashOffset = textBorderDashOffset;
     }
@@ -571,5 +572,17 @@ export function getFont(
 }
 
 export const labelInner = makeInner<{
+    /**
+     * Previous value stored used for label.
+     * It's mainly for text animation
+     */
+    prevValue?: ParsedValue | ParsedValue[]
+    /**
+     * Current value stored used for label.
+     */
+    value?: ParsedValue | ParsedValue[]
+    /**
+     * Change label text from interpolated text during animation
+     */
     setLabelText?(overrideValue?: ParsedValue | ParsedValue[]): void
 }, ZRText>();

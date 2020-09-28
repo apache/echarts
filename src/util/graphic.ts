@@ -65,10 +65,10 @@ import {
 } from 'zrender/src/core/util';
 import SeriesModel from '../model/Series';
 import List from '../data/List';
-import { getLabelText } from '../label/labelStyle';
+import { getLabelText, setLabelText, labelInner } from '../label/labelStyle';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import { getECData } from './innerStore';
-import {makeInner, interpolateRawValues} from './model';
+import {interpolateRawValues} from './model';
 
 
 const mathMax = Math.max;
@@ -78,11 +78,6 @@ const _customShapeMap: Dictionary<{ new(): Path }> = {};
 
 type ExtendShapeOpt = Parameters<typeof Path.extend>[0];
 type ExtendShapeReturn = ReturnType<typeof Path.extend>;
-
-const innerLabel = makeInner<{
-    startValue: ParsedValue | ParsedValue[],
-    nextValue: ParsedValue | ParsedValue[]
-}, ZRText>();
 
 /**
  * Extend shape with parameters
@@ -412,6 +407,8 @@ function animateOrSetProps<Props>(
     else {
         el.stopAnimation();
         !isFrom && el.attr(props);
+        // Call during once.
+        during && during(1);
         cb && (cb as AnimateOrSetPropsOption['cb'])();
     }
 }
@@ -462,10 +459,7 @@ export function initProps<Props>(
     cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
     during?: AnimateOrSetPropsOption['during']
 ) {
-    animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, percent => {
-        // console.log(dataIndex, el.shape.width, percent);
-        during && during(percent);
-    });
+    animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, during);
 }
 
 /**
@@ -548,20 +542,13 @@ function animateOrSetLabel<Props extends PathProps>(
     defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
 ) {
     const valueAnimationEnabled = labelModel && labelModel.get('valueAnimation');
-    if (valueAnimationEnabled) {
+    const label = el.getTextContent();
+    if (valueAnimationEnabled && label) {
         const precision = labelModel ? labelModel.get('precision') : null;
-        const text = el.getTextContent();
-        const host = text && innerLabel(text);
-        host && (host.startValue = host.nextValue);
+        const host = labelInner(label);
 
-        const sourceValue = host.startValue;
-        const targetValue = seriesModel.getRawValue(dataIndex) as ParsedValue[] | ParsedValue;
-
-        const duration = animatableModel.get('animationDuration');
-        if (!duration && host) {
-            // No animation for the first frame
-            host.nextValue = interpolateRawValues(data, precision, 0, targetValue, 1);
-        }
+        const sourceValue = host.prevValue;
+        const targetValue = host.value;
 
         const during = (percent: number) => {
             const text = el.getTextContent();
@@ -578,9 +565,11 @@ function animateOrSetLabel<Props extends PathProps>(
                     ? defaultTextGetter(interpolated)
                     : interpolated + ''
             }, {normal: labelModel}, interpolated);
-            text.style.text = labelText.normal;
-            text.dirty();
+
+            setLabelText(text, labelText);
         };
+
+        host.prevValue = targetValue;
 
         const props: ElementProps = {};
         animateOrSetProps(animationType, el, props, animatableModel, dataIndex, null, during);
@@ -595,9 +584,9 @@ export function updateLabel<Props>(
     labelModel: Model<LabelOption>,
     seriesModel: SeriesModel,
     animatableModel?: Model<AnimationOptionMixin>,
-    defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
+    getText?: (value: ParsedValue[] | ParsedValue) => string
 ) {
-    animateOrSetLabel('update', el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
+    animateOrSetLabel('update', el, data, dataIndex, labelModel, seriesModel, animatableModel, getText);
 }
 
 export function initLabel<Props>(
@@ -607,9 +596,9 @@ export function initLabel<Props>(
     labelModel: Model<LabelOption>,
     seriesModel: SeriesModel,
     animatableModel?: Model<AnimationOptionMixin>,
-    defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
+    getText?: (value: ParsedValue[] | ParsedValue) => string
 ) {
-    animateOrSetLabel('init', el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
+    animateOrSetLabel('init', el, data, dataIndex, labelModel, seriesModel, animatableModel, getText);
 }
 
 /**

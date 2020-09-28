@@ -20,6 +20,8 @@
 
 import {retrieveRawValue} from '../../data/helper/dataProvider';
 import List from '../../data/List';
+import { ParsedValue } from '../../util/types';
+import { isArray } from 'zrender/src/core/util';
 
 /**
  * @return label string. Not null/undefined
@@ -42,4 +44,23 @@ export function getDefaultLabel(
         }
         return vals.join(' ');
     }
+}
+
+export function getDefaultInterpolatedLabel(
+    data: List,
+    interpolatedValue: ParsedValue | ParsedValue[]
+) {
+    const labelDims = data.mapDimensionsAll('defaultedLabel');
+    if (!isArray(interpolatedValue)) {
+        return interpolatedValue + '';
+    }
+
+    const vals = [];
+    for (let i = 0; i < labelDims.length; i++) {
+        const dimInfo = data.getDimensionInfo(labelDims[i]);
+        if (dimInfo) {
+            vals.push(interpolatedValue[dimInfo.index]);
+        }
+    }
+    return vals.join(' ');
 }

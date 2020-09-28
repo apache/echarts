@@ -1001,7 +1001,7 @@ export function interpolateRawValues(
         return round(
             value,
             isAutoPrecision ? Math.max(
-                getPrecisionSafe(sourceValue as number),
+                getPrecisionSafe(sourceValue as number || 0),
                 getPrecisionSafe(targetValue as number)
             )
             : precision as number
@@ -1012,7 +1012,7 @@ export function interpolateRawValues(
     }
     else {
         const interpolated = [];
-        const leftArr = sourceValue as (string | number)[];
+        const leftArr = sourceValue as (string | number)[] || [];
         const rightArr = targetValue as (string | number[]);
         const length = Math.max(leftArr.length, rightArr.length);
         for (let i = 0; i < length; ++i) {
