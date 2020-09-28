@@ -197,7 +197,6 @@ class BarView extends ChartView {
         if (realtimeSort && data.count()) {
             if (this._isFirstFrame) {
                 this._initSort(data, isHorizontalOrRadial, baseAxis as Axis2D, api);
-
                 this._isFirstFrame = false;
                 return;
             }
@@ -302,7 +301,6 @@ class BarView extends ChartView {
                         animationModel,
                         el as Rect,
                         layout as LayoutRect,
-                        data,
                         dataIndex,
                         isHorizontalOrRadial,
                         false,
@@ -390,7 +388,6 @@ class BarView extends ChartView {
                         animationModel,
                         el as Rect,
                         layout as LayoutRect,
-                        data,
                         newIndex,
                         isHorizontalOrRadial,
                         true,
@@ -723,7 +720,6 @@ function updateRealtimeAnimation(
     animationModel: BarSeriesModel,
     el: Rect,
     layout: LayoutRect,
-    data: List,
     newIndex: number,
     isHorizontal: boolean,
     isUpdate: boolean,

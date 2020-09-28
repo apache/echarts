@@ -172,8 +172,8 @@ under the License.
                     for (var i = 1; i < years.length; ++i) {
                         (function (i) {
                             setTimeout(function () {
-                                updateYear(years[i]);
-                            }, i * updateFrequency);
+                                updateYear(years[i + 1]);
+                            }, (i - 1) * updateFrequency);
                         })(i);
                     }
 
@@ -196,116 +196,116 @@ under the License.
 
         <script>
 
-        // require(
-        //     (testHelper.hasURLParam('en')
-        //         ? [
-        //             'echarts',
-        //             // 'echarts/lang/en',
-        //         ]
-        //         : [
-        //             'echarts'
-        //         ]
-        //     ).concat(
-        //         [
-        //             // 'echarts/chart/bar',
-        //             // 'echarts/chart/line',
-        //             // 'echarts/component/legend',
-        //             // 'echarts/component/graphic',
-        //             // 'echarts/component/grid',
-        //             // 'echarts/component/tooltip',
-        //             // 'echarts/component/brush',
-        //             // 'echarts/component/toolbox',
-        //             // 'echarts/component/title',
-        //             // 'zrender/vml/vml'
-        //         ]
-        //     ),
-        //     function (echarts) {
-        //         var chart = echarts.init(document.getElementById('main2'), null, {
-        //         });
-        //         var option = {
-        //             xAxis: {
-        //                 max: 'dataMax'
-        //             },
-        //             yAxis: {
-        //                 type: 'category',
-        //                 data: ['A', 'B', 'C', 'D'],
-        //                 inverse: true,
-        //                 axisLabel: {
-        //                     formatter: function (label, id) {
-        //                         return label + 0 + id;
-        //                     }
-        //                 },
-        //                 animationDuration: 300,
-        //                 animationDurationUpdate: 300,
-        //                 max: 2
-        //             },
-        //             series: [{
-        //                 realtimeSort: true,
-        //                 name: 'X',
-        //                 type: 'bar',
-        //                 data: [{
-        //                     value: 120,
-        //                     itemStyle: {
-        //                         color: 'red'
-        //                     }
-        //                 }, {
-        //                     value: 200,
-        //                     itemStyle: {
-        //                         color: 'orange'
-        //                     }
-        //                 }, {
-        //                     value: 90,
-        //                     itemStyle: {
-        //                         color: 'yellow'
-        //                     }
-        //                 }, {
-        //                     value: 240,
-        //                     itemStyle: {
-        //                         color: 'green'
-        //                     }
-        //                 }],
-        //                 label: {
-        //                     show: true,
-        //                     position: 'right',
-        //                     formatter: '{c}元',
-        //                     valueAnimation: true
-        //                 }
-        //             }],
-        //             legend: {
-        //                 show: true
-        //             },
-        //             animationDurationUpdate: 5000,
-        //             animationEasing: 'linear',
-        //             animationEasingUpdate: 'linear'
-        //         };
+        require(
+            (testHelper.hasURLParam('en')
+                ? [
+                    'echarts',
+                    // 'echarts/lang/en',
+                ]
+                : [
+                    'echarts'
+                ]
+            ).concat(
+                [
+                    // 'echarts/chart/bar',
+                    // 'echarts/chart/line',
+                    // 'echarts/component/legend',
+                    // 'echarts/component/graphic',
+                    // 'echarts/component/grid',
+                    // 'echarts/component/tooltip',
+                    // 'echarts/component/brush',
+                    // 'echarts/component/toolbox',
+                    // 'echarts/component/title',
+                    // 'zrender/vml/vml'
+                ]
+            ),
+            function (echarts) {
+                var chart = echarts.init(document.getElementById('main2'), null, {
+                });
+                var option = {
+                    xAxis: {
+                        max: 'dataMax'
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: ['A', 'B', 'C', 'D'],
+                        inverse: true,
+                        axisLabel: {
+                            formatter: function (label, id) {
+                                return label + 0 + id;
+                            }
+                        },
+                        animationDuration: 300,
+                        animationDurationUpdate: 300,
+                        max: 2
+                    },
+                    series: [{
+                        realtimeSort: true,
+                        name: 'X',
+                        type: 'bar',
+                        data: [{
+                            value: 120,
+                            itemStyle: {
+                                color: 'red'
+                            }
+                        }, {
+                            value: 200,
+                            itemStyle: {
+                                color: 'orange'
+                            }
+                        }, {
+                            value: 90,
+                            itemStyle: {
+                                color: 'yellow'
+                            }
+                        }, {
+                            value: 240,
+                            itemStyle: {
+                                color: 'green'
+                            }
+                        }],
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: '{c}元',
+                            valueAnimation: true
+                        }
+                    }],
+                    legend: {
+                        show: true
+                    },
+                    animationDurationUpdate: 5000,
+                    animationEasing: 'linear',
+                    animationEasingUpdate: 'linear'
+                };
 
-        //         chart.setOption(option);
+                chart.setOption(option);
 
-        //         setTimeout(() => {
-        //             var data = option.series[0].data;
-        //             data[1].value += 100;
-        //             chart.setOption(option);
-        //         }, 1000);
+                setTimeout(() => {
+                    var data = option.series[0].data;
+                    data[1].value += 100;
+                    chart.setOption(option);
+                }, 1000);
 
-        //         setTimeout(() => {
-        //             var data = option.series[0].data;
-        //             data[3].value += 100;
-        //             chart.setOption(option);
-        //         }, 3400);
+                setTimeout(() => {
+                    var data = option.series[0].data;
+                    data[3].value += 100;
+                    chart.setOption(option);
+                }, 3400);
 
-        //         for (var x = 0; x < 4; ++x) {
-        //             (function (x) {
-        //                 var btn = document.getElementById('btn-' + (x + 1));
-        //                 btn.onclick = function () {
-        //                     var data = option.series[0].data;
-        //                     data[x].value += Math.round(100 * Math.random());
-        //                     chart.setOption(option);
-        //                 };
-        //             })(x);
-        //         }
-        //     }
+                for (var x = 0; x < 4; ++x) {
+                    (function (x) {
+                        var btn = document.getElementById('btn-' + (x + 1));
+                        btn.onclick = function () {
+                            var data = option.series[0].data;
+                            data[x].value += Math.round(100 * Math.random());
+                            chart.setOption(option);
+                        };
+                    })(x);
+                }
+            }
 
-        // );
+        );
         </script>
     </body>
 </html>
