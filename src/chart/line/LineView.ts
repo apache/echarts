@@ -1182,6 +1182,7 @@ class LineView extends ChartView {
     remove(ecModel: GlobalModel) {
         const group = this.group;
         const oldData = this._data;
+        this.group.remove(this._endLabel);
         this._lineGroup.removeAll();
         this._symbolDraw.remove(true);
         // Remove temporary created elements when highlighting
@@ -1197,6 +1198,7 @@ class LineView extends ChartView {
             this._coordSys =
             this._points =
             this._stackedOnPoints =
+            this._endLabel =
             this._data = null;
     }
 }
