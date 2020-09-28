@@ -239,9 +239,12 @@ class BarView extends ChartView {
         const isInitSort = payload && payload.isInitSort;
         const isChangeOrder = payload && payload.type === 'changeAxisOrder';
 
+        const defaultTextGetter = (values: ParsedValue | ParsedValue[]) => {
+            return getDefaultInterpolatedLabel(seriesModel.getData(), values);
+        };
         data.diff(oldData)
             .add(function (dataIndex) {
-                const itemModel = data.getItemModel(dataIndex);
+                const itemModel = data.getItemModel<BarDataItemOption>(dataIndex);
                 const layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
@@ -284,6 +287,9 @@ class BarView extends ChartView {
                     seriesModel, isHorizontalOrRadial, coord.type === 'polar'
                 );
 
+                initLabel(
+                    el, data, dataIndex, itemModel.getModel('label'), seriesModel, animationModel, defaultTextGetter
+                );
                 if (isInitSort) {
                     (el as Rect).attr({ shape: layout });
                 }
@@ -313,7 +319,7 @@ class BarView extends ChartView {
                 el.ignore = isClipped;
             })
             .update(function (newIndex, oldIndex) {
-                const itemModel = data.getItemModel(newIndex);
+                const itemModel = data.getItemModel<BarDataItemOption>(newIndex);
                 const layout = getLayout[coord.type](data, newIndex, itemModel);
 
                 if (drawBackground) {
@@ -366,6 +372,9 @@ class BarView extends ChartView {
                     updateStyle(
                         el, data, newIndex, itemModel, layout,
                         seriesModel, isHorizontalOrRadial, coord.type === 'polar'
+                    );
+                    updateLabel(
+                        el, data, newIndex, itemModel.getModel('label'), seriesModel, animationModel, defaultTextGetter
                     );
                 }
 
@@ -756,17 +765,6 @@ function updateRealtimeAnimation(
         (isUpdate ? updateProps : initProps)(el, {
             shape: axisTarget
         }, axisModel, newIndex);
-
-
-        if (!isChangeOrder) {
-            const labelModel = seriesModel.getModel('label');
-            const defaultTextGetter = (values: ParsedValue | ParsedValue[]) => {
-                return getDefaultInterpolatedLabel(seriesModel.getData(), values);
-            };
-            (isUpdate ? updateLabel : initLabel)(
-                el, data, newIndex, labelModel, seriesModel, animationModel, defaultTextGetter
-            );
-        }
     }
 }
 

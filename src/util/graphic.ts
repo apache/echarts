@@ -539,7 +539,7 @@ function animateOrSetLabel<Props extends PathProps>(
     labelModel: Model<LabelOption>,
     seriesModel: SeriesModel,
     animatableModel?: Model<AnimationOptionMixin>,
-    defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
+    getDefaultText?: (value: ParsedValue[] | ParsedValue) => string
 ) {
     const valueAnimationEnabled = labelModel && labelModel.get('valueAnimation');
     const label = el.getTextContent();
@@ -561,8 +561,8 @@ function animateOrSetLabel<Props extends PathProps>(
             const labelText = getLabelText({
                 labelDataIndex: dataIndex,
                 labelFetcher: seriesModel,
-                defaultText: defaultTextGetter
-                    ? defaultTextGetter(interpolated)
+                defaultText: getDefaultText
+                    ? getDefaultText(interpolated)
                     : interpolated + ''
             }, {normal: labelModel}, interpolated);
 
@@ -584,9 +584,9 @@ export function updateLabel<Props>(
     labelModel: Model<LabelOption>,
     seriesModel: SeriesModel,
     animatableModel?: Model<AnimationOptionMixin>,
-    getText?: (value: ParsedValue[] | ParsedValue) => string
+    defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
 ) {
-    animateOrSetLabel('update', el, data, dataIndex, labelModel, seriesModel, animatableModel, getText);
+    animateOrSetLabel('update', el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
 }
 
 export function initLabel<Props>(
@@ -596,9 +596,9 @@ export function initLabel<Props>(
     labelModel: Model<LabelOption>,
     seriesModel: SeriesModel,
     animatableModel?: Model<AnimationOptionMixin>,
-    getText?: (value: ParsedValue[] | ParsedValue) => string
+    defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
 ) {
-    animateOrSetLabel('init', el, data, dataIndex, labelModel, seriesModel, animatableModel, getText);
+    animateOrSetLabel('init', el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
 }
 
 /**
