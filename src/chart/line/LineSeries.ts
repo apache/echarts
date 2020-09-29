@@ -57,6 +57,10 @@ export interface LineDataItemOption extends SymbolOptionMixin,
     value?: LineDataValue
 }
 
+export interface LineEndLabelOption extends LabelOption {
+    valueAnimation: boolean
+}
+
 
 export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraStateOption & {
     emphasis?: {
@@ -83,6 +87,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     clip?: boolean
 
     label?: LabelOption
+    endLabel?: LineEndLabelOption
 
     lineStyle?: LineStyleOption
 
@@ -139,6 +144,12 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         label: {
             position: 'top'
+        },
+
+        endLabel: {
+            show: false,
+            valueAnimation: true,
+            distance: 8
         },
 
         lineStyle: {

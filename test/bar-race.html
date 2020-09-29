@@ -148,7 +148,6 @@ under the License.
                                 fontFamily: 'monospace'
                             }
                         }],
-                        animationDuration: 0,
                         animationDurationUpdate: updateFrequency,
                         animationEasing: 'linear',
                         animationEasingUpdate: 'linear',
@@ -173,7 +172,7 @@ under the License.
                     for (var i = 1; i < years.length; ++i) {
                         (function (i) {
                             setTimeout(function () {
-                                updateYear(years[i]);
+                                updateYear(years[i + 1]);
                             }, (i - 1) * updateFrequency);
                         })(i);
                     }
@@ -275,7 +274,6 @@ under the License.
                     legend: {
                         show: true
                     },
-                    animationDuration: 0,
                     animationDurationUpdate: 5000,
                     animationEasing: 'linear',
                     animationEasingUpdate: 'linear'
