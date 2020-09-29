@@ -170,10 +170,12 @@ proto.onclick = function (ecModel, api, type) {
     var newTitle;
     // Change title of stack
     if (type === 'stack') {
-        var isStack = newOption.series && newOption.series[0] && newOption.series[0].stack === INNER_STACK_KEYWORD;
-        newTitle = isStack
-            ? zrUtil.merge({ stack: magicTypeLang.title.tiled }, magicTypeLang.title)
-            : zrUtil.clone(magicTypeLang.title);
+        // switch the stack and tiled title when click the stack button
+        // and the merge back to the current title (not the default)
+        newTitle = zrUtil.merge({
+                stack: model.option.title.tiled,
+                tiled: model.option.title.stack
+            }, model.option.title);
     }
 
     api.dispatchAction({
