@@ -249,6 +249,8 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
     /**
      * Convert a time data(time, value) item to (x, y) point.
      */
+    // TODO Clamp of calendar is not same with cartesian coordinate systems.
+    // It will return NaN if data exceeds.
     dataToPoint(data: OptionDataValueDate | OptionDataValueDate[], clamp?: boolean) {
         zrUtil.isArray(data) && (data = data[0]);
         clamp == null && (clamp = true);
