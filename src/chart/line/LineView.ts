@@ -359,6 +359,12 @@ function canShowAllSymbolForCategory(
     return true;
 }
 
+interface EndLabelAnimationRecord {
+    lastFrameIndex: number
+    originalX?: number
+    originalY?: number
+}
+
 function createLineClipPath(
     lineView: LineView,
     coordSys: Cartesian2D | Polar,
@@ -371,7 +377,7 @@ function createLineClipPath(
         const valueAnimation = endLabelModel.get('valueAnimation');
         const data = seriesModel.getData();
 
-        const labelAnimationRecord = { lastFrameIndex: 0 };
+        const labelAnimationRecord: EndLabelAnimationRecord = { lastFrameIndex: 0 };
 
         const during = showEndLabel
             ? (percent: number, clipRect: graphic.Rect) => {
@@ -388,7 +394,11 @@ function createLineClipPath(
             : null;
 
         const isHorizontal = coordSys.getBaseAxis().isHorizontal();
-        const clipPath = createGridClipPath(coordSys, hasAnimation, seriesModel, null, during);
+        const clipPath = createGridClipPath(coordSys, hasAnimation, seriesModel, () => {
+            if (lineView._endLabel && labelAnimationRecord.originalX != null) {
+                lineView._endLabel.attr({x: labelAnimationRecord.originalX, y: labelAnimationRecord.originalY});
+            }
+        }, during);
         // Expand clip shape to avoid clipping when line value exceeds axis
         if (!seriesModel.get('clip', true)) {
             const rectShape = clipPath.shape;
@@ -1010,7 +1020,7 @@ class LineView extends ChartView {
         percent: number,
         clipRect: graphic.Rect,
         data: List,
-        animationRecord: { lastFrameIndex: number },
+        animationRecord: EndLabelAnimationRecord,
         valueAnimation: boolean,
         endLabelModel: Model<LabelOption>,
         coordSys: Cartesian2D
@@ -1019,6 +1029,13 @@ class LineView extends ChartView {
         const polyline = this._polyline;
 
         if (endLabel) {
+            // NOTE: Don't remove percent < 1. percent === 1 means the first frame during render.
+            // The label is not prepared at this time.
+            if (percent < 1 && animationRecord.originalX == null) {
+                animationRecord.originalX = endLabel.x;
+                animationRecord.originalY = endLabel.y;
+            }
+
             const seriesModel = data.hostModel as LineSeriesModel;
             const connectNulls = seriesModel.get('connectNulls');
             const precision = endLabelModel.get('precision');
