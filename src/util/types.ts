@@ -961,8 +961,16 @@ export interface LabelLineOption {
 
 
 export interface LabelLayoutOptionCallbackParams {
-    dataIndex: number,
-    dataType: SeriesDataType,
+    /**
+     * Index of data which the label represents.
+     * It can be null if label does't represent any data.
+     */
+    dataIndex?: number,
+    /**
+     * Type of data which the label represents.
+     * It can be null if label does't represent any data.
+     */
+    dataType?: SeriesDataType,
     seriesIndex: number,
     text: string
     align: ZRTextAlign

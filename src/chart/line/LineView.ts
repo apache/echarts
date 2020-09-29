@@ -47,7 +47,7 @@ import type {
 } from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
-import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
+import { CoordinateSystemClipArea, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
@@ -56,6 +56,7 @@ import {getDefaultLabel} from '../helper/labelHelper';
 
 import { getECData } from '../../util/innerStore';
 import { createFloat32Array } from '../../util/vendor';
+import Cartesian from '../../coord/cartesian/Cartesian';
 
 type PolarArea = ReturnType<Polar['getArea']>;
 type Cartesian2DArea = ReturnType<Cartesian2D['getArea']>;
@@ -364,10 +365,11 @@ function createLineClipPath(
     hasAnimation: boolean,
     seriesModel: LineSeriesModel
 ) {
-    if (coordSys.type === 'cartesian2d') {
+    if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
         const endLabelModel = seriesModel.getModel('endLabel');
         const showEndLabel = endLabelModel.get('show');
         const valueAnimation = endLabelModel.get('valueAnimation');
+        const data = seriesModel.getData();
 
         const labelAnimationRecord = { lastFrameIndex: 0 };
 
@@ -376,10 +378,11 @@ function createLineClipPath(
                 lineView._endLabelOnDuring(
                     percent,
                     clipRect,
-                    lineView._data,
+                    data,
                     labelAnimationRecord,
                     valueAnimation,
-                    endLabelModel
+                    endLabelModel,
+                    coordSys
                 );
             }
             : null;
@@ -398,6 +401,11 @@ function createLineClipPath(
                 rectShape.x -= expandSize;
                 rectShape.width += expandSize * 2;
             }
+        }
+
+        // Set to the final frame. To make sure label layout is right.
+        if (during) {
+            during(1, clipPath);
         }
         return clipPath;
     }
@@ -567,6 +575,12 @@ class LineView extends ChartView {
                     points, stackedOnPoints
                 );
             }
+
+            // NOTE: Must update _endLabel before setClipPath.
+            if (!isCoordSysPolar) {
+                this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D);
+            }
+
             lineGroup.setClipPath(
                 createLineClipPath(this, coordSys, true, seriesModel)
             );
@@ -582,6 +596,11 @@ class LineView extends ChartView {
                 // If areaStyle is removed
                 lineGroup.remove(polygon);
                 polygon = this._polygon = null;
+            }
+
+            // NOTE: Must update _endLabel before setClipPath.
+            if (!isCoordSysPolar) {
+                this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D);
             }
 
             // Update clipPath
@@ -708,14 +727,6 @@ class LineView extends ChartView {
 
         (this._polyline as ECElement).onHoverStateChange = changePolyState;
 
-        if (!isCoordSysPolar) {
-            this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D);
-            if (this._endLabel) {
-                enableHoverEmphasis(this._endLabel, focus, blurScope);
-                (this._endLabel as ECElement).onHoverStateChange = changePolyState;
-            }
-        }
-
         this._data = data;
         // Save the coordinate system for transition animation when data changed
         this._coordSys = coordSys;
@@ -813,10 +824,8 @@ class LineView extends ChartView {
 
     _changePolyState(toState: DisplayState) {
         const polygon = this._polygon;
-        const endLabel = this._endLabel;
         setStatesFlag(this._polyline, toState);
         polygon && setStatesFlag(polygon, toState);
-        endLabel && setStatesFlag(endLabel, toState);
     }
 
     _newPolyline(points: ArrayLike<number>) {
@@ -964,13 +973,15 @@ class LineView extends ChartView {
         const endLabelModel = seriesModel.getModel('endLabel');
 
         if (endLabelModel.get('show')) {
+            const polyline = this._polyline;
             let endLabel = this._endLabel;
             if (!endLabel) {
                 endLabel = this._endLabel = new graphic.Text({
-                    ignore: true,
                     z2: 200 // should be higher than item symbol
                 });
-                this.group.add(endLabel);
+                endLabel.ignoreClip = true;
+                polyline.setTextContent(this._endLabel);
+                (polyline as ECElement).disableLabelAnimation = true;
             }
 
             // Find last non-NaN data to display data
@@ -990,7 +1001,7 @@ class LineView extends ChartView {
             }
         }
         else if (this._endLabel) {
-            this.group.remove(this._endLabel);
+            this._polyline.removeTextContent();
             this._endLabel = null;
         }
     }
@@ -1001,7 +1012,8 @@ class LineView extends ChartView {
         data: List,
         animationRecord: { lastFrameIndex: number },
         valueAnimation: boolean,
-        endLabelModel: Model<LabelOption>
+        endLabelModel: Model<LabelOption>,
+        coordSys: Cartesian2D
     ) {
         const endLabel = this._endLabel;
         const polyline = this._polyline;
@@ -1011,7 +1023,6 @@ class LineView extends ChartView {
             const connectNulls = seriesModel.get('connectNulls');
             const precision = endLabelModel.get('precision');
 
-            const coordSys = this._coordSys as Cartesian2D;
             const baseAxis = coordSys.getBaseAxis();
             const isHorizontal = baseAxis.isHorizontal();
             const isBaseInversed = baseAxis.inverse;
@@ -1049,7 +1060,7 @@ class LineView extends ChartView {
             else {
                 // If diff <= 0, which is the range is not found(Include NaN)
                 // Choose the first point or last point.
-                const idx = animationRecord.lastFrameIndex > 0 ? indices[0] : 0;
+                const idx = (percent === 1 || animationRecord.lastFrameIndex > 0) ? indices[0] : 0;
                 const pt = polyline.getPointAtIndex(idx);
                 valueAnimation && (value = seriesModel.getRawValue(idx) as ParsedValue);
                 endLabel.attr({ x: pt[0], y: pt[1] });
@@ -1182,7 +1193,6 @@ class LineView extends ChartView {
     remove(ecModel: GlobalModel) {
         const group = this.group;
         const oldData = this._data;
-        this.group.remove(this._endLabel);
         this._lineGroup.removeAll();
         this._symbolDraw.remove(true);
         // Remove temporary created elements when highlighting

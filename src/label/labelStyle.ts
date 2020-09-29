@@ -194,7 +194,7 @@ function setLabelStyle<LDI>(
         const labelStatesTexts = getLabelText(opt, labelStatesModels);
 
         const normalModel = labelStatesModels.normal;
-        const showNormal = normalModel.getShallow('show');
+        const showNormal = !!normalModel.getShallow('show');
         const normalStyle = createTextStyle(
             normalModel, stateSpecified && stateSpecified.normal, opt, false, !isSetOnText
         );
@@ -210,7 +210,10 @@ function setLabelStyle<LDI>(
 
             if (stateModel) {
                 const stateObj = textContent.ensureState(stateName);
-                stateObj.ignore = !retrieve2(stateModel.getShallow('show'), showNormal);
+                const stateShow = !!retrieve2(stateModel.getShallow('show'), showNormal);
+                if (stateShow !== showNormal) {
+                    stateObj.ignore = !stateShow;
+                }
                 stateObj.style = createTextStyle(
                     stateModel, stateSpecified && stateSpecified[stateName], opt, true, !isSetOnText
                 );
