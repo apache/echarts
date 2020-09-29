@@ -1,0 +1,12 @@
+path_classifiers:
+  test:
+    - test
+  library:
+    - benchmark/dep
+  generated:
+    - dist
+extraction:
+  javascript:
+    index:
+      exclude:
+        - dist
