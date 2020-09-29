@@ -52,11 +52,10 @@ import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '..
 import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
 import {setLabelStyle, getLabelStatesModels, labelInner} from '../../label/labelStyle';
-import {getDefaultLabel} from '../helper/labelHelper';
+import {getDefaultLabel, getDefaultInterpolatedLabel} from '../helper/labelHelper';
 
 import { getECData } from '../../util/innerStore';
 import { createFloat32Array } from '../../util/vendor';
-import Cartesian from '../../coord/cartesian/Cartesian';
 
 type PolarArea = ReturnType<Polar['getArea']>;
 type Cartesian2DArea = ReturnType<Cartesian2D['getArea']>;
@@ -983,6 +982,7 @@ class LineView extends ChartView {
         const endLabelModel = seriesModel.getModel('endLabel');
 
         if (endLabelModel.get('show')) {
+            const data = seriesModel.getData();
             const polyline = this._polyline;
             let endLabel = this._endLabel;
             if (!endLabel) {
@@ -1003,7 +1003,10 @@ class LineView extends ChartView {
                     {
                         labelFetcher: seriesModel,
                         labelDataIndex: dataIndex,
-                        defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
+                        defaultText(dataIndex, opt, overrideValue) {
+                            return overrideValue ? getDefaultInterpolatedLabel(data, overrideValue)
+                                : getDefaultLabel(data, dataIndex);
+                        },
                         enableTextSetter: true
                     },
                     getEndLabelStateSpecified(endLabelModel, coordSys)
@@ -1083,7 +1086,7 @@ class LineView extends ChartView {
                 endLabel.attr({ x: pt[0], y: pt[1] });
             }
             if (valueAnimation) {
-                labelInner(endLabel).setLabelText(value);
+                labelInner(endLabel).setLabelText(value, );
             }
         }
     }

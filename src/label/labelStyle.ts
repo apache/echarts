@@ -42,7 +42,9 @@ type TextCommonParams = {
 const EMPTY_OBJ = {};
 
 interface SetLabelStyleOpt<LDI> extends TextCommonParams {
-    defaultText?: string | ((labelDataIndex: LDI, opt: SetLabelStyleOpt<LDI>) => string);
+    defaultText?: string | ((
+        labelDataIndex: LDI, opt: SetLabelStyleOpt<LDI>, overrideValue?: ParsedValue | ParsedValue[]
+    ) => string);
     // Fetch text by:
     // opt.labelFetcher.getFormattedLabel(
     //     opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex, opt.labelProp
@@ -115,7 +117,7 @@ export function getLabelText<LDI>(
         );
     }
     if (baseText == null) {
-        baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
+        baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt, overrideValue) : opt.defaultText;
     }
 
     const statesText = {
