@@ -845,9 +845,11 @@ function updateStyle(
         );
 
         const label = el.getTextContent();
-        const obj = labelInner(label);
-        obj.prevValue = obj.value;
-        obj.value = seriesModel.getRawValue(dataIndex) as ParsedValue | ParsedValue[];
+        if (label) {
+            const obj = labelInner(label);
+            obj.prevValue = obj.value;
+            obj.value = seriesModel.getRawValue(dataIndex) as ParsedValue | ParsedValue[];
+        }
     }
 
     const emphasisModel = itemModel.getModel(['emphasis']);
