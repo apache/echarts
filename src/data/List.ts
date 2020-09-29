@@ -1199,24 +1199,25 @@ class List<
         const storageArr = this._storageArr;
 
         for (let i = 0, len = this.count(); i < len; i++) {
+            const rawIdx = this.getRawIndex(i);
             // Simple optimization
             switch (dimSize) {
                 case 0:
                     (cb as EachCb0<Ctx>).call(fCtx, i);
                     break;
                 case 1:
-                    (cb as EachCb1<Ctx>).call(fCtx, storageArr[dimIndices[0]][i], i);
+                    (cb as EachCb1<Ctx>).call(fCtx, storageArr[dimIndices[0]][rawIdx], i);
                     break;
                 case 2:
                     (cb as EachCb2<Ctx>).call(
-                        fCtx, storageArr[dimIndices[0]][i], storageArr[dimIndices[1]][i], i
+                        fCtx, storageArr[dimIndices[0]][rawIdx], storageArr[dimIndices[1]][rawIdx], i
                     );
                     break;
                 default:
                     let k = 0;
                     const value = [];
                     for (; k < dimSize; k++) {
-                        value[k] = storageArr[dimIndices[k]][i];
+                        value[k] = storageArr[dimIndices[k]][rawIdx];
                     }
                     // Index
                     value[k] = i;
