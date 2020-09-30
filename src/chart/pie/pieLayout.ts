@@ -48,6 +48,8 @@ export default function (
 
         let center = seriesModel.get('center');
         let radius = seriesModel.get('radius');
+        const cornerRadius = seriesModel.get('cornerRadius');
+        const innerCornerRadius = seriesModel.get('innerCornerRadius');
 
         if (!zrUtil.isArray(radius)) {
             radius = [0, radius];
@@ -108,7 +110,9 @@ export default function (
                     r0: r0,
                     r: roseType
                         ? NaN
-                        : r
+                        : r,
+                    cornerRadius: cornerRadius,
+                    innerCornerRadius: innerCornerRadius
                 });
                 return;
             }
@@ -141,7 +145,9 @@ export default function (
                 r0: r0,
                 r: roseType
                     ? linearMap(value, extent, [r0, r])
-                    : r
+                    : r,
+                cornerRadius: cornerRadius,
+                innerCornerRadius: innerCornerRadius
             });
 
             currentAngle = endAngle;

@@ -91,6 +91,9 @@ export interface PieSeriesOption extends
     minAngle?: number
     minShowLabelAngle?: number
 
+    cornerRadius?: number
+    innerCornerRadius?: number
+
     selectedOffset?: number
 
     avoidLabelOverlap?: boolean
