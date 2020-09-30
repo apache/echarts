@@ -41,7 +41,6 @@ var CartesianAxisView = AxisView.extend({
      * @override
      */
     render: function (axisModel, ecModel, api, payload) {
-
         this.group.removeAll();
 
         var oldAxisGroup = this._axisGroup;
@@ -84,6 +83,7 @@ var CartesianAxisView = AxisView.extend({
      * @private
      */
     _splitLine: function (axisModel, gridModel) {
+
         var axis = axisModel.axis;
 
         if (axis.scale.isBlank()) {
@@ -109,7 +109,14 @@ var CartesianAxisView = AxisView.extend({
         var p2 = [];
 
         var lineStyle = lineStyleModel.getLineStyle();
+        // the showAsAxis will set lineColor to 'transparent' when the viewLabels value is undefind
+        var showAsAxis = splitLineModel.get('showAsAxis');
+        var viewLabels = showAsAxis && axis.getViewLabels();
+
         for (var i = 0; i < ticksCoords.length; i++) {
+            if (viewLabels && viewLabels[i] && !viewLabels[i].formattedLabel) {
+                continue;
+            }
             var tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
 
             if (isHorizontal) {
@@ -127,6 +134,7 @@ var CartesianAxisView = AxisView.extend({
 
             var colorIndex = (lineCount++) % lineColors.length;
             var tickValue = ticksCoords[i].tickValue;
+
             this._axisGroup.add(new graphic.Line({
                 anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
                 subPixelOptimize: true,
