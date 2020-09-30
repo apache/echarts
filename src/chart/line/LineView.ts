@@ -1086,7 +1086,7 @@ class LineView extends ChartView {
                 endLabel.attr({ x: pt[0], y: pt[1] });
             }
             if (valueAnimation) {
-                labelInner(endLabel).setLabelText(value, );
+                labelInner(endLabel).setLabelText(value);
             }
         }
     }
@@ -1144,19 +1144,23 @@ class LineView extends ChartView {
             return;
         }
 
-        // `diff.current` is subset of `current` (which should be ensured by
-        // turnPointsIntoStep), so points in `__points` can be updated when
-        // points in `current` are update during animation.
         (polyline.shape as any).__points = diff.current;
         polyline.shape.points = current;
 
-        // Stop previous animation.
-        polyline.stopAnimation();
-        graphic.updateProps(polyline, {
+        const target = {
             shape: {
                 points: next
             }
-        }, seriesModel);
+        };
+        // Also animate the original points.
+        // If points reference is changed when turning into step line.
+        if (diff.current !== current) {
+            (target.shape as any).__points = diff.next;
+        }
+
+        // Stop previous animation.
+        polyline.stopAnimation();
+        graphic.updateProps(polyline, target, seriesModel);
 
         if (polygon) {
             polygon.setShape({

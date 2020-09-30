@@ -2021,7 +2021,7 @@ class ECharts extends Eventful {
                 }
             });
 
-            if (elCount > ecModel.get('hoverLayerThreshold') && !env.node) {
+            if (elCount > ecModel.get('hoverLayerThreshold') && !env.node && !env.worker) {
                 ecModel.eachSeries(function (seriesModel) {
                     if (seriesModel.preventUsingHoverLayer) {
                         return;

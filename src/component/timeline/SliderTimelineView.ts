@@ -46,6 +46,7 @@ import { makeInner } from '../../util/model';
 import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis } from '../../util/states';
 import { createTooltipMarkup } from '../tooltip/tooltipMarkup';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 const PI = Math.PI;
 
@@ -765,12 +766,18 @@ function makeControlIcon(
     rect: number[],
     opts: PathProps
 ) {
-    const icon = graphic.makePath(
-        timelineModel.get(['controlStyle', objPath]).replace(/^path:\/\//, ''),
-        clone(opts || {}),
-        new BoundingRect(rect[0], rect[1], rect[2], rect[3]),
-        'center'
+    const style = opts.style;
+
+    const icon = graphic.createIcon(
+        timelineModel.get(['controlStyle', objPath]),
+        opts || {},
+        new BoundingRect(rect[0], rect[1], rect[2], rect[3])
     );
+
+    // TODO createIcon won't use style in opt.
+    if (style) {
+        (icon as Displayable).setStyle(style);
+    }
 
     return icon;
 }

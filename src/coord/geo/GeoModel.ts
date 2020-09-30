@@ -38,7 +38,6 @@ import {
 } from '../../util/types';
 import { NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
-import type MapSeries from '../../chart/map/MapSeries';
 
 
 export interface GeoItemStyleOption extends ItemStyleOption {

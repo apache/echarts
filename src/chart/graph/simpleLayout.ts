@@ -54,7 +54,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                 }
             }
 
-            simpleLayoutEdge(data.graph);
+            simpleLayoutEdge(data.graph, seriesModel);
         }
         else if (!layout || layout === 'none') {
             simpleLayout(seriesModel);

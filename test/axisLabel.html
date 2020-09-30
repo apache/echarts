@@ -209,7 +209,10 @@ under the License.
                         trigger: 'axis'
                     },
                     xAxis: {
-                        data: ['a', 'b', 'c', 'd', 'e']
+                        data: ['aaaaaa', 'bbbbbb', 'cccccc', 'ddddd', 'eeeee'],
+                        axisLabel: {
+                            rotate: rotate
+                        }
                     },
                     yAxis: {
                         axisLabel: {
@@ -238,6 +241,11 @@ under the License.
                         yAxis: {
                             axisLabel: {
                                 rotate: rotate
+                            }
+                        },
+                         xAxis: {
+                            axisLabel: {
+                                rotate: rotate-180
                             }
                         }
                     });
@@ -376,7 +384,6 @@ under the License.
             });
 
         </script>
-
 
 
     </body>
