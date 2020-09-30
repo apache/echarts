@@ -34,7 +34,7 @@ import {
 } from '../featureManager';
 import GlobalModel from '../../../model/Global';
 import ExtensionAPI from '../../../ExtensionAPI';
-import { Payload, Dictionary, ComponentOption } from '../../../util/types';
+import { Payload, Dictionary, ComponentOption, ItemStyleOption } from '../../../util/types';
 import Cartesian2D from '../../../coord/cartesian/Cartesian2D';
 import CartesianAxisModel from '../../../coord/cartesian/AxisModel';
 import DataZoomModel from '../../dataZoom/DataZoomModel';
@@ -67,7 +67,9 @@ export interface ToolboxDataZoomFeatureOption extends ToolboxFeatureOption {
     xAxisIndex?: ModelFinderIndexQuery
     yAxisIndex?: ModelFinderIndexQuery
     xAxisId?: ModelFinderIdQuery
-    yAxisId?: ModelFinderIdQuery
+    yAxisId?: ModelFinderIdQuery,
+
+    brushStyle?: ItemStyleOption
 }
 
 type ToolboxDataZoomFeatureModel = ToolboxFeatureModel<ToolboxDataZoomFeatureOption>;
@@ -214,7 +216,11 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
                 back: 'M22,1.4L9.9,13.5l12.3,12.3 M10.3,13.5H54.9v44.6 H10.3v-26'
             },
             // `zoom`, `back`
-            title: ecModel.getLocale(['toolbox', 'dataZoom', 'title'])
+            title: ecModel.getLocale(['toolbox', 'dataZoom', 'title']),
+            brushStyle: {
+                borderWidth: 0,
+                color: 'rgba(210,219,238,0.2)'
+            }
         };
 
         return defaultOption;
@@ -308,11 +314,7 @@ function updateZoomBtnStatus(
             (zoomActive && panels.length)
             ? {
                 brushType: 'auto',
-                brushStyle: {
-                    // FIXME user customized?
-                    lineWidth: 0,
-                    fill: 'rgba(210,219,238,0.2)'
-                }
+                brushStyle: featureModel.getModel('brushStyle').getItemStyle()
             }
             : false
         );

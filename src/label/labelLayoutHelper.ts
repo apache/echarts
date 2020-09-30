@@ -20,6 +20,7 @@
 import ZRText from 'zrender/src/graphic/Text';
 import { LabelLayoutOption } from '../util/types';
 import { BoundingRect, OrientedBoundingRect, Polyline } from '../util/graphic';
+import type Element from 'zrender/src/Element';
 
 interface LabelLayoutListPrepareInput {
     label: ZRText
@@ -295,6 +296,18 @@ export function hideOverlap(labelList: LabelLayoutInfo[]) {
 
     const globalRect = new BoundingRect(0, 0, 0, 0);
 
+    function hideEl(el: Element) {
+        if (!el.ignore) {
+            // Show on emphasis.
+            const emphasisState = el.ensureState('emphasis');
+            if (emphasisState.ignore == null) {
+                emphasisState.ignore = false;
+            }
+        }
+
+        el.ignore = true;
+    }
+
     for (let i = 0; i < labelList.length; i++) {
         const labelItem = labelList[i];
         const isAxisAligned = labelItem.axisAligned;
@@ -339,8 +352,8 @@ export function hideOverlap(labelList: LabelLayoutInfo[]) {
 
         // TODO Callback to determine if this overlap should be handled?
         if (overlapped) {
-            label.hide();
-            labelLine && labelLine.hide();
+            hideEl(label);
+            labelLine && hideEl(labelLine);
         }
         else {
             label.attr('ignore', labelItem.defaultAttr.ignore);

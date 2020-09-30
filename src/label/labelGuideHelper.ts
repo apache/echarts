@@ -359,7 +359,7 @@ export function updateLabelLinePoints(
     labelRect.applyTransform(label.getComputedTransform());
 
     let minDist = Infinity;
-    const anchorPoint = labelGuideConfig && labelGuideConfig.anchor;
+    const anchorPoint = labelGuideConfig.anchor;
     const targetTransform = target.getComputedTransform();
     const targetInversedTransform = targetTransform && invert([], targetTransform);
     const len = labelLineModel.get('length2') || 0;
@@ -648,6 +648,11 @@ export function setLabelLineStyle(
         defaults(labelLine.style, defaultStyle);
         // Not fill.
         labelLine.style.fill = null;
+
+        const showAbove = normalModel.get('showAbove');
+
+        const labelLineConfig = (targetEl.textGuideLineConfig = targetEl.textGuideLineConfig || {});
+        labelLineConfig.showAbove = showAbove || false;
 
         // Custom the buildPath.
         labelLine.buildPath = buildLabelLinePath;

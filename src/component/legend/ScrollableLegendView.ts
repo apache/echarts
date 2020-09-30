@@ -533,7 +533,7 @@ class ScrollableLegendView extends LegendView {
             const legendDataIdx = (child as LegendItemElement).__legendDataIndex;
             // FIXME
             // If the given targetDataIndex (from model) is illegal,
-            // we use defualtIndex. But the index on the legend model and
+            // we use defaultIndex. But the index on the legend model and
             // action payload is still illegal. That case will not be
             // changed until some scenario requires.
             if (defaultIndex == null && legendDataIdx != null) {

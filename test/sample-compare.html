@@ -1,0 +1,202 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<!doctype html>
+<html>
+	<head>
+		<meta charset='utf-8'>
+		<title>Downsample Comparasions</title>
+		<meta name='viewport' content='width=device-width, initial-scale=1'>
+	</head>
+	<body>
+		<style>
+			.chart {
+				width: 800px;
+				height: 400px;
+			}
+		</style>
+		<h2 id='status'>Loading lib....</h2>
+		<div id='container'></div>
+
+        <script src='lib/esl.js'></script>
+        <script src='lib/config.js'></script>
+		<script>
+            require([
+                'echarts'
+                // 'echarts/chart/sankey',
+                // 'echarts/component/tooltip'
+            ], function (echarts) {
+					function round2(val) {
+						return Math.round(val * 100) / 100;
+					}
+
+					function round3(val) {
+						return Math.round(val * 1000) / 1000;
+					}
+
+					function prepData(packed) {
+						console.time('prep');
+
+						// epoch,idl,recv,send,read,writ,used,free
+
+						var numFields = packed[0];
+						packed = packed.slice(numFields + 1);
+
+						var repeatTimes = 5;
+
+						var data = new Float64Array((packed.length / numFields) * 4 * repeatTimes);
+
+						var off = 0;
+						var date = packed[0];
+						for (let repeat = 0; repeat < repeatTimes; repeat++) {
+							for (let i = 0, j = 0; i < packed.length; i += numFields, j++) {
+								date += 1;
+								data[off++] = date * 60 * 1000;
+								data[off++] = round3(100 - packed[i + 1]);
+								data[off++] = round2(
+									(100 * packed[i + 5]) / (packed[i + 5] + packed[i + 6])
+								);
+								data[off++] = packed[i + 3];
+							}
+						}
+						console.timeEnd('prep');
+
+						return data;
+					}
+
+					function makeChart(data, title, sampling) {
+						var container = document.getElementById('container');
+						var dom = document.createElement('div');
+						var titleDom = document.createElement('h3');
+						dom.classList.add('chart');
+						if (title !== 'warmup') {
+							container.appendChild(titleDom);
+							container.appendChild(dom);
+						}
+						var myChart = echarts.init(dom, null, {
+							width: 800,
+							height: 400
+						});
+
+						titleDom.innerHTML = title;
+
+						let opts = {
+							animation: false,
+							dataset: {
+								source: data,
+								dimensions: ['date', 'cpu', 'ram', 'tcpout']
+							},
+							tooltip: {
+								trigger: 'axis'
+							},
+							legend: {},
+							grid: {
+								containLabel: true,
+								left: 0,
+								top: 50,
+								right: 0,
+								bottom: 30
+							},
+							xAxis: {
+								type: 'time'
+							},
+							yAxis: [{
+								type: 'value',
+								max: 100,
+								axisLabel: {
+									formatter: '{value} %'
+								}
+							}, {
+								type: 'value',
+								max: 100,
+								axisLabel: {
+									formatter: '{value} MB'
+								}
+							}],
+							series: [{
+								name: 'CPU',
+								type: 'line',
+								showSymbol: false,
+								sampling: sampling,
+								lineStyle: { width: 1 },
+								emphasis: { lineStyle: { width: 1 } },
+								encode: {
+									x: 'date',
+									y: 'cpu'
+								}
+							}, {
+								name: 'RAM',
+								type: 'line',
+								yAxisIndex: 1,
+								showSymbol: false,
+								sampling: sampling,
+								lineStyle: { width: 1 },
+								emphasis: { lineStyle: { width: 1 } },
+								encode: {
+									x: 'date',
+									y: 'ram'
+								}
+							}, {
+								name: 'TCP Out',
+								type: 'line',
+								yAxisIndex: 1,
+								showSymbol: false,
+								sampling: sampling,
+								lineStyle: { width: 1 },
+								emphasis: { lineStyle: { width: 1 } },
+								encode: {
+									x: 'date',
+									y: 'tcpout'
+								}
+							}]
+						};
+						const startTime = performance.now();
+						myChart.setOption(opts, {
+							notMerge: true
+						});
+						const endTime = performance.now();
+						titleDom.innerHTML = `${title}(${data.length / 4 * 3}) ${(endTime - startTime).toFixed(0)} ms`;
+					}
+					let status = document.getElementById('status');
+					status.textContent = 'Fetching data.json (2.07MB)....';
+
+					fetch('data/large-data.json')
+						.then(r => r.json())
+						.then(packed => {
+							status.textContent = 'Warming up';
+							let data = prepData(packed);
+
+							setTimeout(function () {
+								for (let i = 0; i < 5; i++) {
+									makeChart(data, 'warmup');
+									makeChart(data, 'warmup', 'lttb');
+									makeChart(data, 'warmup', 'average');
+									makeChart(data, 'warmup', 'max');
+								}
+								status.textContent = 'Running';
+								setTimeout(() => makeChart(data, 'No Sampling', null), 500);
+								setTimeout(() => makeChart(data, 'LTTB Sampling', 'lttb'), 1000);
+								setTimeout(() => makeChart(data, 'Max Sampling', 'max'), 1500);
+								setTimeout(() => makeChart(data, 'Average Sampling', 'average'), 1500);
+							});
+						});
+      });
+		</script>
+	</body>
+</html>

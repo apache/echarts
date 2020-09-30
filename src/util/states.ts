@@ -18,7 +18,7 @@ import {
     DownplayPayload
 } from './types';
 import { extend, indexOf, isArrayLike, isObject, keys, isArray, each } from 'zrender/src/core/util';
-import { getECData } from './ecData';
+import { getECData } from './innerStore';
 import * as colorTool from 'zrender/src/tool/color';
 import { EChartsType } from '../echarts';
 import List from '../data/List';
@@ -85,10 +85,8 @@ function liftColor(color: string): string {
 }
 
 function doChangeHoverState(el: ECElement, stateName: DisplayState, hoverStateEnum: 0 | 1 | 2) {
-    if (el.onHoverStateChange) {
-        if ((el.hoverState || 0) !== hoverStateEnum) {
-            el.onHoverStateChange(stateName);
-        }
+    if (el.onHoverStateChange && (el.hoverState || 0) !== hoverStateEnum) {
+        el.onHoverStateChange(stateName);
     }
     el.hoverState = hoverStateEnum;
 }

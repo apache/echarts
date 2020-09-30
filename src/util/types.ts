@@ -709,7 +709,7 @@ export interface AnimationOptionMixin {
      * Delay of initialize animation
      * Can be a callback to specify duration of each element
      */
-    animationDelay?: AnimationDelayCallback
+    animationDelay?: number | AnimationDelayCallback
     // For update animation
     /**
      * Delay of data update animation.
@@ -949,6 +949,10 @@ export interface LineLabelOption extends Omit<LabelOption, 'distance' | 'positio
 
 export interface LabelLineOption {
     show?: boolean
+    /**
+     * If displayed above other elements
+     */
+    showAbove?: boolean
     length?: number
     length2?: number
     smooth?: boolean | number
@@ -958,8 +962,16 @@ export interface LabelLineOption {
 
 
 export interface LabelLayoutOptionCallbackParams {
-    dataIndex: number,
-    dataType: SeriesDataType,
+    /**
+     * Index of data which the label represents.
+     * It can be null if label does't represent any data.
+     */
+    dataIndex?: number,
+    /**
+     * Type of data which the label represents.
+     * It can be null if label does't represent any data.
+     */
+    dataType?: SeriesDataType,
     seriesIndex: number,
     text: string
     align: ZRTextAlign
@@ -1415,7 +1427,7 @@ export interface SeriesStackOptionMixin {
 type SamplingFunc = (frame: ArrayLike<number>) => number;
 
 export interface SeriesSamplingOptionMixin {
-    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | SamplingFunc
+    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | 'lttb' | SamplingFunc
 }
 
 export interface SeriesEncodeOptionMixin {

@@ -27,7 +27,7 @@ import linkList from './helper/linkList';
 import List from './List';
 import createDimensions from './helper/createDimensions';
 import {
-    DimensionLoose, ParsedValue, OptionId, OptionDataValue,
+    DimensionLoose, ParsedValue, OptionDataValue,
     OptionDataItemObject
 } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
@@ -67,9 +67,9 @@ export class TreeNode {
 
     isExpand: boolean = false;
 
-    readonly hostTree: Tree<Model, any, any>; // TODO: TYPE TreeNode use generic?
+    readonly hostTree: Tree<Model>;
 
-    constructor(name: string, hostTree: Tree<Model, any, any>) {
+    constructor(name: string, hostTree: Tree<Model>) {
         this.name = name || '';
 
         this.hostTree = hostTree;
@@ -234,15 +234,7 @@ export class TreeNode {
         }
         const hostTree = this.hostTree;
         const itemModel = hostTree.data.getItemModel(this.dataIndex);
-        const levelModel = this.getLevelModel();
-
-        // FIXME: refactor levelModel to "beforeLink", and remove levelModel here.
-        if (levelModel) {
-            return itemModel.getModel(path as any, levelModel.getModel(path));
-        }
-        else {
-            return itemModel.getModel(path as any);
-        }
+        return itemModel.getModel(path as any);
     }
 
     // TODO: TYPE More specific model
@@ -308,7 +300,7 @@ export class TreeNode {
     }
 };
 
-class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = any> {
+class Tree<HostModel extends Model = Model, LevelOption = any> {
 
     type: 'tree' = 'tree';
 
@@ -322,13 +314,9 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
 
     private _nodes: TreeNode[] = [];
 
-    constructor(hostModel: HostModel, levelOptions: LevelOption[]) {
+    constructor(hostModel: HostModel) {
 
         this.hostModel = hostModel;
-
-        this.levelModels = zrUtil.map(levelOptions || [], function (levelDefine) {
-            return new Model(levelDefine, hostModel, hostModel.ecModel);
-        });
     }
     /**
      * Travel this subtree (include this node).
@@ -410,13 +398,10 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
     static createTree<T extends TreeNodeOption, HostModel extends Model, LevelOption>(
         dataRoot: T,
         hostModel: HostModel,
-        treeOptions?: {
-            levels?: LevelOption[]
-        },
         beforeLink?: (data: List) => void
     ) {
 
-        const tree = new Tree(hostModel, treeOptions && treeOptions.levels);
+        const tree = new Tree(hostModel);
         const listData: TreeNodeOption[] = [];
         let dimMax = 1;
 

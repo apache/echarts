@@ -39,7 +39,7 @@ import { getDefaultLabel } from '../helper/labelHelper';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;

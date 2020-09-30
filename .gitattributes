@@ -1,0 +1,3 @@
+# for pull request size bot
+# excludes all files from test directory
+test/** linguist-generated=true

@@ -564,7 +564,7 @@ function position(
     rect[wh[idx1WhenH]] -= rowOtherLength;
 }
 
-// Return [containerWidth, containerHeight] as defualt.
+// Return [containerWidth, containerHeight] as default.
 function estimateRootSize(
     seriesModel: TreemapSeriesModel,
     targetInfo: { node: TreemapLayoutNode },

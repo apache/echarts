@@ -50,7 +50,7 @@ class EffectScatterView extends ChartView {
 
         this.group.dirty();
 
-        const res = pointsLayout().reset(seriesModel, ecModel, api) as StageHandlerProgressExecutor;
+        const res = pointsLayout('').reset(seriesModel, ecModel, api) as StageHandlerProgressExecutor;
         if (res.progress) {
             res.progress({
                 start: 0,

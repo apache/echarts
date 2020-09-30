@@ -28,7 +28,7 @@ import dataSample from '../processor/dataSample';
 // In case developer forget to include grid component
 import '../component/gridSimple';
 
-echarts.registerLayout(layoutPoints('line'));
+echarts.registerLayout(layoutPoints('line', true));
 
 // Down sample after filter
 echarts.registerProcessor(

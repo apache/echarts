@@ -44,6 +44,7 @@
     "@microsoft/api-extractor": "7.7.2",
     "@typescript-eslint/eslint-plugin": "^2.15.0",
     "@typescript-eslint/parser": "^2.18.0",
+    "husky": "^4.2.5",
     "canvas": "^2.6.0",
     "chalk": "^3.0.0",
     "chokidar": "^3.4.0",

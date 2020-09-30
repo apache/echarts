@@ -24,5 +24,7 @@ export interface LineDataVisual extends DefaultDataVisual {
     toSymbol: string
     fromSymbolSize: number
     toSymbolSize: number
+    fromSymbolRotate: number
+    toSymbolRotate: number
 }
 

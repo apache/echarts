@@ -36,7 +36,7 @@ import SeriesModel, { SeriesModelConstructor } from './model/Series';
 import ComponentView, {ComponentViewConstructor} from './view/Component';
 import ChartView, {ChartViewConstructor} from './view/Chart';
 import * as graphic from './util/graphic';
-import {getECData} from './util/ecData';
+import {getECData} from './util/innerStore';
 import {
     enterEmphasisWhenMouseOver,
     leaveEmphasisWhenMouseOut,
@@ -104,6 +104,7 @@ import { registerExternalTransform } from './data/helper/transform';
 import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 
 import type {EChartsFullOption} from './option';
+import { findEventDispatcher } from './util/event';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -187,6 +188,10 @@ interface SetOptionOpts {
     // other components of the certain `mainType` will be removed.
     replaceMerge?: GlobalModelSetOptionOpts['replaceMerge']
 };
+
+interface PostIniter {
+    (chart: EChartsType): void
+}
 
 type EventMethodName = 'on' | 'off';
 function createRegisterEventWithLowercaseECharts(method: EventMethodName) {
@@ -1794,20 +1799,9 @@ class ECharts extends Eventful {
         };
 
         bindMouseEvent = function (zr: zrender.ZRenderType, ecIns: ECharts): void {
-            function getDispatcher(target: Element, det: (target: Element) => boolean) {
-                while (target && !det(target)) {
-                    if (target.__hostTarget) {
-                        target = target.__hostTarget;
-                    }
-                    else {
-                        target = target.parent;
-                    }
-                }
-                return target;
-            }
             zr.on('mouseover', function (e) {
                 const el = e.target;
-                const dispatcher = getDispatcher(el, isHighDownDispatcher);
+                const dispatcher = findEventDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
                     const ecData = getECData(dispatcher);
                     // Try blur all in the related series. Then emphasis the hoverred.
@@ -1821,7 +1815,7 @@ class ECharts extends Eventful {
                 }
             }).on('mouseout', function (e) {
                 const el = e.target;
-                const dispatcher = getDispatcher(el, isHighDownDispatcher);
+                const dispatcher = findEventDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
                     const ecData = getECData(dispatcher);
                     toggleSeriesBlurState(
@@ -1834,7 +1828,7 @@ class ECharts extends Eventful {
                 }
             }).on('click', function (e) {
                 const el = e.target;
-                const dispatcher = getDispatcher(
+                const dispatcher = findEventDispatcher(
                     el, (target) => getECData(target).dataIndex != null
                 );
                 if (dispatcher) {
@@ -1931,8 +1925,6 @@ class ECharts extends Eventful {
                 // increamental render (alway render from the __startIndex each frame)
                 // chartView.group.markRedraw();
 
-                updateZ(seriesModel, chartView);
-
                 updateBlend(seriesModel, chartView);
 
                 updateSeriesElementSelection(seriesModel);
@@ -1949,6 +1941,9 @@ class ECharts extends Eventful {
 
             ecModel.eachSeries(function (seriesModel) {
                 const chartView = ecIns._chartsMap[seriesModel.__viewId];
+                // Update Z after labels updated. Before applying states.
+                updateZ(seriesModel, chartView);
+
                 // NOTE: Update states after label is updated.
                 // label should be in normal status when layouting.
                 updateStates(seriesModel, chartView);
@@ -2026,7 +2021,7 @@ class ECharts extends Eventful {
                 }
             });
 
-            if (elCount > ecModel.get('hoverLayerThreshold') && !env.node) {
+            if (elCount > ecModel.get('hoverLayerThreshold') && !env.node && !env.worker) {
                 ecModel.eachSeries(function (seriesModel) {
                     if (seriesModel.preventUsingHoverLayer) {
                         return;
@@ -2087,12 +2082,13 @@ class ECharts extends Eventful {
                         label.zlevel = el.zlevel;
                         // lift z2 of text content
                         // TODO if el.emphasis.z2 is spcefied, what about textContent.
-                        label.z2 = el.z2 + 1;
+                        label.z2 = el.z2 + 2;
                     }
                     if (labelLine) {
+                        const showAbove = el.textGuideLineConfig && el.textGuideLineConfig.showAbove;
                         labelLine.z = el.z;
                         labelLine.zlevel = el.zlevel;
-                        labelLine.z2 = el.z2 - 1;
+                        labelLine.z2 = el.z2 + (showAbove ? 1 : -1);
                     }
                 }
             });
@@ -2330,6 +2326,8 @@ const dataProcessorFuncs: StageHandlerInternal[] = [];
 
 const optionPreprocessorFuncs: OptionPreprocessor[] = [];
 
+const postInitFuncs: PostIniter[] = [];
+
 const postUpdateFuncs: PostUpdater[] = [];
 
 const visualFuncs: StageHandlerInternal[] = [];
@@ -2401,6 +2399,10 @@ export function init(
     modelUtil.setAttribute(dom, DOM_ATTRIBUTE_KEY, chart.id);
 
     enableConnect(chart);
+
+    each(postInitFuncs, (postInitFunc) => {
+        postInitFunc(chart);
+    });
 
     return chart;
 }
@@ -2499,12 +2501,21 @@ export function registerProcessor(
     normalizeRegister(dataProcessorFuncs, priority, processor, PRIORITY_PROCESSOR_DEFAULT);
 }
 
+
+/**
+ * Register postIniter
+ * @param {Function} postInitFunc
+ */
+export function registerPostInit(postInitFunc: PostIniter): void {
+    postInitFunc && postInitFuncs.push(postInitFunc);
+}
+
 /**
  * Register postUpdater
  * @param {Function} postUpdateFunc
  */
 export function registerPostUpdate(postUpdateFunc: PostUpdater): void {
-    postUpdateFuncs.push(postUpdateFunc);
+    postUpdateFunc && postUpdateFuncs.push(postUpdateFunc);
 }
 
 /**

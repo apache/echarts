@@ -144,9 +144,14 @@ under the License.
                                     {
                                         name: '平均值stack',
                                         type: 'average',
-                                        value: 1
+                                        value: 1,
+                                        // 覆盖series配置的symbolRotate
+                                        symbolRotate: 45
                                     }
-                                ]
+                                ],
+                                symbolRotate: function(value, params) {
+                                    return ~~(Math.random() * 360);
+                                }
                             }
                         },
                         {

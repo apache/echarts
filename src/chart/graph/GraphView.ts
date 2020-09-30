@@ -35,7 +35,7 @@ import View from '../../coord/View';
 import Symbol from '../helper/Symbol';
 import List from '../../data/List';
 import Line from '../helper/Line';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
