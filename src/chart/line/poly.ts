@@ -20,6 +20,8 @@
 // Poly path support NaN point
 
 import Path, { PathProps } from 'zrender/src/graphic/Path';
+import PathProxy from 'zrender/src/core/PathProxy';
+import { cubicRootAt, cubicAt } from 'zrender/src/core/curve';
 
 const mathMin = Math.min;
 const mathMax = Math.max;
@@ -27,13 +29,14 @@ const mathMax = Math.max;
 function isPointNull(x: number, y: number) {
     return isNaN(x) || isNaN(y);
 }
+
 /**
  * Draw smoothed line in non-monotone, in may cause undesired curve in extreme
  * situations. This should be used when points are non-monotone neither in x or
  * y dimension.
  */
 function drawSegment(
-    ctx: CanvasRenderingContext2D,
+    ctx: PathProxy,
     points: ArrayLike<number>,
     start: number,
     segLen: number,
@@ -77,7 +80,7 @@ function drawSegment(
             const dy = y - prevY;
 
             // Ignore tiny segment.
-            if ((dx * dx + dy * dy) < 1) {
+            if ((dx * dx + dy * dy) < 0.5) {
                 idx += dir;
                 continue;
             }
@@ -226,7 +229,7 @@ export class ECPolyline extends Path<ECPolylineProps> {
         return new ECPolylineShape();
     }
 
-    buildPath(ctx: CanvasRenderingContext2D, shape: ECPolylineShape) {
+    buildPath(ctx: PathProxy, shape: ECPolylineShape) {
         const points = shape.points;
 
         let i = 0;
@@ -251,10 +254,129 @@ export class ECPolyline extends Path<ECPolylineProps> {
             i += drawSegment(
                 ctx, points, i, len, len,
                 1,
-                // result.min, result.max,
                 shape.smooth,
                 shape.smoothMonotone, shape.connectNulls
             ) + 1;
+        }
+    }
+
+    getLastIndexNotNull() {
+        const points = this.shape.points;
+        let len = points.length / 2;
+        for (; len > 0; len--) {
+            if (!isPointNull(points[len * 2 - 2], points[len * 2 - 1])) {
+                break;
+            }
+        }
+
+        return len - 1;
+    }
+
+    getPointAtIndex(idx: number) {
+        const points = this.shape.points;
+        return [points[idx * 2], points[idx * 2 + 1]];
+    }
+
+    getIndexRange(xOrY: number, dim: 'x' | 'y') {
+        const points = this.shape.points;
+        const len = points.length / 2;
+
+        const dimIdx = dim === 'x' ? 0 : 1;
+        let a;
+        let b;
+        let prevIndex = 0;
+        let nextIndex = -1;
+        for (let i = 0; i < len; i++) {
+            b = points[i * 2 + dimIdx];
+            if (isNaN(b) || isNaN(points[i * 2 + 1 - dimIdx])) {
+                continue;
+            }
+            if (i === 0) {
+                a = b;
+                continue;
+            }
+            if (a <= xOrY && b >= xOrY || a >= xOrY && b <= xOrY) {
+                nextIndex = i;
+                break;
+            }
+
+            prevIndex = i;
+            a = b;
+        }
+
+        return {
+            range: [prevIndex, nextIndex],
+            t: (xOrY - a) / (b - a)
+        };
+    }
+
+    getPointOn(xOrY: number, dim: 'x' | 'y'): number[] {
+        if (!this.path) {
+            this.createPathProxy();
+            this.buildPath(this.path, this.shape);
+        }
+        const path = this.path;
+        const data = path.data;
+        const CMD = PathProxy.CMD;
+
+        let x0;
+        let y0;
+
+        const isDimX = dim === 'x';
+        const roots: number[] = [];
+
+        for (let i = 0; i < data.length;) {
+            const cmd = data[i++];
+            let x;
+            let y;
+            let x2;
+            let y2;
+            let x3;
+            let y3;
+            let t;
+            switch (cmd) {
+                case CMD.M:
+                    x0 = data[i++];
+                    y0 = data[i++];
+                    break;
+                case CMD.L:
+                    x = data[i++];
+                    y = data[i++];
+                    t = isDimX ? (xOrY - x0) / (x - x0)
+                        : (xOrY - y0) / (y - y0);
+                    if (t <= 1 && t >= 0) {
+                        const val = isDimX ? (y - y0) * t + y0
+                            : (x - x0) * t + x0;
+                        return isDimX ? [xOrY, val] : [val, xOrY];
+                    }
+                    x0 = x;
+                    y0 = y;
+                    break;
+                case CMD.C:
+                    x = data[i++];
+                    y = data[i++];
+                    x2 = data[i++];
+                    y2 = data[i++];
+                    x3 = data[i++];
+                    y3 = data[i++];
+
+                    const nRoot = isDimX ? cubicRootAt(x0, x, x2, x3, xOrY, roots)
+                        : cubicRootAt(y0, y, y2, y3, xOrY, roots);
+                    if (nRoot > 0) {
+                        for (let i = 0; i < nRoot; i++) {
+                            const t = roots[i];
+                            if (t <= 1 && t >= 0) {
+                                const val = isDimX ? cubicAt(y0, y, y2, y3, t)
+                                    : cubicAt(x0, x, x2, x3, t);
+                                return isDimX ? [xOrY, val] : [val, xOrY];
+                            }
+                        }
+                    }
+
+                    x0 = x3;
+                    y0 = y3;
+                    break;
+            }
         }
     }
 }
@@ -281,7 +403,7 @@ export class ECPolygon extends Path {
         return new ECPolygonShape();
     }
 
-    buildPath(ctx: CanvasRenderingContext2D, shape: ECPolygonShape) {
+    buildPath(ctx: PathProxy, shape: ECPolygonShape) {
         const points = shape.points;
         const stackedOnPoints = shape.stackedOnPoints;
 
@@ -306,14 +428,12 @@ export class ECPolygon extends Path {
             const k = drawSegment(
                 ctx, points, i, len, len,
                 1,
-                // bbox.min, bbox.max,
                 shape.smooth,
                 smoothMonotone, shape.connectNulls
             );
             drawSegment(
                 ctx, stackedOnPoints, i + k - 1, k, len,
                 -1,
-                // stackedOnBBox.min, stackedOnBBox.max,
                 shape.stackedOnSmooth,
                 smoothMonotone, shape.connectNulls
             );

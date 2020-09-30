@@ -35,6 +35,8 @@ import ZRImage from 'zrender/src/graphic/Image';
 type ECSymbol = ReturnType<typeof createSymbol>;
 
 interface SymbolOpts {
+    disableAnimation?: boolean
+
     useNameLabel?: boolean
     symbolInnerColor?: string
 }
@@ -153,6 +155,7 @@ class Symbol extends graphic.Group {
         const seriesModel = data.hostModel as SeriesModel;
         const symbolSize = Symbol.getSymbolSize(data, idx);
         const isInit = symbolType !== this._symbolType;
+        const disableAnimation = opts && opts.disableAnimation;
 
         if (isInit) {
             const keepAspect = data.getItemVisual(idx, 'symbolKeepAspect');
@@ -161,10 +164,12 @@ class Symbol extends graphic.Group {
         else {
             const symbolPath = this.childAt(0) as ECSymbol;
             symbolPath.silent = false;
-            graphic.updateProps(symbolPath, {
+            const target = {
                 scaleX: symbolSize[0] / 2,
                 scaleY: symbolSize[1] / 2
-            }, seriesModel, idx);
+            };
+            disableAnimation ? symbolPath.attr(target)
+                : graphic.updateProps(symbolPath, target, seriesModel, idx);
         }
 
         this._updateCommon(data, idx, symbolSize, seriesScope, opts);
@@ -184,7 +189,8 @@ class Symbol extends graphic.Group {
             symbolPath.scaleX = symbolPath.scaleY = 0;
             symbolPath.style.opacity = 0;
 
-            graphic.initProps(symbolPath, target, seriesModel, idx);
+            disableAnimation ? symbolPath.attr(target)
+                : graphic.initProps(symbolPath, target, seriesModel, idx);
         }
 
         this._seriesModel = seriesModel;

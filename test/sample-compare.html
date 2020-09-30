@@ -167,9 +167,11 @@ under the License.
 							}]
 						};
 						const startTime = performance.now();
-						myChart.setOption(opts, true);
+						myChart.setOption(opts, {
+							notMerge: true
+						});
 						const endTime = performance.now();
-						titleDom.innerHTML = `${title}(${data.length / 4}) ${(endTime - startTime).toFixed(0)} ms`;
+						titleDom.innerHTML = `${title}(${data.length / 4 * 3}) ${(endTime - startTime).toFixed(0)} ms`;
 					}
 					let status = document.getElementById('status');
 					status.textContent = 'Fetching data.json (2.07MB)....';
@@ -185,10 +187,12 @@ under the License.
 									makeChart(data, 'warmup');
 									makeChart(data, 'warmup', 'lttb');
 									makeChart(data, 'warmup', 'average');
+									makeChart(data, 'warmup', 'max');
 								}
 								status.textContent = 'Running';
 								setTimeout(() => makeChart(data, 'No Sampling', null), 500);
 								setTimeout(() => makeChart(data, 'LTTB Sampling', 'lttb'), 1000);
+								setTimeout(() => makeChart(data, 'Max Sampling', 'max'), 1500);
 								setTimeout(() => makeChart(data, 'Average Sampling', 'average'), 1500);
 							});
 						});

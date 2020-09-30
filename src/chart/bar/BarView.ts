@@ -32,7 +32,7 @@ import {
 } from '../../util/graphic';
 import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
-import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels, labelInner } from '../../label/labelStyle';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import Sausage from '../../util/shape/sausage';
@@ -55,7 +55,7 @@ import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Model from '../../model/Model';
 import { isCoordinateSystemType } from '../../coord/CoordinateSystem';
-import { getDefaultLabel } from '../helper/labelHelper';
+import { getDefaultLabel, getDefaultInterpolatedLabel } from '../helper/labelHelper';
 import OrdinalScale from '../../scale/Ordinal';
 import SeriesModel from '../../model/Series';
 import {AngleAxisModel, RadiusAxisModel} from '../../coord/polar/AxisModel';
@@ -133,14 +133,13 @@ class BarView extends ChartView {
         this._updateDrawMode(seriesModel);
 
         const coordinateSystemType = seriesModel.get('coordinateSystem');
-        const isReorder = payload && payload.type === 'changeAxisOrder';
 
         if (coordinateSystemType === 'cartesian2d'
             || coordinateSystemType === 'polar'
         ) {
             this._isLargeDraw
                 ? this._renderLarge(seriesModel, ecModel, api)
-                : this._renderNormal(seriesModel, ecModel, api, isReorder);
+                : this._renderNormal(seriesModel, ecModel, api, payload);
         }
         else if (__DEV__) {
             console.warn('Only cartesian2d and polar supported for bar.');
@@ -172,9 +171,8 @@ class BarView extends ChartView {
         seriesModel: BarSeriesModel,
         ecModel: GlobalModel,
         api: ExtensionAPI,
-        isReorder: boolean
+        payload: Payload
     ): void {
-        const that = this;
         const group = this.group;
         const data = seriesModel.getData();
         const oldData = this._data;
@@ -199,7 +197,6 @@ class BarView extends ChartView {
         if (realtimeSort && data.count()) {
             if (this._isFirstFrame) {
                 this._initSort(data, isHorizontalOrRadial, baseAxis as Axis2D, api);
-
                 this._isFirstFrame = false;
                 return;
             }
@@ -238,9 +235,15 @@ class BarView extends ChartView {
         const bgEls: BarView['_backgroundEls'] = [];
         const oldBgEls = this._backgroundEls;
 
+        const isInitSort = payload && payload.isInitSort;
+        const isChangeOrder = payload && payload.type === 'changeAxisOrder';
+
+        const defaultTextGetter = (values: ParsedValue | ParsedValue[]) => {
+            return getDefaultInterpolatedLabel(seriesModel.getData(), values);
+        };
         data.diff(oldData)
             .add(function (dataIndex) {
-                const itemModel = data.getItemModel(dataIndex);
+                const itemModel = data.getItemModel<BarDataItemOption>(dataIndex);
                 const layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
@@ -283,7 +286,13 @@ class BarView extends ChartView {
                     seriesModel, isHorizontalOrRadial, coord.type === 'polar'
                 );
 
-                if (realtimeSort) {
+                initLabel(
+                    el, data, dataIndex, itemModel.getModel('label'), seriesModel, animationModel, defaultTextGetter
+                );
+                if (isInitSort) {
+                    (el as Rect).attr({ shape: layout });
+                }
+                else if (realtimeSort) {
                     (el as unknown as ECElement).disableLabelAnimation = true;
 
                     updateRealtimeAnimation(
@@ -292,13 +301,13 @@ class BarView extends ChartView {
                         animationModel,
                         el as Rect,
                         layout as LayoutRect,
-                        data,
                         dataIndex,
                         isHorizontalOrRadial,
+                        false,
                         false
                     );
                 }
-                else if (coord.type === 'cartesian2d') {
+                else {
                     initProps(el, {shape: layout} as any, seriesModel, dataIndex);
                 }
 
@@ -308,7 +317,7 @@ class BarView extends ChartView {
                 el.ignore = isClipped;
             })
             .update(function (newIndex, oldIndex) {
-                const itemModel = data.getItemModel(newIndex);
+                const itemModel = data.getItemModel<BarDataItemOption>(newIndex);
                 const layout = getLayout[coord.type](data, newIndex, itemModel);
 
                 if (drawBackground) {
@@ -355,12 +364,22 @@ class BarView extends ChartView {
                     );
                 }
 
-                updateStyle(
-                    el, data, newIndex, itemModel, layout,
-                    seriesModel, isHorizontalOrRadial, coord.type === 'polar'
-                );
+                // Not change anything if only order changed.
+                // Especially not change label.
+                if (!isChangeOrder) {
+                    updateStyle(
+                        el, data, newIndex, itemModel, layout,
+                        seriesModel, isHorizontalOrRadial, coord.type === 'polar'
+                    );
+                    updateLabel(
+                        el, data, newIndex, itemModel.getModel('label'), seriesModel, animationModel, defaultTextGetter
+                    );
+                }
 
-                if (realtimeSort) {
+                if (isInitSort) {
+                    (el as Rect).attr({ shape: layout });
+                }
+                else if (realtimeSort) {
                     (el as unknown as ECElement).disableLabelAnimation = true;
 
                     updateRealtimeAnimation(
@@ -369,14 +388,16 @@ class BarView extends ChartView {
                         animationModel,
                         el as Rect,
                         layout as LayoutRect,
-                        data,
                         newIndex,
                         isHorizontalOrRadial,
-                        true
+                        true,
+                        isChangeOrder
                     );
                 }
                 else {
-                    updateProps(el, {shape: layout}, seriesModel, newIndex, null);
+                    updateProps(el, {
+                        shape: layout
+                    } as any, seriesModel, newIndex, null);
                 }
 
                 data.setItemGraphicEl(newIndex, el);
@@ -523,6 +544,7 @@ class BarView extends ChartView {
         const action = {
             type: 'changeAxisOrder',
             componentType: baseAxis.dim + 'Axis',
+            isInitSort: true,
             axisId: baseAxis.index,
             sortInfo: this._dataSort(
                 data,
@@ -698,10 +720,10 @@ function updateRealtimeAnimation(
     animationModel: BarSeriesModel,
     el: Rect,
     layout: LayoutRect,
-    data: List,
     newIndex: number,
     isHorizontal: boolean,
-    isUpdate: boolean
+    isUpdate: boolean,
+    isChangeOrder: boolean
 ) {
     // Animation
     if (animationModel || axisModel) {
@@ -728,22 +750,17 @@ function updateRealtimeAnimation(
             };
         }
 
-        (isUpdate ? updateProps : initProps)(el, {
-            shape: seriesTarget
-        }, seriesModel, newIndex, null);
+        if (!isChangeOrder) {
+            // Keep the original growth animation if only axis order changed.
+            // Not start a new animation.
+            (isUpdate ? updateProps : initProps)(el, {
+                shape: seriesTarget
+            }, seriesModel, newIndex, null);
+        }
 
         (isUpdate ? updateProps : initProps)(el, {
             shape: axisTarget
         }, axisModel, newIndex);
-
-        const defaultTextGetter = (values: ParsedValue | ParsedValue[]) => {
-            return getDefaultLabel(seriesModel.getData(), newIndex, values);
-        };
-
-        const labelModel = seriesModel.getModel('label');
-        (isUpdate ? updateLabel : initLabel)(
-            el, data, newIndex, labelModel, seriesModel, animationModel, defaultTextGetter
-        );
     }
 }
 
@@ -826,6 +843,13 @@ function updateStyle(
                 defaultOutsidePosition: labelPositionOutside
             }
         );
+
+        const label = el.getTextContent();
+        if (label) {
+            const obj = labelInner(label);
+            obj.prevValue = obj.value;
+            obj.value = seriesModel.getRawValue(dataIndex) as ParsedValue | ParsedValue[];
+        }
     }
 
     const emphasisModel = itemModel.getModel(['emphasis']);

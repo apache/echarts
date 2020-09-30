@@ -17,6 +17,7 @@ import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 import { deprecateReplaceLog } from '../util/log';
+import { makeInner } from '../util/model';
 
 type TextCommonParams = {
     /**
@@ -59,9 +60,15 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
     };
     labelDataIndex?: LDI;
     labelDimIndex?: number;
+
+    /**
+     * Inject a setter of text for the text animation case.
+     */
+    enableTextSetter?: boolean
 }
 type LabelModel = Model<LabelOption & {
     formatter?: string | ((params: any) => string);
+    showDuringLabel?: boolean // Currently only supported by line charts
 }>;
 type LabelModelForText = Model<Omit<
     // Remove
@@ -70,6 +77,21 @@ type LabelModelForText = Model<Omit<
     }>;
 
 type LabelStatesModels<LabelModel> = Partial<Record<DisplayStateNonNormal, LabelModel>> & {normal: LabelModel};
+
+export function setLabelText(label: ZRText, labelTexts: Record<DisplayState, string>) {
+    for (let i = 0; i < SPECIAL_STATES.length; i++) {
+        const stateName = SPECIAL_STATES[i];
+        const text = labelTexts[stateName];
+        const state = label.ensureState(stateName);
+        state.style = state.style || {};
+        state.style.text = text;
+    }
+
+    const oldStates = label.currentStates.slice();
+    label.clearStates(true);
+    label.setStyle({ text: labelTexts.normal });
+    label.useStates(oldStates, true);
+}
 
 export function getLabelText<LDI>(
     opt: SetLabelStyleOpt<LDI>,
@@ -172,7 +194,7 @@ function setLabelStyle<LDI>(
         const labelStatesTexts = getLabelText(opt, labelStatesModels);
 
         const normalModel = labelStatesModels.normal;
-        const showNormal = normalModel.getShallow('show');
+        const showNormal = !!normalModel.getShallow('show');
         const normalStyle = createTextStyle(
             normalModel, stateSpecified && stateSpecified.normal, opt, false, !isSetOnText
         );
@@ -188,7 +210,10 @@ function setLabelStyle<LDI>(
 
             if (stateModel) {
                 const stateObj = textContent.ensureState(stateName);
-                stateObj.ignore = !retrieve2(stateModel.getShallow('show'), showNormal);
+                const stateShow = !!retrieve2(stateModel.getShallow('show'), showNormal);
+                if (stateShow !== showNormal) {
+                    stateObj.ignore = !stateShow;
+                }
                 stateObj.style = createTextStyle(
                     stateModel, stateSpecified && stateSpecified[stateName], opt, true, !isSetOnText
                 );
@@ -216,6 +241,13 @@ function setLabelStyle<LDI>(
         // Always create new style.
         textContent.useStyle(normalStyle);
         textContent.dirty();
+
+        if (opt.enableTextSetter) {
+            labelInner(textContent).setLabelText = function (overrideValue: ParsedValue | ParsedValue[]) {
+                const labelStatesTexts = getLabelText(opt, labelStatesModels, overrideValue);
+                setLabelText(textContent, labelStatesTexts);
+            };
+        }
     }
     else if (textContent) {
         // Not display rich text.
@@ -458,7 +490,9 @@ function setTokenTextStyle(
     if (textBorderType != null) {
         textStyle.lineDash = textBorderType as any;
     }
-    const textBorderDashOffset = retrieve2(textStyleModel.getShallow('textBorderDashOffset'), globalTextStyle.textBorderDashOffset);
+    const textBorderDashOffset = retrieve2(
+        textStyleModel.getShallow('textBorderDashOffset'), globalTextStyle.textBorderDashOffset
+    );
     if (textBorderDashOffset != null) {
         textStyle.lineDashOffset = textBorderDashOffset;
     }
@@ -539,3 +573,19 @@ export function getFont(
         opt.fontFamily || gTextStyleModel && gTextStyleModel.getShallow('fontFamily') || 'sans-serif'
     ].join(' '));
 }
+
+export const labelInner = makeInner<{
+    /**
+     * Previous value stored used for label.
+     * It's mainly for text animation
+     */
+    prevValue?: ParsedValue | ParsedValue[]
+    /**
+     * Current value stored used for label.
+     */
+    value?: ParsedValue | ParsedValue[]
+    /**
+     * Change label text from interpolated text during animation
+     */
+    setLabelText?(overrideValue?: ParsedValue | ParsedValue[]): void
+}, ZRText>();

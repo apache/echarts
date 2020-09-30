@@ -1,0 +1,243 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/facePrint.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body {
+                width: 100%;
+            }
+            #main0, #main1 {
+                width: 100%;
+                height: 1000px;
+                margin-bottom: 30px;
+            }
+        </style>
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <script>
+
+            require([
+                'echarts',
+                'theme/infographic'
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoomInside',
+                // 'zrender/svg/svg'
+            ], function (echarts) {
+
+                var xData = [];
+                var data = [];
+                var value = 200;
+                var positive = 1;
+                for (var i = 0; i < 12; ++i) {
+                    xData.push(i + '');
+                    var plus = i === 6 || i === 7
+                        ? 0
+                        : positive * Math.round(Math.random() * 1000);
+                    value = plus + value;
+                    data.push(i === 3 ? '-' : value);
+
+                    if (Math.random() > 0.7) {
+                        positive = -1 * positive;
+                    }
+                }
+
+                for (var cid = 0; cid < 2; ++cid) {
+                    (function (cid) {
+                        var chart = echarts.init(document.getElementById('main' + cid));
+                        var option = {
+                            title: [{
+                                text: 'Line End Label Animation (connectNulls: '
+                                    + (cid === 0 ? 'false' : 'true') + ')',
+                                subtext: 'Symbol and text should sync with line clipPath\n\naxis not inversed',
+                                textAlign: 'center',
+                                left: '50%',
+                                top: 0
+                            }, {
+                                subtext: 'X axis inversed',
+                                textAlign: 'center',
+                                left: '50%',
+                                top: '28%'
+                            }, {
+                                subtext: 'Y axis inversed',
+                                textAlign: 'center',
+                                left: '50%',
+                                top: '48%'
+                            }, {
+                                subtext: 'X and Y axes inversed',
+                                textAlign: 'center',
+                                left: '50%',
+                                top: '74%'
+                            }],
+                            xAxis: [{
+                                data: xData
+                            }, {
+                                gridIndex: 1
+                            }, {
+                                data: xData,
+                                inverse: true,
+                                gridIndex: 2
+                            }, {
+                                gridIndex: 3,
+                                inverse: true
+                            }, {
+                                data: xData,
+                                gridIndex: 4
+                            }, {
+                                gridIndex: 5
+                            }, {
+                                data: xData,
+                                inverse: true,
+                                gridIndex: 6
+                            }, {
+                                gridIndex: 7,
+                                inverse: true
+                            }],
+                            yAxis: [{
+                            }, {
+                                data: xData,
+                                gridIndex: 1
+                            }, {
+                                inverse: false,
+                                gridIndex: 2
+                            }, {
+                                data: xData,
+                                gridIndex: 3,
+                                inverse: false
+                            }, {
+                                gridIndex: 4,
+                                inverse: true
+                            }, {
+                                data: xData,
+                                gridIndex: 5,
+                                inverse: true
+                            }, {
+                                inverse: true,
+                                gridIndex: 6
+                            }, {
+                                data: xData,
+                                gridIndex: 7,
+                                inverse: true
+                            }],
+                            grid: [{
+                                left: 80,
+                                top: 90,
+                                right: '52%',
+                                bottom: '74%'
+                            }, {
+                                left: '52%',
+                                top: 90,
+                                right: 50,
+                                bottom: '74%'
+                            }, {
+                                left: 80,
+                                right: '52%',
+                                top: '32%',
+                                bottom: '55%'
+                            }, {
+                                left: '52%',
+                                right: 50,
+                                top: '32%',
+                                bottom: '55%'
+                            }, {
+                                left: 80,
+                                top: '52%',
+                                right: '52%',
+                                bottom: '30%'
+                            }, {
+                                left: '52%',
+                                top: '52%',
+                                right: 50,
+                                bottom: '30%'
+                            }, {
+                                left: 80,
+                                right: '52%',
+                                top: '78%',
+                                bottom: 30
+                            }, {
+                                left: '52%',
+                                right: 50,
+                                top: '78%',
+                                bottom: 30
+                            }],
+                            series: (function () {
+                                var series = [];
+                                for (var i = 0; i < 8; ++i) {
+                                    series.push({
+                                        type: 'line',
+                                        data: data,
+                                        connectNulls: cid === 1,
+                                        label: {
+                                            show: false
+                                        },
+                                        endLabel: {
+                                            show: true,
+                                            formatter: function (param) {
+                                                return '$' + param.value;
+                                            },
+                                            fontSize: 14
+                                        },
+                                        emphasis: {
+                                            endLabel: {
+                                                color: 'red'
+                                            }
+                                        },
+                                        xAxisIndex: i,
+                                        yAxisIndex: i
+                                    });
+                                }
+                                return series;
+                            })(),
+                            animationDuration: 10000,
+                            animationDurationUpdate: 500
+                        };
+                        chart.setOption(option);
+
+                        // setTimeout(function () {
+                        //     data.push(1000);
+                        //     data.push('-');
+                        //     data.push('-');
+
+                        //     xData.push('12');
+                        //     xData.push('13');
+                        //     xData.push('14');
+
+                        //     chart.setOption(option);
+                        // }, 12000);
+                    })(cid);
+
+                }
+
+            })
+
+        </script>
+    </body>
+</html>
