@@ -133,7 +133,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
         for (let k = 0; k < layerNum; ++k) {
             const name = layerData[k].name;
             for (let j = 0; j < layerData[k].dataList.length; ++j) {
-                const timeValue = layerData[k].dataList[j][0] = '';
+                const timeValue = layerData[k].dataList[j][0] + '';
                 timeValueKeys[timeValue] = k;
             }
 
