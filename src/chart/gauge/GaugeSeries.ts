@@ -40,12 +40,31 @@ interface LabelFormatter {
 }
 
 interface PointerOption {
+    icon?: string
     show?: boolean
+    keepAspect?: boolean
+    itemStyle?: ItemStyleOption
     /**
      * Can be percent
      */
+    offsetCenter?: (number | string)[]
     length?: number | string
     width?: number
+}
+
+interface AnchorOption {
+    show?: boolean
+    anchorSize?: number
+    itemStyle?: ItemStyleOption
+}
+
+interface ProgressOption {
+    show?: boolean
+    overlap?: boolean
+    width?: number
+    roundCap?: boolean
+    silent?: boolean
+    itemStyle?: ItemStyleOption
 }
 
 export interface GaugeStateOption {
@@ -56,6 +75,7 @@ export interface GaugeDataItemOption extends GaugeStateOption, StatesOptionMixin
     name?: string
     value?: OptionDataValueNumeric
     pointer?: PointerOption
+    progress?: ProgressOption
 }
 export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, GaugeStateOption,
     CircleLayoutOptionMixin {
@@ -73,12 +93,17 @@ export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, Gauge
 
     splitNumber?: number
 
+    itemStyle?: ItemStyleOption
+
     axisLine?: {
         show?: boolean
+        roundCap?: boolean
         lineStyle: Omit<LineStyleOption, 'color'> & {
             color: GaugeColorStop[]
         }
     },
+
+    progress?: ProgressOption
 
     splitLine?: {
         show?: boolean
@@ -86,6 +111,7 @@ export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, Gauge
          * Can be percent
          */
         length?: number
+        distance?: number
         lineStyle?: LineStyleOption
     }
 
@@ -96,6 +122,7 @@ export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, Gauge
          * Can be percent
          */
         length?: number | string
+        distance?: number
         lineStyle?: LineStyleOption
     }
 
@@ -104,6 +131,7 @@ export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, Gauge
     }
 
     pointer?: PointerOption
+    anchor?: AnchorOption
 
     title?: LabelOption & {
         /**
@@ -127,6 +155,9 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
 
     static type = 'series.gauge' as const;
     type = GaugeSeriesModel.type;
+
+    visualStyleAccessPath = 'itemStyle';
+    useColorPaletteOnData = true;
 
     getInitialData(option: GaugeSeriesOption, ecModel: GlobalModel): List {
         return createListSimply(this, ['value']);
@@ -152,21 +183,32 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
         axisLine: {
             // 默认显示，属性show控制显示与否
             show: true,
+            roundCap: false,
             lineStyle: {       // 属性lineStyle控制线条样式
-                color: [[0.2, '#91c7ae'], [0.8, '#63869e'], [1, '#c23531']],
-                width: 30
+                color: [[1, '#E6EBF8']],
+                width: 10
             }
+        },
+        // 坐标轴线
+        progress: {
+            // 默认显示，属性show控制显示与否
+            show: false,
+            overlap: true,
+            width: 10,
+            roundCap: false,
+            silent: false
         },
         // 分隔线
         splitLine: {
             // 默认显示，属性show控制显示与否
             show: true,
             // 属性length控制线长
-            length: 30,
+            length: 10,
+            distance: 10,
             // 属性lineStyle（详见lineStyle）控制线条样式
             lineStyle: {
-                color: '#eee',
-                width: 2,
+                color: '#63677A',
+                width: 3,
                 type: 'solid'
             }
         },
@@ -177,35 +219,46 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             // 每份split细分多少段
             splitNumber: 5,
             // 属性length控制线长
-            length: 8,
+            length: 6,
+            distance: 10,
             // 属性lineStyle控制线条样式
             lineStyle: {
-                color: '#eee',
+                color: '#63677A',
                 width: 1,
                 type: 'solid'
             }
         },
         axisLabel: {
             show: true,
-            distance: 5,
+            distance: 15,
             // formatter: null,
-            color: 'auto'
+            color: '#464646',
+            fontSize: 12
         },
         pointer: {
+            icon: 'default',
+            offsetCenter: [0, 0],
             show: true,
-            length: '80%',
-            width: 8
+            length: '60%',
+            width: 6,
+            keepAspect: false
         },
-        itemStyle: {
-            color: 'auto'
+        anchor: {
+            show: false,
+            anchorSize: 6,
+            itemStyle: {
+                color: '#fff',
+                borderWidth: 0,
+                borderColor: '#5470c6'
+            }
         },
         title: {
             show: true,
             // x, y，单位px
-            offsetCenter: [0, '-40%'],
+            offsetCenter: [0, '20%'],
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-            color: '#333',
-            fontSize: 15
+            color: '#464646',
+            fontSize: 16
         },
         detail: {
             show: true,
@@ -219,8 +272,10 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             offsetCenter: [0, '40%'],
             // formatter: null,
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-            color: 'auto',
-            fontSize: 30
+            color: '#464646',
+            fontSize: 30,
+            fontWeight: 'bold',
+            lineHeight: 30
         }
     };
 }

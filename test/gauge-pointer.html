@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
+        <div id="main6"></div>
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        anchor: {
+                            show: true
+                        },
+                        detail: {formatter: '{value}%'},
+                        data: [{value: 58.46, name: '完成率'}]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'pointer.icon: "default"',
+                    'anchor.show: true'
+                ],
+                option: option
+                // height: 1200,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+
+            var option1 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        pointer: {
+                            icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z'
+                        },
+                        anchor: {
+                            // show: true
+                        },
+                        detail: {formatter: '{value}%'},
+                        data: [{value: 58.46, name: '完成率'}]
+                    }
+                ]
+            };
+
+            var chart1 = testHelper.create(echarts, 'main1', {
+                title: [
+                    'pointer.icon: svg',
+                    'anchor.show: false'
+                ],
+                option: option1
+                // height: 1200,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            var option2 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        pointer: {
+                            icon: 'path://M2.9,0.7L2.9,0.7c1.4,0,2.6,1.2,2.6,2.6v115c0,1.4-1.2,2.6-2.6,2.6l0,0c-1.4,0-2.6-1.2-2.6-2.6V3.3C0.3,1.9,1.4,0.7,2.9,0.7z',
+                            width: 3,
+                            length: '50%'
+                        },
+                        anchor: {
+                            show: true,
+                            anchorSize: 8,
+                            itemStyle: {
+                                color: '#5470c6'
+                            }
+                        },
+                        detail: {formatter: '{value}%'},
+                        data: [{value: 58.46, name: '完成率'}]
+                    }
+                ]
+            };
+
+            var chart2 = testHelper.create(echarts, 'main2', {
+                title: [
+                    'pointer.icon: svg',
+                    'anchor.show: true'
+                ],
+                option: option2
+                // height: 1200,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            var option3 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        pointer: {
+                            icon: 'path://M2.9,0.7L2.9,0.7c1.4,0,2.6,1.2,2.6,2.6v115c0,1.4-1.2,2.6-2.6,2.6l0,0c-1.4,0-2.6-1.2-2.6-2.6V3.3C0.3,1.9,1.4,0.7,2.9,0.7z',
+                            width: 3,
+                            length: '50%',
+                            offsetCenter: [0, '8%']
+                        },
+                        anchor: {
+                            show: true,
+                            anchorSize: 8,
+                            itemStyle: {
+                                color: '#5470c6'
+                            }
+                        },
+                        detail: {formatter: '{value}%'},
+                        data: [{value: 58.46, name: '完成率'}]
+                    }
+                ]
+            };
+
+            var chart3 = testHelper.create(echarts, 'main3', {
+                title: [
+                    'pointer.icon: svg',
+                    'anchor.show: true',
+                    'pointer.offsetCenter: [0, "8%"]'
+                ],
+                option: option3
+                // height: 1200,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            var option4 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        pointer: {
+                            icon: 'path://M2090.36389,615.30999 L2090.36389,615.30999 C2091.48372,615.30999 2092.40383,616.194028 2092.44859,617.312956 L2096.90698,728.755929 C2097.05155,732.369577 2094.2393,735.416212 2090.62566,735.56078 C2090.53845,735.564269 2090.45117,735.566014 2090.36389,735.566014 L2090.36389,735.566014 C2086.74736,735.566014 2083.81557,732.63423 2083.81557,729.017692 C2083.81557,728.930412 2083.81732,728.84314 2083.82081,728.755929 L2088.2792,617.312956 C2088.32396,616.194028 2089.24407,615.30999 2090.36389,615.30999 Z',
+                            // width: 3,
+                            length: '50%',
+                            offsetCenter: [0, '8%']
+                        },
+                        anchor: {
+                            show: true,
+                            anchorSize: 8,
+                            itemStyle: {
+                                // borderColor: '#5470c6'
+                                borderWidth: 1
+                            }
+                        },
+                        detail: {formatter: '{value}%'},
+                        data: [{value: 58.46, name: '完成率'}]
+                    }
+                ]
+            };
+
+            var chart4 = testHelper.create(echarts, 'main4', {
+                title: [
+                    'pointer.icon: svg',
+                    'anchor.show: true',
+                    'pointer.offsetCenter: [0, "8%"]'
+                ],
+                option: option4
+                // height: 1200,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            var option5 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        pointer: {
+                            icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z',
+                            length: '15%',
+                            width: 12,
+                            offsetCenter: [0, '-40%']
+                        },
+                        anchor: {
+                            // show: true
+                        },
+                        detail: {formatter: '{value}%'},
+                        data: [{value: 58.46, name: '完成率'}]
+                    }
+                ]
+            };
+
+            var chart5 = testHelper.create(echarts, 'main5', {
+                title: [
+                    'pointer.icon: svg',
+                    'anchor.show: false'
+                ],
+                option: option5
+                // height: 1200,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+            setInterval(function () {
+                option5.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
+                chart5.setOption(option5, true);
+            }, 2000);
+        });
+        </script>
+
+
+    </body>
+</html>
+

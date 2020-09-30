@@ -28,6 +28,8 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { ColorString } from '../../util/types';
 import List from '../../data/List';
+import Sausage from '../../util/shape/sausage';
+import {createSymbol} from '../../util/symbol';
 
 interface PosInfo {
     cx: number
@@ -72,6 +74,7 @@ class GaugeView extends ChartView {
     type = GaugeView.type;
 
     private _data: List;
+    private _progressData: graphic.Path[];
 
     render(seriesModel: GaugeSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
 
@@ -95,25 +98,26 @@ class GaugeView extends ChartView {
         posInfo: PosInfo
     ) {
         const group = this.group;
-
-        const axisLineModel = seriesModel.getModel('axisLine');
-        const lineStyleModel = axisLineModel.getModel('lineStyle');
-
         const clockwise = seriesModel.get('clockwise');
         let startAngle = -seriesModel.get('startAngle') / 180 * Math.PI;
         let endAngle = -seriesModel.get('endAngle') / 180 * Math.PI;
+        const axisLineModel = seriesModel.getModel('axisLine');
 
+        const roundCap = axisLineModel.get('roundCap');
+        const MainPath = roundCap ? Sausage : graphic.Sector;
+
+        const showAxis = axisLineModel.get('show');
+        const lineStyleModel = axisLineModel.getModel('lineStyle');
+        const axisLineWidth = lineStyleModel.get('width');
         const angleRangeSpan = (endAngle - startAngle) % PI2;
 
         let prevEndAngle = startAngle;
-        const axisLineWidth = lineStyleModel.get('width');
-        const showAxis = axisLineModel.get('show');
 
         for (let i = 0; showAxis && i < colorList.length; i++) {
             // Clamp
             const percent = Math.min(Math.max(colorList[i][0], 0), 1);
             endAngle = startAngle + angleRangeSpan * percent;
-            const sector = new graphic.Sector({
+            const sector = new MainPath({
                 shape: {
                     startAngle: prevEndAngle,
                     endAngle: endAngle,
@@ -166,13 +170,15 @@ class GaugeView extends ChartView {
 
         this._renderTicks(
             seriesModel, ecModel, api, getColor, posInfo,
-            startAngle, endAngle, clockwise
+            startAngle, endAngle, clockwise, axisLineWidth
         );
 
         this._renderPointer(
             seriesModel, ecModel, api, getColor, posInfo,
-            startAngle, endAngle, clockwise
+            startAngle, endAngle, clockwise, axisLineWidth
         );
+
+        this._renderAnchor(seriesModel, posInfo);
 
         this._renderTitle(
             seriesModel, ecModel, api, getColor, posInfo
@@ -190,7 +196,8 @@ class GaugeView extends ChartView {
         posInfo: PosInfo,
         startAngle: number,
         endAngle: number,
-        clockwise: boolean
+        clockwise: boolean,
+        axisLineWidth: number
     ) {
         const group = this.group;
         const cx = posInfo.cx;
@@ -221,6 +228,8 @@ class GaugeView extends ChartView {
         const splitLineStyle = splitLineModel.getModel('lineStyle').getLineStyle();
         const tickLineStyle = tickModel.getModel('lineStyle').getLineStyle();
 
+        const splitLineDistance = splitLineModel.get('distance');
+
         let unitX;
         let unitY;
 
@@ -229,12 +238,13 @@ class GaugeView extends ChartView {
             unitY = Math.sin(angle);
             // Split line
             if (splitLineModel.get('show')) {
+                const distance = splitLineDistance ? splitLineDistance + axisLineWidth : axisLineWidth;
                 const splitLine = new graphic.Line({
                     shape: {
-                        x1: unitX * r + cx,
-                        y1: unitY * r + cy,
-                        x2: unitX * (r - splitLineLen) + cx,
-                        y2: unitY * (r - splitLineLen) + cy
+                        x1: unitX * (r - distance) + cx,
+                        y1: unitY * (r - distance) + cy,
+                        x2: unitX * (r - splitLineLen - distance) + cx,
+                        y2: unitY * (r - splitLineLen - distance) + cy
                     },
                     style: splitLineStyle,
                     silent: true
@@ -250,11 +260,12 @@ class GaugeView extends ChartView {
 
             // Label
             if (labelModel.get('show')) {
+                const distance = labelModel.get('distance') + splitLineDistance;
+
                 const label = formatLabel(
                     round(i / splitNumber * (maxVal - minVal) + minVal),
                     labelModel.get('formatter')
                 );
-                const distance = labelModel.get('distance');
                 const autoColor = getColor(i / splitNumber);
 
                 group.add(new graphic.Text({
@@ -273,15 +284,18 @@ class GaugeView extends ChartView {
 
             // Axis tick
             if (tickModel.get('show') && i !== splitNumber) {
+                let distance = tickModel.get('distance');
+                distance = distance ? distance + axisLineWidth : axisLineWidth;
+
                 for (let j = 0; j <= subSplitNumber; j++) {
                     unitX = Math.cos(angle);
                     unitY = Math.sin(angle);
                     const tickLine = new graphic.Line({
                         shape: {
-                            x1: unitX * r + cx,
-                            y1: unitY * r + cy,
-                            x2: unitX * (r - tickLen) + cx,
-                            y2: unitY * (r - tickLen) + cy
+                            x1: unitX * (r - distance) + cx,
+                            y1: unitY * (r - distance) + cy,
+                            x2: unitX * (r - tickLen - distance) + cx,
+                            y2: unitY * (r - tickLen - distance) + cy
                         },
                         silent: true,
                         style: tickLineStyle
@@ -312,89 +326,207 @@ class GaugeView extends ChartView {
         posInfo: PosInfo,
         startAngle: number,
         endAngle: number,
-        clockwise: boolean
+        clockwise: boolean,
+        axisLineWidth: number
     ) {
 
         const group = this.group;
         const oldData = this._data;
+        const oldProgressData = this._progressData;
+        const progressList = [] as graphic.Path[];
 
-        if (!seriesModel.get(['pointer', 'show'])) {
-            // Remove old element
-            oldData && oldData.eachItemGraphicEl(function (el) {
-                group.remove(el);
+        const showPointer = seriesModel.get(['pointer', 'show']);
+        const progressModel = seriesModel.getModel('progress');
+        const showProgress = progressModel.get('show');
+
+        if (showProgress || showPointer) {
+            const valueExtent = [+seriesModel.get('min'), +seriesModel.get('max')];
+            const angleExtent = [startAngle, endAngle];
+
+            const data = seriesModel.getData();
+            const valueDim = data.mapDimension('value');
+
+            data.diff(oldData)
+                .add(function (idx) {
+                    if (showPointer) {
+                        const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
+                        const pointerModel = itemModel.getModel('pointer');
+                        const pointerWidth = parsePercent(pointerModel.get('width'), posInfo.r);
+                        const pointerLength = parsePercent(pointerModel.get('length'), posInfo.r);
+                        
+                        const pointerStr = seriesModel.get(['pointer', 'icon']);
+                        const pointerOffset = pointerModel.get('offsetCenter');
+                        const pointerKeepAspect = pointerModel.get('keepAspect');
+                        let pointer;
+                        if (pointerStr.indexOf('path://') === 0) {
+                            pointer = createSymbol(
+                                pointerStr,
+                                parsePercent(pointerOffset[0], posInfo.r) - pointerWidth / 2,
+                                parsePercent(pointerOffset[1], posInfo.r) - pointerLength,
+                                pointerWidth,
+                                pointerLength,
+                                null,
+                                pointerKeepAspect
+                            ) as graphic.Path;
+                        }
+                        else {
+                            pointer = new PointerPath({
+                                shape: {
+                                    angle: -Math.PI / 2
+                                }
+                            })
+                        }
+                        pointer.rotation = -(startAngle + Math.PI / 2);
+                        pointer.x = posInfo.cx;
+                        pointer.y = posInfo.cy;
+                        graphic.initProps(pointer, {
+                            rotation: -(linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, true) + Math.PI / 2)
+                        }, seriesModel);
+                        group.add(pointer);
+                        data.setItemGraphicEl(idx, pointer);
+                    }
+
+                    if (showProgress) {
+                        const roundCap = progressModel.get('roundCap');
+                        const ProgressPath = roundCap ? Sausage : graphic.Sector;
+
+                        const isOverlap = progressModel.get('overlap');
+                        const progressWidth = isOverlap ? progressModel.get('width') : axisLineWidth / data.count();
+                        const r0 = isOverlap ? posInfo.r - progressWidth : posInfo.r - (idx + 1) * progressWidth;
+                        const r = isOverlap ? posInfo.r : posInfo.r - idx * progressWidth;
+                        const progressSilent = progressModel.get('silent');
+                        const progress = new ProgressPath({
+                            shape: {
+                                startAngle: startAngle,
+                                endAngle: linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, true),
+                                cx: posInfo.cx,
+                                cy: posInfo.cy,
+                                clockwise: clockwise,
+                                r0: r0,
+                                r: r
+                            },
+                            // 是否相应鼠标事件
+                            silent: progressSilent
+                        });
+                        group.add(progress);
+                        progressList[idx] = progress;
+                    }
+                })
+                .update(function (newIdx, oldIdx) {
+                    if (showPointer) {
+                        const pointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
+
+                        graphic.updateProps(pointer, {
+                            rotation: -(linearMap(data.get(valueDim, oldIdx) as number, valueExtent, angleExtent, true) + Math.PI / 2)
+                        }, seriesModel);
+                        group.add(pointer);
+                        data.setItemGraphicEl(newIdx, pointer);
+                    }
+
+                    if (showProgress) {
+                        const progress = oldProgressData[oldIdx];
+                        graphic.updateProps(progress, {
+                            shape: {
+                                endAngle: linearMap(data.get(valueDim, newIdx) as number, valueExtent, angleExtent, true)
+                            }
+                        }, seriesModel);
+                        group.add(progress);
+                        progressList[newIdx] = progress;
+                    }
+                })
+                .remove(function (idx) {
+                    if (showPointer) {
+                        const pointer = oldData.getItemGraphicEl(idx);
+                        group.remove(pointer);
+                    }
+
+                    if (showProgress) {
+                        const progress = oldProgressData[idx];
+                        group.remove(progress);
+                    }
+                })
+                .execute();
+
+            data.each(function (idx) {
+                const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
+                const emphasisModel = itemModel.getModel('emphasis');
+
+                if (showPointer) {
+                    const pointer = data.getItemGraphicEl(idx) as PointerPath;
+                    const pointerModel = itemModel.getModel('pointer');
+                    pointer.setShape({
+                        width: parsePercent(pointerModel.get('width'), posInfo.r),
+                        r: parsePercent(pointerModel.get('length'), posInfo.r)
+                    });
+                    pointer.x = posInfo.cx;
+                    pointer.y = posInfo.cy;
+    
+                    pointer.useStyle(data.getItemVisual(idx, 'style'));
+                    pointer.setStyle(itemModel.getModel(['pointer', 'itemStyle']).getItemStyle());
+                    if (pointer.style.fill === 'auto') {
+                        pointer.setStyle('fill', getColor(
+                            linearMap(data.get(valueDim, idx) as number, valueExtent, [0, 1], true)
+                        ));
+                    }
+    
+                    setStatesStylesFromModel(pointer, itemModel);
+                    enableHoverEmphasis(pointer, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+                }
+
+                if (showProgress) {
+                    const progress = progressList[idx];
+                    progress.useStyle(data.getItemVisual(idx, 'style'));
+                    progress.setStyle(itemModel.getModel(['progress', 'itemStyle']).getItemStyle());
+                    progress.setShape({
+                        cx: posInfo.cx,
+                        cy: posInfo.cy
+                    });
+                    progress.z2 = +seriesModel.get('max') - (data.get(valueDim, idx) as number);
+                    setStatesStylesFromModel(progress, itemModel);
+                    enableHoverEmphasis(progress, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+                }
             });
-            return;
+
+            this._data = data;
+            this._progressData = progressList;
         }
-
-        const valueExtent = [+seriesModel.get('min'), +seriesModel.get('max')];
-        const angleExtent = [startAngle, endAngle];
-
-        const data = seriesModel.getData();
-        const valueDim = data.mapDimension('value');
-
-        data.diff(oldData)
-            .add(function (idx) {
-                const pointer = new PointerPath({
-                    shape: {
-                        angle: startAngle
-                    }
+        else {
+            if (!showPointer) {
+                // Remove old element
+                oldData && oldData.eachItemGraphicEl(function (el) {
+                    group.remove(el);
                 });
-
-                graphic.initProps(pointer, {
-                    shape: {
-                        angle: linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, true)
-                    }
-                }, seriesModel);
-
-                group.add(pointer);
-                data.setItemGraphicEl(idx, pointer);
-            })
-            .update(function (newIdx, oldIdx) {
-                const pointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
-
-                graphic.updateProps(pointer, {
-                    shape: {
-                        angle: linearMap(data.get(valueDim, newIdx) as number, valueExtent, angleExtent, true)
-                    }
-                }, seriesModel);
-
-                group.add(pointer);
-                data.setItemGraphicEl(newIdx, pointer);
-            })
-            .remove(function (idx) {
-                const pointer = oldData.getItemGraphicEl(idx);
-                group.remove(pointer);
-            })
-            .execute();
-
-        data.eachItemGraphicEl(function (pointer: PointerPath, idx) {
-            const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
-            const pointerModel = itemModel.getModel('pointer');
-            const emphasisModel = itemModel.getModel('emphasis');
-
-            pointer.setShape({
-                x: posInfo.cx,
-                y: posInfo.cy,
-                width: parsePercent(
-                    pointerModel.get('width'), posInfo.r
-                ),
-                r: parsePercent(pointerModel.get('length'), posInfo.r)
-            });
-
-            pointer.useStyle(itemModel.getModel('itemStyle').getItemStyle());
-
-            if (pointer.style.fill === 'auto') {
-                pointer.setStyle('fill', getColor(
-                    linearMap(data.get(valueDim, idx) as number, valueExtent, [0, 1], true)
-                ));
             }
 
+            if (!showProgress) {
+                // Remove old element
+                oldProgressData && oldProgressData.forEach(function (el) {
+                    group.remove(el);
+                });
+            }
+        }
+    }
 
-            setStatesStylesFromModel(pointer, itemModel);
-            enableHoverEmphasis(pointer, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
-        });
-
-        this._data = data;
+    _renderAnchor(
+        seriesModel: GaugeSeriesModel,
+        posInfo: PosInfo
+    ) {
+        const anchorModel = seriesModel.getModel('anchor');
+        const showAnchor = anchorModel.get('show');
+        if (showAnchor) {
+            const anchorSize = anchorModel.get('anchorSize');
+            const symbol = createSymbol(
+                'circle',
+                posInfo.cx - anchorSize / 2,
+                posInfo.cy - anchorSize / 2,
+                anchorSize,
+                anchorSize,
+                null,
+                true
+            ) as graphic.Path;
+            symbol.setStyle(anchorModel.getModel('itemStyle').getItemStyle());
+            this.group.add(symbol);
+        }
     }
 
     _renderTitle(

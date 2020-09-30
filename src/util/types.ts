@@ -795,6 +795,7 @@ export interface LineStyleOption<Clr = ZRColor> extends ShadowOptionMixin {
     join?: CanvasLineJoin
     dashOffset?: number
     miterLimit?: number
+    roundCap?: boolean
 }
 
 /**
