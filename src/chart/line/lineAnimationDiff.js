@@ -166,6 +166,13 @@ export default function (
 
     // Diff result may be crossed if all items are changed
     // Sort by data index
+    for (var i = rawIndices.length - 1; i >= 0; i--) {
+        for (var j = 0; j < rawIndices.length; j++) {
+            if (rawIndices[i] === rawIndices[j]) {
+                rawIndices.splice(i, 1);
+            }
+        }
+    }
     sortedIndices.sort(function (a, b) {
         return rawIndices[a] - rawIndices[b];
     });
