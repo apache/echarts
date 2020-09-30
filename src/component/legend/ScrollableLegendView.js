@@ -260,21 +260,23 @@ var ScrollableLegendView = LegendView.extend({
         mainRect[yx] = Math.min(0, controllerRect[yx] + controllerPos[1 - orientIdx]);
 
         containerGroup.__rectSize = maxSize[wh];
-        if (showController) {
-            var clipShape = {x: 0, y: 0};
-            clipShape[wh] = Math.max(maxSize[wh] - controllerRect[wh] - pageButtonGap, 0);
-            clipShape[hw] = mainRect[hw];
-            containerGroup.setClipPath(new graphic.Rect({shape: clipShape}));
-            // Consider content may be larger than container, container rect
-            // can not be obtained from `containerGroup.getBoundingRect()`.
-            containerGroup.__rectSize = clipShape[wh];
-        }
-        else {
+
+        if (!showController) {
             // Do not remove or ignore controller. Keep them set as placeholders.
             controllerGroup.eachChild(function (child) {
                 child.attr({invisible: true, silent: true});
             });
         }
+
+        // The content is always likely to exceed the container width
+        // regardless of whether the controller exists
+        var clipShape = {x: 0, y: 0};
+        clipShape[wh] = Math.max(maxSize[wh] - controllerRect[wh] - pageButtonGap, 0);
+        clipShape[hw] = mainRect[hw];
+        containerGroup.setClipPath(new graphic.Rect({shape: clipShape}));
+        // Consider content may be larger than container, container rect
+        // can not be obtained from `containerGroup.getBoundingRect()`.
+        containerGroup.__rectSize = clipShape[wh];
 
         // Content translate animation.
         var pageInfo = this._getPageInfo(legendModel);
