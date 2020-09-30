@@ -183,7 +183,7 @@ export function getCurvenessForEdge(edge, seriesModel, index, needReverse?: bool
     }
 
     let edgeIndex = -1;
-    for (const i = 0; i < edgeArray.length; i++) {
+    for (let i = 0; i < edgeArray.length; i++) {
         if (edgeArray[i] === index) {
             edgeIndex = i;
             break;
