@@ -372,7 +372,7 @@ class Line extends graphic.Group {
         if (symbolTo) {
             symbolTo.setPosition(toPos);
             const tangent = line.tangentAt(1);
-            setSymbolRotation(symbolFrom, 1);
+            setSymbolRotation(symbolTo, 1);
 
             symbolTo.rotation = -Math.PI / 2 - Math.atan2(
                 tangent[1], tangent[0]
