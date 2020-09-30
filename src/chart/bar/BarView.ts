@@ -53,6 +53,7 @@ import {
 import BarSeriesModel, {BarSeriesOption, BarDataItemOption} from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import type Polar from '../../coord/polar/Polar';
 import type Model from '../../model/Model';
 import { isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import { getDefaultLabel, getDefaultInterpolatedLabel } from '../helper/labelHelper';
@@ -79,10 +80,12 @@ type RectLayout = RectShape;
 
 type BarPossiblePath = Sector | Rect | Sausage;
 
+type CartesianCoordArea = ReturnType<Cartesian2D['getArea']>;
+type PolarCoordArea = ReturnType<Polar['getArea']>;
+
 function getClipArea(coord: CoordSysOfBar, data: List) {
-    let coordSysClipArea;
+    let coordSysClipArea = coord.getArea && coord.getArea();
     if (isCoordinateSystemType<Cartesian2D>(coord, 'cartesian2d')) {
-        coordSysClipArea = coord.getArea && coord.getArea();
         const baseAxis = coord.getBaseAxis();
         // When boundaryGap is false or using time axis. bar may exceed the grid.
         // We should not clip this part.
@@ -90,17 +93,17 @@ function getClipArea(coord: CoordSysOfBar, data: List) {
         if (baseAxis.type !== 'category' || !baseAxis.onBand) {
             const expandWidth = data.getLayout('bandWidth');
             if (baseAxis.isHorizontal()) {
-                coordSysClipArea.x -= expandWidth;
-                coordSysClipArea.width += expandWidth * 2;
+                (coordSysClipArea as CartesianCoordArea).x -= expandWidth;
+                (coordSysClipArea as CartesianCoordArea).width += expandWidth * 2;
             }
             else {
-                coordSysClipArea.y -= expandWidth;
-                coordSysClipArea.height += expandWidth * 2;
+                (coordSysClipArea as CartesianCoordArea).y -= expandWidth;
+                (coordSysClipArea as CartesianCoordArea).height += expandWidth * 2;
             }
         }
     }
 
-    return coordSysClipArea;
+    return coordSysClipArea as PolarCoordArea | CartesianCoordArea;
 }
 
 class BarView extends ChartView {
@@ -241,20 +244,24 @@ class BarView extends ChartView {
         const defaultTextGetter = (values: ParsedValue | ParsedValue[]) => {
             return getDefaultInterpolatedLabel(seriesModel.getData(), values);
         };
+        function createBackground(dataIndex: number) {
+            const bgLayout = getLayout[coord.type](data, dataIndex);
+            const bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
+            bgEl.useStyle(backgroundModel.getItemStyle());
+            // Only cartesian2d support borderRadius.
+            if (coord.type === 'cartesian2d') {
+                (bgEl as Rect).setShape('r', barBorderRadius);
+            }
+            bgEls[dataIndex] = bgEl;
+            return bgEl;
+        };
         data.diff(oldData)
             .add(function (dataIndex) {
                 const itemModel = data.getItemModel<BarDataItemOption>(dataIndex);
                 const layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
-                    const bgLayout = getLayout[coord.type](data, dataIndex);
-                    const bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
-                    bgEl.useStyle(backgroundModel.getItemStyle());
-                    // Only cartesian2d support borderRadius.
-                    if (coord.type === 'cartesian2d') {
-                        (bgEl as Rect).setShape('r', barBorderRadius);
-                    }
-                    bgEls[dataIndex] = bgEl;
+                    createBackground(dataIndex);
                 }
 
                 // If dataZoom in filteMode: 'empty', the baseValue can be set as NaN in "axisProxy".
@@ -321,19 +328,19 @@ class BarView extends ChartView {
                 const layout = getLayout[coord.type](data, newIndex, itemModel);
 
                 if (drawBackground) {
-                    const bgEl = oldBgEls[oldIndex];
-                    bgEl.useStyle(backgroundModel.getItemStyle());
-                    // Only cartesian2d support borderRadius.
-                    if (coord.type === 'cartesian2d') {
-                        (bgEl as Rect).setShape('r', barBorderRadius);
+                    let bgEl: Rect | Sector;
+                    if (oldBgEls.length === 0) {
+                        bgEl = createBackground(oldIndex);
                     }
-                    bgEls[newIndex] = bgEl;
-
-                    const bgLayout = getLayout[coord.type](data, newIndex);
-                    const shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
-                    updateProps(
-                        bgEl as Path, {shape: shape as RectShape}, animationModel, newIndex
-                    );
+                    else {
+                        bgEl = oldBgEls[oldIndex];
+                        bgEl.useStyle(backgroundModel.getItemStyle());
+                        // Only cartesian2d support borderRadius.
+                        if (coord.type === 'cartesian2d') {
+                            (bgEl as Rect).setShape('r', barBorderRadius);
+                        }
+                        bgEls[newIndex] = bgEl;
+                    }
                 }
 
                 let el = oldData.getItemGraphicEl(oldIndex) as BarPossiblePath;
@@ -595,12 +602,12 @@ class BarView extends ChartView {
 }
 
 interface Clipper {
-    (coordSysBoundingRect: RectLike, layout: RectLayout | SectorLayout): boolean
+    (coordSysBoundingRect: PolarCoordArea | CartesianCoordArea, layout: RectLayout | SectorLayout): boolean
 }
 const clip: {
     [key in 'cartesian2d' | 'polar']: Clipper
 } = {
-    cartesian2d(coordSysBoundingRect: RectLike, layout: Rect['shape']) {
+    cartesian2d(coordSysBoundingRect: CartesianCoordArea, layout: Rect['shape']) {
         const signWidth = layout.width < 0 ? -1 : 1;
         const signHeight = layout.height < 0 ? -1 : 1;
         // Needs positive width and height
@@ -638,8 +645,31 @@ const clip: {
         return clipped;
     },
 
-    polar() {
-        return false;
+    polar(coordSysClipArea: PolarCoordArea, layout: Sector['shape']) {
+        const signR = layout.r0 <= layout.r ? 1 : -1;
+        // Make sure r is larger than r0
+        if (signR < 0) {
+            const tmp = layout.r;
+            layout.r = layout.r0;
+            layout.r0 = tmp;
+        }
+
+        const r = mathMin(layout.r, coordSysClipArea.r);
+        const r0 = mathMax(layout.r0, coordSysClipArea.r0);
+
+        layout.r = r;
+        layout.r0 = r0;
+
+        const clipped = r - r0 < 0;
+
+        // Reverse back
+        if (signR < 0) {
+            const tmp = layout.r;
+            layout.r = layout.r0;
+            layout.r0 = tmp;
+        }
+
+        return clipped;
     }
 };
 

@@ -435,7 +435,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
             // Originally we use visualMap.color as the default color, but setOption at
             // the second time the default color will be erased. So we change to use
             // constant DEFAULT_COLOR.
-            // If user do not want the defualt color, set inRange: {color: null}.
+            // If user do not want the default color, set inRange: {color: null}.
             base.inRange = base.inRange || {color: ecModel.get('gradientColor')};
         }
 
