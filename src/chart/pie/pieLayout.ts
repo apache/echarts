@@ -49,7 +49,6 @@ export default function (
         let center = seriesModel.get('center');
         let radius = seriesModel.get('radius');
         let cornerRadius = seriesModel.get('cornerRadius');
-        console.log(cornerRadius)
 
         if (!zrUtil.isArray(radius)) {
             radius = [0, radius];
