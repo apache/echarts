@@ -137,7 +137,7 @@ class Scheduler {
     }
 
     restoreData(ecModel: GlobalModel, payload: Payload): void {
-        // TODO: Only restroe needed series and components, but not all components.
+        // TODO: Only restore needed series and components, but not all components.
         // Currently `restoreData` of all of the series and component will be called.
         // But some independent components like `title`, `legend`, `graphic`, `toolbox`,
         // `tooltip`, `axisPointer`, etc, do not need series refresh when `setOption`,

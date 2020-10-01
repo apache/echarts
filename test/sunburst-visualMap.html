@@ -128,7 +128,29 @@ under the License.
                         radius: [0, '90%'],
                         label: {
                             rotate: 'radial'
-                        }
+                        },
+                        levels: [{}, {
+                            label: {
+                                formatter: function (params) {
+                                    return 'First Level\n' + params.name;
+                                }
+                            },
+                            emphasis: {
+                                label: {
+                                    formatter: function (params) {
+                                        return 'emphasis\n' + params.name;
+                                    }
+                                }
+                            }
+                        }, {
+                            downplay: {
+                                label: {
+                                    formatter: function (params) {
+                                        return 'downplay\n' + params.name;
+                                    }
+                                }
+                            }
+                        }]
                     }
                 });
 

@@ -64,7 +64,8 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
             $a.target = '_blank';
             $a.href = url;
             const evt = new MouseEvent('click', {
-                view: window,
+                // some micro front-end framework， window maybe is a Proxy
+                view: document.defaultView,
                 bubbles: true,
                 cancelable: false
             });

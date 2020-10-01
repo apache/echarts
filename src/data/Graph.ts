@@ -128,10 +128,6 @@ class Graph {
         }
 
         const key = n1.id + '-' + n2.id;
-        // PENDING
-        if (edgesMap[key]) {
-            return;
-        }
 
         const edge = new GraphEdge(n1, n2, dataIndex);
         edge.hostGraph = this;

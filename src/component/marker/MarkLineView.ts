@@ -348,8 +348,10 @@ class MarkLineView extends MarkerView {
             }
 
             lineData.setItemVisual(idx, {
+                fromSymbolRotate: fromData.getItemVisual(idx, 'symbolRotate'),
                 fromSymbolSize: fromData.getItemVisual(idx, 'symbolSize') as number,
                 fromSymbol: fromData.getItemVisual(idx, 'symbol'),
+                toSymbolRotate: toData.getItemVisual(idx, 'symbolRotate'),
                 toSymbolSize: toData.getItemVisual(idx, 'symbolSize') as number,
                 toSymbol: toData.getItemVisual(idx, 'symbol'),
                 style: lineStyle
@@ -383,6 +385,7 @@ class MarkLineView extends MarkerView {
             }
 
             data.setItemVisual(idx, {
+                symbolRotate: itemModel.get('symbolRotate'),
                 symbolSize: itemModel.get('symbolSize') || (symbolSize as number[])[isFrom ? 0 : 1],
                 symbol: itemModel.get('symbol', true) || (symbolType as string[])[isFrom ? 0 : 1],
                 style
