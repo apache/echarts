@@ -65,6 +65,12 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      */
     appendToBody?: boolean
 
+    /**
+     * specified class name of tooltip dom
+     * Only available when renderMode is html
+     */
+    className?: string
+
     order?: TooltipOrderMode
 }
 

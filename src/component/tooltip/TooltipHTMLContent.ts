@@ -207,6 +207,12 @@ interface TooltipContentOption {
      *  some overflow clip but intrude outside of the container.
      */
     appendToBody: boolean
+
+    /**
+     * specified class name of tooltip dom
+     * @type {[type]}
+     */
+    className?: string
 }
 
 class TooltipHTMLContent {
@@ -245,6 +251,7 @@ class TooltipHTMLContent {
         const el = document.createElement('div');
         // TODO: TYPE
         (el as any).domBelongToZr = true;
+        opt.className && (el.className = opt.className);
         this.el = el;
         const zr = this._zr = api.getZr();
         const appendToBody = this._appendToBody = opt && opt.appendToBody;
