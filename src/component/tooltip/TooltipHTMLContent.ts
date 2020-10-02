@@ -198,6 +198,9 @@ function makeStyleCoord(out: number[], zr: ZRenderType, appendToBody: boolean, z
             out[1] += viewportRootOffset.offsetTop;
         }
     }
+
+    out[2] = out[0] / zr.getWidth();
+    out[3] = out[1] / zr.getHeight();
 }
 
 interface TooltipContentOption {
@@ -207,12 +210,6 @@ interface TooltipContentOption {
      *  some overflow clip but intrude outside of the container.
      */
     appendToBody: boolean
-
-    /**
-     * specified class name of tooltip dom
-     * @type {[type]}
-     */
-    className?: string
 }
 
 class TooltipHTMLContent {
@@ -223,7 +220,7 @@ class TooltipHTMLContent {
 
     private _show: boolean = false;
 
-    private _styleCoord: [number, number] = [0, 0];
+    private _styleCoord: [number, number, number, number] = [0, 0, 0, 0];
     private _appendToBody: boolean;
 
     private _enterable = true;
@@ -251,7 +248,6 @@ class TooltipHTMLContent {
         const el = document.createElement('div');
         // TODO: TYPE
         (el as any).domBelongToZr = true;
-        opt.className && (el.className = opt.className);
         this.el = el;
         const zr = this._zr = api.getZr();
         const appendToBody = this._appendToBody = opt && opt.appendToBody;
@@ -308,7 +304,7 @@ class TooltipHTMLContent {
     /**
      * Update when tooltip is rendered
      */
-    update() {
+    update(tooltipModel: Model<TooltipOption>) {
         // FIXME
         // Move this logic to ec main?
         const container = this._container;
@@ -318,6 +314,14 @@ class TooltipHTMLContent {
         if (domStyle.position !== 'absolute' && stl.position !== 'absolute') {
             domStyle.position = 'relative';
         }
+
+        // move tooltip if chart resized
+        const alwaysShowContent = tooltipModel.get('alwaysShowContent');
+        alwaysShowContent && this._moveIfResized();
+
+        // update className
+        this.el.className = tooltipModel.get('className') || '';
+
         // Hide the tooltip
         // PENDING
         // this.hide();
@@ -339,10 +343,10 @@ class TooltipHTMLContent {
 
         el.style.display = el.innerHTML ? 'block' : 'none';
 
-        // If mouse occsionally move over the tooltip, a mouseout event will be
-        // triggered by canvas, and cuase some unexpectable result like dragging
+        // If mouse occasionally move over the tooltip, a mouseout event will be
+        // triggered by canvas, and cause some unexpectable result like dragging
         // stop, "unfocusAdjacency". Here `pointer-events: none` is used to solve
-        // it. Although it is not suppored by IE8~IE10, fortunately it is a rare
+        // it. Although it is not supported by IE8~IE10, fortunately it is a rare
         // scenario.
         el.style.pointerEvents = this._enterable ? 'auto' : 'none';
 
@@ -392,6 +396,21 @@ class TooltipHTMLContent {
         }
     }
 
+    /**
+     * when `alwaysShowContent` is true,
+     * move the tooltip after chart resized
+     */
+    _moveIfResized() {
+        // The ratio of left to width
+        const ratioX = this._styleCoord[2];
+        // The ratio of top to height
+        const ratioY = this._styleCoord[3];
+        this.moveTo(
+            ratioX * this._zr.getWidth(),
+            ratioY * this._zr.getHeight()
+        );
+    }
+
     hide() {
         this.el.style.display = 'none';
         this._show = false;
@@ -401,7 +420,7 @@ class TooltipHTMLContent {
         if (this._show && !(this._inContent && this._enterable)) {
             if (time) {
                 this._hideDelay = time;
-                // Set show false to avoid invoke hideLater mutiple times
+                // Set show false to avoid invoke hideLater multiple times
                 this._show = false;
                 this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time) as any;
             }

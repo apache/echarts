@@ -40,6 +40,18 @@ under the License.
             margin: 0 auto;
         }
 
+        .custoized-tooltip-class {
+            background-color: cyan!important;
+            text-shadow: 0 0 5px red;
+        }
+        .custoized-tooltip-class::after {
+            content: 'pseudo after';
+            display: inline-block;
+            position: absolute;
+            left: 110%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
     </style>
 
 
@@ -203,12 +215,34 @@ under the License.
             };
 
             var chart = testHelper.create(echarts, 'main0', {
-                option: option
+                option: option,
+                buttons: [
+                    {
+                        text: 'add class',
+                        onclick: function () {
+                            chart.setOption({
+                                tooltip: {
+                                    className: 'custoized-tooltip-class'
+                                }
+                            })
+                        }
+                    },
+                    {
+                        text: 'recovery class',
+                        onclick: function () {
+                            chart.setOption({
+                                tooltip: {
+                                    className: ''
+                                }
+                            })
+                        }
+                    }
+                ]
             });
             chart.setOption(option, true);
-            window.addEventListener('resize',function () {
+            window.addEventListener('resize', function () {
                 chart.resize();
-            })
+            });
         });
 
     </script>
@@ -372,9 +406,9 @@ under the License.
                 option: option
             });
             chart.setOption(option, true);
-            window.addEventListener('resize',function () {
+            window.addEventListener('resize', function () {
                 chart.resize();
-            })
+            });
         });
 
     </script>
