@@ -450,14 +450,38 @@ class GaugeView extends ChartView {
             data.each(function (idx) {
                 const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
                 const emphasisModel = itemModel.getModel('emphasis');
-
                 if (showPointer) {
-                    const pointer = data.getItemGraphicEl(idx) as PointerPath;
                     const pointerModel = itemModel.getModel('pointer');
-                    pointer.setShape({
-                        width: parsePercent(pointerModel.get('width'), posInfo.r),
-                        r: parsePercent(pointerModel.get('length'), posInfo.r)
-                    });
+                    const pointerStr = seriesModel.get(['pointer', 'icon']);
+                    const pointerWidth = parsePercent(pointerModel.get('width'), posInfo.r);
+                    const pointerLength = parsePercent(pointerModel.get('length'), posInfo.r);
+                    let pointer;
+                    if (pointerStr.indexOf('path://') === 0) {
+                        group.remove(data.getItemGraphicEl(idx) as PointerPath);
+                        const pointerOffset = pointerModel.get('offsetCenter');
+                        const pointerKeepAspect = pointerModel.get('keepAspect');
+                        pointer = createSymbol(
+                            pointerStr,
+                            parsePercent(pointerOffset[0], posInfo.r) - pointerWidth / 2,
+                            parsePercent(pointerOffset[1], posInfo.r) - pointerLength,
+                            pointerWidth,
+                            pointerLength,
+                            null,
+                            pointerKeepAspect
+                        ) as graphic.Path;
+                        graphic.initProps(pointer, {
+                            rotation: -(linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, true) + Math.PI / 2)
+                        }, seriesModel);
+                        group.add(pointer);
+                        data.setItemGraphicEl(idx, pointer);
+                    }
+                    else {
+                        pointer = data.getItemGraphicEl(idx) as PointerPath;
+                        pointer.setShape({
+                            width: parsePercent(pointerModel.get('width'), posInfo.r),
+                            r: parsePercent(pointerModel.get('length'), posInfo.r)
+                        });
+                    }
                     pointer.x = posInfo.cx;
                     pointer.y = posInfo.cy;
     
@@ -477,9 +501,16 @@ class GaugeView extends ChartView {
                     const progress = progressList[idx];
                     progress.useStyle(data.getItemVisual(idx, 'style'));
                     progress.setStyle(itemModel.getModel(['progress', 'itemStyle']).getItemStyle());
+                    const isOverlap = progressModel.get('overlap');
+                    const progressWidth = isOverlap ? progressModel.get('width') : axisLineWidth / data.count();
+                    const r0 = isOverlap ? posInfo.r - progressWidth : posInfo.r - (idx + 1) * progressWidth;
+                    const r = isOverlap ? posInfo.r : posInfo.r - idx * progressWidth;
                     progress.setShape({
                         cx: posInfo.cx,
-                        cy: posInfo.cy
+                        cy: posInfo.cy,
+                        clockwise: clockwise,
+                        r0: r0,
+                        r: r
                     });
                     progress.z2 = +seriesModel.get('max') - (data.get(valueDim, idx) as number);
                     setStatesStylesFromModel(progress, itemModel);
