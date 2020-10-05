@@ -207,8 +207,8 @@ under the License.
                     {
                         text: 'random cornerRadius',
                         onclick: function () {
+                            clearInterval(randomTimer);
                             if (randomTimer) {
-                                cleatInterval(randomTimer);
                                 randomTimer = null;
                             }
                             else {
@@ -217,7 +217,7 @@ under the License.
                                     innerCornerRadius = ~~(Math.random() * 50);
                                     chart.setOption({
                                         title: {
-                                            text: getTitle
+                                            text: getTitle()
                                         },
                                         series: [{
                                             cornerRadius: getCornerRadius()
