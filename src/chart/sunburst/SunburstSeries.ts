@@ -111,6 +111,16 @@ export interface SunburstSeriesOption extends
     animationType?: 'expansion' | 'scale'
 
     sort?: 'desc' | 'asc' | ((a: TreeNode, b: TreeNode) => number)
+
+    // can be 10
+    // which means that both innerCornerRadius and outerCornerRadius are 10
+    // can also be an array [20, 10]
+    // which means that innerCornerRadius is 20
+    // and outerCornerRadius is 10
+    // can also be a string or string array, such as ['20%', '50%']
+    // which means that innerCornerRadius is 20% of the innerRadius
+    // and outerCornerRadius is half of outerRadius.
+    cornerRadius?: (number | string)[] | number | string
 }
 
 interface SunburstSeriesModel {
@@ -177,6 +187,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         // 默认全局居中
         center: ['50%', '50%'],
         radius: [0, '75%'],
+        cornerRadius: 0,
         // 默认顺时针
         clockwise: true,
         startAngle: 90,
