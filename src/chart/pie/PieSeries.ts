@@ -96,6 +96,9 @@ export interface PieSeriesOption extends
     // can also be an array [20, 10]
     // which means that innerCornerRadius is 20
     // and outerCornerRadius is 10
+    // can also be a string or string array, such as ['20%', '50%']
+    // which means that innerCornerRadius is 20% of the innerRadius
+    // and outerCornerRadius is half of outerRadius.
     cornerRadius?: (number | string)[] | number | string
 
     selectedOffset?: number
