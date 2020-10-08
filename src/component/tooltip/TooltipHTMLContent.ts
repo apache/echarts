@@ -76,15 +76,14 @@ function assembleArrow(
     }).join(';')
 
     const styleCss = [
-        'style="position:absolute;width:10px;height:10px;',
+        'position:absolute;width:10px;height:10px;',
         `${positionStyle}${transformStyle};`,
         `border-bottom: ${borderColor} solid 1px;`,
         `border-right: ${borderColor} solid 1px;`,
         `background-color: ${backgroundColor};`,
-        'box-shadow: 8px 8px 16px -3px #000',
-        '"'
+        'box-shadow: 8px 8px 16px -3px #000;'
     ];
-    return `<div ${styleCss.join('')}></div>`;
+    return styleCss.join('');
 }
 
 function assembleTransition(duration: number): string {
@@ -355,13 +354,15 @@ class TooltipHTMLContent {
             return;
         }
         this.el.innerHTML = content;
-        this.el.innerHTML += (
-            isString(arrowPosition)
-            && tooltipModel.get('trigger') === 'item'
-            && !shouldTooltipConfine(tooltipModel)
-        )
-            ? assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition)
-            : '';
+
+        if (isString(arrowPosition) && tooltipModel.get('trigger') === 'item'
+            && !shouldTooltipConfine(tooltipModel)) {
+
+            const arrow = document.createElement('div');
+            arrow.style.cssText = assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition);
+
+            this.el.appendChild(arrow);
+        }
     }
 
     setEnterable(enterable: boolean) {
