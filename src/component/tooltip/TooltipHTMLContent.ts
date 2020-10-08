@@ -73,7 +73,7 @@ function assembleArrow(
 
     transformStyle = map(vendors, function (vendorPrefix) {
         return vendorPrefix + 'transform:' + transformStyle;
-    }).join(';')
+    }).join(';');
 
     const styleCss = [
         'position:absolute;width:10px;height:10px;',
@@ -89,7 +89,9 @@ function assembleArrow(
 function assembleTransition(duration: number): string {
     const transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
     const transitionText = 'left ' + duration + 's ' + transitionCurve + ','
-                        + 'top ' + duration + 's ' + transitionCurve;
+                        + 'top ' + duration + 's ' + transitionCurve + ','
+                        + 'opacity ' + (duration / 2) + 's ' + transitionCurve;
+
     return map(vendors, function (vendorPrefix) {
         return vendorPrefix + 'transition:' + transitionText;
     }).join(';');
@@ -122,7 +124,7 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
     return cssText.join(';');
 }
 
-function assembleCssText(tooltipModel: Model<TooltipOption>, isFirstShow: boolean) {
+function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition: boolean) {
     const cssText: string[] = [];
     const transitionDuration = tooltipModel.get('transitionDuration');
     const backgroundColor = tooltipModel.get('backgroundColor');
@@ -139,7 +141,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, isFirstShow: boolea
     // If tooltip shows arrow or firstly, then disable transition
     const showArrow = tooltipModel.get('trigger') === 'item'
         && indexOf(['top', 'left', 'bottom', 'right'], tooltipModel.get('position') as string) > -1;
-    !isFirstShow && transitionDuration && !showArrow
+    enableTransition && transitionDuration && !showArrow
         && cssText.push(assembleTransition(transitionDuration));
 
     if (backgroundColor) {
@@ -322,7 +324,7 @@ class TooltipHTMLContent {
         const styleCoord = this._styleCoord;
         const offset = el.offsetHeight / 2;
         nearPointColor = convertToColorString(nearPointColor);
-        el.style.cssText = gCssText + assembleCssText(tooltipModel, this._firstShow)
+        el.style.cssText = gCssText + assembleCssText(tooltipModel, !this._firstShow)
             // Because of the reason described in:
             // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
             // we should set initial value to `left` and `top`.
@@ -385,7 +387,7 @@ class TooltipHTMLContent {
     }
 
     hide() {
-        this.el.style.display = 'none';
+        this.el.style.opacity = '0';
         this._show = false;
     }
 
