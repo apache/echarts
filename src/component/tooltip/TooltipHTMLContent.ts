@@ -17,12 +17,12 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
-import * as zrColor from 'zrender/src/tool/color';
-import * as eventUtil from 'zrender/src/core/event';
-import * as domUtil from 'zrender/src/core/dom';
+import { isString, indexOf, map, each, bind } from 'zrender/src/core/util';
+import { toHex } from 'zrender/src/tool/color';
+import { normalizeEvent } from 'zrender/src/core/event';
+import { transformLocalCoord } from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
-import * as formatUtil from '../../util/format';
+import { convertToColorString, toCamelCase, normalizeCssArray } from '../../util/format';
 import ExtensionAPI from '../../ExtensionAPI';
 import { ZRenderType } from 'zrender/src/zrender';
 import { TooltipOption } from './TooltipModel';
@@ -34,14 +34,11 @@ import SVGPainter from 'zrender/src/svg/Painter';
 import { shouldTooltipConfine } from './helper';
 import { getPaddingFromTooltipModel } from './tooltipMarkup';
 
-const each = zrUtil.each;
-const toCamelCase = formatUtil.toCamelCase;
-
-const vendors = ['', '-webkit-', '-moz-', '-o-'];
+const vendors = ['-ms-', '-moz-', '-o-', '-webkit-', ''];
 
 const gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;';
 
-function mirrowPos(pos: string): string {
+function mirrorPos(pos: string): string {
     pos = pos === 'left'
         ? 'right'
         : pos === 'right'
@@ -57,26 +54,30 @@ function assembleArrow(
     borderColor: ZRColor,
     arrowPosition: TooltipOption['position']
 ) {
-    if (!zrUtil.isString(arrowPosition) || arrowPosition === 'inside') {
+    if (!isString(arrowPosition) || arrowPosition === 'inside') {
         return '';
     }
 
-    borderColor = formatUtil.convertToColorString(borderColor);
-    const arrowPos = mirrowPos(arrowPosition);
-    let centerPos = '';
-    let rotate = 0;
-    if (zrUtil.indexOf(['left', 'right'], arrowPos) > -1) {
-        centerPos = `${arrowPos}:-6px;top:50%;transform:translateY(-50%)`;
-        rotate = arrowPos === 'left' ? -225 : -45;
+    borderColor = convertToColorString(borderColor);
+    const arrowPos = mirrorPos(arrowPosition);
+    let positionStyle = '';
+    let transformStyle = '';
+    if (indexOf(['left', 'right'], arrowPos) > -1) {
+        positionStyle = `${arrowPos}:-6px;top:50%;`;
+        transformStyle = `translateY(-50%) rotate(${arrowPos === 'left' ? -225 : -45}deg)`;
     }
     else {
-        centerPos = `${arrowPos}:-6px;left:50%;transform:translateX(-50%)`;
-        rotate = arrowPos === 'top' ? 225 : 45;
+        positionStyle = `${arrowPos}:-6px;left:50%;`;
+        transformStyle = `translateX(-50%) rotate(${arrowPos === 'top' ? 225 : 45}deg)`;
     }
+
+    transformStyle = map(vendors, function (vendorPrefix) {
+        return vendorPrefix + 'transform:' + transformStyle;
+    }).join(';')
+
     const styleCss = [
         'style="position:absolute;width:10px;height:10px;',
-        `${centerPos}`,
-        `rotate(${rotate}deg);`,
+        `${positionStyle}${transformStyle};`,
         `border-bottom: ${borderColor} solid 1px;`,
         `border-right: ${borderColor} solid 1px;`,
         `background-color: ${backgroundColor};`,
@@ -90,7 +91,7 @@ function assembleTransition(duration: number): string {
     const transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
     const transitionText = 'left ' + duration + 's ' + transitionCurve + ','
                         + 'top ' + duration + 's ' + transitionCurve;
-    return zrUtil.map(vendors, function (vendorPrefix) {
+    return map(vendors, function (vendorPrefix) {
         return vendorPrefix + 'transition:' + transitionText;
     }).join(';');
 }
@@ -136,10 +137,10 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, isFirstShow: boolea
 
     cssText.push('box-shadow:' + boxShadow);
     // Animation transition. Do not animate when transitionDuration is 0.
-    // If tooltip show arrow, then disable transition
-    !isFirstShow && transitionDuration
-        && zrUtil.indexOf(['top', 'left', 'bottom', 'right'], tooltipModel.get('position') as string) > -1
-        && tooltipModel.get('trigger') !== 'item'
+    // If tooltip shows arrow or firstly, then disable transition
+    const showArrow = tooltipModel.get('trigger') === 'item'
+        && indexOf(['top', 'left', 'bottom', 'right'], tooltipModel.get('position') as string) > -1;
+    !isFirstShow && transitionDuration && !showArrow
         && cssText.push(assembleTransition(transitionDuration));
 
     if (backgroundColor) {
@@ -149,7 +150,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, isFirstShow: boolea
         else {
             // for ie
             cssText.push(
-                'background-Color:#' + zrColor.toHex(backgroundColor)
+                'background-Color:#' + toHex(backgroundColor)
             );
             cssText.push('filter:alpha(opacity=70)');
         }
@@ -169,7 +170,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, isFirstShow: boolea
 
     // Padding
     if (padding != null) {
-        cssText.push('padding:' + formatUtil.normalizeCssArray(padding).join('px ') + 'px');
+        cssText.push('padding:' + normalizeCssArray(padding).join('px ') + 'px');
     }
 
     return cssText.join(';') + ';';
@@ -183,7 +184,7 @@ function makeStyleCoord(out: number[], zr: ZRenderType, appendToBody: boolean, z
         const zrViewportRoot = zrPainter && zrPainter.getViewportRoot();
         if (zrViewportRoot) {
             // Some APPs might use scale on body, so we support CSS transform here.
-            domUtil.transformLocalCoord(out, zrViewportRoot, document.body, zrX, zrY);
+            transformLocalCoord(out, zrViewportRoot, document.body, zrX, zrY);
         }
     }
     else {
@@ -284,7 +285,7 @@ class TooltipHTMLContent {
                 // in and out shape too frequently
                 const handler = zr.handler;
                 const zrViewportRoot = zr.painter.getViewportRoot();
-                eventUtil.normalizeEvent(zrViewportRoot, e as ZRRawEvent, true);
+                normalizeEvent(zrViewportRoot, e as ZRRawEvent, true);
                 handler.dispatch('mousemove', e);
             }
         };
@@ -321,7 +322,7 @@ class TooltipHTMLContent {
         const el = this.el;
         const styleCoord = this._styleCoord;
         const offset = el.offsetHeight / 2;
-        nearPointColor = formatUtil.convertToColorString(nearPointColor);
+        nearPointColor = convertToColorString(nearPointColor);
         el.style.cssText = gCssText + assembleCssText(tooltipModel, this._firstShow)
             // Because of the reason described in:
             // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
@@ -355,7 +356,7 @@ class TooltipHTMLContent {
         }
         this.el.innerHTML = content;
         this.el.innerHTML += (
-            zrUtil.isString(arrowPosition)
+            isString(arrowPosition)
             && tooltipModel.get('trigger') === 'item'
             && !shouldTooltipConfine(tooltipModel)
         )
@@ -396,7 +397,7 @@ class TooltipHTMLContent {
                 this._hideDelay = time;
                 // Set show false to avoid invoke hideLater mutiple times
                 this._show = false;
-                this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time) as any;
+                this._hideTimeout = setTimeout(bind(this.hide, this), time) as any;
             }
             else {
                 this.hide();
