@@ -86,11 +86,13 @@ function assembleArrow(
     return `<div style="${styleCss.join('')}"></div>`;
 }
 
-function assembleTransition(duration: number): string {
+function assembleTransition(duration: number, onlyFade?: boolean): string {
     const transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
-    const transitionText = 'left ' + duration + 's ' + transitionCurve + ','
-                        + 'top ' + duration + 's ' + transitionCurve + ','
-                        + 'opacity ' + (duration / 2) + 's ' + transitionCurve;
+    let transitionText = 'opacity ' + (duration / 2) + 's ' + transitionCurve;
+    if (!onlyFade) {
+        transitionText += ',left ' + duration + 's ' + transitionCurve
+                        + ',top ' + duration + 's ' + transitionCurve;
+    }
 
     return map(vendors, function (vendorPrefix) {
         return vendorPrefix + 'transition:' + transitionText;
@@ -124,7 +126,7 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
     return cssText.join(';');
 }
 
-function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition: boolean) {
+function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: boolean, onlyFade?: boolean) {
     const cssText: string[] = [];
     const transitionDuration = tooltipModel.get('transitionDuration');
     const backgroundColor = tooltipModel.get('backgroundColor');
@@ -138,11 +140,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition: b
 
     cssText.push('box-shadow:' + boxShadow);
     // Animation transition. Do not animate when transitionDuration is 0.
-    // If tooltip shows arrow or firstly, then disable transition
-    const showArrow = tooltipModel.get('trigger') === 'item'
-        && indexOf(['top', 'left', 'bottom', 'right'], tooltipModel.get('position') as string) > -1;
-    enableTransition && transitionDuration && !showArrow
-        && cssText.push(assembleTransition(transitionDuration));
+    enableTransition && transitionDuration && cssText.push(assembleTransition(transitionDuration, onlyFade));
 
     if (backgroundColor) {
         if (env.canvasSupported) {
@@ -233,6 +231,11 @@ class TooltipHTMLContent {
 
     private _inContent: boolean;
     private _firstShow = true;
+    private _longHide = true;
+    /**
+     * Record long-time hide
+     */
+    private _longHideTimeout: number;
 
 
     constructor(
@@ -320,11 +323,12 @@ class TooltipHTMLContent {
 
     show(tooltipModel: Model<TooltipOption>, nearPointColor: ZRColor) {
         clearTimeout(this._hideTimeout);
+        clearTimeout(this._longHideTimeout);
         const el = this.el;
         const styleCoord = this._styleCoord;
         const offset = el.offsetHeight / 2;
         nearPointColor = convertToColorString(nearPointColor);
-        el.style.cssText = gCssText + assembleCssText(tooltipModel, !this._firstShow)
+        el.style.cssText = gCssText + assembleCssText(tooltipModel, !this._firstShow, this._longHide)
             // Because of the reason described in:
             // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
             // we should set initial value to `left` and `top`.
@@ -343,6 +347,7 @@ class TooltipHTMLContent {
 
         this._show = true;
         this._firstShow = false;
+        this._longHide = false;
     }
 
     setContent(
@@ -389,6 +394,7 @@ class TooltipHTMLContent {
     hide() {
         this.el.style.opacity = '0';
         this._show = false;
+        this._longHideTimeout = setTimeout(() => this._longHide = true, 500) as any;
     }
 
     hideLater(time?: number) {
