@@ -51,7 +51,16 @@ under the License.
                 const COLORS = [
                     '#37A2DA', '#e06343', '#37a354', '#b55dba', '#b5bd48', '#8378EA', '#96BFFF'
                 ];
-                const CONTENT_COLOR = '#37a354';
+                var COUNTRY_A = 'Germany';
+                var COUNTRY_B = 'France';
+                const CONTENT_COLORS = {
+                    [COUNTRY_A]: '#37a354',
+                    [COUNTRY_B]: '#e06343'
+                };
+                const Z2 = {
+                    [COUNTRY_A]: 1,
+                    [COUNTRY_B]: 2
+                }
 
                 // const COLORS = [
                 //     {name: 'Income', index: 0, text: '人均收入', unit: '美元'},
@@ -62,8 +71,17 @@ under the License.
 
                 var RAW_DATA_DIMENSIONS = ['Income', 'Life Expectancy', 'Population', 'Country', 'Year'];
                 var ID_RAW_DATA_DIMENSIONS = ['Income', 'Life Expectancy', 'Population', 'Country', 'Year', 'Id'];
+                var SUM_INCOME_DIMENSIONS = ['Income', 'Country'];
+                var ANIMATION_DURATION_UPDATE = 1000;
+                var AXIS_NAME_STYLE = {
+                    nameGap: 25,
+                    nameTextStyle: {
+                        fontSize: 20
+                    },
+                };
 
                 var baseOption = {
+                    animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                     dataset: [{
                         id: 'RawData',
                         source: rawData
@@ -83,12 +101,29 @@ under the License.
                             }
                         }]
                     }, {
-                        id: 'GermanyData',
+                        id: 'CountryABData',
                         fromDatasetId: 'IdRawData',
                         transform: {
                             type: 'filter',
                             config: {
-                                dimension: 'Country', '=': 'Germany'
+                                or: [{
+                                    dimension: 'Country', '=': COUNTRY_A
+                                }, {
+                                    dimension: 'Country', '=': COUNTRY_B
+                                }]
+                            }
+                        }
+                    }, {
+                        id: 'CountryABSumIncome',
+                        fromDatasetId: 'CountryABData',
+                        transform: {
+                            type: 'myTransform:aggregate',
+                            config: {
+                                resultDimensions: [
+                                    { from: 'Income', method: 'sum' },
+                                    { from: 'Country' }
+                                ],
+                                groupBy: 'Country'
                             }
                         }
                     }],
@@ -97,17 +132,14 @@ under the License.
 
                 var optionCreators = {
 
-                    'Country_A_Year_Income_Bar': function (datasetId) {
+                    'CountryAB_Year_Income_Bar': function (datasetId, onlyCountry) {
                         return {
                             xAxis: {
                                 type: 'category'
                             },
                             yAxis: {
                                 name: 'Income',
-                                nameGap: 25,
-                                nameTextStyle: {
-                                    fontSize: 25
-                                }
+                                ...AXIS_NAME_STYLE
                             },
                             series: {
                                 type: 'custom',
@@ -115,41 +147,52 @@ under the License.
                                 datasetId: datasetId,
                                 encode: {
                                     x: 'Year',
-                                    y: 'Income'
+                                    y: 'Income',
+                                    itemName: 'Year',
+                                    tooltip: ['Income'],
                                 },
                                 renderItem: function (params, api) {
                                     var valPos = api.coord([api.value('Year'), api.value('Income')]);
                                     var basePos = api.coord([api.value('Year'), 0]);
                                     var width = api.size([1, 0])[0] * 0.9;
+
+                                    var country = api.value('Country');
+                                    if (onlyCountry != null && onlyCountry !== country) {
+                                        return;
+                                    }
+
                                     return {
-                                        type: 'rect',
-                                        transition: ['shape', 'style'],
-                                        shape: {
-                                            x: basePos[0],
-                                            y: basePos[1],
-                                            width: width,
-                                            height: valPos[1] - basePos[1]
-                                        },
-                                        style: {
-                                            fill: CONTENT_COLOR
-                                        }
+                                        // type: 'group',
+                                        // children: [{
+                                            type: 'rect',
+                                            transition: ['shape', 'style'],
+                                            morph: true,
+                                            shape: {
+                                                x: basePos[0],
+                                                y: basePos[1],
+                                                width: width,
+                                                height: valPos[1] - basePos[1]
+                                            },
+                                            z2: Z2[country],
+                                            style: {
+                                                fill: CONTENT_COLORS[country],
+                                                opacity: 0.8
+                                            }
+                                        // }]
                                     };
                                 }
                             }
                         };
                     },
 
-                    'Country_A_Year_Population_Bar': function (datasetId) {
+                    'CountryAB_Year_Population_Bar': function (datasetId, onlyCountry) {
                         return {
                             xAxis: {
                                 type: 'category'
                             },
                             yAxis: {
                                 name: 'Population',
-                                nameGap: 25,
-                                nameTextStyle: {
-                                    fontSize: 25
-                                }
+                                ...AXIS_NAME_STYLE
                             },
                             series: {
                                 type: 'custom',
@@ -157,32 +200,152 @@ under the License.
                                 datasetId: datasetId,
                                 encode: {
                                     x: 'Year',
-                                    y: 'Population'
+                                    y: 'Population',
+                                    itemName: 'Year',
+                                    tooltip: ['Population'],
                                 },
                                 renderItem: function (params, api) {
                                     var valPos = api.coord([api.value('Year'), api.value('Population')]);
                                     var basePos = api.coord([api.value('Year'), 0]);
                                     var width = api.size([1, 0])[0] * 0.9;
+
+                                    var country = api.value('Country');
+                                    if (onlyCountry != null && onlyCountry !== country) {
+                                        return;
+                                    }
+
                                     return {
-                                        type: 'rect',
-                                        transition: ['shape', 'style'],
-                                        shape: {
-                                            x: basePos[0],
-                                            y: basePos[1],
-                                            width: width,
-                                            height: valPos[1] - basePos[1]
-                                        },
-                                        style: {
-                                            fill: CONTENT_COLOR
-                                        }
+                                        // type: 'group',
+                                        // children: [{
+                                            type: 'rect',
+                                            transition: ['shape', 'style'],
+                                            morph: true,
+                                            shape: {
+                                                x: basePos[0],
+                                                y: basePos[1],
+                                                width: width,
+                                                height: valPos[1] - basePos[1]
+                                            },
+                                            style: {
+                                                fill: CONTENT_COLORS[country]
+                                            }
+                                        // }]
                                     };
                                 }
                             }
                         };
                     },
 
-                    // 'Country_A_Year_Population_Bar': function (datasetId) {
-                    // }
+                    'CountryAB_Income_Population_Scatter': function (datasetId, onlyCountry) {
+                        return {
+                            xAxis: {
+                                name: 'Income',
+                                ...AXIS_NAME_STYLE,
+                                scale: true
+                            },
+                            yAxis: {
+                                name: 'Population',
+                                ...AXIS_NAME_STYLE,
+                                scale: true
+                            },
+                            series: {
+                                type: 'custom',
+                                coordinateSystem: 'cartesian2d',
+                                datasetId: datasetId,
+                                encode: {
+                                    x: 'Income',
+                                    y: 'Population',
+                                    itemName: ['Year'],
+                                    tooltip: ['Income', 'Population', 'Country']
+                                },
+                                renderItem: function (params, api) {
+                                    var pos = api.coord([api.value('Income'), api.value('Population')]);
+
+                                    var country = api.value('Country');
+                                    if (onlyCountry != null && onlyCountry !== country) {
+                                        return;
+                                    }
+
+                                    return {
+                                        // type: 'group',
+                                        // children: [{
+                                            type: 'circle',
+                                            transition: ['shape', 'style'],
+                                            morph: true,
+                                            shape: {
+                                                cx: pos[0],
+                                                cy: pos[1],
+                                                r: 10
+                                            },
+                                            style: {
+                                                fill: CONTENT_COLORS[country],
+                                                lineWidth: 1,
+                                                stroke: '#333',
+                                                opacity: 1,
+                                                enterFrom: {
+                                                    opacity: 0
+                                                }
+                                            }
+                                        // }]
+                                    };
+                                }
+                            }
+                        };
+                    },
+
+
+                    'CountryAB_Income_Sum_Bar': function (datasetId) {
+                        return {
+                            xAxis: {
+                                name: 'Income',
+                                ...AXIS_NAME_STYLE
+                            },
+                            yAxis: {
+                                type: 'category'
+                            },
+                            series: {
+                                type: 'custom',
+                                coordinateSystem: 'cartesian2d',
+                                datasetId: datasetId,
+                                encode: {
+                                    x: 'Income',
+                                    y: 'Country',
+                                    itemName: ['Country'],
+                                    tooltip: ['Income']
+                                },
+                                renderItem: function (params, api) {
+                                    var country = api.ordinalRawValue('Country');
+                                    var valPos = api.coord([api.value('Income'), country]);
+                                    var basePos = api.coord([0, country]);
+                                    var height = api.size([0, 1])[1] * 0.4;
+
+                                    return {
+                                        // type: 'group',
+                                        // children: [{
+                                            type: 'rect',
+                                            transition: ['shape', 'style'],
+                                            morph: true,
+                                            shape: {
+                                                x: basePos[0],
+                                                y: valPos[1] - height / 2,
+                                                width: valPos[0] - basePos[0],
+                                                height: height
+                                            },
+                                            style: {
+                                                fill: CONTENT_COLORS[country]
+                                                // lineWidth: 0,
+                                                // stroke: '#333',
+                                                // opacity: 1,
+                                                // enterFrom: {
+                                                //     opacity: 0
+                                                // }
+                                            }
+                                        // }]
+                                    };
+                                }
+                            }
+                        };
+                    }
 
                 };
 
@@ -197,19 +360,33 @@ under the License.
                             dimensions: ID_RAW_DATA_DIMENSIONS,
                             uniqueDimension: 'Id'
                         },
-                        'GermanyData': {
+                        'CountryABData': {
                             dimensions: ID_RAW_DATA_DIMENSIONS,
                             uniqueDimension: 'Id'
+                        },
+                        'CountryABSumIncome': {
+                            dimensions: SUM_INCOME_DIMENSIONS,
+                            uniqueDimension: 'Country'
                         }
                     },
                     optionList: [{
-                        key: 'Country_A_Year_Income_Bar',
-                        dataMetaKey: 'GermanyData',
-                        option: optionCreators['Country_A_Year_Income_Bar']('GermanyData')
+                        dataMetaKey: 'CountryABData',
+                        option: optionCreators['CountryAB_Year_Income_Bar']('CountryABData', COUNTRY_A)
                     }, {
-                        key: 'Country_A_Year_Population_Bar',
-                        dataMetaKey: 'GermanyData',
-                        option: optionCreators['Country_A_Year_Population_Bar']('GermanyData')
+                        dataMetaKey: 'CountryABData',
+                        option: optionCreators['CountryAB_Year_Population_Bar']('CountryABData', COUNTRY_A)
+                    }, {
+                        dataMetaKey: 'CountryABData',
+                        option: optionCreators['CountryAB_Income_Population_Scatter']('CountryABData', COUNTRY_A)
+                    }, {
+                        dataMetaKey: 'CountryABData',
+                        option: optionCreators['CountryAB_Income_Population_Scatter']('CountryABData')
+                    }, {
+                        dataMetaKey: 'CountryABSumIncome',
+                        option: optionCreators['CountryAB_Income_Sum_Bar']('CountryABSumIncome')
+                    }, {
+                        dataMetaKey: 'CountryABData',
+                        option: optionCreators['CountryAB_Year_Income_Bar']('CountryABData')
                     }]
                 });
 

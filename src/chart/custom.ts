@@ -51,7 +51,8 @@ import {
     ECElement,
     DisplayStateNonNormal,
     BlurScope,
-    SeriesDataType
+    SeriesDataType,
+    OrdinalRawValue
 } from '../util/types';
 import Element, { ElementProps, ElementTextConfig } from 'zrender/src/Element';
 import prepareCartesian2d from '../coord/cartesian/prepareCustom';
@@ -215,6 +216,7 @@ interface CustomSeriesRenderItemAPI extends
         CustomSeriesRenderItemCoordinateSystemAPI,
         Pick<ExtensionAPI, 'getWidth' | 'getHeight' | 'getZr' | 'getDevicePixelRatio'> {
     value(dim: DimensionLoose, dataIndexInside?: number): ParsedValue;
+    ordinalRawValue(dim: DimensionLoose, dataIndexInside?: number): ParsedValue | OrdinalRawValue;
     style(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
     styleEmphasis(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
     visual(visualType: string, dataIndexInside?: number): ReturnType<List['getItemVisual']>;
@@ -1416,6 +1418,7 @@ function makeRenderItem(
         getDevicePixelRatio: api.getDevicePixelRatio,
         value: value,
         style: style,
+        ordinalRawValue: ordinalRawValue,
         styleEmphasis: styleEmphasis,
         visual: visual,
         barLayout: barLayout,
@@ -1507,6 +1510,24 @@ function makeRenderItem(
     function value(dim?: DimensionLoose, dataIndexInside?: number): ParsedValue {
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
         return data.get(data.getDimension(dim || 0), dataIndexInside);
+    }
+
+    /**
+     * @public
+     * @param dim by default 0.
+     * @param dataIndexInside by default `currDataIndexInside`.
+     */
+    function ordinalRawValue(dim?: DimensionLoose, dataIndexInside?: number): ParsedValue | OrdinalRawValue {
+        dataIndexInside == null && (dataIndexInside = currDataIndexInside);
+        const dimInfo = data.getDimensionInfo(dim || 0);
+        if (!dimInfo) {
+            return;
+        }
+        const val = data.get(dimInfo.name, dataIndexInside);
+        const ordinalMeta = dimInfo && dimInfo.ordinalMeta;
+        return ordinalMeta
+            ? ordinalMeta.categories[val as number]
+            : val;
     }
 
     /**
