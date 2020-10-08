@@ -83,7 +83,7 @@ function assembleArrow(
         `background-color: ${backgroundColor};`,
         'box-shadow: 8px 8px 16px -3px #000;'
     ];
-    return styleCss.join('');
+    return `<div style="${styleCss.join('')}"></div>`;
 }
 
 function assembleTransition(duration: number): string {
@@ -353,16 +353,13 @@ class TooltipHTMLContent {
         if (content == null) {
             return;
         }
-        this.el.innerHTML = content;
 
         if (isString(arrowPosition) && tooltipModel.get('trigger') === 'item'
             && !shouldTooltipConfine(tooltipModel)) {
-
-            const arrow = document.createElement('div');
-            arrow.style.cssText = assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition);
-
-            this.el.appendChild(arrow);
+            content += assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition);
         }
+
+        this.el.innerHTML = content;
     }
 
     setEnterable(enterable: boolean) {
