@@ -80,19 +80,39 @@ under the License.
                             roundCap: true
                         },
                         data: [
-                            {value: 20, name: '完成率'},
-                            {value: 40, name: '达标率'},
-                            {value: 60, name: '优秀率'}
+                            {
+                                value: 20,
+                                name: '完成率',
+                                title: {
+                                    offsetCenter: ['-40%', '20%']
+                                },
+                                detail: {
+                                    offsetCenter: ['-40%', '35%']
+                                }
+                            },
+                            {
+                                value: 40,
+                                name: '达标率',
+                                title: {
+                                    offsetCenter: ['0%', '20%']
+                                },
+                                detail: {
+                                    offsetCenter: ['0%', '35%']
+                                }
+                            },
+                            {
+                                value: 60,
+                                name: '优秀率',
+                                title: {
+                                    offsetCenter: ['40%', '20%']
+                                },
+                                detail: {
+                                    offsetCenter: ['40%', '35%']
+                                }
+                            }
                         ],
-                        titleDetailItem: {
-                            isCombination: true,
-                            orient: 'horizontal',
-                            width: '100%',
-                            itemGap: 10
-                        },
                         title: {
-                            fontSize: 14,
-                            offsetCenter: ['-40%', '20%']
+                            fontSize: 14
                         },
                         detail: {
                             width: 30,
@@ -103,19 +123,15 @@ under the License.
                             borderWidth: 1,
                             borderRadius: 3,
                             formatter: '{value}%',
-                            offsetCenter: ['-40%', '35%']
                         },
                     }
                 ]
             };
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'default style'
+                    'detail with border'
                 ],
                 option: option
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
             setInterval(function () {
                 option.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
@@ -150,27 +166,46 @@ under the License.
                             roundCap: true
                         },
                         data: [
-                            {value: 20, name: '完成率'},
-                            {value: 40, name: '达标率'},
-                            {value: 60, name: '优秀率'}
+                            {
+                                value: 20,
+                                name: '完成率',
+                                title: {
+                                    offsetCenter: ['-40%', '20%']
+                                },
+                                detail: {
+                                    offsetCenter: ['-40%', '35%']
+                                }
+                            },
+                            {
+                                value: 40,
+                                name: '达标率',
+                                title: {
+                                    offsetCenter: ['0%', '20%']
+                                },
+                                detail: {
+                                    offsetCenter: ['0%', '35%']
+                                }
+                            },
+                            {
+                                value: 60,
+                                name: '优秀率',
+                                title: {
+                                    offsetCenter: ['40%', '20%']
+                                },
+                                detail: {
+                                    offsetCenter: ['40%', '35%']
+                                }
+                            }
                         ],
-                        titleDetailItem: {
-                            isCombination: true,
-                            orient: 'horizontal',
-                            width: '100%',
-                            itemGap: 10
-                        },
                         title: {
-                            fontSize: 14,
-                            offsetCenter: ['-40%', '20%']
+                            fontSize: 14
                         },
                         detail: {
                             width: 30,
                             height: 12,
                             fontSize: 12,
                             color: 'auto',
-                            formatter: '{value}%',
-                            offsetCenter: ['-40%', '35%']
+                            formatter: '{value}%'
                         }
                     }
                 ]
@@ -180,9 +215,6 @@ under the License.
                     'detail without border'
                 ],
                 option: option1
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
             setInterval(function () {
                 option1.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
@@ -217,19 +249,39 @@ under the License.
                             roundCap: true
                         },
                         data: [
-                            {value: 20, name: '完成率'},
-                            {value: 40, name: '达标率'},
-                            {value: 60, name: '优秀率'}
+                            {
+                                value: 20,
+                                name: '完成率',
+                                title: {
+                                    offsetCenter: ['-40%', '20%']
+                                },
+                                detail: {
+                                    offsetCenter: ['-40%', '35%']
+                                }
+                            },
+                            {
+                                value: 40,
+                                name: '达标率',
+                                title: {
+                                    offsetCenter: ['0%', '20%']
+                                },
+                                detail: {
+                                    offsetCenter: ['0%', '35%']
+                                }
+                            },
+                            {
+                                value: 60,
+                                name: '优秀率',
+                                title: {
+                                    offsetCenter: ['40%', '20%']
+                                },
+                                detail: {
+                                    offsetCenter: ['40%', '35%']
+                                }
+                            }
                         ],
-                        titleDetailItem: {
-                            isCombination: true,
-                            orient: 'horizontal',
-                            width: '100%',
-                            itemGap: 10
-                        },
                         title: {
-                            fontSize: 14,
-                            offsetCenter: ['-40%', '20%']
+                            fontSize: 14
                         },
                         detail: {
                             width: 30,
@@ -238,20 +290,16 @@ under the License.
                             color: '#fff',
                             backgroundColor: 'auto',
                             borderRadius: 3,
-                            formatter: '{value}%',
-                            offsetCenter: ['-40%', '35%']
+                            formatter: '{value}%'
                         }
                     }
                 ]
             };
             var chart2 = testHelper.create(echarts, 'main2', {
                 title: [
-                    'detail with backgroundColor'
+                    'detail with backgroundColor (not recommended)'
                 ],
                 option: option2
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
             setInterval(function () {
                 option2.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
@@ -286,19 +334,39 @@ under the License.
                             roundCap: true
                         },
                         data: [
-                            {value: 20, name: '完成率'},
-                            {value: 40, name: '达标率'},
-                            {value: 60, name: '优秀率'}
+                            {
+                                value: 20,
+                                name: '完成率',
+                                title: {
+                                    offsetCenter: ['0%', '20%']
+                                },
+                                detail: {
+                                    offsetCenter: ['0%', '35%']
+                                }
+                            },
+                            {
+                                value: 40,
+                                name: '达标率',
+                                title: {
+                                    offsetCenter: ['0%', '55%']
+                                },
+                                detail: {
+                                    offsetCenter: ['0%', '70%']
+                                }
+                            },
+                            {
+                                value: 60,
+                                name: '优秀率',
+                                title: {
+                                    offsetCenter: ['0%', '90%']
+                                },
+                                detail: {
+                                    offsetCenter: ['0%', '105%']
+                                }
+                            }
                         ],
-                        titleDetailItem: {
-                            isCombination: true,
-                            orient: 'vertical',
-                            height: '100%',
-                            itemGap: 10
-                        },
                         title: {
-                            fontSize: 14,
-                            offsetCenter: ['0', '20%']
+                            fontSize: 14
                         },
                         detail: {
                             width: 30,
@@ -308,20 +376,16 @@ under the License.
                             borderColor: 'auto',
                             borderRadius: 3,
                             borderWidth: 1,
-                            formatter: '{value}%',
-                            offsetCenter: ['0', '35%']
+                            formatter: '{value}%'
                         },
                     }
                 ]
             };
             var chart3 = testHelper.create(echarts, 'main3', {
                 title: [
-                    'the orient is vertical (not recommended)'
+                    'the orient is vertical'
                 ],
                 option: option3
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
             setInterval(function () {
                 option3.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
@@ -356,19 +420,39 @@ under the License.
                             roundCap: true
                         },
                         data: [
-                            {value: 20, name: '完成率'},
-                            {value: 40, name: '达标率'},
-                            {value: 60, name: '优秀率'}
+                            {
+                                value: 20,
+                                name: '完成率',
+                                title: {
+                                    offsetCenter: ['-40%', '80%']
+                                },
+                                detail: {
+                                    offsetCenter: ['-40%', '95%']
+                                }
+                            },
+                            {
+                                value: 40,
+                                name: '达标率',
+                                title: {
+                                    offsetCenter: ['0%', '80%']
+                                },
+                                detail: {
+                                    offsetCenter: ['0%', '95%']
+                                }
+                            },
+                            {
+                                value: 60,
+                                name: '优秀率',
+                                title: {
+                                    offsetCenter: ['40%', '80%']
+                                },
+                                detail: {
+                                    offsetCenter: ['40%', '95%']
+                                }
+                            }
                         ],
-                        titleDetailItem: {
-                            isCombination: true,
-                            orient: 'horizontal',
-                            width: '100%',
-                            itemGap: 10
-                        },
                         title: {
-                            fontSize: 14,
-                            offsetCenter: ['-40%', '80%']
+                            fontSize: 14
                         },
                         detail: {
                             width: 30,
@@ -379,8 +463,7 @@ under the License.
                             borderColor: 'auto',
                             borderWidth: 1,
                             // backgroundColor: 'auto',
-                            formatter: '{value}%',
-                            offsetCenter: ['-40%', '95%']
+                            formatter: '{value}%'
                         },
                     }
                 ]
@@ -390,9 +473,6 @@ under the License.
                     'out of gauge'
                 ],
                 option: option4
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
             setInterval(function () {
                 option4.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
@@ -427,19 +507,39 @@ under the License.
                             roundCap: true
                         },
                         data: [
-                            {value: 20, name: '完成率'},
-                            {value: 40, name: '达标率'},
-                            {value: 60, name: '优秀率'}
+                            {
+                                value: 20,
+                                name: '完成率',
+                                title: {
+                                    offsetCenter: ['-40%', '80%']
+                                },
+                                detail: {
+                                    offsetCenter: ['-40%', '95%']
+                                }
+                            },
+                            {
+                                value: 40,
+                                name: '达标率',
+                                title: {
+                                    offsetCenter: ['0%', '80%']
+                                },
+                                detail: {
+                                    offsetCenter: ['0%', '95%']
+                                }
+                            },
+                            {
+                                value: 60,
+                                name: '优秀率',
+                                title: {
+                                    offsetCenter: ['40%', '80%']
+                                },
+                                detail: {
+                                    offsetCenter: ['40%', '95%']
+                                }
+                            }
                         ],
-                        titleDetailItem: {
-                            isCombination: true,
-                            orient: 'horizontal',
-                            width: '100%',
-                            itemGap: 10
-                        },
                         title: {
-                            fontSize: 14,
-                            offsetCenter: ['-40%', '80%']
+                            fontSize: 14
                         },
                         detail: {
                             width: 30,
@@ -448,8 +548,7 @@ under the License.
                             color: '#fff',
                             backgroundColor: 'auto',
                             borderRadius: 3,
-                            formatter: '{value}%',
-                            offsetCenter: ['-40%', '95%']
+                            formatter: '{value}%'
                         },
                     }
                 ]
@@ -459,9 +558,6 @@ under the License.
                     'out of gauge, detail with backgroundColor'
                 ],
                 option: option5
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
             setInterval(function () {
                 option5.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;

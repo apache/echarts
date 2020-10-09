@@ -181,19 +181,9 @@ class GaugeView extends ChartView {
 
         this._renderAnchor(seriesModel, posInfo);
 
-        // if (isRenderTogather) {
-            this._renderTitleAndDetail(
-                seriesModel, ecModel, api, getColor, posInfo
-            )
-        // }
-        // else {
-        //     this._renderTitle(
-        //         seriesModel, ecModel, api, getColor, posInfo
-        //     );
-        //     this._renderDetail(
-        //         seriesModel, ecModel, api, getColor, posInfo
-        //     );
-        // }
+        this._renderTitleAndDetail(
+            seriesModel, ecModel, api, getColor, posInfo
+        )
     }
 
     _renderTicks(
@@ -557,45 +547,29 @@ class GaugeView extends ChartView {
         getColor: (percent: number) => ColorString,
         posInfo: PosInfo
     ) {
-        const titleDetailModel = seriesModel.getModel('titleDetailItem');
-        const titleModel = seriesModel.getModel('title');
-        const detailModel = seriesModel.getModel('detail');
-        const showTogather = titleDetailModel.get('isCombination');
-        const showTitle = titleModel.get('show');
-        const showDetail = detailModel.get('show');
-        if (!showDetail && !showTitle && !showTogather) {
-            return;
-        }
         const data = seriesModel.getData();
         const valueDim = data.mapDimension('value');
-
         const minVal = +seriesModel.get('min');
         const maxVal = +seriesModel.get('max');
 
         const contentGroup = new graphic.Group;
 
-        const titleOffsetCenter = titleModel.get('offsetCenter');
-        const titleX = posInfo.cx + parsePercent(titleOffsetCenter[0], posInfo.r);
-        const titleY = posInfo.cy + parsePercent(titleOffsetCenter[1], posInfo.r);
-
-        const detailOffsetCenter = detailModel.get('offsetCenter');
-        const detailX = posInfo.cx + parsePercent(detailOffsetCenter[0], posInfo.r);
-        const detailY = posInfo.cy + parsePercent(detailOffsetCenter[1], posInfo.r);
-        const width = parsePercent(detailModel.get('width'), posInfo.r);
-        const height = parsePercent(detailModel.get('height'), posInfo.r);
-
         data.each(function(idx) {
-            const itemGroup = new graphic.Group;
-            const value = data.get(valueDim, idx) as number;
             const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
+            const value = data.get(valueDim, idx) as number;
+            const itemGroup = new graphic.Group;
             const autoColor = getColor(
                 linearMap(value, [minVal, maxVal], [0, 1], true)
             );
 
-            if (showTitle || showTogather) {
+            const itemTitleModel = itemModel.getModel('title');
+            if (itemTitleModel.get('show')) {
+                const titleOffsetCenter = itemTitleModel.get('offsetCenter');
+                const titleX = posInfo.cx + parsePercent(titleOffsetCenter[0], posInfo.r);
+                const titleY = posInfo.cy + parsePercent(titleOffsetCenter[1], posInfo.r);
                 itemGroup.add(new graphic.Text({
                     silent: true,
-                    style: createTextStyle(titleModel, {
+                    style: createTextStyle(itemTitleModel, {
                         x: titleX,
                         y: titleY,
                         text: data.getName(idx),
@@ -605,114 +579,36 @@ class GaugeView extends ChartView {
                 }));
             }
 
-            if (showDetail || showTogather) {
-                const progressColor = data.getItemVisual(idx, 'style').fill as string;
+            const itemDetailModel = itemModel.getModel('detail');
+            if (itemDetailModel.get('show')) {
+                const detailOffsetCenter = itemDetailModel.get('offsetCenter');
+                const detailX = posInfo.cx + parsePercent(detailOffsetCenter[0], posInfo.r);
+                const detailY = posInfo.cy + parsePercent(detailOffsetCenter[1], posInfo.r);
+                const width = parsePercent(itemDetailModel.get('width'), posInfo.r);
+                const height = parsePercent(itemDetailModel.get('height'), posInfo.r);
+                const detailColor = (
+                    seriesModel.get(['progress', 'show']) ? data.getItemVisual(idx, 'style').fill : autoColor
+                ) as string;
                 itemGroup.add(new graphic.Text({
                     silent: true,
-                    style: createTextStyle(detailModel, {
+                    style: createTextStyle(itemDetailModel, {
                         x: detailX,
                         y: detailY,
                         text: formatLabel(
-                            value, detailModel.get('formatter')
+                            value, itemDetailModel.get('formatter')
                         ),
                         width: isNaN(width) ? null : width,
                         height: isNaN(height) ? null : height,
                         align: 'center',
                         verticalAlign: 'middle'
-                    }, {inheritColor: showTogather ? progressColor : autoColor})
+                    }, {inheritColor: detailColor})
                 }));
             }
 
             contentGroup.add(itemGroup);
         });
-
-        if (showTogather) {
-            layoutUtil.box(
-                titleDetailModel.get('orient'),
-                contentGroup,
-                titleDetailModel.get('itemGap'),
-                titleDetailModel.get('width'),
-                titleDetailModel.get('height')
-            );
-        }
         this.group.add(contentGroup);
 
-    }
-
-    _renderTitle(
-        seriesModel: GaugeSeriesModel,
-        ecModel: GlobalModel,
-        api: ExtensionAPI,
-        getColor: (percent: number) => ColorString,
-        posInfo: PosInfo
-    ) {
-        const data = seriesModel.getData();
-        const valueDim = data.mapDimension('value');
-        const titleModel = seriesModel.getModel('title');
-        if (titleModel.get('show')) {
-            const offsetCenter = titleModel.get('offsetCenter');
-            const x = posInfo.cx + parsePercent(offsetCenter[0], posInfo.r);
-            const y = posInfo.cy + parsePercent(offsetCenter[1], posInfo.r);
-
-            const minVal = +seriesModel.get('min');
-            const maxVal = +seriesModel.get('max');
-            const value = seriesModel.getData().get(valueDim, 0) as number;
-            const autoColor = getColor(
-                linearMap(value, [minVal, maxVal], [0, 1], true)
-            );
-
-            this.group.add(new graphic.Text({
-                silent: true,
-                style: createTextStyle(titleModel, {
-                    x: x,
-                    y: y,
-                    // FIXME First data name ?
-                    text: data.getName(0),
-                    align: 'center',
-                    verticalAlign: 'middle'
-                }, {inheritColor: autoColor})
-            }));
-        }
-    }
-
-    _renderDetail(
-        seriesModel: GaugeSeriesModel,
-        ecModel: GlobalModel,
-        api: ExtensionAPI,
-        getColor: (percent: number) => ColorString,
-        posInfo: PosInfo
-    ) {
-        const detailModel = seriesModel.getModel('detail');
-        const minVal = +seriesModel.get('min');
-        const maxVal = +seriesModel.get('max');
-        if (detailModel.get('show')) {
-            const offsetCenter = detailModel.get('offsetCenter');
-            const x = posInfo.cx + parsePercent(offsetCenter[0], posInfo.r);
-            const y = posInfo.cy + parsePercent(offsetCenter[1], posInfo.r);
-            const width = parsePercent(detailModel.get('width'), posInfo.r);
-            const height = parsePercent(detailModel.get('height'), posInfo.r);
-            const data = seriesModel.getData();
-            const value = data.get(data.mapDimension('value'), 0) as number;
-            const autoColor = getColor(
-                linearMap(value, [minVal, maxVal], [0, 1], true)
-            );
-
-            this.group.add(new graphic.Text({
-                silent: true,
-                style: createTextStyle(detailModel, {
-                    x: x,
-                    y: y,
-                    text: formatLabel(
-                        // FIXME First data name ?
-                        value, detailModel.get('formatter')
-                    ),
-                    width: isNaN(width) ? null : width,
-                    height: isNaN(height) ? null : height,
-                    align: 'center',
-                    verticalAlign: 'middle'
-                }, {inheritColor: autoColor})
-            }));
-        }
     }
 }
 

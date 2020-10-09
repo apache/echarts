@@ -67,12 +67,20 @@ interface ProgressOption {
     itemStyle?: ItemStyleOption
 }
 
-interface TitleDetailItemOption {
-    isCombination?: boolean
-    orient?: 'vertical' | 'horizontal'
-    width?: number
-    height?: number
-    itemGap?: number
+interface TitleOption extends LabelOption {
+    /**
+     * [x, y] offset
+     */
+    offsetCenter?: (number | string)[]
+    formatter?: LabelFormatter | string
+}
+
+interface DetailOption extends LabelOption {
+    /**
+     * [x, y] offset
+     */
+    offsetCenter?: (number | string)[]
+    formatter?: LabelFormatter | string
 }
 
 export interface GaugeStateOption {
@@ -84,6 +92,8 @@ export interface GaugeDataItemOption extends GaugeStateOption, StatesOptionMixin
     value?: OptionDataValueNumeric
     pointer?: PointerOption
     progress?: ProgressOption
+    title?: TitleOption
+    detail?: DetailOption
 }
 export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, GaugeStateOption,
     CircleLayoutOptionMixin {
@@ -140,22 +150,9 @@ export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, Gauge
 
     pointer?: PointerOption
     anchor?: AnchorOption
-    titleDetailItem?: TitleDetailItemOption
 
-    title?: LabelOption & {
-        /**
-         * [x, y] offset
-         */
-        offsetCenter?: (number | string)[]
-        formatter?: LabelFormatter | string
-    }
-    detail?: LabelOption & {
-        /**
-         * [x, y] offset
-         */
-        offsetCenter?: (number | string)[]
-        formatter?: LabelFormatter | string
-    }
+    title?: TitleOption
+    detail?: DetailOption
 
     data?: (OptionDataValueNumeric | GaugeDataItemOption)[]
 }
@@ -260,14 +257,6 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
                 borderWidth: 0,
                 borderColor: '#5470c6'
             }
-        },
-
-        titleDetailItem: {
-            isCombination: false,
-            orient: 'horizontal',
-            width: 0,
-            height: 0,
-            itemGap: 10
         },
 
         title: {
