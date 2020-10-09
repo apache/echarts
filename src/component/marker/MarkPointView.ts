@@ -120,8 +120,9 @@ class MarkPointView extends MarkerView {
             const itemModel = mpData.getItemModel<MarkPointDataItemOption>(idx);
             let symbol = itemModel.getShallow('symbol');
             let symbolSize = itemModel.getShallow('symbolSize');
+            let symbolRotate = itemModel.getShallow('symbolRotate');
 
-            if (isFunction(symbol) || isFunction(symbolSize)) {
+            if (isFunction(symbol) || isFunction(symbolSize) || isFunction(symbolRotate)) {
                 const rawIdx = mpModel.getRawValue(idx);
                 const dataParams = mpModel.getDataParams(idx);
                 if (isFunction(symbol)) {
@@ -130,6 +131,9 @@ class MarkPointView extends MarkerView {
                 if (isFunction(symbolSize)) {
                     // FIXME 这里不兼容 ECharts 2.x，2.x 貌似参数是整个数据？
                     symbolSize = symbolSize(rawIdx, dataParams);
+                }
+                if (isFunction(symbolRotate)) {
+                    symbolRotate = symbolRotate(rawIdx, dataParams);
                 }
             }
 
@@ -142,6 +146,7 @@ class MarkPointView extends MarkerView {
             mpData.setItemVisual(idx, {
                 symbol: symbol,
                 symbolSize: symbolSize,
+                symbolRotate: symbolRotate,
                 style
             });
         });

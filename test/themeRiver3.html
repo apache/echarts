@@ -1,0 +1,154 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <!-- <script src="lib/esl.js"></script> -->
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <link ref="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="main"><div>
+        <script>
+
+            require([
+                'echarts'
+                // 'echarts/src/echarts',
+                // 'echarts/src/chart/themeRiver',
+                // 'echarts/src/component/legend',
+                // 'echarts/src/component/singleAxis',
+                // 'echarts/src/component/tooltip',
+                ], function (echarts) {
+
+                    var chart = echarts.init(document.getElementById('main'));
+
+                    window.onresize = function () {
+                        chart.resize();
+                    };
+
+                    chart.setOption({
+
+                        tooltip: {
+                            trigger: 'axis'
+                        },
+
+                        legend: {
+                            data: ['Store1', 'Store', 'Store3']
+                        },
+
+                        singleAxis: {
+
+                            // top: '8%',
+
+                            axisTick: {},
+
+                            axisLabel: {},
+
+                            type: 'time',
+
+                            // position: 'top',
+
+                            splitLine: {
+                                show: true,
+                                lineStyle: {
+                                    type: 'dashed',
+                                    opacity: 0.2
+                                }
+                            }
+                        },
+
+                        series: [
+                            {
+                                type: 'themeRiver',
+                                itemStyle: {
+                                    emphasis: {
+                                        shadowBlur: 20,
+                                        shadowColor: 'rgba(0, 0, 0, 0.8)'
+                                    }
+                                },
+                                data: [
+                                          ["2014/01/01", 4, "Store1"],
+                                          ["2014/01/02", 5, "Store"],
+                                          ["2014/01/02", 2, "Store1"],
+                                          ["2014/01/03", 6, "Store3"],
+                                          ["2014/01/04", 5, "Store1"],
+                                          ["2014/01/05", 4, "Store"],
+                                          ["2014/01/05", 2, "Store3"],
+                                          ["2014/01/06", 2, "Store"],
+                                          ["2014/01/07", 5, "Store"],
+                                          ["2014/01/08", 5, "Store1"],
+                                          ["2014/01/09", 4, "Store3"],
+                                          ["2014/01/09", 2, "Store1"],
+                                          ["2014/01/10", 2, "Store"],
+                                          ["2014/01/10", 1, "Store1"],
+                                          ["2014/01/11", 5, "Store1"],
+                                          ["2014/01/11", 3, "Store"],
+                                          ["2014/01/12", 3, "Store"],
+                                          ["2014/01/12", 1, "Store1"],
+                                          ["2014/01/13", 4, "Store3"],
+                                          ["2014/01/13", 3, "Store"],
+                                          ["2014/01/16", 1, "Store"],
+                                          ["2014/01/17", 4, "Store3"],
+                                          ["2014/01/17", 3, "Store"],
+                                          ["2014/01/18", 2, "Store"],
+                                          ["2014/01/21", 3, "Store1"],
+                                          ["2014/01/21", 3, "Store"],
+                                          ["2014/01/21", 1, "Store3"],
+                                          ["2014/01/22", 2, "Store1"],
+                                          ["2014/01/23", 2, "Store"],
+                                          ["2014/01/25", 5, "Store"],
+                                          ["2014/01/26", 9, "Store"],
+                                          ["2014/01/27", 7, "Store1"],
+                                          ["2014/01/30", 10, "Store"],
+                                          ["2014/01/30", 3, "Store3"]
+                                      ]
+                            }
+                        ]
+                    });
+                });
+
+        </script>
+    </body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -75,13 +75,14 @@ export default function (seriesType: string, forceStoreInTypedArray?: boolean): 
 
                         if (dimLen === 1) {
                             const x = data.getByDimIdx(dimIdx0, i) as ParsedValueNumeric;
-                            point = coordSys.dataToPoint(x, 0, tmpOut);
+                            // NOTE: Make sure the second parameter is null to use default strategy.
+                            point = coordSys.dataToPoint(x, null, tmpOut);
                         }
                         else {
                             tmpIn[0] = data.getByDimIdx(dimIdx0, i) as ParsedValueNumeric;
                             tmpIn[1] = data.getByDimIdx(dimIdx1, i) as ParsedValueNumeric;
                             // Let coordinate system to handle the NaN data.
-                            point = coordSys.dataToPoint(tmpIn, 0, tmpOut);
+                            point = coordSys.dataToPoint(tmpIn, null, tmpOut);
                         }
 
                         if (useTypedArray) {

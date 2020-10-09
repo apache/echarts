@@ -104,6 +104,7 @@ import { registerExternalTransform } from './data/helper/transform';
 import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 
 import type {EChartsFullOption} from './option';
+import { findEventDispatcher } from './util/event';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -1798,25 +1799,9 @@ class ECharts extends Eventful {
         };
 
         bindMouseEvent = function (zr: zrender.ZRenderType, ecIns: ECharts): void {
-            // Find a dispatcher that's on the most top.
-            function getDispatcher(target: Element, det: (target: Element) => boolean) {
-                let found;
-                while (target) {
-                    if (det(target)) {
-                        found = target;
-                    }
-                    if (target.__hostTarget) {
-                        target = target.__hostTarget;
-                    }
-                    else {
-                        target = target.parent;
-                    }
-                }
-                return found;
-            }
             zr.on('mouseover', function (e) {
                 const el = e.target;
-                const dispatcher = getDispatcher(el, isHighDownDispatcher);
+                const dispatcher = findEventDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
                     const ecData = getECData(dispatcher);
                     // Try blur all in the related series. Then emphasis the hoverred.
@@ -1830,7 +1815,7 @@ class ECharts extends Eventful {
                 }
             }).on('mouseout', function (e) {
                 const el = e.target;
-                const dispatcher = getDispatcher(el, isHighDownDispatcher);
+                const dispatcher = findEventDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
                     const ecData = getECData(dispatcher);
                     toggleSeriesBlurState(
@@ -1843,7 +1828,7 @@ class ECharts extends Eventful {
                 }
             }).on('click', function (e) {
                 const el = e.target;
-                const dispatcher = getDispatcher(
+                const dispatcher = findEventDispatcher(
                     el, (target) => getECData(target).dataIndex != null
                 );
                 if (dispatcher) {
@@ -2036,7 +2021,7 @@ class ECharts extends Eventful {
                 }
             });
 
-            if (elCount > ecModel.get('hoverLayerThreshold') && !env.node) {
+            if (elCount > ecModel.get('hoverLayerThreshold') && !env.node && !env.worker) {
                 ecModel.eachSeries(function (seriesModel) {
                     if (seriesModel.preventUsingHoverLayer) {
                         return;

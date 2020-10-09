@@ -54,6 +54,7 @@ import { shouldTooltipConfine } from './helper';
 import { DataByCoordSys, DataByAxis } from '../axisPointer/axisTrigger';
 import { normalizeTooltipFormatResult } from '../../model/mixin/dataFormat';
 import { createTooltipMarkup, buildTooltipMarkup, TooltipMarkupStyleCreator } from './tooltipMarkup';
+import { findEventDispatcher } from '../../util/event';
 
 const bind = zrUtil.bind;
 const each = zrUtil.each;
@@ -195,7 +196,7 @@ class TooltipView extends ComponentView {
         this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
 
         const tooltipContent = this._tooltipContent;
-        tooltipContent.update();
+        tooltipContent.update(tooltipModel);
         tooltipContent.setEnterable(tooltipModel.get('enterable'));
 
         this._initGlobalListener();
@@ -428,7 +429,7 @@ class TooltipView extends ComponentView {
             this._showAxisTooltip(dataByCoordSys, e);
         }
         // Always show item tooltip if mouse is on the element with dataIndex
-        else if (el && getECData(el).dataIndex != null) {
+        else if (el && findEventDispatcher(el, (target) => getECData(target).dataIndex != null)) {
             this._lastDataByCoordSys = null;
             this._showSeriesItemTooltip(e, el, dispatchAction);
         }
@@ -449,7 +450,7 @@ class TooltipView extends ComponentView {
     ) {
         // showDelay is used in this case: tooltip.enterable is set
         // as true. User intent to move mouse into tooltip and click
-        // something. `showDelay` makes it easyer to enter the content
+        // something. `showDelay` makes it easier to enter the content
         // but tooltip do not move immediately.
         const delay = tooltipModel.get('showDelay');
         cb = zrUtil.bind(cb, this);
@@ -481,17 +482,6 @@ class TooltipView extends ComponentView {
         const markupStyleCreator = new TooltipMarkupStyleCreator();
 
         each(dataByCoordSys, function (itemCoordSys) {
-            // let coordParamList = [];
-            // let coordDefaultHTML = [];
-            // let coordTooltipModel = buildTooltipModel([
-            //     e.tooltipOption,
-            //     itemCoordSys.tooltipOption,
-            //     ecModel.getComponent(itemCoordSys.coordSysMainType, itemCoordSys.coordSysIndex),
-            //     globalTooltipModel
-            // ]);
-            // let displayMode = coordTooltipModel.get('displayMode');
-            // let paramsList = displayMode === 'single' ? infoBySeriesList : [];
-
             each(itemCoordSys.dataByAxis, function (axisItem) {
                 const axisModel = ecModel.getComponent(axisItem.axisDim + 'Axis', axisItem.axisIndex) as AxisBaseModel;
                 const axisValue = axisItem.value;
@@ -539,27 +529,6 @@ class TooltipView extends ComponentView {
                         markupTextArrLegacy.push(seriesTooltipResult.markupText);
                     }
                     cbParamsList.push(cbParams);
-
-                    // const data = series.getData();
-                    // const dims = zrUtil.map(series.coordinateSystem.dimensions, function (coordDim) {
-                    //     return data.mapDimension(coordDim);
-                    // });
-                    // let isStacked = false;
-                    // const stackResultDim = data.getCalculationInfo('stackResultDimension');
-                    // if (isDimensionStacked(data, dims[0])) {
-                    //     isStacked = true;
-                    //     dims[0] = stackResultDim;
-                    // }
-                    // if (isDimensionStacked(data, dims[1])) {
-                    //     isStacked = true;
-                    //     dims[1] = stackResultDim;
-                    // }
-                    // dataParams.coordinateSystem = series.coordinateSystem;
-                    // dataParams.position = findPointFromSeries({
-                    //     seriesIndex: idxItem.seriesIndex,
-                    //     dataIndex: dataIndex,
-                    //     isStacked
-                    // }, ecModel).point;
                 });
             });
         });
@@ -606,8 +575,9 @@ class TooltipView extends ComponentView {
         el: ECElement,
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
+        const dispatcher = findEventDispatcher(el, (target) => getECData(target).dataIndex != null);
         const ecModel = this._ecModel;
-        const ecData = getECData(el);
+        const ecData = getECData(dispatcher);
         // Use dataModel in element if possible
         // Used when mouseover on a element like markPoint or edge
         // In which case, the data is not main data in series.
@@ -696,7 +666,7 @@ class TooltipView extends ComponentView {
         const markupStyleCreator = new TooltipMarkupStyleCreator();
 
         // Do not check whether `trigger` is 'none' here, because `trigger`
-        // only works on cooridinate system. In fact, we have not found case
+        // only works on coordinate system. In fact, we have not found case
         // that requires setting `trigger` nothing on component yet.
 
         this._showOrMove(subTooltipModel, function (this: TooltipView) {
@@ -787,34 +757,6 @@ class TooltipView extends ComponentView {
                 color: tooltipDataParams.color || tooltipDataParams.borderColor
             };
         }
-
-        // if (!zrUtil.isArray(tooltipDataParams)) {
-        //     if (!tooltipDataParams.position) {
-        //         return {
-        //             color: tooltipDataParams.color || tooltipDataParams.borderColor
-        //         };
-        //     }
-        //     return {
-        //         color: tooltipDataParams.color || tooltipDataParams.borderColor
-        //     };
-        // }
-
-        // const distanceArr = zrUtil.map(tooltipDataParams, function (params) {
-        //     let dim = '';
-        //     if (params.coordinateSystem && params.coordinateSystem.type === 'cartesian2d') {
-        //         dim = params.coordinateSystem.getBaseAxis().dim;
-        //     }
-        //     const posIndex = +(dim === 'x');
-        //     const distance = Math.abs(params.position[posIndex] - point[posIndex]);
-        //     delete params.position;
-        //     delete params.coordinateSystem;
-        //     return distance;
-        // });
-
-        // const index = zrUtil.indexOf(distanceArr, Math.min(...distanceArr));
-        // return {
-        //     color: tooltipDataParams[index]?.color || tooltipDataParams[index]?.borderColor || '#fff'
-        // };
     }
 
     private _updatePosition(

@@ -35,12 +35,16 @@ export default function (
     ecModel.eachSeriesByType(seriesType, function (seriesModel: SunburstSeriesModel) {
         let center = seriesModel.get('center');
         let radius = seriesModel.get('radius');
+        let cornerRadius = seriesModel.get('cornerRadius');
 
         if (!zrUtil.isArray(radius)) {
             radius = [0, radius];
         }
         if (!zrUtil.isArray(center)) {
             center = [center, center];
+        }
+        if (!zrUtil.isArray(cornerRadius)) {
+            cornerRadius = [cornerRadius, cornerRadius];
         }
 
         const width = api.getWidth();
@@ -50,6 +54,8 @@ export default function (
         const cy = parsePercent(center[1], height);
         const r0 = parsePercent(radius[0], size / 2);
         const r = parsePercent(radius[1], size / 2);
+        const innerCornerRadius = parsePercent(cornerRadius[0], r0);
+        const outerCornerRadius = parsePercent(cornerRadius[1], r);
 
         const startAngle = -seriesModel.get('startAngle') * RADIAN;
         const minAngle = seriesModel.get('minAngle') * RADIAN;
@@ -139,7 +145,9 @@ export default function (
                     cx: cx,
                     cy: cy,
                     r0: rStart,
-                    r: rEnd
+                    r: rEnd,
+                    cornerRadius: outerCornerRadius,
+                    innerCornerRadius: innerCornerRadius
                 });
             }
 
@@ -169,7 +177,9 @@ export default function (
                 cx: cx,
                 cy: cy,
                 r0: rStart,
-                r: rEnd
+                r: rEnd,
+                cornerRadius: outerCornerRadius,
+                innerCornerRadius: innerCornerRadius
             });
         }
 

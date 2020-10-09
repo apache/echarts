@@ -333,8 +333,10 @@ function rotateTextRect(textRect: RectLike, rotate: number) {
     const rotateRadians = rotate * Math.PI / 180;
     const beforeWidth = textRect.width;
     const beforeHeight = textRect.height;
-    const afterWidth = beforeWidth * Math.cos(rotateRadians) + beforeHeight * Math.sin(rotateRadians);
-    const afterHeight = beforeWidth * Math.sin(rotateRadians) + beforeHeight * Math.cos(rotateRadians);
+    const afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians))
+        + Math.abs(beforeHeight * Math.sin(rotateRadians));
+    const afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians))
+        + Math.abs(beforeHeight * Math.cos(rotateRadians));
     const rotatedRect = new BoundingRect(textRect.x, textRect.y, afterWidth, afterHeight);
 
     return rotatedRect;
