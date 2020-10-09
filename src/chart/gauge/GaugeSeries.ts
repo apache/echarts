@@ -67,6 +67,14 @@ interface ProgressOption {
     itemStyle?: ItemStyleOption
 }
 
+interface TitleDetailItemOption {
+    isCombination?: boolean
+    orient?: 'vertical' | 'horizontal'
+    width?: number
+    height?: number
+    itemGap?: number
+}
+
 export interface GaugeStateOption {
     itemStyle?: ItemStyleOption
 }
@@ -132,6 +140,7 @@ export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, Gauge
 
     pointer?: PointerOption
     anchor?: AnchorOption
+    titleDetailItem?: TitleDetailItemOption
 
     title?: LabelOption & {
         /**
@@ -252,6 +261,15 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
                 borderColor: '#5470c6'
             }
         },
+
+        titleDetailItem: {
+            isCombination: false,
+            orient: 'horizontal',
+            width: 0,
+            height: 0,
+            itemGap: 10
+        },
+
         title: {
             show: true,
             // x, y，单位px
