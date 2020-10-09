@@ -52,6 +52,9 @@ under the License.
             var option;
 
             option = {
+                legend: {
+                    data: ['a', 'b']
+                },
                 xAxis: {
                     type: 'category',
                     data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -60,20 +63,32 @@ under the License.
                     type: 'value'
                 },
                 series: [{
+                    name: 'a',
                     data: [120, 200, 150, 80, 70, 110, 130],
                     type: 'bar',
                     itemStyle: {
                         decal: {
                         }
                     }
-                }]
+                }, {
+                    name: 'b',
+                    data: [120, 200, 150, 80, 70, 110, 130],
+                    type: 'bar',
+                    itemStyle: {
+                        decal: {
+                        }
+                    }
+                }],
+                grid: {
+                    left: 50,
+                    right: '40%'
+                }
             };
 
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'Test Case Description of main0',
-                    '(Muliple lines and **emphasis** are supported in description)'
+                    'Default decals for different series'
                 ],
                 option: option
                 // height: 300,
