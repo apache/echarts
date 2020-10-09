@@ -60,7 +60,10 @@ class PiePiece extends graphic.Sector {
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const emphasisModel = itemModel.getModel('emphasis');
         const layout = data.getItemLayout(idx);
-        const sectorShape = extend(getSectorCornerRadius(itemModel.getModel('itemStyle'), layout), layout);
+        const sectorShape = extend(
+            getSectorCornerRadius(itemModel.getModel('itemStyle'), layout) || {},
+            layout
+        );
 
         if (firstCreate) {
             sector.setShape(sectorShape);
