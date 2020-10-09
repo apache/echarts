@@ -202,7 +202,7 @@ function updateElCommon(
 
     const itemModel = data.getItemModel<ParallelSeriesDataItemOption>(dataIndex);
     const emphasisModel = itemModel.getModel('emphasis');
-    setStatesStylesFromModel(el, itemModel, 'lineStyle', 'getLineStyle');
+    setStatesStylesFromModel(el, itemModel, 'lineStyle');
 
     enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
 }

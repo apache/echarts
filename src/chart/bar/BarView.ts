@@ -20,7 +20,6 @@
 import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
 import {extend, map, defaults, each} from 'zrender/src/core/util';
-import type {RectLike} from 'zrender/src/core/BoundingRect';
 import {
     Rect,
     Sector,
@@ -341,6 +340,9 @@ class BarView extends ChartView {
                         }
                         bgEls[newIndex] = bgEl;
                     }
+                    const bgLayout = getLayout[coord.type](data, newIndex);
+                    const shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
+                    updateProps(bgEl, { shape: shape }, animationModel, newIndex);
                 }
 
                 let el = oldData.getItemGraphicEl(oldIndex) as BarPossiblePath;
