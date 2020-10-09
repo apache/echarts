@@ -32,7 +32,8 @@ import {
     OptionDataValueNumeric,
     ItemStyleOption,
     BoxLayoutOptionMixin,
-    ZRColor
+    ZRColor,
+    Dictionary
 } from '../../util/types';
 import SingleAxis from '../../coord/single/SingleAxis';
 import GlobalModel from '../../model/Global';
@@ -44,6 +45,8 @@ const DATA_NAME_INDEX = 2;
 interface ThemeRiverSeriesLabelOption extends LabelOption {
     margin?: number
 }
+
+type ThemerRiverDataItem = [OptionDataValueDate, OptionDataValueNumeric, string];
 
 export interface ThemeRiverStateOption {
     label?: ThemeRiverSeriesLabelOption
@@ -65,7 +68,7 @@ export interface ThemeRiverSeriesOption extends SeriesOption<ThemeRiverStateOpti
     /**
      * [date, value, name]
      */
-    data?: [OptionDataValueDate, OptionDataValueNumeric, string][]
+    data?: ThemerRiverDataItem[]
 }
 
 class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
@@ -103,55 +106,45 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
      */
     fixData(data: ThemeRiverSeriesOption['data']) {
         let rawDataLength = data.length;
+        /**
+         * Make sure every layer data get the same keys.
+         * The value index tells which layer has visited.
+         * {
+         *  2014/01/01: -1
+         * }
+         */
+        const timeValueKeys: Dictionary<number> = {};
 
         // grouped data by name
-        const groupResult = groupData(data, function (item) {
+        const groupResult = groupData(data, (item: ThemerRiverDataItem) => {
+            if (!timeValueKeys.hasOwnProperty(item[0] + '')) {
+                timeValueKeys[item[0] + ''] = -1;
+            }
             return item[2];
         });
-        const layData: {
-            name: string,
-            dataList: ThemeRiverSeriesOption['data']
-        }[] = [];
+        const layerData: {name: string, dataList: ThemerRiverDataItem[]}[] = [];
         groupResult.buckets.each(function (items, key) {
-            layData.push({
-                name: key,
-                dataList: items
+            layerData.push({
+                name: key, dataList: items
             });
         });
-
-        const layerNum = layData.length;
-        let largestLayer = -1;
-        let index = -1;
-        for (let i = 0; i < layerNum; ++i) {
-            const len = layData[i].dataList.length;
-            if (len > largestLayer) {
-                largestLayer = len;
-                index = i;
-            }
-        }
+        const layerNum = layerData.length;
 
         for (let k = 0; k < layerNum; ++k) {
-            if (k === index) {
-                continue;
+            const name = layerData[k].name;
+            for (let j = 0; j < layerData[k].dataList.length; ++j) {
+                const timeValue = layerData[k].dataList[j][0] + '';
+                timeValueKeys[timeValue] = k;
             }
-            const name = layData[k].name;
-            for (let j = 0; j < largestLayer; ++j) {
-                const timeValue = layData[index].dataList[j][0];
-                const length = layData[k].dataList.length;
-                let keyIndex = -1;
-                for (let l = 0; l < length; ++l) {
-                    const value = layData[k].dataList[l][0];
-                    if (value === timeValue) {
-                        keyIndex = l;
-                        break;
-                    }
-                }
-                if (keyIndex === -1) {
+
+            for (const timeValue in timeValueKeys) {
+                if (timeValueKeys.hasOwnProperty(timeValue) && timeValueKeys[timeValue] !== k) {
+                    timeValueKeys[timeValue] = k;
                     data[rawDataLength] = [timeValue, 0, name];
                     rawDataLength++;
-
                 }
             }
+
         }
         return data;
     }

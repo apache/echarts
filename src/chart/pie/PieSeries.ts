@@ -91,6 +91,16 @@ export interface PieSeriesOption extends
     minAngle?: number
     minShowLabelAngle?: number
 
+    // can be 10
+    // which means that both innerCornerRadius and outerCornerRadius are 10
+    // can also be an array [20, 10]
+    // which means that innerCornerRadius is 20
+    // and outerCornerRadius is 10
+    // can also be a string or string array, such as ['20%', '50%']
+    // which means that innerCornerRadius is 20% of the innerRadius
+    // and outerCornerRadius is half of outerRadius.
+    cornerRadius?: (number | string)[] | number | string
+
     selectedOffset?: number
 
     avoidLabelOverlap?: boolean
@@ -186,6 +196,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         // 默认全局居中
         center: ['50%', '50%'],
         radius: [0, '75%'],
+        cornerRadius: 0,
         // 默认顺时针
         clockwise: true,
         startAngle: 90,

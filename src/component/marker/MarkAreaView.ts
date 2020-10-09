@@ -26,7 +26,7 @@ import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
-import { retrieve, mergeAll, map, defaults, curry, filter, HashMap } from 'zrender/src/core/util';
+import { retrieve, mergeAll, map, defaults, curry, filter, HashMap, each } from 'zrender/src/core/util';
 import { ScaleDataValue, ParsedValue, ZRColor } from '../../util/types';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import MarkAreaModel, { MarkArea2DDataItemOption } from './MarkAreaModel';
@@ -244,9 +244,30 @@ class MarkAreaView extends MarkerView {
         // Update visual and layout of line
         areaData.each(function (idx) {
             // Layout
-            areaData.setItemLayout(idx, map(dimPermutations, function (dim) {
+            const points = map(dimPermutations, function (dim) {
                 return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
-            }));
+            });
+            // If none of the area is inside coordSys, allClipped is set to be true
+            // in layout so that label will not be displayed. See #12591
+            let allClipped = true;
+            each(dimPermutations, function (dim) {
+                if (!allClipped) {
+                    return;
+                }
+                const xValue = areaData.get(dim[0], idx);
+                const yValue = areaData.get(dim[1], idx);
+                // If is infinity, the axis should be considered not clipped
+                if ((isInifinity(xValue) || coordSys.getAxis('x').containData(xValue))
+                    && (isInifinity(yValue) || coordSys.getAxis('y').containData(yValue))
+                ) {
+                    allClipped = false;
+                }
+            });
+            areaData.setItemLayout(idx, {
+                points: points,
+                allClipped: allClipped
+            });
+
 
             const style = areaData.getItemModel<MarkAreaMergedItemOption>(idx).getModel('itemStyle').getItemStyle();
             const color = getVisualFromData(seriesData, 'color') as ZRColor;
@@ -266,23 +287,41 @@ class MarkAreaView extends MarkerView {
 
         areaData.diff(inner(polygonGroup).data)
             .add(function (idx) {
-                const polygon = new graphic.Polygon({
-                    shape: {
-                        points: areaData.getItemLayout(idx)
-                    }
-                });
-                areaData.setItemGraphicEl(idx, polygon);
-                polygonGroup.group.add(polygon);
+                const layout = areaData.getItemLayout(idx);
+                if (!layout.allClipped) {
+                    const polygon = new graphic.Polygon({
+                        shape: {
+                            points: layout.points
+                        }
+                    });
+                    areaData.setItemGraphicEl(idx, polygon);
+                    polygonGroup.group.add(polygon);
+                }
             })
             .update(function (newIdx, oldIdx) {
-                const polygon = inner(polygonGroup).data.getItemGraphicEl(oldIdx) as graphic.Polygon;
-                graphic.updateProps(polygon, {
-                    shape: {
-                        points: areaData.getItemLayout(newIdx)
+                let polygon = inner(polygonGroup).data.getItemGraphicEl(oldIdx) as graphic.Polygon;
+                const layout = areaData.getItemLayout(newIdx);
+                if (!layout.allClipped) {
+                    if (polygon) {
+                        graphic.updateProps(polygon, {
+                            shape: {
+                                points: layout.points
+                            }
+                        }, maModel, newIdx);
                     }
-                }, maModel, newIdx);
-                polygonGroup.group.add(polygon);
-                areaData.setItemGraphicEl(newIdx, polygon);
+                    else {
+                        polygon = new graphic.Polygon({
+                            shape: {
+                                points: layout.points
+                            }
+                        });
+                    }
+                    areaData.setItemGraphicEl(newIdx, polygon);
+                    polygonGroup.group.add(polygon);
+                }
+                else if (polygon) {
+                    polygonGroup.group.remove(polygon);
+                }
             })
             .remove(function (idx) {
                 const polygon = inner(polygonGroup).data.getItemGraphicEl(idx);

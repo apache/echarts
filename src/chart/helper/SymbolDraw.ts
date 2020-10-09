@@ -41,17 +41,19 @@ import { getLabelStatesModels } from '../../label/labelStyle';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
+    clipShape?: CoordinateSystemClipArea,
     getSymbolPoint?(idx: number): number[]
-    clipShape?: CoordinateSystemClipArea
+
+    disableAnimation?: boolean
 }
 
 interface SymbolLike extends graphic.Group {
-    updateData(data: List, idx: number, scope?: SymbolDrawSeriesScope): void
+    updateData(data: List, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): void
     fadeOut?(cb: () => void): void
 }
 
 interface SymbolLikeCtor {
-    new(data: List, idx: number, scope?: SymbolDrawSeriesScope): SymbolLike
+    new(data: List, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): SymbolLike
 }
 
 function symbolNeedsDraw(data: List, point: number[], idx: number, opt: UpdateOpt) {
@@ -160,7 +162,7 @@ class SymbolDraw {
     private _getSymbolPoint: UpdateOpt['getSymbolPoint'];
 
     constructor(SymbolCtor?: SymbolLikeCtor) {
-        this._SymbolCtor = SymbolCtor || SymbolClz;
+        this._SymbolCtor = SymbolCtor || SymbolClz as SymbolLikeCtor;
     }
 
     /**
@@ -173,8 +175,11 @@ class SymbolDraw {
         const seriesModel = data.hostModel;
         const oldData = this._data;
         const SymbolCtor = this._SymbolCtor;
+        const disableAnimation = opt.disableAnimation;
 
         const seriesScope = makeSeriesScope(data);
+
+        const symbolUpdateOpt = { disableAnimation };
 
         const getSymbolPoint = opt.getSymbolPoint || function (idx: number) {
             return data.getItemLayout(idx);
@@ -191,7 +196,7 @@ class SymbolDraw {
             .add(function (newIdx) {
                 const point = getSymbolPoint(newIdx);
                 if (symbolNeedsDraw(data, point, newIdx, opt)) {
-                    const symbolEl = new SymbolCtor(data, newIdx, seriesScope);
+                    const symbolEl = new SymbolCtor(data, newIdx, seriesScope, symbolUpdateOpt);
                     symbolEl.setPosition(point);
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
@@ -210,11 +215,14 @@ class SymbolDraw {
                     symbolEl.setPosition(point);
                 }
                 else {
-                    symbolEl.updateData(data, newIdx, seriesScope);
-                    graphic.updateProps(symbolEl, {
+                    symbolEl.updateData(data, newIdx, seriesScope, symbolUpdateOpt);
+                    const target = {
                         x: point[0],
                         y: point[1]
-                    }, seriesModel);
+                    };
+                    disableAnimation
+                        ? symbolEl.attr(target)
+                        : graphic.updateProps(symbolEl, target, seriesModel);
                 }
 
                 // Add back

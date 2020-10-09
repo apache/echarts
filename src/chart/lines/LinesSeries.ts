@@ -161,9 +161,6 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
     }
 
     mergeOption(option: LinesSeriesOption) {
-        // The input data may be null/undefined.
-        option.data = option.data || [];
-
         compatEc2(option);
 
         if (option.data) {

@@ -52,6 +52,8 @@ import { ForceLayoutInstance } from './forceLayout';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
+import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
+
 
 type GraphDataValue = OptionDataValue | OptionDataValue[];
 
@@ -275,7 +277,13 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         const self = this;
 
         if (nodes && edges) {
-            return createGraphFromNodeEdge(nodes as GraphNodeItemOption[], edges, this, true, beforeLink).data;
+            // auto curveness
+            initCurvenessList(this);
+            const graph = createGraphFromNodeEdge(nodes as GraphNodeItemOption[], edges, this, true, beforeLink);
+            zrUtil.each(graph.edges, function (edge) {
+                createEdgeMapForCurveness(edge.node1, edge.node2, this, edge.dataIndex);
+            }, this);
+            return graph.data;
         }
 
         function beforeLink(nodeData: List, edgeData: List) {
@@ -482,7 +490,6 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         lineStyle: {
             color: '#aaa',
             width: 1,
-            curveness: 0,
             opacity: 0.5
         },
         emphasis: {

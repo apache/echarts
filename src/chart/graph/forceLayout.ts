@@ -25,6 +25,7 @@ import * as vec2 from 'zrender/src/core/vector';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
 import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './GraphSeries';
+import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
 
 export interface ForceLayoutInstance {
     step(cb: (stopped: boolean) => void): void
@@ -93,11 +94,16 @@ export default function (ecModel: GlobalModel) {
                     d = (edgeLengthArr[0] + edgeLengthArr[1]) / 2;
                 }
                 const edgeModel = edge.getModel<GraphEdgeItemOption>();
+                const curveness = zrUtil.retrieve3(
+                    edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'curveness']),
+                    -getCurvenessForEdge(edge, graphSeries, idx, true),
+                    0
+                );
                 return {
                     n1: nodes[edge.node1.dataIndex],
                     n2: nodes[edge.node2.dataIndex],
                     d: d,
-                    curveness: edgeModel.get(['lineStyle', 'curveness']) || 0,
+                    curveness,
                     ignoreForceLayout: edgeModel.get('ignoreForceLayout')
                 };
             });

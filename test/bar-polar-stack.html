@@ -32,11 +32,24 @@ under the License.
                 height: 100%;
                 margin: 0;
             }
+            html, body, .test-chart {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
             #main {
                 background: #fff;
             }
         </style>
         <div id="main"></div>
+        <h1>polar negative</h1>
+        <div id="polar-negative" class="test-chart"></div>
+        <h1>polar min negative</h1>
+        <div id="polar-min-negative" class="test-chart"></div>
+        <h1>polar max negative</h1>
+        <div id="polar-max-negative" class="test-chart"></div>
+        <h1>polar radius min > 0</h1>
+        <div id="polar-radius-min-positive" class="test-chart"></div>
         <script>
 
             require([
@@ -58,6 +71,7 @@ under the License.
                         z: 10
                     },
                     polar: {
+                        radius: [50, 200]
                     },
                     series: [{
                         type: 'bar',
@@ -90,6 +104,210 @@ under the License.
 
                 window.onresize = chart.resize;
             });
+        </script>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('polar-negative'), null, {});
+
+                var data = [];
+
+                chart.setOption({
+                    angleAxis: {
+                    type: 'category',
+                    data: ['S1', 'S2', 'S3']
+                },
+                radiusAxis: {
+                    min:-1,
+                    max: 3
+                },
+                polar: {
+                    radius: [50, 200]
+                },
+                series: [{
+                    type: 'bar',
+                    data: [1, 1, 1],
+                    coordinateSystem: 'polar',
+                    itemStyle:{
+                        color:"blue"
+                    },
+                    name: 'A',
+                    stack: 'a'
+                }, {
+                    type: 'bar',
+                    data: [1, 1, 1],
+                    coordinateSystem: 'polar',
+                    name: 'B',
+                    stack: 'a'
+                }, {
+                    type: 'bar',
+                    data: [1, 1, 1],
+                    coordinateSystem: 'polar',
+                    name: 'C',
+                    stack: 'a'
+                }],
+                legend: {
+                    show: true,
+                    data: ['A', 'B', 'C']
+                }
+                });
+            })
+        </script>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('polar-min-negative'), null, {});
+
+                var data = [];
+
+                chart.setOption({
+                    angleAxis: {
+                        type: 'category',
+                        data: ['S1', 'S2', 'S3']
+                    },
+                    radiusAxis: {
+                        min: -3,
+                        max: 1
+                    },
+                    polar: {
+                        radius: [50, 200]
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: [-2, 1, 1],
+                        coordinateSystem: 'polar',
+                        itemStyle:{
+                            color:"blue"
+                        },
+                        name: 'A',
+                        stack: 'a'
+                    }, {
+                        type: 'bar',
+                        data: [-1, 1, 1],
+                        coordinateSystem: 'polar',
+                        name: 'B',
+                        stack: 'a'
+                    }, {
+                        type: 'bar',
+                        data: [1, 1, 1],
+                        coordinateSystem: 'polar',
+                        name: 'C',
+                        stack: 'a'
+                    }],
+                    legend: {
+                        show: true,
+                        data: ['A', 'B', 'C']
+                    }
+                });
+            })
+        </script>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('polar-max-negative'), null, {});
+
+                var data = [];
+
+                chart.setOption({
+                    angleAxis: {
+                        type: 'category',
+                        data: ['S1', 'S2', 'S3']
+                    },
+                    radiusAxis: {
+                        min: -6,
+                        max: -1
+                    },
+                    polar: {
+                        radius: [50, 200]
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: [-2, 1, 1],
+                        coordinateSystem: 'polar',
+                        itemStyle:{
+                            color:"blue"
+                        },
+                        name: 'A',
+                        stack: 'a'
+                    }, {
+                        type: 'bar',
+                        data: [-1, 1, 1],
+                        coordinateSystem: 'polar',
+                        name: 'B',
+                        stack: 'a'
+                    }, {
+                        type: 'bar',
+                        data: [1, 1, 1],
+                        coordinateSystem: 'polar',
+                        name: 'C',
+                        stack: 'a'
+                    }],
+                    legend: {
+                        show: true,
+                        data: ['A', 'B', 'C']
+                    }
+                });
+            })
+        </script>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('polar-radius-min-positive'), null, {});
+
+                var data = [];
+
+                chart.setOption({
+                    angleAxis: {
+                        type: 'category',
+                        data: ['S1', 'S2', 'S3']
+                    },
+                    radiusAxis: {
+                        min: 1,
+                        max: 6
+                    },
+                    polar: {
+                        radius: [50, 200]
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: [2, 2, 2],
+                        coordinateSystem: 'polar',
+                        itemStyle:{
+                            color:"blue"
+                        },
+                        name: 'A',
+                        stack: 'a'
+                    },
+                    {
+                        type: 'bar',
+                        data: [2, 2, 2],
+                        coordinateSystem: 'polar',
+                        name: 'B',
+                        stack: 'a'
+                    },
+                    {
+                        type: 'bar',
+                        data: [2, 2, 2],
+                        coordinateSystem: 'polar',
+                        name: 'C',
+                        stack: 'a'
+                    }],
+                    legend: {
+                        show: true,
+                        data: ['A', 'B', 'C']
+                    }
+                });
+            })
+
         </script>
     </body>
 </html>

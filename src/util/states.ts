@@ -85,10 +85,8 @@ function liftColor(color: string): string {
 }
 
 function doChangeHoverState(el: ECElement, stateName: DisplayState, hoverStateEnum: 0 | 1 | 2) {
-    if (el.onHoverStateChange) {
-        if ((el.hoverState || 0) !== hoverStateEnum) {
-            el.onHoverStateChange(stateName);
-        }
+    if (el.onHoverStateChange && (el.hoverState || 0) !== hoverStateEnum) {
+        el.onHoverStateChange(stateName);
     }
     el.hoverState = hoverStateEnum;
 }

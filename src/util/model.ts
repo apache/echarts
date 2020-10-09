@@ -45,13 +45,17 @@ import {
     TooltipRenderMode,
     Payload,
     OptionId,
-    OptionName
+    OptionName,
+    LabelOption,
+    ParsedValue
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
-import { isNumeric, getRandomIdBase } from './number';
+import { isNumeric, getRandomIdBase, getPrecisionSafe, round } from './number';
+import { interpolateNumber } from 'zrender/src/animation/Animator';
+import Model from '../model/Model';
 
 /**
  * Make the name displayable. But we should
@@ -978,4 +982,73 @@ export function groupData<T, R extends string | number>(
         keys: keys,
         buckets: buckets
     };
+}
+
+
+/**
+ * Interpolate raw values of a series with percent
+ *
+ * @param data         data
+ * @param labelModel   label model of the text element
+ * @param sourceValue  start value
+ * @param targetValue  end value
+ * @param percent      0~1 percentage; 0 uses start value while 1 uses end value
+ * @return             interpolated values
+ */
+export function interpolateRawValues(
+    data: List,
+    precision: number | 'auto',
+    sourceValue: ParsedValue[] | ParsedValue,
+    targetValue: ParsedValue[] | ParsedValue,
+    percent: number
+): (string | number)[] | string | number {
+    const isAutoPrecision = precision == null || precision === 'auto';
+
+    if (typeof targetValue === 'number') {
+        const value = interpolateNumber(
+            sourceValue as number || 0,
+            targetValue as number,
+            percent
+        );
+        return round(
+            value,
+            isAutoPrecision ? Math.max(
+                getPrecisionSafe(sourceValue as number || 0),
+                getPrecisionSafe(targetValue as number)
+            )
+            : precision as number
+        );
+    }
+    else if (typeof targetValue === 'string') {
+        return percent < 1 ? sourceValue : targetValue;
+    }
+    else {
+        const interpolated = [];
+        const leftArr = sourceValue as (string | number)[] || [];
+        const rightArr = targetValue as (string | number[]);
+        const length = Math.max(leftArr.length, rightArr.length);
+        for (let i = 0; i < length; ++i) {
+            const info = data.getDimensionInfo(i);
+            // Don't interpolate ordinal dims
+            if (info.type === 'ordinal') {
+                interpolated[i] = (percent < 1 ? leftArr : rightArr)[i] as number;
+            }
+            else {
+                const leftVal = leftArr && leftArr[i] ? leftArr[i] as number : 0;
+                const rightVal = rightArr[i] as number;
+                const value = leftArr == null
+                    ? (targetValue as [])[i]
+                    : interpolateNumber(leftVal, rightVal, percent);
+                interpolated[i] = round(
+                    value,
+                    isAutoPrecision ? Math.max(
+                        getPrecisionSafe(leftVal),
+                        getPrecisionSafe(rightVal)
+                    )
+                    : precision as number
+                );
+            }
+        }
+        return interpolated;
+    }
 }

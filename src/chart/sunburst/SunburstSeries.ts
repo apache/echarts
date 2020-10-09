@@ -32,6 +32,8 @@ import {
     OptionDataItemObject
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
+import List from '../../data/List';
+import Model from '../../model/Model';
 
 interface SunburstLabelOption extends Omit<LabelOption, 'rotate' | 'position'> {
     rotate?: 'radial' | 'tangential' | number
@@ -109,6 +111,16 @@ export interface SunburstSeriesOption extends
     animationType?: 'expansion' | 'scale'
 
     sort?: 'desc' | 'asc' | ((a: TreeNode, b: TreeNode) => number)
+
+    // can be 10
+    // which means that both innerCornerRadius and outerCornerRadius are 10
+    // can also be an array [20, 10]
+    // which means that innerCornerRadius is 20
+    // and outerCornerRadius is 10
+    // can also be a string or string array, such as ['20%', '50%']
+    // which means that innerCornerRadius is 20% of the innerRadius
+    // and outerCornerRadius is half of outerRadius.
+    cornerRadius?: (number | string)[] | number | string
 }
 
 interface SunburstSeriesModel {
@@ -132,18 +144,24 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
         completeTreeValue(root);
 
-        const levels = option.levels || [];
-
-        // levels = option.levels = setDefault(levels, ecModel);
-
-        const treeOption = {
-            levels: levels
-        };
+        const levelModels = zrUtil.map(option.levels || [], function (levelDefine) {
+            return new Model(levelDefine, this, ecModel);
+        }, this);
 
         // Make sure always a new tree is created when setOption,
         // in TreemapView, we check whether oldTree === newTree
         // to choose mappings approach among old shapes and new shapes.
-        return Tree.createTree(root, this, treeOption).data;
+        const tree = Tree.createTree(root, this, beforeLink);
+
+        function beforeLink(nodeData: List) {
+            nodeData.wrapMethod('getItemModel', function (model, idx) {
+                const node = tree.getNodeByDataIndex(idx);
+                const levelModel = levelModels[node.depth];
+                levelModel && (model.parentModel = levelModel);
+                return model;
+            });
+        }
+        return tree.data;
     }
 
     optionUpdated() {
@@ -169,6 +187,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         // 默认全局居中
         center: ['50%', '50%'],
         radius: [0, '75%'],
+        cornerRadius: 0,
         // 默认顺时针
         clockwise: true,
         startAngle: 90,

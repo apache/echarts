@@ -142,7 +142,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         const leaves = option.leaves || {};
         const leavesModel = new Model(leaves, this, this.ecModel);
 
-        const tree = Tree.createTree(root, this, {}, beforeLink);
+        const tree = Tree.createTree(root, this, beforeLink);
 
         function beforeLink(nodeData: List) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {

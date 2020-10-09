@@ -117,7 +117,7 @@ type MapCb<Ctx> = (this: CtxOrList<Ctx>, ...args: any) => ParsedValue | ParsedVa
 const TRANSFERABLE_PROPERTIES = [
     'hasItemOption', '_nameList', '_idList', '_invertedIndicesMap',
     '_rawData', '_dimValueGetter',
-    '_count', '_rawCount', '_nameDimIdx', '_idDimIdx'
+    '_count', '_rawCount', '_nameDimIdx', '_idDimIdx', '_nameRepeatCount'
 ];
 const CLONE_PROPERTIES = [
     '_extent', '_approximateExtent', '_rawExtent'
@@ -167,6 +167,7 @@ let prepareStorage: (
 ) => void;
 let getRawIndexWithoutIndices: (this: List, idx: number) => number;
 let getRawIndexWithIndices: (this: List, idx: number) => number;
+let getIdFromName: (list: List, name: string) => string;
 let getId: (list: List, rawIndex: number) => string;
 let normalizeDimensions: (dimensions: ItrParamDims) => Array<DimensionLoose>;
 let validateDimensions: (list: List, dims: DimensionName[]) => void;
@@ -417,7 +418,7 @@ class List<
      * Initialize from data
      * @param data source or data or data provider.
      * @param nameLIst The name of a datum is used on data diff and
-     *        defualt label/tooltip.
+     *        default label/tooltip.
      *        A name can be specified in encode.itemName,
      *        or dataItem.name (only for series option data),
      *        or provided in nameList from outside.
@@ -580,7 +581,7 @@ class List<
         const nameList = this._nameList;
         const idList = this._idList;
         const rawExtent = this._rawExtent;
-        const nameRepeatCount: NameRepeatCount = this._nameRepeatCount = {};
+        this._nameRepeatCount = {};
         let nameDimIdx;
 
         for (let i = 0; i < dimLen; i++) {
@@ -670,12 +671,7 @@ class List<
 
                     if (id == null && name != null) {
                         // Use name as id and add counter to avoid same name
-                        nameRepeatCount[name] = nameRepeatCount[name] || 0;
-                        id = name;
-                        if (nameRepeatCount[name] > 0) {
-                            id += '__ec__' + nameRepeatCount[name];
-                        }
-                        nameRepeatCount[name]++;
+                        id = getIdFromName(this, name);
                     }
                     id != null && (idList[idx] = id);
                 }
@@ -1199,24 +1195,25 @@ class List<
         const storageArr = this._storageArr;
 
         for (let i = 0, len = this.count(); i < len; i++) {
+            const rawIdx = this.getRawIndex(i);
             // Simple optimization
             switch (dimSize) {
                 case 0:
                     (cb as EachCb0<Ctx>).call(fCtx, i);
                     break;
                 case 1:
-                    (cb as EachCb1<Ctx>).call(fCtx, storageArr[dimIndices[0]][i], i);
+                    (cb as EachCb1<Ctx>).call(fCtx, storageArr[dimIndices[0]][rawIdx], i);
                     break;
                 case 2:
                     (cb as EachCb2<Ctx>).call(
-                        fCtx, storageArr[dimIndices[0]][i], storageArr[dimIndices[1]][i], i
+                        fCtx, storageArr[dimIndices[0]][rawIdx], storageArr[dimIndices[1]][rawIdx], i
                     );
                     break;
                 default:
                     let k = 0;
                     const value = [];
                     for (; k < dimSize; k++) {
-                        value[k] = storageArr[dimIndices[k]][i];
+                        value[k] = storageArr[dimIndices[k]][rawIdx];
                     }
                     // Index
                     value[k] = i;
@@ -2126,6 +2123,17 @@ class List<
             return -1;
         };
 
+        getIdFromName = function (list: List, name: string) {
+            const nameRepeatCount = list._nameRepeatCount;
+            nameRepeatCount[name] = nameRepeatCount[name] || 0;
+            let id = name;
+            if (nameRepeatCount[name] > 0) {
+                id += '__ec__' + nameRepeatCount[name];
+            }
+            nameRepeatCount[name]++;
+            return id;
+        };
+
         /**
          * @see the comment of `List['getId']`.
          */
@@ -2135,8 +2143,17 @@ class List<
                 id = convertOptionIdName(getRawValueFromStore(list, list._idDimIdx, rawIndex), null);
             }
             if (id == null) {
-                // FIXME Check the usage in graph, should not use prefix.
-                id = ID_PREFIX + rawIndex;
+                // Use name
+                id = convertOptionIdName(getRawValueFromStore(list, list._nameDimIdx, rawIndex), null);
+                if (id != null) {
+                    id = getIdFromName(list, id);
+                    // Cache the id. Avoid getting twice.
+                    list._idList[rawIndex] = id;
+                }
+                else {
+                    // FIXME Check the usage in graph, should not use prefix.
+                    id = ID_PREFIX + rawIndex;
+                }
             }
             return id;
         };
