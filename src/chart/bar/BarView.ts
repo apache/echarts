@@ -83,7 +83,7 @@ type CartesianCoordArea = ReturnType<Cartesian2D['getArea']>;
 type PolarCoordArea = ReturnType<Polar['getArea']>;
 
 function getClipArea(coord: CoordSysOfBar, data: List) {
-    let coordSysClipArea = coord.getArea && coord.getArea();
+    const coordSysClipArea = coord.getArea && coord.getArea();
     if (isCoordinateSystemType<Cartesian2D>(coord, 'cartesian2d')) {
         const baseAxis = coord.getBaseAxis();
         // When boundaryGap is false or using time axis. bar may exceed the grid.

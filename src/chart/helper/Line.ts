@@ -40,7 +40,7 @@ type ECSymbol = ReturnType<typeof createSymbol>;
 
 type LineECSymbol = ECSymbol & {
     __specifiedRotation: number
-}
+};
 
 type LineList = List<SeriesModel, LineDataVisual>;
 
