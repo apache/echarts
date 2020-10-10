@@ -174,16 +174,16 @@ class GaugeView extends ChartView {
             startAngle, endAngle, clockwise, axisLineWidth
         );
 
+        this._renderTitleAndDetail(
+            seriesModel, ecModel, api, getColor, posInfo
+        )
+
+        this._renderAnchor(seriesModel, posInfo);
+
         this._renderPointer(
             seriesModel, ecModel, api, getColor, posInfo,
             startAngle, endAngle, clockwise, axisLineWidth
         );
-
-        this._renderAnchor(seriesModel, posInfo);
-
-        this._renderTitleAndDetail(
-            seriesModel, ecModel, api, getColor, posInfo
-        )
     }
 
     _renderTicks(

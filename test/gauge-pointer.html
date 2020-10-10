@@ -44,6 +44,7 @@ under the License.
         <div id="main4"></div>
         <div id="main5"></div>
         <div id="main6"></div>
+        <div id="main7"></div>
 
 
 
@@ -304,6 +305,229 @@ under the License.
                 option5.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
                 chart5.setOption(option5, true);
             }, 2000);
+
+
+            var option7 = {
+                series: [
+                    {
+                        name: 'hour',
+                        type: 'gauge',
+                        startAngle: 89.95,
+                        endAngle: -270.04,
+                        min: 0,
+                        max: 12,
+                        splitNumber: 12,
+                        axisLine: {
+                            lineStyle: {
+                                width: 15,
+                                color: [[1, 'rgba(0,0,0,0.7)']],
+                                shadowColor: 'rgba(0, 0, 0, 0.5)',
+                                shadowBlur: 15
+                            }
+                        },
+                        axisLabel: {
+                            fontSize: 50,
+                            distance: 20,
+                            formatter: function(value) {
+                                if (value === 0) {
+                                    return '';
+                                }
+                                return value;
+                            }
+                        },
+                        anchor: {
+                            show: true,
+                            anchorSize: 20,
+                            itemStyle: {
+                                borderWidth: 15,
+                                borderColor: '#C0911F',
+                                shadowColor: 'rgba(0, 0, 0, 0.3)',
+                                shadowBlur: 8,
+                                shadowOffsetX: 2,
+                                shadowOffsetY: 4
+                            }
+                        },
+                        pointer: {
+                            icon: 'path://M2.9,0.7L2.9,0.7c1.4,0,2.6,1.2,2.6,2.6v115c0,1.4-1.2,2.6-2.6,2.6l0,0c-1.4,0-2.6-1.2-2.6-2.6V3.3C0.3,1.9,1.4,0.7,2.9,0.7z',
+                            width: 12,
+                            length: '55%',
+                            offsetCenter: [0, '8%'],
+                            itemStyle: {
+                                color: '#C0911F',
+                                shadowColor: 'rgba(0, 0, 0, 0.3)',
+                                shadowBlur: 8,
+                                shadowOffsetX: 2,
+                                shadowOffsetY: 4
+                            }
+                        },
+                        detail: {
+                            show: false
+                        },
+                        title: {
+                            offsetCenter: [0, '30%']
+                        },
+                        data: [
+                            {
+                                value: 0, 
+                                name: 'Powered by ECharts'
+                            }
+                        ]
+                    },
+                    {
+                        name: 'minute',
+                        type: 'gauge',
+                        z2: 3,
+                        startAngle: 89.95,
+                        endAngle: -270.04,
+                        min: 0,
+                        max: 60,
+                        axisLine: {
+                            show: false
+                        },
+                        splitLine: {
+                            show: false
+                        },
+                        axisTick: {
+                            show: false
+                        },
+                        axisLabel: {
+                            show: false
+                        },
+                        pointer: {
+                            icon: 'path://M2.9,0.7L2.9,0.7c1.4,0,2.6,1.2,2.6,2.6v115c0,1.4-1.2,2.6-2.6,2.6l0,0c-1.4,0-2.6-1.2-2.6-2.6V3.3C0.3,1.9,1.4,0.7,2.9,0.7z',
+                            width: 8,
+                            length: '70%',
+                            offsetCenter: [0, '8%'],
+                            itemStyle: {
+                                color: '#C0911F',
+                                shadowColor: 'rgba(0, 0, 0, 0.3)',
+                                shadowBlur: 8,
+                                shadowOffsetX: 2,
+                                shadowOffsetY: 4
+                            }
+                        },
+                        anchor: {
+                            show: false
+                        },
+                        detail: {
+                            show: false
+                        },
+                        title: {
+                            offsetCenter: ['0%', '-40%']
+                        },
+                        data: [
+                            {
+                                value: 0, 
+                                name: ''
+                            }
+                        ]
+                    },
+                    {
+                        name: 'second',
+                        type: 'gauge',
+                        z2: 4,
+                        startAngle: 89.95,
+                        endAngle: -270.04,
+                        min: 0,
+                        max: 60,
+                        axisLine: {
+                            show: false
+                        },
+                        splitLine: {
+                            show: false
+                        },
+                        axisTick: {
+                            show: false
+                        },
+                        axisLabel: {
+                            show: false
+                        },
+                        pointer: {
+                            icon: 'path://M2.9,0.7L2.9,0.7c1.4,0,2.6,1.2,2.6,2.6v115c0,1.4-1.2,2.6-2.6,2.6l0,0c-1.4,0-2.6-1.2-2.6-2.6V3.3C0.3,1.9,1.4,0.7,2.9,0.7z',
+                            width: 4,
+                            length: '85%',
+                            offsetCenter: [0, '8%'],
+                            itemStyle: {
+                                color: '#C0911F',
+                                shadowColor: 'rgba(0, 0, 0, 0.3)',
+                                shadowBlur: 8,
+                                shadowOffsetX: 2,
+                                shadowOffsetY: 4
+                            }
+                        },
+                        anchor: {
+                            show: true,
+                            anchorSize: 15,
+                            itemStyle: {
+                                color: '#C0911F',
+                                shadowColor: 'rgba(0, 0, 0, 0.3)',
+                                shadowBlur: 8,
+                                shadowOffsetX: 2,
+                                shadowOffsetY: 4
+                            }
+                        },
+                        detail: {
+                            show: false
+                        },
+                        title: {
+                            offsetCenter: ['0%', '-40%']
+                        },
+                        data: [
+                            {
+                                value: 0, 
+                                name: ''
+                            }
+                        ]
+                    }
+                ]
+            };
+
+            var chart7 = testHelper.create(echarts, 'main7', {
+                title: [
+                    'clock'
+                ],
+                option: option7,
+                height: 600
+            });
+
+            const timeUpdatedStatus = {
+                second: false,
+                minute: false,
+                hour: false
+            }
+
+            function updateSeries(time, series, type) {
+                let isCritical = (Math.floor(time) === 0) || (type === 'second' && time === 1);
+                if (isCritical && timeUpdatedStatus[type] === true) {
+                    timeUpdatedStatus[type] = false;
+                    series.data[0].value = 0
+                    series.clockwise = true;
+                    option7.animationDurationUpdate = 0;
+                    chart7.setOption(option7, true);
+                }
+                series.data[0].value = time;
+                series.clockwise = true;
+                if (time === 0) {
+                    timeUpdatedStatus[type] = true;
+                    series.clockwise = false;
+                }
+            }
+
+            setInterval(function () {
+                let date = new Date();
+                let second = date.getSeconds();
+                let minute = date.getMinutes() + second / 60;
+                let hour = date.getHours() % 12 + minute / 60;
+
+                updateSeries(second, option7.series[2], 'second');
+                updateSeries(minute, option7.series[1], 'minute');
+                updateSeries(hour, option7.series[0], 'hour');
+
+                option7.animationDurationUpdate = 300;
+                chart7.setOption(option7, true);
+                date = null;
+            }, 1000);
+
         });
         </script>
 
