@@ -31,6 +31,8 @@ import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import labelLayout from './labelLayout';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { getSectorCornerRadius } from '../helper/pieHelper';
+
 /**
  * Piece of pie including Sector, Label, LabelLine
  */
@@ -58,7 +60,10 @@ class PiePiece extends graphic.Sector {
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const emphasisModel = itemModel.getModel('emphasis');
         const layout = data.getItemLayout(idx);
-        const sectorShape = extend({}, layout);
+        const sectorShape = extend(
+            getSectorCornerRadius(itemModel.getModel('itemStyle'), layout) || {},
+            layout
+        );
 
         if (firstCreate) {
             sector.setShape(sectorShape);
@@ -114,14 +119,18 @@ class PiePiece extends graphic.Sector {
 
         this._updateLabel(seriesModel, data, idx);
 
-
         sector.ensureState('emphasis').shape = {
             r: layout.r + (emphasisModel.get('scale')
-                ? (emphasisModel.get('scaleSize') || 0) : 0)
+                ? (emphasisModel.get('scaleSize') || 0) : 0),
+            ...getSectorCornerRadius(emphasisModel.getModel('itemStyle'), layout)
         };
         extend(sector.ensureState('select'), {
             x: dx,
-            y: dy
+            y: dy,
+            shape: getSectorCornerRadius(itemModel.getModel(['select', 'itemStyle']), layout)
+        });
+        extend(sector.ensureState('blur'), {
+            shape: getSectorCornerRadius(itemModel.getModel(['blur', 'itemStyle']), layout)
         });
 
         const labelLine = sector.getTextGuideLine();

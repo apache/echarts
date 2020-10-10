@@ -44,7 +44,6 @@ import {
     Payload,
     OptionId,
     OptionName,
-    LabelOption,
     ParsedValue
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
@@ -53,7 +52,6 @@ import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
 import { isNumeric, getRandomIdBase, getPrecisionSafe, round } from './number';
 import { interpolateNumber } from 'zrender/src/animation/Animator';
-import Model from '../model/Model';
 
 /**
  * Make the name displayable. But we should

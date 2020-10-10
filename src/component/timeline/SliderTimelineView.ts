@@ -28,7 +28,7 @@ import {createSymbol} from '../../util/symbol';
 import * as numberUtil from '../../util/number';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { merge, each, extend, clone, isString, bind, defaults, retrieve2 } from 'zrender/src/core/util';
+import { merge, each, extend, isString, bind, defaults, retrieve2 } from 'zrender/src/core/util';
 import SliderTimelineModel from './SliderTimelineModel';
 import ComponentView from '../../view/Component';
 import { LayoutOrient, ZRTextAlign, ZRTextVerticalAlign, ZRElementEvent, ScaleTick } from '../../util/types';

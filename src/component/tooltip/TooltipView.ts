@@ -39,7 +39,6 @@ import {
     CallbackDataParams,
     TooltipRenderMode,
     ECElement,
-    ColorString,
     CommonTooltipOption,
     ZRColor
 } from '../../util/types';
@@ -196,7 +195,7 @@ class TooltipView extends ComponentView {
         this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
 
         const tooltipContent = this._tooltipContent;
-        tooltipContent.update();
+        tooltipContent.update(tooltipModel);
         tooltipContent.setEnterable(tooltipModel.get('enterable'));
 
         this._initGlobalListener();
@@ -450,7 +449,7 @@ class TooltipView extends ComponentView {
     ) {
         // showDelay is used in this case: tooltip.enterable is set
         // as true. User intent to move mouse into tooltip and click
-        // something. `showDelay` makes it easyer to enter the content
+        // something. `showDelay` makes it easier to enter the content
         // but tooltip do not move immediately.
         const delay = tooltipModel.get('showDelay');
         cb = zrUtil.bind(cb, this);
@@ -666,7 +665,7 @@ class TooltipView extends ComponentView {
         const markupStyleCreator = new TooltipMarkupStyleCreator();
 
         // Do not check whether `trigger` is 'none' here, because `trigger`
-        // only works on cooridinate system. In fact, we have not found case
+        // only works on coordinate system. In fact, we have not found case
         // that requires setting `trigger` nothing on component yet.
 
         this._showOrMove(subTooltipModel, function (this: TooltipView) {

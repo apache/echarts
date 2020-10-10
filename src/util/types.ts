@@ -435,6 +435,7 @@ export type ECUnitOption = {
 
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
+    stateAnimation?: AnimationOption
 } & AnimationOptionMixin & ColorPaletteOptionMixin;
 
 /**
