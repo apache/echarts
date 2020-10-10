@@ -88,7 +88,8 @@ function assembleArrow(
 
 function assembleTransition(duration: number, onlyFade?: boolean): string {
     const transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
-    let transitionText = 'opacity ' + (duration / 2) + 's ' + transitionCurve;
+    let transitionText = 'opacity ' + (duration / 2) + 's ' + transitionCurve + ','
+                       + 'visibility ' + (duration / 2) + 's ' + transitionCurve;
     if (!onlyFade) {
         transitionText += ',left ' + duration + 's ' + transitionCurve
                         + ',top ' + duration + 's ' + transitionCurve;
@@ -418,6 +419,7 @@ class TooltipHTMLContent {
     }
 
     hide() {
+        this.el.style.visibility = 'hidden';
         this.el.style.opacity = '0';
         this._show = false;
         this._longHideTimeout = setTimeout(() => this._longHide = true, 500) as any;
