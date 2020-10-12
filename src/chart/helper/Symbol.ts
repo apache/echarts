@@ -340,11 +340,11 @@ class Symbol extends graphic.Group {
     }
 
     setSymbolScale(scale: number) {
-        const emphasisState = this.states.emphasis;
+        const emphasisState = this.childAt(0).states.emphasis;
         if (emphasisState) {
             const hoverScale = Math.max(scale * 1.1, 3 / this._sizeY + scale);
-            emphasisState.scaleX = hoverScale;
-            emphasisState.scaleY = hoverScale;
+            emphasisState.scaleX = this._sizeX * hoverScale;
+            emphasisState.scaleY = this._sizeY * hoverScale;
         }
 
         this.scaleX = this.scaleY = scale;

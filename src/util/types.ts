@@ -683,6 +683,7 @@ export interface AnimationOption {
     duration?: number
     easing?: AnimationEasing
     delay?: number
+    additive?: boolean
 }
 /**
  * Mixin of option set to control the animation of series.

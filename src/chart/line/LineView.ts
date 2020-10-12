@@ -49,7 +49,6 @@ import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
-import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
 import {setLabelStyle, getLabelStatesModels, labelInner} from '../../label/labelStyle';
 import {getDefaultLabel, getDefaultInterpolatedLabel} from '../helper/labelHelper';
@@ -908,8 +907,8 @@ class LineView extends ChartView {
             ? seriesDalay(null)
             : seriesDalay;
 
-        data.eachItemGraphicEl(function (symbol, idx) {
-            const el = (symbol as SymbolClz).childAt(0) as Displayable;
+        data.eachItemGraphicEl(function (symbol: SymbolExtended, idx) {
+            const el = symbol;
             if (el) {
                 const point = [symbol.x, symbol.y];
                 let start;
@@ -958,7 +957,8 @@ class LineView extends ChartView {
                     delay: delay
                 });
 
-                const text = el.getTextContent();
+                const symbolPath = el.getSymbolPath();
+                const text = symbolPath.getTextContent();
                 if (text) {
                     text.animateFrom({
                         style: {
@@ -970,7 +970,7 @@ class LineView extends ChartView {
                     });
                 }
 
-                (el as ECElement).disableLabelAnimation = true;
+                (symbolPath as ECElement).disableLabelAnimation = true;
             }
         });
     }
