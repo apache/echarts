@@ -1,11 +1,13 @@
-
 import WeakMap from 'zrender/src/core/WeakMap';
 import {DecalObject, DecalDashArrayX, DecalDashArrayY} from 'zrender/src/graphic/Decal';
 import Pattern from 'zrender/src/graphic/Pattern';
+import {brushSingle} from 'zrender/src/canvas/graphic';
 import {defaults, createCanvas, map} from 'zrender/src/core/util';
 import {PathStyleProps} from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import {getLeastCommonMultiple} from './number';
+import {createSymbol} from './symbol';
+import * as graphic from './graphic';
 
 const decalMap = new WeakMap<DecalObject, Pattern>();
 
@@ -28,13 +30,11 @@ export function createOrUpdatePatternFromDecal(
 ): Pattern {
     const oldPattern = decalMap.get(decalObject);
     if (oldPattern) {
-        console.log('using cache')
         return oldPattern;
     }
-    console.log('create new')
 
     const decalOpt = defaults(decalObject, {
-        shape: 'rect',
+        symbol: 'rect',
         symbolSize: 1,
         symbolKeepAspect: true,
         color: 'rgba(255, 255, 255, 0.4)',
@@ -66,7 +66,7 @@ export function createOrUpdatePatternFromDecal(
 
     const ctx = canvas.getContext('2d');
 
-    brush();
+    brushDecal();
 
     const pattern = new Pattern(canvas, 'repeat', decalOpt.rotation);
     decalMap.set(decalObject, pattern);
@@ -139,7 +139,7 @@ export function createOrUpdatePatternFromDecal(
         return start;
     }
 
-    function brush() {
+    function brushDecal() {
         ctx.clearRect(0, 0, pSize.width, pSize.height);
         if (decalOpt.backgroundColor) {
             ctx.fillStyle = decalOpt.backgroundColor;
@@ -160,10 +160,14 @@ export function createOrUpdatePatternFromDecal(
                 );
                 let xId1 = 0;
                 while (x < pSize.width * 2) {
+                    // E.g., [15, 5, 20, 5] draws only for 15 and 20
                     if (xId1 % 2 === 0) {
-                        // E.g., [15, 5, 20, 5] draws only for 15 and 20
-                        // brushShape(x, y, dashArrayX[xId0][xId1], dashArrayY[yId]);
-                        ctx.fillRect(x, y, dashArrayX[xId0][xId1], dashArrayY[yId]);
+                        const size = (1 - decalOpt.symbolSize) * 0.5;
+                        const left = x + dashArrayX[xId0][xId1] * size;
+                        const top = y + dashArrayY[yId] * size;
+                        const width = dashArrayX[xId0][xId1] * decalOpt.symbolSize;
+                        const height = dashArrayY[yId] * decalOpt.symbolSize;
+                        brushSymbol(left, top, width, height);
                     }
 
                     x += dashArrayX[xId0][xId1];
@@ -189,14 +193,10 @@ export function createOrUpdatePatternFromDecal(
         }
     }
 
-    function brushShape(x: number, y: number, width: number, height: number) {
-        if (decalOpt.image) {
-            return;
-        }
-
-        // switch (decalOpt.shape) {
-        //     case ''
-        // }
+    function brushSymbol(x: number, y: number, width: number, height: number) {
+        const symbol = createSymbol(decalOpt.symbol, x, y, width, height);
+        symbol.style.fill = decalOpt.color;
+        brushSingle(ctx, symbol);
     }
 
 }
