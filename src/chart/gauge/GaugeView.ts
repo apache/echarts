@@ -110,7 +110,8 @@ class GaugeView extends ChartView {
         const showAxis = axisLineModel.get('show');
         const lineStyleModel = axisLineModel.getModel('lineStyle');
         const axisLineWidth = lineStyleModel.get('width');
-        const angleRangeSpan = (endAngle - startAngle) % PI2;
+        const angleRangeSpan = !((endAngle - startAngle) % PI2) && endAngle !== startAngle
+            ? PI2 : (endAngle - startAngle) % PI2;
 
         let prevEndAngle = startAngle;
 
