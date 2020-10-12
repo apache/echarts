@@ -340,14 +340,18 @@ class Symbol extends graphic.Group {
     }
 
     setSymbolScale(scale: number) {
-        const emphasisState = this.childAt(0).states.emphasis;
+        const sizeX = this._sizeX;
+        const sizeY = this._sizeY;
+        const symbolPath = this.childAt(0);
+        const emphasisState = symbolPath.states.emphasis;
         if (emphasisState) {
-            const hoverScale = Math.max(scale * 1.1, 3 / this._sizeY + scale);
-            emphasisState.scaleX = this._sizeX * hoverScale;
-            emphasisState.scaleY = this._sizeY * hoverScale;
+            const hoverScale = Math.max(scale * 1.1, 3 / sizeY + scale);
+            emphasisState.scaleX = sizeX * hoverScale;
+            emphasisState.scaleY = sizeY * hoverScale;
         }
 
-        this.scaleX = this.scaleY = scale;
+        symbolPath.scaleX = sizeX * scale;
+        symbolPath.scaleY = sizeY * scale;
     }
 
     fadeOut(cb: () => void, opt?: {
