@@ -48,7 +48,6 @@ export default function (properties: readonly string[][], ignoreParent?: boolean
                 style[properties[i][0]] = val;
             }
         }
-
         // TODO Text or image?
         return style as PathStyleProps;
     };
