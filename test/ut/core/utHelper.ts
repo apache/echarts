@@ -17,146 +17,109 @@
 * under the License.
 */
 
-/**
- * @public
- * @type {Object}
- */
-var echarts = require('../../../index');
+import { init, EChartsType } from '../../../src/echarts';
+import {
+    curry as zrUtilCurry,
+    bind as zrUtilBind,
+    extend as zrUtilExtend
+} from 'zrender/src/core/util';
+import { ComponentMainType } from '../../../src/util/types';
+import Group from 'zrender/src/graphic/Group';
+import Element from 'zrender/src/Element';
 
-var utHelper = {};
 
-var nativeSlice = Array.prototype.slice;
-
-utHelper.createChart = function (width, height, theme, opts) {
-    var el = document.createElement('div');
+export function createChart(params: {
+    width?: number,
+    height?: number,
+    theme?: Parameters<typeof init>[1],
+    opts?: Parameters<typeof init>[2]
+}): EChartsType {
+    const el = document.createElement('div');
     el.style.cssText = [
         'visibility:hidden',
-        'width:' + (width || '500') + 'px',
-        'height:' + (height || '400') + 'px',
+        'width:' + (params.width || '500') + 'px',
+        'height:' + (params.height || '400') + 'px',
         'position:absolute',
         'bottom:0',
         'right:0'
     ].join(';');
-    var chart = echarts.init(el, theme, opts);
+    const chart = init(el, params.theme, params.opts);
     return chart;
 };
 
-/**
- * @public
- */
-utHelper.removeChart = function (chart) {
+export function removeChart(chart: EChartsType): void {
     chart.dispose();
 };
 
-/**
- * @param {*} target
- * @param {*} source
- */
-utHelper.extend = function (target, source) {
-    for (var key in source) {
-        if (source.hasOwnProperty(key)) {
-            target[key] = source[key];
-        }
-    }
-    return target;
-};
+export const extend = zrUtilExtend;
 
-/**
- * @public
- */
-utHelper.g = function (id) {
+export function g(id: string): HTMLElement {
     return document.getElementById(id);
-};
+}
 
-/**
- * @public
- */
-utHelper.removeEl = function (el) {
-    var parent = utHelper.parentEl(el);
+export function removeEl(el: HTMLElement): void {
+    const parent = utHelper.parentEl(el);
     parent && parent.removeChild(el);
-};
+}
 
-/**
- * @public
- */
-utHelper.parentEl = function (el) {
+export function parentEl(el: HTMLElement): HTMLElement {
     //parentElement for ie.
-    return el.parentElement || el.parentNode;
-};
+    return el.parentElement || el.parentNode as HTMLElement;
+}
 
-/**
- * 得到head
- *
- * @public
- */
-utHelper.getHeadEl = function (s) {
+export function getHeadEl(): HTMLElement {
     return document.head
         || document.getElementsByTagName('head')[0]
         || document.documentElement;
-};
+}
 
-/**
- * @public
- */
-utHelper.curry = function (func) {
-    var args = nativeSlice.call(arguments, 1);
-    return function () {
-        return func.apply(this, args.concat(nativeSlice.call(arguments)));
-    };
-};
+export const curry = zrUtilCurry;
 
-/**
- * @public
- */
-utHelper.bind = function (func, context) {
-    var args = nativeSlice.call(arguments, 2);
-    return function () {
-        return func.apply(context, args.concat(nativeSlice.call(arguments)));
-    };
-};
+export const bind = zrUtilBind;
 
-/**
- * @public
- */
-utHelper.isValueFinite = function (val) {
-    return val != null && val !== '' && isFinite(val);
-};
+export function isValueFinite(val: unknown): boolean {
+    return val != null && val !== '' && isFinite(val as number);
+}
 
-/**
- * @public
- * @param {Array.<string>} deps
- * @param {Array.<Function>} testFnList
- * @param {Function} done All done callback.
- */
-utHelper.resetAMDLoaderEachTest = function (deps, testFnList, done) {
-    var i = -1;
-    next();
+// /**
+//  * @public
+//  * @param {Array.<string>} deps
+//  * @param {Array.<Function>} testFnList
+//  * @param {Function} done All done callback.
+//  */
+// export function resetAMDLoaderEachTest(deps, testFnList, done) {
+//     const i = -1;
+//     next();
 
-    function next() {
-        i++;
-        if (testFnList.length <= i) {
-            done();
-            return;
-        }
+//     function next() {
+//         i++;
+//         if (testFnList.length <= i) {
+//             done();
+//             return;
+//         }
 
-        utHelper.resetAMDLoader(function () {
-            global.require(deps, function () {
-                testFnList[i].apply(null, arguments);
-                next();
-            });
-        });
-    }
-};
+//         utHelper.resetAMDLoader(function () {
+//             global.require(deps, function () {
+//                 testFnList[i].apply(null, arguments);
+//                 next();
+//             });
+//         });
+//     }
+// };
 
-utHelper.getGraphicElements = function (chartOrGroup, mainType, index) {
-    if (chartOrGroup.type === 'group') {
-        return chartOrGroup.children();
+export function getGraphicElements(
+    chartOrGroup: EChartsType | Group,
+    mainType: ComponentMainType,
+    index: number
+): Element[] {
+    if ((chartOrGroup as Group).type === 'group') {
+        return (chartOrGroup as Group).children();
     }
     else {
-        var viewGroup = utHelper.getViewGroup(chartOrGroup, mainType, index);
+        const viewGroup = utHelper.getViewGroup(chartOrGroup, mainType, index);
         if (viewGroup) {
-            var list = [viewGroup];
-            viewGroup.traverse(function (el) {
+            const list = [viewGroup];
+            viewGroup.traverse(function (el: Element) {
                 list.push(el);
             });
             return list;
@@ -165,13 +128,16 @@ utHelper.getGraphicElements = function (chartOrGroup, mainType, index) {
             return [];
         }
     }
-};
+}
 
-utHelper.getViewGroup = function (chart, mainType, index) {
-    var component = chart.getModel().getComponent(mainType, index);
+export function getViewGroup(
+    chart: EChartsType,
+    mainType: ComponentMainType,
+    index: number
+): Group {
+    const component = chart.getModel().getComponent(mainType, index);
     return component ? chart[
         mainType === 'series' ? '_chartsMap' : '_componentsMap'
     ][component.__viewId].group : null;
-};
+}
 
-module.exports = utHelper;

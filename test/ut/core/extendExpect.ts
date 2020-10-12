@@ -18,13 +18,13 @@
 * under the License.
 */
 
+import { isValueFinite } from './utHelper';
 
-const utHelper = require('./utHelper');
 
 // Setup expectes
 expect.extend({
     toBeFinite(received) {
-        const passed = utHelper.isValueFinite(received);
+        const passed = isValueFinite(received);
         return {
             message: passed
                 ? () => `expected ${received} not to be finite`

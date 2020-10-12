@@ -17,27 +17,30 @@
 * under the License.
 */
 
-const path = require('path');
-
 module.exports = {
+    preset: 'ts-jest',
     testEnvironment: 'node',
-    rootDir: path.resolve(__dirname, '../../'),
+    rootDir: __dirname,
     collectCoverage: true,
     setupFiles: [
         'jest-canvas-mock',
-        '<rootDir>/test/ut/core/setup.js'
+        '<rootDir>/core/setup.ts'
     ],
     setupFilesAfterEnv: [
-        '<rootDir>/test/ut/core/extendExpect.js'
+        '<rootDir>/core/extendExpect.ts'
     ],
+    globals: {
+        '__DEV__': true
+    },
     testMatch: [
-        '**/spec/api/*.test.js',
-        '**/spec/component/**/*.test.js',
-        '**/spec/data/*.test.js',
-        '**/spec/model/*.test.js',
-        '**/spec/scale/*.test.js',
-        '**/spec/util/*.test.js',
-        '!**/spec/api/containPixel.test.js',
-        '!**/spec/component/graphic/setOption.test.js'
+        '**/spec/api/containPixel.test.ts'
+        // '**/spec/api/*.test.ts',
+        // '**/spec/component/**/*.test.ts',
+        // '**/spec/data/*.test.ts',
+        // '**/spec/model/*.test.ts',
+        // '**/spec/scale/*.test.ts',
+        // '**/spec/util/*.test.ts',
+        // '!**/spec/api/containPixel.test.ts',
+        // '!**/spec/component/graphic/setOption.test.ts'
     ]
 };

@@ -353,7 +353,7 @@ export interface DataVisualDimensions {
 
 export type DimensionDefinition = {
     type?: ListDimensionType,
-    name: DimensionName,
+    name?: DimensionName,
     displayName?: string
 };
 export type DimensionDefinitionLoose = DimensionDefinition['name'] | DimensionDefinition;

@@ -17,12 +17,12 @@
 * under the License.
 */
 
-const jsdom = require('jsdom');
-const Canvas = require('canvas');
-const {JSDOM} = jsdom;
-const {window} = new JSDOM();
+import { JSDOM } from 'jsdom';
+import { Image } from 'canvas';
 
-global.window = window;
-global.navigator = window.navigator;
-global.document = window.document;
-global.Image = Canvas.Image;
+const { window } = new JSDOM();
+
+(global as any).window = window;
+(global as any).navigator = window.navigator;
+(global as any).document = window.document;
+(global as any).Image = Image;

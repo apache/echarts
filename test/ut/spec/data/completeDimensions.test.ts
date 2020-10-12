@@ -1,4 +1,3 @@
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -17,19 +16,27 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-const completeDimensions = require('../../../../lib/data/helper/completeDimensions');
-const Source = require('../../../../lib/data/Source');
-const types = require('../../../../lib/util/types');
+
+
+import completeDimensions from '../../../../src/data/helper/completeDimensions';
+import { createSource } from '../../../../src/data/Source';
+import { SOURCE_FORMAT_ARRAY_ROWS, SERIES_LAYOUT_BY_COLUMN } from '../../../../src/util/types';
+
+type ParametersOfCompleteDimensions = Parameters<typeof completeDimensions>;
 
 describe('completeDimensions', function () {
 
-    function doCompleteDimensions(completeDimensions, sysDims, data, opt) {
-        var result = completeDimensions(sysDims, data, opt);
+    function doCompleteDimensions(
+        sysDims: ParametersOfCompleteDimensions[0],
+        data: ParametersOfCompleteDimensions[1],
+        opt: ParametersOfCompleteDimensions[2]
+    ) {
+        const result = completeDimensions(sysDims, data, opt);
         if (result) {
-            for (var i = 0; i < result.length; i++) {
-                var item = result[i];
-                if (item && item.hasOwnProperty('dimsDef') && item.dimsDef == null) {
-                    delete item.dimsDef;
+            for (let i = 0; i < result.length; i++) {
+                const item = result[i];
+                if (item && item.hasOwnProperty('dimsDef') && (item as any).dimsDef == null) {
+                    delete (item as any).dimsDef;
                 }
             }
         }
@@ -37,12 +44,12 @@ describe('completeDimensions', function () {
     }
 
     it('namesMoreThanDimCount', function () {
-        var sysDims = [
+        const sysDims = [
             {
                 'name': 'x',
-                'type': 'ordinal',
+                'type': 'ordinal' as const,
                 'otherDims': {
-                    'tooltip': false,
+                    'tooltip': false as const,
                     'itemName': 0
                 },
                 'dimsDef': [
@@ -51,7 +58,7 @@ describe('completeDimensions', function () {
             },
             {
                 'name': 'y',
-                'type': 'float',
+                'type': 'float' as const,
                 'dimsDef': [
                     'open',
                     'close',
@@ -61,14 +68,20 @@ describe('completeDimensions', function () {
             }
         ];
 
-        var source = new Source({
-            data: [],
-            fromDataset: true,
-            sourceFormat: types.SOURCE_FORMAT_ARRAY_ROWS,
-            dimensionsDetectCount: 11
-        });
+        const source = createSource(
+            [
+                [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+            ],
+            {
+                seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN,
+                sourceHeader: 0,
+                dimensions: void 0
+            },
+            SOURCE_FORMAT_ARRAY_ROWS,
+            null
+        )
 
-        var opt = {
+        const opt = {
             'dimsDef': [
                 {
                     'name': 'date',
@@ -133,7 +146,7 @@ describe('completeDimensions', function () {
             'dimCount': 5
         };
 
-        var result = [
+        const result: unknown = [
             {
                 'otherDims': {
                     'tooltip': false,
@@ -240,13 +253,18 @@ describe('completeDimensions', function () {
             }
         ];
 
-        expect(doCompleteDimensions(completeDimensions, sysDims, source, opt)).toEqual(result);
+        expect(doCompleteDimensions(sysDims, source, opt)).toEqual(result);
     });
 
 
     it('differentData', function () {
-        function doTest(sysDims, data, opt, result) {
-            expect(doCompleteDimensions(completeDimensions, sysDims, data, opt)).toEqual(result);
+        function doTest(
+            sysDims: ParametersOfCompleteDimensions[0],
+            data: ParametersOfCompleteDimensions[1],
+            opt: ParametersOfCompleteDimensions[2],
+            result: unknown
+        ) {
+            expect(doCompleteDimensions(sysDims, data, opt)).toEqual(result);
         }
 
         // test dimcount
@@ -372,11 +390,16 @@ describe('completeDimensions', function () {
 
 
     it('differentSysDims', function () {
-        function doTest(sysDims, data, opt, result) {
-            expect(doCompleteDimensions(completeDimensions, sysDims, data, opt)).toEqual(result);
+        function doTest(
+            sysDims: ParametersOfCompleteDimensions[0],
+            data: ParametersOfCompleteDimensions[1],
+            opt: ParametersOfCompleteDimensions[2],
+            result: unknown
+        ) {
+            expect(doCompleteDimensions(sysDims, data, opt)).toEqual(result);
         }
 
-        var data = [
+        const data = [
             ['iw', 332, 4434, 323, 59],
             ['vrr', 44, 11, 144, 55]
         ];
@@ -414,13 +437,14 @@ describe('completeDimensions', function () {
         );
 
         doTest(
-            [{name: 'time', type: 'time', stackable: false}, 'value'], data, null,
+            [{name: 'time', type: 'time' as const}, 'value'],
+            data,
+            null,
             [
                 {
                     'otherDims': {},
                     'name': 'time',
                     'type': 'time',
-                    'stackable': false,
                     'coordDimIndex': 0,
                     'ordinalMeta': undefined,
                     'coordDim': 'time'
@@ -580,11 +604,16 @@ describe('completeDimensions', function () {
 
 
     it('dimsDef', function () {
-        function doTest(sysDims, data, opt, result) {
-            expect(doCompleteDimensions(completeDimensions, sysDims, data, opt)).toEqual(result);
+        function doTest(
+            sysDims: ParametersOfCompleteDimensions[0],
+            data: ParametersOfCompleteDimensions[1],
+            opt: ParametersOfCompleteDimensions[2],
+            result: unknown
+        ) {
+            expect(doCompleteDimensions(sysDims, data, opt)).toEqual(result);
         }
 
-        var data = [['iw', 332, 4434, 323, 59], ['vrr', 44, 11, 144, 55]];
+        const data = [['iw', 332, 4434, 323, 59], ['vrr', 44, 11, 144, 55]];
         doTest(
             ['x', 'y', 'value'], data,
             {dimsDef: ['挨克思', null, '歪溜']},
@@ -615,7 +644,7 @@ describe('completeDimensions', function () {
 
         doTest(
             ['x', 'y', 'value'], data,
-            {dimsDef: ['挨克思', null, {type: 'ordinal'}]}, // no name but only type
+            {dimsDef: ['挨克思', null, {type: 'ordinal' as const}]}, // no name but only type
             [
                 {
                     'otherDims': {},
@@ -642,7 +671,7 @@ describe('completeDimensions', function () {
         );
 
         doTest(
-            [{name: 'time', type: 'time', stackable: false}, 'value'], data,
+            [{name: 'time', type: 'time' as const}, 'value'], data,
             {dimsDef: [{name: '泰亩', type: 'ordinal'}, {name: '歪溜', type: 'float'}]},
             [
                 {
@@ -650,7 +679,6 @@ describe('completeDimensions', function () {
                     'displayName': '泰亩',
                     'name': '泰亩',
                     'type': 'ordinal',
-                    'stackable': false,
                     'ordinalMeta': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'time'
@@ -676,11 +704,16 @@ describe('completeDimensions', function () {
 
 
     it('encodeDef', function () {
-        function doTest(sysDims, data, opt, result) {
-            expect(doCompleteDimensions(completeDimensions, sysDims, data, opt)).toEqual(result);
+        function doTest(
+            sysDims: ParametersOfCompleteDimensions[0],
+            data: ParametersOfCompleteDimensions[1],
+            opt: ParametersOfCompleteDimensions[2],
+            result: unknown
+        ) {
+            expect(doCompleteDimensions(sysDims, data, opt)).toEqual(result);
         }
 
-        var data = [['iw', 332, 4434, 323, 'd8', 59], ['vrr', 44, 11, 144, '-', 55]];
+        const data = [['iw', 332, 4434, 323, 'd8', 59], ['vrr', 44, 11, 144, '-', 55]];
 
         doTest(
             null, data,
@@ -744,7 +777,7 @@ describe('completeDimensions', function () {
         );
 
         doTest(
-            ['x', {name: 'y', type: 'time', stackable: false}, 'z'], data,
+            ['x', {name: 'y', type: 'time' as const}, 'z'], data,
             {
                 dimsDef: ['挨克思', null, '歪溜'],
                 encodeDef: {
@@ -769,7 +802,6 @@ describe('completeDimensions', function () {
                     'coordDimIndex': 0,
                     'name': 'y',
                     'type': 'time',
-                    'stackable': false,
                     'ordinalMeta': undefined
                 },
                 {
@@ -785,14 +817,13 @@ describe('completeDimensions', function () {
         );
 
         doTest(
-            [{name: 'time', type: 'time', stackable: false}, 'value'], data,
+            [{name: 'time', type: 'time' as const}, 'value'], data,
             {
                 // dimsDef type 'ordinal' has higher priority then sysDims type 'time'.
                 dimsDef: [{name: '泰亩', type: 'ordinal'}, {name: '歪溜', type: 'float'}],
                 encodeDef: {
                     tooltip: 2
-                },
-                extraPrefix: 'aaa'
+                }
             },
             [
                 {
@@ -800,7 +831,6 @@ describe('completeDimensions', function () {
                     'displayName': '泰亩',
                     'name': '泰亩',
                     'type': 'ordinal',
-                    'stackable': false,
                     'ordinalMeta': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'time'
@@ -817,15 +847,13 @@ describe('completeDimensions', function () {
         );
 
         doTest(
-            [{name: 'time', type: 'time', stackable: false}, 'value'], data,
+            [{name: 'time', type: 'time' as const}, 'value'], data,
             {
                 // dimsDef type 'ordinal' has higher priority then sysDims type 'time'.
                 dimsDef: [{name: '泰亩', type: 'ordinal'}, {name: '歪溜', type: 'float'}],
                 encodeDef: {
                     tooltip: 2
-                },
-                extraPrefix: 'aaa',
-                extraFromZero: true
+                }
             },
             [
                 {
@@ -833,7 +861,6 @@ describe('completeDimensions', function () {
                     'displayName': '泰亩',
                     'name': '泰亩',
                     'type': 'ordinal',
-                    'stackable': false,
                     'ordinalMeta': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'time'
