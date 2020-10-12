@@ -258,7 +258,7 @@ class GlobalModel extends Model<ECUnitOption> {
             // (1) for normal merge, `{xxx: null/undefined}` are the same meaning as `{xxx: []}`.
             // (2) some preprocessor may convert some of `{xxx: null/undefined}` to `{xxx: []}`.
             replaceMergeMainTypeMap.each(function (val, mainTypeInReplaceMerge) {
-                if (!newCmptTypeMap.get(mainTypeInReplaceMerge)) {
+                if (ComponentModel.hasClass(mainTypeInReplaceMerge) && !newCmptTypeMap.get(mainTypeInReplaceMerge)) {
                     newCmptTypes.push(mainTypeInReplaceMerge);
                     newCmptTypeMap.set(mainTypeInReplaceMerge, true);
                 }
@@ -755,7 +755,9 @@ class GlobalModel extends Model<ECUnitOption> {
         const componentsMap = this._componentsMap;
         const componentTypes: string[] = [];
         componentsMap.each(function (components, componentType) {
-            componentTypes.push(componentType);
+            if (ComponentModel.hasClass(componentType)) {
+                componentTypes.push(componentType);
+            }
         });
 
         (ComponentModel as ComponentModelConstructor).topologicalTravel(
