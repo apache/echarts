@@ -25,6 +25,7 @@ import { LINE_STYLE_KEY_MAP } from '../model/mixin/lineStyle';
 import SeriesModel from '../model/Series';
 import Model from '../model/Model';
 import { makeInner } from '../util/model';
+import setDecalWithPattern, {createOrUpdatePatternFromDecal} from '../util/decal';
 
 const inner = makeInner<{scope: object}, SeriesModel>();
 
@@ -75,6 +76,7 @@ const seriesStyleTask: StageHandler = {
         const getStyle = getStyleMapper(seriesModel, stylePath);
 
         const globalStyle = getStyle(styleModel);
+        setDecalWithPattern(styleModel, globalStyle);
 
         // TODO
         const colorKey = getDefaultColorKey(seriesModel, stylePath);
@@ -137,6 +139,10 @@ const dataStyleTask: StageHandler = {
 
                     const existsStyle = data.ensureUniqueItemVisual(idx, 'style');
                     extend(existsStyle, style);
+
+                    if (sharedModel.option.decal) {
+                        existsStyle.decal = createOrUpdatePatternFromDecal(sharedModel.option.decal);
+                    }
 
                     if (colorKey in style) {
                         data.setItemVisual(idx, 'colorFromPalette', false);

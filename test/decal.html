@@ -50,6 +50,12 @@ under the License.
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
+            var decal1 = {};
+            var decal2 = {
+                rotation: Math.PI / 6,
+                dashArrayX: [6, 2],
+                dashArrayY: [2, 10]
+            };
 
             option = {
                 legend: {
@@ -67,17 +73,31 @@ under the License.
                     data: [120, 200, 150, 80, 70, 110, 130],
                     type: 'bar',
                     itemStyle: {
-                        decal: {
-                        }
+                        decal: decal1
                     }
                 }, {
                     name: 'b',
-                    data: [120, 200, 150, 80, 70, 110, 130],
+                    data: [80, 70, 110, 130, 120, 200, 150],
                     type: 'bar',
                     itemStyle: {
-                        decal: {
-                        }
+                        decal: decal2
                     }
+                }, {
+                    type: 'pie',
+                    center: ['80%', '50%'],
+                    data: [{
+                        name: 'c',
+                        value: 10,
+                        itemStyle: {
+                            decal: decal1
+                        }
+                    }, {
+                        name: 'd',
+                        value: 5,
+                        itemStyle: {
+                            decal: decal2
+                        }
+                    }]
                 }],
                 grid: {
                     left: 50,

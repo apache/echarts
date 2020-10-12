@@ -25,7 +25,6 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 export const ITEM_STYLE_KEY_MAP = [
     ['fill', 'color'],
     ['stroke', 'borderColor'],
-    ['decal'],
     ['lineWidth', 'borderWidth'],
     ['opacity'],
     ['shadowBlur'],

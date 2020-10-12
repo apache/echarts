@@ -47,6 +47,8 @@ class AreaStyleMixin {
         excludes?: readonly (keyof AreaStyleOption)[],
         includes?: readonly (keyof AreaStyleOption)[]
     ): AreaStyleProps {
+        const decal = this.getShallow('decal');
+        console.log(decal);
         return getAreaStyle(this, excludes, includes);
     }
 };
