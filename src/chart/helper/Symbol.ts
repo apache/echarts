@@ -324,34 +324,25 @@ class Symbol extends graphic.Group {
         this._sizeX = symbolSize[0] / 2;
         this._sizeY = symbolSize[1] / 2;
 
-        symbolPath.ensureState('emphasis').style = emphasisItemStyle;
+        const emphasisState = symbolPath.ensureState('emphasis');
+
+        emphasisState.style = emphasisItemStyle;
         symbolPath.ensureState('select').style = selectItemStyle;
         symbolPath.ensureState('blur').style = blurItemStyle;
 
         if (hoverScale) {
-            this.ensureState('emphasis');
-            this.setSymbolScale(1);
+            const scaleRatio = Math.max(1.1, 3 / this._sizeY);
+            emphasisState.scaleX = this._sizeX * scaleRatio;
+            emphasisState.scaleY = this._sizeY * scaleRatio;
         }
-        else {
-            this.states.emphasis = null;
-        }
+
+        this.setSymbolScale(1);
 
         enableHoverEmphasis(this, focus, blurScope);
     }
 
     setSymbolScale(scale: number) {
-        const sizeX = this._sizeX;
-        const sizeY = this._sizeY;
-        const symbolPath = this.childAt(0);
-        const emphasisState = symbolPath.states.emphasis;
-        if (emphasisState) {
-            const hoverScale = Math.max(scale * 1.1, 3 / sizeY + scale);
-            emphasisState.scaleX = sizeX * hoverScale;
-            emphasisState.scaleY = sizeY * hoverScale;
-        }
-
-        symbolPath.scaleX = sizeX * scale;
-        symbolPath.scaleY = sizeY * scale;
+        this.scaleX = this.scaleY = scale;
     }
 
     fadeOut(cb: () => void, opt?: {
