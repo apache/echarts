@@ -64,6 +64,7 @@ interface ProgressOption {
     width?: number
     roundCap?: boolean
     silent?: boolean
+    clip?: boolean
     itemStyle?: ItemStyleOption
 }
 
@@ -202,7 +203,8 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             overlap: true,
             width: 10,
             roundCap: false,
-            silent: false
+            silent: false,
+            clip: true
         },
         // 分隔线
         splitLine: {

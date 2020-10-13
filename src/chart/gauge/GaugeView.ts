@@ -418,9 +418,10 @@ class GaugeView extends ChartView {
 
                     if (showProgress) {
                         const progress = createProgress(idx, endAngle) as graphic.Sector;
+                        const isClip = progressModel.get('clip');
                         graphic.initProps(progress, {
                             shape: {
-                                endAngle: linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, false)
+                                endAngle: linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, isClip)
                             }
                         }, seriesModel);
                         group.add(progress);
@@ -485,9 +486,10 @@ class GaugeView extends ChartView {
                     const progress = createProgress(idx, previousEndAngle) as graphic.Sector;
                     progress.useStyle(data.getItemVisual(idx, 'style'));
                     progress.setStyle(itemModel.getModel(['progress', 'itemStyle']).getItemStyle());
+                    const isClip = progressModel.get('clip');
                     graphic.updateProps(progress, {
                         shape: {
-                            endAngle: linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, false)
+                            endAngle: linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, isClip)
                         }
                     }, seriesModel);
                     progress.z2 = (data.get(valueDim, idx) as number) % seriesModel.get('max');

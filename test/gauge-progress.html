@@ -42,6 +42,8 @@ under the License.
         <div id="main2"></div>
         <div id="main3"></div>
         <div id="main4"></div>
+        <div id="main5"></div>
+        <div id="main6"></div>
 
 
 
@@ -89,9 +91,6 @@ under the License.
                     'axisLine.roundCap: false, progress.roundCap: false, data.length: 1'
                 ],
                 option: option0
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
             setInterval(function () {
                 option0.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
@@ -136,9 +135,6 @@ under the License.
                     'axisLine.roundCap: true, progress.roundCap: true, data.length: 1'
                 ],
                 option: option1
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
             setInterval(function () {
                 option1.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
@@ -191,9 +187,6 @@ under the License.
                     'axisLine.roundCap: true, progress.roundCap: true, overlap: true, data.length: 3, detail.show: false'
                 ],
                 option: option2
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
             setInterval(function () {
                 option2.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
@@ -242,9 +235,6 @@ under the License.
                     'axisLine.roundCap: false, progress.roundCap: true, overlap: false, data.length: 3, detail.show: false'
                 ],
                 option: option3
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
             setInterval(function () {
                 option3.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
@@ -299,9 +289,6 @@ under the License.
                     'axisLine.roundCap: true, progress.roundCap: true, overlap: false, data.length: 3, detail.show: false, title.show: false'
                 ],
                 option: option4
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
             setInterval(function () {
                 option4.series[0].pointer.show = false;
@@ -310,6 +297,56 @@ under the License.
                 option4.series[0].data[2].value = (Math.random() * 100).toFixed(2) - 0;
                 chart4.setOption(option4, true);
             }, 2000);
+
+
+            var option5 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        startAngle: 90,
+                        endAngle: -270,
+                        pointer: {
+                            show: false
+                        },
+                        progress: {
+                            show: true,
+                            clip: false,
+                            roundCap: true,
+                            itemStyle: {
+                                color: '#ff9933',
+                                borderColor: '#7e0023',
+                                borderWidth: 1
+                            }
+                        },
+                        data: [
+                            {value: 120, name: '本月跑步'}
+                        ],
+                        detail: {
+                            formatter: '{value} km'
+                        },
+                    }
+                ]
+            };
+            var chart5 = testHelper.create(echarts, 'main5', {
+                title: [
+                    'progress.roundCap: true, click the button to change progress.clip'
+                ],
+                option: option5,
+                buttons: [{text: 'change progress.clip', onclick: function () {
+                    option5.series[0].progress.clip = !option5.series[0].progress.clip;
+                    chart5.setOption(option5, true);
+                }}]
+            });
 
         });
         </script>
