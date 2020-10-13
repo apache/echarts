@@ -1202,6 +1202,7 @@ class LineView extends ChartView {
 
         if (polyline.animators && polyline.animators.length) {
             polyline.animators[0].during(function () {
+                polygon && polygon.dirtyShape();
                 const points = (polyline.shape as any).__points;
                 for (let i = 0; i < updatedDataInfo.length; i++) {
                     const el = updatedDataInfo[i].el;
