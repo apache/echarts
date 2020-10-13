@@ -302,12 +302,27 @@ export type OrdinalSortInfo = {
     ordinalNumber: OrdinalNumber,
     beforeSortIndex: number
 };
-export type ParsedValueNumeric = number | OrdinalNumber;
+
+/**
+ * `OptionDataValue` is the primitive value in `series.data` or `dataset.source`.
+ * `OptionDataValue` are parsed (see `src/data/helper/dataValueHelper.parseDataValue`)
+ * into `ParsedValue` and stored into `data/List` storage.
+ * Note:
+ * (1) The term "parse" does not mean `src/scale/Scale['parse']`.
+ * (2) If a category dimension is not mapped to any axis, its raw value will NOT be
+ * parsed to `OrdinalNumber` but keep the original `OrdinalRawValue` in `src/data/List` storage.
+ */
 export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
-// FIXME:TS better name?
-// This is not `OptionDataPrimitive` because the "dataProvider parse"
-// will not be performed. But "scale parse" will be performed.
-export type ScaleDataValue = ParsedValue | Date;
+export type ParsedValueNumeric = number | OrdinalNumber;
+/**
+ * `ScaleDataValue` means that the user input primitive value to `src/scale/Scale`.
+ * (For example, used in `axis.min`, `axis.max`, `convertToPixel`).
+ * Note:
+ * `ScaleDataValue` is a little different from `OptionDataValue`, because it will not go through
+ * `src/data/helper/dataValueHelper.parseDataValue`, but go through `src/scale/Scale['parse']`.
+ */
+export type ScaleDataValue = ParsedValueNumeric | OrdinalRawValue | Date;
+
 export interface ScaleTick {
     value: number
 };

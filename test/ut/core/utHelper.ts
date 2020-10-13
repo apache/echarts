@@ -17,7 +17,10 @@
 * under the License.
 */
 
-import { init, EChartsType } from '../../../src/echarts';
+// PENDING: should resolve that no `.ts` suffix.
+// @ts-ignore
+import { init, EChartsType } from '../../../echarts.all.ts';
+
 import {
     curry as zrUtilCurry,
     bind as zrUtilBind,

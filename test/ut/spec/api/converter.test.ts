@@ -18,13 +18,14 @@
 * under the License.
 */
 
-/* jshint maxlen:200 */
-var utHelper = require('../../core/utHelper');
-var echarts = require('../../../../index');
+
+import { EChartsType, registerMap } from '../../../../src/echarts';
+import { GeoJSON } from '../../../../src/coord/geo/geoTypes';
+
 
 describe('api/converter', function () {
 
-    var DELTA = 1E-3;
+    const DELTA = 1E-3;
 
     function pointEquals(p1, p2) {
         if (p1 instanceof Array && p2 instanceof Array) {
@@ -35,10 +36,11 @@ describe('api/converter', function () {
         }
     }
 
-    var testGeoJson1 = {
+    const testGeoJson1: GeoJSON = {
         'type': 'FeatureCollection',
         'features': [
             {
+                'type': 'Feature',
                 'geometry': {
                     'type': 'Polygon',
                     'coordinates': [
@@ -70,10 +72,11 @@ describe('api/converter', function () {
         ]
     };
 
-    var testGeoJson2 = {
+    const testGeoJson2: GeoJSON = {
         'type': 'FeatureCollection',
         'features': [
             {
+                'type': 'Feature',
                 'geometry': {
                     'type': 'Polygon',
                     'coordinates': [
@@ -104,10 +107,10 @@ describe('api/converter', function () {
             }
         ]
     };
-    echarts.registerMap('converter_test_geo_1', testGeoJson1);
-    echarts.registerMap('converter_test_geo_2', testGeoJson2);
+    registerMap('converter_test_geo_1', testGeoJson1);
+    registerMap('converter_test_geo_2', testGeoJson2);
 
-    var chart;
+    let chart: EChartsType;
     beforeEach(function () {
         chart = utHelper.createChart();
     });
@@ -153,8 +156,8 @@ describe('api/converter', function () {
             ]
         });
 
-        var width = chart.getWidth();
-        var height = chart.getHeight();
+        const width = chart.getWidth();
+        const height = chart.getHeight();
 
         expect(pointEquals(chart.convertToPixel('geo', [5000, 3000]), [width - 20, height - 40])).toEqual(true);
         expect(pointEquals(chart.convertFromPixel('geo', [width - 20, height - 40]), [5000, 3000])).toEqual(true);
@@ -283,38 +286,38 @@ describe('api/converter', function () {
                 {
                     id: 'k1',
                     type: 'scatter',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
+                    // left: 0,
+                    // right: 0,
+                    // top: 0,
+                    // bottom: 0,
                     data: [[1000, 700]]
                 },
                 {
                     id: 'k2',
                     type: 'scatter',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
+                    // left: 0,
+                    // right: 0,
+                    // top: 0,
+                    // bottom: 0,
                     data: [[100, 800]]
                 },
                 {
                     id: 'j1',
                     type: 'scatter',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
+                    // left: 0,
+                    // right: 0,
+                    // top: 0,
+                    // bottom: 0,
                     data: [[100, 800]],
                     xAxisIndex: 1
                 },
                 {
                     id: 'i1',
                     type: 'scatter',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
+                    // left: 0,
+                    // right: 0,
+                    // top: 0,
+                    // bottom: 0,
                     data: [],
                     xAxisId: 'x2',
                     yAxisId: 'y1'
@@ -322,8 +325,8 @@ describe('api/converter', function () {
             ]
         });
 
-        var width = chart.getWidth();
-        var height = chart.getHeight();
+        const width = chart.getWidth();
+        const height = chart.getHeight();
 
         expect(pointEquals(chart.convertToPixel({seriesIndex: 1}, [-500, 6000]), [10, height - 40])).toEqual(true);
         expect(pointEquals(chart.convertFromPixel({seriesIndex: 1}, [10, height - 40]), [-500, 6000])).toEqual(true);
@@ -386,8 +389,8 @@ describe('api/converter', function () {
             ]
         });
 
-        var width = chart.getWidth();
-        var height = chart.getHeight();
+        const width = chart.getWidth();
+        const height = chart.getHeight();
 
         expect(pointEquals(chart.convertToPixel({seriesIndex: 0}, [2000, 3500]), [10 + (width - 30) / 2, 30 + (height - 70) / 2])).toEqual(true);
         expect(pointEquals(chart.convertFromPixel({seriesIndex: 0}, [10 + (width - 30) / 2, 30 + (height - 70) / 2]), [2000, 3500])).toEqual(true);

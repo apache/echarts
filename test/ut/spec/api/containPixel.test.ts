@@ -18,16 +18,18 @@
 * under the License.
 */
 
-/* jshint maxlen:200 */
+import { createChart, removeChart } from '../../core/utHelper';
+import { EChartsType, registerMap } from '../../../../src/echarts';
+import { GeoJSON } from '../../../../src/coord/geo/geoTypes';
 
-const echarts = require('../../../../lib/echarts');
-const utHelper = require('../../core/utHelper');
+
 
 describe('api/containPixel', function () {
-    var testGeoJson1 = {
+    const testGeoJson1: GeoJSON = {
         'type': 'FeatureCollection',
         'features': [
             {
+                'type': 'Feature',
                 'geometry': {
                     'type': 'Polygon',
                     'coordinates': [
@@ -59,10 +61,11 @@ describe('api/containPixel', function () {
         ]
     };
 
-    var testGeoJson2 = {
+    const testGeoJson2: GeoJSON = {
         'type': 'FeatureCollection',
         'features': [
             {
+                'type': 'Feature',
                 'geometry': {
                     'type': 'Polygon',
                     'coordinates': [
@@ -94,26 +97,23 @@ describe('api/containPixel', function () {
         ]
     };
 
-    var chart = '';
-    var createResult = '';
+    let chart: EChartsType;
+
     beforeEach(function () {
-        createResult = utHelper.createChart(context, echarts);
-        chart = createResult.charts[0];
+        chart = createChart({
+            width: 200,
+            height: 150
+        });
     });
 
     afterEach(function () {
-        utHelper.removeChart(createResult);
+        removeChart(chart);
     });
 
 
     it('geo', function () {
-        context.width = 200;
-        context.height = 150;
-        createResult = utHelper.createChart(context, echarts);
-        chart = createResult.charts[0];
-
-        echarts.registerMap('test1', testGeoJson1);
-        echarts.registerMap('test2', testGeoJson2);
+        registerMap('test1', testGeoJson1);
+        registerMap('test2', testGeoJson2);
 
         chart.setOption({
             geo: [
@@ -149,8 +149,8 @@ describe('api/containPixel', function () {
             ]
         });
 
-        var width = chart.getWidth();
-        var height = chart.getWidth();
+        const width = chart.getWidth();
+        const height = chart.getWidth();
 
         expect(chart.containPixel('geo', [15, 30])).toEqual(true);
         expect(chart.containPixel('geo', [9.5, 30])).toEqual(false);
@@ -161,12 +161,8 @@ describe('api/containPixel', function () {
 
 
     it('map', function () {
-        context.width = 200;
-        context.height = 150;
-        createResult = utHelper.createChart(context, echarts);
-        chart = createResult.charts[0];
-        echarts.registerMap('test1', testGeoJson1);
-        echarts.registerMap('test2', testGeoJson2);
+        registerMap('test1', testGeoJson1);
+        registerMap('test2', testGeoJson2);
 
         chart.setOption({
             series: [
@@ -190,7 +186,7 @@ describe('api/containPixel', function () {
             ]
         });
 
-        var width = chart.getWidth();
+        const width = chart.getWidth();
 
         expect(chart.containPixel('series', [15, 30])).toEqual(true);
         expect(chart.containPixel('series', [9.5, 30])).toEqual(false);
@@ -200,7 +196,7 @@ describe('api/containPixel', function () {
 
 
     it('cartesian', function () {
-        echarts.registerMap('test1', testGeoJson1);
+        registerMap('test1', testGeoJson1);
 
         chart.setOption({
             geo: [ // Should not affect grid converter.
@@ -268,38 +264,38 @@ describe('api/containPixel', function () {
                 {
                     id: 'k1',
                     type: 'scatter',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
+                    // left: 0,
+                    // right: 0,
+                    // top: 0,
+                    // bottom: 0,
                     data: [[1000, 700]]
                 },
                 {
                     id: 'k2',
                     type: 'scatter',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
+                    // left: 0,
+                    // right: 0,
+                    // top: 0,
+                    // bottom: 0,
                     data: [[100, 800]]
                 },
                 {
                     id: 'j1',
                     type: 'scatter',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
+                    // left: 0,
+                    // right: 0,
+                    // top: 0,
+                    // bottom: 0,
                     data: [[100, 800]],
                     xAxisIndex: 1
                 },
                 {
                     id: 'i1',
                     type: 'scatter',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
+                    // left: 0,
+                    // right: 0,
+                    // top: 0,
+                    // bottom: 0,
                     data: [],
                     xAxisId: 'x2',
                     yAxisId: 'y1'
@@ -307,7 +303,7 @@ describe('api/containPixel', function () {
             ]
         });
 
-        var width = chart.getWidth();
+        const width = chart.getWidth();
 
         expect(chart.containPixel('grid', [15, 30])).toEqual(true);
         expect(chart.containPixel('grid', [9.5, 30])).toEqual(false);
@@ -336,7 +332,7 @@ describe('api/containPixel', function () {
     //         ]
     //     });
 
-    //     var height = chart.getHeight();
+    //     const height = chart.getHeight();
 
     //     expect(chart.containPixel('series', [40, height / 2])).toEqual(false);
     //     expect(chart.containPixel('series', [40, height / 2 + 10])).toEqual(true);
@@ -345,8 +341,8 @@ describe('api/containPixel', function () {
 
 
     // it('pieAndGeo', function () {
-    //     echarts.registerMap('test1', testGeoJson1);
-    //     echarts.registerMap('test2', testGeoJson2);
+    //     registerMap('test1', testGeoJson1);
+    //     registerMap('test2', testGeoJson2);
 
     //     chart.setOption({
     //         geo: [
@@ -394,7 +390,7 @@ describe('api/containPixel', function () {
 
 
     it('graph', function () {
-        echarts.registerMap('test1', testGeoJson1);
+        registerMap('test1', testGeoJson1);
 
         chart.setOption({
             geo: [ // Should not affect graph converter.
