@@ -191,7 +191,7 @@ class PiePiece extends graphic.Sector {
         // Default use item visual color
         setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
             stroke: visualColor,
-            opacity: retrieve2(labelLineModel.get('opacity'), visualOpacity)
+            opacity: retrieve2(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity)
         });
     }
 }
