@@ -18,20 +18,20 @@
 * under the License.
 */
 
-const utHelper = require('../../core/utHelper');
+import { createChart } from '../../core/utHelper';
+import { EChartsType } from '../../../../src/echarts';
 
-/* jshint maxlen:200 */
+
 describe('api/getVisual', function () {
-
 
     // TODO
     // test each chart type, which may set visual on view which can not get from List.
     // each of which should test visual map.
     // symbol and symbolSize should be tested.
 
-    var chart;
+    let chart: EChartsType;
     beforeEach(function () {
-        chart = utHelper.createChart();
+        chart = createChart();
     });
 
     afterEach(function () {
@@ -44,7 +44,7 @@ describe('api/getVisual', function () {
             color: ['#000', '#111', '#222'],
             visualMap: {
                 seriesIndex: 3,
-                demension: 1,
+                dimension: 1,
                 min: 0,
                 max: 10000,
                 inRange: {
@@ -62,9 +62,7 @@ describe('api/getVisual', function () {
                     type: 'scatter',
                     data: [[10, 7]],
                     itemStyle: {
-                        normal: {
-                            color: '#fff'
-                        }
+                        color: '#fff'
                     }
                 },
                 {
@@ -75,16 +73,12 @@ describe('api/getVisual', function () {
                         {
                             value: [333, 222],
                             itemStyle: {
-                                normal: {
-                                    color: '#ff0'
-                                }
+                                color: '#ff0'
                             }
                         }
                     ],
                     itemStyle: {
-                        normal: {
-                            color: '#eee'
-                        }
+                        color: '#eee'
                     }
                 },
                 {
@@ -95,16 +89,12 @@ describe('api/getVisual', function () {
                         {
                             value: [333, 9999],
                             itemStyle: {
-                                normal: {
-                                    color: '#ff0'
-                                }
+                                color: 'red'
                             }
                         }
                     ],
                     itemStyle: {
-                        normal: {
-                            color: '#eee'
-                        }
+                        color: '#eee'
                     }
                 }
             ]
@@ -118,7 +108,7 @@ describe('api/getVisual', function () {
         expect(chart.getVisual({dataIndex: 1, seriesId: 'k2'}, 'color')).toEqual('#ff0');
         expect(chart.getVisual({seriesId: 'k2'}, 'color')).toEqual('#eee');
 
-        expect(chart.getVisual({dataIndex: 1, seriesId: 'k3'}, 'color')).toEqual('rgba(255,0,0,1)');
+        expect(chart.getVisual({dataIndex: 1, seriesId: 'k3'}, 'color')).toEqual('red');
         expect(chart.getVisual({seriesId: 'k3'}, 'color')).toEqual('#eee');
     });
 
@@ -145,16 +135,12 @@ describe('api/getVisual', function () {
                         {
                             value: [50, 222],
                             itemStyle: {
-                                normal: {
-                                    color: '#ff0'
-                                }
+                                color: '#ff0'
                             }
                         }
                     ],
                     itemStyle: {
-                        normal: {
-                            color: '#eee'
-                        }
+                        color: '#eee'
                     }
                 }
             ]
@@ -167,7 +153,7 @@ describe('api/getVisual', function () {
 
 
     // it('pie', function () {
-    //     var chart = this.chart;
+    //     const chart = this.chart;
 
     //     chart.setOption({
     //         series: [
@@ -187,7 +173,7 @@ describe('api/getVisual', function () {
     //         ]
     //     });
 
-    //     var height = chart.getHeight();
+    //     const height = chart.getHeight();
 
     //     expect(chart.containPixel('series', [40, height / 2])).toEqual(false);
     //     expect(chart.containPixel('series', [40, height / 2 + 10])).toEqual(true);
@@ -196,7 +182,7 @@ describe('api/getVisual', function () {
 
 
     // it('graph', function () {
-    //     var chart = this.chart;
+    //     const chart = this.chart;
 
     //     chart.setOption({
     //         series: [

@@ -795,7 +795,12 @@ export type ParsedModelFinder = ParsedModelFinderKnown & {
 export function parseFinder(
     ecModel: GlobalModel,
     finderInput: ModelFinder,
-    opt?: {defaultMainType?: ComponentMainType, includeMainTypes?: ComponentMainType[]}
+    opt?: {
+        // If no main type specified, use this main type.
+        defaultMainType?: ComponentMainType,
+        // If pervided, types out of this list will be ignored.
+        includeMainTypes?: ComponentMainType[]
+    }
 ): ParsedModelFinder {
     let finder: ModelFinderObject;
     if (isString(finderInput)) {
@@ -807,9 +812,9 @@ export function parseFinder(
         finder = finderInput;
     }
 
-    const defaultMainType = opt ? opt.defaultMainType : null;
     const queryOptionMap = createHashMap<QueryReferringUserOption, ComponentMainType>();
     const result = {} as ParsedModelFinder;
+    let mainTypeSpecified = false;
 
     each(finder, function (value, key) {
         // Exclude 'dataIndex' and other illgal keys.
@@ -825,15 +830,21 @@ export function parseFinder(
         if (
             !mainType
             || !queryType
-            || (mainType !== defaultMainType && value == null)
             || (opt && opt.includeMainTypes && indexOf(opt.includeMainTypes, mainType) < 0)
         ) {
             return;
         }
 
+        mainTypeSpecified = mainTypeSpecified || !!mainType;
+
         const queryOption = queryOptionMap.get(mainType) || queryOptionMap.set(mainType, {});
         queryOption[queryType] = value as any;
     });
+
+    const defaultMainType = opt ? opt.defaultMainType : null;
+    if (!mainTypeSpecified && defaultMainType) {
+        queryOptionMap.set(defaultMainType, {});
+    }
 
     queryOptionMap.each(function (queryOption, mainType) {
         const queryResult = queryReferringComponents(

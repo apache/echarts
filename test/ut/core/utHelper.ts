@@ -31,12 +31,13 @@ import Group from 'zrender/src/graphic/Group';
 import Element from 'zrender/src/Element';
 
 
-export function createChart(params: {
+export function createChart(params?: {
     width?: number,
     height?: number,
     theme?: Parameters<typeof init>[1],
     opts?: Parameters<typeof init>[2]
 }): EChartsType {
+    params = params || {};
     const el = document.createElement('div');
     el.style.cssText = [
         'visibility:hidden',
@@ -61,7 +62,7 @@ export function g(id: string): HTMLElement {
 }
 
 export function removeEl(el: HTMLElement): void {
-    const parent = utHelper.parentEl(el);
+    const parent = parentEl(el);
     parent && parent.removeChild(el);
 }
 
@@ -119,9 +120,9 @@ export function getGraphicElements(
         return (chartOrGroup as Group).children();
     }
     else {
-        const viewGroup = utHelper.getViewGroup(chartOrGroup, mainType, index);
+        const viewGroup = getViewGroup(chartOrGroup, mainType, index);
         if (viewGroup) {
-            const list = [viewGroup];
+            const list: Element[] = [viewGroup];
             viewGroup.traverse(function (el: Element) {
                 list.push(el);
             });

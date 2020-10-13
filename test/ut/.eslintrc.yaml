@@ -19,7 +19,7 @@ parserOptions:
     project: "test/ut/tsconfig.json"
 plugins: ["@typescript-eslint"]
 env:
-    browser: false
+    browser: true
     node: true
     es6: false
 globals:
