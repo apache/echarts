@@ -19,7 +19,7 @@
 */
 
 
-import { extend } from 'zrender/src/core/util';
+import { extend, retrieve2 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
@@ -151,17 +151,13 @@ class PiePiece extends graphic.Sector {
 
     private _updateLabel(seriesModel: PieSeriesModel, data: List, idx: number): void {
         const sector = this;
-        const labelText = sector.getTextContent();
-
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
-
-        const labelTextEmphasisState = labelText.ensureState('emphasis');
-
         const labelModel = itemModel.getModel('label');
-        const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
+        const labelLineModel = itemModel.getModel('labelLine');
 
         const style = data.getItemVisual(idx, 'style');
         const visualColor = style && style.fill as ColorString;
+        const visualOpacity = style && style.opacity;
 
         setLabelStyle(
             sector,
@@ -174,9 +170,10 @@ class PiePiece extends graphic.Sector {
                     || data.getName(idx)
             },
             { normal: {
-                opacity: style && style.opacity
+                opacity: retrieve2(labelModel.get('opacity'), visualOpacity)
             } }
         );
+        const labelText = sector.getTextContent();
 
         // Set textConfig on sector.
         sector.setTextConfig({
@@ -187,18 +184,14 @@ class PiePiece extends graphic.Sector {
 
         // Make sure update style on labelText after setLabelStyle.
         // Because setLabelStyle will replace a new style on it.
-
         labelText.attr({
             z2: 10
         });
 
-        labelText.ignore = !labelModel.get('show');
-        labelTextEmphasisState.ignore = !labelHoverModel.get('show');
-
         // Default use item visual color
         setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
             stroke: visualColor,
-            opacity: style && style.opacity
+            opacity: retrieve2(labelLineModel.get('opacity'), visualOpacity)
         });
     }
 }

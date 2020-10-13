@@ -278,7 +278,7 @@ export function getLabelStatesModels<LabelName extends string = 'label'>(
  */
 export function createTextStyle(
     textStyleModel: Model,
-    specifiedTextStyle?: TextStyleProps, // Can be overrided by settings in model.
+    specifiedTextStyle?: TextStyleProps, // Fixed style in the code. Can't be set by model.
     opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
     isNotNormal?: boolean, isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
 ) {

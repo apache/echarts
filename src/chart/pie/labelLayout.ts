@@ -361,9 +361,7 @@ export default function (
             textRect.applyTransform(label.getComputedTransform());
             // Text has a default 1px stroke. Exclude this.
             const margin = (label.style.margin || 0) + 2.1;
-            textRect.x -= margin / 2;
             textRect.y -= margin / 2;
-            textRect.width += margin;
             textRect.height += margin;
 
             labelLayoutList.push({
