@@ -179,11 +179,10 @@ function setLabelStyle<LDI>(
             break;
         }
     }
-    let textContent = isSetOnText ? targetEl as ZRText : null;
+    let textContent = isSetOnText ? targetEl as ZRText : targetEl.getTextContent();
     if (needsCreateText) {
         if (!isSetOnText) {
             // Reuse the previous
-            textContent = targetEl.getTextContent();
             if (!textContent) {
                 textContent = new ZRText();
                 targetEl.setTextContent(textContent);
