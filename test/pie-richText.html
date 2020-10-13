@@ -38,9 +38,8 @@ under the License.
 
 
         <div id="main0"></div>
-
-
         <div id="main1"></div>
+        <div id="main2"></div>
 
 
 
@@ -167,10 +166,10 @@ under the License.
                     borderRadius: 3,
                     width: 3,
                     height: 3,
-                    padding: [3, 3, 0, -12]
+                    padding: [0, 3, 3, -12]
                 }
                 result[`a${i}`] = {
-                    padding: [8, -60, -20, -20],
+                    padding: [-20, -60, 0, -20],
                     color: colorLine[i],
                     fontSize: 12
                 }
@@ -330,11 +329,11 @@ under the License.
                                 backgroundColor: 'rgba(255, 0, 0, 0.2)',
                                 rich: {
                                     a: {
-                                        padding: [4, 10, 0, 10],  // 4边距是文字和hr间距，此处的边距10用于解决label和引导线有间距问题
+                                        padding: [0, 10, 4, 10],  // 4边距是文字和hr间距，此处的边距10用于解决label和引导线有间距问题
                                         color: 'blue'
                                     },
                                     d: {
-                                        padding: [0, 10, 4, 10],
+                                        padding: [4, 10, 0, 10],
                                         color: 'purple'
                                     },
                                     hr: {
@@ -372,6 +371,213 @@ under the License.
         </script>
 
 
+
+        <script>
+            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+                var option;
+                // $.getJSON('./data/nutrients.json', function (data) {});
+
+                var seriesData = [{
+                    name: "大白",
+                    value: "40000"
+                }, {
+                    name: "长大",
+                    value: "53000"
+                }, {
+                    name: "杜洛克",
+                    value: "40000"
+                }, {
+                    name: "约克猪",
+                    value: "10000"
+                }, {
+                    name: "二元",
+                    value: "40000"
+                }, {
+                    name: "三元",
+                    value: "60000"
+                }, {
+                    name: "大长",
+                    value: "10000"
+                }, {
+                    name: "PIC",
+                    value: "20000"
+                }];
+                var legendData1 = ["大白", "长大", "杜洛克", "约克猪"]
+                var legendData2 = ["二元", "三元", "大长","PIC"]
+                var colorList = ['#0066FF', '#2E2EE6', '#4400CC', '#00AACC', '#9BBF30', '#E60000', '#92368D', '#BF9926'];
+                option = {
+                    backgroundColor: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 1,
+                        y2: 1,
+                        colorStops: [{
+                            offset: 0,
+                            color: '#000F44' // 0% 处的颜色
+                        }, {
+                            offset: 1,
+                            color: '#000B3B' // 100% 处的颜色
+                        }],
+                        globalCoord: false // 缺省为 false
+                    },
+                    // title: {
+                    //     text: '品种',
+                    //     x: '56%',
+                    //     y: 'center',
+                    //     textStyle: {
+                    //         fontSize:40,
+                    //         color: '#fff'
+                    //     }
+                    // },
+                    tooltip: {
+                        trigger: 'item',
+                        borderColor: 'rgba(255,255,255,.3)',
+                        backgroundColor: 'rgba(13,5,30,.6)',
+                        borderWidth: 1,
+                        padding: 5,
+                        formatter: function(parms) {
+                            var str = parms.marker + "" + parms.data.name + "</br>" +
+                                "数量：" + parms.data.value + "头</br>" +
+                                "占比：" + parms.percent + "%";
+                            return str;
+                        }
+                    },
+                    legend: [{
+                        type: "scroll",
+                        orient: 'vertical',
+                        icon:'square',
+                        left: '8%',
+                        align: 'left',
+                        top: 'center',
+                        itemGap: 20,
+                        // bottom:'50%',
+                        textStyle: {
+                            fontSize:14,
+                            color: '#AAAAAA'
+                        },
+                        data: legendData1
+                    }, {
+                        type: "scroll",
+                        orient: 'vertical',
+                        icon:'square',
+                        left: '18%',
+                        align: 'left',
+                        top: 'center',
+                        itemGap: 20,
+                        // bottom:'50%',
+                        textStyle: {
+                            fontSize:14,
+                            color: '#AAAAAA'
+                        },
+                        data: legendData2
+                    }],
+                    series: [{
+                        type: 'pie',
+                        z: 3,
+                        center: ['62%', '50%'],
+                        radius: ['25%', '37%'],
+                        clockwise: true,
+                        avoidLabelOverlap: true,
+                        hoverOffset: 15,
+                        itemStyle: {
+                            normal: {
+                                color: function(params) {
+                                    return colorList[params.dataIndex]
+                                }
+                            }
+                        },
+                        label: {
+                            show: true,
+                            position: 'outside',
+                            formatter: '{a|{b}：{d}%}\n{hr|}',
+                            rich: {
+                                // hr: {
+                                //     backgroundColor: 't',
+                                //     borderRadius: 3,
+                                //     width: 3,
+                                //     height: 3,
+                                //     padding: [3, 3, 0, -12]
+                                // },
+                                a: {
+                                    color:'#fff',
+                                    padding: [0, -80, 20, -80]
+                                }
+                            }
+                        },
+                        labelLine: {
+                            normal: {
+                                length: 40,
+                                length2: 90,
+                                lineStyle: {
+                                    width: 1
+                                }
+                            }
+                        },
+                        data: seriesData
+                    }, {
+                        name:'第一层环',
+                        type: 'pie',
+                        z: 2,
+                        tooltip:{
+                            show:false
+                        },
+                        center: ['62%', '50%'],
+                        radius: ['37%', '47%'],
+                        hoverAnimation: false,
+                        clockWise: false,
+                        itemStyle: {
+                            normal: {
+                                // shadowBlur: 40,
+                                // shadowColor: 'rgba(0, 255, 255,.3)',
+                                color: 'rgba(1,15,80,.9)',
+                            },
+                            emphasis:{
+                                color: 'rgba(1,15,80,.9)',
+                            }
+                        },
+                        label: {
+                            show: false
+                        },
+                        data: [100]
+                    }, {
+                        name:'第二层环',
+                        type: 'pie',
+                        z: 1,
+                        tooltip:{
+                            show:false
+                        },
+                        center: ['62%', '50%'],
+                        radius: ['47%', '62%'],
+                        hoverAnimation: false,
+                        clockWise: false,
+                        itemStyle: {
+                            normal: {
+                                // shadowBlur: 40,
+                                // shadowColor: 'rgba(0, 255, 255,.3)',
+                                color: 'rgba(0,15,69,.8)',
+                            },
+                            emphasis:{
+                                color: 'rgba(0,15,69,.8)',
+                            }
+                        },
+                        label: {
+                            show: false
+                        },
+                        data: [100]
+                    }]
+                };
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Test Case from https://gallery.echartsjs.com/editor.html?c=xD3PY0UKmS'
+                    ],
+                    option: option
+                    // height: 300,
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+            });
+            </script>
     </body>
 </html>
 
