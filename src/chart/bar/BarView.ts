@@ -349,6 +349,7 @@ class BarView extends ChartView {
                 if (!data.hasValue(newIndex)) {
                     group.remove(el);
                     el = null;
+                    return;
                 }
 
                 let isClipped = false;
