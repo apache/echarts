@@ -177,9 +177,9 @@ BMapCoordSys.create = function (ecModel, api) {
                 root.removeChild(bmapRoot);
             }
             bmapRoot = document.createElement('div');
-            bmapRoot.style.cssText = 'width:100%;height:100%';
-            // Not support IE8
-            bmapRoot.classList.add('ec-extension-bmap');
+            bmapRoot.className = 'ec-extension-bmap';
+            // fix #13424
+            bmapRoot.style.cssText = 'position:absolute;width:100%;height:100%';
             root.appendChild(bmapRoot);
 
             // initializes bmap
