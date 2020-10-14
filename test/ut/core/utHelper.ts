@@ -17,9 +17,7 @@
 * under the License.
 */
 
-// PENDING: should resolve that no `.ts` suffix.
-// @ts-ignore
-import { init, EChartsType } from '../../../echarts.all.ts';
+import { init, EChartsType } from '../../../src/echarts.all';
 
 import {
     curry as zrUtilCurry,
@@ -120,7 +118,7 @@ export function getGraphicElements(
         return (chartOrGroup as Group).children();
     }
     else {
-        const viewGroup = getViewGroup(chartOrGroup, mainType, index);
+        const viewGroup = getViewGroup(chartOrGroup as EChartsType, mainType, index);
         if (viewGroup) {
             const list: Element[] = [viewGroup];
             viewGroup.traverse(function (el: Element) {

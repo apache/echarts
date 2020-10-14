@@ -22,6 +22,6 @@
 /// Make sure run it before edit this file.                         ///
 ///////////////////////////////////////////////////////////////////////
 
-export * from './types/echarts.all';
+export * from './types/src/echarts.all';
 
 export {EChartsFullOption as EChartsOption} from './types/src/option';
