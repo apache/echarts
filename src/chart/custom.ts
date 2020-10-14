@@ -531,7 +531,7 @@ class CustomSeriesView extends ChartView {
 
         // Enable to give a name on a group made by `renderItem`, and listen
         // events that triggerd by its descendents.
-        while ((targetEl = targetEl.parent) && targetEl !== this.group) {
+        while ((targetEl = (targetEl.__hostTarget || targetEl.parent)) && targetEl !== this.group) {
             if (targetEl.name === elementName) {
                 return true;
             }

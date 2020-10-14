@@ -903,20 +903,26 @@ class ECharts extends Eventful {
                 const el = e.target;
                 let params: ECEvent;
                 const isGlobalOut = eveName === 'globalout';
-                const ecData = el && getECData(el);
                 // no e.target when 'globalout'.
                 if (isGlobalOut) {
                     params = {} as ECEvent;
                 }
-                else if (ecData && ecData.dataIndex != null) {
-                    const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
-                    params = (
-                        dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {}
-                    ) as ECEvent;
-                }
-                // If element has custom eventData of components
-                else if (el && ecData.eventData) {
-                    params = zrUtil.extend({}, ecData.eventData) as ECEvent;
+                else {
+                    el && findEventDispatcher(el, (parent) => {
+                        const ecData = getECData(parent);
+                        if (ecData && ecData.dataIndex != null) {
+                            const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
+                            params = (
+                                dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {}
+                            ) as ECEvent;
+                            return true;
+                        }
+                        // If element has custom eventData of components
+                        else if (ecData.eventData) {
+                            params = zrUtil.extend({}, ecData.eventData) as ECEvent;
+                            return true;
+                        }
+                    }, true);
                 }
 
                 // Contract: if params prepared in mouse event,
@@ -1829,7 +1835,7 @@ class ECharts extends Eventful {
             }).on('click', function (e) {
                 const el = e.target;
                 const dispatcher = findEventDispatcher(
-                    el, (target) => getECData(target).dataIndex != null
+                    el, (target) => getECData(target).dataIndex != null, true
                 );
                 if (dispatcher) {
                     const actionType = (dispatcher as ECElement).selected ? 'unselect' : 'select';
