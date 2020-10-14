@@ -204,11 +204,9 @@ const dataColorPaletteTask: StageHandler = {
                 // 2. color is encoded by visualMap
                 if (fromPalette) {
                     const itemStyle = data.ensureUniqueItemVisual(idx, 'style');
-                    itemStyle[colorKey] = seriesModel.getColorFromPalette(
-                        dataAll.getName(rawIdx) || (rawIdx + ''),
-                        colorScope,
-                        dataAll.count()
-                    );
+                    const name = dataAll.getName(rawIdx) || (rawIdx + '');
+                    const dataCount = dataAll.count();
+                    itemStyle[colorKey] = seriesModel.getColorFromPalette(name, colorScope, dataCount);
                 }
             });
         });
@@ -218,6 +216,5 @@ const dataColorPaletteTask: StageHandler = {
 export {
     seriesStyleTask,
     dataStyleTask,
-    dataColorPaletteTask,
-    dataDecalPaletteTask
+    dataColorPaletteTask
 };

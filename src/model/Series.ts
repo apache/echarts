@@ -47,7 +47,6 @@ import makeStyleMapper from './mixin/makeStyleMapper';
 import { SourceManager } from '../data/helper/sourceManager';
 import { Source } from '../data/Source';
 import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatTooltip';
-import {Pattern} from 'zrender/src/export';
 import {DecalObject} from 'zrender/src/graphic/Decal';
 
 const inner = modelUtil.makeInner<{

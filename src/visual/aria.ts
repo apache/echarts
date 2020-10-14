@@ -20,27 +20,29 @@
 // @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
-import { retrieveRawValue }
+import ExtensionAPI from '../ExtensionAPI';
+import {retrieveRawValue} from '../data/helper/dataProvider';
+import GlobalModel from '../model/Global';
+import Model from '../model/Model';
+import {AriaOption} from '../component/aria';
 
-from '../data/helper/dataProvider';
-
-export default function (dom, ecModel) {
-    const ariaModel = ecModel.getModel('aria');
+export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+    const ariaModel: Model<AriaOption> = ecModel.getModel('aria');
     if (!ariaModel.get('show')) {
         return;
     }
-    else if (ariaModel.get('description')) {
-        dom.setAttribute('aria-label', ariaModel.get('description'));
+
+    const labelModel = ariaModel.getModel('label') || ariaModel;
+
+    const dom = api.getZr().dom;
+    if (labelModel.get('description')) {
+        dom.setAttribute('aria-label', labelModel.get('description'));
         return;
     }
 
-    let seriesCnt = 0;
-    ecModel.eachSeries(function (seriesModel, idx) {
-        ++seriesCnt;
-    }, this);
-
-    const maxDataCnt = ariaModel.get('data.maxCount') || 10;
-    const maxSeriesCnt = ariaModel.get('series.maxCount') || 10;
+    const seriesCnt = ecModel.getSeriesCount();
+    const maxDataCnt = labelModel.get('data.maxCount') || 10;
+    const maxSeriesCnt = labelModel.get('series.maxCount') || 10;
     const displaySeriesCnt = Math.min(seriesCnt, maxSeriesCnt);
 
     let ariaLabel;
@@ -51,19 +53,19 @@ export default function (dom, ecModel) {
     else {
         const title = getTitle();
         if (title) {
-            ariaLabel = replace(getConfig('general.withTitle'), {
+            ariaLabel = replace(getConfig(labelModel, 'general.withTitle'), {
                 title: title
             });
         }
         else {
-            ariaLabel = getConfig('general.withoutTitle');
+            ariaLabel = getConfig(labelModel, 'general.withoutTitle');
         }
 
         const seriesLabels = [];
         const prefix = seriesCnt > 1
             ? 'series.multiple.prefix'
             : 'series.single.prefix';
-        ariaLabel += replace(getConfig(prefix), { seriesCount: seriesCnt });
+        ariaLabel += replace(getConfig(labelModel, prefix), { seriesCount: seriesCnt });
 
         ecModel.eachSeries(function (seriesModel, idx) {
             if (idx < displaySeriesCnt) {
@@ -72,7 +74,7 @@ export default function (dom, ecModel) {
                 const seriesName = seriesModel.get('name');
                 const seriesTpl = 'series.'
                     + (seriesCnt > 1 ? 'multiple' : 'single') + '.';
-                seriesLabel = getConfig(seriesName
+                seriesLabel = getConfig(labelModel, seriesName
                     ? seriesTpl + 'withName'
                     : seriesTpl + 'withoutName');
 
@@ -86,12 +88,12 @@ export default function (dom, ecModel) {
                 window.data = data;
                 if (data.count() > maxDataCnt) {
                     // Show part of data
-                    seriesLabel += replace(getConfig('data.partialData'), {
+                    seriesLabel += replace(getConfig(labelModel, 'data.partialData'), {
                         displayCnt: maxDataCnt
                     });
                 }
                 else {
-                    seriesLabel += getConfig('data.allData');
+                    seriesLabel += getConfig(labelModel, 'data.allData');
                 }
 
                 const dataLabels = [];
@@ -102,8 +104,8 @@ export default function (dom, ecModel) {
                         dataLabels.push(
                             replace(
                                 name
-                                    ? getConfig('data.withName')
-                                    : getConfig('data.withoutName'),
+                                    ? getConfig(labelModel, 'data.withName')
+                                    : getConfig(labelModel, 'data.withoutName'),
                                 {
                                     name: name,
                                     value: value
@@ -113,16 +115,16 @@ export default function (dom, ecModel) {
                     }
                 }
                 seriesLabel += dataLabels
-                    .join(getConfig('data.separator.middle'))
-                    + getConfig('data.separator.end');
+                    .join(getConfig(labelModel, 'data.separator.middle'))
+                    + getConfig(labelModel, 'data.separator.end');
 
                 seriesLabels.push(seriesLabel);
             }
         });
 
         ariaLabel += seriesLabels
-            .join(getConfig('series.multiple.separator.middle'))
-            + getConfig('series.multiple.separator.end');
+            .join(getConfig(labelModel, 'series.multiple.separator.middle'))
+            + getConfig(labelModel, 'series.multiple.separator.end');
 
         dom.setAttribute('aria-label', ariaLabel);
     }
@@ -142,8 +144,8 @@ export default function (dom, ecModel) {
         return result;
     }
 
-    function getConfig(path) {
-        const userConfig = ariaModel.get(path);
+    function getConfig(model, path) {
+        const userConfig = model.get(path);
         if (userConfig == null) {
             const pathArr = path.split('.');
             let result = ecModel.getLocale('aria');
