@@ -26,7 +26,7 @@ import {
     ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
-import {ColorPaletteMixin} from './mixin/colorPalette';
+import {PaletteMixin} from './mixin/palette';
 import { DataFormatMixin } from '../model/mixin/dataFormat';
 import Model from '../model/Model';
 import {
@@ -47,6 +47,8 @@ import makeStyleMapper from './mixin/makeStyleMapper';
 import { SourceManager } from '../data/helper/sourceManager';
 import { Source } from '../data/Source';
 import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatTooltip';
+import {Pattern} from 'zrender/src/export';
+import {DecalObject} from 'zrender/src/graphic/Decal';
 
 const inner = modelUtil.makeInner<{
     data: List
@@ -438,11 +440,20 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     getColorFromPalette(name: string, scope: any, requestColorNum?: number): ZRColor {
         const ecModel = this.ecModel;
         // PENDING
-        let color = ColorPaletteMixin.prototype.getColorFromPalette.call(this, name, scope, requestColorNum);
+        let color = PaletteMixin.prototype.getColorFromPalette.call(this, name, scope, requestColorNum);
         if (!color) {
             color = ecModel.getColorFromPalette(name, scope, requestColorNum);
         }
         return color;
+    }
+
+    getDecalFromPalette(name: string, scope: any, requestColorNum?: number): DecalObject {
+        const ecModel = this.ecModel;
+        let decal = PaletteMixin.prototype.getDecalFromPalette.call(this, name, scope, requestColorNum);
+        if (!decal) {
+            decal = ecModel.getDecalFromPalette(name, scope, requestColorNum);
+        }
+        return decal;
     }
 
     /**
@@ -584,7 +595,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 }
 
 interface SeriesModel<Opt extends SeriesOption = SeriesOption>
-    extends DataFormatMixin, ColorPaletteMixin<Opt>, DataHost {
+    extends DataFormatMixin, PaletteMixin<Opt>, DataHost {
 
     // methods that can be implemented optionally to provide to components
     /**
@@ -593,7 +604,7 @@ interface SeriesModel<Opt extends SeriesOption = SeriesOption>
     getShadowDim?(): string
 }
 zrUtil.mixin(SeriesModel, DataFormatMixin);
-zrUtil.mixin(SeriesModel, ColorPaletteMixin);
+zrUtil.mixin(SeriesModel, PaletteMixin);
 
 export type SeriesModelConstructor = typeof SeriesModel & ExtendableConstructor;
 mountExtend(SeriesModel, ComponentModel as SeriesModelConstructor);

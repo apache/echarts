@@ -46,6 +46,7 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
+import Decal from 'zrender/src/graphic/Decal';
 
 
 
@@ -630,6 +631,12 @@ export type ComponentLayoutMode = {
     ignoreSize?: boolean | boolean[]
 };
 /******************* Mixins for Common Option Properties   ********************** */
+export interface PaletteOptionMixin {
+    color?: ZRColor | ZRColor[]
+    colorLayer?: ZRColor[][],
+    decal?: Decal | Decal[]
+}
+
 export interface ColorPaletteOptionMixin {
     color?: ZRColor | ZRColor[]
     colorLayer?: ZRColor[][]
