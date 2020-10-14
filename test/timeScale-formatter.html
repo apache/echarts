@@ -316,9 +316,16 @@ under the License.
                 xAxis: {
                     type: 'time',
                     axisLabel: {
-                        formatter: function (param) {
-                            const date = new Date(param.value);
-                            if (echarts.time.getUnitFromValue(param.value) === 'year') {
+                        formatter: function (value) {
+                            const date = new Date(value);
+                            const yearStart = new Date(value);
+                            yearStart.setMonth(0);
+                            yearStart.setDate(1);
+                            yearStart.setHours(0);
+                            yearStart.setMinutes(0);
+                            yearStart.setSeconds(0);
+                            yearStart.setMilliseconds(0);
+                            if (date.getTime() === yearStart.getTime()) {
                                 return '{year|' + date.getFullYear() + '}\n'
                                     + '{month|' + (date.getMonth() + 1) + '月}';
                             }
