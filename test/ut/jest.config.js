@@ -19,7 +19,7 @@
 
 module.exports = {
     preset: 'ts-jest',
-    testEnvironment: 'node',
+    testEnvironment: 'jsdom',
     rootDir: __dirname,
     collectCoverage: true,
     setupFiles: [
@@ -33,14 +33,13 @@ module.exports = {
         '__DEV__': true
     },
     testMatch: [
-        '**/spec/api/containPixel.test.ts'
-        // '**/spec/api/*.test.ts',
-        // '**/spec/component/**/*.test.ts',
-        // '**/spec/data/*.test.ts',
-        // '**/spec/model/*.test.ts',
-        // '**/spec/scale/*.test.ts',
-        // '**/spec/util/*.test.ts',
-        // '!**/spec/api/containPixel.test.ts',
-        // '!**/spec/component/graphic/setOption.test.ts'
+        '**/spec/api/*.test.ts',
+        '**/spec/component/**/*.test.ts',
+        '**/spec/data/*.test.ts',
+        '**/spec/model/*.test.ts',
+        '**/spec/scale/*.test.ts',
+        '**/spec/util/*.test.ts',
+        '!**/spec/api/containPixel.test.ts',
+        '!**/spec/component/graphic/setOption.test.ts'
     ]
 };
