@@ -112,7 +112,7 @@ export function isValueFinite(val: unknown): boolean {
 export function getGraphicElements(
     chartOrGroup: EChartsType | Group,
     mainType: ComponentMainType,
-    index: number
+    index?: number
 ): Element[] {
     if ((chartOrGroup as Group).type === 'group') {
         return (chartOrGroup as Group).children();
@@ -135,7 +135,7 @@ export function getGraphicElements(
 export function getViewGroup(
     chart: EChartsType,
     mainType: ComponentMainType,
-    index: number
+    index?: number
 ): Group {
     const component = chart.getModel().getComponent(mainType, index);
     return component ? chart[

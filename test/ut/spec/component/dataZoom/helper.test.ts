@@ -17,91 +17,87 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-const helper = require('../../../../../lib/component/dataZoom/helper');
-const utHelper = require('../../../core/utHelper');
-describe('dataZoom/helper', function () {
 
-    function makeRecords(result) {
-        var o = {};
-        helper.eachAxisDim(function (dimNames) {
-            o[dimNames.name] = {};
-            var r = result[dimNames.name] || [];
-            for (var i = 0; i < r.length; i++) {
-                o[dimNames.name][r[i]] = true;
-            }
-        });
-        return o;
-    }
+import { findEffectedDataZooms } from '../../../../../src/component/dataZoom/helper';
+import { createChart } from '../../../core/utHelper';
+import { EChartsType } from '../../../../../src/echarts';
+
+
+
+describe('dataZoom/helper', function () {
 
     describe('findLinkedNodes', function () {
 
-        function forEachModel(models, callback) {
-            for (var i = 0; i < models.length; i++) {
-                callback(models[i]);
-            }
-        }
-
-        function axisIndicesGetter(model, dimNames) {
-            return model[dimNames.axisIndex];
-        }
-
-        it('findLinkedNodes_base', function (done) {
-            var models = [
-                {xAxisIndex: [1, 2], yAxisIndex: [0]},
-                {xAxisIndex: [3], yAxisIndex: [1]},
-                {xAxisIndex: [5], yAxisIndex: []},
-                {xAxisIndex: [2, 5], yAxisIndex: []}
-            ];
-            var result = helper.createLinkedNodesFinder(
-                utHelper.curry(forEachModel, models),
-                helper.eachAxisDim,
-                axisIndicesGetter
-            )(models[0]);
-            expect(result).toEqual({
-                nodes: [models[0], models[3], models[2]],
-                records: makeRecords({x: [1, 2, 5], y: [0]})
-            });
-            done();
+        let chart: EChartsType;
+        beforeEach(function () {
+            chart = createChart();
         });
 
-        it('findLinkedNodes_crossXY', function (done) {
-            var models = [
-                {xAxisIndex: [1, 2], yAxisIndex: [0]},
-                {xAxisIndex: [3], yAxisIndex: [3, 0]},
-                {xAxisIndex: [6, 3], yAxisIndex: [9]},
-                {xAxisIndex: [5, 3], yAxisIndex: []},
-                {xAxisIndex: [8], yAxisIndex: [4]}
-            ];
-            var result = helper.createLinkedNodesFinder(
-                utHelper.curry(forEachModel, models),
-                helper.eachAxisDim,
-                axisIndicesGetter
-            )(models[0]);
-            expect(result).toEqual({
-                nodes: [models[0], models[1], models[2], models[3]],
-                records: makeRecords({x: [1, 2, 3, 5, 6], y: [0, 3, 9]})
-            });
-            done();
+        afterEach(function () {
+            chart.dispose();
         });
 
-        it('findLinkedNodes_emptySourceModel', function (done) {
-            var models = [
-                {xAxisIndex: [1, 2], yAxisIndex: [0]},
-                {xAxisIndex: [3], yAxisIndex: [3, 0]},
-                {xAxisIndex: [6, 3], yAxisIndex: [9]},
-                {xAxisIndex: [5, 3], yAxisIndex: []},
-                {xAxisIndex: [8], yAxisIndex: [4]}
-            ];
-            var result = helper.createLinkedNodesFinder(
-                utHelper.curry(forEachModel, models),
-                helper.eachAxisDim,
-                axisIndicesGetter
-            )();
-            expect(result).toEqual({
-                nodes: [],
-                records: makeRecords({x: [], y: []})
+        it('findLinkedNodes_base', function () {
+            chart.setOption({
+                xAxis: [{}, {}, {}, {}, {}, {}],
+                yAxis: [{}, {}, {}, {}, {}, {}],
+                dataZoom: [
+                    { id: 'dz0', xAxisIndex: [1, 2], yAxisIndex: [0] },
+                    { id: 'dz1', xAxisIndex: [3], yAxisIndex: [1] },
+                    { id: 'dz2', xAxisIndex: [5], yAxisIndex: [] },
+                    { id: 'dz3', xAxisIndex: [2, 5], yAxisIndex: [] }
+                ]
             });
-            done();
+
+            const payload = { type: 'dataZoom', dataZoomIndex: 0 };
+            const dzModels = findEffectedDataZooms(chart.getModel(), payload);
+
+            expect(dzModels.length === 3);
+            expect(dzModels[0] === chart.getModel().getComponent('dataZoom', 0)).toEqual(true);
+            expect(dzModels[1] === chart.getModel().getComponent('dataZoom', 3)).toEqual(true);
+            expect(dzModels[2] === chart.getModel().getComponent('dataZoom', 2)).toEqual(true);
+        });
+
+        it('findLinkedNodes_crossXY', function () {
+            chart.setOption({
+                xAxis: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                yAxis: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                dataZoom: [
+                    { id: 'dz0', xAxisIndex: [1, 2], yAxisIndex: [0] },
+                    { id: 'dz1', xAxisIndex: [3], yAxisIndex: [3, 0] },
+                    { id: 'dz2', xAxisIndex: [6, 3], yAxisIndex: [9] },
+                    { id: 'dz3', xAxisIndex: [5, 3], yAxisIndex: [] },
+                    { id: 'dz4', xAxisIndex: [8], yAxisIndex: [4] }
+                ]
+            });
+
+            const payload = { type: 'dataZoom', dataZoomIndex: 0 };
+            const dzModels = findEffectedDataZooms(chart.getModel(), payload);
+
+            expect(dzModels.length === 4);
+            expect(dzModels[0] === chart.getModel().getComponent('dataZoom', 0)).toEqual(true);
+            expect(dzModels[1] === chart.getModel().getComponent('dataZoom', 1)).toEqual(true);
+            expect(dzModels[2] === chart.getModel().getComponent('dataZoom', 2)).toEqual(true);
+            expect(dzModels[3] === chart.getModel().getComponent('dataZoom', 3)).toEqual(true);
+        });
+
+        it('findLinkedNodes_emptySourceModel', function () {
+            chart.setOption({
+                xAxis: [{}, {}, {}, {}, {}, {}, {}, {}, {}],
+                yAxis: [{}, {}, {}, {}, {}, {}, {}, {}, {}],
+                dataZoom: [
+                    { id: 'dz0', xAxisIndex: [1, 2], yAxisIndex: [0] },
+                    { id: 'dz1', xAxisIndex: [3], yAxisIndex: [3, 0] },
+                    { id: 'dz2', xAxisIndex: [6, 3], yAxisIndex: [9] },
+                    { id: 'dz3', xAxisIndex: [5, 3], yAxisIndex: [] },
+                    { id: 'dz4', xAxisIndex: [8], yAxisIndex: [4] }
+                ]
+            });
+
+            const payload = { type: 'other' };
+            const dzModels = findEffectedDataZooms(chart.getModel(), payload);
+
+            expect(dzModels.length === 0);
         });
 
     });

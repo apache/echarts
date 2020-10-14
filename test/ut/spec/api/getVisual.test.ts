@@ -37,6 +37,7 @@ describe('api/getVisual', function () {
     afterEach(function () {
         chart.dispose();
     });
+
     it('scatter', function () {
         chart.setOption({
             xAxis: {},
