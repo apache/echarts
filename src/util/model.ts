@@ -366,7 +366,6 @@ function mappingByIndex<T extends MappingExistingItem>(
     newCmptOptions: ComponentOption[],
     brandNew: boolean
 ): void {
-    let nextIdx = 0;
     each(newCmptOptions, function (cmptOption) {
         if (!cmptOption) {
             return;
@@ -374,6 +373,7 @@ function mappingByIndex<T extends MappingExistingItem>(
 
         // Find the first place that not mapped by id and not internal component (consider the "hole").
         let resultItem;
+        let nextIdx = 0;
         while (
             // Be `!resultItem` only when `nextIdx >= result.length`.
             (resultItem = result[nextIdx])
@@ -518,10 +518,10 @@ function keyExistAndEqual(
     obj1: { id?: OptionId, name?: OptionName },
     obj2: { id?: OptionId, name?: OptionName }
 ): boolean {
-    const key1 = obj1[attr];
-    const key2 = obj2[attr];
+    const key1 = convertOptionIdName(obj1[attr], null);
+    const key2 = convertOptionIdName(obj2[attr], null);
     // See `MappingExistingItem`. `id` and `name` trade string equals to number.
-    return key1 != null && key2 != null && key1 + '' === key2 + '';
+    return key1 != null && key2 != null && key1 === key2;
 }
 
 /**
@@ -610,8 +610,8 @@ function determineSubType(
 
 
 type BatchItem = {
-    seriesId: string,
-    dataIndex: number[]
+    seriesId: OptionId,
+    dataIndex: number | number[]
 };
 /**
  * A helper for removing duplicate items between batchA and batchB,
@@ -641,7 +641,10 @@ export function compressBatches(
 
     function makeMap(sourceBatch: BatchItem[], map: InnerMap, otherMap?: InnerMap): void {
         for (let i = 0, len = sourceBatch.length; i < len; i++) {
-            const seriesId = sourceBatch[i].seriesId;
+            const seriesId = convertOptionIdName(sourceBatch[i].seriesId, null);
+            if (seriesId == null) {
+                return;
+            }
             const dataIndices = normalizeToArray(sourceBatch[i].dataIndex);
             const otherDataIndices = otherMap && otherMap[seriesId];
 

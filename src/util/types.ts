@@ -636,13 +636,13 @@ export interface MediaQuery {
     maxAspectRatio?: number;
 };
 export type MediaUnit = {
-    query: MediaQuery,
+    query?: MediaQuery,
     option: ECUnitOption
 };
 
 export type ComponentLayoutMode = {
     // Only support 'box' now.
-    type: 'box',
+    type?: 'box',
     ignoreSize?: boolean | boolean[]
 };
 /******************* Mixins for Common Option Properties   ********************** */
