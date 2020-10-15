@@ -324,29 +324,24 @@ class Symbol extends graphic.Group {
         this._sizeX = symbolSize[0] / 2;
         this._sizeY = symbolSize[1] / 2;
 
-        symbolPath.ensureState('emphasis').style = emphasisItemStyle;
+        const emphasisState = symbolPath.ensureState('emphasis');
+
+        emphasisState.style = emphasisItemStyle;
         symbolPath.ensureState('select').style = selectItemStyle;
         symbolPath.ensureState('blur').style = blurItemStyle;
 
         if (hoverScale) {
-            this.ensureState('emphasis');
-            this.setSymbolScale(1);
+            const scaleRatio = Math.max(1.1, 3 / this._sizeY);
+            emphasisState.scaleX = this._sizeX * scaleRatio;
+            emphasisState.scaleY = this._sizeY * scaleRatio;
         }
-        else {
-            this.states.emphasis = null;
-        }
+
+        this.setSymbolScale(1);
 
         enableHoverEmphasis(this, focus, blurScope);
     }
 
     setSymbolScale(scale: number) {
-        const emphasisState = this.states.emphasis;
-        if (emphasisState) {
-            const hoverScale = Math.max(scale * 1.1, 3 / this._sizeY + scale);
-            emphasisState.scaleX = hoverScale;
-            emphasisState.scaleY = hoverScale;
-        }
-
         this.scaleX = this.scaleY = scale;
     }
 

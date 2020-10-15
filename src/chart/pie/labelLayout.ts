@@ -254,6 +254,18 @@ export default function (
         el.ignore = true;
     }
 
+    function isLabelShown(label: ZRText) {
+        if (!label.ignore) {
+            return true;
+        }
+        for (const key in label.states) {
+            if (label.states[key].ignore === false) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     data.each(function (idx) {
         const sector = data.getItemGraphicEl(idx) as Sector;
         const sectorShape = sector.shape;
@@ -278,6 +290,10 @@ export default function (
         if (Math.abs(sectorShape.endAngle - sectorShape.startAngle) < minShowLabelRadian) {
             each(label.states, setNotShow);
             label.ignore = true;
+            return;
+        }
+
+        if (!isLabelShown(label)) {
             return;
         }
 
@@ -361,9 +377,7 @@ export default function (
             textRect.applyTransform(label.getComputedTransform());
             // Text has a default 1px stroke. Exclude this.
             const margin = (label.style.margin || 0) + 2.1;
-            textRect.x -= margin / 2;
             textRect.y -= margin / 2;
-            textRect.width += margin;
             textRect.height += margin;
 
             labelLayoutList.push({

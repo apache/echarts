@@ -349,6 +349,7 @@ class BarView extends ChartView {
                 if (!data.hasValue(newIndex)) {
                     group.remove(el);
                     el = null;
+                    return;
                 }
 
                 let isClipped = false;
@@ -855,8 +856,6 @@ function updateStyle(
 
     el.useStyle(style);
 
-    el.ignore = isZeroOnPolar(layout as SectorLayout);
-
     const cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && (el as Path).attr('cursor', cursorStyle);
 
@@ -889,6 +888,8 @@ function updateStyle(
     setStatesStylesFromModel(el, itemModel);
 
     if (isZeroOnPolar(layout as SectorLayout)) {
+        el.style.fill = 'none';
+        el.style.stroke = 'none';
         each(el.states, (state) => {
             if (state.style) {
                 state.style.fill = state.style.stroke = 'none';

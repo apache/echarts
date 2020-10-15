@@ -47,8 +47,16 @@ export default echarts.extendComponentView({
                 -parseInt(offsetEl.style.left, 10) || 0,
                 -parseInt(offsetEl.style.top, 10) || 0
             ];
-            viewportRoot.style.left = mapOffset[0] + 'px';
-            viewportRoot.style.top = mapOffset[1] + 'px';
+            // only update style when map offset changed
+            const viewportRootStyle = viewportRoot.style;
+            const offsetLeft = mapOffset[0] + 'px';
+            const offsetTop = mapOffset[1] + 'px';
+            if (viewportRootStyle.left !== offsetLeft) {
+                viewportRootStyle.left = offsetLeft;
+            }
+            if (viewportRootStyle.top !== offsetTop) {
+                viewportRootStyle.top = offsetTop;
+            }
 
             coordSys.setMapOffset(mapOffset);
             bMapModel.__mapOffset = mapOffset;

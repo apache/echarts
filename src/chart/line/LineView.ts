@@ -49,7 +49,6 @@ import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
-import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
 import {setLabelStyle, getLabelStatesModels, labelInner} from '../../label/labelStyle';
 import {getDefaultLabel, getDefaultInterpolatedLabel} from '../helper/labelHelper';
@@ -358,6 +357,59 @@ function canShowAllSymbolForCategory(
     return true;
 }
 
+
+function isPointNull(x: number, y: number) {
+    return isNaN(x) || isNaN(y);
+}
+
+function getLastIndexNotNull(points: ArrayLike<number>) {
+    let len = points.length / 2;
+    for (; len > 0; len--) {
+        if (!isPointNull(points[len * 2 - 2], points[len * 2 - 1])) {
+            break;
+        }
+    }
+
+    return len - 1;
+}
+
+function getPointAtIndex(points: ArrayLike<number>, idx: number) {
+    return [points[idx * 2], points[idx * 2 + 1]];
+}
+
+function getIndexRange(points: ArrayLike<number>, xOrY: number, dim: 'x' | 'y') {
+    const len = points.length / 2;
+
+    const dimIdx = dim === 'x' ? 0 : 1;
+    let a;
+    let b;
+    let prevIndex = 0;
+    let nextIndex = -1;
+    for (let i = 0; i < len; i++) {
+        b = points[i * 2 + dimIdx];
+        if (isNaN(b) || isNaN(points[i * 2 + 1 - dimIdx])) {
+            continue;
+        }
+        if (i === 0) {
+            a = b;
+            continue;
+        }
+        if (a <= xOrY && b >= xOrY || a >= xOrY && b <= xOrY) {
+            nextIndex = i;
+            break;
+        }
+
+        prevIndex = i;
+        a = b;
+    }
+
+    return {
+        range: [prevIndex, nextIndex],
+        t: (xOrY - a) / (b - a)
+    };
+}
+
+
 interface EndLabelAnimationRecord {
     lastFrameIndex: number
     originalX?: number
@@ -394,8 +446,14 @@ function createLineClipPath(
 
         const isHorizontal = coordSys.getBaseAxis().isHorizontal();
         const clipPath = createGridClipPath(coordSys, hasAnimation, seriesModel, () => {
-            if (lineView._endLabel && labelAnimationRecord.originalX != null) {
-                lineView._endLabel.attr({x: labelAnimationRecord.originalX, y: labelAnimationRecord.originalY});
+            const endLabel = lineView._endLabel;
+            if (endLabel && hasAnimation) {
+                if (labelAnimationRecord.originalX != null) {
+                    endLabel.attr({
+                        x: labelAnimationRecord.originalX,
+                        y: labelAnimationRecord.originalY
+                    });
+                }
             }
         }, during);
         // Expand clip shape to avoid clipping when line value exceeds axis
@@ -908,8 +966,8 @@ class LineView extends ChartView {
             ? seriesDalay(null)
             : seriesDalay;
 
-        data.eachItemGraphicEl(function (symbol, idx) {
-            const el = (symbol as SymbolClz).childAt(0) as Displayable;
+        data.eachItemGraphicEl(function (symbol: SymbolExtended, idx) {
+            const el = symbol;
             if (el) {
                 const point = [symbol.x, symbol.y];
                 let start;
@@ -958,7 +1016,8 @@ class LineView extends ChartView {
                     delay: delay
                 });
 
-                const text = el.getTextContent();
+                const symbolPath = el.getSymbolPath();
+                const text = symbolPath.getTextContent();
                 if (text) {
                     text.animateFrom({
                         style: {
@@ -970,7 +1029,7 @@ class LineView extends ChartView {
                     });
                 }
 
-                (el as ECElement).disableLabelAnimation = true;
+                (symbolPath as ECElement).disableLabelAnimation = true;
             }
         });
     }
@@ -995,7 +1054,7 @@ class LineView extends ChartView {
             }
 
             // Find last non-NaN data to display data
-            const dataIndex = this._polyline.getLastIndexNotNull();
+            const dataIndex = getLastIndexNotNull(data.getLayout('points'));
             if (dataIndex >= 0) {
                 setLabelStyle(
                     endLabel,
@@ -1039,6 +1098,7 @@ class LineView extends ChartView {
                 animationRecord.originalY = endLabel.y;
             }
 
+            const points = data.getLayout('points');
             const seriesModel = data.hostModel as LineSeriesModel;
             const connectNulls = seriesModel.get('connectNulls');
             const precision = endLabelModel.get('precision');
@@ -1053,7 +1113,7 @@ class LineView extends ChartView {
                 : isHorizontal ? (clipShape.x + clipShape.width) : clipShape.y;
             const dim = isHorizontal ? 'x' : 'y';
 
-            const dataIndexRange = polyline.getIndexRange(xOrY, dim);
+            const dataIndexRange = getIndexRange(points, xOrY, dim);
             const indices = dataIndexRange.range;
 
             const diff = indices[1] - indices[0];
@@ -1061,7 +1121,7 @@ class LineView extends ChartView {
             if (diff >= 1) {
                 // diff > 1 && connectNulls, which is on the null data.
                 if (diff > 1 && !connectNulls) {
-                    const pt = polyline.getPointAtIndex(indices[0]);
+                    const pt = getPointAtIndex(points, indices[0]);
                     endLabel.attr({ x: pt[0], y: pt[1] });
                     valueAnimation && (value = seriesModel.getRawValue(indices[0]) as ParsedValue);
                 }
@@ -1081,7 +1141,7 @@ class LineView extends ChartView {
                 // If diff <= 0, which is the range is not found(Include NaN)
                 // Choose the first point or last point.
                 const idx = (percent === 1 || animationRecord.lastFrameIndex > 0) ? indices[0] : 0;
-                const pt = polyline.getPointAtIndex(idx);
+                const pt = getPointAtIndex(points, idx);
                 valueAnimation && (value = seriesModel.getRawValue(idx) as ParsedValue);
                 endLabel.attr({ x: pt[0], y: pt[1] });
             }
@@ -1202,6 +1262,7 @@ class LineView extends ChartView {
 
         if (polyline.animators && polyline.animators.length) {
             polyline.animators[0].during(function () {
+                polygon && polygon.dirtyShape();
                 const points = (polyline.shape as any).__points;
                 for (let i = 0; i < updatedDataInfo.length; i++) {
                     const el = updatedDataInfo[i].el;

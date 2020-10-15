@@ -100,7 +100,9 @@ function singleEnterEmphasis(el: ECElement) {
 function singleLeaveEmphasis(el: ECElement) {
     // Only mark the flag.
     // States will be applied in the echarts.ts in next frame.
-    doChangeHoverState(el, 'normal', HOVER_STATE_NORMAL);
+    if (el.hoverState === HOVER_STATE_EMPHASIS) {
+        doChangeHoverState(el, 'normal', HOVER_STATE_NORMAL);
+    }
 }
 
 function singleEnterBlur(el: ECElement) {
@@ -108,7 +110,9 @@ function singleEnterBlur(el: ECElement) {
 }
 
 function singleLeaveBlur(el: ECElement) {
-    doChangeHoverState(el, 'normal', HOVER_STATE_NORMAL);
+    if (el.hoverState === HOVER_STATE_BLUR) {
+        doChangeHoverState(el, 'normal', HOVER_STATE_NORMAL);
+    }
 }
 
 function singleEnterSelect(el: ECElement) {
