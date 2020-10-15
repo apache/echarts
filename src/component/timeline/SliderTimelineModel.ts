@@ -18,7 +18,7 @@
 */
 
 import TimelineModel, { TimelineOption } from './TimelineModel';
-import DataFormatMixin from '../../model/mixin/dataFormat';
+import { DataFormatMixin } from '../../model/mixin/dataFormat';
 import ComponentModel from '../../model/Component';
 import { mixin } from 'zrender/src/core/util';
 import List from '../../data/List';

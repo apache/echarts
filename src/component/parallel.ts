@@ -28,6 +28,7 @@ import GlobalModel from '../model/Global';
 
 // NOTE: DONT Remove this import, or GeoModel will be treeshaked.
 import '../coord/parallel/ParallelModel';
+/* eslint-disable-next-line */
 import ParallelModel, { ParallelCoordinateSystemOption } from '../coord/parallel/ParallelModel';
 import ExtensionAPI from '../ExtensionAPI';
 import ComponentView from '../view/Component';

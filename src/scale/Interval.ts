@@ -22,7 +22,7 @@ import * as numberUtil from '../util/number';
 import * as formatUtil from '../util/format';
 import Scale from './Scale';
 import * as helper from './helper';
-import {ScaleTick, ParsedValue} from '../util/types';
+import {ScaleTick} from '../util/types';
 
 const roundNumber = numberUtil.round;
 

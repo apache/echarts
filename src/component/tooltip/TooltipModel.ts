@@ -65,6 +65,12 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      */
     appendToBody?: boolean
 
+    /**
+     * specified class name of tooltip dom
+     * Only available when renderMode is html
+     */
+    className?: string
+
     order?: TooltipOrderMode
 }
 
@@ -97,9 +103,10 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         renderMode: 'auto', // 'auto' | 'html' | 'richText'
 
-        // whether restraint content inside viewRect
-        // For compatibility reason, default is false
-        confine: false,
+        // whether restraint content inside viewRect.
+        // If renderMode: 'richText', default true.
+        // If renderMode: 'html', defaut false (for backward compat).
+        confine: null,
 
         showDelay: 0,
 
@@ -129,7 +136,8 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         // Tooltip inside padding, default is 5 for all direction
         // Array is allowed to set up, right, bottom, left, same with css
-        padding: 10,
+        // The default value: See `tooltip/tooltipMarkup.ts#getPaddingFromTooltipModel`.
+        padding: null,
 
         // Extra css text
         extraCssText: '',

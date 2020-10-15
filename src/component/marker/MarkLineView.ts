@@ -27,7 +27,7 @@ import { CoordinateSystem, isCoordinateSystemType } from '../../coord/Coordinate
 import MarkLineModel, { MarkLine2DDataItemOption, MarkLineOption } from './MarkLineModel';
 import { ScaleDataValue, ColorString } from '../../util/types';
 import SeriesModel from '../../model/Series';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 import ExtensionAPI from '../../ExtensionAPI';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import GlobalModel from '../../model/Global';
@@ -348,8 +348,10 @@ class MarkLineView extends MarkerView {
             }
 
             lineData.setItemVisual(idx, {
+                fromSymbolRotate: fromData.getItemVisual(idx, 'symbolRotate'),
                 fromSymbolSize: fromData.getItemVisual(idx, 'symbolSize') as number,
                 fromSymbol: fromData.getItemVisual(idx, 'symbol'),
+                toSymbolRotate: toData.getItemVisual(idx, 'symbolRotate'),
                 toSymbolSize: toData.getItemVisual(idx, 'symbolSize') as number,
                 toSymbol: toData.getItemVisual(idx, 'symbol'),
                 style: lineStyle
@@ -383,6 +385,7 @@ class MarkLineView extends MarkerView {
             }
 
             data.setItemVisual(idx, {
+                symbolRotate: itemModel.get('symbolRotate'),
                 symbolSize: itemModel.get('symbolSize') || (symbolSize as number[])[isFrom ? 0 : 1],
                 symbol: itemModel.get('symbol', true) || (symbolType as string[])[isFrom ? 0 : 1],
                 style

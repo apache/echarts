@@ -21,11 +21,6 @@ import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import Tree, { TreeNode } from '../../data/Tree';
 import Model from '../../model/Model';
-import {
-    addCommas,
-    concatTooltipHtml,
-    encodeHTML
-} from '../../util/format';
 import {wrapTreePathInfo} from '../helper/treeHelper';
 import {
     SeriesOption,
@@ -33,7 +28,6 @@ import {
     ItemStyleOption,
     LabelOption,
     RoamOptionMixin,
-    TooltipRenderMode,
     CallbackDataParams,
     ColorString,
     StatesOptionMixin
@@ -42,6 +36,7 @@ import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
 import List from '../../data/List';
 import { normalizeToArray } from '../../util/model';
+import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
 // Only support numberic value.
 type TreemapSeriesDataValue = number | number[];
@@ -209,6 +204,8 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
 
     layoutInfo: LayoutRect;
 
+    designatedVisualItemStyle: TreemapSeriesItemStyleOption;
+
     private _viewRoot: TreeNode;
     private _idIndexMap: zrUtil.HashMap<number>;
     private _idIndexMapCount: number;
@@ -343,21 +340,29 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
 
         let levels = option.levels || [];
 
+        // Used in "visual priority" in `treemapVisual.js`.
+        // This way is a little tricky, must satisfy the precondition:
+        //   1. There is no `treeNode.getModel('itemStyle.xxx')` used.
+        //   2. The `Model.prototype.getModel()` will not use any clone-like way.
+        const designatedVisualItemStyle = this.designatedVisualItemStyle = {};
+        const designatedVisualModel = new Model({itemStyle: designatedVisualItemStyle}, this, ecModel);
+
         levels = option.levels = setDefault(levels, ecModel);
         const levelModels = zrUtil.map(levels || [], function (levelDefine) {
-            return new Model(levelDefine, this, ecModel);
+            return new Model(levelDefine, designatedVisualModel, ecModel);
         }, this);
 
         // Make sure always a new tree is created when setOption,
         // in TreemapView, we check whether oldTree === newTree
         // to choose mappings approach among old shapes and new shapes.
-        const tree = Tree.createTree(root, this, null, beforeLink);
+        const tree = Tree.createTree(root, this, beforeLink);
 
         function beforeLink(nodeData: List) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 const node = tree.getNodeByDataIndex(idx);
                 const levelModel = levelModels[node.depth];
-                levelModel && (model.parentModel = levelModel);
+                // If no levelModel, we also need `designatedVisualModel`.
+                model.parentModel = levelModel || designatedVisualModel;
                 return model;
             });
         }
@@ -377,21 +382,13 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
     formatTooltip(
         dataIndex: number,
         multipleSeries: boolean,
-        dataType: string,
-        renderMode: TooltipRenderMode
+        dataType: string
     ) {
         const data = this.getData();
         const value = this.getRawValue(dataIndex) as TreemapSeriesDataValue;
-        const formattedValue = zrUtil.isArray(value)
-            ? addCommas(value[0] as number) : addCommas(value as number);
         const name = data.getName(dataIndex);
 
-        if (renderMode === 'richText') {
-            return encodeHTML(name) + ': ' + formattedValue;
-        }
-        return '<div style="line-height:1">'
-            + concatTooltipHtml(name, formattedValue)
-            + '</div>';
+        return createTooltipMarkup('nameValue', { name: name, value: value });
     }
 
     /**

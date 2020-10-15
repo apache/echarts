@@ -26,7 +26,7 @@ import {
     updateProps,
     initProps
 } from '../util/graphic';
-import { getECData } from '../util/ecData';
+import { getECData } from '../util/innerStore';
 import ExtensionAPI from '../ExtensionAPI';
 import {
     ZRTextAlign,
@@ -57,13 +57,17 @@ interface LabelDesc {
     labelLine: Polyline
 
     seriesModel: SeriesModel
-    dataIndex: number
-    dataType: SeriesDataType
+    // Can be null if label doesn't represent any data.
+    dataIndex?: number
+    // Can be null if label doesn't represent any data.
+    dataType?: SeriesDataType
 
     layoutOption: LabelLayoutOptionCallback | LabelLayoutOption
     computedLayoutOption: LabelLayoutOption
 
     hostRect: RectLike
+    rect: RectLike
+
     priority: number
 
     defaultAttr: SavedLabelAttr
@@ -94,7 +98,6 @@ interface SavedLabelAttr {
     attachedPos: ElementTextConfig['position']
     attachedRot: ElementTextConfig['rotation']
 
-    rect: RectLike
 }
 
 function cloneArr(points: number[][]) {
@@ -108,7 +111,6 @@ function cloneArr(points: number[][]) {
 }
 
 function prepareLayoutCallbackParams(labelItem: LabelDesc, hostEl?: Element): LabelLayoutOptionCallbackParams {
-    const labelAttr = labelItem.defaultAttr;
     const label = labelItem.label;
     const labelLine = hostEl && hostEl.getTextGuideLine();
     return {
@@ -117,7 +119,7 @@ function prepareLayoutCallbackParams(labelItem: LabelDesc, hostEl?: Element): La
         seriesIndex: labelItem.seriesModel.seriesIndex,
         text: labelItem.label.style.text,
         rect: labelItem.hostRect,
-        labelRect: labelAttr.rect,
+        labelRect: labelItem.rect,
         // x: labelAttr.x,
         // y: labelAttr.y,
         align: label.style.align,
@@ -188,8 +190,8 @@ class LabelManager {
      * Add label to manager
      */
     private _addLabel(
-        dataIndex: number,
-        dataType: SeriesDataType,
+        dataIndex: number | null | undefined,
+        dataType: SeriesDataType | null | undefined,
         seriesModel: SeriesModel,
         label: ZRText,
         layoutOption: LabelDesc['layoutOption']
@@ -234,6 +236,8 @@ class LabelManager {
             layoutOption,
             computedLayoutOption: null,
 
+            rect: labelRect,
+
             hostRect,
 
             // Label with lower priority will be hidden when overlapped
@@ -249,8 +253,6 @@ class LabelManager {
                 x: dummyTransformable.x,
                 y: dummyTransformable.y,
                 rotation: dummyTransformable.rotation,
-
-                rect: labelRect,
 
                 style: {
                     x: labelStyle.x,
@@ -294,10 +296,9 @@ class LabelManager {
             // Only support label being hosted on graphic elements.
             const textEl = child.getTextContent();
             const ecData = getECData(child);
-            const dataIndex = ecData.dataIndex;
             // Can only attach the text on the element with dataIndex
-            if (textEl && dataIndex != null && !(textEl as ECElement).disableLabelLayout) {
-                this._addLabel(dataIndex, ecData.dataType, seriesModel, textEl, layoutOption);
+            if (textEl && !(textEl as ECElement).disableLabelLayout) {
+                this._addLabel(ecData.dataIndex, ecData.dataType, seriesModel, textEl, layoutOption);
             }
         });
     }
@@ -392,9 +393,12 @@ class LabelManager {
                 label.draggable = true;
                 label.cursor = 'move';
                 if (hostEl) {
-                    const data = labelItem.seriesModel.getData(labelItem.dataType);
-                    const itemModel = data.getItemModel<LabelLineOptionMixin>(labelItem.dataIndex);
-                    label.on('drag', createDragHandler(hostEl, itemModel.getModel('labelLine')));
+                    let hostModel: Model<LabelLineOptionMixin> = labelItem.seriesModel as SeriesModel<LabelLineOptionMixin>;
+                    if (labelItem.dataIndex != null) {
+                        const data = labelItem.seriesModel.getData(labelItem.dataType);
+                        hostModel = data.getItemModel<LabelLineOptionMixin>(labelItem.dataIndex);
+                    }
+                    label.on('drag', createDragHandler(hostEl, hostModel.getModel('labelLine')));
                 }
             }
             else {
@@ -464,6 +468,7 @@ class LabelManager {
         const ecData = getECData(el);
         const dataIndex = ecData.dataIndex;
 
+        // Only support labelLine on the labels represent data.
         if (textEl && dataIndex != null) {
             const data = seriesModel.getData(ecData.dataType);
             const itemModel = data.getItemModel<LabelLineOptionMixin>(dataIndex);
@@ -489,6 +494,7 @@ class LabelManager {
         if (textEl && !textEl.ignore && !textEl.invisible && !(el as ECElement).disableLabelAnimation) {
             const layoutStore = labelLayoutInnerStore(textEl);
             const oldLayout = layoutStore.oldLayout;
+            const dataIndex = getECData(el).dataIndex;
             const newProps = {
                 x: textEl.x,
                 y: textEl.y,
@@ -501,7 +507,7 @@ class LabelManager {
                 textEl.style.opacity = 0;
                 initProps(textEl, {
                     style: { opacity: oldOpacity }
-                }, seriesModel);
+                }, seriesModel, dataIndex);
             }
             else {
                 textEl.attr(oldLayout);
@@ -516,7 +522,7 @@ class LabelManager {
                         textEl.attr(layoutStore.oldLayoutEmphasis);
                     }
                 }
-                updateProps(textEl, newProps, seriesModel);
+                updateProps(textEl, newProps, seriesModel, dataIndex);
             }
             layoutStore.oldLayout = newProps;
 

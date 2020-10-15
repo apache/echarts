@@ -1,0 +1,302 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <script src='lib/esl.js'></script>
+        <script src='lib/config.js'></script>
+        <script src='lib/jquery.min.js'></script>
+        <script src="http://api.map.baidu.com/api?v=2.0&ak=KOmVjPVUAey1G2E8zNhPiuQ6QiEmAwZu"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+        </style>
+        <div id='main'></div>
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                $.getJSON('data/usa.json', function (geojson) {
+                    echarts.registerMap('USA', geojson, {
+                        Alaska: {              // 把阿拉斯加移到美国主大陆左下方
+                            left: -131,
+                            top: 25,
+                            width: 15
+                        },
+                        Hawaii: {
+                            left: -110,        // 夏威夷
+                            top: 28,
+                            width: 5
+                        },
+                        'Puerto Rico': {       // 波多黎各
+                            left: -76,
+                            top: 26,
+                            width: 2
+                        }
+                    });
+
+                    const tmpChart = echarts.init(document.createElement('div'), null, {
+                        width: window.innerWidth,
+                        height: window.innerHeight
+                    });
+                    tmpChart.setOption({
+                        geo: {
+                            map: 'USA'
+                        }
+                    });
+
+                    const geo = tmpChart.getModel().getComponent('geo').coordinateSystem;
+                    const regionsMap = geo.regions.reduce(function (obj, region) {
+                        obj[region.properties.name] = region;
+                        return obj;
+                    }, {});
+
+                    const transform = geo.transform;
+
+                    const data = [
+                        {name: 'Alabama', value: 4822023},
+                        {name: 'Alaska', value: 731449},
+                        {name: 'Arizona', value: 6553255},
+                        {name: 'Arkansas', value: 2949131},
+                        {name: 'California', value: 38041430},
+                        {name: 'Colorado', value: 5187582},
+                        {name: 'Connecticut', value: 3590347},
+                        {name: 'Delaware', value: 917092},
+                        {name: 'District of Columbia', value: 632323},
+                        {name: 'Florida', value: 19317568},
+                        {name: 'Georgia', value: 9919945},
+                        {name: 'Hawaii', value: 1392313},
+                        {name: 'Idaho', value: 1595728},
+                        {name: 'Illinois', value: 12875255},
+                        {name: 'Indiana', value: 6537334},
+                        {name: 'Iowa', value: 3074186},
+                        {name: 'Kansas', value: 2885905},
+                        {name: 'Kentucky', value: 4380415},
+                        {name: 'Louisiana', value: 4601893},
+                        {name: 'Maine', value: 1329192},
+                        {name: 'Maryland', value: 5884563},
+                        {name: 'Massachusetts', value: 6646144},
+                        {name: 'Michigan', value: 9883360},
+                        {name: 'Minnesota', value: 5379139},
+                        {name: 'Mississippi', value: 2984926},
+                        {name: 'Missouri', value: 6021988},
+                        {name: 'Montana', value: 1005141},
+                        {name: 'Nebraska', value: 1855525},
+                        {name: 'Nevada', value: 2758931},
+                        {name: 'New Hampshire', value: 1320718},
+                        {name: 'New Jersey', value: 8864590},
+                        {name: 'New Mexico', value: 2085538},
+                        {name: 'New York', value: 19570261},
+                        {name: 'North Carolina', value: 9752073},
+                        {name: 'North Dakota', value: 699628},
+                        {name: 'Ohio', value: 11544225},
+                        {name: 'Oklahoma', value: 3814820},
+                        {name: 'Oregon', value: 3899353},
+                        {name: 'Pennsylvania', value: 12763536},
+                        {name: 'Rhode Island', value: 1050292},
+                        {name: 'South Carolina', value: 4723723},
+                        {name: 'South Dakota', value: 833354},
+                        {name: 'Tennessee', value: 6456243},
+                        {name: 'Texas', value: 26059203},
+                        {name: 'Utah', value: 2855287},
+                        {name: 'Vermont', value: 626011},
+                        {name: 'Virginia', value: 8185867},
+                        {name: 'Washington', value: 6897012},
+                        {name: 'West Virginia', value: 1855413},
+                        {name: 'Wisconsin', value: 5726398},
+                        {name: 'Wyoming', value: 576412},
+                        {name: 'Puerto Rico', value: 3667084}
+                    ];
+
+                    const myChart = echarts.init(document.getElementById('main'));
+
+                    function createMapOption() {
+                        return {
+                            series: [{
+                                coordinateSystem: 'none',
+                                type: 'custom',
+                                data,
+                                animationDurationUpdate: 2000,
+                                renderItem(params, api) {
+                                    const dataItem = data[params.dataIndex];
+                                    const geometries = regionsMap[dataItem.name].geometries.slice();
+                                    // Pick the main polygon
+                                    // TODO Multipolygon
+                                    geometries.sort((a, b) => b.exterior.length - a.exterior.length);
+                                    const points = geometries[0].exterior;
+                                    const newPoints = [];
+                                    for (let i = 0; i < points.length; i++) {
+                                        newPoints.push([
+                                            points[i][0] * transform[0] + transform[4],
+                                            points[i][1] * transform[3] + transform[5]
+                                        ]);
+                                    }
+                                    return {
+                                        type: 'polygon',
+                                        morph: true,
+                                        shape: {
+                                            points: newPoints
+                                        },
+                                        style: {
+                                            fill: '#aaa',
+                                            stroke: '#555',
+                                            strokeNoScale: true
+                                        }
+                                    }
+                                }
+                            }]
+                        };
+                    }
+
+                    function renderBarItem(params, api) {
+                        const dataItem = data[params.dataIndex];
+                        const start = api.coord([params.dataIndex, 0]);
+                        const size = api.size([0, api.value(1)]);
+                        const width = 20;
+                        return {
+                            type: 'rect',
+                            morph: true,
+                            shape: {
+                                x: start[0] - width / 2,
+                                y: start[1],
+                                width: width,
+                                height: -size[1]
+                            },
+                            style: {
+                                fill: '#aaa',
+                                stroke: '#555',
+                                strokeNoScale: true
+                            },
+                        };
+                    }
+
+
+                    function renderBubbleItem(params, api) {
+                        const dataItem = data[params.dataIndex];
+                        const center = api.coord([params.dataIndex, api.value(1)]);
+                        return {
+                            type: 'circle',
+                            morph: true,
+                            shape: {
+                                cx: center[0],
+                                cy: center[1],
+                                r: api.value(1) / 5e5
+                            },
+                            style: {
+                                fill: '#aaa',
+                                stroke: '#555',
+                                strokeNoScale: true
+                            },
+                        };
+                    }
+
+                    function createCartesianOption(renderItem) {
+                        return {
+                            xAxis: {
+                                data: data.map(item => item.name)
+                            },
+                            yAxis: {
+                            },
+                            series: [{
+                                type: 'custom',
+                                data,
+                                animationDurationUpdate: 2000,
+                                renderItem
+                            }]
+                        };
+                    }
+
+                    function createPieOption(renderItem) {
+                        const pieData = data.slice();
+                        pieData.reverse();
+                        const totalValue = pieData.reduce(function (val, item) {
+                            return val + item.value;
+                        }, 0);
+                        let angles = [];
+                        let currentAngle = -Math.PI / 2;
+                        for (let i = 0; i < pieData.length; i++) {
+                            const angle = pieData[i].value / totalValue * Math.PI * 2;
+                            angles.push([currentAngle, angle + currentAngle]);
+                            currentAngle += angle;
+                        }
+                        return {
+                            series: [{
+                                type: 'custom',
+                                coordinateSystem: 'none',
+                                data: pieData,
+                                animationDurationUpdate: 2000,
+                                renderItem(params, api) {
+                                    const width = myChart.getWidth();
+                                    const height = myChart.getHeight();
+                                    return {
+                                        type: 'sector',
+                                        morph: true,
+                                        shape: {
+                                            cx: width / 2,
+                                            cy: height / 2,
+                                            r: Math.min(width, height) / 3,
+                                            r0: Math.min(width, height) / 5,
+                                            startAngle: angles[params.dataIndex][0],
+                                            endAngle: angles[params.dataIndex][1],
+                                            clockwise: true
+                                        },
+                                        style: {
+                                            fill: '#aaa',
+                                            stroke: '#555',
+                                            strokeNoScale: true
+                                        },
+                                    };
+                                }
+                            }]
+                        };
+                    }
+
+                    const options = [
+                        createMapOption(),
+                        createCartesianOption(renderBarItem),
+                        createCartesianOption(renderBubbleItem),
+                        createPieOption()
+                    ];
+
+                    let currentIndex = 0;
+                    myChart.setOption(options[currentIndex]);
+
+                    function transitionToNext() {
+                        const nextIndex = (currentIndex + 1) % options.length;
+                        myChart.setOption(options[nextIndex], true);
+                        currentIndex = nextIndex;
+                    }
+
+                    setInterval(transitionToNext, 3000);
+                });
+            });
+
+        </script>
+    </body>
+</html>

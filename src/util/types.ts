@@ -27,7 +27,7 @@
 
 import Group from 'zrender/src/graphic/Group';
 import Element, {ElementEvent, ElementTextConfig} from 'zrender/src/Element';
-import DataFormatMixin from '../model/mixin/dataFormat';
+import { DataFormatMixin } from '../model/mixin/dataFormat';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
 import SeriesModel from '../model/Series';
@@ -36,7 +36,6 @@ import { TaskPlanCallbackReturn, TaskProgressParams } from '../stream/task';
 import List, {ListDimensionType} from '../data/List';
 import { Dictionary, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
-import Source from '../data/Source';
 import { TooltipMarker } from './format';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
@@ -46,6 +45,7 @@ import { TSpanStyleProps } from 'zrender/src/graphic/TSpan';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
+import { Source } from '../data/Source';
 
 
 
@@ -64,7 +64,7 @@ export type VerticalAlign = 'top' | 'middle' | 'bottom';
 // Types from zrender
 export type ColorString = string;
 export type ZRColor = ColorString | LinearGradientObject | RadialGradientObject | PatternObject;
-export type ZRLineType = 'solid' | 'dotted' | 'dashed';
+export type ZRLineType = 'solid' | 'dotted' | 'dashed' | number | number[];
 
 export type ZRFontStyle = 'normal' | 'italic' | 'oblique';
 export type ZRFontWeight = 'normal' | 'bold' | 'bolder' | 'lighter' | number;
@@ -275,6 +275,12 @@ export interface LoadingEffect extends Element {
     resize: () => void;
 }
 
+/**
+ * 'html' is used for rendering tooltip in extra DOM form, and the result
+ * string is used as DOM HTML content.
+ * 'richText' is used for rendering tooltip in rich text form, for those where
+ * DOM operation is not supported.
+ */
 export type TooltipRenderMode = 'html' | 'richText';
 
 export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'seriesAsc' | 'seriesDesc';
@@ -429,6 +435,7 @@ export type ECUnitOption = {
 
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
+    stateAnimation?: AnimationOption
 } & AnimationOptionMixin & ColorPaletteOptionMixin;
 
 /**
@@ -471,10 +478,10 @@ export type ECUnitOption = {
  * ```
  */
 export interface ECOption extends ECUnitOption {
-    baseOption?: ECUnitOption,
-    timeline?: ComponentOption,
-    options?: ECUnitOption[],
-    media?: MediaUnit[],
+    baseOption?: ECUnitOption;
+    timeline?: ComponentOption | ComponentOption[];
+    options?: ECUnitOption[];
+    media?: MediaUnit[];
 };
 
 // series.data or dataset.source
@@ -511,11 +518,15 @@ export type OptionDataItem =
     | OptionDataItemObject<OptionDataValue>;
 // Only for `SOURCE_FORMAT_KEYED_ORIGINAL`
 export type OptionDataItemObject<T> = {
-    id?: string | number;
-    name?: string;
+    id?: OptionId;
+    name?: OptionName;
     value?: T[] | T;
     selected?: boolean;
 };
+// Compat number because it is usually used and not easy to
+// restrict it in practise.
+export type OptionId = string | number;
+export type OptionName = string | number;
 export interface GraphEdgeItemObject<
     VAL extends OptionDataValue
 > extends OptionDataItemObject<VAL> {
@@ -655,6 +666,10 @@ export interface BorderOptionMixin {
     borderColor?: string
     borderWidth?: number
     borderType?: ZRLineType
+    borderCap?: CanvasLineCap
+    borderJoin?: CanvasLineJoin
+    borderDashOffset?: number
+    borderMiterLimit?: number
 }
 
 export type AnimationDelayCallbackParam = {
@@ -668,6 +683,7 @@ export interface AnimationOption {
     duration?: number
     easing?: AnimationEasing
     delay?: number
+    additive?: boolean
 }
 /**
  * Mixin of option set to control the animation of series.
@@ -695,7 +711,7 @@ export interface AnimationOptionMixin {
      * Delay of initialize animation
      * Can be a callback to specify duration of each element
      */
-    animationDelay?: AnimationDelayCallback
+    animationDelay?: number | AnimationDelayCallback
     // For update animation
     /**
      * Delay of data update animation.
@@ -777,6 +793,10 @@ export interface LineStyleOption<Clr = ZRColor> extends ShadowOptionMixin {
     color?: Clr
     opacity?: number
     type?: ZRLineType
+    cap?: CanvasLineCap
+    join?: CanvasLineJoin
+    dashOffset?: number
+    miterLimit?: number
 }
 
 /**
@@ -848,6 +868,8 @@ export interface TextCommonOption extends ShadowOptionMixin {
     }
     borderColor?: string
     borderWidth?: number
+    borderType?: ZRLineType
+    borderDashOffset?: number
     borderRadius?: number | number[]
     padding?: number | number[]
 
@@ -855,6 +877,8 @@ export interface TextCommonOption extends ShadowOptionMixin {
     height?: number
     textBorderColor?: string
     textBorderWidth?: number
+    textBorderType?: ZRLineType
+    textBorderDashOffset?: number
 
     textShadowBlur?: number
     textShadowColor?: string
@@ -926,6 +950,10 @@ export interface LineLabelOption extends Omit<LabelOption, 'distance' | 'positio
 
 export interface LabelLineOption {
     show?: boolean
+    /**
+     * If displayed above other elements
+     */
+    showAbove?: boolean
     length?: number
     length2?: number
     smooth?: boolean | number
@@ -935,8 +963,16 @@ export interface LabelLineOption {
 
 
 export interface LabelLayoutOptionCallbackParams {
-    dataIndex: number,
-    dataType: SeriesDataType,
+    /**
+     * Index of data which the label represents.
+     * It can be null if label does't represent any data.
+     */
+    dataIndex?: number,
+    /**
+     * Type of data which the label represents.
+     * It can be null if label does't represent any data.
+     */
+    dataType?: SeriesDataType,
     seriesIndex: number,
     text: string
     align: ZRTextAlign
@@ -1229,8 +1265,8 @@ export interface CommonAxisPointerOption {
 export interface ComponentOption {
     type?: string;
 
-    id?: string;
-    name?: string;
+    id?: OptionId;
+    name?: OptionName;
 
     z?: number;
     zlevel?: number;
@@ -1392,7 +1428,7 @@ export interface SeriesStackOptionMixin {
 type SamplingFunc = (frame: ArrayLike<number>) => number;
 
 export interface SeriesSamplingOptionMixin {
-    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | SamplingFunc
+    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | 'lttb' | SamplingFunc
 }
 
 export interface SeriesEncodeOptionMixin {

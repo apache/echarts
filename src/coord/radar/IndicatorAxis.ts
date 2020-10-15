@@ -33,8 +33,6 @@ class IndicatorAxis extends Axis {
 
     model: AxisBaseModel<InnerIndicatorAxisOption>;
 
-    value?: number | string;
-
     constructor(dim: string, scale: Scale, radiusExtent?: [number, number]) {
         super(dim, scale, radiusExtent);
     }

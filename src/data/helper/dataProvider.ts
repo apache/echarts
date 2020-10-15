@@ -23,7 +23,7 @@
 
 import {isTypedArray, extend, assert, each, isObject, bind} from 'zrender/src/core/util';
 import {getDataItemValue} from '../../util/model';
-import Source from '../Source';
+import { createSourceFromSeriesDataOption, Source, isSourceInstance } from '../Source';
 import {ArrayLike, Dictionary} from 'zrender/src/core/types';
 import {
     SOURCE_FORMAT_ORIGINAL,
@@ -34,10 +34,9 @@ import {
     SERIES_LAYOUT_BY_COLUMN,
     SERIES_LAYOUT_BY_ROW,
     DimensionName, DimensionIndex, OptionSourceData,
-    DimensionIndexLoose, OptionDataItem, OptionDataValue, DimensionDefinition, SourceFormat, SeriesLayoutBy
+    DimensionIndexLoose, OptionDataItem, OptionDataValue, SourceFormat, SeriesLayoutBy, ParsedValue
 } from '../../util/types';
 import List from '../List';
-
 
 export interface DataProvider {
     // If data is pure without style configuration
@@ -48,6 +47,12 @@ export interface DataProvider {
     getSource(): Source;
     count(): number;
     getItem(idx: number, out?: OptionDataItem): OptionDataItem;
+    fillStorage?(
+        start: number,
+        end: number,
+        out: ArrayLike<ParsedValue>[],
+        extent: number[][]
+    ): void
     appendData(newData: ArrayLike<OptionDataItem>): void;
     clean(): void;
 }
@@ -56,6 +61,14 @@ export interface DataProvider {
 let providerMethods: Dictionary<any>;
 let mountMethods: (provider: DefaultDataProvider, data: OptionSourceData, source: Source) => void;
 
+export interface DefaultDataProvider {
+    fillStorage?(
+        start: number,
+        end: number,
+        out: ArrayLike<ParsedValue>[],
+        extent: number[][]
+    ): void
+}
 /**
  * If normal array used, mutable chunk size is supported.
  * If typed array used, chunk size must be fixed.
@@ -85,8 +98,8 @@ export class DefaultDataProvider implements DataProvider {
 
     constructor(sourceParam: Source | OptionSourceData, dimSize?: number) {
         // let source: Source;
-        const source: Source = !(sourceParam instanceof Source)
-            ? Source.seriesDataToSource(sourceParam as OptionSourceData)
+        const source: Source = !isSourceInstance(sourceParam)
+            ? createSourceFromSeriesDataOption(sourceParam as OptionSourceData)
             : sourceParam as Source;
 
         // declare source is Source;
@@ -144,6 +157,7 @@ export class DefaultDataProvider implements DataProvider {
             if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
                 provider.getItem = getItemForTypedArray;
                 provider.count = countForTypedArray;
+                provider.fillStorage = fillStorageForTypedArray;
             }
             else {
                 const rawItemGetter = getRawSourceItemGetter(sourceFormat, seriesLayoutBy);
@@ -158,11 +172,36 @@ export class DefaultDataProvider implements DataProvider {
         ): ArrayLike<number> {
             idx = idx - this._offset;
             out = out || [];
-            const offset = this._dimSize * idx;
-            for (let i = 0; i < this._dimSize; i++) {
-                out[i] = (this._data as ArrayLike<number>)[offset + i];
+            const data = this._data;
+            const dimSize = this._dimSize;
+            const offset = dimSize * idx;
+            for (let i = 0; i < dimSize; i++) {
+                out[i] = (data as ArrayLike<number>)[offset + i];
             }
             return out;
+        };
+
+        const fillStorageForTypedArray: DefaultDataProvider['fillStorage'] = function (
+            this: DefaultDataProvider, start: number, end: number, storage: ArrayLike<ParsedValue>[], extent: number[][]
+        ) {
+            const data = this._data as ArrayLike<number>;
+            const dimSize = this._dimSize;
+
+            for (let dim = 0; dim < dimSize; dim++) {
+                const dimExtent = extent[dim];
+                let min = dimExtent[0] == null ? Infinity : dimExtent[0];
+                let max = dimExtent[1] == null ? -Infinity : dimExtent[1];
+                const count = end - start;
+                const arr = storage[dim];
+                for (let i = 0; i < count; i++) {
+                    const val = data[(start + i) * dimSize + dim];
+                    arr[start + i] = val;
+                    val < min && (min = val);
+                    val > max && (max = val);
+                }
+                dimExtent[0] = min;
+                dimExtent[1] = max;
+            }
         };
 
         const countForTypedArray: DefaultDataProvider['count'] = function (
@@ -243,7 +282,7 @@ export class DefaultDataProvider implements DataProvider {
 type RawSourceItemGetter = (
     rawData: OptionSourceData,
     startIndex: number,
-    dimsDef: DimensionDefinition[],
+    dimsDef: { name?: DimensionName }[],
     idx: number
 ) => OptionDataItem;
 
@@ -277,7 +316,13 @@ const rawSourceItemGetterMap: Dictionary<RawSourceItemGetter> = {
     ): OptionDataValue[] {
         const item = [];
         for (let i = 0; i < dimsDef.length; i++) {
-            const col = (rawData as Dictionary<OptionDataValue[]>)[dimsDef[i].name];
+            const dimName = dimsDef[i].name;
+            if (__DEV__) {
+                if (dimName == null) {
+                    throw new Error();
+                }
+            }
+            const col = (rawData as Dictionary<OptionDataValue[]>)[dimName];
             item.push(col ? col[idx] : null);
         }
         return item;
@@ -301,7 +346,7 @@ export function getRawSourceItemGetter(
 type RawSourceDataCounter = (
     rawData: OptionSourceData,
     startIndex: number,
-    dimsDef: DimensionDefinition[]
+    dimsDef: { name?: DimensionName }[]
 ) => number;
 
 const countSimply: RawSourceDataCounter = function (
@@ -327,6 +372,11 @@ const rawSourceDataCounterMap: Dictionary<RawSourceDataCounter> = {
         rawData, startIndex, dimsDef
     ) {
         const dimName = dimsDef[0].name;
+        if (__DEV__) {
+            if (dimName == null) {
+                throw new Error();
+            }
+        }
         const col = (rawData as Dictionary<OptionDataValue[]>)[dimName];
         return col ? col.length : 0;
     },

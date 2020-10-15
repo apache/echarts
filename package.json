@@ -1,6 +1,6 @@
 {
   "name": "echarts",
-  "version": "5.0.0-alpha.2",
+  "version": "5.0.0-beta.1",
   "description": "A powerful charting and visualization library for browser",
   "license": "Apache-2.0",
   "keywords": [
@@ -28,13 +28,15 @@
     "test:visual": "node test/runTest/server.js",
     "test:visual:report": "node test/runTest/genReport.js",
     "test": "node build/build.js --prepublish && jest --config test/ut/jest.config.js",
+    "test:single": "jest --config test/ut/jest.config.js --coverage=false -t",
     "mktest": "node test/build/mktest.js",
     "mktest:help": "node test/build/mktest.js -h",
     "lint": "./node_modules/.bin/eslint src/**/*.ts extension-src/**/*.ts",
+    "lint:fix": "./node_modules/.bin/eslint --fix src/**/*.ts extension-src/**/*.ts",
     "lint:dist": "echo 'It might take a while. Please wait ...' && ./node_modules/.bin/jshint --config .jshintrc-dist dist/echarts.js"
   },
   "dependencies": {
-    "zrender": "5.0.0-alpha.2"
+    "zrender": "5.0.0-beta.1"
   },
   "devDependencies": {
     "@babel/core": "7.3.4",
@@ -42,6 +44,7 @@
     "@microsoft/api-extractor": "7.7.2",
     "@typescript-eslint/eslint-plugin": "^2.15.0",
     "@typescript-eslint/parser": "^2.18.0",
+    "husky": "^4.2.5",
     "canvas": "^2.6.0",
     "chalk": "^3.0.0",
     "chokidar": "^3.4.0",

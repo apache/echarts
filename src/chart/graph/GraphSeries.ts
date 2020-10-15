@@ -21,7 +21,6 @@ import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
 import {defaultEmphasis} from '../../util/model';
 import Model from '../../model/Model';
-import {encodeHTML} from '../../util/format';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
@@ -43,8 +42,7 @@ import {
     LineLabelOption,
     StatesOptionMixin,
     GraphEdgeItemObject,
-    OptionDataValueNumeric,
-    TooltipRenderMode
+    OptionDataValueNumeric
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -52,6 +50,10 @@ import GlobalModel from '../../model/Global';
 import { VectorArray } from 'zrender/src/core/vector';
 import { ForceLayoutInstance } from './forceLayout';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
+import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
+import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
+
 
 type GraphDataValue = OptionDataValue | OptionDataValue[];
 
@@ -275,7 +277,13 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         const self = this;
 
         if (nodes && edges) {
-            return createGraphFromNodeEdge(nodes as GraphNodeItemOption[], edges, this, true, beforeLink).data;
+            // auto curveness
+            initCurvenessList(this);
+            const graph = createGraphFromNodeEdge(nodes as GraphNodeItemOption[], edges, this, true, beforeLink);
+            zrUtil.each(graph.edges, function (edge) {
+                createEdgeMapForCurveness(edge.node1, edge.node2, this, edge.dataIndex);
+            }, this);
+            return graph.data;
         }
 
         function beforeLink(nodeData: List, edgeData: List) {
@@ -333,14 +341,10 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         return this._categoriesData;
     }
 
-    /**
-     * @override
-     */
     formatTooltip(
         dataIndex: number,
         multipleSeries: boolean,
-        dataType: string,
-        renderMode: TooltipRenderMode
+        dataType: string
     ) {
         if (dataType === 'edge') {
             const nodeData = this.getData();
@@ -349,19 +353,23 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
             const sourceName = nodeData.getName(edge.node1.dataIndex);
             const targetName = nodeData.getName(edge.node2.dataIndex);
 
-            const html = [];
-            sourceName != null && html.push(sourceName);
-            targetName != null && html.push(targetName);
-            let htmlStr = encodeHTML(html.join(' > '));
+            const nameArr = [];
+            sourceName != null && nameArr.push(sourceName);
+            targetName != null && nameArr.push(targetName);
 
-            if (params.value) {
-                htmlStr += ' : ' + encodeHTML(params.value);
-            }
-            return htmlStr;
+            return createTooltipMarkup('nameValue', {
+                name: nameArr.join(' > '),
+                value: params.value,
+                noValue: params.value == null
+            });
         }
-        else { // dataType === 'node' or empty
-            return super.formatTooltip.apply(this, arguments as any);
-        }
+        // dataType === 'node' or empty
+        const nodeMarkup = defaultSeriesFormatTooltip({
+            series: this,
+            dataIndex: dataIndex,
+            multipleSeries: multipleSeries
+        });
+        return nodeMarkup;
     }
 
     _updateCategoriesData() {
@@ -482,7 +490,6 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         lineStyle: {
             color: '#aaa',
             width: 1,
-            curveness: 0,
             opacity: 0.5
         },
         emphasis: {

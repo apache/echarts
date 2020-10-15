@@ -23,7 +23,7 @@ import * as symbolUtil from '../../util/symbol';
 import ECLinePath from './LinePath';
 import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis, enterEmphasis, leaveEmphasis, SPECIAL_STATES } from '../../util/states';
-import {createTextStyle, getLabelStatesModels, setLabelStyle} from '../../label/labelStyle';
+import {getLabelStatesModels, setLabelStyle} from '../../label/labelStyle';
 import {round} from '../../util/number';
 import List from '../../data/List';
 import { ZRTextAlign, ZRTextVerticalAlign, LineLabelOption, ColorString } from '../../util/types';
@@ -32,12 +32,15 @@ import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
 
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
-import { setLabelLineStyle } from '../../label/labelGuideHelper';
 import Model from '../../model/Model';
 
 const SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'] as const;
 
 type ECSymbol = ReturnType<typeof createSymbol>;
+
+type LineECSymbol = ECSymbol & {
+    __specifiedRotation: number
+};
 
 type LineList = List<SeriesModel, LineDataVisual>;
 
@@ -61,14 +64,12 @@ function makeSymbolTypeKey(symbolCategory: 'fromSymbol' | 'toSymbol') {
  */
 function createSymbol(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: number) {
     const symbolType = lineData.getItemVisual(idx, name);
-    const symbolSize = lineData.getItemVisual(
-        idx,
-        name + 'Size' as 'fromSymbolSize' | 'toSymbolSize'
-    );
-
     if (!symbolType || symbolType === 'none') {
         return;
     }
+
+    const symbolSize = lineData.getItemVisual(idx, name + 'Size' as 'fromSymbolSize' | 'toSymbolSize');
+    const symbolRotate = lineData.getItemVisual(idx, name + 'Rotate' as 'fromSymbolRotate' | 'toSymbolRotate');
 
     const symbolSizeArr = zrUtil.isArray(symbolSize)
         ? symbolSize : [symbolSize, symbolSize];
@@ -76,6 +77,10 @@ function createSymbol(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: 
         symbolType, -symbolSizeArr[0] / 2, -symbolSizeArr[1] / 2,
         symbolSizeArr[0], symbolSizeArr[1]
     );
+
+    (symbolPath as LineECSymbol).__specifiedRotation = symbolRotate == null || isNaN(symbolRotate)
+        ? void 0
+        : +symbolRotate * Math.PI / 180 || 0;
 
     symbolPath.name = name;
 
@@ -335,8 +340,28 @@ class Line extends graphic.Group {
         const d = vector.sub([], toPos, fromPos);
         vector.normalize(d, d);
 
+        function setSymbolRotation(symbol: ECSymbol, percent: 0 | 1) {
+            // Fix #12388
+            // when symbol is set to be 'arrow' in markLine,
+            // symbolRotate value will be ignored, and compulsively use tangent angle.
+            // rotate by default if symbol rotation is not specified
+            const specifiedRotation = (symbol as LineECSymbol).__specifiedRotation;
+            if (specifiedRotation == null) {
+                const tangent = line.tangentAt(percent);
+                symbol.attr('rotation', (percent === 1 ? -1 : 1) * Math.PI / 2 - Math.atan2(
+                    tangent[1], tangent[0]
+                ));
+            }
+            else {
+                symbol.attr('rotation', specifiedRotation);
+            }
+        }
+
         if (symbolFrom) {
             symbolFrom.setPosition(fromPos);
+
+            setSymbolRotation(symbolFrom, 0);
+
             const tangent = line.tangentAt(0);
             symbolFrom.rotation = Math.PI / 2 - Math.atan2(
                 tangent[1], tangent[0]
@@ -347,6 +372,8 @@ class Line extends graphic.Group {
         if (symbolTo) {
             symbolTo.setPosition(toPos);
             const tangent = line.tangentAt(1);
+            setSymbolRotation(symbolTo, 1);
+
             symbolTo.rotation = -Math.PI / 2 - Math.atan2(
                 tangent[1], tangent[0]
             );

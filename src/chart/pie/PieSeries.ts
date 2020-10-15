@@ -39,9 +39,21 @@ import {
 } from '../../util/types';
 import List from '../../data/List';
 
+interface PieItemStyleOption extends ItemStyleOption {
+    // can be 10
+    // which means that both innerCornerRadius and outerCornerRadius are 10
+    // can also be an array [20, 10]
+    // which means that innerCornerRadius is 20
+    // and outerCornerRadius is 10
+    // can also be a string or string array, such as ['20%', '50%']
+    // which means that innerCornerRadius is 20% of the innerRadius
+    // and outerCornerRadius is half of outerRadius.
+    borderRadius?: (number | string)[] | number | string
+}
+
 export interface PieStateOption {
     // TODO: TYPE Color Callback
-    itemStyle?: ItemStyleOption
+    itemStyle?: PieItemStyleOption
     label?: PieLabelOption
     labelLine?: PieLabelLineOption
 }

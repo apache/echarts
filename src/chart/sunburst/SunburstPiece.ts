@@ -27,11 +27,11 @@ import GlobalModel from '../../model/Global';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ColorString } from '../../util/types';
 import Model from '../../model/Model';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
+import { getSectorCornerRadius } from '../helper/pieHelper';
 
 const DEFAULT_SECTOR_Z = 2;
 const DEFAULT_TEXT_Z = 4;
-
 interface DrawTreeNode extends TreeNode {
     piece: SunburstPiece
 }
@@ -90,9 +90,18 @@ class SunburstPiece extends graphic.Sector {
         const normalStyle = node.getVisual('style') as PathStyleProps;
         normalStyle.lineJoin = 'bevel';
 
+        const cornerRadius = getSectorCornerRadius(itemModel.getModel('itemStyle'), sectorShape);
+        zrUtil.extend(sectorShape, cornerRadius);
+
         zrUtil.each(SPECIAL_STATES, function (stateName) {
             const state = sector.ensureState(stateName);
-            state.style = itemModel.getModel([stateName, 'itemStyle']).getItemStyle();
+            const itemStyleModel = itemModel.getModel([stateName, 'itemStyle']);
+            state.style = itemStyleModel.getItemStyle();
+            // border radius
+            const cornerRadius = getSectorCornerRadius(itemStyleModel, sectorShape);
+            if (cornerRadius) {
+                state.shape = cornerRadius;
+            }
         });
 
         if (firstCreate) {
@@ -173,7 +182,6 @@ class SunburstPiece extends graphic.Sector {
             if (text) {
                 state.style.text = text;
             }
-
             // Not displaying text when angle is too small
             state.ignore = labelMinAngle != null && Math.abs(angle) < labelMinAngle;
 

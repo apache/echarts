@@ -125,7 +125,7 @@ async function run() {
     validateIO(opt.input, opt.output);
 
     if (isWatch) {
-        watch(config.createECharts(opt));
+        watch(config.createECharts(opt), opt.sourcemap);
     }
     else if (isPrePublish) {
         await prePublish();
@@ -257,7 +257,7 @@ async function build(configs, min, sourcemap) {
  *      watch: {chokidar, include, exclude}
  *  }
  */
-function watch(singleConfig) {
+function watch(singleConfig, sourcemap) {
 
     let watcher = rollup.watch(singleConfig);
 
@@ -280,6 +280,12 @@ function watch(singleConfig) {
             printCodeError(event.error);
         }
         if (event.code === 'BUNDLE_END') {
+
+            const sourceCode = fs.readFileSync(singleConfig.output.file, 'utf-8');
+            // Convert __DEV__ to true;
+            const transformResult = transformDEV.transform(sourceCode, sourcemap, 'true');
+            fs.writeFileSync(singleConfig.output.file, transformResult.code, 'utf-8');
+
             printWatchResult(event);
         }
     });

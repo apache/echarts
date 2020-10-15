@@ -93,7 +93,6 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
         const splitLineModel = axisModel.getModel('splitLine');
         const lineStyleModel = splitLineModel.getModel('lineStyle');
-        const lineWidth = lineStyleModel.get('width');
         let lineColors = lineStyleModel.get('color');
 
         lineColors = lineColors instanceof Array ? lineColors : [lineColors];
@@ -135,20 +134,16 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                     x2: p2[0],
                     y2: p2[1]
                 },
-                style: {
-                    lineWidth: lineWidth
-                },
                 silent: true
             }));
         }
 
+        const lineStyle = lineStyleModel.getLineStyle(['color']);
         for (let i = 0; i < splitLines.length; ++i) {
             group.add(graphic.mergePath(splitLines[i], {
-                style: {
-                    stroke: lineColors[i % lineColors.length],
-                    lineDash: lineStyleModel.getLineDash(lineWidth),
-                    lineWidth: lineWidth
-                },
+                style: zrUtil.defaults({
+                    stroke: lineColors[i % lineColors.length]
+                }, lineStyle),
                 silent: true
             }));
         }

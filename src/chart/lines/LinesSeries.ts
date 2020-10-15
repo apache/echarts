@@ -22,7 +22,6 @@
 import SeriesModel from '../../model/Series';
 import List from '../../data/List';
 import { concatArray, mergeAll, map } from 'zrender/src/core/util';
-import {encodeHTML} from '../../util/format';
 import CoordinateSystem from '../../CoordinateSystem';
 import {
     SeriesOption,
@@ -34,11 +33,11 @@ import {
     LineStyleOption,
     OptionDataValue,
     LineLabelOption,
-    StatesOptionMixin,
-    TooltipRenderMode
+    StatesOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import type { LineDrawModelOption } from '../helper/LineDraw';
+import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
 const Uint32Arr = typeof Uint32Array === 'undefined' ? Array : Uint32Array;
 const Float64Arr = typeof Float64Array === 'undefined' ? Array : Float64Array;
@@ -162,9 +161,6 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
     }
 
     mergeOption(option: LinesSeriesOption) {
-        // The input data may be null/undefined.
-        option.data = option.data || [];
-
         compatEc2(option);
 
         if (option.data) {
@@ -324,8 +320,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
     formatTooltip(
         dataIndex: number,
         multipleSeries: boolean,
-        dataType: string,
-        renderMode: TooltipRenderMode
+        dataType: string
     ) {
         const data = this.getData();
         const itemModel = data.getItemModel<LinesDataItemOption>(dataIndex);
@@ -335,11 +330,13 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         }
         const fromName = itemModel.get('fromName');
         const toName = itemModel.get('toName');
-        const html = [];
-        fromName != null && html.push(fromName);
-        toName != null && html.push(toName);
+        const nameArr = [];
+        fromName != null && nameArr.push(fromName);
+        toName != null && nameArr.push(toName);
 
-        return encodeHTML(html.join(' > '));
+        return createTooltipMarkup('nameValue', {
+            name: nameArr.join(' > ')
+        });
     }
 
     preventIncremental() {

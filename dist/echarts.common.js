@@ -39,6 +39,20 @@
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
   }
 
+  var __assign = function () {
+    __assign = Object.assign || function __assign(t) {
+      for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+      }
+
+      return t;
+    };
+
+    return __assign.apply(this, arguments);
+  };
+
   function __spreadArrays() {
     for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
 
@@ -1123,7 +1137,6 @@
           var hItem = _h[i];
 
           if (eventProcessor && eventProcessor.filter && hItem.query != null && !eventProcessor.filter(eventType, hItem.query)) {
-            i++;
             continue;
           }
 
@@ -1165,11 +1178,10 @@
         var ctx = args[argLen - 1];
         var len = _h.length;
 
-        for (var i = 0; i < len;) {
+        for (var i = 0; i < len; i++) {
           var hItem = _h[i];
 
           if (eventProcessor && eventProcessor.filter && hItem.query != null && !eventProcessor.filter(type, hItem.query)) {
-            i++;
             continue;
           }
 
@@ -1816,16 +1828,23 @@
     if (displayable[displayable.rectHover ? 'rectContain' : 'contain'](x, y)) {
       var el = displayable;
       var isSilent = void 0;
+      var ignoreClip = false;
 
       while (el) {
-        var clipPath = el.getClipPath();
-
-        if (clipPath && !clipPath.contain(x, y)) {
-          return false;
+        if (el.ignoreClip) {
+          ignoreClip = true;
         }
 
-        if (el.silent) {
-          isSilent = true;
+        if (!ignoreClip) {
+          var clipPath = el.getClipPath();
+
+          if (clipPath && !clipPath.contain(x, y)) {
+            return false;
+          }
+
+          if (el.silent) {
+            isSilent = true;
+          }
         }
 
         var hostEl = el.__hostTarget;
@@ -2567,15 +2586,13 @@
       }
 
       el.beforeUpdate();
-
-      if (el.__dirty) {
-        el.update();
-      }
-
+      el.update();
       el.afterUpdate();
       var userSetClipPath = el.getClipPath();
 
-      if (userSetClipPath) {
+      if (el.ignoreClip) {
+        clipPaths = null;
+      } else if (userSetClipPath) {
         if (clipPaths) {
           clipPaths = clipPaths.slice();
         } else {
@@ -2693,7 +2710,7 @@
 
   var requestAnimationFrame;
 
-  requestAnimationFrame = typeof window !== 'undefined' && window.requestAnimationFrame && window.requestAnimationFrame.bind(window) || window.msRequestAnimationFrame && window.msRequestAnimationFrame.bind(window) || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || function (func) {
+  requestAnimationFrame = typeof window !== 'undefined' && (window.requestAnimationFrame && window.requestAnimationFrame.bind(window) || window.msRequestAnimationFrame && window.msRequestAnimationFrame.bind(window) || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame) || function (func) {
     return setTimeout(func, 16);
   };
 
@@ -3853,6 +3870,10 @@
 
     Track.prototype.setFinished = function () {
       this._finished = true;
+
+      if (this._additiveTrack) {
+        this._additiveTrack.setFinished();
+      }
     };
 
     Track.prototype.needsAnimate = function () {
@@ -3964,7 +3985,7 @@
         }
       }
 
-      if (additiveTrack && this.interpolable && arrDim === additiveTrack.arrDim && this.isValueColor === additiveTrack.isValueColor && !additiveTrack._finished) {
+      if (additiveTrack && this.needsAnimate() && additiveTrack.needsAnimate() && arrDim === additiveTrack.arrDim && this.isValueColor === additiveTrack.isValueColor && !additiveTrack._finished) {
         this._additiveTrack = additiveTrack;
         var startValue = kfs[0].value;
 
@@ -4109,19 +4130,20 @@
     Track.prototype._addToTarget = function (target) {
       var arrDim = this.arrDim;
       var propName = this.propName;
+      var additiveValue = this._additiveValue;
 
       if (arrDim === 0) {
         if (this.isValueColor) {
           parse(target[propName], tmpRgba);
-          add1DArray(tmpRgba, tmpRgba, this._additiveValue, 1);
+          add1DArray(tmpRgba, tmpRgba, additiveValue, 1);
           target[propName] = rgba2String(tmpRgba);
         } else {
-          target[propName] = target[propName] + this._additiveValue;
+          target[propName] = target[propName] + additiveValue;
         }
       } else if (arrDim === 1) {
-        add1DArray(target[propName], target[propName], this._additiveValue, 1);
+        add1DArray(target[propName], target[propName], additiveValue, 1);
       } else if (arrDim === 2) {
-        add2DArray(target[propName], target[propName], this._additiveValue, 1);
+        add2DArray(target[propName], target[propName], additiveValue, 1);
       }
     };
 
@@ -4136,8 +4158,6 @@
       this._maxTime = 0;
       this._paused = false;
       this._started = 0;
-      this._doneList = [];
-      this._onframeList = [];
       this._clip = null;
       this._target = target;
       this._loop = loop;
@@ -4204,12 +4224,6 @@
       return this;
     };
 
-    Animator.prototype.during = function (callback) {
-      this._onframeList.push(callback);
-
-      return this;
-    };
-
     Animator.prototype.pause = function () {
       this._clip.pause();
 
@@ -4227,13 +4241,45 @@
     };
 
     Animator.prototype._doneCallback = function () {
-      this._tracks = null;
+      this._setTracksFinished();
+
       this._clip = null;
       var doneList = this._doneList;
-      var len = doneList.length;
 
-      for (var i = 0; i < len; i++) {
-        doneList[i].call(this);
+      if (doneList) {
+        var len = doneList.length;
+
+        for (var i = 0; i < len; i++) {
+          doneList[i].call(this);
+        }
+      }
+    };
+
+    Animator.prototype._abortedCallback = function () {
+      this._setTracksFinished();
+
+      var animation = this.animation;
+      var abortedList = this._abortedList;
+
+      if (animation) {
+        animation.removeClip(this._clip);
+      }
+
+      this._clip = null;
+
+      if (abortedList) {
+        for (var i = 0; i < abortedList.length; i++) {
+          abortedList[i].call(this);
+        }
+      }
+    };
+
+    Animator.prototype._setTracksFinished = function () {
+      var tracks = this._tracks;
+      var tracksKeys = this._trackKeys;
+
+      for (var i = 0; i < tracksKeys.length; i++) {
+        tracks[tracksKeys[i]].setFinished();
       }
     };
 
@@ -4311,15 +4357,15 @@
               tracks[i].step(self._target, percent);
             }
 
-            for (var i = 0; i < self._onframeList.length; i++) {
-              self._onframeList[i](self._target, percent);
+            var onframeList = self._onframeList;
+
+            if (onframeList) {
+              for (var i = 0; i < onframeList.length; i++) {
+                onframeList[i](self._target, percent);
+              }
             }
           },
           ondestroy: function () {
-            for (var i = 0; i < tracks.length; i++) {
-              tracks[i].setFinished();
-            }
-
             self._doneCallback();
           }
         });
@@ -4345,17 +4391,12 @@
       }
 
       var clip = this._clip;
-      var animation = this.animation;
 
       if (forwardToLast) {
         clip.onframe(1);
       }
 
-      if (animation) {
-        animation.removeClip(clip);
-      }
-
-      this._clip = null;
+      this._abortedCallback();
     };
 
     Animator.prototype.delay = function (time) {
@@ -4363,9 +4404,37 @@
       return this;
     };
 
+    Animator.prototype.during = function (cb) {
+      if (cb) {
+        if (!this._onframeList) {
+          this._onframeList = [];
+        }
+
+        this._onframeList.push(cb);
+      }
+
+      return this;
+    };
+
     Animator.prototype.done = function (cb) {
       if (cb) {
+        if (!this._doneList) {
+          this._doneList = [];
+        }
+
         this._doneList.push(cb);
+      }
+
+      return this;
+    };
+
+    Animator.prototype.aborted = function (cb) {
+      if (cb) {
+        if (!this._abortedList) {
+          this._abortedList = [];
+        }
+
+        this._abortedList.push(cb);
       }
 
       return this;
@@ -4410,9 +4479,8 @@
         }
       }
 
-      if (allAborted && this.animation) {
-        this.animation.removeClip(this._clip);
-        this._clip = null;
+      if (allAborted) {
+        this._abortedCallback();
       }
 
       return allAborted;
@@ -4550,7 +4618,7 @@
       animator.animation = null;
     };
 
-    Animation.prototype.update = function () {
+    Animation.prototype.update = function (notTriggerStageUpdate) {
       var time = new Date().getTime() - this._pausedTime;
 
       var delta = time - this._time;
@@ -4573,7 +4641,7 @@
       this.onframe(delta);
       this.trigger('frame', delta);
 
-      if (this.stage.update) {
+      if (this.stage.update && !notTriggerStageUpdate) {
         this.stage.update();
       }
     };
@@ -6310,11 +6378,11 @@
       return states[name];
     };
 
-    Element.prototype.clearStates = function () {
-      this.useState(PRESERVED_NORMAL_STATE, false);
+    Element.prototype.clearStates = function (noAnimation) {
+      this.useState(PRESERVED_NORMAL_STATE, false, noAnimation);
     };
 
-    Element.prototype.useState = function (stateName, keepCurrentStates) {
+    Element.prototype.useState = function (stateName, keepCurrentStates, noAnimation) {
       var toNormalState = stateName === PRESERVED_NORMAL_STATE;
       var hasStates = this.hasState();
 
@@ -6354,7 +6422,7 @@
         this._toggleHoverLayerFlag(true);
       }
 
-      this._applyStateObj(stateName, state, this._normalState, keepCurrentStates, !this.__inHover && animationCfg && animationCfg.duration > 0, animationCfg);
+      this._applyStateObj(stateName, state, this._normalState, keepCurrentStates, !noAnimation && !this.__inHover && animationCfg && animationCfg.duration > 0, animationCfg);
 
       if (this._textContent) {
         this._textContent.useState(stateName, keepCurrentStates);
@@ -6388,7 +6456,7 @@
       return state;
     };
 
-    Element.prototype.useStates = function (states) {
+    Element.prototype.useStates = function (states, noAnimation) {
       if (!states.length) {
         this.clearStates();
       } else {
@@ -6438,7 +6506,7 @@
         var animationCfg = this.stateTransition;
         this.saveCurrentToNormalState(mergedState);
 
-        this._applyStateObj(states.join(','), mergedState, this._normalState, false, !this.__inHover && animationCfg && animationCfg.duration > 0, animationCfg);
+        this._applyStateObj(states.join(','), mergedState, this._normalState, false, !noAnimation && !this.__inHover && animationCfg && animationCfg.duration > 0, animationCfg);
 
         if (this._textContent) {
           this._textContent.useStates(states);
@@ -6453,7 +6521,7 @@
         this.currentStates = states.slice();
         this.markRedraw();
 
-        if (!useHoverLayer) {
+        if (!useHoverLayer && this.__inHover) {
           this._toggleHoverLayerFlag(false);
 
           this.__dirty &= ~Element.REDARAW_BIT;
@@ -6880,6 +6948,7 @@
       elProto.isGroup = false;
       elProto.draggable = false;
       elProto.dragging = false;
+      elProto.ignoreClip = false;
       elProto.__inHover = false;
       elProto.__dirty = Element.REDARAW_BIT;
       var logs = {};
@@ -6949,28 +7018,47 @@
     cfg = cfg || {};
     var animators = [];
     animateToShallow(animatable, '', animatable, target, cfg, animationProps, animators, reverse);
-    var count = animators.length;
+    var doneCount = animators.length;
+    var abortedCount = doneCount;
+    var cfgDone = cfg.done;
+    var cfgAborted = cfg.aborted;
+    var doneCb = cfgDone ? function () {
+      doneCount--;
 
-    function done() {
-      count--;
-
-      if (!count) {
-        cfg.done && cfg.done();
+      if (!doneCount) {
+        cfgDone();
       }
+    } : null;
+    var abortedCb = cfgAborted ? function () {
+      abortedCount--;
+
+      if (!abortedCount) {
+        cfgAborted();
+      }
+    } : null;
+
+    if (!doneCount) {
+      cfgDone && cfgDone();
     }
 
-    if (!count) {
-      cfg.done && cfg.done();
-    }
-
-    if (animators.length > 0 && typeof cfg.during === 'function') {
+    if (animators.length > 0 && cfg.during) {
       animators[0].during(function (target, percent) {
         cfg.during(percent);
       });
     }
 
     for (var i = 0; i < animators.length; i++) {
-      animators[i].done(done).start(cfg.easing, cfg.force);
+      var animator = animators[i];
+
+      if (doneCb) {
+        animator.done(doneCb);
+      }
+
+      if (abortedCb) {
+        animator.aborted(abortedCb);
+      }
+
+      animator.start(cfg.easing, cfg.force);
     }
 
     return animators;
@@ -6990,6 +7078,15 @@
     if (isArrayLike(source[key])) {
       if (!isArrayLike(target[key])) {
         target[key] = [];
+      }
+
+      if (isTypedArray(source[key])) {
+        var len = source[key].length;
+
+        if (target[key].length !== len) {
+          target[key] = new source[key].constructor(len);
+          copyArrShallow(target[key], source[key], len);
+        }
       }
 
       var sourceArr = source[key];
@@ -7969,10 +8066,42 @@
   var PI = Math.PI;
   var PI2$1 = PI * 2;
   var hasTypedArray = typeof Float32Array !== 'undefined';
+  var tmpAngles = [];
+
+  function modPI2(radian) {
+    var n = Math.round(radian / PI * 1e8) / 1e8;
+    return n % 2 * PI;
+  }
+
+  function normalizeArcAngles(angles, anticlockwise) {
+    var newStartAngle = modPI2(angles[0]);
+
+    if (newStartAngle < 0) {
+      newStartAngle += PI2$1;
+    }
+
+    var delta = newStartAngle - angles[0];
+    var newEndAngle = angles[1];
+    newEndAngle += delta;
+
+    if (!anticlockwise && newEndAngle - newStartAngle >= PI2$1) {
+      newEndAngle = newStartAngle + PI2$1;
+    } else if (anticlockwise && newStartAngle - newEndAngle >= PI2$1) {
+      newEndAngle = newStartAngle - PI2$1;
+    } else if (!anticlockwise && newStartAngle > newEndAngle) {
+      newEndAngle = newStartAngle + (PI2$1 - modPI2(newStartAngle - newEndAngle));
+    } else if (anticlockwise && newStartAngle < newEndAngle) {
+      newEndAngle = newStartAngle - (PI2$1 - modPI2(newEndAngle - newStartAngle));
+    }
+
+    angles[0] = newStartAngle;
+    angles[1] = newEndAngle;
+  }
 
   var PathProxy = function () {
     function PathProxy(notSaveData) {
       this.dpr = 1;
+      this._version = 0;
       this._xi = 0;
       this._yi = 0;
       this._x0 = 0;
@@ -7987,6 +8116,14 @@
         this.data = [];
       }
     }
+
+    PathProxy.prototype.increaseVersion = function () {
+      this._version++;
+    };
+
+    PathProxy.prototype.getVersion = function () {
+      return this._version;
+    };
 
     PathProxy.prototype.setScale = function (sx, sy, segmentIgnoreThreshold) {
       segmentIgnoreThreshold = segmentIgnoreThreshold || 0;
@@ -8029,6 +8166,8 @@
         this._pathSegLen = null;
         this._pathLen = 0;
       }
+
+      this._version++;
     };
 
     PathProxy.prototype.moveTo = function (x, y) {
@@ -8082,8 +8221,12 @@
     };
 
     PathProxy.prototype.arc = function (cx, cy, r, startAngle, endAngle, anticlockwise) {
+      tmpAngles[0] = startAngle;
+      tmpAngles[1] = endAngle;
+      normalizeArcAngles(tmpAngles, anticlockwise);
+      startAngle = tmpAngles[0];
+      endAngle = tmpAngles[1];
       var delta = endAngle - startAngle;
-      endAngle = startAngle + delta;
       this.addData(CMD.A, cx, cy, r, r, startAngle, delta, 0, anticlockwise ? 0 : 1);
       this._ctx && this._ctx.arc(cx, cy, r, startAngle, endAngle, anticlockwise);
       this._xi = mathCos$1(endAngle) * r + cx;
@@ -8369,8 +8512,9 @@
 
       for (i = 0; i < data.length;) {
         var cmd = data[i++];
+        var isFirst = i === 1;
 
-        if (i === 1) {
+        if (isFirst) {
           xi = data[i];
           yi = data[i + 1];
           x0 = xi;
@@ -8413,14 +8557,14 @@
             var startAngle = data[i++];
             var endAngle = data[i++] + startAngle;
             i += 1;
-            var anticlockwise = 1 - data[i++];
+            var anticlockwise = !data[i++];
 
-            if (i === 1) {
+            if (isFirst) {
               x0 = mathCos$1(startAngle) * rx + cx;
               y0 = mathSin$1(startAngle) * ry + cy;
             }
 
-            fromArc(cx, cy, rx, ry, startAngle, endAngle, !!anticlockwise, min2, max2);
+            fromArc(cx, cy, rx, ry, startAngle, endAngle, anticlockwise, min2, max2);
             xi = mathCos$1(endAngle) * rx + cx;
             yi = mathSin$1(endAngle) * ry + cy;
             break;
@@ -8470,8 +8614,9 @@
 
       for (var i = 0; i < len;) {
         var cmd = data[i++];
+        var isFirst = i === 1;
 
-        if (i === 1) {
+        if (isFirst) {
           xi = data[i];
           yi = data[i + 1];
           x0 = xi;
@@ -8539,7 +8684,7 @@
             i += 1;
             var anticlockwise = !data[i++];
 
-            if (i === 1) {
+            if (isFirst) {
               x0 = mathCos$1(startAngle) * rx + cx;
               y0 = mathSin$1(startAngle) * ry + cy;
             }
@@ -8614,8 +8759,9 @@
 
       lo: for (var i = 0; i < len;) {
         var cmd = d[i++];
+        var isFirst = i === 1;
 
-        if (i === 1) {
+        if (isFirst) {
           xi = d[i];
           yi = d[i + 1];
           x0 = xi;
@@ -8721,8 +8867,6 @@
             var psi = d[i++];
             var anticlockwise = !d[i++];
             var r = rx > ry ? rx : ry;
-            var scaleX = rx > ry ? 1 : rx / ry;
-            var scaleY = rx > ry ? ry / rx : 1;
             var isEllipse = mathAbs(rx - ry) > 1e-3;
             var endAngle = startAngle + delta;
             var breakBuild = false;
@@ -8738,14 +8882,8 @@
               accumLength += l;
             }
 
-            if (isEllipse) {
-              ctx.translate(cx, cy);
-              ctx.rotate(psi);
-              ctx.scale(scaleX, scaleY);
-              ctx.arc(0, 0, r, startAngle, endAngle, anticlockwise);
-              ctx.scale(1 / scaleX, 1 / scaleY);
-              ctx.rotate(-psi);
-              ctx.translate(-cx, -cy);
+            if (isEllipse && ctx.ellipse) {
+              ctx.ellipse(cx, cy, rx, ry, psi, startAngle, endAngle, anticlockwise);
             } else {
               ctx.arc(cx, cy, r, startAngle, endAngle, anticlockwise);
             }
@@ -8754,7 +8892,7 @@
               break lo;
             }
 
-            if (i === 1) {
+            if (isFirst) {
               x0 = mathCos$1(startAngle) * rx + cx;
               y0 = mathSin$1(startAngle) * ry + cy;
             }
@@ -9109,7 +9247,7 @@
       return 0;
     }
 
-    if (dTheta % PI2$4 < 1e-4) {
+    if (dTheta >= PI2$4 - 1e-4) {
       startAngle = 0;
       endAngle = PI2$4;
       var dir = anticlockwise ? 1 : -1;
@@ -9121,16 +9259,14 @@
       }
     }
 
-    if (anticlockwise) {
+    if (startAngle > endAngle) {
       var tmp_1 = startAngle;
-      startAngle = normalizeRadian(endAngle);
-      endAngle = normalizeRadian(tmp_1);
-    } else {
-      startAngle = normalizeRadian(startAngle);
-      endAngle = normalizeRadian(endAngle);
+      startAngle = endAngle;
+      endAngle = tmp_1;
     }
 
-    if (startAngle > endAngle) {
+    if (startAngle < 0) {
+      startAngle += PI2$4;
       endAngle += PI2$4;
     }
 
@@ -9171,6 +9307,7 @@
 
     for (var i = 0; i < data.length;) {
       var cmd = data[i++];
+      var isFirst = i === 1;
 
       if (cmd === CMD$1.M && i > 1) {
         if (!isStroke) {
@@ -9178,7 +9315,7 @@
         }
       }
 
-      if (i === 1) {
+      if (isFirst) {
         xi = data[i];
         yi = data[i + 1];
         x0 = xi;
@@ -9244,7 +9381,7 @@
           x1 = Math.cos(theta) * rx + cx;
           y1 = Math.sin(theta) * ry + cy;
 
-          if (i > 1) {
+          if (!isFirst) {
             w += windingLine(xi, yi, x1, y1, x, y);
           } else {
             x0 = x1;
@@ -9397,7 +9534,7 @@
         if (isString(pathFill)) {
           var fillLum = lum(pathFill, 0);
 
-          if (fillLum > 0.6) {
+          if (fillLum > 0.5) {
             return DARK_LABEL_COLOR;
           } else if (fillLum > 0.2) {
             return LIGHTER_LABEL_COLOR;
@@ -9483,7 +9620,8 @@
           var w = style.lineWidth;
 
           if (!this.hasFill()) {
-            w = Math.max(w, this.strokeContainThreshold || 4);
+            var strokeContainThreshold = this.strokeContainThreshold;
+            w = Math.max(w, strokeContainThreshold == null ? 4 : strokeContainThreshold);
           }
 
           if (lineScale > 1e-10) {
@@ -9811,6 +9949,8 @@
         data[j++] = p_1[1];
       }
     }
+
+    path.increaseVersion();
   }
 
   var mathSqrt$3 = Math.sqrt;
@@ -11690,9 +11830,10 @@
         var font = token.font = tokenStyle.font || style.font;
         token.contentHeight = getLineHeight(font);
         var tokenHeight = retrieve2(tokenStyle.height, token.contentHeight);
-        token.lineHeight = retrieve3(tokenStyle.lineHeight, style.lineHeight, tokenHeight);
+        token.innerHeight = tokenHeight;
         textPadding && (tokenHeight += textPadding[0] + textPadding[2]);
         token.height = tokenHeight;
+        token.lineHeight = retrieve3(tokenStyle.lineHeight, style.lineHeight, tokenHeight);
         token.align = tokenStyle && tokenStyle.align || style.align;
         token.verticalAlign = tokenStyle && tokenStyle.verticalAlign || 'middle';
 
@@ -12205,7 +12346,7 @@
         textPadding && (outerWidth_1 += textPadding[1] + textPadding[3]);
         var boxX = adjustTextX(baseX, outerWidth_1, textAlign);
         var boxY = adjustTextY(baseY, outerHeight, verticalAlign);
-        needDrawBg && this._renderBackground(style, boxX, boxY, outerWidth_1, outerHeight);
+        needDrawBg && this._renderBackground(style, style, boxX, boxY, outerWidth_1, outerHeight);
       }
 
       textY += lineHeight / 2;
@@ -12298,7 +12439,7 @@
       var xRight = xLeft + contentWidth;
 
       if (needDrawBackground(style)) {
-        this._renderBackground(style, boxX, boxY, outerWidth, outerHeight);
+        this._renderBackground(style, style, boxX, boxY, outerWidth, outerHeight);
       }
 
       var bgColorDrawn = !!style.backgroundColor;
@@ -12359,12 +12500,13 @@
       }
 
       var needDrawBg = !token.isLineHolder && needDrawBackground(tokenStyle);
-      needDrawBg && this._renderBackground(tokenStyle, textAlign === 'right' ? x - token.width : textAlign === 'center' ? x - token.width / 2 : x, y - token.height / 2, token.width, token.height);
+      needDrawBg && this._renderBackground(tokenStyle, style, textAlign === 'right' ? x - token.width : textAlign === 'center' ? x - token.width / 2 : x, y - token.height / 2, token.width, token.height);
       var bgColorDrawn = !!tokenStyle.backgroundColor;
       var textPadding = token.textPadding;
 
       if (textPadding) {
         x = getTextXForPadding(x, textAlign, textPadding);
+        y -= token.height / 2 - textPadding[0] - token.innerHeight / 2;
       }
 
       var el = this._getOrCreateChild(TSpan);
@@ -12391,6 +12533,7 @@
       subElStyle.textAlign = textAlign;
       subElStyle.textBaseline = 'middle';
       subElStyle.font = token.font || DEFAULT_FONT;
+      subElStyle.opacity = retrieve3(tokenStyle.opacity, style.opacity, 1);
 
       if (textStroke) {
         subElStyle.lineWidth = retrieve3(tokenStyle.lineWidth, style.lineWidth, defaultLineWidth);
@@ -12408,7 +12551,7 @@
       el.setBoundingRect(new BoundingRect(adjustTextX(subElStyle.x, textWidth, subElStyle.textAlign), adjustTextY(subElStyle.y, textHeight, subElStyle.textBaseline), textWidth, textHeight));
     };
 
-    ZRText.prototype._renderBackground = function (style, x, y, width, height) {
+    ZRText.prototype._renderBackground = function (style, topStyle, x, y, width, height) {
       var textBackgroundColor = style.backgroundColor;
       var textBorderWidth = style.borderWidth;
       var textBorderColor = style.borderColor;
@@ -12434,7 +12577,6 @@
       if (isPlainBg) {
         var rectStyle = rectEl.style;
         rectStyle.fill = textBackgroundColor || null;
-        rectStyle.opacity = retrieve2(style.opacity, 1);
         rectStyle.fillOpacity = retrieve2(style.fillOpacity, 1);
       } else if (textBackgroundColor && textBackgroundColor.image) {
         imgEl = this._getOrCreateChild(ZRImage);
@@ -12458,6 +12600,7 @@
         rectStyle.strokeOpacity = retrieve2(style.strokeOpacity, 1);
         rectStyle.lineDash = style.borderDash;
         rectStyle.lineDashOffset = style.borderDashOffset || 0;
+        rectEl.strokeContainThreshold = 0;
 
         if (rectEl.hasFill() && rectEl.hasStroke()) {
           rectStyle.strokeFirst = true;
@@ -12465,11 +12608,12 @@
         }
       }
 
-      var shadowStyle = (rectEl || imgEl).style;
-      shadowStyle.shadowBlur = style.shadowBlur || 0;
-      shadowStyle.shadowColor = style.shadowColor || 'transparent';
-      shadowStyle.shadowOffsetX = style.shadowOffsetX || 0;
-      shadowStyle.shadowOffsetY = style.shadowOffsetY || 0;
+      var commonStyle = (rectEl || imgEl).style;
+      commonStyle.shadowBlur = style.shadowBlur || 0;
+      commonStyle.shadowColor = style.shadowColor || 'transparent';
+      commonStyle.shadowOffsetX = style.shadowOffsetX || 0;
+      commonStyle.shadowOffsetY = style.shadowOffsetY || 0;
+      commonStyle.opacity = retrieve3(style.opacity, topStyle.opacity, 1);
     };
 
     ZRText.makeFont = function (style) {
@@ -12926,6 +13070,195 @@
   }(Path);
 
   Rose.prototype.type = 'rose';
+  var PI$3 = Math.PI;
+  var PI2$5 = PI$3 * 2;
+  var mathSin$3 = Math.sin;
+  var mathCos$3 = Math.cos;
+  var mathACos = Math.acos;
+  var mathATan2 = Math.atan2;
+  var mathAbs$1 = Math.abs;
+  var mathSqrt$4 = Math.sqrt;
+  var mathMax$3 = Math.max;
+  var mathMin$3 = Math.min;
+  var e = 1e-4;
+
+  function intersect(x0, y0, x1, y1, x2, y2, x3, y3) {
+    var x10 = x1 - x0;
+    var y10 = y1 - y0;
+    var x32 = x3 - x2;
+    var y32 = y3 - y2;
+    var t = y32 * x10 - x32 * y10;
+
+    if (t * t < e) {
+      return;
+    }
+
+    t = (x32 * (y0 - y2) - y32 * (x0 - x2)) / t;
+    return [x0 + t * x10, y0 + t * y10];
+  }
+
+  function computeCornerTangents(x0, y0, x1, y1, radius, cr, clockwise) {
+    var x01 = x0 - x1;
+    var y01 = y0 - y1;
+    var lo = (clockwise ? cr : -cr) / mathSqrt$4(x01 * x01 + y01 * y01);
+    var ox = lo * y01;
+    var oy = -lo * x01;
+    var x11 = x0 + ox;
+    var y11 = y0 + oy;
+    var x10 = x1 + ox;
+    var y10 = y1 + oy;
+    var x00 = (x11 + x10) / 2;
+    var y00 = (y11 + y10) / 2;
+    var dx = x10 - x11;
+    var dy = y10 - y11;
+    var d2 = dx * dx + dy * dy;
+    var r = radius - cr;
+    var s = x11 * y10 - x10 * y11;
+    var d = (dy < 0 ? -1 : 1) * mathSqrt$4(mathMax$3(0, r * r * d2 - s * s));
+    var cx0 = (s * dy - dx * d) / d2;
+    var cy0 = (-s * dx - dy * d) / d2;
+    var cx1 = (s * dy + dx * d) / d2;
+    var cy1 = (-s * dx + dy * d) / d2;
+    var dx0 = cx0 - x00;
+    var dy0 = cy0 - y00;
+    var dx1 = cx1 - x00;
+    var dy1 = cy1 - y00;
+
+    if (dx0 * dx0 + dy0 * dy0 > dx1 * dx1 + dy1 * dy1) {
+      cx0 = cx1;
+      cy0 = cy1;
+    }
+
+    return {
+      cx: cx0,
+      cy: cy0,
+      x01: -ox,
+      y01: -oy,
+      x11: cx0 * (radius / r - 1),
+      y11: cy0 * (radius / r - 1)
+    };
+  }
+
+  function buildPath$2(ctx, shape) {
+    var radius = mathMax$3(shape.r, 0);
+    var innerRadius = mathMax$3(shape.r0 || 0, 0);
+    var hasRadius = radius > 0;
+    var hasInnerRadius = innerRadius > 0;
+
+    if (!hasRadius && !hasInnerRadius) {
+      return;
+    }
+
+    if (!hasRadius) {
+      radius = innerRadius;
+      innerRadius = 0;
+    }
+
+    if (innerRadius > radius) {
+      var tmp = radius;
+      radius = innerRadius;
+      innerRadius = tmp;
+    }
+
+    var x = shape.cx;
+    var y = shape.cy;
+    var clockwise = !!shape.clockwise;
+    var startAngle = shape.startAngle;
+    var endAngle = shape.endAngle;
+    var cornerRadius = shape.cornerRadius || 0;
+    var innerCornerRadius = shape.innerCornerRadius || 0;
+    var tmpAngles = [startAngle, endAngle];
+    normalizeArcAngles(tmpAngles, !clockwise);
+    var arc = mathAbs$1(tmpAngles[0] - tmpAngles[1]);
+
+    if (!(radius > e)) {
+      ctx.moveTo(x, y);
+    } else if (arc > PI2$5 - e) {
+      ctx.moveTo(x + radius * mathCos$3(startAngle), y + radius * mathSin$3(startAngle));
+      ctx.arc(x, y, radius, startAngle, endAngle, !clockwise);
+
+      if (innerRadius > e) {
+        ctx.moveTo(x + innerRadius * mathCos$3(endAngle), y + innerRadius * mathSin$3(endAngle));
+        ctx.arc(x, y, innerRadius, endAngle, startAngle, clockwise);
+      }
+    } else {
+      var halfRd = mathAbs$1(radius - innerRadius) / 2;
+      var cr = mathMin$3(halfRd, cornerRadius);
+      var icr = mathMin$3(halfRd, innerCornerRadius);
+      var cr0 = icr;
+      var cr1 = cr;
+      var xrs = radius * mathCos$3(startAngle);
+      var yrs = radius * mathSin$3(startAngle);
+      var xire = innerRadius * mathCos$3(endAngle);
+      var yire = innerRadius * mathSin$3(endAngle);
+      var xre = void 0;
+      var yre = void 0;
+      var xirs = void 0;
+      var yirs = void 0;
+
+      if (cr > e || icr > e) {
+        xre = radius * mathCos$3(endAngle);
+        yre = radius * mathSin$3(endAngle);
+        xirs = innerRadius * mathCos$3(startAngle);
+        yirs = innerRadius * mathSin$3(startAngle);
+
+        if (arc < PI$3) {
+          var it = intersect(xrs, yrs, xirs, yirs, xre, yre, xire, yire);
+
+          if (it) {
+            var x0 = xrs - it[0];
+            var y0 = yrs - it[1];
+            var x1 = xre - it[0];
+            var y1 = yre - it[1];
+            var a = 1 / mathSin$3(mathACos((x0 * x1 + y0 * y1) / (mathSqrt$4(x0 * x0 + y0 * y0) * mathSqrt$4(x1 * x1 + y1 * y1))) / 2);
+            var b = mathSqrt$4(it[0] * it[0] + it[1] * it[1]);
+            cr0 = mathMin$3(icr, (innerRadius - b) / (a - 1));
+            cr1 = mathMin$3(cr, (radius - b) / (a + 1));
+          }
+        }
+      }
+
+      if (!(arc > e)) {
+        ctx.moveTo(x + xrs, y + yrs);
+      } else if (cr1 > e) {
+        var ct0 = computeCornerTangents(xirs, yirs, xrs, yrs, radius, cr1, clockwise);
+        var ct1 = computeCornerTangents(xre, yre, xire, yire, radius, cr1, clockwise);
+        ctx.moveTo(x + ct0.cx + ct0.x01, y + ct0.cy + ct0.y01);
+
+        if (cr1 < cr) {
+          ctx.arc(x + ct0.cx, y + ct0.cy, cr1, mathATan2(ct0.y01, ct0.x01), mathATan2(ct1.y01, ct1.x01), !clockwise);
+        } else {
+          ctx.arc(x + ct0.cx, y + ct0.cy, cr1, mathATan2(ct0.y01, ct0.x01), mathATan2(ct0.y11, ct0.x11), !clockwise);
+          ctx.arc(x, y, radius, mathATan2(ct0.cy + ct0.y11, ct0.cx + ct0.x11), mathATan2(ct1.cy + ct1.y11, ct1.cx + ct1.x11), !clockwise);
+          ctx.arc(x + ct1.cx, y + ct1.cy, cr1, mathATan2(ct1.y11, ct1.x11), mathATan2(ct1.y01, ct1.x01), !clockwise);
+        }
+      } else {
+        ctx.moveTo(x + xrs, y + yrs);
+        ctx.arc(x, y, radius, startAngle, endAngle, !clockwise);
+      }
+
+      if (!(innerRadius > e)) {
+        ctx.lineTo(x + xire, y + yire);
+      } else if (cr0 > e) {
+        var ct0 = computeCornerTangents(xire, yire, xre, yre, innerRadius, -cr0, clockwise);
+        var ct1 = computeCornerTangents(xrs, yrs, xirs, yirs, innerRadius, -cr0, clockwise);
+        ctx.lineTo(x + ct0.cx + ct0.x01, y + ct0.cy + ct0.y01);
+
+        if (cr0 < icr) {
+          ctx.arc(x + ct0.cx, y + ct0.cy, cr0, mathATan2(ct0.y01, ct0.x01), mathATan2(ct1.y01, ct1.x01), !clockwise);
+        } else {
+          ctx.arc(x + ct0.cx, y + ct0.cy, cr0, mathATan2(ct0.y01, ct0.x01), mathATan2(ct0.y11, ct0.x11), !clockwise);
+          ctx.arc(x, y, innerRadius, mathATan2(ct0.cy + ct0.y11, ct0.cx + ct0.x11), mathATan2(ct1.cy + ct1.y11, ct1.cx + ct1.x11), clockwise);
+          ctx.arc(x + ct1.cx, y + ct1.cy, cr0, mathATan2(ct1.y11, ct1.x11), mathATan2(ct1.y01, ct1.x01), !clockwise);
+        }
+      } else {
+        ctx.lineTo(x + xire, y + yire);
+        ctx.arc(x, y, innerRadius, endAngle, startAngle, clockwise);
+      }
+    }
+
+    ctx.closePath();
+  }
 
   var SectorShape = function () {
     function SectorShape() {
@@ -12936,6 +13269,8 @@
       this.startAngle = 0;
       this.endAngle = Math.PI * 2;
       this.clockwise = true;
+      this.cornerRadius = 0;
+      this.innerCornerRadius = 0;
     }
 
     return SectorShape;
@@ -12953,25 +13288,7 @@
     };
 
     Sector.prototype.buildPath = function (ctx, shape) {
-      var x = shape.cx;
-      var y = shape.cy;
-      var r0 = Math.max(shape.r0 || 0, 0);
-      var r = Math.max(shape.r, 0);
-      var startAngle = shape.startAngle;
-      var endAngle = shape.endAngle;
-      var clockwise = shape.clockwise;
-      var unitX = Math.cos(startAngle);
-      var unitY = Math.sin(startAngle);
-      ctx.moveTo(unitX * r0 + x, unitY * r0 + y);
-      ctx.lineTo(unitX * r + x, unitY * r + y);
-      ctx.arc(x, y, r, startAngle, endAngle, !clockwise);
-      ctx.lineTo(Math.cos(endAngle) * r0 + x, Math.sin(endAngle) * r0 + y);
-
-      if (r0 !== 0) {
-        ctx.arc(x, y, r0, endAngle, startAngle, clockwise);
-      }
-
-      ctx.closePath();
+      buildPath$2(ctx, shape);
     };
 
     Sector.prototype.isZeroArea = function () {
@@ -12982,7 +13299,7 @@
   }(Path);
 
   Sector.prototype.type = 'sector';
-  var PI$3 = Math.PI;
+  var PI$4 = Math.PI;
   var cos$2 = Math.cos;
   var sin$2 = Math.sin;
 
@@ -13021,11 +13338,11 @@
       var r0 = shape.r0;
 
       if (r0 == null) {
-        r0 = n > 4 ? r * cos$2(2 * PI$3 / n) / cos$2(PI$3 / n) : r / 3;
+        r0 = n > 4 ? r * cos$2(2 * PI$4 / n) / cos$2(PI$4 / n) : r / 3;
       }
 
-      var dStep = PI$3 / n;
-      var deg = -PI$3 / 2;
+      var dStep = PI$4 / n;
+      var deg = -PI$4 / 2;
       var xStart = x + r * cos$2(deg);
       var yStart = y + r * sin$2(deg);
       deg += dStep;
@@ -13326,6 +13643,7 @@
     function ZRender(id, dom, opts) {
       var _this = this;
 
+      this._sleepAfterStill = 10;
       this._stillFrameAccum = 0;
       this._needsRefresh = true;
       this._needsRefreshHover = true;
@@ -13366,12 +13684,20 @@
     }
 
     ZRender.prototype.add = function (el) {
+      if (!el) {
+        return;
+      }
+
       this.storage.addRoot(el);
       el.addSelfToZr(this);
       this.refresh();
     };
 
     ZRender.prototype.remove = function (el) {
+      if (!el) {
+        return;
+      }
+
       this.storage.delRoot(el);
       el.removeSelfFromZr(this);
       this.refresh();
@@ -13409,7 +13735,7 @@
 
     ZRender.prototype.refreshImmediately = function (fromInside) {
       if (!fromInside) {
-        this.animation.update();
+        this.animation.update(true);
       }
 
       this._needsRefresh = false;
@@ -13431,7 +13757,7 @@
 
       if (this._needsRefresh) {
         triggerRendered = true;
-        this.refreshImmediately(fromInside);
+        this.refreshImmediately(true);
       }
 
       if (this._needsRefreshHover) {
@@ -13442,13 +13768,17 @@
       if (triggerRendered) {
         this._stillFrameAccum = 0;
         this.trigger('rendered');
-      } else {
+      } else if (this._sleepAfterStill > 0) {
         this._stillFrameAccum++;
 
-        if (this._stillFrameAccum > 10) {
+        if (this._stillFrameAccum > this._sleepAfterStill) {
           this.animation.stop();
         }
       }
+    };
+
+    ZRender.prototype.setSleepAfterStill = function (stillFramesCount) {
+      this._sleepAfterStill = stillFramesCount;
     };
 
     ZRender.prototype.wakeUp = function () {
@@ -13573,7 +13903,7 @@
     painterCtors[name] = Ctor;
   }
 
-  var version = '5.0.0-alpha.2';
+  var version = '5.0.0-beta.1';
   var zrender = /*#__PURE__*/Object.freeze({
     __proto__: null,
     init: init,
@@ -13904,7 +14234,11 @@
     return !isNaN(numericToNumber(val));
   }
 
-  var number = /*#__PURE__*/Object.freeze({
+  function getRandomIdBase() {
+    return Math.round(Math.random() * 9);
+  }
+
+  var numberUtil = /*#__PURE__*/Object.freeze({
     __proto__: null,
     linearMap: linearMap,
     parsePercent: parsePercent$2,
@@ -13924,7 +14258,8 @@
     quantile: quantile,
     reformIntervals: reformIntervals,
     numericToNumber: numericToNumber,
-    isNumeric: isNumeric
+    isNumeric: isNumeric,
+    getRandomIdBase: getRandomIdBase
   });
   var DUMMY_COMPONENT_NAME_PREFIX = 'series\0';
   var INTERNAL_COMPONENT_ID_PREFIX = '\0_ec_\0';
@@ -14149,7 +14484,12 @@
       }
     }
 
-    return val + '';
+    return convertOptionIdName(val, '');
+  }
+
+  function convertOptionIdName(idOrName, defaultValue) {
+    var type = typeof idOrName;
+    return type === 'string' ? idOrName : type === 'number' || isStringSafe(idOrName) ? idOrName + '' : defaultValue;
   }
 
   function validateIdOrName(idOrName) {
@@ -14212,7 +14552,7 @@
     };
   }
 
-  var innerUniqueIndex = Math.round(Math.random() * 5);
+  var innerUniqueIndex = getRandomIdBase();
 
   function parseFinder(ecModel, finderInput, opt) {
     var finder;
@@ -14269,6 +14609,7 @@
   };
 
   function queryReferringComponents(ecModel, mainType, userOption, opt) {
+    opt = opt || SINGLE_REFERRING;
     var indexOption = userOption.index;
     var idOption = userOption.id;
     var nameOption = userOption.name;
@@ -14316,6 +14657,37 @@
       return env.domSupported ? 'html' : 'richText';
     } else {
       return renderModeOption || 'html';
+    }
+  }
+
+  function interpolateRawValues(data, precision, sourceValue, targetValue, percent) {
+    var isAutoPrecision = precision == null || precision === 'auto';
+
+    if (typeof targetValue === 'number') {
+      var value = interpolateNumber(sourceValue || 0, targetValue, percent);
+      return round$1(value, isAutoPrecision ? Math.max(getPrecisionSafe(sourceValue || 0), getPrecisionSafe(targetValue)) : precision);
+    } else if (typeof targetValue === 'string') {
+      return percent < 1 ? sourceValue : targetValue;
+    } else {
+      var interpolated = [];
+      var leftArr = sourceValue || [];
+      var rightArr = targetValue;
+      var length_1 = Math.max(leftArr.length, rightArr.length);
+
+      for (var i = 0; i < length_1; ++i) {
+        var info = data.getDimensionInfo(i);
+
+        if (info.type === 'ordinal') {
+          interpolated[i] = (percent < 1 ? leftArr : rightArr)[i];
+        } else {
+          var leftVal = leftArr && leftArr[i] ? leftArr[i] : 0;
+          var rightVal = rightArr[i];
+          var value = leftArr == null ? targetValue[i] : interpolateNumber(leftVal, rightVal, percent);
+          interpolated[i] = round$1(value, isAutoPrecision ? Math.max(getPrecisionSafe(leftVal), getPrecisionSafe(rightVal)) : precision);
+        }
+      }
+
+      return interpolated;
     }
   }
 
@@ -14609,10 +14981,8 @@
   }
 
   function doChangeHoverState(el, stateName, hoverStateEnum) {
-    if (el.onHoverStateChange) {
-      if ((el.hoverState || 0) !== hoverStateEnum) {
-        el.onHoverStateChange(stateName);
-      }
+    if (el.onHoverStateChange && (el.hoverState || 0) !== hoverStateEnum) {
+      el.onHoverStateChange(stateName);
     }
 
     el.hoverState = hoverStateEnum;
@@ -15023,20 +15393,20 @@
   }
 
   var OTHER_STATES = ['emphasis', 'blur', 'select'];
-  var styleGetterMap = {
+  var defaultStyleGetterMap = {
     itemStyle: 'getItemStyle',
     lineStyle: 'getLineStyle',
     areaStyle: 'getAreaStyle'
   };
 
-  function setStatesStylesFromModel(el, itemModel, styleType, getterType) {
+  function setStatesStylesFromModel(el, itemModel, styleType, getter) {
     styleType = styleType || 'itemStyle';
 
     for (var i = 0; i < OTHER_STATES.length; i++) {
       var stateName = OTHER_STATES[i];
       var model = itemModel.getModel([stateName, styleType]);
       var state = el.ensureState(stateName);
-      state.style = model[getterType || styleGetterMap[styleType]]();
+      state.style = getter ? getter(model) : model[defaultStyleGetterMap[styleType]]();
     }
   }
 
@@ -15140,19 +15510,30 @@
     var msg = '';
 
     if (true) {
+      var makePrintableStringIfPossible_1 = function (val) {
+        return val === void 0 ? 'undefined' : val === Infinity ? 'Infinity' : val === -Infinity ? '-Infinity' : eqNaN(val) ? 'NaN' : val instanceof Date ? 'Date(' + val.toISOString() + ')' : isFunction(val) ? 'function () { ... }' : isRegExp(val) ? val + '' : null;
+      };
+
       msg = map(hintInfo, function (arg) {
         if (isString(arg)) {
           return arg;
-        } else if (typeof JSON !== 'undefined' && JSON.stringify) {
-          try {
-            return JSON.stringify(arg, function (n, val) {
-              return val === void 0 ? 'undefined' : val === Infinity ? 'Infinity' : val === -Infinity ? '-Infinity' : eqNaN(val) ? 'NaN' : val instanceof Date ? 'Date(' + val.toISOString() + ')' : isFunction(val) ? 'function () { ... }' : isRegExp(val) ? val + '' : val;
-            });
-          } catch (err) {
+        } else {
+          var printableStr = makePrintableStringIfPossible_1(arg);
+
+          if (printableStr != null) {
+            return printableStr;
+          } else if (typeof JSON !== 'undefined' && JSON.stringify) {
+            try {
+              return JSON.stringify(arg, function (n, val) {
+                var printableStr = makePrintableStringIfPossible_1(val);
+                return printableStr == null ? val : printableStr;
+              });
+            } catch (err) {
+              return '?';
+            }
+          } else {
             return '?';
           }
-        } else {
-          return '?';
         }
       }).join(' ');
     }
@@ -15160,7 +15541,28 @@
     return msg;
   }
 
+  function throwError(msg) {
+    throw new Error(msg);
+  }
+
   var EMPTY_OBJ = {};
+
+  function setLabelText(label, labelTexts) {
+    for (var i = 0; i < SPECIAL_STATES.length; i++) {
+      var stateName = SPECIAL_STATES[i];
+      var text = labelTexts[stateName];
+      var state = label.ensureState(stateName);
+      state.style = state.style || {};
+      state.style.text = text;
+    }
+
+    var oldStates = label.currentStates.slice();
+    label.clearStates(true);
+    label.setStyle({
+      text: labelTexts.normal
+    });
+    label.useStates(oldStates, true);
+  }
 
   function getLabelText(opt, stateModels, overrideValue) {
     var labelFetcher = opt.labelFetcher;
@@ -15176,7 +15578,7 @@
     }
 
     if (baseText == null) {
-      baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
+      baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt, overrideValue) : opt.defaultText;
     }
 
     var statesText = {
@@ -15206,12 +15608,10 @@
       }
     }
 
-    var textContent = isSetOnText ? targetEl : null;
+    var textContent = isSetOnText ? targetEl : targetEl.getTextContent();
 
     if (needsCreateText) {
       if (!isSetOnText) {
-        textContent = targetEl.getTextContent();
-
         if (!textContent) {
           textContent = new ZRText();
           targetEl.setTextContent(textContent);
@@ -15224,7 +15624,7 @@
 
       var labelStatesTexts = getLabelText(opt, labelStatesModels);
       var normalModel = labelStatesModels.normal;
-      var showNormal = normalModel.getShallow('show');
+      var showNormal = !!normalModel.getShallow('show');
       var normalStyle = createTextStyle(normalModel, stateSpecified && stateSpecified.normal, opt, false, !isSetOnText);
       normalStyle.text = labelStatesTexts.normal;
 
@@ -15238,7 +15638,12 @@
 
         if (stateModel) {
           var stateObj = textContent.ensureState(stateName);
-          stateObj.ignore = !retrieve2(stateModel.getShallow('show'), showNormal);
+          var stateShow = !!retrieve2(stateModel.getShallow('show'), showNormal);
+
+          if (stateShow !== showNormal) {
+            stateObj.ignore = !stateShow;
+          }
+
           stateObj.style = createTextStyle(stateModel, stateSpecified && stateSpecified[stateName], opt, true, !isSetOnText);
           stateObj.style.text = labelStatesTexts[stateName];
 
@@ -15262,6 +15667,13 @@
       textContent.ignore = !showNormal;
       textContent.useStyle(normalStyle);
       textContent.dirty();
+
+      if (opt.enableTextSetter) {
+        labelInner(textContent).setLabelText = function (overrideValue) {
+          var labelStatesTexts = getLabelText(opt, labelStatesModels, overrideValue);
+          setLabelText(textContent, labelStatesTexts);
+        };
+      }
     } else if (textContent) {
       textContent.ignore = true;
     }
@@ -15382,7 +15794,7 @@
 
   var TEXT_PROPS_WITH_GLOBAL = ['fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'opacity', 'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'];
   var TEXT_PROPS_SELF = ['align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign'];
-  var TEXT_PROPS_BOX = ['padding', 'borderWidth', 'borderRadius', 'backgroundColor', 'borderColor', 'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'];
+  var TEXT_PROPS_BOX = ['padding', 'borderWidth', 'borderRadius', 'borderDashOffset', 'backgroundColor', 'borderColor', 'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'];
 
   function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, isBlock) {
     globalTextStyle = !isNotNormal && globalTextStyle || EMPTY_OBJ;
@@ -15431,10 +15843,22 @@
       textStyle.stroke = strokeColor;
     }
 
-    var lineWidth = retrieve2(textStyleModel.getShallow('textBorderWidth'), globalTextStyle.textBorderWidth);
+    var textBorderWidth = retrieve2(textStyleModel.getShallow('textBorderWidth'), globalTextStyle.textBorderWidth);
 
-    if (lineWidth != null) {
-      textStyle.lineWidth = lineWidth;
+    if (textBorderWidth != null) {
+      textStyle.lineWidth = textBorderWidth;
+    }
+
+    var textBorderType = retrieve2(textStyleModel.getShallow('textBorderType'), globalTextStyle.textBorderType);
+
+    if (textBorderType != null) {
+      textStyle.lineDash = textBorderType;
+    }
+
+    var textBorderDashOffset = retrieve2(textStyleModel.getShallow('textBorderDashOffset'), globalTextStyle.textBorderDashOffset);
+
+    if (textBorderDashOffset != null) {
+      textStyle.lineDashOffset = textBorderDashOffset;
     }
 
     if (!isNotNormal && !isAttached) {
@@ -15479,6 +15903,12 @@
         }
       }
 
+      var borderType = textStyleModel.getShallow('borderType');
+
+      if (borderType != null) {
+        textStyle.borderDash = borderType;
+      }
+
       if ((textStyle.backgroundColor === 'auto' || textStyle.backgroundColor === 'inherit') && inheritColor) {
         if (true) {
           if (textStyle.backgroundColor === 'auto') {
@@ -15506,6 +15936,7 @@
     return trim([opt.fontStyle || gTextStyleModel && gTextStyleModel.getShallow('fontStyle') || '', opt.fontWeight || gTextStyleModel && gTextStyleModel.getShallow('fontWeight') || '', (opt.fontSize || gTextStyleModel && gTextStyleModel.getShallow('fontSize') || 12) + 'px', opt.fontFamily || gTextStyleModel && gTextStyleModel.getShallow('fontFamily') || 'sans-serif'].join(' '));
   }
 
+  var labelInner = makeInner();
   var PATH_COLOR = ['textStyle', 'color'];
   var tmpRichText = new ZRText();
 
@@ -15545,48 +15976,27 @@
     return TextStyleMixin;
   }();
 
-  var LINE_STYLE_KEY_MAP = [['lineWidth', 'width'], ['stroke', 'color'], ['opacity'], ['shadowBlur'], ['shadowOffsetX'], ['shadowOffsetY'], ['shadowColor']];
+  var LINE_STYLE_KEY_MAP = [['lineWidth', 'width'], ['stroke', 'color'], ['opacity'], ['shadowBlur'], ['shadowOffsetX'], ['shadowOffsetY'], ['shadowColor'], ['lineDash', 'type'], ['lineDashOffset', 'dashOffset'], ['lineCap', 'cap'], ['lineJoin', 'join'], ['miterLimit']];
   var getLineStyle = makeStyleMapper(LINE_STYLE_KEY_MAP);
 
   var LineStyleMixin = function () {
     function LineStyleMixin() {}
 
     LineStyleMixin.prototype.getLineStyle = function (excludes) {
-      var style = getLineStyle(this, excludes);
-      style.lineDash = this.getLineDash(style.lineWidth);
-      return style;
-    };
-
-    LineStyleMixin.prototype.getLineDash = function (lineWidth) {
-      if (lineWidth == null) {
-        lineWidth = 1;
-      }
-
-      var lineType = this.get('type');
-      var dotSize = Math.max(lineWidth, 2);
-      var dashSize = lineWidth * 4;
-      return lineType === 'solid' || lineType == null ? false : lineType === 'dashed' ? [dashSize, dashSize] : [dotSize, dotSize];
+      return getLineStyle(this, excludes);
     };
 
     return LineStyleMixin;
   }();
 
-  var ITEM_STYLE_KEY_MAP = [['fill', 'color'], ['stroke', 'borderColor'], ['lineWidth', 'borderWidth'], ['opacity'], ['shadowBlur'], ['shadowOffsetX'], ['shadowOffsetY'], ['shadowColor']];
+  var ITEM_STYLE_KEY_MAP = [['fill', 'color'], ['stroke', 'borderColor'], ['lineWidth', 'borderWidth'], ['opacity'], ['shadowBlur'], ['shadowOffsetX'], ['shadowOffsetY'], ['shadowColor'], ['lineDash', 'borderType'], ['lineDashOffset', 'borderDashOffset'], ['lineCap', 'borderCap'], ['lineJoin', 'borderJoin'], ['miterLimit', 'borderMiterLimit']];
   var getItemStyle = makeStyleMapper(ITEM_STYLE_KEY_MAP);
 
   var ItemStyleMixin = function () {
     function ItemStyleMixin() {}
 
     ItemStyleMixin.prototype.getItemStyle = function (excludes, includes) {
-      var style = getItemStyle(this, excludes, includes);
-      var lineDash = this.getBorderLineDash();
-      lineDash && (style.lineDash = lineDash);
-      return style;
-    };
-
-    ItemStyleMixin.prototype.getBorderLineDash = function () {
-      var lineType = this.get('borderType');
-      return lineType === 'solid' || lineType == null ? null : lineType === 'dashed' ? [5, 5] : [1, 1];
+      return getItemStyle(this, excludes, includes);
     };
 
     return ItemStyleMixin;
@@ -16359,10 +16769,9 @@
     return isUTC ? 'setUTCSeconds' : 'setSeconds';
   }
 
-  var mathMax$3 = Math.max;
-  var mathMin$3 = Math.min;
+  var mathMax$4 = Math.max;
+  var mathMin$4 = Math.min;
   var _customShapeMap = {};
-  var innerLabel = makeInner();
 
   function extendShape(opts) {
     return Path.extend(opts);
@@ -16543,6 +16952,7 @@
     } else {
       el.stopAnimation();
       !isFrom && el.attr(props);
+      during && during(1);
       cb && cb();
     }
   }
@@ -16552,9 +16962,7 @@
   }
 
   function initProps(el, props, animatableModel, dataIndex, cb, during) {
-    animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, function (percent) {
-      during && during(percent);
-    });
+    animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, during);
   }
 
   function removeElement(el, props, animatableModel, dataIndex, cb, during) {
@@ -16603,39 +17011,15 @@
     return false;
   }
 
-  function animateOrSetLabel(animationType, el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter) {
+  function animateOrSetLabel(animationType, el, data, dataIndex, labelModel, seriesModel, animatableModel, getDefaultText) {
     var valueAnimationEnabled = labelModel && labelModel.get('valueAnimation');
+    var label = el.getTextContent();
 
-    if (valueAnimationEnabled) {
-      var precisionOption = labelModel.get('precision');
-      var precision_1 = !precisionOption || precisionOption === 'auto' ? 0 : precisionOption;
-      var interpolateValues_1;
-      var rawValues_1 = seriesModel.getRawValue(dataIndex);
-      var isRawValueNumber_1 = false;
-
-      if (typeof rawValues_1 === 'number') {
-        isRawValueNumber_1 = true;
-        interpolateValues_1 = rawValues_1;
-      } else {
-        interpolateValues_1 = [];
-
-        for (var i = 0; i < rawValues_1.length; ++i) {
-          var info = data.getDimensionInfo(i);
-
-          if (info.type !== 'ordinal') {
-            interpolateValues_1.push(rawValues_1[i]);
-          }
-        }
-      }
-
-      var text = el.getTextContent();
-      var host_1 = text && innerLabel(text);
-      host_1 && (host_1.startValue = host_1.nextValue);
-      var duration = animatableModel.get('animationDuration');
-
-      if (!duration) {
-        host_1.nextValue = interpolateValues_1;
-      }
+    if (valueAnimationEnabled && label) {
+      var precision_1 = labelModel ? labelModel.get('precision') : null;
+      var host_1 = labelInner(label);
+      var sourceValue_1 = host_1.prevValue;
+      var targetValue_1 = host_1.value;
 
       var during = function (percent) {
         var text = el.getTextContent();
@@ -16644,39 +17028,18 @@
           return;
         }
 
-        var interpolated;
-
-        if (isRawValueNumber_1) {
-          var value = interpolateNumber(host_1.startValue || 0, interpolateValues_1, percent);
-          interpolated = round$1(value, precision_1);
-        } else {
-          interpolated = [];
-
-          for (var i = 0; i < rawValues_1.length; ++i) {
-            var info = data.getDimensionInfo(i);
-
-            if (info.type === 'ordinal') {
-              interpolated[i] = rawValues_1[i];
-            } else {
-              var startValues = host_1.startValue;
-              var value = startValues == null ? rawValues_1[i] : interpolateNumber(startValues && startValues[i] ? startValues[i] : 0, interpolateValues_1[i], percent);
-              interpolated[i] = round$1(value), precision_1;
-            }
-          }
-        }
-
-        host_1.nextValue = interpolated;
+        var interpolated = interpolateRawValues(data, precision_1, sourceValue_1, targetValue_1, percent);
         var labelText = getLabelText({
           labelDataIndex: dataIndex,
           labelFetcher: seriesModel,
-          defaultText: defaultTextGetter ? defaultTextGetter(interpolated) : interpolated + ''
+          defaultText: getDefaultText ? getDefaultText(interpolated) : interpolated + ''
         }, {
           normal: labelModel
         }, interpolated);
-        text.style.text = labelText.normal;
-        text.dirty();
+        setLabelText(text, labelText);
       };
 
+      host_1.prevValue = targetValue_1;
       var props = {};
       animateOrSetProps(animationType, el, props, animatableModel, dataIndex, null, during);
     }
@@ -16775,20 +17138,20 @@
   function clipPointsByRect(points, rect) {
     return map(points, function (point) {
       var x = point[0];
-      x = mathMax$3(x, rect.x);
-      x = mathMin$3(x, rect.x + rect.width);
+      x = mathMax$4(x, rect.x);
+      x = mathMin$4(x, rect.x + rect.width);
       var y = point[1];
-      y = mathMax$3(y, rect.y);
-      y = mathMin$3(y, rect.y + rect.height);
+      y = mathMax$4(y, rect.y);
+      y = mathMin$4(y, rect.y + rect.height);
       return [x, y];
     });
   }
 
   function clipRectByRect(targetRect, rect) {
-    var x = mathMax$3(targetRect.x, rect.x);
-    var x2 = mathMin$3(targetRect.x + targetRect.width, rect.x + rect.width);
-    var y = mathMax$3(targetRect.y, rect.y);
-    var y2 = mathMin$3(targetRect.y + targetRect.height, rect.y + rect.height);
+    var x = mathMax$4(targetRect.x, rect.x);
+    var x2 = mathMin$4(targetRect.x + targetRect.width, rect.x + rect.width);
+    var y = mathMax$4(targetRect.y, rect.y);
+    var y2 = mathMin$4(targetRect.y + targetRect.height, rect.y + rect.height);
 
     if (x2 >= x && y2 >= y) {
       return {
@@ -16947,8 +17310,8 @@
   }
 
   function addCommas(x) {
-    if (isNaN(x)) {
-      return '-';
+    if (!isNumeric(x)) {
+      return isString(x) ? x : '-';
     }
 
     var parts = (x + '').split('.');
@@ -16983,8 +17346,36 @@
     });
   }
 
-  function concatTooltipHtml(html, value, dontEncodeHtml) {
-    return (dontEncodeHtml ? html : "<span style=\"font-size:12px;color:#6e7079;\">" + encodeHTML(html) + "</span>") + (value ? '<span style="float:right;margin-left:20px;color:#464646;font-weight:900;font-size:14px;">' : '') + encodeHTML(value) + (value ? '</span>' : '');
+  function makeValueReadable(value, valueType) {
+    var USER_READABLE_DEFUALT_TIME_PATTERN = 'yyyy-MM-dd hh:mm:ss';
+
+    function stringToUserReadable(str) {
+      return str && trim(str) ? str : '-';
+    }
+
+    function isNumberUserReadable(num) {
+      return !!(num != null && !isNaN(num) && isFinite(num));
+    }
+
+    var isTypeTime = valueType === 'time';
+    var isValueDate = value instanceof Date;
+
+    if (isTypeTime || isValueDate) {
+      var date = isTypeTime ? parseDate(value) : value;
+
+      if (!isNaN(+date)) {
+        return format(date, USER_READABLE_DEFUALT_TIME_PATTERN);
+      } else if (isValueDate) {
+        return '-';
+      }
+    }
+
+    if (valueType === 'ordinal') {
+      return isStringSafe(value) ? stringToUserReadable(value) : isNumber(value) ? isNumberUserReadable(value) ? value + '' : '-' : '-';
+    }
+
+    var numericResult = numericToNumber(value);
+    return isNumberUserReadable(numericResult) ? addCommas(numericResult) : isStringSafe(value) ? stringToUserReadable(value) : '-';
   }
 
   var TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
@@ -17045,7 +17436,6 @@
     var type = opt.type;
     extraCssText = opt.extraCssText;
     var renderMode = opt.renderMode || 'html';
-    var markerId = opt.markerId || 'X';
 
     if (!color) {
       return '';
@@ -17054,17 +17444,30 @@
     if (renderMode === 'html') {
       return type === 'subItem' ? '<span style="display:inline-block;vertical-align:middle;margin-right:8px;margin-left:3px;' + 'border-radius:4px;width:4px;height:4px;background-color:' + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>' : '<span style="display:inline-block;margin-right:4px;' + 'border-radius:10px;width:10px;height:10px;background-color:' + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
     } else {
+      var markerId = opt.markerId || 'markerX';
       return {
         renderMode: renderMode,
-        content: '{marker' + markerId + '|}  ',
-        style: {
-          color: color
+        content: '{' + markerId + '|}  ',
+        style: type === 'subItem' ? {
+          width: 4,
+          height: 4,
+          borderRadius: 2,
+          backgroundColor: color
+        } : {
+          width: 10,
+          height: 10,
+          borderRadius: 5,
+          backgroundColor: color
         }
       };
     }
   }
 
   function formatTime(tpl, value, isUTC) {
+    if (true) {
+      deprecateReplaceLog('echarts.format.formatTime', 'echarts.time.format');
+    }
+
     if (tpl === 'week' || tpl === 'month' || tpl === 'quarter' || tpl === 'half-year' || tpl === 'year') {
       tpl = 'MM-dd\nyyyy';
     }
@@ -17086,6 +17489,11 @@
     return str ? str.charAt(0).toUpperCase() + str.substr(1) : str;
   }
 
+  function convertToColorString(color, defaultColor) {
+    defaultColor = defaultColor || 'transparent';
+    return isString(color) ? color : isObject(color) ? color.colorStops && (color.colorStops[0] || {}).color || defaultColor : defaultColor;
+  }
+
   function windowOpen(link, target) {
     if (target === '_blank' || target === 'blank') {
       var blank = window.open();
@@ -17096,18 +17504,19 @@
     }
   }
 
-  var format$1 = /*#__PURE__*/Object.freeze({
+  var formatUtil = /*#__PURE__*/Object.freeze({
     __proto__: null,
     addCommas: addCommas,
     toCamelCase: toCamelCase,
     normalizeCssArray: normalizeCssArray$1,
     encodeHTML: encodeHTML,
-    concatTooltipHtml: concatTooltipHtml,
+    makeValueReadable: makeValueReadable,
     formatTpl: formatTpl,
     formatTplSimple: formatTplSimple,
     getTooltipMarker: getTooltipMarker,
     formatTime: formatTime,
     capitalFirst: capitalFirst,
+    convertToColorString: convertToColorString,
     windowOpen: windowOpen,
     truncateText: truncateText,
     getTextRect: getTextRect
@@ -17533,7 +17942,8 @@
     blendMode: null,
     stateAnimation: {
       duration: 300,
-      easing: 'cubicOut'
+      easing: 'cubicOut',
+      additive: true
     },
     animation: 'auto',
     animationDuration: 1000,
@@ -17609,29 +18019,6 @@
   var SOURCE_FORMAT_UNKNOWN = 'unknown';
   var SERIES_LAYOUT_BY_COLUMN = 'column';
   var SERIES_LAYOUT_BY_ROW = 'row';
-
-  var Source = function () {
-    function Source(fields) {
-      this.data = fields.data || (fields.sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS ? {} : []);
-      this.sourceFormat = fields.sourceFormat || SOURCE_FORMAT_UNKNOWN;
-      this.seriesLayoutBy = fields.seriesLayoutBy || SERIES_LAYOUT_BY_COLUMN;
-      this.startIndex = fields.startIndex || 0;
-      this.dimensionsDefine = fields.dimensionsDefine;
-      this.dimensionsDetectCount = fields.dimensionsDetectCount;
-      this.encodeDefine = fields.encodeDefine;
-      this.metaRawOption = fields.metaRawOption;
-    }
-
-    Source.seriesDataToSource = function (data) {
-      return new Source({
-        data: data,
-        sourceFormat: isTypedArray(data) ? SOURCE_FORMAT_TYPED_ARRAY : SOURCE_FORMAT_ORIGINAL
-      });
-    };
-
-    return Source;
-  }();
-
   var BE_ORDINAL = {
     Must: 1,
     Might: 2,
@@ -17639,209 +18026,12 @@
   };
   var innerGlobalModel = makeInner();
 
-  function detectSourceFormat(data) {
-    var sourceFormat = SOURCE_FORMAT_UNKNOWN;
-
-    if (isTypedArray(data)) {
-      sourceFormat = SOURCE_FORMAT_TYPED_ARRAY;
-    } else if (isArray(data)) {
-      if (data.length === 0) {
-        sourceFormat = SOURCE_FORMAT_ARRAY_ROWS;
-      }
-
-      for (var i = 0, len = data.length; i < len; i++) {
-        var item = data[i];
-
-        if (item == null) {
-          continue;
-        } else if (isArray(item)) {
-          sourceFormat = SOURCE_FORMAT_ARRAY_ROWS;
-          break;
-        } else if (isObject(item)) {
-          sourceFormat = SOURCE_FORMAT_OBJECT_ROWS;
-          break;
-        }
-      }
-    } else if (isObject(data)) {
-      for (var key in data) {
-        if (hasOwn(data, key) && isArrayLike(data[key])) {
-          sourceFormat = SOURCE_FORMAT_KEYED_COLUMNS;
-          break;
-        }
-      }
-    } else if (data != null) {
-      throw new Error('Invalid data');
-    }
-
-    return sourceFormat;
-  }
-
   function resetSourceDefaulter(ecModel) {
     innerGlobalModel(ecModel).datasetMap = createHashMap();
   }
 
-  function createSource(sourceData, thisMetaRawOption, sourceFormat, encodeDefine) {
-    sourceFormat = sourceFormat || detectSourceFormat(sourceData);
-    var dimInfo = determineSourceDimensions(sourceData, sourceFormat, thisMetaRawOption.seriesLayoutBy, thisMetaRawOption.sourceHeader, thisMetaRawOption.dimensions);
-    var source = new Source({
-      data: sourceData,
-      sourceFormat: sourceFormat,
-      seriesLayoutBy: thisMetaRawOption.seriesLayoutBy,
-      dimensionsDefine: dimInfo.dimensionsDefine,
-      startIndex: dimInfo.startIndex,
-      dimensionsDetectCount: dimInfo.dimensionsDetectCount,
-      encodeDefine: makeEncodeDefine(encodeDefine),
-      metaRawOption: clone(thisMetaRawOption)
-    });
-    return source;
-  }
-
   function inheritSourceMetaRawOption(opt) {
     return defaults(opt.thisNew, opt.parent);
-  }
-
-  function cloneSourceShallow(source) {
-    return new Source({
-      data: source.data,
-      sourceFormat: source.sourceFormat,
-      seriesLayoutBy: source.seriesLayoutBy,
-      dimensionsDefine: clone(source.dimensionsDefine),
-      startIndex: source.startIndex,
-      dimensionsDetectCount: source.dimensionsDetectCount,
-      encodeDefine: makeEncodeDefine(source.encodeDefine)
-    });
-  }
-
-  function makeEncodeDefine(encodeDefine) {
-    return encodeDefine ? createHashMap(encodeDefine) : null;
-  }
-
-  function determineSourceDimensions(data, sourceFormat, seriesLayoutBy, sourceHeader, dimensionsDefine) {
-    var dimensionsDetectCount;
-    var startIndex;
-
-    if (!data) {
-      return {
-        dimensionsDefine: normalizeDimensionsOption(dimensionsDefine),
-        startIndex: startIndex,
-        dimensionsDetectCount: dimensionsDetectCount
-      };
-    }
-
-    if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
-      var dataArrayRows = data;
-
-      if (sourceHeader === 'auto' || sourceHeader == null) {
-        arrayRowsTravelFirst(function (val) {
-          if (val != null && val !== '-') {
-            if (isString(val)) {
-              startIndex == null && (startIndex = 1);
-            } else {
-              startIndex = 0;
-            }
-          }
-        }, seriesLayoutBy, dataArrayRows, 10);
-      } else {
-        startIndex = isNumber(sourceHeader) ? sourceHeader : sourceHeader ? 1 : 0;
-      }
-
-      if (!dimensionsDefine && startIndex === 1) {
-        dimensionsDefine = [];
-        arrayRowsTravelFirst(function (val, index) {
-          dimensionsDefine[index] = val != null ? val + '' : '';
-        }, seriesLayoutBy, dataArrayRows, Infinity);
-      }
-
-      dimensionsDetectCount = dimensionsDefine ? dimensionsDefine.length : seriesLayoutBy === SERIES_LAYOUT_BY_ROW ? dataArrayRows.length : dataArrayRows[0] ? dataArrayRows[0].length : null;
-    } else if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS) {
-      if (!dimensionsDefine) {
-        dimensionsDefine = objectRowsCollectDimensions(data);
-      }
-    } else if (sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS) {
-      if (!dimensionsDefine) {
-        dimensionsDefine = [];
-        each(data, function (colArr, key) {
-          dimensionsDefine.push(key);
-        });
-      }
-    } else if (sourceFormat === SOURCE_FORMAT_ORIGINAL) {
-      var value0 = getDataItemValue(data[0]);
-      dimensionsDetectCount = isArray(value0) && value0.length || 1;
-    } else if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
-      if (true) {
-        assert(!!dimensionsDefine, 'dimensions must be given if data is TypedArray.');
-      }
-    }
-
-    return {
-      startIndex: startIndex,
-      dimensionsDefine: normalizeDimensionsOption(dimensionsDefine),
-      dimensionsDetectCount: dimensionsDetectCount
-    };
-  }
-
-  function normalizeDimensionsOption(dimensionsDefine) {
-    if (!dimensionsDefine) {
-      return;
-    }
-
-    var nameMap = createHashMap();
-    return map(dimensionsDefine, function (item, index) {
-      item = extend({}, isObject(item) ? item : {
-        name: item
-      });
-
-      if (item.name == null) {
-        return item;
-      }
-
-      item.name += '';
-
-      if (item.displayName == null) {
-        item.displayName = item.name;
-      }
-
-      var exist = nameMap.get(item.name);
-
-      if (!exist) {
-        nameMap.set(item.name, {
-          count: 1
-        });
-      } else {
-        item.name += '-' + exist.count++;
-      }
-
-      return item;
-    });
-  }
-
-  function arrayRowsTravelFirst(cb, seriesLayoutBy, data, maxLoop) {
-    if (seriesLayoutBy === SERIES_LAYOUT_BY_ROW) {
-      for (var i = 0; i < data.length && i < maxLoop; i++) {
-        cb(data[i] ? data[i][0] : null, i);
-      }
-    } else {
-      var value0 = data[0] || [];
-
-      for (var i = 0; i < value0.length && i < maxLoop; i++) {
-        cb(value0[i], i);
-      }
-    }
-  }
-
-  function objectRowsCollectDimensions(data) {
-    var firstIndex = 0;
-    var obj;
-
-    while (firstIndex < data.length && !(obj = data[firstIndex++])) {}
-
-    if (obj) {
-      var dimensions_1 = [];
-      each(obj, function (value, key) {
-        dimensions_1.push(key);
-      });
-      return dimensions_1;
-    }
   }
 
   function makeSeriesEncodeForAxisCoordSys(coordDimensions, seriesModel, source) {
@@ -18826,25 +19016,32 @@
   }();
 
   function parseRawOption(rawOption, optionPreprocessorFuncs, isNew) {
-    var timelineOptions = [];
     var mediaList = [];
     var mediaDefault;
     var baseOption;
-    var timelineOpt = rawOption.timeline;
+    var declaredBaseOption = rawOption.baseOption;
+    var timelineOnRoot = rawOption.timeline;
+    var timelineOptionsOnRoot = rawOption.options;
+    var mediaOnRoot = rawOption.media;
+    var hasMedia = !!rawOption.media;
+    var hasTimeline = !!(timelineOptionsOnRoot || timelineOnRoot || declaredBaseOption && declaredBaseOption.timeline);
 
-    if (rawOption.baseOption) {
-      baseOption = rawOption.baseOption;
+    if (declaredBaseOption) {
+      baseOption = declaredBaseOption;
+
+      if (!baseOption.timeline) {
+        baseOption.timeline = timelineOnRoot;
+      }
+    } else {
+      if (hasTimeline || hasMedia) {
+        rawOption.options = rawOption.media = null;
+      }
+
+      baseOption = rawOption;
     }
 
-    if (timelineOpt || rawOption.options) {
-      baseOption = baseOption || {};
-      timelineOptions = (rawOption.options || []).slice();
-    }
-
-    if (rawOption.media) {
-      baseOption = baseOption || {};
-      var media = rawOption.media;
-      each(media, function (singleMedia) {
+    if (hasMedia) {
+      each(mediaOnRoot, function (singleMedia) {
         if (singleMedia && singleMedia.option) {
           if (singleMedia.query) {
             mediaList.push(singleMedia);
@@ -18855,24 +19052,23 @@
       });
     }
 
-    if (!baseOption) {
-      baseOption = rawOption;
-    }
+    doPreprocess(baseOption);
+    each(timelineOptionsOnRoot, function (option) {
+      return doPreprocess(option);
+    });
+    each(mediaList, function (media) {
+      return doPreprocess(media.option);
+    });
 
-    if (!baseOption.timeline) {
-      baseOption.timeline = timelineOpt;
-    }
-
-    each([baseOption].concat(timelineOptions).concat(map(mediaList, function (media) {
-      return media.option;
-    })), function (option) {
+    function doPreprocess(option) {
       each(optionPreprocessorFuncs, function (preProcess) {
         preProcess(option, isNew);
       });
-    });
+    }
+
     return {
       baseOption: baseOption,
-      timelineOptions: timelineOptions,
+      timelineOptions: timelineOptionsOnRoot || [],
       mediaDefault: mediaDefault,
       mediaList: mediaList
     };
@@ -19562,6 +19758,229 @@
     });
   }
 
+  var SourceImpl = function () {
+    function SourceImpl(fields) {
+      this.data = fields.data || (fields.sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS ? {} : []);
+      this.sourceFormat = fields.sourceFormat || SOURCE_FORMAT_UNKNOWN;
+      this.seriesLayoutBy = fields.seriesLayoutBy || SERIES_LAYOUT_BY_COLUMN;
+      this.startIndex = fields.startIndex || 0;
+      this.dimensionsDefine = fields.dimensionsDefine;
+      this.dimensionsDetectedCount = fields.dimensionsDetectedCount;
+      this.encodeDefine = fields.encodeDefine;
+      this.metaRawOption = fields.metaRawOption;
+    }
+
+    return SourceImpl;
+  }();
+
+  function isSourceInstance(val) {
+    return val instanceof SourceImpl;
+  }
+
+  function createSource(sourceData, thisMetaRawOption, sourceFormat, encodeDefine) {
+    sourceFormat = sourceFormat || detectSourceFormat(sourceData);
+    var determined = determineSourceDimensions(sourceData, sourceFormat, thisMetaRawOption.seriesLayoutBy, thisMetaRawOption.sourceHeader, thisMetaRawOption.dimensions);
+    var source = new SourceImpl({
+      data: sourceData,
+      sourceFormat: sourceFormat,
+      seriesLayoutBy: thisMetaRawOption.seriesLayoutBy,
+      dimensionsDefine: determined.dimensionsDefine,
+      startIndex: determined.startIndex,
+      dimensionsDetectedCount: determined.dimensionsDetectedCount,
+      encodeDefine: makeEncodeDefine(encodeDefine),
+      metaRawOption: clone(thisMetaRawOption)
+    });
+    return source;
+  }
+
+  function createSourceFromSeriesDataOption(data) {
+    return new SourceImpl({
+      data: data,
+      sourceFormat: isTypedArray(data) ? SOURCE_FORMAT_TYPED_ARRAY : SOURCE_FORMAT_ORIGINAL
+    });
+  }
+
+  function cloneSourceShallow(source) {
+    return new SourceImpl({
+      data: source.data,
+      sourceFormat: source.sourceFormat,
+      seriesLayoutBy: source.seriesLayoutBy,
+      dimensionsDefine: clone(source.dimensionsDefine),
+      startIndex: source.startIndex,
+      dimensionsDetectedCount: source.dimensionsDetectedCount,
+      encodeDefine: makeEncodeDefine(source.encodeDefine)
+    });
+  }
+
+  function makeEncodeDefine(encodeDefine) {
+    return encodeDefine ? createHashMap(encodeDefine) : null;
+  }
+
+  function detectSourceFormat(data) {
+    var sourceFormat = SOURCE_FORMAT_UNKNOWN;
+
+    if (isTypedArray(data)) {
+      sourceFormat = SOURCE_FORMAT_TYPED_ARRAY;
+    } else if (isArray(data)) {
+      if (data.length === 0) {
+        sourceFormat = SOURCE_FORMAT_ARRAY_ROWS;
+      }
+
+      for (var i = 0, len = data.length; i < len; i++) {
+        var item = data[i];
+
+        if (item == null) {
+          continue;
+        } else if (isArray(item)) {
+          sourceFormat = SOURCE_FORMAT_ARRAY_ROWS;
+          break;
+        } else if (isObject(item)) {
+          sourceFormat = SOURCE_FORMAT_OBJECT_ROWS;
+          break;
+        }
+      }
+    } else if (isObject(data)) {
+      for (var key in data) {
+        if (hasOwn(data, key) && isArrayLike(data[key])) {
+          sourceFormat = SOURCE_FORMAT_KEYED_COLUMNS;
+          break;
+        }
+      }
+    } else if (data != null) {
+      throw new Error('Invalid data');
+    }
+
+    return sourceFormat;
+  }
+
+  function determineSourceDimensions(data, sourceFormat, seriesLayoutBy, sourceHeader, dimensionsDefine) {
+    var dimensionsDetectedCount;
+    var startIndex;
+
+    if (!data) {
+      return {
+        dimensionsDefine: normalizeDimensionsOption(dimensionsDefine),
+        startIndex: startIndex,
+        dimensionsDetectedCount: dimensionsDetectedCount
+      };
+    }
+
+    if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
+      var dataArrayRows = data;
+
+      if (sourceHeader === 'auto' || sourceHeader == null) {
+        arrayRowsTravelFirst(function (val) {
+          if (val != null && val !== '-') {
+            if (isString(val)) {
+              startIndex == null && (startIndex = 1);
+            } else {
+              startIndex = 0;
+            }
+          }
+        }, seriesLayoutBy, dataArrayRows, 10);
+      } else {
+        startIndex = isNumber(sourceHeader) ? sourceHeader : sourceHeader ? 1 : 0;
+      }
+
+      if (!dimensionsDefine && startIndex === 1) {
+        dimensionsDefine = [];
+        arrayRowsTravelFirst(function (val, index) {
+          dimensionsDefine[index] = val != null ? val + '' : '';
+        }, seriesLayoutBy, dataArrayRows, Infinity);
+      }
+
+      dimensionsDetectedCount = dimensionsDefine ? dimensionsDefine.length : seriesLayoutBy === SERIES_LAYOUT_BY_ROW ? dataArrayRows.length : dataArrayRows[0] ? dataArrayRows[0].length : null;
+    } else if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS) {
+      if (!dimensionsDefine) {
+        dimensionsDefine = objectRowsCollectDimensions(data);
+      }
+    } else if (sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS) {
+      if (!dimensionsDefine) {
+        dimensionsDefine = [];
+        each(data, function (colArr, key) {
+          dimensionsDefine.push(key);
+        });
+      }
+    } else if (sourceFormat === SOURCE_FORMAT_ORIGINAL) {
+      var value0 = getDataItemValue(data[0]);
+      dimensionsDetectedCount = isArray(value0) && value0.length || 1;
+    } else if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
+      if (true) {
+        assert(!!dimensionsDefine, 'dimensions must be given if data is TypedArray.');
+      }
+    }
+
+    return {
+      startIndex: startIndex,
+      dimensionsDefine: normalizeDimensionsOption(dimensionsDefine),
+      dimensionsDetectedCount: dimensionsDetectedCount
+    };
+  }
+
+  function objectRowsCollectDimensions(data) {
+    var firstIndex = 0;
+    var obj;
+
+    while (firstIndex < data.length && !(obj = data[firstIndex++])) {}
+
+    if (obj) {
+      var dimensions_1 = [];
+      each(obj, function (value, key) {
+        dimensions_1.push(key);
+      });
+      return dimensions_1;
+    }
+  }
+
+  function normalizeDimensionsOption(dimensionsDefine) {
+    if (!dimensionsDefine) {
+      return;
+    }
+
+    var nameMap = createHashMap();
+    return map(dimensionsDefine, function (item, index) {
+      item = extend({}, isObject(item) ? item : {
+        name: item
+      });
+
+      if (item.name == null) {
+        return item;
+      }
+
+      item.name += '';
+
+      if (item.displayName == null) {
+        item.displayName = item.name;
+      }
+
+      var exist = nameMap.get(item.name);
+
+      if (!exist) {
+        nameMap.set(item.name, {
+          count: 1
+        });
+      } else {
+        item.name += '-' + exist.count++;
+      }
+
+      return item;
+    });
+  }
+
+  function arrayRowsTravelFirst(cb, seriesLayoutBy, data, maxLoop) {
+    if (seriesLayoutBy === SERIES_LAYOUT_BY_ROW) {
+      for (var i = 0; i < data.length && i < maxLoop; i++) {
+        cb(data[i] ? data[i][0] : null, i);
+      }
+    } else {
+      var value0 = data[0] || [];
+
+      for (var i = 0; i < value0.length && i < maxLoop; i++) {
+        cb(value0[i], i);
+      }
+    }
+  }
+
   var _a, _b, _c;
 
   var providerMethods;
@@ -19569,7 +19988,7 @@
 
   var DefaultDataProvider = function () {
     function DefaultDataProvider(sourceParam, dimSize) {
-      var source = !(sourceParam instanceof Source) ? Source.seriesDataToSource(sourceParam) : sourceParam;
+      var source = !isSourceInstance(sourceParam) ? createSourceFromSeriesDataOption(sourceParam) : sourceParam;
       this._source = source;
       var data = this._data = source.data;
 
@@ -19629,6 +20048,7 @@
         if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
           provider.getItem = getItemForTypedArray;
           provider.count = countForTypedArray;
+          provider.fillStorage = fillStorageForTypedArray;
         } else {
           var rawItemGetter = getRawSourceItemGetter(sourceFormat, seriesLayoutBy);
           provider.getItem = bind(rawItemGetter, null, data, startIndex, dimsDef);
@@ -19640,13 +20060,38 @@
       var getItemForTypedArray = function (idx, out) {
         idx = idx - this._offset;
         out = out || [];
-        var offset = this._dimSize * idx;
+        var data = this._data;
+        var dimSize = this._dimSize;
+        var offset = dimSize * idx;
 
-        for (var i = 0; i < this._dimSize; i++) {
-          out[i] = this._data[offset + i];
+        for (var i = 0; i < dimSize; i++) {
+          out[i] = data[offset + i];
         }
 
         return out;
+      };
+
+      var fillStorageForTypedArray = function (start, end, storage, extent) {
+        var data = this._data;
+        var dimSize = this._dimSize;
+
+        for (var dim = 0; dim < dimSize; dim++) {
+          var dimExtent = extent[dim];
+          var min = dimExtent[0] == null ? Infinity : dimExtent[0];
+          var max = dimExtent[1] == null ? -Infinity : dimExtent[1];
+          var count = end - start;
+          var arr = storage[dim];
+
+          for (var i = 0; i < count; i++) {
+            var val = data[(start + i) * dimSize + dim];
+            arr[start + i] = val;
+            val < min && (min = val);
+            val > max && (max = val);
+          }
+
+          dimExtent[0] = min;
+          dimExtent[1] = max;
+        }
       };
 
       var countForTypedArray = function () {
@@ -19725,7 +20170,15 @@
     var item = [];
 
     for (var i = 0; i < dimsDef.length; i++) {
-      var col = rawData[dimsDef[i].name];
+      var dimName = dimsDef[i].name;
+
+      if (true) {
+        if (dimName == null) {
+          throw new Error();
+        }
+      }
+
+      var col = rawData[dimName];
       item.push(col ? col[idx] : null);
     }
 
@@ -19753,6 +20206,13 @@
     return row ? Math.max(0, row.length - startIndex) : 0;
   }, _b[SOURCE_FORMAT_OBJECT_ROWS] = countSimply, _b[SOURCE_FORMAT_KEYED_COLUMNS] = function (rawData, startIndex, dimsDef) {
     var dimName = dimsDef[0].name;
+
+    if (true) {
+      if (dimName == null) {
+        throw new Error();
+      }
+    }
+
     var col = rawData[dimName];
     return col ? col.length : 0;
   }, _b[SOURCE_FORMAT_ORIGINAL] = countSimply, _b);
@@ -19894,12 +20354,34 @@
       return retrieveRawValue(this.getData(dataType), idx);
     };
 
-    DataFormatMixin.prototype.formatTooltip = function (dataIndex, multipleSeries, dataType, renderMode, order) {
+    DataFormatMixin.prototype.formatTooltip = function (dataIndex, multipleSeries, dataType) {
       return;
     };
 
     return DataFormatMixin;
   }();
+
+  function normalizeTooltipFormatResult(result) {
+    var markupText;
+    var markupFragment;
+
+    if (isObject(result)) {
+      if (result.type) {
+        markupFragment = result;
+      } else {
+        if (true) {
+          console.warn('The return type of `formatTooltip` is not supported: ' + makePrintable(result));
+        }
+      }
+    } else {
+      markupText = result;
+    }
+
+    return {
+      markupText: markupText,
+      markupFragment: markupFragment
+    };
+  }
 
   function createTask(define) {
     return new Task(define);
@@ -20146,6 +20628,53 @@
     }
   });
 
+  var SortOrderComparator = function () {
+    function SortOrderComparator(order, incomparable) {
+      var isDesc = order === 'desc';
+      this._resultLT = isDesc ? 1 : -1;
+
+      if (incomparable == null) {
+        incomparable = isDesc ? 'min' : 'max';
+      }
+
+      this._incomparable = incomparable === 'min' ? -Infinity : Infinity;
+    }
+
+    SortOrderComparator.prototype.evaluate = function (lval, rval) {
+      var lvalTypeof = typeof lval;
+      var rvalTypeof = typeof rval;
+      var lvalFloat = lvalTypeof === 'number' ? lval : numericToNumber(lval);
+      var rvalFloat = rvalTypeof === 'number' ? rval : numericToNumber(rval);
+      var lvalNotNumeric = isNaN(lvalFloat);
+      var rvalNotNumeric = isNaN(rvalFloat);
+
+      if (lvalNotNumeric) {
+        lvalFloat = this._incomparable;
+      }
+
+      if (rvalNotNumeric) {
+        rvalFloat = this._incomparable;
+      }
+
+      if (lvalNotNumeric && rvalNotNumeric) {
+        var lvalIsStr = lvalTypeof === 'string';
+        var rvalIsStr = rvalTypeof === 'string';
+
+        if (lvalIsStr) {
+          lvalFloat = rvalIsStr ? lval : 0;
+        }
+
+        if (rvalIsStr) {
+          rvalFloat = lvalIsStr ? rval : 0;
+        }
+      }
+
+      return lvalFloat < rvalFloat ? this._resultLT : lvalFloat > rvalFloat ? -this._resultLT : 0;
+    };
+
+    return SortOrderComparator;
+  }();
+
   var ExternalSource = function () {
     function ExternalSource() {}
 
@@ -20180,27 +20709,47 @@
     return ExternalSource;
   }();
 
-  function createExternalSource(data, sourceFormat, dimsDef, sourceHeaderCount) {
+  function createExternalSource(internalSource) {
     var extSource = new ExternalSource();
-    extSource.data = data;
-    extSource.sourceFormat = sourceFormat;
-    extSource.sourceHeaderCount = sourceHeaderCount;
+    var data = extSource.data = internalSource.data;
+    var sourceFormat = extSource.sourceFormat = internalSource.sourceFormat;
+    var sourceHeaderCount = extSource.sourceHeaderCount = internalSource.startIndex;
     var dimensions = [];
     var dimsByName = {};
-    each(dimsDef, function (dimDef, idx) {
-      var name = dimDef.name;
-      var dimDefExt = {
-        index: idx,
-        name: name,
-        displayName: dimDef.displayName
-      };
-      dimensions.push(dimDefExt);
+    var dimsDef = internalSource.dimensionsDefine;
 
-      if (name != null) {
-        assert(!hasOwn(dimsByName, name), 'dimension name "' + name + '" duplicated.');
-        dimsByName[name] = dimDefExt;
+    if (dimsDef) {
+      each(dimsDef, function (dimDef, idx) {
+        var name = dimDef.name;
+        var dimDefExt = {
+          index: idx,
+          name: name,
+          displayName: dimDef.displayName
+        };
+        dimensions.push(dimDefExt);
+
+        if (name != null) {
+          var errMsg = '';
+
+          if (hasOwn(dimsByName, name)) {
+            if (true) {
+              errMsg = 'dimension name "' + name + '" duplicated.';
+            }
+
+            throwError(errMsg);
+          }
+
+          dimsByName[name] = dimDefExt;
+        }
+      });
+    } else {
+      for (var i = 0; i < internalSource.dimensionsDetectedCount || 0; i++) {
+        dimensions.push({
+          index: i
+        });
       }
-    });
+    }
+
     var rawItemGetter = getRawSourceItemGetter(sourceFormat, SERIES_LAYOUT_BY_COLUMN);
     extSource.getRawDataItem = bind(rawItemGetter, null, data, sourceHeaderCount, dimensions);
 
@@ -20252,9 +20801,25 @@
   function registerExternalTransform(externalTransform) {
     externalTransform = clone(externalTransform);
     var type = externalTransform.type;
-    assert(type, 'Must have a `type` when `registerTransform`.');
+    var errMsg = '';
+
+    if (!type) {
+      if (true) {
+        errMsg = 'Must have a `type` when `registerTransform`.';
+      }
+
+      throwError(errMsg);
+    }
+
     var typeParsed = type.split(':');
-    assert(typeParsed.length === 2, 'Name must include namespace like "ns:regression".');
+
+    if (typeParsed.length !== 2) {
+      if (true) {
+        errMsg = 'Name must include namespace like "ns:regression".';
+      }
+
+      throwError(errMsg);
+    }
 
     if (typeParsed[0] === 'echarts') {
       type = typeParsed[1];
@@ -20265,13 +20830,22 @@
 
   function applyDataTransform(rawTransOption, sourceList, infoForPrint) {
     var pipedTransOption = normalizeToArray(rawTransOption);
+    var pipeLen = pipedTransOption.length;
+    var errMsg = '';
 
-    for (var i = 0, len = pipedTransOption.length; i < len; i++) {
+    if (!pipeLen) {
+      if (true) {
+        errMsg = 'If `transform` declared, it should at least contain one transform.';
+      }
+
+      throwError(errMsg);
+    }
+
+    for (var i = 0, len = pipeLen; i < len; i++) {
       var transOption = pipedTransOption[i];
-      var isFinal = i === len - 1;
-      sourceList = applySingleDataTransform(transOption, sourceList, infoForPrint, isFinal);
+      sourceList = applySingleDataTransform(transOption, sourceList, infoForPrint, pipeLen === 1 ? null : i);
 
-      if (!isFinal) {
+      if (i !== len - 1) {
         sourceList.length = Math.max(sourceList.length, 1);
       }
     }
@@ -20279,15 +20853,37 @@
     return sourceList;
   }
 
-  function applySingleDataTransform(rawTransOption, upSourceList, infoForPrint, isFinal) {
-    assert(upSourceList.length, 'Must have at least one upstream dataset.');
-    var transOption = rawTransOption;
+  function applySingleDataTransform(transOption, upSourceList, infoForPrint, pipeIndex) {
+    var errMsg = '';
+
+    if (!upSourceList.length) {
+      if (true) {
+        errMsg = 'Must have at least one upstream dataset.';
+      }
+
+      throwError(errMsg);
+    }
+
+    if (!isObject(transOption)) {
+      if (true) {
+        errMsg = 'transform declaration must be an object rather than ' + typeof transOption + '.';
+      }
+
+      throwError(errMsg);
+    }
+
     var transType = transOption.type;
     var externalTransform = externalTransformMap.get(transType);
-    assert(externalTransform, 'Can not find transform on type "' + transType + '".');
-    var sourceList = map(upSourceList, function (source) {
-      return createExternalSource(source.data, source.sourceFormat, source.dimensionsDefine, source.startIndex);
-    });
+
+    if (!externalTransform) {
+      if (true) {
+        errMsg = 'Can not find transform on type "' + transType + '".';
+      }
+
+      throwError(errMsg);
+    }
+
+    var sourceList = map(upSourceList, createExternalSource);
     var resultList = normalizeToArray(externalTransform.transform({
       source: sourceList[0],
       sourceList: sourceList,
@@ -20295,17 +20891,34 @@
     }));
 
     if (true) {
-      if (isFinal && transOption.print) {
+      if (transOption.print) {
         var printStrArr = map(resultList, function (extSource) {
-          return ['--- datasetIndex: ' + infoForPrint.datasetIndex + '---', '- transform result data:', makePrintable(extSource.data), '- transform result dimensions:', makePrintable(extSource.dimensions), '- transform result sourceHeader: ' + extSource.sourceHeader, '------'].join('\n');
+          var pipeIndexStr = pipeIndex != null ? ' === pipe index: ' + pipeIndex : '';
+          return ['=== dataset index: ' + infoForPrint.datasetIndex + pipeIndexStr + ' ===', '- transform result data:', makePrintable(extSource.data), '- transform result dimensions:', makePrintable(extSource.dimensions), '- transform result sourceHeader: ', makePrintable(extSource.sourceHeader)].join('\n');
         }).join('\n');
         consoleLog(printStrArr);
       }
     }
 
     return map(resultList, function (result) {
-      assert(isObject(result), 'A transform should not return some empty results.');
-      assert(isObject(result.data) || isArrayLike(result.data), 'Result data should be object or array in data transform.');
+      var errMsg = '';
+
+      if (!isObject(result)) {
+        if (true) {
+          errMsg = 'A transform should not return some empty results.';
+        }
+
+        throwError(errMsg);
+      }
+
+      if (!isObject(result.data) && !isArrayLike(result.data)) {
+        if (true) {
+          errMsg = 'Result data should be object or array in data transform.';
+        }
+
+        throwError(errMsg);
+      }
+
       var resultMetaRawOption = inheritSourceMetaRawOption({
         parent: upSourceList[0].metaRawOption,
         thisNew: {
@@ -20411,36 +21024,49 @@
       var datasetModel = this._sourceHost;
       var transformOption = datasetModel.get('transform', true);
       var fromTransformResult = datasetModel.get('fromTransformResult', true);
-      var sourceList;
-      var upstreamSignList;
 
-      if (transformOption) {
-        var upSourceList_1 = [];
-        upstreamSignList = [];
-        each(upMgrList, function (upMgr) {
-          upMgr.prepareSource();
-          upSourceList_1.push(upMgr.getSource());
-          upstreamSignList.push(upMgr._getVersionSign());
-        });
-        sourceList = applyDataTransform(transformOption, upSourceList_1, {
-          datasetIndex: datasetModel.componentIndex
-        });
-      } else if (fromTransformResult != null) {
+      if (true) {
+        assert(fromTransformResult != null || transformOption != null);
+      }
+
+      if (fromTransformResult != null) {
+        var errMsg = '';
+
         if (upMgrList.length !== 1) {
-          var errMsg = '';
-
           if (true) {
             errMsg = 'When using `fromTransformResult`, there should be only one upstream dataset';
           }
 
           doThrow(errMsg);
         }
+      }
 
-        var upMgr = upMgrList[0];
+      var sourceList;
+      var upSourceList = [];
+      var upstreamSignList = [];
+      each(upMgrList, function (upMgr) {
         upMgr.prepareSource();
-        var upSource = upMgr.getSource(fromTransformResult);
-        upstreamSignList = [upMgr._getVersionSign()];
-        sourceList = [cloneSourceShallow(upSource)];
+        var upSource = upMgr.getSource(fromTransformResult || 0);
+        var errMsg = '';
+
+        if (fromTransformResult != null && !upSource) {
+          if (true) {
+            errMsg = 'Can not retrieve result by `fromTransformResult`: ' + fromTransformResult;
+          }
+
+          doThrow(errMsg);
+        }
+
+        upSourceList.push(upSource);
+        upstreamSignList.push(upMgr._getVersionSign());
+      });
+
+      if (transformOption) {
+        sourceList = applyDataTransform(transformOption, upSourceList, {
+          datasetIndex: datasetModel.componentIndex
+        });
+      } else if (fromTransformResult != null) {
+        sourceList = [cloneSourceShallow(upSourceList[0])];
       }
 
       return {
@@ -20522,6 +21148,337 @@
 
   function doThrow(errMsg) {
     throw new Error(errMsg);
+  }
+
+  var TOOLTIP_NAME_TEXT_STYLE_CSS = 'font-size:12px;color:#6e7079';
+  var TOOLTIP_TEXT_STYLE_RICH = {
+    fontSize: 12,
+    fill: '#6e7079'
+  };
+  var TOOLTIP_VALUE_TEXT_STYLE_CSS = 'font-size:14px;color:#464646;font-weight:900';
+  var TOOLTIP_VALUE_TEXT_STYLE_RICH = {
+    fontSize: 14,
+    fill: '#464646',
+    fontWeight: 900
+  };
+  var TOOLTIP_LINE_HEIGHT_CSS = 'line-height:1';
+  var HTML_GAPS = [0, 10, 20, 30];
+  var RICH_TEXT_GAPS = ['', '\n', '\n\n', '\n\n\n'];
+
+  function createTooltipMarkup(type, option) {
+    option.type = type;
+    return option;
+  }
+
+  function getBuilder(fragment) {
+    return hasOwn(builderMap, fragment.type) && builderMap[fragment.type];
+  }
+
+  var builderMap = {
+    section: {
+      planLayout: function (fragment) {
+        var subBlockLen = fragment.blocks.length;
+        var thisBlockHasInnerGap = subBlockLen > 1 || subBlockLen > 0 && !fragment.noHeader;
+        var thisGapLevelBetweenSubBlocks = 0;
+        each(fragment.blocks, function (subBlock) {
+          getBuilder(subBlock).planLayout(subBlock);
+          var subGapLevel = subBlock.__gapLevelBetweenSubBlocks;
+
+          if (subGapLevel >= thisGapLevelBetweenSubBlocks) {
+            thisGapLevelBetweenSubBlocks = subGapLevel + (thisBlockHasInnerGap && (!subGapLevel || subBlock.type === 'section' && !subBlock.noHeader) ? 1 : 0);
+          }
+        });
+        fragment.__gapLevelBetweenSubBlocks = thisGapLevelBetweenSubBlocks;
+      },
+      build: function (ctx, fragment, topMarginForOuterGap) {
+        var noHeader = fragment.noHeader;
+        var gaps = getGap(fragment);
+        var subMarkupText = buildSubBlocks(ctx, fragment, noHeader ? topMarginForOuterGap : gaps.html);
+
+        if (noHeader) {
+          return subMarkupText;
+        }
+
+        var displayableHeader = makeValueReadable(fragment.header, 'ordinal');
+
+        if (ctx.renderMode === 'richText') {
+          return wrapInlineNameRichText(ctx, displayableHeader) + gaps.richText + subMarkupText;
+        } else {
+          return wrapBlockHTML("<div style=\"" + TOOLTIP_NAME_TEXT_STYLE_CSS + ";" + TOOLTIP_LINE_HEIGHT_CSS + ";\">" + encodeHTML(displayableHeader) + '</div>' + subMarkupText, topMarginForOuterGap);
+        }
+      }
+    },
+    nameValue: {
+      planLayout: function (fragment) {
+        fragment.__gapLevelBetweenSubBlocks = 0;
+      },
+      build: function (ctx, fragment, topMarginForOuterGap) {
+        var renderMode = ctx.renderMode;
+        var noName = fragment.noName;
+        var noValue = fragment.noValue;
+        var noMarker = !fragment.markerType;
+        var name = fragment.name;
+        var value = fragment.value;
+
+        if (noName && noValue) {
+          return;
+        }
+
+        var markerStr = noMarker ? '' : ctx.markupStyleCreator.makeTooltipMarker(fragment.markerType, fragment.markerColor || '#333', renderMode);
+        var readableName = noName ? '' : makeValueReadable(name, 'ordinal');
+        var valueTypeOption = fragment.valueType;
+        var readableValueList = noValue ? [] : isArray(value) ? map(value, function (val, idx) {
+          return makeValueReadable(val, isArray(valueTypeOption) ? valueTypeOption[idx] : valueTypeOption);
+        }) : [makeValueReadable(value, isArray(valueTypeOption) ? valueTypeOption[0] : valueTypeOption)];
+        var valueAlignRight = !noMarker || !noName;
+        var valueCloseToMarker = !noMarker && noName;
+        return renderMode === 'richText' ? (noMarker ? '' : markerStr) + (noName ? '' : wrapInlineNameRichText(ctx, readableName)) + (noValue ? '' : wrapInlineValueRichText(ctx, readableValueList, valueAlignRight, valueCloseToMarker)) : wrapBlockHTML((noMarker ? '' : markerStr) + (noName ? '' : wrapInlineNameHTML(readableName, !noMarker)) + (noValue ? '' : wrapInlineValueHTML(readableValueList, valueAlignRight, valueCloseToMarker)), topMarginForOuterGap);
+      }
+    }
+  };
+
+  function buildSubBlocks(ctx, fragment, topMarginForOuterGap) {
+    var subMarkupTextList = [];
+    var subBlocks = fragment.blocks || [];
+    assert(!subBlocks || isArray(subBlocks));
+    subBlocks = subBlocks || [];
+    var orderMode = ctx.orderMode;
+
+    if (fragment.sortBlocks && orderMode) {
+      subBlocks = subBlocks.slice();
+      var orderMap = {
+        valueAsc: 'asc',
+        valueDesc: 'desc'
+      };
+
+      if (hasOwn(orderMap, orderMode)) {
+        var comparator_1 = new SortOrderComparator(orderMap[orderMode], null);
+        subBlocks.sort(function (a, b) {
+          return comparator_1.evaluate(a.sortParam, b.sortParam);
+        });
+      } else if (orderMode === 'seriesDesc') {
+        subBlocks.reverse();
+      }
+    }
+
+    var gaps = getGap(fragment);
+    each(subBlocks, function (subBlock, idx) {
+      var subMarkupText = getBuilder(subBlock).build(ctx, subBlock, idx > 0 ? gaps.html : 0);
+      subMarkupText != null && subMarkupTextList.push(subMarkupText);
+    });
+
+    if (!subMarkupTextList.length) {
+      return;
+    }
+
+    return ctx.renderMode === 'richText' ? subMarkupTextList.join(gaps.richText) : wrapBlockHTML(subMarkupTextList.join(''), topMarginForOuterGap);
+  }
+
+  function buildTooltipMarkup(fragment, markupStyleCreator, renderMode, orderMode) {
+    if (!fragment) {
+      return;
+    }
+
+    var builder = getBuilder(fragment);
+    builder.planLayout(fragment);
+    var ctx = {
+      renderMode: renderMode,
+      orderMode: orderMode,
+      markupStyleCreator: markupStyleCreator
+    };
+    return builder.build(ctx, fragment, 0);
+  }
+
+  function getGap(fragment) {
+    var gapLevelBetweenSubBlocks = fragment.__gapLevelBetweenSubBlocks;
+    return {
+      html: HTML_GAPS[gapLevelBetweenSubBlocks],
+      richText: RICH_TEXT_GAPS[gapLevelBetweenSubBlocks]
+    };
+  }
+
+  function wrapBlockHTML(encodedContent, topGap) {
+    var clearfix = '<div style="clear:both"></div>';
+    var marginCSS = "margin: " + topGap + "px 0 0";
+    return "<div style=\"" + marginCSS + ";" + TOOLTIP_LINE_HEIGHT_CSS + ";\">" + encodedContent + clearfix + '</div>';
+  }
+
+  function wrapInlineNameHTML(name, leftHasMarker) {
+    var marginCss = leftHasMarker ? 'margin-left:2px' : '';
+    return "<span style=\"" + TOOLTIP_NAME_TEXT_STYLE_CSS + ";" + marginCss + "\">" + encodeHTML(name) + '</span>';
+  }
+
+  function wrapInlineValueHTML(valueList, alignRight, valueCloseToMarker) {
+    var paddingStr = valueCloseToMarker ? '10px' : '20px';
+    var alignCSS = alignRight ? "float:right;margin-left:" + paddingStr : '';
+    return "<span style=\"" + alignCSS + ";" + TOOLTIP_VALUE_TEXT_STYLE_CSS + "\">" + map(valueList, function (value) {
+      return encodeHTML(value);
+    }).join('&nbsp;&nbsp;') + '</span>';
+  }
+
+  function wrapInlineNameRichText(ctx, name) {
+    return ctx.markupStyleCreator.wrapRichTextStyle(name, TOOLTIP_TEXT_STYLE_RICH);
+  }
+
+  function wrapInlineValueRichText(ctx, valueList, alignRight, valueCloseToMarker) {
+    var styles = [TOOLTIP_VALUE_TEXT_STYLE_RICH];
+    var paddingLeft = valueCloseToMarker ? 10 : 20;
+    alignRight && styles.push({
+      padding: [0, 0, 0, paddingLeft],
+      align: 'right'
+    });
+    return ctx.markupStyleCreator.wrapRichTextStyle(valueList.join('  '), styles);
+  }
+
+  function retrieveVisualColorForTooltipMarker(series, dataIndex) {
+    var style = series.getData().getItemVisual(dataIndex, 'style');
+    var color = style[series.visualDrawType];
+    return convertToColorString(color);
+  }
+
+  function getPaddingFromTooltipModel(model, renderMode) {
+    var padding = model.get('padding');
+    return padding != null ? padding : renderMode === 'richText' ? [8, 10] : 10;
+  }
+
+  var TooltipMarkupStyleCreator = function () {
+    function TooltipMarkupStyleCreator() {
+      this.richTextStyles = {};
+      this._nextStyleNameId = getRandomIdBase();
+    }
+
+    TooltipMarkupStyleCreator.prototype._generateStyleName = function () {
+      return '__EC_aUTo_' + this._nextStyleNameId++;
+    };
+
+    TooltipMarkupStyleCreator.prototype.makeTooltipMarker = function (markerType, colorStr, renderMode) {
+      var markerId = renderMode === 'richText' ? this._generateStyleName() : null;
+      var marker = getTooltipMarker({
+        color: colorStr,
+        type: markerType,
+        renderMode: renderMode,
+        markerId: markerId
+      });
+
+      if (isString(marker)) {
+        return marker;
+      } else {
+        if (true) {
+          assert(markerId);
+        }
+
+        this.richTextStyles[markerId] = marker.style;
+        return marker.content;
+      }
+    };
+
+    TooltipMarkupStyleCreator.prototype.wrapRichTextStyle = function (text, styles) {
+      var finalStl = {};
+
+      if (isArray(styles)) {
+        each(styles, function (stl) {
+          return extend(finalStl, stl);
+        });
+      } else {
+        extend(finalStl, styles);
+      }
+
+      var styleName = this._generateStyleName();
+
+      this.richTextStyles[styleName] = finalStl;
+      return "{" + styleName + "|" + text + "}";
+    };
+
+    return TooltipMarkupStyleCreator;
+  }();
+
+  function defaultSeriesFormatTooltip(opt) {
+    var series = opt.series;
+    var dataIndex = opt.dataIndex;
+    var multipleSeries = opt.multipleSeries;
+    var data = series.getData();
+    var tooltipDims = data.mapDimensionsAll('defaultedTooltip');
+    var tooltipDimLen = tooltipDims.length;
+    var value = series.getRawValue(dataIndex);
+    var isValueArr = isArray(value);
+    var markerColor = retrieveVisualColorForTooltipMarker(series, dataIndex);
+    var inlineValue;
+    var inlineValueType;
+    var subBlocks;
+    var sortParam;
+
+    if (tooltipDimLen > 1 || isValueArr && !tooltipDimLen) {
+      var formatArrResult = formatTooltipArrayValue(value, series, dataIndex, tooltipDims, markerColor);
+      inlineValue = formatArrResult.inlineValues;
+      inlineValueType = formatArrResult.inlineValueTypes;
+      subBlocks = formatArrResult.blocks;
+      sortParam = formatArrResult.inlineValues[0];
+    } else if (tooltipDimLen) {
+      var dimInfo = data.getDimensionInfo(tooltipDims[0]);
+      sortParam = inlineValue = retrieveRawValue(data, dataIndex, tooltipDims[0]);
+      inlineValueType = dimInfo.type;
+    } else {
+      sortParam = inlineValue = isValueArr ? value[0] : value;
+    }
+
+    var seriesNameSpecified = isNameSpecified(series);
+    var seriesName = seriesNameSpecified && series.name || '';
+    var itemName = data.getName(dataIndex);
+    var inlineName = multipleSeries ? seriesName : itemName;
+    return createTooltipMarkup('section', {
+      header: seriesName,
+      noHeader: multipleSeries || !seriesNameSpecified,
+      sortParam: sortParam,
+      blocks: [createTooltipMarkup('nameValue', {
+        markerType: 'item',
+        markerColor: markerColor,
+        name: inlineName,
+        noName: !trim(inlineName),
+        value: inlineValue,
+        valueType: inlineValueType
+      })].concat(subBlocks || [])
+    });
+  }
+
+  function formatTooltipArrayValue(value, series, dataIndex, tooltipDims, colorStr) {
+    var data = series.getData();
+    var isValueMultipleLine = reduce(value, function (isValueMultipleLine, val, idx) {
+      var dimItem = data.getDimensionInfo(idx);
+      return isValueMultipleLine = isValueMultipleLine || dimItem && dimItem.tooltip !== false && dimItem.displayName != null;
+    }, false);
+    var inlineValues = [];
+    var inlineValueTypes = [];
+    var blocks = [];
+    tooltipDims.length ? each(tooltipDims, function (dim) {
+      setEachItem(retrieveRawValue(data, dataIndex, dim), dim);
+    }) : each(value, setEachItem);
+
+    function setEachItem(val, dim) {
+      var dimInfo = data.getDimensionInfo(dim);
+
+      if (!dimInfo || dimInfo.otherDims.tooltip === false) {
+        return;
+      }
+
+      if (isValueMultipleLine) {
+        blocks.push(createTooltipMarkup('nameValue', {
+          markerType: 'subItem',
+          markerColor: colorStr,
+          name: dimInfo.displayName,
+          value: val,
+          valueType: dimInfo.type
+        }));
+      } else {
+        inlineValues.push(val);
+        inlineValueTypes.push(dimInfo.type);
+      }
+    }
+
+    return {
+      inlineValues: inlineValues,
+      inlineValueTypes: inlineValueTypes,
+      blocks: blocks
+    };
   }
 
   var inner$2 = makeInner();
@@ -20674,115 +21631,12 @@
       return coordSys && coordSys.getBaseAxis && coordSys.getBaseAxis();
     };
 
-    SeriesModel.prototype.formatTooltip = function (dataIndex, multipleSeries, dataType, renderMode) {
-      var series = this;
-      renderMode = renderMode || 'html';
-      var newLine = renderMode === 'html' ? '' : '\n';
-      var isRichText = renderMode === 'richText';
-      var markers = {};
-      var markerId = 0;
-
-      function formatArrayValue(value) {
-        var vertially = reduce(value, function (vertially, val, idx) {
-          var dimItem = data.getDimensionInfo(idx);
-          return vertially |= dimItem && dimItem.tooltip !== false && dimItem.displayName != null;
-        }, 0);
-        var result = [];
-        tooltipDims.length ? each(tooltipDims, function (dim) {
-          setEachItem(retrieveRawValue(data, dataIndex, dim), dim);
-        }) : each(value, setEachItem);
-
-        function setEachItem(val, dim) {
-          var dimInfo = data.getDimensionInfo(dim);
-
-          if (!dimInfo || dimInfo.otherDims.tooltip === false) {
-            return;
-          }
-
-          var dimType = dimInfo.type;
-          var markName = 'sub' + series.seriesIndex + 'at' + markerId;
-          var dimHead = getTooltipMarker({
-            color: colorStr,
-            type: 'subItem',
-            renderMode: renderMode,
-            markerId: markName
-          });
-          var dimHeadStr = typeof dimHead === 'string' ? dimHead : dimHead.content;
-          var valStr = (vertially ? '<span style="font-size:12px;color:#6e7079;">' + dimHeadStr + encodeHTML(dimInfo.displayName || '-') + '</span>' : '') + '<span style="float:right;margin-left:20px;color:#000;font-weight:900">' + encodeHTML(dimType === 'ordinal' ? val + '' : dimType === 'time' ? multipleSeries ? '' : formatTime('yyyy/MM/dd hh:mm:ss', val) : addCommas(val)) + '</span>';
-          valStr && result.push("<div style=\"margin: 11px 0 0;line-height:1;\">" + valStr + "</div>");
-
-          if (isRichText) {
-            markers[markName] = colorStr;
-            ++markerId;
-          }
-        }
-
-        var newLine = vertially ? isRichText ? '\n' : '' : '';
-        var content = newLine + result.join(newLine || '');
-        return {
-          renderMode: renderMode,
-          content: content,
-          style: markers
-        };
-      }
-
-      function formatSingleValue(val) {
-        return {
-          renderMode: renderMode,
-          content: encodeHTML(addCommas(val)),
-          style: markers
-        };
-      }
-
-      var data = this.getData();
-      var tooltipDims = data.mapDimensionsAll('defaultedTooltip');
-      var tooltipDimLen = tooltipDims.length;
-      var value = this.getRawValue(dataIndex);
-      var isValueArr = isArray(value);
-      var style = data.getItemVisual(dataIndex, 'style');
-      var color = style[this.visualDrawType];
-      var colorStr;
-
-      if (isString(color)) {
-        colorStr = color;
-      } else if (color && color.colorStops) {
-        colorStr = (color.colorStops[0] || {}).color;
-      }
-
-      colorStr = colorStr || 'transparent';
-      var formattedValue = tooltipDimLen > 1 || isValueArr && !tooltipDimLen ? formatArrayValue(value) : tooltipDimLen ? formatSingleValue(retrieveRawValue(data, dataIndex, tooltipDims[0])) : formatSingleValue(isValueArr ? value[0] : value);
-      var content = isRichText ? formattedValue.content : tooltipDimLen > 1 || isValueArr && !tooltipDimLen ? '<div>' + formattedValue.content + '</div>' : '<span style="float:right;margin-left:20px;color:#464646;font-weight:bold">' + formattedValue.content + '</span>';
-      var markName = series.seriesIndex + 'at' + markerId;
-      var colorEl = getTooltipMarker({
-        color: colorStr,
-        type: 'item',
-        renderMode: renderMode,
-        markerId: markName
+    SeriesModel.prototype.formatTooltip = function (dataIndex, multipleSeries, dataType) {
+      return defaultSeriesFormatTooltip({
+        series: this,
+        dataIndex: dataIndex,
+        multipleSeries: multipleSeries
       });
-      markers[markName] = colorStr;
-      ++markerId;
-      var name = data.getName(dataIndex);
-      var seriesName = this.name;
-
-      if (!isNameSpecified(this)) {
-        seriesName = '';
-      }
-
-      seriesName = seriesName ? encodeHTML(seriesName) + (!multipleSeries ? newLine : ' ') : '';
-      colorStr = isString(colorEl) ? colorEl : colorEl.content;
-      var html = '';
-
-      if (!isRichText) {
-        seriesName = seriesName ? !multipleSeries ? "<div style=\"font-size:12px;color:#6e7079;line-height:1;margin-top:-4px;\">" + seriesName + "</div>" : "<span style=\"font-size:12px;color:#6e7079;line-height:1\">" + seriesName + "</span>" : '';
-        html = !multipleSeries ? seriesName + ("<div style=\"margin: " + (seriesName ? 8 : 0) + "px 0 0;line-height:1\">") + colorStr + (name ? "<span style=\"font-size:12px;color:#6e7079;\">" + encodeHTML(name) + "</span>" + content : content) + '</div>' : "<div style=\"margin: 11px 0 0;line-height:1;\">" + colorStr + seriesName + content + "</div>";
-      } else {
-        html = !multipleSeries ? seriesName + (seriesName ? '\n' : '') + '' + colorStr + (name ? encodeHTML(name) + ": " + content : content) + '' : "" + colorStr + seriesName + ": " + content;
-      }
-
-      return {
-        html: html,
-        markers: markers
-      };
     };
 
     SeriesModel.prototype.isAnimationEnabled = function () {
@@ -20994,17 +21848,19 @@
   }
 
   function wrapData(data, seriesModel) {
-    each(data.CHANGABLE_METHODS, function (methodName) {
-      data.wrapMethod(methodName, curry(onDataSelfChange, seriesModel));
+    each(__spreadArrays(data.CHANGABLE_METHODS, data.DOWNSAMPLE_METHODS), function (methodName) {
+      data.wrapMethod(methodName, curry(onDataChange, seriesModel));
     });
   }
 
-  function onDataSelfChange(seriesModel) {
+  function onDataChange(seriesModel, newList) {
     var task = getCurrentTask(seriesModel);
 
     if (task) {
-      task.setOutputEnd(this.count());
+      task.setOutputEnd((newList || this).count());
     }
+
+    return newList;
   }
 
   function getCurrentTask(seriesModel) {
@@ -21059,11 +21915,11 @@
     return function (seriesModel) {
       var fields = inner(seriesModel);
       var pipelineContext = seriesModel.pipelineContext;
-      var originalLarge = fields.large;
-      var originalProgressive = fields.progressiveRender;
-      var large = fields.large = pipelineContext && pipelineContext.large;
-      var progressive = fields.progressiveRender = pipelineContext && pipelineContext.progressiveRender;
-      return !!(originalLarge ^ large || originalProgressive ^ progressive) && 'reset';
+      var originalLarge = !!fields.large;
+      var originalProgressive = !!fields.progressiveRender;
+      var large = fields.large = !!(pipelineContext && pipelineContext.large);
+      var progressive = fields.progressiveRender = !!(pipelineContext && pipelineContext.progressiveRender);
+      return !!(originalLarge !== large || originalProgressive !== progressive) && 'reset';
     };
   }
 
@@ -21550,7 +22406,7 @@
     }
   }
 
-  var PI$4 = Math.PI;
+  var PI$5 = Math.PI;
 
   function loadingDefault(api, opts) {
     opts = opts || {};
@@ -21599,8 +22455,8 @@
     if (opts.showSpinner) {
       arc = new Arc({
         shape: {
-          startAngle: -PI$4 / 2,
-          endAngle: -PI$4 / 2 + 0.1,
+          startAngle: -PI$5 / 2,
+          endAngle: -PI$5 / 2 + 0.1,
           r: opts.spinnerRadius
         },
         style: {
@@ -21612,10 +22468,10 @@
         z: 10001
       });
       arc.animateShape(true).when(1000, {
-        endAngle: PI$4 * 3 / 2
+        endAngle: PI$5 * 3 / 2
       }).start('circularInOut');
       arc.animateShape(true).when(1000, {
-        startAngle: PI$4 * 3 / 2
+        startAngle: PI$5 * 3 / 2
       }).delay(300).start('circularInOut');
       group.add(arc);
     }
@@ -22121,9 +22977,7 @@
     },
     toolbox: {
       iconStyle: {
-        normal: {
-          borderColor: contrastColor
-        }
+        borderColor: contrastColor
       }
     },
     dataZoom: {
@@ -22223,12 +23077,10 @@
     },
     candlestick: {
       itemStyle: {
-        normal: {
-          color: '#FD1050',
-          color0: '#0CF49B',
-          borderColor: '#FD1050',
-          borderColor0: '#0CF49B'
-        }
+        color: '#FD1050',
+        color0: '#0CF49B',
+        borderColor: '#FD1050',
+        borderColor0: '#0CF49B'
       }
     }
   };
@@ -22569,7 +23421,7 @@
     }
   }
 
-  var PI2$5 = Math.PI * 2;
+  var PI2$6 = Math.PI * 2;
   var CMD$3 = PathProxy.CMD;
   var DEFAULT_SEARCH_SPACE = ['top', 'right', 'bottom', 'left'];
 
@@ -22609,7 +23461,7 @@
     var ox = x * r + cx;
     var oy = y * r + cy;
 
-    if (Math.abs(startAngle - endAngle) % PI2$5 < 1e-4) {
+    if (Math.abs(startAngle - endAngle) % PI2$6 < 1e-4) {
       out[0] = ox;
       out[1] = oy;
       return d - r;
@@ -22625,16 +23477,16 @@
     }
 
     if (startAngle > endAngle) {
-      endAngle += PI2$5;
+      endAngle += PI2$6;
     }
 
     var angle = Math.atan2(y, x);
 
     if (angle < 0) {
-      angle += PI2$5;
+      angle += PI2$6;
     }
 
-    if (angle >= startAngle && angle <= endAngle || angle + PI2$5 >= startAngle && angle + PI2$5 <= endAngle) {
+    if (angle >= startAngle && angle <= endAngle || angle + PI2$6 >= startAngle && angle + PI2$6 <= endAngle) {
       out[0] = ox;
       out[1] = oy;
       return d - r;
@@ -22827,7 +23679,7 @@
     var labelRect = label.getBoundingRect().clone();
     labelRect.applyTransform(label.getComputedTransform());
     var minDist = Infinity;
-    var anchorPoint = labelGuideConfig && labelGuideConfig.anchor;
+    var anchorPoint = labelGuideConfig.anchor;
     var targetTransform = target.getComputedTransform();
     var targetInversedTransform = targetTransform && invert([], targetTransform);
     var len = labelLineModel.get('length2') || 0;
@@ -23065,6 +23917,9 @@
     if (labelLine) {
       defaults(labelLine.style, defaultStyle);
       labelLine.style.fill = null;
+      var showAbove = normalModel.get('showAbove');
+      var labelLineConfig = targetEl.textGuideLineConfig = targetEl.textGuideLineConfig || {};
+      labelLineConfig.showAbove = showAbove || false;
       labelLine.buildPath = buildLabelLinePath;
     }
   }
@@ -23280,6 +24135,18 @@
     });
     var globalRect = new BoundingRect(0, 0, 0, 0);
 
+    function hideEl(el) {
+      if (!el.ignore) {
+        var emphasisState = el.ensureState('emphasis');
+
+        if (emphasisState.ignore == null) {
+          emphasisState.ignore = false;
+        }
+      }
+
+      el.ignore = true;
+    }
+
     for (var i = 0; i < labelList.length; i++) {
       var labelItem = labelList[i];
       var isAxisAligned = labelItem.axisAligned;
@@ -23322,8 +24189,8 @@
       }
 
       if (overlapped) {
-        label.hide();
-        labelLine && labelLine.hide();
+        hideEl(label);
+        labelLine && hideEl(labelLine);
       } else {
         label.attr('ignore', labelItem.defaultAttr.ignore);
         labelLine && labelLine.attr('ignore', labelItem.defaultAttr.labelGuideIgnore);
@@ -23345,7 +24212,6 @@
   }
 
   function prepareLayoutCallbackParams(labelItem, hostEl) {
-    var labelAttr = labelItem.defaultAttr;
     var label = labelItem.label;
     var labelLine = hostEl && hostEl.getTextGuideLine();
     return {
@@ -23354,7 +24220,7 @@
       seriesIndex: labelItem.seriesModel.seriesIndex,
       text: labelItem.label.style.text,
       rect: labelItem.hostRect,
-      labelRect: labelAttr.rect,
+      labelRect: labelItem.rect,
       align: label.style.align,
       verticalAlign: label.style.verticalAlign,
       labelLinePoints: cloneArr(labelLine && labelLine.shape.points)
@@ -23423,6 +24289,7 @@
         dataType: dataType,
         layoutOption: layoutOption,
         computedLayoutOption: null,
+        rect: labelRect,
         hostRect: hostRect,
         priority: hostRect ? hostRect.width * hostRect.height : 0,
         defaultAttr: {
@@ -23431,7 +24298,6 @@
           x: dummyTransformable.x,
           y: dummyTransformable.y,
           rotation: dummyTransformable.rotation,
-          rect: labelRect,
           style: {
             x: labelStyle.x,
             y: labelStyle.y,
@@ -23467,10 +24333,9 @@
 
         var textEl = child.getTextContent();
         var ecData = getECData(child);
-        var dataIndex = ecData.dataIndex;
 
-        if (textEl && dataIndex != null && !textEl.disableLabelLayout) {
-          _this._addLabel(dataIndex, ecData.dataType, seriesModel, textEl, layoutOption);
+        if (textEl && !textEl.disableLabelLayout) {
+          _this._addLabel(ecData.dataIndex, ecData.dataType, seriesModel, textEl, layoutOption);
         }
       });
     };
@@ -23556,9 +24421,14 @@
           label.cursor = 'move';
 
           if (hostEl) {
-            var data = labelItem.seriesModel.getData(labelItem.dataType);
-            var itemModel = data.getItemModel(labelItem.dataIndex);
-            label.on('drag', createDragHandler(hostEl, itemModel.getModel('labelLine')));
+            var hostModel = labelItem.seriesModel;
+
+            if (labelItem.dataIndex != null) {
+              var data = labelItem.seriesModel.getData(labelItem.dataType);
+              hostModel = data.getItemModel(labelItem.dataIndex);
+            }
+
+            label.on('drag', createDragHandler(hostEl, hostModel.getModel('labelLine')));
           }
         } else {
           label.off('drag');
@@ -23640,6 +24510,7 @@
       if (textEl && !textEl.ignore && !textEl.invisible && !el.disableLabelAnimation) {
         var layoutStore = labelLayoutInnerStore(textEl);
         var oldLayout = layoutStore.oldLayout;
+        var dataIndex = getECData(el).dataIndex;
         var newProps = {
           x: textEl.x,
           y: textEl.y,
@@ -23654,7 +24525,7 @@
             style: {
               opacity: oldOpacity
             }
-          }, seriesModel);
+          }, seriesModel, dataIndex);
         } else {
           textEl.attr(oldLayout);
           var prevStates = el.prevStates;
@@ -23669,7 +24540,7 @@
             }
           }
 
-          updateProps(textEl, newProps, seriesModel);
+          updateProps(textEl, newProps, seriesModel, dataIndex);
         }
 
         layoutStore.oldLayout = newProps;
@@ -23844,6 +24715,15 @@
     return canvasGradient;
   }
 
+  function normalizeLineDash(lineType, lineWidth) {
+    if (!lineType || lineType === 'solid' || !(lineWidth > 0)) {
+      return null;
+    }
+
+    lineWidth = lineWidth || 1;
+    return lineType === 'dashed' ? [4 * lineWidth, 2 * lineWidth] : lineType === 'dotted' ? [lineWidth] : isNumber(lineType) ? [lineType] : isArray(lineType) ? lineType : null;
+  }
+
   var pathProxyForDraw = new PathProxy(true);
 
   function styleHasStroke(style) {
@@ -23957,7 +24837,7 @@
       }
     }
 
-    var lineDash = style.lineDash;
+    var lineDash = style.lineDash && style.lineWidth > 0 && normalizeLineDash(style.lineDash, style.lineWidth);
     var lineDashOffset = style.lineDashOffset;
     var ctxLineDash = !!ctx.setLineDash;
     var scale = el.getGlobalScale();
@@ -24077,9 +24957,10 @@
       ctx.font = style.font || DEFAULT_FONT;
       ctx.textAlign = style.textAlign;
       ctx.textBaseline = style.textBaseline;
+      var hasLineDash = void 0;
 
       if (ctx.setLineDash) {
-        var lineDash = style.lineDash;
+        var lineDash = style.lineDash && style.lineWidth > 0 && normalizeLineDash(style.lineDash, style.lineWidth);
         var lineDashOffset = style.lineDashOffset;
 
         if (lineDash) {
@@ -24091,10 +24972,11 @@
             });
             lineDashOffset /= lineScale_2;
           }
-        }
 
-        ctx.setLineDash(lineDash || []);
-        ctx.lineDashOffset = lineDashOffset;
+          ctx.setLineDash(lineDash);
+          ctx.lineDashOffset = lineDashOffset;
+          hasLineDash = true;
+        }
       }
 
       if (style.strokeFirst) {
@@ -24113,6 +24995,10 @@
         if (styleHasStroke(style)) {
           ctx.strokeText(text, style.x, style.y);
         }
+      }
+
+      if (hasLineDash) {
+        ctx.setLineDash([]);
       }
     }
   }
@@ -24261,6 +25147,10 @@
   var viewRect = new BoundingRect(0, 0, 0, 0);
 
   function isDisplayableCulled(el, width, height) {
+    if (!width || !height) {
+      return false;
+    }
+
     tmpRect.copy(el.getBoundingRect());
 
     if (el.transform) {
@@ -24337,11 +25227,19 @@
     return inHover ? el.__hoverStyle || el.style : el.style;
   }
 
+  function brushSingle(ctx, el) {
+    brush(ctx, el, {
+      inHover: false,
+      viewWidth: 0,
+      viewHeight: 0
+    }, true);
+  }
+
   function brush(ctx, el, scope, isLast) {
     var m = el.transform;
 
     if (el.invisible || el.style.opacity === 0 || el.culling && isDisplayableCulled(el, scope.viewWidth, scope.viewHeight) || m && !m[0] && !m[3]) {
-      el.__dirty = 0;
+      el.__dirty &= ~Element.REDARAW_BIT;
       return;
     }
 
@@ -25420,13 +26318,32 @@
   }();
 
   registerPainter('canvas', CanvasPainter);
+
+  function findEventDispatcher(target, det, returnFirstMatch) {
+    var found;
+
+    while (target) {
+      if (det(target)) {
+        found = target;
+
+        if (returnFirstMatch) {
+          break;
+        }
+      }
+
+      target = target.__hostTarget || target.parent;
+    }
+
+    return found;
+  }
+
   var assert$1 = assert;
   var each$3 = each;
   var isFunction$1 = isFunction;
   var isObject$2 = isObject;
-  var version$1 = '5.0.0-alpha.2';
+  var version$1 = '5.0.0-beta.1';
   var dependencies = {
-    zrender: '5.0.0-alpha.2'
+    zrender: '5.0.0-beta.1'
   };
   var TEST_FRAME_REMAIN_TIME = 1;
   var PRIORITY_PROCESSOR_SERIES_FILTER = 800;
@@ -25956,15 +26873,22 @@
           var el = e.target;
           var params;
           var isGlobalOut = eveName === 'globalout';
-          var ecData = el && getECData(el);
 
           if (isGlobalOut) {
             params = {};
-          } else if (ecData && ecData.dataIndex != null) {
-            var dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
-            params = dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {};
-          } else if (el && ecData.eventData) {
-            params = extend({}, ecData.eventData);
+          } else {
+            el && findEventDispatcher(el, function (parent) {
+              var ecData = getECData(parent);
+
+              if (ecData && ecData.dataIndex != null) {
+                var dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
+                params = dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {};
+                return true;
+              } else if (ecData.eventData) {
+                params = extend({}, ecData.eventData);
+                return true;
+              }
+            }, true);
           }
 
           if (params) {
@@ -26617,21 +27541,9 @@
       };
 
       bindMouseEvent = function (zr, ecIns) {
-        function getDispatcher(target, det) {
-          while (target && !det(target)) {
-            if (target.__hostTarget) {
-              target = target.__hostTarget;
-            } else {
-              target = target.parent;
-            }
-          }
-
-          return target;
-        }
-
         zr.on('mouseover', function (e) {
           var el = e.target;
-          var dispatcher = getDispatcher(el, isHighDownDispatcher);
+          var dispatcher = findEventDispatcher(el, isHighDownDispatcher);
 
           if (dispatcher) {
             var ecData = getECData(dispatcher);
@@ -26641,7 +27553,7 @@
           }
         }).on('mouseout', function (e) {
           var el = e.target;
-          var dispatcher = getDispatcher(el, isHighDownDispatcher);
+          var dispatcher = findEventDispatcher(el, isHighDownDispatcher);
 
           if (dispatcher) {
             var ecData = getECData(dispatcher);
@@ -26651,9 +27563,9 @@
           }
         }).on('click', function (e) {
           var el = e.target;
-          var dispatcher = getDispatcher(el, function (target) {
+          var dispatcher = findEventDispatcher(el, function (target) {
             return getECData(target).dataIndex != null;
-          });
+          }, true);
 
           if (dispatcher) {
             var actionType = dispatcher.selected ? 'unselect' : 'select';
@@ -26721,7 +27633,6 @@
           }
 
           chartView.group.silent = !!seriesModel.get('silent');
-          updateZ(seriesModel, chartView);
           updateBlend(seriesModel, chartView);
           updateSeriesElementSelection(seriesModel);
           labelManager.addLabelsOfSeries(chartView);
@@ -26732,6 +27643,7 @@
         labelManager.processLabelsOverall();
         ecModel.eachSeries(function (seriesModel) {
           var chartView = ecIns._chartsMap[seriesModel.__viewId];
+          updateZ(seriesModel, chartView);
           updateStates(seriesModel, chartView);
         });
         updateHoverLayerStatus(ecIns, ecModel);
@@ -26799,7 +27711,7 @@
           }
         });
 
-        if (elCount > ecModel.get('hoverLayerThreshold') && !env.node) {
+        if (elCount > ecModel.get('hoverLayerThreshold') && !env.node && !env.worker) {
           ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.preventUsingHoverLayer) {
               return;
@@ -26857,13 +27769,14 @@
             if (label) {
               label.z = el.z;
               label.zlevel = el.zlevel;
-              label.z2 = el.z2 + 1;
+              label.z2 = el.z2 + 2;
             }
 
             if (labelLine) {
+              var showAbove = el.textGuideLineConfig && el.textGuideLineConfig.showAbove;
               labelLine.z = el.z;
               labelLine.zlevel = el.zlevel;
-              labelLine.z2 = el.z2 - 1;
+              labelLine.z2 = el.z2 + (showAbove ? 1 : -1);
             }
           }
         });
@@ -26906,7 +27819,8 @@
         var stateTransition = duration > 0 ? {
           duration: duration,
           delay: stateAnimationModel.get('delay'),
-          easing: stateAnimationModel.get('easing')
+          easing: stateAnimationModel.get('easing'),
+          additive: stateAnimationModel.get('additive')
         } : null;
         view.group.traverse(function (el) {
           if (el.states && el.states.emphasis) {
@@ -27077,6 +27991,7 @@
   var eventActionMap = {};
   var dataProcessorFuncs = [];
   var optionPreprocessorFuncs = [];
+  var postInitFuncs = [];
   var postUpdateFuncs = [];
   var visualFuncs = [];
   var themeStorage = {};
@@ -27115,6 +28030,9 @@
     instances$1[chart.id] = chart;
     setAttribute(dom, DOM_ATTRIBUTE_KEY, chart.id);
     enableConnect(chart);
+    each$3(postInitFuncs, function (postInitFunc) {
+      postInitFunc(chart);
+    });
     return chart;
   }
 
@@ -27175,8 +28093,12 @@
     normalizeRegister(dataProcessorFuncs, priority, processor, PRIORITY_PROCESSOR_DEFAULT);
   }
 
+  function registerPostInit(postInitFunc) {
+    postInitFunc && postInitFuncs.push(postInitFunc);
+  }
+
   function registerPostUpdate(postUpdateFunc) {
-    postUpdateFuncs.push(postUpdateFunc);
+    postUpdateFunc && postUpdateFuncs.push(postUpdateFunc);
   }
 
   function registerAction(actionInfo, eventName, action) {
@@ -27523,7 +28445,9 @@
     return DataDimensionInfo;
   }();
 
+  var mathFloor = Math.floor;
   var isObject$3 = isObject;
+  var map$1 = map;
   var UNDEFINED = 'undefined';
   var INDEX_NOT_FOUND = -1;
   var ID_PREFIX = 'e\0\0';
@@ -27537,20 +28461,20 @@
   var CtorUint32Array = typeof Uint32Array === UNDEFINED ? Array : Uint32Array;
   var CtorInt32Array = typeof Int32Array === UNDEFINED ? Array : Int32Array;
   var CtorUint16Array = typeof Uint16Array === UNDEFINED ? Array : Uint16Array;
-  var TRANSFERABLE_PROPERTIES = ['hasItemOption', '_nameList', '_idList', '_invertedIndicesMap', '_rawData', '_chunkSize', '_chunkCount', '_dimValueGetter', '_count', '_rawCount', '_nameDimIdx', '_idDimIdx'];
+  var TRANSFERABLE_PROPERTIES = ['hasItemOption', '_nameList', '_idList', '_invertedIndicesMap', '_rawData', '_dimValueGetter', '_count', '_rawCount', '_nameDimIdx', '_idDimIdx', '_nameRepeatCount'];
   var CLONE_PROPERTIES = ['_extent', '_approximateExtent', '_rawExtent'];
   var defaultDimValueGetters;
   var prepareInvertedIndex;
   var getRawValueFromStore;
   var getIndicesCtor;
-  var prepareChunks;
+  var prepareStorage;
   var getRawIndexWithoutIndices;
   var getRawIndexWithIndices;
+  var getIdFromName;
   var getId;
   var normalizeDimensions;
   var validateDimensions;
   var cloneListForMapAndSample;
-  var cloneDimStore;
   var getInitialExtent;
   var setItemDataAndSeriesIndex;
   var transferProperties;
@@ -27561,6 +28485,7 @@
       this._count = 0;
       this._rawCount = 0;
       this._storage = {};
+      this._storageArr = [];
       this._nameList = [];
       this._idList = [];
       this._visual = {};
@@ -27568,15 +28493,14 @@
       this._itemVisuals = [];
       this._itemLayouts = [];
       this._graphicEls = [];
-      this._chunkSize = 1e5;
-      this._chunkCount = 0;
       this._rawExtent = {};
       this._extent = {};
       this._approximateExtent = {};
       this._calculationInfo = {};
       this.hasItemOption = true;
-      this.TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'];
+      this.TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'lttbDownSample', 'map'];
       this.CHANGABLE_METHODS = ['filterSelf', 'selectRange'];
+      this.DOWNSAMPLE_METHODS = ['downSample', 'lttbDownSample'];
       this.getRawIndex = getRawIndexWithoutIndices;
       dimensions = dimensions || ['x', 'y'];
       var dimensionInfos = {};
@@ -27648,7 +28572,7 @@
     };
 
     List.prototype.initData = function (data, nameList, dimValueGetter) {
-      var notProvider = data instanceof Source || isArrayLike(data);
+      var notProvider = isSourceInstance(data) || isArrayLike(data);
 
       if (notProvider) {
         data = new DefaultDataProvider(data, this.dimensions.length);
@@ -27701,18 +28625,16 @@
         end += start;
       }
 
-      this._initDataFromProvider(start, end);
+      this._initDataFromProvider(start, end, true);
     };
 
     List.prototype.appendValues = function (values, names) {
-      var chunkSize = this._chunkSize;
       var storage = this._storage;
       var dimensions = this.dimensions;
       var dimLen = dimensions.length;
       var rawExtent = this._rawExtent;
       var start = this.count();
       var end = start + Math.max(values.length, names ? names.length : 0);
-      var originalChunkCount = this._chunkCount;
 
       for (var i = 0; i < dimLen; i++) {
         var dim = dimensions[i];
@@ -27721,28 +28643,27 @@
           rawExtent[dim] = getInitialExtent();
         }
 
-        if (!storage[dim]) {
-          storage[dim] = [];
-        }
-
-        prepareChunks(storage, this._dimensionInfos[dim], chunkSize, originalChunkCount, end);
-        this._chunkCount = storage[dim].length;
+        prepareStorage(storage, this._dimensionInfos[dim], end, true);
       }
 
-      var emptyDataItem = new Array(dimLen);
+      var rawExtentArr = map$1(dimensions, function (dim) {
+        return rawExtent[dim];
+      });
+      var storageArr = this._storageArr = map$1(dimensions, function (dim) {
+        return storage[dim];
+      });
+      var emptyDataItem = [];
 
       for (var idx = start; idx < end; idx++) {
         var sourceIdx = idx - start;
-        var chunkIndex = Math.floor(idx / chunkSize);
-        var chunkOffset = idx % chunkSize;
 
-        for (var k = 0; k < dimLen; k++) {
-          var dim = dimensions[k];
+        for (var dimIdx = 0; dimIdx < dimLen; dimIdx++) {
+          var dim = dimensions[dimIdx];
 
-          var val = this._dimValueGetterArrayRows(values[sourceIdx] || emptyDataItem, dim, sourceIdx, k);
+          var val = this._dimValueGetterArrayRows(values[sourceIdx] || emptyDataItem, dim, sourceIdx, dimIdx);
 
-          storage[dim][chunkIndex][chunkOffset] = val;
-          var dimRawExtent = rawExtent[dim];
+          storageArr[dimIdx][idx] = val;
+          var dimRawExtent = rawExtentArr[dimIdx];
           val < dimRawExtent[0] && (dimRawExtent[0] = val);
           val > dimRawExtent[1] && (dimRawExtent[1] = val);
         }
@@ -27757,12 +28678,11 @@
       prepareInvertedIndex(this);
     };
 
-    List.prototype._initDataFromProvider = function (start, end) {
+    List.prototype._initDataFromProvider = function (start, end, append) {
       if (start >= end) {
         return;
       }
 
-      var chunkSize = this._chunkSize;
       var rawData = this._rawData;
       var storage = this._storage;
       var dimensions = this.dimensions;
@@ -27771,9 +28691,8 @@
       var nameList = this._nameList;
       var idList = this._idList;
       var rawExtent = this._rawExtent;
-      var nameRepeatCount = this._nameRepeatCount = {};
+      this._nameRepeatCount = {};
       var nameDimIdx;
-      var originalChunkCount = this._chunkCount;
 
       for (var i = 0; i < dimLen; i++) {
         var dim = dimensions[i];
@@ -27792,68 +28711,61 @@
           this._idDimIdx = i;
         }
 
-        if (!storage[dim]) {
-          storage[dim] = [];
-        }
-
-        prepareChunks(storage, dimInfo, chunkSize, originalChunkCount, end);
-        this._chunkCount = storage[dim].length;
+        prepareStorage(storage, dimInfo, end, append);
       }
 
-      var dataItem = new Array(dimLen);
+      var storageArr = this._storageArr = map$1(dimensions, function (dim) {
+        return storage[dim];
+      });
+      var rawExtentArr = map$1(dimensions, function (dim) {
+        return rawExtent[dim];
+      });
 
-      for (var idx = start; idx < end; idx++) {
-        dataItem = rawData.getItem(idx, dataItem);
-        var chunkIndex = Math.floor(idx / chunkSize);
-        var chunkOffset = idx % chunkSize;
+      if (rawData.fillStorage) {
+        rawData.fillStorage(start, end, storageArr, rawExtentArr);
+      } else {
+        var dataItem = [];
 
-        for (var k = 0; k < dimLen; k++) {
-          var dim = dimensions[k];
-          var dimStorage = storage[dim][chunkIndex];
+        for (var idx = start; idx < end; idx++) {
+          dataItem = rawData.getItem(idx, dataItem);
 
-          var val = this._dimValueGetter(dataItem, dim, idx, k);
+          for (var dimIdx = 0; dimIdx < dimLen; dimIdx++) {
+            var dim = dimensions[dimIdx];
+            var dimStorage = storageArr[dimIdx];
 
-          dimStorage[chunkOffset] = val;
-          var dimRawExtent = rawExtent[dim];
-          val < dimRawExtent[0] && (dimRawExtent[0] = val);
-          val > dimRawExtent[1] && (dimRawExtent[1] = val);
-        }
+            var val = this._dimValueGetter(dataItem, dim, idx, dimIdx);
 
-        if (!rawData.pure) {
-          var name_1 = nameList[idx];
+            dimStorage[idx] = val;
+            var dimRawExtent = rawExtentArr[dimIdx];
+            val < dimRawExtent[0] && (dimRawExtent[0] = val);
+            val > dimRawExtent[1] && (dimRawExtent[1] = val);
+          }
 
-          if (dataItem && name_1 == null) {
-            if (dataItem.name != null) {
-              nameList[idx] = name_1 = dataItem.name;
-            } else if (nameDimIdx != null) {
-              var nameDim = dimensions[nameDimIdx];
-              var nameDimChunk = storage[nameDim][chunkIndex];
+          if (!rawData.pure) {
+            var name_1 = nameList[idx];
 
-              if (nameDimChunk) {
-                name_1 = nameDimChunk[chunkOffset];
-                var ordinalMeta = dimensionInfoMap[nameDim].ordinalMeta;
+            if (dataItem && name_1 == null) {
+              if (dataItem.name != null) {
+                nameList[idx] = name_1 = convertOptionIdName(dataItem.name, null);
+              } else if (nameDimIdx != null) {
+                var nameDim = dimensions[nameDimIdx];
+                var nameDimChunk = storage[nameDim];
 
-                if (ordinalMeta && ordinalMeta.categories.length) {
-                  name_1 = ordinalMeta.categories[name_1];
+                if (nameDimChunk) {
+                  var ordinalMeta = dimensionInfoMap[nameDim].ordinalMeta;
+                  name_1 = convertOptionIdName(ordinalMeta && ordinalMeta.categories.length ? ordinalMeta.categories[nameDimChunk[idx]] : nameDimChunk[idx], null);
                 }
               }
             }
-          }
 
-          var id = dataItem == null ? null : dataItem.id;
+            var id = dataItem == null ? null : convertOptionIdName(dataItem.id, null);
 
-          if (id == null && name_1 != null) {
-            nameRepeatCount[name_1] = nameRepeatCount[name_1] || 0;
-            id = name_1;
-
-            if (nameRepeatCount[name_1] > 0) {
-              id += '__ec__' + nameRepeatCount[name_1];
+            if (id == null && name_1 != null) {
+              id = getIdFromName(this, name_1);
             }
 
-            nameRepeatCount[name_1]++;
+            id != null && (idList[idx] = id);
           }
-
-          id != null && (idList[idx] = id);
         }
       }
 
@@ -27899,23 +28811,22 @@
       return newIndices;
     };
 
+    List.prototype.getByDimIdx = function (dimIdx, idx) {
+      if (!(idx >= 0 && idx < this._count)) {
+        return NaN;
+      }
+
+      var dimStore = this._storageArr[dimIdx];
+      return dimStore ? dimStore[this.getRawIndex(idx)] : NaN;
+    };
+
     List.prototype.get = function (dim, idx) {
       if (!(idx >= 0 && idx < this._count)) {
         return NaN;
       }
 
-      var storage = this._storage;
-
-      if (!storage[dim]) {
-        return NaN;
-      }
-
-      idx = this.getRawIndex(idx);
-      var chunkIndex = Math.floor(idx / this._chunkSize);
-      var chunkOffset = idx % this._chunkSize;
-      var chunkStore = storage[dim][chunkIndex];
-      var value = chunkStore[chunkOffset];
-      return value;
+      var dimStore = this._storage[dim];
+      return dimStore ? dimStore[this.getRawIndex(idx)] : NaN;
     };
 
     List.prototype.getByRawIndex = function (dim, rawIdx) {
@@ -27924,22 +28835,7 @@
       }
 
       var dimStore = this._storage[dim];
-
-      if (!dimStore) {
-        return NaN;
-      }
-
-      var chunkIndex = Math.floor(rawIdx / this._chunkSize);
-      var chunkOffset = rawIdx % this._chunkSize;
-      var chunkStore = dimStore[chunkIndex];
-      return chunkStore[chunkOffset];
-    };
-
-    List.prototype._getFast = function (dim, rawIdx) {
-      var chunkIndex = Math.floor(rawIdx / this._chunkSize);
-      var chunkOffset = rawIdx % this._chunkSize;
-      var chunkStore = this._storage[dim][chunkIndex];
-      return chunkStore[chunkOffset];
+      return dimStore ? dimStore[rawIdx] : NaN;
     };
 
     List.prototype.getValues = function (dimensions, idx) {
@@ -27997,8 +28893,8 @@
       var max = dimExtent[1];
 
       for (var i = 0; i < currEnd; i++) {
-        var value = this._getFast(dim, this.getRawIndex(i));
-
+        var rawIdx = this.getRawIndex(i);
+        var value = dimData[rawIdx];
         value < min && (min = value);
         value > max && (max = value);
       }
@@ -28137,7 +29033,8 @@
       var nearestIndicesLen = 0;
 
       for (var i = 0, len = this.count(); i < len; i++) {
-        var diff = value - this.get(dim, i);
+        var dataIndex = this.getRawIndex(i);
+        var diff = value - dimData[dataIndex];
         var dist = Math.abs(diff);
 
         if (dist <= maxDistance) {
@@ -28174,7 +29071,7 @@
 
     List.prototype.getName = function (idx) {
       var rawIndex = this.getRawIndex(idx);
-      return this._nameList[rawIndex] || getRawValueFromStore(this, this._nameDimIdx, rawIndex) || '';
+      return this._nameList[rawIndex] || convertOptionIdName(getRawValueFromStore(this, this._nameDimIdx, rawIndex), '') || '';
     };
 
     List.prototype.getId = function (idx) {
@@ -28182,6 +29079,8 @@
     };
 
     List.prototype.each = function (dims, cb, ctx, ctxCompat) {
+      var _this = this;
+
       if (!this._count) {
         return;
       }
@@ -28194,26 +29093,32 @@
       }
 
       var fCtx = ctx || ctxCompat || this;
-      var dimNames = map(normalizeDimensions(dims), this.getDimension, this);
+      var dimNames = map$1(normalizeDimensions(dims), this.getDimension, this);
 
       if (true) {
         validateDimensions(this, dimNames);
       }
 
       var dimSize = dimNames.length;
+      var dimIndices = map$1(dimNames, function (dimName) {
+        return _this._dimensionInfos[dimName].index;
+      });
+      var storageArr = this._storageArr;
 
-      for (var i = 0; i < this.count(); i++) {
+      for (var i = 0, len = this.count(); i < len; i++) {
+        var rawIdx = this.getRawIndex(i);
+
         switch (dimSize) {
           case 0:
             cb.call(fCtx, i);
             break;
 
           case 1:
-            cb.call(fCtx, this.get(dimNames[0], i), i);
+            cb.call(fCtx, storageArr[dimIndices[0]][rawIdx], i);
             break;
 
           case 2:
-            cb.call(fCtx, this.get(dimNames[0], i), this.get(dimNames[1], i), i);
+            cb.call(fCtx, storageArr[dimIndices[0]][rawIdx], storageArr[dimIndices[1]][rawIdx], i);
             break;
 
           default:
@@ -28221,7 +29126,7 @@
             var value = [];
 
             for (; k < dimSize; k++) {
-              value[k] = this.get(dimNames[k], i);
+              value[k] = storageArr[dimIndices[k]][rawIdx];
             }
 
             value[k] = i;
@@ -28231,6 +29136,8 @@
     };
 
     List.prototype.filterSelf = function (dims, cb, ctx, ctxCompat) {
+      var _this = this;
+
       if (!this._count) {
         return;
       }
@@ -28243,7 +29150,7 @@
       }
 
       var fCtx = ctx || ctxCompat || this;
-      var dimNames = map(normalizeDimensions(dims), this.getDimension, this);
+      var dimNames = map$1(normalizeDimensions(dims), this.getDimension, this);
 
       if (true) {
         validateDimensions(this, dimNames);
@@ -28255,7 +29162,11 @@
       var value = [];
       var dimSize = dimNames.length;
       var offset = 0;
-      var dim0 = dimNames[0];
+      var dimIndices = map$1(dimNames, function (dimName) {
+        return _this._dimensionInfos[dimName].index;
+      });
+      var dim0 = dimIndices[0];
+      var storageArr = this._storageArr;
 
       for (var i = 0; i < count; i++) {
         var keep = void 0;
@@ -28264,14 +29175,13 @@
         if (dimSize === 0) {
           keep = cb.call(fCtx, i);
         } else if (dimSize === 1) {
-          var val = this._getFast(dim0, rawIdx);
-
+          var val = storageArr[dim0][rawIdx];
           keep = cb.call(fCtx, val, i);
         } else {
           var k = 0;
 
           for (; k < dimSize; k++) {
-            value[k] = this._getFast(dim0, rawIdx);
+            value[k] = storageArr[dimIndices[k]][rawIdx];
           }
 
           value[k] = i;
@@ -28294,7 +29204,11 @@
     };
 
     List.prototype.selectRange = function (range) {
-      if (!this._count) {
+      var _this = this;
+
+      var len = this._count;
+
+      if (!len) {
         return;
       }
 
@@ -28321,53 +29235,46 @@
       var newIndices = new Ctor(originalCount);
       var offset = 0;
       var dim0 = dimensions[0];
+      var dimIndices = map$1(dimensions, function (dimName) {
+        return _this._dimensionInfos[dimName].index;
+      });
       var min = range[dim0][0];
       var max = range[dim0][1];
+      var storageArr = this._storageArr;
       var quickFinished = false;
 
       if (!this._indices) {
         var idx = 0;
 
         if (dimSize === 1) {
-          var dimStorage = this._storage[dimensions[0]];
+          var dimStorage = storageArr[dimIndices[0]];
 
-          for (var k = 0; k < this._chunkCount; k++) {
-            var chunkStorage = dimStorage[k];
-            var len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
+          for (var i = 0; i < len; i++) {
+            var val = dimStorage[i];
 
-            for (var i = 0; i < len; i++) {
-              var val = chunkStorage[i];
-
-              if (val >= min && val <= max || isNaN(val)) {
-                newIndices[offset++] = idx;
-              }
-
-              idx++;
+            if (val >= min && val <= max || isNaN(val)) {
+              newIndices[offset++] = idx;
             }
+
+            idx++;
           }
 
           quickFinished = true;
         } else if (dimSize === 2) {
-          var dimStorage = this._storage[dim0];
-          var dimStorage2 = this._storage[dimensions[1]];
+          var dimStorage = storageArr[dimIndices[0]];
+          var dimStorage2 = storageArr[dimIndices[1]];
           var min2 = range[dimensions[1]][0];
           var max2 = range[dimensions[1]][1];
 
-          for (var k = 0; k < this._chunkCount; k++) {
-            var chunkStorage = dimStorage[k];
-            var chunkStorage2 = dimStorage2[k];
-            var len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
+          for (var i = 0; i < len; i++) {
+            var val = dimStorage[i];
+            var val2 = dimStorage2[i];
 
-            for (var i = 0; i < len; i++) {
-              var val = chunkStorage[i];
-              var val2 = chunkStorage2[i];
-
-              if ((val >= min && val <= max || isNaN(val)) && (val2 >= min2 && val2 <= max2 || isNaN(val2))) {
-                newIndices[offset++] = idx;
-              }
-
-              idx++;
+            if ((val >= min && val <= max || isNaN(val)) && (val2 >= min2 && val2 <= max2 || isNaN(val2))) {
+              newIndices[offset++] = idx;
             }
+
+            idx++;
           }
 
           quickFinished = true;
@@ -28378,8 +29285,7 @@
         if (dimSize === 1) {
           for (var i = 0; i < originalCount; i++) {
             var rawIndex = this.getRawIndex(i);
-
-            var val = this._getFast(dim0, rawIndex);
+            var val = storageArr[dimIndices[0]][rawIndex];
 
             if (val >= min && val <= max || isNaN(val)) {
               newIndices[offset++] = rawIndex;
@@ -28392,8 +29298,7 @@
 
             for (var k = 0; k < dimSize; k++) {
               var dimk = dimensions[k];
-
-              var val = this._getFast(dimk, rawIndex);
+              var val = storageArr[dimIndices[k]][rawIndex];
 
               if (val < range[dimk][0] || val > range[dimk][1]) {
                 keep = false;
@@ -28435,18 +29340,17 @@
 
     List.prototype.map = function (dims, cb, ctx, ctxCompat) {
       var fCtx = ctx || ctxCompat || this;
-      var dimNames = map(normalizeDimensions(dims), this.getDimension, this);
+      var dimNames = map$1(normalizeDimensions(dims), this.getDimension, this);
 
       if (true) {
         validateDimensions(this, dimNames);
       }
 
       var list = cloneListForMapAndSample(this, dimNames);
+      var storage = list._storage;
       list._indices = this._indices;
       list.getRawIndex = list._indices ? getRawIndexWithIndices : getRawIndexWithoutIndices;
-      var storage = list._storage;
       var tmpRetValue = [];
-      var chunkSize = this._chunkSize;
       var dimSize = dimNames.length;
       var dataCount = this.count();
       var values = [];
@@ -28467,8 +29371,6 @@
           }
 
           var rawIndex = this.getRawIndex(dataIndex);
-          var chunkIndex = Math.floor(rawIndex / chunkSize);
-          var chunkOffset = rawIndex % chunkSize;
 
           for (var i = 0; i < retValue.length; i++) {
             var dim = dimNames[i];
@@ -28477,7 +29379,7 @@
             var dimStore = storage[dim];
 
             if (dimStore) {
-              dimStore[chunkIndex][chunkOffset] = val;
+              dimStore[rawIndex] = val;
             }
 
             if (val < rawExtentOnDim[0]) {
@@ -28498,10 +29400,9 @@
       var list = cloneListForMapAndSample(this, [dimension]);
       var targetStorage = list._storage;
       var frameValues = [];
-      var frameSize = Math.floor(1 / rate);
+      var frameSize = mathFloor(1 / rate);
       var dimStore = targetStorage[dimension];
       var len = this.count();
-      var chunkSize = this._chunkSize;
       var rawExtentOnDim = list._rawExtent[dimension];
       var newIndices = new (getIndicesCtor(this))(len);
       var offset = 0;
@@ -28514,16 +29415,12 @@
 
         for (var k = 0; k < frameSize; k++) {
           var dataIdx = this.getRawIndex(i + k);
-          var originalChunkIndex = Math.floor(dataIdx / chunkSize);
-          var originalChunkOffset = dataIdx % chunkSize;
-          frameValues[k] = dimStore[originalChunkIndex][originalChunkOffset];
+          frameValues[k] = dimStore[dataIdx];
         }
 
         var value = sampleValue(frameValues);
         var sampleFrameIdx = this.getRawIndex(Math.min(i + sampleIndex(frameValues, value) || 0, len - 1));
-        var sampleChunkIndex = Math.floor(sampleFrameIdx / chunkSize);
-        var sampleChunkOffset = sampleFrameIdx % chunkSize;
-        dimStore[sampleChunkIndex][sampleChunkOffset] = value;
+        dimStore[sampleFrameIdx] = value;
 
         if (value < rawExtentOnDim[0]) {
           rawExtentOnDim[0] = value;
@@ -28537,6 +29434,72 @@
       }
 
       list._count = offset;
+      list._indices = newIndices;
+      list.getRawIndex = getRawIndexWithIndices;
+      return list;
+    };
+
+    List.prototype.lttbDownSample = function (valueDimension, rate) {
+      var list = cloneListForMapAndSample(this, []);
+      var targetStorage = list._storage;
+      var dimStore = targetStorage[valueDimension];
+      var len = this.count();
+      var newIndices = new (getIndicesCtor(this))(len);
+      var sampledIndex = 0;
+      var frameSize = mathFloor(1 / rate);
+      var currentRawIndex = this.getRawIndex(0);
+      var maxArea;
+      var area;
+      var nextRawIndex;
+      newIndices[sampledIndex++] = currentRawIndex;
+
+      for (var i = 1; i < len - 1; i += frameSize) {
+        var nextFrameStart = Math.min(i + frameSize, len - 1);
+        var nextFrameEnd = Math.min(i + frameSize * 2, len);
+        var avgX = (nextFrameEnd + nextFrameStart) / 2;
+        var avgY = 0;
+
+        for (var idx = nextFrameStart; idx < nextFrameEnd; idx++) {
+          var rawIndex = this.getRawIndex(idx);
+          var y = dimStore[rawIndex];
+
+          if (isNaN(y)) {
+            continue;
+          }
+
+          avgY += y;
+        }
+
+        avgY /= nextFrameEnd - nextFrameStart;
+        var frameStart = i;
+        var frameEnd = Math.min(i + frameSize, len);
+        var pointAX = i - 1;
+        var pointAY = dimStore[currentRawIndex];
+        maxArea = -1;
+        nextRawIndex = frameStart;
+
+        for (var idx = frameStart; idx < frameEnd; idx++) {
+          var rawIndex = this.getRawIndex(idx);
+          var y = dimStore[rawIndex];
+
+          if (isNaN(y)) {
+            continue;
+          }
+
+          area = Math.abs((pointAX - avgX) * (y - pointAY) - (pointAX - idx) * (avgY - pointAY));
+
+          if (area > maxArea) {
+            maxArea = area;
+            nextRawIndex = rawIndex;
+          }
+        }
+
+        newIndices[sampledIndex++] = nextRawIndex;
+        currentRawIndex = nextRawIndex;
+      }
+
+      newIndices[sampledIndex++] = this.getRawIndex(len - 1);
+      list._count = sampledIndex;
       list._indices = newIndices;
       list.getRawIndex = getRawIndexWithIndices;
       return list;
@@ -28685,11 +29648,12 @@
 
     List.prototype.cloneShallow = function (list) {
       if (!list) {
-        var dimensionInfoList = map(this.dimensions, this.getDimensionInfo, this);
+        var dimensionInfoList = map$1(this.dimensions, this.getDimensionInfo, this);
         list = new List(dimensionInfoList, this.hostModel);
       }
 
       list._storage = this._storage;
+      list._storageArr = this._storageArr;
       transferProperties(list, this);
 
       if (this._indices) {
@@ -28779,14 +29743,11 @@
         var val;
 
         if (dimIndex != null) {
-          var chunkSize = list._chunkSize;
-          var chunkIndex = Math.floor(rawIndex / chunkSize);
-          var chunkOffset = rawIndex % chunkSize;
           var dim = list.dimensions[dimIndex];
-          var chunk = list._storage[dim][chunkIndex];
+          var chunk = list._storage[dim];
 
           if (chunk) {
-            val = chunk[chunkOffset];
+            val = chunk[rawIndex];
             var ordinalMeta = list._dimensionInfos[dim].ordinalMeta;
 
             if (ordinalMeta && ordinalMeta.categories.length) {
@@ -28802,24 +29763,25 @@
         return list._rawCount > 65535 ? CtorUint32Array : CtorUint16Array;
       };
 
-      prepareChunks = function (storage, dimInfo, chunkSize, chunkCount, end) {
+      prepareStorage = function (storage, dimInfo, end, append) {
         var DataCtor = dataCtors[dimInfo.type];
-        var lastChunkIndex = chunkCount - 1;
         var dim = dimInfo.name;
-        var resizeChunkArray = storage[dim][lastChunkIndex];
 
-        if (resizeChunkArray && resizeChunkArray.length < chunkSize) {
-          var newStore = new DataCtor(Math.min(end - lastChunkIndex * chunkSize, chunkSize));
+        if (append) {
+          var oldStore = storage[dim];
+          var oldLen = oldStore && oldStore.length;
 
-          for (var j = 0; j < resizeChunkArray.length; j++) {
-            newStore[j] = resizeChunkArray[j];
+          if (!(oldLen === end)) {
+            var newStore = new DataCtor(end);
+
+            for (var j = 0; j < oldLen; j++) {
+              newStore[j] = oldStore[j];
+            }
+
+            storage[dim] = newStore;
           }
-
-          storage[dim][lastChunkIndex] = newStore;
-        }
-
-        for (var k = chunkCount * chunkSize; k < end; k += chunkSize) {
-          storage[dim].push(new DataCtor(Math.min(end - k, chunkSize)));
+        } else {
+          storage[dim] = new DataCtor(end);
         }
       };
 
@@ -28835,15 +29797,35 @@
         return -1;
       };
 
+      getIdFromName = function (list, name) {
+        var nameRepeatCount = list._nameRepeatCount;
+        nameRepeatCount[name] = nameRepeatCount[name] || 0;
+        var id = name;
+
+        if (nameRepeatCount[name] > 0) {
+          id += '__ec__' + nameRepeatCount[name];
+        }
+
+        nameRepeatCount[name]++;
+        return id;
+      };
+
       getId = function (list, rawIndex) {
         var id = list._idList[rawIndex];
 
         if (id == null) {
-          id = getRawValueFromStore(list, list._idDimIdx, rawIndex);
+          id = convertOptionIdName(getRawValueFromStore(list, list._idDimIdx, rawIndex), null);
         }
 
         if (id == null) {
-          id = ID_PREFIX + rawIndex;
+          id = convertOptionIdName(getRawValueFromStore(list, list._nameDimIdx, rawIndex), null);
+
+          if (id != null) {
+            id = getIdFromName(list, id);
+            list._idList[rawIndex] = id;
+          } else {
+            id = ID_PREFIX + rawIndex;
+          }
         }
 
         return id;
@@ -28867,36 +29849,29 @@
 
       cloneListForMapAndSample = function (original, excludeDimensions) {
         var allDimensions = original.dimensions;
-        var list = new List(map(allDimensions, original.getDimensionInfo, original), original.hostModel);
+        var list = new List(map$1(allDimensions, original.getDimensionInfo, original), original.hostModel);
         transferProperties(list, original);
         var storage = list._storage = {};
         var originalStorage = original._storage;
+        var storageArr = list._storageArr = [];
 
         for (var i = 0; i < allDimensions.length; i++) {
           var dim = allDimensions[i];
 
           if (originalStorage[dim]) {
             if (indexOf(excludeDimensions, dim) >= 0) {
-              storage[dim] = cloneDimStore(originalStorage[dim]);
+              storage[dim] = cloneChunk(originalStorage[dim]);
               list._rawExtent[dim] = getInitialExtent();
               list._extent[dim] = null;
             } else {
               storage[dim] = originalStorage[dim];
             }
+
+            storageArr.push(storage[dim]);
           }
         }
 
         return list;
-      };
-
-      cloneDimStore = function (originalDimStore) {
-        var newDimStore = new Array(originalDimStore.length);
-
-        for (var j = 0; j < originalDimStore.length; j++) {
-          newDimStore[j] = cloneChunk(originalDimStore[j]);
-        }
-
-        return newDimStore;
       };
 
       function cloneChunk(originalChunk) {
@@ -28934,8 +29909,8 @@
   }();
 
   function completeDimensions(sysDims, source, opt) {
-    if (!(source instanceof Source)) {
-      source = Source.seriesDataToSource(source);
+    if (!isSourceInstance(source)) {
+      source = createSourceFromSeriesDataOption(source);
     }
 
     opt = opt || {};
@@ -29087,7 +30062,7 @@
   }
 
   function getDimCount(source, sysDims, dimsDef, optDimCount) {
-    var dimCount = Math.max(source.dimensionsDetectCount || 1, sysDims.length, dimsDef.length, optDimCount || 0);
+    var dimCount = Math.max(source.dimensionsDetectedCount || 1, sysDims.length, dimsDef.length, optDimCount || 0);
     each(sysDims, function (sysDimItem) {
       var sysDimItemDimsDef;
 
@@ -29332,8 +30307,8 @@
   function createListFromArray(source, seriesModel, opt) {
     opt = opt || {};
 
-    if (!(source instanceof Source)) {
-      source = Source.seriesDataToSource(source);
+    if (!isSourceInstance(source)) {
+      source = createSourceFromSeriesDataOption(source);
     }
 
     var coordSysName = seriesModel.get('coordinateSystem');
@@ -30451,7 +31426,7 @@
     };
 
     TimeScale.prototype.parse = function (val) {
-      return +parseDate(val);
+      return typeof val === 'number' ? val : +parseDate(val);
     };
 
     TimeScale.prototype.contain = function (val) {
@@ -30801,7 +31776,7 @@
   var intervalScaleProto = IntervalScale.prototype;
   var getPrecisionSafe$1 = getPrecisionSafe;
   var roundingErrorFix = round$1;
-  var mathFloor = Math.floor;
+  var mathFloor$1 = Math.floor;
   var mathCeil = Math.ceil;
   var mathPow$1 = Math.pow;
   var mathLog = Math.log;
@@ -30887,7 +31862,7 @@
         interval *= 10;
       }
 
-      var niceExtent = [round$1(mathCeil(extent[0] / interval) * interval), round$1(mathFloor(extent[1] / interval) * interval)];
+      var niceExtent = [round$1(mathCeil(extent[0] / interval) * interval), round$1(mathFloor$1(extent[1] / interval) * interval)];
       this._interval = interval;
       this._niceExtent = niceExtent;
     };
@@ -30944,7 +31919,7 @@
       this._dataMin = dataExtent[0];
       this._dataMax = dataExtent[1];
       var isOrdinal = this._isOrdinal = scale.type === 'ordinal';
-      this._needCrossZero = model.getNeedCrossZero();
+      this._needCrossZero = model.getNeedCrossZero && model.getNeedCrossZero();
       var modelMinRaw = this._modelMinRaw = model.get('min', true);
 
       if (isFunction(modelMinRaw)) {
@@ -31302,8 +32277,8 @@
     var rotateRadians = rotate * Math.PI / 180;
     var beforeWidth = textRect.width;
     var beforeHeight = textRect.height;
-    var afterWidth = beforeWidth * Math.cos(rotateRadians) + beforeHeight * Math.sin(rotateRadians);
-    var afterHeight = beforeWidth * Math.sin(rotateRadians) + beforeHeight * Math.cos(rotateRadians);
+    var afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians)) + Math.abs(beforeHeight * Math.sin(rotateRadians));
+    var afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians)) + Math.abs(beforeHeight * Math.cos(rotateRadians));
     var rotatedRect = new BoundingRect(textRect.x, textRect.y, afterWidth, afterHeight);
     return rotatedRect;
   }
@@ -31634,6 +32609,7 @@
     dataStack: dataStack$1,
     createScale: createScale,
     mixinAxisModelCommonMethods: mixinAxisModelCommonMethods,
+    getECData: getECData,
     createDimensions: createDimensions,
     createSymbol: createSymbol
   });
@@ -32348,6 +33324,14 @@
   }
 
   var parseGeoJson = parseGeoJSON;
+  var number = {};
+  each(['linearMap', 'round', 'asc', 'getPrecision', 'getPrecisionSafe', 'getPixelPrecision', 'getPercentWithPrecision', 'MAX_SAFE_INTEGER', 'remRadian', 'isRadianAroundZero', 'parseDate', 'quantity', 'quantityExponent', 'nice', 'quantile', 'reformIntervals', 'isNumeric', 'numericToNumber'], function (name) {
+    number[name] = numberUtil[name];
+  });
+  var format$1 = {};
+  each(['addCommas', 'toCamelCase', 'normalizeCssArray', 'encodeHTML', 'formatTpl', 'getTooltipMarker', 'formatTime', 'capitalFirst', 'truncateText', 'getTextRect'], function (name) {
+    format$1[name] = formatUtil[name];
+  });
   var time = {
     parse: parseDate,
     format: format
@@ -32399,6 +33383,11 @@
       label: {
         position: 'top'
       },
+      endLabel: {
+        show: false,
+        valueAnimation: true,
+        distance: 8
+      },
       lineStyle: {
         width: 2,
         type: 'solid'
@@ -32428,22 +33417,41 @@
 
   SeriesModel.registerClass(LineSeriesModel);
 
-  function getDefaultLabel(data, dataIndex, interpolatedValues) {
+  function getDefaultLabel(data, dataIndex) {
     var labelDims = data.mapDimensionsAll('defaultedLabel');
     var len = labelDims.length;
 
     if (len === 1) {
-      return interpolatedValues == null ? retrieveRawValue(data, dataIndex, labelDims[0]) : interpolatedValues;
+      return retrieveRawValue(data, dataIndex, labelDims[0]);
     } else if (len) {
       var vals = [];
 
       for (var i = 0; i < labelDims.length; i++) {
-        var val = interpolatedValues == null ? retrieveRawValue(data, dataIndex, labelDims[i]) : interpolatedValues;
-        vals.push(val);
+        vals.push(retrieveRawValue(data, dataIndex, labelDims[i]));
       }
 
       return vals.join(' ');
     }
+  }
+
+  function getDefaultInterpolatedLabel(data, interpolatedValue) {
+    var labelDims = data.mapDimensionsAll('defaultedLabel');
+
+    if (!isArray(interpolatedValue)) {
+      return interpolatedValue + '';
+    }
+
+    var vals = [];
+
+    for (var i = 0; i < labelDims.length; i++) {
+      var dimInfo = data.getDimensionInfo(labelDims[i]);
+
+      if (dimInfo) {
+        vals.push(interpolatedValue[dimInfo.index]);
+      }
+    }
+
+    return vals.join(' ');
   }
 
   var Symbol = function (_super) {
@@ -32505,6 +33513,7 @@
       var seriesModel = data.hostModel;
       var symbolSize = Symbol.getSymbolSize(data, idx);
       var isInit = symbolType !== this._symbolType;
+      var disableAnimation = opts && opts.disableAnimation;
 
       if (isInit) {
         var keepAspect = data.getItemVisual(idx, 'symbolKeepAspect');
@@ -32513,10 +33522,11 @@
       } else {
         var symbolPath = this.childAt(0);
         symbolPath.silent = false;
-        updateProps(symbolPath, {
+        var target = {
           scaleX: symbolSize[0] / 2,
           scaleY: symbolSize[1] / 2
-        }, seriesModel, idx);
+        };
+        disableAnimation ? symbolPath.attr(target) : updateProps(symbolPath, target, seriesModel, idx);
       }
 
       this._updateCommon(data, idx, symbolSize, seriesScope, opts);
@@ -32532,7 +33542,7 @@
         };
         symbolPath.scaleX = symbolPath.scaleY = 0;
         symbolPath.style.opacity = 0;
-        initProps(symbolPath, target, seriesModel, idx);
+        disableAnimation ? symbolPath.attr(target) : initProps(symbolPath, target, seriesModel, idx);
       }
 
       this._seriesModel = seriesModel;
@@ -32636,29 +33646,22 @@
 
       this._sizeX = symbolSize[0] / 2;
       this._sizeY = symbolSize[1] / 2;
-      symbolPath.ensureState('emphasis').style = emphasisItemStyle;
+      var emphasisState = symbolPath.ensureState('emphasis');
+      emphasisState.style = emphasisItemStyle;
       symbolPath.ensureState('select').style = selectItemStyle;
       symbolPath.ensureState('blur').style = blurItemStyle;
 
       if (hoverScale) {
-        this.ensureState('emphasis');
-        this.setSymbolScale(1);
-      } else {
-        this.states.emphasis = null;
+        var scaleRatio = Math.max(1.1, 3 / this._sizeY);
+        emphasisState.scaleX = this._sizeX * scaleRatio;
+        emphasisState.scaleY = this._sizeY * scaleRatio;
       }
 
+      this.setSymbolScale(1);
       enableHoverEmphasis(this, focus, blurScope);
     };
 
     Symbol.prototype.setSymbolScale = function (scale) {
-      var emphasisState = this.states.emphasis;
-
-      if (emphasisState) {
-        var hoverScale = Math.max(scale * 1.1, 3 / this._sizeY + scale);
-        emphasisState.scaleX = hoverScale;
-        emphasisState.scaleY = hoverScale;
-      }
-
       this.scaleX = this.scaleY = scale;
     };
 
@@ -32730,24 +33733,32 @@
       var seriesModel = data.hostModel;
       var oldData = this._data;
       var SymbolCtor = this._SymbolCtor;
+      var disableAnimation = opt.disableAnimation;
       var seriesScope = makeSeriesScope(data);
+      var symbolUpdateOpt = {
+        disableAnimation: disableAnimation
+      };
+
+      var getSymbolPoint = opt.getSymbolPoint || function (idx) {
+        return data.getItemLayout(idx);
+      };
 
       if (!oldData) {
         group.removeAll();
       }
 
       data.diff(oldData).add(function (newIdx) {
-        var point = data.getItemLayout(newIdx);
+        var point = getSymbolPoint(newIdx);
 
         if (symbolNeedsDraw(data, point, newIdx, opt)) {
-          var symbolEl = new SymbolCtor(data, newIdx, seriesScope);
+          var symbolEl = new SymbolCtor(data, newIdx, seriesScope, symbolUpdateOpt);
           symbolEl.setPosition(point);
           data.setItemGraphicEl(newIdx, symbolEl);
           group.add(symbolEl);
         }
       }).update(function (newIdx, oldIdx) {
         var symbolEl = oldData.getItemGraphicEl(oldIdx);
-        var point = data.getItemLayout(newIdx);
+        var point = getSymbolPoint(newIdx);
 
         if (!symbolNeedsDraw(data, point, newIdx, opt)) {
           group.remove(symbolEl);
@@ -32758,11 +33769,12 @@
           symbolEl = new SymbolCtor(data, newIdx);
           symbolEl.setPosition(point);
         } else {
-          symbolEl.updateData(data, newIdx, seriesScope);
-          updateProps(symbolEl, {
+          symbolEl.updateData(data, newIdx, seriesScope, symbolUpdateOpt);
+          var target = {
             x: point[0],
             y: point[1]
-          }, seriesModel);
+          };
+          disableAnimation ? symbolEl.attr(target) : updateProps(symbolEl, target, seriesModel);
         }
 
         group.add(symbolEl);
@@ -32773,6 +33785,7 @@
           group.remove(el);
         });
       }).execute();
+      this._getSymbolPoint = getSymbolPoint;
       this._data = data;
     };
 
@@ -32781,11 +33794,14 @@
     };
 
     SymbolDraw.prototype.updateLayout = function () {
+      var _this = this;
+
       var data = this._data;
 
       if (data) {
         data.eachItemGraphicEl(function (el, idx) {
-          var point = data.getItemLayout(idx);
+          var point = _this._getSymbolPoint(idx);
+
           el.setPosition(point);
           el.markRedraw();
         });
@@ -32914,6 +33930,17 @@
     return coordSys.dataToPoint(stackedData);
   }
 
+  var supportFloat32Array = typeof Float32Array !== 'undefined';
+  var Float32ArrayCtor = !supportFloat32Array ? Array : Float32Array;
+
+  function createFloat32Array(arg) {
+    if (isArray(arg)) {
+      return supportFloat32Array ? new Float32Array(arg) : arg;
+    }
+
+    return new Float32ArrayCtor(arg);
+  }
+
   function diffData(oldData, newData) {
     var diffResult = [];
     newData.diff(oldData).add(function (idx) {
@@ -32947,45 +33974,62 @@
     var rawIndices = [];
     var newDataOldCoordInfo = prepareDataCoordInfo(oldCoordSys, newData, oldValueOrigin);
     var oldDataNewCoordInfo = prepareDataCoordInfo(newCoordSys, oldData, newValueOrigin);
+    var oldPoints = oldData.getLayout('points') || [];
+    var newPoints = newData.getLayout('points') || [];
 
     for (var i = 0; i < diff.length; i++) {
       var diffItem = diff[i];
       var pointAdded = true;
+      var oldIdx2 = void 0;
+      var newIdx2 = void 0;
 
       switch (diffItem.cmd) {
         case '=':
-          var currentPt = oldData.getItemLayout(diffItem.idx);
-          var nextPt = newData.getItemLayout(diffItem.idx1);
+          oldIdx2 = diffItem.idx * 2;
+          newIdx2 = diffItem.idx1 * 2;
+          var currentX = oldPoints[oldIdx2];
+          var currentY = oldPoints[oldIdx2 + 1];
+          var nextX = newPoints[newIdx2];
+          var nextY = newPoints[newIdx2 + 1];
 
-          if (isNaN(currentPt[0]) || isNaN(currentPt[1])) {
-            currentPt = nextPt.slice();
+          if (isNaN(currentX) || isNaN(currentY)) {
+            currentX = nextX;
+            currentY = nextY;
           }
 
-          currPoints.push(currentPt);
-          nextPoints.push(nextPt);
-          currStackedPoints.push(oldStackedOnPoints[diffItem.idx]);
-          nextStackedPoints.push(newStackedOnPoints[diffItem.idx1]);
+          currPoints.push(currentX, currentY);
+          nextPoints.push(nextX, nextY);
+          currStackedPoints.push(oldStackedOnPoints[oldIdx2], oldStackedOnPoints[oldIdx2 + 1]);
+          nextStackedPoints.push(newStackedOnPoints[newIdx2], newStackedOnPoints[newIdx2 + 1]);
           rawIndices.push(newData.getRawIndex(diffItem.idx1));
           break;
 
         case '+':
-          var idxAdd = diffItem.idx;
-          currPoints.push(oldCoordSys.dataToPoint([newData.get(newDataOldCoordInfo.dataDimsForPoint[0], idxAdd), newData.get(newDataOldCoordInfo.dataDimsForPoint[1], idxAdd)]));
-          nextPoints.push(newData.getItemLayout(idxAdd).slice());
-          currStackedPoints.push(getStackedOnPoint(newDataOldCoordInfo, oldCoordSys, newData, idxAdd));
-          nextStackedPoints.push(newStackedOnPoints[idxAdd]);
-          rawIndices.push(newData.getRawIndex(idxAdd));
+          var newIdx = diffItem.idx;
+          var newDataDimsForPoint = newDataOldCoordInfo.dataDimsForPoint;
+          var oldPt = oldCoordSys.dataToPoint([newData.get(newDataDimsForPoint[0], newIdx), newData.get(newDataDimsForPoint[1], newIdx)]);
+          newIdx2 = newIdx * 2;
+          currPoints.push(oldPt[0], oldPt[1]);
+          nextPoints.push(newPoints[newIdx2], newPoints[newIdx2 + 1]);
+          var stackedOnPoint = getStackedOnPoint(newDataOldCoordInfo, oldCoordSys, newData, newIdx);
+          currStackedPoints.push(stackedOnPoint[0], stackedOnPoint[1]);
+          nextStackedPoints.push(newStackedOnPoints[newIdx2], newStackedOnPoints[newIdx2 + 1]);
+          rawIndices.push(newData.getRawIndex(newIdx));
           break;
 
         case '-':
-          var idxMinus = diffItem.idx;
-          var rawIndex = oldData.getRawIndex(idxMinus);
+          var oldIdx = diffItem.idx;
+          var rawIndex = oldData.getRawIndex(oldIdx);
+          var oldDataDimsForPoint = oldDataNewCoordInfo.dataDimsForPoint;
+          oldIdx2 = oldIdx * 2;
 
-          if (rawIndex !== idxMinus) {
-            currPoints.push(oldData.getItemLayout(idxMinus));
-            nextPoints.push(newCoordSys.dataToPoint([oldData.get(oldDataNewCoordInfo.dataDimsForPoint[0], idxMinus), oldData.get(oldDataNewCoordInfo.dataDimsForPoint[1], idxMinus)]));
-            currStackedPoints.push(oldStackedOnPoints[idxMinus]);
-            nextStackedPoints.push(getStackedOnPoint(oldDataNewCoordInfo, newCoordSys, oldData, idxMinus));
+          if (rawIndex !== oldIdx) {
+            var newPt = newCoordSys.dataToPoint([oldData.get(oldDataDimsForPoint[0], oldIdx), oldData.get(oldDataDimsForPoint[1], oldIdx)]);
+            var newStackedOnPt = getStackedOnPoint(oldDataNewCoordInfo, newCoordSys, oldData, oldIdx);
+            currPoints.push(oldPoints[oldIdx2], oldPoints[oldIdx2 + 1]);
+            nextPoints.push(newPt[0], newPt[1]);
+            currStackedPoints.push(oldStackedOnPoints[oldIdx2], oldStackedOnPoints[oldIdx2 + 1]);
+            nextStackedPoints.push(newStackedOnPt[0], newStackedOnPt[1]);
             rawIndices.push(rawIndex);
           } else {
             pointAdded = false;
@@ -33002,18 +34046,25 @@
     sortedIndices.sort(function (a, b) {
       return rawIndices[a] - rawIndices[b];
     });
-    var sortedCurrPoints = [];
-    var sortedNextPoints = [];
-    var sortedCurrStackedPoints = [];
-    var sortedNextStackedPoints = [];
+    var len = currPoints.length;
+    var sortedCurrPoints = createFloat32Array(len);
+    var sortedNextPoints = createFloat32Array(len);
+    var sortedCurrStackedPoints = createFloat32Array(len);
+    var sortedNextStackedPoints = createFloat32Array(len);
     var sortedStatus = [];
 
     for (var i = 0; i < sortedIndices.length; i++) {
       var idx = sortedIndices[i];
-      sortedCurrPoints[i] = currPoints[idx];
-      sortedNextPoints[i] = nextPoints[idx];
-      sortedCurrStackedPoints[i] = currStackedPoints[idx];
-      sortedNextStackedPoints[i] = nextStackedPoints[idx];
+      var i2 = i * 2;
+      var idx2 = idx * 2;
+      sortedCurrPoints[i2] = currPoints[idx2];
+      sortedCurrPoints[i2 + 1] = currPoints[idx2 + 1];
+      sortedNextPoints[i2] = nextPoints[idx2];
+      sortedNextPoints[i2 + 1] = nextPoints[idx2 + 1];
+      sortedCurrStackedPoints[i2] = currStackedPoints[idx2];
+      sortedCurrStackedPoints[i2 + 1] = currStackedPoints[idx2 + 1];
+      sortedNextStackedPoints[i2] = nextStackedPoints[idx2];
+      sortedNextStackedPoints[i2 + 1] = nextStackedPoints[idx2 + 1];
       sortedStatus[i] = status[idx];
     }
 
@@ -33026,35 +34077,32 @@
     };
   }
 
-  var vec2Min = min;
-  var vec2Max = max;
-  var scaleAndAdd$1 = scaleAndAdd;
-  var v2Copy = copy;
-  var v = [];
-  var cp0 = [];
-  var cp1 = [];
+  var mathMin$5 = Math.min;
+  var mathMax$5 = Math.max;
 
-  function isPointNull(p) {
-    return isNaN(p[0]) || isNaN(p[1]);
+  function isPointNull(x, y) {
+    return isNaN(x) || isNaN(y);
   }
 
-  function drawSegment(ctx, points, start, segLen, allLen, dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls) {
-    return (smoothMonotone === 'none' || !smoothMonotone ? drawNonMono : drawMono)(ctx, points, start, segLen, allLen, dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls);
-  }
-
-  function drawMono(ctx, points, start, segLen, allLen, dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls) {
-    var prevIdx = 0;
+  function drawSegment(ctx, points, start, segLen, allLen, dir, smooth, smoothMonotone, connectNulls) {
+    var prevX;
+    var prevY;
+    var cpx0;
+    var cpy0;
+    var cpx1;
+    var cpy1;
     var idx = start;
     var k = 0;
 
     for (; k < segLen; k++) {
-      var p = points[idx];
+      var x = points[idx * 2];
+      var y = points[idx * 2 + 1];
 
       if (idx >= allLen || idx < 0) {
         break;
       }
 
-      if (isPointNull(p)) {
+      if (isPointNull(x, y)) {
         if (connectNulls) {
           idx += dir;
           continue;
@@ -33064,148 +34112,113 @@
       }
 
       if (idx === start) {
-        ctx[dir > 0 ? 'moveTo' : 'lineTo'](p[0], p[1]);
+        ctx[dir > 0 ? 'moveTo' : 'lineTo'](x, y);
+        cpx0 = x;
+        cpy0 = y;
       } else {
-        if (smooth > 0) {
-          var prevP = points[prevIdx];
-          var dim = smoothMonotone === 'y' ? 1 : 0;
-          var ctrlLen = (p[dim] - prevP[dim]) * smooth;
-          v2Copy(cp0, prevP);
-          cp0[dim] = prevP[dim] + ctrlLen;
-          v2Copy(cp1, p);
-          cp1[dim] = p[dim] - ctrlLen;
-          ctx.bezierCurveTo(cp0[0], cp0[1], cp1[0], cp1[1], p[0], p[1]);
-        } else {
-          ctx.lineTo(p[0], p[1]);
-        }
-      }
+        var dx = x - prevX;
+        var dy = y - prevY;
 
-      prevIdx = idx;
-      idx += dir;
-    }
-
-    return k;
-  }
-
-  function drawNonMono(ctx, points, start, segLen, allLen, dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls) {
-    var prevIdx = 0;
-    var idx = start;
-    var k = 0;
-
-    for (; k < segLen; k++) {
-      var p = points[idx];
-
-      if (idx >= allLen || idx < 0) {
-        break;
-      }
-
-      if (isPointNull(p)) {
-        if (connectNulls) {
+        if (dx * dx + dy * dy < 0.5) {
           idx += dir;
           continue;
         }
 
-        break;
-      }
-
-      if (idx === start) {
-        ctx[dir > 0 ? 'moveTo' : 'lineTo'](p[0], p[1]);
-        v2Copy(cp0, p);
-      } else {
         if (smooth > 0) {
           var nextIdx = idx + dir;
-          var nextP = points[nextIdx];
+          var nextX = points[nextIdx * 2];
+          var nextY = points[nextIdx * 2 + 1];
+          var tmpK = k + 1;
 
           if (connectNulls) {
-            while (nextP && isPointNull(points[nextIdx])) {
+            while (isPointNull(nextX, nextY) && tmpK < segLen) {
+              tmpK++;
               nextIdx += dir;
-              nextP = points[nextIdx];
+              nextX = points[nextIdx * 2];
+              nextY = points[nextIdx * 2 + 1];
             }
           }
 
           var ratioNextSeg = 0.5;
-          var prevP = points[prevIdx];
-          nextP = points[nextIdx];
+          var vx = 0;
+          var vy = 0;
+          var nextCpx0 = void 0;
+          var nextCpy0 = void 0;
 
-          if (!nextP || isPointNull(nextP)) {
-            v2Copy(cp1, p);
+          if (tmpK >= segLen || isPointNull(nextX, nextY)) {
+            cpx1 = x;
+            cpy1 = y;
           } else {
-            if (isPointNull(nextP) && !connectNulls) {
-              nextP = p;
-            }
-
-            sub(v, nextP, prevP);
+            vx = nextX - prevX;
+            vy = nextY - prevY;
+            var dx0 = x - prevX;
+            var dx1 = nextX - x;
+            var dy0 = y - prevY;
+            var dy1 = nextY - y;
             var lenPrevSeg = void 0;
             var lenNextSeg = void 0;
 
-            if (smoothMonotone === 'x' || smoothMonotone === 'y') {
-              var dim = smoothMonotone === 'x' ? 0 : 1;
-              lenPrevSeg = Math.abs(p[dim] - prevP[dim]);
-              lenNextSeg = Math.abs(p[dim] - nextP[dim]);
+            if (smoothMonotone === 'x') {
+              lenPrevSeg = Math.abs(dx0);
+              lenNextSeg = Math.abs(dx1);
+              cpx1 = x - lenPrevSeg * smooth;
+              cpy1 = y;
+              nextCpx0 = x + lenPrevSeg * smooth;
+              nextCpy0 = y;
+            } else if (smoothMonotone === 'y') {
+              lenPrevSeg = Math.abs(dy0);
+              lenNextSeg = Math.abs(dy1);
+              cpx1 = x;
+              cpy1 = y - lenPrevSeg * smooth;
+              nextCpx0 = x;
+              nextCpy0 = y + lenPrevSeg * smooth;
             } else {
-              lenPrevSeg = dist(p, prevP);
-              lenNextSeg = dist(p, nextP);
+              lenPrevSeg = Math.sqrt(dx0 * dx0 + dy0 * dy0);
+              lenNextSeg = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+              ratioNextSeg = lenNextSeg / (lenNextSeg + lenPrevSeg);
+              cpx1 = x - vx * smooth * (1 - ratioNextSeg);
+              cpy1 = y - vy * smooth * (1 - ratioNextSeg);
+              nextCpx0 = x + vx * smooth * ratioNextSeg;
+              nextCpy0 = y + vy * smooth * ratioNextSeg;
+              nextCpx0 = mathMin$5(nextCpx0, mathMax$5(nextX, x));
+              nextCpy0 = mathMin$5(nextCpy0, mathMax$5(nextY, y));
+              nextCpx0 = mathMax$5(nextCpx0, mathMin$5(nextX, x));
+              nextCpy0 = mathMax$5(nextCpy0, mathMin$5(nextY, y));
+              vx = nextCpx0 - x;
+              vy = nextCpy0 - y;
+              cpx1 = x - vx * lenPrevSeg / lenNextSeg;
+              cpy1 = y - vy * lenPrevSeg / lenNextSeg;
+              cpx1 = mathMin$5(cpx1, mathMax$5(prevX, x));
+              cpy1 = mathMin$5(cpy1, mathMax$5(prevY, y));
+              cpx1 = mathMax$5(cpx1, mathMin$5(prevX, x));
+              cpy1 = mathMax$5(cpy1, mathMin$5(prevY, y));
+              vx = x - cpx1;
+              vy = y - cpy1;
+              nextCpx0 = x + vx * lenNextSeg / lenPrevSeg;
+              nextCpy0 = y + vy * lenNextSeg / lenPrevSeg;
             }
-
-            ratioNextSeg = lenNextSeg / (lenNextSeg + lenPrevSeg);
-            scaleAndAdd$1(cp1, p, v, -smooth * (1 - ratioNextSeg));
           }
 
-          vec2Min(cp0, cp0, smoothMax);
-          vec2Max(cp0, cp0, smoothMin);
-          vec2Min(cp1, cp1, smoothMax);
-          vec2Max(cp1, cp1, smoothMin);
-          ctx.bezierCurveTo(cp0[0], cp0[1], cp1[0], cp1[1], p[0], p[1]);
-          scaleAndAdd$1(cp0, p, v, smooth * ratioNextSeg);
+          ctx.bezierCurveTo(cpx0, cpy0, cpx1, cpy1, x, y);
+          cpx0 = nextCpx0;
+          cpy0 = nextCpy0;
         } else {
-          ctx.lineTo(p[0], p[1]);
+          ctx.lineTo(x, y);
         }
       }
 
-      prevIdx = idx;
+      prevX = x;
+      prevY = y;
       idx += dir;
     }
 
     return k;
-  }
-
-  function getBoundingBox(points, smoothConstraint) {
-    var ptMin = [Infinity, Infinity];
-    var ptMax = [-Infinity, -Infinity];
-
-    if (smoothConstraint) {
-      for (var i = 0; i < points.length; i++) {
-        var pt = points[i];
-
-        if (pt[0] < ptMin[0]) {
-          ptMin[0] = pt[0];
-        }
-
-        if (pt[1] < ptMin[1]) {
-          ptMin[1] = pt[1];
-        }
-
-        if (pt[0] > ptMax[0]) {
-          ptMax[0] = pt[0];
-        }
-
-        if (pt[1] > ptMax[1]) {
-          ptMax[1] = pt[1];
-        }
-      }
-    }
-
-    return {
-      min: smoothConstraint ? ptMin : ptMax,
-      max: smoothConstraint ? ptMax : ptMin
-    };
   }
 
   var ECPolylineShape = function () {
     function ECPolylineShape() {
       this.smooth = 0;
       this.smoothConstraint = true;
-      this.connectNulls = false;
     }
 
     return ECPolylineShape;
@@ -33235,25 +34248,149 @@
     ECPolyline.prototype.buildPath = function (ctx, shape) {
       var points = shape.points;
       var i = 0;
-      var len = points.length;
-      var result = getBoundingBox(points, shape.smoothConstraint);
+      var len = points.length / 2;
 
       if (shape.connectNulls) {
         for (; len > 0; len--) {
-          if (!isPointNull(points[len - 1])) {
+          if (!isPointNull(points[len * 2 - 2], points[len * 2 - 1])) {
             break;
           }
         }
 
         for (; i < len; i++) {
-          if (!isPointNull(points[i])) {
+          if (!isPointNull(points[i * 2], points[i * 2 + 1])) {
             break;
           }
         }
       }
 
       while (i < len) {
-        i += drawSegment(ctx, points, i, len, len, 1, result.min, result.max, shape.smooth, shape.smoothMonotone, shape.connectNulls) + 1;
+        i += drawSegment(ctx, points, i, len, len, 1, shape.smooth, shape.smoothMonotone, shape.connectNulls) + 1;
+      }
+    };
+
+    ECPolyline.prototype.getLastIndexNotNull = function () {
+      var points = this.shape.points;
+      var len = points.length / 2;
+
+      for (; len > 0; len--) {
+        if (!isPointNull(points[len * 2 - 2], points[len * 2 - 1])) {
+          break;
+        }
+      }
+
+      return len - 1;
+    };
+
+    ECPolyline.prototype.getPointAtIndex = function (idx) {
+      var points = this.shape.points;
+      return [points[idx * 2], points[idx * 2 + 1]];
+    };
+
+    ECPolyline.prototype.getIndexRange = function (xOrY, dim) {
+      var points = this.shape.points;
+      var len = points.length / 2;
+      var dimIdx = dim === 'x' ? 0 : 1;
+      var a;
+      var b;
+      var prevIndex = 0;
+      var nextIndex = -1;
+
+      for (var i = 0; i < len; i++) {
+        b = points[i * 2 + dimIdx];
+
+        if (isNaN(b) || isNaN(points[i * 2 + 1 - dimIdx])) {
+          continue;
+        }
+
+        if (i === 0) {
+          a = b;
+          continue;
+        }
+
+        if (a <= xOrY && b >= xOrY || a >= xOrY && b <= xOrY) {
+          nextIndex = i;
+          break;
+        }
+
+        prevIndex = i;
+        a = b;
+      }
+
+      return {
+        range: [prevIndex, nextIndex],
+        t: (xOrY - a) / (b - a)
+      };
+    };
+
+    ECPolyline.prototype.getPointOn = function (xOrY, dim) {
+      if (!this.path) {
+        this.createPathProxy();
+        this.buildPath(this.path, this.shape);
+      }
+
+      var path = this.path;
+      var data = path.data;
+      var CMD = PathProxy.CMD;
+      var x0;
+      var y0;
+      var isDimX = dim === 'x';
+      var roots = [];
+
+      for (var i = 0; i < data.length;) {
+        var cmd = data[i++];
+        var x = void 0;
+        var y = void 0;
+        var x2 = void 0;
+        var y2 = void 0;
+        var x3 = void 0;
+        var y3 = void 0;
+        var t = void 0;
+
+        switch (cmd) {
+          case CMD.M:
+            x0 = data[i++];
+            y0 = data[i++];
+            break;
+
+          case CMD.L:
+            x = data[i++];
+            y = data[i++];
+            t = isDimX ? (xOrY - x0) / (x - x0) : (xOrY - y0) / (y - y0);
+
+            if (t <= 1 && t >= 0) {
+              var val = isDimX ? (y - y0) * t + y0 : (x - x0) * t + x0;
+              return isDimX ? [xOrY, val] : [val, xOrY];
+            }
+
+            x0 = x;
+            y0 = y;
+            break;
+
+          case CMD.C:
+            x = data[i++];
+            y = data[i++];
+            x2 = data[i++];
+            y2 = data[i++];
+            x3 = data[i++];
+            y3 = data[i++];
+            var nRoot = isDimX ? cubicRootAt(x0, x, x2, x3, xOrY, roots) : cubicRootAt(y0, y, y2, y3, xOrY, roots);
+
+            if (nRoot > 0) {
+              for (var i_1 = 0; i_1 < nRoot; i_1++) {
+                var t_1 = roots[i_1];
+
+                if (t_1 <= 1 && t_1 >= 0) {
+                  var val = isDimX ? cubicAt(y0, y, y2, y3, t_1) : cubicAt(x0, x, x2, x3, t_1);
+                  return isDimX ? [xOrY, val] : [val, xOrY];
+                }
+              }
+            }
+
+            x0 = x3;
+            y0 = y3;
+            break;
+        }
       }
     };
 
@@ -33288,28 +34425,26 @@
       var points = shape.points;
       var stackedOnPoints = shape.stackedOnPoints;
       var i = 0;
-      var len = points.length;
+      var len = points.length / 2;
       var smoothMonotone = shape.smoothMonotone;
-      var bbox = getBoundingBox(points, shape.smoothConstraint);
-      var stackedOnBBox = getBoundingBox(stackedOnPoints, shape.smoothConstraint);
 
       if (shape.connectNulls) {
         for (; len > 0; len--) {
-          if (!isPointNull(points[len - 1])) {
+          if (!isPointNull(points[len * 2 - 2], points[len * 2 - 1])) {
             break;
           }
         }
 
         for (; i < len; i++) {
-          if (!isPointNull(points[i])) {
+          if (!isPointNull(points[i * 2], points[i * 2 + 1])) {
             break;
           }
         }
       }
 
       while (i < len) {
-        var k = drawSegment(ctx, points, i, len, len, 1, bbox.min, bbox.max, shape.smooth, smoothMonotone, shape.connectNulls);
-        drawSegment(ctx, stackedOnPoints, i + k - 1, k, len, -1, stackedOnBBox.min, stackedOnBBox.max, shape.stackedOnSmooth, smoothMonotone, shape.connectNulls);
+        var k = drawSegment(ctx, points, i, len, len, 1, shape.smooth, smoothMonotone, shape.connectNulls);
+        drawSegment(ctx, stackedOnPoints, i + k - 1, k, len, -1, shape.stackedOnSmooth, smoothMonotone, shape.connectNulls);
         i += k + 1;
         ctx.closePath();
       }
@@ -33318,9 +34453,8 @@
     return ECPolygon;
   }(Path);
 
-  function createGridClipPath(cartesian, hasAnimation, seriesModel) {
+  function createGridClipPath(cartesian, hasAnimation, seriesModel, done, during) {
     var rect = cartesian.getArea();
-    var isHorizontal = cartesian.getBaseAxis().isHorizontal();
     var x = rect.x;
     var y = rect.y;
     var width = rect.width;
@@ -33342,13 +34476,35 @@
     });
 
     if (hasAnimation) {
-      clipPath.shape[isHorizontal ? 'width' : 'height'] = 0;
+      var baseAxis = cartesian.getBaseAxis();
+      var isHorizontal = baseAxis.isHorizontal();
+      var isAxisInversed = baseAxis.inverse;
+
+      if (isHorizontal) {
+        if (isAxisInversed) {
+          clipPath.shape.x += width;
+        }
+
+        clipPath.shape.width = 0;
+      } else {
+        if (!isAxisInversed) {
+          clipPath.shape.y += height;
+        }
+
+        clipPath.shape.height = 0;
+      }
+
+      var duringCb = typeof during === 'function' ? function (percent) {
+        during(percent, clipPath);
+      } : null;
       initProps(clipPath, {
         shape: {
           width: width,
-          height: height
+          height: height,
+          x: x,
+          y: y
         }
-      }, seriesModel);
+      }, seriesModel, null, done, duringCb);
     }
 
     return clipPath;
@@ -33356,12 +34512,14 @@
 
   function createPolarClipPath(polar, hasAnimation, seriesModel) {
     var sectorArea = polar.getArea();
+    var r0 = round$1(sectorArea.r0, 1);
+    var r = round$1(sectorArea.r, 1);
     var clipPath = new Sector({
       shape: {
         cx: round$1(polar.cx, 1),
         cy: round$1(polar.cy, 1),
-        r0: round$1(sectorArea.r0, 1),
-        r: round$1(sectorArea.r, 1),
+        r0: r0,
+        r: r,
         startAngle: sectorArea.startAngle,
         endAngle: sectorArea.endAngle,
         clockwise: sectorArea.clockwise
@@ -33369,10 +34527,18 @@
     });
 
     if (hasAnimation) {
-      clipPath.shape.endAngle = sectorArea.startAngle;
+      var isRadial = polar.getBaseAxis().dim === 'angle';
+
+      if (isRadial) {
+        clipPath.shape.endAngle = sectorArea.startAngle;
+      } else {
+        clipPath.shape.r = r0;
+      }
+
       initProps(clipPath, {
         shape: {
-          endAngle: sectorArea.endAngle
+          endAngle: sectorArea.endAngle,
+          r: r
         }
       }, seriesModel);
     }
@@ -33380,16 +34546,20 @@
     return clipPath;
   }
 
-  function createClipPath(coordSys, hasAnimation, seriesModel) {
+  function createClipPath(coordSys, hasAnimation, seriesModel, done, during) {
     if (!coordSys) {
       return null;
     } else if (coordSys.type === 'polar') {
       return createPolarClipPath(coordSys, hasAnimation, seriesModel);
     } else if (coordSys.type === 'cartesian2d') {
-      return createGridClipPath(coordSys, hasAnimation, seriesModel);
+      return createGridClipPath(coordSys, hasAnimation, seriesModel, done, during);
     }
 
     return null;
+  }
+
+  function isCoordinateSystemType(coordSys, type) {
+    return coordSys.type === type;
   }
 
   function isPointsSame(points1, points2) {
@@ -33398,10 +34568,7 @@
     }
 
     for (var i = 0; i < points1.length; i++) {
-      var p1 = points1[i];
-      var p2 = points2[i];
-
-      if (p1[0] !== p2[0] || p1[1] !== p2[1]) {
+      if (points1[i] !== points2[i]) {
         return;
       }
     }
@@ -33409,13 +34576,39 @@
     return true;
   }
 
+  function bboxFromPoints(points) {
+    var minX = Infinity;
+    var minY = Infinity;
+    var maxX = -Infinity;
+    var maxY = -Infinity;
+
+    for (var i = 0; i < points.length;) {
+      var x = points[i++];
+      var y = points[i++];
+
+      if (!isNaN(x)) {
+        minX = Math.min(x, minX);
+        maxX = Math.max(x, maxX);
+      }
+
+      if (!isNaN(y)) {
+        minY = Math.min(y, minY);
+        maxY = Math.max(y, maxY);
+      }
+    }
+
+    return [[minX, minY], [maxX, maxY]];
+  }
+
   function getBoundingDiff(points1, points2) {
-    var min1 = [];
-    var max1 = [];
-    var min2 = [];
-    var max2 = [];
-    fromPoints(points1, min1, max1);
-    fromPoints(points2, min2, max2);
+    var _a = bboxFromPoints(points1),
+        min1 = _a[0],
+        max1 = _a[1];
+
+    var _b = bboxFromPoints(points2),
+        min2 = _b[0],
+        max2 = _b[1];
+
     return Math.max(Math.abs(min1[0] - min2[0]), Math.abs(min1[1] - min2[1]), Math.abs(max1[0] - max2[0]), Math.abs(max1[1] - max2[1]));
   }
 
@@ -33428,10 +34621,13 @@
       return [];
     }
 
-    var points = [];
+    var len = data.count();
+    var points = createFloat32Array(len * 2);
 
-    for (var idx = 0, len = data.count(); idx < len; idx++) {
-      points.push(getStackedOnPoint(dataCoordInfo, coordSys, data, idx));
+    for (var idx = 0; idx < len; idx++) {
+      var pt = getStackedOnPoint(dataCoordInfo, coordSys, data, idx);
+      points[idx * 2] = pt[0];
+      points[idx * 2 + 1] = pt[1];
     }
 
     return points;
@@ -33442,18 +34638,22 @@
     var baseIndex = baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1;
     var stepPoints = [];
     var i = 0;
+    var stepPt = [];
+    var pt = [];
+    var nextPt = [];
 
-    for (; i < points.length - 1; i++) {
-      var nextPt = points[i + 1];
-      var pt = points[i];
-      stepPoints.push(pt);
-      var stepPt = [];
+    for (; i < points.length - 2; i += 2) {
+      nextPt[0] = points[i + 2];
+      nextPt[1] = points[i + 3];
+      pt[0] = points[i];
+      pt[1] = points[i + 1];
+      stepPoints.push(pt[0], pt[1]);
 
       switch (stepTurnAt) {
         case 'end':
           stepPt[baseIndex] = nextPt[baseIndex];
           stepPt[1 - baseIndex] = pt[1 - baseIndex];
-          stepPoints.push(stepPt);
+          stepPoints.push(stepPt[0], stepPt[1]);
           break;
 
         case 'middle':
@@ -33462,18 +34662,18 @@
           stepPt[baseIndex] = stepPt2[baseIndex] = middle;
           stepPt[1 - baseIndex] = pt[1 - baseIndex];
           stepPt2[1 - baseIndex] = nextPt[1 - baseIndex];
-          stepPoints.push(stepPt);
-          stepPoints.push(stepPt2);
+          stepPoints.push(stepPt[0], stepPt[1]);
+          stepPoints.push(stepPt2[0], stepPt[1]);
           break;
 
         default:
           stepPt[baseIndex] = pt[baseIndex];
           stepPt[1 - baseIndex] = nextPt[1 - baseIndex];
-          stepPoints.push(stepPt);
+          stepPoints.push(stepPt[0], stepPt[1]);
       }
     }
 
-    points[i] && stepPoints.push(points[i]);
+    stepPoints.push(points[i++], points[i++]);
     return stepPoints;
   }
 
@@ -33601,10 +34801,27 @@
     return true;
   }
 
-  function createLineClipPath(coordSys, hasAnimation, seriesModel) {
-    if (coordSys.type === 'cartesian2d') {
+  function createLineClipPath(lineView, coordSys, hasAnimation, seriesModel) {
+    if (isCoordinateSystemType(coordSys, 'cartesian2d')) {
+      var endLabelModel_1 = seriesModel.getModel('endLabel');
+      var showEndLabel = endLabelModel_1.get('show');
+      var valueAnimation_1 = endLabelModel_1.get('valueAnimation');
+      var data_1 = seriesModel.getData();
+      var labelAnimationRecord_1 = {
+        lastFrameIndex: 0
+      };
+      var during = showEndLabel ? function (percent, clipRect) {
+        lineView._endLabelOnDuring(percent, clipRect, data_1, labelAnimationRecord_1, valueAnimation_1, endLabelModel_1, coordSys);
+      } : null;
       var isHorizontal = coordSys.getBaseAxis().isHorizontal();
-      var clipPath = createGridClipPath(coordSys, hasAnimation, seriesModel);
+      var clipPath = createGridClipPath(coordSys, hasAnimation, seriesModel, function () {
+        if (lineView._endLabel && labelAnimationRecord_1.originalX != null) {
+          lineView._endLabel.attr({
+            x: labelAnimationRecord_1.originalX,
+            y: labelAnimationRecord_1.originalY
+          });
+        }
+      }, during);
 
       if (!seriesModel.get('clip', true)) {
         var rectShape = clipPath.shape;
@@ -33619,10 +34836,35 @@
         }
       }
 
+      if (during) {
+        during(1, clipPath);
+      }
+
       return clipPath;
     } else {
+      if (true) {
+        if (seriesModel.get(['endLabel', 'show'])) {
+          console.warn('endLabel is not supported for lines in polar systems.');
+        }
+      }
+
       return createPolarClipPath(coordSys, hasAnimation, seriesModel);
     }
+  }
+
+  function getEndLabelStateSpecified(endLabelModel, coordSys) {
+    var baseAxis = coordSys.getBaseAxis();
+    var isHorizontal = baseAxis.isHorizontal();
+    var isBaseInversed = baseAxis.inverse;
+    var align = isHorizontal ? isBaseInversed ? 'right' : 'left' : 'center';
+    var verticalAlign = isHorizontal ? 'middle' : isBaseInversed ? 'top' : 'bottom';
+    return {
+      normal: {
+        align: endLabelModel.get('align') || align,
+        verticalAlign: endLabelModel.get('verticalAlign') || verticalAlign,
+        padding: endLabelModel.get('distance') || 0
+      }
+    };
   }
 
   var LineView = function (_super) {
@@ -33648,7 +34890,7 @@
       var data = seriesModel.getData();
       var lineStyleModel = seriesModel.getModel('lineStyle');
       var areaStyleModel = seriesModel.getModel('areaStyle');
-      var points = data.mapArray(data.getItemLayout);
+      var points = data.getLayout('points') || [];
       var isCoordSysPolar = coordSys.type === 'polar';
       var prevCoordSys = this._coordSys;
       var symbolDraw = this._symbolDraw;
@@ -33659,7 +34901,7 @@
       var isAreaChart = !areaStyleModel.isEmpty();
       var valueOrigin = areaStyleModel.get('origin');
       var dataCoordInfo = prepareDataCoordInfo(coordSys, data, valueOrigin);
-      var stackedOnPoints = getStackedOnPoints(coordSys, data, dataCoordInfo);
+      var stackedOnPoints = isAreaChart && getStackedOnPoints(coordSys, data, dataCoordInfo);
       var showSymbol = seriesModel.get('showSymbol');
       var isIgnoreFunc = showSymbol && !isCoordSysPolar && getIsIgnoreFunc(seriesModel, data, coordSys);
       var oldData = this._data;
@@ -33697,12 +34939,21 @@
       if (!(polyline && prevCoordSys.type === coordSys.type && step === this._step)) {
         showSymbol && symbolDraw.updateData(data, {
           isIgnore: isIgnoreFunc,
-          clipShape: clipShapeForSymbol
+          clipShape: clipShapeForSymbol,
+          disableAnimation: true,
+          getSymbolPoint: function (idx) {
+            return [points[idx * 2], points[idx * 2 + 1]];
+          }
         });
+
+        this._initSymbolLabelAnimation(data, coordSys, clipShapeForSymbol);
 
         if (step) {
           points = turnPointsIntoStep(points, coordSys, step);
-          stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+
+          if (stackedOnPoints) {
+            stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+          }
         }
 
         polyline = this._newPolyline(points);
@@ -33711,7 +34962,11 @@
           polygon = this._newPolygon(points, stackedOnPoints);
         }
 
-        lineGroup.setClipPath(createLineClipPath(coordSys, true, seriesModel));
+        if (!isCoordSysPolar) {
+          this._initOrUpdateEndLabel(seriesModel, coordSys);
+        }
+
+        lineGroup.setClipPath(createLineClipPath(this, coordSys, true, seriesModel));
       } else {
         if (isAreaChart && !polygon) {
           polygon = this._newPolygon(points, stackedOnPoints);
@@ -33720,22 +34975,30 @@
           polygon = this._polygon = null;
         }
 
-        lineGroup.setClipPath(createLineClipPath(coordSys, false, seriesModel));
+        if (!isCoordSysPolar) {
+          this._initOrUpdateEndLabel(seriesModel, coordSys);
+        }
+
+        lineGroup.setClipPath(createLineClipPath(this, coordSys, false, seriesModel));
         showSymbol && symbolDraw.updateData(data, {
           isIgnore: isIgnoreFunc,
-          clipShape: clipShapeForSymbol
-        });
-        data.eachItemGraphicEl(function (el) {
-          el && el.stopAnimation(null, true);
+          clipShape: clipShapeForSymbol,
+          disableAnimation: true,
+          getSymbolPoint: function (idx) {
+            return [points[idx * 2], points[idx * 2 + 1]];
+          }
         });
 
         if (!isPointsSame(this._stackedOnPoints, stackedOnPoints) || !isPointsSame(this._points, points)) {
           if (hasAnimation) {
-            this._updateAnimation(data, stackedOnPoints, coordSys, api, step, valueOrigin);
+            this._doUpdateAnimation(data, stackedOnPoints, coordSys, api, step, valueOrigin);
           } else {
             if (step) {
               points = turnPointsIntoStep(points, coordSys, step);
-              stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+
+              if (stackedOnPoints) {
+                stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+              }
             }
 
             polyline.setShape({
@@ -33768,10 +35031,12 @@
       getECData(polyline).seriesIndex = seriesModel.seriesIndex;
       enableHoverEmphasis(polyline, focus, blurScope);
       var smooth = getSmooth(seriesModel.get('smooth'));
+      var smoothMonotone = seriesModel.get('smoothMonotone');
+      var connectNulls = seriesModel.get('connectNulls');
       polyline.setShape({
         smooth: smooth,
-        smoothMonotone: seriesModel.get('smoothMonotone'),
-        connectNulls: seriesModel.get('connectNulls')
+        smoothMonotone: smoothMonotone,
+        connectNulls: connectNulls
       });
 
       if (polygon) {
@@ -33790,8 +35055,8 @@
         polygon.setShape({
           smooth: smooth,
           stackedOnSmooth: stackedOnSmooth,
-          smoothMonotone: seriesModel.get('smoothMonotone'),
-          connectNulls: seriesModel.get('connectNulls')
+          smoothMonotone: smoothMonotone,
+          connectNulls: connectNulls
         });
         setStatesStylesFromModel(polygon, seriesModel, 'areaStyle');
         getECData(polygon).seriesIndex = seriesModel.seriesIndex;
@@ -33805,6 +35070,7 @@
       data.eachItemGraphicEl(function (el) {
         el && (el.onHoverStateChange = changePolyState);
       });
+      this._polyline.onHoverStateChange = changePolyState;
       this._data = data;
       this._coordSys = coordSys;
       this._stackedOnPoints = stackedOnPoints;
@@ -33822,23 +35088,25 @@
       this._changePolyState('emphasis');
 
       if (!(dataIndex instanceof Array) && dataIndex != null && dataIndex >= 0) {
+        var points = data.getLayout('points');
         var symbol = data.getItemGraphicEl(dataIndex);
 
         if (!symbol) {
-          var pt = data.getItemLayout(dataIndex);
+          var x = points[dataIndex * 2];
+          var y = points[dataIndex * 2 + 1];
 
-          if (!pt) {
+          if (isNaN(x) || isNaN(y)) {
             return;
           }
 
-          if (this._clipShapeForSymbol && !this._clipShapeForSymbol.contain(pt[0], pt[1])) {
+          if (this._clipShapeForSymbol && !this._clipShapeForSymbol.contain(x, y)) {
             return;
           }
 
           symbol = new Symbol(data, dataIndex);
-          symbol.setPosition(pt);
+          symbol.x = x;
+          symbol.y = y;
           symbol.setZ(seriesModel.get('zlevel'), seriesModel.get('z'));
-          symbol.ignore = isNaN(pt[0]) || isNaN(pt[1]);
           symbol.__temp = true;
           data.setItemGraphicEl(dataIndex, symbol);
           symbol.stopSymbolAnimation(true);
@@ -33921,7 +35189,195 @@
       return polygon;
     };
 
-    LineView.prototype._updateAnimation = function (data, stackedOnPoints, coordSys, api, step, valueOrigin) {
+    LineView.prototype._initSymbolLabelAnimation = function (data, coordSys, clipShape) {
+      var isHorizontalOrRadial;
+      var isCoordSysPolar;
+      var baseAxis = coordSys.getBaseAxis();
+      var isAxisInverse = baseAxis.inverse;
+
+      if (coordSys.type === 'cartesian2d') {
+        isHorizontalOrRadial = baseAxis.isHorizontal();
+        isCoordSysPolar = false;
+      } else if (coordSys.type === 'polar') {
+        isHorizontalOrRadial = baseAxis.dim === 'angle';
+        isCoordSysPolar = true;
+      }
+
+      var seriesModel = data.hostModel;
+      var seriesDuration = seriesModel.get('animationDuration');
+
+      if (typeof seriesDuration === 'function') {
+        seriesDuration = seriesDuration(null);
+      }
+
+      var seriesDalay = seriesModel.get('animationDelay') || 0;
+      var seriesDalayValue = typeof seriesDalay === 'function' ? seriesDalay(null) : seriesDalay;
+      data.eachItemGraphicEl(function (symbol, idx) {
+        var el = symbol;
+
+        if (el) {
+          var point = [symbol.x, symbol.y];
+          var start = void 0;
+          var end = void 0;
+          var current = void 0;
+
+          if (isCoordSysPolar) {
+            var polarClip = clipShape;
+            var coord = coordSys.pointToCoord(point);
+
+            if (isHorizontalOrRadial) {
+              start = polarClip.startAngle;
+              end = polarClip.endAngle;
+              current = -coord[1] / 180 * Math.PI;
+            } else {
+              start = polarClip.r0;
+              end = polarClip.r;
+              current = coord[0];
+            }
+          } else {
+            var gridClip = clipShape;
+
+            if (isHorizontalOrRadial) {
+              start = gridClip.x;
+              end = gridClip.x + gridClip.width;
+              current = symbol.x;
+            } else {
+              start = gridClip.y + gridClip.height;
+              end = gridClip.y;
+              current = symbol.y;
+            }
+          }
+
+          var ratio = end === start ? 0 : (current - start) / (end - start);
+
+          if (isAxisInverse) {
+            ratio = 1 - ratio;
+          }
+
+          var delay = typeof seriesDalay === 'function' ? seriesDalay(idx) : seriesDuration * ratio + seriesDalayValue;
+          el.animateFrom({
+            scaleX: 0,
+            scaleY: 0
+          }, {
+            duration: 200,
+            delay: delay
+          });
+          var symbolPath = el.getSymbolPath();
+          var text = symbolPath.getTextContent();
+
+          if (text) {
+            text.animateFrom({
+              style: {
+                opacity: 0
+              }
+            }, {
+              duration: 300,
+              delay: delay
+            });
+          }
+
+          symbolPath.disableLabelAnimation = true;
+        }
+      });
+    };
+
+    LineView.prototype._initOrUpdateEndLabel = function (seriesModel, coordSys) {
+      var endLabelModel = seriesModel.getModel('endLabel');
+
+      if (endLabelModel.get('show')) {
+        var data_2 = seriesModel.getData();
+        var polyline = this._polyline;
+        var endLabel = this._endLabel;
+
+        if (!endLabel) {
+          endLabel = this._endLabel = new ZRText({
+            z2: 200
+          });
+          endLabel.ignoreClip = true;
+          polyline.setTextContent(this._endLabel);
+          polyline.disableLabelAnimation = true;
+        }
+
+        var dataIndex = this._polyline.getLastIndexNotNull();
+
+        if (dataIndex >= 0) {
+          setLabelStyle(endLabel, getLabelStatesModels(seriesModel, 'endLabel'), {
+            labelFetcher: seriesModel,
+            labelDataIndex: dataIndex,
+            defaultText: function (dataIndex, opt, overrideValue) {
+              return overrideValue ? getDefaultInterpolatedLabel(data_2, overrideValue) : getDefaultLabel(data_2, dataIndex);
+            },
+            enableTextSetter: true
+          }, getEndLabelStateSpecified(endLabelModel, coordSys));
+        }
+      } else if (this._endLabel) {
+        this._polyline.removeTextContent();
+
+        this._endLabel = null;
+      }
+    };
+
+    LineView.prototype._endLabelOnDuring = function (percent, clipRect, data, animationRecord, valueAnimation, endLabelModel, coordSys) {
+      var endLabel = this._endLabel;
+      var polyline = this._polyline;
+
+      if (endLabel) {
+        if (percent < 1 && animationRecord.originalX == null) {
+          animationRecord.originalX = endLabel.x;
+          animationRecord.originalY = endLabel.y;
+        }
+
+        var seriesModel = data.hostModel;
+        var connectNulls = seriesModel.get('connectNulls');
+        var precision = endLabelModel.get('precision');
+        var baseAxis = coordSys.getBaseAxis();
+        var isHorizontal = baseAxis.isHorizontal();
+        var isBaseInversed = baseAxis.inverse;
+        var clipShape = clipRect.shape;
+        var xOrY = isBaseInversed ? isHorizontal ? clipShape.x : clipShape.y + clipShape.height : isHorizontal ? clipShape.x + clipShape.width : clipShape.y;
+        var dim = isHorizontal ? 'x' : 'y';
+        var dataIndexRange = polyline.getIndexRange(xOrY, dim);
+        var indices = dataIndexRange.range;
+        var diff = indices[1] - indices[0];
+        var value = void 0;
+
+        if (diff >= 1) {
+          if (diff > 1 && !connectNulls) {
+            var pt = polyline.getPointAtIndex(indices[0]);
+            endLabel.attr({
+              x: pt[0],
+              y: pt[1]
+            });
+            valueAnimation && (value = seriesModel.getRawValue(indices[0]));
+          } else {
+            var pt = polyline.getPointOn(xOrY, dim);
+            pt && endLabel.attr({
+              x: pt[0],
+              y: pt[1]
+            });
+            var startValue = seriesModel.getRawValue(indices[0]);
+            var endValue = seriesModel.getRawValue(indices[1]);
+            valueAnimation && (value = interpolateRawValues(data, precision, startValue, endValue, dataIndexRange.t));
+          }
+
+          animationRecord.lastFrameIndex = indices[0];
+        } else {
+          var idx = percent === 1 || animationRecord.lastFrameIndex > 0 ? indices[0] : 0;
+          var pt = polyline.getPointAtIndex(idx);
+          valueAnimation && (value = seriesModel.getRawValue(idx));
+          endLabel.attr({
+            x: pt[0],
+            y: pt[1]
+          });
+        }
+
+        if (valueAnimation) {
+          labelInner(endLabel).setLabelText(value);
+        }
+      }
+    };
+
+    LineView.prototype._doUpdateAnimation = function (data, stackedOnPoints, coordSys, api, step, valueOrigin) {
       var polyline = this._polyline;
       var polygon = this._polygon;
       var seriesModel = data.hostModel;
@@ -33955,12 +35411,18 @@
 
       polyline.shape.__points = diff.current;
       polyline.shape.points = current;
-      polyline.stopAnimation();
-      updateProps(polyline, {
+      var target = {
         shape: {
           points: next
         }
-      }, seriesModel);
+      };
+
+      if (diff.current !== current) {
+        target.shape.__points = diff.next;
+      }
+
+      polyline.stopAnimation();
+      updateProps(polyline, target, seriesModel);
 
       if (polygon) {
         polygon.setShape({
@@ -33999,9 +35461,14 @@
 
       if (polyline.animators && polyline.animators.length) {
         polyline.animators[0].during(function () {
+          polygon && polygon.dirtyShape();
+          var points = polyline.shape.__points;
+
           for (var i = 0; i < updatedDataInfo.length; i++) {
             var el = updatedDataInfo[i].el;
-            el.setPosition(polyline.shape.__points[updatedDataInfo[i].ptIdx]);
+            var offset = updatedDataInfo[i].ptIdx * 2;
+            el.x = points[offset];
+            el.y = points[offset + 1];
             el.markRedraw();
           }
         });
@@ -34022,7 +35489,7 @@
           oldData.setItemGraphicEl(idx, null);
         }
       });
-      this._polyline = this._polygon = this._coordSys = this._points = this._stackedOnPoints = this._data = null;
+      this._polyline = this._polygon = this._coordSys = this._points = this._stackedOnPoints = this._endLabel = this._data = null;
     };
 
     LineView.type = 'line';
@@ -34031,7 +35498,7 @@
 
   ChartView.registerClass(LineView);
 
-  function layoutPoints(seriesType) {
+  function layoutPoints(seriesType, forceStoreInTypedArray) {
     return {
       seriesType: seriesType,
       plan: createRenderPlanner(),
@@ -34039,7 +35506,7 @@
         var data = seriesModel.getData();
         var coordSys = seriesModel.coordinateSystem;
         var pipelineContext = seriesModel.pipelineContext;
-        var isLargeRender = pipelineContext.large;
+        var useTypedArray = forceStoreInTypedArray || pipelineContext.large;
 
         if (!coordSys) {
           return;
@@ -34059,10 +35526,14 @@
           dims[1] = stackResultDim;
         }
 
+        var dimInfo0 = data.getDimensionInfo(dims[0]);
+        var dimInfo1 = data.getDimensionInfo(dims[1]);
+        var dimIdx0 = dimInfo0 && dimInfo0.index;
+        var dimIdx1 = dimInfo1 && dimInfo1.index;
         return dimLen && {
           progress: function (params, data) {
             var segCount = params.end - params.start;
-            var points = isLargeRender && new Float32Array(segCount * dimLen);
+            var points = useTypedArray && createFloat32Array(segCount * dimLen);
             var tmpIn = [];
             var tmpOut = [];
 
@@ -34070,23 +35541,23 @@
               var point = void 0;
 
               if (dimLen === 1) {
-                var x = data.get(dims[0], i);
-                point = !isNaN(x) && coordSys.dataToPoint(x, null, tmpOut);
+                var x = data.getByDimIdx(dimIdx0, i);
+                point = coordSys.dataToPoint(x, null, tmpOut);
               } else {
-                var x = tmpIn[0] = data.get(dims[0], i);
-                var y = tmpIn[1] = data.get(dims[1], i);
-                point = !isNaN(x) && !isNaN(y) && coordSys.dataToPoint(tmpIn, null, tmpOut);
+                tmpIn[0] = data.getByDimIdx(dimIdx0, i);
+                tmpIn[1] = data.getByDimIdx(dimIdx1, i);
+                point = coordSys.dataToPoint(tmpIn, null, tmpOut);
               }
 
-              if (isLargeRender) {
-                points[offset++] = point ? point[0] : NaN;
-                points[offset++] = point ? point[1] : NaN;
+              if (useTypedArray) {
+                points[offset++] = point[0];
+                points[offset++] = point[1];
               } else {
-                data.setItemLayout(i, point && point.slice() || [NaN, NaN]);
+                data.setItemLayout(i, point.slice());
               }
             }
 
-            isLargeRender && data.setLayout('symbolPoints', points);
+            useTypedArray && data.setLayout('points', points);
           }
         };
       }
@@ -34150,15 +35621,21 @@
         var data = seriesModel.getData();
         var sampling = seriesModel.get('sampling');
         var coordSys = seriesModel.coordinateSystem;
+        var count = data.count();
 
-        if (coordSys.type === 'cartesian2d' && sampling) {
+        if (count > 10 && coordSys.type === 'cartesian2d' && sampling) {
           var baseAxis = coordSys.getBaseAxis();
           var valueAxis = coordSys.getOtherAxis(baseAxis);
           var extent = baseAxis.getExtent();
-          var size = extent[1] - extent[0];
-          var rate = Math.round(data.count() / size);
+          var dpr = api.getDevicePixelRatio();
+          var size = Math.abs(extent[1] - extent[0]) * (dpr || 1);
+          var rate = Math.round(count / size);
 
           if (rate > 1) {
+            if (sampling === 'lttb') {
+              seriesModel.setData(data.lttbDownSample(data.mapDimension(valueAxis.dim), 1 / rate));
+            }
+
             var sampler = void 0;
 
             if (typeof sampling === 'string') {
@@ -34404,7 +35881,7 @@
   };
   axisModelCreator('x', CartesianAxisModel, extraOption);
   axisModelCreator('y', CartesianAxisModel, extraOption);
-  var PI$5 = Math.PI;
+  var PI$6 = Math.PI;
 
   var AxisBuilder = function () {
     function AxisBuilder(axisModel, opt) {
@@ -34450,13 +35927,13 @@
       if (isRadianAroundZero(rotationDiff)) {
         textVerticalAlign = direction > 0 ? 'top' : 'bottom';
         textAlign = 'center';
-      } else if (isRadianAroundZero(rotationDiff - PI$5)) {
+      } else if (isRadianAroundZero(rotationDiff - PI$6)) {
         textVerticalAlign = direction > 0 ? 'bottom' : 'top';
         textAlign = 'center';
       } else {
         textVerticalAlign = 'middle';
 
-        if (rotationDiff > 0 && rotationDiff < PI$5) {
+        if (rotationDiff > 0 && rotationDiff < PI$6) {
           textAlign = direction > 0 ? 'right' : 'left';
         } else {
           textAlign = direction > 0 ? 'left' : 'right';
@@ -34594,7 +36071,7 @@
       var nameRotation = axisModel.get('nameRotate');
 
       if (nameRotation != null) {
-        nameRotation = nameRotation * PI$5 / 180;
+        nameRotation = nameRotation * PI$6 / 180;
       }
 
       var axisNameAvailableWidth;
@@ -34671,16 +36148,16 @@
     var inverse = extent[0] > extent[1];
     var onLeft = textPosition === 'start' && !inverse || textPosition !== 'start' && inverse;
 
-    if (isRadianAroundZero(rotationDiff - PI$5 / 2)) {
+    if (isRadianAroundZero(rotationDiff - PI$6 / 2)) {
       textVerticalAlign = onLeft ? 'bottom' : 'top';
       textAlign = 'center';
-    } else if (isRadianAroundZero(rotationDiff - PI$5 * 1.5)) {
+    } else if (isRadianAroundZero(rotationDiff - PI$6 * 1.5)) {
       textVerticalAlign = onLeft ? 'top' : 'bottom';
       textAlign = 'center';
     } else {
       textVerticalAlign = 'middle';
 
-      if (rotationDiff < PI$5 * 1.5 && rotationDiff > PI$5 / 2) {
+      if (rotationDiff < PI$6 * 1.5 && rotationDiff > PI$6 / 2) {
         textAlign = onLeft ? 'left' : 'right';
       } else {
         textAlign = onLeft ? 'right' : 'left';
@@ -34866,7 +36343,7 @@
     var labelModel = axisModel.getModel('axisLabel');
     var labelMargin = labelModel.get('margin');
     var labels = axis.getViewLabels();
-    var labelRotation = (retrieve(opt.labelRotate, labelModel.get('rotate')) || 0) * PI$5 / 180;
+    var labelRotation = (retrieve(opt.labelRotate, labelModel.get('rotate')) || 0) * PI$6 / 180;
     var labelLayout = AxisBuilder.innerTextLayout(opt.rotation, labelRotation, opt.labelDirection);
     var rawCategoryData = axisModel.getCategories && axisModel.getCategories(true);
     var labelEls = [];
@@ -35809,7 +37286,7 @@
       option.grid = {};
     }
   });
-  registerLayout(layoutPoints('line'));
+  registerLayout(layoutPoints('line', true));
   registerProcessor(PRIORITY.PROCESSOR.STATISTIC, dataSample('line'));
 
   var Cartesian = function () {
@@ -35849,6 +37326,10 @@
 
   var cartesian2DDimensions = ['x', 'y'];
 
+  function canCalculateAffineTransform(scale) {
+    return scale.type === 'interval' || scale.type === 'time';
+  }
+
   var Cartesian2D = function (_super) {
     __extends(Cartesian2D, _super);
 
@@ -35859,6 +37340,34 @@
       _this.dimensions = cartesian2DDimensions;
       return _this;
     }
+
+    Cartesian2D.prototype.calcAffineTransform = function () {
+      this._transform = this._invTransform = null;
+      var xAxisScale = this.getAxis('x').scale;
+      var yAxisScale = this.getAxis('y').scale;
+
+      if (!canCalculateAffineTransform(xAxisScale) || !canCalculateAffineTransform(yAxisScale)) {
+        return;
+      }
+
+      var xScaleExtent = xAxisScale.getExtent();
+      var yScaleExtent = yAxisScale.getExtent();
+      var start = this.dataToPoint([xScaleExtent[0], yScaleExtent[0]]);
+      var end = this.dataToPoint([xScaleExtent[1], yScaleExtent[1]]);
+      var xScaleSpan = xScaleExtent[1] - xScaleExtent[0];
+      var yScaleSpan = yScaleExtent[1] - yScaleExtent[0];
+
+      if (!xScaleSpan || !yScaleSpan) {
+        return;
+      }
+
+      var scaleX = (end[0] - start[0]) / xScaleSpan;
+      var scaleY = (end[1] - start[1]) / yScaleSpan;
+      var translateX = start[0] - xScaleExtent[0] * scaleX;
+      var translateY = start[1] - yScaleExtent[0] * scaleY;
+      var m = this._transform = [scaleX, 0, 0, scaleY, translateX, translateY];
+      this._invTransform = invert([], m);
+    };
 
     Cartesian2D.prototype.getBaseAxis = function () {
       return this.getAxesByScale('ordinal')[0] || this.getAxesByScale('time')[0] || this.getAxis('x');
@@ -35875,9 +37384,14 @@
     };
 
     Cartesian2D.prototype.dataToPoint = function (data, reserved, out) {
+      out = out || [];
+
+      if (this._transform && !isNaN(data[0]) && !isNaN(data[1])) {
+        return applyTransform(out, data, this._transform);
+      }
+
       var xAxis = this.getAxis('x');
       var yAxis = this.getAxis('y');
-      out = out || [];
       out[0] = xAxis.toGlobalCoord(xAxis.dataToCoord(data[0]));
       out[1] = yAxis.toGlobalCoord(yAxis.dataToCoord(data[1]));
       return out;
@@ -35897,9 +37411,14 @@
     };
 
     Cartesian2D.prototype.pointToData = function (point, out) {
+      out = out || [];
+
+      if (this._invTransform) {
+        return applyTransform(out, point, this._invTransform);
+      }
+
       var xAxis = this.getAxis('x');
       var yAxis = this.getAxis('y');
-      out = out || [];
       out[0] = xAxis.coordToData(xAxis.toLocalCoord(point[0]));
       out[1] = yAxis.coordToData(yAxis.toLocalCoord(point[1]));
       return out;
@@ -36032,6 +37551,10 @@
         });
         adjustAxes();
       }
+
+      each(this._coordsList, function (coord) {
+        coord.calcAffineTransform();
+      });
 
       function adjustAxes() {
         each(axesList, function (axis) {
@@ -36536,21 +38059,16 @@
     return SausagePath;
   }(Path);
 
-  function isCoordinateSystemType(coordSys, type) {
-    return coordSys.type === type;
-  }
-
   var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'];
   var BAR_BORDER_RADIUS_QUERY = ['itemStyle', 'borderRadius'];
   var _eventPos = [0, 0];
-  var mathMax$4 = Math.max;
-  var mathMin$4 = Math.min;
+  var mathMax$6 = Math.max;
+  var mathMin$6 = Math.min;
 
   function getClipArea(coord, data) {
-    var coordSysClipArea;
+    var coordSysClipArea = coord.getArea && coord.getArea();
 
     if (isCoordinateSystemType(coord, 'cartesian2d')) {
-      coordSysClipArea = coord.getArea && coord.getArea();
       var baseAxis = coord.getBaseAxis();
 
       if (baseAxis.type !== 'category' || !baseAxis.onBand) {
@@ -36587,10 +38105,9 @@
       this._updateDrawMode(seriesModel);
 
       var coordinateSystemType = seriesModel.get('coordinateSystem');
-      var isReorder = payload && payload.type === 'changeAxisOrder';
 
       if (coordinateSystemType === 'cartesian2d' || coordinateSystemType === 'polar') {
-        this._isLargeDraw ? this._renderLarge(seriesModel, ecModel, api) : this._renderNormal(seriesModel, ecModel, api, isReorder);
+        this._isLargeDraw ? this._renderLarge(seriesModel, ecModel, api) : this._renderNormal(seriesModel, ecModel, api, payload);
       } else if (true) {
         console.warn('Only cartesian2d and polar supported for bar.');
       }
@@ -36618,7 +38135,7 @@
       }
     };
 
-    BarView.prototype._renderNormal = function (seriesModel, ecModel, api, isReorder) {
+    BarView.prototype._renderNormal = function (seriesModel, ecModel, api, payload) {
       var _this = this;
 
       var group = this.group;
@@ -36673,20 +38190,32 @@
       var barBorderRadius = backgroundModel.get('borderRadius') || 0;
       var bgEls = [];
       var oldBgEls = this._backgroundEls;
+      var isInitSort = payload && payload.isInitSort;
+      var isChangeOrder = payload && payload.type === 'changeAxisOrder';
+
+      var defaultTextGetter = function (values) {
+        return getDefaultInterpolatedLabel(seriesModel.getData(), values);
+      };
+
+      function createBackground(dataIndex) {
+        var bgLayout = getLayout[coord.type](data, dataIndex);
+        var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
+        bgEl.useStyle(backgroundModel.getItemStyle());
+
+        if (coord.type === 'cartesian2d') {
+          bgEl.setShape('r', barBorderRadius);
+        }
+
+        bgEls[dataIndex] = bgEl;
+        return bgEl;
+      }
+
       data.diff(oldData).add(function (dataIndex) {
         var itemModel = data.getItemModel(dataIndex);
         var layout = getLayout[coord.type](data, dataIndex, itemModel);
 
         if (drawBackground) {
-          var bgLayout = getLayout[coord.type](data, dataIndex);
-          var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
-          bgEl.useStyle(backgroundModel.getItemStyle());
-
-          if (coord.type === 'cartesian2d') {
-            bgEl.setShape('r', barBorderRadius);
-          }
-
-          bgEls[dataIndex] = bgEl;
+          createBackground(dataIndex);
         }
 
         if (!data.hasValue(dataIndex)) {
@@ -36701,11 +38230,16 @@
 
         var el = elementCreator[coord.type](seriesModel, data, dataIndex, layout, isHorizontalOrRadial, animationModel, baseAxis.model, false, roundCap);
         updateStyle(el, data, dataIndex, itemModel, layout, seriesModel, isHorizontalOrRadial, coord.type === 'polar');
+        initLabel(el, data, dataIndex, itemModel.getModel('label'), seriesModel, animationModel, defaultTextGetter);
 
-        if (realtimeSort) {
+        if (isInitSort) {
+          el.attr({
+            shape: layout
+          });
+        } else if (realtimeSort) {
           el.disableLabelAnimation = true;
-          updateRealtimeAnimation(seriesModel, axis2DModel, animationModel, el, layout, data, dataIndex, isHorizontalOrRadial, false);
-        } else if (coord.type === 'cartesian2d') {
+          updateRealtimeAnimation(seriesModel, axis2DModel, animationModel, el, layout, dataIndex, isHorizontalOrRadial, false, false);
+        } else {
           initProps(el, {
             shape: layout
           }, seriesModel, dataIndex);
@@ -36719,14 +38253,21 @@
         var layout = getLayout[coord.type](data, newIndex, itemModel);
 
         if (drawBackground) {
-          var bgEl = oldBgEls[oldIndex];
-          bgEl.useStyle(backgroundModel.getItemStyle());
+          var bgEl = void 0;
 
-          if (coord.type === 'cartesian2d') {
-            bgEl.setShape('r', barBorderRadius);
+          if (oldBgEls.length === 0) {
+            bgEl = createBackground(oldIndex);
+          } else {
+            bgEl = oldBgEls[oldIndex];
+            bgEl.useStyle(backgroundModel.getItemStyle());
+
+            if (coord.type === 'cartesian2d') {
+              bgEl.setShape('r', barBorderRadius);
+            }
+
+            bgEls[newIndex] = bgEl;
           }
 
-          bgEls[newIndex] = bgEl;
           var bgLayout = getLayout[coord.type](data, newIndex);
           var shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
           updateProps(bgEl, {
@@ -36739,6 +38280,7 @@
         if (!data.hasValue(newIndex)) {
           group.remove(el);
           el = null;
+          return;
         }
 
         var isClipped = false;
@@ -36755,11 +38297,18 @@
           el = elementCreator[coord.type](seriesModel, data, newIndex, layout, isHorizontalOrRadial, animationModel, baseAxis.model, !!el, roundCap);
         }
 
-        updateStyle(el, data, newIndex, itemModel, layout, seriesModel, isHorizontalOrRadial, coord.type === 'polar');
+        if (!isChangeOrder) {
+          updateStyle(el, data, newIndex, itemModel, layout, seriesModel, isHorizontalOrRadial, coord.type === 'polar');
+          updateLabel(el, data, newIndex, itemModel.getModel('label'), seriesModel, animationModel, defaultTextGetter);
+        }
 
-        if (realtimeSort) {
+        if (isInitSort) {
+          el.attr({
+            shape: layout
+          });
+        } else if (realtimeSort) {
           el.disableLabelAnimation = true;
-          updateRealtimeAnimation(seriesModel, axis2DModel, animationModel, el, layout, data, newIndex, isHorizontalOrRadial, true);
+          updateRealtimeAnimation(seriesModel, axis2DModel, animationModel, el, layout, newIndex, isHorizontalOrRadial, true, isChangeOrder);
         } else {
           updateProps(el, {
             shape: layout
@@ -36886,6 +38435,7 @@
       var action = {
         type: 'changeAxisOrder',
         componentType: baseAxis.dim + 'Axis',
+        isInitSort: true,
         axisId: baseAxis.index,
         sortInfo: this._dataSort(data, function (idx) {
           return parseFloat(data.get(isHorizontal ? 'y' : 'x', idx)) || 0;
@@ -36954,10 +38504,10 @@
         layout.height = -layout.height;
       }
 
-      var x = mathMax$4(layout.x, coordSysBoundingRect.x);
-      var x2 = mathMin$4(layout.x + layout.width, coordSysBoundingRect.x + coordSysBoundingRect.width);
-      var y = mathMax$4(layout.y, coordSysBoundingRect.y);
-      var y2 = mathMin$4(layout.y + layout.height, coordSysBoundingRect.y + coordSysBoundingRect.height);
+      var x = mathMax$6(layout.x, coordSysBoundingRect.x);
+      var x2 = mathMin$6(layout.x + layout.width, coordSysBoundingRect.x + coordSysBoundingRect.width);
+      var y = mathMax$6(layout.y, coordSysBoundingRect.y);
+      var y2 = mathMin$6(layout.y + layout.height, coordSysBoundingRect.y + coordSysBoundingRect.height);
       layout.x = x;
       layout.y = y;
       layout.width = x2 - x;
@@ -36976,8 +38526,28 @@
 
       return clipped;
     },
-    polar: function () {
-      return false;
+    polar: function (coordSysClipArea, layout) {
+      var signR = layout.r0 <= layout.r ? 1 : -1;
+
+      if (signR < 0) {
+        var tmp = layout.r;
+        layout.r = layout.r0;
+        layout.r0 = tmp;
+      }
+
+      var r = mathMin$6(layout.r, coordSysClipArea.r);
+      var r0 = mathMax$6(layout.r0, coordSysClipArea.r0);
+      layout.r = r;
+      layout.r0 = r0;
+      var clipped = r - r0 < 0;
+
+      if (signR < 0) {
+        var tmp = layout.r;
+        layout.r = layout.r0;
+        layout.r0 = tmp;
+      }
+
+      return clipped;
     }
   };
   var elementCreator = {
@@ -37023,7 +38593,7 @@
     }
   };
 
-  function updateRealtimeAnimation(seriesModel, axisModel, animationModel, el, layout, data, newIndex, isHorizontal, isUpdate) {
+  function updateRealtimeAnimation(seriesModel, axisModel, animationModel, el, layout, newIndex, isHorizontal, isUpdate, isChangeOrder) {
     if (animationModel || axisModel) {
       var seriesTarget = void 0;
       var axisTarget = void 0;
@@ -37048,19 +38618,15 @@
         };
       }
 
-      (isUpdate ? updateProps : initProps)(el, {
-        shape: seriesTarget
-      }, seriesModel, newIndex, null);
+      if (!isChangeOrder) {
+        (isUpdate ? updateProps : initProps)(el, {
+          shape: seriesTarget
+        }, seriesModel, newIndex, null);
+      }
+
       (isUpdate ? updateProps : initProps)(el, {
         shape: axisTarget
       }, axisModel, newIndex);
-
-      var defaultTextGetter = function (values) {
-        return getDefaultLabel(seriesModel.getData(), newIndex, values);
-      };
-
-      var labelModel = seriesModel.getModel('label');
-      (isUpdate ? updateLabel : initLabel)(el, data, newIndex, labelModel, seriesModel, animationModel, defaultTextGetter);
     }
   }
 
@@ -37102,7 +38668,6 @@
     }
 
     el.useStyle(style);
-    el.ignore = isZeroOnPolar(layout);
     var cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && el.attr('cursor', cursorStyle);
 
@@ -37115,6 +38680,13 @@
         inheritColor: style.fill,
         defaultOutsidePosition: labelPositionOutside
       });
+      var label = el.getTextContent();
+
+      if (label) {
+        var obj = labelInner(label);
+        obj.prevValue = obj.value;
+        obj.value = seriesModel.getRawValue(dataIndex);
+      }
     }
 
     var emphasisModel = itemModel.getModel(['emphasis']);
@@ -37122,6 +38694,8 @@
     setStatesStylesFromModel(el, itemModel);
 
     if (isZeroOnPolar(layout)) {
+      el.style.fill = 'none';
+      el.style.stroke = 'none';
       each(el.states, function (state) {
         if (state.style) {
           state.style.fill = state.style.stroke = 'none';
@@ -37666,6 +39240,20 @@
       el.ignore = true;
     }
 
+    function isLabelShown(label) {
+      if (!label.ignore) {
+        return true;
+      }
+
+      for (var key in label.states) {
+        if (label.states[key].ignore === false) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
     data.each(function (idx) {
       var sector = data.getItemGraphicEl(idx);
       var sectorShape = sector.shape;
@@ -37687,6 +39275,10 @@
       if (Math.abs(sectorShape.endAngle - sectorShape.startAngle) < minShowLabelRadian) {
         each(label.states, setNotShow);
         label.ignore = true;
+        return;
+      }
+
+      if (!isLabelShown(label)) {
         return;
       }
 
@@ -37751,9 +39343,7 @@
         var textRect = label.getBoundingRect().clone();
         textRect.applyTransform(label.getComputedTransform());
         var margin = (label.style.margin || 0) + 2.1;
-        textRect.x -= margin / 2;
         textRect.y -= margin / 2;
-        textRect.width += margin;
         textRect.height += margin;
         labelLayoutList.push({
           label: label,
@@ -37837,6 +39427,23 @@
     }
   }
 
+  function getSectorCornerRadius(model, shape) {
+    var cornerRadius = model.get('borderRadius');
+
+    if (cornerRadius == null) {
+      return null;
+    }
+
+    if (!isArray(cornerRadius)) {
+      cornerRadius = [cornerRadius, cornerRadius];
+    }
+
+    return {
+      innerCornerRadius: parsePercent(cornerRadius[0], shape.r0),
+      cornerRadius: parsePercent(cornerRadius[1], shape.r)
+    };
+  }
+
   var PiePiece = function (_super) {
     __extends(PiePiece, _super);
 
@@ -37862,7 +39469,7 @@
       var itemModel = data.getItemModel(idx);
       var emphasisModel = itemModel.getModel('emphasis');
       var layout = data.getItemLayout(idx);
-      var sectorShape = extend({}, layout);
+      var sectorShape = extend(getSectorCornerRadius(itemModel.getModel('itemStyle'), layout) || {}, layout);
 
       if (firstCreate) {
         sector.setShape(sectorShape);
@@ -37913,12 +39520,16 @@
 
       this._updateLabel(seriesModel, data, idx);
 
-      sector.ensureState('emphasis').shape = {
+      sector.ensureState('emphasis').shape = __assign({
         r: layout.r + (emphasisModel.get('scale') ? emphasisModel.get('scaleSize') || 0 : 0)
-      };
+      }, getSectorCornerRadius(emphasisModel.getModel('itemStyle'), layout));
       extend(sector.ensureState('select'), {
         x: dx,
-        y: dy
+        y: dy,
+        shape: getSectorCornerRadius(itemModel.getModel(['select', 'itemStyle']), layout)
+      });
+      extend(sector.ensureState('blur'), {
+        shape: getSectorCornerRadius(itemModel.getModel(['blur', 'itemStyle']), layout)
       });
       var labelLine = sector.getTextGuideLine();
       var labelText = sector.getTextContent();
@@ -37935,13 +39546,12 @@
 
     PiePiece.prototype._updateLabel = function (seriesModel, data, idx) {
       var sector = this;
-      var labelText = sector.getTextContent();
       var itemModel = data.getItemModel(idx);
-      var labelTextEmphasisState = labelText.ensureState('emphasis');
       var labelModel = itemModel.getModel('label');
-      var labelHoverModel = itemModel.getModel(['emphasis', 'label']);
+      var labelLineModel = itemModel.getModel('labelLine');
       var style = data.getItemVisual(idx, 'style');
       var visualColor = style && style.fill;
+      var visualOpacity = style && style.opacity;
       setLabelStyle(sector, getLabelStatesModels(itemModel), {
         labelFetcher: data.hostModel,
         labelDataIndex: idx,
@@ -37949,9 +39559,10 @@
         defaultText: seriesModel.getFormattedLabel(idx, 'normal') || data.getName(idx)
       }, {
         normal: {
-          opacity: style && style.opacity
+          opacity: retrieve2(labelModel.get('opacity'), visualOpacity)
         }
       });
+      var labelText = sector.getTextContent();
       sector.setTextConfig({
         position: null,
         rotation: null
@@ -37959,11 +39570,9 @@
       labelText.attr({
         z2: 10
       });
-      labelText.ignore = !labelModel.get('show');
-      labelTextEmphasisState.ignore = !labelHoverModel.get('show');
       setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
         stroke: visualColor,
-        opacity: style && style.opacity
+        opacity: retrieve2(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity)
       });
     };
 
@@ -38043,7 +39652,7 @@
   }(ChartView);
 
   ChartView.registerClass(PieView);
-  var PI2$6 = Math.PI * 2;
+  var PI2$7 = Math.PI * 2;
   var RADIAN$1 = Math.PI / 180;
 
   function getViewRect(seriesModel, api) {
@@ -38089,7 +39698,7 @@
       var stillShowZeroSum = seriesModel.get('stillShowZeroSum');
       var extent = data.getDataExtent(valueDim);
       extent[0] = 0;
-      var restAngle = PI2$6;
+      var restAngle = PI2$7;
       var valueSumLargerThanMinAngle = 0;
       var currentAngle = startAngle;
       var dir = clockwise ? 1 : -1;
@@ -38117,7 +39726,7 @@
         if (roseType !== 'area') {
           angle = sum === 0 && stillShowZeroSum ? unitRadian : value * unitRadian;
         } else {
-          angle = PI2$6 / validDataCount;
+          angle = PI2$7 / validDataCount;
         }
 
         if (angle < minAngle) {
@@ -38141,9 +39750,9 @@
         currentAngle = endAngle;
       });
 
-      if (restAngle < PI2$6 && validDataCount) {
+      if (restAngle < PI2$7 && validDataCount) {
         if (restAngle <= 1e-3) {
-          var angle_1 = PI2$6 / validDataCount;
+          var angle_1 = PI2$7 / validDataCount;
           data.each(valueDim, function (value, idx) {
             if (!isNaN(value)) {
               var layout_1 = data.getItemLayout(idx);
@@ -38388,7 +39997,7 @@
         cursor: 'default'
       });
       symbolEl.setShape({
-        points: data.getLayout('symbolPoints')
+        points: data.getLayout('points')
       });
 
       this._setCommon(symbolEl, data, false, opt);
@@ -38402,7 +40011,7 @@
         return;
       }
 
-      var points = data.getLayout('symbolPoints');
+      var points = data.getLayout('points');
       this.group.eachChild(function (child) {
         if (child.startIndex != null) {
           var len = (child.endIndex - child.startIndex) * 2;
@@ -38451,7 +40060,7 @@
       }
 
       symbolEl.setShape({
-        points: data.getLayout('symbolPoints')
+        points: data.getLayout('points')
       });
 
       this._setCommon(symbolEl, data, !!this._incremental, opt);
@@ -38553,7 +40162,7 @@
           update: true
         };
       } else {
-        var res = layoutPoints().reset(seriesModel, ecModel, api);
+        var res = layoutPoints('').reset(seriesModel, ecModel, api);
 
         if (res.progress) {
           res.progress({
@@ -39815,20 +41424,13 @@
     elOption.label = {
       x: position[0],
       y: position[1],
-      style: {
+      style: createTextStyle(labelModel, {
         text: text,
-        textFont: font,
+        font: font,
         fill: labelModel.getTextColor(),
         padding: paddings,
-        backgroundColor: bgColor,
-        borderColor: labelModel.get('borderColor') || 'transparent',
-        borderRadius: labelModel.get('borderRadius'),
-        borderWidth: labelModel.get('borderWidth') || 0,
-        shadowBlur: labelModel.get('shadowBlur'),
-        shadowColor: labelModel.get('shadowColor'),
-        shadowOffsetX: labelModel.get('shadowOffsetX'),
-        shadowOffsetY: labelModel.get('shadowOffsetY')
-      },
+        backgroundColor: bgColor
+      }),
       z2: 10
     };
   }
@@ -40115,7 +41717,7 @@
       alwaysShowContent: false,
       displayMode: 'single',
       renderMode: 'auto',
-      confine: false,
+      confine: null,
       showDelay: 0,
       hideDelay: 100,
       transitionDuration: 0.4,
@@ -40128,7 +41730,7 @@
       borderColor: '#333',
       borderRadius: 4,
       borderWidth: 1,
-      padding: 10,
+      padding: null,
       extraCssText: '',
       axisPointer: {
         type: 'line',
@@ -40152,28 +41754,18 @@
   }(ComponentModel);
 
   ComponentModel.registerClass(TooltipModel);
-  var each$5 = each;
-  var toCamelCase$1 = toCamelCase;
-  var vendors = ['', '-webkit-', '-moz-', '-o-'];
-  var gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;';
 
-  function mirrowPos(pos) {
-    pos = pos === 'left' ? 'right' : pos === 'right' ? 'left' : pos === 'top' ? 'bottom' : 'top';
-    return pos;
+  function shouldTooltipConfine(tooltipModel) {
+    var confineOption = tooltipModel.get('confine');
+    return confineOption != null ? !!confineOption : tooltipModel.get('renderMode') === 'richText';
   }
 
-  function getFinalColor(color) {
-    var finalNearPointColor = '#fff';
+  var vendors = ['-ms-', '-moz-', '-o-', '-webkit-', ''];
+  var gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;';
 
-    if (isObject(color) && color.type !== 'pattern') {
-      finalNearPointColor = color.colorStops[0].color;
-    } else if (isObject(color) && color.type === 'pattern') {
-      finalNearPointColor = 'transparent';
-    } else if (isString(color)) {
-      finalNearPointColor = color;
-    }
-
-    return finalNearPointColor;
+  function mirrorPos(pos) {
+    pos = pos === 'left' ? 'right' : pos === 'right' ? 'left' : pos === 'top' ? 'bottom' : 'top';
+    return pos;
   }
 
   function assembleArrow(backgroundColor, borderColor, arrowPosition) {
@@ -40181,26 +41773,34 @@
       return '';
     }
 
-    borderColor = getFinalColor(borderColor);
-    var arrowPos = mirrowPos(arrowPosition);
-    var centerPos = '';
-    var rotate = 0;
+    borderColor = convertToColorString(borderColor);
+    var arrowPos = mirrorPos(arrowPosition);
+    var positionStyle = '';
+    var transformStyle = '';
 
     if (indexOf(['left', 'right'], arrowPos) > -1) {
-      centerPos = arrowPos + ":-6px;top:50%;transform:translateY(-50%)";
-      rotate = arrowPos === 'left' ? -225 : -45;
+      positionStyle = arrowPos + ":-6px;top:50%;";
+      transformStyle = "translateY(-50%) rotate(" + (arrowPos === 'left' ? -225 : -45) + "deg)";
     } else {
-      centerPos = arrowPos + ":-6px;left:50%;transform:translateX(-50%)";
-      rotate = arrowPos === 'top' ? 225 : 45;
+      positionStyle = arrowPos + ":-6px;left:50%;";
+      transformStyle = "translateX(-50%) rotate(" + (arrowPos === 'top' ? 225 : 45) + "deg)";
     }
 
-    var styleCss = ['style="position:absolute;width:10px;height:10px;', "" + centerPos, "rotate(" + rotate + "deg);", "border-bottom: " + borderColor + " solid 1px;", "border-right: " + borderColor + " solid 1px;", "background-color: " + backgroundColor + ";", 'box-shadow: 8px 8px 16px -3px #000', '"'];
-    return "<div " + styleCss.join('') + "></div>";
+    transformStyle = map(vendors, function (vendorPrefix) {
+      return vendorPrefix + 'transform:' + transformStyle;
+    }).join(';');
+    var styleCss = ['position:absolute;width:10px;height:10px;', "" + positionStyle + transformStyle + ";", "border-bottom: " + borderColor + " solid 1px;", "border-right: " + borderColor + " solid 1px;", "background-color: " + backgroundColor + ";", 'box-shadow: 8px 8px 16px -3px #000;'];
+    return "<div style=\"" + styleCss.join('') + "\"></div>";
   }
 
-  function assembleTransition(duration) {
+  function assembleTransition(duration, onlyFade) {
     var transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
-    var transitionText = 'left ' + duration + 's ' + transitionCurve + ',' + 'top ' + duration + 's ' + transitionCurve;
+    var transitionText = 'opacity ' + duration / 2 + 's ' + transitionCurve + ',' + 'visibility ' + duration / 2 + 's ' + transitionCurve;
+
+    if (!onlyFade) {
+      transitionText += ',left ' + duration + 's ' + transitionCurve + ',top ' + duration + 's ' + transitionCurve;
+    }
+
     return map(vendors, function (vendorPrefix) {
       return vendorPrefix + 'transition:' + transitionText;
     }).join(';');
@@ -40213,14 +41813,14 @@
     color && cssText.push('color:' + color);
     cssText.push('font:' + textStyleModel.getFont());
     fontSize && cssText.push('line-height:' + Math.round(fontSize * 3 / 2) + 'px');
-    each$5(['decoration', 'align'], function (name) {
+    each(['decoration', 'align'], function (name) {
       var val = textStyleModel.get(name);
       val && cssText.push('text-' + name + ':' + val);
     });
     return cssText.join(';');
   }
 
-  function assembleCssText(tooltipModel, isFirstShow) {
+  function assembleCssText(tooltipModel, enableTransition, onlyFade) {
     var cssText = [];
     var transitionDuration = tooltipModel.get('transitionDuration');
     var backgroundColor = tooltipModel.get('backgroundColor');
@@ -40229,10 +41829,10 @@
     var shadowOffsetX = tooltipModel.get('shadowOffsetX');
     var shadowOffsetY = tooltipModel.get('shadowOffsetY');
     var textStyleModel = tooltipModel.getModel('textStyle');
-    var padding = tooltipModel.get('padding');
+    var padding = getPaddingFromTooltipModel(tooltipModel, 'html');
     var boxShadow = shadowOffsetX + "px " + shadowOffsetY + "px " + shadowBlur + "px " + shadowColor;
     cssText.push('box-shadow:' + boxShadow);
-    !isFirstShow && transitionDuration && indexOf(['top', 'left', 'bottom', 'right'], tooltipModel.get('position')) > -1 && tooltipModel.get('trigger') !== 'item' && cssText.push(assembleTransition(transitionDuration));
+    enableTransition && transitionDuration && cssText.push(assembleTransition(transitionDuration, onlyFade));
 
     if (backgroundColor) {
       if (env.canvasSupported) {
@@ -40243,9 +41843,9 @@
       }
     }
 
-    each$5(['width', 'color', 'radius'], function (name) {
+    each(['width', 'color', 'radius'], function (name) {
       var borderName = 'border-' + name;
-      var camelCase = toCamelCase$1(borderName);
+      var camelCase = toCamelCase(borderName);
       var val = tooltipModel.get(camelCase);
       val != null && cssText.push(borderName + ':' + val + (name === 'color' ? '' : 'px'));
     });
@@ -40277,14 +41877,18 @@
         out[1] += viewportRootOffset.offsetTop;
       }
     }
+
+    out[2] = out[0] / zr.getWidth();
+    out[3] = out[1] / zr.getHeight();
   }
 
   var TooltipHTMLContent = function () {
     function TooltipHTMLContent(container, api, opt) {
       this._show = false;
-      this._styleCoord = [0, 0];
+      this._styleCoord = [0, 0, 0, 0];
       this._enterable = true;
       this._firstShow = true;
+      this._longHide = true;
 
       if (env.wxa) {
         return null;
@@ -40337,7 +41941,7 @@
       };
     }
 
-    TooltipHTMLContent.prototype.update = function () {
+    TooltipHTMLContent.prototype.update = function (tooltipModel) {
       var container = this._container;
       var stl = container.currentStyle || document.defaultView.getComputedStyle(container);
       var domStyle = container.style;
@@ -40345,19 +41949,25 @@
       if (domStyle.position !== 'absolute' && stl.position !== 'absolute') {
         domStyle.position = 'relative';
       }
+
+      var alwaysShowContent = tooltipModel.get('alwaysShowContent');
+      alwaysShowContent && this._moveIfResized();
+      this.el.className = tooltipModel.get('className') || '';
     };
 
     TooltipHTMLContent.prototype.show = function (tooltipModel, nearPointColor) {
       clearTimeout(this._hideTimeout);
+      clearTimeout(this._longHideTimeout);
       var el = this.el;
       var styleCoord = this._styleCoord;
       var offset = el.offsetHeight / 2;
-      nearPointColor = getFinalColor(nearPointColor);
-      el.style.cssText = gCssText + assembleCssText(tooltipModel, this._firstShow) + ';left:' + styleCoord[0] + 'px;top:' + (styleCoord[1] - offset) + 'px;' + ("border-color: " + nearPointColor + ";") + (tooltipModel.get('extraCssText') || '');
+      nearPointColor = convertToColorString(nearPointColor);
+      el.style.cssText = gCssText + assembleCssText(tooltipModel, !this._firstShow, this._longHide) + ';left:' + styleCoord[0] + 'px;top:' + (styleCoord[1] - offset) + 'px;' + ("border-color: " + nearPointColor + ";") + (tooltipModel.get('extraCssText') || '');
       el.style.display = el.innerHTML ? 'block' : 'none';
       el.style.pointerEvents = this._enterable ? 'auto' : 'none';
       this._show = true;
       this._firstShow = false;
+      this._longHide = false;
     };
 
     TooltipHTMLContent.prototype.setContent = function (content, markers, tooltipModel, borderColor, arrowPosition) {
@@ -40365,8 +41975,11 @@
         return;
       }
 
+      if (isString(arrowPosition) && tooltipModel.get('trigger') === 'item' && !shouldTooltipConfine(tooltipModel)) {
+        content += assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition);
+      }
+
       this.el.innerHTML = content;
-      this.el.innerHTML += isString(arrowPosition) && tooltipModel.get('trigger') === 'item' && !tooltipModel.get('confine') ? assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition) : '';
     };
 
     TooltipHTMLContent.prototype.setEnterable = function (enterable) {
@@ -40381,14 +41994,29 @@
     TooltipHTMLContent.prototype.moveTo = function (zrX, zrY) {
       var styleCoord = this._styleCoord;
       makeStyleCoord(styleCoord, this._zr, this._appendToBody, zrX, zrY);
-      var style = this.el.style;
-      style.left = styleCoord[0] + 'px';
-      style.top = styleCoord[1] + 'px';
+
+      if (styleCoord[0] != null && styleCoord[1] != null) {
+        var style = this.el.style;
+        style.left = styleCoord[0].toFixed(0) + 'px';
+        style.top = styleCoord[1].toFixed(0) + 'px';
+      }
+    };
+
+    TooltipHTMLContent.prototype._moveIfResized = function () {
+      var ratioX = this._styleCoord[2];
+      var ratioY = this._styleCoord[3];
+      this.moveTo(ratioX * this._zr.getWidth(), ratioY * this._zr.getHeight());
     };
 
     TooltipHTMLContent.prototype.hide = function () {
-      this.el.style.display = 'none';
+      var _this = this;
+
+      this.el.style.visibility = 'hidden';
+      this.el.style.opacity = '0';
       this._show = false;
+      this._longHideTimeout = setTimeout(function () {
+        return _this._longHide = true;
+      }, 500);
     };
 
     TooltipHTMLContent.prototype.hideLater = function (time) {
@@ -40436,11 +42064,16 @@
   var TooltipRichContent = function () {
     function TooltipRichContent(api) {
       this._show = false;
+      this._styleCoord = [0, 0, 0, 0];
       this._enterable = true;
       this._zr = api.getZr();
+      makeStyleCoord$1(this._styleCoord, this._zr, api.getWidth() / 2, api.getHeight() / 2);
     }
 
-    TooltipRichContent.prototype.update = function () {};
+    TooltipRichContent.prototype.update = function (tooltipModel) {
+      var alwaysShowContent = tooltipModel.get('alwaysShowContent');
+      alwaysShowContent && this._moveIfResized();
+    };
 
     TooltipRichContent.prototype.show = function () {
       if (this._hideTimeout) {
@@ -40451,46 +42084,16 @@
       this._show = true;
     };
 
-    TooltipRichContent.prototype.setContent = function (content, markerRich, tooltipModel, borderColor, arrowPosition) {
+    TooltipRichContent.prototype.setContent = function (content, markupStyleCreator, tooltipModel, borderColor, arrowPosition) {
       if (this.el) {
         this._zr.remove(this.el);
       }
 
-      var markers = {};
-      var text = content;
-      var prefix = '{marker';
-      var suffix = '|}';
-      var startId = text.indexOf(prefix);
-
-      while (startId >= 0) {
-        var endId = text.indexOf(suffix);
-        var name_1 = text.substr(startId + prefix.length, endId - startId - prefix.length);
-
-        if (name_1.indexOf('sub') > -1) {
-          markers['marker' + name_1] = {
-            width: 4,
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: markerRich[name_1]
-          };
-        } else {
-          markers['marker' + name_1] = {
-            width: 10,
-            height: 10,
-            borderRadius: 5,
-            backgroundColor: markerRich[name_1]
-          };
-        }
-
-        text = text.substr(endId + 1);
-        startId = text.indexOf(prefix);
-      }
-
       this.el = new ZRText({
         style: {
-          rich: markers,
+          rich: markupStyleCreator.richTextStyles,
           text: content,
-          lineHeight: 20,
+          lineHeight: 22,
           backgroundColor: tooltipModel.get('backgroundColor'),
           borderRadius: tooltipModel.get('borderRadius'),
           borderWidth: 1,
@@ -40500,8 +42103,8 @@
           shadowOffsetX: tooltipModel.get('shadowOffsetX'),
           shadowOffsetY: tooltipModel.get('shadowOffsetY'),
           fill: tooltipModel.get(['textStyle', 'color']),
-          padding: tooltipModel.get('padding'),
-          verticalAlign: 'middle',
+          padding: getPaddingFromTooltipModel(tooltipModel, 'richText'),
+          verticalAlign: 'top',
           align: 'left'
         },
         z: tooltipModel.get('z')
@@ -40534,18 +42137,33 @@
     };
 
     TooltipRichContent.prototype.getSize = function () {
+      var el = this.el;
       var bounding = this.el.getBoundingRect();
-      return [bounding.width, bounding.height];
+      var shadowOuterSize = calcShadowOuterSize(el.style);
+      return [bounding.width + shadowOuterSize.left + shadowOuterSize.right, bounding.height + shadowOuterSize.top + shadowOuterSize.bottom];
     };
 
     TooltipRichContent.prototype.moveTo = function (x, y) {
       var el = this.el;
 
       if (el) {
-        el.x = x;
-        el.y = y;
+        var styleCoord = this._styleCoord;
+        makeStyleCoord$1(styleCoord, this._zr, x, y);
+        x = styleCoord[0];
+        y = styleCoord[1];
+        var style = el.style;
+        var borderWidth = mathMaxWith0(style.borderWidth || 0);
+        var shadowOuterSize = calcShadowOuterSize(style);
+        el.x = x + borderWidth + shadowOuterSize.left;
+        el.y = y + borderWidth + shadowOuterSize.top;
         el.markRedraw();
       }
+    };
+
+    TooltipRichContent.prototype._moveIfResized = function () {
+      var ratioX = this._styleCoord[2];
+      var ratioY = this._styleCoord[3];
+      this.moveTo(ratioX * this._zr.getWidth(), ratioY * this._zr.getHeight());
     };
 
     TooltipRichContent.prototype.hide = function () {
@@ -40587,8 +42205,31 @@
     return TooltipRichContent;
   }();
 
+  function mathMaxWith0(val) {
+    return Math.max(0, val);
+  }
+
+  function calcShadowOuterSize(style) {
+    var shadowBlur = mathMaxWith0(style.shadowBlur || 0);
+    var shadowOffsetX = mathMaxWith0(style.shadowOffsetX || 0);
+    var shadowOffsetY = mathMaxWith0(style.shadowOffsetY || 0);
+    return {
+      left: mathMaxWith0(shadowBlur - shadowOffsetX),
+      right: mathMaxWith0(shadowBlur + shadowOffsetX),
+      top: mathMaxWith0(shadowBlur - shadowOffsetY),
+      bottom: mathMaxWith0(shadowBlur + shadowOffsetY)
+    };
+  }
+
+  function makeStyleCoord$1(out, zr, zrX, zrY) {
+    out[0] = zrX;
+    out[1] = zrY;
+    out[2] = out[0] / zr.getWidth();
+    out[3] = out[1] / zr.getHeight();
+  }
+
   var bind$2 = bind;
-  var each$6 = each;
+  var each$5 = each;
   var parsePercent$3 = parsePercent$2;
   var proxyRect = new Rect({
     shape: {
@@ -40617,19 +42258,9 @@
       var tooltipModel = ecModel.getComponent('tooltip');
       var renderMode = tooltipModel.get('renderMode');
       this._renderMode = getTooltipRenderMode(renderMode);
-      var tooltipContent;
-
-      if (this._renderMode === 'html') {
-        tooltipContent = new TooltipHTMLContent(api.getDom(), api, {
-          appendToBody: tooltipModel.get('appendToBody', true)
-        });
-        this._newLine = '';
-      } else {
-        tooltipContent = new TooltipRichContent(api);
-        this._newLine = '\n';
-      }
-
-      this._tooltipContent = tooltipContent;
+      this._tooltipContent = this._renderMode === 'richText' ? new TooltipRichContent(api) : new TooltipHTMLContent(api.getDom(), api, {
+        appendToBody: tooltipModel.get('appendToBody', true)
+      });
     };
 
     TooltipView.prototype.render = function (tooltipModel, ecModel, api) {
@@ -40641,10 +42272,9 @@
       this._tooltipModel = tooltipModel;
       this._ecModel = ecModel;
       this._api = api;
-      this._lastDataByCoordSys = null;
       this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
       var tooltipContent = this._tooltipContent;
-      tooltipContent.update();
+      tooltipContent.update(tooltipModel);
       tooltipContent.setEnterable(tooltipModel.get('enterable'));
 
       this._initGlobalListener();
@@ -40677,7 +42307,8 @@
         this._refreshUpdateTimeout = setTimeout(function () {
           !api.isDisposed() && self_1.manuallyShowTip(tooltipModel, ecModel, api, {
             x: self_1._lastX,
-            y: self_1._lastY
+            y: self_1._lastY,
+            dataByCoordSys: self_1._lastDataByCoordSys
           });
         });
       }
@@ -40752,7 +42383,7 @@
         tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
       }
 
-      this._lastX = this._lastY = null;
+      this._lastX = this._lastY = this._lastDataByCoordSys = null;
 
       if (payload.from !== this.uid) {
         this._hide(makeDispatchAction$1(payload, api));
@@ -40804,7 +42435,9 @@
 
       if (dataByCoordSys && dataByCoordSys.length) {
         this._showAxisTooltip(dataByCoordSys, e);
-      } else if (el && getECData(el).dataIndex != null) {
+      } else if (el && findEventDispatcher(el, function (target) {
+        return getECData(target).dataIndex != null;
+      })) {
         this._lastDataByCoordSys = null;
 
         this._showSeriesItemTooltip(e, el, dispatchAction);
@@ -40830,109 +42463,90 @@
       var ecModel = this._ecModel;
       var globalTooltipModel = this._tooltipModel;
       var point = [e.offsetX, e.offsetY];
-      var singleDefaultHTML = [];
-      var singleParamsList = [];
       var singleTooltipModel = buildTooltipModel([e.tooltipOption, globalTooltipModel]);
       var renderMode = this._renderMode;
-      var newLine = this._newLine;
-      var markers = {};
-      each$6(dataByCoordSys, function (itemCoordSys) {
-        each$6(itemCoordSys.dataByAxis, function (item) {
-          var axisModel = ecModel.getComponent(item.axisDim + 'Axis', item.axisIndex);
-          var axisValue = item.value;
-          var seriesDefaultHTML = [];
+      var cbParamsList = [];
+      var articleMarkup = createTooltipMarkup('section', {
+        blocks: [],
+        noHeader: true
+      });
+      var markupTextArrLegacy = [];
+      var markupStyleCreator = new TooltipMarkupStyleCreator();
+      each$5(dataByCoordSys, function (itemCoordSys) {
+        each$5(itemCoordSys.dataByAxis, function (axisItem) {
+          var axisModel = ecModel.getComponent(axisItem.axisDim + 'Axis', axisItem.axisIndex);
+          var axisValue = axisItem.value;
 
           if (!axisModel || axisValue == null) {
             return;
           }
 
-          var valueLabel = getValueLabel(axisValue, axisModel.axis, ecModel, item.seriesDataIndices, item.valueLabelOpt);
-          each(item.seriesDataIndices, function (idxItem) {
+          var axisValueLabel = getValueLabel(axisValue, axisModel.axis, ecModel, axisItem.seriesDataIndices, axisItem.valueLabelOpt);
+          var axisSectionMarkup = createTooltipMarkup('section', {
+            header: axisValueLabel,
+            noHeader: !trim(axisValueLabel),
+            sortBlocks: true,
+            blocks: []
+          });
+          articleMarkup.blocks.push(axisSectionMarkup);
+          each(axisItem.seriesDataIndices, function (idxItem) {
             var series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
             var dataIndex = idxItem.dataIndexInside;
-            var dataParams = series && series.getDataParams(dataIndex);
-            dataParams.axisDim = item.axisDim;
-            dataParams.axisIndex = item.axisIndex;
-            dataParams.axisType = item.axisType;
-            dataParams.axisId = item.axisId;
-            dataParams.axisValue = getAxisRawValue(axisModel.axis, {
+            var cbParams = series.getDataParams(dataIndex);
+            cbParams.axisDim = axisItem.axisDim;
+            cbParams.axisIndex = axisItem.axisIndex;
+            cbParams.axisType = axisItem.axisType;
+            cbParams.axisId = axisItem.axisId;
+            cbParams.axisValue = getAxisRawValue(axisModel.axis, {
               value: axisValue
             });
-            dataParams.axisValueLabel = valueLabel;
-            dataParams.marker = getTooltipMarker({
-              color: dataParams.color,
-              renderMode: renderMode
-            });
-            singleParamsList.push(dataParams);
-            var seriesTooltip = series.formatTooltip(dataIndex, true, null, renderMode);
-            var html;
+            cbParams.axisValueLabel = axisValueLabel;
+            cbParams.marker = markupStyleCreator.makeTooltipMarker('item', convertToColorString(cbParams.color), renderMode);
+            var seriesTooltipResult = normalizeTooltipFormatResult(series.formatTooltip(dataIndex, true, null));
 
-            if (isObject(seriesTooltip)) {
-              html = seriesTooltip.html;
-              var newMarkers = seriesTooltip.markers;
-              merge(markers, newMarkers);
-            } else {
-              html = seriesTooltip;
+            if (seriesTooltipResult.markupFragment) {
+              axisSectionMarkup.blocks.push(seriesTooltipResult.markupFragment);
             }
 
-            dataParams.html = html;
+            if (seriesTooltipResult.markupText) {
+              markupTextArrLegacy.push(seriesTooltipResult.markupText);
+            }
+
+            cbParamsList.push(cbParams);
           });
-
-          switch (singleTooltipModel.get('order')) {
-            case 'valueAsc':
-              singleParamsList.sort(function (a, b) {
-                return +a.data - +b.data;
-              });
-              break;
-
-            case 'valueDesc':
-              singleParamsList.sort(function (a, b) {
-                return +b.data - +a.data;
-              });
-              break;
-
-            case 'seriesDesc':
-              singleParamsList.reverse();
-              break;
-          }
-
-          each(singleParamsList, function (params) {
-            seriesDefaultHTML.push(params.html);
-            delete params.html;
-          });
-          var firstLine = valueLabel;
-
-          if (renderMode !== 'html') {
-            singleDefaultHTML.push(seriesDefaultHTML.join(newLine));
-          } else {
-            singleDefaultHTML.push((firstLine ? '<div style="font-size:12px;color:#6e7079;line-height:1;margin-top:-4px;">' + encodeHTML(firstLine) + '</div>' + newLine : '') + seriesDefaultHTML.reverse().join(newLine));
-          }
-
-          singleDefaultHTML.push('<br/>');
         });
-      }, this);
-      singleDefaultHTML.pop();
-      var singleDefaultHTMLStr = singleDefaultHTML.join(this._newLine + this._newLine);
+      });
+      articleMarkup.blocks.reverse();
+      markupTextArrLegacy.reverse();
       var positionExpr = e.position;
+      var orderMode = singleTooltipModel.get('order');
+      var builtMarkupText = buildTooltipMarkup(articleMarkup, markupStyleCreator, renderMode, orderMode);
+      builtMarkupText && markupTextArrLegacy.unshift(builtMarkupText);
+      var blockBreak = renderMode === 'richText' ? '\n\n' : '<br/>';
+      var allMarkupText = markupTextArrLegacy.join(blockBreak);
 
       this._showOrMove(singleTooltipModel, function () {
         if (this._updateContentNotChangedOnAxis(dataByCoordSys)) {
-          this._updatePosition(singleTooltipModel, positionExpr, point[0], point[1], this._tooltipContent, singleParamsList);
+          this._updatePosition(singleTooltipModel, positionExpr, point[0], point[1], this._tooltipContent, cbParamsList);
         } else {
-          this._showTooltipContent(singleTooltipModel, singleDefaultHTMLStr, singleParamsList, Math.random() + '', point[0], point[1], positionExpr, undefined, markers);
+          this._showTooltipContent(singleTooltipModel, allMarkupText, cbParamsList, Math.random() + '', point[0], point[1], positionExpr, null, markupStyleCreator);
         }
       });
     };
 
     TooltipView.prototype._showSeriesItemTooltip = function (e, el, dispatchAction) {
+      var dispatcher = findEventDispatcher(el, function (target) {
+        return getECData(target).dataIndex != null;
+      });
       var ecModel = this._ecModel;
-      var ecData = getECData(el);
+      var ecData = getECData(dispatcher);
       var seriesIndex = ecData.seriesIndex;
       var seriesModel = ecModel.getSeriesByIndex(seriesIndex);
       var dataModel = ecData.dataModel || seriesModel;
       var dataIndex = ecData.dataIndex;
       var dataType = ecData.dataType;
       var data = dataModel.getData(dataType);
+      var renderMode = this._renderMode;
       var tooltipModel = buildTooltipModel([data.getItemModel(dataIndex), dataModel, seriesModel && (seriesModel.coordinateSystem || {}).model, this._tooltipModel]);
       var tooltipTrigger = tooltipModel.get('trigger');
 
@@ -40940,28 +42554,16 @@
         return;
       }
 
-      var tooltipOrder = tooltipModel.get('order');
       var params = dataModel.getDataParams(dataIndex, dataType);
-      params.marker = getTooltipMarker({
-        color: params.color,
-        renderMode: this._renderMode
-      });
-      var seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._renderMode, tooltipOrder);
-      var defaultHtml;
-      var markers;
-
-      if (isObject(seriesTooltip)) {
-        defaultHtml = seriesTooltip.html;
-        markers = seriesTooltip.markers;
-      } else {
-        defaultHtml = seriesTooltip;
-        markers = null;
-      }
-
+      var markupStyleCreator = new TooltipMarkupStyleCreator();
+      params.marker = markupStyleCreator.makeTooltipMarker('item', convertToColorString(params.color), renderMode);
+      var seriesTooltipResult = normalizeTooltipFormatResult(dataModel.formatTooltip(dataIndex, false, dataType));
+      var orderMode = tooltipModel.get('order');
+      var markupText = seriesTooltipResult.markupFragment ? buildTooltipMarkup(seriesTooltipResult.markupFragment, markupStyleCreator, renderMode, orderMode) : seriesTooltipResult.markupText;
       var asyncTicket = 'item_' + dataModel.name + '_' + dataIndex;
 
       this._showOrMove(tooltipModel, function () {
-        this._showTooltipContent(tooltipModel, defaultHtml, params, asyncTicket, e.offsetX, e.offsetY, e.position, e.target, markers);
+        this._showTooltipContent(tooltipModel, markupText, params, asyncTicket, e.offsetX, e.offsetY, e.position, e.target, markupStyleCreator);
       });
 
       dispatchAction({
@@ -40987,9 +42589,10 @@
       var subTooltipModel = new Model(tooltipOpt, this._tooltipModel, this._ecModel);
       var defaultHtml = subTooltipModel.get('content');
       var asyncTicket = Math.random() + '';
+      var markupStyleCreator = new TooltipMarkupStyleCreator();
 
       this._showOrMove(subTooltipModel, function () {
-        this._showTooltipContent(subTooltipModel, defaultHtml, subTooltipModel.get('formatterParams') || {}, asyncTicket, e.offsetX, e.offsetY, e.position, el);
+        this._showTooltipContent(subTooltipModel, defaultHtml, subTooltipModel.get('formatterParams') || {}, asyncTicket, e.offsetX, e.offsetY, e.position, el, markupStyleCreator);
       });
 
       dispatchAction({
@@ -40998,7 +42601,7 @@
       });
     };
 
-    TooltipView.prototype._showTooltipContent = function (tooltipModel, defaultHtml, params, asyncTicket, x, y, positionExpr, el, markers) {
+    TooltipView.prototype._showTooltipContent = function (tooltipModel, defaultHtml, params, asyncTicket, x, y, positionExpr, el, markupStyleCreator) {
       this._ticket = '';
 
       if (!tooltipModel.get('showContent') || !tooltipModel.get('show')) {
@@ -41017,7 +42620,7 @@
       } else if (isFunction(formatter)) {
         var callback = bind$2(function (cbTicket, html) {
           if (cbTicket === this._ticket) {
-            tooltipContent.setContent(html, markers, tooltipModel, nearPoint.color, positionExpr);
+            tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPoint.color, positionExpr);
 
             this._updatePosition(tooltipModel, positionExpr, x, y, tooltipContent, params, el);
           }
@@ -41026,7 +42629,7 @@
         html = formatter(params, asyncTicket, callback);
       }
 
-      tooltipContent.setContent(html, markers, tooltipModel, nearPoint.color, positionExpr);
+      tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPoint.color, positionExpr);
       tooltipContent.show(tooltipModel, nearPoint.color);
 
       this._updatePosition(tooltipModel, positionExpr, x, y, tooltipContent, params, el);
@@ -41093,7 +42696,7 @@
       align && (x -= isCenterAlign(align) ? contentSize[0] / 2 : align === 'right' ? contentSize[0] : 0);
       vAlign && (y -= isCenterAlign(vAlign) ? contentSize[1] / 2 : vAlign === 'bottom' ? contentSize[1] : 0);
 
-      if (tooltipModel.get('confine')) {
+      if (shouldTooltipConfine(tooltipModel)) {
         var pos = confineTooltipPosition(x, y, content, viewWidth, viewHeight);
         x = pos[0];
         y = pos[1];
@@ -41105,17 +42708,17 @@
     TooltipView.prototype._updateContentNotChangedOnAxis = function (dataByCoordSys) {
       var lastCoordSys = this._lastDataByCoordSys;
       var contentNotChanged = !!lastCoordSys && lastCoordSys.length === dataByCoordSys.length;
-      contentNotChanged && each$6(lastCoordSys, function (lastItemCoordSys, indexCoordSys) {
+      contentNotChanged && each$5(lastCoordSys, function (lastItemCoordSys, indexCoordSys) {
         var lastDataByAxis = lastItemCoordSys.dataByAxis || [];
         var thisItemCoordSys = dataByCoordSys[indexCoordSys] || {};
         var thisDataByAxis = thisItemCoordSys.dataByAxis || [];
         contentNotChanged = contentNotChanged && lastDataByAxis.length === thisDataByAxis.length;
-        contentNotChanged && each$6(lastDataByAxis, function (lastItem, indexAxis) {
+        contentNotChanged && each$5(lastDataByAxis, function (lastItem, indexAxis) {
           var thisItem = thisDataByAxis[indexAxis] || {};
           var lastIndices = lastItem.seriesDataIndices || [];
           var newIndices = thisItem.seriesDataIndices || [];
           contentNotChanged = contentNotChanged && lastItem.value === thisItem.value && lastItem.axisType === thisItem.axisType && lastItem.axisId === thisItem.axisId && lastIndices.length === newIndices.length;
-          contentNotChanged && each$6(lastIndices, function (lastIdxItem, j) {
+          contentNotChanged && each$5(lastIndices, function (lastIdxItem, j) {
             var newIdxItem = newIndices[j];
             contentNotChanged = contentNotChanged && lastIdxItem.seriesIndex === newIdxItem.seriesIndex && lastIdxItem.dataIndex === newIdxItem.dataIndex;
           });
@@ -41181,7 +42784,7 @@
     var height = size.height;
 
     if (gapH != null) {
-      if (x + width + gapH > viewWidth) {
+      if (x + width + gapH + 2 > viewWidth) {
         x -= width + gapH;
       } else {
         x += gapH;
@@ -41594,7 +43197,7 @@
   }
 
   var curry$1 = curry;
-  var each$7 = each;
+  var each$6 = each;
   var Group$1 = Group;
 
   var LegendView = function (_super) {
@@ -41678,7 +43281,7 @@
       ecModel.eachRawSeries(function (seriesModel) {
         !seriesModel.get('legendHoverLink') && excludeSeriesId.push(seriesModel.id);
       });
-      each$7(legendModel.getData(), function (itemModel, dataIndex) {
+      each$6(legendModel.getData(), function (itemModel, dataIndex) {
         var name = itemModel.get('name');
 
         if (!this.newlineDisabled && (name === '' || name === '\n')) {
@@ -41754,7 +43357,7 @@
 
     LegendView.prototype._createSelector = function (selector, legendModel, api, orient, selectorPosition) {
       var selectorGroup = this.getSelectorGroup();
-      each$7(selector, function createSelectorButton(selectorItem) {
+      each$6(selector, function createSelectorButton(selectorItem) {
         var type = selectorItem.type;
         var labelText = new ZRText({
           style: {
@@ -42511,7 +44114,7 @@
 
       if (sublink) {
         subTextEl.on('click', function () {
-          windowOpen(link, '_' + titleModel.get('subtarget'));
+          windowOpen(sublink, '_' + titleModel.get('subtarget'));
         });
       }
 
@@ -42679,26 +44282,19 @@
       }
     };
 
-    MarkerModel.prototype.formatTooltip = function (dataIndex, multipleSeries, dataType, renderMode) {
+    MarkerModel.prototype.formatTooltip = function (dataIndex, multipleSeries, dataType) {
       var data = this.getData();
       var value = this.getRawValue(dataIndex);
-      var formattedValue = isArray(value) ? map(value, addCommas).join(', ') : addCommas(value);
-      var name = encodeHTML(data.getName(dataIndex));
-      var html = "<div style=\"font-size:12px;line-height:1;margin:0 0 8px 0;\">" + encodeHTML(this.name) + "</div>";
-
-      if (value != null || name) {
-        html += renderMode === 'html' ? '' : '\n';
-      }
-
-      if (name) {
-        html += "<div style=\"line-height:1\"><span style=\"font-size:12px;color:#6e7079;\">" + name + "</span>";
-      }
-
-      if (value != null) {
-        html = renderMode === 'html' ? concatTooltipHtml(html, formattedValue, true) + (name ? '</div>' : '') : html + formattedValue;
-      }
-
-      return html;
+      var itemName = data.getName(dataIndex);
+      return createTooltipMarkup('section', {
+        header: this.name,
+        blocks: [createTooltipMarkup('nameValue', {
+          name: itemName,
+          value: value,
+          noName: !itemName,
+          noValue: value == null
+        })]
+      });
     };
 
     MarkerModel.prototype.getData = function () {
@@ -43009,8 +44605,9 @@
         var itemModel = mpData.getItemModel(idx);
         var symbol = itemModel.getShallow('symbol');
         var symbolSize = itemModel.getShallow('symbolSize');
+        var symbolRotate = itemModel.getShallow('symbolRotate');
 
-        if (isFunction(symbol) || isFunction(symbolSize)) {
+        if (isFunction(symbol) || isFunction(symbolSize) || isFunction(symbolRotate)) {
           var rawIdx = mpModel.getRawValue(idx);
           var dataParams = mpModel.getDataParams(idx);
 
@@ -43020,6 +44617,10 @@
 
           if (isFunction(symbolSize)) {
             symbolSize = symbolSize(rawIdx, dataParams);
+          }
+
+          if (isFunction(symbolRotate)) {
+            symbolRotate = symbolRotate(rawIdx, dataParams);
           }
         }
 
@@ -43033,6 +44634,7 @@
         mpData.setItemVisual(idx, {
           symbol: symbol,
           symbolSize: symbolSize,
+          symbolRotate: symbolRotate,
           style: style
         });
       });
@@ -43215,14 +44817,16 @@
 
   function createSymbol$1(name, lineData, idx) {
     var symbolType = lineData.getItemVisual(idx, name);
-    var symbolSize = lineData.getItemVisual(idx, name + 'Size');
 
     if (!symbolType || symbolType === 'none') {
       return;
     }
 
+    var symbolSize = lineData.getItemVisual(idx, name + 'Size');
+    var symbolRotate = lineData.getItemVisual(idx, name + 'Rotate');
     var symbolSizeArr = isArray(symbolSize) ? symbolSize : [symbolSize, symbolSize];
     var symbolPath = createSymbol(symbolType, -symbolSizeArr[0] / 2, -symbolSizeArr[1] / 2, symbolSizeArr[0], symbolSizeArr[1]);
+    symbolPath.__specifiedRotation = symbolRotate == null || isNaN(symbolRotate) ? void 0 : +symbolRotate * Math.PI / 180 || 0;
     symbolPath.name = name;
     return symbolPath;
   }
@@ -43452,8 +45056,20 @@
       var d = sub([], toPos, fromPos);
       normalize(d, d);
 
+      function setSymbolRotation(symbol, percent) {
+        var specifiedRotation = symbol.__specifiedRotation;
+
+        if (specifiedRotation == null) {
+          var tangent = line.tangentAt(percent);
+          symbol.attr('rotation', (percent === 1 ? -1 : 1) * Math.PI / 2 - Math.atan2(tangent[1], tangent[0]));
+        } else {
+          symbol.attr('rotation', specifiedRotation);
+        }
+      }
+
       if (symbolFrom) {
         symbolFrom.setPosition(fromPos);
+        setSymbolRotation(symbolFrom, 0);
         var tangent = line.tangentAt(0);
         symbolFrom.rotation = Math.PI / 2 - Math.atan2(tangent[1], tangent[0]);
         symbolFrom.scaleX = symbolFrom.scaleY = invScale * percent;
@@ -43463,6 +45079,7 @@
       if (symbolTo) {
         symbolTo.setPosition(toPos);
         var tangent = line.tangentAt(1);
+        setSymbolRotation(symbolTo, 1);
         symbolTo.rotation = -Math.PI / 2 - Math.atan2(tangent[1], tangent[0]);
         symbolTo.scaleX = symbolTo.scaleY = invScale * percent;
         symbolTo.markRedraw();
@@ -43905,8 +45522,10 @@
         }
 
         lineData.setItemVisual(idx, {
+          fromSymbolRotate: fromData.getItemVisual(idx, 'symbolRotate'),
           fromSymbolSize: fromData.getItemVisual(idx, 'symbolSize'),
           fromSymbol: fromData.getItemVisual(idx, 'symbol'),
+          toSymbolRotate: toData.getItemVisual(idx, 'symbolRotate'),
           toSymbolSize: toData.getItemVisual(idx, 'symbolSize'),
           toSymbol: toData.getItemVisual(idx, 'symbol'),
           style: lineStyle
@@ -43929,6 +45548,7 @@
         }
 
         data.setItemVisual(idx, {
+          symbolRotate: itemModel.get('symbolRotate'),
           symbolSize: itemModel.get('symbolSize') || symbolSize[isFrom ? 0 : 1],
           symbol: itemModel.get('symbol', true) || symbolType[isFrom ? 0 : 1],
           style: style
@@ -44172,9 +45792,26 @@
       var areaData = createList$3(coordSys, seriesModel, maModel);
       maModel.setData(areaData);
       areaData.each(function (idx) {
-        areaData.setItemLayout(idx, map(dimPermutations, function (dim) {
+        var points = map(dimPermutations, function (dim) {
           return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
-        }));
+        });
+        var allClipped = true;
+        each(dimPermutations, function (dim) {
+          if (!allClipped) {
+            return;
+          }
+
+          var xValue = areaData.get(dim[0], idx);
+          var yValue = areaData.get(dim[1], idx);
+
+          if ((isInifinity$1(xValue) || coordSys.getAxis('x').containData(xValue)) && (isInifinity$1(yValue) || coordSys.getAxis('y').containData(yValue))) {
+            allClipped = false;
+          }
+        });
+        areaData.setItemLayout(idx, {
+          points: points,
+          allClipped: allClipped
+        });
         var style = areaData.getItemModel(idx).getModel('itemStyle').getItemStyle();
         var color$1 = getVisualFromData(seriesData, 'color');
 
@@ -44193,22 +45830,41 @@
         areaData.setItemVisual(idx, 'style', style);
       });
       areaData.diff(inner$d(polygonGroup).data).add(function (idx) {
-        var polygon = new Polygon({
-          shape: {
-            points: areaData.getItemLayout(idx)
-          }
-        });
-        areaData.setItemGraphicEl(idx, polygon);
-        polygonGroup.group.add(polygon);
+        var layout = areaData.getItemLayout(idx);
+
+        if (!layout.allClipped) {
+          var polygon = new Polygon({
+            shape: {
+              points: layout.points
+            }
+          });
+          areaData.setItemGraphicEl(idx, polygon);
+          polygonGroup.group.add(polygon);
+        }
       }).update(function (newIdx, oldIdx) {
         var polygon = inner$d(polygonGroup).data.getItemGraphicEl(oldIdx);
-        updateProps(polygon, {
-          shape: {
-            points: areaData.getItemLayout(newIdx)
+        var layout = areaData.getItemLayout(newIdx);
+
+        if (!layout.allClipped) {
+          if (polygon) {
+            updateProps(polygon, {
+              shape: {
+                points: layout.points
+              }
+            }, maModel, newIdx);
+          } else {
+            polygon = new Polygon({
+              shape: {
+                points: layout.points
+              }
+            });
           }
-        }, maModel, newIdx);
-        polygonGroup.group.add(polygon);
-        areaData.setItemGraphicEl(newIdx, polygon);
+
+          areaData.setItemGraphicEl(newIdx, polygon);
+          polygonGroup.group.add(polygon);
+        } else if (polygon) {
+          polygonGroup.group.remove(polygon);
+        }
       }).remove(function (idx) {
         var polygon = inner$d(polygonGroup).data.getItemGraphicEl(idx);
         polygonGroup.group.remove(polygon);
@@ -45693,7 +47349,7 @@
   }
 
   ComponentView.registerClass(SliderZoomView);
-  var each$8 = each;
+  var each$7 = each;
   var asc$1 = asc;
 
   var AxisProxy = function () {
@@ -45750,7 +47406,7 @@
       var percentWindow = [];
       var valueWindow = [];
       var hasPropModeValue;
-      each$8(['start', 'end'], function (prop, idx) {
+      each$7(['start', 'end'], function (prop, idx) {
         var boundPercent = opt[prop];
         var boundValue = opt[prop + 'Value'];
 
@@ -45818,7 +47474,7 @@
         return;
       }
 
-      each$8(seriesModels, function (seriesModel) {
+      each$7(seriesModels, function (seriesModel) {
         var seriesData = seriesModel.getData();
         var dataDims = seriesData.mapDimensionsAll(axisDim);
 
@@ -45850,7 +47506,7 @@
             return hasValue && leftOut && rightOut;
           });
         } else {
-          each$8(dataDims, function (dim) {
+          each$7(dataDims, function (dim) {
             if (filterMode === 'empty') {
               seriesModel.setData(seriesData = seriesData.map(dim, function (value) {
                 return !isInWindow(value) ? NaN : value;
@@ -45863,7 +47519,7 @@
           });
         }
 
-        each$8(dataDims, function (dim) {
+        each$7(dataDims, function (dim) {
           seriesData.setApproximateExtent(valueWindow, dim);
         });
       });
@@ -45877,7 +47533,7 @@
       var minMaxSpan = this._minMaxSpan = {};
       var dataZoomModel = this._dataZoomModel;
       var dataExtent = this._dataExtent;
-      each$8(['min', 'max'], function (minMax) {
+      each$7(['min', 'max'], function (minMax) {
         var percentSpan = dataZoomModel.get(minMax + 'Span');
         var valueSpan = dataZoomModel.get(minMax + 'ValueSpan');
         valueSpan != null && (valueSpan = this.getAxisModel().axis.scale.parse(valueSpan));
@@ -45922,7 +47578,7 @@
 
   function calculateDataExtent(axisProxy, axisDim, seriesModels) {
     var dataExtent = [Infinity, -Infinity];
-    each$8(seriesModels, function (seriesModel) {
+    each$7(seriesModels, function (seriesModel) {
       unionAxisExtentFromData(dataExtent, seriesModel.getData(), axisDim);
     });
     var axisModel = axisProxy.getAxisModel();
@@ -46915,7 +48571,7 @@
         $a.target = '_blank';
         $a.href = url;
         var evt = new MouseEvent('click', {
-          view: window,
+          view: document.defaultView,
           bubbles: true,
           cancelable: false
         });
@@ -47059,13 +48715,10 @@
       var newTitle;
 
       if (type === 'stack') {
-        var seriesOptions = newOption.series;
-        var tiledLang = ecModel.getLocale(['toolbox', 'magicType', 'title', 'tiled']);
-        var titleLang = ecModel.getLocale(['toolbox', 'magicType', 'title']);
-        var isStack = seriesOptions && seriesOptions[0] && seriesOptions[0].stack === INNER_STACK_KEYWORD;
-        newTitle = isStack ? merge({
-          stack: tiledLang
-        }, titleLang) : clone(titleLang);
+        newTitle = merge({
+          stack: model.option.title.tiled,
+          tiled: model.option.title.stack
+        }, model.option.title);
       }
 
       api.dispatchAction({
@@ -47179,7 +48832,8 @@
       }));
       var columns = [categoryAxis.model.getCategories()];
       each(group.series, function (series) {
-        columns.push(series.getRawData().mapArray(valueAxisDim, function (val) {
+        var rawData = series.getRawData();
+        columns.push(series.getRawData().mapArray(rawData.mapDimension(valueAxisDim), function (val) {
           return val;
         }));
       });
@@ -47276,7 +48930,13 @@
     var data = [];
 
     for (var i = 0; i < lines.length; i++) {
-      var items = trim$1(lines[i]).split(itemSplitRegex);
+      var line = trim$1(lines[i]);
+
+      if (!line) {
+        continue;
+      }
+
+      var items = line.split(itemSplitRegex);
       var name_1 = '';
       var value = void 0;
       var hasName = false;
@@ -47400,6 +49060,15 @@
 
       addEventListener(closeButton, 'click', close);
       addEventListener(refreshButton, 'click', function () {
+        if (contentToOption == null && optionToContent != null || contentToOption != null && optionToContent == null) {
+          if (true) {
+            console.warn('It seems you have just provided one of `contentToOption` and `optionToContent` functions but missed the other one. Data change is ignored.');
+          }
+
+          close();
+          return;
+        }
+
         var newOption;
 
         try {
@@ -47471,13 +49140,18 @@
       var original = originalData && originalData[idx];
 
       if (isObject(original) && !isArray(original)) {
-        if (isObject(newVal) && !isArray(newVal)) {
-          newVal = newVal.value;
+        var newValIsObject = isObject(newVal) && !isArray(newVal);
+
+        if (!newValIsObject) {
+          newVal = {
+            value: newVal
+          };
         }
 
-        return defaults({
-          value: newVal
-        }, original);
+        var shouldDeleteName = original.name != null && newVal.name == null;
+        newVal = defaults(newVal, original);
+        shouldDeleteName && delete newVal.name;
+        return newVal;
       } else {
         return newVal;
       }
@@ -47511,8 +49185,8 @@
     }, payload.newOption));
   });
   var BRUSH_PANEL_GLOBAL = true;
-  var mathMin$5 = Math.min;
-  var mathMax$5 = Math.max;
+  var mathMin$7 = Math.min;
+  var mathMax$7 = Math.max;
   var mathPow$2 = Math.pow;
   var COVER_Z = 10000;
   var UNSELECT_THRESHOLD = 6;
@@ -47856,7 +49530,7 @@
 
   function updateBaseRect(controller, cover, localRange, brushOption) {
     var lineWidth = brushOption.brushStyle.lineWidth || 0;
-    var handleSize = mathMax$5(lineWidth, MIN_RESIZE_LINE_WIDTH);
+    var handleSize = mathMax$7(lineWidth, MIN_RESIZE_LINE_WIDTH);
     var x = localRange[0][0];
     var y = localRange[1][0];
     var xa = x - lineWidth / 2;
@@ -47915,8 +49589,8 @@
   }
 
   function formatRectRange(x, y, x2, y2) {
-    var min = [mathMin$5(x, x2), mathMin$5(y, y2)];
-    var max = [mathMax$5(x, x2), mathMax$5(y, y2)];
+    var min = [mathMin$7(x, x2), mathMin$7(y, y2)];
+    var max = [mathMax$7(x, x2), mathMax$7(y, y2)];
     return [[min[0], max[0]], [min[1], max[1]]];
   }
 
@@ -47988,10 +49662,10 @@
   }
 
   function pointsToRect(points) {
-    var xmin = mathMin$5(points[0][0], points[1][0]);
-    var ymin = mathMin$5(points[0][1], points[1][1]);
-    var xmax = mathMax$5(points[0][0], points[1][0]);
-    var ymax = mathMax$5(points[0][1], points[1][1]);
+    var xmin = mathMin$7(points[0][0], points[1][0]);
+    var ymin = mathMin$7(points[0][1], points[1][1]);
+    var xmax = mathMax$7(points[0][0], points[1][0]);
+    var ymax = mathMax$7(points[0][1], points[1][1]);
     return {
       x: xmin,
       y: ymin,
@@ -48215,8 +49889,8 @@
       },
       getCreatingRange: function (localTrack) {
         var ends = getTrackEnds(localTrack);
-        var min = mathMin$5(ends[0][xyIndex], ends[1][xyIndex]);
-        var max = mathMax$5(ends[0][xyIndex], ends[1][xyIndex]);
+        var min = mathMin$7(ends[0][xyIndex], ends[1][xyIndex]);
+        var max = mathMax$7(ends[0][xyIndex], ends[1][xyIndex]);
         return [min, max];
       },
       updateCoverShape: function (controller, cover, localRange, brushOption) {
@@ -48561,12 +50235,12 @@
     return xyMinMax ? [xyMinMax[0][1] - xyMinMax[0][0], xyMinMax[1][1] - xyMinMax[1][0]] : [NaN, NaN];
   }
 
-  var each$9 = each;
+  var each$8 = each;
   var inner$f = makeInner();
 
   function push(ecModel, newSnapshot) {
     var storedSnapshots = getStoreSnapshots(ecModel);
-    each$9(newSnapshot, function (batchItem, dataZoomId) {
+    each$8(newSnapshot, function (batchItem, dataZoomId) {
       var i = storedSnapshots.length - 1;
 
       for (; i >= 0; i--) {
@@ -48602,7 +50276,7 @@
     var head = storedSnapshots[storedSnapshots.length - 1];
     storedSnapshots.length > 1 && storedSnapshots.pop();
     var snapshot = {};
-    each$9(head, function (batchItem, dataZoomId) {
+    each$8(head, function (batchItem, dataZoomId) {
       for (var i = storedSnapshots.length - 1; i >= 0; i--) {
         batchItem = storedSnapshots[i][dataZoomId];
 
@@ -48664,7 +50338,7 @@
   }(DataZoomView);
 
   ComponentView.registerClass(SelectDataZoomView);
-  var each$a = each;
+  var each$9 = each;
   var DATA_ZOOM_ID_BASE = makeInternalComponentId('toolbox-dataZoom_');
 
   var DataZoomFeature = function (_super) {
@@ -48762,7 +50436,7 @@
 
     DataZoomFeature.prototype._dispatchZoomAction = function (snapshot) {
       var batch = [];
-      each$a(snapshot, function (batchItem, dataZoomId) {
+      each$9(snapshot, function (batchItem, dataZoomId) {
         batch.push(clone(batchItem));
       });
       batch.length && this.api.dispatchAction({
@@ -48780,7 +50454,11 @@
           zoom: 'M0,13.5h26.9 M13.5,26.9V0 M32.1,13.5H58V58H13.5 V32.1',
           back: 'M22,1.4L9.9,13.5l12.3,12.3 M10.3,13.5H54.9v44.6 H10.3v-26'
         },
-        title: ecModel.getLocale(['toolbox', 'dataZoom', 'title'])
+        title: ecModel.getLocale(['toolbox', 'dataZoom', 'title']),
+        brushStyle: {
+          borderWidth: 0,
+          color: 'rgba(210,219,238,0.2)'
+        }
       };
       return defaultOption;
     };
@@ -48842,10 +50520,7 @@
     });
     view.brushController.setPanels(panels).enableBrush(zoomActive && panels.length ? {
       brushType: 'auto',
-      brushStyle: {
-        lineWidth: 0,
-        fill: 'rgba(210,219,238,0.2)'
-      }
+      brushStyle: featureModel.getModel('brushStyle').getItemStyle()
     } : false);
   }
 
@@ -48861,10 +50536,10 @@
     var dzOptions = [];
     var finder = makeAxisFinder(dzFeatureModel);
     var finderResult = parseFinder(ecModel, finder);
-    each$a(finderResult.xAxisModels, function (axisModel) {
+    each$9(finderResult.xAxisModels, function (axisModel) {
       return buildInternalOptions(axisModel, 'xAxis', 'xAxisIndex');
     });
-    each$a(finderResult.yAxisModels, function (axisModel) {
+    each$9(finderResult.yAxisModels, function (axisModel) {
       return buildInternalOptions(axisModel, 'yAxis', 'yAxisIndex');
     });
 
@@ -48923,14 +50598,13 @@
     return document.createElementNS('http://www.w3.org/2000/svg', name);
   }
 
-  var CMD$4 = PathProxy.CMD;
   var NONE = 'none';
   var mathRound = Math.round;
-  var mathSin$3 = Math.sin;
-  var mathCos$3 = Math.cos;
-  var PI$6 = Math.PI;
-  var PI2$7 = Math.PI * 2;
-  var degree = 180 / PI$6;
+  var mathSin$4 = Math.sin;
+  var mathCos$4 = Math.cos;
+  var PI$7 = Math.PI;
+  var PI2$8 = Math.PI * 2;
+  var degree = 180 / PI$7;
   var EPSILON$4 = 1e-4;
 
   function round4(val) {
@@ -48992,7 +50666,7 @@
       attr(svgEl, 'stroke-width', (strokeScale_1 ? strokeWidth / strokeScale_1 : 0) + '');
       attr(svgEl, 'paint-order', style.strokeFirst ? 'stroke' : 'fill');
       attr(svgEl, 'stroke-opacity', (style.strokeOpacity != null ? style.strokeOpacity * opacity : opacity) + '');
-      var lineDash = style.lineDash;
+      var lineDash = style.lineDash && strokeWidth > 0 && normalizeLineDash(style.lineDash, strokeWidth);
 
       if (lineDash) {
         var lineDashOffset = style.lineDashOffset;
@@ -49022,140 +50696,120 @@
     }
   }
 
-  function pathDataToString(path) {
-    if (!path) {
-      return '';
-    }
+  var SVGPathRebuilder = function () {
+    function SVGPathRebuilder() {}
 
-    var str = [];
-    var data = path.data;
-    var dataLength = path.len();
-    var x;
-    var y;
+    SVGPathRebuilder.prototype.reset = function () {
+      this._d = [];
+      this._str = '';
+    };
 
-    for (var i = 0; i < dataLength;) {
-      var cmd = data[i++];
-      var cmdStr = '';
-      var nData = 0;
+    SVGPathRebuilder.prototype.moveTo = function (x, y) {
+      this._add('M', x, y);
+    };
 
-      switch (cmd) {
-        case CMD$4.M:
-          cmdStr = 'M';
-          nData = 2;
-          break;
+    SVGPathRebuilder.prototype.lineTo = function (x, y) {
+      this._add('L', x, y);
+    };
 
-        case CMD$4.L:
-          cmdStr = 'L';
-          nData = 2;
-          break;
+    SVGPathRebuilder.prototype.bezierCurveTo = function (x, y, x2, y2, x3, y3) {
+      this._add('C', x, y, x2, y2, x3, y3);
+    };
 
-        case CMD$4.Q:
-          cmdStr = 'Q';
-          nData = 4;
-          break;
+    SVGPathRebuilder.prototype.quadraticCurveTo = function (x, y, x2, y2) {
+      this._add('Q', x, y, x2, y2);
+    };
 
-        case CMD$4.C:
-          cmdStr = 'C';
-          nData = 6;
-          break;
+    SVGPathRebuilder.prototype.arc = function (cx, cy, r, startAngle, endAngle, anticlockwise) {
+      this.ellipse(cx, cy, r, r, 0, startAngle, endAngle, anticlockwise);
+    };
 
-        case CMD$4.A:
-          var cx = data[i++];
-          var cy = data[i++];
-          var rx = data[i++];
-          var ry = data[i++];
-          var theta = data[i++];
-          var dTheta = data[i++];
-          var psi = data[i++];
-          var clockwise = data[i++];
-          var dThetaPositive = Math.abs(dTheta);
-          var isCircle = isAroundZero$1(dThetaPositive - PI2$7) || (clockwise ? dTheta >= PI2$7 : -dTheta >= PI2$7);
-          var unifiedTheta = dTheta > 0 ? dTheta % PI2$7 : dTheta % PI2$7 + PI2$7;
-          var large = false;
+    SVGPathRebuilder.prototype.ellipse = function (cx, cy, rx, ry, psi, startAngle, endAngle, anticlockwise) {
+      var firstCmd = this._d.length === 0;
+      var dTheta = endAngle - startAngle;
+      var clockwise = !anticlockwise;
+      var dThetaPositive = Math.abs(dTheta);
+      var isCircle = isAroundZero$1(dThetaPositive - PI2$8) || (clockwise ? dTheta >= PI2$8 : -dTheta >= PI2$8);
+      var unifiedTheta = dTheta > 0 ? dTheta % PI2$8 : dTheta % PI2$8 + PI2$8;
+      var large = false;
 
-          if (isCircle) {
-            large = true;
-          } else if (isAroundZero$1(dThetaPositive)) {
-            large = false;
-          } else {
-            large = unifiedTheta >= PI$6 === !!clockwise;
-          }
-
-          var x0 = round4(cx + rx * mathCos$3(theta));
-          var y0 = round4(cy + ry * mathSin$3(theta));
-
-          if (isCircle) {
-            if (clockwise) {
-              dTheta = PI2$7 - 1e-4;
-            } else {
-              dTheta = -PI2$7 + 1e-4;
-            }
-
-            large = true;
-
-            if (i === 9) {
-              str.push('M', x0, y0);
-            }
-          }
-
-          x = round4(cx + rx * mathCos$3(theta + dTheta));
-          y = round4(cy + ry * mathSin$3(theta + dTheta));
-
-          if (isNaN(x0) || isNaN(y0) || isNaN(rx) || isNaN(ry) || isNaN(psi) || isNaN(degree) || isNaN(x) || isNaN(y)) {
-            return '';
-          }
-
-          str.push('A', round4(rx), round4(ry), mathRound(psi * degree), +large, +clockwise, x, y);
-          break;
-
-        case CMD$4.Z:
-          cmdStr = 'Z';
-          break;
-
-        case CMD$4.R:
-          x = round4(data[i++]);
-          y = round4(data[i++]);
-          var w = round4(data[i++]);
-          var h = round4(data[i++]);
-
-          if (isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h)) {
-            return '';
-          }
-
-          str.push('M', x, y, 'L', x + w, y, 'L', x + w, y + h, 'L', x, y + h, 'L', x, y);
-          break;
+      if (isCircle) {
+        large = true;
+      } else if (isAroundZero$1(dThetaPositive)) {
+        large = false;
+      } else {
+        large = unifiedTheta >= PI$7 === !!clockwise;
       }
 
-      cmdStr && str.push(cmdStr);
+      var x0 = round4(cx + rx * mathCos$4(startAngle));
+      var y0 = round4(cy + ry * mathSin$4(startAngle));
 
-      for (var j = 0; j < nData; j++) {
-        var val = round4(data[i++]);
-
-        if (isNaN(val)) {
-          return '';
+      if (isCircle) {
+        if (clockwise) {
+          dTheta = PI2$8 - 1e-4;
+        } else {
+          dTheta = -PI2$8 + 1e-4;
         }
 
-        str.push(val);
+        large = true;
+
+        if (firstCmd) {
+          this._d.push('M', x0, y0);
+        }
       }
-    }
 
-    return str.join(' ');
-  }
+      var x = round4(cx + rx * mathCos$4(startAngle + dTheta));
+      var y = round4(cy + ry * mathSin$4(startAngle + dTheta));
 
-  function wrapSVGBuildPath(el) {
-    if (!el.__svgBuildPath) {
-      var oldBuildPath_1 = el.buildPath;
-
-      el.__svgBuildPath = el.buildPath = function (path, shape, inBundle) {
-        oldBuildPath_1.call(this, el.path, shape, inBundle);
-        el.__svgPathStr = pathDataToString(el.path);
-      };
-
-      if (!el.shapeChanged()) {
-        el.__svgPathStr = pathDataToString(el.path);
+      if (isNaN(x0) || isNaN(y0) || isNaN(rx) || isNaN(ry) || isNaN(psi) || isNaN(degree) || isNaN(x) || isNaN(y)) {
+        return '';
       }
-    }
-  }
+
+      this._d.push('A', round4(rx), round4(ry), mathRound(psi * degree), +large, +clockwise, x, y);
+    };
+
+    SVGPathRebuilder.prototype.rect = function (x, y, w, h) {
+      this._add('M', x, y);
+
+      this._add('L', x + w, y);
+
+      this._add('L', x + w, y + h);
+
+      this._add('L', x, y + h);
+
+      this._add('L', x, y);
+    };
+
+    SVGPathRebuilder.prototype.closePath = function () {
+      this._add('Z');
+    };
+
+    SVGPathRebuilder.prototype._add = function (cmd, a, b, c, d, e, f, g, h) {
+      this._d.push(cmd);
+
+      for (var i = 1; i < arguments.length; i++) {
+        var val = arguments[i];
+
+        if (isNaN(val)) {
+          this._invalid = true;
+          return;
+        }
+
+        this._d.push(round4(val));
+      }
+    };
+
+    SVGPathRebuilder.prototype.generateStr = function () {
+      this._str = this._invalid ? '' : this._d.join(' ');
+      this._d = [];
+    };
+
+    SVGPathRebuilder.prototype.getStr = function () {
+      return this._str;
+    };
+
+    return SVGPathRebuilder;
+  }();
 
   var svgPath = {
     brush: function (el) {
@@ -49172,7 +50826,6 @@
       }
 
       var path = el.path;
-      wrapSVGBuildPath(el);
 
       if (el.shapeChanged()) {
         path.beginPath();
@@ -49180,7 +50833,22 @@
         el.pathUpdated();
       }
 
-      attr(svgEl, 'd', el.__svgPathStr);
+      var pathVersion = path.getVersion();
+      var elExt = el;
+      var svgPathBuilder = elExt.__svgPathBuilder;
+
+      if (elExt.__svgPathVersion !== pathVersion || !svgPathBuilder || el.style.strokePercent < 1) {
+        if (!svgPathBuilder) {
+          svgPathBuilder = elExt.__svgPathBuilder = new SVGPathRebuilder();
+        }
+
+        svgPathBuilder.reset();
+        path.rebuildPath(svgPathBuilder, el.style.strokePercent);
+        svgPathBuilder.generateStr();
+        elExt.__svgPathVersion = pathVersion;
+      }
+
+      attr(svgEl, 'd', svgPathBuilder.getStr());
       bindStyle(svgEl, style, el);
       setTransform(svgEl, el.transform);
     }
@@ -50307,6 +51975,7 @@
   exports.graphic = graphic$1;
   exports.helper = helper;
   exports.init = init$1;
+  exports.innerDrawElementOnCanvas = brushSingle;
   exports.matrix = matrix;
   exports.number = number;
   exports.parseGeoJSON = parseGeoJSON;
@@ -50317,6 +51986,7 @@
   exports.registerLoading = registerLoading;
   exports.registerLocale = registerLocale;
   exports.registerMap = registerMap;
+  exports.registerPostInit = registerPostInit;
   exports.registerPostUpdate = registerPostUpdate;
   exports.registerPreprocessor = registerPreprocessor;
   exports.registerProcessor = registerProcessor;

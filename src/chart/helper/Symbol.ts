@@ -19,7 +19,7 @@
 
 import {createSymbol} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
-import {getECData} from '../../util/ecData';
+import {getECData} from '../../util/innerStore';
 import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
 import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
@@ -35,6 +35,8 @@ import ZRImage from 'zrender/src/graphic/Image';
 type ECSymbol = ReturnType<typeof createSymbol>;
 
 interface SymbolOpts {
+    disableAnimation?: boolean
+
     useNameLabel?: boolean
     symbolInnerColor?: string
 }
@@ -153,6 +155,7 @@ class Symbol extends graphic.Group {
         const seriesModel = data.hostModel as SeriesModel;
         const symbolSize = Symbol.getSymbolSize(data, idx);
         const isInit = symbolType !== this._symbolType;
+        const disableAnimation = opts && opts.disableAnimation;
 
         if (isInit) {
             const keepAspect = data.getItemVisual(idx, 'symbolKeepAspect');
@@ -161,10 +164,12 @@ class Symbol extends graphic.Group {
         else {
             const symbolPath = this.childAt(0) as ECSymbol;
             symbolPath.silent = false;
-            graphic.updateProps(symbolPath, {
+            const target = {
                 scaleX: symbolSize[0] / 2,
                 scaleY: symbolSize[1] / 2
-            }, seriesModel, idx);
+            };
+            disableAnimation ? symbolPath.attr(target)
+                : graphic.updateProps(symbolPath, target, seriesModel, idx);
         }
 
         this._updateCommon(data, idx, symbolSize, seriesScope, opts);
@@ -184,7 +189,8 @@ class Symbol extends graphic.Group {
             symbolPath.scaleX = symbolPath.scaleY = 0;
             symbolPath.style.opacity = 0;
 
-            graphic.initProps(symbolPath, target, seriesModel, idx);
+            disableAnimation ? symbolPath.attr(target)
+                : graphic.initProps(symbolPath, target, seriesModel, idx);
         }
 
         this._seriesModel = seriesModel;
@@ -199,7 +205,6 @@ class Symbol extends graphic.Group {
     ) {
         const symbolPath = this.childAt(0) as ECSymbol;
         const seriesModel = data.hostModel as SeriesModel;
-
 
         let emphasisItemStyle;
         let blurItemStyle;
@@ -232,8 +237,8 @@ class Symbol extends graphic.Group {
         if (!seriesScope || data.hasItemOption) {
             const itemModel = (seriesScope && seriesScope.itemModel)
                 ? seriesScope.itemModel : data.getItemModel<SymbolDrawItemModelOption>(idx);
-
             const emphasisModel = itemModel.getModel('emphasis');
+
             emphasisItemStyle = emphasisModel.getModel('itemStyle').getItemStyle();
             selectItemStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
             blurItemStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
@@ -319,29 +324,24 @@ class Symbol extends graphic.Group {
         this._sizeX = symbolSize[0] / 2;
         this._sizeY = symbolSize[1] / 2;
 
-        symbolPath.ensureState('emphasis').style = emphasisItemStyle;
+        const emphasisState = symbolPath.ensureState('emphasis');
+
+        emphasisState.style = emphasisItemStyle;
         symbolPath.ensureState('select').style = selectItemStyle;
         symbolPath.ensureState('blur').style = blurItemStyle;
 
         if (hoverScale) {
-            this.ensureState('emphasis');
-            this.setSymbolScale(1);
+            const scaleRatio = Math.max(1.1, 3 / this._sizeY);
+            emphasisState.scaleX = this._sizeX * scaleRatio;
+            emphasisState.scaleY = this._sizeY * scaleRatio;
         }
-        else {
-            this.states.emphasis = null;
-        }
+
+        this.setSymbolScale(1);
 
         enableHoverEmphasis(this, focus, blurScope);
     }
 
     setSymbolScale(scale: number) {
-        const emphasisState = this.states.emphasis;
-        if (emphasisState) {
-            const hoverScale = Math.max(scale * 1.1, 3 / this._sizeY + scale);
-            emphasisState.scaleX = hoverScale;
-            emphasisState.scaleY = hoverScale;
-        }
-
         this.scaleX = this.scaleY = scale;
     }
 

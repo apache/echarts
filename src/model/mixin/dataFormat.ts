@@ -23,20 +23,20 @@ import {formatTpl} from '../../util/format';
 import {
     DataHost,
     DisplayState,
-    TooltipRenderMode,
     CallbackDataParams,
     ColorString,
     ZRColor,
     OptionDataValue,
-    SeriesDataType,
-    TooltipOrderMode
+    SeriesDataType
 } from '../../util/types';
 import GlobalModel from '../Global';
+import { TooltipMarkupBlockFragment } from '../../component/tooltip/tooltipMarkup';
+import { makePrintable } from '../../util/log';
 
 const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
 
-interface DataFormatMixin extends DataHost {
+export interface DataFormatMixin extends DataHost {
     ecModel: GlobalModel;
     mainType: string;
     subType: string;
@@ -46,7 +46,7 @@ interface DataFormatMixin extends DataHost {
     animatedValue: OptionDataValue[];
 }
 
-class DataFormatMixin {
+export class DataFormatMixin {
 
     /**
      * Get params for formatter
@@ -166,22 +166,75 @@ class DataFormatMixin {
      * @param {number} dataIndex
      * @param {boolean} [multipleSeries=false]
      * @param {string} [dataType]
-     * @param {string} [renderMode='html'] valid values: 'html' and 'richText'.
-     *                                     'html' is used for rendering tooltip in extra DOM form, and the result
-     *                                     string is used as DOM HTML content.
-     *                                     'richText' is used for rendering tooltip in rich text form, for those where
-     *                                     DOM operation is not supported.
      */
     formatTooltip(
         dataIndex: number,
         multipleSeries?: boolean,
-        dataType?: string,
-        renderMode?: TooltipRenderMode,
-        order?: TooltipOrderMode
-    ): string | {html: string, markers: {[markName: string]: string}} {
+        dataType?: string
+    ): TooltipFormatResult {
         // Empty function
         return;
     }
 };
 
-export default DataFormatMixin;
+type TooltipFormatResult =
+    // If `string`, means `TooltipFormatResultLegacyObject['html']`
+    string
+    // | TooltipFormatResultLegacyObject
+    | TooltipMarkupBlockFragment;
+
+// PENDING: previously we accept this type when calling `formatTooltip`,
+// but guess little chance has been used outside. Do we need to backward
+// compat it?
+// type TooltipFormatResultLegacyObject = {
+//     // `html` means the markup language text, either in 'html' or 'richText'.
+//     // The name `html` is not appropriate becuase in 'richText' it is not a HTML
+//     // string. But still support it for backward compat.
+//     html: string;
+//     markers: Dictionary<ColorString>;
+// };
+
+/**
+ * For backward compat, normalize the return from `formatTooltip`.
+ */
+export function normalizeTooltipFormatResult(
+    result: TooltipFormatResult
+    // markersExisting: Dictionary<ColorString>
+): {
+    // If `markupFragment` exists, `markupText` should be ignored.
+    markupFragment: TooltipMarkupBlockFragment;
+    // Can be `null`/`undefined`, means no tooltip.
+    markupText: string;
+    // Merged with `markersExisting`.
+    // markers: Dictionary<ColorString>;
+} {
+    let markupText;
+    // let markers: Dictionary<ColorString>;
+    let markupFragment: TooltipMarkupBlockFragment;
+    if (zrUtil.isObject(result)) {
+        if ((result as TooltipMarkupBlockFragment).type) {
+            markupFragment = result as TooltipMarkupBlockFragment;
+        }
+        else {
+            if (__DEV__) {
+                console.warn('The return type of `formatTooltip` is not supported: ' + makePrintable(result));
+            }
+        }
+        // else {
+        //     markupText = (result as TooltipFormatResultLegacyObject).html;
+        //     markers = (result as TooltipFormatResultLegacyObject).markers;
+        //     if (markersExisting) {
+        //         markers = zrUtil.merge(markersExisting, markers);
+        //     }
+        // }
+    }
+    else {
+        markupText = result;
+    }
+
+    return {
+        markupText: markupText,
+        // markers: markers || markersExisting,
+        markupFragment: markupFragment
+    };
+}

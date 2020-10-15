@@ -21,7 +21,13 @@
 import * as clazzUtil from '../util/clazz';
 import { Dictionary } from 'zrender/src/core/types';
 import List from '../data/List';
-import { DimensionName, ScaleDataValue, OptionDataValue, DimensionLoose, ScaleTick, ParsedValue } from '../util/types';
+import {
+    DimensionName,
+    ScaleDataValue,
+    OptionDataValue,
+    DimensionLoose,
+    ScaleTick
+} from '../util/types';
 import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
 
 
@@ -91,6 +97,8 @@ abstract class Scale {
 
     /**
      * Get extent
+     *
+     * Extent is always in increase order.
      */
     getExtent(): [number, number] {
         return this._extent.slice() as [number, number];

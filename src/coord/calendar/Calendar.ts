@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
-import { BoundingRect } from 'zrender/src/export';
+import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
 import CalendarModel from './CalendarModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -35,7 +35,6 @@ import { ParsedModelFinder } from '../../util/model';
 import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import SeriesModel from '../../model/Series';
 import CoordinateSystemManager from '../../CoordinateSystem';
-import { RectLike } from 'zrender/src/core/BoundingRect';
 
 // (24*60*60*1000)
 const PROXIMATE_ONE_DAY = 86400000;
@@ -250,6 +249,8 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
     /**
      * Convert a time data(time, value) item to (x, y) point.
      */
+    // TODO Clamp of calendar is not same with cartesian coordinate systems.
+    // It will return NaN if data exceeds.
     dataToPoint(data: OptionDataValueDate | OptionDataValueDate[], clamp?: boolean) {
         zrUtil.isArray(data) && (data = data[0]);
         clamp == null && (clamp = true);

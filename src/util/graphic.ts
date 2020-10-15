@@ -63,14 +63,12 @@ import {
     defaults,
     isObject
 } from 'zrender/src/core/util';
-import * as numberUtil from './number';
 import SeriesModel from '../model/Series';
-import {interpolateNumber} from 'zrender/src/animation/Animator';
 import List from '../data/List';
-import { getLabelText } from '../label/labelStyle';
+import { getLabelText, setLabelText, labelInner } from '../label/labelStyle';
 import { AnimationEasing } from 'zrender/src/animation/easing';
-import { getECData } from './ecData';
-import {makeInner} from './model';
+import { getECData } from './innerStore';
+import {interpolateRawValues} from './model';
 
 
 const mathMax = Math.max;
@@ -80,11 +78,6 @@ const _customShapeMap: Dictionary<{ new(): Path }> = {};
 
 type ExtendShapeOpt = Parameters<typeof Path.extend>[0];
 type ExtendShapeReturn = ReturnType<typeof Path.extend>;
-
-const innerLabel = makeInner<{
-    startValue: number | (string | number)[],
-    nextValue: number | (string | number)[]
-}, ZRText>();
 
 /**
  * Extend shape with parameters
@@ -414,6 +407,8 @@ function animateOrSetProps<Props>(
     else {
         el.stopAnimation();
         !isFrom && el.attr(props);
+        // Call during once.
+        during && during(1);
         cb && (cb as AnimateOrSetPropsOption['cb'])();
     }
 }
@@ -464,10 +459,7 @@ export function initProps<Props>(
     cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
     during?: AnimateOrSetPropsOption['during']
 ) {
-    animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, percent => {
-        // console.log(dataIndex, el.shape.width, percent);
-        during && during(percent);
-    });
+    animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, during);
 }
 
 /**
@@ -547,41 +539,16 @@ function animateOrSetLabel<Props extends PathProps>(
     labelModel: Model<LabelOption>,
     seriesModel: SeriesModel,
     animatableModel?: Model<AnimationOptionMixin>,
-    defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
+    getDefaultText?: (value: ParsedValue[] | ParsedValue) => string
 ) {
     const valueAnimationEnabled = labelModel && labelModel.get('valueAnimation');
-    if (valueAnimationEnabled) {
-        const precisionOption = labelModel.get('precision');
-        const precision: number = !precisionOption || precisionOption === 'auto'
-            ? 0
-            : precisionOption;
+    const label = el.getTextContent();
+    if (valueAnimationEnabled && label) {
+        const precision = labelModel ? labelModel.get('precision') : null;
+        const host = labelInner(label);
 
-        let interpolateValues: (number | string)[] | (number | string);
-        const rawValues = seriesModel.getRawValue(dataIndex);
-        let isRawValueNumber = false;
-        if (typeof rawValues === 'number') {
-            isRawValueNumber = true;
-            interpolateValues = rawValues;
-        }
-        else {
-            interpolateValues = [];
-            for (let i = 0; i < (rawValues as []).length; ++i) {
-                const info = data.getDimensionInfo(i);
-                if (info.type !== 'ordinal') {
-                    interpolateValues.push((rawValues as [])[i]);
-                }
-            }
-        }
-
-        const text = el.getTextContent();
-        const host = text && innerLabel(text);
-        host && (host.startValue = host.nextValue);
-
-        const duration = animatableModel.get('animationDuration');
-        if (!duration && host) {
-            // No animation for the first frame
-            host.nextValue = interpolateValues;
-        }
+        const sourceValue = host.prevValue;
+        const targetValue = host.value;
 
         const during = (percent: number) => {
             const text = el.getTextContent();
@@ -589,58 +556,26 @@ function animateOrSetLabel<Props extends PathProps>(
                 return;
             }
 
-            let interpolated;
-            if (isRawValueNumber) {
-                const value = interpolateNumber(
-                    host.startValue as number || 0,
-                    interpolateValues as number,
-                    percent
-                );
-                interpolated = numberUtil.round(value, precision);
-            }
-            else {
-                interpolated = [];
-                for (let i = 0; i < (rawValues as []).length; ++i) {
-                    const info = data.getDimensionInfo(i);
-                    // Don't interpolate ordinal dims
-                    if (info.type === 'ordinal') {
-                        interpolated[i] = (rawValues as [])[i];
-                    }
-                    else {
-                        /**
-                         * startValues may be undefined if no data in last setOption but
-                         * have data in this setOption. Use the data in this setOption
-                         * as interpolated value.
-                         */
-                        const startValues = host.startValue as number[];
-                        const value = startValues == null
-                            ? (rawValues as [])[i]
-                            : interpolateNumber(
-                                startValues && startValues[i] ? startValues[i] : 0,
-                                (interpolateValues as number[])[i],
-                                percent
-                            );
-                        interpolated[i] = numberUtil.round(value), precision;
-                    }
-                }
-            }
-            host.nextValue = interpolated;
+            const interpolated = interpolateRawValues(data, precision, sourceValue, targetValue, percent);
 
             const labelText = getLabelText({
                 labelDataIndex: dataIndex,
                 labelFetcher: seriesModel,
-                defaultText: defaultTextGetter
-                    ? defaultTextGetter(interpolated)
+                defaultText: getDefaultText
+                    ? getDefaultText(interpolated)
                     : interpolated + ''
             }, {normal: labelModel}, interpolated);
-            text.style.text = labelText.normal;
-            text.dirty();
+
+            setLabelText(text, labelText);
         };
+
+        host.prevValue = targetValue;
 
         const props: ElementProps = {};
         animateOrSetProps(animationType, el, props, animatableModel, dataIndex, null, during);
     }
 }
+
 
 export function updateLabel<Props>(
     el: Element<Props>,

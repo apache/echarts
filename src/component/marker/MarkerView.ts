@@ -24,7 +24,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { makeInner } from '../../util/model';
 import SeriesModel from '../../model/Series';
-import { Group } from 'zrender/src/export';
+import Group from 'zrender/src/graphic/Group';
 import { enterBlur } from '../../util/states';
 
 const inner = makeInner<{

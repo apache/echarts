@@ -26,10 +26,9 @@ import TimelineView from './TimelineView';
 import TimelineAxis from './TimelineAxis';
 import {createSymbol} from '../../util/symbol';
 import * as numberUtil from '../../util/number';
-import {encodeHTML} from '../../util/format';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { merge, each, extend, clone, isString, bind, defaults, retrieve2 } from 'zrender/src/core/util';
+import { merge, each, extend, isString, bind, defaults, retrieve2 } from 'zrender/src/core/util';
 import SliderTimelineModel from './SliderTimelineModel';
 import ComponentView from '../../view/Component';
 import { LayoutOrient, ZRTextAlign, ZRTextVerticalAlign, ZRElementEvent, ScaleTick } from '../../util/types';
@@ -44,8 +43,10 @@ import IntervalScale from '../../scale/Interval';
 import { VectorArray } from 'zrender/src/core/vector';
 import { parsePercent } from 'zrender/src/contain/text';
 import { makeInner } from '../../util/model';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis } from '../../util/states';
+import { createTooltipMarkup } from '../tooltip/tooltipMarkup';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 const PI = Math.PI;
 
@@ -129,7 +130,8 @@ class SliderTimelineView extends TimelineView {
             const axis = this._axis = this._createAxis(layoutInfo, timelineModel);
 
             timelineModel.formatTooltip = function (dataIndex: number) {
-                return encodeHTML(axis.scale.getLabel({value: dataIndex}));
+                const name = axis.scale.getLabel({value: dataIndex});
+                return createTooltipMarkup('nameValue', { noName: true, value: name });
             };
 
             each(
@@ -764,12 +766,18 @@ function makeControlIcon(
     rect: number[],
     opts: PathProps
 ) {
-    const icon = graphic.makePath(
-        timelineModel.get(['controlStyle', objPath]).replace(/^path:\/\//, ''),
-        clone(opts || {}),
-        new BoundingRect(rect[0], rect[1], rect[2], rect[3]),
-        'center'
+    const style = opts.style;
+
+    const icon = graphic.createIcon(
+        timelineModel.get(['controlStyle', objPath]),
+        opts || {},
+        new BoundingRect(rect[0], rect[1], rect[2], rect[3])
     );
+
+    // TODO createIcon won't use style in opt.
+    if (style) {
+        (icon as Displayable).setStyle(style);
+    }
 
     return icon;
 }

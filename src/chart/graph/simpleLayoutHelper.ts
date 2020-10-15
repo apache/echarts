@@ -20,6 +20,9 @@
 import * as vec2 from 'zrender/src/core/vector';
 import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './GraphSeries';
 import Graph from '../../data/Graph';
+import * as zrUtil from 'zrender/src/core/util';
+import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
+
 
 export function simpleLayout(seriesModel: GraphSeriesModel) {
     const coordSys = seriesModel.coordinateSystem;
@@ -33,12 +36,16 @@ export function simpleLayout(seriesModel: GraphSeriesModel) {
         node.setLayout([+model.get('x'), +model.get('y')]);
     });
 
-    simpleLayoutEdge(graph);
+    simpleLayoutEdge(graph, seriesModel);
 }
 
-export function simpleLayoutEdge(graph: Graph) {
-    graph.eachEdge(function (edge, idx) {
-        const curveness = edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'curveness']) || 0;
+export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
+    graph.eachEdge(function (edge, index) {
+        const curveness = zrUtil.retrieve3(
+            edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'curveness']),
+            -getCurvenessForEdge(edge, seriesModel, index, true),
+            0
+        );
         const p1 = vec2.clone(edge.node1.getLayout());
         const p2 = vec2.clone(edge.node2.getLayout());
         const points = [p1, p2];

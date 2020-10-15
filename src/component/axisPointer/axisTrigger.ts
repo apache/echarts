@@ -41,7 +41,7 @@ interface DataIndex {
 
 type BatchItem = DataIndex;
 
-interface DataByAxis {
+export interface DataByAxis {
     // TODO: TYPE Value type
     value: string | number
     axisIndex: number
@@ -56,7 +56,7 @@ interface DataByAxis {
         formatter: AxisPointerOption['label']['formatter']
     }
 }
-interface DataByCoordSys {
+export interface DataByCoordSys {
     coordSysId: string
     coordSysIndex: number
     coordSysType: string
@@ -235,7 +235,7 @@ function processOnAxis(
     const snapToValue = payloadInfo.snapToValue;
 
     // Fill content of event obj for echarts.connect.
-    // By defualt use the first involved series data as a sample to connect.
+    // By default use the first involved series data as a sample to connect.
     if (payloadBatch[0] && outputFinder.seriesIndex == null) {
         extend(outputFinder, payloadBatch[0]);
     }

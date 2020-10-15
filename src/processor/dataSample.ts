@@ -83,15 +83,21 @@ export default function (seriesType: string): StageHandler {
             const data = seriesModel.getData();
             const sampling = seriesModel.get('sampling');
             const coordSys = seriesModel.coordinateSystem;
-            // Only cartesian2d support down sampling
-            if (coordSys.type === 'cartesian2d' && sampling) {
+            const count = data.count();
+            // Only cartesian2d support down sampling. Disable it when there is few data.
+            if (count > 10 && coordSys.type === 'cartesian2d' && sampling) {
                 const baseAxis = coordSys.getBaseAxis();
                 const valueAxis = coordSys.getOtherAxis(baseAxis);
                 const extent = baseAxis.getExtent();
+                const dpr = api.getDevicePixelRatio();
                 // Coordinste system has been resized
-                const size = extent[1] - extent[0];
-                const rate = Math.round(data.count() / size);
+                const size = Math.abs(extent[1] - extent[0]) * (dpr || 1);
+                const rate = Math.round(count / size);
+
                 if (rate > 1) {
+                    if (sampling === 'lttb') {
+                        seriesModel.setData(data.lttbDownSample(data.mapDimension(valueAxis.dim), 1 / rate));
+                    }
                     let sampler;
                     if (typeof sampling === 'string') {
                         sampler = samplers[sampling];

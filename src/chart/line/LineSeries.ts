@@ -57,6 +57,10 @@ export interface LineDataItemOption extends SymbolOptionMixin,
     value?: LineDataValue
 }
 
+export interface LineEndLabelOption extends LabelOption {
+    valueAnimation: boolean
+}
+
 
 export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraStateOption & {
     emphasis?: {
@@ -83,6 +87,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     clip?: boolean
 
     label?: LabelOption
+    endLabel?: LineEndLabelOption
 
     lineStyle?: LineStyleOption
 
@@ -141,6 +146,12 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
             position: 'top'
         },
 
+        endLabel: {
+            show: false,
+            valueAnimation: true,
+            distance: 8
+        },
+
         lineStyle: {
             width: 2,
             type: 'solid'
@@ -179,7 +190,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         // Whether to connect break point.
         connectNulls: false,
 
-        // Sampling for large data. Can be: 'average', 'max', 'min', 'sum'.
+        // Sampling for large data. Can be: 'average', 'max', 'min', 'sum', 'lttb'.
         sampling: 'none',
 
         animationEasing: 'linear',

@@ -118,7 +118,8 @@ function assembleSeriesWithCategoryAxis(groups: Dictionary<SeriesGroup>): string
         // @ts-ignore TODO Polar
         const columns = [categoryAxis.model.getCategories()];
         zrUtil.each(group.series, function (series) {
-            columns.push(series.getRawData().mapArray(valueAxisDim, function (val) {
+            const rawData = series.getRawData();
+            columns.push(series.getRawData().mapArray(rawData.mapDimension(valueAxisDim), function (val) {
                 return val;
             }));
         });
@@ -223,7 +224,14 @@ function parseListContents(str: string) {
 
     const data: DataList = [];
     for (let i = 0; i < lines.length; i++) {
-        let items = trim(lines[i]).split(itemSplitRegex);
+        // if line is empty, ignore it.
+        // there is a case that a user forgot to delete `\n`.
+        const line = trim(lines[i]);
+        if (!line) {
+            continue;
+        }
+        let items = line.split(itemSplitRegex);
+
         let name = '';
         let value: number[];
         let hasName = false;
@@ -371,6 +379,16 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         addEventListener(closeButton, 'click', close);
 
         addEventListener(refreshButton, 'click', function () {
+            if ((contentToOption == null && optionToContent != null)
+                || (contentToOption != null && optionToContent == null)) {
+                if (__DEV__) {
+                    // eslint-disable-next-line
+                    console.warn('It seems you have just provided one of `contentToOption` and `optionToContent` functions but missed the other one. Data change is ignored.')
+                }
+                close();
+                return;
+            }
+
             let newOption;
             try {
                 if (typeof contentToOption === 'function') {
@@ -450,13 +468,18 @@ function tryMergeDataOption(newData: DataList, originalData: DataList) {
     return zrUtil.map(newData, function (newVal, idx) {
         const original = originalData && originalData[idx];
         if (zrUtil.isObject(original) && !zrUtil.isArray(original)) {
-            if (zrUtil.isObject(newVal) && !zrUtil.isArray(newVal)) {
-                newVal = newVal.value;
+            const newValIsObject = zrUtil.isObject(newVal) && !zrUtil.isArray(newVal);
+            if (!newValIsObject) {
+                newVal = {
+                    value: newVal
+                } as DataItem;
             }
+            // original data has name but new data has no name
+            const shouldDeleteName = original.name != null && (newVal as DataItem).name == null;
             // Original data has option
-            return zrUtil.defaults({
-                value: newVal
-            }, original);
+            newVal = zrUtil.defaults((newVal as DataItem), original);
+            shouldDeleteName && (delete (newVal as DataItem).name);
+            return newVal;
         }
         else {
             return newVal;
