@@ -79,7 +79,7 @@ describe('completeDimensions', function () {
             },
             SOURCE_FORMAT_ARRAY_ROWS,
             null
-        )
+        );
 
         const opt = {
             'dimsDef': [

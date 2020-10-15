@@ -17,12 +17,19 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-const utHelper = require('../../../core/utHelper');
+
+import { createChart } from '../../../core/utHelper';
+import { EChartsType } from '../../../../../src/echarts';
+import { EChartsFullOption } from '../../../../../src/option';
+import { ContinousVisualMapOption } from '../../../../../src/component/visualMap/ContinuousModel';
+import { PiecewiseVisualMapOption } from '../../../../../src/component/visualMap/PiecewiseModel';
+import VisualMapModel from '../../../../../src/component/visualMap/VisualMapModel';
+
 
 describe('vsiaulMap_setOption', function () {
-    var chart;
+    let chart: EChartsType;
     beforeEach(function () {
-        chart = utHelper.createChart();
+        chart = createChart();
     });
 
     afterEach(function () {
@@ -41,12 +48,13 @@ describe('vsiaulMap_setOption', function () {
             }
         });
 
-        var option = chart.getOption();
+        const option = chart.getOption();
+        const visualMapOptionGotten = option.visualMap as (ContinousVisualMapOption | PiecewiseVisualMapOption)[];
 
-        expect(option.visualMap.length).toEqual(1);
-        expect(option.visualMap[0].inRange.color).toEqual(['red', 'blue', 'yellow']);
-        expect(option.visualMap[0].target.inRange.color).toEqual(['red', 'blue', 'yellow']);
-        expect(option.visualMap[0].controller.inRange.color).toEqual(['red', 'blue', 'yellow']);
+        expect(visualMapOptionGotten.length).toEqual(1);
+        expect(visualMapOptionGotten[0].inRange.color).toEqual(['red', 'blue', 'yellow']);
+        expect(visualMapOptionGotten[0].target.inRange.color).toEqual(['red', 'blue', 'yellow']);
+        expect(visualMapOptionGotten[0].controller.inRange.color).toEqual(['red', 'blue', 'yellow']);
         done();
     });
 
@@ -60,12 +68,13 @@ describe('vsiaulMap_setOption', function () {
             }
         });
 
-        var option = chart.getOption();
+        const option = chart.getOption();
+        const visualMapOptionGotten = option.visualMap as (ContinousVisualMapOption | PiecewiseVisualMapOption)[];
 
-        expect(option.visualMap.length).toEqual(1);
-        expect(option.visualMap[0].color).toEqual(['yellow', 'blue', 'red']);
-        expect(option.visualMap[0].target.inRange.color).toEqual(['red', 'blue', 'yellow']);
-        expect(option.visualMap[0].controller.inRange.color).toEqual(['red', 'blue', 'yellow']);
+        expect(visualMapOptionGotten.length).toEqual(1);
+        expect(visualMapOptionGotten[0].color).toEqual(['yellow', 'blue', 'red']);
+        expect(visualMapOptionGotten[0].target.inRange.color).toEqual(['red', 'blue', 'yellow']);
+        expect(visualMapOptionGotten[0].controller.inRange.color).toEqual(['red', 'blue', 'yellow']);
         done();
     });
 
@@ -93,11 +102,12 @@ describe('vsiaulMap_setOption', function () {
 
         expectTheSame(chart.getOption());
 
-        function expectTheSame(option) {
-            expect(option.visualMap.length).toEqual(1);
-            expect(option.visualMap[0].inRange.color).toEqual(['red', 'blue', 'yellow']);
-            expect(option.visualMap[0].target.inRange.color).toEqual(['red', 'blue', 'yellow']);
-            expect(option.visualMap[0].controller.inRange.color).toEqual(['red', 'blue', 'yellow']);
+        function expectTheSame(option: EChartsFullOption) {
+            const visualMapOptionGotten = option.visualMap as (ContinousVisualMapOption | PiecewiseVisualMapOption)[];
+            expect(visualMapOptionGotten.length).toEqual(1);
+            expect(visualMapOptionGotten[0].inRange.color).toEqual(['red', 'blue', 'yellow']);
+            expect(visualMapOptionGotten[0].target.inRange.color).toEqual(['red', 'blue', 'yellow']);
+            expect(visualMapOptionGotten[0].controller.inRange.color).toEqual(['red', 'blue', 'yellow']);
             done();
         }
     });
@@ -115,7 +125,7 @@ describe('vsiaulMap_setOption', function () {
             }
         });
 
-        var option = chart.getOption();
+        // const option = chart.getOption();
 
         chart.setOption({
             visualMap: {
@@ -125,14 +135,15 @@ describe('vsiaulMap_setOption', function () {
             }
         });
 
-        var option = chart.getOption();
+        const option = chart.getOption();
+        const visualMapOptionGotten = option.visualMap as (ContinousVisualMapOption | PiecewiseVisualMapOption)[];
 
-        expect(option.visualMap.length).toEqual(1);
-        expect(option.visualMap[0].inRange.hasOwnProperty('color')).toEqual(false);
-        expect(option.visualMap[0].target.inRange.hasOwnProperty('color')).toEqual(false);
-        expect(option.visualMap[0].controller.inRange.hasOwnProperty('color')).toEqual(false);
-        expect(option.visualMap[0].inRange.symbolSize).toEqual([0.4, 0.6]);
-        expect(option.visualMap[0].target.inRange.symbolSize).toEqual([0.4, 0.6]);
+        expect(visualMapOptionGotten.length).toEqual(1);
+        expect(visualMapOptionGotten[0].inRange.hasOwnProperty('color')).toEqual(false);
+        expect(visualMapOptionGotten[0].target.inRange.hasOwnProperty('color')).toEqual(false);
+        expect(visualMapOptionGotten[0].controller.inRange.hasOwnProperty('color')).toEqual(false);
+        expect(visualMapOptionGotten[0].inRange.symbolSize).toEqual([0.4, 0.6]);
+        expect(visualMapOptionGotten[0].target.inRange.symbolSize).toEqual([0.4, 0.6]);
         done();
         // Do not compare controller.inRange.symbolSize, which will be amplified to controller size.
         // expect(option.visualMap[0].controller.inRange.symbolSize).toEqual([?, ?]);
@@ -159,15 +170,15 @@ describe('vsiaulMap_setOption', function () {
             }
         });
 
-        var option = chart.getOption();
-
-        expect(option.visualMap.length).toEqual(1);
-        expect(option.visualMap[0].inRange.hasOwnProperty('color')).toEqual(false);
-        expect(option.visualMap[0].target.inRange.hasOwnProperty('color')).toEqual(false);
-        expect(option.visualMap[0].controller.inRange.hasOwnProperty('color')).toEqual(false);
-        expect(option.visualMap[0].inRange.colorAlpha).toEqual([0.4, 0.6]);
-        expect(option.visualMap[0].target.inRange.colorAlpha).toEqual([0.4, 0.6]);
-        expect(option.visualMap[0].controller.inRange.colorAlpha).toEqual([0.4, 0.6]);
+        let visualMapOptionGotten: (ContinousVisualMapOption | PiecewiseVisualMapOption)[];
+        visualMapOptionGotten = chart.getOption().visualMap as typeof visualMapOptionGotten;
+        expect(visualMapOptionGotten.length).toEqual(1);
+        expect(visualMapOptionGotten[0].inRange.hasOwnProperty('color')).toEqual(false);
+        expect(visualMapOptionGotten[0].target.inRange.hasOwnProperty('color')).toEqual(false);
+        expect(visualMapOptionGotten[0].controller.inRange.hasOwnProperty('color')).toEqual(false);
+        expect(visualMapOptionGotten[0].inRange.colorAlpha).toEqual([0.4, 0.6]);
+        expect(visualMapOptionGotten[0].target.inRange.colorAlpha).toEqual([0.4, 0.6]);
+        expect(visualMapOptionGotten[0].controller.inRange.colorAlpha).toEqual([0.4, 0.6]);
 
         chart.setOption({
             visualMap: {
@@ -175,13 +186,12 @@ describe('vsiaulMap_setOption', function () {
             }
         });
 
-        var option = chart.getOption();
-
-        expect(option.visualMap.length).toEqual(1);
-        expect(option.visualMap[0].target.inRange.hasOwnProperty('colorAlpha')).toEqual(false);
-        expect(option.visualMap[0].controller.inRange.hasOwnProperty('colorAlpha')).toEqual(false);
-        expect(option.visualMap[0].target.inRange.color).toEqual(['green', 'blue', 'red']);
-        expect(option.visualMap[0].controller.inRange.color).toEqual(['green', 'blue', 'red']);
+        visualMapOptionGotten = chart.getOption().visualMap as typeof visualMapOptionGotten;
+        expect(visualMapOptionGotten.length).toEqual(1);
+        expect(visualMapOptionGotten[0].target.inRange.hasOwnProperty('colorAlpha')).toEqual(false);
+        expect(visualMapOptionGotten[0].controller.inRange.hasOwnProperty('colorAlpha')).toEqual(false);
+        expect(visualMapOptionGotten[0].target.inRange.color).toEqual(['green', 'blue', 'red']);
+        expect(visualMapOptionGotten[0].controller.inRange.color).toEqual(['green', 'blue', 'red']);
 
         chart.setOption({
             visualMap: {
@@ -193,20 +203,20 @@ describe('vsiaulMap_setOption', function () {
             }
         });
 
-        var option = chart.getOption();
+        visualMapOptionGotten = chart.getOption().visualMap as typeof visualMapOptionGotten;
 
-        expect(option.visualMap.length).toEqual(1);
-        expect(!!option.visualMap[0].target.inRange).toEqual(true);
-        var onlyColor = true;
-        for (var i in option.visualMap[0].target.inRange) {
+        expect(visualMapOptionGotten.length).toEqual(1);
+        expect(!!visualMapOptionGotten[0].target.inRange).toEqual(true);
+        let onlyColor = true;
+        for (const i in visualMapOptionGotten[0].target.inRange) {
             if (i !== 'color') {
                 onlyColor = false;
             }
         }
-        var inRangeColor = option.visualMap[0].target.inRange.color;
+        const inRangeColor = visualMapOptionGotten[0].target.inRange.color;
         expect(onlyColor).toEqual(true);
         expect(inRangeColor).toEqual(['#f6efa6', '#d88273', '#bf444c']);
-        expect(option.visualMap[0].controller.outOfRange.symbol).toEqual(['diamond']);
+        expect(visualMapOptionGotten[0].controller.outOfRange.symbol).toEqual(['diamond']);
         done();
     });
 
@@ -222,9 +232,10 @@ describe('vsiaulMap_setOption', function () {
             }
         });
 
-        var option = chart.getOption();
-
-        expect(!!option.visualMap[0].target.outOfRange.opacity).toEqual(true);
+        const visualMapOptionGotten = chart.getOption().visualMap as (
+            ContinousVisualMapOption | PiecewiseVisualMapOption
+        )[];
+        expect(!!visualMapOptionGotten[0].target.outOfRange.opacity).toEqual(true);
         done();
     });
 
@@ -245,21 +256,21 @@ describe('vsiaulMap_setOption', function () {
             ]
         });
 
-        var ecModel = chart.getModel();
+        const ecModel = chart.getModel();
 
-        function getVisual(idx, visualType) {
-            return ecModel.getComponent('visualMap', idx)
+        function getVisual(idx: number, visualType: 'color' | 'opacity' | 'symbol') {
+            return (ecModel.getComponent('visualMap', idx) as VisualMapModel)
                 .targetVisuals.inRange[visualType].option.visual;
         }
 
-        function makeCategoryVisual(val) {
-            var CATEGORY_DEFAULT_VISUAL_INDEX = -1;
-            var arr = [];
-            if (val != null) {
-                arr[CATEGORY_DEFAULT_VISUAL_INDEX] = val;
+        function makeCategoryVisual(...args: unknown[]) {
+            const CATEGORY_DEFAULT_VISUAL_INDEX = -1;
+            const arr = [];
+            if (args[0] != null) {
+                arr[CATEGORY_DEFAULT_VISUAL_INDEX] = args[0];
             }
-            for (var i = 1; i < arguments.length; i++) {
-                arr.push(arguments[i]);
+            for (let i = 1; i < args.length; i++) {
+                arr.push(args[i]);
             }
             return arr;
         }

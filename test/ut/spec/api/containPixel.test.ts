@@ -23,7 +23,6 @@ import { EChartsType, registerMap } from '../../../../src/echarts';
 import { GeoJSON } from '../../../../src/coord/geo/geoTypes';
 
 
-
 describe('api/containPixel', function () {
     const testGeoJson1: GeoJSON = {
         'type': 'FeatureCollection',
@@ -150,7 +149,7 @@ describe('api/containPixel', function () {
         });
 
         const width = chart.getWidth();
-        const height = chart.getWidth();
+        // const height = chart.getWidth();
 
         expect(chart.containPixel('geo', [15, 30])).toEqual(true);
         expect(chart.containPixel('geo', [9.5, 30])).toEqual(false);
