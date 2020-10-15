@@ -133,7 +133,7 @@ export interface DataModel extends DataHost, DataFormatMixin {}
     // Pick<DataFormatMixin, 'getDataParams' | 'formatTooltip'> {}
 
 interface PayloadItem {
-    excludeSeriesId?: string | string[];
+    excludeSeriesId?: OptionId | OptionId[];
     animation?: PayloadAnimationPart
     [other: string]: any;
 }
@@ -1343,8 +1343,6 @@ export interface SeriesOption<StateOption=any, ExtraStateOpts extends {
     ColorPaletteOptionMixin,
     StatesOptionMixin<StateOption, ExtraStateOpts>
 {
-    name?: string
-
     silent?: boolean
 
     blendMode?: string

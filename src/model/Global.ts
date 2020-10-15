@@ -52,7 +52,9 @@ import {
     ThemeOption,
     ComponentOption,
     ComponentMainType,
-    ComponentSubType
+    ComponentSubType,
+    OptionId,
+    OptionName
 } from '../util/types';
 import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
@@ -540,8 +542,8 @@ class GlobalModel extends Model<ECUnitOption> {
                     mainType: mainType,
                     // subType will be filtered finally.
                     index: q[indexAttr] as (number | number[]),
-                    id: q[idAttr] as (string | string[]),
-                    name: q[nameAttr] as (string | string[])
+                    id: q[idAttr] as (OptionId | OptionId[]),
+                    name: q[nameAttr] as (OptionName | OptionName[])
                 }
                 : null;
         }
@@ -622,10 +624,11 @@ class GlobalModel extends Model<ECUnitOption> {
     /**
      * Get series list before filtered by name.
      */
-    getSeriesByName(name: string): SeriesModel[] {
+    getSeriesByName(name: OptionName): SeriesModel[] {
+        const nameStr = modelUtil.convertOptionIdName(name, null);
         return filter(
             this._componentsMap.get('series') as SeriesModel[],
-            oneSeries => !!oneSeries && oneSeries.name === name
+            oneSeries => !!oneSeries && nameStr != null && oneSeries.name === nameStr
         );
     }
 
@@ -853,8 +856,8 @@ export interface QueryConditionKindB {
     mainType: ComponentMainType;
     subType?: ComponentSubType;
     index?: number | number[];
-    id?: string | number | (string | number)[];
-    name?: (string | number) | (string | number)[];
+    id?: OptionId | OptionId[];
+    name?: OptionName | OptionName[];
 }
 export interface EachComponentAllCallback {
     (mainType: string, model: ComponentModel, componentIndex: number): void;
@@ -909,18 +912,18 @@ function queryByIdOrName<T extends { id?: string, name?: string }>(
     // Here is a break from echarts4: string and number are
     // traded as equal.
     if (isArray(idOrName)) {
-        const keyMap = createHashMap<boolean>(idOrName);
+        const keyMap = createHashMap<boolean>();
         each(idOrName, function (idOrNameItem) {
             if (idOrNameItem != null) {
-                modelUtil.validateIdOrName(idOrNameItem);
-                keyMap.set(idOrNameItem, true);
+                const idName = modelUtil.convertOptionIdName(idOrNameItem, null);
+                idName != null && keyMap.set(idOrNameItem, true);
             }
         });
         return filter(cmpts, cmpt => cmpt && keyMap.get(cmpt[attr]));
     }
     else {
-        modelUtil.validateIdOrName(idOrName);
-        return filter(cmpts, cmpt => cmpt && cmpt[attr] === idOrName + '');
+        const idName = modelUtil.convertOptionIdName(idOrName, null);
+        return filter(cmpts, cmpt => cmpt && idName != null && cmpt[attr] === idName);
     }
 }
 

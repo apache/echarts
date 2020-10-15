@@ -1381,9 +1381,15 @@ class ECharts extends Eventful {
             subType && (condition.subType = subType); // subType may be '' by parseClassType;
 
             const excludeSeriesId = payload.excludeSeriesId;
-            let excludeSeriesIdMap: zrUtil.HashMap<string[], string>;
+            let excludeSeriesIdMap: zrUtil.HashMap<true, string>;
             if (excludeSeriesId != null) {
-                excludeSeriesIdMap = zrUtil.createHashMap(modelUtil.normalizeToArray(excludeSeriesId));
+                excludeSeriesIdMap = zrUtil.createHashMap();
+                each(modelUtil.normalizeToArray(excludeSeriesId), id => {
+                    const modelId = modelUtil.convertOptionIdName(id, null);
+                    if (modelId != null) {
+                        excludeSeriesIdMap.set(modelId, true);
+                    }
+                });
             }
 
             // If dispatchAction before setOption, do nothing.

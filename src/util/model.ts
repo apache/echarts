@@ -52,6 +52,7 @@ import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
 import { isNumeric, getRandomIdBase, getPrecisionSafe, round } from './number';
 import { interpolateNumber } from 'zrender/src/animation/Animator';
+import { warn } from './log';
 
 /**
  * Make the name displayable. But we should
@@ -232,8 +233,17 @@ export function mappingToExists<T extends MappingExistingItem>(
             newCmptOptions[index] = null;
             return;
         }
-        cmptOption.id == null || validateIdOrName(cmptOption.id);
-        cmptOption.name == null || validateIdOrName(cmptOption.name);
+
+        if (__DEV__) {
+            // There is some legacy case that name is set as `false`.
+            // But should work normally rather than throw error.
+            if (cmptOption.id != null && !isValidIdOrName(cmptOption.id)) {
+                warnInvalidateIdOrName(cmptOption.id);
+            }
+            if (cmptOption.name != null && !isValidIdOrName(cmptOption.name)) {
+                warnInvalidateIdOrName(cmptOption.name);
+            }
+        }
     });
 
     const result = prepareResult(existings, existingIdIdxMap, mode);
@@ -535,12 +545,9 @@ export function convertOptionIdName(idOrName: unknown, defaultValue: string): st
         : defaultValue;
 }
 
-export function validateIdOrName(idOrName: unknown) {
+function warnInvalidateIdOrName(idOrName: unknown) {
     if (__DEV__) {
-        assert(
-            isValidIdOrName(idOrName),
-            '`' + idOrName + '` is invalid id or name. Must be a string.'
-        );
+            warn('`' + idOrName + '` is invalid id or name. Must be a string or number.');
     }
 }
 
