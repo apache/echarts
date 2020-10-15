@@ -3,21 +3,10 @@ import {DecalObject, DecalDashArrayX, DecalDashArrayY} from 'zrender/src/graphic
 import Pattern from 'zrender/src/graphic/Pattern';
 import {brushSingle} from 'zrender/src/canvas/graphic';
 import {defaults, createCanvas, map} from 'zrender/src/core/util';
-import {PathStyleProps} from 'zrender/src/graphic/Path';
-import Model from '../model/Model';
 import {getLeastCommonMultiple} from './number';
 import {createSymbol} from './symbol';
-import * as graphic from './graphic';
 
 const decalMap = new WeakMap<DecalObject, Pattern>();
-
-export default function setDecalWithPattern(styleModel: Model, style: PathStyleProps) {
-    const decalOption = styleModel.getShallow('decal') as DecalObject;
-    if (decalOption) {
-        style.decal = createOrUpdatePatternFromDecal(decalOption);
-    }
-    return style;
-}
 
 /**
  * Create or update pattern image from decal options
@@ -37,12 +26,12 @@ export function createOrUpdatePatternFromDecal(
         symbol: 'rect',
         symbolSize: 1,
         symbolKeepAspect: true,
-        color: 'rgba(255, 255, 255, 0.4)',
+        color: 'rgba(0, 0, 0, 0.2)',
         backgroundColor: null,
         dashArrayX: 5,
         dashArrayY: 5,
         dashLineOffset: 0,
-        rotation: Math.PI / 4,
+        rotation: 0,
         maxTileWidth: 512,
         maxTileHeight: 512
     } as DecalObject);

@@ -25,7 +25,7 @@ import { LINE_STYLE_KEY_MAP } from '../model/mixin/lineStyle';
 import SeriesModel from '../model/Series';
 import Model from '../model/Model';
 import { makeInner } from '../util/model';
-import setDecalWithPattern, {createOrUpdatePatternFromDecal} from '../util/decal';
+import {DecalObject} from 'zrender/src/graphic/Decal';
 
 const inner = makeInner<{scope: object}, SeriesModel>();
 
@@ -76,7 +76,11 @@ const seriesStyleTask: StageHandler = {
         const getStyle = getStyleMapper(seriesModel, stylePath);
 
         const globalStyle = getStyle(styleModel);
-        setDecalWithPattern(styleModel, globalStyle);
+
+        const decalOption = styleModel.getShallow('decal') as DecalObject;
+        if (decalOption) {
+            data.setVisual('decal', decalOption);
+        }
 
         // TODO
         const colorKey = getDefaultColorKey(seriesModel, stylePath);
@@ -141,7 +145,7 @@ const dataStyleTask: StageHandler = {
                     extend(existsStyle, style);
 
                     if (sharedModel.option.decal) {
-                        existsStyle.decal = createOrUpdatePatternFromDecal(sharedModel.option.decal);
+                        data.setItemVisual(idx, 'decal', sharedModel.option.decal);
                     }
 
                     if (colorKey in style) {

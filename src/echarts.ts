@@ -105,6 +105,7 @@ import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 import type {EChartsFullOption} from './option';
 import { findEventDispatcher } from './util/event';
 import aria from './visual/aria';
+import decal from './visual/decal';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -143,6 +144,7 @@ const PRIORITY_VISUAL_CHART_DATA_CUSTOM = 4500;    // visual property in data
 // necessary?
 const PRIORITY_VISUAL_BRUSH = 5000;
 const PRIORITY_VISUAL_ARIA = 6000;
+const PRIORITY_VISUAL_DECAL = 7000;
 
 export const PRIORITY = {
     PROCESSOR: {
@@ -159,7 +161,8 @@ export const PRIORITY = {
         COMPONENT: PRIORITY_VISUAL_COMPONENT,
         BRUSH: PRIORITY_VISUAL_BRUSH,
         CHART_ITEM: PRIORITY_VISUAL_CHART_DATA_CUSTOM,
-        ARIA: PRIORITY_VISUAL_ARIA
+        ARIA: PRIORITY_VISUAL_ARIA,
+        DECAL: PRIORITY_VISUAL_DECAL
     }
 };
 
@@ -2757,6 +2760,8 @@ registerVisual(PRIORITY_VISUAL_GLOBAL, seriesSymbolTask);
 registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataSymbolTask);
 
 registerVisual(PRIORITY_VISUAL_ARIA, aria);
+
+registerVisual(PRIORITY_VISUAL_DECAL, decal);
 
 registerPreprocessor(backwardCompat);
 registerProcessor(PRIORITY_PROCESSOR_DATASTACK, dataStack);

@@ -44,6 +44,7 @@ import type Tree from './Tree';
 import type { VisualMeta } from '../component/visualMap/VisualMapModel';
 import { parseDataValue } from './helper/dataValueHelper';
 import { isSourceInstance } from './Source';
+import {DecalObject} from 'zrender/src/graphic/Decal';
 
 const mathFloor = Math.floor;
 const isObject = zrUtil.isObject;
@@ -144,6 +145,8 @@ export interface DefaultDataVisual {
 
     // If color is encoded from palette
     colorFromPalette?: boolean
+
+    decal?: DecalObject
 }
 
 export interface DataCalculationInfo<SERIES_MODEL> {
