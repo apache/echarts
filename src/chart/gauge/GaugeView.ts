@@ -432,39 +432,33 @@ class GaugeView extends ChartView {
                 .update(function (newIdx, oldIdx) {
                     if (showPointer) {
                         const previousPointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
-                        if (previousPointer) {
-                            const previousRotate = previousPointer.rotation;
-                            group.remove(previousPointer);
-                            const pointer = createPointer(newIdx, previousRotate);
+                        const previousRotate = previousPointer ? previousPointer.rotation : startAngle;
+                        const pointer = createPointer(newIdx, previousRotate);
                             pointer.rotation = previousRotate;
                             graphic.updateProps(pointer, {
                                 rotation: -(
                                     linearMap(data.get(valueDim, newIdx) as number, valueExtent, angleExtent, true)
-                                    + Math.PI / 2
+                                        + Math.PI / 2
                                 )
                             }, seriesModel);
                             group.add(pointer);
                             data.setItemGraphicEl(newIdx, pointer);
-                        }
                     }
 
                     if (showProgress) {
                         const previousProgress = oldProgressData[oldIdx];
-                        if (previousProgress) {
-                            const previousEndAngle = previousProgress.shape.endAngle;
-                            group.remove(previousProgress);
-                            const progress = createProgress(newIdx, previousEndAngle) as graphic.Sector;
-                            const isClip = progressModel.get('clip');
-                            graphic.updateProps(progress, {
-                                shape: {
-                                    endAngle: linearMap(
-                                        data.get(valueDim, newIdx) as number, valueExtent, angleExtent, isClip
-                                    )
-                                }
-                            }, seriesModel);
-                            group.add(progress);
-                            progressList[newIdx] = progress;
-                        }
+                        const previousEndAngle = previousProgress ? previousProgress.shape.endAngle : startAngle;
+                        const progress = createProgress(newIdx, previousEndAngle) as graphic.Sector;
+                        const isClip = progressModel.get('clip');
+                        graphic.updateProps(progress, {
+                            shape: {
+                                endAngle: linearMap(
+                                    data.get(valueDim, newIdx) as number, valueExtent, angleExtent, isClip
+                                )
+                            }
+                        }, seriesModel);
+                        group.add(progress);
+                        progressList[newIdx] = progress;
                     }
                 })
                 .execute();
@@ -491,6 +485,7 @@ class GaugeView extends ChartView {
                     const progress = progressList[idx];
                     progress.useStyle(data.getItemVisual(idx, 'style'));
                     progress.setStyle(itemModel.getModel(['progress', 'itemStyle']).getItemStyle());
+                    (progress as ECElement).z2EmphasisLift = 0;
                     setStatesStylesFromModel(progress, itemModel);
                     enableHoverEmphasis(progress, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
                 }
