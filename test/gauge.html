@@ -62,6 +62,7 @@ under the License.
                                 show: true
                             },
                             anchor:{
+                                showAbove: true,
                                 show: true
                             },
                             roundCap: true,
@@ -105,16 +106,59 @@ under the License.
                                 color: ['#f00', '#0f0']
                             },
                             anchor: {
-                                show: true
+                                show: true,
+                                showAbove: true
                             },
-                            detail: {formatter: '{value}%'},
+                            detail: {
+                                formatter: '{value}%'
+                            },
                             data: [
-                                {value: 30, name: '完成率'},
-                                {value: 50, name: '成率'},
-                                {value: 60, name: '达标率'}
-                            ]
+                                {
+                                    value: 20,
+                                    name: '完成率',
+                                    title: {
+                                        offsetCenter: ['-40%', '20%']
+                                    },
+                                    detail: {
+                                        offsetCenter: ['-40%', '35%']
+                                    }
+                                },
+                                {
+                                    value: 40,
+                                    name: '达标率',
+                                    title: {
+                                        offsetCenter: ['0%', '20%']
+                                    },
+                                    detail: {
+                                        offsetCenter: ['0%', '35%']
+                                    }
+                                },
+                                {
+                                    value: 60,
+                                    name: '优秀率',
+                                    title: {
+                                        offsetCenter: ['40%', '20%']
+                                    },
+                                    detail: {
+                                        offsetCenter: ['40%', '35%']
+                                    }
+                                }
+                            ],
+                            title: {
+                                fontSize: 14
+                            },
+                            detail: {
+                                width: 30,
+                                height: 12,
+                                fontSize: 12,
+                                color: 'auto',
+                                borderColor: 'auto',
+                                borderWidth: 1,
+                                borderRadius: 3,
+                                formatter: '{value}%',
+                            }
                         }
-                    ]
+                    ],
                 };
                 chart2.setOption(option2);
             })

@@ -54,7 +54,11 @@ interface PointerOption {
 
 interface AnchorOption {
     show?: boolean
+    showAbove?: boolean
     anchorSize?: number
+    icon?: string
+    offsetCenter?: (number | string)[]
+    keepAspect?: boolean
     itemStyle?: ItemStyleOption
 }
 
@@ -253,7 +257,11 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
         },
         anchor: {
             show: false,
+            showAbove: false,
             anchorSize: 6,
+            icon: 'circle',
+            offsetCenter: [0, 0],
+            keepAspect: false,
             itemStyle: {
                 color: '#fff',
                 borderWidth: 0,

@@ -26,11 +26,10 @@ import {parsePercent, round, linearMap} from '../../util/number';
 import GaugeSeriesModel, { GaugeDataItemOption } from './GaugeSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { ColorString } from '../../util/types';
+import { ColorString, ECElement } from '../../util/types';
 import List from '../../data/List';
 import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
-import * as layoutUtil from '../../util/layout';
 
 interface PosInfo {
     cx: number
@@ -179,12 +178,12 @@ class GaugeView extends ChartView {
             seriesModel, ecModel, api, getColor, posInfo
         )
 
+        this._renderAnchor(seriesModel, posInfo);
+
         this._renderPointer(
             seriesModel, ecModel, api, getColor, posInfo,
             startAngle, endAngle, clockwise, axisLineWidth
         );
-
-        this._renderAnchor(seriesModel, posInfo);
     }
 
     _renderTicks(
@@ -272,7 +271,7 @@ class GaugeView extends ChartView {
                         text: label,
                         x: unitX * (r - splitLineLen - distance) + cx,
                         y: unitY * (r - splitLineLen - distance) + cy,
-                        verticalAlign: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
+                        verticalAlign: unitY < -0.8 ? 'top' : (unitY > 0.8 ? 'bottom' : 'middle'),
                         align: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
                     }, {
                         inheritColor: autoColor
@@ -340,10 +339,12 @@ class GaugeView extends ChartView {
 
         const data = seriesModel.getData();
         const valueDim = data.mapDimension('value');
-        const valueExtent = [+seriesModel.get('min'), +seriesModel.get('max')];
+        const minVal = +seriesModel.get('min');
+        const maxVal = +seriesModel.get('max');
+        const valueExtent = [minVal, maxVal];
         const angleExtent = [startAngle, endAngle];
 
-        function createPointer(idx: number) {
+        function createPointer(idx: number, angle: number) {
             const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
             const pointerModel = itemModel.getModel('pointer');
             const pointerWidth = parsePercent(pointerModel.get('width'), posInfo.r);
@@ -373,7 +374,7 @@ class GaugeView extends ChartView {
                     }
                 })
             }
-            pointer.rotation = -(startAngle + Math.PI / 2);
+            pointer.rotation = -(angle + Math.PI / 2);
             pointer.x = posInfo.cx;
             pointer.y = posInfo.cy;
             return pointer;
@@ -401,6 +402,7 @@ class GaugeView extends ChartView {
                 // 是否相应鼠标事件
                 silent: progressSilent
             });
+            isOverlap && (progress.z2 = maxVal - (data.get(valueDim, idx) as number) % maxVal);
             return progress;
         }
 
@@ -408,7 +410,7 @@ class GaugeView extends ChartView {
             data.diff(oldData)
                 .add(function (idx) {
                     if (showPointer) {
-                        const pointer = createPointer(idx);
+                        const pointer = createPointer(idx, startAngle);
                         graphic.initProps(pointer, {
                             rotation: -(linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, true) + Math.PI / 2)
                         }, seriesModel);
@@ -417,7 +419,7 @@ class GaugeView extends ChartView {
                     }
 
                     if (showProgress) {
-                        const progress = createProgress(idx, endAngle) as graphic.Sector;
+                        const progress = createProgress(idx, startAngle) as graphic.Sector;
                         const isClip = progressModel.get('clip');
                         graphic.initProps(progress, {
                             shape: {
@@ -430,13 +432,29 @@ class GaugeView extends ChartView {
                 })
                 .update(function (newIdx, oldIdx) {
                     if (showPointer) {
-                        const pointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
+                        const previousPointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
+                        const previousRotate = previousPointer.rotation;
+                        group.remove(previousPointer);
+                        const pointer = createPointer(newIdx, previousRotate);
+                        pointer.rotation = previousRotate;
+                        graphic.updateProps(pointer, {
+                            rotation: -(linearMap(data.get(valueDim, newIdx) as number, valueExtent, angleExtent, true) + Math.PI / 2)
+                        }, seriesModel);
                         group.add(pointer);
                         data.setItemGraphicEl(newIdx, pointer);
                     }
 
                     if (showProgress) {
-                        const progress = oldProgressData[oldIdx];
+                        const previousProgress = oldProgressData[oldIdx];
+                        const previousEndAngle = previousProgress.shape.endAngle;
+                        group.remove(previousProgress);
+                        const progress = createProgress(newIdx, previousEndAngle) as graphic.Sector;
+                        const isClip = progressModel.get('clip');
+                        graphic.updateProps(progress, {
+                            shape: {
+                                endAngle: linearMap(data.get(valueDim, newIdx) as number, valueExtent, angleExtent, isClip)
+                            }
+                        }, seriesModel);
                         group.add(progress);
                         progressList[newIdx] = progress;
                     }
@@ -458,16 +476,7 @@ class GaugeView extends ChartView {
                 const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
                 const emphasisModel = itemModel.getModel('emphasis');
                 if (showPointer) {
-                    let previousRotate = data.getItemGraphicEl(idx).rotation;
-                    group.remove(data.getItemGraphicEl(idx) as PointerPath);
-                    const pointer = createPointer(idx);
-                    pointer.rotation = previousRotate;
-                    graphic.updateProps(pointer, {
-                        rotation: -(linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, true) + Math.PI / 2)
-                    }, seriesModel);
-                    group.add(pointer);
-                    data.setItemGraphicEl(idx, pointer);
-    
+                    const pointer = data.getItemGraphicEl(idx) as PointerPath;
                     pointer.useStyle(data.getItemVisual(idx, 'style'));
                     pointer.setStyle(itemModel.getModel(['pointer', 'itemStyle']).getItemStyle());
                     if (pointer.style.fill === 'auto') {
@@ -476,26 +485,15 @@ class GaugeView extends ChartView {
                         ));
                     }
     
+                    (pointer as ECElement).z2EmphasisLift = 0
                     setStatesStylesFromModel(pointer, itemModel);
                     enableHoverEmphasis(pointer, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
                 }
 
                 if (showProgress) {
-                    let previousEndAngle = progressList[idx].shape.endAngle;
-                    group.remove(progressList[idx]);
-                    const progress = createProgress(idx, previousEndAngle) as graphic.Sector;
+                    const progress = progressList[idx];
                     progress.useStyle(data.getItemVisual(idx, 'style'));
                     progress.setStyle(itemModel.getModel(['progress', 'itemStyle']).getItemStyle());
-                    const isClip = progressModel.get('clip');
-                    graphic.updateProps(progress, {
-                        shape: {
-                            endAngle: linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, isClip)
-                        }
-                    }, seriesModel);
-                    progress.z2 = (data.get(valueDim, idx) as number) % seriesModel.get('max');
-                    group.add(progress);
-                    progressList[idx] = progress;
-
                     setStatesStylesFromModel(progress, itemModel);
                     enableHoverEmphasis(progress, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
                 }
@@ -529,17 +527,21 @@ class GaugeView extends ChartView {
         const showAnchor = anchorModel.get('show');
         if (showAnchor) {
             const anchorSize = anchorModel.get('anchorSize');
-            const symbol = createSymbol(
-                'circle',
-                posInfo.cx - anchorSize / 2,
-                posInfo.cy - anchorSize / 2,
+            const anchorType = anchorModel.get('icon');
+            const offsetCenter = anchorModel.get('offsetCenter');
+            const anchorKeepAspect = anchorModel.get('keepAspect');
+            const anchor = createSymbol(
+                anchorType,
+                posInfo.cx - anchorSize / 2 + parsePercent(offsetCenter[0], posInfo.r),
+                posInfo.cy - anchorSize / 2 + parsePercent(offsetCenter[1], posInfo.r),
                 anchorSize,
                 anchorSize,
                 null,
-                true
+                anchorKeepAspect
             ) as graphic.Path;
-            symbol.setStyle(anchorModel.getModel('itemStyle').getItemStyle());
-            this.group.add(symbol);
+            anchor.z2 = anchorModel.get('showAbove') ? 1 : 0;
+            anchor.setStyle(anchorModel.getModel('itemStyle').getItemStyle());
+            this.group.add(anchor);
         }
     }
 
