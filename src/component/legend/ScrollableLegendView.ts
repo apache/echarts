@@ -295,7 +295,6 @@ class ScrollableLegendView extends LegendView {
         // Always align controller to content as 'middle'.
         controllerPos[1 - orientIdx] += contentRect[hw] / 2 - controllerRect[hw] / 2;
 
-        contentGroup.setPosition(contentPos);
         containerGroup.setPosition(containerPos);
         controllerGroup.setPosition(controllerPos);
 
