@@ -17,6 +17,11 @@
 * under the License.
 */
 
+import * as echarts from '../echarts';
+import ariaVisual from '../visual/aria';
+
+const PRIORITY_VISUAL_ARIA = echarts.PRIORITY.VISUAL.ARIA;
+
 export interface AriaLabelOption {
     show?: boolean;
     description?: string;
@@ -62,3 +67,5 @@ export interface AriaOption extends AriaLabelOption {
         show?: boolean;
     }
 }
+
+echarts.registerVisual(PRIORITY_VISUAL_ARIA, ariaVisual);

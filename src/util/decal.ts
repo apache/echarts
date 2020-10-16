@@ -50,8 +50,6 @@ export function createOrUpdatePatternFromDecal(
 
     canvas.width = pSize.width;
     canvas.height = pSize.height;
-    canvas.style.width = canvas.width + 'px';
-    canvas.style.height = canvas.height + 'px';
 
     const ctx = canvas.getContext('2d');
 
@@ -197,7 +195,7 @@ export function createOrUpdatePatternFromDecal(
  * @return {number[][]} normolized dash array
  */
 function normalizeDashArrayX(dash: DecalDashArrayX): number[][] {
-    if (!dash || typeof dash === 'object' && dash.length === 0) {
+    if (!dash || (dash as number[]).length === 0) {
         return [[0, 0]];
     }
     if (typeof dash === 'number') {

@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import ExtensionAPI from '../ExtensionAPI';
 import GlobalModel from '../model/Global';
 import {createOrUpdatePatternFromDecal} from '../util/decal';
@@ -27,7 +25,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachRawSeries(seriesModel => {
         const data = seriesModel.getData();
 
-        if (seriesModel.useColorPaletteOnData) {
+        if (data.hasItemVisual()) {
             data.each(idx => {
                 const decal = data.getItemVisual(idx, 'decal');
                 if (decal) {

@@ -17,14 +17,13 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import ExtensionAPI from '../ExtensionAPI';
 import {retrieveRawValue} from '../data/helper/dataProvider';
 import GlobalModel from '../model/Global';
 import Model from '../model/Model';
 import {AriaOption} from '../component/aria';
+import {TitleOption} from '../component/title';
 
 export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     const ariaModel: Model<AriaOption> = ecModel.getModel('aria');
@@ -87,8 +86,8 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
         }
 
         const seriesCnt = ecModel.getSeriesCount();
-        const maxDataCnt = labelModel.get('data.maxCount') || 10;
-        const maxSeriesCnt = labelModel.get('series.maxCount') || 10;
+        const maxDataCnt = labelModel.get(['data', 'maxCount']) || 10;
+        const maxSeriesCnt = labelModel.get(['series', 'maxCount']) || 10;
         const displaySeriesCnt = Math.min(seriesCnt, maxSeriesCnt);
 
         let ariaLabel;
@@ -107,7 +106,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                 ariaLabel = getConfig(labelModel, 'general.withoutTitle');
             }
 
-            const seriesLabels = [];
+            const seriesLabels: string[] = [];
             const prefix = seriesCnt > 1
                 ? 'series.multiple.prefix'
                 : 'series.single.prefix';
@@ -131,7 +130,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                     });
 
                     const data = seriesModel.getData();
-                    window.data = data;
+                    (window as any).data = data;
                     if (data.count() > maxDataCnt) {
                         // Show part of data
                         seriesLabel += replace(getConfig(labelModel, 'data.partialData'), {
@@ -176,13 +175,13 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
         }
     }
 
-    function replace(str, keyValues) {
+    function replace(str: string, keyValues: object) {
         if (typeof str !== 'string') {
             return str;
         }
 
         let result = str;
-        zrUtil.each(keyValues, function (value, key) {
+        zrUtil.each(keyValues, function (value: string, key: string) {
             result = result.replace(
                 new RegExp('\\{\\s*' + key + '\\s*\\}', 'g'),
                 value
@@ -191,11 +190,12 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
         return result;
     }
 
-    function getConfig(model, path) {
+    function getConfig(model: Model, path: string) {
         const userConfig = model.get(path);
         if (userConfig == null) {
             const pathArr = path.split('.');
-            let result = ecModel.getLocale('aria');
+            // FIXME: remove as any
+            let result = ecModel.getLocale('aria' as any);
             for (let i = 0; i < pathArr.length; ++i) {
                 result = result[pathArr[i]];
             }
@@ -207,14 +207,15 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     }
 
     function getTitle() {
-        let title = ecModel.getModel('title').option;
-        if (title && title.length) {
-            title = title[0];
+        let title = ecModel.get('title') as TitleOption | TitleOption[];
+        if (title && (title as TitleOption[]).length) {
+            title = (title as TitleOption[])[0];
         }
-        return title && title.text;
+        return title && (title as TitleOption).text;
     }
 
-    function getSeriesTypeName(type) {
-        return ecModel.getLocale(['series', 'typeNames'])[type] || '自定义图';
+    function getSeriesTypeName(type: string) {
+        // FIXME: remove as any
+        return ecModel.getLocale(['series', 'typeNames'] as any)[type] || '自定义图';
     }
 }

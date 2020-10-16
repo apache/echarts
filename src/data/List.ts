@@ -1778,6 +1778,13 @@ class List<
     }
 
     /**
+     * If exists visual property of single data item
+     */
+    hasItemVisual() {
+        return this._itemVisuals.length > 0;
+    }
+
+    /**
      * Make sure itemVisual property is unique
      */
     // TODO: use key to save visual to reduce memory.

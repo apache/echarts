@@ -104,7 +104,6 @@ import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 
 import type {EChartsFullOption} from './option';
 import { findEventDispatcher } from './util/event';
-import aria from './visual/aria';
 import decal from './visual/decal';
 
 declare let global: any;
@@ -2758,8 +2757,6 @@ registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataColorPaletteTask);
 
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesSymbolTask);
 registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataSymbolTask);
-
-registerVisual(PRIORITY_VISUAL_ARIA, aria);
 
 registerVisual(PRIORITY_VISUAL_DECAL, decal);
 
