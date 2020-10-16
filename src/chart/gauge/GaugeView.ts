@@ -176,7 +176,7 @@ class GaugeView extends ChartView {
 
         this._renderTitleAndDetail(
             seriesModel, ecModel, api, getColor, posInfo
-        )
+        );
 
         this._renderAnchor(seriesModel, posInfo);
 
@@ -349,12 +349,13 @@ class GaugeView extends ChartView {
             const pointerModel = itemModel.getModel('pointer');
             const pointerWidth = parsePercent(pointerModel.get('width'), posInfo.r);
             const pointerLength = parsePercent(pointerModel.get('length'), posInfo.r);
-            
             const pointerStr = seriesModel.get(['pointer', 'icon']);
             const pointerOffset = pointerModel.get('offsetCenter');
             const pointerKeepAspect = pointerModel.get('keepAspect');
+
             let pointer;
-            if (pointerStr.indexOf('path://') === 0) {
+            // not exist icon type will be set 'rect'
+            if (pointerStr) {
                 pointer = createSymbol(
                     pointerStr,
                     parsePercent(pointerOffset[0], posInfo.r) - pointerWidth / 2,
@@ -372,7 +373,7 @@ class GaugeView extends ChartView {
                         width: parsePercent(pointerModel.get('width'), posInfo.r),
                         r: parsePercent(pointerModel.get('length'), posInfo.r)
                     }
-                })
+                });
             }
             pointer.rotation = -(angle + Math.PI / 2);
             pointer.x = posInfo.cx;
@@ -388,7 +389,6 @@ class GaugeView extends ChartView {
             const progressWidth = isOverlap ? progressModel.get('width') : axisLineWidth / data.count();
             const r0 = isOverlap ? posInfo.r - progressWidth : posInfo.r - (idx + 1) * progressWidth;
             const r = isOverlap ? posInfo.r : posInfo.r - idx * progressWidth;
-            const progressSilent = progressModel.get('silent');
             const progress = new ProgressPath({
                 shape: {
                     startAngle: startAngle,
@@ -398,9 +398,7 @@ class GaugeView extends ChartView {
                     clockwise: clockwise,
                     r0: r0,
                     r: r
-                },
-                // 是否相应鼠标事件
-                silent: progressSilent
+                }
             });
             isOverlap && (progress.z2 = maxVal - (data.get(valueDim, idx) as number) % maxVal);
             return progress;
@@ -412,7 +410,8 @@ class GaugeView extends ChartView {
                     if (showPointer) {
                         const pointer = createPointer(idx, startAngle);
                         graphic.initProps(pointer, {
-                            rotation: -(linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, true) + Math.PI / 2)
+                            rotation: -(linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, true)
+                                + Math.PI / 2)
                         }, seriesModel);
                         group.add(pointer);
                         data.setItemGraphicEl(idx, pointer);
@@ -433,41 +432,39 @@ class GaugeView extends ChartView {
                 .update(function (newIdx, oldIdx) {
                     if (showPointer) {
                         const previousPointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
-                        const previousRotate = previousPointer.rotation;
-                        group.remove(previousPointer);
-                        const pointer = createPointer(newIdx, previousRotate);
-                        pointer.rotation = previousRotate;
-                        graphic.updateProps(pointer, {
-                            rotation: -(linearMap(data.get(valueDim, newIdx) as number, valueExtent, angleExtent, true) + Math.PI / 2)
-                        }, seriesModel);
-                        group.add(pointer);
-                        data.setItemGraphicEl(newIdx, pointer);
+                        if (previousPointer) {
+                            const previousRotate = previousPointer.rotation;
+                            group.remove(previousPointer);
+                            const pointer = createPointer(newIdx, previousRotate);
+                            pointer.rotation = previousRotate;
+                            graphic.updateProps(pointer, {
+                                rotation: -(
+                                    linearMap(data.get(valueDim, newIdx) as number, valueExtent, angleExtent, true)
+                                    + Math.PI / 2
+                                )
+                            }, seriesModel);
+                            group.add(pointer);
+                            data.setItemGraphicEl(newIdx, pointer);
+                        }
                     }
 
                     if (showProgress) {
                         const previousProgress = oldProgressData[oldIdx];
-                        const previousEndAngle = previousProgress.shape.endAngle;
-                        group.remove(previousProgress);
-                        const progress = createProgress(newIdx, previousEndAngle) as graphic.Sector;
-                        const isClip = progressModel.get('clip');
-                        graphic.updateProps(progress, {
-                            shape: {
-                                endAngle: linearMap(data.get(valueDim, newIdx) as number, valueExtent, angleExtent, isClip)
-                            }
-                        }, seriesModel);
-                        group.add(progress);
-                        progressList[newIdx] = progress;
-                    }
-                })
-                .remove(function (idx) {
-                    if (showPointer) {
-                        const pointer = oldData.getItemGraphicEl(idx);
-                        group.remove(pointer);
-                    }
-
-                    if (showProgress) {
-                        const progress = oldProgressData[idx];
-                        group.remove(progress);
+                        if (previousProgress) {
+                            const previousEndAngle = previousProgress.shape.endAngle;
+                            group.remove(previousProgress);
+                            const progress = createProgress(newIdx, previousEndAngle) as graphic.Sector;
+                            const isClip = progressModel.get('clip');
+                            graphic.updateProps(progress, {
+                                shape: {
+                                    endAngle: linearMap(
+                                        data.get(valueDim, newIdx) as number, valueExtent, angleExtent, isClip
+                                    )
+                                }
+                            }, seriesModel);
+                            group.add(progress);
+                            progressList[newIdx] = progress;
+                        }
                     }
                 })
                 .execute();
@@ -484,8 +481,8 @@ class GaugeView extends ChartView {
                             linearMap(data.get(valueDim, idx) as number, valueExtent, [0, 1], true)
                         ));
                     }
-    
-                    (pointer as ECElement).z2EmphasisLift = 0
+
+                    (pointer as ECElement).z2EmphasisLift = 0;
                     setStatesStylesFromModel(pointer, itemModel);
                     enableHoverEmphasis(pointer, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
                 }
@@ -502,21 +499,6 @@ class GaugeView extends ChartView {
             this._data = data;
             this._progressData = progressList;
         }
-        else {
-            if (!showPointer) {
-                // Remove old element
-                oldData && oldData.eachItemGraphicEl(function (el) {
-                    group.remove(el);
-                });
-            }
-
-            if (!showProgress) {
-                // Remove old element
-                oldProgressData && oldProgressData.forEach(function (el) {
-                    group.remove(el);
-                });
-            }
-        }
     }
 
     _renderAnchor(
@@ -526,7 +508,7 @@ class GaugeView extends ChartView {
         const anchorModel = seriesModel.getModel('anchor');
         const showAnchor = anchorModel.get('show');
         if (showAnchor) {
-            const anchorSize = anchorModel.get('anchorSize');
+            const anchorSize = anchorModel.get('size');
             const anchorType = anchorModel.get('icon');
             const offsetCenter = anchorModel.get('offsetCenter');
             const anchorKeepAspect = anchorModel.get('keepAspect');
@@ -557,12 +539,12 @@ class GaugeView extends ChartView {
         const minVal = +seriesModel.get('min');
         const maxVal = +seriesModel.get('max');
 
-        const contentGroup = new graphic.Group;
+        const contentGroup = new graphic.Group();
 
-        data.each(function(idx) {
+        data.each(function (idx) {
             const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
             const value = data.get(valueDim, idx) as number;
-            const itemGroup = new graphic.Group;
+            const itemGroup = new graphic.Group();
             const autoColor = getColor(
                 linearMap(value, [minVal, maxVal], [0, 1], true)
             );

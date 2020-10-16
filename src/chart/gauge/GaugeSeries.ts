@@ -55,7 +55,7 @@ interface PointerOption {
 interface AnchorOption {
     show?: boolean
     showAbove?: boolean
-    anchorSize?: number
+    size?: number
     icon?: string
     offsetCenter?: (number | string)[]
     keepAspect?: boolean
@@ -67,7 +67,6 @@ interface ProgressOption {
     overlap?: boolean
     width?: number
     roundCap?: boolean
-    silent?: boolean
     clip?: boolean
     itemStyle?: ItemStyleOption
 }
@@ -207,7 +206,6 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             overlap: true,
             width: 10,
             roundCap: false,
-            silent: false,
             clip: true
         },
         // 分隔线
@@ -248,7 +246,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             fontSize: 12
         },
         pointer: {
-            icon: 'default',
+            icon: null,
             offsetCenter: [0, 0],
             show: true,
             length: '60%',
@@ -258,7 +256,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
         anchor: {
             show: false,
             showAbove: false,
-            anchorSize: 6,
+            size: 6,
             icon: 'circle',
             offsetCenter: [0, 0],
             keepAspect: false,
