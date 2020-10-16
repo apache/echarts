@@ -333,6 +333,7 @@ class ECharts extends Eventful {
             locale?: string | LocaleOption,
             renderer?: RendererType,
             devicePixelRatio?: number,
+            useDirtyRect?: boolean,
             width?: number,
             height?: number
         }
@@ -348,18 +349,27 @@ class ECharts extends Eventful {
 
         this._dom = dom;
 
+        const root = (
+            typeof window === 'undefined' ? global : window
+        ) as any;
+
         let defaultRenderer = 'canvas';
+        let defaultUseDirtyRect = false;
         if (__DEV__) {
-            defaultRenderer = ((
-                typeof window === 'undefined' ? global : window
-            ) as any).__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
+            defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
+
+            const devUseDirtyRect = root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
+            defaultUseDirtyRect = devUseDirtyRect == null
+                ? defaultUseDirtyRect
+                : devUseDirtyRect;
         }
 
         const zr = this._zr = zrender.init(dom, {
             renderer: opts.renderer || defaultRenderer,
             devicePixelRatio: opts.devicePixelRatio,
             width: opts.width,
-            height: opts.height
+            height: opts.height,
+            useDirtyRect: opts.useDirtyRect == null ? defaultUseDirtyRect : opts.useDirtyRect
         });
 
         // Expect 60 fps.
