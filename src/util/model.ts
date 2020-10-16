@@ -539,6 +539,9 @@ function makeComparableKey(val: unknown): string {
 }
 
 export function convertOptionIdName(idOrName: unknown, defaultValue: string): string {
+    if (idOrName == null) {
+        return defaultValue;
+    }
     const type = typeof idOrName;
     return type === 'string'
         ? idOrName as string
