@@ -17,11 +17,11 @@
 * under the License.
 */
 
-export * from './src/echarts';
-export * from './src/export';
+export * from './echarts';
+export * from './export';
 
-import './src/component/dataset';
-import './src/component/transform';
+import './component/dataset';
+import './component/transform';
 
 // ----------------------------------------------
 // All of the modules that are allowed to be
@@ -46,28 +46,28 @@ import './src/component/transform';
 //     }]
 // });
 
-import './src/chart/line';
-import './src/chart/bar';
-import './src/chart/pie';
-import './src/chart/scatter';
-import './src/chart/radar';
-import './src/chart/map';
-import './src/chart/tree';
-import './src/chart/treemap';
-import './src/chart/graph';
-import './src/chart/gauge';
-import './src/chart/funnel';
-import './src/chart/parallel';
-import './src/chart/sankey';
-import './src/chart/boxplot';
-import './src/chart/candlestick';
-import './src/chart/effectScatter';
-import './src/chart/lines';
-import './src/chart/heatmap';
-import './src/chart/pictorialBar';
-import './src/chart/themeRiver';
-import './src/chart/sunburst';
-import './src/chart/custom';
+import './chart/line';
+import './chart/bar';
+import './chart/pie';
+import './chart/scatter';
+import './chart/radar';
+import './chart/map';
+import './chart/tree';
+import './chart/treemap';
+import './chart/graph';
+import './chart/gauge';
+import './chart/funnel';
+import './chart/parallel';
+import './chart/sankey';
+import './chart/boxplot';
+import './chart/candlestick';
+import './chart/effectScatter';
+import './chart/lines';
+import './chart/heatmap';
+import './chart/pictorialBar';
+import './chart/themeRiver';
+import './chart/sunburst';
+import './chart/custom';
 
 
 
@@ -89,7 +89,7 @@ import './src/chart/custom';
 //     yAxis: {...},
 //     series: [{...}]
 // });
-import './src/component/grid';
+import './component/grid';
 
 // `polar` coordinate system, for example:
 // chart.setOption({
@@ -100,7 +100,7 @@ import './src/component/grid';
 //         coordinateSystem: 'polar'
 //     }]
 // });
-import './src/component/polar';
+import './component/polar';
 
 // `geo` coordinate system, for example:
 // chart.setOption({
@@ -109,7 +109,7 @@ import './src/component/polar';
 //         coordinateSystem: 'geo'
 //     }]
 // });
-import './src/component/geo';
+import './component/geo';
 
 // `singleAxis` coordinate system (notice, it is a coordinate system
 // with only one axis, work for chart like theme river), for example:
@@ -117,7 +117,7 @@ import './src/component/geo';
 //     singleAxis: {...}
 //     series: [{type: 'themeRiver', ...}]
 // });
-import './src/component/singleAxis';
+import './component/singleAxis';
 
 // `parallel` coordinate system, only work for parallel series, for example:
 // chart.setOption({
@@ -127,7 +127,7 @@ import './src/component/singleAxis';
 //         type: 'parallel'
 //     }]
 // });
-import './src/component/parallel';
+import './component/parallel';
 
 // `calendar` coordinate system. for example,
 // chart.setOptionp({
@@ -136,7 +136,7 @@ import './src/component/parallel';
 //         coordinateSystem: 'calendar'
 //     }]
 // );
-import './src/component/calendar';
+import './component/calendar';
 
 
 
@@ -150,19 +150,19 @@ import './src/component/calendar';
 // chart.setOption({
 //     graphic: {...}
 // });
-import './src/component/graphic';
+import './component/graphic';
 
 // `toolbox` component, for example:
 // chart.setOption({
 //     toolbox: {...}
 // });
-import './src/component/toolbox';
+import './component/toolbox';
 
 // `tooltip` component, for example:
 // chart.setOption({
 //     tooltip: {...}
 // });
-import './src/component/tooltip';
+import './component/tooltip';
 
 // `axisPointer` component, for example:
 // chart.setOption({
@@ -172,7 +172,7 @@ import './src/component/tooltip';
 // chart.setOption({
 //     axisPointer: {...}
 // });
-import './src/component/axisPointer';
+import './component/axisPointer';
 
 // `brush` component, for example:
 // chart.setOption({
@@ -182,80 +182,80 @@ import './src/component/axisPointer';
 // chart.setOption({
 //     tooltip: {feature: {brush: {...}}
 // })
-import './src/component/brush';
+import './component/brush';
 
 // `title` component, for example:
 // chart.setOption({
 //     title: {...}
 // });
-import './src/component/title';
+import './component/title';
 
 // `timeline` component, for example:
 // chart.setOption({
 //     timeline: {...}
 // });
-import './src/component/timeline';
+import './component/timeline';
 
 // `markPoint` component, for example:
 // chart.setOption({
 //     series: [{markPoint: {...}}]
 // });
-import './src/component/markPoint';
+import './component/markPoint';
 
 // `markLine` component, for example:
 // chart.setOption({
 //     series: [{markLine: {...}}]
 // });
-import './src/component/markLine';
+import './component/markLine';
 
 // `markArea` component, for example:
 // chart.setOption({
 //     series: [{markArea: {...}}]
 // });
-import './src/component/markArea';
+import './component/markArea';
 
 // `legend` component scrollable, for example:
 // chart.setOption({
 //     legend: {type: 'scroll'}
 // });
-import './src/component/legendScroll';
+import './component/legendScroll';
 
 // `legend` component not scrollable. for example:
 // chart.setOption({
 //     legend: {...}
 // });
-import './src/component/legend';
+import './component/legend';
 
 // `dataZoom` component including both `dataZoomInside` and `dataZoomSlider`.
-import './src/component/dataZoom';
+import './component/dataZoom';
 
 // `dataZoom` component providing drag, pinch, wheel behaviors
 // inside coodinate system, for example:
 // chart.setOption({
 //     dataZoom: {type: 'inside'}
 // });
-import './src/component/dataZoomInside';
+import './component/dataZoomInside';
 
 // `dataZoom` component providing a slider bar, for example:
 // chart.setOption({
 //     dataZoom: {type: 'slider'}
 // });
-import './src/component/dataZoomSlider';
+import './component/dataZoomSlider';
 
 // `dataZoom` component including both `visualMapContinuous` and `visualMapPiecewise`.
-import './src/component/visualMap';
+import './component/visualMap';
 
 // `visualMap` component providing continuous bar, for example:
 // chart.setOption({
 //     visualMap: {type: 'continuous'}
 // });
-import './src/component/visualMapContinuous';
+import './component/visualMapContinuous';
 
 // `visualMap` component providing pieces bar, for example:
 // chart.setOption({
 //     visualMap: {type: 'piecewise'}
 // });
-import './src/component/visualMapPiecewise';
+import './component/visualMapPiecewise';
 
 
 
@@ -266,7 +266,7 @@ import './src/component/visualMapPiecewise';
 
 
 // Provide IE 6,7,8 compatibility.
-// import 'zrender/src/vml/vml';
+// import 'zrender/vml/vml';
 
 // Render via SVG rather than canvas.
 import 'zrender/src/svg/svg';

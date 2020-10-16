@@ -18,45 +18,60 @@
 * under the License.
 */
 
-const utHelper = require('../../core/utHelper');
+import { EChartsType } from '../../../../src/echarts';
+import { createChart } from '../../core/utHelper';
+import { ComponentMainType, ParsedValue } from '../../../../src/util/types';
+import SeriesModel from '../../../../src/model/Series';
+import ComponentModel from '../../../../src/model/Component';
+import ChartView from '../../../../src/view/Chart';
+import { EChartsFullOption } from '../../../../src/option';
+
+type OriginModelView = {
+    model: SeriesModel;
+    view: ChartView;
+};
+
 
 describe('modelAndOptionMapping', function () {
 
-    function getData0(chart, seriesIndex) {
+    function getData0(chart: EChartsType, seriesIndex: number): ParsedValue {
         return getSeries(chart, seriesIndex).getData().get('y', 0);
     }
 
-    function getSeries(chart, seriesIndex) {
-        return chart.getModel().getComponent('series', seriesIndex);
+    function getSeries(chart: EChartsType, seriesIndex: number): SeriesModel {
+        return chart.getModel().getComponent('series', seriesIndex) as SeriesModel;
     }
 
-    function getModel(chart, type, index) {
+    function getModel(chart: EChartsType, type: ComponentMainType, index: number): ComponentModel {
         return chart.getModel().getComponent(type, index);
     }
 
-    function countSeries(chart) {
+    function countSeries(chart: EChartsType): number {
         return countModel(chart, 'series');
     }
 
-    function countModel(chart, type) {
+    function countModel(chart: EChartsType, type: ComponentMainType): number {
         // FIXME
         // access private
+        // @ts-ignore
         return chart.getModel()._componentsMap.get(type).length;
     }
 
-    function getChartView(chart, series) {
+    function getChartView(chart: EChartsType, series: SeriesModel): ChartView {
+        // @ts-ignore
         return chart._chartsMap[series.__viewId];
     }
 
-    function countChartViews(chart) {
+    function countChartViews(chart: EChartsType): number {
+        // @ts-ignore
         return chart._chartsViews.length;
     }
 
-    function saveOrigins(chart) {
-        var count = countSeries(chart);
-        var origins = [];
-        for (var i = 0; i < count; i++) {
-            var series = getSeries(chart, i);
+    function saveOrigins(chart: EChartsType): OriginModelView[] {
+        const count = countSeries(chart);
+        const origins = [];
+        for (let i = 0; i < count; i++) {
+            const series = getSeries(chart, i);
             origins.push({
                 model: series,
                 view: getChartView(chart, series)
@@ -65,16 +80,26 @@ describe('modelAndOptionMapping', function () {
         return origins;
     }
 
-    function modelEqualsToOrigin(chart, idxList, origins, boolResult) {
-        for (var i = 0; i < idxList.length; i++) {
-            var idx = idxList[i];
+    function modelEqualsToOrigin(
+        chart: EChartsType,
+        idxList: number[],
+        origins: OriginModelView[],
+        boolResult: boolean
+    ): void {
+        for (let i = 0; i < idxList.length; i++) {
+            const idx = idxList[i];
             expect(origins[idx].model === getSeries(chart, idx)).toEqual(boolResult);
         }
     }
 
-    function viewEqualsToOrigin(chart, idxList, origins, boolResult) {
-        for (var i = 0; i < idxList.length; i++) {
-            var idx = idxList[i];
+    function viewEqualsToOrigin(
+        chart: EChartsType,
+        idxList: number[],
+        origins: OriginModelView[],
+        boolResult: boolean
+    ): void {
+        for (let i = 0; i < idxList.length; i++) {
+            const idx = idxList[i];
             expect(
                 origins[idx].view === getChartView(chart, getSeries(chart, idx))
             ).toEqual(boolResult);
@@ -82,9 +107,9 @@ describe('modelAndOptionMapping', function () {
     }
 
 
-    var chart;
+    let chart: EChartsType;
     beforeEach(function () {
-        chart = utHelper.createChart();
+        chart = createChart();
     });
 
     afterEach(function () {
@@ -94,7 +119,7 @@ describe('modelAndOptionMapping', function () {
     describe('idNoNameNo', function () {
 
         it('sameTypeNotMerge', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -106,7 +131,7 @@ describe('modelAndOptionMapping', function () {
             chart.setOption(option);
 
             // Not merge
-            var origins = saveOrigins(chart);
+            const origins = saveOrigins(chart);
             chart.setOption(option, true);
             expect(countChartViews(chart)).toEqual(3);
             expect(countSeries(chart)).toEqual(3);
@@ -115,7 +140,7 @@ describe('modelAndOptionMapping', function () {
         });
 
         it('sameTypeMergeFull', function () {
-            var option = {
+            chart.setOption({
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -123,11 +148,10 @@ describe('modelAndOptionMapping', function () {
                     {type: 'line', data: [22]},
                     {type: 'line', data: [33]}
                 ]
-            };
-            chart.setOption(option);
+            });
 
             // Merge
-            var origins = saveOrigins(chart);
+            const origins = saveOrigins(chart);
             chart.setOption({
                 series: [
                     {type: 'line', data: [111]},
@@ -146,7 +170,7 @@ describe('modelAndOptionMapping', function () {
         });
 
         it('sameTypeMergePartial', function () {
-            var option = {
+            chart.setOption({
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -154,11 +178,10 @@ describe('modelAndOptionMapping', function () {
                     {type: 'line', data: [22]},
                     {type: 'line', data: [33]}
                 ]
-            };
-            chart.setOption(option);
+            });
 
             // Merge
-            var origins = saveOrigins(chart);
+            const origins = saveOrigins(chart);
             chart.setOption({
                 series: [
                     {data: [22222]}
@@ -175,7 +198,7 @@ describe('modelAndOptionMapping', function () {
         });
 
         it('differentTypeMerge', function () {
-            var option = {
+            chart.setOption({
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -183,11 +206,10 @@ describe('modelAndOptionMapping', function () {
                     {type: 'line', data: [22]},
                     {type: 'line', data: [33]}
                 ]
-            };
-            chart.setOption(option);
+            });
 
             // Merge
-            var origins = saveOrigins(chart);
+            const origins = saveOrigins(chart);
             chart.setOption({
                 series: [
                     {type: 'line', data: [111]},
@@ -217,7 +239,7 @@ describe('modelAndOptionMapping', function () {
     describe('idSpecified', function () {
 
         it('sameTypeNotMerge', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -238,7 +260,7 @@ describe('modelAndOptionMapping', function () {
             expect(getData0(chart, 3)).toEqual(44);
             expect(getData0(chart, 4)).toEqual(55);
 
-            var origins = saveOrigins(chart);
+            const origins = saveOrigins(chart);
             chart.setOption(option, true);
             expect(countChartViews(chart)).toEqual(5);
             expect(countSeries(chart)).toEqual(5);
@@ -248,7 +270,7 @@ describe('modelAndOptionMapping', function () {
         });
 
         it('sameTypeMerge', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -261,7 +283,7 @@ describe('modelAndOptionMapping', function () {
             };
             chart.setOption(option);
 
-            var origins = saveOrigins(chart);
+            const origins = saveOrigins(chart);
             chart.setOption(option);
             expect(countChartViews(chart)).toEqual(5);
             expect(countSeries(chart)).toEqual(5);
@@ -271,7 +293,7 @@ describe('modelAndOptionMapping', function () {
         });
 
         it('differentTypeNotMerge', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -284,8 +306,8 @@ describe('modelAndOptionMapping', function () {
             };
             chart.setOption(option);
 
-            var origins = saveOrigins(chart);
-            var option2 = {
+            const origins = saveOrigins(chart);
+            const option2: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -306,7 +328,7 @@ describe('modelAndOptionMapping', function () {
         });
 
         it('differentTypeMergeFull', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -319,8 +341,8 @@ describe('modelAndOptionMapping', function () {
             };
             chart.setOption(option);
 
-            var origins = saveOrigins(chart);
-            var option2 = {
+            const origins = saveOrigins(chart);
+            const option2: EChartsFullOption = {
                 series: [
                     {type: 'line', data: [11]},
                     {type: 'bar', data: [22], id: 20, name: 'a'},
@@ -340,7 +362,7 @@ describe('modelAndOptionMapping', function () {
         });
 
         it('differentTypeMergePartial1', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -353,8 +375,8 @@ describe('modelAndOptionMapping', function () {
             };
             chart.setOption(option);
 
-            var origins = saveOrigins(chart);
-            var option2 = {
+            const origins = saveOrigins(chart);
+            const option2: EChartsFullOption = {
                 series: [
                     {type: 'bar', data: [444], id: 40},
                     {type: 'line', data: [333]},
@@ -377,7 +399,7 @@ describe('modelAndOptionMapping', function () {
         });
 
         it('differentTypeMergePartial2', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -387,7 +409,7 @@ describe('modelAndOptionMapping', function () {
             };
             chart.setOption(option);
 
-            var option2 = {
+            const option2: EChartsFullOption = {
                 series: [
                     {type: 'bar', data: [444], id: 40},
                     {type: 'line', data: [333]},
@@ -407,7 +429,7 @@ describe('modelAndOptionMapping', function () {
 
 
         it('mergePartialDoNotMapToOtherId', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -417,7 +439,7 @@ describe('modelAndOptionMapping', function () {
             };
             chart.setOption(option);
 
-            var option2 = {
+            const option2: EChartsFullOption = {
                 series: [
                     {type: 'bar', data: [444], id: 40}
                 ]
@@ -433,7 +455,7 @@ describe('modelAndOptionMapping', function () {
 
 
         it('idDuplicate', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -451,7 +473,7 @@ describe('modelAndOptionMapping', function () {
 
         it('nameTheSameButIdNotTheSame', function () {
 
-            var option = {
+            const option = {
                 grid: {},
                 xAxis: [
                     {id: 'x1', name: 'a', xxxx: 'x1_a'},
@@ -462,13 +484,16 @@ describe('modelAndOptionMapping', function () {
 
             chart.setOption(option);
 
-            var xAxisModel0 = getModel(chart, 'xAxis', 0);
-            var xAxisModel1 = getModel(chart, 'xAxis', 1);
-            expect(xAxisModel0.option.xxxx).toEqual('x1_a');
-            expect(xAxisModel1.option.xxxx).toEqual('x2_b');
+            let xAxisModel0;
+            let xAxisModel1;
+
+            xAxisModel0 = getModel(chart, 'xAxis', 0);
+            xAxisModel1 = getModel(chart, 'xAxis', 1);
+            expect((xAxisModel0.option as any).xxxx).toEqual('x1_a');
+            expect((xAxisModel1.option as any).xxxx).toEqual('x2_b');
             expect(xAxisModel1.option.name).toEqual('b');
 
-            var option2 = {
+            const option2 = {
                 xAxis: [
                     {id: 'k1', name: 'a', xxxx: 'k1_a'},
                     {id: 'x2', name: 'a', xxxx: 'x2_a'}
@@ -476,13 +501,13 @@ describe('modelAndOptionMapping', function () {
             };
             chart.setOption(option2);
 
-            var xAxisModel0 = getModel(chart, 'xAxis', 0);
-            var xAxisModel1 = getModel(chart, 'xAxis', 1);
-            var xAxisModel2 = getModel(chart, 'xAxis', 2);
-            expect(xAxisModel0.option.xxxx).toEqual('x1_a');
-            expect(xAxisModel1.option.xxxx).toEqual('x2_a');
+            xAxisModel0 = getModel(chart, 'xAxis', 0);
+            xAxisModel1 = getModel(chart, 'xAxis', 1);
+            const xAxisModel2 = getModel(chart, 'xAxis', 2);
+            expect((xAxisModel0.option as any).xxxx).toEqual('x1_a');
+            expect((xAxisModel1.option as any).xxxx).toEqual('x2_a');
             expect(xAxisModel1.option.name).toEqual('a');
-            expect(xAxisModel2.option.xxxx).toEqual('k1_a');
+            expect((xAxisModel2.option as any).xxxx).toEqual('k1_a');
         });
 
     });
@@ -499,7 +524,7 @@ describe('modelAndOptionMapping', function () {
     describe('noIdButNameExists', function () {
 
         it('sameTypeNotMerge', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -523,7 +548,7 @@ describe('modelAndOptionMapping', function () {
             expect(getData0(chart, 3)).toEqual(44);
             expect(getData0(chart, 4)).toEqual(55);
 
-            var origins = saveOrigins(chart);
+            const origins = saveOrigins(chart);
             chart.setOption(option, true);
             expect(countChartViews(chart)).toEqual(5);
             expect(countSeries(chart)).toEqual(5);
@@ -533,7 +558,7 @@ describe('modelAndOptionMapping', function () {
         });
 
         it('sameTypeMerge', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -546,7 +571,7 @@ describe('modelAndOptionMapping', function () {
             };
             chart.setOption(option);
 
-            var origins = saveOrigins(chart);
+            const origins = saveOrigins(chart);
             chart.setOption(option);
             expect(countChartViews(chart)).toEqual(5);
             expect(countSeries(chart)).toEqual(5);
@@ -556,7 +581,7 @@ describe('modelAndOptionMapping', function () {
         });
 
         it('differentTypeNotMerge', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -569,8 +594,8 @@ describe('modelAndOptionMapping', function () {
             };
             chart.setOption(option);
 
-            var origins = saveOrigins(chart);
-            var option2 = {
+            const origins = saveOrigins(chart);
+            const option2: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -591,7 +616,7 @@ describe('modelAndOptionMapping', function () {
         });
 
         it('differentTypeMergePartialOneMapTwo', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -604,8 +629,8 @@ describe('modelAndOptionMapping', function () {
             };
             chart.setOption(option);
 
-            var origins = saveOrigins(chart);
-            var option2 = {
+            const origins = saveOrigins(chart);
+            const option2: EChartsFullOption = {
                 series: [
                     {type: 'bar', data: [444], id: 40},
                     {type: 'line', data: [333]},
@@ -629,7 +654,7 @@ describe('modelAndOptionMapping', function () {
         });
 
         it('differentTypeMergePartialTwoMapOne', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -639,7 +664,7 @@ describe('modelAndOptionMapping', function () {
             };
             chart.setOption(option);
 
-            var option2 = {
+            const option2: EChartsFullOption = {
                 series: [
                     {type: 'bar', data: [444], name: 'a'},
                     {type: 'line', data: [333]},
@@ -659,7 +684,7 @@ describe('modelAndOptionMapping', function () {
 
         it('mergePartialCanMapToOtherName', function () {
             // Consider case: axis.name = 'some label', which can be overwritten.
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 series: [
@@ -669,7 +694,7 @@ describe('modelAndOptionMapping', function () {
             };
             chart.setOption(option);
 
-            var option2 = {
+            const option2: EChartsFullOption = {
                 series: [
                     {type: 'bar', data: [444], name: 40},
                     {type: 'bar', data: [999], name: 40},
@@ -695,24 +720,22 @@ describe('modelAndOptionMapping', function () {
     describe('ohters', function () {
 
         it('aBugCase', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 series: [
                     {
                         type: 'pie',
                         radius: ['20%', '25%'],
                         center: ['20%', '20%'],
                         avoidLabelOverlap: true,
-                        hoverAnimation: false,
                         label: {
-                            normal: {
-                                show: true,
-                                position: 'center',
-                                textStyle: {
-                                    fontSize: '30',
-                                    fontWeight: 'bold'
-                                }
-                            },
-                            emphasis: {
+                            show: true,
+                            position: 'center',
+                            fontSize: '30',
+                            fontWeight: 'bold'
+                        },
+                        emphasis: {
+                            scale: false,
+                            label: {
                                 show: true
                             }
                         },
@@ -732,16 +755,11 @@ describe('modelAndOptionMapping', function () {
                         radius: ['20%', '25%'],
                         center: ['20%', '20%'],
                         avoidLabelOverlap: true,
-                        hoverAnimation: false,
                         label: {
-                            normal: {
-                                show: true,
-                                position: 'center',
-                                textStyle: {
-                                    fontSize: '30',
-                                    fontWeight: 'bold'
-                                }
-                            }
+                            show: true,
+                            position: 'center',
+                            fontSize: '30',
+                            fontWeight: 'bold'
                         },
                         data: [
                             {value: 135, name: '视频广告'},
@@ -753,16 +771,11 @@ describe('modelAndOptionMapping', function () {
                         radius: ['20%', '25%'],
                         center: ['60%', '20%'],
                         avoidLabelOverlap: true,
-                        hoverAnimation: false,
                         label: {
-                            normal: {
-                                show: true,
-                                position: 'center',
-                                textStyle: {
-                                    fontSize: '30',
-                                    fontWeight: 'bold'
-                                }
-                            }
+                            show: true,
+                            position: 'center',
+                            fontSize: '30',
+                            fontWeight: 'bold'
                         },
                         data: [
                             {value: 135, name: '视频广告'},
@@ -777,7 +790,7 @@ describe('modelAndOptionMapping', function () {
         });
 
         it('color', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 backgroundColor: 'rgba(1,1,1,1)',
                 xAxis: {data: ['a']},
                 yAxis: {},
@@ -788,18 +801,18 @@ describe('modelAndOptionMapping', function () {
                 ]
             };
             chart.setOption(option);
-            expect(chart._model.option.backgroundColor).toEqual('rgba(1,1,1,1)');
+            expect(chart.getModel().option.backgroundColor).toEqual('rgba(1,1,1,1)');
 
             // Not merge
             chart.setOption({
                 backgroundColor: '#fff'
             }, true);
 
-            expect(chart._model.option.backgroundColor).toEqual('#fff');
+            expect(chart.getModel().option.backgroundColor).toEqual('#fff');
         });
 
         it('innerId', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: {data: ['a']},
                 yAxis: {},
                 toolbox: {

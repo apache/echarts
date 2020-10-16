@@ -17,11 +17,28 @@
 * under the License.
 */
 
-export * from './src/echarts';
+export * from './echarts';
+export * from './export';
 
-import './src/component/dataset';
+import './component/dataset';
 
-import './src/chart/line';
-import './src/chart/bar';
-import './src/chart/pie';
-import './src/component/gridSimple';
+import './chart/line';
+import './chart/bar';
+import './chart/pie';
+import './chart/scatter';
+import './component/graphic';
+import './component/tooltip';
+import './component/axisPointer';
+import './component/legendScroll';
+
+import './component/grid';
+import './component/title';
+
+import './component/markPoint';
+import './component/markLine';
+import './component/markArea';
+import './component/dataZoom';
+import './component/toolbox';
+
+// import 'zrender/vml/vml';
+import 'zrender/src/svg/svg';

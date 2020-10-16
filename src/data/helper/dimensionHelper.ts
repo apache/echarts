@@ -100,9 +100,6 @@ export function summarizeDimensions(data: List): DimensionSummary {
 
     notExtraCoordDimMap.each(function (v, coordDim) {
         const dimArr = encode[coordDim];
-        // ??? FIXME extra coord should not be set in dataDimsOnCoord.
-        // But should fix the case that radar axes: simplify the logic
-        // of `completeDimension`, remove `extraPrefix`.
         encodeFirstDimNotExtra[coordDim] = dimArr[0];
         // Not necessary to remove duplicate, because a data
         // dim canot on more than one coordDim.

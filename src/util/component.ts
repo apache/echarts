@@ -21,6 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import {parseClassType, ClassManager} from './clazz';
 import { ComponentOption, ComponentMainType, ComponentSubType, ComponentFullType } from './types';
 import { Dictionary } from 'zrender/src/core/types';
+import { makePrintable } from './log';
 
 // A random offset
 let base = Math.round(Math.random() * 10);
@@ -127,15 +128,15 @@ export function enableTopologicalTravel<T>(
 
         const result = makeDepndencyGraph(fullNameList);
         const graph = result.graph;
-        const stack = result.noEntryList;
+        const noEntryList = result.noEntryList;
 
         const targetNameSet: {[cmtpMainType: string]: boolean} = {};
         zrUtil.each(targetNameList, function (name) {
             targetNameSet[name] = true;
         });
 
-        while (stack.length) {
-            const currComponentType = stack.pop();
+        while (noEntryList.length) {
+            const currComponentType = noEntryList.pop();
             const currVertex = graph[currComponentType];
             const isInTargetNameSet = !!targetNameSet[currComponentType];
             if (isInTargetNameSet) {
@@ -149,13 +150,17 @@ export function enableTopologicalTravel<T>(
         }
 
         zrUtil.each(targetNameSet, function () {
-            throw new Error('Circle dependency may exists');
+            let errMsg = '';
+            if (__DEV__) {
+                errMsg = makePrintable('Circle dependency may exists: ', targetNameSet, targetNameList, fullNameList);
+            }
+            throw new Error(errMsg);
         });
 
         function removeEdge(succComponentType: ComponentMainType): void {
             graph[succComponentType].entryCount--;
             if (graph[succComponentType].entryCount === 0) {
-                stack.push(succComponentType);
+                noEntryList.push(succComponentType);
             }
         }
 

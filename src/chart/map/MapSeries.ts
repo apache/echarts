@@ -86,7 +86,7 @@ export interface MapSeriesOption extends
     data?: OptionDataValueNumeric[] | OptionDataValueNumeric[][] | MapDataItemOption[]
 
 
-    nameProperty: string;
+    nameProperty?: string;
 }
 
 class MapSeries extends SeriesModel<MapSeriesOption> {
