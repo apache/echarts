@@ -260,56 +260,6 @@ export class ECPolyline extends Path<ECPolylineProps> {
         }
     }
 
-    getLastIndexNotNull() {
-        const points = this.shape.points;
-        let len = points.length / 2;
-        for (; len > 0; len--) {
-            if (!isPointNull(points[len * 2 - 2], points[len * 2 - 1])) {
-                break;
-            }
-        }
-
-        return len - 1;
-    }
-
-    getPointAtIndex(idx: number) {
-        const points = this.shape.points;
-        return [points[idx * 2], points[idx * 2 + 1]];
-    }
-
-    getIndexRange(xOrY: number, dim: 'x' | 'y') {
-        const points = this.shape.points;
-        const len = points.length / 2;
-
-        const dimIdx = dim === 'x' ? 0 : 1;
-        let a;
-        let b;
-        let prevIndex = 0;
-        let nextIndex = -1;
-        for (let i = 0; i < len; i++) {
-            b = points[i * 2 + dimIdx];
-            if (isNaN(b) || isNaN(points[i * 2 + 1 - dimIdx])) {
-                continue;
-            }
-            if (i === 0) {
-                a = b;
-                continue;
-            }
-            if (a <= xOrY && b >= xOrY || a >= xOrY && b <= xOrY) {
-                nextIndex = i;
-                break;
-            }
-
-            prevIndex = i;
-            a = b;
-        }
-
-        return {
-            range: [prevIndex, nextIndex],
-            t: (xOrY - a) / (b - a)
-        };
-    }
-
     getPointOn(xOrY: number, dim: 'x' | 'y'): number[] {
         if (!this.path) {
             this.createPathProxy();

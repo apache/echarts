@@ -71,7 +71,7 @@ export interface CoordinateSystemMaster {
     // null/undefined value.
     convertFromPixel?(
         ecModel: GlobalModel, finder: ParsedModelFinder, pixelValue: number | number[]
-    ): ScaleDataValue | ScaleDataValue[];
+    ): number | number[];
 
     // @param point Point in global pixel coordinate system.
     // The signature of this method should be the same as `CoordinateSystemExecutive`

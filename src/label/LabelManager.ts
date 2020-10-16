@@ -494,6 +494,7 @@ class LabelManager {
         if (textEl && !textEl.ignore && !textEl.invisible && !(el as ECElement).disableLabelAnimation) {
             const layoutStore = labelLayoutInnerStore(textEl);
             const oldLayout = layoutStore.oldLayout;
+            const dataIndex = getECData(el).dataIndex;
             const newProps = {
                 x: textEl.x,
                 y: textEl.y,
@@ -506,7 +507,7 @@ class LabelManager {
                 textEl.style.opacity = 0;
                 initProps(textEl, {
                     style: { opacity: oldOpacity }
-                }, seriesModel);
+                }, seriesModel, dataIndex);
             }
             else {
                 textEl.attr(oldLayout);
@@ -521,7 +522,7 @@ class LabelManager {
                         textEl.attr(layoutStore.oldLayoutEmphasis);
                     }
                 }
-                updateProps(textEl, newProps, seriesModel);
+                updateProps(textEl, newProps, seriesModel, dataIndex);
             }
             layoutStore.oldLayout = newProps;
 

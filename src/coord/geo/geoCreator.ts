@@ -59,8 +59,8 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
 
     const rect = this.getBoundingRect();
 
-    let center = geoModel.get('layoutCenter');
-    let size = geoModel.get('layoutSize');
+    const centerOption = geoModel.get('layoutCenter');
+    const sizeOption = geoModel.get('layoutSize');
 
     const viewWidth = api.getWidth();
     const viewHeight = api.getHeight();
@@ -68,13 +68,15 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
     const aspect = rect.width / rect.height * this.aspectScale;
 
     let useCenterAndSize = false;
+    let center: number[];
+    let size: number;
 
-    if (center && size) {
+    if (centerOption && sizeOption) {
         center = [
-            numberUtil.parsePercent(center[0], viewWidth),
-            numberUtil.parsePercent(center[1], viewHeight)
+            numberUtil.parsePercent(centerOption[0], viewWidth),
+            numberUtil.parsePercent(centerOption[1], viewHeight)
         ];
-        size = numberUtil.parsePercent(size, Math.min(viewWidth, viewHeight));
+        size = numberUtil.parsePercent(sizeOption, Math.min(viewWidth, viewHeight));
 
         if (!isNaN(center[0]) && !isNaN(center[1]) && !isNaN(size)) {
             useCenterAndSize = true;

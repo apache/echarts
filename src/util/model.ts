@@ -46,7 +46,6 @@ import {
     Payload,
     OptionId,
     OptionName,
-    LabelOption,
     ParsedValue
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
@@ -55,7 +54,7 @@ import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
 import { isNumeric, getRandomIdBase, getPrecisionSafe, round } from './number';
 import { interpolateNumber } from 'zrender/src/animation/Animator';
-import Model from '../model/Model';
+import { warn } from './log';
 
 /**
  * Make the name displayable. But we should
@@ -236,8 +235,17 @@ export function mappingToExists<T extends MappingExistingItem>(
             newCmptOptions[index] = null;
             return;
         }
-        cmptOption.id == null || validateIdOrName(cmptOption.id);
-        cmptOption.name == null || validateIdOrName(cmptOption.name);
+
+        if (__DEV__) {
+            // There is some legacy case that name is set as `false`.
+            // But should work normally rather than throw error.
+            if (cmptOption.id != null && !isValidIdOrName(cmptOption.id)) {
+                warnInvalidateIdOrName(cmptOption.id);
+            }
+            if (cmptOption.name != null && !isValidIdOrName(cmptOption.name)) {
+                warnInvalidateIdOrName(cmptOption.name);
+            }
+        }
     });
 
     const result = prepareResult(existings, existingIdIdxMap, mode);
@@ -360,7 +368,6 @@ function mappingByIndex<T extends MappingExistingItem>(
     newCmptOptions: ComponentOption[],
     brandNew: boolean
 ): void {
-    let nextIdx = 0;
     each(newCmptOptions, function (cmptOption) {
         if (!cmptOption) {
             return;
@@ -368,6 +375,7 @@ function mappingByIndex<T extends MappingExistingItem>(
 
         // Find the first place that not mapped by id and not internal component (consider the "hole").
         let resultItem;
+        let nextIdx = 0;
         while (
             // Be `!resultItem` only when `nextIdx >= result.length`.
             (resultItem = result[nextIdx])
@@ -512,10 +520,10 @@ function keyExistAndEqual(
     obj1: { id?: OptionId, name?: OptionName },
     obj2: { id?: OptionId, name?: OptionName }
 ): boolean {
-    const key1 = obj1[attr];
-    const key2 = obj2[attr];
+    const key1 = convertOptionIdName(obj1[attr], null);
+    const key2 = convertOptionIdName(obj2[attr], null);
     // See `MappingExistingItem`. `id` and `name` trade string equals to number.
-    return key1 != null && key2 != null && key1 + '' === key2 + '';
+    return key1 != null && key2 != null && key1 === key2;
 }
 
 /**
@@ -539,12 +547,9 @@ export function convertOptionIdName(idOrName: unknown, defaultValue: string): st
         : defaultValue;
 }
 
-export function validateIdOrName(idOrName: unknown) {
+function warnInvalidateIdOrName(idOrName: unknown) {
     if (__DEV__) {
-        assert(
-            isValidIdOrName(idOrName),
-            '`' + idOrName + '` is invalid id or name. Must be a string.'
-        );
+        warn('`' + idOrName + '` is invalid id or name. Must be a string or number.');
     }
 }
 
@@ -607,8 +612,8 @@ function determineSubType(
 
 
 type BatchItem = {
-    seriesId: string,
-    dataIndex: number[]
+    seriesId: OptionId,
+    dataIndex: number | number[]
 };
 /**
  * A helper for removing duplicate items between batchA and batchB,
@@ -638,7 +643,10 @@ export function compressBatches(
 
     function makeMap(sourceBatch: BatchItem[], map: InnerMap, otherMap?: InnerMap): void {
         for (let i = 0, len = sourceBatch.length; i < len; i++) {
-            const seriesId = sourceBatch[i].seriesId;
+            const seriesId = convertOptionIdName(sourceBatch[i].seriesId, null);
+            if (seriesId == null) {
+                return;
+            }
             const dataIndices = normalizeToArray(sourceBatch[i].dataIndex);
             const otherDataIndices = otherMap && otherMap[seriesId];
 
@@ -801,9 +809,10 @@ export function parseFinder(
     ecModel: GlobalModel,
     finderInput: ModelFinder,
     opt?: {
+        // If no main type specified, use this main type.
+        defaultMainType?: ComponentMainType;
+        // If pervided, types out of this list will be ignored.
         includeMainTypes?: ComponentMainType[];
-        // The `mainType` listed will set `useDefault: true`.
-        useDefaultMainType?: ComponentMainType[];
         enableAll?: boolean;
         enableNone?: boolean;
     }
@@ -820,6 +829,7 @@ export function parseFinder(
 
     const queryOptionMap = createHashMap<QueryReferringUserOption, ComponentMainType>();
     const result = {} as ParsedModelFinder;
+    let mainTypeSpecified = false;
 
     each(finder, function (value, key) {
         // Exclude 'dataIndex' and other illgal keys.
@@ -840,14 +850,16 @@ export function parseFinder(
             return;
         }
 
+        mainTypeSpecified = mainTypeSpecified || !!mainType;
+
         const queryOption = queryOptionMap.get(mainType) || queryOptionMap.set(mainType, {});
         queryOption[queryType] = value as any;
     });
 
-    const useDefaultMainType = opt && opt.useDefaultMainType || [];
-    each(useDefaultMainType, function (mainType) {
-        !queryOptionMap.get(mainType) && queryOptionMap.set(mainType, {});
-    });
+    const defaultMainType = opt ? opt.defaultMainType : null;
+    if (!mainTypeSpecified && defaultMainType) {
+        queryOptionMap.set(defaultMainType, {});
+    }
 
     queryOptionMap.each(function (queryOption, mainType) {
         const queryResult = queryReferringComponents(
@@ -855,7 +867,7 @@ export function parseFinder(
             mainType,
             queryOption,
             {
-                useDefault: indexOf(useDefaultMainType, mainType) >= 0,
+                useDefault: defaultMainType === mainType,
                 enableAll: (opt && opt.enableAll != null) ? opt.enableAll : true,
                 enableNone: (opt && opt.enableNone != null) ? opt.enableNone : true
             }

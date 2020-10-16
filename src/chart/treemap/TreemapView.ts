@@ -44,7 +44,7 @@ import { LayoutRect } from '../../util/layout';
 import { TreemapLayoutNode } from './treemapLayout';
 import Element from 'zrender/src/Element';
 import Displayable from 'zrender/src/graphic/Displayable';
-import { makeInner } from '../../util/model';
+import { makeInner, convertOptionIdName } from '../../util/model';
 import { PathStyleProps, PathProps } from 'zrender/src/graphic/Path';
 import { TreeSeriesNodeItemOption } from '../tree/TreeSeries';
 import {
@@ -954,7 +954,7 @@ function renderNode(
             seriesModel.getFormattedLabel(
                 thisNode.dataIndex, 'normal', null, null, normalLabelModel.get('formatter')
             ),
-            nodeModel.get('name')
+            convertOptionIdName(nodeModel.get('name'), null)
         );
         if (!upperLabelRect && thisLayout.isLeafRoot) {
             const iconChar = seriesModel.get('drillDownIcon', true);
@@ -964,7 +964,8 @@ function renderNode(
         const isShow = normalLabelModel.getShallow('show');
 
         setLabelStyle(
-            rectEl, getLabelStatesModels(nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL),
+            rectEl,
+            getLabelStatesModels(nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL),
             {
                 defaultText: isShow ? text : null,
                 inheritColor: visualColor,

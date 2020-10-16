@@ -19,7 +19,7 @@
 */
 
 
-import { extend } from 'zrender/src/core/util';
+import { extend, retrieve2 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
@@ -31,6 +31,8 @@ import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import labelLayout from './labelLayout';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { getSectorCornerRadius } from '../helper/pieHelper';
+
 /**
  * Piece of pie including Sector, Label, LabelLine
  */
@@ -58,7 +60,10 @@ class PiePiece extends graphic.Sector {
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const emphasisModel = itemModel.getModel('emphasis');
         const layout = data.getItemLayout(idx);
-        const sectorShape = extend({}, layout);
+        const sectorShape = extend(
+            getSectorCornerRadius(itemModel.getModel('itemStyle'), layout) || {},
+            layout
+        );
 
         if (firstCreate) {
             sector.setShape(sectorShape);
@@ -114,14 +119,18 @@ class PiePiece extends graphic.Sector {
 
         this._updateLabel(seriesModel, data, idx);
 
-
         sector.ensureState('emphasis').shape = {
             r: layout.r + (emphasisModel.get('scale')
-                ? (emphasisModel.get('scaleSize') || 0) : 0)
+                ? (emphasisModel.get('scaleSize') || 0) : 0),
+            ...getSectorCornerRadius(emphasisModel.getModel('itemStyle'), layout)
         };
         extend(sector.ensureState('select'), {
             x: dx,
-            y: dy
+            y: dy,
+            shape: getSectorCornerRadius(itemModel.getModel(['select', 'itemStyle']), layout)
+        });
+        extend(sector.ensureState('blur'), {
+            shape: getSectorCornerRadius(itemModel.getModel(['blur', 'itemStyle']), layout)
         });
 
         const labelLine = sector.getTextGuideLine();
@@ -142,17 +151,13 @@ class PiePiece extends graphic.Sector {
 
     private _updateLabel(seriesModel: PieSeriesModel, data: List, idx: number): void {
         const sector = this;
-        const labelText = sector.getTextContent();
-
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
-
-        const labelTextEmphasisState = labelText.ensureState('emphasis');
-
         const labelModel = itemModel.getModel('label');
-        const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
+        const labelLineModel = itemModel.getModel('labelLine');
 
         const style = data.getItemVisual(idx, 'style');
         const visualColor = style && style.fill as ColorString;
+        const visualOpacity = style && style.opacity;
 
         setLabelStyle(
             sector,
@@ -165,9 +170,10 @@ class PiePiece extends graphic.Sector {
                     || data.getName(idx)
             },
             { normal: {
-                opacity: style && style.opacity
+                opacity: retrieve2(labelModel.get('opacity'), visualOpacity)
             } }
         );
+        const labelText = sector.getTextContent();
 
         // Set textConfig on sector.
         sector.setTextConfig({
@@ -178,18 +184,14 @@ class PiePiece extends graphic.Sector {
 
         // Make sure update style on labelText after setLabelStyle.
         // Because setLabelStyle will replace a new style on it.
-
         labelText.attr({
             z2: 10
         });
 
-        labelText.ignore = !labelModel.get('show');
-        labelTextEmphasisState.ignore = !labelHoverModel.get('show');
-
         // Default use item visual color
         setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
             stroke: visualColor,
-            opacity: style && style.opacity
+            opacity: retrieve2(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity)
         });
     }
 }

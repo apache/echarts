@@ -222,7 +222,7 @@ class SankeyView extends ChartView {
 
             const emphasisModel = edgeModel.getModel('emphasis');
 
-            setStatesStylesFromModel(curve, edgeModel, 'lineStyle', 'getItemStyle');
+            setStatesStylesFromModel(curve, edgeModel, 'lineStyle', (model) => model.getItemStyle());
 
             group.add(curve);
 

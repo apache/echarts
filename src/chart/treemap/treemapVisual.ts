@@ -18,7 +18,7 @@
 */
 
 import VisualMapping, { VisualMappingOption } from '../../visual/VisualMapping';
-import { map, each, extend, isArray } from 'zrender/src/core/util';
+import { each, extend, isArray } from 'zrender/src/core/util';
 import TreemapSeriesModel, { TreemapSeriesNodeItemOption, TreemapSeriesOption } from './TreemapSeries';
 import { TreemapLayoutNode, TreemapItemLayout } from './treemapLayout';
 import Model from '../../model/Model';

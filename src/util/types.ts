@@ -134,7 +134,7 @@ export interface DataModel extends DataHost, DataFormatMixin {}
     // Pick<DataFormatMixin, 'getDataParams' | 'formatTooltip'> {}
 
 interface PayloadItem {
-    excludeSeriesId?: string | string[];
+    excludeSeriesId?: OptionId | OptionId[];
     animation?: PayloadAnimationPart
     [other: string]: any;
 }
@@ -332,12 +332,27 @@ export type OrdinalSortInfo = {
     ordinalNumber: OrdinalNumber,
     beforeSortIndex: number
 };
-export type ParsedValueNumeric = number | OrdinalNumber;
+
+/**
+ * `OptionDataValue` is the primitive value in `series.data` or `dataset.source`.
+ * `OptionDataValue` are parsed (see `src/data/helper/dataValueHelper.parseDataValue`)
+ * into `ParsedValue` and stored into `data/List` storage.
+ * Note:
+ * (1) The term "parse" does not mean `src/scale/Scale['parse']`.
+ * (2) If a category dimension is not mapped to any axis, its raw value will NOT be
+ * parsed to `OrdinalNumber` but keep the original `OrdinalRawValue` in `src/data/List` storage.
+ */
 export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
-// FIXME:TS better name?
-// This is not `OptionDataPrimitive` because the "dataProvider parse"
-// will not be performed. But "scale parse" will be performed.
-export type ScaleDataValue = ParsedValue | Date;
+export type ParsedValueNumeric = number | OrdinalNumber;
+/**
+ * `ScaleDataValue` means that the user input primitive value to `src/scale/Scale`.
+ * (For example, used in `axis.min`, `axis.max`, `convertToPixel`).
+ * Note:
+ * `ScaleDataValue` is a little different from `OptionDataValue`, because it will not go through
+ * `src/data/helper/dataValueHelper.parseDataValue`, but go through `src/scale/Scale['parse']`.
+ */
+export type ScaleDataValue = ParsedValueNumeric | OrdinalRawValue | Date;
+
 export interface ScaleTick {
     value: number
 };
@@ -383,7 +398,7 @@ export interface DataVisualDimensions {
 
 export type DimensionDefinition = {
     type?: ListDimensionType,
-    name: DimensionName,
+    name?: DimensionName,
     displayName?: string
 };
 export type DimensionDefinitionLoose = DimensionDefinition['name'] | DimensionDefinition;
@@ -465,6 +480,7 @@ export type ECUnitOption = {
 
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
+    stateAnimation?: AnimationOption
 } & AnimationOptionMixin & ColorPaletteOptionMixin;
 
 /**
@@ -650,13 +666,13 @@ export interface MediaQuery {
     maxAspectRatio?: number;
 };
 export type MediaUnit = {
-    query: MediaQuery,
+    query?: MediaQuery,
     option: ECUnitOption
 };
 
 export type ComponentLayoutMode = {
     // Only support 'box' now.
-    type: 'box',
+    type?: 'box',
     ignoreSize?: boolean | boolean[]
 };
 /******************* Mixins for Common Option Properties   ********************** */
@@ -712,6 +728,7 @@ export interface AnimationOption {
     duration?: number
     easing?: AnimationEasing
     delay?: number
+    additive?: boolean
 }
 /**
  * Mixin of option set to control the animation of series.
@@ -1357,8 +1374,6 @@ export interface SeriesOption<StateOption=any, ExtraStateOpts extends {
     ColorPaletteOptionMixin,
     StatesOptionMixin<StateOption, ExtraStateOpts>
 {
-    name?: string
-
     silent?: boolean
 
     blendMode?: string

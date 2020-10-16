@@ -29,6 +29,8 @@ import { SINGLE_REFERRING } from '../../../util/model';
 const INNER_STACK_KEYWORD = '__ec_magicType_stack__' as const;
 
 const ICON_TYPES = ['line', 'bar', 'stack'] as const;
+// stack and tiled appears in pair for the title
+const TITLE_TYPES = ['line', 'bar', 'stack', 'tiled'] as const;
 
 const radioTypes = [
     ['line', 'bar'],
@@ -36,6 +38,7 @@ const radioTypes = [
 ] as const;
 
 type IconType = typeof ICON_TYPES[number];
+type TitleType = typeof TITLE_TYPES[number];
 
 export interface ToolboxMagicTypeFeatureOption extends ToolboxFeatureOption {
     type?: IconType[]
@@ -43,7 +46,7 @@ export interface ToolboxMagicTypeFeatureOption extends ToolboxFeatureOption {
      * Icon group
      */
     icon?: {[key in IconType]?: string}
-    title?: {[key in IconType]?: string}
+    title?: {[key in TitleType]?: string}
 
     // TODO LineSeriesOption, BarSeriesOption
     option?: {[key in IconType]?: SeriesOption}
@@ -154,14 +157,13 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
         let newTitle;
         // Change title of stack
         if (type === 'stack') {
-            const seriesOptions = newOption.series as (SeriesOption & { stack: string })[];
-            const tiledLang = ecModel.getLocale(['toolbox', 'magicType', 'title', 'tiled'] as any);
-            const titleLang = ecModel.getLocale(['toolbox', 'magicType', 'title']);
-            const isStack = seriesOptions && seriesOptions[0]
-                && seriesOptions[0].stack === INNER_STACK_KEYWORD;
-            newTitle = isStack
-                ? zrUtil.merge({ stack: tiledLang }, titleLang)
-                : zrUtil.clone(titleLang);
+            // use titles in model instead of ecModel
+            // as stack and tiled appears in pair, just flip them
+            // no need of checking stack state
+            newTitle = zrUtil.merge({
+                stack: model.option.title.tiled,
+                tiled: model.option.title.stack
+            }, model.option.title)
         }
 
         api.dispatchAction({

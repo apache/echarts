@@ -72,8 +72,10 @@ export interface GeoCommonOptionMixin extends RoamOptionMixin {
     ///// Layout with center and size
     // If you wan't to put map in a fixed size box with right aspect ratio
     // This two properties may more conveninet
-    layoutCenter?: number[];
-    layoutSize?: number;
+    // Like: `40` or `'50%'`.
+    layoutCenter?: (number | string)[];
+    // Like: `40` or `'50%'`.
+    layoutSize?: number | string;
 
     // Define left-top, right-bottom coords to control view
     // For example, [ [180, 90], [-180, -90] ]
@@ -94,7 +96,7 @@ export interface GeoOption extends
     show?: boolean;
     silent?: boolean;
 
-    regions: RegoinOption[];
+    regions?: RegoinOption[];
 
     stateAnimation?: AnimationOptionMixin
 

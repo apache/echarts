@@ -28,6 +28,7 @@ import { curry, defaults } from 'zrender/src/core/util';
 import { ZRElementEvent, BoxLayoutOptionMixin, ECElement } from '../../util/types';
 import Element from 'zrender/src/Element';
 import Model from '../../model/Model';
+import { convertOptionIdName } from '../../util/model';
 
 const TEXT_PADDING = 8;
 const ITEM_GAP = 8;
@@ -110,7 +111,7 @@ class Breadcrumb {
      */
     _prepare(targetNode: TreeNode, layoutParam: LayoutParam, textStyleModel: BreadcrumbTextStyleModel) {
         for (let node = targetNode; node; node = node.parentNode) {
-            const text = node.getModel<TreemapSeriesNodeItemOption>().get('name');
+            const text = convertOptionIdName(node.getModel<TreemapSeriesNodeItemOption>().get('name'), '');
             const textRect = textStyleModel.getTextRect(text);
             const itemWidth = Math.max(
                 textRect.width + TEXT_PADDING * 2,

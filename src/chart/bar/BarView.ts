@@ -20,7 +20,6 @@
 import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
 import {extend, map, defaults, each} from 'zrender/src/core/util';
-import type {RectLike} from 'zrender/src/core/BoundingRect';
 import {
     Rect,
     Sector,
@@ -84,7 +83,7 @@ type CartesianCoordArea = ReturnType<Cartesian2D['getArea']>;
 type PolarCoordArea = ReturnType<Polar['getArea']>;
 
 function getClipArea(coord: CoordSysOfBar, data: List) {
-    let coordSysClipArea = coord.getArea && coord.getArea();
+    const coordSysClipArea = coord.getArea && coord.getArea();
     if (isCoordinateSystemType<Cartesian2D>(coord, 'cartesian2d')) {
         const baseAxis = coord.getBaseAxis();
         // When boundaryGap is false or using time axis. bar may exceed the grid.
@@ -341,12 +340,16 @@ class BarView extends ChartView {
                         }
                         bgEls[newIndex] = bgEl;
                     }
+                    const bgLayout = getLayout[coord.type](data, newIndex);
+                    const shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
+                    updateProps(bgEl, { shape: shape }, animationModel, newIndex);
                 }
 
                 let el = oldData.getItemGraphicEl(oldIndex) as BarPossiblePath;
                 if (!data.hasValue(newIndex)) {
                     group.remove(el);
                     el = null;
+                    return;
                 }
 
                 let isClipped = false;
@@ -853,8 +856,6 @@ function updateStyle(
 
     el.useStyle(style);
 
-    el.ignore = isZeroOnPolar(layout as SectorLayout);
-
     const cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && (el as Path).attr('cursor', cursorStyle);
 
@@ -887,6 +888,8 @@ function updateStyle(
     setStatesStylesFromModel(el, itemModel);
 
     if (isZeroOnPolar(layout as SectorLayout)) {
+        el.style.fill = 'none';
+        el.style.stroke = 'none';
         each(el.states, (state) => {
             if (state.style) {
                 state.style.fill = state.style.stroke = 'none';
