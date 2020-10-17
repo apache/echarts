@@ -393,7 +393,8 @@ class LabelManager {
                 label.draggable = true;
                 label.cursor = 'move';
                 if (hostEl) {
-                    let hostModel: Model<LabelLineOptionMixin> = labelItem.seriesModel as SeriesModel<LabelLineOptionMixin>;
+                    let hostModel: Model<LabelLineOptionMixin> =
+                        labelItem.seriesModel as SeriesModel<LabelLineOptionMixin>;
                     if (labelItem.dataIndex != null) {
                         const data = labelItem.seriesModel.getData(labelItem.dataType);
                         hostModel = data.getItemModel<LabelLineOptionMixin>(labelItem.dataIndex);

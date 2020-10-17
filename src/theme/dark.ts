@@ -184,9 +184,18 @@ const theme = {
     },
     gauge: {
         title: {
-            textStyle: {
-                color: contrastColor
+            color: contrastColor
+        },
+        axisLine: {
+            lineStyle: {
+                color: [[1, 'rgba(207,212,219,0.2)']]
             }
+        },
+        axisLabel: {
+            color: contrastColor
+        },
+        detail: {
+            color: '#EEF1FA'
         }
     },
     candlestick: {

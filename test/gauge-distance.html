@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        detail: {formatter: '{value}%'},
+                        data: [{value: 58.46, name: '完成率'}]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'The default value of distance and length',
+                    'splitLine.distance: 10, splitLine.length: 10',
+                    'axisTick.distance: 10, axisTick.length: 6',
+                    'axisLabel.distance: 15'
+                ],
+                option: option
+                // height: 1200,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            var option1 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        progress: {
+                            show: true,
+                            width: 18
+                        },
+                        axisLine: {
+                            lineStyle: {
+                                width: 18
+                            }
+                        },
+                        axisTick: {
+                            show: false
+                        },
+                        splitLine: {
+                            length: 15,
+                            lineStyle: {
+                                width: 2,
+                                color: '#999'
+                            }
+                        },
+                        axisLabel: {
+                            distance: 25,
+                            color: '#999',
+                            fontSize: 20
+                        },
+                        anchor: {
+                            show: true,
+                            showAbove: true,
+                            size: 25,
+                            itemStyle: {
+                                borderWidth: 10
+                            }
+                        },
+                        title: {
+                            show: false
+                        },
+                        detail: {
+                            fontSize: 50,
+                            offsetCenter: [0, '75%'],
+                        },
+                        data: [{value: 70, name: '完成率'}]
+                    }
+                ]
+            };
+
+            var chart1 = testHelper.create(echarts, 'main1', {
+                title: [
+                    'splitLine.distance: 10, splitLine.length: 15',
+                    'axisLabel.distance: 25'
+                ],
+                option: option1,
+                height: 890,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            var option2 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        axisLine: {
+                            lineStyle: {
+                                width: 30,
+                                color: [
+                                    [0.3, '#67e0e3'],
+                                    [0.7, '#37a2da'],
+                                    [1, '#fd666d']
+                                ]
+                            }
+                        },
+                        pointer: {
+                            itemStyle: {
+                                color: 'auto'
+                            }
+                        },
+                        axisTick: {
+                            distance: -30,
+                            lineStyle: {
+                                color: '#fff'
+                            }
+                        },
+                        splitLine: {
+                            length: 30,
+                            distance: -30,
+                            lineStyle: {
+                                color: '#fff',
+                                width: 2
+                            }
+                        },
+                        axisLabel: {
+                            color: 'auto',
+                            distance: 35,
+                            fontSize: 20
+                        },
+                        detail: {
+                            formatter: '{value}%',
+                            color: 'auto'
+                        },
+                        data: [{value: 70, name: '完成率'}]
+                    }
+                ]
+            };
+
+            var chart2 = testHelper.create(echarts, 'main2', {
+                title: [
+                    'splitLine.distance: -30, splitLine.length: 30',
+                    'axisTick.distance: -30, axisTick.length: 6',
+                    'axisLabel.distance: 35'
+                ],
+                option: option2,
+                height: 890,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+            setInterval(function () {
+                option2.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
+                chart2.setOption(option2, true);
+            }, 2000);
+
+
+
+            var option3 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '学生成绩',
+                        type: 'gauge',
+                        startAngle: 180,
+                        endAngle: 0,
+                        min: 0,
+                        max: 1,
+                        splitNumber: 8,
+                        axisLine: {
+                            lineStyle: {
+                                width: 5,
+                                color: [
+                                    [0.25, '#FF6E76'],
+                                    [0.5, '#FDDD60'],
+                                    [0.75, '#58D9F9'],
+                                    [1, '#7CFFB2'],
+                                ]
+                            }
+                        },
+                        pointer: {
+                            length: '80%',
+                            itemStyle: {
+                                color: 'auto'
+                            }
+                        },
+                        axisTick: {
+                            length: 15,
+                            lineStyle: {
+                                color: 'auto'
+                            }
+                        },
+                        splitLine: {
+                            length: 20,
+                            lineStyle: {
+                                color: 'auto',
+                                width: 5
+                            }
+                        },
+                        axisLabel: {
+                            color: '#464646',
+                            fontSize: 20,
+                            distance: -60,
+                            formatter: function(value) {
+                                if (value === 0.875) {
+                                    return '优'
+                                } 
+                                else if (value === 0.625) {
+                                    return '中'
+                                } 
+                                else if (value === 0.375) {
+                                    return '良'
+                                } 
+                                else if (value === 0.125) {
+                                    return '差'
+                                }
+                            }
+                        },
+                        title: {
+                            offsetCenter: [0, '-50%'],
+                            fontSize: 40
+                        },
+                        detail: {
+                            fontSize: 50,
+                            offsetCenter: [0, '-30%'],
+                            formatter: function(value) {
+                                return value * 100 + '%';
+                            },
+                            color: 'auto'
+                        },
+                        data: [{value: 0.75, name: '成绩评定'}]
+                    }
+                ]
+            };
+
+            var chart3 = testHelper.create(echarts, 'main3', {
+                title: [
+                    'splitLine.distance: -30, splitLine.length: 30',
+                    'axisTick.distance: -30, axisTick.length: 6',
+                    'axisLabel.distance: 35'
+                ],
+                option: option3,
+                height: 890,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+
+            var option4 = {
+                backgroundColor: '#fff',
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '速度仪表盘',
+                        type: 'gauge',
+                        startAngle: 180,
+                        endAngle: 0,
+                        min: 0,
+                        max: 240,
+                        splitNumber: 12,
+                        itemStyle: {
+                            color: '#58D9F9',
+                            shadowColor: 'rgba(0,138,255,0.45)',
+                            shadowBlur: 10,
+                            shadowOffsetX: 2,
+                            shadowOffsetY: 2
+                        },
+                        progress: {
+                            show: true,
+                            roundCap: true,
+                            width: 18
+                        },
+                        pointer: {
+                            icon: 'path://M2090.36389,615.30999 L2090.36389,615.30999 C2091.48372,615.30999 2092.40383,616.194028 2092.44859,617.312956 L2096.90698,728.755929 C2097.05155,732.369577 2094.2393,735.416212 2090.62566,735.56078 C2090.53845,735.564269 2090.45117,735.566014 2090.36389,735.566014 L2090.36389,735.566014 C2086.74736,735.566014 2083.81557,732.63423 2083.81557,729.017692 C2083.81557,728.930412 2083.81732,728.84314 2083.82081,728.755929 L2088.2792,617.312956 C2088.32396,616.194028 2089.24407,615.30999 2090.36389,615.30999 Z',
+                            length: '70%',
+                            width: 14,
+                            offsetCenter: [0, '5%']
+                        },
+                        axisLine: {
+                            roundCap: true,
+                            lineStyle: {
+                                width: 18
+                            }
+                        },
+                        axisTick: {
+                            splitNumber: 2
+                        },
+                        splitLine: {
+                            length: 15,
+                            lineStyle: {
+                                width: 2,
+                                color: '#999'
+                            }
+                        },
+                        axisLabel: {
+                            distance: 25,
+                            color: '#999',
+                            fontSize: 20
+                        },
+                        title: {
+                            show: false
+                        },
+                        detail: {
+                            backgroundColor: '#fff',
+                            borderColor: '#999',
+                            borderWidth: 2,
+                            width: '60%',
+                            lineHeight: 50,
+                            height: '15%',
+                            borderRadius: 10,
+                            offsetCenter: [0, '35%'],
+                            formatter: function(value) {
+                                return '{value|' + value.toFixed(0) + '}{unit|km/h}';
+                            },
+                            rich: {
+                                value: {
+                                    fontSize: 50,
+                                    fontWeight: 'bolder',
+                                    color: '#777'
+                                },
+                                unit: {
+                                    fontSize: 20,
+                                    color: '#999',
+                                    padding: [0, 0, 15, 6]
+                                },
+                            }
+                        },
+                        data: [{value: 100, name: 'km/h'}]
+                    }
+                ]
+            };
+
+            var chart4 = testHelper.create(echarts, 'main4', {
+                title: [
+                    'splitLine.distance: 10, splitLine.length: 15',
+                    'axisLabel.distance: 25'
+                ],
+                option: option4,
+                height: 890,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+
+            var option5 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                   {
+                        name: '业务指标',
+                        type: 'gauge',
+                        min: 0,
+                        max: 100,
+                        splitNumber: 10,
+                        radius: '80%',
+                        axisLine: {
+                            lineStyle: {
+                                color: [[1, '#f00']],
+                                width: 2
+                            }
+                        },
+                        splitLine: {
+                            distance: -17,
+                            length: 15,
+                            lineStyle: {
+                                color: '#f00'
+                            }
+                        },
+                        axisTick: {
+                            distance: -12,
+                            length: 10,
+                            lineStyle: {
+                                color: '#f00'
+                            }
+                        },
+                        axisLabel: {
+                            distance: -50,
+                            color: '#f00',
+                            fontSize: 25
+                        },
+                        anchor: {
+                            show: true,
+                            size: 20,
+                            itemStyle: {
+                                borderColor: '#000',
+                                borderWidth: 2
+                            }
+                        },
+                        pointer: {
+                            offsetCenter: [0, '10%'],
+                            icon: 'path://M2090.36389,615.30999 L2090.36389,615.30999 C2091.48372,615.30999 2092.40383,616.194028 2092.44859,617.312956 L2096.90698,728.755929 C2097.05155,732.369577 2094.2393,735.416212 2090.62566,735.56078 C2090.53845,735.564269 2090.45117,735.566014 2090.36389,735.566014 L2090.36389,735.566014 C2086.74736,735.566014 2083.81557,732.63423 2083.81557,729.017692 C2083.81557,728.930412 2083.81732,728.84314 2083.82081,728.755929 L2088.2792,617.312956 C2088.32396,616.194028 2089.24407,615.30999 2090.36389,615.30999 Z',
+                            length: '115%',
+                            itemStyle: {
+                                color: '#000'
+                            }
+                        },
+                        title: {
+                            offsetCenter: [0, '-50%']
+                        },
+                        data: [{value: 58.46, name: 'PLP低压计'}]
+                    },
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        min: 0,
+                        max: 60,
+                        splitNumber: 6,
+                        axisLine: {
+                            lineStyle: {
+                                color: [[1, '#000']],
+                                width: 2
+                            }
+                        },
+                        splitLine: {
+                            distance: 0,
+                            length: 15
+                        },
+                        axisTick: {
+                            distance: 0,
+                            length: 10
+                        },
+                        axisLabel: {
+                            distance: 10,
+                            fontSize: 25,
+                            color: '#000'
+                        },
+                        pointer: {
+                            show: false
+                        },
+                        title: {
+                            show: false
+                        },
+                        anchor: {
+                            show: true,
+                            size: 14,
+                            itemStyle: {
+                                color: '#000'
+                                // borderColor: '#000',
+                                // borderWidth: 2
+                            }
+                        },
+                        detail: {
+                            show: false
+                            // formatter: '{value}%'
+                        },
+                        data: [{value: 58.46, name: '完成率'}]
+                    }
+                ]
+            };
+
+            var chart5 = testHelper.create(echarts, 'main5', {
+                title: [
+                    'Multimeter'
+                ],
+                option: option5,
+                height: 890,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            setInterval(function () {
+                option5.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
+                chart5.setOption(option5, true);
+            }, 2000);
+
+        });
+        </script>
+
+
+    </body>
+</html>
+
