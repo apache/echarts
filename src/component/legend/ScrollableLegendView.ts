@@ -205,7 +205,7 @@ class ScrollableLegendView extends LegendView {
         selector && (processMaxSize[wh] = maxSize[wh] - selectorRect[wh] - selectorButtonGap);
 
         const mainRect = this._layoutContentAndController(legendModel, isFirstRender,
-            processMaxSize, orientIdx, wh, hw, yx
+            processMaxSize, orientIdx, wh, hw, yx, xy
         );
 
         if (selector) {
@@ -238,7 +238,8 @@ class ScrollableLegendView extends LegendView {
         orientIdx: 0 | 1,
         wh: 'width' | 'height',
         hw: 'width' | 'height',
-        yx: 'x' | 'y'
+        yx: 'x' | 'y',
+        xy: 'y' | 'x'
     ) {
         const contentGroup = this.getContentGroup();
         const containerGroup = this._containerGroup;
@@ -264,12 +265,13 @@ class ScrollableLegendView extends LegendView {
         const controllerRect = controllerGroup.getBoundingRect();
         const showController = this._showController = contentRect[wh] > maxSize[wh];
 
+        // In case that the inner elements of contentGroup layout do not based on [0, 0]
         const contentPos = [-contentRect.x, -contentRect.y];
         // Remain contentPos when scroll animation perfroming.
         // If first rendering, `contentGroup.position` is [0, 0], which
         // does not make sense and may cause unexepcted animation if adopted.
         if (!isFirstRender) {
-            contentPos[orientIdx] = contentGroup[yx];
+            contentPos[orientIdx] = contentGroup[xy];
         }
 
         // Layout container group based on 0.
@@ -295,6 +297,7 @@ class ScrollableLegendView extends LegendView {
         // Always align controller to content as 'middle'.
         controllerPos[1 - orientIdx] += contentRect[hw] / 2 - controllerRect[hw] / 2;
 
+        contentGroup.setPosition(contentPos);
         containerGroup.setPosition(containerPos);
         controllerGroup.setPosition(controllerPos);
 
