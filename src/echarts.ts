@@ -2165,8 +2165,8 @@ class ECharts extends Eventful {
             const stateTransition = duration > 0 ? {
                 duration,
                 delay: stateAnimationModel.get('delay'),
-                easing: stateAnimationModel.get('easing'),
-                additive: stateAnimationModel.get('additive')
+                easing: stateAnimationModel.get('easing')
+                // additive: stateAnimationModel.get('additive')
             } : null;
             view.group.traverse(function (el: Displayable) {
                 if (el.states && el.states.emphasis) {
