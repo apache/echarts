@@ -22,6 +22,8 @@ import GlobalModel from '../model/Global';
 import {createOrUpdatePatternFromDecal} from '../util/decal';
 
 export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+    const dpr = api.getDevicePixelRatio();
+
     ecModel.eachRawSeries(seriesModel => {
         const data = seriesModel.getData();
 
@@ -30,7 +32,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                 const decal = data.getItemVisual(idx, 'decal');
                 if (decal) {
                     const itemStyle = data.ensureUniqueItemVisual(idx, 'style');
-                    itemStyle.decal = createOrUpdatePatternFromDecal(decal);
+                    itemStyle.decal = createOrUpdatePatternFromDecal(decal, dpr);
                 }
             });
         }
@@ -38,7 +40,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
             const decal = data.getVisual('decal');
             if (decal) {
                 const style = data.getVisual('style');
-                style.decal = createOrUpdatePatternFromDecal(decal);
+                style.decal = createOrUpdatePatternFromDecal(decal, dpr);
             }
         }
     });

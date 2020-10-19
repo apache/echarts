@@ -26,8 +26,11 @@ const decalKeys = [
  * @return {Pattern} pattern with generated image
  */
 export function createOrUpdatePatternFromDecal(
-    decalObject: DecalObject
+    decalObject: DecalObject,
+    dpr: number
 ): Pattern {
+    dpr = dpr || 1;
+
     if (decalObject.dirty) {
         decalMap.delete(decalObject);
     }
@@ -55,7 +58,10 @@ export function createOrUpdatePatternFromDecal(
     }
 
     const canvas = getPatternCanvas();
-    const pattern = new Pattern(canvas, 'repeat', decalOpt.rotation);
+    const pattern = new Pattern(canvas, 'repeat');
+    pattern.rotation = decalOpt.rotation;
+    pattern.scaleX = pattern.scaleY = 1 / dpr;
+
     decalMap.set(decalObject, pattern);
 
     decalObject.dirty = false;
@@ -63,7 +69,7 @@ export function createOrUpdatePatternFromDecal(
     return pattern;
 
     function getPatternCanvas(): HTMLCanvasElement {
-        const keys = [];
+        const keys = [dpr];
         let isValidKey = true;
         for (let i = 0; i < decalKeys.length; ++i) {
             const value = (decalOpt as any)[decalKeys[i]];
@@ -96,8 +102,8 @@ export function createOrUpdatePatternFromDecal(
 
         const canvas = createCanvas();
         const pSize = getPatternSize();
-        canvas.width = pSize.width;
-        canvas.height = pSize.height;
+        canvas.width = pSize.width * dpr;
+        canvas.height = pSize.height * dpr;
         brushDecal();
 
         if (isValidKey) {
@@ -177,13 +183,22 @@ export function createOrUpdatePatternFromDecal(
 
         function brushDecal() {
             const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, pSize.width, pSize.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (decalOpt.backgroundColor) {
                 ctx.fillStyle = decalOpt.backgroundColor;
-                ctx.fillRect(0, 0, pSize.width, pSize.height);
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
 
             ctx.fillStyle = decalOpt.color;
+
+            let ySum = 0;
+            for (let i = 0; i < dashArrayY.length; ++i) {
+                ySum += dashArrayY[i];
+            }
+            if (ySum <= 0) {
+                // dashArrayY is 0, draw nothing
+                return;
+            }
 
             let yCnt = 0;
             let y = -pSize.lines * lineBlockLengthY;
@@ -197,6 +212,15 @@ export function createOrUpdatePatternFromDecal(
                     );
                     let xId1 = 0;
                     while (x < pSize.width * 2) {
+                        let xSum = 0;
+                        for (let i = 0; i < dashArrayX[xId0].length; ++i) {
+                            xSum += dashArrayX[xId0][i];
+                        }
+                        if (xSum <= 0) {
+                            // Skip empty line
+                            break;
+                        }
+
                         // E.g., [15, 5, 20, 5] draws only for 15 and 20
                         if (xId1 % 2 === 0) {
                             const size = (1 - decalOpt.symbolSize) * 0.5;
@@ -230,7 +254,13 @@ export function createOrUpdatePatternFromDecal(
             }
 
             function brushSymbol(x: number, y: number, width: number, height: number) {
-                const symbol = createSymbol(decalOpt.symbol, x, y, width, height);
+                const symbol = createSymbol(
+                    decalOpt.symbol,
+                    x * dpr,
+                    y * dpr,
+                    width * dpr,
+                    height * dpr
+                );
                 symbol.style.fill = decalOpt.color;
                 brushSingle(ctx, symbol);
             }
