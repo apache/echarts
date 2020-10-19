@@ -77,6 +77,11 @@ interface TitleOption extends LabelOption {
      */
     offsetCenter?: (number | string)[]
     formatter?: LabelFormatter | string
+
+    /**
+     * If do value animtion.
+     */
+    valueAnimation?: boolean
 }
 
 interface DetailOption extends LabelOption {
@@ -85,6 +90,11 @@ interface DetailOption extends LabelOption {
      */
     offsetCenter?: (number | string)[]
     formatter?: LabelFormatter | string
+
+    /**
+     * If do value animtion.
+     */
+    valueAnimation?: boolean
 }
 
 export interface GaugeStateOption {
@@ -273,7 +283,8 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             offsetCenter: [0, '20%'],
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
             color: '#464646',
-            fontSize: 16
+            fontSize: 16,
+            valueAnimation: true
         },
         detail: {
             show: true,
@@ -290,7 +301,8 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             color: '#464646',
             fontSize: 30,
             fontWeight: 'bold',
-            lineHeight: 30
+            lineHeight: 30,
+            valueAnimation: true
         }
     };
 }
