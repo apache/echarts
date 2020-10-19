@@ -295,14 +295,9 @@ under the License.
 
             chart = testHelper.create(echarts, 'main2', {
                 title: [
-                    'It should use decal when aria.show is true',
-                    '(1) Each bar and pie piece should have different decal',
-                    '(2) The first bar and pie piece decal should be blue'
+                    'Change parameters and check if it goes into endless loop'
                 ],
                 option: option
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
 
             ['symbolSize', 'dashArrayX-0', 'dashArrayX-1', 'dashArrayY-0', 'dashArrayY-1', 'dashLineOffset', 'rotation'].forEach(function (name) {
