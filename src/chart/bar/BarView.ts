@@ -25,13 +25,11 @@ import {
     Sector,
     updateProps,
     initProps,
-    updateLabel,
-    initLabel,
     removeElementWithFadeOut
 } from '../../util/graphic';
 import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
-import { setLabelStyle, getLabelStatesModels, labelInner } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels, labelInner, setLabelValueAnimation } from '../../label/labelStyle';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import Sausage from '../../util/shape/sausage';
@@ -291,16 +289,10 @@ class BarView extends ChartView {
                     el, data, dataIndex, itemModel, layout,
                     seriesModel, isHorizontalOrRadial, coord.type === 'polar'
                 );
-
-                initLabel(
-                    el, data, dataIndex, itemModel.getModel('label'), seriesModel, animationModel, defaultTextGetter
-                );
                 if (isInitSort) {
                     (el as Rect).attr({ shape: layout });
                 }
                 else if (realtimeSort) {
-                    (el as unknown as ECElement).disableLabelAnimation = true;
-
                     updateRealtimeAnimation(
                         seriesModel,
                         axis2DModel,
@@ -381,17 +373,12 @@ class BarView extends ChartView {
                         el, data, newIndex, itemModel, layout,
                         seriesModel, isHorizontalOrRadial, coord.type === 'polar'
                     );
-                    updateLabel(
-                        el, data, newIndex, itemModel.getModel('label'), seriesModel, animationModel, defaultTextGetter
-                    );
                 }
 
                 if (isInitSort) {
                     (el as Rect).attr({ shape: layout });
                 }
                 else if (realtimeSort) {
-                    (el as unknown as ECElement).disableLabelAnimation = true;
-
                     updateRealtimeAnimation(
                         seriesModel,
                         axis2DModel,
@@ -863,9 +850,10 @@ function updateStyle(
         const labelPositionOutside = isHorizontal
             ? ((layout as RectLayout).height > 0 ? 'bottom' as const : 'top' as const)
             : ((layout as RectLayout).width > 0 ? 'left' as const : 'right' as const);
+        const labelStatesModels = getLabelStatesModels(itemModel);
 
         setLabelStyle(
-            el, getLabelStatesModels(itemModel),
+            el, labelStatesModels,
             {
                 labelFetcher: seriesModel,
                 labelDataIndex: dataIndex,
@@ -876,11 +864,13 @@ function updateStyle(
         );
 
         const label = el.getTextContent();
-        if (label) {
-            const obj = labelInner(label);
-            obj.prevValue = obj.value;
-            obj.value = seriesModel.getRawValue(dataIndex) as ParsedValue | ParsedValue[];
-        }
+
+        setLabelValueAnimation(
+            label,
+            labelStatesModels,
+            seriesModel.getRawValue(dataIndex) as ParsedValue,
+            (value: number) => getDefaultInterpolatedLabel(data, value)
+        );
     }
 
     const emphasisModel = itemModel.getModel(['emphasis']);
