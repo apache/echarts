@@ -33,12 +33,90 @@ under the License.
     </head>
     <body>
         <style>
+            table {
+                padding: 20px;
+            }
+            tr {
+                padding: 5px;
+            }
         </style>
 
 
 
         <div id="main0"></div>
         <div id="main1"></div>
+
+        <div id="main2"></div>
+
+        <table>
+            <tr>
+                <td>
+                    <button onclick="randAll()">Random All</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    symbolSize
+                </td>
+                <td>
+                    <input type="range" min="0" max="1" value="1" step="0.01" id="symbolSize-range">
+                    <label id="symbolSize-label">1</label>
+                </td>
+                <td>
+                    <button onclick="rand('symbolSize', 0, 1)">Random</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    dashArrayX
+                </td>
+                <td>
+                    <input type="range" min="0" max="50" value="10" id="dashArrayX-0-range">
+                    <input type="range" min="0" max="50" value="10" id="dashArrayX-1-range">
+                    <label id="dashArrayX-label">[10, 10]</label>
+                </td>
+                <td>
+                    <button onclick="rand('dashArrayX-0', 0, 100)">Random</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    dashArrayY
+                </td>
+                <td>
+                    <input type="range" min="0" max="50" value="10" id="dashArrayY-0-range">
+                    <input type="range" min="0" max="50" value="10" id="dashArrayY-1-range">
+                    <label id="dashArrayY-label">[10, 10]</label>
+                </td>
+                <td>
+                    <button onclick="rand('dashArrayY-0', 0, 100)">Random</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    dashLineOffset
+                </td>
+                <td>
+                    <input type="range" min="0" max="50" value="0" id="dashLineOffset-range">
+                    <label id="dashLineOffset-label">0</label>
+                </td>
+                <td>
+                    <button onclick="rand('dashLineOffset', 0, 100)"">Random</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    rotation
+                </td>
+                <td>
+                    <input type="range" min="0" max="3.14" value="0" step="0.01" id="rotation-range">
+                    <label id="rotation-label">0</label>
+                </td>
+                <td>
+                    <button onclick="rand('rotation', 0, 3.14)"">Random</button>
+                </td>
+            </tr>
+        </table>
 
 
 
@@ -53,7 +131,7 @@ under the License.
                     color: 'blue'
                 }
             };
-            for (var i = 0; i < 6; ++i) {
+            for (var i = 0; i < 12; ++i) {
                 var s = {
                     name: 'bar' + i,
                     data: [i * 10 + 100],
@@ -177,6 +255,123 @@ under the License.
         </script>
 
 
+        <script>
+        var option;
+        var decal = {
+            symbolSize: 1,
+            dashArrayX: [10, 10],
+            dashArrayY: [10, 10],
+            dashLineOffset: 0,
+            rotation: 0,
+            maxTileWidth: 256,
+            maxTileHeight: 256
+        };
+
+        option = {
+            xAxis: {
+                type: 'category',
+                data: ['a', 'b']
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: {
+                type: 'bar',
+                data: [100, 90],
+                itemStyle: {
+                    decal: decal
+                }
+            },
+            grid: {
+                left: 50,
+                right: 20
+            },
+            aria: {
+                show: true
+            }
+        };
+        var chart;
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+
+            chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'It should use decal when aria.show is true',
+                    '(1) Each bar and pie piece should have different decal',
+                    '(2) The first bar and pie piece decal should be blue'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            ['symbolSize', 'dashArrayX-0', 'dashArrayX-1', 'dashArrayY-0', 'dashArrayY-1', 'dashLineOffset', 'rotation'].forEach(function (name) {
+                var input = document.getElementById(name + '-range');
+                var nameSplit = name.split('-');
+                var attrName = nameSplit[0];
+                var idName = nameSplit[1];
+                var label = document.getElementById(attrName + '-label');
+                input.addEventListener('change', function (event) {
+                    var value = event.target.value;
+                    var labelText = value;
+                    var rangeValue = value;
+                    if (idName) {
+                        var otherId = idName === '0' ? '1' : '0';
+                        var otherValue = document.getElementById(attrName + '-' + otherId + '-range').value;
+                        labelText = idName === '0'
+                            ? '[' + value + ', ' + otherValue + ']'
+                            : '[' + otherValue + ', ' + value + ']';
+                        rangeValue = idName === '0'
+                            ? [+value, +otherValue]
+                            : [+otherValue, +value];
+                    }
+                    label.innerText = labelText;
+
+                    decal[attrName] = rangeValue;
+                    chart.setOption(option);
+                });
+            });
+        });
+
+        function rand(name, min, max) {
+            var n = Math.random() * (max - min) + min;
+            var value = max < 10 ? Math.floor(n * 100) / 100 : Math.floor(n);
+
+            var nameSplit = name.split('-');
+            var attrName = nameSplit[0];
+            var idName = nameSplit[1];
+            var labelText = value;
+            var rangeValue = value;
+            var label = document.getElementById(attrName + '-label');
+            if (idName) {
+                var otherN = Math.random() * (max - min) + min;
+                var otherValue = max < 10 ? Math.floor(otherN * 100) / 100 : Math.floor(otherN);
+                document.getElementById(attrName + '-1-range').value = otherValue;
+
+                labelText = idName === '0'
+                    ? '[' + value + ', ' + otherValue + ']'
+                    : '[' + otherValue + ', ' + value + ']';
+                rangeValue = idName === '0'
+                    ? [+value, +otherValue]
+                    : [+otherValue, +value];
+            }
+            label.innerText = labelText;
+
+            var input = document.getElementById(name + '-range');
+            input.value = value;
+
+            decal[attrName] = rangeValue;
+            chart.setOption(option);
+        }
+
+        function randAll() {
+            rand('symbolSize', 0, 1);
+            rand('dashArrayX-0', 0, 50);
+            rand('dashArrayY-0', 0, 50);
+            rand('dashLineOffset', 0, 50);
+            rand('rotation', 0, 3.14);
+        }
+        </script>
     </body>
 </html>
 

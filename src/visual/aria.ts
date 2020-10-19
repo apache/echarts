@@ -67,10 +67,10 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                         null,
                         ecModel.getSeriesCount()
                     );
-                    const decal = zrUtil.defaults(
-                        style.decal || {},
-                        paletteDecal
-                    );
+                    const decal = style.decal
+                        ? zrUtil.defaults(style.decal, paletteDecal)
+                        : paletteDecal;
+                    decal.dirty = true;
                     data.setVisual('decal', decal);
                 }
             });
