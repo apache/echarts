@@ -298,12 +298,14 @@ class TooltipHTMLContent {
             }
         };
         el.onmouseleave = function () {
+            // set `_inContent` to `false` before `hideLater`
+            self._inContent = false;
+
             if (self._enterable) {
                 if (self._show) {
                     self.hideLater(self._hideDelay);
                 }
             }
-            self._inContent = false;
         };
     }
 
