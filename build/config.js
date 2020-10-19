@@ -106,13 +106,12 @@ exports.createECharts = function (opt = {}) {
         output = nodePath.resolve(output);
     }
     else {
-        input = nodePath.resolve(ecDir, `echarts${srcType}.ts`);
+        input = nodePath.resolve(ecDir, `src/echarts${srcType}.ts`);
         output = nodePath.resolve(ecDir, `dist/echarts${postfixLang}${postfixType}.js`);
     }
 
     const include = [
-        nodePath.resolve(ecDir, 'src/**/*.ts'),
-        nodePath.resolve(ecDir, 'echarts*.ts')
+        nodePath.resolve(ecDir, 'src/**/*.ts')
     ];
 
     return {

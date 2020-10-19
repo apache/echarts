@@ -17,7 +17,11 @@
 * under the License.
 */
 
-export * from './src/echarts';
-export * from './src/export';
+export * from './echarts';
 
-import './src/component/dataset';
+import './component/dataset';
+
+import './chart/line';
+import './chart/bar';
+import './chart/pie';
+import './component/gridSimple';

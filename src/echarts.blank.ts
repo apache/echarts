@@ -17,12 +17,7 @@
 * under the License.
 */
 
-const jsdom = require('jsdom');
-const Canvas = require('canvas');
-const {JSDOM} = jsdom;
-const {window} = new JSDOM();
+export * from './echarts';
+export * from './export';
 
-global.window = window;
-global.navigator = window.navigator;
-global.document = window.document;
-global.Image = Canvas.Image;
+import './component/dataset';

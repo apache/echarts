@@ -17,22 +17,25 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-const layoutUtil = require('../../../../lib/util/layout');
+
+// import { Dictionary } from 'zrender/src/core/types';
+import { mergeLayoutParam } from '../../../../src/util/layout';
+import { BoxLayoutOptionMixin } from '../../../../src/util/types';
 
 describe('util/number', function () {
 
     describe('mergeLayoutParam', function () {
 
         // The given obj has exactly the given props, has no other props.
-        function expectPropsEqual(obj, props) {
+        function expectPropsEqual(obj: object, props: object): void {
             expect(propContain(obj, props) && propContain(props, obj)).toEqual(true);
         }
 
-        function propContain(more, less) {
-            for (var key in more) {
+        function propContain(more: object, less: object): boolean {
+            for (const key in more) {
                 if (more.hasOwnProperty(key)) {
-                    if (more[key] !== less[key]
-                        && !(more[key] == null && less[key] == null)
+                    if ((more as any)[key] !== (less as any)[key]
+                        && !((more as any)[key] == null && (less as any)[key] == null)
                     ) {
                         return false;
                     }
@@ -41,9 +44,9 @@ describe('util/number', function () {
             return true;
         }
 
-        function shadowClone(obj) {
-            var newObj = {};
-            for (var key in obj) {
+        function shadowClone<T extends object>(obj: T): T {
+            const newObj = {} as T;
+            for (const key in obj) {
                 if (obj.hasOwnProperty(key)) {
                     newObj[key] = obj[key];
                 }
@@ -53,18 +56,23 @@ describe('util/number', function () {
 
         it('all', function () {
 
-            function testMerge(targetOption, newOption, result, resultIgnoreSize) {
-                var t1 = shadowClone(targetOption);
-                var t2 = shadowClone(targetOption);
-                var n1 = shadowClone(newOption);
-                var n2 = shadowClone(newOption);
-                layoutUtil.mergeLayoutParam(t1, n1);
-                layoutUtil.mergeLayoutParam(t2, n2, {ignoreSize: true});
+            function testMerge(
+                targetOption: BoxLayoutOptionMixin,
+                newOption: BoxLayoutOptionMixin,
+                result: BoxLayoutOptionMixin,
+                resultIgnoreSize?: BoxLayoutOptionMixin
+            ) {
+                const t1 = shadowClone(targetOption);
+                const t2 = shadowClone(targetOption);
+                const n1 = shadowClone(newOption);
+                const n2 = shadowClone(newOption);
+                mergeLayoutParam(t1, n1);
+                mergeLayoutParam(t2, n2, {ignoreSize: true});
                 expectPropsEqual(t1, result);
                 expectPropsEqual(t2, resultIgnoreSize || result);
             }
 
-            function singleValueAdd(val) {
+            function singleValueAdd(val: number | string): void {
                 testMerge({}, {width: val}, {width: val});
                 testMerge({}, {left: val}, {left: val});
                 testMerge({}, {right: val}, {right: val});
@@ -79,7 +87,7 @@ describe('util/number', function () {
             singleValueAdd('right');
             singleValueAdd('center');
 
-            function singleValueReplace(val) {
+            function singleValueReplace(val: number | string): void {
                 testMerge({width: -999}, {width: val}, {width: val});
                 testMerge({left: -999}, {left: val}, {left: val});
                 testMerge({right: -999}, {right: val}, {right: val});

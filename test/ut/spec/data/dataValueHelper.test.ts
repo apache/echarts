@@ -18,7 +18,8 @@
 */
 
 
-const dataValueHelper = require('../../../../lib/data/helper/dataValueHelper');
+import * as dataValueHelper from '../../../../src/data/helper/dataValueHelper';
+
 
 const NO_SUCH_CASE = 'NO_SUCH_CASE';
 
@@ -35,7 +36,15 @@ const TAG = {
     BothIncmpr_NotEQ: 'BothIncmpr_NotEQ',
     L_Incmpr_R_NumberOrString: 'L_Incmpr_R_NumberOrString',
     R_Incmpr_L_NumberOrString: 'R_Incmpr_L_NumberOrString'
-};
+} as const;
+
+type CaseTag = typeof TAG[keyof typeof TAG];
+
+type Operation = 'lt' | 'lte' | 'gt' | 'gte' | 'eq' | 'ne';
+type Order = 'asc' | 'desc';
+type Incomparable = 'min' | 'max';
+
+
 const tagRevertPairs = [
     ['BothNumeric_AtLeastOneNumber_L_LT_R', 'BothNumeric_AtLeastOneNumber_L_GT_R'],
     ['BothString_L_LT_R', 'BothString_L_GT_R'],
@@ -44,7 +53,7 @@ const tagRevertPairs = [
     ['BothNumeric_OneNumber_NumericEQ', 'BothNumeric_OneNumber_NumericEQ'],
     ['BothIncmpr_NotEQ', 'BothIncmpr_NotEQ'],
     ['L_Incmpr_R_NumberOrString', 'R_Incmpr_L_NumberOrString']
-];
+] as const;
 
 const filterResultMap = {
     BothNumeric_AtLeastOneNumber_L_LT_R: {
@@ -127,7 +136,7 @@ const filterResultMap = {
         eq: false,
         ne: true
     }
-};
+} as const;
 
 const sortResultMap = {
     BothNumeric_AtLeastOneNumber_L_LT_R: {
@@ -190,12 +199,11 @@ const sortResultMap = {
         desc_incmprmin: -1,
         desc_incmprmax: 1
     }
-};
+} as const;
 
-/**
- * @param {(lval: unknown, rval: unknown, caseTag: TAG) => void} evalFn
- */
-function eachRelationalComparisonCase(evalFn) {
+type EvaluateFunction = (lval: unknown, rval: unknown, caseTag: CaseTag) => void;
+
+function eachRelationalComparisonCase(evalFn: EvaluateFunction) {
 
     const FULL_WIDTH_SPACE = String.fromCharCode(12288);
 
@@ -300,7 +308,7 @@ function eachRelationalComparisonCase(evalFn) {
 
         equalOtherTypes: function () {
             const emptyObj = {};
-            const emptyArr = [];
+            const emptyArr = [] as unknown[];
             const date = new Date(2012, 5, 12);
             const fn = function () {};
             expectDual(emptyObj, emptyObj, TAG.Strict_EQ);
@@ -310,7 +318,7 @@ function eachRelationalComparisonCase(evalFn) {
         }
     };
 
-    function expectDual(lval, rval, caseTag) {
+    function expectDual(lval: unknown, rval: unknown, caseTag: CaseTag) {
         validateCaseTag(caseTag);
         evalFn(lval, rval, caseTag);
 
@@ -319,11 +327,11 @@ function eachRelationalComparisonCase(evalFn) {
         evalFn(rval, lval, revertedCaseTag);
     }
 
-    function validateCaseTag(caseTag) {
+    function validateCaseTag(caseTag: CaseTag) {
         expect(TAG.hasOwnProperty(caseTag)).toEqual(true);
     }
 
-    function findRevertTag(caseTag) {
+    function findRevertTag(caseTag: CaseTag) {
         for (let i = 0; i < tagRevertPairs.length; i++) {
             const item = tagRevertPairs[i];
             if (item[0] === caseTag) {
@@ -335,18 +343,19 @@ function eachRelationalComparisonCase(evalFn) {
         }
     }
 
-    Object.keys(testerMap).forEach(name => testerMap[name]());
+    Object.keys(testerMap).forEach((name: keyof typeof testerMap) => testerMap[name]());
 }
 
 
 describe('data/helper/dataValueHelper', function () {
 
     describe('filter_relational_comparison', function () {
-        function testFilterComparator(op) {
+
+        function testFilterComparator(op: Operation) {
             it(op + '_filter_comparator', () => {
                 eachRelationalComparisonCase((lval, rval, caseTag) => {
-                    expect(filterResultMap.hasOwnProperty[caseTag]);
-                    expect(filterResultMap[caseTag].hasOwnProperty[op]);
+                    expect(filterResultMap.hasOwnProperty(caseTag));
+                    expect(filterResultMap[caseTag].hasOwnProperty(op));
                     const expectedResult = filterResultMap[caseTag][op];
 
                     if ((op === 'lt' || op === 'lte' || op === 'gt' || op === 'gte')
@@ -358,7 +367,7 @@ describe('data/helper/dataValueHelper', function () {
                     }
                     else {
                         const comparator = dataValueHelper.createFilterComparator(op, rval);
-                        expect(comparator.evaluate(lval, rval)).toEqual(expectedResult);
+                        expect(comparator.evaluate(lval)).toEqual(expectedResult);
                     }
                 });
             });
@@ -372,15 +381,16 @@ describe('data/helper/dataValueHelper', function () {
     });
 
     describe('sort_relational_comparison', function () {
-        function testSortComparator(order, incomparable) {
+
+        function testSortComparator(order: Order, incomparable: Incomparable) {
             const key = order + '_incmpr' + incomparable;
             const SortOrderComparator = dataValueHelper.SortOrderComparator;
             const sortOrderComparator = new SortOrderComparator(order, incomparable);
             it(key + '_sort_comparator', () => {
                 eachRelationalComparisonCase((lval, rval, caseTag) => {
-                    expect(sortResultMap.hasOwnProperty[caseTag]);
-                    expect(sortResultMap[caseTag].hasOwnProperty[key]);
-                    const expectedResult = sortResultMap[caseTag][key];
+                    expect(sortResultMap.hasOwnProperty(caseTag));
+                    expect(sortResultMap[caseTag].hasOwnProperty(key));
+                    const expectedResult = (sortResultMap[caseTag] as any)[key];
                     expect(sortOrderComparator.evaluate(lval, rval)).toEqual(expectedResult);
                 });
             });

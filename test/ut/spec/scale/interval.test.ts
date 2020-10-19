@@ -18,15 +18,19 @@
 * under the License.
 */
 
-const scaleHelper = require('../../../../lib/scale/helper');
-const numberUtil = require('../../../../lib/util/number');
-const IntervalScale = require('../../../../lib/scale/Interval');
-const utHelper = require('../../core/utHelper');
+import { createChart, isValueFinite } from '../../core/utHelper';
+import { EChartsType } from '../../../../src/echarts';
+import CartesianAxisModel from '../../../../src/coord/cartesian/AxisModel';
+import IntervalScale from '../../../../src/scale/Interval';
+import { intervalScaleNiceTicks } from '../../../../src/scale/helper';
+import { getPrecisionSafe } from '../../../../src/util/number';
+
 
 describe('scale_interval', function () {
-    var chart;
+
+    let chart: EChartsType;
     beforeEach(function () {
-        chart = utHelper.createChart();
+        chart = createChart();
     });
 
     afterEach(function () {
@@ -37,9 +41,9 @@ describe('scale_interval', function () {
     describe('extreme', function () {
         it('ticks_min_max', function () {
 
-            var min = 0;
-            var max = 54.090909;
-            var splitNumber = 5;
+            const min = 0;
+            const max = 54.090909;
+            const splitNumber = 5;
 
             chart.setOption({
                 xAxis: {},
@@ -53,12 +57,12 @@ describe('scale_interval', function () {
                 series: [{type: 'line', data: []}]
             });
 
-            var yAxis = chart.getModel().getComponent('yAxis', 0);
-            var scale = yAxis.axis.scale;
-            var ticks = scale.getTicks();
+            const yAxis = chart.getModel().getComponent('yAxis', 0) as CartesianAxisModel;
+            const scale = yAxis.axis.scale;
+            const ticks = scale.getTicks();
 
-            expect(ticks[0]).toEqual(min);
-            expect(ticks[ticks.length - 1]).toEqual(max);
+            expect(ticks[0].value).toEqual(min);
+            expect(ticks[ticks.length - 1].value).toEqual(max);
         });
 
         it('ticks_small_value', function () {
@@ -87,16 +91,16 @@ describe('scale_interval', function () {
                 ]
             });
 
-            var yAxis = chart.getModel().getComponent('yAxis', 0);
-            var scale = yAxis.axis.scale;
-            var ticks = scale.getTicks();
-            var labels = yAxis.axis.getViewLabels().map(function (item) {
+            const yAxis = chart.getModel().getComponent('yAxis', 0) as CartesianAxisModel;
+            const scale = yAxis.axis.scale as IntervalScale;
+            const ticks = scale.getTicks();
+            const labels = yAxis.axis.getViewLabels().map(function (item) {
                 return item.formattedLabel;
             });
 
-            var labelPrecisioned = scale.getLabel(0.0000005, {precision: 10});
+            const labelPrecisioned = scale.getLabel({ value: 0.0000005 }, { precision: 10 });
 
-            expect(ticks).toEqual(
+            expect(ticks.map(tick => tick.value)).toEqual(
                 [0, 0.0000005, 0.000001, 0.0000015, 0.000002, 0.0000025, 0.000003, 0.0000035]
             );
             expect(labels).toEqual(
@@ -110,51 +114,51 @@ describe('scale_interval', function () {
 
     describe('ticks', function () {
 
-        function randomNumber(quantity) {
+        function randomNumber(quantity: number): number {
             return (Math.random() - 0.5) * Math.pow(10, (Math.random() - 0.5) * quantity);
         }
 
-        function doSingleTest(extent, splitNumber) {
-            var result = scaleHelper.intervalScaleNiceTicks(extent, splitNumber);
-            var intervalPrecision = result.intervalPrecision;
-            var interval = result.interval;
-            var niceTickExtent = result.niceTickExtent;
+        function doSingleTest(extent: [number, number], splitNumber: number): void {
+            const result = intervalScaleNiceTicks(extent, splitNumber);
+            const intervalPrecision = result.intervalPrecision;
+            const resultInterval = result.interval;
+            const niceTickExtent = result.niceTickExtent;
 
-            expect(interval).toBeFinite();
-            expect(intervalPrecision).toBeFinite();
-            expect(niceTickExtent[0]).toBeFinite();
-            expect(niceTickExtent[1]).toBeFinite();
+            expect(isValueFinite(resultInterval)).toEqual(true);
+            expect(isValueFinite(intervalPrecision)).toEqual(true);
+            expect(isValueFinite(niceTickExtent[0])).toEqual(true);
+            expect(isValueFinite(niceTickExtent[1])).toEqual(true);
 
-            expect(niceTickExtent[0]).toBeGeaterThanOrEqualTo(extent[0]);
+            expect(niceTickExtent[0]).toBeGreaterThanOrEqual(extent[0]);
             expect(niceTickExtent[1]).not.toBeGreaterThan(extent[1]);
-            expect(niceTickExtent[1]).toBeGeaterThanOrEqualTo(niceTickExtent[1]);
+            expect(niceTickExtent[1]).toBeGreaterThanOrEqual(niceTickExtent[1]);
 
-            var interval = new IntervalScale();
+            const interval = new IntervalScale();
             interval.setExtent(extent[0], extent[1]);
             interval.niceExtent({
                 fixMin: true,
                 fixMax: true,
                 splitNumber
             });
-            var ticks = interval.getTicks();
+            const ticks = interval.getTicks();
 
-            expect(ticks).not.toBeEmptyArray();
-            expect(ticks[0]).toEqual(extent[0]);
-            expect(ticks[ticks.length - 1]).toEqual(extent[1]);
+            expect(ticks.length > 0);
+            expect(ticks[0].value).toEqual(extent[0]);
+            expect(ticks[ticks.length - 1].value).toEqual(extent[1]);
 
-            for (var i = 1; i < ticks.length; i++) {
-                expect(ticks[i - 1]).not.toBeGeaterThanOrEqualTo(ticks[i]);
+            for (let i = 1; i < ticks.length; i++) {
+                expect(ticks[i - 1].value).not.toBeGreaterThanOrEqual(ticks[i].value);
 
-                if (ticks[i] !== extent[0] && ticks[i] !== extent[1]) {
-                    var tickPrecision = numberUtil.getPrecisionSafe(ticks[i]);
+                if (ticks[i].value !== extent[0] && ticks[i].value !== extent[1]) {
+                    const tickPrecision = getPrecisionSafe(ticks[i].value);
                     expect(tickPrecision).not.toBeGreaterThan(intervalPrecision);
                 }
             }
         }
 
-        function doRandomTest(count, splitNumber, quantity) {
-            for (var i = 0; i < count; i++) {
-                var extent = [];
+        function doRandomTest(count: number, splitNumber: number, quantity: number): void {
+            for (let i = 0; i < count; i++) {
+                const extent: number[] = [];
                 extent[0] = randomNumber(quantity);
                 extent[1] = extent[0] + randomNumber(quantity);
                 if (extent[1] === extent[0]) {
@@ -163,7 +167,7 @@ describe('scale_interval', function () {
                 if (extent[0] > extent[1]) {
                     extent.reverse();
                 }
-                doSingleTest(extent, splitNumber);
+                doSingleTest(extent as [number, number], splitNumber);
             }
         }
 

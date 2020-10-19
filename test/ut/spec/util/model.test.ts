@@ -18,20 +18,21 @@
 * under the License.
 */
 
-const modelUtil = require('../../../../lib/util/model');
+import { compressBatches } from '../../../../src/util/model';
+
 
 describe('util/model', function () {
 
 
     describe('compressBatches', function () {
 
-        function item(seriesId, dataIndex) {
+        function item(seriesId: number | string, dataIndex: number | number[]) {
             return {seriesId, dataIndex};
         }
 
         it('base', function () {
             // Remove dupliate between A and B
-            expect(modelUtil.compressBatches(
+            expect(compressBatches(
                 [item(3, 4), item(3, 5), item(4, 5)],
                 [item(4, 6), item(4, 5), item(3, 3), item(3, 4)]
             )).toEqual([
@@ -40,7 +41,7 @@ describe('util/model', function () {
             ]);
 
             // Compress
-            expect(modelUtil.compressBatches(
+            expect(compressBatches(
                 [item(3, 4), item(3, 6), item(3, 5), item(4, 5)],
                 [item(4, 6), item(4, 5), item(3, 3), item(3, 4), item(4, 7)]
             )).toEqual([
@@ -49,7 +50,7 @@ describe('util/model', function () {
             ]);
 
             // Remove duplicate in themselves
-            expect(modelUtil.compressBatches(
+            expect(compressBatches(
                 [item(3, 4), item(3, 6), item(3, 5), item(4, 5)],
                 [item(4, 6), item(4, 5), item(3, 3), item(3, 4), item(4, 7), item(4, 6)]
             )).toEqual([
@@ -58,7 +59,7 @@ describe('util/model', function () {
             ]);
 
             // dataIndex is array
-            expect(modelUtil.compressBatches(
+            expect(compressBatches(
                 [item(3, [4, 5, 8]), item(4, 4), item(3, [5, 7, 7])],
                 [item(3, [8, 9])]
             )).toEqual([
@@ -67,14 +68,14 @@ describe('util/model', function () {
             ]);
 
             // empty
-            expect(modelUtil.compressBatches(
+            expect(compressBatches(
                 [item(3, [4, 5, 8]), item(4, 4), item(3, [5, 7, 7])],
                 []
             )).toEqual([
                 [item('3', [4, 5, 7, 8]), item('4', [4])],
                 []
             ]);
-            expect(modelUtil.compressBatches(
+            expect(compressBatches(
                 [],
                 [item(3, [4, 5, 8]), item(4, 4), item(3, [5, 7, 7])]
             )).toEqual([
@@ -83,7 +84,7 @@ describe('util/model', function () {
             ]);
 
             // should not has empty array
-            expect(modelUtil.compressBatches(
+            expect(compressBatches(
                 [item(3, [4, 5, 8])],
                 [item(3, [4, 5, 8])]
             )).toEqual([

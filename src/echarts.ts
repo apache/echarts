@@ -88,7 +88,8 @@ import {
     ComponentMainType,
     ComponentSubType,
     ColorString,
-    SelectChangedPayload
+    SelectChangedPayload,
+    ScaleDataValue
 } from './util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
@@ -237,7 +238,12 @@ let updateMethods: {
     updateVisual: UpdateMethod,
     updateLayout: UpdateMethod
 };
-let doConvertPixel: (ecIns: ECharts, methodName: string, finder: ModelFinder, value: any) => any;
+let doConvertPixel: (
+    ecIns: ECharts,
+    methodName: string,
+    finder: ModelFinder,
+    value: (number | number[]) | (ScaleDataValue | ScaleDataValue[])
+) => (number | number[]);
 let updateStreamModes: (ecIns: ECharts, ecModel: GlobalModel) => void;
 let doDispatchAction: (this: ECharts, payload: Payload, silent: boolean) => void;
 let flushPendingActions: (this: ECharts, silent: boolean) => void;
@@ -327,6 +333,7 @@ class ECharts extends Eventful {
             locale?: string | LocaleOption,
             renderer?: RendererType,
             devicePixelRatio?: number,
+            useDirtyRect?: boolean,
             width?: number,
             height?: number
         }
@@ -342,18 +349,27 @@ class ECharts extends Eventful {
 
         this._dom = dom;
 
+        const root = (
+            typeof window === 'undefined' ? global : window
+        ) as any;
+
         let defaultRenderer = 'canvas';
+        let defaultUseDirtyRect = false;
         if (__DEV__) {
-            defaultRenderer = ((
-                typeof window === 'undefined' ? global : window
-            ) as any).__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
+            defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
+
+            const devUseDirtyRect = root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
+            defaultUseDirtyRect = devUseDirtyRect == null
+                ? defaultUseDirtyRect
+                : devUseDirtyRect;
         }
 
         const zr = this._zr = zrender.init(dom, {
             renderer: opts.renderer || defaultRenderer,
             devicePixelRatio: opts.devicePixelRatio,
             width: opts.width,
-            height: opts.height
+            height: opts.height,
+            useDirtyRect: opts.useDirtyRect == null ? defaultUseDirtyRect : opts.useDirtyRect
         });
 
         // Expect 60 fps.
@@ -779,7 +795,9 @@ class ECharts extends Eventful {
      * Convert from logical coordinate system to pixel coordinate system.
      * See CoordinateSystem#convertToPixel.
      */
-    convertToPixel(finder: ModelFinder, value: any): number[] {
+    convertToPixel(finder: ModelFinder, value: ScaleDataValue): number;
+    convertToPixel(finder: ModelFinder, value: ScaleDataValue[]): number[];
+    convertToPixel(finder: ModelFinder, value: ScaleDataValue | ScaleDataValue[]): number | number[] {
         return doConvertPixel(this, 'convertToPixel', finder, value);
     }
 
@@ -787,7 +805,9 @@ class ECharts extends Eventful {
      * Convert from pixel coordinate system to logical coordinate system.
      * See CoordinateSystem#convertFromPixel.
      */
-    convertFromPixel(finder: ModelFinder, value: number[]): any {
+    convertFromPixel(finder: ModelFinder, value: number): number;
+    convertFromPixel(finder: ModelFinder, value: number[]): number[];
+    convertFromPixel(finder: ModelFinder, value: number | number[]): number | number[] {
         return doConvertPixel(this, 'convertFromPixel', finder, value);
     }
 
@@ -1377,9 +1397,15 @@ class ECharts extends Eventful {
             subType && (condition.subType = subType); // subType may be '' by parseClassType;
 
             const excludeSeriesId = payload.excludeSeriesId;
-            let excludeSeriesIdMap: zrUtil.HashMap<string[], string>;
+            let excludeSeriesIdMap: zrUtil.HashMap<true, string>;
             if (excludeSeriesId != null) {
-                excludeSeriesIdMap = zrUtil.createHashMap(modelUtil.normalizeToArray(excludeSeriesId));
+                excludeSeriesIdMap = zrUtil.createHashMap();
+                each(modelUtil.normalizeToArray(excludeSeriesId), id => {
+                    const modelId = modelUtil.convertOptionIdName(id, null);
+                    if (modelId != null) {
+                        excludeSeriesIdMap.set(modelId, true);
+                    }
+                });
             }
 
             // If dispatchAction before setOption, do nothing.
@@ -1620,8 +1646,8 @@ class ECharts extends Eventful {
             ecIns: ECharts,
             methodName: 'convertFromPixel' | 'convertToPixel',
             finder: ModelFinder,
-            value: any
-        ): any {
+            value: (number | number[]) | (ScaleDataValue | ScaleDataValue[])
+        ): (number | number[]) {
             if (ecIns._disposed) {
                 disposedWarning(ecIns.id);
                 return;
@@ -1635,7 +1661,7 @@ class ECharts extends Eventful {
             for (let i = 0; i < coordSysList.length; i++) {
                 const coordSys = coordSysList[i];
                 if (coordSys[methodName]
-                    && (result = coordSys[methodName](ecModel, parsedFinder, value)) != null
+                    && (result = coordSys[methodName](ecModel, parsedFinder, value as any)) != null
                 ) {
                     return result;
                 }

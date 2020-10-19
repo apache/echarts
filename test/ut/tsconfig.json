@@ -11,17 +11,14 @@
         // https://github.com/ezolenko/rollup-plugin-typescript2/issues/12#issuecomment-536173372
         "moduleResolution": "node",
 
-        "declaration": true,
-        "declarationMap": false,
-
         "importHelpers": true,
 
-        "pretty": true,
-
-        "outDir": "lib"
+        "pretty": true
     },
     "include": [
-        "src/**/*.ts",
-        "extension-src/**/*.ts"
+        "../../src/global.d.ts",
+        "**/*.ts"
+    ],
+    "exclude": [
     ]
 }

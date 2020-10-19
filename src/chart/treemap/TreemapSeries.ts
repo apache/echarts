@@ -30,7 +30,9 @@ import {
     RoamOptionMixin,
     CallbackDataParams,
     ColorString,
-    StatesOptionMixin
+    StatesOptionMixin,
+    OptionId,
+    OptionName
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -119,8 +121,8 @@ export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption,
 
 export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
     TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
-    id?: string
-    name?: string
+    id?: OptionId
+    name?: OptionName
 
     value?: TreemapSeriesDataValue
 
