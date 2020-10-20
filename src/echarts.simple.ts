@@ -21,8 +21,8 @@ export * from './echarts';
 
 import './component/dataset';
 
-import './src/chart/line';
-import './src/chart/bar';
-import './src/chart/pie';
-import './src/component/gridSimple';
-import './src/component/aria';
+import './chart/line';
+import './chart/bar';
+import './chart/pie';
+import './component/gridSimple';
+import './component/aria';

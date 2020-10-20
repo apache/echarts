@@ -261,7 +261,7 @@ import './component/visualMapPiecewise';
 // chart.setOption({
 //     aria: {...}
 // });
-import './src/component/aria';
+import './component/aria';
 
 
 

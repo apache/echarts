@@ -34,12 +34,12 @@ import './component/legendScroll';
 import './component/grid';
 import './component/title';
 
-import './src/component/markPoint';
-import './src/component/markLine';
-import './src/component/markArea';
-import './src/component/dataZoom';
-import './src/component/toolbox';
-import './src/component/aria';
+import './component/markPoint';
+import './component/markLine';
+import './component/markArea';
+import './component/dataZoom';
+import './component/toolbox';
+import './component/aria';
 
 // import 'zrender/vml/vml';
 import 'zrender/src/svg/svg';
