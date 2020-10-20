@@ -107,6 +107,7 @@ import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 
 import type {EChartsFullOption} from './option';
 import { findEventDispatcher } from './util/event';
+import { MorphDividingMethod } from 'zrender/src/tool/morphPath';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -192,12 +193,13 @@ interface SetOptionOpts {
     transition?: SetOptionTransitionOpt
 };
 
-interface SetOptionTransitionOptItem {
+export interface SetOptionTransitionOptItem {
     // If `from` not given, it means that do not make series transition mandatorily.
     // There might be transition mapping dy default. Sometimes we do not need them,
     // which might bring about misleading.
     from?: SetOptionTransitionOptFinder;
     to: SetOptionTransitionOptFinder;
+    dividingMethod: MorphDividingMethod;
 }
 interface SetOptionTransitionOptFinder extends modelUtil.ModelFinderObject {
     dimension: DimensionLoose;
@@ -2350,7 +2352,8 @@ class ECharts extends Eventful {
                 // Just a temp solution: mount them on series.
                 toSeries.__transientTransitionOpt = {
                     from: fromOpt ? fromOpt.dimension : null,
-                    to: toOpt.dimension
+                    to: toOpt.dimension,
+                    dividingMethod: transOpt.dividingMethod
                 };
             });
         };

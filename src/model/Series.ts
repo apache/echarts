@@ -47,6 +47,7 @@ import makeStyleMapper from './mixin/makeStyleMapper';
 import { SourceManager } from '../data/helper/sourceManager';
 import { Source } from '../data/Source';
 import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatTooltip';
+import { MorphDividingMethod } from 'zrender/src/tool/morphPath';
 
 const inner = modelUtil.makeInner<{
     data: List
@@ -139,6 +140,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         // Both from and to can be null/undefined, which meams no transform mapping.
         from: DimensionLoose;
         to: DimensionLoose;
+        dividingMethod: MorphDividingMethod;
     };
 
     // ---------------------------------------

@@ -49,7 +49,7 @@ function defaultKeyGetter(item: string): string {
     return item;
 }
 
-export type DataDiffCallbackMode = 'single' | 'multiple';
+export type DataDiffMode = 'oneToOne' | 'multiple';
 
 class DataDiffer<CTX = unknown> {
 
@@ -62,7 +62,7 @@ class DataDiffer<CTX = unknown> {
     private _updateManyToOne: DiffCallbackUpdateManyToOne;
     private _updateOneToMany: DiffCallbackUpdateOneToMany;
     private _remove: DiffCallbackRemove;
-    private _cbModeMultiple: boolean;
+    private _diffModeMultiple: boolean;
 
     readonly context: CTX;
 
@@ -75,7 +75,8 @@ class DataDiffer<CTX = unknown> {
         oldKeyGetter?: DiffKeyGetter<CTX>,
         newKeyGetter?: DiffKeyGetter<CTX>,
         context?: CTX,
-        cbMode?: DataDiffCallbackMode
+        // By default: 'oneToOne'.
+        diffMode?: DataDiffMode
     ) {
         this._old = oldArr;
         this._new = newArr;
@@ -86,7 +87,7 @@ class DataDiffer<CTX = unknown> {
         // Visible in callback via `this.context`;
         this.context = context;
 
-        this._cbModeMultiple = cbMode === 'multiple';
+        this._diffModeMultiple = diffMode === 'multiple';
     }
 
     /**
@@ -130,7 +131,7 @@ class DataDiffer<CTX = unknown> {
     }
 
     execute(): void {
-        this[this._cbModeMultiple ? '_executeByKey' : '_executeByIndex']();
+        this[this._diffModeMultiple ? '_executeByKey' : '_executeByIndex']();
     }
 
     private _executeByIndex(): void {
@@ -266,7 +267,7 @@ class DataDiffer<CTX = unknown> {
         keyArr: string[],
         keyGetterName: '_oldKeyGetter' | '_newKeyGetter'
     ): void {
-        const cbModeMultiple = this._cbModeMultiple;
+        const cbModeMultiple = this._diffModeMultiple;
 
         for (let i = 0; i < arr.length; i++) {
             // Add prefix to avoid conflict with Object.prototype.

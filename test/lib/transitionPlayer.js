@@ -44,7 +44,8 @@
      *         },
      *         bbb: {
      *             dimensions: ['ccc', 'www', 'eee'],
-     *             uniqueDimension: 'www'
+     *             uniqueDimension: 'www',
+     *             dividingMethod: 'duplicate'
      *         },
      *         ...
      *     },
@@ -82,6 +83,7 @@
      *            [dataMetaKey in string]: {
      *                dimensions: string[];
      *                uniqueDimension?: string;
+     *                dividingMethod?: 'split' | 'duplicate'
      *            }
      *        }
      * @param opt.optionList
@@ -176,8 +178,9 @@
                     },
                     to: {
                         seriesIndex: targetSeriesIndex,
-                        dimension: commonDimension
-                    }
+                        dimension: commonDimension,
+                    },
+                    dividingMethod: dataMeta.dividingMethod
                 };
             }
         }
