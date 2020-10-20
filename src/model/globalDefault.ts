@@ -56,7 +56,7 @@ export default {
 
     gradientColor: ['#f6efa6', '#d88273', '#bf444c'],
 
-    decal: [{
+    decals: [{
         color: decalColor,
         dashArrayX: [1, 0],
         dashArrayY: [2, 5],

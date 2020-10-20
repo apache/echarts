@@ -66,11 +66,11 @@ class PaletteMixin<T extends PaletteOptionMixin = PaletteOptionMixin> {
         scope?: any,
         requestNum?: number
     ): DecalObject {
-        let decals = this.get('decal', true);
+        let decals = this.get('decals', true);
         if (!isArray(decals)) {
-            decals = [decals as Decal];
+            decals = [decals as DecalObject];
         }
-        const defaultDecals = decals as Decal[];
+        const defaultDecals = decals as DecalObject[];
         return getFromPalette<DecalObject>(this, innerDecal, defaultDecals, [defaultDecals], name, scope, requestNum);
     }
 

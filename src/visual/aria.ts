@@ -27,7 +27,7 @@ import {TitleOption} from '../component/title';
 
 export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     const ariaModel: Model<AriaOption> = ecModel.getModel('aria');
-    if (!ariaModel.get('show')) {
+    if (ariaModel.get('show') === false) {
         return;
     }
 
@@ -37,7 +37,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     function setDecal() {
         const decalModel = ariaModel.getModel('decal');
 
-        const useDecal = !decalModel || (decalModel.get('show') !== false);
+        const useDecal = decalModel.get('show');
         if (useDecal) {
             // default decal show value is true
             ecModel.eachRawSeries(seriesModel => {
@@ -79,6 +79,21 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
 
     function setLabel() {
         const labelModel = ariaModel.getModel('label') || ariaModel;
+        // Label enabled default: true
+        let labelEnabled = labelModel.get('enabled');
+        if (labelEnabled == null) {
+            const show = labelModel.get('show');
+            if (show == null) {
+                labelEnabled = true;
+            }
+            else {
+                labelEnabled = show;
+            }
+        }
+        if (!labelEnabled) {
+            return;
+        }
+
         const dom = api.getZr().dom;
         if (labelModel.get('description')) {
             dom.setAttribute('aria-label', labelModel.get('description'));

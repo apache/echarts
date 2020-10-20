@@ -80,6 +80,7 @@ const seriesStyleTask: StageHandler = {
         const decalOption = styleModel.getShallow('decal') as DecalObject;
         if (decalOption) {
             data.setVisual('decal', decalOption);
+            decalOption.dirty = true;
         }
 
         // TODO
@@ -146,6 +147,7 @@ const dataStyleTask: StageHandler = {
 
                     if (sharedModel.option.decal) {
                         data.setItemVisual(idx, 'decal', sharedModel.option.decal);
+                        sharedModel.option.decal.dirty = true;
                     }
 
                     if (colorKey in style) {

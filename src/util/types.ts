@@ -46,7 +46,7 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
-import Decal from 'zrender/src/graphic/Decal';
+import Decal, {DecalObject} from 'zrender/src/graphic/Decal';
 
 
 
@@ -650,7 +650,7 @@ export type ComponentLayoutMode = {
 export interface PaletteOptionMixin {
     color?: ZRColor | ZRColor[]
     colorLayer?: ZRColor[][],
-    decal?: Decal | Decal[]
+    decals?: DecalObject | DecalObject[]
 }
 
 export interface ColorPaletteOptionMixin {
@@ -803,6 +803,7 @@ export interface SymbolOptionMixin<T = unknown> {
 export interface ItemStyleOption extends ShadowOptionMixin, BorderOptionMixin {
     color?: ZRColor
     opacity?: number
+    decal?: DecalObject[]
 }
 
 /**
