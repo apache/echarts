@@ -38,7 +38,7 @@ import CoordinateSystemManager from '../../CoordinateSystem';
 import {ParsedModelFinder, SINGLE_REFERRING} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
-import GridModel from './GridModel';
+import GridModel, {defaultGridLayoutWithoutLabel, defaultGridLayoutWithLabel} from './GridModel';
 import CartesianAxisModel from './AxisModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -118,8 +118,19 @@ class Grid implements CoordinateSystemMaster {
      */
     resize(gridModel: GridModel, api: ExtensionAPI, ignoreContainLabel?: boolean): void {
 
+        const boxLayoutParams = gridModel.getBoxLayoutParams();
+        const isContainLabel = !ignoreContainLabel && gridModel.get('containLabel');
+
+        each(defaultGridLayoutWithoutLabel, function (val, key) {
+            if (boxLayoutParams[key] == null || boxLayoutParams[key] === 'auto') {
+                boxLayoutParams[key] = isContainLabel
+                    ? defaultGridLayoutWithLabel[key]
+                    : defaultGridLayoutWithoutLabel[key];
+            }
+        });
+
         const gridRect = getLayoutRect(
-            gridModel.getBoxLayoutParams(), {
+            boxLayoutParams, {
                 width: api.getWidth(),
                 height: api.getHeight()
             });
@@ -131,7 +142,7 @@ class Grid implements CoordinateSystemMaster {
         adjustAxes();
 
         // Minus label size
-        if (!ignoreContainLabel && gridModel.get('containLabel')) {
+        if (isContainLabel) {
             each(axesList, function (axis) {
                 if (!axis.model.get(['axisLabel', 'inside'])) {
                     const labelUnionRect = estimateLabelUnionRect(axis);
