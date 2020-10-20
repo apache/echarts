@@ -38,11 +38,9 @@ import type {SliderTimelineOption} from './component/timeline/SliderTimelineMode
 import type {LegendOption} from './component/legend/LegendModel';
 import type {ScrollableLegendOption} from './component/legend/ScrollableLegendModel';
 
-import type {DataZoomOption} from './component/dataZoom/DataZoomModel';
 import type {SliderDataZoomOption} from './component/dataZoom/SliderZoomModel';
 import type {InsideDataZoomOption} from './component/dataZoom/InsideZoomModel';
 
-import type {VisualMapOption} from './component/visualMap/VisualMapModel';
 import type {ContinousVisualMapOption} from './component/visualMap/ContinuousModel';
 import type {PiecewiseVisualMapOption} from './component/visualMap/PiecewiseModel';
 

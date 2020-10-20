@@ -49,7 +49,7 @@ async function wrapUMDCode() {
 function rebuild() {
     build({
         stdio: 'inherit',
-        entryPoints: [path.resolve(__dirname, '../echarts.all.ts')],
+        entryPoints: [path.resolve(__dirname, '../src/echarts.all.ts')],
         outfile: outFilePath,
         format: 'cjs',
         sourcemap: true,

@@ -118,6 +118,7 @@ export default {
     stateAnimation: {
         duration: 300,
         easing: 'cubicOut'
+        // additive: true
     },
 
     animation: 'auto',

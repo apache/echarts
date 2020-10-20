@@ -90,9 +90,7 @@ const theme = {
     },
     toolbox: {
         iconStyle: {
-            normal: {
-                borderColor: contrastColor
-            }
+            borderColor: contrastColor
         }
     },
     dataZoom: {
@@ -186,19 +184,26 @@ const theme = {
     },
     gauge: {
         title: {
-            textStyle: {
-                color: contrastColor
+            color: contrastColor
+        },
+        axisLine: {
+            lineStyle: {
+                color: [[1, 'rgba(207,212,219,0.2)']]
             }
+        },
+        axisLabel: {
+            color: contrastColor
+        },
+        detail: {
+            color: '#EEF1FA'
         }
     },
     candlestick: {
         itemStyle: {
-            normal: {
-                color: '#FD1050',
-                color0: '#0CF49B',
-                borderColor: '#FD1050',
-                borderColor0: '#0CF49B'
-            }
+            color: '#FD1050',
+            color0: '#0CF49B',
+            borderColor: '#FD1050',
+            borderColor0: '#0CF49B'
         }
     }
 };

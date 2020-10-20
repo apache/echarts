@@ -55,6 +55,7 @@ under the License.
             var innerCornerRadius = 5;
             var usePercent = false;
             var isCircular = false;
+            var isRounderOnEmphasis = false;
             var roseType = 'area';
             var randomTimer;
             var data = [
@@ -96,11 +97,13 @@ under the License.
                 series: {
                     type: 'pie',
                     roseType: roseType,
-                    cornerRadius: getCornerRadius(),
                     selectedMode: 'single',
                     selectedOffset: 30,
                     label: {
                         formatter: '{b} {c}({d}%)'
+                    },
+                    itemStyle: {
+                        borderRadius: getCornerRadius(),
                     },
                     // itemStyle: {
                     //     borderColor: '#fff',
@@ -125,6 +128,16 @@ under the License.
                 ];
             }
 
+            function getEmphassiCornerRadius() {
+                const cornerRadius = getCornerRadius();
+                const emphasisCornerRadius = [+cornerRadius[0] * 2, +cornerRadius[1] * 2];
+                if (usePercent) {
+                    emphasisCornerRadius[0] = emphasisCornerRadius[0] + '%';
+                    emphasisCornerRadius[1] = emphasisCornerRadius[1] + '%';
+                }
+                return isRounderOnEmphasis ? null : emphasisCornerRadius;
+            }
+
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
                     'Test Pie with **cornerRadius**',
@@ -141,7 +154,10 @@ under the License.
                                     text: getTitle()
                                 },
                                 series: [{
-                                    cornerRadius: getCornerRadius()
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                    }
                                 }]
                             });
                         }
@@ -158,7 +174,10 @@ under the License.
                                     text: getTitle()
                                 },
                                 series: [{
-                                    cornerRadius: getCornerRadius()
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                    }
                                 }]
                             });
                         }
@@ -172,7 +191,10 @@ under the License.
                                     text: getTitle()
                                 },
                                 series: [{
-                                    cornerRadius: getCornerRadius()
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                    }
                                 }]
                             });
                         }
@@ -189,7 +211,10 @@ under the License.
                                     text: getTitle()
                                 },
                                 series: [{
-                                    cornerRadius: getCornerRadius()
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                    }
                                 }]
                             });
                         }
@@ -203,7 +228,10 @@ under the License.
                                     text: getTitle()
                                 },
                                 series: [{
-                                    cornerRadius: getCornerRadius()
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                    }
                                 }]
                             });
                         }
@@ -211,24 +239,27 @@ under the License.
                     {
                         text: 'random cornerRadius',
                         onclick: function () {
-                            clearInterval(randomTimer);
-                            if (randomTimer) {
-                                randomTimer = null;
-                            }
-                            else {
-                                randomTimer = setInterval(function () {
-                                    outerCornerRadius = ~~(Math.random() * 50);
-                                    innerCornerRadius = ~~(Math.random() * 50);
-                                    chart.setOption({
-                                        title: {
-                                            text: getTitle()
-                                        },
-                                        series: [{
-                                            cornerRadius: getCornerRadius()
-                                        }]
-                                    });
-                                }, 2e3);
-                            }
+                            // clearInterval(randomTimer);
+                            // if (randomTimer) {
+                            //     randomTimer = null;
+                            // }
+                            // else {
+                            //     randomTimer = setInterval(function () {
+                            outerCornerRadius = ~~(Math.random() * 50);
+                            innerCornerRadius = ~~(Math.random() * 50);
+                            chart.setOption({
+                                title: {
+                                    text: getTitle()
+                                },
+                                series: [{
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                    }
+                                }]
+                            });
+                            //     }, 2e3);
+                            // }
                         }
                     },
                     {
@@ -273,6 +304,19 @@ under the License.
                         }
                     },
                     {
+                        text: 'rounder on emphasis',
+                        onclick: function () {
+                            chart.setOption({
+                                series: [{
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                    }
+                                }]
+                            });
+                        }
+                    },
+                    {
                         text: 'reset',
                         onclick: function () {
                             outerCornerRadius = 5;
@@ -285,7 +329,10 @@ under the License.
                                     text: getTitle()
                                 },
                                 series: [{
-                                    cornerRadius: getCornerRadius(),
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                    },
                                     roseType: roseType,
                                     radius: [0, '75%'],
                                     data: data

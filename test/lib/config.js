@@ -35,6 +35,9 @@
     if (params.__RENDERER__) {
         window.__ECHARTS__DEFAULT__RENDERER__ = params.__RENDERER__;
     }
+    if (params.__USE_DIRTY_RECT__) {
+        window.__ECHARTS__DEFAULT__USE_DIRTY_RECT__ = params.__USE_DIRTY_RECT__ === 'true';
+    }
 
     // Set echarts source code.
     var ecDistPath;

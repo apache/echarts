@@ -39,7 +39,6 @@ import {
     CallbackDataParams,
     TooltipRenderMode,
     ECElement,
-    ColorString,
     CommonTooltipOption,
     ZRColor
 } from '../../util/types';

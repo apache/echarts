@@ -51,7 +51,9 @@ import {
     ThemeOption,
     ComponentOption,
     ComponentMainType,
-    ComponentSubType
+    ComponentSubType,
+    OptionId,
+    OptionName
 } from '../util/types';
 import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
@@ -258,7 +260,7 @@ class GlobalModel extends Model<ECUnitOption> {
             // (1) for normal merge, `{xxx: null/undefined}` are the same meaning as `{xxx: []}`.
             // (2) some preprocessor may convert some of `{xxx: null/undefined}` to `{xxx: []}`.
             replaceMergeMainTypeMap.each(function (val, mainTypeInReplaceMerge) {
-                if (!newCmptTypeMap.get(mainTypeInReplaceMerge)) {
+                if (ComponentModel.hasClass(mainTypeInReplaceMerge) && !newCmptTypeMap.get(mainTypeInReplaceMerge)) {
                     newCmptTypes.push(mainTypeInReplaceMerge);
                     newCmptTypeMap.set(mainTypeInReplaceMerge, true);
                 }
@@ -540,8 +542,8 @@ class GlobalModel extends Model<ECUnitOption> {
                     mainType: mainType,
                     // subType will be filtered finally.
                     index: q[indexAttr] as (number | number[]),
-                    id: q[idAttr] as (string | string[]),
-                    name: q[nameAttr] as (string | string[])
+                    id: q[idAttr] as (OptionId | OptionId[]),
+                    name: q[nameAttr] as (OptionName | OptionName[])
                 }
                 : null;
         }
@@ -622,10 +624,11 @@ class GlobalModel extends Model<ECUnitOption> {
     /**
      * Get series list before filtered by name.
      */
-    getSeriesByName(name: string): SeriesModel[] {
+    getSeriesByName(name: OptionName): SeriesModel[] {
+        const nameStr = modelUtil.convertOptionIdName(name, null);
         return filter(
             this._componentsMap.get('series') as SeriesModel[],
-            oneSeries => !!oneSeries && oneSeries.name === name
+            oneSeries => !!oneSeries && nameStr != null && oneSeries.name === nameStr
         );
     }
 
@@ -755,7 +758,9 @@ class GlobalModel extends Model<ECUnitOption> {
         const componentsMap = this._componentsMap;
         const componentTypes: string[] = [];
         componentsMap.each(function (components, componentType) {
-            componentTypes.push(componentType);
+            if (ComponentModel.hasClass(componentType)) {
+                componentTypes.push(componentType);
+            }
         });
 
         (ComponentModel as ComponentModelConstructor).topologicalTravel(
@@ -851,8 +856,8 @@ export interface QueryConditionKindB {
     mainType: ComponentMainType;
     subType?: ComponentSubType;
     index?: number | number[];
-    id?: string | number | (string | number)[];
-    name?: (string | number) | (string | number)[];
+    id?: OptionId | OptionId[];
+    name?: OptionName | OptionName[];
 }
 export interface EachComponentAllCallback {
     (mainType: string, model: ComponentModel, componentIndex: number): void;
@@ -907,18 +912,18 @@ function queryByIdOrName<T extends { id?: string, name?: string }>(
     // Here is a break from echarts4: string and number are
     // traded as equal.
     if (isArray(idOrName)) {
-        const keyMap = createHashMap<boolean>(idOrName);
+        const keyMap = createHashMap<boolean>();
         each(idOrName, function (idOrNameItem) {
             if (idOrNameItem != null) {
-                modelUtil.validateIdOrName(idOrNameItem);
-                keyMap.set(idOrNameItem, true);
+                const idName = modelUtil.convertOptionIdName(idOrNameItem, null);
+                idName != null && keyMap.set(idOrNameItem, true);
             }
         });
         return filter(cmpts, cmpt => cmpt && keyMap.get(cmpt[attr]));
     }
     else {
-        modelUtil.validateIdOrName(idOrName);
-        return filter(cmpts, cmpt => cmpt && cmpt[attr] === idOrName + '');
+        const idName = modelUtil.convertOptionIdName(idOrName, null);
+        return filter(cmpts, cmpt => cmpt && idName != null && cmpt[attr] === idName);
     }
 }
 

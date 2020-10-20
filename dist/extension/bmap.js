@@ -136,10 +136,17 @@
         }
 
         bmapRoot = document.createElement('div');
-        bmapRoot.style.cssText = 'width:100%;height:100%';
-        bmapRoot.classList.add('ec-extension-bmap');
+        bmapRoot.className = 'ec-extension-bmap';
+        bmapRoot.style.cssText = 'position:absolute;width:100%;height:100%';
         root.appendChild(bmapRoot);
-        bmap = bmapModel.__bmap = new BMap.Map(bmapRoot);
+        var mapOptions = bmapModel.get('mapOptions');
+
+        if (mapOptions) {
+          mapOptions = echarts.util.clone(mapOptions);
+          delete mapOptions.mapType;
+        }
+
+        bmap = bmapModel.__bmap = new BMap.Map(bmapRoot, mapOptions);
         var overlay = new Overlay(viewportRoot);
         bmap.addOverlay(overlay);
 
@@ -156,8 +163,14 @@
       var zoom = bmapModel.get('zoom');
 
       if (center && zoom) {
-        var pt = new BMap.Point(center[0], center[1]);
-        bmap.centerAndZoom(pt, zoom);
+        var bmapCenter = bmap.getCenter();
+        var bmapZoom = bmap.getZoom();
+        var centerOrZoomChanged = bmapModel.centerOrZoomChanged([bmapCenter.lng, bmapCenter.lat], bmapZoom);
+
+        if (centerOrZoomChanged) {
+          var pt = new BMap.Point(center[0], center[1]);
+          bmap.centerAndZoom(pt, zoom);
+        }
       }
 
       bmapCoordSys = new BMapCoordSys(bmap, api);
@@ -195,107 +208,19 @@
       zoom: 5,
       mapStyle: {},
       mapStyleV2: {},
+      mapOptions: {},
       roam: false
     }
   });
-  var BUILTIN_OBJECT = {
-    '[object Function]': true,
-    '[object RegExp]': true,
-    '[object Date]': true,
-    '[object Error]': true,
-    '[object CanvasGradient]': true,
-    '[object CanvasPattern]': true,
-    '[object Image]': true,
-    '[object Canvas]': true
-  };
-  var TYPED_ARRAY = {
-    '[object Int8Array]': true,
-    '[object Uint8Array]': true,
-    '[object Uint8ClampedArray]': true,
-    '[object Int16Array]': true,
-    '[object Uint16Array]': true,
-    '[object Int32Array]': true,
-    '[object Uint32Array]': true,
-    '[object Float32Array]': true,
-    '[object Float64Array]': true
-  };
-  var objToString = Object.prototype.toString;
-  var arrayProto = Array.prototype;
-  var nativeSlice = arrayProto.slice;
 
-  var ctorFunction = function () {}.constructor;
-
-  var protoFunction = ctorFunction ? ctorFunction.prototype : null;
-
-  function clone(source) {
-    if (source == null || typeof source !== 'object') {
-      return source;
-    }
-
-    var result = source;
-    var typeStr = objToString.call(source);
-
-    if (typeStr === '[object Array]') {
-      if (!isPrimitive(source)) {
-        result = [];
-
-        for (var i = 0, len = source.length; i < len; i++) {
-          result[i] = clone(source[i]);
-        }
-      }
-    } else if (TYPED_ARRAY[typeStr]) {
-      if (!isPrimitive(source)) {
-        var Ctor = source.constructor;
-
-        if (Ctor.from) {
-          result = Ctor.from(source);
-        } else {
-          result = new Ctor(source.length);
-
-          for (var i = 0, len = source.length; i < len; i++) {
-            result[i] = clone(source[i]);
-          }
-        }
-      }
-    } else if (!BUILTIN_OBJECT[typeStr] && !isPrimitive(source) && !isDom(source)) {
-      result = {};
-
-      for (var key in source) {
-        if (source.hasOwnProperty(key)) {
-          result[key] = clone(source[key]);
-        }
+  function isEmptyObject(obj) {
+    for (var key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        return false;
       }
     }
 
-    return result;
-  }
-
-  function bindPolyfill(func, context) {
-    var args = [];
-
-    for (var _i = 2; _i < arguments.length; _i++) {
-      args[_i - 2] = arguments[_i];
-    }
-
-    return function () {
-      return func.apply(context, args.concat(nativeSlice.call(arguments)));
-    };
-  }
-
-  var bind = protoFunction && isFunction(protoFunction.bind) ? protoFunction.call.bind(protoFunction.bind) : bindPolyfill;
-
-  function isFunction(value) {
-    return typeof value === 'function';
-  }
-
-  function isDom(value) {
-    return typeof value === 'object' && typeof value.nodeType === 'number' && typeof value.ownerDocument === 'object';
-  }
-
-  var primitiveKey = '__ec_primitive__';
-
-  function isPrimitive(obj) {
-    return obj[primitiveKey];
+    return true;
   }
 
   echarts.extendComponentView({
@@ -313,8 +238,18 @@
 
         var offsetEl = viewportRoot.parentNode.parentNode.parentNode;
         var mapOffset = [-parseInt(offsetEl.style.left, 10) || 0, -parseInt(offsetEl.style.top, 10) || 0];
-        viewportRoot.style.left = mapOffset[0] + 'px';
-        viewportRoot.style.top = mapOffset[1] + 'px';
+        var viewportRootStyle = viewportRoot.style;
+        var offsetLeft = mapOffset[0] + 'px';
+        var offsetTop = mapOffset[1] + 'px';
+
+        if (viewportRootStyle.left !== offsetLeft) {
+          viewportRootStyle.left = offsetLeft;
+        }
+
+        if (viewportRootStyle.top !== offsetTop) {
+          viewportRootStyle.top = offsetTop;
+        }
+
         coordSys.setMapOffset(mapOffset);
         bMapModel.__mapOffset = mapOffset;
         api.dispatchAction({
@@ -339,8 +274,10 @@
       }
 
       bmap.removeEventListener('moving', this._oldMoveHandler);
+      bmap.removeEventListener('moveend', this._oldMoveHandler);
       bmap.removeEventListener('zoomend', this._oldZoomEndHandler);
       bmap.addEventListener('moving', moveHandler);
+      bmap.addEventListener('moveend', moveHandler);
       bmap.addEventListener('zoomend', zoomEndHandler);
       this._oldMoveHandler = moveHandler;
       this._oldZoomEndHandler = zoomEndHandler;
@@ -367,8 +304,8 @@
       var mapStyleStr = JSON.stringify(newMapStyle);
 
       if (JSON.stringify(originalStyle) !== mapStyleStr) {
-        if (Object.keys(newMapStyle).length) {
-          bmap.setMapStyle(clone(newMapStyle));
+        if (!isEmptyObject(newMapStyle)) {
+          bmap.setMapStyle(echarts.util.clone(newMapStyle));
         }
 
         bMapModel.__mapStyle = JSON.parse(mapStyleStr);
@@ -379,8 +316,8 @@
       var mapStyleStr2 = JSON.stringify(newMapStyle2);
 
       if (JSON.stringify(originalStyle2) !== mapStyleStr2) {
-        if (Object.keys(newMapStyle2).length) {
-          bmap.setMapStyleV2(clone(newMapStyle2));
+        if (!isEmptyObject(newMapStyle2)) {
+          bmap.setMapStyleV2(echarts.util.clone(newMapStyle2));
         }
 
         bMapModel.__mapStyle2 = JSON.parse(mapStyleStr2);

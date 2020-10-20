@@ -100,7 +100,9 @@ function singleEnterEmphasis(el: ECElement) {
 function singleLeaveEmphasis(el: ECElement) {
     // Only mark the flag.
     // States will be applied in the echarts.ts in next frame.
-    doChangeHoverState(el, 'normal', HOVER_STATE_NORMAL);
+    if (el.hoverState === HOVER_STATE_EMPHASIS) {
+        doChangeHoverState(el, 'normal', HOVER_STATE_NORMAL);
+    }
 }
 
 function singleEnterBlur(el: ECElement) {
@@ -108,7 +110,9 @@ function singleEnterBlur(el: ECElement) {
 }
 
 function singleLeaveBlur(el: ECElement) {
-    doChangeHoverState(el, 'normal', HOVER_STATE_NORMAL);
+    if (el.hoverState === HOVER_STATE_BLUR) {
+        doChangeHoverState(el, 'normal', HOVER_STATE_NORMAL);
+    }
 }
 
 function singleEnterSelect(el: ECElement) {
@@ -593,7 +597,7 @@ export function enableHoverFocus(el: Element, focus: InnerFocus, blurScope: Blur
 }
 
 const OTHER_STATES = ['emphasis', 'blur', 'select'] as const;
-const styleGetterMap: Dictionary<'getItemStyle' | 'getLineStyle' | 'getAreaStyle'> = {
+const defaultStyleGetterMap: Dictionary<'getItemStyle' | 'getLineStyle' | 'getAreaStyle'> = {
     itemStyle: 'getItemStyle',
     lineStyle: 'getLineStyle',
     areaStyle: 'getAreaStyle'
@@ -605,7 +609,7 @@ export function setStatesStylesFromModel(
     el: Displayable,
     itemModel: Model<Partial<Record<'emphasis' | 'blur' | 'select', any>>>,
     styleType?: string, // default itemStyle
-    getterType?: 'getItemStyle' | 'getLineStyle' | 'getAreaStyle'
+    getter?: (model: Model) => Dictionary<any>
 ) {
     styleType = styleType || 'itemStyle';
     for (let i = 0; i < OTHER_STATES.length; i++) {
@@ -613,7 +617,7 @@ export function setStatesStylesFromModel(
         const model = itemModel.getModel([stateName, styleType]);
         const state = el.ensureState(stateName);
         // Let it throw error if getterType is not found.
-        state.style = model[getterType || styleGetterMap[styleType]]();
+        state.style = getter ? getter(model) : model[defaultStyleGetterMap[styleType]]();
     }
 }
 

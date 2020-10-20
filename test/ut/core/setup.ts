@@ -17,7 +17,12 @@
 * under the License.
 */
 
-export * from './src/echarts';
-export * from './src/export';
+// import { JSDOM } from 'jsdom';
+import { Image } from 'canvas';
 
-import './src/component/dataset';
+// const { window } = new JSDOM();
+
+// (global as any).window = window;
+// (global as any).navigator = window.navigator;
+// (global as any).document = window.document;
+(global as any).Image = Image;

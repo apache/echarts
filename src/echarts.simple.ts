@@ -17,9 +17,9 @@
 * under the License.
 */
 
-export * from './src/echarts';
+export * from './echarts';
 
-import './src/component/dataset';
+import './component/dataset';
 
 import './src/chart/line';
 import './src/chart/bar';

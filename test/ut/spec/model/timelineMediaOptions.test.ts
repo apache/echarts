@@ -17,26 +17,37 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-const utHelper = require('../../core/utHelper');
+
+import { EChartsType } from '../../../../src/echarts';
+import SeriesModel from '../../../../src/model/Series';
+import { ParsedValue } from '../../../../src/util/types';
+import { LegendOption } from '../../../../src/component/legend/LegendModel';
+import TimelineModel from '../../../../src/component/timeline/TimelineModel';
+import { createChart } from '../../core/utHelper';
+import { EChartsFullOption } from '../../../../src/option';
+
 
 describe('timelineMediaOptions', function () {
 
-    function getData0(chart, seriesIndex) {
+    function getData0(chart: EChartsType, seriesIndex: number): ParsedValue {
         return getSeries(chart, seriesIndex).getData().get('y', 0);
     }
-    function getSeries(chart, seriesIndex) {
-        return chart.getModel().getComponent('series', seriesIndex);
+    function getSeries(chart: EChartsType, seriesIndex: number): SeriesModel {
+        return chart.getModel().getComponent('series', seriesIndex) as SeriesModel;
     }
-    function getLegendOption(chart) {
+    function getLegendOption(chart: EChartsType): LegendOption {
         return chart.getModel().getComponent('legend', 0).option;
     }
-    function getTimelineComponent(chart) {
-        return chart.getModel().getComponent('timeline', 0);
+    function getTimelineComponent(chart: EChartsType): TimelineModel {
+        return chart.getModel().getComponent('timeline', 0) as TimelineModel;
     }
 
-    var chart;
+    let chart: EChartsType;
     beforeEach(function () {
-        chart = utHelper.createChart(10, 10);
+        chart = createChart({
+            width: 10,
+            height: 10
+        });
     });
 
     afterEach(function () {
@@ -49,7 +60,7 @@ describe('timelineMediaOptions', function () {
     describe('parse_timeline_media_option', function () {
 
         it('parse_media_has_baseOption_has_default', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 baseOption: {
                     xAxis: { data: ['a'] },
                     yAxis: {},
@@ -77,7 +88,7 @@ describe('timelineMediaOptions', function () {
         });
 
         it('parse_media_no_baseOption_has_default', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: { data: ['a'] },
                 yAxis: {},
                 legend: { left: 10 },
@@ -101,7 +112,7 @@ describe('timelineMediaOptions', function () {
         });
 
         it('parse_media_no_baseOption_no_default', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 xAxis: { data: ['a'] },
                 yAxis: {},
                 legend: { left: 10 },
@@ -121,7 +132,7 @@ describe('timelineMediaOptions', function () {
         });
 
         it('parse_timeline_media_has_baseOption', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 baseOption: {
                     timeline: { axisType: 'category' },
                     xAxis: { data: ['a'] },
@@ -161,7 +172,7 @@ describe('timelineMediaOptions', function () {
         });
 
         it('parse_timeline_media_no_baseOption', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 timeline: { axisType: 'category' },
                 xAxis: { data: ['a'] },
                 yAxis: {},
@@ -197,7 +208,7 @@ describe('timelineMediaOptions', function () {
         });
 
         it('parse_timeline_has_baseOption', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 baseOption: {
                     timeline: { axisType: 'category' },
                     xAxis: { data: ['a'] },
@@ -221,7 +232,7 @@ describe('timelineMediaOptions', function () {
         });
 
         it('parse_timeline_has_baseOption_compat', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 timeline: { axisType: 'category' },
                 baseOption: {
                     xAxis: { data: ['a'] },
@@ -245,7 +256,7 @@ describe('timelineMediaOptions', function () {
         });
 
         it('parse_timeline_has_baseOption_compat', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 timeline: { axisType: 'category' },
                 baseOption: {
                     xAxis: { data: ['a'] },
@@ -269,7 +280,7 @@ describe('timelineMediaOptions', function () {
         });
 
         it('parse_timeline_no_baseOption', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 timeline: { axisType: 'category' },
                 xAxis: { data: ['a'] },
                 yAxis: {},
@@ -299,7 +310,7 @@ describe('timelineMediaOptions', function () {
     describe('timeline_onceMore', function () {
 
         it('timeline_setOptionOnceMore_baseOption', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 baseOption: {
                     timeline: {
                         axisType: 'category',
@@ -347,7 +358,7 @@ describe('timelineMediaOptions', function () {
 
 
         it('timeline_setOptionOnceMore_substitudeTimelineOptions', function () {
-            var option = {
+            const option: EChartsFullOption = {
                 baseOption: {
                     timeline: {
                         axisType: 'category',
@@ -377,7 +388,7 @@ describe('timelineMediaOptions', function () {
             };
             chart.setOption(option);
 
-            var ecModel = chart.getModel();
+            let ecModel = chart.getModel();
             expect(getData0(chart, 0)).toEqual(1111);
             expect(getData0(chart, 1)).toEqual(2222);
 
@@ -399,9 +410,9 @@ describe('timelineMediaOptions', function () {
                 }]
             });
 
-            var ecModel = chart.getModel();
-            var option = ecModel.getOption();
-            expect(option.backgroundColor).toEqual('#987654');
+            ecModel = chart.getModel();
+            const optionGotten = ecModel.getOption();
+            expect(optionGotten.backgroundColor).toEqual('#987654');
             expect(getData0(chart, 0)).toEqual(1111);
             expect(getData0(chart, 1)).toEqual(2222);
 

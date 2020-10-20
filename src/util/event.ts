@@ -19,19 +19,21 @@
 
 import Element from 'zrender/src/Element';
 
-// Find a dispatcher that's on the most top.
-export function findEventDispatcher(target: Element, det: (target: Element) => boolean) {
+export function findEventDispatcher(
+    target: Element,
+    det: (target: Element) => boolean,
+    returnFirstMatch?: boolean
+) {
     let found;
     while (target) {
         if (det(target)) {
             found = target;
+            if (returnFirstMatch) {
+                break;
+            }
         }
-        if (target.__hostTarget) {
-            target = target.__hostTarget;
-        }
-        else {
-            target = target.parent;
-        }
+
+        target = target.__hostTarget || target.parent;
     }
     return found;
 }

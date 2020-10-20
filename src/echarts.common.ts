@@ -17,12 +17,29 @@
 * under the License.
 */
 
-const jsdom = require('jsdom');
-const Canvas = require('canvas');
-const {JSDOM} = jsdom;
-const {window} = new JSDOM();
+export * from './echarts';
+export * from './export';
 
-global.window = window;
-global.navigator = window.navigator;
-global.document = window.document;
-global.Image = Canvas.Image;
+import './component/dataset';
+
+import './chart/line';
+import './chart/bar';
+import './chart/pie';
+import './chart/scatter';
+import './component/graphic';
+import './component/tooltip';
+import './component/axisPointer';
+import './component/legendScroll';
+
+import './component/grid';
+import './component/title';
+
+import './src/component/markPoint';
+import './src/component/markLine';
+import './src/component/markArea';
+import './src/component/dataZoom';
+import './src/component/toolbox';
+import './src/component/aria';
+
+// import 'zrender/vml/vml';
+import 'zrender/src/svg/svg';

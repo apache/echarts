@@ -17,15 +17,18 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-const sliderMove = require('../../../../../lib/component/helper/sliderMove');
+
+import sliderMove from '../../../../../src/component/helper/sliderMove';
+
+
 describe('component/helper/sliderMove', function () {
 
     describe('sliderMove', function () {
 
         it('normalize', function () {
             // Return input handleEnds
-            var inputHandleEnds = [22, 50];
-            var outputHandleEnds = sliderMove(0, inputHandleEnds, [20, 50], 0);
+            const inputHandleEnds = [22, 50];
+            const outputHandleEnds = sliderMove(0, inputHandleEnds, [20, 50], 0);
             expect(inputHandleEnds === outputHandleEnds).toEqual(true);
             expect(outputHandleEnds).toEqual([22, 50]);
 

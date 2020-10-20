@@ -17,29 +17,24 @@
 * under the License.
 */
 
-export * from './src/echarts';
-export * from './src/export';
+import Model from '../../model/Model';
+import { Sector } from 'zrender/src/export';
+import { isArray } from 'zrender/src/core/util';
+import { parsePercent } from 'zrender/src/contain/text';
 
-import './src/component/dataset';
-
-import './src/chart/line';
-import './src/chart/bar';
-import './src/chart/pie';
-import './src/chart/scatter';
-import './src/component/graphic';
-import './src/component/tooltip';
-import './src/component/axisPointer';
-import './src/component/legendScroll';
-
-import './src/component/grid';
-import './src/component/title';
-
-import './src/component/markPoint';
-import './src/component/markLine';
-import './src/component/markArea';
-import './src/component/dataZoom';
-import './src/component/toolbox';
-import './src/component/aria';
-
-// import 'zrender/src/vml/vml';
-import 'zrender/src/svg/svg';
+export function getSectorCornerRadius(
+    model: Model<{ borderRadius?: string | number | (string | number)[] }>,
+    shape: Pick<Sector['shape'], 'r0' | 'r'>
+) {
+    let cornerRadius = model.get('borderRadius');
+    if (cornerRadius == null) {
+        return null;
+    }
+    if (!isArray(cornerRadius)) {
+        cornerRadius = [cornerRadius, cornerRadius];
+    }
+    return {
+        innerCornerRadius: parsePercent(cornerRadius[0], shape.r0),
+        cornerRadius: parsePercent(cornerRadius[1], shape.r)
+    };
+}

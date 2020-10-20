@@ -164,4 +164,5 @@ var localeObj = {
     }
 };
     echarts.registerLocale('DE', localeObj);
+        
 });

@@ -17,7 +17,10 @@ import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 import { deprecateReplaceLog } from '../util/log';
-import { makeInner } from '../util/model';
+import { makeInner, interpolateRawValues } from '../util/model';
+import List from '../data/List';
+import SeriesModel from '../model/Series';
+import { initProps, updateProps } from '../util/graphic';
 
 type TextCommonParams = {
     /**
@@ -179,11 +182,10 @@ function setLabelStyle<LDI>(
             break;
         }
     }
-    let textContent = isSetOnText ? targetEl as ZRText : null;
+    let textContent = isSetOnText ? targetEl as ZRText : targetEl.getTextContent();
     if (needsCreateText) {
         if (!isSetOnText) {
             // Reuse the previous
-            textContent = targetEl.getTextContent();
             if (!textContent) {
                 textContent = new ZRText();
                 targetEl.setTextContent(textContent);
@@ -278,7 +280,7 @@ export function getLabelStatesModels<LabelName extends string = 'label'>(
  */
 export function createTextStyle(
     textStyleModel: Model,
-    specifiedTextStyle?: TextStyleProps, // Can be overrided by settings in model.
+    specifiedTextStyle?: TextStyleProps, // Fixed style in the code. Can't be set by model.
     opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
     isNotNormal?: boolean, isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
 ) {
@@ -587,7 +589,87 @@ export const labelInner = makeInner<{
      */
     value?: ParsedValue | ParsedValue[]
     /**
+     * If enable value animation
+     */
+    valueAnimation?: boolean
+    /**
+     * Label value precision during animation.
+     */
+    precision?: number | 'auto'
+
+    /**
+     * If enable value animation
+     */
+    statesModels?: LabelStatesModels<LabelModelForText>
+    /**
+     * Default text getter during interpolation
+     */
+    defaultInterpolatedText?: (value: ParsedValue[] | ParsedValue) => string
+    /**
      * Change label text from interpolated text during animation
      */
     setLabelText?(overrideValue?: ParsedValue | ParsedValue[]): void
 }, ZRText>();
+
+export function setLabelValueAnimation(
+    label: ZRText,
+    labelStatesModels: LabelStatesModels<LabelModelForText>,
+    value: ParsedValue | ParsedValue[],
+    getDefaultText: (value: ParsedValue[] | ParsedValue) => string
+) {
+    if (!label) {
+        return;
+    }
+
+    const obj = labelInner(label);
+    obj.prevValue = obj.value;
+    obj.value = value;
+
+    const normalLabelModel = labelStatesModels.normal;
+
+    obj.valueAnimation = normalLabelModel.get('valueAnimation');
+
+    if (obj.valueAnimation) {
+        obj.precision = normalLabelModel.get('precision');
+        obj.defaultInterpolatedText = getDefaultText;
+        obj.statesModels = labelStatesModels;
+    }
+}
+
+export function animateLabelValue(
+    textEl: ZRText,
+    dataIndex: number,
+    data: List,
+    seriesModel: SeriesModel
+) {
+    const labelInnerStore = labelInner(textEl);
+    if (!labelInnerStore.valueAnimation) {
+        return;
+    }
+    const defaultInterpolatedText = labelInnerStore.defaultInterpolatedText;
+    const prevValue = labelInnerStore.prevValue;
+    const currentValue = labelInnerStore.value;
+
+    function during(percent: number) {
+        const interpolated = interpolateRawValues(
+            data,
+            labelInnerStore.precision,
+            prevValue,
+            currentValue,
+            percent
+        );
+
+        const labelText = getLabelText({
+            labelDataIndex: dataIndex,
+            // labelFetcher: seriesModel,
+            defaultText: defaultInterpolatedText
+                ? defaultInterpolatedText(interpolated)
+                : interpolated + ''
+        }, labelInnerStore.statesModels, interpolated);
+
+        setLabelText(textEl, labelText);
+    }
+
+    (prevValue == null ? initProps
+        : updateProps)(textEl, {}, seriesModel, dataIndex, null, during);
+}

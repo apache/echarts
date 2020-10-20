@@ -17,12 +17,12 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
-import * as zrColor from 'zrender/src/tool/color';
-import * as eventUtil from 'zrender/src/core/event';
-import * as domUtil from 'zrender/src/core/dom';
+import { isString, indexOf, map, each, bind } from 'zrender/src/core/util';
+import { toHex } from 'zrender/src/tool/color';
+import { normalizeEvent } from 'zrender/src/core/event';
+import { transformLocalCoord } from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
-import * as formatUtil from '../../util/format';
+import { convertToColorString, toCamelCase, normalizeCssArray } from '../../util/format';
 import ExtensionAPI from '../../ExtensionAPI';
 import { ZRenderType } from 'zrender/src/zrender';
 import { TooltipOption } from './TooltipModel';
@@ -34,14 +34,11 @@ import SVGPainter from 'zrender/src/svg/Painter';
 import { shouldTooltipConfine } from './helper';
 import { getPaddingFromTooltipModel } from './tooltipMarkup';
 
-const each = zrUtil.each;
-const toCamelCase = formatUtil.toCamelCase;
-
-const vendors = ['', '-webkit-', '-moz-', '-o-'];
+const vendors = ['-ms-', '-moz-', '-o-', '-webkit-', ''];
 
 const gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;';
 
-function mirrowPos(pos: string): string {
+function mirrorPos(pos: string): string {
     pos = pos === 'left'
         ? 'right'
         : pos === 'right'
@@ -57,40 +54,48 @@ function assembleArrow(
     borderColor: ZRColor,
     arrowPosition: TooltipOption['position']
 ) {
-    if (!zrUtil.isString(arrowPosition) || arrowPosition === 'inside') {
+    if (!isString(arrowPosition) || arrowPosition === 'inside') {
         return '';
     }
 
-    borderColor = formatUtil.convertToColorString(borderColor);
-    const arrowPos = mirrowPos(arrowPosition);
-    let centerPos = '';
-    let rotate = 0;
-    if (zrUtil.indexOf(['left', 'right'], arrowPos) > -1) {
-        centerPos = `${arrowPos}:-6px;top:50%;transform:translateY(-50%)`;
-        rotate = arrowPos === 'left' ? -225 : -45;
+    borderColor = convertToColorString(borderColor);
+    const arrowPos = mirrorPos(arrowPosition);
+    let positionStyle = '';
+    let transformStyle = '';
+    if (indexOf(['left', 'right'], arrowPos) > -1) {
+        positionStyle = `${arrowPos}:-6px;top:50%;`;
+        transformStyle = `translateY(-50%) rotate(${arrowPos === 'left' ? -225 : -45}deg)`;
     }
     else {
-        centerPos = `${arrowPos}:-6px;left:50%;transform:translateX(-50%)`;
-        rotate = arrowPos === 'top' ? 225 : 45;
+        positionStyle = `${arrowPos}:-6px;left:50%;`;
+        transformStyle = `translateX(-50%) rotate(${arrowPos === 'top' ? 225 : 45}deg)`;
     }
+
+    transformStyle = map(vendors, function (vendorPrefix) {
+        return vendorPrefix + 'transform:' + transformStyle;
+    }).join(';');
+
     const styleCss = [
-        'style="position:absolute;width:10px;height:10px;',
-        `${centerPos}`,
-        `rotate(${rotate}deg);`,
+        'position:absolute;width:10px;height:10px;',
+        `${positionStyle}${transformStyle};`,
         `border-bottom: ${borderColor} solid 1px;`,
         `border-right: ${borderColor} solid 1px;`,
         `background-color: ${backgroundColor};`,
-        'box-shadow: 8px 8px 16px -3px #000',
-        '"'
+        'box-shadow: 8px 8px 16px -3px #000;'
     ];
-    return `<div ${styleCss.join('')}></div>`;
+    return `<div style="${styleCss.join('')}"></div>`;
 }
 
-function assembleTransition(duration: number): string {
+function assembleTransition(duration: number, onlyFade?: boolean): string {
     const transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
-    const transitionText = 'left ' + duration + 's ' + transitionCurve + ','
-                        + 'top ' + duration + 's ' + transitionCurve;
-    return zrUtil.map(vendors, function (vendorPrefix) {
+    let transitionText = 'opacity ' + (duration / 2) + 's ' + transitionCurve + ','
+                       + 'visibility ' + (duration / 2) + 's ' + transitionCurve;
+    if (!onlyFade) {
+        transitionText += ',left ' + duration + 's ' + transitionCurve
+                        + ',top ' + duration + 's ' + transitionCurve;
+    }
+
+    return map(vendors, function (vendorPrefix) {
         return vendorPrefix + 'transition:' + transitionText;
     }).join(';');
 }
@@ -122,7 +127,7 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
     return cssText.join(';');
 }
 
-function assembleCssText(tooltipModel: Model<TooltipOption>, isFirstShow: boolean) {
+function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: boolean, onlyFade?: boolean) {
     const cssText: string[] = [];
     const transitionDuration = tooltipModel.get('transitionDuration');
     const backgroundColor = tooltipModel.get('backgroundColor');
@@ -136,11 +141,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, isFirstShow: boolea
 
     cssText.push('box-shadow:' + boxShadow);
     // Animation transition. Do not animate when transitionDuration is 0.
-    // If tooltip show arrow, then disable transition
-    !isFirstShow && transitionDuration
-        && zrUtil.indexOf(['top', 'left', 'bottom', 'right'], tooltipModel.get('position') as string) > -1
-        && tooltipModel.get('trigger') !== 'item'
-        && cssText.push(assembleTransition(transitionDuration));
+    enableTransition && transitionDuration && cssText.push(assembleTransition(transitionDuration, onlyFade));
 
     if (backgroundColor) {
         if (env.canvasSupported) {
@@ -149,7 +150,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, isFirstShow: boolea
         else {
             // for ie
             cssText.push(
-                'background-Color:#' + zrColor.toHex(backgroundColor)
+                'background-Color:#' + toHex(backgroundColor)
             );
             cssText.push('filter:alpha(opacity=70)');
         }
@@ -169,7 +170,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, isFirstShow: boolea
 
     // Padding
     if (padding != null) {
-        cssText.push('padding:' + formatUtil.normalizeCssArray(padding).join('px ') + 'px');
+        cssText.push('padding:' + normalizeCssArray(padding).join('px ') + 'px');
     }
 
     return cssText.join(';') + ';';
@@ -183,7 +184,7 @@ function makeStyleCoord(out: number[], zr: ZRenderType, appendToBody: boolean, z
         const zrViewportRoot = zrPainter && zrPainter.getViewportRoot();
         if (zrViewportRoot) {
             // Some APPs might use scale on body, so we support CSS transform here.
-            domUtil.transformLocalCoord(out, zrViewportRoot, document.body, zrX, zrY);
+            transformLocalCoord(out, zrViewportRoot, document.body, zrX, zrY);
         }
     }
     else {
@@ -234,6 +235,11 @@ class TooltipHTMLContent {
 
     private _inContent: boolean;
     private _firstShow = true;
+    private _longHide = true;
+    /**
+     * Record long-time hide
+     */
+    private _longHideTimeout: number;
 
 
     constructor(
@@ -287,17 +293,19 @@ class TooltipHTMLContent {
                 // in and out shape too frequently
                 const handler = zr.handler;
                 const zrViewportRoot = zr.painter.getViewportRoot();
-                eventUtil.normalizeEvent(zrViewportRoot, e as ZRRawEvent, true);
+                normalizeEvent(zrViewportRoot, e as ZRRawEvent, true);
                 handler.dispatch('mousemove', e);
             }
         };
         el.onmouseleave = function () {
+            // set `_inContent` to `false` before `hideLater`
+            self._inContent = false;
+
             if (self._enterable) {
                 if (self._show) {
                     self.hideLater(self._hideDelay);
                 }
             }
-            self._inContent = false;
         };
     }
 
@@ -329,11 +337,12 @@ class TooltipHTMLContent {
 
     show(tooltipModel: Model<TooltipOption>, nearPointColor: ZRColor) {
         clearTimeout(this._hideTimeout);
+        clearTimeout(this._longHideTimeout);
         const el = this.el;
         const styleCoord = this._styleCoord;
         const offset = el.offsetHeight / 2;
-        nearPointColor = formatUtil.convertToColorString(nearPointColor);
-        el.style.cssText = gCssText + assembleCssText(tooltipModel, this._firstShow)
+        nearPointColor = convertToColorString(nearPointColor);
+        el.style.cssText = gCssText + assembleCssText(tooltipModel, !this._firstShow, this._longHide)
             // Because of the reason described in:
             // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
             // we should set initial value to `left` and `top`.
@@ -352,6 +361,7 @@ class TooltipHTMLContent {
 
         this._show = true;
         this._firstShow = false;
+        this._longHide = false;
     }
 
     setContent(
@@ -364,14 +374,13 @@ class TooltipHTMLContent {
         if (content == null) {
             return;
         }
+
+        if (isString(arrowPosition) && tooltipModel.get('trigger') === 'item'
+            && !shouldTooltipConfine(tooltipModel)) {
+            content += assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition);
+        }
+
         this.el.innerHTML = content;
-        this.el.innerHTML += (
-            zrUtil.isString(arrowPosition)
-            && tooltipModel.get('trigger') === 'item'
-            && !shouldTooltipConfine(tooltipModel)
-        )
-            ? assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition)
-            : '';
     }
 
     setEnterable(enterable: boolean) {
@@ -412,8 +421,10 @@ class TooltipHTMLContent {
     }
 
     hide() {
-        this.el.style.display = 'none';
+        this.el.style.visibility = 'hidden';
+        this.el.style.opacity = '0';
         this._show = false;
+        this._longHideTimeout = setTimeout(() => this._longHide = true, 500) as any;
     }
 
     hideLater(time?: number) {
@@ -422,7 +433,7 @@ class TooltipHTMLContent {
                 this._hideDelay = time;
                 // Set show false to avoid invoke hideLater multiple times
                 this._show = false;
-                this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time) as any;
+                this._hideTimeout = setTimeout(bind(this.hide, this), time) as any;
             }
             else {
                 this.hide();
