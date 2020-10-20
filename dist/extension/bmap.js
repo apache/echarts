@@ -179,7 +179,12 @@ BMapCoordSys.create = function (ecModel, api) {
             // Not support IE8
             bmapRoot.classList.add('ec-extension-bmap');
             root.appendChild(bmapRoot);
-            var bmap = bmapModel.__bmap = new BMap.Map(bmapRoot);
+
+            // initialize bmap
+            var mapOptions = bmapModel.get('mapOptions') || {};
+            // Not support `mapType`, use `bmap.setMapType(MapType)` instead.
+            delete mapOptions.mapType;
+            var bmap = bmapModel.__bmap = new BMap.Map(bmapRoot, mapOptions);
 
             var overlay = new Overlay(viewportRoot);
             bmap.addOverlay(overlay);
@@ -196,8 +201,13 @@ BMapCoordSys.create = function (ecModel, api) {
         var center = bmapModel.get('center');
         var zoom = bmapModel.get('zoom');
         if (center && zoom) {
-            var pt = new BMap.Point(center[0], center[1]);
-            bmap.centerAndZoom(pt, zoom);
+            var bmapCenter = bmap.getCenter();
+            var bmapZoom = bmap.getZoom();
+            var centerOrZoomChanged = bmapModel.centerOrZoomChanged([bmapCenter.lng, bmapCenter.lat], bmapZoom);
+            if (centerOrZoomChanged) {
+                var pt = new BMap.Point(center[0], center[1]);
+                bmap.centerAndZoom(pt, zoom);
+            }
         }
 
         bmapCoordSys = new BMapCoordSys(bmap, api);
@@ -262,9 +272,14 @@ echarts.extendComponentModel({
 
         zoom: 5,
 
+        // 2.0 http://lbsyun.baidu.com/custom/index.htm
         mapStyle: {},
 
+        // 3.0 http://lbsyun.baidu.com/index.php?title=open/custom
         mapStyleV2: {},
+
+        // See https://lbsyun.baidu.com/cms/jsapi/reference/jsapi_reference.html#a0b1
+        mapOptions: {},
 
         roam: false
     }
@@ -288,6 +303,15 @@ echarts.extendComponentModel({
 * specific language governing permissions and limitations
 * under the License.
 */
+
+function isEmptyObject(obj) {
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            return false;
+        }
+    }
+    return true;
+}
 
 echarts.extendComponentView({
     type: 'bmap',
@@ -328,12 +352,10 @@ echarts.extendComponentView({
         }
 
         bmap.removeEventListener('moving', this._oldMoveHandler);
-        // FIXME
-        // Moveend may be triggered by centerAndZoom method when creating coordSys next time
-        // bmap.removeEventListener('moveend', this._oldMoveHandler);
+        bmap.removeEventListener('moveend', this._oldMoveHandler);
         bmap.removeEventListener('zoomend', this._oldZoomEndHandler);
         bmap.addEventListener('moving', moveHandler);
-        // bmap.addEventListener('moveend', moveHandler);
+        bmap.addEventListener('moveend', moveHandler);
         bmap.addEventListener('zoomend', zoomEndHandler);
 
         this._oldMoveHandler = moveHandler;
@@ -365,8 +387,8 @@ echarts.extendComponentView({
         var mapStyleStr = JSON.stringify(newMapStyle);
         if (JSON.stringify(originalStyle) !== mapStyleStr) {
             // FIXME May have blank tile when dragging if setMapStyle
-            if (Object.keys(newMapStyle).length) {
-                bmap.setMapStyle(newMapStyle);
+            if (!isEmptyObject(newMapStyle2)) {
+                bmap.setMapStyle(echarts.util.clone(newMapStyle));
             }
             bMapModel.__mapStyle = JSON.parse(mapStyleStr);
         }
@@ -379,8 +401,8 @@ echarts.extendComponentView({
         var mapStyleStr2 = JSON.stringify(newMapStyle2);
         if (JSON.stringify(originalStyle2) !== mapStyleStr2) {
             // FIXME May have blank tile when dragging if setMapStyle
-            if (Object.keys(newMapStyle2).length) {
-                bmap.setMapStyleV2(newMapStyle2);
+            if (!isEmptyObject(newMapStyle2)) {
+                bmap.setMapStyleV2(echarts.util.clone(newMapStyle2));
             }
             bMapModel.__mapStyle2 = JSON.parse(mapStyleStr2);
         }

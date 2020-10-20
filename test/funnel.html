@@ -86,9 +86,10 @@ under the License.
                             left: 300,
                             right: 300,
                             sort: 'ascending',
+                            orient: 'horizontal',
                             label: {
                                 normal: {
-                                    position: 'inside'
+                                    position: 'leftTop'
                                 }
                             },
                             data:[
@@ -122,6 +123,7 @@ under the License.
 
                 var config = {
                     sort: 'ascending',
+                    orient: 'vertical',
                     labelPosition: 'inside',
                     labelLineLen: 20
                 };
@@ -131,6 +133,7 @@ under the License.
                         series: [{
                             name: '漏斗图',
                             sort: config.sort,
+                            orient: config.orient,
                             label: {
                                 normal: {
                                     position: config.labelPosition
@@ -146,9 +149,11 @@ under the License.
                 }
 
                 var gui = new dat.GUI();
-                gui.add(config, 'sort', ['descending', 'ascending'])
+                gui.add(config, 'sort', ['descending', 'ascending', 'none'])
                     .onChange(update);
-                gui.add(config, 'labelPosition', ['inside', 'left', 'right'])
+                gui.add(config, 'orient', ['vertical', 'horizontal'])
+                    .onChange(update);
+                gui.add(config, 'labelPosition', ['inside', 'center', 'insideLeft', 'insideRight', 'left', 'right', 'top', 'bottom', 'leftTop', 'leftBottom', 'rightTop', 'rightBottom'])
                     .onChange(update);
                 gui.add(config, 'labelLineLen', 0, 100)
                     .onChange(update);

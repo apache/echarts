@@ -68,7 +68,9 @@ under the License.
                     xAxis: {
                         data: xAxisData
                     },
-                    yAxis: {},
+                    yAxis: {
+                        max: 5
+                    },
                     series: [{
                         name: 'line',
                         type: 'line',
@@ -118,10 +120,25 @@ under the License.
                                     yAxis: 0.5
                                 }, {
                                     yAxis: 0.7
+                                }],
+                                [{
+                                    name: 'This text should not be displayed\nwhen out of range',
+                                    yAxis: 3
+                                }, {
+                                    yAxis: 3.5
                                 }]
                             ]
                         }
-                    }]
+                    }],
+                    dataZoom: {
+                        yAxisIndex: 0,
+                        startValue: 0,
+                        endValue: 2,
+                        right: 250
+                    },
+                    grid: {
+                        right: 300
+                    }
                 });
 
             });

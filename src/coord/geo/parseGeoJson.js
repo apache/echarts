@@ -137,7 +137,7 @@ export default function (geoJson, nameProperty) {
         }
 
         var region = new Region(
-            properties[nameProperty],
+            properties[nameProperty || 'name'],
             geometries,
             properties.cp
         );

@@ -121,15 +121,16 @@ var MarkerModel = echarts.extendComponentModel({
         }
     },
 
-    formatTooltip: function (dataIndex) {
+    formatTooltip: function (dataIndex, multipleSeries, dataType, renderMode) {
         var data = this.getData();
         var value = this.getRawValue(dataIndex);
         var formattedValue = zrUtil.isArray(value)
             ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
         var name = data.getName(dataIndex);
         var html = encodeHTML(this.name);
+        var newLine = renderMode === 'html' ? '<br/>' : '\n';
         if (value != null || name) {
-            html += '<br />';
+            html += newLine;
         }
         if (name) {
             html += encodeHTML(name);
