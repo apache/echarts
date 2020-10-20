@@ -1008,7 +1008,10 @@ class LineView extends ChartView {
                 const delay = typeof seriesDalay === 'function' ? seriesDalay(idx)
                     : (seriesDuration * ratio) + seriesDalayValue;
 
-                el.animateFrom({
+                const symbolPath = el.getSymbolPath();
+                const text = symbolPath.getTextContent();
+
+                symbolPath.animateFrom({
                     scaleX: 0,
                     scaleY: 0
                 }, {
@@ -1016,8 +1019,6 @@ class LineView extends ChartView {
                     delay: delay
                 });
 
-                const symbolPath = el.getSymbolPath();
-                const text = symbolPath.getTextContent();
                 if (text) {
                     text.animateFrom({
                         style: {
