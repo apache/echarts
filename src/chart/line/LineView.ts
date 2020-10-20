@@ -1011,9 +1011,10 @@ class LineView extends ChartView {
                 const symbolPath = el.getSymbolPath();
                 const text = symbolPath.getTextContent();
 
-                symbolPath.animateFrom({
-                    scaleX: 0,
-                    scaleY: 0
+                el.attr({ scaleX: 0, scaleY: 0});
+                el.animateFrom({
+                    scaleX: 1,
+                    scaleY: 1
                 }, {
                     duration: 200,
                     delay: delay

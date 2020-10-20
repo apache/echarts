@@ -331,6 +331,11 @@ function animateOrSetProps<Props>(
     }
     const animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
 
+    if (!isRemove) {
+        // Must stop the remove animation.
+        el.stopAnimation('remove');
+    }
+
     if (animationEnabled) {
         let duration: number | Function;
         let animationEasing: AnimationEasing;
@@ -366,11 +371,6 @@ function animateOrSetProps<Props>(
             if (typeof duration === 'function') {
                 duration = duration(dataIndex as number);
             }
-        }
-
-        if (!isRemove) {
-            // Must stop the remove animation.
-            el.stopAnimation('remove');
         }
 
         duration > 0

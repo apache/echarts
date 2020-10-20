@@ -192,6 +192,11 @@ class Symbol extends graphic.Group {
             }
         }
 
+        if (disableAnimation) {
+            // Must stop remove animation manually if don't call initProps or updateProps.
+            this.childAt(0).stopAnimation('remove');
+        }
+
         this._seriesModel = seriesModel;
     }
 
