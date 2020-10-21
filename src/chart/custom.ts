@@ -19,7 +19,7 @@
 
 import {
     hasOwn, assert, isString, retrieve2, retrieve3, defaults, each,
-    keys, isArrayLike, bind, isFunction, eqNaN, indexOf
+    keys, isArrayLike, bind, isFunction, eqNaN, indexOf, clone
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
 import { setDefaultStateProxy, enableHoverEmphasis } from '../util/states';
@@ -85,7 +85,7 @@ import { ItemStyleProps } from '../model/mixin/itemStyle';
 import { cloneValue } from 'zrender/src/animation/Animator';
 import { warn, throwError } from '../util/log';
 import {
-    combine, isInAnyMorphing, morphPath, isCombiningPath, CombineSeparateConfig, separate
+    combine, isInAnyMorphing, morphPath, isCombiningPath, CombineSeparateConfig, separate, CombineSeparateResult
 } from 'zrender/src/tool/morphPath';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 
@@ -826,9 +826,8 @@ function updateElNormal(
     // If `isMorphTo`, we should not update these props to el directly, otherwise,
     // when applying morph finally, the original prop are missing for making "animation from".
     if (!isMorphTo) {
-        applyTransitionRelatedUpdate(
-            el, dataIndex, elOption, styleOpt, seriesModel, allPropsFinal, transFromProps, isInit
-        );
+        applyPropsFinal(el, allPropsFinal, styleOpt);
+        applyTransitionFrom(el, dataIndex, elOption, seriesModel, transFromProps, isInit);
     }
 
     // Merge by default.
@@ -847,24 +846,18 @@ function updateElNormal(
     return isMorphTo ? allPropsFinal : null;
 }
 
-function applyTransitionRelatedUpdate(
+function applyPropsFinal(
     el: Element,
-    dataIndex: number,
-    elOption: CustomElementOption,
-    styleOpt: CustomElementOption['style'],
-    seriesModel: CustomSeriesModel,
     // Can be null/undefined
     allPropsFinal: ElementProps,
-    // Can be null/undefined
-    transFromProps: ElementProps,
-    isInit: boolean
+    styleOpt: CustomElementOption['style']
 ) {
     const elDisplayable = el.isGroup ? null : el as Displayable;
 
-    if (elDisplayable) {
+    if (elDisplayable && styleOpt) {
         // PENDING: here the input style object is used directly.
         // Good for performance but bad for compatibility control.
-        styleOpt && elDisplayable.useStyle(styleOpt);
+        elDisplayable.useStyle(styleOpt);
 
         // When style object changed, how to trade the existing animation?
         // It is probably conplicated and not needed to cover all the cases.
@@ -892,7 +885,17 @@ function applyTransitionRelatedUpdate(
 
     // Set el to the final state firstly.
     allPropsFinal && el.attr(allPropsFinal);
+}
 
+function applyTransitionFrom(
+    el: Element,
+    dataIndex: number,
+    elOption: CustomElementOption,
+    seriesModel: CustomSeriesModel,
+    // Can be null/undefined
+    transFromProps: ElementProps,
+    isInit: boolean
+): void {
     if (transFromProps) {
         // Do not use `el.updateDuringAnimation` here becuase `el.updateDuringAnimation` will
         // be called mutiple time in each animation frame. For example, if both "transform" props
@@ -2317,21 +2320,26 @@ class MorphPreparation {
     hasFrom(): boolean {
         return !!this._fromList.length;
     }
+
     needAddFrom(): boolean {
         return this._needAddFrom;
     }
+
     freezeFrom(): void {
         this._needAddFrom = false;
     }
+
     addFrom(path: graphicUtil.Path): void {
         if (__DEV__) {
             assert(this._needAddFrom);
         }
         path && this._fromList.push(path);
     }
+
     enableNextAddTo(): void {
         this._preventAddTo = false;
     }
+
     addTo(
         path: graphicUtil.Path,
         elOption: CustomElementOption,
@@ -2348,6 +2356,7 @@ class MorphPreparation {
             this._preventAddTo = true;
         }
     }
+
     applyMorphing(
         type: 'oneToOne' | 'oneToMany' | 'manyToOne',
         seriesModel: CustomSeriesModel,
@@ -2365,7 +2374,31 @@ class MorphPreparation {
             return;
         }
         const elAnimationConfig = prepareMorphElementAnimateConfig(seriesModel, toDataIndices[0], transOpt);
-        const morphDuration = elAnimationConfig.duration;
+        const shouldMorph = !!elAnimationConfig.duration;
+
+        // [MORPHING_LOGIC_HINT]
+        // Pay attention to the order:
+        // (A) Apply `allPropsFinal` and `styleOption` to "to".
+        //     (Then "to" becomes to the final state.)
+        // (B) Apply `morphPath`/`combine`/`separate`.
+        //     (Based on the current state of "from" and the final state of "to".)
+        //     (Then we may get "from.subList" or "to.subList".)
+        // (C) Copy the related props from "from" to "from.subList", from "to" to "to.subList".
+        // (D) Collect `transitionFromProps` for "to" and "to.subList"
+        //     (Based on "from" or "from.subList".)
+        // (E) Apply `transitionFromProps` to "to" and "to.subList"
+        //     (It might change the prop values to the first frame value.)
+        // Case_I:
+        //     If (D) should be after (C), we use sequence: A - B - C - D - E
+        // Case_II:
+        //     If (A) should be after (D), we use sequence: D - A - B - C - E
+
+        // [MORPHING_LOGIC_HINT]
+        // zrender `morphPath`/`combine`/`separate` only manages the shape animation.
+        // Other props (like transfrom, style transition) will handled in echarts).
+
+        // [MORPHING_LOGIC_HINT]
+        // Make sure `applyPropsFinal` always be called for "to".
 
         if (type === 'oneToOne') {
             const from = fromList[0];
@@ -2375,60 +2408,67 @@ class MorphPreparation {
             const allPropsFinal = allPropsFinalList[0];
 
             if (!isCombiningPath(from)) {
+                // See [Case_II] above.
+                // In this case, there is probably `from === to`. And the `transitionFromProps` collecting
+                // does not depends on morphing. So we collect `transitionFromProps` first.
                 const transFromProps = {} as ElementProps;
                 prepareShapeOrExtraTransitionFrom('shape', to, from, toElOption, transFromProps, false);
                 prepareShapeOrExtraTransitionFrom('extra', to, from, toElOption, transFromProps, false);
                 prepareTransformTransitionFrom(to, from, toElOption, transFromProps, false);
                 prepareStyleTransitionFrom(to, from, toElOption, toElOption.style, transFromProps, false);
-                applyTransitionRelatedUpdate(
-                    to, toDataIndex, toElOption, toElOption.style, seriesModel,
-                    allPropsFinal, transFromProps, false
-                );
-                morphDuration && morphPath(from, to, elAnimationConfig);
+
+                applyPropsFinal(to, allPropsFinal, toElOption.style);
+
+                if (shouldMorph) {
+                    morphPath(from, to, elAnimationConfig);
+                }
+                applyTransitionFrom(to, toDataIndex, toElOption, seriesModel, transFromProps, false);
             }
             else {
-                applyTransitionRelatedUpdate(
-                    to, toDataIndex, toElOption, toElOption.style, seriesModel, allPropsFinal, null, false
-                );
-                morphDuration && applyCombine(
-                    [from], to, toElOption, elAnimationConfig, seriesModel, toDataIndex
-                );
+                applyPropsFinal(to, allPropsFinal, toElOption.style);
+
+                if (shouldMorph) {
+                    const combineResult = combine([from], to, elAnimationConfig, copyPropsWhenDivided);
+                    processCombineSeparateIndividuals(
+                        'combine', combineResult, seriesModel, toElOption, toDataIndex
+                    );
+                }
+                // The target el will not be displayed and transition from multiple path.
+                // transition on the target el does not make sense.
             }
         }
+
         else if (type === 'manyToOne') {
             const to = toList[0];
             const toElOption = toElOptionList[0];
             const toDataIndex = toDataIndices[0];
             const allPropsFinal = allPropsFinalList[0];
 
-            applyTransitionRelatedUpdate(
-                to, toDataIndex, toElOption, toElOption.style, seriesModel,
-                allPropsFinal, null, false
-            );
-            morphDuration && applyCombine(
-                fromList, toList[0], toElOption, elAnimationConfig, seriesModel, toDataIndex
-            );
+            applyPropsFinal(to, allPropsFinal, toElOption.style);
+
+            if (shouldMorph) {
+                const combineResult = combine(fromList, to, elAnimationConfig, copyPropsWhenDivided);
+                processCombineSeparateIndividuals(
+                    'combine', combineResult, seriesModel, toElOption, toDataIndex
+                );
+            }
         }
+
         else if (type === 'oneToMany') {
             const from = fromList[0];
             for (let i = 0; i < toList.length; i++) {
-                const to = toList[i];
-                const toElOption = toElOptionList[i];
-                const allPropsFinal = allPropsFinalList[i];
-                const transFromProps = {} as ElementProps;
-                // PENDING: is `morphPath` responsible for `transform` transition?
-                prepareTransformTransitionFrom(to, from, toElOption, transFromProps, false);
-                prepareStyleTransitionFrom(to, from, toElOption, toElOption.style, transFromProps, false);
-                applyTransitionRelatedUpdate(
-                    to, toDataIndices[i], toElOption, toElOption.style, seriesModel,
-                    allPropsFinal, transFromProps, false
+                applyPropsFinal(toList[i], allPropsFinalList[i], toElOptionList[i].style);
+            }
+            if (shouldMorph) {
+                const separateResult = separate(from, toList, elAnimationConfig, copyPropsWhenDivided);
+                processCombineSeparateIndividuals(
+                    'separate', separateResult, seriesModel, toElOptionList, toDataIndices
                 );
             }
-            // Note: any morphing should be called after `el.attr(allPropsFinal)` called.
-            // otherwise cause wrong interpolation.
-            morphDuration && separate(from, toList, elAnimationConfig);
         }
+
     }
+
     reset(): void {
         this._needAddFrom = true;
         this._preventAddTo = true;
@@ -2440,24 +2480,35 @@ class MorphPreparation {
     }
 }
 
-function applyCombine(
-    fromList: graphicUtil.Path[],
-    to: graphicUtil.Path,
-    toElOption: CustomElementOption,
-    elAnimationConfig: CombineSeparateConfig,
+function processCombineSeparateIndividuals<TYPE extends 'combine' | 'separate'>(
+    type: TYPE,
+    combineSeparateResult: CombineSeparateResult,
     seriesModel: CustomSeriesModel,
-    dataIndex: number
+    toElOptionInput: TYPE extends 'separate' ? CustomElementOption[] : CustomElementOption,
+    dataIndexInput: TYPE extends 'separate' ? number[] : number
 ): void {
-    const combineResult = combine(fromList, to, elAnimationConfig);
+    const isSeparate = type === 'separate';
 
-    for (let i = 0; i < combineResult.count; i++) {
+    for (let i = 0; i < combineSeparateResult.count; i++) {
+        const fromIndividual = combineSeparateResult.fromIndividuals[i];
+        const toIndividual = combineSeparateResult.toIndividuals[i];
+
+        const toElOption = isSeparate
+            ? (toElOptionInput as CustomElementOption[])[i]
+            : (toElOptionInput as CustomElementOption);
+        const dataIndex = isSeparate
+            ? (dataIndexInput as number[])[i]
+            : (dataIndexInput as number);
+
         const transFromProps = {} as ElementProps;
-        const fromIndividual = combineResult.fromIndividuals[i];
-        const toIndividual = combineResult.toIndividuals[i];
-        prepareTransformTransitionFrom(toIndividual, fromIndividual, toElOption, transFromProps, false);
-        prepareStyleTransitionFrom(toIndividual, fromIndividual, toElOption, toElOption.style, transFromProps, false);
-        applyTransitionRelatedUpdate(
-            toIndividual, dataIndex, toElOption, toElOption.style, seriesModel, null, transFromProps, false
+        prepareTransformTransitionFrom(
+            toIndividual, fromIndividual, toElOption, transFromProps, false
+        );
+        prepareStyleTransitionFrom(
+            toIndividual, fromIndividual, toElOption, toElOption.style, transFromProps, false
+        );
+        applyTransitionFrom(
+            toIndividual, dataIndex, toElOption, seriesModel, transFromProps, false
         );
     }
 }
@@ -2516,4 +2567,26 @@ function prepareMorphElementAnimateConfig(
         easing: easing,
         dividingMethod: transOpt ? transOpt.dividingMethod : null
     };
+}
+
+function copyPropsWhenDivided(
+    srcPath: graphicUtil.Path,
+    tarPath: graphicUtil.Path,
+    willClone: boolean
+): void {
+    tarPath.x = srcPath.x;
+    tarPath.y = srcPath.y;
+    tarPath.scaleX = srcPath.scaleX;
+    tarPath.scaleY = srcPath.scaleY;
+    tarPath.originX = srcPath.originX;
+    tarPath.originY = srcPath.originY;
+
+    // If just carry the style, will not be modifed, so do not copy.
+    tarPath.style = willClone
+        ? clone(srcPath.style)
+        : srcPath.style;
+
+    tarPath.zlevel = srcPath.zlevel;
+    tarPath.z = srcPath.z;
+    tarPath.z2 = srcPath.z2;
 }
