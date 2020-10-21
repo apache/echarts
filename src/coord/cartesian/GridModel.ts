@@ -37,20 +37,6 @@ export interface GridOption extends ComponentOption, BoxLayoutOptionMixin, Shado
     tooltip?: any; // FIXME:TS add this tooltip type
 }
 
-export const defaultGridLayoutWithoutLabel = {
-    left: '10%',
-    top: 60,
-    right: '10%',
-    bottom: 70
-} as const;
-
-export const defaultGridLayoutWithLabel = {
-    left: '5%',
-    top: 60,
-    right: '5%',
-    bottom: 55
-} as const;
-
 class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHostModel {
 
     static type = 'grid';
@@ -65,6 +51,10 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
         show: false,
         zlevel: 0,
         z: 0,
+        left: '10%',
+        top: 60,
+        right: '10%',
+        bottom: 70,
         // If grid size contain label
         containLabel: false,
         // width: {totalWidth} - left - right,

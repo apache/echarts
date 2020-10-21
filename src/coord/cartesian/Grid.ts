@@ -121,14 +121,6 @@ class Grid implements CoordinateSystemMaster {
         const boxLayoutParams = gridModel.getBoxLayoutParams();
         const isContainLabel = !ignoreContainLabel && gridModel.get('containLabel');
 
-        each(defaultGridLayoutWithoutLabel, function (val, key) {
-            if (boxLayoutParams[key] == null || boxLayoutParams[key] === 'auto') {
-                boxLayoutParams[key] = isContainLabel
-                    ? defaultGridLayoutWithLabel[key]
-                    : defaultGridLayoutWithoutLabel[key];
-            }
-        });
-
         const gridRect = getLayoutRect(
             boxLayoutParams, {
                 width: api.getWidth(),
