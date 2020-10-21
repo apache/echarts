@@ -131,10 +131,10 @@ class DataDiffer<CTX = unknown> {
     }
 
     execute(): void {
-        this[this._diffModeMultiple ? '_executeByKey' : '_executeByIndex']();
+        this[this._diffModeMultiple ? '_executeMultiple' : '_executeOneToOne']();
     }
 
-    private _executeByIndex(): void {
+    private _executeOneToOne(): void {
         const oldArr = this._old;
         const newArr = this._new;
         const newDataIndexMap: DataIndexMap = {};
@@ -196,7 +196,7 @@ class DataDiffer<CTX = unknown> {
      *     this._add(n7);
      *     this._add(n8);
      */
-    private _executeByKey(): void {
+    private _executeMultiple(): void {
         const oldArr = this._old;
         const newArr = this._new;
         const oldDataIndexMap: DataIndexMap = {};

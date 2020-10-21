@@ -500,10 +500,16 @@ class CustomSeriesView extends ChartView {
                     data, null
                 );
             })
+            .remove(function (oldIdx) {
+                doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
+            })
             .update(function (newIdx, oldIdx) {
                 morphPreparation.reset();
                 morphPreparation.enableNextAddTo();
                 const oldEl = oldData.getItemGraphicEl(oldIdx);
+                const from = findMayMorphFrom(oldEl);
+                morphPreparation.addFrom(from);
+                morphPreparation.needCheckFromSameEl = true;
                 // Do not call `removeElementDirectly` here.
                 // `oldEl` is passed into the first param of `createOrUpdateItem`,
                 // which will handle the remove or replace.
@@ -513,9 +519,6 @@ class CustomSeriesView extends ChartView {
                 );
                 morphPreparation.applyMorphing('oneToOne', customSeries, transOpt);
             })
-            .remove(function (oldIdx) {
-                doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
-            })
             .updateManyToOne(function (newIdx, oldIndices) {
                 morphPreparation.reset();
                 for (let i = 0; i < oldIndices.length; i++) {
@@ -524,7 +527,6 @@ class CustomSeriesView extends ChartView {
                     morphPreparation.addFrom(from);
                     removeElementDirectly(oldEl, group);
                 }
-                morphPreparation.freezeFrom();
                 morphPreparation.enableNextAddTo();
                 createOrUpdateItem(
                     null, newIdx, renderItem(newIdx, payload), customSeries, group,
@@ -539,7 +541,6 @@ class CustomSeriesView extends ChartView {
                 const from = findMayMorphFrom(oldEl);
                 morphPreparation.addFrom(from);
                 removeElementDirectly(oldEl, group);
-                morphPreparation.freezeFrom();
 
                 for (let i = 0; i < newLen; i++) {
                     morphPreparation.enableNextAddTo();
@@ -1846,26 +1847,28 @@ function doCreateOrUpdateEl(
         assert(elOption, 'should not have an null/undefined element setting');
     }
 
-    let toBeReplacedIdx = -1;
+    const optionMorph = (elOption as CustomZRPathOption).morph;
+    if (optionMorph && morphPreparation) {
+        morphPreparation.meetMorphOption();
+    }
 
-    if (el) {
-        const elNeedRecreate = doesElNeedRecreate(el, elOption);
-        if (inner(el).morphOption
-            && isPath(el)
-            && morphPreparation
-            && morphPreparation.needAddFrom()
-            // When an el has been morphing, we also need to make it go through
-            // morphing logic, other it will blink.
-            && (elNeedRecreate || isInAnyMorphing(el))
-            // In other cases, el will go normal update transition even `morph` declared in option.
-        ) {
-            morphPreparation.addFrom(el);
-        }
-        if (elNeedRecreate) {
-            // Should keep at the original index, otherwise "merge by index" will be incorrect.
-            toBeReplacedIdx = group.childrenRef().indexOf(el);
-            el = null;
-        }
+    let toBeReplacedIdx = -1;
+    if (
+        el && (
+            doesElNeedRecreate(el, elOption)
+            || (
+                // el has been used as the "from" for other el.
+                // So can not be used as the old el in this place.
+                morphPreparation
+                && morphPreparation.needCheckFromSameEl
+                && morphPreparation.getSingleFrom() === el
+                && !optionMorph
+            )
+        )
+    ) {
+        // Should keep at the original index, otherwise "merge by index" will be incorrect.
+        toBeReplacedIdx = group.childrenRef().indexOf(el);
+        el = null;
     }
 
     const elIsNewCreated = !el;
@@ -1880,12 +1883,8 @@ function doCreateOrUpdateEl(
         el.clearStates();
     }
 
-    const optionMorph = (elOption as CustomZRPathOption).morph;
     inner(el).morphOption = optionMorph;
-    let thisElIsMorphTo = false;
-    if (optionMorph && isPath(el) && morphPreparation && morphPreparation.hasFrom()) {
-        thisElIsMorphTo = true;
-    }
+    const thisElIsMorphTo = optionMorph && isPath(el) && morphPreparation && morphPreparation.hasFrom();
 
     // Use update animation when morph is enabled.
     const isInit = elIsNewCreated && !thisElIsMorphTo;
@@ -1933,7 +1932,9 @@ function doCreateOrUpdateEl(
     updateZ(el, elOption, seriesModel, attachedTxInfoTmp);
 
     if (elOption.type === 'group') {
-        mergeChildren(el as graphicUtil.Group, dataIndex, elOption as CustomGroupOption, seriesModel);
+        mergeChildren(
+            el as graphicUtil.Group, dataIndex, elOption as CustomGroupOption, seriesModel, morphPreparation
+        );
     }
 
     if (toBeReplacedIdx >= 0) {
@@ -2168,7 +2169,8 @@ function mergeChildren(
     el: graphicUtil.Group,
     dataIndex: number,
     elOption: CustomGroupOption,
-    seriesModel: CustomSeriesModel
+    seriesModel: CustomSeriesModel,
+    morphPreparation: MorphPreparation
 ): void {
 
     const newChildren = elOption.children;
@@ -2189,7 +2191,8 @@ function mergeChildren(
             newChildren: newChildren || [],
             dataIndex: dataIndex,
             seriesModel: seriesModel,
-            group: el
+            group: el,
+            morphPreparation: morphPreparation
         });
         return;
     }
@@ -2207,7 +2210,7 @@ function mergeChildren(
             seriesModel,
             el,
             false,
-            null
+            morphPreparation
         );
     }
     for (let i = el.childCount() - 1; i >= index; i--) {
@@ -2223,7 +2226,8 @@ type DiffGroupContext = {
     newChildren: CustomElementOption[],
     dataIndex: number,
     seriesModel: CustomSeriesModel,
-    group: graphicUtil.Group
+    group: graphicUtil.Group,
+    morphPreparation: MorphPreparation
 };
 function diffGroupChildren(context: DiffGroupContext) {
     (new DataDiffer(
@@ -2260,7 +2264,7 @@ function processAddUpdate(
         context.seriesModel,
         context.group,
         false,
-        null
+        context.morphPreparation
     );
 }
 
@@ -2314,29 +2318,35 @@ class MorphPreparation {
     private _toElOptionList: CustomElementOption[] = [];
     private _allPropsFinalList: ElementProps[] = [];
     private _toDataIndices: number[] = [];
-    private _needAddFrom: boolean;
     private _preventAddTo: boolean;
+    private _metMorphOption: boolean;
+    needCheckFromSameEl: boolean;
 
     hasFrom(): boolean {
         return !!this._fromList.length;
     }
 
-    needAddFrom(): boolean {
-        return this._needAddFrom;
-    }
-
-    freezeFrom(): void {
-        this._needAddFrom = false;
+    getSingleFrom(): graphicUtil.Path {
+        return this._fromList[0];
     }
 
     addFrom(path: graphicUtil.Path): void {
-        if (__DEV__) {
-            assert(this._needAddFrom);
-        }
         path && this._fromList.push(path);
     }
 
+    meetMorphOption() {
+        let errMsg = '';
+        if (this._metMorphOption) {
+            if (__DEV__) {
+                errMsg = 'Only one "morph" allowed in each `renderItem` return.';
+            }
+            throwError(errMsg);
+        }
+        this._metMorphOption = true;
+    }
+
     enableNextAddTo(): void {
+        this._metMorphOption = false;
         this._preventAddTo = false;
     }
 
@@ -2374,7 +2384,7 @@ class MorphPreparation {
             return;
         }
         const elAnimationConfig = prepareMorphElementAnimateConfig(seriesModel, toDataIndices[0], transOpt);
-        const shouldMorph = !!elAnimationConfig.duration;
+        const morphDuration = !!elAnimationConfig.duration;
 
         // [MORPHING_LOGIC_HINT]
         // Pay attention to the order:
@@ -2408,14 +2418,21 @@ class MorphPreparation {
             const allPropsFinal = allPropsFinalList[0];
 
             if (!isCombiningPath(from)) {
+                const shouldMorph = morphDuration
+                    // from === to usually happen in scenarios where internal update like
+                    // "dataZoom", "legendToggle" happen. If from is not in any morphing,
+                    // we do not need to call `morphPath`.
+                    && (from !== to || isInAnyMorphing(from));
+                const morphFrom = shouldMorph ? from : null;
+
                 // See [Case_II] above.
                 // In this case, there is probably `from === to`. And the `transitionFromProps` collecting
                 // does not depends on morphing. So we collect `transitionFromProps` first.
                 const transFromProps = {} as ElementProps;
-                prepareShapeOrExtraTransitionFrom('shape', to, from, toElOption, transFromProps, false);
-                prepareShapeOrExtraTransitionFrom('extra', to, from, toElOption, transFromProps, false);
-                prepareTransformTransitionFrom(to, from, toElOption, transFromProps, false);
-                prepareStyleTransitionFrom(to, from, toElOption, toElOption.style, transFromProps, false);
+                prepareShapeOrExtraTransitionFrom('shape', to, morphFrom, toElOption, transFromProps, false);
+                prepareShapeOrExtraTransitionFrom('extra', to, morphFrom, toElOption, transFromProps, false);
+                prepareTransformTransitionFrom(to, morphFrom, toElOption, transFromProps, false);
+                prepareStyleTransitionFrom(to, morphFrom, toElOption, toElOption.style, transFromProps, false);
 
                 applyPropsFinal(to, allPropsFinal, toElOption.style);
 
@@ -2427,7 +2444,7 @@ class MorphPreparation {
             else {
                 applyPropsFinal(to, allPropsFinal, toElOption.style);
 
-                if (shouldMorph) {
+                if (morphDuration) {
                     const combineResult = combine([from], to, elAnimationConfig, copyPropsWhenDivided);
                     processCombineSeparateIndividuals(
                         'combine', combineResult, seriesModel, toElOption, toDataIndex
@@ -2446,7 +2463,7 @@ class MorphPreparation {
 
             applyPropsFinal(to, allPropsFinal, toElOption.style);
 
-            if (shouldMorph) {
+            if (morphDuration) {
                 const combineResult = combine(fromList, to, elAnimationConfig, copyPropsWhenDivided);
                 processCombineSeparateIndividuals(
                     'combine', combineResult, seriesModel, toElOption, toDataIndex
@@ -2459,7 +2476,7 @@ class MorphPreparation {
             for (let i = 0; i < toList.length; i++) {
                 applyPropsFinal(toList[i], allPropsFinalList[i], toElOptionList[i].style);
             }
-            if (shouldMorph) {
+            if (morphDuration) {
                 const separateResult = separate(from, toList, elAnimationConfig, copyPropsWhenDivided);
                 processCombineSeparateIndividuals(
                     'separate', separateResult, seriesModel, toElOptionList, toDataIndices
@@ -2470,8 +2487,9 @@ class MorphPreparation {
     }
 
     reset(): void {
-        this._needAddFrom = true;
         this._preventAddTo = true;
+        this.needCheckFromSameEl = false;
+        this._metMorphOption = false;
         this._fromList.length =
             this._toList.length =
             this._toElOptionList.length =
