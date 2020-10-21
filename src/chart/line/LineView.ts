@@ -171,7 +171,7 @@ function turnPointsIntoStep(
                 stepPt[1 - baseIndex] = pt[1 - baseIndex];
                 stepPt2[1 - baseIndex] = nextPt[1 - baseIndex];
                 stepPoints.push(stepPt[0], stepPt[1]);
-                stepPoints.push(stepPt2[0], stepPt[1]);
+                stepPoints.push(stepPt2[0], stepPt2[1]);
                 break;
             default:
                 // default is start
