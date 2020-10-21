@@ -38,7 +38,7 @@ import CoordinateSystemManager from '../../CoordinateSystem';
 import {ParsedModelFinder, SINGLE_REFERRING} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
-import GridModel, {defaultGridLayoutWithoutLabel, defaultGridLayoutWithLabel} from './GridModel';
+import GridModel from './GridModel';
 import CartesianAxisModel from './AxisModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';

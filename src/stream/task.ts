@@ -23,6 +23,7 @@ import { Pipeline } from './Scheduler';
 import { Payload } from '../util/types';
 import List from '../data/List';
 
+
 export interface TaskContext {
     outputData?: List;
     data?: List;
@@ -183,7 +184,6 @@ export class Task<Ctx extends TaskContext> {
         const step = performArgs && performArgs.step;
 
         if (upTask) {
-
             if (__DEV__) {
                 assert(upTask._outputDueEnd != null);
             }
@@ -386,16 +386,18 @@ const iterator: TaskDataIterator = (function () {
 
 ///////////////////////////////////////////////////////////
 // For stream debug (Should be commented out after used!)
-// Usage: printTask(this, 'begin');
-// Usage: printTask(this, null, {someExtraProp});
-// function printTask(task, prefix, extra) {
+// @usage: printTask(this, 'begin');
+// @usage: printTask(this, null, {someExtraProp});
+// @usage: Use `__idxInPipeline` as conditional breakpiont.
+//
+// window.printTask = function (task: any, prefix: string, extra: { [key: string]: unknown }): void {
 //     window.ecTaskUID == null && (window.ecTaskUID = 0);
 //     task.uidDebug == null && (task.uidDebug = `task_${window.ecTaskUID++}`);
 //     task.agent && task.agent.uidDebug == null && (task.agent.uidDebug = `task_${window.ecTaskUID++}`);
 //     let props = [];
 //     if (task.__pipeline) {
 //         let val = `${task.__idxInPipeline}/${task.__pipeline.tail.__idxInPipeline} ${task.agent ? '(stub)' : ''}`;
-//         props.push({text: 'idx', value: val});
+//         props.push({text: '__idxInPipeline/total', value: val});
 //     } else {
 //         let stubCount = 0;
 //         task.agentStubMap.each(() => stubCount++);
@@ -403,7 +405,7 @@ const iterator: TaskDataIterator = (function () {
 //     }
 //     props.push({text: 'uid', value: task.uidDebug});
 //     if (task.__pipeline) {
-//         props.push({text: 'pid', value: task.__pipeline.id});
+//         props.push({text: 'pipelineId', value: task.__pipeline.id});
 //         task.agent && props.push(
 //             {text: 'stubFor', value: task.agent.uidDebug}
 //         );
@@ -421,9 +423,48 @@ const iterator: TaskDataIterator = (function () {
 //     }
 //     let args = ['color: blue'];
 //     let msg = `%c[${prefix || 'T'}] %c` + props.map(item => (
-//         args.push('color: black', 'color: red'),
+//         args.push('color: green', 'color: red'),
 //         `${item.text}: %c${item.value}`
 //     )).join('%c, ');
 //     console.log.apply(console, [msg].concat(args));
 //     // console.log(this);
-// }
+// };
+// window.printPipeline = function (task: any, prefix: string) {
+//     const pipeline = task.__pipeline;
+//     let currTask = pipeline.head;
+//     while (currTask) {
+//         window.printTask(currTask, prefix);
+//         currTask = currTask._downstream;
+//     }
+// };
+// window.showChain = function (chainHeadTask) {
+//     var chain = [];
+//     var task = chainHeadTask;
+//     while (task) {
+//         chain.push({
+//             task: task,
+//             up: task._upstream,
+//             down: task._downstream,
+//             idxInPipeline: task.__idxInPipeline
+//         });
+//         task = task._downstream;
+//     }
+//     return chain;
+// };
+// window.findTaskInChain = function (task, chainHeadTask) {
+//     let chain = window.showChain(chainHeadTask);
+//     let result = [];
+//     for (let i = 0; i < chain.length; i++) {
+//         let chainItem = chain[i];
+//         if (chainItem.task === task) {
+//             result.push(i);
+//         }
+//     }
+//     return result;
+// };
+// window.printChainAEachInChainB = function (chainHeadTaskA, chainHeadTaskB) {
+//     let chainA = window.showChain(chainHeadTaskA);
+//     for (let i = 0; i < chainA.length; i++) {
+//         console.log('chainAIdx:', i, 'inChainB:', window.findTaskInChain(chainA[i].task, chainHeadTaskB));
+//     }
+// };

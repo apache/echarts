@@ -39,10 +39,17 @@ import {
 import List from '../List';
 
 export interface DataProvider {
-    // If data is pure without style configuration
-    pure: boolean;
-    // If data is persistent and will not be released after use.
-    persistent: boolean;
+    /**
+     * true: all of the value are in primitive type (in type `OptionDataValue`).
+     * false: Not sure whether any of them is non primitive type (in type `OptionDataItemObject`).
+     *     Like `data: [ { value: xx, itemStyle: {...} }, ...]`
+     *     At present it only happen in `SOURCE_FORMAT_ORIGINAL`.
+     */
+    pure?: boolean;
+    /**
+     * If data is persistent and will not be released after use.
+     */
+    persistent?: boolean;
 
     getSource(): Source;
     count(): number;
@@ -53,8 +60,8 @@ export interface DataProvider {
         out: ArrayLike<ParsedValue>[],
         extent: number[][]
     ): void
-    appendData(newData: ArrayLike<OptionDataItem>): void;
-    clean(): void;
+    appendData?(newData: ArrayLike<OptionDataItem>): void;
+    clean?(): void;
 }
 
 

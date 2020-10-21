@@ -63,7 +63,6 @@ import { applyDataTransform } from './transform';
  * }, {
  *     transform: { type: 'filter', ... }
  * }]
- *
  * dataset: [{
  *     dimension: ['Product', 'Sales', 'Prise'],
  *     source: [ ['Cookies', 321, 44.21], ...]
@@ -213,10 +212,10 @@ export class SourceManager {
             }
 
             // See [REQUIREMENT_MEMO], merge settings on series and parent dataset if it is root.
-            const thisMetaRawOption = inheritSourceMetaRawOption({
-                parent: upSource ? upSource.metaRawOption : null,
-                thisNew: this._createSourceMetaRawOption()
-            });
+            const thisMetaRawOption = inheritSourceMetaRawOption(
+                upSource,
+                this._getSourceMetaRawOption()
+            );
 
             resultSourceList = [createSource(
                 data,
@@ -239,7 +238,7 @@ export class SourceManager {
                 const sourceData = datasetModel.get('source', true);
                 resultSourceList = [createSource(
                     sourceData,
-                    this._createSourceMetaRawOption(),
+                    this._getSourceMetaRawOption(),
                     null,
                     // Note: dataset option does not have `encode`.
                     null
@@ -361,7 +360,7 @@ export class SourceManager {
         }
     }
 
-    private _createSourceMetaRawOption(): SourceMetaRawOption {
+    private _getSourceMetaRawOption(): SourceMetaRawOption {
         const sourceHost = this._sourceHost;
         let seriesLayoutBy: SeriesLayoutBy;
         let sourceHeader: OptionSourceHeader;

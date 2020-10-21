@@ -396,7 +396,17 @@ function animateOrSetProps<Props>(
                         during: during
                     })
             )
-            : (el.stopAnimation(), el.attr(props), cb && (cb as AnimateOrSetPropsOption['cb'])());
+            // FIXME:
+            // If `duration` is 0, only the animation on props
+            // can be stoped, other animation should be continued?
+            // But at present using duration 0 in `animateTo`, `animateFrom`
+            // might cause unexpected behavior.
+            : (
+                el.stopAnimation(),
+                // If `isFrom`, the props is the "from" props.
+                !isFrom && el.attr(props),
+                cb && (cb as AnimateOrSetPropsOption['cb'])()
+            );
     }
     else {
         el.stopAnimation();

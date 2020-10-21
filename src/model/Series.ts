@@ -23,7 +23,7 @@ import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
     SeriesOption, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType
+    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType, DimensionLoose
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {ColorPaletteMixin} from './mixin/colorPalette';
@@ -47,6 +47,7 @@ import makeStyleMapper from './mixin/makeStyleMapper';
 import { SourceManager } from '../data/helper/sourceManager';
 import { Source } from '../data/Source';
 import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatTooltip';
+import { MorphDividingMethod } from 'zrender/src/tool/morphPath';
 
 const inner = modelUtil.makeInner<{
     data: List
@@ -129,6 +130,18 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     dataTask: SeriesTask;
     // Injected outside
     pipelineContext: PipelineContext;
+
+    // only avalible in `render()` caused by `setOption`.
+    __transientTransitionOpt: {
+        // [MEMO] Currently only support single "from". If intending to
+        // support multiple "from", if not hard to implement "merge morph",
+        // but correspondingly not easy to implement "split morph".
+
+        // Both from and to can be null/undefined, which meams no transform mapping.
+        from: DimensionLoose;
+        to: DimensionLoose;
+        dividingMethod: MorphDividingMethod;
+    };
 
     // ---------------------------------------
     // Props to tell visual/style.ts about how to do visual encoding.

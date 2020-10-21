@@ -27,7 +27,9 @@ import {
     assert,
     isString,
     indexOf,
-    isStringSafe
+    isStringSafe,
+    hasOwn,
+    defaults
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import GlobalModel from '../model/Global';
@@ -537,6 +539,9 @@ function makeComparableKey(val: unknown): string {
 }
 
 export function convertOptionIdName(idOrName: unknown, defaultValue: string): string {
+    if (idOrName == null) {
+        return defaultValue;
+    }
     const type = typeof idOrName;
     return type === 'string'
         ? idOrName as string
@@ -547,7 +552,7 @@ export function convertOptionIdName(idOrName: unknown, defaultValue: string): st
 
 function warnInvalidateIdOrName(idOrName: unknown) {
     if (__DEV__) {
-            warn('`' + idOrName + '` is invalid id or name. Must be a string or number.');
+        warn('`' + idOrName + '` is invalid id or name. Must be a string or number.');
     }
 }
 
@@ -762,6 +767,7 @@ let innerUniqueIndex = getRandomIdBase();
 export type ModelFinderIndexQuery = number | number[] | 'all' | 'none' | false;
 export type ModelFinderIdQuery = OptionId | OptionId[];
 export type ModelFinderNameQuery = OptionId | OptionId[];
+// If string, like 'series', means { seriesIndex: 0 }.
 export type ModelFinder = string | ModelFinderObject;
 export type ModelFinderObject = {
     seriesIndex?: ModelFinderIndexQuery, seriesId?: ModelFinderIdQuery, seriesName?: ModelFinderNameQuery
@@ -807,9 +813,11 @@ export function parseFinder(
     finderInput: ModelFinder,
     opt?: {
         // If no main type specified, use this main type.
-        defaultMainType?: ComponentMainType,
+        defaultMainType?: ComponentMainType;
         // If pervided, types out of this list will be ignored.
-        includeMainTypes?: ComponentMainType[]
+        includeMainTypes?: ComponentMainType[];
+        enableAll?: boolean;
+        enableNone?: boolean;
     }
 ): ParsedModelFinder {
     let finder: ModelFinderObject;
@@ -862,9 +870,9 @@ export function parseFinder(
             mainType,
             queryOption,
             {
-                useDefault: mainType === defaultMainType,
-                enableAll: true,
-                enableNone: true
+                useDefault: defaultMainType === mainType,
+                enableAll: (opt && opt.enableAll != null) ? opt.enableAll : true,
+                enableNone: (opt && opt.enableNone != null) ? opt.enableNone : true
             }
         );
         result[mainType + 'Models'] = queryResult.models;
