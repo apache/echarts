@@ -20,7 +20,9 @@
 import {
     Dictionary, OptionSourceData, DimensionDefinitionLoose,
     SourceFormat, DimensionDefinition, OptionDataItem, DimensionIndex,
-    OptionDataValue, DimensionLoose, DimensionName, ParsedValue, SERIES_LAYOUT_BY_COLUMN, SOURCE_FORMAT_OBJECT_ROWS, SOURCE_FORMAT_ARRAY_ROWS, OptionSourceDataObjectRows, OptionSourceDataArrayRows
+    OptionDataValue, DimensionLoose, DimensionName, ParsedValue,
+    SERIES_LAYOUT_BY_COLUMN, SOURCE_FORMAT_OBJECT_ROWS, SOURCE_FORMAT_ARRAY_ROWS,
+    OptionSourceDataObjectRows, OptionSourceDataArrayRows
 } from '../../util/types';
 import { normalizeToArray } from '../../util/model';
 import {
@@ -35,7 +37,7 @@ import {
 import { parseDataValue } from './dataValueHelper';
 import { inheritSourceMetaRawOption } from './sourceHelper';
 import { consoleLog, makePrintable, throwError } from '../../util/log';
-import { createSource, Source, sourceFormatCanBeExposed } from '../Source';
+import { createSource, Source } from '../Source';
 
 
 export type PipedDataTransformOption = DataTransformOption[];
@@ -52,7 +54,7 @@ export interface DataTransformOption {
 export interface ExternalDataTransform<TO extends DataTransformOption = DataTransformOption> {
     // Must include namespace like: 'ecStat:regression'
     type: string;
-    __isBuiltIn: boolean;
+    __isBuiltIn?: boolean;
     transform: (
         param: ExternalDataTransformParam<TO>
     ) => ExternalDataTransformResultItem | ExternalDataTransformResultItem[];
