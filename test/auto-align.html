@@ -55,6 +55,8 @@ under the License.
     <div id="main10" class="chart"></div>
     <div id="main11" class="chart"></div>
     <div id="main14" class="chart"></div>
+    <div id="main15" class="chart"></div>
+    <div id="main16" class="chart"></div>
     <script>
         require([
             'echarts'
@@ -697,6 +699,80 @@ under the License.
                 title: [
                     'Axis auto align',
                     'One axis have minInterval'
+                ],
+                option: option
+            });
+
+            option = {
+                tooltip: {},
+                "xAxis": [{
+                    "data": ["test", 'test2', "test3", 'test4', "test5", 'test6', "test7"]
+                }],
+                "yAxis": [{
+                        "name": "A",
+                        maxInterval: 98
+                    },
+                    {
+                        "name": "B"
+                    }
+                ],
+                "series": [{
+                        "name": "A",
+                        "type": "bar",
+                        "data": [10, 2, 20, 33, 39, 33, 22],
+                        "yAxisIndex": 1
+                    },
+                    {
+                        "name": "B",
+                        "type": "bar",
+                        "data": [10, 52, 200, 334, 390, 330, 220],
+                        "yAxisIndex": 0
+                    }
+                ]
+            };
+           
+            chart = testHelper.create(echarts, 'main15', {
+                title: [
+                    'Axis auto align',
+                    'One axis have maxInterval'
+                ],
+                option: option
+            });
+        
+
+            option = {
+                tooltip: {},
+                "xAxis": [{
+                    "data": ["test", 'test2', "test3", 'test4', "test5", 'test6', "test7"]
+                }],
+                "yAxis": [{
+                        "name": "A",
+                        maxInterval: 98
+                    },
+                    {
+                        "name": "B",
+                        maxInterval: 7
+                    }
+                ],
+                "series": [{
+                        "name": "A",
+                        "type": "bar",
+                        "data": [10, 2, 20, 33, 39, 33, 22],
+                        "yAxisIndex": 1
+                    },
+                    {
+                        "name": "B",
+                        "type": "bar",
+                        "data": [10, 52, 200, 334, 390, 330, 220],
+                        "yAxisIndex": 0
+                    }
+                ]
+            };
+           
+            chart = testHelper.create(echarts, 'main16', {
+                title: [
+                    'Axis auto align',
+                    'Both axis have maxInterval'
                 ],
                 option: option
             });
