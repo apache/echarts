@@ -19,7 +19,7 @@
 
 import {
     isTypedArray, HashMap, clone, createHashMap, isArray, isObject, isArrayLike,
-    hasOwn, assert, each, map, isNumber, isString, isFunction
+    hasOwn, assert, each, map, isNumber, isString
 } from 'zrender/src/core/util';
 import {
     SourceFormat, SeriesLayoutBy, DimensionDefinition,
@@ -146,7 +146,7 @@ class SourceImpl {
      */
     readonly metaRawOption: SourceMetaRawOption;
 
-    readonly frozen: boolean;
+    // readonly frozen: boolean;
 
 
     constructor(fields: {
@@ -182,6 +182,9 @@ class SourceImpl {
         this.metaRawOption = fields.metaRawOption;
     }
 
+    // There is performance issue in some browser like Safari,
+    // an also slower than clone in Chrome.
+    // So DO NOT use `Object.freeze`.
     /**
      * When expose the source to thrid-party transform, it probably better to
      * freeze to make sure immutability.
@@ -193,23 +196,22 @@ class SourceImpl {
      * The original user input object should better not be frozen in case they
      * make other usages.
      */
-    freeze() {
-        assert(sourceFormatCanBeExposed(this));
-
-        const data = this.data as OptionSourceDataArrayRows;
-        if (this.frozen || !data || !isFunction(Object.freeze)) {
-            return;
-        }
-        // @ts-ignore
-        this.frozen = true;
-        // PENDING:
-        // There is a flaw that there might be non-primitive values like `Date`.
-        // Is it worth handling that?
-        for (let i = 0; i < data.length; i++) {
-            Object.freeze(data[i]);
-        }
-        Object.freeze(data);
-    }
+    // freeze() {
+    //     assert(sourceFormatCanBeExposed(this));
+    //     const data = this.data as OptionSourceDataArrayRows;
+    //     if (this.frozen || !data || !isFunction(Object.freeze)) {
+    //         return;
+    //     }
+    //     // @ts-ignore
+    //     this.frozen = true;
+    //     // PENDING:
+    //     // There is a flaw that there might be non-primitive values like `Date`.
+    //     // Is it worth handling that?
+    //     for (let i = 0; i < data.length; i++) {
+    //         Object.freeze(data[i]);
+    //     }
+    //     Object.freeze(data);
+    // }
 
 }
 
@@ -274,15 +276,6 @@ export function cloneSourceShallow(source: Source): Source {
         dimensionsDetectedCount: source.dimensionsDetectedCount,
         encodeDefine: makeEncodeDefine(source.encodeDefine)
     });
-}
-
-export function sourceFormatCanBeExposed(source: Source): boolean {
-    const sourceFormat = source.sourceFormat;
-    const data = source.data;
-    return sourceFormat === SOURCE_FORMAT_ARRAY_ROWS
-        || sourceFormat === SOURCE_FORMAT_OBJECT_ROWS
-        || !data
-        || (isArray(data) && !data.length);
 }
 
 function makeEncodeDefine(

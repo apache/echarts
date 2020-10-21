@@ -67,8 +67,10 @@
             var dimsDef = upstream.cloneAllDimensionInfo();
             dimsDef[dimensionIndex] = dimensionName;
 
-            for (var i = 0, len = upstream.count(); i < len; i++) {
-                var line = upstream.getRawDataItem(i);
+            var data = upstream.cloneRawData();
+
+            for (var i = 0, len = data.length; i < len; i++) {
+                var line = data[i];
                 line[dimensionIndex] = i;
             }
 

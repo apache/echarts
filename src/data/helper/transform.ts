@@ -20,12 +20,14 @@
 import {
     Dictionary, OptionSourceData, DimensionDefinitionLoose,
     SourceFormat, DimensionDefinition, OptionDataItem, DimensionIndex,
-    OptionDataValue, DimensionLoose, DimensionName, ParsedValue, SERIES_LAYOUT_BY_COLUMN
+    OptionDataValue, DimensionLoose, DimensionName, ParsedValue, SERIES_LAYOUT_BY_COLUMN, SOURCE_FORMAT_OBJECT_ROWS, SOURCE_FORMAT_ARRAY_ROWS, OptionSourceDataObjectRows, OptionSourceDataArrayRows
 } from '../../util/types';
 import { normalizeToArray } from '../../util/model';
 import {
     createHashMap, bind, each, hasOwn, map, clone, isObject,
-    isArrayLike
+    isArrayLike,
+    extend,
+    isArray
 } from 'zrender/src/core/util';
 import {
     getRawSourceItemGetter, getRawSourceDataCounter, getRawSourceValueGetter
@@ -50,6 +52,7 @@ export interface DataTransformOption {
 export interface ExternalDataTransform<TO extends DataTransformOption = DataTransformOption> {
     // Must include namespace like: 'ecStat:regression'
     type: string;
+    __isBuiltIn: boolean;
     transform: (
         param: ExternalDataTransformParam<TO>
     ) => ExternalDataTransformResultItem | ExternalDataTransformResultItem[];
@@ -101,10 +104,16 @@ export class ExternalSource {
     sourceFormat: SourceFormat;
 
     getRawData(): Source['data'] {
-        return;
+        // Only built-in transform available.
+        throw new Error('not supported');
     }
 
     getRawDataItem(dataIndex: number): OptionDataItem {
+        // Only built-in transform available.
+        throw new Error('not supported');
+    }
+
+    cloneRawData(): Source['data'] {
         return;
     }
 
@@ -206,12 +215,14 @@ function createExternalSource(internalSource: Source, externalTransform: Externa
 
     // Implement public methods:
     const rawItemGetter = getRawSourceItemGetter(sourceFormat, SERIES_LAYOUT_BY_COLUMN);
-    extSource.getRawDataItem = function (dataIndex) {
-        !internalSource.frozen && (internalSource.freeze());
-        return rawItemGetter(data, sourceHeaderCount, dimensions, dataIndex);
-    };
+    if (externalTransform.__isBuiltIn) {
+        extSource.getRawDataItem = function (dataIndex) {
+            return rawItemGetter(data, sourceHeaderCount, dimensions, dataIndex);
+        };
+        extSource.getRawData = bind(getRawData, null, internalSource);
+    }
 
-    extSource.getRawData = bind(getRawData, null, internalSource);
+    extSource.cloneRawData = bind(cloneRawData, null, internalSource);
 
     const rawCounter = getRawSourceDataCounter(sourceFormat, SERIES_LAYOUT_BY_COLUMN);
     extSource.count = bind(rawCounter, null, data, sourceHeaderCount, dimensions);
@@ -239,18 +250,50 @@ function createExternalSource(internalSource: Source, externalTransform: Externa
 }
 
 function getRawData(upstream: Source): Source['data'] {
-    let errMsg = '';
     const sourceFormat = upstream.sourceFormat;
-    const upstreamData = upstream.data;
-    if (!sourceFormatCanBeExposed(upstream)) {
-        if (__DEV__) {
-            errMsg = '`getRawData` is not supported in source format ' + sourceFormat;
-        }
-        throwError(errMsg);
+    const data = upstream.data;
+
+    if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS
+        || sourceFormat === SOURCE_FORMAT_OBJECT_ROWS
+        || !data
+        || (isArray(data) && !data.length)
+    ) {
+        return upstream.data;
     }
 
-    upstream.freeze();
-    return upstreamData;
+    let errMsg = '';
+    if (__DEV__) {
+        errMsg = '`getRawData` is not supported in source format ' + sourceFormat;
+    }
+    throwError(errMsg);
+}
+
+function cloneRawData(upstream: Source): Source['data'] {
+    const sourceFormat = upstream.sourceFormat;
+    const data = upstream.data;
+
+    if (!data) {
+        return data;
+    }
+    else if (isArray(data) && !data.length) {
+        return [];
+    }
+    else if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
+        const result = [];
+        for (let i = 0, len = data.length; i < len; i++) {
+            // Not strictly clone for performance
+            result.push((data as OptionSourceDataArrayRows)[i].slice());
+        }
+        return result;
+    }
+    else if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS) {
+        const result = [];
+        for (let i = 0, len = data.length; i < len; i++) {
+            // Not strictly clone for performance
+            result.push(extend({}, (data as OptionSourceDataObjectRows)[i]));
+        }
+        return result;
+    }
 }
 
 function getDimensionInfo(
@@ -301,9 +344,12 @@ export function registerExternalTransform(
     }
     // Namespace 'echarts:xxx' is official namespace, where the transforms should
     // be called directly via 'xxx' rather than 'echarts:xxx'.
+    let isBuiltIn = false;
     if (typeParsed[0] === 'echarts') {
         type = typeParsed[1];
+        isBuiltIn = true;
     }
+    externalTransform.__isBuiltIn = isBuiltIn;
     externalTransformMap.set(type, externalTransform);
 }
 
