@@ -1,3 +1,4 @@
+import { AriaOption } from './../component/aria';
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -452,7 +453,7 @@ export type ECUnitOption = {
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
     stateAnimation?: AnimationOption
-} & AnimationOptionMixin & ColorPaletteOptionMixin;
+} & AnimationOptionMixin & ColorPaletteOptionMixin & AriaOptionMixin;
 
 /**
  * [ECOption]:
@@ -656,6 +657,10 @@ export interface PaletteOptionMixin {
 export interface ColorPaletteOptionMixin {
     color?: ZRColor | ZRColor[]
     colorLayer?: ZRColor[][]
+}
+
+export interface AriaOptionMixin {
+    aria?: AriaOption
 }
 
 /**

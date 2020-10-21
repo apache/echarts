@@ -25,9 +25,25 @@ import Model from '../model/Model';
 import {AriaOption} from '../component/aria';
 import {TitleOption} from '../component/title';
 
+const defaultOption: AriaOption = {
+    enabled: true,
+    label: {
+        enabled: true
+    },
+    decal: {
+        show: false
+    }
+};
+
 export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     const ariaModel: Model<AriaOption> = ecModel.getModel('aria');
-    if (ariaModel.get('show') === false) {
+
+    if (ariaModel.option) {
+        const labelLocale = ecModel.getLocale('aria' as any);
+        defaultOption.label = zrUtil.defaults(labelLocale, defaultOption.label);
+        ariaModel.option = zrUtil.defaults(ariaModel.option, defaultOption);
+    }
+    if (!ariaModel.get('enabled')) {
         return;
     }
 
@@ -78,19 +94,11 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     }
 
     function setLabel() {
-        const labelModel = ariaModel.getModel('label') || ariaModel;
-        // Label enabled default: true
-        let labelEnabled = labelModel.get('enabled');
-        if (labelEnabled == null) {
-            const show = labelModel.get('show');
-            if (show == null) {
-                labelEnabled = true;
-            }
-            else {
-                labelEnabled = show;
-            }
-        }
-        if (!labelEnabled) {
+        const labelLocale = ecModel.getLocale('aria' as any);
+        const labelModel = ariaModel.getModel('label');
+        labelModel.option = zrUtil.defaults(labelModel.option, labelLocale);
+
+        if (!labelModel.get('enabled')) {
             return;
         }
 
@@ -113,30 +121,30 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
         else {
             const title = getTitle();
             if (title) {
-                ariaLabel = replace(getConfig(labelModel, 'general.withTitle'), {
+                const withTitle = labelModel.get(['general', 'withTitle']);
+                ariaLabel = replace(withTitle, {
                     title: title
                 });
             }
             else {
-                ariaLabel = getConfig(labelModel, 'general.withoutTitle');
+                ariaLabel = labelModel.get(['general', 'withoutTitle']);
             }
 
             const seriesLabels: string[] = [];
             const prefix = seriesCnt > 1
-                ? 'series.multiple.prefix'
-                : 'series.single.prefix';
-            ariaLabel += replace(getConfig(labelModel, prefix), { seriesCount: seriesCnt });
+                ? labelModel.get(['series', 'multiple', 'prefix'])
+                : labelModel.get(['series', 'single', 'prefix']);
+            ariaLabel += replace(prefix, { seriesCount: seriesCnt });
 
             ecModel.eachSeries(function (seriesModel, idx) {
                 if (idx < displaySeriesCnt) {
                     let seriesLabel;
 
                     const seriesName = seriesModel.get('name');
-                    const seriesTpl = 'series.'
-                        + (seriesCnt > 1 ? 'multiple' : 'single') + '.';
-                    seriesLabel = getConfig(labelModel, seriesName
-                        ? seriesTpl + 'withName'
-                        : seriesTpl + 'withoutName');
+                    const withName = seriesName ? 'withName' : 'withoutName';
+                    seriesLabel = seriesCnt > 1
+                        ? labelModel.get(['series', 'multiple', withName])
+                        : labelModel.get(['series', 'single', withName]);
 
                     seriesLabel = replace(seriesLabel, {
                         seriesId: seriesModel.seriesIndex,
@@ -145,15 +153,15 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                     });
 
                     const data = seriesModel.getData();
-                    (window as any).data = data;
                     if (data.count() > maxDataCnt) {
                         // Show part of data
-                        seriesLabel += replace(getConfig(labelModel, 'data.partialData'), {
+                        const partialLabel = labelModel.get(['data', 'partialData']);
+                        seriesLabel += replace(partialLabel, {
                             displayCnt: maxDataCnt
                         });
                     }
                     else {
-                        seriesLabel += getConfig(labelModel, 'data.allData');
+                        seriesLabel += labelModel.get(['data', 'allData']);
                     }
 
                     const dataLabels = [];
@@ -161,30 +169,26 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                         if (i < maxDataCnt) {
                             const name = data.getName(i);
                             const value = retrieveRawValue(data, i);
+                            const dataLabel = labelModel.get(['data', name ? 'withName' : 'withoutName']);
                             dataLabels.push(
-                                replace(
-                                    name
-                                        ? getConfig(labelModel, 'data.withName')
-                                        : getConfig(labelModel, 'data.withoutName'),
-                                    {
-                                        name: name,
-                                        value: value
-                                    }
-                                )
+                                replace(dataLabel, {
+                                    name: name,
+                                    value: value
+                                })
                             );
                         }
                     }
-                    seriesLabel += dataLabels
-                        .join(getConfig(labelModel, 'data.separator.middle'))
-                        + getConfig(labelModel, 'data.separator.end');
+                    const middleSeparator = labelModel.get(['data', 'separator', 'middle']);
+                    const endSeparator = labelModel.get(['data', 'separator', 'end']);
+                    seriesLabel += dataLabels.join(middleSeparator) + endSeparator;
 
                     seriesLabels.push(seriesLabel);
                 }
             });
 
-            ariaLabel += seriesLabels
-                .join(getConfig(labelModel, 'series.multiple.separator.middle'))
-                + getConfig(labelModel, 'series.multiple.separator.end');
+            const middleSeparator = labelModel.get(['series', 'multiple', 'separator', 'middle'] as any);
+            const endSeparator = labelModel.get(['series', 'multiple', 'separator', 'end'] as any);
+            ariaLabel += seriesLabels.join(middleSeparator) + endSeparator;
 
             dom.setAttribute('aria-label', ariaLabel);
         }
@@ -203,22 +207,6 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
             );
         });
         return result;
-    }
-
-    function getConfig(model: Model, path: string) {
-        const userConfig = model.get(path);
-        if (userConfig == null) {
-            const pathArr = path.split('.');
-            // FIXME: remove as any
-            let result = ecModel.getLocale('aria' as any);
-            for (let i = 0; i < pathArr.length; ++i) {
-                result = result[pathArr[i]];
-            }
-            return result;
-        }
-        else {
-            return userConfig;
-        }
     }
 
     function getTitle() {

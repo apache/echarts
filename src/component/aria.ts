@@ -19,12 +19,12 @@
 
 import * as echarts from '../echarts';
 import ariaVisual from '../visual/aria';
+import ariaPreprocessor from './aria/preprocessor';
 
 const PRIORITY_VISUAL_ARIA = echarts.PRIORITY.VISUAL.ARIA;
 
 export interface AriaLabelOption {
     enabled?: boolean;
-    show?: boolean; // @deprecated use enabled instead
     description?: string;
     general?: {
         withTitle?: string;
@@ -63,11 +63,11 @@ export interface AriaLabelOption {
 // Extending is for compating ECharts 4
 export interface AriaOption extends AriaLabelOption {
     enabled?: boolean;
-    show?: boolean; // @deprecated use enabled instead
     label?: AriaLabelOption;
     decal?: {
         show?: boolean;
     }
 }
 
+echarts.registerPreprocessor(ariaPreprocessor);
 echarts.registerVisual(PRIORITY_VISUAL_ARIA, ariaVisual);
