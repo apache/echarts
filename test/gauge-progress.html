@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
+        <div id="main6"></div>
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            var option0 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        pointer: {
+                            icon: 'path://M2090.36389,615.30999 L2090.36389,615.30999 C2091.48372,615.30999 2092.40383,616.194028 2092.44859,617.312956 L2096.90698,728.755929 C2097.05155,732.369577 2094.2393,735.416212 2090.62566,735.56078 C2090.53845,735.564269 2090.45117,735.566014 2090.36389,735.566014 L2090.36389,735.566014 C2086.74736,735.566014 2083.81557,732.63423 2083.81557,729.017692 C2083.81557,728.930412 2083.81732,728.84314 2083.82081,728.755929 L2088.2792,617.312956 C2088.32396,616.194028 2089.24407,615.30999 2090.36389,615.30999 Z'
+                        },
+                        progress: {
+                            show: true,            // 坐标轴线
+                        },
+                        data: [
+                            {value: 20, name: '完成率'}
+                        ],
+                        detail: {
+                            formatter: '{value}%'
+                        },
+                    }
+                ]
+            };
+            var chart0 = testHelper.create(echarts, 'main0', {
+                title: [
+                    'axisLine.roundCap: false, progress.roundCap: false, data.length: 1'
+                ],
+                option: option0
+            });
+            setInterval(function () {
+                option0.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
+                chart0.setOption(option0, true);
+            }, 2000);
+
+            var option1 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        pointer: {
+                            icon: 'path://M2090.36389,615.30999 L2090.36389,615.30999 C2091.48372,615.30999 2092.40383,616.194028 2092.44859,617.312956 L2096.90698,728.755929 C2097.05155,732.369577 2094.2393,735.416212 2090.62566,735.56078 C2090.53845,735.564269 2090.45117,735.566014 2090.36389,735.566014 L2090.36389,735.566014 C2086.74736,735.566014 2083.81557,732.63423 2083.81557,729.017692 C2083.81557,728.930412 2083.81732,728.84314 2083.82081,728.755929 L2088.2792,617.312956 C2088.32396,616.194028 2089.24407,615.30999 2090.36389,615.30999 Z'
+                        },
+                        progress: {
+                            show: true,            // 坐标轴线
+                            roundCap: true
+                        },
+                        axisLine: {
+                            roundCap: true
+                        },
+                        data: [
+                            {value: 20, name: '完成率'}
+                        ],
+                        detail: {
+                            formatter: '{value}%'
+                        },
+                    }
+                ]
+            };
+            var chart1 = testHelper.create(echarts, 'main1', {
+                title: [
+                    'axisLine.roundCap: true, progress.roundCap: true, data.length: 1'
+                ],
+                option: option1
+            });
+            setInterval(function () {
+                option1.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
+                chart1.setOption(option1, true);
+            }, 2000);
+
+
+            var option2 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        pointer: {
+                            icon: 'path://M2090.36389,615.30999 L2090.36389,615.30999 C2091.48372,615.30999 2092.40383,616.194028 2092.44859,617.312956 L2096.90698,728.755929 C2097.05155,732.369577 2094.2393,735.416212 2090.62566,735.56078 C2090.53845,735.564269 2090.45117,735.566014 2090.36389,735.566014 L2090.36389,735.566014 C2086.74736,735.566014 2083.81557,732.63423 2083.81557,729.017692 C2083.81557,728.930412 2083.81732,728.84314 2083.82081,728.755929 L2088.2792,617.312956 C2088.32396,616.194028 2089.24407,615.30999 2090.36389,615.30999 Z'
+                        },
+                        progress: {
+                            show: true,            // 坐标轴线
+                            overlap: true,
+                            roundCap: true
+                        },
+                        axisLine: {
+                            roundCap: true
+                        },
+                        data: [
+                            {value: 20, name: '完成率'},
+                            {value: 40, name: '达标率'},
+                            {value: 60, name: '优秀率'}
+                        ],
+                        title: {
+                            show: false
+                        },
+                        detail: {
+                            show: false,
+                            formatter: '{value}%'
+                        },
+                    }
+                ]
+            };
+            var chart2 = testHelper.create(echarts, 'main2', {
+                title: [
+                    'axisLine.roundCap: true, progress.roundCap: true, overlap: true, data.length: 3, detail.show: false'
+                ],
+                option: option2
+            });
+            setInterval(function () {
+                option2.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
+                option2.series[0].data[1].value = (Math.random() * 100).toFixed(2) - 0;
+                option2.series[0].data[2].value = (Math.random() * 100).toFixed(2) - 0;
+                chart2.setOption(option2, true);
+            }, 2000);
+
+
+            var option3 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        progress: {
+                            show: true,            // 坐标轴线
+                            overlap: false,
+                            roundCap: true
+                        },
+                        data: [
+                            {value: 20, name: '完成率'},
+                            {value: 40, name: '达标率'},
+                            {value: 60, name: '优秀率'}
+                        ],
+                        title: {
+                            show: false
+                        },
+                        detail: {
+                            show: false,
+                            formatter: '{value}%'
+                        },
+                    }
+                ]
+            };
+            var chart3 = testHelper.create(echarts, 'main3', {
+                title: [
+                    'axisLine.roundCap: false, progress.roundCap: true, overlap: false, data.length: 3, detail.show: false'
+                ],
+                option: option3
+            });
+            setInterval(function () {
+                option3.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
+                option3.series[0].data[1].value = (Math.random() * 100).toFixed(2) - 0;
+                option3.series[0].data[2].value = (Math.random() * 100).toFixed(2) - 0;
+                chart3.setOption(option3, true);
+            }, 2000);
+
+
+            var option4 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        pointer: {
+                            icon: 'path://M2090.36389,615.30999 L2090.36389,615.30999 C2091.48372,615.30999 2092.40383,616.194028 2092.44859,617.312956 L2096.90698,728.755929 C2097.05155,732.369577 2094.2393,735.416212 2090.62566,735.56078 C2090.53845,735.564269 2090.45117,735.566014 2090.36389,735.566014 L2090.36389,735.566014 C2086.74736,735.566014 2083.81557,732.63423 2083.81557,729.017692 C2083.81557,728.930412 2083.81732,728.84314 2083.82081,728.755929 L2088.2792,617.312956 C2088.32396,616.194028 2089.24407,615.30999 2090.36389,615.30999 Z'
+                        },
+                        progress: {
+                            show: true,            // 坐标轴线
+                            overlap: false,
+                            roundCap: true
+                        },
+                        axisLine: {
+                            roundCap: true
+                        },
+                        data: [
+                            {value: 20, name: '完成率'},
+                            {value: 40, name: '达标率'},
+                            {value: 60, name: '优秀率'}
+                        ],
+                        title: {
+                            show: false
+                        },
+                        detail: {
+                            show: false,
+                            formatter: '{value}%'
+                        },
+                    }
+                ]
+            };
+            var chart4 = testHelper.create(echarts, 'main4', {
+                title: [
+                    'axisLine.roundCap: true, progress.roundCap: true, overlap: false, data.length: 3, detail.show: false, title.show: false'
+                ],
+                option: option4
+            });
+            setInterval(function () {
+                option4.series[0].pointer.show = false;
+                option4.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
+                option4.series[0].data[1].value = (Math.random() * 100).toFixed(2) - 0;
+                option4.series[0].data[2].value = (Math.random() * 100).toFixed(2) - 0;
+                chart4.setOption(option4, true);
+            }, 2000);
+
+
+            var option5 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        startAngle: 90,
+                        endAngle: -270,
+                        pointer: {
+                            show: false
+                        },
+                        progress: {
+                            show: true,
+                            clip: false,
+                            roundCap: true,
+                            itemStyle: {
+                                color: '#ff9933',
+                                borderColor: '#7e0023',
+                                borderWidth: 1
+                            }
+                        },
+                        data: [
+                            {value: 120, name: '本月跑步'}
+                        ],
+                        detail: {
+                            formatter: '{value} km'
+                        },
+                    }
+                ]
+            };
+            var chart5 = testHelper.create(echarts, 'main5', {
+                title: [
+                    'progress.roundCap: true, click the button to change progress.clip'
+                ],
+                option: option5,
+                buttons: [{text: 'change progress.clip', onclick: function () {
+                    option5.series[0].progress.clip = !option5.series[0].progress.clip;
+                    chart5.setOption(option5, true);
+                }}]
+            });
+
+        });
+        </script>
+
+
+    </body>
+</html>
+

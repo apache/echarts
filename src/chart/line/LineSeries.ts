@@ -136,7 +136,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
     static defaultOption: LineSeriesOption = {
         zlevel: 0,
-        z: 2,
+        z: 3,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
 

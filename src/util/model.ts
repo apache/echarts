@@ -1019,6 +1019,10 @@ export function interpolateRawValues(
 ): (string | number)[] | string | number {
     const isAutoPrecision = precision == null || precision === 'auto';
 
+    if (targetValue == null) {
+        return targetValue;
+    }
+
     if (typeof targetValue === 'number') {
         const value = interpolateNumber(
             sourceValue as number || 0,

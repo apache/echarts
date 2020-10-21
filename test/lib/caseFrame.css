@@ -35,7 +35,7 @@
 }
 .case-frame .cases-list ul {
     padding-left: 32px;
-    margin-top: 130px;
+    margin-top: 170px;
     list-style-type: decimal;
 }
 .case-frame .info-panel {
@@ -54,10 +54,7 @@
     text-decoration: underline;
 }
 .case-frame .info-panel .renderer-selector {
-    height: 40px;
-    line-height: 40px;
-}
-.case-frame .info-panel .dist-selector {
+    margin: 10px;
 }
 .case-frame .info-panel .list-filter {
     margin: 10px 0;

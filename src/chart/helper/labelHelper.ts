@@ -49,7 +49,7 @@ export function getDefaultLabel(
 export function getDefaultInterpolatedLabel(
     data: List,
     interpolatedValue: ParsedValue | ParsedValue[]
-) {
+): string {
     const labelDims = data.mapDimensionsAll('defaultedLabel');
     if (!isArray(interpolatedValue)) {
         return interpolatedValue + '';
