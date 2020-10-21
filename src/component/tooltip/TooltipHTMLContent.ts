@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { isString, indexOf, map, each, bind } from 'zrender/src/core/util';
+import { isString, indexOf, map, each, bind, isObject } from 'zrender/src/core/util';
 import { toHex } from 'zrender/src/tool/color';
 import { normalizeEvent } from 'zrender/src/core/event';
 import { transformLocalCoord } from 'zrender/src/core/dom';
@@ -365,7 +365,7 @@ class TooltipHTMLContent {
     }
 
     setContent(
-        content: string,
+        content: string | HTMLElement[],
         markers: unknown,
         tooltipModel: Model<TooltipOption>,
         borderColor?: ZRColor,
@@ -379,8 +379,17 @@ class TooltipHTMLContent {
             && !shouldTooltipConfine(tooltipModel)) {
             content += assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition);
         }
-
-        this.el.innerHTML = content;
+        if (isObject(content)) {
+            if (this.el.children) {
+                for (var child of Array.from(this.el.children)) {
+                    this.el.removeChild(child);
+                }
+            }
+            content.forEach(child => this.el.appendChild(child));
+        }
+        else {
+            this.el.innerHTML = content == null ? '' : content;
+        }
     }
 
     setEnterable(enterable: boolean) {
