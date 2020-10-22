@@ -373,13 +373,109 @@ export function retrieveColumnLayout(barWidthAndOffset, axis, seriesModel) {
         return result;
     }
 }
+//源码修改点-开始 柱状图条形图组内排序
+/**
+ * 根据外部参数进行组内排序，为绘制做准备
+ * @param seriesModels
+ * @returns {{layoutDataList: [], groupOrder: string, columnOffsetList: []}}
+ */
+function getLayoutDada(seriesModels) {
+    var layoutInfo = {
+        layoutDataList: [],
+        columnOffsetList: [],
+        groupOrder: 'auto',
+        stacked: false
+    };
+    var layoutDataList = layoutInfo.layoutDataList;
+    var columnOffsetList = layoutInfo.columnOffsetList;
+    var barWidthAndOffset = makeColumnLayout(seriesModels);
+    zrUtil.each(seriesModels, function (seriesModel, index) {
+        var data = seriesModel.getData();
+        var cartesian = seriesModel.coordinateSystem;
+        var baseAxis = cartesian.getBaseAxis();
+        var valueAxis = cartesian.getOtherAxis(baseAxis);
+        var valueDim = data.mapDimension(valueAxis.dim);
+        var baseDim = data.mapDimension(baseAxis.dim);
+        var stacked = isDimensionStacked(data, valueDim);
+        var stackId = getSeriesStackId(seriesModel);
+        var columnLayoutInfo = barWidthAndOffset[getAxisKey(baseAxis)][stackId];
+        var groupOrder = seriesModel.get('groupOrder') || 'auto'; //'desc' 'asc'  'auto'
+        layoutInfo.groupOrder = groupOrder;
+        layoutInfo.stacked = stacked;
+        for (var idx = 0, len = data.count(); idx < len; idx++) {
+            if (layoutDataList[idx] === undefined) {
+                layoutDataList[idx] = [];
+                columnOffsetList[idx] = [];
+            }
+            var value = data.get(valueDim, idx);
+            var baseValue = data.get(baseDim, idx);
+            columnOffsetList[idx].push(columnLayoutInfo.offset);//位置信息一定要全部收集，绘制会按照顺序取值
+            if (isNaN(value) || isNaN(baseValue)) {
+                //后续data.getItemLayout的相关使用，未对返回值做防御校验，故此当值为NaN时，正常set，维持原有代码逻辑
+                data.setItemLayout(idx, {
+                    x: undefined,
+                    y: undefined,
+                    width: undefined,
+                    height: undefined
+                });
+                continue;
+            }
+            layoutDataList[idx].push({
+                value: value,
+                idx: idx,
+                baseValue: baseValue, //index
+                coordinateSystem: cartesian,
+                seriesModelData: data,
+                columnLayoutInfo: columnLayoutInfo,
+                baseAxis: baseAxis,
+                valueAxis: valueAxis,
+                seriesModel: seriesModel,
+                seriesModelIndex: index
+            });
+        }
+    });
+    if (layoutInfo.groupOrder !== 'auto') {
+        orderLayoutData(layoutInfo);
+    }
+    return layoutInfo;
+}
 
 /**
- * @param {string} seriesType
- * @param {module:echarts/model/Global} ecModel
+ * 收集信息进行排序处理
+ * @param layoutInfo
  */
-export function layout(seriesType, ecModel) {
-
+function orderLayoutData(layoutInfo) {
+    var groupOrder = layoutInfo.groupOrder;
+    var layoutDataList = layoutInfo.layoutDataList;
+    var columnOffsetList = layoutInfo.columnOffsetList;
+    zrUtil.each(columnOffsetList, function (columnOffsetListItem) {
+        columnOffsetListItem.sort(function (a, b) {
+            if (groupOrder !== 'auto') {//升序,坐标点自左向右
+                return a - b;
+            }
+        });
+    });
+    zrUtil.each(layoutDataList, function (layoutDataListItem) {
+        layoutDataListItem.sort(function (a, b) {
+            if (groupOrder === 'desc') {//降序
+                // if (stacked){//堆叠相反
+                //     return a.value - b.value;
+                // }
+                return b.value - a.value;
+            }
+            if (groupOrder === 'asc') {//升序
+                // if (stacked){//堆叠相反
+                //     return b.value - a.value;
+                // }
+                return a.value - b.value;
+            }
+        });
+    });
+}
+/**
+ * 绘制图形
+ */
+function doInitLayout(seriesType, ecModel) {
     var seriesModels = prepareLayoutBarSeries(seriesType, ecModel);
     var barWidthAndOffset = makeColumnLayout(seriesModels);
 
@@ -396,44 +492,49 @@ export function layout(seriesType, ecModel) {
         var columnLayoutInfo = barWidthAndOffset[getAxisKey(baseAxis)][stackId];
         var columnOffset = columnLayoutInfo.offset;
         var columnWidth = columnLayoutInfo.width;
-        var valueAxis = cartesian.getOtherAxis(baseAxis);
-
-        var barMinHeight = seriesModel.get('barMinHeight') || 0;
-
-        lastStackCoords[stackId] = lastStackCoords[stackId] || [];
-        lastStackCoordsOrigin[stackId] = lastStackCoordsOrigin[stackId] || []; // Fix #4243
-
         data.setLayout({
             bandWidth: columnLayoutInfo.bandWidth,
             offset: columnOffset,
             size: columnWidth
         });
-
-        var valueDim = data.mapDimension(valueAxis.dim);
-        var baseDim = data.mapDimension(baseAxis.dim);
-        var stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
-        var isValueAxisH = valueAxis.isHorizontal();
-
-        var valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
-
-        for (var idx = 0, len = data.count(); idx < len; idx++) {
-            var value = data.get(valueDim, idx);
-            var baseValue = data.get(baseDim, idx);
-
+    }, this);
+    var orderLayoutData = getLayoutDada(seriesModels);
+    var layoutDataList = orderLayoutData.layoutDataList;
+    var columnOffsetList = orderLayoutData.columnOffsetList;
+    zrUtil.each(layoutDataList, function (layoutDataListItem, index) {
+        if (layoutDataListItem === undefined) {
+            return;
+        }
+        var columnOffsetListItem = columnOffsetList[index];
+        zrUtil.each(layoutDataListItem, function (dataItem, itemIndex) {
+            var columnLayoutInfo = dataItem.columnLayoutInfo;
+            var data = dataItem.seriesModelData;
+            var value = dataItem.value;
+            var idx = dataItem.idx;
+            var baseValue = dataItem.baseValue;
+            var seriesModel = dataItem.seriesModel;
+            var cartesian = dataItem.coordinateSystem;
+            var columnOffset = columnOffsetListItem[itemIndex];
+            var columnWidth = columnLayoutInfo.width;
+            var baseAxis = cartesian.getBaseAxis();
+            var valueAxis = cartesian.getOtherAxis(baseAxis);
+            var valueDim = data.mapDimension(valueAxis.dim);
+            var stacked = isDimensionStacked(data, valueDim);
+            var isValueAxisH = valueAxis.isHorizontal();
+            var valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
+            var stackId = getSeriesStackId(seriesModel);
             var sign = value >= 0 ? 'p' : 'n';
+            lastStackCoords[stackId] = lastStackCoords[stackId] || [];
+            lastStackCoordsOrigin[stackId] = lastStackCoordsOrigin[stackId] || []; // Fix #4243
             var baseCoord = valueAxisStart;
-
-            // Because of the barMinHeight, we can not use the value in
-            // stackResultDimension directly.
+            var barMinHeight = seriesModel.get('barMinHeight') || 0;
             if (stacked) {
-                // Only ordinal axis can be stacked.
                 if (!lastStackCoords[stackId][baseValue]) {
                     lastStackCoords[stackId][baseValue] = {
                         p: valueAxisStart, // Positive stack
                         n: valueAxisStart  // Negative stack
                     };
                 }
-                // Should also consider #4243
                 baseCoord = lastStackCoords[stackId][baseValue][sign];
             }
 
@@ -441,7 +542,6 @@ export function layout(seriesType, ecModel) {
             var y;
             var width;
             var height;
-
             if (isValueAxisH) {
                 var coord = cartesian.dataToPoint([value, baseValue]);
                 x = baseCoord;
@@ -452,7 +552,6 @@ export function layout(seriesType, ecModel) {
                 if (Math.abs(width) < barMinHeight) {
                     width = (width < 0 ? -1 : 1) * barMinHeight;
                 }
-                // Ignore stack from NaN value
                 if (!isNaN(width)) {
                     stacked && (lastStackCoords[stackId][baseValue][sign] += width);
                 }
@@ -468,23 +567,133 @@ export function layout(seriesType, ecModel) {
                     // Include zero to has a positive bar
                     height = (height <= 0 ? -1 : 1) * barMinHeight;
                 }
-                // Ignore stack from NaN value
                 if (!isNaN(height)) {
                     stacked && (lastStackCoords[stackId][baseValue][sign] += height);
                 }
-            }
 
+            }
             data.setItemLayout(idx, {
                 x: x,
                 y: y,
                 width: width,
                 height: height
             });
-        }
-
+        }, this);
     }, this);
 }
-
+/**
+ * @param {string} seriesType
+ * @param {module:echarts/model/Global} ecModel
+ */
+export function layout(seriesType, ecModel) {
+    //TOOD 组内排序修改源码标记
+    doInitLayout(seriesType, ecModel);
+    return;
+    // var seriesModels = prepareLayoutBarSeries(seriesType, ecModel);
+    // var barWidthAndOffset = makeColumnLayout(seriesModels);
+    //
+    // var lastStackCoords = {};
+    // var lastStackCoordsOrigin = {};
+    //
+    // zrUtil.each(seriesModels, function (seriesModel) {
+    //
+    //     var data = seriesModel.getData();
+    //     var cartesian = seriesModel.coordinateSystem;
+    //     var baseAxis = cartesian.getBaseAxis();
+    //
+    //     var stackId = getSeriesStackId(seriesModel);
+    //     var columnLayoutInfo = barWidthAndOffset[getAxisKey(baseAxis)][stackId];
+    //     var columnOffset = columnLayoutInfo.offset;
+    //     var columnWidth = columnLayoutInfo.width;
+    //     var valueAxis = cartesian.getOtherAxis(baseAxis);
+    //
+    //     var barMinHeight = seriesModel.get('barMinHeight') || 0;
+    //
+    //     lastStackCoords[stackId] = lastStackCoords[stackId] || [];
+    //     lastStackCoordsOrigin[stackId] = lastStackCoordsOrigin[stackId] || []; // Fix #4243
+    //
+    //     data.setLayout({
+    //         bandWidth: columnLayoutInfo.bandWidth,
+    //         offset: columnOffset,
+    //         size: columnWidth
+    //     });
+    //
+    //     var valueDim = data.mapDimension(valueAxis.dim);
+    //     var baseDim = data.mapDimension(baseAxis.dim);
+    //     var stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
+    //     var isValueAxisH = valueAxis.isHorizontal();
+    //
+    //     var valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
+    //
+    //     for (var idx = 0, len = data.count(); idx < len; idx++) {
+    //         var value = data.get(valueDim, idx);
+    //         var baseValue = data.get(baseDim, idx);
+    //
+    //         var sign = value >= 0 ? 'p' : 'n';
+    //         var baseCoord = valueAxisStart;
+    //
+    //         // Because of the barMinHeight, we can not use the value in
+    //         // stackResultDimension directly.
+    //         if (stacked) {
+    //             // Only ordinal axis can be stacked.
+    //             if (!lastStackCoords[stackId][baseValue]) {
+    //                 lastStackCoords[stackId][baseValue] = {
+    //                     p: valueAxisStart, // Positive stack
+    //                     n: valueAxisStart  // Negative stack
+    //                 };
+    //             }
+    //             // Should also consider #4243
+    //             baseCoord = lastStackCoords[stackId][baseValue][sign];
+    //         }
+    //
+    //         var x;
+    //         var y;
+    //         var width;
+    //         var height;
+    //
+    //         if (isValueAxisH) {
+    //             var coord = cartesian.dataToPoint([value, baseValue]);
+    //             x = baseCoord;
+    //             y = coord[1] + columnOffset;
+    //             width = coord[0] - valueAxisStart;
+    //             height = columnWidth;
+    //
+    //             if (Math.abs(width) < barMinHeight) {
+    //                 width = (width < 0 ? -1 : 1) * barMinHeight;
+    //             }
+    //             // Ignore stack from NaN value
+    //             if (!isNaN(width)) {
+    //                 stacked && (lastStackCoords[stackId][baseValue][sign] += width);
+    //             }
+    //         }
+    //         else {
+    //             var coord = cartesian.dataToPoint([baseValue, value]);
+    //             x = coord[0] + columnOffset;
+    //             y = baseCoord;
+    //             width = columnWidth;
+    //             height = coord[1] - valueAxisStart;
+    //
+    //             if (Math.abs(height) < barMinHeight) {
+    //                 // Include zero to has a positive bar
+    //                 height = (height <= 0 ? -1 : 1) * barMinHeight;
+    //             }
+    //             // Ignore stack from NaN value
+    //             if (!isNaN(height)) {
+    //                 stacked && (lastStackCoords[stackId][baseValue][sign] += height);
+    //             }
+    //         }
+    //
+    //         data.setItemLayout(idx, {
+    //             x: x,
+    //             y: y,
+    //             width: width,
+    //             height: height
+    //         });
+    //     }
+    //
+    // }, this);
+}
+//源码修改点-结束
 // TODO: Do not support stack in large mode yet.
 export var largeLayout = {
 
