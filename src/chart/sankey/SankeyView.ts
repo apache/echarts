@@ -29,7 +29,6 @@ import List from '../../data/List';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
-import {defaults} from 'zrender/src/core/util';
 
 interface FocusNodeAdjacencyPayload extends Payload {
     dataIndex?: number
@@ -203,11 +202,11 @@ class SankeyView extends ChartView {
             switch (curve.style.fill) {
                 case 'source':
                     curve.style.fill = edge.node1.getVisual('color');
-                    curve.style.decal = nodeData.getItemVisual(edge.node1.dataIndex, 'style').decal;
+                    curve.style.decal = edge.node1.getVisual('style').decal;
                     break;
                 case 'target':
                     curve.style.fill = edge.node2.getVisual('color');
-                    curve.style.decal = nodeData.getItemVisual(edge.node2.dataIndex, 'style').decal;
+                    curve.style.decal = edge.node2.getVisual('style').decal;
                     break;
                 case 'gradient':
                     const sourceColor = edge.node1.getVisual('color');
@@ -271,6 +270,7 @@ class SankeyView extends ChartView {
             (rect as ECElement).disableLabelAnimation = true;
 
             rect.setStyle('fill', node.getVisual('color'));
+            rect.setStyle('decal', node.getVisual('style').decal);
 
             setStatesStylesFromModel(rect, itemModel);
 

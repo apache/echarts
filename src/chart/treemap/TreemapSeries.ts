@@ -39,6 +39,7 @@ import { LayoutRect } from '../../util/layout';
 import List from '../../data/List';
 import { normalizeToArray } from '../../util/model';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import {DecalObject} from 'zrender/src/graphic/Decal';
 
 // Only support numberic value.
 type TreemapSeriesDataValue = number | number[];
@@ -116,7 +117,8 @@ export interface TreemapSeriesVisualOption {
 export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption,
     TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
 
-    color?: ColorString[] | 'none'
+    color?: ColorString[] | 'none',
+    decal?: DecalObject[] | 'none'
 }
 
 export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
@@ -129,6 +131,8 @@ export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
     children?: TreemapSeriesNodeItemOption[]
 
     color?: ColorString[] | 'none'
+
+    decal?: DecalObject[] | 'none'
 }
 
 export interface TreemapSeriesOption
@@ -524,27 +528,37 @@ function completeTreeValue(dataNode: TreemapSeriesNodeItemOption) {
  */
 function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
     const globalColorList = normalizeToArray(ecModel.get('color')) as ColorString[];
+    const globalDecalList = normalizeToArray(ecModel.get('decals')) as DecalObject[];
 
     if (!globalColorList) {
         return;
     }
 
     levels = levels || [];
-    let hasColorDefine;
+    let hasColorDefine, hasDecalDefine;
     zrUtil.each(levels, function (levelDefine) {
         const model = new Model(levelDefine);
         const modelColor = model.get('color');
+        const modelDecal = model.get('decal');
 
         if (model.get(['itemStyle', 'color'])
             || (modelColor && modelColor !== 'none')
         ) {
             hasColorDefine = true;
         }
+        if (model.get(['itemStyle', 'decal'])
+            || (modelDecal && modelDecal !== 'none')
+        ) {
+            hasDecalDefine = true;
+        }
     });
 
+    const level0 = levels[0] || (levels[0] = {});
     if (!hasColorDefine) {
-        const level0 = levels[0] || (levels[0] = {});
         level0.color = globalColorList.slice();
+    }
+    if (!hasDecalDefine && globalDecalList) {
+        level0.decal = globalDecalList.slice();
     }
 
     return levels;

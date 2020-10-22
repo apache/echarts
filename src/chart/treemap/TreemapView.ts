@@ -915,9 +915,11 @@ function renderNode(
         }
         else {
             content.invisible = false;
-            const visualColor = thisNode.getVisual('style').fill;
+            const nodeStyle = thisNode.getVisual('style');
+            const visualColor = nodeStyle.fill;
             const normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualColor;
+            normalStyle.decal = nodeStyle.decal;
             const emphasisStyle = getStateItemStyle(itemStyleEmphasisModel);
             const blurStyle = getStateItemStyle(itemStyleBlurModel);
             const selectStyle = getStateItemStyle(itemStyleSelectModel);

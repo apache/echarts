@@ -17,8 +17,8 @@
 * under the License.
 */
 
-import VisualMapping from '../../visual/VisualMapping';
 import * as zrUtil from 'zrender/src/core/util';
+import VisualMapping from '../../visual/VisualMapping';
 import GlobalModel from '../../model/Global';
 import SankeySeriesModel, { SankeyNodeItemOption } from './SankeySeries';
 
@@ -57,6 +57,11 @@ export default function (ecModel: GlobalModel) {
                     node.setVisual('color', mapValueToColor);
                     node.setVisual('style', {fill: mapValueToColor});
                 }
+
+                const name = seriesModel.getDataParams(node.dataIndex, 'node').name;
+                const paletteDecal = seriesModel.getDecalFromPalette(name, null, nodes.length);
+                const decal = zrUtil.defaults(node.getVisual('style').decal || {}, paletteDecal);
+                node.hostGraph.data.setItemVisual(node.dataIndex, 'decal', decal);
             });
         }
     });

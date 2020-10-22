@@ -25,17 +25,17 @@ export default function (option: ECUnitOption) {
         return;
     }
 
-    const aria = option.aria as any;
+    const aria = option.aria;
     // aria.show is deprecated and should use aria.enabled instead
-    if (aria.show != null) {
-        option.aria.enabled = aria.show;
+    if ((aria as any).show != null) {
+        aria.enabled = (aria as any).show;
     }
 
-    option.aria.label = option.aria.label || {};
+    aria.label = aria.label || {};
     // move description, general, series, data to be under aria.label
     zrUtil.each(['description', 'general', 'series', 'data'], name => {
-        if (aria[name] != null) {
-            aria.label[name] = aria[name];
+        if ((aria as any)[name] != null) {
+            (aria.label as any)[name] = (aria as any)[name];
         }
     });
 }

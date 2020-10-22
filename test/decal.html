@@ -101,7 +101,7 @@ under the License.
                     <label id="dashLineOffset-label">0</label>
                 </td>
                 <td>
-                    <button onclick="rand('dashLineOffset', 0, 100)"">Random</button>
+                    <button onclick="rand('dashLineOffset', 0, 100)">Random</button>
                 </td>
             </tr>
             <tr>
@@ -113,11 +113,10 @@ under the License.
                     <label id="rotation-label">0</label>
                 </td>
                 <td>
-                    <button onclick="rand('rotation', 0, 3.14)"">Random</button>
+                    <button onclick="rand('rotation', 0, 3.14)">Random</button>
                 </td>
             </tr>
         </table>
-
 
 
 
@@ -126,6 +125,7 @@ under the License.
             var option;
             var series = [];
             var pieData = [];
+            var legendNames = [];
             var itemStyle = {
                 decal: {
                     color: 'blue'
@@ -150,6 +150,8 @@ under the License.
                     p.itemStyle = itemStyle;
                 }
                 pieData.push(p);
+
+                legendNames.push('bar' + i, 'pie' + i);
             }
             series.push({
                 type: 'pie',
@@ -159,6 +161,9 @@ under the License.
             });
 
             option = {
+                legend: {
+                    data: legendNames
+                },
                 xAxis: {
                     type: 'category',
                     data: ['x']
@@ -175,7 +180,8 @@ under the License.
                     decal: {
                         show: true
                     }
-                }
+                },
+                animationDurationUpdate: 10000
             };
 
             var chart = testHelper.create(echarts, 'main0', {
@@ -243,13 +249,17 @@ under the License.
                 grid: {
                     left: 50,
                     right: '40%'
+                },
+                aria: {
+                    // no decal
                 }
             };
 
             var chart = testHelper.create(echarts, 'main1', {
                 title: [
                     'If aria is not enabled, decal can also be enabled',
-                    '(1) Only the first bar and pie piece should use decal'
+                    '(1) Only the first bar and pie piece should use decal',
+                    '(2) `aria.label` should be in the HTML'
                 ],
                 option: option
             });
@@ -272,25 +282,43 @@ under the License.
         option = {
             xAxis: {
                 type: 'category',
-                data: ['a', 'b']
+                data: ['a', 'b'],
+                show: false
             },
             yAxis: {
-                type: 'value'
+                type: 'value',
+                show: false
             },
-            series: {
+            series: [{
                 type: 'bar',
-                data: [100, 90],
+                data: [70, 40],
                 itemStyle: {
-                    decal: decal
+                    decal: decal,
+                    borderWidth: 20,
+                    borderColor: '#ff0'
                 }
-            },
+            }, {
+                type: 'line',
+                data: [100, 80],
+                itemStyle: {
+                    decal: decal,
+                    borderWidth: 20,
+                    borderColor: '#ff0'
+                },
+                lineStyle: {
+                    width: 20
+                },
+                symbol: 'circle',
+                symbolSize: 200
+            }],
             grid: {
                 left: 50,
                 right: 20
             },
             aria: {
                 show: true
-            }
+            },
+            animation: false
         };
         var chart;
         require(['echarts'/*, 'map/js/china' */], function (echarts) {

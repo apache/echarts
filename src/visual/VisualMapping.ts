@@ -288,6 +288,16 @@ class VisualMapping<VisualOption
             return zrColor.modifyAlpha(color, value);
         }),
 
+        decal: {
+            applyVisual: makeApplyVisual('decal'),
+            _normalizedToVisual: {
+                linear: null,
+                category: doMapCategory,
+                piecewise: null,
+                fixed: null
+            }
+        },
+
         opacity: {
             applyVisual: makeApplyVisual('opacity'),
             _normalizedToVisual: createNormalizedToNumericVisual([0, 1])
