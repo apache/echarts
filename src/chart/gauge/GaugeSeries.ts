@@ -284,7 +284,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
             color: '#464646',
             fontSize: 16,
-            valueAnimation: true
+            valueAnimation: false
         },
         detail: {
             show: true,
@@ -302,7 +302,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             fontSize: 30,
             fontWeight: 'bold',
             lineHeight: 30,
-            valueAnimation: true
+            valueAnimation: false
         }
     };
 }
