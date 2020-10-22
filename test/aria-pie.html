@@ -98,6 +98,7 @@ under the License.
                             type: 'pie',
                             radius : '55%',
                             center: ['50%', '60%'],
+                            selectedMode: 'single',
                             data:[
                                 {value:335, name:'直接访问'},
                                 {value:310, name:'邮件营销'},
@@ -105,8 +106,8 @@ under the License.
                                 {value:null, name:'视频广告(value is null)'},
                                 {value:1548, name:'搜索引擎'}
                             ],
-                            itemStyle: {
-                                emphasis: {
+                            emphasis: {
+                                itemStyle: {
                                     shadowBlur: 10,
                                     shadowOffsetX: 0,
                                     shadowColor: 'rgba(0, 0, 0, 0.5)'
@@ -114,6 +115,10 @@ under the License.
                             }
                         }
                     ]
+                });
+
+                chart.on('pieselectchanged', function (e) {
+                    console.log(e);
                 });
 
                 window.onresize = chart.resize;

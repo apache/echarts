@@ -40,6 +40,7 @@ under the License.
 
 
     <div id="main0"></div>
+    <div id="main1"></div>
 
 
 
@@ -134,11 +135,92 @@ under the License.
                 // buttons: [{text: 'btn-txt', onclick: function () {}}],
                 // recordCanvas: true,
             });
-
+            
             setTimeout(function () {
                 option.legend.type = 'plain';
                 chart.setOption(option);
             }, 3000);
+
+            var option1 = {
+                legend: {
+                    data: [
+                        '邮件营销', '联盟广告', '视频广告', '直接访问', '搜索引擎',
+                        '邮件营销1', '联盟广告1', '视频广告1', '直接访问1', '搜索引擎1'
+                    ],
+                    type: 'scroll'
+                },
+                xAxis: [{
+                    type: 'category',
+                    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                series: [
+                    {
+                        name: '邮件营销',
+                        type: 'line',
+                        data: [null, null, null, null, null, null, null]
+                    },
+                    {
+                        name: '联盟广告',
+                        type: 'line',
+                        data: [null, null, null, null, null, null, null]
+                    },
+                    {
+                        name: '视频广告',
+                        type: 'line',
+                        data: [null, null, null, null, null, null, null]
+                    },
+                    {
+                        name: '直接访问',
+                        type: 'line',
+                        data: [null, null, null, null, null, null, null]
+                    },
+                    {
+                        name: '搜索引擎',
+                        type: 'line',
+                        data: [null, null, null, null, null, null, null]
+                    },
+                    {
+                        name: '邮件营销1',
+                        type: 'line',
+                        data: [null, null, null, null, null, null, null]
+                    },
+                    {
+                        name: '联盟广告1',
+                        type: 'line',
+                        data: [null, null, null, null, null, null, null]
+                    },
+                    {
+                        name: '视频广告1',
+                        type: 'line',
+                        data: [null, null, null, null, null, null, null]
+                    },
+                    {
+                        name: '直接访问1',
+                        type: 'line',
+                        data: [null, null, null, null, null, null, null]
+                    },
+                    {
+                        name: '搜索引擎1',
+                        type: 'line',
+                        data: [null, null, null, null, null, null, null]
+                    }
+                ]
+                
+            };
+            var chart1 = testHelper.create(echarts, 'main1', {
+                title: [
+                    'Test Case Description of main1',
+                    'Legend scroll animation'
+                ],
+                option: option1,
+                width: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+            chart1.setOption(option1);
         });
     </script>
 

@@ -51,14 +51,11 @@ under the License.
 
                 // Pencil sketch texture
                 var patternSrc = window.pieTexture;
-                var img = new Image();
-                img.src = patternSrc;
-
                 var itemStyle = {
                     normal: {
                         opacity: 0.7,
                         color: {
-                            image: img,
+                            image: patternSrc,
                             repeat: 'repeat'
                         },
                         borderWidth: 3,

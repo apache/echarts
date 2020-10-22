@@ -89,14 +89,20 @@ under the License.
                 return {
                     useUTC: useUTC,
                     tooltip: {
-                        trigger: 'axis'
+                        trigger: 'axis',
+                        // test in Safari (NaN-NaN-NaN NaN:NaN:NaN)
+                        formatter: '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}'
                     },
                     xAxis: [{
                         type: 'time',
                         splitNumber: 7,
                         axisLabel: {
-                            formatter: function (value) {
-                                return echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', value, useUTC);
+                            formatter: function (tick) {
+                                return echarts.time.format(
+                                    tick,
+                                    '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}',
+                                    useUTC
+                                );
                             },
                             rotate: 10
                         },
@@ -118,7 +124,11 @@ under the License.
                             normal: {
                                 show: true,
                                 formatter: function (params) {
-                                    return echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', params.value[0], useUTC);
+                                    return echarts.time.format(
+                                        params.value[0],
+                                        '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}',
+                                        useUTC
+                                    );
                                 }
                             }
                         }

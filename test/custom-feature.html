@@ -35,10 +35,10 @@ under the License.
         </style>
 
 
-        <div id="main0"></div>
-        <div id="main2"></div>
-        <div id="main3"></div>
-        <!-- <div id="main1"></div> -->
+        <div id="main-eventful"></div>
+        <div id="main-clip-by-system"></div>
+        <div id="main-clip-by-self"></div>
+        <div id="main-SVG-Path"></div>
 
 
         <script>
@@ -85,6 +85,7 @@ under the License.
                                         style: {
                                             fill: 'red',
                                             text: 'dataIndex: ' + params.dataIndex,
+                                            textFill: '#000',
                                             textStroke: '#fff',
                                             textStrokeWidth: 1
                                         }
@@ -107,7 +108,7 @@ under the License.
                     }]
                 };
 
-                var chart = testHelper.create(echarts, 'main0', {
+                var chart = testHelper.create(echarts, 'main-eventful', {
                     title: [
                         'Eventful: ',
                         'Only this el trigger events: **red circle** and **red rect** of **dataIndex: 1**',
@@ -138,8 +139,6 @@ under the License.
                 'echarts'/*, 'map/js/china' */
             ], function (echarts) {
 
-                // deprecated: this case would be wrong.
-
                 var option = {
                     xAxis: {
                         min: 90,
@@ -151,13 +150,11 @@ under the License.
                         max: 500,
                         scale: true
                     },
-                    dataZoom: [{
-                        type: 'inside',
-                        filterMode: 'none'
-                    }, {
-                        type: 'slider',
-                        filterMode: 'none'
-                    }],
+                    dataZoom: [
+                        {type: 'inside', filterMode: 'none'},
+                        {type: 'slider', filterMode: 'none'},
+                        {type: 'slider', filterMode: 'none', orient: 'vertical'},
+                    ],
                     series: [{
                         type: 'custom',
                         renderItem: function (params, api) {
@@ -173,24 +170,19 @@ under the License.
                                         [90, 50]
                                     ]
                                 },
-                                clip: {
-                                    x: params.coordSys.x,
-                                    y: params.coordSys.y,
-                                    width: params.coordSys.width,
-                                    height: params.coordSys.height
-                                },
                                 style: {
                                     fill: 'green'
                                 }
                             }
                         },
+                        clip: true,
                         data: [[100, 300]]
                     }]
                 };
 
-                var chart = testHelper.create(echarts, 'main2', {
+                var chart = testHelper.create(echarts, 'main-clip-by-system', {
                     title: [
-                        'The shape should be **clipped** by the grid. (TODO)',
+                        'The shape should be **clipped** by the grid (by series.clip).',
                     ],
                     option: option
                 });
@@ -204,12 +196,81 @@ under the License.
 
 
 
-
         <script>
 
             require([
                 'echarts'/*, 'map/js/china' */
             ], function (echarts) {
+
+                var option = {
+                    xAxis: {
+                        min: 90,
+                        max: 120,
+                        scale: true
+                    },
+                    yAxis: {
+                        min: 50,
+                        max: 500,
+                        scale: true
+                    },
+                    dataZoom: [
+                        {type: 'inside', filterMode: 'none'},
+                        {type: 'slider', filterMode: 'none'},
+                        {type: 'slider', filterMode: 'none', orient: 'vertical'},
+                    ],
+                    series: [{
+                        type: 'custom',
+                        renderItem: function (params, api) {
+                            return {
+                                type: 'group',
+                                children: [{
+                                    type: 'polygon',
+                                    position: api.coord([api.value(0), api.value(1)]),
+                                    shape: {
+                                        points: [
+                                            [0, 0],
+                                            [50, -50],
+                                            [90, -50],
+                                            [140, 0],
+                                            [90, 50]
+                                        ]
+                                    },
+                                    style: {
+                                        fill: 'blue'
+                                    }
+                                }],
+                                clipPath: {
+                                    type: 'rect',
+                                    shape: {
+                                        x: params.coordSys.x,
+                                        y: params.coordSys.y,
+                                        width: params.coordSys.width,
+                                        height: params.coordSys.height
+                                    }
+                                }
+                            }
+                        },
+                        data: [[100, 300]]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main-clip-by-self', {
+                    title: [
+                        'The shape should be **clipped** by the grid (by custom clipPath).',
+                    ],
+                    option: option
+                });
+
+            });
+
+        </script>
+
+
+
+
+        <script>
+
+            require(['echarts'], function (echarts) {
 
                 // deprecated: this case would be wrong.
 
@@ -224,23 +285,6 @@ under the License.
                     tooltip: {
                     },
                     dataZoom: [{
-                        type: 'slider',
-                        xAxisIndex: 0,
-                        filterMode: 'weakFilter',
-                        height: 20,
-                        bottom: 0,
-                        start: -26,
-                        end: 26,
-                        showDetail: false
-                    }, {
-                        type: 'inside',
-                        xAxisIndex: 0,
-                        filterMode: 'weakFilter',
-                        start: -26,
-                        end: 26,
-                        zoomOnMouseWheel: false,
-                        moveOnMouseMove: true
-                    }, {
                         type: 'slider',
                         yAxisIndex: 0,
                         zoomLock: true,
@@ -350,7 +394,7 @@ under the License.
                     };
                 }
 
-                var chart = testHelper.create(echarts, 'main3', {
+                var chart = testHelper.create(echarts, 'main-SVG-Path', {
                     title: [
                         'Test SVG path data auto fit to rect: ',
                         'the y axis label (made by custom series) should be center',
@@ -361,6 +405,10 @@ under the License.
             });
 
         </script>
+
+
+
+
 
 
 
