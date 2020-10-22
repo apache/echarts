@@ -27,6 +27,7 @@ import './bar/BarView';
 import '../action/changeAxisOrder';
 // In case developer forget to include grid component
 import '../component/gridSimple';
+import dataSample from '../processor/dataSample';
 
 
 echarts.registerLayout(echarts.PRIORITY.VISUAL.LAYOUT, zrUtil.curry(layout, 'bar'));
@@ -41,3 +42,9 @@ echarts.registerVisual({
         seriesModel.getData().setVisual('legendSymbol', 'roundRect');
     }
 });
+
+// Down sample after filter
+echarts.registerProcessor(
+    echarts.PRIORITY.PROCESSOR.STATISTIC,
+    dataSample('bar')
+);

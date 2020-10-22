@@ -29,7 +29,7 @@ import {
 } from '../../util/graphic';
 import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
-import { setLabelStyle, getLabelStatesModels, labelInner, setLabelValueAnimation } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels, setLabelValueAnimation } from '../../label/labelStyle';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import Sausage from '../../util/shape/sausage';
@@ -44,8 +44,7 @@ import {
     OrdinalSortInfo,
     Payload,
     OrdinalNumber,
-    ParsedValue,
-    ECElement
+    ParsedValue
 } from '../../util/types';
 import BarSeriesModel, {BarSeriesOption, BarDataItemOption} from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -238,9 +237,6 @@ class BarView extends ChartView {
         const isInitSort = payload && payload.isInitSort;
         const isChangeOrder = payload && payload.type === 'changeAxisOrder';
 
-        const defaultTextGetter = (values: ParsedValue | ParsedValue[]) => {
-            return getDefaultInterpolatedLabel(seriesModel.getData(), values);
-        };
         function createBackground(dataIndex: number) {
             const bgLayout = getLayout[coord.type](data, dataIndex);
             const bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
