@@ -24,6 +24,8 @@ import GlobalModel from '../model/Global';
 import Model from '../model/Model';
 import {AriaOption} from '../component/aria';
 import {TitleOption} from '../component/title';
+import {Dictionary} from '../util/types';
+import {DecalObject} from 'zrender/src/graphic/Decal';
 
 const defaultOption: AriaOption = {
     enabled: true,
@@ -34,6 +36,8 @@ const defaultOption: AriaOption = {
         show: false
     }
 };
+
+const decalPaletteScope: Dictionary<DecalObject> = {};
 
 export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     const ariaModel: Model<AriaOption> = ecModel.getModel('aria');
@@ -57,16 +61,23 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
         if (useDecal) {
             // default decal show value is true
             ecModel.eachRawSeries(seriesModel => {
+                if (typeof seriesModel.enableAriaDecal === 'function') {
+                    // Let series define how to use decal palette on data
+                    seriesModel.enableAriaDecal();
+                    return;
+                }
+
                 const data = seriesModel.getData();
 
                 if (seriesModel.useColorPaletteOnData) {
+                    const decalSeriesScope: Dictionary<DecalObject> = {};
                     const dataCount = data.count();
                     data.each(idx => {
                         const itemStyle = data.ensureUniqueItemVisual(idx, 'style');
                         const name = data.getName(idx) || (idx + '');
                         const paletteDecal = seriesModel.getDecalFromPalette(
                             name,
-                            null,
+                            decalSeriesScope,
                             dataCount
                         );
                         const decal = zrUtil.defaults(
@@ -80,7 +91,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                     const style = data.getVisual('style');
                     const paletteDecal = seriesModel.getDecalFromPalette(
                         seriesModel.name,
-                        null,
+                        decalPaletteScope,
                         ecModel.getSeriesCount()
                     );
                     const decal = style.decal

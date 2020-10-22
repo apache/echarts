@@ -29,6 +29,7 @@ import { ColorString } from '../../util/types';
 import Model from '../../model/Model';
 import { getECData } from '../../util/innerStore';
 import { getSectorCornerRadius } from '../helper/pieHelper';
+import {createOrUpdatePatternFromDecal} from '../../util/decal';
 
 const DEFAULT_SECTOR_Z = 2;
 const DEFAULT_TEXT_Z = 4;
@@ -89,6 +90,11 @@ class SunburstPiece extends graphic.Sector {
 
         const normalStyle = node.getVisual('style') as PathStyleProps;
         normalStyle.lineJoin = 'bevel';
+
+        const decal = node.getVisual('decal');
+        if (decal) {
+            normalStyle.decal = createOrUpdatePatternFromDecal(decal, 2);
+        }
 
         const cornerRadius = getSectorCornerRadius(itemModel.getModel('itemStyle'), sectorShape);
         zrUtil.extend(sectorShape, cornerRadius);
@@ -177,8 +183,7 @@ class SunburstPiece extends graphic.Sector {
                 text = text || this.node.name;
             }
 
-            state.style = createTextStyle(labelStateModel, {
-            }, null, stateName !== 'normal', true);
+            state.style = createTextStyle(labelStateModel, {}, null, stateName !== 'normal', true);
             if (text) {
                 state.style.text = text;
             }

@@ -66,7 +66,7 @@ class PaletteMixin<T extends PaletteOptionMixin = PaletteOptionMixin> {
         scope?: any,
         requestNum?: number
     ): DecalObject {
-        let decals = this.get('decals', true);
+        let decals = this.get('decals');
         if (!isArray(decals)) {
             decals = [decals as DecalObject];
         }

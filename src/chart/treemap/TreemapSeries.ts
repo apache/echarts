@@ -32,7 +32,8 @@ import {
     ColorString,
     StatesOptionMixin,
     OptionId,
-    OptionName
+    OptionName,
+    Dictionary
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -40,6 +41,7 @@ import List from '../../data/List';
 import { normalizeToArray } from '../../util/model';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import {DecalObject} from 'zrender/src/graphic/Decal';
+import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
 
 // Only support numberic value.
 type TreemapSeriesDataValue = number | number[];
@@ -483,6 +485,10 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         ) {
             this._viewRoot = root;
         }
+    }
+
+    enableAriaDecal() {
+        enableAriaDecalForTree(this);
     }
 }
 

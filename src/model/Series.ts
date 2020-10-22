@@ -101,6 +101,8 @@ interface SeriesModel {
         selectors: BrushCommonSelectorsForSeries,
         area: BrushSelectableArea
     ): boolean;
+
+    enableAriaDecal(): void;
 }
 
 class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentModel<Opt> {

@@ -25,7 +25,6 @@ import Model from '../../model/Model';
 import { ColorString, ZRColor } from '../../util/types';
 import { modifyHSL, modifyAlpha } from 'zrender/src/tool/color';
 import { makeInner } from '../../util/model';
-import {DecalObject} from 'zrender/src/graphic/Decal';
 
 type NodeModel = Model<TreemapSeriesNodeItemOption>;
 type NodeItemStyleModel = Model<TreemapSeriesNodeItemOption['itemStyle']>;
@@ -39,8 +38,7 @@ const inner = makeInner<{
 interface TreemapVisual {
     color?: ZRColor
     colorAlpha?: number
-    colorSaturation?: number,
-    decal?: DecalObject
+    colorSaturation?: number
 }
 
 type TreemapLevelItemStyleOption = TreemapSeriesOption['levels'][number]['itemStyle'];
@@ -98,7 +96,6 @@ function travelTree(
         thisNodeColor = calculateColor(visuals);
         // Apply visual to this node.
         existsStyle.fill = thisNodeColor;
-        data.setItemVisual(node.dataIndex, 'decal', visuals.decal);
     }
     else {
         const mapping = buildVisualMapping(
@@ -128,7 +125,7 @@ function buildVisuals(
     const visuals = extend({}, designatedVisual);
     const designatedVisualItemStyle = seriesModel.designatedVisualItemStyle;
 
-    each(['color', 'colorAlpha', 'colorSaturation', 'decal'] as const, function (visualName) {
+    each(['color', 'colorAlpha', 'colorSaturation'] as const, function (visualName) {
         // Priority: thisNode > thisLevel > parentNodeDesignated > seriesModel
         (designatedVisualItemStyle as any)[visualName] = designatedVisual[visualName];
         const val = nodeItemStyleModel.get(visualName);
@@ -174,11 +171,6 @@ function getValueVisualDefine(visuals: TreemapVisual, name: keyof TreemapVisual)
     }
 }
 
-type TreemapMapping = {
-    color: VisualMapping,
-    decal?: VisualMapping
-};
-
 function buildVisualMapping(
     node: TreemapLayoutNode,
     nodeModel: NodeModel,
@@ -186,12 +178,12 @@ function buildVisualMapping(
     nodeItemStyleModel: NodeItemStyleModel,
     visuals: TreemapVisual,
     viewChildren: TreemapLayoutNode[]
-): TreemapMapping {
+) {
     if (!viewChildren || !viewChildren.length) {
         return;
     }
 
-    const colorRangeVisual = getRangeVisual(nodeModel, 'color')
+    const rangeVisual = getRangeVisual(nodeModel, 'color')
         || (
             visuals.color != null
             && visuals.color !== 'none'
@@ -200,11 +192,10 @@ function buildVisualMapping(
                 || getRangeVisual(nodeModel, 'colorSaturation')
             )
         );
-    if (!colorRangeVisual) {
+
+    if (!rangeVisual) {
         return;
     }
-
-    const decalRangeValue = getRangeVisual(nodeModel, 'decal');
 
     const visualMin = nodeModel.get('visualMin');
     const visualMax = nodeModel.get('visualMax');
@@ -213,39 +204,26 @@ function buildVisualMapping(
     visualMax != null && visualMax > dataExtent[1] && (dataExtent[1] = visualMax);
 
     const colorMappingBy = nodeModel.get('colorMappingBy');
-    const colorOpt: VisualMappingOption = {
-        type: colorRangeVisual.name,
+    const opt: VisualMappingOption = {
+        type: rangeVisual.name,
         dataExtent: dataExtent,
-        visual: colorRangeVisual.range
+        visual: rangeVisual.range
     };
-    if (colorOpt.type === 'color'
+    if (opt.type === 'color'
         && (colorMappingBy === 'index' || colorMappingBy === 'id')
     ) {
-        colorOpt.mappingMethod = 'category';
-        colorOpt.loop = true;
+        opt.mappingMethod = 'category';
+        opt.loop = true;
         // categories is ordinal, so do not set opt.categories.
     }
     else {
-        colorOpt.mappingMethod = 'linear';
+        opt.mappingMethod = 'linear';
     }
 
-    const decalOpt: VisualMappingOption = {
-        type: 'decal',
-        dataExtent: dataExtent,
-        visual: decalRangeValue ? decalRangeValue.range : [visuals.decal],
-        mappingMethod: 'category',
-        loop: true
-    };
+    const mapping = new VisualMapping(opt);
+    inner(mapping).drColorMappingBy = colorMappingBy;
 
-    const colorMapping = new VisualMapping(colorOpt);
-    inner(colorMapping).drColorMappingBy = colorMappingBy;
-
-    const decalMapping = new VisualMapping(decalOpt);
-
-    return {
-        color: colorMapping,
-        decal: decalMapping
-    };
+    return mapping;
 }
 
 // Notice: If we dont have the attribute 'colorRange', but only use
@@ -270,28 +248,22 @@ function mapVisual(
     visuals: TreemapVisual,
     child: TreemapLayoutNode,
     index: number,
-    mapping: TreemapMapping,
+    mapping: VisualMapping,
     seriesModel: TreemapSeriesModel
 ) {
     const childVisuals = extend({}, visuals);
 
     if (mapping) {
-        let value;
-        if (mapping.color) {
-            // Only support color, colorAlpha, colorSaturation.
-            const colorMappingType = mapping.color.type as keyof TreemapVisual;
-            const colorMappingBy = colorMappingType === 'color' && inner(mapping.color).drColorMappingBy;
-            value = colorMappingBy === 'index'
-                ? index
-                : colorMappingBy === 'id'
-                ? seriesModel.mapIdToIndex(child.getId())
-                : child.getValue(nodeModel.get('visualDimension'));
-            (childVisuals as any)[colorMappingType] = mapping.color.mapValueToVisual(value);
-        }
+        // Only support color, colorAlpha, colorSaturation.
+        const mappingType = mapping.type as keyof TreemapVisual;
+        const colorMappingBy = mappingType === 'color' && inner(mapping).drColorMappingBy;
+        const value = colorMappingBy === 'index'
+            ? index
+            : colorMappingBy === 'id'
+            ? seriesModel.mapIdToIndex(child.getId())
+            : child.getValue(nodeModel.get('visualDimension'));
 
-        if (mapping.decal && value != null) {
-            (childVisuals as any).decal = mapping.decal.mapValueToVisual(value);
-        }
+        (childVisuals as any)[mappingType] = mapping.mapValueToVisual(value);
     }
 
     return childVisuals;
