@@ -30,6 +30,7 @@ import Model from '../../model/Model';
 import { getECData } from '../../util/innerStore';
 import { getSectorCornerRadius } from '../helper/pieHelper';
 import {createOrUpdatePatternFromDecal} from '../../util/decal';
+import ExtensionAPI from '../../ExtensionAPI';
 
 const DEFAULT_SECTOR_Z = 2;
 const DEFAULT_TEXT_Z = 4;
@@ -46,7 +47,7 @@ class SunburstPiece extends graphic.Sector {
     private _seriesModel: SunburstSeriesModel;
     private _ecModel: GlobalModel;
 
-    constructor(node: TreeNode, seriesModel: SunburstSeriesModel, ecModel: GlobalModel) {
+    constructor(node: TreeNode, seriesModel: SunburstSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         super();
 
         this.z2 = DEFAULT_SECTOR_Z;
@@ -62,15 +63,16 @@ class SunburstPiece extends graphic.Sector {
         });
         this.setTextContent(text);
 
-        this.updateData(true, node, seriesModel, ecModel);
+        this.updateData(true, node, seriesModel, ecModel, api);
     }
 
     updateData(
         firstCreate: boolean,
         node: TreeNode,
         // state: 'emphasis' | 'normal' | 'highlight' | 'downplay',
-        seriesModel?: SunburstSeriesModel,
-        ecModel?: GlobalModel
+        seriesModel: SunburstSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
     ) {
         this.node = node;
         (node as DrawTreeNode).piece = this;
@@ -93,7 +95,7 @@ class SunburstPiece extends graphic.Sector {
 
         const decal = node.getVisual('decal');
         if (decal) {
-            normalStyle.decal = createOrUpdatePatternFromDecal(decal, 2);
+            normalStyle.decal = createOrUpdatePatternFromDecal(decal, api);
         }
 
         const cornerRadius = getSectorCornerRadius(itemModel.getModel('itemStyle'), sectorShape);

@@ -1,16 +1,18 @@
 import WeakMap from 'zrender/src/core/WeakMap';
 import {DecalObject, DecalDashArrayX, DecalDashArrayY} from 'zrender/src/graphic/Decal';
-import Pattern from 'zrender/src/graphic/Pattern';
+import { PatternObject } from 'zrender/src/graphic/Pattern';
 import LRU from 'zrender/src/core/LRU';
-import {brushSingle} from 'zrender/src/canvas/graphic';
 import {defaults, createCanvas, map, isArray} from 'zrender/src/core/util';
 import {getLeastCommonMultiple} from './number';
 import {createSymbol} from './symbol';
 import {util} from 'zrender/src/export';
+import ExtensionAPI from '../ExtensionAPI';
+import type SVGPainter from 'zrender/src/svg/Painter';
+import type CanvasPainter from 'zrender/src/canvas/Painter';
 
-const decalMap = new WeakMap<DecalObject, Pattern>();
+const decalMap = new WeakMap<DecalObject, PatternObject>();
 
-const decalCache = new LRU<HTMLCanvasElement>(100);
+const decalCache = new LRU<HTMLCanvasElement | SVGElement>(100);
 
 const decalKeys = [
     'symbol', 'symbolSize', 'symbolKeepAspect',
@@ -27,9 +29,11 @@ const decalKeys = [
  */
 export function createOrUpdatePatternFromDecal(
     decalObject: DecalObject,
-    dpr: number
-): Pattern {
-    dpr = dpr || 1;
+    api: ExtensionAPI
+): PatternObject {
+    const dpr = api.getDevicePixelRatio();
+    const zr = api.getZr();
+    const isSVG = zr.painter.type === 'svg';
 
     if (decalObject.dirty) {
         decalMap.delete(decalObject);
@@ -57,10 +61,10 @@ export function createOrUpdatePatternFromDecal(
         decalOpt.backgroundColor = null;
     }
 
-    const canvas = getPatternCanvas();
-    const pattern = new Pattern(canvas, 'repeat');
+    const pattern: PatternObject = { repeat: 'repeat' } as PatternObject;
+    setPatternnSource(pattern);
     pattern.rotation = decalOpt.rotation;
-    pattern.scaleX = pattern.scaleY = 1 / dpr;
+    pattern.scaleX = pattern.scaleY = isSVG ? 1 : 1 / dpr;
 
     decalMap.set(decalObject, pattern);
 
@@ -68,7 +72,7 @@ export function createOrUpdatePatternFromDecal(
 
     return pattern;
 
-    function getPatternCanvas(): HTMLCanvasElement {
+    function setPatternnSource(pattern: PatternObject) {
         const keys = [dpr];
         let isValidKey = true;
         for (let i = 0; i < decalKeys.length; ++i) {
@@ -88,10 +92,11 @@ export function createOrUpdatePatternFromDecal(
 
         let cacheKey;
         if (isValidKey) {
-            cacheKey = keys.join(',');
+            cacheKey = keys.join(',') + (isSVG ? '-svg' : '');
             const cache = decalCache.get(cacheKey);
             if (cache) {
-                return cache;
+                isSVG ? pattern.svgElement = cache as SVGElement
+                    : pattern.image = cache as HTMLCanvasElement;
             }
         }
 
@@ -100,29 +105,36 @@ export function createOrUpdatePatternFromDecal(
         const lineBlockLengthsX = getLineBlockLengthX(dashArrayX);
         const lineBlockLengthY = getLineBlockLengthY(dashArrayY);
 
-        const canvas = createCanvas();
+        const canvas = !isSVG && createCanvas();
+        const svgRoot = isSVG && (zr.painter as SVGPainter).createSVGElement('g');
         const pSize = getPatternSize();
-        canvas.width = pSize.width * dpr;
-        canvas.height = pSize.height * dpr;
+        let ctx: CanvasRenderingContext2D;
+        if (canvas) {
+            canvas.width = pSize.width * dpr;
+            canvas.height = pSize.height * dpr;
+            ctx = canvas.getContext('2d');
+        }
         brushDecal();
 
         if (isValidKey) {
-            decalCache.put(cacheKey, canvas);
+            decalCache.put(cacheKey, canvas || svgRoot);
         }
-        return canvas;
+
+        pattern.image = canvas;
+        pattern.svgElement = svgRoot;
+        pattern.svgWidth = pSize.width;
+        pattern.svgHeight = pSize.height;
 
         /**
          * Get minumum length that can make a repeatable pattern.
          *
          * @return {Object} pattern width and height
          */
-        function getPatternSize()
-            : {
-                width: number,
-                height: number,
-                lines: number
-            }
-        {
+        function getPatternSize(): {
+            width: number,
+            height: number,
+            lines: number
+        } {
             /**
              * For example, if dash is [[3, 2], [2, 1]] for X, it looks like
              * |---  ---  ---  ---  --- ...
@@ -160,10 +172,11 @@ export function createOrUpdatePatternFromDecal(
             const columns = decalOpt.dashLineOffset
                 ? width / offsetMultipleX
                 : 2;
-            let height = lineBlockLengthY * columns;
+            const height = lineBlockLengthY * columns;
 
             if (__DEV__) {
                 const warn = (attrName: string) => {
+                    /* eslint-disable-next-line */
                     console.warn(`Calculated decal size is greater than ${attrName} due to decal option settings so ${attrName} is used for the decal size. Please consider changing the decal option to make a smaller decal or set ${attrName} to be larger to avoid incontinuity.`);
                 };
                 if (width > decalOpt.maxTileWidth) {
@@ -182,14 +195,13 @@ export function createOrUpdatePatternFromDecal(
         }
 
         function brushDecal() {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (decalOpt.backgroundColor) {
-                ctx.fillStyle = decalOpt.backgroundColor;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            if (ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (decalOpt.backgroundColor) {
+                    ctx.fillStyle = decalOpt.backgroundColor;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
             }
-
-            ctx.fillStyle = decalOpt.color;
 
             let ySum = 0;
             for (let i = 0; i < dashArrayY.length; ++i) {
@@ -254,15 +266,21 @@ export function createOrUpdatePatternFromDecal(
             }
 
             function brushSymbol(x: number, y: number, width: number, height: number) {
+                const scale = isSVG ? 1 : dpr;
                 const symbol = createSymbol(
                     decalOpt.symbol,
-                    x * dpr,
-                    y * dpr,
-                    width * dpr,
-                    height * dpr
+                    x * scale,
+                    y * scale,
+                    width * scale,
+                    height * scale
                 );
                 symbol.style.fill = decalOpt.color;
-                brushSingle(ctx, symbol);
+                if (isSVG) {
+                    svgRoot.appendChild((zr.painter as SVGPainter).paintOne(symbol));
+                }
+                else {
+                    (zr.painter as CanvasPainter).paintOne(ctx, symbol);
+                }
             }
         }
     }
