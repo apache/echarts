@@ -171,7 +171,7 @@ function turnPointsIntoStep(
                 stepPt[1 - baseIndex] = pt[1 - baseIndex];
                 stepPt2[1 - baseIndex] = nextPt[1 - baseIndex];
                 stepPoints.push(stepPt[0], stepPt[1]);
-                stepPoints.push(stepPt2[0], stepPt[1]);
+                stepPoints.push(stepPt2[0], stepPt2[1]);
                 break;
             default:
                 // default is start
@@ -1009,16 +1009,18 @@ class LineView extends ChartView {
                 const delay = typeof seriesDalay === 'function' ? seriesDalay(idx)
                     : (seriesDuration * ratio) + seriesDalayValue;
 
-                el.animateFrom({
-                    scaleX: 0,
-                    scaleY: 0
+                const symbolPath = el.getSymbolPath();
+                const text = symbolPath.getTextContent();
+
+                el.attr({ scaleX: 0, scaleY: 0});
+                el.animateTo({
+                    scaleX: 1,
+                    scaleY: 1
                 }, {
                     duration: 200,
                     delay: delay
                 });
 
-                const symbolPath = el.getSymbolPath();
-                const text = symbolPath.getTextContent();
                 if (text) {
                     text.animateFrom({
                         style: {

@@ -118,8 +118,11 @@ class Grid implements CoordinateSystemMaster {
      */
     resize(gridModel: GridModel, api: ExtensionAPI, ignoreContainLabel?: boolean): void {
 
+        const boxLayoutParams = gridModel.getBoxLayoutParams();
+        const isContainLabel = !ignoreContainLabel && gridModel.get('containLabel');
+
         const gridRect = getLayoutRect(
-            gridModel.getBoxLayoutParams(), {
+            boxLayoutParams, {
                 width: api.getWidth(),
                 height: api.getHeight()
             });
@@ -131,7 +134,7 @@ class Grid implements CoordinateSystemMaster {
         adjustAxes();
 
         // Minus label size
-        if (!ignoreContainLabel && gridModel.get('containLabel')) {
+        if (isContainLabel) {
             each(axesList, function (axis) {
                 if (!axis.model.get(['axisLabel', 'inside'])) {
                     const labelUnionRect = estimateLabelUnionRect(axis);

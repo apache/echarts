@@ -30,7 +30,6 @@ import { ColorString, ECElement, ParsedValue } from '../../util/types';
 import List from '../../data/List';
 import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
-import { labeledStatement } from '@babel/types';
 
 interface PosInfo {
     cx: number
@@ -615,7 +614,7 @@ class GaugeView extends ChartView {
                     }, {inheritColor: detailColor})
                 });
                 setLabelValueAnimation(
-                    labelEl, {normal: itemTitleModel}, seriesModel.getRawValue(idx) as ParsedValue,
+                    labelEl, {normal: itemDetailModel}, seriesModel.getRawValue(idx) as ParsedValue,
                     (value: number) => formatLabel(value, formatter)
                 );
                 hasAnimation && animateLabelValue(labelEl, idx, data, seriesModel);

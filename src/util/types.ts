@@ -239,13 +239,42 @@ export interface StageHandlerOverallReset {
     (ecModel: GlobalModel, api: ExtensionAPI, payload?: Payload): void
 }
 export interface StageHandler {
-    seriesType?: string;
+    /**
+     * Indicate that the task will be only piped all series
+     * (`performRawSeries` indicate whether includes filtered series).
+     */
     createOnAllSeries?: boolean;
-    performRawSeries?: boolean;
-    plan?: StageHandlerPlan;
-    overallReset?: StageHandlerOverallReset;
-    reset?: StageHandlerReset;
+    /**
+     * Indicate that the task will be only piped in the pipeline of this type of series.
+     * (`performRawSeries` indicate whether includes filtered series).
+     */
+    seriesType?: string;
+    /**
+     * Indicate that the task will be only piped in the pipeline of the returned series.
+     */
     getTargetSeries?: (ecModel: GlobalModel, api: ExtensionAPI) => HashMap<SeriesModel>;
+
+    /**
+     * If `true`, filtered series will also be "performed".
+     */
+    performRawSeries?: boolean;
+
+    /**
+     * Called only when this task in a pipeline.
+     */
+    plan?: StageHandlerPlan;
+    /**
+     * If `overallReset` specified, an "overall task" will be created.
+     * "overall task" does not belong to a certain pipeline.
+     * They always be "performed" in certain phase (depends on when they declared).
+     * They has "stub"s to connect with pipelines (one stub for one pipeline),
+     * delivering info like "dirty" and "output end".
+     */
+    overallReset?: StageHandlerOverallReset;
+    /**
+     * Called only when this task in a pipeline, and "dirty".
+     */
+    reset?: StageHandlerReset;
 }
 
 export interface StageHandlerInternal extends StageHandler {
@@ -297,7 +326,7 @@ export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'seriesAsc' | 'seriesD
 // `Date` will be parsed to timestamp.
 // Ordinal/category data will be parsed to its index if possible, otherwise
 // keep its original string in list._storage.
-// Check `convertDataValue` for more details.
+// Check `convertValue` for more details.
 export type OrdinalRawValue = string | number;
 export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
 export type OrdinalSortInfo = {
@@ -519,9 +548,9 @@ export type OptionSourceDataOriginal<
     ORIITEM extends OptionDataItemOriginal<VAL> = OptionDataItemOriginal<VAL>
 > = ArrayLike<ORIITEM>;
 export type OptionSourceDataObjectRows<VAL extends OptionDataValue = OptionDataValue> =
-    ArrayLike<Dictionary<VAL>>;
+    Array<Dictionary<VAL>>;
 export type OptionSourceDataArrayRows<VAL extends OptionDataValue = OptionDataValue> =
-    ArrayLike<ArrayLike<VAL>>;
+    Array<Array<VAL>>;
 export type OptionSourceDataKeyedColumns<VAL extends OptionDataValue = OptionDataValue> =
     Dictionary<ArrayLike<VAL>>;
 export type OptionSourceDataTypedArray = ArrayLike<number>;

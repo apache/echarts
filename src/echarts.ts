@@ -88,6 +88,7 @@ import {
     ComponentSubType,
     ColorString,
     SelectChangedPayload,
+    DimensionLoose,
     ScaleDataValue
 } from './util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
@@ -95,7 +96,7 @@ import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import { seriesSymbolTask, dataSymbolTask } from './visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from './visual/helper';
 import LabelManager from './label/LabelManager';
-import { deprecateLog } from './util/log';
+import { deprecateLog, throwError } from './util/log';
 import { handleLegacySelectEvents } from './legacy/dataSelectAction';
 
 // At least canvas renderer.
@@ -106,6 +107,7 @@ import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 import type {EChartsFullOption} from './option';
 import { findEventDispatcher } from './util/event';
 import decal from './visual/decal';
+import {MorphDividingMethod} from 'zrender/src/tool/morphPath';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -191,8 +193,22 @@ interface SetOptionOpts {
     silent?: boolean;
     // Rule: only `id` mapped will be merged,
     // other components of the certain `mainType` will be removed.
-    replaceMerge?: GlobalModelSetOptionOpts['replaceMerge']
+    replaceMerge?: GlobalModelSetOptionOpts['replaceMerge'];
+    transition?: SetOptionTransitionOpt
 };
+
+export interface SetOptionTransitionOptItem {
+    // If `from` not given, it means that do not make series transition mandatorily.
+    // There might be transition mapping dy default. Sometimes we do not need them,
+    // which might bring about misleading.
+    from?: SetOptionTransitionOptFinder;
+    to: SetOptionTransitionOptFinder;
+    dividingMethod: MorphDividingMethod;
+}
+interface SetOptionTransitionOptFinder extends modelUtil.ModelFinderObject {
+    dimension: DimensionLoose;
+}
+type SetOptionTransitionOpt = SetOptionTransitionOptItem | SetOptionTransitionOptItem[];
 
 interface PostIniter {
     (chart: EChartsType): void
@@ -269,6 +285,10 @@ let renderSeries: (
 let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI) => void;
 let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
 let enableConnect: (ecIns: ECharts) => void;
+let setTransitionOpt: (
+    chart: ECharts,
+    transitionOpt: SetOptionTransitionOpt
+) => void;
 
 let markStatusToUpdate: (ecIns: ECharts) => void;
 let applyChangedStates: (ecIns: ECharts) => void;
@@ -323,6 +343,7 @@ class ECharts extends Eventful {
     private _loadingFX: LoadingEffect;
 
     private _labelManager: LabelManager;
+
 
     private [OPTION_UPDATED_KEY]: boolean | {silent: boolean};
     private [IN_MAIN_PROCESS_KEY]: boolean;
@@ -527,10 +548,12 @@ class ECharts extends Eventful {
 
         let silent;
         let replaceMerge;
+        let transitionOpt: SetOptionTransitionOpt;
         if (isObject(notMerge)) {
             lazyUpdate = notMerge.lazyUpdate;
             silent = notMerge.silent;
             replaceMerge = notMerge.replaceMerge;
+            transitionOpt = notMerge.transition;
             notMerge = notMerge.notMerge;
         }
 
@@ -544,7 +567,9 @@ class ECharts extends Eventful {
             ecModel.init(null, null, null, theme, this._locale, optionManager);
         }
 
-        this._model.setOption(option as ECOption, {replaceMerge: replaceMerge}, optionPreprocessorFuncs);
+        this._model.setOption(option as ECOption, { replaceMerge }, optionPreprocessorFuncs);
+
+        setTransitionOpt(this, transitionOpt);
 
         if (lazyUpdate) {
             this[OPTION_UPDATED_KEY] = {silent: silent};
@@ -1956,6 +1981,8 @@ class ECharts extends Eventful {
                     unfinished = true;
                 }
 
+                seriesModel.__transientTransitionOpt = null;
+
                 chartView.group.silent = !!seriesModel.get('silent');
                 // Should not call markRedraw on group, because it will disable zrender
                 // increamental render (alway render from the __startIndex each frame)
@@ -2287,6 +2314,58 @@ class ECharts extends Eventful {
                         updateConnectedChartsStatus(otherCharts, CONNECT_STATUS_UPDATED);
                     }
                 });
+            });
+        };
+
+        setTransitionOpt = function (
+            chart: ECharts,
+            transitionOpt: SetOptionTransitionOpt
+        ): void {
+            const ecModel = chart._model;
+
+            zrUtil.each(modelUtil.normalizeToArray(transitionOpt), transOpt => {
+                let errMsg;
+                const fromOpt = transOpt.from;
+                const toOpt = transOpt.to;
+
+                if (toOpt == null) {
+                    if (__DEV__) {
+                        errMsg = '`transition.to` must be specified.';
+                    }
+                    throwError(errMsg);
+                }
+
+                const finderOpt = {
+                    includeMainTypes: ['series'],
+                    enableAll: false,
+                    enableNone: false
+                };
+                const fromResult = fromOpt ? modelUtil.parseFinder(ecModel, fromOpt, finderOpt) : null;
+                const toResult = modelUtil.parseFinder(ecModel, toOpt, finderOpt);
+                const toSeries = toResult.seriesModel;
+
+                if (toSeries == null) {
+                    errMsg = '';
+                    if (__DEV__) {
+                        errMsg = '`transition` is only supported on series.';
+                    }
+                }
+                if (fromResult && fromResult.seriesModel !== toSeries) {
+                    errMsg = '';
+                    if (__DEV__) {
+                        errMsg = '`transition.from` and `transition.to` must be specified to the same series.';
+                    }
+                }
+                if (errMsg != null) {
+                    throwError(errMsg);
+                }
+
+                // Just a temp solution: mount them on series.
+                toSeries.__transientTransitionOpt = {
+                    from: fromOpt ? fromOpt.dimension : null,
+                    to: toOpt.dimension,
+                    dividingMethod: transOpt.dividingMethod
+                };
             });
         };
 

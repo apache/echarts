@@ -177,20 +177,24 @@ class Symbol extends graphic.Group {
         if (isInit) {
             const symbolPath = this.childAt(0) as ECSymbol;
 
-            const target: PathProps = {
-                scaleX: this._sizeX,
-                scaleY: this._sizeY,
-                style: {
-                    // Always fadeIn. Because it has fadeOut animation when symbol is removed..
-                    opacity: symbolPath.style.opacity
-                }
-            };
+            if (!disableAnimation) {
+                const target: PathProps = {
+                    scaleX: this._sizeX,
+                    scaleY: this._sizeY,
+                    style: {
+                        // Always fadeIn. Because it has fadeOut animation when symbol is removed..
+                        opacity: symbolPath.style.opacity
+                    }
+                };
+                symbolPath.scaleX = symbolPath.scaleY = 0;
+                symbolPath.style.opacity = 0;
+                graphic.initProps(symbolPath, target, seriesModel, idx);
+            }
+        }
 
-            symbolPath.scaleX = symbolPath.scaleY = 0;
-            symbolPath.style.opacity = 0;
-
-            disableAnimation ? symbolPath.attr(target)
-                : graphic.initProps(symbolPath, target, seriesModel, idx);
+        if (disableAnimation) {
+            // Must stop remove animation manually if don't call initProps or updateProps.
+            this.childAt(0).stopAnimation('remove');
         }
 
         this._seriesModel = seriesModel;
@@ -335,7 +339,6 @@ class Symbol extends graphic.Group {
             emphasisState.scaleX = this._sizeX * scaleRatio;
             emphasisState.scaleY = this._sizeY * scaleRatio;
         }
-
         this.setSymbolScale(1);
 
         enableHoverEmphasis(this, focus, blurScope);
