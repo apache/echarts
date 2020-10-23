@@ -19,13 +19,12 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import {DecalObject} from 'zrender/src/graphic/Decal';
 import {MorphDividingMethod} from 'zrender/src/tool/morphPath';
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
     SeriesOption, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType, DimensionLoose
+    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType, DimensionLoose, DecalObject
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {PaletteMixin} from './mixin/palette';

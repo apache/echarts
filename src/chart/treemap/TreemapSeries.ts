@@ -33,14 +33,13 @@ import {
     StatesOptionMixin,
     OptionId,
     OptionName,
-    Dictionary
+    DecalObject
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
 import List from '../../data/List';
 import { normalizeToArray } from '../../util/model';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
-import {DecalObject} from 'zrender/src/graphic/Decal';
 import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
 
 // Only support numberic value.

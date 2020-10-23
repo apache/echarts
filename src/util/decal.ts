@@ -1,5 +1,4 @@
 import WeakMap from 'zrender/src/core/WeakMap';
-import {DecalObject, DecalDashArrayX, DecalDashArrayY} from 'zrender/src/graphic/Decal';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import LRU from 'zrender/src/core/LRU';
 import {defaults, createCanvas, map, isArray} from 'zrender/src/core/util';
@@ -9,6 +8,7 @@ import {util} from 'zrender/src/export';
 import ExtensionAPI from '../ExtensionAPI';
 import type SVGPainter from 'zrender/src/svg/Painter';
 import { brushSingle } from 'zrender/src/canvas/graphic';
+import {DecalObject, DecalDashArrayX, DecalDashArrayY} from './types';
 
 const decalMap = new WeakMap<DecalObject, PatternObject>();
 

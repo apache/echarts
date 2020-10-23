@@ -24,7 +24,6 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
-import {DecalObject} from 'zrender/src/graphic/Decal';
 import {PathStyleProps} from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
@@ -36,7 +35,7 @@ import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
     ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput,
-    ModelOption, SeriesDataType, OptionSourceData, SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL
+    ModelOption, SeriesDataType, OptionSourceData, SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL, DecalObject
 } from '../util/types';
 import {isDataItemOption, convertOptionIdName} from '../util/model';
 import { getECData } from '../util/innerStore';

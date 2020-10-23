@@ -18,7 +18,6 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import {DecalObject} from 'zrender/src/graphic/Decal';
 import ExtensionAPI from '../ExtensionAPI';
 import {retrieveRawValue} from '../data/helper/dataProvider';
 import GlobalModel from '../model/Global';
@@ -27,7 +26,7 @@ import SeriesModel from '../model/Series';
 import {AriaOption} from '../component/aria';
 import {TitleOption} from '../component/title';
 import {makeInner} from '../util/model';
-import {Dictionary} from '../util/types';
+import {Dictionary, DecalObject} from '../util/types';
 import {LocaleOption} from '../locale';
 
 const defaultOption: AriaOption = {

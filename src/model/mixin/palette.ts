@@ -18,11 +18,10 @@
 */
 
 import {Dictionary} from 'zrender/src/core/types';
-import Decal, {DecalObject} from 'zrender/src/graphic/Decal';
 import {isArray} from 'zrender/src/core/util';
 import {makeInner, normalizeToArray} from '../../util/model';
 import Model from '../Model';
-import {ZRColor, PaletteOptionMixin} from '../../util/types';
+import {ZRColor, PaletteOptionMixin, DecalObject} from '../../util/types';
 
 type Inner<T> = (hostObj: PaletteMixin<PaletteOptionMixin>) => {
     paletteIdx: number;

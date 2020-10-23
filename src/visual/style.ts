@@ -18,14 +18,13 @@
 */
 
 import { isFunction, extend, createHashMap } from 'zrender/src/core/util';
-import { StageHandler, CallbackDataParams, ZRColor, Dictionary } from '../util/types';
+import { StageHandler, CallbackDataParams, ZRColor, Dictionary, DecalObject } from '../util/types';
 import makeStyleMapper from '../model/mixin/makeStyleMapper';
 import { ITEM_STYLE_KEY_MAP } from '../model/mixin/itemStyle';
 import { LINE_STYLE_KEY_MAP } from '../model/mixin/lineStyle';
 import SeriesModel from '../model/Series';
 import Model from '../model/Model';
 import { makeInner } from '../util/model';
-import {DecalObject} from 'zrender/src/graphic/Decal';
 
 const inner = makeInner<{scope: object}, SeriesModel>();
 

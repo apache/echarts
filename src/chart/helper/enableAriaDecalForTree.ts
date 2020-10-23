@@ -1,6 +1,5 @@
-import {DecalObject} from 'zrender/src/graphic/Decal';
 import SeriesModel from '../../model/Series';
-import {Dictionary} from '../../util/types';
+import {Dictionary, DecalObject} from '../../util/types';
 
 export default function (seriesModel: SeriesModel) {
     const data = seriesModel.getData();

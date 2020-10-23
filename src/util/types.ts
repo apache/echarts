@@ -47,7 +47,6 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
-import Decal, {DecalObject} from 'zrender/src/graphic/Decal';
 
 
 
@@ -656,6 +655,39 @@ export type DimensionUserOuput = {
     // The same as `data.dimensions`
     dimensionNames: DimensionName[]
     encode: DimensionUserOuputEncode
+};
+
+export type DecalDashArrayX = number | (number | number[])[];
+export type DecalDashArrayY = number | number[];
+export interface DecalObject {
+    // 'image', 'triangle', 'diamond', 'pin', 'arrow', 'line', 'rect', 'roundRect', 'square', 'circle'
+    symbol?: string
+
+    // size relative to the dash bounding box; valued from 0 to 1
+    symbolSize?: number
+    // keep the aspect ratio and use the smaller one of width and height as bounding box size
+    symbolKeepAspect?: boolean
+
+    // foreground color of the pattern
+    color?: string
+    // background color of the pattern; default value is 'none' (same as 'transparent') so that the underlying series color is displayed
+    backgroundColor?: string
+
+    // dash-gap pattern on x
+    dashArrayX?: DecalDashArrayX
+    // dash-gap pattern on y
+    dashArrayY?: DecalDashArrayY
+
+    // in radians; valued from -Math.PI to Math.PI
+    rotation?: number,
+
+    // boundary of largest tile width
+    maxTileWidth?: number,
+    // boundary of largest tile height
+    maxTileHeight?: number
+
+    // If option has changed
+    dirty?: boolean
 };
 
 export interface MediaQuery {
