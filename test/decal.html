@@ -94,18 +94,6 @@ under the License.
             </tr>
             <tr>
                 <td>
-                    dashLineOffset
-                </td>
-                <td>
-                    <input type="range" min="0" max="50" value="0" id="dashLineOffset-range">
-                    <label id="dashLineOffset-label">0</label>
-                </td>
-                <td>
-                    <button onclick="rand('dashLineOffset', 0, 100)">Random</button>
-                </td>
-            </tr>
-            <tr>
-                <td>
                     rotation
                 </td>
                 <td>
@@ -272,7 +260,6 @@ under the License.
             symbolSize: 1,
             dashArrayX: [10, 10],
             dashArrayY: [10, 10],
-            dashLineOffset: 0,
             rotation: 0,
             maxTileWidth: 256,
             maxTileHeight: 256
@@ -329,7 +316,7 @@ under the License.
                 option: option
             });
 
-            ['symbolSize', 'dashArrayX-0', 'dashArrayX-1', 'dashArrayY-0', 'dashArrayY-1', 'dashLineOffset', 'rotation'].forEach(function (name) {
+            ['symbolSize', 'dashArrayX-0', 'dashArrayX-1', 'dashArrayY-0', 'dashArrayY-1', 'rotation'].forEach(function (name) {
                 var input = document.getElementById(name + '-range');
                 var nameSplit = name.split('-');
                 var attrName = nameSplit[0];
@@ -392,7 +379,6 @@ under the License.
             rand('symbolSize', 0, 1);
             rand('dashArrayX-0', 0, 50);
             rand('dashArrayY-0', 0, 50);
-            rand('dashLineOffset', 0, 50);
             rand('rotation', 0, 3.14);
         }
         </script>
