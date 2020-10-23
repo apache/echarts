@@ -34,12 +34,10 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                 }
             });
         }
-        else {
-            const decal = data.getVisual('decal');
-            if (decal) {
-                const style = data.getVisual('style');
-                style.decal = createOrUpdatePatternFromDecal(decal, api);
-            }
+        const decal = data.getVisual('decal');
+        if (decal) {
+            const style = data.getVisual('style');
+            style.decal = createOrUpdatePatternFromDecal(decal, api);
         }
     });
 }
