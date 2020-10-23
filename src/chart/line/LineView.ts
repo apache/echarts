@@ -762,7 +762,8 @@ class LineView extends ChartView {
                 {
                     fill: visualColor,
                     opacity: 0.7,
-                    lineJoin: 'bevel' as CanvasLineJoin
+                    lineJoin: 'bevel' as CanvasLineJoin,
+                    decal: data.getVisual('style').decal
                 }
             ));
 

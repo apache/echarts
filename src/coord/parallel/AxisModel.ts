@@ -79,7 +79,8 @@ class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
                 ['lineWidth', 'borderWidth'],
                 ['stroke', 'borderColor'],
                 ['width', 'width'],
-                ['opacity', 'opacity']
+                ['opacity', 'opacity'],
+                ['decal']
             ]
         )(this.getModel('areaSelectStyle')) as ParallelAreaSelectStyleProps;
     }

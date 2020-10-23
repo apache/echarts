@@ -34,7 +34,8 @@ export const LINE_STYLE_KEY_MAP = [
     ['lineDashOffset', 'dashOffset'],
     ['lineCap', 'cap'],
     ['lineJoin', 'join'],
-    ['miterLimit']
+    ['miterLimit'],
+    ['decal']
 ];
 
 const getLineStyle = makeStyleMapper(LINE_STYLE_KEY_MAP);

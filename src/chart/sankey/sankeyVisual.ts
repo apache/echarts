@@ -17,8 +17,8 @@
 * under the License.
 */
 
-import VisualMapping from '../../visual/VisualMapping';
 import * as zrUtil from 'zrender/src/core/util';
+import VisualMapping from '../../visual/VisualMapping';
 import GlobalModel from '../../model/Global';
 import SankeySeriesModel, { SankeyNodeItemOption } from './SankeySeries';
 

@@ -221,7 +221,8 @@ class RadarView extends ChartView {
                     areaStyleModel.getAreaStyle(),
                     {
                         fill: color,
-                        opacity: 0.7
+                        opacity: 0.7,
+                        decal: itemStyle.decal
                     }
                 )
             );

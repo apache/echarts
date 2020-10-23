@@ -34,6 +34,7 @@ import {
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import Model from '../../model/Model';
+import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
 
 interface SunburstItemStyleOption extends ItemStyleOption {
     // can be 10
@@ -278,6 +279,10 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         ) {
             this._viewRoot = root;
         }
+    }
+
+    enableAriaDecal() {
+        enableAriaDecalForTree(this);
     }
 }
 

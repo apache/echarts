@@ -17,12 +17,25 @@
 * under the License.
 */
 
-export * from './echarts';
+import * as zrUtil from 'zrender/src/core/util';
+import { ECUnitOption } from '../../util/types';
 
-import './component/dataset';
+export default function (option: ECUnitOption) {
+    if (!option || !option.aria) {
+        return;
+    }
 
-import './chart/line';
-import './chart/bar';
-import './chart/pie';
-import './component/gridSimple';
-import './component/aria';
+    const aria = option.aria;
+    // aria.show is deprecated and should use aria.enabled instead
+    if ((aria as any).show != null) {
+        aria.enabled = (aria as any).show;
+    }
+
+    aria.label = aria.label || {};
+    // move description, general, series, data to be under aria.label
+    zrUtil.each(['description', 'general', 'series', 'data'], name => {
+        if ((aria as any)[name] != null) {
+            (aria.label as any)[name] = (aria as any)[name];
+        }
+    });
+}

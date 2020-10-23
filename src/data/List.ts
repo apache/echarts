@@ -24,6 +24,7 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
+import {PathStyleProps} from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
 import {DefaultDataProvider, DataProvider} from './helper/dataProvider';
@@ -34,16 +35,15 @@ import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
     ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput,
-    ModelOption, SeriesDataType, OptionSourceData, SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL
+    ModelOption, SeriesDataType, OptionSourceData, SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL, DecalObject
 } from '../util/types';
 import {isDataItemOption, convertOptionIdName} from '../util/model';
 import { getECData } from '../util/innerStore';
-import { PathStyleProps } from 'zrender/src/graphic/Path';
 import type Graph from './Graph';
 import type Tree from './Tree';
 import type { VisualMeta } from '../component/visualMap/VisualMapModel';
 import { parseDataValue } from './helper/dataValueHelper';
-import { isSourceInstance, Source } from './Source';
+import {isSourceInstance, Source} from './Source';
 import OrdinalMeta from './OrdinalMeta';
 
 const mathFloor = Math.floor;
@@ -145,6 +145,8 @@ export interface DefaultDataVisual {
 
     // If color is encoded from palette
     colorFromPalette?: boolean
+
+    decal?: DecalObject
 }
 
 export interface DataCalculationInfo<SERIES_MODEL> {
@@ -1772,6 +1774,13 @@ class List<
             return this.getVisual(key);
         }
         return val;
+    }
+
+    /**
+     * If exists visual property of single data item
+     */
+    hasItemVisual() {
+        return this._itemVisuals.length > 0;
     }
 
     /**

@@ -257,6 +257,12 @@ import './component/visualMapContinuous';
 // });
 import './component/visualMapPiecewise';
 
+// `aria` component providing aria, for example:
+// chart.setOption({
+//     aria: {...}
+// });
+import './component/aria';
+
 
 
 // -----------------

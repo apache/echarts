@@ -20,9 +20,9 @@
 // TODO Parse shadow style
 // TODO Only shallow path support
 import * as zrUtil from 'zrender/src/core/util';
+import {Dictionary} from 'zrender/src/core/types';
+import {PathStyleProps} from 'zrender/src/graphic/Path';
 import Model from '../Model';
-import { Dictionary } from 'zrender/src/core/types';
-import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 export default function (properties: readonly string[][], ignoreParent?: boolean) {
     // Normalize

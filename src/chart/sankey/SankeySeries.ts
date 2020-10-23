@@ -17,6 +17,7 @@
 * under the License.
 */
 
+import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import Model from '../../model/Model';
@@ -274,6 +275,17 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             params.value = nodeValue;
         }
         return params;
+    }
+
+    enableAriaDecal() {
+        const graph = this.getGraph();
+        const nodes = graph.nodes;
+        zrUtil.each(nodes, node => {
+            const name = this.getDataParams(node.dataIndex, 'node').name;
+            const paletteDecal = this.getDecalFromPalette(name, null, nodes.length);
+            const decal = zrUtil.defaults(node.getVisual('style').decal || {}, paletteDecal);
+            node.hostGraph.data.setItemVisual(node.dataIndex, 'decal', decal);
+        });
     }
 
     static defaultOption: SankeySeriesOption = {
