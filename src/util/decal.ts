@@ -4,7 +4,6 @@ import LRU from 'zrender/src/core/LRU';
 import {defaults, createCanvas, map, isArray} from 'zrender/src/core/util';
 import {getLeastCommonMultiple} from './number';
 import {createSymbol} from './symbol';
-import {util} from 'zrender/src/export';
 import ExtensionAPI from '../ExtensionAPI';
 import type SVGPainter from 'zrender/src/svg/Painter';
 import { brushSingle } from 'zrender/src/canvas/graphic';
@@ -295,7 +294,7 @@ function normalizeDashArrayX(dash: DecalDashArrayX): number[][] {
             result.push([dashValue, dashValue]);
         }
         else {
-            const dashValue = util.map(dash[i] as number[], n => Math.ceil(n));
+            const dashValue = map(dash[i] as number[], n => Math.ceil(n));
             if (dashValue.length % 2 === 1) {
                 // [4, 2, 1] means |----  -    -- |----  -    -- |
                 // so normalize it to be [4, 2, 1, 4, 2, 1]
@@ -324,7 +323,7 @@ function normalizeDashArrayY(dash: DecalDashArrayY): number[] {
         return [dashValue, dashValue];
     }
 
-    const dashValue = util.map(dash as number[], n => Math.ceil(n));
+    const dashValue = map(dash as number[], n => Math.ceil(n));
     return dash.length % 2 ? dashValue.concat(dashValue) : dashValue;
 }
 

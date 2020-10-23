@@ -41,7 +41,6 @@ import Model from '../../model/Model';
 import Displayable, { DisplayableState } from 'zrender/src/graphic/Displayable';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { parse, stringify } from 'zrender/src/tool/color';
-import {Pattern} from 'zrender/src/export';
 import {PatternObject} from 'zrender/src/graphic/Pattern';
 
 const curry = zrUtil.curry;
