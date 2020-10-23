@@ -8,7 +8,6 @@ import {createSymbol} from './symbol';
 import {util} from 'zrender/src/export';
 import ExtensionAPI from '../ExtensionAPI';
 import type SVGPainter from 'zrender/src/svg/Painter';
-import type CanvasPainter from 'zrender/src/canvas/Painter';
 import { brushSingle } from 'zrender/src/canvas/graphic';
 
 const decalMap = new WeakMap<DecalObject, PatternObject>();

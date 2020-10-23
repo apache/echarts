@@ -38,6 +38,7 @@ import Model from '../../model/Model';
 import Transformable from 'zrender/src/core/Transformable';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
+import { createOrUpdatePatternFromDecal } from '../../util/decal';
 
 
 interface RegionsGroup extends graphic.Group {
@@ -206,8 +207,12 @@ class MapDraw {
                 //
                 // Visual color for each series is for the symbol draw
                 const style = data.getItemVisual(dataIdx, 'style');
+                const decal = data.getItemVisual(dataIdx, 'decal');
                 if (isVisualEncodedByVisualMap && style.fill) {
                     itemStyle.fill = style.fill;
+                }
+                if (decal) {
+                    itemStyle.decal = createOrUpdatePatternFromDecal(decal, api);
                 }
             }
 
