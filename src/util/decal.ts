@@ -8,7 +8,7 @@ import {util} from 'zrender/src/export';
 import ExtensionAPI from '../ExtensionAPI';
 import type SVGPainter from 'zrender/src/svg/Painter';
 import { brushSingle } from 'zrender/src/canvas/graphic';
-import {DecalObject, DecalDashArrayX, DecalDashArrayY} from './types';
+import {DecalDashArrayX, DecalDashArrayY, InnerDecalObject, DecalObject} from './types';
 
 const decalMap = new WeakMap<DecalObject, PatternObject>();
 
@@ -24,11 +24,11 @@ const decalKeys = [
 /**
  * Create or update pattern image from decal options
  *
- * @param {DecalObject} decalObject decal options
+ * @param {InnerDecalObject} decalObject decal options
  * @return {Pattern} pattern with generated image
  */
 export function createOrUpdatePatternFromDecal(
-    decalObject: DecalObject,
+    decalObject: InnerDecalObject,
     api: ExtensionAPI
 ): PatternObject {
     const dpr = api.getDevicePixelRatio();

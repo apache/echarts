@@ -42,6 +42,7 @@ import Displayable, { DisplayableState } from 'zrender/src/graphic/Displayable';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { parse, stringify } from 'zrender/src/tool/color';
 import {Pattern} from 'zrender/src/export';
+import {PatternObject} from 'zrender/src/graphic/Pattern';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -336,7 +337,7 @@ class LegendView extends ComponentView {
         itemAlign: LegendOption['align'],
         color: ZRColor,
         borderColor: ZRColor,
-        decal: Pattern,
+        decal: PatternObject,
         selectMode: LegendOption['selectedMode']
     ) {
         const itemWidth = legendModel.get('itemWidth');
@@ -554,7 +555,7 @@ function setSymbolStyle(
     legendModelItemStyle: Model<ItemStyleOption>,
     borderColor: ZRColor,
     inactiveBorderColor: ZRColor,
-    decal: Pattern,
+    decal: PatternObject,
     isSelected: boolean
 ) {
     let itemStyle;
