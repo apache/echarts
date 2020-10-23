@@ -18,15 +18,17 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
+import {DecalObject} from 'zrender/src/graphic/Decal';
 import ExtensionAPI from '../ExtensionAPI';
 import {retrieveRawValue} from '../data/helper/dataProvider';
 import GlobalModel from '../model/Global';
 import Model from '../model/Model';
+import SeriesModel from '../model/Series';
 import {AriaOption} from '../component/aria';
 import {TitleOption} from '../component/title';
+import {makeInner} from '../util/model';
 import {Dictionary} from '../util/types';
-import {DecalObject} from 'zrender/src/graphic/Decal';
-import { LocaleOption } from '../locale';
+import {LocaleOption} from '../locale';
 
 const defaultOption: AriaOption = {
     enabled: true,
@@ -37,6 +39,8 @@ const defaultOption: AriaOption = {
         show: false
     }
 };
+
+const inner = makeInner<{scope: object}, SeriesModel>();
 
 const decalPaletteScope: Dictionary<DecalObject> = {};
 
@@ -62,8 +66,25 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
 
         const useDecal = decalModel.get('show');
         if (useDecal) {
-            // default decal show value is true
+            // Each type of series use one scope.
+            // Pie and funnel are using diferrent scopes
+            const paletteScopeGroupByType = zrUtil.createHashMap<object>();
+            ecModel.eachSeries(function (seriesModel) {
+                if (!seriesModel.useColorPaletteOnData) {
+                    return;
+                }
+                let decalScope = paletteScopeGroupByType.get(seriesModel.type);
+                if (!decalScope) {
+                    decalScope = {};
+                    paletteScopeGroupByType.set(seriesModel.type, decalScope);
+                }
+                inner(seriesModel).scope = decalScope;
+            });
+
             ecModel.eachRawSeries(seriesModel => {
+                if (ecModel.isSeriesFiltered(seriesModel)) {
+                    return;
+                }
                 if (typeof seriesModel.enableAriaDecal === 'function') {
                     // Let series define how to use decal palette on data
                     seriesModel.enableAriaDecal();
@@ -73,14 +94,23 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                 const data = seriesModel.getData();
 
                 if (seriesModel.useColorPaletteOnData) {
-                    const decalSeriesScope: Dictionary<DecalObject> = {};
-                    const dataCount = data.count();
-                    data.each(idx => {
+                    const dataAll = seriesModel.getRawData();
+                    const idxMap: Dictionary<number> = {};
+                    const decalScope = inner(seriesModel).scope;
+
+                    data.each(function (idx) {
+                        const rawIdx = data.getRawIndex(idx);
+                        idxMap[rawIdx] = idx;
+                    });
+
+                    const dataCount = dataAll.count();
+                    dataAll.each(rawIdx => {
+                        const idx = idxMap[rawIdx];
                         const itemStyle = data.ensureUniqueItemVisual(idx, 'style');
-                        const name = data.getName(idx) || (idx + '');
+                        const name = dataAll.getName(rawIdx) || (rawIdx + '');
                         const paletteDecal = seriesModel.getDecalFromPalette(
                             name,
-                            decalSeriesScope,
+                            decalScope,
                             dataCount
                         );
                         const decal = zrUtil.defaults(

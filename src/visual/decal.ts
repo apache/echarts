@@ -23,6 +23,10 @@ import {createOrUpdatePatternFromDecal} from '../util/decal';
 
 export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachRawSeries(seriesModel => {
+        if (ecModel.isSeriesFiltered(seriesModel)) {
+            return;
+        }
+
         const data = seriesModel.getData();
 
         if (data.hasItemVisual()) {

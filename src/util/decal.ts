@@ -132,8 +132,7 @@ export function createOrUpdatePatternFromDecal(
          */
         function getPatternSize(): {
             width: number,
-            height: number,
-            lines: number
+            height: number
         } {
             /**
              * For example, if dash is [[3, 2], [2, 1]] for X, it looks like
@@ -145,34 +144,12 @@ export function createOrUpdatePatternFromDecal(
              * which is the least common multiple of `3 + 2` and `2 + 1`
              * |---  ---  ---  |---  --- ...
              * |-- -- -- -- -- |-- -- -- ...
-             *
-             * When consider with dashLineOffset, it means the `n`th line has the offset
-             * of `n * dashLineOffset`.
-             * For example, if dash is [[3, 1], [1, 1]] and dashLineOffset is 3,
-             * and use `=` for the start to make it clear, it looks like
-             * |=-- --- --- --- --- -...
-             * | - = - - - - - - - - ...
-             * |- --- =-- --- --- -- ...
-             * | - - - - = - - - - - ...
-             * |--- --- --- =-- --- -...
-             * | - - - - - - - = - - ...
-             * In this case, the minumum length is 12, which is the least common
-             * multiple of `3 + 1`, `1 + 1` and `3 * 2` where `2` is xlen
-             * |=-- --- --- |--- --- -...
-             * | - = - - - -| - - - - ...
-             * |- --- =-- --|- --- -- ...
-             * | - - - - = -| - - - - ...
              */
-            const offsetMultipleX = decalOpt.dashLineOffset || 1;
             let width = 1;
             for (let i = 0, xlen = lineBlockLengthsX.length; i < xlen; ++i) {
-                const x = getLeastCommonMultiple(offsetMultipleX * xlen, lineBlockLengthsX[i]);
-                width = getLeastCommonMultiple(width, x);
+                width = getLeastCommonMultiple(width, lineBlockLengthsX[i]);
             }
-            const columns = decalOpt.dashLineOffset
-                ? width / offsetMultipleX
-                : 2;
-            const height = lineBlockLengthY * columns;
+            const height = lineBlockLengthY * lineBlockLengthsX.length;
 
             if (__DEV__) {
                 const warn = (attrName: string) => {
@@ -189,8 +166,7 @@ export function createOrUpdatePatternFromDecal(
 
             return {
                 width: Math.max(1, Math.min(width, decalOpt.maxTileWidth)),
-                height: Math.max(1, Math.min(height, decalOpt.maxTileHeight)),
-                lines: columns
+                height: Math.max(1, Math.min(height, decalOpt.maxTileHeight))
             };
         }
 
@@ -212,16 +188,12 @@ export function createOrUpdatePatternFromDecal(
                 return;
             }
 
-            let yCnt = 0;
-            let y = -pSize.lines * lineBlockLengthY;
+            let y = -lineBlockLengthY;
             let yId = 0;
             let xId0 = 0;
             while (y < pSize.height) {
                 if (yId % 2 === 0) {
-                    let x = fixStartPosition(
-                        decalOpt.dashLineOffset * (yCnt - pSize.lines) / 2,
-                        lineBlockLengthsX[0]
-                    );
+                    let x = 0;
                     let xId1 = 0;
                     while (x < pSize.width * 2) {
                         let xSum = 0;
@@ -255,8 +227,6 @@ export function createOrUpdatePatternFromDecal(
                         xId0 = 0;
                     }
                 }
-
-                ++yCnt;
                 y += dashArrayY[yId];
 
                 ++yId;
@@ -383,12 +353,4 @@ function getLineBlockLengthY(dash: number[]): number {
         return blockLength * 2;
     }
     return blockLength;
-}
-
-function fixStartPosition(lineOffset: number, blockLength: number) {
-    let start = lineOffset || 0;
-    while (start > 0) {
-        start -= blockLength;
-    }
-    return start;
 }
