@@ -88,6 +88,7 @@ import {
     combine, isInAnyMorphing, morphPath, isCombiningPath, CombineSeparateConfig, separate, CombineSeparateResult
 } from 'zrender/src/tool/morphPath';
 import { AnimationEasing } from 'zrender/src/animation/easing';
+import * as matrix from 'zrender/src/core/matrix';
 
 
 const inner = makeInner<{
@@ -98,7 +99,8 @@ const inner = makeInner<{
     // customText: string;
     txConZ2Set: number;
     leaveToProps: ElementProps;
-    morphOption: boolean;
+    // Can morph: "morph" specified in option and el is Path.
+    canMorph: boolean;
     userDuring: CustomBaseElementOption['during'];
 }, Element>();
 
@@ -368,6 +370,8 @@ export type PrepareCustomInfo = (coordSys: CoordinateSystem) => {
     api: CustomSeriesRenderItemCoordinateSystemAPI
 };
 
+const tmpTransformable = new Transformable();
+
 /**
  * To reduce total package size of each coordinate systems, the modules `prepareCustom`
  * of each coordinate systems are not required by each coordinate systems directly, but
@@ -469,7 +473,6 @@ class CustomSeriesView extends ChartView {
         // roam or data zoom according to `actionType`.
 
         const transOpt = customSeries.__transientTransitionOpt;
-        const diffMode: DataDiffMode = transOpt ? 'multiple' : 'oneToOne';
 
         // Enable user to disable transition animation by both set
         // `from` and `to` dimension as `null`/`undefined`.
@@ -484,7 +487,8 @@ class CustomSeriesView extends ChartView {
             });
         }
         else {
-            const morphPreparation = new MorphPreparation();
+            const morphPreparation = new MorphPreparation(customSeries, transOpt);
+            const diffMode: DataDiffMode = transOpt ? 'multiple' : 'oneToOne';
 
             (new DataDiffer(
                 oldData ? oldData.getIndices() : [],
@@ -504,52 +508,53 @@ class CustomSeriesView extends ChartView {
                 doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
             })
             .update(function (newIdx, oldIdx) {
-                morphPreparation.reset();
-                morphPreparation.enableNextAddTo();
-                const oldEl = oldData.getItemGraphicEl(oldIdx);
-                const from = findMayMorphFrom(oldEl);
-                morphPreparation.addFrom(from);
-                morphPreparation.needCheckFromSameEl = true;
-                // Do not call `removeElementDirectly` here.
-                // `oldEl` is passed into the first param of `createOrUpdateItem`,
-                // which will handle the remove or replace.
+                morphPreparation.reset('oneToOne');
+                let oldEl = oldData.getItemGraphicEl(oldIdx);
+                morphPreparation.findAndAddFrom(oldEl);
+
+                // PENDING:
+                // if may morph, currently we alway recreate the whole el.
+                // because if reuse some of the el in the group tree, the old el has to
+                // be removed from the group, and consequently we can not calculate
+                // the "global transition" of the old element.
+                // But is there performance issue?
+                if (morphPreparation.hasFrom()) {
+                    removeElementDirectly(oldEl, group);
+                    oldEl = null;
+                }
                 createOrUpdateItem(
                     oldEl, newIdx, renderItem(newIdx, payload), customSeries, group,
                     data, morphPreparation
                 );
-                morphPreparation.applyMorphing('oneToOne', customSeries, transOpt);
+                morphPreparation.applyMorphing();
             })
             .updateManyToOne(function (newIdx, oldIndices) {
-                morphPreparation.reset();
+                morphPreparation.reset('manyToOne');
                 for (let i = 0; i < oldIndices.length; i++) {
                     const oldEl = oldData.getItemGraphicEl(oldIndices[i]);
-                    const from = findMayMorphFrom(oldEl);
-                    morphPreparation.addFrom(from);
+                    morphPreparation.findAndAddFrom(oldEl);
                     removeElementDirectly(oldEl, group);
                 }
-                morphPreparation.enableNextAddTo();
                 createOrUpdateItem(
                     null, newIdx, renderItem(newIdx, payload), customSeries, group,
                     data, morphPreparation
                 );
-                morphPreparation.applyMorphing('manyToOne', customSeries, transOpt);
+                morphPreparation.applyMorphing();
             })
             .updateOneToMany(function (newIndices, oldIdx) {
-                morphPreparation.reset();
+                morphPreparation.reset('oneToMany');
                 const newLen = newIndices.length;
                 const oldEl = oldData.getItemGraphicEl(oldIdx);
-                const from = findMayMorphFrom(oldEl);
-                morphPreparation.addFrom(from);
+                morphPreparation.findAndAddFrom(oldEl);
                 removeElementDirectly(oldEl, group);
 
                 for (let i = 0; i < newLen; i++) {
-                    morphPreparation.enableNextAddTo();
                     createOrUpdateItem(
                         null, newIndices[i], renderItem(newIndices[i], payload), customSeries, group,
                         data, morphPreparation
                     );
                 }
-                morphPreparation.applyMorphing('oneToMany', customSeries, transOpt);
+                morphPreparation.applyMorphing();
             })
             .execute();
         }
@@ -1021,7 +1026,6 @@ function prepareTransformTransitionFrom(
     isInit: boolean
 ): void {
     const enterFrom = elOption.enterFrom;
-    const fromEl = morphFromEl || el;
     if (isInit && enterFrom) {
         const enterFromKeys = keys(enterFrom);
         for (let i = 0; i < enterFromKeys.length; i++) {
@@ -1038,13 +1042,14 @@ function prepareTransformTransitionFrom(
         // If morphing, force transition all transform props.
         // otherwise might have incorrect morphing animation.
         if (morphFromEl) {
-            setTransformPropToTransitionFrom(transFromProps, 'x', fromEl);
-            setTransformPropToTransitionFrom(transFromProps, 'y', fromEl);
-            setTransformPropToTransitionFrom(transFromProps, 'scaleX', fromEl);
-            setTransformPropToTransitionFrom(transFromProps, 'scaleY', fromEl);
-            setTransformPropToTransitionFrom(transFromProps, 'originX', fromEl);
-            setTransformPropToTransitionFrom(transFromProps, 'originY', fromEl);
-            setTransformPropToTransitionFrom(transFromProps, 'rotation', fromEl);
+            const fromTransformable = calcOldElLocalTransformBasedOnNewElParent(morphFromEl, el);
+            setTransformPropToTransitionFrom(transFromProps, 'x', fromTransformable);
+            setTransformPropToTransitionFrom(transFromProps, 'y', fromTransformable);
+            setTransformPropToTransitionFrom(transFromProps, 'scaleX', fromTransformable);
+            setTransformPropToTransitionFrom(transFromProps, 'scaleY', fromTransformable);
+            setTransformPropToTransitionFrom(transFromProps, 'originX', fromTransformable);
+            setTransformPropToTransitionFrom(transFromProps, 'originY', fromTransformable);
+            setTransformPropToTransitionFrom(transFromProps, 'rotation', fromTransformable);
         }
         else if (elOption.transition) {
             const transitionKeys = normalizeToArray(elOption.transition);
@@ -1053,7 +1058,7 @@ function prepareTransformTransitionFrom(
                 if (key === 'style' || key === 'shape' || key === 'extra') {
                     continue;
                 }
-                const elVal = fromEl[key];
+                const elVal = el[key];
                 if (__DEV__) {
                     checkTransformPropRefer(key, 'el.transition');
                     checkNonStyleTansitionRefer(key, elOption[key], elVal);
@@ -1064,8 +1069,8 @@ function prepareTransformTransitionFrom(
         }
         // This default transition see [STRATEGY_TRANSITION]
         else {
-            setTransformPropToTransitionFrom(transFromProps, 'x', fromEl);
-            setTransformPropToTransitionFrom(transFromProps, 'y', fromEl);
+            setTransformPropToTransitionFrom(transFromProps, 'x', el);
+            setTransformPropToTransitionFrom(transFromProps, 'y', el);
         }
     }
 
@@ -1171,6 +1176,54 @@ function prepareStyleTransitionFrom(
             (leaveToStyleProps as any)[key] = leaveTo[key];
         }
     }
+}
+
+/**
+ * If make "transform"(x/y/scaleX/scaleY/orient/originX/originY) transition between
+ * two path elements that have different hierarchy, before we retrieve the "from" props,
+ * we have to calculate the local transition of the "oldPath" based on the parent of
+ * the "newPath".
+ * At present, the case only happend in "morphing". Without morphing, the transform
+ * transition are all between elements in the same hierarchy, where this kind of process
+ * is not needed.
+ *
+ * [CAVEAT]:
+ * This method makes sense only if: (very tricky)
+ * (1) "newEl" has been added to its final parent.
+ * (2) Local transform props of "newPath.parent" are not at their final value but already
+ * have been at the "from value".
+ *     This is currently ensured by:
+ *     (2.1) "graphicUtil.animationFrom", which will set the element to the "from value"
+ *     immediately.
+ *     (2.2) "morph" option is not allowed to be set on Group, so all of the groups have
+ *     been finished their "updateElNormal" when calling this method in morphing process.
+ */
+function calcOldElLocalTransformBasedOnNewElParent(oldEl: Element, newEl: Element): Transformable {
+    if (!oldEl || oldEl === newEl || oldEl.parent === newEl.parent) {
+        return oldEl;
+    }
+
+    // Not sure oldEl is rendered (may have "lazyUpdate"),
+    // so always call `getComputedTransform`.
+    const tmpM = tmpTransformable.transform
+        || (tmpTransformable.transform = matrix.identity([]));
+
+    const oldGlobalTransform = oldEl.getComputedTransform();
+    oldGlobalTransform
+        ? matrix.copy(tmpM, oldGlobalTransform)
+        : matrix.identity(tmpM);
+
+    const newParent = newEl.parent;
+    if (newParent) {
+        newParent.getComputedTransform();
+    }
+
+    tmpTransformable.originX = oldEl.originX;
+    tmpTransformable.originY = oldEl.originY;
+    tmpTransformable.parent = newParent;
+    tmpTransformable.decomposeTransform();
+
+    return tmpTransformable;
 }
 
 let checkNonStyleTansitionRefer: (propName: string, optVal: unknown, elVal: unknown) => void;
@@ -1447,14 +1500,14 @@ function setLagecyTransformProp(
     elOption: CustomElementOption,
     targetProps: Partial<Pick<Transformable, TransformProp>>,
     legacyName: LegacyTransformProp,
-    fromEl?: Element // If provided, retrieve from the element.
+    fromTransformable?: Transformable // If provided, retrieve from the element.
 ): void {
     const legacyArr = (elOption as any)[legacyName];
     const xyName = LEGACY_TRANSFORM_PROPS[legacyName];
     if (legacyArr) {
-        if (fromEl) {
-            targetProps[xyName[0]] = fromEl[xyName[0]];
-            targetProps[xyName[1]] = fromEl[xyName[1]];
+        if (fromTransformable) {
+            targetProps[xyName[0]] = fromTransformable[xyName[0]];
+            targetProps[xyName[1]] = fromTransformable[xyName[1]];
         }
         else {
             targetProps[xyName[0]] = legacyArr[0];
@@ -1467,20 +1520,20 @@ function setTransformProp(
     elOption: CustomElementOption,
     allProps: Partial<Pick<Transformable, TransformProp>>,
     name: TransformProp,
-    fromEl?: Element // If provided, retrieve from the element.
+    fromTransformable?: Transformable // If provided, retrieve from the element.
 ): void {
     if (elOption[name] != null) {
-        allProps[name] = fromEl ? fromEl[name] : elOption[name];
+        allProps[name] = fromTransformable ? fromTransformable[name] : elOption[name];
     }
 }
 
 function setTransformPropToTransitionFrom(
     transitionFrom: Partial<Pick<Transformable, TransformProp>>,
     name: TransformProp,
-    fromEl?: Element // If provided, retrieve from the element.
+    fromTransformable?: Transformable // If provided, retrieve from the element.
 ): void {
-    if (fromEl) {
-        transitionFrom[name] = fromEl[name];
+    if (fromTransformable) {
+        transitionFrom[name] = fromTransformable[name];
     }
 }
 
@@ -1847,23 +1900,16 @@ function doCreateOrUpdateEl(
         assert(elOption, 'should not have an null/undefined element setting');
     }
 
-    const optionMorph = (elOption as CustomZRPathOption).morph;
-    if (optionMorph && morphPreparation) {
-        morphPreparation.meetMorphOption();
-    }
-
     let toBeReplacedIdx = -1;
     if (
         el && (
             doesElNeedRecreate(el, elOption)
-            || (
-                // el has been used as the "from" for other el.
-                // So can not be used as the old el in this place.
-                morphPreparation
-                && morphPreparation.needCheckFromSameEl
-                && morphPreparation.getSingleFrom() === el
-                && !optionMorph
-            )
+            // || (
+            //     // PENDING: even in one-to-one mapping case, if el is marked as morph,
+            //     // do not sure whether the el will be mapped to another el with different
+            //     // hierarchy in Group tree. So always recreate el rather than reuse the el.
+            //     morphPreparation && morphPreparation.isOneToOneFrom(el)
+            // )
         )
     ) {
         // Should keep at the original index, otherwise "merge by index" will be incorrect.
@@ -1883,8 +1929,8 @@ function doCreateOrUpdateEl(
         el.clearStates();
     }
 
-    inner(el).morphOption = optionMorph;
-    const thisElIsMorphTo = optionMorph && isPath(el) && morphPreparation && morphPreparation.hasFrom();
+    const canMorph = inner(el).canMorph = (elOption as CustomZRPathOption).morph && isPath(el);
+    const thisElIsMorphTo = canMorph && morphPreparation && morphPreparation.hasFrom();
 
     // Use update animation when morph is enabled.
     const isInit = elIsNewCreated && !thisElIsMorphTo;
@@ -2312,42 +2358,62 @@ function removeElementDirectly(el: Element, group: ViewRootGroup): void {
 }
 
 
+type MorphPreparationType = 'oneToOne' | 'oneToMany' | 'manyToOne';
+
+/**
+ * Any morph-potential el should added by `morphPreparation.addTo(el)`.
+ * And they may apply morph or not when `morphPreparation.applyMorphing()`.
+ * But at least, all of the "to" elements will apply all of the updates
+ * as `doCreateOrUpdateItem` did.
+ */
 class MorphPreparation {
+    private _type: MorphPreparationType;
     private _fromList: graphicUtil.Path[] = [];
     private _toList: graphicUtil.Path[] = [];
     private _toElOptionList: CustomElementOption[] = [];
     private _allPropsFinalList: ElementProps[] = [];
     private _toDataIndices: number[] = [];
-    private _preventAddTo: boolean;
-    private _metMorphOption: boolean;
-    needCheckFromSameEl: boolean;
+    private _transOpt: SeriesModel['__transientTransitionOpt'];
+    private _seriesModel: CustomSeriesModel;
+    // Key: `toDataIndex`, not `toIdx`
+    private _morphConfigList: CombineSeparateConfig[] = [];
+
+    constructor(
+        seriesModel: CustomSeriesModel,
+        transOpt: SeriesModel['__transientTransitionOpt']
+    ) {
+        this._seriesModel = seriesModel;
+        this._transOpt = transOpt;
+    }
 
     hasFrom(): boolean {
         return !!this._fromList.length;
     }
 
-    getSingleFrom(): graphicUtil.Path {
-        return this._fromList[0];
-    }
+    // isOneToOneFrom(el: Element): boolean {
+    //     if (el && inner(el).canMorph) {
+    //         const fromList = this._fromList;
+    //         for (let i = 0; i < fromList.length; i++) {
+    //             if (fromList[i] === el) {
+    //                 return true;
+    //             }
+    //         }
+    //     }
+    // }
 
-    addFrom(path: graphicUtil.Path): void {
-        path && this._fromList.push(path);
-    }
-
-    meetMorphOption() {
-        let errMsg = '';
-        if (this._metMorphOption) {
-            if (__DEV__) {
-                errMsg = 'Only one "morph" allowed in each `renderItem` return.';
-            }
-            throwError(errMsg);
+    findAndAddFrom(el: Element): void {
+        if (!el) {
+            return;
         }
-        this._metMorphOption = true;
-    }
-
-    enableNextAddTo(): void {
-        this._metMorphOption = false;
-        this._preventAddTo = false;
+        if (inner(el).canMorph) {
+            this._fromList.push(el as graphicUtil.Path);
+        }
+        if (el.isGroup) {
+            const children = (el as graphicUtil.Group).childrenRef();
+            for (let i = 0; i < children.length; i++) {
+                this.findAndAddFrom(children[i]);
+            }
+        }
     }
 
     addTo(
@@ -2356,36 +2422,15 @@ class MorphPreparation {
         dataIndex: number,
         allPropsFinal: ElementProps
     ): void {
-        // After added successfully, can not perform a next add until `enableNextAddTo` called.
-        // At present only one 'morph' option works if multiple 'morph` option sepecified for a data item.
-        if (!this._preventAddTo && path) {
+        if (path) {
             this._toList.push(path);
             this._toElOptionList.push(elOption);
             this._toDataIndices.push(dataIndex);
             this._allPropsFinalList.push(allPropsFinal);
-            this._preventAddTo = true;
         }
     }
 
-    applyMorphing(
-        type: 'oneToOne' | 'oneToMany' | 'manyToOne',
-        seriesModel: CustomSeriesModel,
-        transOpt: SeriesModel['__transientTransitionOpt'] // May be null/undefined
-    ): void {
-        if (!seriesModel.isAnimationEnabled()) {
-            return;
-        }
-        const fromList = this._fromList;
-        const toList = this._toList;
-        const toElOptionList = this._toElOptionList;
-        const toDataIndices = this._toDataIndices;
-        const allPropsFinalList = this._allPropsFinalList;
-        if (!fromList.length || !toList.length) {
-            return;
-        }
-        const elAnimationConfig = prepareMorphElementAnimateConfig(seriesModel, toDataIndices[0], transOpt);
-        const morphDuration = !!elAnimationConfig.duration;
-
+    applyMorphing(): void {
         // [MORPHING_LOGIC_HINT]
         // Pay attention to the order:
         // (A) Apply `allPropsFinal` and `styleOption` to "to".
@@ -2410,86 +2455,241 @@ class MorphPreparation {
         // [MORPHING_LOGIC_HINT]
         // Make sure `applyPropsFinal` always be called for "to".
 
+        const type = this._type;
+        const fromList = this._fromList;
+        const toList = this._toList;
+        const toListLen = toList.length;
+        const fromListLen = fromList.length;
+
+        if (!fromListLen || !toListLen) {
+            return;
+        }
+
         if (type === 'oneToOne') {
-            const from = fromList[0];
-            const to = toList[0];
-            const toElOption = toElOptionList[0];
-            const toDataIndex = toDataIndices[0];
-            const allPropsFinal = allPropsFinalList[0];
-
-            if (!isCombiningPath(from)) {
-                const shouldMorph = morphDuration
-                    // from === to usually happen in scenarios where internal update like
-                    // "dataZoom", "legendToggle" happen. If from is not in any morphing,
-                    // we do not need to call `morphPath`.
-                    && (from !== to || isInAnyMorphing(from));
-                const morphFrom = shouldMorph ? from : null;
-
-                // See [Case_II] above.
-                // In this case, there is probably `from === to`. And the `transitionFromProps` collecting
-                // does not depends on morphing. So we collect `transitionFromProps` first.
-                const transFromProps = {} as ElementProps;
-                prepareShapeOrExtraTransitionFrom('shape', to, morphFrom, toElOption, transFromProps, false);
-                prepareShapeOrExtraTransitionFrom('extra', to, morphFrom, toElOption, transFromProps, false);
-                prepareTransformTransitionFrom(to, morphFrom, toElOption, transFromProps, false);
-                prepareStyleTransitionFrom(to, morphFrom, toElOption, toElOption.style, transFromProps, false);
-
-                applyPropsFinal(to, allPropsFinal, toElOption.style);
-
-                if (shouldMorph) {
-                    morphPath(from, to, elAnimationConfig);
-                }
-                applyTransitionFrom(to, toDataIndex, toElOption, seriesModel, transFromProps, false);
-            }
-            else {
-                applyPropsFinal(to, allPropsFinal, toElOption.style);
-
-                if (morphDuration) {
-                    const combineResult = combine([from], to, elAnimationConfig, copyPropsWhenDivided);
-                    processCombineSeparateIndividuals(
-                        'combine', combineResult, seriesModel, toElOption, toDataIndex
-                    );
-                }
-                // The target el will not be displayed and transition from multiple path.
-                // transition on the target el does not make sense.
+            // In one-to-one case, we by default apply a simple rule:
+            // map "from" and "to" one by one.
+            // For this case: old_data_item_el and new_data_item_el
+            // has the same hierarchy of group tree but only some path type changed.
+            for (let toIdx = 0; toIdx < toListLen; toIdx++) {
+                this._oneToOneForSingleTo(toIdx, toIdx);
             }
         }
 
         else if (type === 'manyToOne') {
-            const to = toList[0];
-            const toElOption = toElOptionList[0];
-            const toDataIndex = toDataIndices[0];
-            const allPropsFinal = allPropsFinalList[0];
-
-            applyPropsFinal(to, allPropsFinal, toElOption.style);
-
-            if (morphDuration) {
-                const combineResult = combine(fromList, to, elAnimationConfig, copyPropsWhenDivided);
-                processCombineSeparateIndividuals(
-                    'combine', combineResult, seriesModel, toElOption, toDataIndex
+            // A rough strategy: if there are more than one "to", we simply divide "fromList" equally.
+            const fromSingleSegLen = Math.max(1, Math.floor(fromListLen / toListLen));
+            for (
+                let toIdx = 0, fromIdxStart = 0;
+                toIdx < toListLen;
+                toIdx++, fromIdxStart += fromSingleSegLen
+            ) {
+                const fromCount = toIdx + 1 >= toListLen
+                    ? fromListLen - fromIdxStart
+                    : fromSingleSegLen;
+                this._manyToOneForSingleTo(
+                    toIdx, fromIdxStart >= fromListLen ? null : fromIdxStart, fromCount
                 );
             }
         }
 
         else if (type === 'oneToMany') {
-            const from = fromList[0];
-            for (let i = 0; i < toList.length; i++) {
-                applyPropsFinal(toList[i], allPropsFinalList[i], toElOptionList[i].style);
-            }
-            if (morphDuration) {
-                const separateResult = separate(from, toList, elAnimationConfig, copyPropsWhenDivided);
-                processCombineSeparateIndividuals(
-                    'separate', separateResult, seriesModel, toElOptionList, toDataIndices
+            // A rough strategy: if there are more than one "from", we simply divide "toList" equally.
+            const toSingleSegLen = Math.max(1, Math.floor(toListLen / fromListLen));
+            for (
+                let toIdxStart = 0, fromIdx = 0;
+                toIdxStart < toListLen;
+                toIdxStart += toSingleSegLen, fromIdx++
+            ) {
+                const toCount = toIdxStart + toSingleSegLen >= toListLen
+                    ? toListLen - toIdxStart
+                    : toSingleSegLen;
+                this._oneToManyForSingleFrom(
+                    toIdxStart, toCount, fromIdx >= fromListLen ? null : fromIdx
                 );
             }
         }
-
     }
 
-    reset(): void {
-        this._preventAddTo = true;
-        this.needCheckFromSameEl = false;
-        this._metMorphOption = false;
+    private _oneToOneForSingleTo(
+        // "to" must NOT be null/undefined.
+        toIdx: number,
+        // May `fromIdx >= this._fromList.length`
+        fromIdx: number
+    ): void {
+        const to = this._toList[toIdx];
+        const toElOption = this._toElOptionList[toIdx];
+        const toDataIndex = this._toDataIndices[toIdx];
+        const allPropsFinal = this._allPropsFinalList[toIdx];
+        const from = this._fromList[fromIdx];
+
+        const elAnimationConfig = this._getOrCreateMorphConfig(toDataIndex);
+        const morphDuration = elAnimationConfig.duration;
+
+        if (from && isCombiningPath(from)) {
+            applyPropsFinal(to, allPropsFinal, toElOption.style);
+
+            if (morphDuration) {
+                const combineResult = combine([from], to, elAnimationConfig, copyPropsWhenDivided);
+                this._processResultIndividuals(combineResult, toIdx, null);
+            }
+            // The target el will not be displayed and transition from multiple path.
+            // transition on the target el does not make sense.
+        }
+        else {
+            const morphFrom = (
+                morphDuration
+                // from === to usually happen in scenarios where internal update like
+                // "dataZoom", "legendToggle" happen. If from is not in any morphing,
+                // we do not need to call `morphPath`.
+                && from
+                && (from !== to || isInAnyMorphing(from))
+            ) ? from : null;
+
+            // See [Case_II] above.
+            // In this case, there is probably `from === to`. And the `transitionFromProps` collecting
+            // does not depends on morphing. So we collect `transitionFromProps` first.
+            const transFromProps = {} as ElementProps;
+            prepareShapeOrExtraTransitionFrom('shape', to, morphFrom, toElOption, transFromProps, false);
+            prepareShapeOrExtraTransitionFrom('extra', to, morphFrom, toElOption, transFromProps, false);
+            prepareTransformTransitionFrom(to, morphFrom, toElOption, transFromProps, false);
+            prepareStyleTransitionFrom(to, morphFrom, toElOption, toElOption.style, transFromProps, false);
+
+            applyPropsFinal(to, allPropsFinal, toElOption.style);
+
+            if (morphFrom) {
+                morphPath(morphFrom, to, elAnimationConfig);
+            }
+            applyTransitionFrom(to, toDataIndex, toElOption, this._seriesModel, transFromProps, false);
+        }
+    }
+
+    private _manyToOneForSingleTo(
+        // "to" must NOT be null/undefined.
+        toIdx: number,
+        // May be null.
+        fromIdxStart: number,
+        fromCount: number
+    ): void {
+        const to = this._toList[toIdx];
+        const toElOption = this._toElOptionList[toIdx];
+        const allPropsFinal = this._allPropsFinalList[toIdx];
+
+        applyPropsFinal(to, allPropsFinal, toElOption.style);
+
+        const elAnimationConfig = this._getOrCreateMorphConfig(this._toDataIndices[toIdx]);
+        if (elAnimationConfig.duration && fromIdxStart != null) {
+            const combineFromList = [];
+            for (let fromIdx = fromIdxStart; fromIdx < fromCount; fromIdx++) {
+                combineFromList.push(this._fromList[fromIdx]);
+            }
+            const combineResult = combine(combineFromList, to, elAnimationConfig, copyPropsWhenDivided);
+            this._processResultIndividuals(combineResult, toIdx, null);
+        }
+    }
+
+    private _oneToManyForSingleFrom(
+        // "to" must NOT be null/undefined.
+        toIdxStart: number,
+        toCount: number,
+        // May be null
+        fromIdx: number
+    ): void {
+        const from = fromIdx == null ? null : this._fromList[fromIdx];
+        const toList = this._toList;
+
+        const separateToList = [];
+        for (let toIdx = toIdxStart; toIdx < toCount; toIdx++) {
+            const to = toList[toIdx];
+            applyPropsFinal(to, this._allPropsFinalList[toIdx], this._toElOptionList[toIdx].style);
+            separateToList.push(to);
+        }
+
+        const elAnimationConfig = this._getOrCreateMorphConfig(this._toDataIndices[toIdxStart]);
+        if (elAnimationConfig.duration && from) {
+            const separateResult = separate(from, separateToList, elAnimationConfig, copyPropsWhenDivided);
+            this._processResultIndividuals(separateResult, toIdxStart, toCount);
+        }
+    }
+
+    private _processResultIndividuals(
+        combineSeparateResult: CombineSeparateResult,
+        toIdxStart: number,
+        toCount: number
+    ): void {
+        const isSeparate = toCount != null;
+
+        for (let i = 0; i < combineSeparateResult.count; i++) {
+            const fromIndividual = combineSeparateResult.fromIndividuals[i];
+            const toIndividual = combineSeparateResult.toIndividuals[i];
+            // Here it's a trick:
+            // For "combine" case, all of the `toIndividuals` map to the same `toIdx`.
+            // For "separate" case, the `toIndividuals` map to some certain segment of `_toList` accurately.
+            const toIdx = toIdxStart + (isSeparate ? i : 0);
+
+            const toElOption = this._toElOptionList[toIdx];
+            const dataIndex = this._toDataIndices[toIdx];
+
+            const transFromProps = {} as ElementProps;
+            prepareTransformTransitionFrom(
+                toIndividual, fromIndividual, toElOption, transFromProps, false
+            );
+            prepareStyleTransitionFrom(
+                toIndividual, fromIndividual, toElOption, toElOption.style, transFromProps, false
+            );
+            applyTransitionFrom(
+                toIndividual, dataIndex, toElOption, this._seriesModel, transFromProps, false
+            );
+        }
+    }
+
+    _getOrCreateMorphConfig(dataIndex: number): CombineSeparateConfig {
+        const morphConfigList = this._morphConfigList;
+        let config = morphConfigList[dataIndex];
+        if (config) {
+            return config;
+        }
+
+        let duration: number;
+        let easing: AnimationEasing;
+        let delay: number;
+        const seriesModel = this._seriesModel;
+        const transOpt = this._transOpt;
+
+        if (seriesModel.isAnimationEnabled()) {
+            // PENDING: refactor? this is the same logic as `src/util/graphic.ts#animateOrSetProps`.
+            let animationPayload: PayloadAnimationPart;
+            if (seriesModel && seriesModel.ecModel) {
+                const updatePayload = seriesModel.ecModel.getUpdatePayload();
+                animationPayload = (updatePayload && updatePayload.animation) as PayloadAnimationPart;
+            }
+            if (animationPayload) {
+                duration = animationPayload.duration || 0;
+                easing = animationPayload.easing || 'cubicOut';
+                delay = animationPayload.delay || 0;
+            }
+            else {
+                easing = seriesModel.get('animationEasingUpdate');
+                const delayOption = seriesModel.get('animationDelayUpdate');
+                delay = isFunction(delayOption) ? delayOption(dataIndex) : delayOption;
+                const durationOption = seriesModel.get('animationDurationUpdate');
+                duration = isFunction(durationOption) ? durationOption(dataIndex) : durationOption;
+            }
+        }
+
+        config = {
+            duration: duration || 0,
+            delay: delay,
+            easing: easing,
+            dividingMethod: transOpt ? transOpt.dividingMethod : null
+        };
+        morphConfigList[dataIndex] = config;
+
+        return config;
+    }
+
+    reset(type: MorphPreparationType): void {
+        // `this._morphConfigList` can be kept. It only related to `dataIndex`.
+        this._type = type;
         this._fromList.length =
             this._toList.length =
             this._toElOptionList.length =
@@ -2498,106 +2698,19 @@ class MorphPreparation {
     }
 }
 
-function processCombineSeparateIndividuals<TYPE extends 'combine' | 'separate'>(
-    type: TYPE,
-    combineSeparateResult: CombineSeparateResult,
-    seriesModel: CustomSeriesModel,
-    toElOptionInput: TYPE extends 'separate' ? CustomElementOption[] : CustomElementOption,
-    dataIndexInput: TYPE extends 'separate' ? number[] : number
-): void {
-    const isSeparate = type === 'separate';
-
-    for (let i = 0; i < combineSeparateResult.count; i++) {
-        const fromIndividual = combineSeparateResult.fromIndividuals[i];
-        const toIndividual = combineSeparateResult.toIndividuals[i];
-
-        const toElOption = isSeparate
-            ? (toElOptionInput as CustomElementOption[])[i]
-            : (toElOptionInput as CustomElementOption);
-        const dataIndex = isSeparate
-            ? (dataIndexInput as number[])[i]
-            : (dataIndexInput as number);
-
-        const transFromProps = {} as ElementProps;
-        prepareTransformTransitionFrom(
-            toIndividual, fromIndividual, toElOption, transFromProps, false
-        );
-        prepareStyleTransitionFrom(
-            toIndividual, fromIndividual, toElOption, toElOption.style, transFromProps, false
-        );
-        applyTransitionFrom(
-            toIndividual, dataIndex, toElOption, seriesModel, transFromProps, false
-        );
-    }
-}
-
-// At present only one 'morph' enabled in each data item.
-function findMayMorphFrom(el: Element): graphicUtil.Path {
-    if (!el) {
-        return;
-    }
-    if (inner(el).morphOption && isPath(el)) {
-        return el;
-    }
-    if (el.isGroup) {
-        const elGroup = el as graphicUtil.Group;
-        const children = elGroup.childrenRef();
-        for (let i = 0; i < children.length; i++) {
-            const path = findMayMorphFrom(children[i]);
-            if (path) {
-                return path;
-            }
-        }
-    }
-}
-
-function prepareMorphElementAnimateConfig(
-    seriesModel: CustomSeriesModel,
-    dataIndex: number,
-    transOpt: SeriesModel['__transientTransitionOpt'] // may be null/undefined
-): CombineSeparateConfig {
-    let duration: number;
-    let easing: AnimationEasing;
-    let delay: number;
-
-    // PENDING: refactor? this is the same logic as `src/util/graphic.ts#animateOrSetProps`.
-    let animationPayload: PayloadAnimationPart;
-    if (seriesModel && seriesModel.ecModel) {
-        const updatePayload = seriesModel.ecModel.getUpdatePayload();
-        animationPayload = (updatePayload && updatePayload.animation) as PayloadAnimationPart;
-    }
-    if (animationPayload) {
-        duration = animationPayload.duration || 0;
-        easing = animationPayload.easing || 'cubicOut';
-        delay = animationPayload.delay || 0;
-    }
-    else {
-        easing = seriesModel.get('animationEasingUpdate');
-        const delayOption = seriesModel.get('animationDelayUpdate');
-        delay = isFunction(delayOption) ? delayOption(dataIndex) : delayOption;
-        const durationOption = seriesModel.get('animationDurationUpdate');
-        duration = isFunction(durationOption) ? durationOption(dataIndex) : durationOption;
-    }
-
-    return {
-        duration: duration || 0,
-        delay: delay,
-        easing: easing,
-        dividingMethod: transOpt ? transOpt.dividingMethod : null
-    };
-}
-
 function copyPropsWhenDivided(
     srcPath: graphicUtil.Path,
     tarPath: graphicUtil.Path,
     willClone: boolean
 ): void {
-    tarPath.x = srcPath.x;
-    tarPath.y = srcPath.y;
-    tarPath.scaleX = srcPath.scaleX;
-    tarPath.scaleY = srcPath.scaleY;
-    tarPath.originX = srcPath.originX;
-    tarPath.originY = srcPath.originY;
+    // Do not copy transform props.
+    // Sub paths are transfrom based on their host path.
+    // tarPath.x = srcPath.x;
+    // tarPath.y = srcPath.y;
+    // tarPath.scaleX = srcPath.scaleX;
+    // tarPath.scaleY = srcPath.scaleY;
+    // tarPath.originX = srcPath.originX;
+    // tarPath.originY = srcPath.originY;
 
     // If just carry the style, will not be modifed, so do not copy.
     tarPath.style = willClone
