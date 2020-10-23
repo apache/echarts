@@ -26,6 +26,7 @@ import {AriaOption} from '../component/aria';
 import {TitleOption} from '../component/title';
 import {Dictionary} from '../util/types';
 import {DecalObject} from 'zrender/src/graphic/Decal';
+import { LocaleOption } from '../locale';
 
 const defaultOption: AriaOption = {
     enabled: true,
@@ -39,11 +40,13 @@ const defaultOption: AriaOption = {
 
 const decalPaletteScope: Dictionary<DecalObject> = {};
 
+type SeriesTypes = keyof LocaleOption['series']['typeNames'];
+
 export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     const ariaModel: Model<AriaOption> = ecModel.getModel('aria');
 
     if (ariaModel.option) {
-        const labelLocale = ecModel.getLocale('aria' as any);
+        const labelLocale = ecModel.getLocaleModel().get('aria');
         defaultOption.label = zrUtil.defaults(labelLocale, defaultOption.label);
         ariaModel.option = zrUtil.defaults(ariaModel.option, defaultOption);
     }
@@ -105,7 +108,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     }
 
     function setLabel() {
-        const labelLocale = ecModel.getLocale('aria' as any);
+        const labelLocale = ecModel.getLocaleModel().get('aria');
         const labelModel = ariaModel.getModel('label');
         labelModel.option = zrUtil.defaults(labelModel.option, labelLocale);
 
@@ -160,7 +163,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                     seriesLabel = replace(seriesLabel, {
                         seriesId: seriesModel.seriesIndex,
                         seriesName: seriesModel.get('name'),
-                        seriesType: getSeriesTypeName(seriesModel.subType)
+                        seriesType: getSeriesTypeName(seriesModel.subType as SeriesTypes)
                     });
 
                     const data = seriesModel.getData();
@@ -197,8 +200,9 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                 }
             });
 
-            const middleSeparator = labelModel.get(['series', 'multiple', 'separator', 'middle'] as any);
-            const endSeparator = labelModel.get(['series', 'multiple', 'separator', 'end'] as any);
+            const separatorModel = labelModel.getModel(['series', 'multiple', 'separator']);
+            const middleSeparator = separatorModel.get('middle');
+            const endSeparator = separatorModel.get('end');
             ariaLabel += seriesLabels.join(middleSeparator) + endSeparator;
 
             dom.setAttribute('aria-label', ariaLabel);
@@ -228,8 +232,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
         return title && (title as TitleOption).text;
     }
 
-    function getSeriesTypeName(type: string) {
-        // FIXME: remove as any
-        return ecModel.getLocale(['series', 'typeNames'] as any)[type] || '自定义图';
+    function getSeriesTypeName(type: SeriesTypes) {
+        return ecModel.getLocaleModel().get(['series', 'typeNames'])[type] || '自定义图';
     }
 }

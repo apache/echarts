@@ -46,7 +46,7 @@ export interface AriaLabelOption {
                 end?: string;
             }
         }
-    },
+    };
     data?: {
         maxCount?: number;
         allData?: string;
