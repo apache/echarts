@@ -66,7 +66,6 @@ import {
 import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
 import {seriesStyleTask, dataStyleTask, dataColorPaletteTask} from './visual/style';
-import aria from './visual/aria';
 import loadingDefault from './loading/default';
 import Scheduler from './stream/Scheduler';
 import lightTheme from './theme/light';
@@ -107,7 +106,8 @@ import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 
 import type {EChartsFullOption} from './option';
 import { findEventDispatcher } from './util/event';
-import { MorphDividingMethod } from 'zrender/src/tool/morphPath';
+import decal from './visual/decal';
+import {MorphDividingMethod} from 'zrender/src/tool/morphPath';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -145,6 +145,8 @@ const PRIORITY_VISUAL_CHART_DATA_CUSTOM = 4500;    // visual property in data
 // FIXME
 // necessary?
 const PRIORITY_VISUAL_BRUSH = 5000;
+const PRIORITY_VISUAL_ARIA = 6000;
+const PRIORITY_VISUAL_DECAL = 7000;
 
 export const PRIORITY = {
     PROCESSOR: {
@@ -160,7 +162,9 @@ export const PRIORITY = {
         POST_CHART_LAYOUT: PRIORITY_VISUAL_POST_CHART_LAYOUT,
         COMPONENT: PRIORITY_VISUAL_COMPONENT,
         BRUSH: PRIORITY_VISUAL_BRUSH,
-        CHART_ITEM: PRIORITY_VISUAL_CHART_DATA_CUSTOM
+        CHART_ITEM: PRIORITY_VISUAL_CHART_DATA_CUSTOM,
+        ARIA: PRIORITY_VISUAL_ARIA,
+        DECAL: PRIORITY_VISUAL_DECAL
     }
 };
 
@@ -2011,9 +2015,6 @@ class ECharts extends Eventful {
 
             // If use hover layer
             updateHoverLayerStatus(ecIns, ecModel);
-
-            // Add aria
-            aria(ecIns._zr.dom, ecModel);
         };
 
         performPostUpdateFuncs = function (ecModel: GlobalModel, api: ExtensionAPI): void {
@@ -2868,6 +2869,8 @@ registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataColorPaletteTask);
 
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesSymbolTask);
 registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataSymbolTask);
+
+registerVisual(PRIORITY_VISUAL_DECAL, decal);
 
 registerPreprocessor(backwardCompat);
 registerProcessor(PRIORITY_PROCESSOR_DATASTACK, dataStack);

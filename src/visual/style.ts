@@ -18,7 +18,7 @@
 */
 
 import { isFunction, extend, createHashMap } from 'zrender/src/core/util';
-import { StageHandler, CallbackDataParams, ZRColor, Dictionary } from '../util/types';
+import { StageHandler, CallbackDataParams, ZRColor, Dictionary, InnerDecalObject } from '../util/types';
 import makeStyleMapper from '../model/mixin/makeStyleMapper';
 import { ITEM_STYLE_KEY_MAP } from '../model/mixin/itemStyle';
 import { LINE_STYLE_KEY_MAP } from '../model/mixin/lineStyle';
@@ -75,6 +75,12 @@ const seriesStyleTask: StageHandler = {
         const getStyle = getStyleMapper(seriesModel, stylePath);
 
         const globalStyle = getStyle(styleModel);
+
+        const decalOption = styleModel.getShallow('decal') as InnerDecalObject;
+        if (decalOption) {
+            data.setVisual('decal', decalOption);
+            decalOption.dirty = true;
+        }
 
         // TODO
         const colorKey = getDefaultColorKey(seriesModel, stylePath);
@@ -138,6 +144,11 @@ const dataStyleTask: StageHandler = {
                     const existsStyle = data.ensureUniqueItemVisual(idx, 'style');
                     extend(existsStyle, style);
 
+                    if (sharedModel.option.decal) {
+                        data.setItemVisual(idx, 'decal', sharedModel.option.decal);
+                        sharedModel.option.decal.dirty = true;
+                    }
+
                     if (colorKey in style) {
                         data.setItemVisual(idx, 'colorFromPalette', false);
                     }
@@ -198,11 +209,9 @@ const dataColorPaletteTask: StageHandler = {
                 // 2. color is encoded by visualMap
                 if (fromPalette) {
                     const itemStyle = data.ensureUniqueItemVisual(idx, 'style');
-                    itemStyle[colorKey] = seriesModel.getColorFromPalette(
-                        dataAll.getName(rawIdx) || (rawIdx + ''),
-                        colorScope,
-                        dataAll.count()
-                    );
+                    const name = dataAll.getName(rawIdx) || (rawIdx + '');
+                    const dataCount = dataAll.count();
+                    itemStyle[colorKey] = seriesModel.getColorFromPalette(name, colorScope, dataCount);
                 }
             });
         });

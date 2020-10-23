@@ -28,7 +28,8 @@ export const AREA_STYLE_KEY_MAP = [
     ['shadowOffsetX'],
     ['shadowOffsetY'],
     ['opacity'],
-    ['shadowColor']
+    ['shadowColor'],
+    ['decal']
 ];
 const getAreaStyle = makeStyleMapper(AREA_STYLE_KEY_MAP);
 

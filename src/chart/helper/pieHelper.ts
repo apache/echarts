@@ -18,7 +18,7 @@
 */
 
 import Model from '../../model/Model';
-import { Sector } from 'zrender/src/export';
+import Sector from 'zrender/src/graphic/shape/Sector';
 import { isArray } from 'zrender/src/core/util';
 import { parsePercent } from 'zrender/src/contain/text';
 

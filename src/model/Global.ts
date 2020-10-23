@@ -41,7 +41,6 @@ import * as modelUtil from '../util/model';
 import Model from './Model';
 import ComponentModel, {ComponentModelConstructor} from './Component';
 import globalDefault from './globalDefault';
-import {ColorPaletteMixin} from './mixin/colorPalette';
 import {resetSourceDefaulter} from '../data/helper/sourceHelper';
 import SeriesModel from './Series';
 import {
@@ -60,6 +59,7 @@ import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
 import { concatInternalOptions } from './internalComponentCreator';
 import { LocaleOption } from '../locale';
+import {PaletteMixin} from './mixin/palette';
 
 export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
@@ -954,7 +954,7 @@ function normalizeSetOptionInput(opts: GlobalModelSetOptionOpts): InnerSetOption
     };
 }
 
-interface GlobalModel extends ColorPaletteMixin<ECUnitOption> {}
-mixin(GlobalModel, ColorPaletteMixin);
+interface GlobalModel extends PaletteMixin<ECUnitOption> {}
+mixin(GlobalModel, PaletteMixin);
 
 export default GlobalModel;

@@ -77,7 +77,8 @@ const getStateItemStyle = makeStyleMapper([
     ['shadowBlur'],
     ['shadowOffsetX'],
     ['shadowOffsetY'],
-    ['shadowColor']
+    ['shadowColor'],
+    ['decal']
 ]);
 const getItemStyleNormal = function (model: Model<TreemapSeriesNodeItemOption['itemStyle']>): PathStyleProps {
     // Normal style props should include emphasis style props.
@@ -914,9 +915,11 @@ function renderNode(
         }
         else {
             content.invisible = false;
-            const visualColor = thisNode.getVisual('style').fill;
+            const nodeStyle = thisNode.getVisual('style');
+            const visualColor = nodeStyle.fill;
             const normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualColor;
+            normalStyle.decal = nodeStyle.decal;
             const emphasisStyle = getStateItemStyle(itemStyleEmphasisModel);
             const blurStyle = getStateItemStyle(itemStyleBlurModel);
             const selectStyle = getStateItemStyle(itemStyleSelectModel);

@@ -1,3 +1,4 @@
+import { AriaOption } from './../component/aria';
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -480,7 +481,7 @@ export type ECUnitOption = {
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
     stateAnimation?: AnimationOption
-} & AnimationOptionMixin & ColorPaletteOptionMixin;
+} & AnimationOptionMixin & ColorPaletteOptionMixin & AriaOptionMixin;
 
 /**
  * [ECOption]:
@@ -656,6 +657,41 @@ export type DimensionUserOuput = {
     encode: DimensionUserOuputEncode
 };
 
+export type DecalDashArrayX = number | (number | number[])[];
+export type DecalDashArrayY = number | number[];
+export interface DecalObject {
+    // 'image', 'triangle', 'diamond', 'pin', 'arrow', 'line', 'rect', 'roundRect', 'square', 'circle'
+    symbol?: string
+
+    // size relative to the dash bounding box; valued from 0 to 1
+    symbolSize?: number
+    // keep the aspect ratio and use the smaller one of width and height as bounding box size
+    symbolKeepAspect?: boolean
+
+    // foreground color of the pattern
+    color?: string
+    // background color of the pattern; default value is 'none' (same as 'transparent') so that the underlying series color is displayed
+    backgroundColor?: string
+
+    // dash-gap pattern on x
+    dashArrayX?: DecalDashArrayX
+    // dash-gap pattern on y
+    dashArrayY?: DecalDashArrayY
+
+    // in radians; valued from -Math.PI to Math.PI
+    rotation?: number,
+
+    // boundary of largest tile width
+    maxTileWidth?: number,
+    // boundary of largest tile height
+    maxTileHeight?: number
+};
+
+export interface InnerDecalObject extends DecalObject {
+    // If option has changed
+    dirty?: boolean
+}
+
 export interface MediaQuery {
     minWidth?: number;
     maxWidth?: number;
@@ -675,9 +711,19 @@ export type ComponentLayoutMode = {
     ignoreSize?: boolean | boolean[]
 };
 /******************* Mixins for Common Option Properties   ********************** */
+export interface PaletteOptionMixin {
+    color?: ZRColor | ZRColor[]
+    colorLayer?: ZRColor[][],
+    decals?: DecalObject | DecalObject[]
+}
+
 export interface ColorPaletteOptionMixin {
     color?: ZRColor | ZRColor[]
     colorLayer?: ZRColor[][]
+}
+
+export interface AriaOptionMixin {
+    aria?: AriaOption
 }
 
 /**
@@ -825,6 +871,7 @@ export interface SymbolOptionMixin<T = unknown> {
 export interface ItemStyleOption extends ShadowOptionMixin, BorderOptionMixin {
     color?: ZRColor
     opacity?: number
+    decal?: DecalObject[]
 }
 
 /**
@@ -865,6 +912,7 @@ export interface VisualOptionUnit {
     colorLightness?: number
     colorSaturation?: number
     colorHue?: number
+    decal?: DecalObject
 
     // Not exposed?
     liftZ?: number

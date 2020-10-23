@@ -39,6 +39,7 @@ import './component/markLine';
 import './component/markArea';
 import './component/dataZoom';
 import './component/toolbox';
+import './component/aria';
 
 // import 'zrender/vml/vml';
 import 'zrender/src/svg/svg';

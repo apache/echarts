@@ -35,13 +35,15 @@ export const ITEM_STYLE_KEY_MAP = [
     ['lineDashOffset', 'borderDashOffset'],
     ['lineCap', 'borderCap'],
     ['lineJoin', 'borderJoin'],
-    ['miterLimit', 'borderMiterLimit']
+    ['miterLimit', 'borderMiterLimit'],
+    ['decal']
 ];
 
 const getItemStyle = makeStyleMapper(ITEM_STYLE_KEY_MAP);
 
 type ItemStyleKeys = 'fill'
     | 'stroke'
+    | 'decal'
     | 'lineWidth'
     | 'opacity'
     | 'shadowBlur'
