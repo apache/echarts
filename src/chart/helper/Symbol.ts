@@ -291,6 +291,8 @@ class Symbol extends graphic.Group {
             else {
                 symbolPath.useStyle(symbolStyle);
             }
+            // Disable decal because symbol scale will been applied on the decal.
+            symbolPath.style.decal = null;
             symbolPath.setColor(visualColor, opts && opts.symbolInnerColor);
             symbolPath.style.strokeNoScale = true;
 
