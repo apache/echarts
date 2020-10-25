@@ -159,8 +159,8 @@ const dataStyleTask: StageHandler = {
 };
 
 // Pick color from palette for the data which has not been set with color yet.
+// Note: do not support stream rendering. No such cases yet.
 const dataColorPaletteTask: StageHandler = {
-    createOnAllSeries: true,
     performRawSeries: true,
     overallReset(ecModel) {
         // Each type of series use one scope.

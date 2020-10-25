@@ -263,10 +263,12 @@ class Scheduler {
         each(this._allHandlers, function (handler) {
             const record = stageTaskMap.get(handler.uid) || stageTaskMap.set(handler.uid, {});
 
+            let errMsg = '';
             if (__DEV__) {
                 // Currently do not need to support to sepecify them both.
-                assert(!(handler.reset && handler.overallReset));
+                errMsg = '"reset" and "overallReset" must not be both specified.';
             }
+            assert(!(handler.reset && handler.overallReset), errMsg);
 
             handler.reset && this._createSeriesStageTask(handler, record, ecModel, api);
             handler.overallReset && this._createOverallStageTask(handler, record, ecModel, api);
@@ -414,7 +416,8 @@ class Scheduler {
     ): void {
         const scheduler = this;
         const oldSeriesTaskMap = stageHandlerRecord.seriesTaskMap;
-        // Totally stages are about several dozen, so probalby do not need to reuse the map.
+        // The count of stages are totally about only several dozen, so
+        // do not need to reuse the map.
         const newSeriesTaskMap = stageHandlerRecord.seriesTaskMap = createHashMap();
         const seriesType = stageHandler.seriesType;
         const getTargetSeries = stageHandler.getTargetSeries;
@@ -479,7 +482,8 @@ class Scheduler {
         };
 
         const oldAgentStubMap = overallTask.agentStubMap;
-        // Totally stages are about several dozen, so probalby do not need to reuse the map.
+        // The count of stages are totally about only several dozen, so
+        // do not need to reuse the map.
         const newAgentStubMap = overallTask.agentStubMap = createHashMap<StubTask>();
 
         const seriesType = stageHandler.seriesType;
@@ -493,10 +497,13 @@ class Scheduler {
         // stub in each pipelines, it will set the overall task dirty when the pipeline
         // progress. Moreover, to avoid call the overall task each frame (too frequent),
         // we set the pipeline block.
-        if (stageHandler.createOnAllSeries) {
-            ecModel.eachRawSeries(createStub);
+        let errMsg = '';
+        if (__DEV__) {
+            errMsg = '"createOnAllSeries" do not supported for "overallReset", '
+                + 'becuase it will block all streams.';
         }
-        else if (seriesType) {
+        assert(!stageHandler.createOnAllSeries, errMsg);
+        if (seriesType) {
             ecModel.eachRawSeriesByType(seriesType, createStub);
         }
         else if (getTargetSeries) {

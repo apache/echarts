@@ -239,7 +239,7 @@ export interface StageHandlerOverallReset {
 }
 export interface StageHandler {
     /**
-     * Indicate that the task will be only piped all series
+     * Indicate that the task will be piped all series
      * (`performRawSeries` indicate whether includes filtered series).
      */
     createOnAllSeries?: boolean;
