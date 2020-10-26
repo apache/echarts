@@ -62164,9 +62164,11 @@
       var sector = this;
       var label = sector.getTextContent();
       var dataIndex = this.node.dataIndex;
+      var labelMinAngle = normalLabelModel.get('minAngle') / 180 * Math.PI;
+      var isNormalShown = normalLabelModel.get('show') && !(labelMinAngle != null && Math.abs(angle) < labelMinAngle);
+      label.ignore = !isNormalShown;
       each(DISPLAY_STATES, function (stateName) {
         var labelStateModel = stateName === 'normal' ? itemModel.getModel('label') : itemModel.getModel([stateName, 'label']);
-        var labelMinAngle = labelStateModel.get('minAngle') / 180 * Math.PI;
         var isNormal = stateName === 'normal';
         var state = isNormal ? label : label.ensureState(stateName);
         var text = seriesModel.getFormattedLabel(dataIndex, stateName);
@@ -62181,7 +62183,12 @@
           state.style.text = text;
         }
 
-        state.ignore = labelMinAngle != null && Math.abs(angle) < labelMinAngle;
+        var isShown = labelStateModel.get('show');
+
+        if (isShown != null && !isNormal) {
+          state.ignore = !isShown;
+        }
+
         var labelPosition = getLabelAttr(labelStateModel, 'position');
         var sectorState = isNormal ? sector : sector.states[stateName];
         var labelColor = sectorState.style.fill;
