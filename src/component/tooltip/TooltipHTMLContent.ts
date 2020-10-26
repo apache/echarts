@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { isString, indexOf, map, each, bind, isObject } from 'zrender/src/core/util';
+import { isString, indexOf, map, each, bind, isObject, isArray, isDom } from 'zrender/src/core/util';
 import { toHex } from 'zrender/src/tool/color';
 import { normalizeEvent } from 'zrender/src/core/event';
 import { transformLocalCoord } from 'zrender/src/core/dom';
@@ -375,20 +375,26 @@ class TooltipHTMLContent {
             return;
         }
 
+        const el = this.el;
+
         if (isString(arrowPosition) && tooltipModel.get('trigger') === 'item'
             && !shouldTooltipConfine(tooltipModel)) {
             content += assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition);
         }
-        if (isObject(content)) {
-            if (this.el.children) {
-                for (var child of Array.from(this.el.children)) {
-                    this.el.removeChild(child);
+        if (isString(content)) {
+            el.innerHTML = content == null ? '' : content;
+        }
+        else if (content) {
+            // Clear previous
+            el.innerHTML = '';
+            if (!isArray(content)) {
+                content = [content];
+            }
+            for (let i = 0; i < content.length; i++) {
+                if (isDom(content[i]) && content[i].parentNode !== el) {
+                    el.appendChild(content[i]);
                 }
             }
-            content.forEach(child => this.el.appendChild(child));
-        }
-        else {
-            this.el.innerHTML = content == null ? '' : content;
         }
     }
 
