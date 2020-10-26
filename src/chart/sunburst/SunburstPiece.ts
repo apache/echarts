@@ -170,13 +170,16 @@ class SunburstPiece extends graphic.Sector {
         const sector = this;
         const label = sector.getTextContent();
         const dataIndex = this.node.dataIndex;
+        const labelMinAngle = normalLabelModel.get('minAngle') / 180 * Math.PI;
+        const isNormalShown = normalLabelModel.get('show')
+            && !(labelMinAngle != null && Math.abs(angle) < labelMinAngle);
+        label.ignore = !isNormalShown;
 
         // TODO use setLabelStyle
         zrUtil.each(DISPLAY_STATES, (stateName) => {
 
             const labelStateModel = stateName === 'normal' ? itemModel.getModel('label')
                 : itemModel.getModel([stateName, 'label']);
-            const labelMinAngle = labelStateModel.get('minAngle') / 180 * Math.PI;
             const isNormal = stateName === 'normal';
 
             const state = isNormal ? label : label.ensureState(stateName);
@@ -190,7 +193,10 @@ class SunburstPiece extends graphic.Sector {
                 state.style.text = text;
             }
             // Not displaying text when angle is too small
-            state.ignore = labelMinAngle != null && Math.abs(angle) < labelMinAngle;
+            const isShown = labelStateModel.get('show');
+            if (isShown != null && !isNormal) {
+                state.ignore = !isShown;
+            }
 
             const labelPosition = getLabelAttr(labelStateModel, 'position');
 
