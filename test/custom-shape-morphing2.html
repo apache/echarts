@@ -92,19 +92,10 @@ under the License.
                     '#c23531', '#2f4554', '#61a0a8', '#d48265', '#91c7ae', '#749f83',
                     '#ca8622', '#bda29a', '#6e7074', '#546570', '#c4ccd3'
                 ];
-                const zTagColorMap = {};
-                let zTagColorIndex = 0;
-                function getZTagColor(zTag) {
-                    if (!zTagColorMap[zTag]) {
-                        zTagColorMap[zTag] = Z_TAG_COLORS[zTagColorIndex];
-                        zTagColorIndex++;
-                        if (zTagColorIndex >= Z_TAG_COLORS.length) {
-                            zTagColorIndex = 0;
-                        }
-                    }
-                    return zTagColorMap[zTag]
-                }
-
+                const Z_TAG_COLORS_2 = [
+                    '#51689b', '#ce5c5c', '#fbc357', '#8fbf8f', '#659d84', '#fb8e6a', '#c77288', '#786090',
+                    '#91c4c5', '#6890ba'
+                ];
                 const SYMBOL_PATHS = [
                     'path://m67.25,28.9c27.42,-69.1 134.84,0 0,88.85c-134.84,-88.85 -27.42,-157.96 0,-88.85z',
                     'path://M16 0c-8.837 0-16 7.163-16 16s7.163 16 16 16 16-7.163 16-16-7.163-16-16-16zM22 8c1.105 0 2 1.343 2 3s-0.895 3-2 3-2-1.343-2-3 0.895-3 2-3zM10 8c1.105 0 2 1.343 2 3s-0.895 3-2 3-2-1.343-2-3 0.895-3 2-3zM16 28c-5.215 0-9.544-4.371-10-9.947 2.93 1.691 6.377 2.658 10 2.658s7.070-0.963 10-2.654c-0.455 5.576-4.785 9.942-10 9.942z',
@@ -113,24 +104,9 @@ under the License.
                     'path://M237.062,81.761L237.062,81.761c-12.144-14.24-25.701-20.1-40.68-19.072 c-10.843,0.747-20.938,5.154-30.257,13.127c-9.51-5.843-19.8-9.227-30.859-10.366c0.521-3.197,1.46-6.306,2.85-9.363 c3.458-7.038,8.907-12.741,16.331-17.296c-5.609-3.384-11.227-6.799-16.854-10.279c-16.257,8.104-25.06,20.601-26.463,38.417 c-7.599,1.705-14.685,4.486-21.247,8.437c-9.164-7.677-18.996-11.917-29.496-12.632c-14.819-0.998-28.467,4.787-40.938,18.827 C6.445,96.182,0,114.867,0,136.242c-0.007,6.371,0.674,12.646,2.053,18.738c4.593,22.785,15.398,41.367,32.558,55.344 c15.43,12.773,29.901,18.023,43.362,16.981c7.074-0.561,13.624-3.977,19.685-10.192c10.534,5.49,20.391,8.217,29.561,8.203 c9.856-0.012,20.236-2.953,31.125-8.898c6.227,6.692,12.966,10.346,20.211,10.933c13.795,1.073,28.614-4.111,44.377-16.84 c17.49-14.104,28.043-32.79,31.796-55.485c0.836-5.624,1.272-11.292,1.272-16.966C255.998,115.814,249.707,96.601,237.062,81.761z  M54.795,97.7l40.661,14.496c-4.402,8.811-10.766,13.219-19.06,13.219c-2.542,0-4.917-0.419-7.122-1.274 C58.103,118.38,53.263,109.572,54.795,97.7z M150.613,185.396l-9.156-8.389l-7.619,12.951c-3.391,0.341-6.615,0.514-9.665,0.514 c-4.401,0-8.635-0.263-12.708-0.777l-8.634-14.973l-9.151,9.909c-4.91-2.717-9.15-5.856-12.708-9.413 c-8.81-8.295-13.384-17.959-13.727-28.97c2.877,1.692,7.427,3.461,13.675,5.308l10.636,13.629l9.44-9.852 c4.734,0.702,9.234,1.12,13.466,1.275l10.689,11.498l9.671-11.949c3.559-0.173,7.285-0.515,11.182-1.01l9.924,10.159l10.933-14.227 c5.931-1.351,11.196-2.798,15.771-4.323C179.747,163.538,169.068,176.414,150.613,185.396z M175.258,124.907 c-2.209,0.849-4.66,1.273-7.369,1.273c-8.134,0-14.489-4.415-19.052-13.224l40.905-14.477 C191.105,110.331,186.273,119.141,175.258,124.907z',
                     'path://M237.062,81.761L237.062,81.761c-12.144-14.24-25.701-20.1-40.68-19.072 c-10.843,0.747-20.938,5.154-30.257,13.127c-9.51-5.843-19.8-9.227-30.859-10.366c0.521-3.197,1.46-6.306,2.85-9.363 c3.458-7.038,8.907-12.741,16.331-17.296c-5.609-3.384-11.227-6.799-16.854-10.279c-16.257,8.104-25.06,20.601-26.463,38.417 c-7.599,1.705-14.685,4.486-21.247,8.437c-9.164-7.677-18.996-11.917-29.496-12.632c-14.819-0.998-28.467,4.787-40.938,18.827 C6.445,96.182,0,114.867,0,136.242c-0.007,6.371,0.674,12.646,2.053,18.738c4.593,22.785,15.398,41.367,32.558,55.344 c15.43,12.773,29.901,18.023,43.362,16.981c7.074-0.561,13.624-3.977,19.685-10.192c10.534,5.49,20.391,8.217,29.561,8.203 c9.856-0.012,20.236-2.953,31.125-8.898c6.227,6.692,12.966,10.346,20.211,10.933c13.795,1.073,28.614-4.111,44.377-16.84 c17.49-14.104,28.043-32.79,31.796-55.485c0.836-5.624,1.272-11.292,1.272-16.966C255.998,115.814,249.707,96.601,237.062,81.761z  M54.795,97.7l40.661,14.496c-4.402,8.811-10.766,13.219-19.06,13.219c-2.542,0-4.917-0.419-7.122-1.274 C58.103,118.38,53.263,109.572,54.795,97.7z M150.613,185.396l-9.156-8.389l-7.619,12.951c-3.391,0.341-6.615,0.514-9.665,0.514 c-4.401,0-8.635-0.263-12.708-0.777l-8.634-14.973l-9.151,9.909c-4.91-2.717-9.15-5.856-12.708-9.413 c-8.81-8.295-13.384-17.959-13.727-28.97c2.877,1.692,7.427,3.461,13.675,5.308l10.636,13.629l9.44-9.852 c4.734,0.702,9.234,1.12,13.466,1.275l10.689,11.498l9.671-11.949c3.559-0.173,7.285-0.515,11.182-1.01l9.924,10.159l10.933-14.227 c5.931-1.351,11.196-2.798,15.771-4.323C179.747,163.538,169.068,176.414,150.613,185.396z M175.258,124.907 c-2.209,0.849-4.66,1.273-7.369,1.273c-8.134,0-14.489-4.415-19.052-13.224l40.905-14.477 C191.105,110.331,186.273,119.141,175.258,124.907z'
                 ];
-                const zTagSymbolMap = {};
-                let zTagSymbolIndex = 0;
-                function getZTagSymbolPath(zTag) {
-                    if (!zTagSymbolMap[zTag]) {
-                        zTagSymbolMap[zTag] = SYMBOL_PATHS[zTagSymbolIndex];
-                        zTagSymbolIndex++;
-                        if (zTagSymbolIndex >= SYMBOL_PATHS.length) {
-                            zTagSymbolIndex = 0;
-                        }
-                    }
-                    return zTagSymbolMap[zTag]
-                }
-
-
-                var COUNT = 50;
                 var CONTENT_COLOR = '#37A2DA';
-
                 var ANIMATION_DURATION_UPDATE = 1500;
+
 
                 // var rawData = initRawData(COUNT);
                 // console.log(JSON.stringify(rawData));
@@ -140,6 +116,25 @@ under the License.
                 var M_TAG_SUM_DIMENSIONS = ['ATA', 'STE', 'CTZ', 'M_TAG'];
                 var RAW_CLUSTER_DIMENSIONS = ['DATE', 'ATA', 'STE', 'CTZ', 'M_TAG', 'Z_TAG', 'ID', 'CLUSTER_IDX', 'CLUSTER_CENTER_ATA', 'CLUSTER_CENTER_STE'];
                 var RAW_CLUSTER_CENTERS_DIMENSIONS = ['COUNT', 'CLUSTER_IDX', 'CLUSTER_CENTER_ATA', 'CLUSTER_CENTER_STE'];
+
+
+                function getFromPalette(value, palette) {
+                    if (!palette.__colorMap) {
+                        palette.__colorMap = {};
+                    }
+                    if (palette.__colorIdx == null) {
+                        palette.__colorIdx = 0;
+                    }
+                    if (!palette.__colorMap[value]) {
+                        palette.__colorMap[value] = palette[palette.__colorIdx];
+                        palette.__colorIdx++;
+                        if (palette.__colorIdx >= palette.length) {
+                            palette.__colorIdx = 0;
+                        }
+                    }
+                    return palette.__colorMap[value];
+                }
+
 
 
                 var baseOption = {
@@ -224,312 +219,368 @@ under the License.
                 };
                 var BG_COLOR = '#000';
 
+
+
+                function makeScatterOptionCreator(renderItem) {
+                    return function () {
+                        var datasetId = 'rawClusters';
+                        return {
+                            datasetId: datasetId,
+                            option: {
+                                backgroundColor: BG_COLOR,
+                                grid: {
+                                    containLabel: true
+                                },
+                                xAxis: {
+                                    name: 'STE',
+                                    ...AXIS_STYLE
+                                },
+                                yAxis: {
+                                    name: 'ATA',
+                                    ...AXIS_STYLE
+                                },
+                                dataZoom: [{
+                                    type: 'slider',
+                                }, {
+                                    type: 'inside'
+                                }],
+                                series: {
+                                    type: 'custom',
+                                    coordinateSystem: 'cartesian2d',
+                                    animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                                    datasetId: datasetId,
+                                    encode: {
+                                        itemName: 'ID',
+                                        x: 'STE',
+                                        y: 'ATA',
+                                        tooltip: ['STE', 'ATA']
+                                    },
+                                    renderItem: renderItem
+                                }
+                            }
+                        }
+                    };
+                }
+
+
                 var optionCreators = {
 
-                    'Scatter_ATA_STE': function (datasetId) {
-                        return {
-                            backgroundColor: BG_COLOR,
-                            grid: {
-                                containLabel: true
-                            },
-                            xAxis: {
-                                name: 'STE',
-                                ...AXIS_STYLE
-                            },
-                            yAxis: {
-                                name: 'ATA',
-                                ...AXIS_STYLE
-                            },
-                            dataZoom: [{
-                                type: 'slider',
-                            }, {
-                                type: 'inside'
-                            }],
-                            series: {
-                                type: 'custom',
-                                coordinateSystem: 'cartesian2d',
-                                animationDurationUpdate: ANIMATION_DURATION_UPDATE,
-                                datasetId: datasetId,
-                                encode: {
-                                    itemName: 'ID',
-                                    x: 'STE',
-                                    y: 'ATA',
-                                    tooltip: ['STE', 'ATA']
+                    'Scatter_circle_ATA_STE': makeScatterOptionCreator(
+                        function (params, api) {
+                            var pos = api.coord([
+                                api.value('STE'),
+                                api.value('ATA')
+                            ]);
+                            var zTagVal = api.value('Z_TAG');
+                            var color = getFromPalette(zTagVal, Z_TAG_COLORS);
+                            var symbolPath = getFromPalette(zTagVal, SYMBOL_PATHS);
+                            return {
+                                type: 'circle',
+                                morph: true,
+                                shape: {
+                                    cx: pos[0],
+                                    cy: pos[1],
+                                    r: 10
                                 },
-                                renderItem: function (params, api) {
-                                    var pos = api.coord([
-                                        api.value('STE'),
-                                        api.value('ATA')
-                                    ]);
-                                    var zTagVal = api.value('Z_TAG');
-                                    var color = getZTagColor(zTagVal);
-                                    // var clusterIndex = api.value('CLUSTER_IDX');
-                                    var symbolPath = getZTagSymbolPath(zTagVal);
-                                    return {
-                                        type: 'circle',
-                                        morph: true,
-                                        shape: {
-                                            cx: pos[0],
-                                            cy: pos[1],
-                                            r: 10
-                                        },
-                                        style: {
-                                            fill: color,
-                                            stroke: '#555',
-                                            lineWidth: 0
-                                        },
-                                        transition: ['shape', 'style']
-                                    };
-                                }
-                            }
-                        };
-                    },
+                                style: {
+                                    fill: color
+                                },
+                                transition: ['shape', 'style']
+                            };
+                        }
+                    ),
 
-                    'Scatter_SVG_ATA_STE': function (datasetId) {
-                        return {
-                            backgroundColor: BG_COLOR,
-                            grid: {
-                                containLabel: true
-                            },
-                            xAxis: {
-                                name: 'STE',
-                                ...AXIS_STYLE
-                            },
-                            yAxis: {
-                                name: 'ATA',
-                                ...AXIS_STYLE
-                            },
-                            dataZoom: [{
-                                type: 'slider',
-                            }, {
-                                type: 'inside'
-                            }],
-                            series: {
-                                type: 'custom',
-                                coordinateSystem: 'cartesian2d',
-                                animationDurationUpdate: ANIMATION_DURATION_UPDATE,
-                                datasetId: datasetId,
-                                encode: {
-                                    itemName: 'ID',
-                                    x: 'STE',
-                                    y: 'ATA',
-                                    tooltip: ['STE', 'ATA']
+                    'Scatter_singleSVG_ATA_STE': makeScatterOptionCreator(
+                        function (params, api) {
+                            var pos = api.coord([
+                                api.value('STE'),
+                                api.value('ATA')
+                            ]);
+                            var zTagVal = api.value('Z_TAG');
+                            var color = getFromPalette(zTagVal, Z_TAG_COLORS);
+                            var symbolPath = getFromPalette(zTagVal, SYMBOL_PATHS);
+                            return {
+                                type: 'path',
+                                morph: true,
+                                x: pos[0],
+                                y: pos[1],
+                                shape: {
+                                    pathData: symbolPath,
+                                    width: 40,
+                                    height: 40
                                 },
-                                renderItem: function (params, api) {
-                                    var pos = api.coord([
-                                        api.value('STE'),
-                                        api.value('ATA')
-                                    ]);
-                                    var zTagVal = api.value('Z_TAG');
-                                    var color = getZTagColor(zTagVal);
-                                    // var clusterIndex = api.value('CLUSTER_IDX');
-                                    var symbolPath = getZTagSymbolPath(zTagVal);
-                                    return {
-                                        type: 'path',
-                                        morph: true,
-                                        x: pos[0],
-                                        y: pos[1],
-                                        shape: {
-                                            pathData: symbolPath,
-                                            width: 40,
-                                            height: 40
-                                        },
-                                        style: {
-                                            fill: color,
-                                            stroke: '#555',
-                                            lineWidth: 0
-                                        },
-                                        transition: ['style']
-                                    };
-                                }
-                            }
-                        };
-                    },
+                                style: {
+                                    fill: color
+                                },
+                                transition: ['style']
+                            };
+                        }
+                    ),
 
-                    'Bar_mSum_ATA': function (datasetId) {
-                        return {
-                            backgroundColor: BG_COLOR,
-                            grid: {
-                                containLabel: true
-                            },
-                            xAxis: {
-                                type: 'category',
-                                ...AXIS_STYLE
-                            },
-                            yAxis: {
-                                ...AXIS_STYLE
-                            },
-                            dataZoom: [{
-                                type: 'slider',
-                            }, {
-                                type: 'inside'
-                            }],
-                            series: {
-                                type: 'custom',
-                                coordinateSystem: 'cartesian2d',
-                                animationDurationUpdate: ANIMATION_DURATION_UPDATE,
-                                datasetId: datasetId,
-                                encode: {
-                                    x: 'M_TAG',
-                                    y: 'ATA',
-                                    tooltip: ['M_TAG', 'ATA']
-                                },
-                                renderItem: function (params, api) {
-                                    var mTagVal = api.value('M_TAG');
-                                    var ataVal = api.value('ATA');
-                                    var tarPos = api.coord([mTagVal, ataVal]);
-                                    var zeroPos = api.coord([mTagVal, 0]);
-                                    var size = api.size([mTagVal, ataVal]);
-                                    var width = size[0] * 0.4;
-                                    return {
-                                        type: 'rect',
-                                        morph: true,
-                                        shape: {
-                                            x: tarPos[0] - width / 2,
-                                            y: tarPos[1],
-                                            height: zeroPos[1] - tarPos[1],
-                                            width: width,
-                                        },
-                                        style: {
-                                            fill: CONTENT_COLOR,
-                                            stroke: '#555',
-                                            lineWidth: 0
-                                        },
-                                        transition: ['shape', 'style']
-                                    };
-                                }
-                            }
-                        };
-                    },
+                    'Scatter_groupShape_ATA_STE': makeScatterOptionCreator(
+                        function (params, api) {
+                            var pos = api.coord([
+                                api.value('STE'),
+                                api.value('ATA')
+                            ]);
+                            var zTagVal = api.value('Z_TAG');
+                            var color1 = getFromPalette(zTagVal, Z_TAG_COLORS);
+                            var color2 = getFromPalette(zTagVal, Z_TAG_COLORS_2);
+                            return {
+                                type: 'group',
+                                x: pos[0],
+                                y: pos[1],
+                                children: [{
+                                    type: 'polygon',
+                                    morph: true,
+                                    shape: {
+                                        points: [
+                                            [-40, -2],
+                                            [40, -2],
+                                            [0, -35]
+                                        ]
+                                    },
+                                    style: {
+                                        fill: color1,
+                                        stroke: '#333',
+                                        lineWidth: 1
+                                    },
+                                    transition: ['shape', 'style']
+                                }, {
+                                    type: 'rect',
+                                    morph: true,
+                                    shape: {
+                                        x: -20,
+                                        y: 0,
+                                        width: 40,
+                                        height: 30
+                                    },
+                                    style: {
+                                        fill: color2,
+                                        stroke: '#333',
+                                        lineWidth: 1
+                                    },
+                                    transition: ['shape', 'style']
+                                }]
+                            };
+                        }
+                    ),
 
-                    'Pie_mSum_ATA': function (datasetId) {
+                    'Bar_mSum_ATA': function () {
+                        var datasetId = 'mTagSum'
                         return {
-                            backgroundColor: BG_COLOR,
-                            series: {
-                                type: 'custom',
-                                coordinateSystem: 'none',
-                                animationDurationUpdate: ANIMATION_DURATION_UPDATE,
-                                datasetId: datasetId,
-                                encode: {
-                                    itemName: 'M_TAG',
-                                    value: 'ATA',
-                                    tooltip: 'ATA'
+                            datasetId: datasetId,
+                            option: {
+                                backgroundColor: BG_COLOR,
+                                grid: {
+                                    containLabel: true
                                 },
-                                renderItem: function (params, api) {
-                                    var context = params.context;
-                                    if (!context.layout) {
-                                        context.layout = true;
-                                        var totalValue = 0;
-                                        for (var i = 0; i < params.dataInsideLength; i++) {
-                                            totalValue += api.value('ATA', i);
-                                        }
-                                        var angles = [];
-                                        var colors = [];
-                                        var currentAngle = -Math.PI / 2;
-                                        for (var i = 0; i < params.dataInsideLength; i++) {
-                                            colors.push(PIE_COLORS[i]);
-                                            var angle = api.value('ATA', i) / totalValue * Math.PI * 2;
-                                            angles.push([currentAngle, angle + currentAngle - 0.01]);
-                                            currentAngle += angle;
-                                        }
-                                        context.angles = angles;
-                                        context.colors = colors;
+                                xAxis: {
+                                    type: 'category',
+                                    ...AXIS_STYLE
+                                },
+                                yAxis: {
+                                    ...AXIS_STYLE
+                                },
+                                dataZoom: [{
+                                    type: 'slider',
+                                }, {
+                                    type: 'inside'
+                                }],
+                                series: {
+                                    type: 'custom',
+                                    coordinateSystem: 'cartesian2d',
+                                    animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                                    datasetId: datasetId,
+                                    encode: {
+                                        x: 'M_TAG',
+                                        y: 'ATA',
+                                        tooltip: ['M_TAG', 'ATA']
+                                    },
+                                    renderItem: function (params, api) {
+                                        var mTagVal = api.value('M_TAG');
+                                        var ataVal = api.value('ATA');
+                                        var tarPos = api.coord([mTagVal, ataVal]);
+                                        var zeroPos = api.coord([mTagVal, 0]);
+                                        var size = api.size([mTagVal, ataVal]);
+                                        var width = size[0] * 0.4;
+                                        return {
+                                            type: 'rect',
+                                            morph: true,
+                                            shape: {
+                                                x: tarPos[0] - width / 2,
+                                                y: tarPos[1],
+                                                height: zeroPos[1] - tarPos[1],
+                                                width: width,
+                                            },
+                                            style: {
+                                                fill: CONTENT_COLOR,
+                                                stroke: '#555',
+                                                lineWidth: 0
+                                            },
+                                            transition: ['shape', 'style']
+                                        };
                                     }
-
-                                    var width = chart.getWidth();
-                                    var height = chart.getHeight();
-                                    return {
-                                        type: 'sector',
-                                        morph: true,
-                                        shape: {
-                                            cx: width / 2,
-                                            cy: height / 2,
-                                            r: Math.min(width, height) / 3,
-                                            r0: Math.min(width, height) / 5,
-                                            startAngle: context.angles[params.dataIndex][0],
-                                            endAngle: context.angles[params.dataIndex][1],
-                                            clockwise: true
-                                        },
-                                        style: {
-                                            // fill: CONTENT_COLOR,
-                                            fill: context.colors[params.dataIndex],
-                                            stroke: '#555',
-                                            lineWidth: 0,
-                                            strokeNoScale: true
-                                        },
-                                        transition: ['shape', 'style']
-                                    };
                                 }
                             }
                         };
                     },
 
-                    'Scatter_ATA_STE_Cluster_Center': function (datasetId) {
+                    'Pie_mSum_ATA': function () {
+                        var datasetId = 'mTagSum';
                         return {
-                            backgroundColor: BG_COLOR,
-                            grid: {
-                                containLabel: true
-                            },
-                            xAxis: {
-                                name: 'STE',
-                                ...AXIS_STYLE
-                            },
-                            yAxis: {
-                                name: 'ATA',
-                                ...AXIS_STYLE
-                            },
-                            dataZoom: [{
-                                type: 'slider',
-                            }, {
-                                type: 'inside'
-                            }],
-                            series: {
-                                type: 'custom',
-                                coordinateSystem: 'cartesian2d',
-                                animationDurationUpdate: ANIMATION_DURATION_UPDATE,
-                                datasetId: datasetId,
-                                encode: {
-                                    x: 'CLUSTER_CENTER_STE',
-                                    y: 'CLUSTER_CENTER_ATA',
-                                    tooltip: ['CLUSTER_CENTER_STE', 'CLUSTER_CENTER_ATA']
-                                },
-                                renderItem: function (params, api) {
-                                    var context = params.context;
-                                    if (!context.layout) {
-                                        context.layout = true;
-                                        context.totalCount = 0;
-                                        for (var i = 0; i < params.dataInsideLength; i++) {
-                                            context.totalCount += api.value('COUNT', i);
+                            datasetId: datasetId,
+                            option: {
+                                backgroundColor: BG_COLOR,
+                                series: {
+                                    type: 'custom',
+                                    coordinateSystem: 'none',
+                                    animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                                    datasetId: datasetId,
+                                    encode: {
+                                        itemName: 'M_TAG',
+                                        value: 'ATA',
+                                        tooltip: 'ATA'
+                                    },
+                                    renderItem: function (params, api) {
+                                        var context = params.context;
+                                        if (!context.layout) {
+                                            context.layout = true;
+                                            var totalValue = 0;
+                                            for (var i = 0; i < params.dataInsideLength; i++) {
+                                                totalValue += api.value('ATA', i);
+                                            }
+                                            var angles = [];
+                                            var colors = [];
+                                            var currentAngle = -Math.PI / 2;
+                                            for (var i = 0; i < params.dataInsideLength; i++) {
+                                                colors.push(PIE_COLORS[i]);
+                                                var angle = api.value('ATA', i) / totalValue * Math.PI * 2;
+                                                angles.push([currentAngle, angle + currentAngle - 0.01]);
+                                                currentAngle += angle;
+                                            }
+                                            context.angles = angles;
+                                            context.colors = colors;
                                         }
-                                    }
 
-                                    var pos = api.coord([
-                                        api.value('CLUSTER_CENTER_STE'),
-                                        api.value('CLUSTER_CENTER_ATA')
-                                    ]);
-                                    var count = api.value('COUNT');
-                                    var radius = count / context.totalCount * 100 + 10;
-                                    return {
-                                        type: 'circle',
-                                        morph: true,
-                                        shape: {
-                                            cx: pos[0],
-                                            cy: pos[1],
-                                            r: radius,
-                                        },
-                                        style: {
-                                            // fill: CONTENT_COLOR,
-                                            fill: CLUSTER_COLORS[params.dataIndex],
-                                            stroke: '#555',
-                                            lineWidth: 0
-                                        },
-                                        transition: ['shape', 'style']
-                                    };
+                                        var width = chart.getWidth();
+                                        var height = chart.getHeight();
+                                        return {
+                                            type: 'sector',
+                                            morph: true,
+                                            shape: {
+                                                cx: width / 2,
+                                                cy: height / 2,
+                                                r: Math.min(width, height) / 3,
+                                                r0: Math.min(width, height) / 5,
+                                                startAngle: context.angles[params.dataIndex][0],
+                                                endAngle: context.angles[params.dataIndex][1],
+                                                clockwise: true
+                                            },
+                                            style: {
+                                                // fill: CONTENT_COLOR,
+                                                fill: context.colors[params.dataIndex],
+                                                stroke: '#555',
+                                                lineWidth: 0,
+                                                strokeNoScale: true
+                                            },
+                                            transition: ['shape', 'style']
+                                        };
+                                    }
+                                }
+                            }
+                        };
+                    },
+
+                    'Scatter_ATA_STE_Cluster_Center': function () {
+                        var datasetId = 'rawClusterCenters';
+                        return {
+                            datasetId: datasetId,
+                            option: {
+                                backgroundColor: BG_COLOR,
+                                grid: {
+                                    containLabel: true
+                                },
+                                xAxis: {
+                                    name: 'STE',
+                                    ...AXIS_STYLE
+                                },
+                                yAxis: {
+                                    name: 'ATA',
+                                    ...AXIS_STYLE
+                                },
+                                dataZoom: [{
+                                    type: 'slider',
+                                }, {
+                                    type: 'inside'
+                                }],
+                                series: {
+                                    type: 'custom',
+                                    coordinateSystem: 'cartesian2d',
+                                    animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                                    datasetId: datasetId,
+                                    encode: {
+                                        x: 'CLUSTER_CENTER_STE',
+                                        y: 'CLUSTER_CENTER_ATA',
+                                        tooltip: ['CLUSTER_CENTER_STE', 'CLUSTER_CENTER_ATA']
+                                    },
+                                    renderItem: function (params, api) {
+                                        var context = params.context;
+                                        if (!context.layout) {
+                                            context.layout = true;
+                                            context.totalCount = 0;
+                                            for (var i = 0; i < params.dataInsideLength; i++) {
+                                                context.totalCount += api.value('COUNT', i);
+                                            }
+                                        }
+
+                                        var pos = api.coord([
+                                            api.value('CLUSTER_CENTER_STE'),
+                                            api.value('CLUSTER_CENTER_ATA')
+                                        ]);
+                                        var count = api.value('COUNT');
+                                        var radius = count / context.totalCount * 100 + 10;
+                                        return {
+                                            type: 'circle',
+                                            morph: true,
+                                            shape: {
+                                                cx: pos[0],
+                                                cy: pos[1],
+                                                r: radius,
+                                            },
+                                            style: {
+                                                // fill: CONTENT_COLOR,
+                                                fill: CLUSTER_COLORS[params.dataIndex],
+                                                stroke: '#555',
+                                                lineWidth: 0
+                                            },
+                                            transition: ['shape', 'style']
+                                        };
+                                    }
                                 }
                             }
                         };
                     }
                 };
+
+
+
+                var optionList = [];
+                var buttons = [];
+                echarts.util.each(optionCreators, function (creator, key) {
+                    var optionWrap = creator();
+                    optionList.push({
+                        key: key,
+                        dataMetaKey: optionWrap.datasetId,
+                        option: optionWrap.option
+                    });
+                    buttons.push({
+                        text: key,
+                        onclick: function () {
+                            player.go(key);
+                        }
+                    });
+                });
 
 
                 var player = transitionPlayer.create({
@@ -557,27 +608,7 @@ under the License.
                             uniqueDimension: 'CLUSTER_IDX'
                         }
                     },
-                    optionList: [{
-                        key: 'Scatter_ATA_STE',
-                        dataMetaKey: 'rawClusters',
-                        option: optionCreators['Scatter_ATA_STE']('rawClusters')
-                    }, {
-                        key: 'Scatter_SVG_ATA_STE',
-                        dataMetaKey: 'rawClusters',
-                        option: optionCreators['Scatter_SVG_ATA_STE']('rawClusters')
-                    }, {
-                        key: 'Bar_mTagSum_ATA',
-                        dataMetaKey: 'mTagSum',
-                        option: optionCreators['Bar_mSum_ATA']('mTagSum')
-                    }, {
-                        key: 'Pie_mTagSum_ATA',
-                        dataMetaKey: 'mTagSum',
-                        option: optionCreators['Pie_mSum_ATA']('mTagSum')
-                    }, {
-                        key: 'Scatter_ATA_STE_Cluster_Center',
-                        dataMetaKey: 'rawClusterCenters',
-                        option: optionCreators['Scatter_ATA_STE_Cluster_Center']('rawClusterCenters')
-                    }]
+                    optionList: optionList
                 });
 
 
@@ -591,32 +622,7 @@ under the License.
                     option: baseOption,
                     lazyUpdate: true,
                     height: 600,
-                    buttons: [{
-                        text: 'Bar_mTagSum_ATA',
-                        onclick: function () {
-                            player.go('Bar_mTagSum_ATA');
-                        }
-                    }, {
-                        text: 'Scatter_ATA_STE',
-                        onclick: function () {
-                            player.go('Scatter_ATA_STE');
-                        }
-                    }, {
-                        text: 'Scatter_SVG_ATA_STE',
-                        onclick: function () {
-                            player.go('Scatter_SVG_ATA_STE');
-                        }
-                    }, {
-                        text: 'Pie_mTagSum_ATA',
-                        onclick: function () {
-                            player.go('Pie_mTagSum_ATA');
-                        }
-                    }, {
-                        text: 'Scatter_ATA_STE_Cluster_Center',
-                        onclick: function () {
-                            player.go('Scatter_ATA_STE_Cluster_Center');
-                        }
-                    }, {
+                    buttons: buttons.concat([{
                         text: 'resizeToSmall',
                         onclick: function () {
                             chart.resize({
@@ -632,10 +638,10 @@ under the License.
                                 height: 600
                             });
                         }
-                    }]
+                    }])
                 });
 
-                player.go('Scatter_SVG_ATA_STE');
+                player.go('Scatter_singleSVG_ATA_STE');
 
             });
 

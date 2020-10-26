@@ -18,7 +18,7 @@
 */
 
 import { isFunction, extend, createHashMap } from 'zrender/src/core/util';
-import { StageHandler, CallbackDataParams, ZRColor, Dictionary, DecalObject } from '../util/types';
+import { StageHandler, CallbackDataParams, ZRColor, Dictionary, InnerDecalObject } from '../util/types';
 import makeStyleMapper from '../model/mixin/makeStyleMapper';
 import { ITEM_STYLE_KEY_MAP } from '../model/mixin/itemStyle';
 import { LINE_STYLE_KEY_MAP } from '../model/mixin/lineStyle';
@@ -76,7 +76,7 @@ const seriesStyleTask: StageHandler = {
 
         const globalStyle = getStyle(styleModel);
 
-        const decalOption = styleModel.getShallow('decal') as DecalObject;
+        const decalOption = styleModel.getShallow('decal') as InnerDecalObject;
         if (decalOption) {
             data.setVisual('decal', decalOption);
             decalOption.dirty = true;
@@ -159,8 +159,8 @@ const dataStyleTask: StageHandler = {
 };
 
 // Pick color from palette for the data which has not been set with color yet.
+// Note: do not support stream rendering. No such cases yet.
 const dataColorPaletteTask: StageHandler = {
-    createOnAllSeries: true,
     performRawSeries: true,
     overallReset(ecModel) {
         // Each type of series use one scope.

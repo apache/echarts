@@ -715,7 +715,9 @@ class SliderZoomView extends DataZoomView {
             (handle as graphic.Path).attr({
                 scaleX: handleHeight / 2,
                 scaleY: handleHeight / 2,
-                x: handleEnds[handleIndex],
+                // This is a trick, by adding an extra tiny offset to let the default handle's end point align to the drag window.
+                // NOTE: It may affect some custom shapes a bit. But we prefer to have better result by default.
+                x: handleEnds[handleIndex] + (handleIndex ? -1 : 1),
                 y: size[1] / 2 - handleHeight / 2
             });
         }, this);

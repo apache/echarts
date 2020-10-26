@@ -239,7 +239,7 @@ export interface StageHandlerOverallReset {
 }
 export interface StageHandler {
     /**
-     * Indicate that the task will be only piped all series
+     * Indicate that the task will be piped all series
      * (`performRawSeries` indicate whether includes filtered series).
      */
     createOnAllSeries?: boolean;
@@ -685,10 +685,12 @@ export interface DecalObject {
     maxTileWidth?: number,
     // boundary of largest tile height
     maxTileHeight?: number
+};
 
+export interface InnerDecalObject extends DecalObject {
     // If option has changed
     dirty?: boolean
-};
+}
 
 export interface MediaQuery {
     minWidth?: number;

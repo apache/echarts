@@ -26,7 +26,7 @@ import SeriesModel from '../model/Series';
 import {AriaOption} from '../component/aria';
 import {TitleOption} from '../component/title';
 import {makeInner} from '../util/model';
-import {Dictionary, DecalObject} from '../util/types';
+import {Dictionary, DecalObject, InnerDecalObject} from '../util/types';
 import {LocaleOption} from '../locale';
 
 const defaultOption: AriaOption = {
@@ -129,7 +129,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                     const decal = style.decal
                         ? zrUtil.defaults(style.decal, paletteDecal)
                         : paletteDecal;
-                    decal.dirty = true;
+                    (decal as InnerDecalObject).dirty = true;
                     data.setVisual('decal', decal);
                 }
             });
