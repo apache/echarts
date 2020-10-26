@@ -70,12 +70,15 @@ class TooltipRichContent {
      * Set tooltip content
      */
     setContent(
-        content: string,
+        content: string | HTMLElement[],
         markupStyleCreator: TooltipMarkupStyleCreator,
         tooltipModel: Model<TooltipOption>,
         borderColor: ZRColor,
         arrowPosition: TooltipOption['position']
     ) {
+        if (zrUtil.isObject(content)) {
+            throw new Error("Passing DOM nodes as content is not supported in richText tooltip!");
+        }
         if (this.el) {
             this._zr.remove(this.el);
         }

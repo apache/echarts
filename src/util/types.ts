@@ -1130,12 +1130,12 @@ interface TooltipFormatterCallback<T> {
      * For sync callback
      * params will be an array on axis trigger.
      */
-    (params: T, asyncTicket: string): string
+    (params: T, asyncTicket: string): string | HTMLElement[]
     /**
      * For async callback.
      * Returned html string will be a placeholder when callback is not invoked.
      */
-    (params: T, asyncTicket: string, callback: (cbTicket: string, html: string) => void): string
+    (params: T, asyncTicket: string, callback: (cbTicket: string, htmlOrDomNodes: string | HTMLElement[]) => void): string | HTMLElement[]
 }
 
 type TooltipBuiltinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom';
