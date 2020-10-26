@@ -25,6 +25,7 @@ import { ZRColor } from '../../util/types';
 import Model from '../../model/Model';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { TooltipMarkupStyleCreator, getPaddingFromTooltipModel } from './tooltipMarkup';
+import { throwError } from '../../util/log';
 
 class TooltipRichContent {
 
@@ -77,7 +78,7 @@ class TooltipRichContent {
         arrowPosition: TooltipOption['position']
     ) {
         if (zrUtil.isObject(content)) {
-            throw new Error("Passing DOM nodes as content is not supported in richText tooltip!");
+            throwError(__DEV__ ? 'Passing DOM nodes as content is not supported in richText tooltip!' : '');
         }
         if (this.el) {
             this._zr.remove(this.el);
@@ -86,7 +87,7 @@ class TooltipRichContent {
         this.el = new ZRText({
             style: {
                 rich: markupStyleCreator.richTextStyles,
-                text: content,
+                text: content as string,
                 lineHeight: 22,
                 backgroundColor: tooltipModel.get('backgroundColor'),
                 borderRadius: tooltipModel.get('borderRadius'),
