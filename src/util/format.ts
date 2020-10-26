@@ -202,9 +202,10 @@ interface GetTooltipMarkerOpt {
     // id name for marker. If only one marker is in a rich text, this can be omitted.
     // By default: 'markerX'
     markerId?: string;
+    size?: string;
 }
 // Only support color string
-export function getTooltipMarker(color: ColorString, extraCssText?: string): TooltipMarker;
+export function getTooltipMarker(color: ColorString, size?: string, extraCssText?: string): TooltipMarker;
 export function getTooltipMarker(opt: GetTooltipMarkerOpt): TooltipMarker;
 export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extraCssText?: string): TooltipMarker {
     const opt = zrUtil.isString(inOpt) ? {
@@ -215,6 +216,11 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
     const type = opt.type;
     extraCssText = opt.extraCssText;
     const renderMode = opt.renderMode || 'html';
+    let size = opt.size;
+
+    if (!size) {
+        size = '10px';
+    }
 
     if (!color) {
         return '';
@@ -227,7 +233,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
             // Only support string
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
         : '<span style="display:inline-block;margin-right:4px;'
-            + 'border-radius:10px;width:10px;height:10px;background-color:'
+            + 'border-radius:' + size + ';width:' + size + ';height:' + size + ';background-color:'
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
     }
     else {
