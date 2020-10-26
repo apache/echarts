@@ -65,7 +65,10 @@ export default {
             encode: userOutput ? userOutput.encode : null,
             marker: getTooltipMarker({
                 color: color,
-                renderMode: renderMode
+                renderMode: renderMode,
+                radius: "10px",
+                height: "10px",
+                width: "10px"
             }),
 
             // Param name list for mapping `a`, `b`, `c`, `d`, `e`

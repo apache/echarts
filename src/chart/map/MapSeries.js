@@ -162,7 +162,6 @@ var MapSeries = SeriesModel.extend({
             var name = this.getData().getName(dataIndex);
             var geo = this.coordinateSystem;
             var region = geo.getRegion(name);
-
             return region && geo.dataToPoint(region.center);
         }
     },

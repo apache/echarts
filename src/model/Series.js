@@ -419,8 +419,12 @@ var SeriesModel = ComponentModel.extend({
             color: color,
             type: 'item',
             renderMode: renderMode,
-            markerId: markName
+            markerId: markName,
+            radius: "10px",
+            height: "10px",
+            width: "10px"
         });
+        getTooltipMarker.setToolTip
         markers[markName] = color;
         ++markerId;
 

@@ -29515,7 +29515,7 @@ function updateHoverLayerStatus(ecIns, ecModel) {
         elCount++;
     });
 
-    if (elCount > ecModel.get('hoverLayerThreshold') && !env$1.node) {
+    if (elCount > ecModel.get('hoverLayerThreshold') && !env$1.node && !env$1.worker) {
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.preventUsingHoverLayer) {
                 return;
@@ -35677,8 +35677,10 @@ function rotateTextRect(textRect, rotate) {
     var boundingBox = textRect.plain();
     var beforeWidth = boundingBox.width;
     var beforeHeight = boundingBox.height;
-    var afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians)) + Math.abs(beforeHeight * Math.sin(rotateRadians));
-    var afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians)) + Math.abs(beforeHeight * Math.cos(rotateRadians));
+    var afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians))
+        + Math.abs(beforeHeight * Math.sin(rotateRadians));
+    var afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians))
+        + Math.abs(beforeHeight * Math.cos(rotateRadians));
     var rotatedRect = new BoundingRect(boundingBox.x, boundingBox.y, afterWidth, afterHeight);
 
     return rotatedRect;

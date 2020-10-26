@@ -148,6 +148,10 @@ export function getTooltipMarker(opt, extraCssText) {
     var renderMode = opt.renderMode || 'html';
     var markerId = opt.markerId || 'X';
 
+    var radius = opt.radius;
+    var width = opt.width;
+    var height = opt.height;
+
     if (!color) {
         return '';
     }
@@ -158,7 +162,7 @@ export function getTooltipMarker(opt, extraCssText) {
             + 'border-radius:4px;width:4px;height:4px;background-color:'
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
         : '<span style="display:inline-block;margin-right:5px;'
-            + 'border-radius:10px;width:10px;height:10px;background-color:'
+            + 'border-radius:'+ radius + ';width:'+ width + ';height:' + height + ';background-color:'
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
     }
     else {

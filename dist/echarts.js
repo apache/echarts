@@ -1640,6 +1640,81 @@ function on(eventful, event, query, handler, context, isOnce) {
     return eventful;
 }
 
+// ----------------------
+// The events in zrender
+// ----------------------
+
+/**
+ * @event module:zrender/mixin/Eventful#onclick
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmouseover
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmouseout
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmousemove
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmousewheel
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmousedown
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmouseup
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondrag
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragstart
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragend
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragenter
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragleave
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragover
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondrop
+ * @type {Function}
+ * @default null
+ */
+
 /**
  * The algoritm is learnt from
  * https://franklinta.com/2014/09/08/computing-css-matrix3d-transforms/
@@ -2144,6 +2219,10 @@ function isMiddleOrRightButtonOnMouseUpDown(e) {
  * @deprecated
  */
 
+
+
+// For backward compatibility
+
 /**
  * Only implements needed gestures for mobile.
  */
@@ -2257,65 +2336,6 @@ var recognizers = {
 
     // Only pinch currently.
 };
-
-/**
- * [The interface between `Handler` and `HandlerProxy`]:
- *
- * The default `HandlerProxy` only support the common standard web environment
- * (e.g., standalone browser, headless browser, embed browser in mobild APP, ...).
- * But `HandlerProxy` can be replaced to support more non-standard environment
- * (e.g., mini app), or to support more feature that the default `HandlerProxy`
- * not provided (like echarts-gl did).
- * So the interface between `Handler` and `HandlerProxy` should be stable. Do not
- * make break changes util inevitable. The interface include the public methods
- * of `Handler` and the events listed in `handlerNames` below, by which `HandlerProxy`
- * drives `Handler`.
- */
-
-/**
- * [Drag outside]:
- *
- * That is, triggering `mousemove` and `mouseup` event when the pointer is out of the
- * zrender area when dragging. That is important for the improvement of the user experience
- * when dragging something near the boundary without being terminated unexpectedly.
- *
- * We originally consider to introduce new events like `pagemovemove` and `pagemouseup`
- * to resolve this issue. But some drawbacks of it is described in
- * https://github.com/ecomfe/zrender/pull/536#issuecomment-560286899
- *
- * Instead, we referenced the specifications:
- * https://www.w3.org/TR/touch-events/#the-touchmove-event
- * https://www.w3.org/TR/2014/WD-DOM-Level-3-Events-20140925/#event-type-mousemove
- * where the the mousemove/touchmove can be continue to fire if the user began a drag
- * operation and the pointer has left the boundary. (for the mouse event, browsers
- * only do it on `document` and when the pointer has left the boundary of the browser.)
- *
- * So the default `HandlerProxy` supports this feature similarly: if it is in the dragging
- * state (see `pointerCapture` in `HandlerProxy`), the `mousemove` and `mouseup` continue
- * to fire until release the pointer. That is implemented by listen to those event on
- * `document`.
- * If we implement some other `HandlerProxy` only for touch device, that would be easier.
- * The touch event support this feature by default.
- *
- * Note:
- * There might be some cases that the mouse event can not be
- * received on `document`. For example,
- * (A) `useCapture` is not supported and some user defined event listeners on the ancestor
- * of zr dom throw Error .
- * (B) `useCapture` is not supported Some user defined event listeners on the ancestor of
- * zr dom call `stopPropagation`.
- * In these cases, the `mousemove` event might be keep triggered event
- * if the mouse is released. We try to reduce the side-effect in those cases.
- * That is, do nothing (especially, `findHover`) in those cases. See `isOutsideBoundary`.
- *
- * Note:
- * If `HandlerProxy` listens to `document` with `useCapture`, `HandlerProxy` needs to
- * make sure `stopPropagation` and `preventDefault` doing nothing if and only if the event
- * target is not zrender dom. Becuase it is dangerous to enable users to call them in
- * `document` capture phase to prevent the propagation to any listener of the webpage.
- * But they are needed to work when the pointer inside the zrender dom.
- */
-
 
 var SILENT = 'silent';
 
@@ -5072,10 +5092,6 @@ if (debugMode === 1) {
 
 var logError$1 = logError;
 
-/**
- * @alias module:zrender/mixin/Animatable
- * @constructor
- */
 var Animatable = function () {
 
     /**
@@ -5355,13 +5371,6 @@ function setAttrByPath(el, path, name, value) {
     }
 }
 
-/**
- * @alias module:zrender/Element
- * @constructor
- * @extends {module:zrender/mixin/Animatable}
- * @extends {module:zrender/mixin/Transformable}
- * @extends {module:zrender/mixin/Eventful}
- */
 var Element = function (opts) { // jshint ignore:line
 
     Transformable.call(this, opts);
@@ -5822,12 +5831,6 @@ BoundingRect.create = function (rect) {
  *     zr.add(g);
  */
 
-/**
- * @alias module:zrender/graphic/Group
- * @constructor
- * @extends module:zrender/mixin/Transformable
- * @extends module:zrender/mixin/Eventful
- */
 var Group = function (opts) {
 
     opts = opts || {};
@@ -6778,8 +6781,6 @@ function sort(array, compare, lo, hi) {
     ts.forceMergeRuns();
 }
 
-// Use timsort because in most case elements are partially sorted
-// https://jsfiddle.net/pissang/jr4x7mdm/8/
 function shapeCompareFunc(a, b) {
     if (a.zlevel === b.zlevel) {
         if (a.z === b.z) {
@@ -9315,11 +9316,6 @@ RectText.prototype = {
  */
 
 
-/**
- * @alias module:zrender/graphic/Displayable
- * @extends module:zrender/Element
- * @extends module:zrender/graphic/mixin/RectText
- */
 function Displayable(opts) {
 
     opts = opts || {};
@@ -9592,13 +9588,8 @@ Displayable.prototype = {
 inherits(Displayable, Element);
 
 mixin(Displayable, RectText);
+// zrUtil.mixin(Displayable, Stateful);
 
-/**
- * @alias zrender/graphic/Image
- * @extends module:zrender/graphic/Displayable
- * @constructor
- * @param {Object} opts
- */
 function ZImage(opts) {
     Displayable.call(this, opts);
 }
@@ -10779,34 +10770,6 @@ Painter.prototype = {
 // http://iosoteric.com/additive-animations-animatewithduration-in-ios-8/
 // https://developer.apple.com/videos/wwdc2014/#236
 
-/**
- * @typedef {Object} IZRenderStage
- * @property {Function} update
- */
-
-/**
- * @alias module:zrender/animation/Animation
- * @constructor
- * @param {Object} [options]
- * @param {Function} [options.onframe]
- * @param {IZRenderStage} [options.stage]
- * @example
- *     var animation = new Animation();
- *     var obj = {
- *         x: 100,
- *         y: 100
- *     };
- *     animation.animate(node.position)
- *         .when(1000, {
- *             x: 500,
- *             y: 500
- *         })
- *         .when(2000, {
- *             x: 100,
- *             y: 100
- *         })
- *         .start('spline');
- */
 var Animation = function (options) {
 
     options = options || {};
@@ -14540,21 +14503,6 @@ function containStroke$1(x0, y0, x1, y1, lineWidth, x, y) {
     return _s <= _l / 2 * _l / 2;
 }
 
-/**
- * 三次贝塞尔曲线描边包含判断
- * @param  {number}  x0
- * @param  {number}  y0
- * @param  {number}  x1
- * @param  {number}  y1
- * @param  {number}  x2
- * @param  {number}  y2
- * @param  {number}  x3
- * @param  {number}  y3
- * @param  {number}  lineWidth
- * @param  {number}  x
- * @param  {number}  y
- * @return {boolean}
- */
 function containStroke$2(x0, y0, x1, y1, x2, y2, x3, y3, lineWidth, x, y) {
     if (lineWidth === 0) {
         return false;
@@ -14576,19 +14524,6 @@ function containStroke$2(x0, y0, x1, y1, x2, y2, x3, y3, lineWidth, x, y) {
     return d <= _l / 2;
 }
 
-/**
- * 二次贝塞尔曲线描边包含判断
- * @param  {number}  x0
- * @param  {number}  y0
- * @param  {number}  x1
- * @param  {number}  y1
- * @param  {number}  x2
- * @param  {number}  y2
- * @param  {number}  lineWidth
- * @param  {number}  x
- * @param  {number}  y
- * @return {boolean}
- */
 function containStroke$3(x0, y0, x1, y1, x2, y2, lineWidth, x, y) {
     if (lineWidth === 0) {
         return false;
@@ -15566,12 +15501,6 @@ var transformPath = function (path, m) {
     }
 };
 
-// command chars
-// var cc = [
-//     'm', 'M', 'l', 'L', 'v', 'V', 'h', 'H', 'z', 'Z',
-//     'c', 'C', 'q', 'Q', 't', 'T', 's', 'S', 'a', 'A'
-// ];
-
 var mathSqrt = Math.sqrt;
 var mathSin = Math.sin;
 var mathCos = Math.cos;
@@ -15999,12 +15928,6 @@ function mergePath$1(pathEls, opts) {
     return pathBundle;
 }
 
-/**
- * @alias zrender/graphic/Text
- * @extends module:zrender/graphic/Displayable
- * @constructor
- * @param {Object} opts
- */
 var Text = function (opts) { // jshint ignore:line
     Displayable.call(this, opts);
 };
@@ -16120,21 +16043,6 @@ var Circle = Path.extend({
         ctx.arc(shape.cx, shape.cy, shape.r, 0, Math.PI * 2, true);
     }
 });
-
-// Fix weird bug in some version of IE11 (like 11.0.9600.178**),
-// where exception "unexpected call to method or property access"
-// might be thrown when calling ctx.fill or ctx.stroke after a path
-// whose area size is zero is drawn and ctx.clip() is called and
-// shadowBlur is set. See #4572, #3112, #5777.
-// (e.g.,
-//  ctx.moveTo(10, 10);
-//  ctx.lineTo(20, 10);
-//  ctx.closePath();
-//  ctx.clip();
-//  ctx.shadowBlur = 10;
-//  ...
-//  ctx.fill();
-// )
 
 var shadowTemp = [
     ['shadowBlur', 0],
@@ -16282,9 +16190,6 @@ var Ring = Path.extend({
  *         errorrik (errorrik@gmail.com)
  */
 
-/**
- * @inner
- */
 function interpolate(p0, p1, p2, p3, t, t2, t3) {
     var v0 = (p2 - p0) * 0.5;
     var v1 = (p3 - p1) * 0.5;
@@ -16350,17 +16255,6 @@ var smoothSpline = function (points, isLoop) {
  *         errorrik (errorrik@gmail.com)
  */
 
-/**
- * 贝塞尔平滑曲线
- * @alias module:zrender/shape/util/smoothBezier
- * @param {Array} points 线段顶点数组
- * @param {number} smooth 平滑等级, 0-1
- * @param {boolean} isLoop
- * @param {Array} constraint 将计算出来的控制点约束在一个包围盒内
- *                           比如 [[0, 0], [100, 100]], 这个包围盒会与
- *                           整个折线的包围盒做一个并集用来约束控制点。
- * @param {Array} 计算出来的控制点数组
- */
 var smoothBezier = function (points, smooth, isLoop, constraint) {
     var cps = [];
 
@@ -16642,7 +16536,6 @@ function subPixelOptimize$1(position, lineWidth, positiveOrNegative) {
  * @module zrender/graphic/shape/Rect
  */
 
-// Avoid create repeatly.
 var subPixelOptimizeOutputShape = {};
 
 var Rect = Path.extend({
@@ -16701,7 +16594,6 @@ var Rect = Path.extend({
  * @module zrender/graphic/shape/Line
  */
 
-// Avoid create repeatly.
 var subPixelOptimizeOutputShape$1 = {};
 
 var Line = Path.extend({
@@ -17025,15 +16917,6 @@ Gradient.prototype = {
 
 };
 
-/**
- * x, y, x2, y2 are all percent from 0 to 1
- * @param {number} [x=0]
- * @param {number} [y=0]
- * @param {number} [x2=1]
- * @param {number} [y2=0]
- * @param {Array.<Object>} colorStops
- * @param {boolean} [globalCoord=false]
- */
 var LinearGradient = function (x, y, x2, y2, colorStops, globalCoord) {
     // Should do nothing more in this constructor. Because gradient can be
     // declard by `color: {type: 'linear', colorStops: ...}`, where
@@ -17063,14 +16946,6 @@ LinearGradient.prototype = {
 
 inherits(LinearGradient, Gradient);
 
-/**
- * x, y, r are all percent from 0 to 1
- * @param {number} [x=0.5]
- * @param {number} [y=0.5]
- * @param {number} [r=0.5]
- * @param {Array.<Object>} [colorStops]
- * @param {boolean} [globalCoord=false]
- */
 var RadialGradient = function (x, y, r, colorStops, globalCoord) {
     // Should do nothing more in this constructor. Because gradient can be
     // declard by `color: {type: 'radial', colorStops: ...}`, where
@@ -17105,7 +16980,6 @@ inherits(RadialGradient, Gradient);
  *
  * It use a not clearFlag to tell the painter don't clear the layer if it's the first element.
  */
-// TODO Style override ?
 function IncrementalDisplayble(opts) {
 
     Displayable.call(this, opts);
@@ -19809,13 +19683,6 @@ var number = (Object.freeze || Object)({
 * under the License.
 */
 
-// import Text from 'zrender/src/graphic/Text';
-
-/**
- * add commas after every three numbers
- * @param {string|number} x
- * @return {string}
- */
 function addCommas(x) {
     if (isNaN(x)) {
         return '-';
@@ -19937,6 +19804,10 @@ function getTooltipMarker(opt, extraCssText) {
     var renderMode = opt.renderMode || 'html';
     var markerId = opt.markerId || 'X';
 
+    var radius = opt.radius;
+    var width = opt.width;
+    var height = opt.height;
+
     if (!color) {
         return '';
     }
@@ -19947,7 +19818,7 @@ function getTooltipMarker(opt, extraCssText) {
             + 'border-radius:4px;width:4px;height:4px;background-color:'
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
         : '<span style="display:inline-block;margin-right:5px;'
-            + 'border-radius:10px;width:10px;height:10px;background-color:'
+            + 'border-radius:'+ radius + ';width:'+ width + ';height:' + height + ';background-color:'
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
     }
     else {
@@ -21060,54 +20931,6 @@ var SERIES_LAYOUT_BY_ROW = 'row';
 * under the License.
 */
 
-/**
- * [sourceFormat]
- *
- * + "original":
- * This format is only used in series.data, where
- * itemStyle can be specified in data item.
- *
- * + "arrayRows":
- * [
- *     ['product', 'score', 'amount'],
- *     ['Matcha Latte', 89.3, 95.8],
- *     ['Milk Tea', 92.1, 89.4],
- *     ['Cheese Cocoa', 94.4, 91.2],
- *     ['Walnut Brownie', 85.4, 76.9]
- * ]
- *
- * + "objectRows":
- * [
- *     {product: 'Matcha Latte', score: 89.3, amount: 95.8},
- *     {product: 'Milk Tea', score: 92.1, amount: 89.4},
- *     {product: 'Cheese Cocoa', score: 94.4, amount: 91.2},
- *     {product: 'Walnut Brownie', score: 85.4, amount: 76.9}
- * ]
- *
- * + "keyedColumns":
- * {
- *     'product': ['Matcha Latte', 'Milk Tea', 'Cheese Cocoa', 'Walnut Brownie'],
- *     'count': [823, 235, 1042, 988],
- *     'score': [95.8, 81.4, 91.2, 76.9]
- * }
- *
- * + "typedArray"
- *
- * + "unknown"
- */
-
-/**
- * @constructor
- * @param {Object} fields
- * @param {string} fields.sourceFormat
- * @param {Array|Object} fields.fromDataset
- * @param {Array|Object} [fields.data]
- * @param {string} [seriesLayoutBy='column']
- * @param {Array.<Object|string>} [dimensionsDefine]
- * @param {Objet|HashMap} [encodeDefine]
- * @param {number} [startIndex=0]
- * @param {number} [dimensionsDetectCount]
- */
 function Source(fields) {
 
     /**
@@ -21198,7 +21021,6 @@ enableClassCheck(Source);
 * under the License.
 */
 
-// The result of `guessOrdinal`.
 var BE_ORDINAL = {
     Must: 1, // Encounter string but not '-' and not number-like.
     Might: 2, // Encounter string but number-like.
@@ -23572,11 +23394,6 @@ var backwardCompat = function (option, isTheme) {
 * under the License.
 */
 
-// (1) [Caution]: the logic is correct based on the premises:
-//     data processing stage is blocked in stream.
-//     See <module:echarts/stream/Scheduler#performDataProcessorTasks>
-// (2) Only register once when import repeatly.
-//     Should be executed after series filtered and before stack calculation.
 var dataStack = function (ecModel) {
     var stackInfoMap = createHashMap();
     ecModel.eachSeries(function (seriesModel) {
@@ -23704,10 +23521,6 @@ function calculateStack(stackInfoList) {
 // ??? refactor? check the outer usage of data provider.
 // merge with defaultDimValueGetter?
 
-/**
- * If normal array used, mutable chunk size is supported.
- * If typed array used, chunk size must be fixed.
- */
 function DefaultDataProvider(source, dimSize) {
     if (!Source.isInstance(source)) {
         source = Source.seriesDataToSource(source);
@@ -24115,7 +23928,10 @@ var dataFormatMixin = {
             encode: userOutput ? userOutput.encode : null,
             marker: getTooltipMarker({
                 color: color,
-                renderMode: renderMode
+                renderMode: renderMode,
+                radius: "10px",
+                height: "10px",
+                width: "10px"
             }),
 
             // Param name list for mapping `a`, `b`, `c`, `d`, `e`
@@ -24210,10 +24026,6 @@ var dataFormatMixin = {
 * under the License.
 */
 
-/**
- * @param {Object} define
- * @return See the return of `createTask`.
- */
 function createTask(define) {
     return new Task(define);
 }
@@ -24934,8 +24746,12 @@ var SeriesModel = ComponentModel.extend({
             color: color,
             type: 'item',
             renderMode: renderMode,
-            markerId: markName
+            markerId: markName,
+            radius: "10px",
+            height: "10px",
+            width: "10px"
         });
+        getTooltipMarker.setToolTip;
         markers[markName] = color;
         ++markerId;
 
@@ -25223,9 +25039,6 @@ enableClassManagement(Component$1, {registerWhenExtend: true});
 * under the License.
 */
 
-/**
- * @return {string} If large mode changed, return string 'reset';
- */
 var createRenderPlanner = function () {
     var inner = makeInner();
 
@@ -26194,9 +26007,6 @@ var loadingDefault = function (api, opts) {
  * @module echarts/stream/Scheduler
  */
 
-/**
- * @constructor
- */
 function Scheduler(ecInstance, api, dataProcessorHandlers, visualHandlers) {
     this.ecInstance = ecInstance;
     this.api = api;
@@ -27017,10 +26827,6 @@ var Ellipse = Path.extend({
     }
 });
 
-// import RadialGradient from '../graphic/RadialGradient';
-// import Pattern from '../graphic/Pattern';
-// import * as vector from '../core/vector';
-// Most of the values can be separated by comma and/or white space.
 var DILIMITER_REG = /[\s,]+/;
 
 /**
@@ -29515,7 +29321,7 @@ function updateHoverLayerStatus(ecIns, ecModel) {
         elCount++;
     });
 
-    if (elCount > ecModel.get('hoverLayerThreshold') && !env$1.node) {
+    if (elCount > ecModel.get('hoverLayerThreshold') && !env$1.node && !env$1.worker) {
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.preventUsingHoverLayer) {
                 return;
@@ -30546,10 +30352,6 @@ function mayLabelDimType(dimType) {
 * under the License.
 */
 
-/**
- * @class
- * @param {Object|DataDimensionInfo} [opt] All of the fields will be shallow copied.
- */
 function DataDimensionInfo(opt) {
     if (opt != null) {
         extend(this, opt);
@@ -32711,45 +32513,6 @@ listProto.CHANGABLE_METHODS = ['filterSelf', 'selectRange'];
  * Use `echarts/data/helper/createDimensions` instead.
  */
 
-/**
- * @see {module:echarts/test/ut/spec/data/completeDimensions}
- *
- * This method builds the relationship between:
- * + "what the coord sys or series requires (see `sysDims`)",
- * + "what the user defines (in `encode` and `dimensions`, see `opt.dimsDef` and `opt.encodeDef`)"
- * + "what the data source provids (see `source`)".
- *
- * Some guess strategy will be adapted if user does not define something.
- * If no 'value' dimension specified, the first no-named dimension will be
- * named as 'value'.
- *
- * @param {Array.<string>} sysDims Necessary dimensions, like ['x', 'y'], which
- *      provides not only dim template, but also default order.
- *      properties: 'name', 'type', 'displayName'.
- *      `name` of each item provides default coord name.
- *      [{dimsDef: [string|Object, ...]}, ...] dimsDef of sysDim item provides default dim name, and
- *                                    provide dims count that the sysDim required.
- *      [{ordinalMeta}] can be specified.
- * @param {module:echarts/data/Source|Array|Object} source or data (for compatibal with pervious)
- * @param {Object} [opt]
- * @param {Array.<Object|string>} [opt.dimsDef] option.series.dimensions User defined dimensions
- *      For example: ['asdf', {name, type}, ...].
- * @param {Object|HashMap} [opt.encodeDef] option.series.encode {x: 2, y: [3, 1], tooltip: [1, 2], label: 3}
- * @param {Function} [opt.encodeDefaulter] Called if no `opt.encodeDef` exists.
- *      If not specified, auto find the next available data dim.
- *      param source {module:data/Source}
- *      param dimCount {number}
- *      return {Object} encode Never be `null/undefined`.
- * @param {string} [opt.generateCoord] Generate coord dim with the given name.
- *      If not specified, extra dim names will be:
- *      'value', 'value0', 'value1', ...
- * @param {number} [opt.generateCoordCount] By default, the generated dim name is `generateCoord`.
- *      If `generateCoordCount` specified, the generated dim names will be:
- *      `generateCoord` + 0, `generateCoord` + 1, ...
- *      can be Infinity, indicate that use all of the remain columns.
- * @param {number} [opt.dimCount] If not specified, guess by the first data item.
- * @return {Array.<module:data/DataDimensionInfo>}
- */
 function completeDimensions(sysDims, source, opt) {
     if (!Source.isInstance(source)) {
         source = Source.seriesDataToSource(source);
@@ -33000,18 +32763,6 @@ function genName(name, map$$1, fromZero) {
  * Substitute `completeDimensions`.
  * `completeDimensions` is to be deprecated.
  */
-/**
- * @param {module:echarts/data/Source|module:echarts/data/List} source or data.
- * @param {Object|Array} [opt]
- * @param {Array.<string|Object>} [opt.coordDimensions=[]]
- * @param {number} [opt.dimensionsCount]
- * @param {string} [opt.generateCoord]
- * @param {string} [opt.generateCoordCount]
- * @param {Array.<string|Object>} [opt.dimensionsDefine=source.dimensionsDefine] Overwrite source define.
- * @param {Object|HashMap} [opt.encodeDefine=source.encodeDefine] Overwrite source define.
- * @param {Function} [opt.encodeDefaulter] Make default encode if user not specified.
- * @return {Array.<Object>} dimensionsInfo
- */
 var createDimensions = function (source, opt) {
     opt = opt || {};
     return completeDimensions(opt.coordDimensions || [], source, {
@@ -33052,26 +32803,6 @@ var createDimensions = function (source, opt) {
 // merge relevant logic to this file?
 // check: "modelHelper" of tooltip and "BrushTargetManager".
 
-/**
- * @class
- * For example:
- * {
- *     coordSysName: 'cartesian2d',
- *     coordSysDims: ['x', 'y', ...],
- *     axisMap: HashMap({
- *         x: xAxisModel,
- *         y: yAxisModel
- *     }),
- *     categoryAxisMap: HashMap({
- *         x: xAxisModel,
- *         y: undefined
- *     }),
- *     // The index of the first category axis in `coordSysDims`.
- *     // `null/undefined` means no category axis exists.
- *     firstCategoryDimIndex: 1,
- *     // To replace user specified encode.
- * }
- */
 function CoordSysInfo(coordSysName) {
     /**
      * @type {string}
@@ -33238,26 +32969,6 @@ function isCategory(axisModel) {
 * under the License.
 */
 
-/**
- * Note that it is too complicated to support 3d stack by value
- * (have to create two-dimension inverted index), so in 3d case
- * we just support that stacked by index.
- *
- * @param {module:echarts/model/Series} seriesModel
- * @param {Array.<string|Object>} dimensionInfoList The same as the input of <module:echarts/data/List>.
- *        The input dimensionInfoList will be modified.
- * @param {Object} [opt]
- * @param {boolean} [opt.stackedCoordDimension=''] Specify a coord dimension if needed.
- * @param {boolean} [opt.byIndex=false]
- * @return {Object} calculationInfo
- * {
- *     stackedDimension: string
- *     stackedByDimension: string
- *     isStackedByIndex: boolean
- *     stackedOverDimension: string
- *     stackResultDimension: string
- * }
- */
 function enableDataStack(seriesModel, dimensionInfoList, opt) {
     opt = opt || {};
     var byIndex = opt.byIndex;
@@ -33399,13 +33110,6 @@ function getStackedDimension(data, targetDim) {
 * under the License.
 */
 
-/**
- * @param {module:echarts/data/Source|Array} source Or raw data.
- * @param {module:echarts/model/Series} seriesModel
- * @param {Object} [opt]
- * @param {string} [opt.generateCoord]
- * @param {boolean} [opt.useEncodeDefaulter]
- */
 function createListFromArray(source, seriesModel, opt) {
     opt = opt || {};
 
@@ -33530,9 +33234,6 @@ function firstDataNotNull(data) {
  * @module echarts/scale/Scale
  */
 
-/**
- * @param {Object} [setting]
- */
 function Scale(setting) {
     this._setting = setting || {};
 
@@ -33690,13 +33391,6 @@ enableClassManagement(Scale, {
 * under the License.
 */
 
-/**
- * @constructor
- * @param {Object} [opt]
- * @param {Object} [opt.categories=[]]
- * @param {Object} [opt.needCollect=false]
- * @param {Object} [opt.deduplication=false]
- */
 function OrdinalMeta(opt) {
 
     /**
@@ -35122,7 +34816,6 @@ TimeScale.create = function (model) {
  * @module echarts/scale/Log
  */
 
-// Use some method of IntervalScale
 var scaleProto$1 = Scale.prototype;
 var intervalScaleProto$1 = IntervalScale.prototype;
 
@@ -35323,10 +35016,6 @@ function fixRoundingError(val, originalVal) {
 * under the License.
 */
 
-/**
- * Get axis scale extent before niced.
- * Item of returned array can only be number (including Infinity and NaN).
- */
 function getScaleExtent(scale, model) {
     var scaleType = scale.type;
 
@@ -35677,8 +35366,10 @@ function rotateTextRect(textRect, rotate) {
     var boundingBox = textRect.plain();
     var beforeWidth = boundingBox.width;
     var beforeHeight = boundingBox.height;
-    var afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians)) + Math.abs(beforeHeight * Math.sin(rotateRadians));
-    var afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians)) + Math.abs(beforeHeight * Math.cos(rotateRadians));
+    var afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians))
+        + Math.abs(beforeHeight * Math.sin(rotateRadians));
+    var afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians))
+        + Math.abs(beforeHeight * Math.cos(rotateRadians));
     var rotatedRect = new BoundingRect(boundingBox.x, boundingBox.y, afterWidth, afterHeight);
 
     return rotatedRect;
@@ -35722,8 +35413,6 @@ function shouldShowAllLabels(axis) {
 * specific language governing permissions and limitations
 * under the License.
 */
-
-// import * as axisHelper from './axisHelper';
 
 var axisModelCommonMixin = {
 
@@ -35821,10 +35510,6 @@ var axisModelCommonMixin = {
 
 // Symbol factory
 
-/**
- * Triangle shape
- * @inner
- */
 var Triangle = extendShape({
     type: 'triangle',
     shape: {
@@ -36189,15 +35874,15 @@ function createSymbol(symbolType, x, y, w, h, color, keepAspect) {
 * under the License.
 */
 
-// import createGraphFromNodeEdge from './chart/helper/createGraphFromNodeEdge';
-/**
- * Create a muti dimension List structure from seriesModel.
- * @param  {module:echarts/model/Model} seriesModel
- * @return {module:echarts/data/List} list
- */
 function createList(seriesModel) {
     return createListFromArray(seriesModel.getSource(), seriesModel);
 }
+
+// export function createGraph(seriesModel) {
+//     var nodes = seriesModel.get('data');
+//     var links = seriesModel.get('links');
+//     return createGraphFromNodeEdge(nodes, links, seriesModel);
+// }
 
 var dataStack$1 = {
     isDimensionStacked: isDimensionStacked,
@@ -36206,9 +35891,13 @@ var dataStack$1 = {
 };
 
 /**
- * Create scale
- * @param {Array.<number>} dataExtent
- * @param {Object|module:echarts/Model} option
+ * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
+ * @param {string} symbolDesc
+ * @param {number} x
+ * @param {number} y
+ * @param {number} w
+ * @param {number} h
+ * @param {string} color
  */
 function createScale(dataExtent, option) {
     var axisModel = option;
@@ -36303,11 +35992,6 @@ function contain$1(points, x, y) {
  * @module echarts/coord/geo/Region
  */
 
-/**
- * @param {string|Region} name
- * @param {Array} geometries
- * @param {Array.<number>} cp
- */
 function Region(name, geometries, cp) {
 
     /**
@@ -37523,11 +37207,6 @@ SeriesModel.extend({
 * under the License.
 */
 
-/**
- * @param {module:echarts/data/List} data
- * @param {number} dataIndex
- * @return {string} label string. Not null/undefined
- */
 function getDefaultLabel(data, dataIndex) {
     var labelDims = data.mapDimension('defaultedLabel', true);
     var len = labelDims.length;
@@ -37569,13 +37248,6 @@ function getDefaultLabel(data, dataIndex) {
  * @module echarts/chart/helper/Symbol
  */
 
-/**
- * @constructor
- * @alias {module:echarts/chart/helper/Symbol}
- * @param {module:echarts/data/List} data
- * @param {number} idx
- * @extends {module:zrender/graphic/Group}
- */
 function SymbolClz$1(data, idx, seriesScope) {
     Group.call(this);
     this.updateData(data, idx, seriesScope);
@@ -37958,11 +37630,6 @@ inherits(SymbolClz$1, Group);
  * @module echarts/chart/helper/SymbolDraw
  */
 
-/**
- * @constructor
- * @alias module:echarts/chart/helper/SymbolDraw
- * @param {module:zrender/graphic/Group} [symbolCtor]
- */
 function SymbolDraw(symbolCtor) {
     this.group = new Group();
 
@@ -38152,11 +37819,6 @@ function makeSeriesScope(data) {
 * under the License.
 */
 
-/**
- * @param {Object} coordSys
- * @param {module:echarts/data/List} data
- * @param {string} valueOrigin lineSeries.option.areaStyle.origin
- */
 function prepareDataCoordInfo(coordSys, data, valueOrigin) {
     var baseAxis = coordSys.getBaseAxis();
     var valueAxis = coordSys.getOtherAxis(baseAxis);
@@ -38255,33 +37917,6 @@ function getStackedOnPoint(dataCoordInfo, coordSys, data, idx) {
 * specific language governing permissions and limitations
 * under the License.
 */
-
-// var arrayDiff = require('zrender/src/core/arrayDiff');
-// 'zrender/src/core/arrayDiff' has been used before, but it did
-// not do well in performance when roam with fixed dataZoom window.
-
-// function convertToIntId(newIdList, oldIdList) {
-//     // Generate int id instead of string id.
-//     // Compare string maybe slow in score function of arrDiff
-
-//     // Assume id in idList are all unique
-//     var idIndicesMap = {};
-//     var idx = 0;
-//     for (var i = 0; i < newIdList.length; i++) {
-//         idIndicesMap[newIdList[i]] = idx;
-//         newIdList[i] = idx++;
-//     }
-//     for (var i = 0; i < oldIdList.length; i++) {
-//         var oldId = oldIdList[i];
-//         // Same with newIdList
-//         if (idIndicesMap[oldId]) {
-//             oldIdList[i] = idIndicesMap[oldId];
-//         }
-//         else {
-//             oldIdList[i] = idx++;
-//         }
-//     }
-// }
 
 function diffData(oldData, newData) {
     var diffResult = [];
@@ -40283,16 +39918,6 @@ inherits(Cartesian2D, Cartesian);
 * under the License.
 */
 
-/**
- * Extend axis 2d
- * @constructor module:echarts/coord/cartesian/Axis2D
- * @extends {module:echarts/coord/cartesian/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- * @param {string} position
- */
 var Axis2D = function (dim, scale, coordExtent, axisType, position) {
     Axis.call(this, dim, scale, coordExtent);
     /**
@@ -40623,7 +40248,6 @@ axisDefault.logAxis = defaults({
 * under the License.
 */
 
-// FIXME axisType is fixed ?
 var AXIS_TYPES = ['value', 'category', 'time', 'log'];
 
 /**
@@ -40869,11 +40493,6 @@ ComponentModel.extend({
  * TODO Default cartesian
  */
 
-// Depends on GridModel, AxisModel, which performs preprocess.
-/**
- * Check if the axis is used in the specified grid
- * @inner
- */
 function isAxisUsedInTheGrid(axisModel, gridModel, ecModel) {
     return axisModel.getCoordSysModel() === gridModel;
 }
@@ -42594,9 +42213,6 @@ function makeKey(model) {
 * under the License.
 */
 
-/**
- * Base class of AxisView.
- */
 var AxisView = extendComponentView({
 
     type: 'axis',
@@ -42711,16 +42327,6 @@ AxisView.getAxisPointerClass = function (type) {
 * under the License.
 */
 
-/**
- * Can only be called after coordinate system creation stage.
- * (Can be called before coordinate system update stage).
- *
- * @param {Object} opt {labelInside}
- * @return {Object} {
- *  position, rotation, labelDirection, labelOffset,
- *  tickDirection, labelRotate, z2
- * }
- */
 function layout$1(gridModel, axisModel, opt) {
     opt = opt || {};
     var grid = gridModel.coordinateSystem;
@@ -43140,7 +42746,6 @@ CartesianAxisView.extend({
 * under the License.
 */
 
-// Grid view
 extendComponentView({
 
     type: 'grid',
@@ -43187,7 +42792,6 @@ registerPreprocessor(function (option) {
 * under the License.
 */
 
-// In case developer forget to include grid component
 registerVisual(visualSymbol('line', 'circle', 'line'));
 registerLayout(pointsLayout('line'));
 
@@ -43466,10 +43070,6 @@ var barItemStyle = {
 * under the License.
 */
 
-/**
- * Sausage: similar to sector, but have half circle on both sides
- * @public
- */
 var Sausage = extendShape({
 
     type: 'sausage',
@@ -44282,7 +43882,6 @@ function createBackgroundEl(coord, isHorizontalOrRadial, layout) {
 * under the License.
 */
 
-// In case developer forget to include grid component
 registerLayout(PRIORITY.VISUAL.LAYOUT, curry(layout, 'bar'));
 // Use higher prority to avoid to be blocked by other overall layout, which do not
 // only exist in this module, but probably also exist in other modules, like `barPolar`.
@@ -44316,22 +43915,6 @@ registerVisual({
 */
 
 
-/**
- * [Usage]:
- * (1)
- * createListSimply(seriesModel, ['value']);
- * (2)
- * createListSimply(seriesModel, {
- *     coordDimensions: ['value'],
- *     dimensionsCount: 5
- * });
- *
- * @param {module:echarts/model/Series} seriesModel
- * @param {Object|Array.<string|Object>} opt opt or coordDimensions
- *        The options in opt, see `echarts/data/helper/createDimensions`
- * @param {Array.<string>} [nameList]
- * @return {module:echarts/data/List}
- */
 var createListSimply = function (seriesModel, opt, nameList) {
     opt = isArray(opt) && {coordDimensions: opt} || extend({}, opt);
 
@@ -44722,11 +44305,6 @@ mixin(PieSeries, selectableMixin);
 * under the License.
 */
 
-/**
- * @param {module:echarts/model/Series} seriesModel
- * @param {boolean} hasAnimation
- * @inner
- */
 function updateDataSelected(uid, seriesModel, hasAnimation, api) {
     var data = seriesModel.getData();
     var dataIndex = this.dataIndex;
@@ -46412,9 +45990,6 @@ extendChartView({
 * under the License.
 */
 
-// import * as zrUtil from 'zrender/src/core/util';
-
-// In case developer forget to include grid component
 registerVisual(visualSymbol('scatter', 'circle'));
 registerLayout(pointsLayout('scatter'));
 
@@ -47567,7 +47142,6 @@ var backwardCompat$1 = function (option) {
 */
 
 
-// Must use radar component
 registerVisual(dataColor('radar'));
 registerVisual(visualSymbol('radar', 'circle'));
 registerLayout(radarLayout);
@@ -47778,7 +47352,6 @@ var fixDiaoyuIsland = function (mapType, region) {
 * under the License.
 */
 
-// Built-in GEO fixer.
 var inner$7 = makeInner();
 
 var geoJSONLoader = {
@@ -48257,7 +47830,6 @@ var MapSeries = SeriesModel.extend({
             var name = this.getData().getName(dataIndex);
             var geo = this.coordinateSystem;
             var region = geo.getRegion(name);
-
             return region && geo.dataToPoint(region.center);
         }
     },
@@ -48434,13 +48006,6 @@ registerAction(
 * under the License.
 */
 
-/**
- * @alias module:echarts/component/helper/RoamController
- * @constructor
- * @mixin {module:zrender/mixin/Eventful}
- *
- * @param {module:zrender/zrender~ZRender} zr
- */
 function RoamController(zr) {
 
     /**
@@ -49569,15 +49134,6 @@ function updateCenterAndZoom(
 * under the License.
 */
 
-/**
- * @payload
- * @property {string} [componentType=series]
- * @property {number} [dx]
- * @property {number} [dy]
- * @property {number} [zoom]
- * @property {number} [originX]
- * @property {number} [originY]
- */
 registerAction({
     type: 'geoRoam',
     event: 'geoRoam',
@@ -49951,18 +49507,6 @@ function doConvert$1(methodName, ecModel, finder, value) {
 * under the License.
 */
 
-/**
- * [Geo description]
- * For backward compatibility, the orginal interface:
- * `name, map, geoJson, specialAreas, nameMap` is kept.
- *
- * @param {string|Object} name
- * @param {string} map Map type
- *        Specify the positioned areas by left, top, width, height
- * @param {Object.<string, string>} [nameMap]
- *        Specify name alias
- * @param {boolean} [invertLongitute=true]
- */
 function Geo(name, map$$1, nameMap, invertLongitute) {
 
     View.call(this, name);
@@ -50156,11 +49700,6 @@ function doConvert(methodName, ecModel, finder, value) {
 * under the License.
 */
 
-/**
- * Resize method bound to the geo
- * @param {module:echarts/coord/geo/GeoModel|module:echarts/chart/map/MapModel} geoModel
- * @param {module:echarts/ExtensionAPI} api
- */
 function resizeGeo(geoModel, api) {
 
     var boundingCoords = geoModel.get('boundingCoords');
@@ -50495,12 +50034,6 @@ var mapVisual = function (ecModel) {
 * under the License.
 */
 
-// FIXME 公用？
-/**
- * @param {Array.<module:echarts/data/List>} datas
- * @param {string} statisticType 'average' 'sum'
- * @inner
- */
 function dataStatistics(datas, statisticType) {
     var dataNameMap = {};
 
@@ -50817,11 +50350,6 @@ function linkSingle(data, dataType, mainData, opt) {
  * @module echarts/data/Tree
  */
 
-/**
- * @constructor module:echarts/data/Tree~TreeNode
- * @param {string} name
- * @param {module:echarts/data/Tree} hostTree
- */
 var TreeNode = function (name, hostTree) {
     /**
      * @type {string}
@@ -51521,11 +51049,6 @@ SeriesModel.extend({
  *       the tree.
  */
 
-/**
- * Initialize all computational message for following algorithm.
- *
- * @param  {module:echarts/data/Tree~TreeNode} root   The virtual root of the tree.
- */
 function init$2(root) {
     root.hierNode = {
         defaultAncestor: null,
@@ -53364,21 +52887,6 @@ function packEventData(el, seriesModel, itemNode) {
 * under the License.
 */
 
-/**
- * @param {number} [time=500] Time in ms
- * @param {string} [easing='linear']
- * @param {number} [delay=0]
- * @param {Function} [callback]
- *
- * @example
- *  // Animate position
- *  animation
- *      .createWrap()
- *      .add(el1, {position: [10, 10]})
- *      .add(el2, {shape: {width: 500}, style: {fill: 'red'}}, 400)
- *      .done(function () { // done })
- *      .start('cubicOut');
- */
 function createWrap() {
 
     var storage = [];
@@ -55969,7 +55477,6 @@ registerLayout(treemapLayout);
 * under the License.
 */
 
-// id may be function name of Object, add a prefix to avoid this problem.
 function generateNodeKey(id) {
     return '_EC_' + id;
 }
@@ -57657,12 +57164,6 @@ inherits(Line$1, Group);
  * @module echarts/chart/helper/LineDraw
  */
 
-// import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
-
-/**
- * @alias module:echarts/component/marker/LineDraw
- * @constructor
- */
 function LineDraw(ctor) {
     this._ctor = ctor || Line$1;
 
@@ -58439,13 +57940,6 @@ extendChartView({
 * under the License.
 */
 
-/**
- * @payload
- * @property {number} [seriesIndex]
- * @property {string} [seriesId]
- * @property {string} [seriesName]
- * @property {number} [dataIndex]
- */
 registerAction({
     type: 'focusNodeAdjacency',
     event: 'focusNodeAdjacency',
@@ -60201,11 +59695,6 @@ var FunnelSeries = extendSeriesModel({
 * under the License.
 */
 
-/**
- * Piece of pie including Sector, Label, LabelLine
- * @constructor
- * @extends {module:zrender/graphic/Group}
- */
 function FunnelPiece(data, idx) {
 
     Group.call(this);
@@ -60891,14 +60380,6 @@ function mergeAxisOptionFromParallel(option) {
 * under the License.
 */
 
-/**
- * @constructor module:echarts/coord/parallel/ParallelAxis
- * @extends {module:echarts/coord/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- */
 var ParallelAxis = function (dim, scale, coordExtent, axisType, axisIndex) {
 
     Axis.call(this, dim, scale, coordExtent);
@@ -61935,11 +61416,6 @@ ComponentModel.extend({
 * under the License.
 */
 
-/**
- * @payload
- * @property {string} parallelAxisId
- * @property {Array.<Array.<number>>} intervals
- */
 var actionInfo$1 = {
     type: 'axisAreaSelect',
     event: 'axisAreaSelected'
@@ -65384,7 +64860,6 @@ mixin(BoxplotSeries, seriesModelMixin, true);
 * under the License.
 */
 
-// Update common properties
 var NORMAL_ITEM_STYLE_PATH = ['itemStyle'];
 var EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'];
 
@@ -67361,11 +66836,6 @@ var LinesSeries = SeriesModel.extend({
  * @module echarts/chart/helper/EffectLine
  */
 
-/**
- * @constructor
- * @extends {module:zrender/graphic/Group}
- * @alias {module:echarts/chart/helper/Line}
- */
 function EffectLine(lineData, idx, seriesScope) {
     Group.call(this);
 
@@ -67578,11 +67048,6 @@ inherits(EffectLine, Group);
  * @module echarts/chart/helper/Line
  */
 
-/**
- * @constructor
- * @extends {module:zrender/graphic/Group}
- * @alias {module:echarts/chart/helper/Polyline}
- */
 function Polyline$2(lineData, idx, seriesScope) {
     Group.call(this);
 
@@ -67677,11 +67142,6 @@ inherits(Polyline$2, Group);
  * @module echarts/chart/helper/EffectLine
  */
 
-/**
- * @constructor
- * @extends {module:echarts/chart/helper/EffectLine}
- * @alias {module:echarts/chart/helper/Polyline}
- */
 function EffectPolyline(lineData, idx, seriesScope) {
     EffectLine.call(this, lineData, idx, seriesScope);
     this._lastFrame = 0;
@@ -69805,7 +69265,6 @@ function toIntTimes(times) {
 * under the License.
 */
 
-// In case developer forget to include grid component
 registerLayout(curry(
     layout, 'pictorialBar'
 ));
@@ -69830,15 +69289,6 @@ registerVisual(visualSymbol('pictorialBar', 'roundRect'));
 * under the License.
 */
 
-/**
- * @constructor  module:echarts/coord/single/SingleAxis
- * @extends {module:echarts/coord/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- * @param {string} position
- */
 var SingleAxis = function (dim, scale, coordExtent, axisType, position) {
 
     Axis.call(this, dim, scale, coordExtent);
@@ -69942,13 +69392,6 @@ inherits(SingleAxis, Axis);
  * Single coordinates system.
  */
 
-/**
- * Create a single coordinates system.
- *
- * @param {module:echarts/coord/single/AxisModel} axisModel
- * @param {module:echarts/model/Global} ecModel
- * @param {module:echarts/ExtensionAPI} api
- */
 function Single(axisModel, ecModel, api) {
 
     /**
@@ -70227,13 +69670,6 @@ Single.prototype = {
  * Single coordinate system creator.
  */
 
-/**
- * Create single coordinate system and inject it into seriesModel.
- *
- * @param {module:echarts/model/Global} ecModel
- * @param {module:echarts/ExtensionAPI} api
- * @return {Array.<module:echarts/coord/single/Single>}
- */
 function create$3(ecModel, api) {
     var singles = [];
 
@@ -70285,13 +69721,6 @@ CoordinateSystemManager.register('single', {
 * under the License.
 */
 
-/**
- * @param {Object} opt {labelInside}
- * @return {Object} {
- *  position, rotation, labelDirection, labelOffset,
- *  tickDirection, labelRotate, z2
- * }
- */
 function layout$2(axisModel, opt) {
     opt = opt || {};
     var single = axisModel.coordinateSystem;
@@ -70604,11 +70033,6 @@ axisModelCreator('single', AxisModel$4, getAxisType$2, defaultOption$2);
 * under the License.
 */
 
-/**
- * @param {Object} finder contains {seriesIndex, dataIndex, dataIndexInside}
- * @param {module:echarts/model/Global} ecModel
- * @return {Object} {point: [x, y], el: ...} point Will not be null.
- */
 var findPointFromSeries = function (finder, ecModel) {
     var point = [];
     var seriesIndex = finder.seriesIndex;
@@ -71923,9 +71347,6 @@ enableClassExtend(BaseAxisPointer);
 * under the License.
 */
 
-/**
- * @param {module:echarts/model/Model} axisPointerModel
- */
 function buildElStyle(axisPointerModel) {
     var axisPointerType = axisPointerModel.get('type');
     var styleModel = axisPointerModel.getModel(axisPointerType + 'Style');
@@ -72286,9 +71707,6 @@ AxisView.registerAxisPointerClass('CartesianAxisPointer', CartesianAxisPointer);
 * under the License.
 */
 
-// CartesianAxisPointer is not supposed to be required here. But consider
-// echarts.simple.js and online build tooltip, which only require gridSimple,
-// CartesianAxisPointer should be able to required somewhere.
 registerPreprocessor(function (option) {
     // Always has a global axisPointerModel for default setting.
     if (option) {
@@ -73724,13 +73142,6 @@ SunburstPieceProto._initEvents = function (
 
 inherits(SunburstPiece, Group);
 
-/**
- * Get node color
- *
- * @param {TreeNode} node the node to get color
- * @param {module:echarts/model/Series} seriesModel series
- * @param {module:echarts/model/Global} ecModel echarts defaults
- */
 function getNodeColor(node, seriesModel, ecModel) {
     // Color from visualMap
     var visualColor = node.getVisual('color');
@@ -74155,7 +73566,6 @@ registerAction(
 */
 
 
-// var PI2 = Math.PI * 2;
 var RADIAN$2 = Math.PI / 180;
 
 var sunburstLayout = function (seriesType, ecModel, api, payload) {
@@ -75924,11 +75334,6 @@ inherits(AngleAxis, Axis);
  * @module echarts/coord/polar/Polar
  */
 
-/**
- * @alias {module:echarts/coord/polar/Polar}
- * @constructor
- * @param {string} name
- */
 var Polar = function (name) {
 
     /**
@@ -76349,11 +75754,6 @@ extendComponentModel({
 
 // TODO Axis scale
 
-/**
- * Resize method bound to the polar
- * @param {module:echarts/coord/polar/PolarModel} polarModel
- * @param {module:echarts/ExtensionAPI} api
- */
 function resizePolar(polar, polarModel, api) {
     var center = polarModel.get('center');
     var width = api.getWidth();
@@ -77266,7 +76666,6 @@ AxisView.registerAxisPointerClass('PolarAxisPointer', PolarAxisPointer);
 * under the License.
 */
 
-// For reducing size of echarts.min, barLayoutPolar is required by polar.
 registerLayout(curry(barLayoutPolar, 'bar'));
 
 // Polar view
@@ -77571,7 +76970,6 @@ makeAction('unSelect', {
 * under the License.
 */
 
-// (24*60*60*1000)
 var PROXIMATE_ONE_DAY = 86400000;
 
 /**
@@ -79418,13 +78816,6 @@ var ToolboxModel = extendComponentModel({
 * under the License.
 */
 
-/**
- * Layout list like component.
- * It will box layout each items in group of component and then position the whole group in the viewport
- * @param {module:zrender/group/Group} group
- * @param {module:echarts/model/Component} componentModel
- * @param {module:echarts/ExtensionAPI}
- */
 function layout$3(group, componentModel, api) {
     var boxLayoutParams = componentModel.getBoxLayoutParams();
     var padding = componentModel.get('padding');
@@ -82746,7 +82137,6 @@ registerAction('dataZoom', function (payload, ecModel) {
 * under the License.
 */
 
-// Use dataZoomSelect
 var dataZoomLang = lang.toolbox.dataZoom;
 var each$16 = each$1;
 
@@ -83631,7 +83021,6 @@ TooltipContent.prototype = {
 * under the License.
 */
 
-// import Group from 'zrender/src/container/Group';
 function makeStyleCoord$1(out, zr, zrX, zrY) {
     out[0] = zrX;
     out[1] = zrY;
@@ -84685,14 +84074,6 @@ function isCenterAlign(align) {
 
 // FIXME Better way to pack data in graphic element
 
-/**
- * @action
- * @property {string} type
- * @property {number} seriesIndex
- * @property {number} dataIndex
- * @property {number} [x]
- * @property {number} [y]
- */
 registerAction(
     {
         type: 'showTip',
@@ -85023,15 +84404,6 @@ function incrementalApplyVisual(stateList, visualMappings, getValueState, dim) {
 * under the License.
 */
 
-// Key of the first level is brushType: `line`, `rect`, `polygon`.
-// Key of the second level is chart element type: `point`, `rect`.
-// See moudule:echarts/component/helper/BrushController
-// function param:
-//      {Object} itemLayout fetch from data.getItemLayout(dataIndex)
-//      {Object} selectors {point: selector, rect: selector, ...}
-//      {Object} area {range: [[], [], ..], boudingRect}
-// function return:
-//      {boolean} Whether in the given brush.
 var selector = {
     lineX: getLineSelectors(0),
     lineY: getLineSelectors(1),
@@ -85752,14 +85124,6 @@ function updateController(brushModel, ecModel, api, payload) {
 * under the License.
 */
 
-/**
- * payload: {
- *      brushIndex: number, or,
- *      brushId: string, or,
- *      brushName: string,
- *      globalRanges: Array
- * }
- */
 registerAction(
         {type: 'brush', event: 'brush' /*, update: 'updateView' */},
     function (payload, ecModel) {
@@ -85981,7 +85345,6 @@ registerPreprocessor(preprocessor$1);
 * under the License.
 */
 
-// Model
 extendComponentModel({
 
     type: 'title',
@@ -86724,16 +86087,6 @@ var TimelineView = Component$1.extend({
 * under the License.
 */
 
-/**
- * Extend axis 2d
- * @constructor module:echarts/coord/cartesian/Axis2D
- * @extends {module:echarts/coord/cartesian/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- * @param {string} position
- */
 var TimelineAxis = function (dim, scale, coordExtent, axisType) {
 
     Axis.call(this, dim, scale, coordExtent);
@@ -90192,7 +89545,6 @@ var legendFilter = function (ecModel) {
 
 // Do not contain scrollable legend, for sake of file size.
 
-// Series Filter
 registerProcessor(PRIORITY.PROCESSOR.SERIES_FILTER, legendFilter);
 
 ComponentModel.registerSubTypeDefaulter('legend', function () {
@@ -90785,12 +90137,6 @@ var ScrollableLegendView = LegendView.extend({
 * under the License.
 */
 
-/**
- * @event legendScroll
- * @type {Object}
- * @property {string} type 'legendScroll'
- * @property {string} scrollDataIndex
- */
 registerAction(
     'legendScroll', 'legendscroll',
     function (payload, ecModel) {
@@ -93143,7 +92489,6 @@ var VisualMapModel = extendComponentModel({
 * under the License.
 */
 
-// Constant
 var DEFAULT_BAR_BOUND = [20, 140];
 
 var ContinuousModel = VisualMapModel.extend({
@@ -93563,12 +92908,6 @@ var VisualMapView = extendComponentView({
 * under the License.
 */
 
-/**
- * @param {module:echarts/component/visualMap/VisualMapModel} visualMapModel\
- * @param {module:echarts/ExtensionAPI} api
- * @param {Array.<number>} itemSize always [short, long]
- * @return {string} 'left' or 'right' or 'top' or 'bottom'
- */
 function getItemAlign(visualMapModel, api, itemSize) {
     var modelOption = visualMapModel.option;
     var itemAlign = modelOption.align;
@@ -97594,14 +96933,6 @@ Definable.prototype.getSvgElement = function (displayable) {
  * @author Zhang Wenli
  */
 
-/**
- * Manages SVG gradient elements.
- *
- * @class
- * @extends Definable
- * @param   {number}     zrId    zrender instance id
- * @param   {SVGElement} svgRoot root of SVG document
- */
 function GradientManager(zrId, svgRoot) {
     Definable.call(
         this,
@@ -97815,14 +97146,6 @@ GradientManager.prototype.markUsed = function (displayable) {
  * @author Zhang Wenli
  */
 
-/**
- * Manages SVG clipPath elements.
- *
- * @class
- * @extends Definable
- * @param   {number}     zrId    zrender instance id
- * @param   {SVGElement} svgRoot root of SVG document
- */
 function ClippathManager(zrId, svgRoot) {
     Definable.call(this, zrId, svgRoot, 'clipPath', '__clippath_in_use__');
 }
@@ -97982,14 +97305,6 @@ ClippathManager.prototype.markUsed = function (displayable) {
  * @author Zhang Wenli
  */
 
-/**
- * Manages SVG shadow elements.
- *
- * @class
- * @extends Definable
- * @param   {number}     zrId    zrender instance id
- * @param   {SVGElement} svgRoot root of SVG document
- */
 function ShadowManager(zrId, svgRoot) {
     Definable.call(
         this,
@@ -98643,174 +97958,6 @@ registerPainter('svg', SVGPainter);
 * under the License.
 */
 
-// ----------------------------------------------
-// All of the modules that are allowed to be
-// imported are listed below.
-//
-// Users MUST NOT import other modules that are
-// not included in this list.
-// ----------------------------------------------
-
-
-
-// ----------------
-// Charts (series)
-// ----------------
-
-
-
-// All of the series types, for example:
-// chart.setOption({
-//     series: [{
-//         type: 'line' // or 'bar', 'pie', ...
-//     }]
-// });
-
-// -------------------
-// Coordinate systems
-// -------------------
-
-
-
-// All of the axis modules have been included in the
-// coordinate system module below, do not need to
-// make extra import.
-
-// `cartesian` coordinate system. For some historical
-// reasons, it is named as grid, for example:
-// chart.setOption({
-//     grid: {...},
-//     xAxis: {...},
-//     yAxis: {...},
-//     series: [{...}]
-// });
-// `polar` coordinate system, for example:
-// chart.setOption({
-//     polar: {...},
-//     radiusAxis: {...},
-//     angleAxis: {...},
-//     series: [{
-//         coordinateSystem: 'polar'
-//     }]
-// });
-// `geo` coordinate system, for example:
-// chart.setOption({
-//     geo: {...},
-//     series: [{
-//         coordinateSystem: 'geo'
-//     }]
-// });
-// `singleAxis` coordinate system (notice, it is a coordinate system
-// with only one axis, work for chart like theme river), for example:
-// chart.setOption({
-//     singleAxis: {...}
-//     series: [{type: 'themeRiver', ...}]
-// });
-// `parallel` coordinate system, only work for parallel series, for example:
-// chart.setOption({
-//     parallel: {...},
-//     parallelAxis: [{...}, ...],
-//     series: [{
-//         type: 'parallel'
-//     }]
-// });
-// `calendar` coordinate system. for example,
-// chart.setOptionp({
-//     calendar: {...},
-//     series: [{
-//         coordinateSystem: 'calendar'
-//     }]
-// );
-// ------------------
-// Other components
-// ------------------
-
-
-
-// `graphic` component, for example:
-// chart.setOption({
-//     graphic: {...}
-// });
-// `toolbox` component, for example:
-// chart.setOption({
-//     toolbox: {...}
-// });
-// `tooltip` component, for example:
-// chart.setOption({
-//     tooltip: {...}
-// });
-// `axisPointer` component, for example:
-// chart.setOption({
-//     tooltip: {axisPointer: {...}, ...}
-// });
-// Or
-// chart.setOption({
-//     axisPointer: {...}
-// });
-// `brush` component, for example:
-// chart.setOption({
-//     brush: {...}
-// });
-// Or
-// chart.setOption({
-//     tooltip: {feature: {brush: {...}}
-// })
-// `title` component, for example:
-// chart.setOption({
-//     title: {...}
-// });
-// `timeline` component, for example:
-// chart.setOption({
-//     timeline: {...}
-// });
-// `markPoint` component, for example:
-// chart.setOption({
-//     series: [{markPoint: {...}}]
-// });
-// `markLine` component, for example:
-// chart.setOption({
-//     series: [{markLine: {...}}]
-// });
-// `markArea` component, for example:
-// chart.setOption({
-//     series: [{markArea: {...}}]
-// });
-// `legend` component scrollable, for example:
-// chart.setOption({
-//     legend: {type: 'scroll'}
-// });
-// `legend` component not scrollable. for example:
-// chart.setOption({
-//     legend: {...}
-// });
-// `dataZoom` component including both `dataZoomInside` and `dataZoomSlider`.
-// `dataZoom` component providing drag, pinch, wheel behaviors
-// inside coodinate system, for example:
-// chart.setOption({
-//     dataZoom: {type: 'inside'}
-// });
-// `dataZoom` component providing a slider bar, for example:
-// chart.setOption({
-//     dataZoom: {type: 'slider'}
-// });
-// `dataZoom` component including both `visualMapContinuous` and `visualMapPiecewise`.
-// `visualMap` component providing continuous bar, for example:
-// chart.setOption({
-//     visualMap: {type: 'continuous'}
-// });
-// `visualMap` component providing pieces bar, for example:
-// chart.setOption({
-//     visualMap: {type: 'piecewise'}
-// });
-// -----------------
-// Render engines
-// -----------------
-
-
-
-// Provide IE 6,7,8 compatibility.
-// Render via SVG rather than canvas.
-
 exports.version = version;
 exports.dependencies = dependencies;
 exports.PRIORITY = PRIORITY;
@@ -98855,6 +98002,8 @@ exports.List = List;
 exports.Model = Model;
 exports.Axis = Axis;
 exports.env = env$1;
+
+exports.bundleVersion = '1603670090948';
 
 })));
 //# sourceMappingURL=echarts.js.map
