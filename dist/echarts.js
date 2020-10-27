@@ -19204,25 +19204,19 @@
   function getTooltipMarker(inOpt, extraCssText) {
     var opt = isString(inOpt) ? {
       color: inOpt,
-      extraCssText: extraCssText,
-      size: inOpt
+      extraCssText: extraCssText
     } : inOpt || {};
     var color = opt.color;
     var type = opt.type;
     extraCssText = opt.extraCssText;
     var renderMode = opt.renderMode || 'html';
-    var size = opt.size;
-
-    if (!size) {
-      size = '10px';
-    }
 
     if (!color) {
       return '';
     }
 
     if (renderMode === 'html') {
-      return type === 'subItem' ? '<span style="display:inline-block;vertical-align:middle;margin-right:8px;margin-left:3px;' + 'border-radius:4px;width:4px;height:4px;background-color:' + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>' : '<span style="display:inline-block;margin-right:4px;' + 'border-radius:' + size + ';width:' + size + ';height:' + size + ';background-color:' + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
+      return type === 'subItem' ? '<span style="display:inline-block;vertical-align:middle;margin-right:8px;margin-left:3px;' + 'border-radius:4px;width:4px;height:4px;background-color:' + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>' : '<span style="display:inline-block;margin-right:4px;' + 'border-radius:10px;width:10px;height:10px;background-color:' + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
     } else {
       var markerId = opt.markerId || 'markerX';
       return {
@@ -19234,8 +19228,8 @@
           borderRadius: 2,
           backgroundColor: color
         } : {
-          width: size,
-          height: size,
+          width: 10,
+          height: 10,
           borderRadius: 5,
           backgroundColor: color
         }
@@ -23382,8 +23376,7 @@
         color: colorStr,
         type: markerType,
         renderMode: renderMode,
-        markerId: markerId,
-        size: "1000px"
+        markerId: markerId
       });
 
       if (isString(marker)) {
@@ -80151,5 +80144,4 @@
   Object.defineProperty(exports, '__esModule', {
     value: true
   });
-  exports.bundleVersion = '1603824596548';
 });
