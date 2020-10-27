@@ -17750,11 +17750,10 @@
     return tpl;
   }
 
-  function getTooltipMarker(inOpt, extraCssText, sizeOpt) {
+  function getTooltipMarker(inOpt, extraCssText) {
     var opt = isString(inOpt) ? {
       color: inOpt,
-      extraCssText: extraCssText,
-      size: "10px"
+      extraCssText: extraCssText
     } : inOpt || {};
     var color = opt.color;
     var type = opt.type;

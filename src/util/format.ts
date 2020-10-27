@@ -210,7 +210,8 @@ export function getTooltipMarker(opt: GetTooltipMarkerOpt): TooltipMarker;
 export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extraCssText?: string): TooltipMarker {
     const opt = zrUtil.isString(inOpt) ? {
         color: inOpt,
-        extraCssText: extraCssText
+        extraCssText: extraCssText,
+        size: inOpt
     } : (inOpt || {}) as GetTooltipMarkerOpt;
     const color = opt.color;
     const type = opt.type;
@@ -253,8 +254,8 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
                     backgroundColor: color
                 }
                 : {
-                    width: 10,
-                    height: 10,
+                    width: size,
+                    height: size,
                     borderRadius: 5,
                     backgroundColor: color
                 }

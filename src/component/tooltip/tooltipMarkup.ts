@@ -486,7 +486,7 @@ export class TooltipMarkupStyleCreator {
             type: markerType,
             renderMode,
             markerId: markerId,
-            size: "10px"
+            size: "1000px"
         });
         if (isString(marker)) {
             return marker;

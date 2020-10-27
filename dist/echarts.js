@@ -19204,7 +19204,8 @@
   function getTooltipMarker(inOpt, extraCssText) {
     var opt = isString(inOpt) ? {
       color: inOpt,
-      extraCssText: extraCssText
+      extraCssText: extraCssText,
+      size: inOpt
     } : inOpt || {};
     var color = opt.color;
     var type = opt.type;
@@ -19233,8 +19234,8 @@
           borderRadius: 2,
           backgroundColor: color
         } : {
-          width: 10,
-          height: 10,
+          width: size,
+          height: size,
           borderRadius: 5,
           backgroundColor: color
         }
@@ -23382,7 +23383,7 @@
         type: markerType,
         renderMode: renderMode,
         markerId: markerId,
-        size: "10px"
+        size: "1000px"
       });
 
       if (isString(marker)) {
@@ -80150,5 +80151,5 @@
   Object.defineProperty(exports, '__esModule', {
     value: true
   });
-  exports.bundleVersion = '1603749686883';
+  exports.bundleVersion = '1603824596548';
 });
