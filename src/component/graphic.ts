@@ -27,7 +27,7 @@ import * as layoutUtil from '../util/layout';
 import {parsePercent} from '../util/number';
 import { ComponentOption, BoxLayoutOptionMixin, Dictionary, ZRStyleProps, OptionId } from '../util/types';
 import ComponentModel from '../model/Component';
-import Element from 'zrender/src/Element';
+import Element, { ElementTextConfig } from 'zrender/src/Element';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
@@ -35,6 +35,7 @@ import GlobalModel from '../model/Global';
 import ComponentView from '../view/Component';
 import ExtensionAPI from '../ExtensionAPI';
 import { getECData } from '../util/innerStore';
+import { TextStyleProps, TextProps } from 'zrender/src/graphic/Text';
 
 
 const TRANSFORM_PROPS = {
@@ -115,10 +116,8 @@ interface GraphicComponentBaseElementOption extends
      */
     info?: GraphicExtraElementInfo;
 
-    // TODO: textContent, textConfig ?
-    // `false` means remove the textContent ???
-    // textContent?: CustomTextOption | false;
-    // textConfig?:
+    textContent?: GraphicComponentTextOption;
+    textConfig?: ElementTextConfig;
 
     $action?: 'merge' | 'replace' | 'remove';
 };
@@ -170,8 +169,10 @@ interface GraphicComponentImageOption extends GraphicComponentDisplayableOption 
 // interface GraphicComponentImageOptionOnState extends GraphicComponentDisplayableOptionOnState {
 //     style?: ImageStyleProps;
 // }
-interface GraphicComponentTextOption extends GraphicComponentDisplayableOption {
+interface GraphicComponentTextOption
+        extends Omit<GraphicComponentDisplayableOption, 'textContent' | 'textConfig'> {
     type: 'text';
+    style?: TextStyleProps;
 }
 type GraphicComponentElementOption =
     GraphicComponentZRPathOption
@@ -371,11 +372,12 @@ class GraphicComponentModel extends ComponentModel<GraphicComponentOption> {
     }
 }
 
+ComponentModel.registerClass(GraphicComponentModel);
+
 // ------------------------
 // View
 // ------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class GraphicComponentView extends ComponentView {
 
     static type = 'graphic';
@@ -424,9 +426,8 @@ class GraphicComponentView extends ComponentView {
 
         // Top-down tranverse to assign graphic settings to each elements.
         zrUtil.each(elOptionsToUpdate, function (elOption) {
-            const $action = elOption.$action;
             const id = modelUtil.convertOptionIdName(elOption.id, null);
-            const existEl = id != null ? elMap.get(id) : null;
+            const elExisting = id != null ? elMap.get(id) : null;
             const parentId = modelUtil.convertOptionIdName(elOption.parentId, null);
             const targetElParent = (parentId != null ? elMap.get(parentId) : rootGroup) as graphicUtil.Group;
 
@@ -448,31 +449,46 @@ class GraphicComponentView extends ComponentView {
                 );
             }
 
+            const textContentOption = (elOption as GraphicComponentZRPathOption).textContent;
             // Remove unnecessary props to avoid potential problems.
             const elOptionCleaned = getCleanedElOption(elOption);
 
             // For simple, do not support parent change, otherwise reorder is needed.
             if (__DEV__) {
-                existEl && zrUtil.assert(
-                    targetElParent === existEl.parent,
+                elExisting && zrUtil.assert(
+                    targetElParent === elExisting.parent,
                     'Changing parent is not supported.'
                 );
             }
 
-            if (!$action || $action === 'merge') {
-                existEl
-                    ? existEl.attr(elOptionCleaned)
+            const $action = elOption.$action || 'merge';
+            if ($action === 'merge') {
+                elExisting
+                    ? elExisting.attr(elOptionCleaned)
                     : createEl(id, targetElParent, elOptionCleaned, elMap);
             }
             else if ($action === 'replace') {
-                removeEl(existEl, elMap);
+                removeEl(elExisting, elMap);
                 createEl(id, targetElParent, elOptionCleaned, elMap);
             }
             else if ($action === 'remove') {
-                removeEl(existEl, elMap);
+                removeEl(elExisting, elMap);
             }
 
             const el = elMap.get(id);
+
+            if (el && textContentOption) {
+                if ($action === 'merge') {
+                    const textContentExisting = el.getTextContent();
+                    textContentExisting
+                        ? textContentExisting.attr(textContentOption)
+                        : el.setTextContent(new graphicUtil.Text(textContentOption));
+                }
+                else if ($action === 'replace') {
+                    el.setTextContent(new graphicUtil.Text(textContentOption));
+                }
+            }
+
             if (el) {
                 const elInner = inner(el);
                 elInner.__ecGraphicWidthOption = (elOption as GraphicComponentGroupOption).width;
@@ -565,6 +581,9 @@ class GraphicComponentView extends ComponentView {
     }
 }
 
+ComponentView.registerClass(GraphicComponentView);
+
+
 function createEl(
     id: string,
     targetElParent: graphicUtil.Group,
@@ -595,22 +614,24 @@ function createEl(
     inner(el).__ecGraphicId = id;
 }
 
-function removeEl(existEl: Element, elMap: ElementMap): void {
-    const existElParent = existEl && existEl.parent;
+function removeEl(elExisting: Element, elMap: ElementMap): void {
+    const existElParent = elExisting && elExisting.parent;
     if (existElParent) {
-        existEl.type === 'group' && existEl.traverse(function (el) {
+        elExisting.type === 'group' && elExisting.traverse(function (el) {
             removeEl(el, elMap);
         });
-        elMap.removeKey(inner(existEl).__ecGraphicId);
-        existElParent.remove(existEl);
+        elMap.removeKey(inner(elExisting).__ecGraphicId);
+        existElParent.remove(elExisting);
     }
 }
 
 // Remove unnecessary props to avoid potential problems.
-function getCleanedElOption(elOption: GraphicComponentElementOption): GraphicComponentElementOption {
+function getCleanedElOption(
+    elOption: GraphicComponentElementOption
+): Omit<GraphicComponentElementOption, 'textContent'> {
     elOption = zrUtil.extend({}, elOption);
     zrUtil.each(
-        ['id', 'parentId', '$action', 'hv', 'bounding'].concat(layoutUtil.LOCATION_PARAMS),
+        ['id', 'parentId', '$action', 'hv', 'bounding', 'textContent'].concat(layoutUtil.LOCATION_PARAMS),
         function (name) {
             delete (elOption as any)[name];
         }
