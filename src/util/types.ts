@@ -871,7 +871,7 @@ export interface SymbolOptionMixin<T = unknown> {
 export interface ItemStyleOption extends ShadowOptionMixin, BorderOptionMixin {
     color?: ZRColor
     opacity?: number
-    decal?: DecalObject[]
+    decal?: DecalObject | 'none'
 }
 
 /**
