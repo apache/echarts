@@ -36,6 +36,7 @@ import ComponentView from '../view/Component';
 import ExtensionAPI from '../ExtensionAPI';
 import { getECData } from '../util/innerStore';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
+import { isEC4CompatibleStyle, convertFromEC4CompatibleStyle } from '../util/styleCompat';
 
 
 const TRANSFORM_PROPS = {
@@ -436,8 +437,9 @@ class GraphicComponentView extends ComponentView {
             const parentId = modelUtil.convertOptionIdName(elOption.parentId, null);
             const targetElParent = (parentId != null ? elMap.get(parentId) : rootGroup) as graphicUtil.Group;
 
+            const elType = elOption.type;
             const elOptionStyle = (elOption as GraphicComponentDisplayableOption).style;
-            if (elOption.type === 'text' && elOptionStyle) {
+            if (elType === 'text' && elOptionStyle) {
                 // In top/bottom mode, textVerticalAlign should not be used, which cause
                 // inaccurately locating.
                 if (elOption.hv && elOption.hv[1]) {
@@ -448,7 +450,20 @@ class GraphicComponentView extends ComponentView {
                 }
             }
 
-            const textContentOption = (elOption as GraphicComponentZRPathOption).textContent;
+            let textContentOption = (elOption as GraphicComponentZRPathOption).textContent;
+            let textConfig = (elOption as GraphicComponentZRPathOption).textConfig;
+            if (elOptionStyle
+                && isEC4CompatibleStyle(elOptionStyle, elType, !!textConfig, !!textContentOption)
+            ) {
+                const convertResult = convertFromEC4CompatibleStyle(elOptionStyle, elType, true);
+                if (!textConfig && convertResult.textConfig) {
+                    textConfig = (elOption as GraphicComponentZRPathOption).textConfig = convertResult.textConfig;
+                }
+                if (!textContentOption && convertResult.textContent) {
+                    textContentOption = convertResult.textContent;
+                }
+            }
+
             // Remove unnecessary props to avoid potential problems.
             const elOptionCleaned = getCleanedElOption(elOption);
 
