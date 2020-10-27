@@ -39,6 +39,6 @@ module.exports = {
         '**/spec/model/*.test.ts',
         '**/spec/scale/*.test.ts',
         '**/spec/util/*.test.ts',
-        '!**/spec/component/graphic/setOption.test.ts'
+        '**/spec/component/graphic/setOption.test.ts'
     ]
 };

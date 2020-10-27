@@ -77,6 +77,7 @@ import {ToolboxFeatureOption} from './component/toolbox/featureManager';
 
 
 import { ECOption } from './util/types';
+import { GraphicComponentLooseOption } from './component/graphic';
 
 interface ToolboxFullOptionWithFeatures extends ToolboxOption {
     feature?: {
@@ -138,6 +139,7 @@ export interface EChartsFullOption extends ECOption {
     dataZoom?: SliderDataZoomOption | InsideDataZoomOption | (SliderDataZoomOption | InsideDataZoomOption)[]
     visualMap?: ContinousVisualMapOption | PiecewiseVisualMapOption
         | (ContinousVisualMapOption | PiecewiseVisualMapOption)[]
+    graphic?: GraphicComponentLooseOption | GraphicComponentLooseOption[]
 
     // TODO Generally we support specify a single object on series.
     // But in practice we found the error hint in monaco editor is not clear if we also support

@@ -35,7 +35,7 @@ import GlobalModel from '../model/Global';
 import ComponentView from '../view/Component';
 import ExtensionAPI from '../ExtensionAPI';
 import { getECData } from '../util/innerStore';
-import { TextStyleProps, TextProps } from 'zrender/src/graphic/Text';
+import { TextStyleProps } from 'zrender/src/graphic/Text';
 
 
 const TRANSFORM_PROPS = {
@@ -85,16 +85,18 @@ interface GraphicComponentBaseElementOption extends
 
     /**
      * element type, mandatory.
+     * Only can be omit if call setOption not at the first time and perform merge.
      */
-    type: string;
+    type?: string;
 
     id?: OptionId;
+    name?: string;
 
     // Only internal usage. Use specified value does NOT make sense.
     parentId?: OptionId;
-    parentOption: GraphicComponentElementOption;
-    children: GraphicComponentElementOption[];
-    hv: [boolean, boolean];
+    parentOption?: GraphicComponentElementOption;
+    children?: GraphicComponentElementOption[];
+    hv?: [boolean, boolean];
 
     /**
      * bounding: (enum: 'all' (default) | 'raw')
@@ -108,7 +110,7 @@ interface GraphicComponentBaseElementOption extends
      *     want an element to be able to overflow its container. (Consider
      *     a rotated circle needs to be located in a corner.)
      */
-    bounding?: 'all'
+    bounding?: 'raw' | 'all';
 
     /**
      * info: custom info. enables user to mount some info on elements and use them
@@ -139,7 +141,7 @@ interface GraphicComponentDisplayableOption extends
 //     style?: ZRStyleProps;
 // }
 interface GraphicComponentGroupOption extends GraphicComponentBaseElementOption {
-    type: 'group';
+    type?: 'group';
 
     /**
      * width/height: (can only be pixel value, default 0)
@@ -154,11 +156,11 @@ interface GraphicComponentGroupOption extends GraphicComponentBaseElementOption 
     // children: Omit<GraphicComponentElementOption, 'focus' | 'blurScope'>[];
     children: GraphicComponentElementOption[];
 }
-interface GraphicComponentZRPathOption extends GraphicComponentDisplayableOption {
+export interface GraphicComponentZRPathOption extends GraphicComponentDisplayableOption {
     shape?: PathProps['shape'];
 }
-interface GraphicComponentImageOption extends GraphicComponentDisplayableOption {
-    type: 'image';
+export interface GraphicComponentImageOption extends GraphicComponentDisplayableOption {
+    type?: 'image';
     style?: ImageStyleProps;
     // TODO: states?
     // emphasis?: GraphicComponentImageOptionOnState;
@@ -171,11 +173,12 @@ interface GraphicComponentImageOption extends GraphicComponentDisplayableOption 
 // }
 interface GraphicComponentTextOption
         extends Omit<GraphicComponentDisplayableOption, 'textContent' | 'textConfig'> {
-    type: 'text';
+    type?: 'text';
     style?: TextStyleProps;
 }
 type GraphicComponentElementOption =
-    GraphicComponentZRPathOption
+    GraphicComponentGroupOption
+    | GraphicComponentZRPathOption
     | GraphicComponentImageOption
     | GraphicComponentTextOption;
 // type GraphicComponentElementOptionOnState =
@@ -240,11 +243,13 @@ echarts.registerPreprocessor(function (option) {
 // Model
 // ------------------------
 
+export type GraphicComponentLooseOption = GraphicComponentOption | GraphicComponentElementOption;
+
 export interface GraphicComponentOption extends ComponentOption {
     // Note: elements is always behind its ancestors in this elements array.
     elements?: GraphicComponentElementOption[];
     // parentId: string;
-}
+};
 
 
 class GraphicComponentModel extends ComponentModel<GraphicComponentOption> {
@@ -431,22 +436,16 @@ class GraphicComponentView extends ComponentView {
             const parentId = modelUtil.convertOptionIdName(elOption.parentId, null);
             const targetElParent = (parentId != null ? elMap.get(parentId) : rootGroup) as graphicUtil.Group;
 
-            const elOptionStyle = elOption.style;
+            const elOptionStyle = (elOption as GraphicComponentDisplayableOption).style;
             if (elOption.type === 'text' && elOptionStyle) {
                 // In top/bottom mode, textVerticalAlign should not be used, which cause
                 // inaccurately locating.
                 if (elOption.hv && elOption.hv[1]) {
-                    (elOptionStyle as any).textVerticalAlign = (elOptionStyle as any).textBaseline = null;
+                    (elOptionStyle as any).textVerticalAlign =
+                    (elOptionStyle as any).textBaseline =
+                    (elOptionStyle as TextStyleProps).verticalAlign =
+                    (elOptionStyle as TextStyleProps).align = null;
                 }
-
-                // Compatible with previous setting: both support fill and textFill,
-                // stroke and textStroke.
-                !elOptionStyle.hasOwnProperty('textFill') && (elOptionStyle as any).fill && (
-                    (elOptionStyle as any).textFill = (elOptionStyle as any).fill
-                );
-                !elOptionStyle.hasOwnProperty('textStroke') && (elOptionStyle as any).stroke && (
-                    (elOptionStyle as any).textStroke = (elOptionStyle as any).stroke
-                );
             }
 
             const textContentOption = (elOption as GraphicComponentZRPathOption).textContent;
