@@ -711,11 +711,7 @@ export type ComponentLayoutMode = {
     ignoreSize?: boolean | boolean[]
 };
 /******************* Mixins for Common Option Properties   ********************** */
-export interface PaletteOptionMixin {
-    color?: ZRColor | ZRColor[]
-    colorLayer?: ZRColor[][],
-    decals?: DecalObject | DecalObject[]
-}
+export type PaletteOptionMixin = ColorPaletteOptionMixin;
 
 export interface ColorPaletteOptionMixin {
     color?: ZRColor | ZRColor[]

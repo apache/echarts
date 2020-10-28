@@ -39,6 +39,7 @@ import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { LayoutRect } from '../../util/layout';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import { getDecalFromPalette } from '../../model/mixin/palette';
 
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
@@ -282,7 +283,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         const nodes = graph.nodes;
         zrUtil.each(nodes, node => {
             const name = this.getDataParams(node.dataIndex, 'node').name;
-            const paletteDecal = this.getDecalFromPalette(name, null, nodes.length);
+            const paletteDecal = getDecalFromPalette(this.ecModel, name, null, nodes.length);
             const decal = zrUtil.defaults(node.getVisual('style').decal || {}, paletteDecal);
             node.hostGraph.data.setItemVisual(node.dataIndex, 'decal', decal);
         });

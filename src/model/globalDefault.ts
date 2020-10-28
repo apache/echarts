@@ -56,40 +56,44 @@ export default {
 
     gradientColor: ['#f6efa6', '#d88273', '#bf444c'],
 
-    decals: [{
-        color: decalColor,
-        dashArrayX: [1, 0],
-        dashArrayY: [2, 5],
-        symbolSize: 1,
-        rotation: Math.PI / 6
-    }, {
-        color: decalColor,
-        symbol: 'circle',
-        dashArrayX: [[8, 8], [0, 8, 8, 0]],
-        dashArrayY: [6, 0],
-        symbolSize: 0.8
-    }, {
-        color: decalColor,
-        dashArrayX: [1, 0],
-        dashArrayY: [4, 3],
-        dashLineOffset: 0,
-        rotation: -Math.PI / 4
-    }, {
-        color: decalColor,
-        dashArrayX: [[6, 6], [0, 6, 6, 0]],
-        dashArrayY: [6, 0]
-    }, {
-        color: decalColor,
-        dashArrayX: [[1, 0], [1, 6]],
-        dashArrayY: [1, 0, 6, 0],
-        rotation: Math.PI / 4
-    }, {
-        color: decalColor,
-        symbol: 'triangle',
-        dashArrayX: [[9, 9], [0, 9, 9, 0]],
-        dashArrayY: [7, 2],
-        symbolSize: 0.75
-    }],
+    aria: {
+        decal: {
+            decals: [{
+                color: decalColor,
+                dashArrayX: [1, 0],
+                dashArrayY: [2, 5],
+                symbolSize: 1,
+                rotation: Math.PI / 6
+            }, {
+                color: decalColor,
+                symbol: 'circle',
+                dashArrayX: [[8, 8], [0, 8, 8, 0]],
+                dashArrayY: [6, 0],
+                symbolSize: 0.8
+            }, {
+                color: decalColor,
+                dashArrayX: [1, 0],
+                dashArrayY: [4, 3],
+                dashLineOffset: 0,
+                rotation: -Math.PI / 4
+            }, {
+                color: decalColor,
+                dashArrayX: [[6, 6], [0, 6, 6, 0]],
+                dashArrayY: [6, 0]
+            }, {
+                color: decalColor,
+                dashArrayX: [[1, 0], [1, 6]],
+                dashArrayY: [1, 0, 6, 0],
+                rotation: Math.PI / 4
+            }, {
+                color: decalColor,
+                symbol: 'triangle',
+                dashArrayX: [[9, 9], [0, 9, 9, 0]],
+                dashArrayY: [7, 2],
+                symbolSize: 0.75
+            }]
+        }
+    },
 
     // If xAxis and yAxis declared, grid is created by default.
     // grid: {},

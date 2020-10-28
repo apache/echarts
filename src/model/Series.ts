@@ -460,15 +460,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         return color;
     }
 
-    getDecalFromPalette(name: string, scope: any, requestColorNum?: number): DecalObject {
-        const ecModel = this.ecModel;
-        let decal = PaletteMixin.prototype.getDecalFromPalette.call(this, name, scope, requestColorNum);
-        if (!decal) {
-            decal = ecModel.getDecalFromPalette(name, scope, requestColorNum);
-        }
-        return decal;
-    }
-
     /**
      * Use `data.mapDimensionsAll(coordDim)` instead.
      * @deprecated

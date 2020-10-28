@@ -1,5 +1,6 @@
 import SeriesModel from '../../model/Series';
 import {Dictionary, DecalObject} from '../../util/types';
+import { getDecalFromPalette } from '../../model/mixin/palette';
 
 export default function (seriesModel: SeriesModel) {
     const data = seriesModel.getData();
@@ -13,7 +14,8 @@ export default function (seriesModel: SeriesModel) {
             current = current.parentNode;
         }
 
-        const decal = seriesModel.getDecalFromPalette(
+        const decal = getDecalFromPalette(
+            seriesModel.ecModel,
             current.name || current.dataIndex + '',
             decalPaletteScope
         );

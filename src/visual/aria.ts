@@ -28,9 +28,9 @@ import {TitleOption} from '../component/title';
 import {makeInner} from '../util/model';
 import {Dictionary, DecalObject, InnerDecalObject} from '../util/types';
 import {LocaleOption} from '../locale';
+import { getDecalFromPalette } from '../model/mixin/palette';
 
-const defaultOption: AriaOption = {
-    enabled: true,
+const DEFAULT_OPTION: AriaOption = {
     label: {
         enabled: true
     },
@@ -48,14 +48,14 @@ type SeriesTypes = keyof LocaleOption['series']['typeNames'];
 export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     const ariaModel: Model<AriaOption> = ecModel.getModel('aria');
 
-    if (ariaModel.option) {
-        const labelLocale = ecModel.getLocaleModel().get('aria');
-        defaultOption.label = zrUtil.defaults(labelLocale, defaultOption.label);
-        ariaModel.option = zrUtil.defaults(ariaModel.option, defaultOption);
-    }
+    // See "area enabled" detection code in `GlobalModel.ts`.
     if (!ariaModel.get('enabled')) {
         return;
     }
+
+    const defaultOption = zrUtil.clone(DEFAULT_OPTION);
+    zrUtil.merge(defaultOption.label, ecModel.getLocaleModel().get('aria'), false);
+    zrUtil.merge(ariaModel.option, defaultOption, false);
 
     setDecal();
     setLabel();
@@ -107,7 +107,8 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                         const idx = idxMap[rawIdx];
                         const itemStyle = data.ensureUniqueItemVisual(idx, 'style');
                         const name = dataAll.getName(rawIdx) || (rawIdx + '');
-                        const paletteDecal = seriesModel.getDecalFromPalette(
+                        const paletteDecal = getDecalFromPalette(
+                            seriesModel.ecModel,
                             name,
                             decalScope,
                             dataCount
@@ -121,7 +122,8 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                 }
                 else {
                     const style = data.getVisual('style');
-                    const paletteDecal = seriesModel.getDecalFromPalette(
+                    const paletteDecal = getDecalFromPalette(
+                        seriesModel.ecModel,
                         seriesModel.name,
                         decalPaletteScope,
                         ecModel.getSeriesCount()
