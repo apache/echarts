@@ -126,7 +126,7 @@ under the License.
                     currentSeriesIndices.pop(); // remove custom series;
 
                     var barLayout = api.barLayout({
-                        barGap: '30%', barCategoryGap: '20%', count: currentSeriesIndices.length
+                        count: currentSeriesIndices.length
                     });
 
                     var nameTexts = echarts.util.map(currentSeriesIndices, function (serIdx, index) {

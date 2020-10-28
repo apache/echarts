@@ -122,3 +122,17 @@ td.test-data-table-key {
     width: 300px;
     height: 500px;
 }
+
+.control-frame-btn-panel {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    box-shadow: 0 0 3px #000;
+    background: green;
+    padding: 5px;
+}
+.control-frame-btn-panel .control-frame-info {
+    display: block;
+    color: #fff;
+    font-size: 10px;
+}

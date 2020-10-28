@@ -24,11 +24,7 @@ const nodeFS = require('fs');
 const assert = require('assert');
 const nodePath = require('path');
 const commander = require('commander');
-const {color} = require('zrender/build/helper');
-
-const colorFgCyanDim = color('fgCyan', 'dim');
-const colorFgGreen = color('fgGreen');
-const colorFgRed = color('fgRed');
+const chalk = require('chalk');
 
 const testDir = nodePath.resolve(__dirname, '..');
 const testTplPath = nodePath.resolve(__dirname, 'mktest-tpl.html');
@@ -38,19 +34,19 @@ const tagDomPlace = '<!-- TPL_DOM_PLACE -->';
 const tagJSPlace = '<!-- TPL_JS_PLACE -->';
 
 const manualText = `
-    ${colorFgCyanDim('Usage:')}
+    ${chalk.cyan.dim('Usage:')}
 
     # Make a file named "bar-action.html" in directory "echarts/test" with 1 initial chart.
-    ${colorFgGreen('npm run mktest bar-action')}
+    ${chalk.green('npm run mktest bar-action')}
     # or
-    ${colorFgGreen('npm run mktest bar-action.html')}
+    ${chalk.green('npm run mktest bar-action.html')}
     # or
-    ${colorFgGreen('node ./test/build/mktest bar-action')}
+    ${chalk.green('node ./test/build/mktest bar-action')}
 
     # Make a file named "bar-action.html" in directory "echarts/test" with 5 initial charts.
-    ${colorFgGreen('npm run mktest bar-action 5')}
+    ${chalk.green('npm run mktest bar-action 5')}
     # or
-    ${colorFgGreen('node ./test/build/mktest bar-action 5')}
+    ${chalk.green('node ./test/build/mktest bar-action 5')}
 `;
 
 function run() {
@@ -73,7 +69,7 @@ function run() {
 
     nodeFS.writeFileSync(opt.testFilePath, testFileContent, {encoding: 'utf8'});
 
-    console.log(`A test file has been added in: \n${colorFgGreen(opt.testFilePath)}`);
+    console.log(`A test file has been added in: \n${chalk.green(opt.testFilePath)}`);
     console.log();
 }
 
@@ -150,7 +146,7 @@ function normalizeInputExt(testFileName) {
 }
 
 function printError(msg) {
-    console.error(colorFgRed('[ERROR]: ' + msg));
+    console.error(chalk.red('[ERROR]: ' + msg));
 }
 
 run();

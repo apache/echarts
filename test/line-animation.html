@@ -32,7 +32,7 @@ under the License.
     </head>
     <body>
         <style>
-            h1 {
+            h2 {
                 line-height: 60px;
                 height: 60px;
                 background: #146402;
@@ -42,7 +42,7 @@ under the License.
                 font-size: 14px;
             }
             .chart {
-                height: 500px;
+                height: 600px;
             }
             button {
                 font-size: 16px;
@@ -50,39 +50,27 @@ under the License.
         </style>
 
         <button onclick="change()">CHANGE</button>
-        <div class="chart" id="main"></div>
+        <div class="chart" id="main2"></div>
+
+        <h2>Default Label Animation</h2>
+        <div class="chart" id="main0"></div>
+
+
+        <h2>Label Animation with animationDelay callback</h2>
+        <div class="chart" id="main1"></div>
+
+
 
 
 
         <script>
 
-            var echarts;
-            var chart;
-            var myChart;
-            var groupCategories = [];
-            var groupColors = [];
-
             require([
                 'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/chart/bar',
-                // 'echarts/chart/pie',
-                // 'echarts/chart/scatter',
-                // 'echarts/chart/map',
-                // 'echarts/chart/parallel',
-                // 'echarts/chart/radar',
-                // 'echarts/component/grid',
-                // 'echarts/component/polar',
-                // 'echarts/component/geo',
-                // 'echarts/component/singleAxis',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom'
-            ], function (ec) {
-                echarts = ec;
-                chart = myChart = echarts.init(document.getElementById('main'));
+            ], function (echarts) {
+                var groupCategories = [];
+                var groupColors = [];
+                var chart = echarts.init(document.getElementById('main2'));
 
                 var base = +new Date(1968, 9, 3);
                 var oneDay = 24 * 3600 * 1000;
@@ -154,6 +142,7 @@ under the License.
                         {
                             name:'large area',
                             type:'line',
+                            symbol: 'none',
                             // type:'scatter',
                             // smooth:true,
                             // symbol: 'none',
@@ -190,16 +179,227 @@ under the License.
 
                 chart.setOption(option);
 
+                window.change = function () {
+                    chart.dispatchAction({
+                        type: 'dataZoom',
+                        end: 20
+                    });
+                }
 
             });
 
-            function change() {
-                chart.dispatchAction({
-                    type: 'dataZoom',
-                    end: 20
-                });
-            }
 
         </script>
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                var chart = echarts.init(document.getElementById('main0'));
+
+                var xData = [];
+                var data = [];
+                var value = 200;
+                var positive = 1;
+                for (let i = 0; i < 100; ++i) {
+                    xData.push(i + '');
+                    value = positive * Math.round(Math.random() * 50) + value;
+                    data.push(value);
+
+                    if (Math.random() > 0.7) {
+                        positive = -1 * positive;
+                    }
+                }
+
+                option = {
+                    title: [{
+                        text: 'Default Line Animation, all should be left-to-right, bottom-to top',
+                        subtext: 'Symbol and text should sync with line clipPath\n\naxis not inversed',
+                        textAlign: 'center',
+                        left: '50%',
+                        top: 0
+                    }, {
+                        subtext: 'axis inversed',
+                        textAlign: 'center',
+                        left: '50%',
+                        top: '52%'
+                    }, {
+                        text: 'left-to-right',
+                        left: '25%',
+                        textAlign: 'center',
+                        top: 70
+                    }, {
+                        text: 'bottom-to-top',
+                        left: '75%',
+                        textAlign: 'center',
+                        top: 70
+                    }, {
+                        text: 'right-to-left',
+                        left: '25%',
+                        textAlign: 'center',
+                        top: '55%'
+                    }, {
+                        text: 'top-to-bottom',
+                        left: '75%',
+                        textAlign: 'center',
+                        top: '55%'
+                    }],
+                    xAxis: [{
+                        data: xData
+                    }, {
+                        gridIndex: 1
+                    }, {
+                        data: xData,
+                        inverse: true,
+                        gridIndex: 2
+                    }, {
+                        gridIndex: 3,
+                        inverse: true
+                    }],
+                    yAxis: [{
+                    }, {
+                        data: xData,
+                        gridIndex: 1
+                    }, {
+                        inverse: true,
+                        gridIndex: 2
+                    }, {
+                        data: xData,
+                        gridIndex: 3,
+                        inverse: true
+                    }],
+                    grid: [{
+                        left: 80,
+                        top: 100,
+                        right: '52%',
+                        bottom: '55%'
+                    }, {
+                        left: '52%',
+                        top: 100,
+                        right: 50,
+                        bottom: '55%'
+                    }, {
+                        left: 80,
+                        right: '52%',
+                        top: '60%',
+                        bottom: 30
+                    }, {
+                        left: '52%',
+                        right: 50,
+                        top: '60%',
+                        bottom: 30
+                    }],
+                    series: [{
+                        type: 'line',
+                        data: data,
+                        label: {
+                            show: true
+                        },
+                        labelLayout: {
+                            hideOverlap: true
+                        }
+                    }, {
+                        type: 'line',
+                        data: data,
+                        label: {
+                            show: true
+                        },
+                        labelLayout: {
+                            hideOverlap: true
+                        },
+                        xAxisIndex: 1,
+                        yAxisIndex: 1
+                    }, {
+                        type: 'line',
+                        data: data,
+                        label: {
+                            show: true
+                        },
+                        labelLayout: {
+                            hideOverlap: true
+                        },
+                        xAxisIndex: 2,
+                        yAxisIndex: 2
+                    }, {
+                        type: 'line',
+                        data: data,
+                        label: {
+                            show: true
+                        },
+                        labelLayout: {
+                            hideOverlap: true
+                        },
+                        xAxisIndex: 3,
+                        yAxisIndex: 3
+                    }],
+                    animationDuration: 10000,
+                    animationDurationUpdate: 1000
+                };
+                chart.setOption(option);
+
+            });
+
+        </script>
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var chart = echarts.init(document.getElementById('main1'));
+
+                var xData = [];
+                var data = [];
+                var value = 200;
+                var positive = 1;
+                for (let i = 0; i < 100; ++i) {
+                    xData.push(i + '');
+                    value = positive * Math.round(Math.random() * 50) + value;
+                    data.push(value);
+
+                    if (Math.random() > 0.7) {
+                        positive = -1 * positive;
+                    }
+                }
+
+                var duration = 10000;
+                option = {
+                    title: {
+                        text: 'Label Animation with animationDelay callback',
+                        subtext: 'Symbol and text should sync with line clipPath'
+                    },
+                    xAxis: {
+                        data: xData
+                    },
+                    yAxis: {},
+                    series: [{
+                        type: 'line',
+                        data: data,
+                        label: {
+                            show: true
+                        },
+                        animationEasing: 'cubicIn',
+                        animationDelay: function (i) {
+                            if (i == null) {
+                                return null;
+                            }
+                            else {
+                                // cubicIn is x=t^3 so t=x^(1/3)
+                                return (Math.pow((i + 0.5) / data.length, 1 / 3)) * duration;
+                            }
+                        }
+                    }],
+                    animationDuration: duration,
+                    animationDurationUpdate: 1000
+                };
+                chart.setOption(option);
+
+            });
+
+        </script>
+
+
+
     </body>
 </html>

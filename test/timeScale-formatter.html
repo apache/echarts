@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+
+
+        <div id="main1"></div>
+
+
+        <div id="main2"></div>
+
+
+        <div id="main3"></div>
+
+
+        <div id="main4"></div>
+
+
+        <div id="main5"></div>
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            const time = new Date('2010-01-01 00:00:00');
+            const data = [];
+            for (let i = 0; i < 10; ++i) {
+                data.push([time.getTime(), i * 10 + Math.random() * 100]);
+                time.setFullYear(time.getFullYear() + 1);
+            }
+
+            option = {
+                tooltip: {
+                    show: true,
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'time'
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: {
+                    type: 'line',
+                    data: data,
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'When min/max data is in year unit',
+                    'Expect 2010 and 2019 to be displayed'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            const time = new Date('2010-01-01 00:00:00');
+            const data = [[new Date('2009-09-10 11:00:00'), 20]];
+            for (let i = 0; i < 11; ++i) {
+                data.push([time.getTime(), i * 10 + Math.random() * 100]);
+                time.setFullYear(time.getFullYear() + 1);
+            }
+            data.push([new Date('2020-03-10 11:00:00'), 200])
+
+            option = {
+                tooltip: {
+                    show: true,
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'time',
+                    axisLabel: {
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: {
+                    type: 'line',
+                    data: data
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'When min/max data is not in year unit',
+                    'Expect 2009 and 2020 not to be displayed'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            const time = new Date('2010-01-01 00:00:00');
+            const data = [[new Date('2009-09-10 11:00:00'), 20]];
+            for (let i = 0; i < 11; ++i) {
+                data.push([time.getTime(), i * 10 + Math.random() * 100]);
+                time.setFullYear(time.getFullYear() + 1);
+            }
+            data.push([new Date('2020-03-10 11:00:00'), 200])
+
+            option = {
+                tooltip: {
+                    show: true,
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'time',
+                    axisLabel: {
+                        showMaxLabel: true,
+                        showMinLabel: true,
+                        formatter: '{yyyy}'
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: {
+                    type: 'line',
+                    data: data
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'Force show min and max in the above case',
+                    'Expect 2009 and 2020 to be displayed'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            const time = new Date('2010-01-01 00:00:00');
+            const data = [];
+            for (let i = 0; i < 30; ++i) {
+                data.push([time.getTime(), i * 10 + Math.random() * 100]);
+                time.setMonth(time.getMonth() + 1);
+            }
+            // data.push([new Date('2020-09-10 11:00:00'), 200])
+
+            option = {
+                xAxis: {
+                    type: 'time',
+                    axisLabel: {
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: {
+                    type: 'line',
+                    data: data
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main3', {
+                title: [
+                    'Default styles for levels'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            const time = new Date('2010-01-01 00:00:00');
+            const data = [];
+            for (let i = 0; i < 30; ++i) {
+                data.push([time.getTime(), i * 10 + Math.random() * 100]);
+                time.setMonth(time.getMonth() + 1);
+            }
+            // data.push([new Date('2020-09-10 11:00:00'), 200])
+
+            option = {
+                xAxis: {
+                    type: 'time',
+                    axisLabel: {
+                        formatter: {
+                            year: '{year|{yyyy}}\n{month|{MMM}}',
+                            month: '{month|{MMM}}'
+                        },
+                        rich: {
+                            year: {
+                                color: '#333',
+                                fontWeight: 'bold'
+                            },
+                            month: {
+                                color: '#999'
+                            }
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: {
+                    type: 'line',
+                    data: data
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main4', {
+                title: [
+                    'Customed styles for levels'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            const time = new Date('2010-01-01 00:00:00');
+            const data = [];
+            for (let i = 0; i < 30; ++i) {
+                data.push([time.getTime(), i * 10 + Math.random() * 100]);
+                time.setMonth(time.getMonth() + 1);
+            }
+            // data.push([new Date('2020-09-10 11:00:00'), 200])
+
+            option = {
+                xAxis: {
+                    type: 'time',
+                    axisLabel: {
+                        formatter: function (value) {
+                            const date = new Date(value);
+                            const yearStart = new Date(value);
+                            yearStart.setMonth(0);
+                            yearStart.setDate(1);
+                            yearStart.setHours(0);
+                            yearStart.setMinutes(0);
+                            yearStart.setSeconds(0);
+                            yearStart.setMilliseconds(0);
+                            if (date.getTime() === yearStart.getTime()) {
+                                return '{year|' + date.getFullYear() + '}\n'
+                                    + '{month|' + (date.getMonth() + 1) + '月}';
+                            }
+                            else {
+                                return '{month|' + (date.getMonth() + 1) + '月}'
+                            }
+                        },
+                        rich: {
+                            year: {
+                                color: '#333',
+                                fontWeight: 'bold'
+                            },
+                            month: {
+                                color: '#999'
+                            }
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: {
+                    type: 'line',
+                    data: data
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main5', {
+                title: [
+                    'Callback formatter'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+    </body>
+</html>
+

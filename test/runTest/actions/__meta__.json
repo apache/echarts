@@ -54,6 +54,7 @@
   "custom": 5,
   "custom-children-remove": 1,
   "custom-hexbin": 1,
+  "custom-text-content": 6,
   "dataZoom-action": 4,
   "dataZoom-axes": 4,
   "dataZoom-axis-type": 3,

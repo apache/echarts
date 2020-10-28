@@ -38,6 +38,14 @@ jobs:
           npm run release
         env:
           CI: true
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/release'
+
+    steps:
       - name: unit test
         run: |
           npm run test

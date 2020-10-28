@@ -19,17 +19,19 @@
 * under the License.
 */
 
-const fsExtra = require('fs-extra');
 const fs = require('fs');
-const {resolve} = require('path');
 const config = require('./config.js');
 const commander = require('commander');
-const {build, watch, color} = require('zrender/build/helper');
-const ecLangPlugin = require('./rollup-plugin-ec-lang');
+const chalk = require('chalk');
+const rollup = require('rollup');
 const prePublish = require('./pre-publish');
-const recheckDEV = require('zrender/build/babel-plugin-transform-remove-dev').recheckDEV;
+const transformDEV = require('./transform-dev');
+const UglifyJS = require("uglify-js");
+const preamble = require('./preamble');
+const {buildI18n} = require('./build-i18n')
+const terser = require('terser');
 
-function run() {
+async function run() {
 
     /**
      * Tips for `commander`:
@@ -55,17 +57,14 @@ function run() {
                 + '\n' + descIndent + '# Build all to `dist` folder.',
             egIndent + 'node build/build.js --prepublish'
                 + '\n' + descIndent + '# Only prepublish.',
-            egIndent + 'node build/build.js --removedev'
-                + '\n' + descIndent + '# Remove __DEV__ code. If --min, __DEV__ always be removed.',
             egIndent + 'node build/build.js --type ""'
                 + '\n' + descIndent + '# Only generate `dist/echarts.js`.',
             egIndent + 'node build/build.js --type common --min'
                 + '\n' + descIndent + '# Only generate `dist/echarts.common.min.js`.',
-            egIndent + 'node build/build.js --type simple --min --lang en'
+            egIndent + 'node build/build.js --type simple --min'
                 + '\n' + descIndent + '# Only generate `dist/echarts-en.simple.min.js`.',
-            egIndent + 'node build/build.js --lang "my/lang.js" -i "my/index.js" -o "my/bundle.js"'
+            egIndent + 'node build/build.js -i "my/index.js" -o "my/bundle.js"'
                 + '\n' + descIndent + '# Take `<cwd>/my/index.js` as input and generate `<cwd>/my/bundle.js`,'
-                + '\n' + descIndent + 'where `<cwd>/my/lang.js` is used as language file.',
         ].join('\n'))
         .option(
             '-w, --watch', [
@@ -73,23 +72,8 @@ function run() {
             descIndent + '`echarts/dist/echarts.js`.'
         ].join('\n'))
         .option(
-            '--lang <language file path or shortcut>', [
-            'Use the specified file instead of `echarts/src/lang.js`. For example:',
-            descIndent + '`--lang en` will use `echarts/src/langEN.js`.',
-            descIndent + '`--lang my/langDE.js` will use `<cwd>/my/langDE.js`. -o must be specified in this case.',
-            descIndent + '`--lang /my/indexSW.js` will use `/my/indexSW.js`. -o must be specified in this case.'
-        ].join('\n'))
-        .option(
-            '--release',
-            'Build all for release'
-        )
-        .option(
             '--prepublish',
             'Build all for release'
-        )
-        .option(
-            '--removedev',
-            'Remove __DEV__ code. If --min, __DEV__ always be removed.'
         )
         .option(
             '--min',
@@ -106,7 +90,7 @@ function run() {
         )
         .option(
             '--format <format>',
-            'The format of output bundle. Can be "umd", "amd", "iife", "cjs", "es".'
+            'The format of output bundle. Can be "umd", "amd", "iife", "cjs", "esm".'
         )
         .option(
             '-i, --input <input file path>',
@@ -116,6 +100,10 @@ function run() {
             '-o, --output <output file path>',
             'If output file path is specified, input file path must be specified too.'
         )
+        .option(
+            '--clean',
+            'If cleaning build without cache. Maybe useful if some unexpected happens.'
+        )
         .parse(process.argv);
 
     let isWatch = !!commander.watch;
@@ -123,102 +111,48 @@ function run() {
     let isPrePublish = !!commander.prepublish;
 
     let opt = {
-        lang: commander.lang,
         min: commander.min,
         type: commander.type || '',
         input: commander.input,
         output: commander.output,
         format: commander.format,
         sourcemap: commander.sourcemap,
-        removeDev: commander.removedev,
-        addBundleVersion: isWatch
+        addBundleVersion: isWatch,
+        // Force to disable cache in release build.
+        // TODO npm run build also disable cache?
+        clean: commander.clean || isRelease
     };
 
     validateIO(opt.input, opt.output);
-    validateLang(opt.lang, opt.output);
-
-    normalizeParams(opt);
-
-    // Clear `echarts/dist`
-    if (isRelease) {
-        fsExtra.removeSync(getPath('./dist'));
-    }
 
     if (isWatch) {
-        watch(config.createECharts(opt));
+        watch(config.createECharts(opt), opt.sourcemap);
     }
     else if (isPrePublish) {
-        prePublish();
+        await prePublish();
     }
-    else if (isRelease) {
-        let configs = [];
-        let configForCheck;
-
-        [
-            {min: false},
-            {min: true},
-            {min: false, lang: 'en'},
-            {min: true, lang: 'en'}
-        ].forEach(function (opt) {
-
-            ['', 'simple', 'common'].forEach(function (type) {
-                let singleOpt = Object.assign({type}, opt);
-                normalizeParams(singleOpt);
-                let singleConfig = config.createECharts(singleOpt);
-                configs.push(singleConfig);
-
-                if (singleOpt.min && singleOpt.type === '') {
-                    configForCheck = singleConfig;
-                }
-            });
-        });
-
-        configs.push(
-            config.createBMap(false),
-            config.createBMap(true),
-            config.createDataTool(false),
-            config.createDataTool(true)
-        );
-
-        build(configs)
-            .then(function () {
-                checkCode(configForCheck);
-                prePublish();
-            }).catch(handleBuildError);
+    else if (opt.type === 'extension') {
+        const cfgs = [
+            config.createBMap(),
+            config.createDataTool()
+        ];
+        await build(cfgs, opt.min, opt.sourcemap);
     }
     else {
-        let cfg = config.createECharts(opt);
-        build([cfg])
-            .then(function () {
-                if (opt.removeDev) {
-                    checkCode(cfg);
-                }
-            })
-            .catch(handleBuildError);
+        const cfg = config.createECharts(opt);
+        await build([cfg], opt.min, opt.sourcemap);
+        checkBundleCode(cfg);
     }
 }
 
-function normalizeParams(opt) {
-    if (opt.sourcemap == null) {
-        opt.sourcemap = !(opt.min || opt.type);
-    }
-    if (opt.removeDev == null) {
-        opt.removeDev = !!opt.min;
-    }
-}
-
-function handleBuildError(err) {
-    console.log(err);
-}
-
-function checkCode(singleConfig) {
+function checkBundleCode(cfg) {
     // Make sure __DEV__ is eliminated.
-    let code = fs.readFileSync(singleConfig.output.file, {encoding: 'utf-8'});
+    let code = fs.readFileSync(cfg.output.file, {encoding: 'utf-8'});
     if (!code) {
-        throw new Error(`${singleConfig.output.file} is empty`);
+        throw new Error(`${cfg.output.file} is empty`);
     }
-    recheckDEV(code);
-    console.log(color('fgGreen', 'dim')('Check code: correct.'));
+    transformDEV.recheckDEV(code);
+    console.log(chalk.green.dim('Check code: correct.'));
 }
 
 function validateIO(input, output) {
@@ -229,27 +163,201 @@ function validateIO(input, output) {
     }
 }
 
-function validateLang(lang, output) {
-    if (!lang) {
-        return;
+/**
+ * @param {Array.<Object>} configs A list of rollup configs:
+ *  See: <https://rollupjs.org/#big-list-of-options>
+ *  For example:
+ *  [
+ *      {
+ *          ...inputOptions,
+ *          output: [outputOptions],
+ *          watch: {chokidar, include, exclude}
+ *      },
+ *      ...
+ *  ]
+ */
+async function build(configs, min, sourcemap) {
+    // buildI18n JSON before build when build
+    buildI18n();
+
+    // ensureZRenderCode.prepare();
+
+    for (let singleConfig of configs) {
+
+        console.log(
+            chalk.cyan.dim('\Bundling '),
+            chalk.cyan(singleConfig.input),
+            chalk.cyan.dim('=>'),
+            chalk.cyan(singleConfig.output.file),
+            chalk.cyan.dim(' ...')
+        );
+
+        console.time('rollup build');
+        const bundle = await rollup.rollup(singleConfig);
+        console.timeEnd('rollup build');
+
+        await bundle.write(singleConfig.output);
+        const sourceCode = fs.readFileSync(singleConfig.output.file, 'utf-8');
+        // Convert __DEV__ to true;
+        const transformResult = transformDEV.transform(sourceCode, sourcemap, 'true');
+        fs.writeFileSync(singleConfig.output.file, transformResult.code, 'utf-8');
+        if (transformResult.map) {
+            fs.writeFileSync(singleConfig.output.file + '.map', JSON.stringify(transformResult.map), 'utf-8');
+        }
+
+        console.log(
+            chalk.green.dim('Created '),
+            chalk.green(singleConfig.output.file),
+            chalk.green.dim(' successfully.')
+        );
+
+        if (min) {
+            const fileMinPath = singleConfig.output.file.replace(/.js$/, '.min.js');
+            console.log(
+                chalk.cyan.dim('Minifying '),
+                chalk.cyan(singleConfig.output.file),
+                chalk.cyan.dim('=>'),
+                chalk.cyan(fileMinPath),
+                chalk.cyan.dim(' ...')
+            )
+            console.time('Minify');
+            // Convert __DEV__ to false and let uglify remove the dead code;
+            const transformedCode = transformDEV.transform(sourceCode, false, 'false').code;
+            let minifyResult;
+            if (singleConfig.output.format !== 'esm') {
+                minifyResult = UglifyJS.minify(transformedCode, {
+                    output: {
+                        preamble: preamble.js
+                    }
+                });
+                if (minifyResult.error) {
+                    throw new Error(minifyResult.error);
+                }
+            }
+            else {
+                // Use terser for esm minify because uglify doesn't support esm code.
+                minifyResult = await terser.minify(transformedCode, {
+                    format: {
+                        preamble: preamble.js
+                    }
+                })
+            }
+            fs.writeFileSync(fileMinPath, minifyResult.code, 'utf-8');
+
+            console.timeEnd('Minify');
+            console.log(
+                chalk.green.dim('Created '),
+                chalk.green(fileMinPath),
+                chalk.green.dim(' successfully.')
+            );
+        }
+
     }
 
-    let langInfo = ecLangPlugin.getLangFileInfo(lang);
-
-    if (langInfo.isOuter && !output) {
-        throw new Error('`-o` or `--output` must be specified if using a file path in `--lang`.');
-    }
-    if (!langInfo.absolutePath || !fs.statSync(langInfo.absolutePath).isFile()) {
-        throw new Error(`File ${langInfo.absolutePath} does not exist yet. Contribution is welcome!`);
-    }
+    // ensureZRenderCode.clear();
 }
 
 /**
- * @param {string} relativePath Based on echarts directory.
- * @return {string} Absolute path.
+ * @param {Object} singleConfig A single rollup config:
+ *  See: <https://rollupjs.org/#big-list-of-options>
+ *  For example:
+ *  {
+ *      ...inputOptions,
+ *      output: [outputOptions],
+ *      watch: {chokidar, include, exclude}
+ *  }
  */
-function getPath(relativePath) {
-    return resolve(__dirname, '../', relativePath);
+function watch(singleConfig, sourcemap) {
+
+    let watcher = rollup.watch(singleConfig);
+
+    watcher.on('event', function (event) {
+        // event.code can be one of:
+        //   START        — the watcher is (re)starting
+        //   BUNDLE_START — building an individual bundle
+        //   BUNDLE_END   — finished building a bundle
+        //   END          — finished building all bundles
+        //   ERROR        — encountered an error while bundling
+        //   FATAL        — encountered an unrecoverable error
+        if (event.code !== 'START' && event.code !== 'END') {
+            console.log(
+                chalk.blue('[' + getTimeString() + ']'),
+                chalk.blue.dim('build'),
+                event.code.replace(/_/g, ' ').toLowerCase()
+            );
+        }
+        if (event.code === 'ERROR' || event.code === 'FATAL') {
+            printCodeError(event.error);
+        }
+        if (event.code === 'BUNDLE_END') {
+
+            const sourceCode = fs.readFileSync(singleConfig.output.file, 'utf-8');
+            // Convert __DEV__ to true;
+            const transformResult = transformDEV.transform(sourceCode, sourcemap, 'true');
+            fs.writeFileSync(singleConfig.output.file, transformResult.code, 'utf-8');
+
+            printWatchResult(event);
+        }
+    });
 }
 
-run();
+function printWatchResult(event) {
+    console.log(
+        chalk.green.dim('Created'),
+        chalk.green(event.output.join(', ')),
+        chalk.green.dim('in'),
+        chalk.green(event.duration),
+        chalk.green.dim('ms.')
+    );
+}
+
+function printCodeError(error) {
+    console.log('\n' + error.code);
+    if (error.code === 'PARSE_ERROR') {
+        console.log(
+            'line',
+            chalk.cyan(error.loc.line),
+            'column',
+            chalk.cyan(error.loc.column),
+            'in',
+            chalk.cyan(error.loc.file)
+        );
+    }
+    if (error.frame) {
+        console.log('\n' + chalk.red(error.frame));
+    }
+    console.log(chalk.red.dim('\n' + error.stack));
+}
+
+function getTimeString() {
+    return (new Date()).toLocaleString();
+}
+
+
+async function main() {
+    try {
+        await run();
+    }
+    catch (err) {
+        console.log(chalk.red('BUILD ERROR!'));
+        // rollup parse error.
+        if (err) {
+            if (err.loc) {
+                console.warn(chalk.red(`${err.loc.file} (${err.loc.line}:${err.loc.column})`));
+                console.warn(chalk.red(err.message));
+            }
+            if (err.frame) {
+                console.warn(chalk.red(err.frame));
+            }
+            console.log(chalk.red(err ? err.stack : err));
+
+            err.id != null && console.warn(chalk.red(`id: ${err.id}`));
+            err.hook != null && console.warn(chalk.red(`hook: ${err.hook}`));
+            err.code != null && console.warn(chalk.red(`code: ${err.code}`));
+            err.plugin != null && console.warn(chalk.red(`plugin: ${err.plugin}`));
+        }
+        // console.log(err);
+    }
+}
+
+main();
