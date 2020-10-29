@@ -581,8 +581,8 @@ export function enableHoverEmphasis(el: Element, focus?: InnerFocus, blurScope?:
 }
 
 export function enableHoverFocus(el: Element, focus: InnerFocus, blurScope: BlurScope) {
+    const ecData = getECData(el);
     if (focus != null) {
-        const ecData = getECData(el);
         // TODO dataIndex may be set after this function. This check is not useful.
         // if (ecData.dataIndex == null) {
         //     if (__DEV__) {
@@ -593,6 +593,9 @@ export function enableHoverFocus(el: Element, focus: InnerFocus, blurScope: Blur
         ecData.focus = focus;
         ecData.blurScope = blurScope;
         // }
+    }
+    else if (ecData.focus) {
+        ecData.focus = null;
     }
 }
 

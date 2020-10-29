@@ -621,7 +621,7 @@ class LineView extends ChartView {
                 }
             });
 
-            this._initSymbolLabelAnimation(
+            hasAnimation && this._initSymbolLabelAnimation(
                 data,
                 coordSys,
                 clipShapeForSymbol
