@@ -105,7 +105,6 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                     const dataCount = dataAll.count();
                     dataAll.each(rawIdx => {
                         const idx = idxMap[rawIdx];
-                        const itemStyle = data.ensureUniqueItemVisual(idx, 'style');
                         const name = dataAll.getName(rawIdx) || (rawIdx + '');
                         const paletteDecal = getDecalFromPalette(
                             seriesModel.ecModel,
@@ -113,26 +112,29 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                             decalScope,
                             dataCount
                         );
-                        const decal = zrUtil.defaults(
-                            itemStyle.decal || {},
-                            paletteDecal
-                        );
-                        data.setItemVisual(idx, 'decal', decal);
+                        const specifiedDecal = data.getItemVisual(idx, 'decal');
+                        data.setItemVisual(idx, 'decal', mergeDecal(specifiedDecal, paletteDecal));
                     });
                 }
                 else {
-                    const style = data.getVisual('style');
                     const paletteDecal = getDecalFromPalette(
                         seriesModel.ecModel,
                         seriesModel.name,
                         decalPaletteScope,
                         ecModel.getSeriesCount()
                     );
-                    const decal = style.decal
-                        ? zrUtil.defaults(style.decal, paletteDecal)
+                    const specifiedDecal = data.getVisual('decal');
+                    data.setVisual('decal', mergeDecal(specifiedDecal, paletteDecal));
+                }
+
+                function mergeDecal(specifiedDecal: DecalObject, paletteDecal: DecalObject): DecalObject {
+                    // Merge decal from palette to decal from itemStyle.
+                    // User do not need to specify all of the decal props.
+                    const resultDecal = specifiedDecal
+                        ? zrUtil.extend(zrUtil.extend({}, paletteDecal), specifiedDecal)
                         : paletteDecal;
-                    (decal as InnerDecalObject).dirty = true;
-                    data.setVisual('decal', decal);
+                    (resultDecal as InnerDecalObject).dirty = true;
+                    return resultDecal;
                 }
             });
         }

@@ -90,6 +90,9 @@ const seriesStyleTask: StageHandler = {
         const colorCallback = isFunction(color) ? color as unknown as ColorCallback : null;
         // Get from color palette by default.
         if (!globalStyle[colorKey] || colorCallback) {
+            // Note: if some series has color specified (e.g., by itemStyle.color), we DO NOT
+            // make it effect palette. Bacause some scenarios users need to make some series
+            // transparent or as background, which should better not effect the palette.
             globalStyle[colorKey] = seriesModel.getColorFromPalette(
                 // TODO series count changed.
                 seriesModel.name, null, ecModel.getSeriesCount()

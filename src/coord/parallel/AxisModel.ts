@@ -79,8 +79,9 @@ class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
                 ['lineWidth', 'borderWidth'],
                 ['stroke', 'borderColor'],
                 ['width', 'width'],
-                ['opacity', 'opacity'],
-                ['decal']
+                ['opacity', 'opacity']
+                // Option decal is in `DecalObject` but style.decal is in `PatternObject`.
+                // So do not transfer decal directly.
             ]
         )(this.getModel('areaSelectStyle')) as ParallelAreaSelectStyleProps;
     }

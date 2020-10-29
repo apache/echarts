@@ -688,7 +688,8 @@ export interface DecalObject {
 };
 
 export interface InnerDecalObject extends DecalObject {
-    // If option has changed
+    // Mark dirty when object may be changed.
+    // The record in WeakMap will be deleted.
     dirty?: boolean
 }
 

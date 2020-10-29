@@ -28,8 +28,9 @@ export const AREA_STYLE_KEY_MAP = [
     ['shadowOffsetX'],
     ['shadowOffsetY'],
     ['opacity'],
-    ['shadowColor'],
-    ['decal']
+    ['shadowColor']
+    // Option decal is in `DecalObject` but style.decal is in `PatternObject`.
+    // So do not transfer decal directly.
 ];
 const getAreaStyle = makeStyleMapper(AREA_STYLE_KEY_MAP);
 
