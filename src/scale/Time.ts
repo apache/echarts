@@ -99,14 +99,12 @@ const bisect = function (
     return lo;
 };
 
-interface TimeScale {
-    constructor(settings?: {
-        locale: Model<LocaleOption>,
-        useUTC: boolean
-    }): void
-}
+type TimeScaleSetting = {
+    locale: Model<LocaleOption>;
+    useUTC: boolean;
+};
 
-class TimeScale extends IntervalScale {
+class TimeScale extends IntervalScale<TimeScaleSetting> {
 
     static type = 'time';
     readonly type = 'time';
@@ -114,6 +112,10 @@ class TimeScale extends IntervalScale {
     _approxInterval: number;
 
     _minLevelUnit: TimeUnit;
+
+    constructor(settings?: TimeScaleSetting) {
+        super(settings);
+    }
 
     /**
      * Get label is mainly for other components like dataZoom, tooltip.
@@ -125,6 +127,7 @@ class TimeScale extends IntervalScale {
             fullLeveledFormatter[
                 getDefaultFormatPrecisionOfInterval(getPrimaryTimeUnit(this._minLevelUnit))
             ] || fullLeveledFormatter.second,
+            this.getSetting('locale'),
             useUTC
         );
     }

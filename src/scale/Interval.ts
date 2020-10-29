@@ -22,11 +22,11 @@ import * as numberUtil from '../util/number';
 import * as formatUtil from '../util/format';
 import Scale from './Scale';
 import * as helper from './helper';
-import {ScaleTick} from '../util/types';
+import {ScaleTick, Dictionary} from '../util/types';
 
 const roundNumber = numberUtil.round;
 
-class IntervalScale extends Scale {
+class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> extends Scale<SETTING> {
 
     static type = 'interval';
     type = 'interval';

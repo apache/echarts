@@ -31,11 +31,11 @@ import {
 import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
 
 
-abstract class Scale {
+abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> {
 
     type: string;
 
-    private _setting: Dictionary<any>;
+    private _setting: SETTING;
 
     protected _extent: [number, number];
 
@@ -44,12 +44,12 @@ abstract class Scale {
     // Inject
     readonly rawExtentInfo: ScaleRawExtentInfo;
 
-    constructor(setting?: Dictionary<any>) {
-        this._setting = setting || {};
+    constructor(setting?: SETTING) {
+        this._setting = setting || {} as SETTING;
         this._extent = [Infinity, -Infinity];
     }
 
-    getSetting(name: string): any {
+    getSetting<KEY extends keyof SETTING>(name: KEY): SETTING[KEY] {
         return this._setting[name];
     }
 

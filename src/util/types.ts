@@ -477,6 +477,7 @@ export type ECUnitOption = {
     backgroundColor?: ZRColor
     darkMode?: boolean | 'auto'
     textStyle?: Pick<LabelOption, 'color' | 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>
+    useUTC?: boolean
 
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
