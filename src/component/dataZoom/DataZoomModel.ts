@@ -18,7 +18,6 @@
 */
 
 import { each, createHashMap, merge, HashMap, assert } from 'zrender/src/core/util';
-import env from 'zrender/src/core/env';
 import AxisProxy from './AxisProxy';
 import ComponentModel from '../../model/Component';
 import {
@@ -240,10 +239,9 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
     private _doInit(inputRawOption: Opts): void {
         const thisOption = this.option;
 
-        // Disable realtime view update if canvas is not supported.
-        if (!env.canvasSupported) {
-            thisOption.realtime = false;
-        }
+        // if (!env.canvasSupported) {
+        //     thisOption.realtime = false;
+        // }
 
         this._setDefaultThrottle(inputRawOption);
 
@@ -354,7 +352,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
         if (needAuto) {
             // If no parallel axis, find the first category axis as default. (Also consider polar).
             each(DATA_ZOOM_AXIS_DIMENSIONS, function (axisDim) {
-                if (needAuto) {
+                if (!needAuto) {
                     return;
                 }
                 const axisModels = ecModel.findComponents({
@@ -365,6 +363,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
                     const axisInfo = new DataZoomAxisInfo();
                     axisInfo.add(axisModels[0].componentIndex);
                     targetAxisIndexMap.set(axisDim, axisInfo);
+                    needAuto = false;
                 }
             }, this);
         }
