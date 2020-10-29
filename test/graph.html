@@ -114,7 +114,9 @@ under the License.
                                         shadowColor: 'rgba(0, 0, 0, 0.3)'
                                     }
                                 },
-                                focusNodeAdjacency: true,
+                                emphasis: {
+                                    focus: 'adjacency'
+                                },
                                 // edgeSymbol: ['none', 'arrow'],
                                 // scaleLimit: {
                                 //     min: 1.5,
@@ -146,14 +148,14 @@ under the License.
                         focusNodeAdjacency: true,
                         manualFocusNodeAdjacency: function () {
                             chart.dispatchAction({
-                                type: 'focusNodeAdjacency',
+                                type: 'highlight',
                                 seriesName: 'Les Miserables',
                                 dataIndex: 2
                             });
                         },
                         manualUnfocusNodeAdjacency: function () {
                             chart.dispatchAction({
-                                type: 'unfocusNodeAdjacency',
+                                type: 'downplay',
                                 seriesName: 'Les Miserables'
                             });
                         },
@@ -179,7 +181,9 @@ under the License.
                             chart.setOption({
                                 series: [{
                                     name: 'Les Miserables',
-                                    focusNodeAdjacency: value
+                                    emphasis: {
+                                        focus: config.focusNodeAdjacency ? 'adjacency' : null
+                                    }
                                 }]
                             });
                         });
