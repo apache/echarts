@@ -23,13 +23,17 @@ const decalKeys = [
 /**
  * Create or update pattern image from decal options
  *
- * @param {InnerDecalObject} decalObject decal options
- * @return {Pattern} pattern with generated image
+ * @param {InnerDecalObject | 'none'} decalObject decal options, 'none' if no decal
+ * @return {Pattern} pattern with generated image, null if no decal
  */
 export function createOrUpdatePatternFromDecal(
-    decalObject: InnerDecalObject,
+    decalObject: InnerDecalObject | 'none',
     api: ExtensionAPI
 ): PatternObject {
+    if (decalObject === 'none') {
+        return null;
+    }
+
     const dpr = api.getDevicePixelRatio();
     const zr = api.getZr();
     const isSVG = zr.painter.type === 'svg';

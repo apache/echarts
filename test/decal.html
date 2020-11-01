@@ -133,15 +133,25 @@ under the License.
                 if (i === 0) {
                     s.itemStyle = itemStyle;
                 }
+                else if (i === 1) {
+                    s.itemStyle = {
+                        decal: 'none'
+                    };
+                }
+                else if (i === 2) {
+                    s.data = [{
+                        value: s.data[0],
+                        itemStyle: {
+                            decal: 'none'
+                        }
+                    }];
+                }
                 series.push(s);
 
                 var p = {
                     name: 'pie' + i,
                     value: i * 5 + 10
                 };
-                if (i === 0) {
-                    p.itemStyle = itemStyle;
-                }
                 pieData.push(p);
 
                 legendNames.push('bar' + i, 'pie' + i);
@@ -180,7 +190,8 @@ under the License.
                 title: [
                     'It should use decal when aria.show is true',
                     '(1) Each bar and pie piece should have different decal',
-                    '(2) The first bar and pie piece decal should be **blue**'
+                    '(2) The first bar and pie piece decal should be **blue**',
+                    '(3) The second and third bar should not have decal'
                 ],
                 option: option
                 // height: 300,

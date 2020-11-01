@@ -477,6 +477,7 @@ export type ECUnitOption = {
     backgroundColor?: ZRColor
     darkMode?: boolean | 'auto'
     textStyle?: Pick<LabelOption, 'color' | 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>
+    useUTC?: boolean
 
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
@@ -868,7 +869,7 @@ export interface SymbolOptionMixin<T = unknown> {
 export interface ItemStyleOption extends ShadowOptionMixin, BorderOptionMixin {
     color?: ZRColor
     opacity?: number
-    decal?: DecalObject[]
+    decal?: DecalObject | 'none'
 }
 
 /**

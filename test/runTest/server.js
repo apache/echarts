@@ -162,7 +162,7 @@ function startTests(testsNameList, socket, {
                 '--speed', replaySpeed || 5,
                 '--actual', actualVersion,
                 '--expected', expectedVersion,
-                '--renderer', renderer,
+                '--renderer', renderer || '',
                 ...(noHeadless ? ['--no-headless'] : []),
                 ...(noSave ? ['--no-save'] : [])
             ]);
@@ -298,7 +298,7 @@ async function start() {
                     replaySpeed: 2,
                     actualVersion: data.actualVersion,
                     expectedVersion: data.expectedVersion,
-                    renderer: data.renderer,
+                    renderer: data.renderer || '',
                     noSave: true
                 });
             }
