@@ -278,17 +278,6 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         return params;
     }
 
-    enableAriaDecal() {
-        const graph = this.getGraph();
-        const nodes = graph.nodes;
-        zrUtil.each(nodes, node => {
-            const name = this.getDataParams(node.dataIndex, 'node').name;
-            const paletteDecal = getDecalFromPalette(this.ecModel, name, null, nodes.length);
-            const decal = zrUtil.defaults(node.getVisual('style').decal || {}, paletteDecal);
-            node.hostGraph.data.setItemVisual(node.dataIndex, 'decal', decal);
-        });
-    }
-
     static defaultOption: SankeySeriesOption = {
         zlevel: 0,
         z: 2,

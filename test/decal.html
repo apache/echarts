@@ -45,7 +45,6 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
-
         <div id="main2"></div>
 
         <table>
@@ -105,6 +104,12 @@ under the License.
                 </td>
             </tr>
         </table>
+
+
+        <div id="main-sankey"></div>
+        <div id="main-sunburst"></div>
+        <div id="main-treemap"></div>
+        <div id="main-custom-series"></div>
 
 
 
@@ -205,6 +210,13 @@ under the License.
                 };
                 if (i === 0) {
                     s.itemStyle = itemStyle;
+                    s.emphasis = {
+                        itemStyle: {
+                            decal: {
+                                color: 'red'
+                            }
+                        }
+                    }
                 }
                 series.push(s);
 
@@ -214,6 +226,13 @@ under the License.
                 };
                 if (i === 0) {
                     p.itemStyle = itemStyle;
+                    p.emphasis = {
+                        itemStyle: {
+                            decal: {
+                                color: 'red'
+                            }
+                        }
+                    }
                 }
                 pieData.push(p);
             }
@@ -252,6 +271,9 @@ under the License.
             });
         });
         </script>
+
+
+
 
 
         <script>
@@ -382,6 +404,428 @@ under the License.
             rand('rotation', 0, 3.14);
         }
         </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+
+
+            var testData =  {
+                nodes: [
+                    {
+                        name: 'a',
+                        itemStyle: {
+                            decal: {
+                                color: 'yellow'
+                            }
+                        }
+                    },
+                    {
+                        name: 'b',
+                        depth: 2
+                    },
+                    {
+                        name: 'a1',
+                        depth: 4
+                    },
+                    {
+                        name: 'b1'
+                    },
+                    {
+                        name: 'c',
+                        depth: 3
+                    },
+                    {
+                        name: 'e',
+                        depth: 1
+                    }
+                ],
+                links: [
+                    {
+                        source: 'a',
+                        target: 'a1',
+                        value: 5
+                    },
+                    {
+                        source: 'e',
+                        target: 'b',
+                        value: 3
+                    },
+                    {
+                        source: 'a',
+                        target: 'b1',
+                        value: 0
+                    },
+                    {
+                        source: 'b1',
+                        target: 'a1',
+                        value: 1
+                    },
+                    {
+                        source: 'b1',
+                        target: 'c',
+                        value: 3
+                    },
+                    {
+                        source: 'b',
+                        target: 'c',
+                        value: 3
+                    }
+                ]
+            };
+
+            var option = {
+                aria: {
+                    decal: { show: true }
+                },
+                tooltip: {
+                    trigger: 'item',
+                    triggerOn: 'mousemove'
+                },
+                animation: false,
+                series: [
+                    {
+                        type: 'sankey',
+                        bottom: '10%',
+                        focusNodeAdjacency: true,
+                        itemStyle: {
+                            decal: {
+                                color: 'blue'
+                            }
+                        },
+                        data: testData.nodes,
+                        links: testData.links
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main-sankey', {
+                title: [
+                    'All sankey nodes should have decal (they are from palette)',
+                    'decal color of all except "a" is **blue** (they are from series.itemStyle)',
+                    'decal color of "a" is **yellow** (it is from dataItem.itemStyle)'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var data = [{
+                children: [{
+                    value: 5,
+                    children: [{
+                        value: 1
+                    }, {
+                        value: 2,
+                        children: [{
+                            value: 1
+                        }]
+                    }, {
+                        children: [{
+                            value: 1
+                        }]
+                    }]
+                }, {
+                    value: 10,
+                    children: [{
+                        value: 6,
+                        children: [{
+                            value: 1
+                        }, {
+                            value: 1
+                        }, {
+                            value: 1
+                        }, {
+                            value: 1
+                        }]
+                    }, {
+                        value: 2,
+                        children: [{
+                            value: 1
+                        }]
+                    }, {
+                        children: [{
+                            value: 1
+                        }]
+                    }]
+                }]
+            }, {
+                value: 9,
+                children: [{
+                    value: 4,
+                    children: [{
+                        value: 2
+                    }, {
+                        children: [{
+                            value: 1
+                        }]
+                    }]
+                }, {
+                    children: [{
+                        value: 3,
+                        children: [{
+                            value: 1
+                        }, {
+                            value: 1
+                        }]
+                    }]
+                }]
+            }, {
+                value: 7,
+                children: [{
+                    children: [{
+                        value: 1
+                    }, {
+                        value: 3,
+                        children: [{
+                            value: 1
+                        }, {
+                            value: 1
+                        }]
+                    }, {
+                        value: 2,
+                        children: [{
+                            value: 1
+                        }, {
+                            value: 1
+                        }]
+                    }]
+                }]
+            }, {
+                children: [{
+                    value: 6,
+                    children: [{
+                        value: 1
+                    }, {
+                        value: 2,
+                        children: [{
+                            value: 2
+                        }]
+                    }, {
+                        value: 1
+                    }]
+                }, {
+                    value: 3,
+                    children: [{
+                        value: 1,
+                    }, {
+                        children: [{
+                            value: 1
+                        }]
+                    }, {
+                        value: 1
+                    }]
+                }]
+            }];
+
+            var option = {
+                aria: {
+                    decal: { show: true }
+                },
+                series: {
+                    type: 'sunburst',
+                    data: data
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main-sunburst', {
+                title: [
+                    'All sunburst nodes should have decal (by 1st level) (they are from palette)'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option = {
+                aria: {
+                    decal: { show: true }
+                },
+                series: [{
+                    name: 'tm',
+                    type: 'treemap',
+                    roam: false,
+                    label: {
+                        position: 'insideRight',
+                        emphasis: {
+                            show: true
+                        }
+                    },
+                    leafDepth: 1,
+                    levels: [{
+                        itemStyle: {
+                            borderColor: '#333',
+                            borderWidth: 4,
+                            gapWidth: 2
+                        }
+                    }, {
+                        itemStyle: {
+                            borderColor: '#aaa',
+                            gapWidth: 2,
+                            borderWidth: 2
+                        },
+                        colorSaturation: [0.2, 0.7]
+                    }],
+                    data: [{
+                        name: 'a',
+                        value: 10,
+                        children: [{
+                            name: 'a1',
+                            value: 11,
+                            children: [{
+                                name: 'a11',
+                                value: 111,
+                            }, {
+                                name: 'a111',
+                                value: 1111
+                            }, {
+                                name: 'a112',
+                                value: 1111
+                            }, {
+                                name: 'a113',
+                                value: 111
+                            }, {
+                                name: 'a114',
+                                value: 111
+                            }, {
+                                name: 'a115',
+                                value: 1100
+                            }]
+                        }]
+                    }, {
+                        name: 'b',
+                        value: 6,
+                        children: [{
+                            name: 'b1',
+                            value: 15,
+                            children: [{
+                                name: 'b11',
+                                value: 120
+                            }]
+                        }]
+                    }]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main-treemap', {
+                title: [
+                    'All treemap nodes should have decal (by 1st level) (they are from palette)'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+
+            function renderItem(params, api) {
+                var pos = api.coord([api.value(0), api.value(1)]);
+                var paletteColor = api.visual('color');
+                var paletteDecal = api.visual('decal');
+                if (params.dataIndex === 0) {
+                    return {
+                        type: 'group',
+                        x: pos[0],
+                        y: pos[1],
+                        children: [{
+                            type: 'circle',
+                            shape: { cx: 0, cy: 0, r: 30 },
+                            style: {
+                                fill: 'orange',
+                                decal: {
+                                    color: 'blue',
+                                    dashArrayX: [1, 0],
+                                    dashArrayY: [4, 3],
+                                    dashLineOffset: 0,
+                                    rotation: -Math.PI / 4
+                                }
+                            }
+                        }, {
+                            type: 'circle',
+                            shape: { cx: 60, cy: 0, r: 30 },
+                            style: { fill: 'orange' }
+                        }]
+                    }
+                }
+                else {
+                    return {
+                        type: 'group',
+                        x: pos[0],
+                        y: pos[1],
+                        children: [{
+                            type: 'rect',
+                            shape: { x: -20, y: -20, width: 40, height: 40 },
+                            style: { fill: paletteColor, decal: paletteDecal },
+                        }, {
+                            type: 'rect',
+                            shape: { x: 60 - 20, y: -20, width: 40, height: 40 },
+                            style: { fill: paletteColor, decal: paletteDecal },
+                        }]
+                    }
+                }
+            }
+
+            var option = {
+                xAxis: {
+                },
+                yAxis: {
+                },
+                series: [{
+                    type: 'custom',
+                    renderItem: renderItem,
+                    data: [ [11, 22], [55, 22] ]
+                }, {
+                    type: 'custom',
+                    renderItem: renderItem,
+                    data: [ [11, 55], [55, 55] ]
+                }, {
+                    type: 'custom',
+                    renderItem: renderItem,
+                    data: [ [11, 88], [55, 88] ]
+                }],
+                aria: {
+                    decal: {
+                        show: true
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main-custom-series', {
+                title: [
+                    'All circle/rect should show decals.',
+                    'Circel should be in specified decal (in **blue**) and specified color (in **orange**).',
+                    'Rect should be in palette decal and palette color'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+
     </body>
 </html>
 
