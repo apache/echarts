@@ -462,7 +462,7 @@ class TreemapView extends ChartView {
         this._state = 'animating';
 
         animationWrap
-            .done(bind(function () {
+            .finished(bind(function () {
                 this._state = 'ready';
                 renderResult.renderFinally();
             }, this))

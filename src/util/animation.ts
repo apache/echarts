@@ -46,7 +46,7 @@ class AnimationWrap {
 
     private _storage = [] as AnimationWrapStorage[];
     private _elExistsMap: { [elId: string]: boolean } = {};
-    private _doneCallback: AnimationWrapDoneCallback;
+    private _finishedCallback: AnimationWrapDoneCallback;
 
     /**
      * Caution: a el can only be added once, otherwise 'done'
@@ -79,11 +79,10 @@ class AnimationWrap {
     }
 
     /**
-     * Only execute when animation finished. Will not execute when any
-     * of 'stop' or 'stopAnimation' called.
+     * Only execute when animation done/aborted.
      */
-    done(callback: AnimationWrapDoneCallback): AnimationWrap {
-        this._doneCallback = callback;
+    finished(callback: AnimationWrapDoneCallback): AnimationWrap {
+        this._finishedCallback = callback;
         return this;
     }
 
@@ -93,12 +92,12 @@ class AnimationWrap {
     start(): AnimationWrap {
         let count = this._storage.length;
 
-        const done = () => {
+        const checkTerminate = () => {
             count--;
-            if (!count) {
+            if (count <= 0) { // Guard.
                 this._storage.length = 0;
                 this._elExistsMap = {};
-                this._doneCallback && this._doneCallback();
+                this._finishedCallback && this._finishedCallback();
             }
         };
 
@@ -109,7 +108,8 @@ class AnimationWrap {
                 delay: item.delay,
                 easing: item.easing,
                 setToFinal: true,
-                done
+                done: checkTerminate,
+                aborted: checkTerminate
             });
         }
 
