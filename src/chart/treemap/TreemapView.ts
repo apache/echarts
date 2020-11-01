@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {bind, each, indexOf, curry, extend, retrieve, normalizeCssArray} from 'zrender/src/core/util';
+import {bind, each, indexOf, curry, extend, retrieve, normalizeCssArray, isFunction} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
 import {
@@ -358,8 +358,11 @@ class TreemapView extends ChartView {
             return;
         }
 
-        const duration = seriesModel.get('animationDurationUpdate');
-        const easing = seriesModel.get('animationEasing');
+        const durationOption = seriesModel.get('animationDurationUpdate');
+        const easingOption = seriesModel.get('animationEasing');
+        // TODO: do not support function until necessary.
+        const duration = (isFunction(durationOption) ? 0 : durationOption) || 0;
+        const easing = (isFunction(easingOption) ? null : easingOption) || 'cubicOut';
         const animationWrap = animationUtil.createWrap();
 
         // Make delete animations.
@@ -411,8 +414,9 @@ class TreemapView extends ChartView {
                             style: {opacity: 0}
                         };
                 }
-                // @ts-ignore
-                target && animationWrap.add(el, target, duration, easing);
+
+                // TODO: do not support delay until necessary.
+                target && animationWrap.add(el, target, duration, 0, easing);
             });
         });
 
@@ -451,8 +455,7 @@ class TreemapView extends ChartView {
                     }
                 }
 
-                // @ts-ignore
-                animationWrap.add(el, target, duration, easing);
+                animationWrap.add(el, target, duration, 0, easing);
             });
         }, this);
 
