@@ -53,7 +53,9 @@ import {
     BlurScope,
     SeriesDataType,
     OrdinalRawValue,
-    PayloadAnimationPart
+    PayloadAnimationPart,
+    DecalObject,
+    InnerDecalObject
 } from '../util/types';
 import Element, { ElementProps, ElementTextConfig } from 'zrender/src/Element';
 import prepareCartesian2d from '../coord/cartesian/prepareCustom';
@@ -69,7 +71,7 @@ import ExtensionAPI from '../ExtensionAPI';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Axis2D from '../coord/cartesian/Axis2D';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import { PathProps } from 'zrender/src/graphic/Path';
+import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import { CoordinateSystem } from '../coord/CoordinateSystem';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
@@ -89,6 +91,8 @@ import {
 } from 'zrender/src/tool/morphPath';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import * as matrix from 'zrender/src/core/matrix';
+import { PatternObject } from 'zrender/src/graphic/Pattern';
+import { createOrUpdatePatternFromDecal } from '../util/decal';
 
 
 const inner = makeInner<{
@@ -187,6 +191,11 @@ interface CustomGroupOption extends CustomBaseElementOption {
 }
 interface CustomZRPathOption extends CustomDisplayableOption, ShapeMorphingOption {
     shape?: PathProps['shape'] & TransitionAnyOption;
+    style?: CustomDisplayableOption['style'] & {
+        decal?: DecalObject;
+        // Only internal usage. Any user specified value will be overwritten.
+        __decalPattern?: PatternObject;
+    };
 }
 interface CustomSVGPathOption extends CustomDisplayableOption, ShapeMorphingOption {
     type: 'path';
@@ -219,14 +228,19 @@ type CustomElementOption = CustomZRPathOption | CustomSVGPathOption | CustomImag
 type CustomElementOptionOnState = CustomDisplayableOptionOnState | CustomImageOptionOnState;
 
 
-interface CustomSeriesRenderItemAPI extends
+export interface CustomSeriesRenderItemAPI extends
         CustomSeriesRenderItemCoordinateSystemAPI,
         Pick<ExtensionAPI, 'getWidth' | 'getHeight' | 'getZr' | 'getDevicePixelRatio'> {
     value(dim: DimensionLoose, dataIndexInside?: number): ParsedValue;
     ordinalRawValue(dim: DimensionLoose, dataIndexInside?: number): ParsedValue | OrdinalRawValue;
     style(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
     styleEmphasis(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
-    visual(visualType: string, dataIndexInside?: number): ReturnType<List['getItemVisual']>;
+    visual<VT extends NonStyleVisualProps | StyleVisualProps>(
+        visualType: VT,
+        dataIndexInside?: number
+    ): VT extends NonStyleVisualProps ? DefaultDataVisual[VT]
+        : VT extends StyleVisualProps ? PathStyleProps[typeof STYLE_VISUAL_TYPE[VT]]
+        : void;
     barLayout(opt: Omit<Parameters<typeof getLayoutOnAxis>[0], 'axis'>): ReturnType<typeof getLayoutOnAxis>;
     currentSeriesIndices(): ReturnType<GlobalModel['getCurrentSeriesIndices']>;
     font(opt: Parameters<typeof labelStyleHelper.getFont>[0]): ReturnType<typeof labelStyleHelper.getFont>;
@@ -245,7 +259,7 @@ interface CustomSeriesRenderItemCoordinateSystemAPI {
         dataItem: OptionDataValue | OptionDataValue[]
     ): number | number[];
 }
-interface CustomSeriesRenderItemParams {
+export interface CustomSeriesRenderItemParams {
     context: Dictionary<unknown>;
     seriesId: string;
     seriesName: string;
@@ -301,15 +315,18 @@ const STYLE_VISUAL_TYPE = {
     color: 'fill',
     borderColor: 'stroke'
 } as const;
+type StyleVisualProps = keyof typeof STYLE_VISUAL_TYPE;
 
-const VISUAL_PROPS = {
+const NON_STYLE_VISUAL_PROPS = {
     symbol: 1,
     symbolSize: 1,
     symbolKeepAspect: 1,
     legendSymbol: 1,
     visualMeta: 1,
-    liftZ: 1
+    liftZ: 1,
+    decal: 1
 } as const;
+type NonStyleVisualProps = keyof typeof NON_STYLE_VISUAL_PROPS;
 
 const EMPHASIS = 'emphasis' as const;
 const NORMAL = 'normal' as const;
@@ -482,7 +499,7 @@ class CustomSeriesView extends ChartView {
             });
             data.each(function (newIdx) {
                 createOrUpdateItem(
-                    null, newIdx, renderItem(newIdx, payload), customSeries, group, data, null
+                    api, null, newIdx, renderItem(newIdx, payload), customSeries, group, data, null
                 );
             });
         }
@@ -500,7 +517,7 @@ class CustomSeriesView extends ChartView {
             ))
             .add(function (newIdx) {
                 createOrUpdateItem(
-                    null, newIdx, renderItem(newIdx, payload), customSeries, group,
+                    api, null, newIdx, renderItem(newIdx, payload), customSeries, group,
                     data, null
                 );
             })
@@ -523,7 +540,7 @@ class CustomSeriesView extends ChartView {
                     oldEl = null;
                 }
                 createOrUpdateItem(
-                    oldEl, newIdx, renderItem(newIdx, payload), customSeries, group,
+                    api, oldEl, newIdx, renderItem(newIdx, payload), customSeries, group,
                     data, morphPreparation
                 );
                 morphPreparation.applyMorphing();
@@ -536,7 +553,7 @@ class CustomSeriesView extends ChartView {
                     removeElementDirectly(oldEl, group);
                 }
                 createOrUpdateItem(
-                    null, newIdx, renderItem(newIdx, payload), customSeries, group,
+                    api, null, newIdx, renderItem(newIdx, payload), customSeries, group,
                     data, morphPreparation
                 );
                 morphPreparation.applyMorphing();
@@ -550,7 +567,7 @@ class CustomSeriesView extends ChartView {
 
                 for (let i = 0; i < newLen; i++) {
                     createOrUpdateItem(
-                        null, newIndices[i], renderItem(newIndices[i], payload), customSeries, group,
+                        api, null, newIndices[i], renderItem(newIndices[i], payload), customSeries, group,
                         data, morphPreparation
                     );
                 }
@@ -599,7 +616,7 @@ class CustomSeriesView extends ChartView {
         }
         for (let idx = params.start; idx < params.end; idx++) {
             const el = createOrUpdateItem(
-                null, idx, renderItem(idx, payload), customSeries, this.group, data, null
+                null, null, idx, renderItem(idx, payload), customSeries, this.group, data, null
             );
             el.traverse(setIncrementalAndHoverLayer);
         }
@@ -779,6 +796,8 @@ function createEl(elOption: CustomElementOption): Element {
  * @return if `isMorphTo`, return `allPropsFinal`.
  */
 function updateElNormal(
+    // Can be null/undefined
+    api: ExtensionAPI,
     el: Element,
     // Whether be a morph target.
     isMorphTo: boolean,
@@ -823,6 +842,17 @@ function updateElNormal(
         );
     }
 
+    if (styleOpt) {
+        let decalPattern;
+        const decalObj = isPath(el) ? (styleOpt as CustomZRPathOption['style']).decal : null;
+        if (api && decalObj) {
+            (decalObj as InnerDecalObject).dirty = true;
+            decalPattern = createOrUpdatePatternFromDecal(decalObj, api);
+        }
+        // Always overwrite in case user specify this prop.
+        (styleOpt as CustomZRPathOption['style']).__decalPattern = decalPattern;
+    }
+
     !isMorphTo && prepareStyleTransitionFrom(el, null, elOption, styleOpt, transFromProps, isInit);
 
     if (elDisplayable) {
@@ -861,9 +891,21 @@ function applyPropsFinal(
     const elDisplayable = el.isGroup ? null : el as Displayable;
 
     if (elDisplayable && styleOpt) {
+
+        const decalPattern = (styleOpt as CustomZRPathOption['style']).__decalPattern;
+        let originalDecalObj;
+        if (decalPattern) {
+            originalDecalObj = (styleOpt as CustomZRPathOption['style']).decal;
+            (styleOpt as any).decal = decalPattern;
+        }
+
         // PENDING: here the input style object is used directly.
         // Good for performance but bad for compatibility control.
         elDisplayable.useStyle(styleOpt);
+
+        if (decalPattern) {
+            (styleOpt as CustomZRPathOption['style']).decal = originalDecalObj;
+        }
 
         // When style object changed, how to trade the existing animation?
         // It is probably conplicated and not needed to cover all the cases.
@@ -1794,22 +1836,25 @@ function makeRenderItem(
      * @public
      * @param dataIndexInside by default `currDataIndexInside`.
      */
-    function visual(
-        visualType: keyof DefaultDataVisual,
+    function visual<VT extends NonStyleVisualProps | StyleVisualProps>(
+        visualType: VT,
         dataIndexInside?: number
-    ): ReturnType<List['getItemVisual']> {
+    ): VT extends NonStyleVisualProps ? DefaultDataVisual[VT]
+            : VT extends StyleVisualProps ? PathStyleProps[typeof STYLE_VISUAL_TYPE[VT]]
+            : never {
+
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
 
         if (hasOwn(STYLE_VISUAL_TYPE, visualType)) {
             const style = data.getItemVisual(dataIndexInside, 'style');
             return style
-                ? style[STYLE_VISUAL_TYPE[visualType as keyof typeof STYLE_VISUAL_TYPE]] as any
+                ? style[STYLE_VISUAL_TYPE[visualType as StyleVisualProps]] as any
                 : null;
         }
         // Only support these visuals. Other visual might be inner tricky
         // for performance (like `style`), do not expose to users.
-        if (hasOwn(VISUAL_PROPS, visualType)) {
-            return data.getItemVisual(dataIndexInside, visualType);
+        if (hasOwn(NON_STYLE_VISUAL_PROPS, visualType)) {
+            return data.getItemVisual(dataIndexInside, visualType as NonStyleVisualProps) as any;
         }
     }
 
@@ -1858,6 +1903,7 @@ function wrapEncodeDef(data: List<CustomSeriesModel>): Dictionary<number[]> {
 }
 
 function createOrUpdateItem(
+    api: ExtensionAPI,
     el: Element,
     dataIndex: number,
     elOption: CustomElementOption,
@@ -1878,7 +1924,7 @@ function createOrUpdateItem(
         removeElementDirectly(el, group);
         return;
     }
-    el = doCreateOrUpdateEl(el, dataIndex, elOption, seriesModel, group, true, morphPreparation);
+    el = doCreateOrUpdateEl(api, el, dataIndex, elOption, seriesModel, group, true, morphPreparation);
     el && data.setItemGraphicEl(dataIndex, el);
 
     enableHoverEmphasis(el, elOption.focus, elOption.blurScope);
@@ -1887,6 +1933,7 @@ function createOrUpdateItem(
 }
 
 function doCreateOrUpdateEl(
+    api: ExtensionAPI,
     el: Element,
     dataIndex: number,
     elOption: CustomElementOption,
@@ -1951,6 +1998,7 @@ function doCreateOrUpdateEl(
     );
 
     const pendingAllPropsFinal = updateElNormal(
+        api,
         el,
         thisElIsMorphTo,
         dataIndex,
@@ -1979,7 +2027,7 @@ function doCreateOrUpdateEl(
 
     if (elOption.type === 'group') {
         mergeChildren(
-            el as graphicUtil.Group, dataIndex, elOption as CustomGroupOption, seriesModel, morphPreparation
+            api, el as graphicUtil.Group, dataIndex, elOption as CustomGroupOption, seriesModel, morphPreparation
         );
     }
 
@@ -2052,7 +2100,7 @@ function doCreateOrUpdateClipPath(
             el.setClipPath(clipPath);
         }
         updateElNormal(
-            clipPath, null, dataIndex, clipPathOpt, null, null, seriesModel, isInit, false
+            null, clipPath, null, dataIndex, clipPathOpt, null, null, seriesModel, isInit, false
         );
     }
     // If not define `clipPath` in option, do nothing unnecessary.
@@ -2105,7 +2153,7 @@ function doCreateOrUpdateAttachedTx(
             const txConStlOptNormal = txConOptNormal && txConOptNormal.style;
 
             updateElNormal(
-                textContent, null, dataIndex, txConOptNormal, txConStlOptNormal, null, seriesModel, isInit, true
+                null, textContent, null, dataIndex, txConOptNormal, txConStlOptNormal, null, seriesModel, isInit, true
             );
             for (let i = 0; i < STATES.length; i++) {
                 const stateName = STATES[i];
@@ -2212,6 +2260,7 @@ function retrieveStyleOptionOnState(
 // child (otherwise the total indicies of the children array have to be modified).
 // User can remove a single child by set its `ignore` as `true`.
 function mergeChildren(
+    api: ExtensionAPI,
     el: graphicUtil.Group,
     dataIndex: number,
     elOption: CustomGroupOption,
@@ -2233,6 +2282,7 @@ function mergeChildren(
 
     if (byName) {
         diffGroupChildren({
+            api: api,
             oldChildren: el.children() || [],
             newChildren: newChildren || [],
             dataIndex: dataIndex,
@@ -2250,6 +2300,7 @@ function mergeChildren(
     let index = 0;
     for (; index < newLen; index++) {
         newChildren[index] && doCreateOrUpdateEl(
+            api,
             el.childAt(index),
             dataIndex,
             newChildren[index],
@@ -2268,12 +2319,13 @@ function mergeChildren(
 }
 
 type DiffGroupContext = {
-    oldChildren: Element[],
-    newChildren: CustomElementOption[],
-    dataIndex: number,
-    seriesModel: CustomSeriesModel,
-    group: graphicUtil.Group,
-    morphPreparation: MorphPreparation
+    api: ExtensionAPI;
+    oldChildren: Element[];
+    newChildren: CustomElementOption[];
+    dataIndex: number;
+    seriesModel: CustomSeriesModel;
+    group: graphicUtil.Group;
+    morphPreparation: MorphPreparation;
 };
 function diffGroupChildren(context: DiffGroupContext) {
     (new DataDiffer(
@@ -2304,6 +2356,7 @@ function processAddUpdate(
     const child = oldIndex != null ? context.oldChildren[oldIndex] : null;
 
     doCreateOrUpdateEl(
+        context.api,
         child,
         context.dataIndex,
         childOption,
