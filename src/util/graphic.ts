@@ -290,9 +290,6 @@ export const subPixelOptimize = subPixelOptimizeUtil.subPixelOptimize;
 
 type AnimateOrSetPropsOption = {
     dataIndex?: number;
-    // `cb` will be called when "done" or "aborted".
-    // Note: if there is requirment to ditinguish "done" and "aborted",
-    // in the future, we can add them to the params.
     cb?: () => void;
     during?: (percent: number) => void;
     isFrom?: boolean;
@@ -384,7 +381,6 @@ function animateOrSetProps<Props>(
                         delay: animationDelay as number || 0,
                         easing: animationEasing,
                         done: cb,
-                        aborted: cb,
                         force: !!cb || !!during,
                         scope: animationType,
                         during: during
@@ -394,7 +390,6 @@ function animateOrSetProps<Props>(
                         delay: animationDelay as number || 0,
                         easing: animationEasing,
                         done: cb,
-                        aborted: cb,
                         force: !!cb || !!during,
                         setToFinal: true,
                         scope: animationType,
