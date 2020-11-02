@@ -148,9 +148,7 @@ const theme = {
             color: contrastColor
         },
         label: {
-            textStyle: {
-                color: contrastColor
-            }
+            color: contrastColor
         },
         controlStyle: {
             color: contrastColor,

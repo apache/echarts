@@ -172,9 +172,7 @@
                 color: contrastColor
             },
             label: {
-                textStyle: {
-                    color: contrastColor
-                }
+                color: contrastColor
             },
             controlStyle: {
                 color: contrastColor,
@@ -208,9 +206,7 @@
         },
         gauge: {
             title: {
-                textStyle: {
-                    color: contrastColor
-                }
+                color: contrastColor
             }
         },
         candlestick: {

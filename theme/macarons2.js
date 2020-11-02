@@ -177,25 +177,23 @@
             minAngle: 0, // 最小角度改为0
             selectedOffset: 10, // 选中是扇区偏移量
             itemStyle: {
-                normal: {
-                    // color: 各异,
-                    borderColor: '#fff',
-                    borderWidth: 1,
-                    label: {
-                        show: true,
-                        position: 'outer',
-                        textStyle: { color: '#1b1b1b' },
-                        lineStyle: { color: '#1b1b1b' }
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                    },
-                    labelLine: {
-                        show: true,
-                        length: 20,
-                        lineStyle: {
-                            // color: 各异,
-                            width: 1,
-                            type: 'solid'
-                        }
+                // color: 各异,
+                borderColor: '#fff',
+                borderWidth: 1,
+                label: {
+                    show: true,
+                    position: 'outer',
+                    color: '#1b1b1b',
+                    lineStyle: { color: '#1b1b1b' }
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                },
+                labelLine: {
+                    show: true,
+                    length: 20,
+                    lineStyle: {
+                        // color: 各异,
+                        width: 1,
+                        type: 'solid'
                     }
                 }
             }
