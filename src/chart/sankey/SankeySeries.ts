@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import Model from '../../model/Model';
@@ -39,7 +38,6 @@ import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { LayoutRect } from '../../util/layout';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
-import { getDecalFromPalette } from '../../model/mixin/palette';
 
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
