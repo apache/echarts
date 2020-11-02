@@ -27,9 +27,7 @@ import {
     assert,
     isString,
     indexOf,
-    isStringSafe,
-    hasOwn,
-    defaults
+    isStringSafe
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import GlobalModel from '../model/Global';

@@ -83,7 +83,6 @@ function preparePlugins(
 /**
  * @param {Object} [opt]
  * @param {string} [opt.type=''] '' or 'simple' or 'common'
- * @param {string} [opt.lang=undefined] null/undefined/'' or 'en' or 'fi' or a file path.
  * @param {string} [opt.input=undefined] If set, `opt.output` is required too, and `opt.type` is ignored.
  * @param {string} [opt.output=undefined] If set, `opt.input` is required too, and `opt.type` is ignored.
  * @param {boolean} [opt.sourcemap] If set, `opt.input` is required too, and `opt.type` is ignored.
@@ -94,11 +93,11 @@ function preparePlugins(
 exports.createECharts = function (opt = {}) {
     let srcType = opt.type ? '.' + opt.type : '.all';
     let postfixType = opt.type ? '.' + opt.type : '';
-    let postfixLang = opt.lang ? '-' + opt.lang.toLowerCase() : '';
     let input = opt.input;
     let output = opt.output;
     let sourcemap = opt.sourcemap;
     let format = opt.format || 'umd';
+    let postfixFormat = (format !== 'umd') ? '.' + format.toLowerCase() : '';
 
     if (input != null || output != null) {
         // Based on process.cwd();
@@ -107,7 +106,7 @@ exports.createECharts = function (opt = {}) {
     }
     else {
         input = nodePath.resolve(ecDir, `src/echarts${srcType}.ts`);
-        output = nodePath.resolve(ecDir, `dist/echarts${postfixLang}${postfixType}.js`);
+        output = nodePath.resolve(ecDir, `dist/echarts${postfixFormat}${postfixType}.js`);
     }
 
     const include = [

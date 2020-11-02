@@ -337,7 +337,7 @@ export function positionElement(
     containerRect: {width: number, height: number},
     margin?: number[] | number,
     opt?: {
-        hv: [1 | 0, 1 | 0],
+        hv: [1 | 0 | boolean, 1 | 0 | boolean],
         boundingMode: 'all' | 'raw'
     }
 ) {

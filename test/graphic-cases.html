@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main-legacy-style"></div>
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+
+            const imageURI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAADcCAYAAAAbWs+BAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4gIUARQAHY8+4wAAApBJREFUeNrt3cFqAjEUhlEjvv8rXzciiiBGk/He5JxdN2U649dY+KmnEwAAAAAv2uMXEeGOwERntwAEB4IDBAeCAwQHggPBAYIDwQGCA8GB4ADBgeAAwYHgAMGB4EBwgOCgpkuKq2it/r8Li2hbvGKqP6s/PycnHHv9YvSWEgQHCA4EBwgOBAeCAwQHggMEByXM+QRUE6D3suwuPafDn5MTDg50KXnVPSdxa54y/oYDwQGCA8EBggPBAYIDwYHggBE+X5rY3Y3Tey97Nn2eU+rnlGfaZa6Ft5SA4EBwgOBAcCA4QHAgOEBwIDjgZu60y1xrDPtIJxwgOBAcIDgQHAgOEBwIDhAcCA4EBwgOBAcIDgQHCA4EB4IDBAeCAwQHggPBAYIDwQGCA8GB4ADBgeAAwYHgAMGB4GADcz9y2McIgxMOBAeCAwQHggMEB4IDwQGCA8EBggPBATdP6+KIGPRdW7i1LCFi6ALfCQfeUoLgAMGB4ADBgeBAcIDgQHCA4CCdOVvK7quwveQgg7eRTjjwlhIQHAgOBAcIDgQHCA4EB4IDBAfl5dhSdl+17SX3F22rdLlOOBAcCA4QHAgOEBwIDgQHCA4EBwgO0qm5pez6Ce0uSym2jXTCgeAAwYHgQHCA4EBwgOBAcCA4QHBQ3vpbyu47Yns51OLbSCccCA4QHAgOBAcIDgQHCA4EB4ID5jDt+vkObjgFM9dywoHgAMGB4EBwgOBAcIDgQHAgOEBwsA5bysPveMLtpW2kEw4EBwgOBAcIDgQHggMEB4IDBAeCg33ZUqZ/Ql9sL20jnXCA4EBwIDhAcCA4QHAgOBAcIDgQHNOZai3DlhKccCA4QHAgOEBwIDgQHCA4AAAAAGA1VyxaWIohrgXFAAAAAElFTkSuQmCC';
+
+
+            option = {
+                graphic: [{
+                    type: 'circle',
+                    x: 100,
+                    y: 50,
+                    shape: {
+                        cx: 0,
+                        cy: 0,
+                        r: 50
+                    },
+                    style: {
+                        fill: 'orange'
+                    },
+                    textContent: {
+                        style: {
+                            text: 'x: 100, y: 50\nposition: bottom',
+                            fill: 'blue'
+                        }
+                    },
+                    textConfig: {
+                        position: 'bottom'
+                    }
+                }, {
+                    type: 'rect',
+                    x: 200,
+                    y: 0,
+                    scaleX: 10,
+                    scaleY: 20,
+                    shape: {
+                        x: 0,
+                        y: 0,
+                        width: 5,
+                        height: 5
+                    },
+                    style: {
+                        fill: 'red'
+                    },
+                    textContent: {
+                        style: {
+                            text: 'x: 200, y: 0\nscaleX: 10, scaleY: 20\nposition: inside'
+                        }
+                    },
+                    textConfig: {
+                        position: 'inside'
+                    }
+                }, {
+                    type: 'image',
+                    x: 300,
+                    y: 0,
+                    style: {
+                        width: 50,
+                        height: 100,
+                        image: imageURI,
+                        storke: 'blue',
+                        lineWidth: 5
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'New API:',
+                    '**textContent** should be displayed.',
+                    'Check transform according to textContent.'
+                ],
+                option: option
+            });
+
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+
+            const imageURI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAADcCAYAAAAbWs+BAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4gIUARQAHY8+4wAAApBJREFUeNrt3cFqAjEUhlEjvv8rXzciiiBGk/He5JxdN2U649dY+KmnEwAAAAAv2uMXEeGOwERntwAEB4IDBAeCAwQHggPBAYIDwQGCA8GB4ADBgeAAwYHgAMGB4EBwgOCgpkuKq2it/r8Li2hbvGKqP6s/PycnHHv9YvSWEgQHCA4EBwgOBAeCAwQHggMEByXM+QRUE6D3suwuPafDn5MTDg50KXnVPSdxa54y/oYDwQGCA8EBggPBAYIDwYHggBE+X5rY3Y3Tey97Nn2eU+rnlGfaZa6Ft5SA4EBwgOBAcCA4QHAgOEBwIDjgZu60y1xrDPtIJxwgOBAcIDgQHAgOEBwIDhAcCA4EBwgOBAcIDgQHCA4EB4IDBAeCAwQHggPBAYIDwQGCA8GB4ADBgeAAwYHgAMGB4GADcz9y2McIgxMOBAeCAwQHggMEB4IDwQGCA8EBggPBATdP6+KIGPRdW7i1LCFi6ALfCQfeUoLgAMGB4ADBgeBAcIDgQHCA4CCdOVvK7quwveQgg7eRTjjwlhIQHAgOBAcIDgQHCA4EB4IDBAfl5dhSdl+17SX3F22rdLlOOBAcCA4QHAgOEBwIDgQHCA4EBwgO0qm5pez6Ce0uSym2jXTCgeAAwYHgQHCA4EBwgOBAcCA4QHBQ3vpbyu47Yns51OLbSCccCA4QHAgOBAcIDgQHCA4EB4ID5jDt+vkObjgFM9dywoHgAMGB4EBwgOBAcIDgQHAgOEBwsA5bysPveMLtpW2kEw4EBwgOBAcIDgQHggMEB4IDBAeCg33ZUqZ/Ql9sL20jnXCA4EBwIDhAcCA4QHAgOBAcIDgQHNOZai3DlhKccCA4QHAgOEBwIDgQHCA4AAAAAGA1VyxaWIohrgXFAAAAAElFTkSuQmCC';
+
+
+            option = {
+                graphic: [{
+                    type: 'circle',
+                    x: 100,
+                    y: 50,
+                    shape: {
+                        cx: 0,
+                        cy: 0,
+                        r: 50
+                    },
+                    style: {
+                        fill: 'orange',
+                        text: 'x: 100, y: 50\nposition: bottom',
+                        textFill: 'blue',
+                        textPosition: 'bottom'
+                    },
+                }, {
+                    type: 'rect',
+                    x: 200,
+                    y: 0,
+                    scaleX: 10,
+                    scaleY: 20,
+                    shape: {
+                        x: 0,
+                        y: 0,
+                        width: 5,
+                        height: 5
+                    },
+                    style: {
+                        fill: 'red',
+                        text: 'x: 200, y: 0\nscaleX: 10, scaleY: 20\nposition: inside',
+                        textPosition: 'inside'
+                    }
+                }, {
+                    type: 'image',
+                    x: 300,
+                    y: 0,
+                    style: {
+                        width: 50,
+                        height: 100,
+                        image: imageURI,
+                        storke: 'blue',
+                        lineWidth: 5
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main-legacy-style', {
+                title: [
+                    'Legacy API:',
+                    'Should the same as new API'
+                ],
+                option: option
+            });
+
+        });
+        </script>
+
+
+    </body>
+</html>
+

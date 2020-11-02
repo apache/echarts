@@ -707,7 +707,7 @@ class TooltipView extends ComponentView {
 
         const formatter = tooltipModel.get('formatter');
         positionExpr = positionExpr || tooltipModel.get('position');
-        let html = defaultHtml;
+        let html: string | HTMLElement[] = defaultHtml;
         const nearPoint = this._getNearestPoint(
             [x, y],
             params,
@@ -718,7 +718,7 @@ class TooltipView extends ComponentView {
             html = formatUtil.formatTpl(formatter, params, true);
         }
         else if (zrUtil.isFunction(formatter)) {
-            const callback = bind(function (cbTicket: string, html: string) {
+            const callback = bind(function (cbTicket: string, html: string | HTMLElement[]) {
                 if (cbTicket === this._ticket) {
                     tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPoint.color, positionExpr);
                     this._updatePosition(
