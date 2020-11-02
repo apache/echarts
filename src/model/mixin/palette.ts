@@ -22,6 +22,7 @@ import {isArray} from 'zrender/src/core/util';
 import {makeInner, normalizeToArray} from '../../util/model';
 import Model from '../Model';
 import {ZRColor, PaletteOptionMixin, DecalObject} from '../../util/types';
+import GlobalModel from '../Global';
 
 type Inner<T> = (hostObj: PaletteMixin<PaletteOptionMixin>) => {
     paletteIdx: number;
@@ -58,26 +59,17 @@ class PaletteMixin<T extends PaletteOptionMixin = PaletteOptionMixin> {
     clearColorPalette(this: PaletteMixin<T>) {
         clearPalette<ZRColor>(this, innerColor);
     }
-
-    getDecalFromPalette(
-        this: PaletteMixin<T>,
-        name: string,
-        scope?: any,
-        requestNum?: number
-    ): DecalObject {
-        let decals = this.get('decals');
-        if (!isArray(decals)) {
-            decals = [decals as DecalObject];
-        }
-        const defaultDecals = decals as DecalObject[];
-        return getFromPalette<DecalObject>(this, innerDecal, defaultDecals, [defaultDecals], name, scope, requestNum);
-    }
-
-    clearDecalPalette(this: PaletteMixin<T>) {
-        clearPalette<DecalObject>(this, innerDecal);
-    }
 }
 
+export function getDecalFromPalette(
+    ecModel: GlobalModel,
+    name: string,
+    scope?: any,
+    requestNum?: number
+): DecalObject {
+    const defaultDecals = normalizeToArray(ecModel.get(['aria', 'decal', 'decals']));
+    return getFromPalette<DecalObject>(ecModel, innerDecal, defaultDecals, null, name, scope, requestNum);
+}
 
 
 function getNearestPalette<T>(

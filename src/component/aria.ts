@@ -20,6 +20,7 @@
 import * as echarts from '../echarts';
 import ariaVisual from '../visual/aria';
 import ariaPreprocessor from './aria/preprocessor';
+import { DecalObject } from '../util/types';
 
 const PRIORITY_VISUAL_ARIA = echarts.PRIORITY.VISUAL.ARIA;
 
@@ -66,7 +67,8 @@ export interface AriaOption extends AriaLabelOption {
     label?: AriaLabelOption;
     decal?: {
         show?: boolean;
-    }
+        decals?: DecalObject | DecalObject[];
+    };
 }
 
 echarts.registerPreprocessor(ariaPreprocessor);

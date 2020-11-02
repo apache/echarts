@@ -813,6 +813,13 @@ class GlobalModel extends Model<ECUnitOption> {
             ecModel._componentsMap = createHashMap({series: []});
             ecModel._componentsCount = createHashMap();
 
+            // If user spefied `option.aria`, aria will be enable. This detection should be
+            // performed before theme and globalDefault merge.
+            const airaOption = baseOption.aria;
+            if (isObject(airaOption) && airaOption.enabled == null) {
+                airaOption.enabled = true;
+            }
+
             mergeTheme(baseOption, ecModel._theme.option);
 
             // TODO Needs clone when merging to the unexisted property

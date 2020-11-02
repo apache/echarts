@@ -689,7 +689,8 @@ export interface DecalObject {
 };
 
 export interface InnerDecalObject extends DecalObject {
-    // If option has changed
+    // Mark dirty when object may be changed.
+    // The record in WeakMap will be deleted.
     dirty?: boolean
 }
 
@@ -712,11 +713,7 @@ export type ComponentLayoutMode = {
     ignoreSize?: boolean | boolean[]
 };
 /******************* Mixins for Common Option Properties   ********************** */
-export interface PaletteOptionMixin {
-    color?: ZRColor | ZRColor[]
-    colorLayer?: ZRColor[][],
-    decals?: DecalObject | DecalObject[]
-}
+export type PaletteOptionMixin = ColorPaletteOptionMixin;
 
 export interface ColorPaletteOptionMixin {
     color?: ZRColor | ZRColor[]

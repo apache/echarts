@@ -1787,7 +1787,6 @@ class List<
      * Make sure itemVisual property is unique
      */
     // TODO: use key to save visual to reduce memory.
-    // eslint-disable-next-line
     ensureUniqueItemVisual<K extends keyof Visual>(idx: number, key: K): Visual[K] {
         const itemVisuals = this._itemVisuals;
         let itemVisual = itemVisuals[idx] as Visual;
@@ -1795,7 +1794,7 @@ class List<
             itemVisual = itemVisuals[idx] = {} as Visual;
         }
         let val = itemVisual[key];
-        if (!val) {
+        if (val == null) {
             val = this.getVisual(key);
 
             // TODO Performance?
