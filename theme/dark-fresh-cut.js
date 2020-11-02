@@ -55,9 +55,7 @@
                 }
             },
             axisLabel: {
-                textStyle: {
-                    color: contrastColor
-                }
+                color: contrastColor
             },
             splitLine: {
                 lineStyle: {
@@ -108,9 +106,7 @@
         },
         toolbox: {
             iconStyle: {
-                normal: {
-                    borderColor: contrastColor
-                }
+                borderColor: contrastColor
             }
         },
 
