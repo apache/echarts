@@ -17,103 +17,106 @@
 * under the License.
 */
 
-// @ts-nocheck
 
-import * as zrUtil from 'zrender/src/core/util';
 import Element, { ElementProps } from 'zrender/src/Element';
 import { ZREasing } from './types';
+import { AnimationEasing } from 'zrender/src/animation/easing';
+
+interface AnimationWrapStorage {
+    el: Element;
+    target: ElementProps;
+    duration: number;
+    delay: number;
+    easing: AnimationEasing
+}
+type AnimationWrapDoneCallback = () => void;
 
 /**
+ * Animate multiple elements with a single done-callback.
+ *
  * @example
- *  // Animate position
  *  animation
  *      .createWrap()
- *      .add(el1, {position: [10, 10]})
+ *      .add(el1, {x: 10, y: 10})
  *      .add(el2, {shape: {width: 500}, style: {fill: 'red'}}, 400)
  *      .done(function () { // done })
  *      .start('cubicOut');
  */
-export function createWrap() {
+class AnimationWrap {
 
-    const storage = [];
-    let elExistsMap = {};
-    let doneCallback;
+    private _storage = [] as AnimationWrapStorage[];
+    private _elExistsMap: { [elId: string]: boolean } = {};
+    private _finishedCallback: AnimationWrapDoneCallback;
 
-    return {
-
-        /**
-         * Caution: a el can only be added once, otherwise 'done'
-         * might not be called. This method checks this (by el.id),
-         * suppresses adding and returns false when existing el found.
-         *
-         * @return Whether adding succeeded.
-         *
-         * @example
-         *     add(el, target, time, delay, easing);
-         *     add(el, target, time, easing);
-         *     add(el, target, time);
-         *     add(el, target);
-         */
-        add: function (
-            el: Element,
-            target: ElementProps,
-            time?: number,
-            delay?: number | ZREasing,
-            easing?: ZREasing
-        ) {
-            if (zrUtil.isString(delay)) {
-                easing = delay;
-                delay = 0;
-            }
-
-            if (elExistsMap[el.id]) {
-                return false;
-            }
-            elExistsMap[el.id] = 1;
-
-            storage.push(
-                {el: el, target: target, time: time, delay: delay, easing: easing}
-            );
-
-            return true;
-        },
-
-        /**
-         * Only execute when animation finished. Will not execute when any
-         * of 'stop' or 'stopAnimation' called.
-         */
-        done: function (callback: () => void) {
-            doneCallback = callback;
-            return this;
-        },
-
-        /**
-         * Will stop exist animation firstly.
-         */
-        start: function () {
-            let count = storage.length;
-
-            for (let i = 0, len = storage.length; i < len; i++) {
-                const item = storage[i];
-                item.el.animateTo(item.target, {
-                    duration: item.time,
-                    delay: item.delay,
-                    easing: item.easing,
-                    setToFinal: true,
-                    done
-                });
-            }
-
-            return this;
-
-            function done() {
-                count--;
-                if (!count) {
-                    storage.length = 0;
-                    elExistsMap = {};
-                    doneCallback && doneCallback();
-                }
-            }
+    /**
+     * Caution: a el can only be added once, otherwise 'done'
+     * might not be called. This method checks this (by el.id),
+     * suppresses adding and returns false when existing el found.
+     *
+     * @return Whether adding succeeded.
+     */
+    add(
+        el: Element,
+        target: ElementProps,
+        duration?: number,
+        delay?: number,
+        easing?: ZREasing
+    ): boolean {
+        if (this._elExistsMap[el.id]) {
+            return false;
         }
-    };
+        this._elExistsMap[el.id] = true;
+
+        this._storage.push({
+            el: el,
+            target: target,
+            duration: duration,
+            delay: delay,
+            easing: easing
+        });
+
+        return true;
+    }
+
+    /**
+     * Only execute when animation done/aborted.
+     */
+    finished(callback: AnimationWrapDoneCallback): AnimationWrap {
+        this._finishedCallback = callback;
+        return this;
+    }
+
+    /**
+     * Will stop exist animation firstly.
+     */
+    start(): AnimationWrap {
+        let count = this._storage.length;
+
+        const checkTerminate = () => {
+            count--;
+            if (count <= 0) { // Guard.
+                this._storage.length = 0;
+                this._elExistsMap = {};
+                this._finishedCallback && this._finishedCallback();
+            }
+        };
+
+        for (let i = 0, len = this._storage.length; i < len; i++) {
+            const item = this._storage[i];
+            item.el.animateTo(item.target, {
+                duration: item.duration,
+                delay: item.delay,
+                easing: item.easing,
+                setToFinal: true,
+                done: checkTerminate,
+                aborted: checkTerminate
+            });
+        }
+
+        return this;
+    }
+}
+
+export function createWrap(): AnimationWrap {
+    return new AnimationWrap();
 }
