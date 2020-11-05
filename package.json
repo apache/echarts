@@ -10,7 +10,7 @@
   "main": "index.js",
   "module": "echarts.all.js",
   "jsdelivr": "dist/echarts.min.js",
-  "types": "index.d.ts",
+  "types": "types/dist/echarts.d.ts",
   "homepage": "http://echarts.apache.org",
   "repository": {
     "type": "git",
@@ -64,6 +64,7 @@
     "pngjs": "3.4.0",
     "rollup": "1.28.0",
     "rollup-plugin-commonjs": "8.4.1",
+    "rollup-plugin-dts": "1.4.2",
     "rollup-plugin-node-resolve": "3.0.0",
     "rollup-plugin-typescript2": "0.25.3",
     "seedrandom": "3.0.3",

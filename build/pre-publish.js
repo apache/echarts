@@ -37,6 +37,9 @@ const ts = require('typescript');
 const globby = require('globby');
 const transformDEVUtil = require('./transform-dev');
 const preamble = require('./preamble');
+// NOTE: v1.4.2 is the latest version that supports ts 3.8.3
+const dts = require('rollup-plugin-dts').default;
+const rollup = require('rollup');
 
 const ecDir = nodePath.resolve(__dirname, '..');
 const tmpDir = nodePath.resolve(ecDir, 'pre-publish-tmp');
@@ -71,47 +74,6 @@ const typesDir = nodePath.resolve(ecDir, 'types');
 
 
 const compileWorkList = [
-    {
-        logLabel: 'main ts -> js-cjs',
-        compilerOptionsOverride: {
-            module: 'CommonJS',
-            // `rootDir` Only use to control the output
-            // directory structure with --outDir.
-            rootDir: ecDir,
-            outDir: tmpDir
-        },
-        srcGlobby: mainSrcGlobby,
-        transformOptions: {
-            filesGlobby: {patterns: ['**/*.js'], cwd: tmpDir},
-            preamble: preamble.js,
-            transformDEV: true
-        },
-        before: async function () {
-            fsExtra.removeSync(tmpDir);
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'lib'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.blank.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.common.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.simple.js'));
-        },
-        after: async function () {
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.all.js'), nodePath.resolve(ecDir, 'index.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'index.blank.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'index.common.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'index.simple.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'lib'));
-
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.js'), 'lib');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.blank.js'), 'lib');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), 'lib');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), 'lib');
-
-            await transformDistributionFiles(nodePath.resolve(ecDir, 'lib'), 'lib');
-            removeESmoduleMark();
-
-            fsExtra.removeSync(tmpDir);
-        }
-    },
     {
         logLabel: 'main ts -> js-esm',
         compilerOptionsOverride: {
@@ -150,6 +112,48 @@ const compileWorkList = [
 
             await transformDistributionFiles(nodePath.resolve(ecDir, 'esm'), 'esm');
             await transformDistributionFiles(nodePath.resolve(ecDir, 'types'), 'esm');
+            fsExtra.removeSync(tmpDir);
+
+            await bundleDTS();
+        }
+    },
+    {
+        logLabel: 'main ts -> js-cjs',
+        compilerOptionsOverride: {
+            module: 'CommonJS',
+            // `rootDir` Only use to control the output
+            // directory structure with --outDir.
+            rootDir: ecDir,
+            outDir: tmpDir
+        },
+        srcGlobby: mainSrcGlobby,
+        transformOptions: {
+            filesGlobby: {patterns: ['**/*.js'], cwd: tmpDir},
+            preamble: preamble.js,
+            transformDEV: true
+        },
+        before: async function () {
+            fsExtra.removeSync(tmpDir);
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'lib'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.blank.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.common.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.simple.js'));
+        },
+        after: async function () {
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.all.js'), nodePath.resolve(ecDir, 'index.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'index.blank.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'index.common.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'index.simple.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'lib'));
+
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.js'), 'lib');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.blank.js'), 'lib');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), 'lib');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), 'lib');
+
+            await transformDistributionFiles(nodePath.resolve(ecDir, 'lib'), 'lib');
+            removeESmoduleMark();
 
             fsExtra.removeSync(tmpDir);
         }
@@ -311,9 +315,9 @@ async function transformDistributionFiles(rooltFolder, replacement) {
         code = singleTransformZRRootFolder(code, replacement);
         // For lower ts version, not use import type
         // TODO Use https://github.com/sandersn/downlevel-dts ?
-        if (fileName.endsWith('.d.ts')) {
-            code = singleTransformImportType(code);
-        }
+        // if (fileName.endsWith('.d.ts')) {
+        //     code = singleTransformImportType(code);
+        // }
         fs.writeFileSync(fileName, code, 'utf-8');
     }
 }
@@ -342,9 +346,9 @@ function singleTransformZRRootFolder(code, replacement) {
     return code.replace(/([\"\'])zrender\/src\//g, `$1zrender/${replacement}/`);
 }
 
-function singleTransformImportType(code) {
-    return code.replace(/import\s+type\s+/g, 'import ');
-}
+// function singleTransformImportType(code) {
+//     return code.replace(/import\s+type\s+/g, 'import ');
+// }
 
 /**
  * @param {Object} transformOptions
@@ -381,6 +385,16 @@ async function readFilePaths({patterns, cwd}) {
     ).map(
         srcPath => nodePath.resolve(cwd, srcPath)
     );
+}
+
+async function bundleDTS() {
+    const bundle = await rollup.rollup({
+        input: nodePath.resolve(__dirname, '../index.d.ts'),
+        plugins: [dts()]
+    });
+    await bundle.write({
+        file: nodePath.resolve(__dirname, '../types/dist/echarts.d.ts')
+    });
 }
 
 function readTSConfig() {
