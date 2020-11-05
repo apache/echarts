@@ -336,7 +336,8 @@ class ECharts extends Eventful {
     // Can't dispatch action during rendering procedure
     private _pendingActions: Payload[] = [];
 
-    protected _$eventProcessor: ECEventProcessor;
+    // We use unkown here so ECEventProcessor, which may include many unexpected types won't be exposed in the types to developers.
+    protected _$eventProcessor: unknown;
 
     private _disposed: boolean;
 
@@ -1016,7 +1017,7 @@ class ECharts extends Eventful {
                     params.event = e;
                     params.type = eveName;
 
-                    this._$eventProcessor.eventInfo = {
+                    (this._$eventProcessor as ECEventProcessor).eventInfo = {
                         targetEl: el,
                         packedEvent: params,
                         model: model,
