@@ -95,6 +95,13 @@ export interface SunburstSeriesLevelOption extends SunburstStateOption, StatesOp
         label?: SunburstLabelOption
     }
 }
+
+interface SortParam {
+    dataIndex: number
+    depth: number
+    height: number
+    getValue(): number
+}
 export interface SunburstSeriesOption extends
     SeriesOption<SunburstStateOption, ExtraStateOption>, SunburstStateOption,
     CircleLayoutOptionMixin {
@@ -123,7 +130,7 @@ export interface SunburstSeriesOption extends
 
     animationType?: 'expansion' | 'scale'
 
-    sort?: 'desc' | 'asc' | ((a: TreeNode, b: TreeNode) => number)
+    sort?: 'desc' | 'asc' | ((a: SortParam, b: SortParam) => number)
 }
 
 interface SunburstSeriesModel {
