@@ -36,7 +36,6 @@ import {
     EventQueryItem, ECEvent, SeriesOption, SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin, SeriesOnSingleOptionMixin, SeriesOnGeoOptionMixin,
     SeriesOnCalendarOptionMixin, ItemStyleOption, SeriesEncodeOptionMixin,
-    SeriesTooltipOption,
     DimensionLoose,
     ParsedValue,
     Dictionary,
@@ -305,9 +304,6 @@ export interface CustomSeriesOption extends
 
     // Only works on polar and cartesian2d coordinate system.
     clip?: boolean;
-
-    // FIXME needed?
-    tooltip?: SeriesTooltipOption;
 }
 
 interface LegacyCustomSeriesOption extends SeriesOption<CustomSeriesStateOption>, CustomSeriesStateOption {}

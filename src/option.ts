@@ -74,10 +74,13 @@ import {ToolboxMagicTypeFeatureOption} from './component/toolbox/feature/MagicTy
 import {ToolboxRestoreFeatureOption} from './component/toolbox/feature/Restore';
 import {ToolboxSaveAsImageFeatureOption} from './component/toolbox/feature/SaveAsImage';
 import {ToolboxFeatureOption} from './component/toolbox/featureManager';
+import { MarkAreaOption } from './component/marker/MarkAreaModel';
 
 
-import { ECOption } from './util/types';
+import { ECOption, SeriesTooltipOption } from './util/types';
 import { GraphicComponentLooseOption } from './component/graphic';
+import { MarkLineOption } from './component/marker/MarkLineModel';
+import { MarkPointOption } from './component/marker/MarkPointModel';
 
 interface ToolboxFullOptionWithFeatures extends ToolboxOption {
     feature?: {
@@ -94,7 +97,7 @@ interface ToolboxFullOptionWithFeatures extends ToolboxOption {
     }
 }
 
-type SeriesOption = LineSeriesOption
+type SeriesOption = (LineSeriesOption
     | BarSeriesOption
     | ScatterSeriesOption
     | PieSeriesOption
@@ -115,7 +118,13 @@ type SeriesOption = LineSeriesOption
     | PictorialBarSeriesOption
     | ThemeRiverSeriesOption
     | SunburstSeriesOption
-    | CustomSeriesOption;
+    | CustomSeriesOption) & {
+        // Inject markArea markLine
+        markArea?: MarkAreaOption
+        markLine?: MarkLineOption
+        markPoint?: MarkPointOption
+        tooltip?: SeriesTooltipOption
+    };
 
 export interface EChartsFullOption extends ECOption {
     title?: TitleOption | TitleOption[]

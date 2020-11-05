@@ -28,7 +28,6 @@ import {
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin,
     LabelOption,
-    SeriesTooltipOption,
     OptionDataItemObject,
     OptionDataValueNumeric,
     ParsedValue,
@@ -68,8 +67,6 @@ export interface MapSeriesOption extends
 
     coordinateSystem?: string;
     silent?: boolean;
-
-    tooltip?: SeriesTooltipOption;
 
     // FIXME:TS add marker types
     markLine?: any;
