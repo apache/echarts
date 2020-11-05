@@ -28,7 +28,7 @@ import { Payload } from '../../util/types';
  * @param ecModel
  * @return  {point: [x, y], el: ...} point Will not be null.
  */
-export default function (finder: {
+export default function findPointFromSeries(finder: {
     seriesIndex?: number
     dataIndex?: number | number[]
     dataIndexInside?: number | number[]

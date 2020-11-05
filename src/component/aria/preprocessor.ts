@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import { ECUnitOption } from '../../util/types';
 
-export default function (option: ECUnitOption) {
+export default function ariaPreprocessor(option: ECUnitOption) {
     if (!option || !option.aria) {
         return;
     }

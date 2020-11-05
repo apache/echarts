@@ -21,7 +21,7 @@ import GlobalModel from '../../model/Global';
 import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
 import type LegendModel from '../../component/legend/LegendModel';
 
-export default function (ecModel: GlobalModel) {
+export default function categoryFilter(ecModel: GlobalModel) {
     const legendModels = ecModel.findComponents({
         mainType: 'legend'
     }) as LegendModel[];

@@ -95,7 +95,7 @@ function intersectCurveCircle(
 }
 
 // Adjust edge to avoid
-export default function (graph: Graph, scale: number) {
+export default function adjustEdge(graph: Graph, scale: number) {
     const tmp0: number[] = [];
     const quadraticSubdivide = curveTool.quadraticSubdivide;
     const pts: number[][] = [[], [], []];

@@ -49,7 +49,7 @@ export interface ToolboxFeatureOption {
 
     iconStatus?: Dictionary<DisplayState>
 
-    onclick?: (ecModel: GlobalModel, api: ExtensionAPI, type: string, event: ZRElementEvent) => void
+    onclick?: () => void
 }
 
 export interface ToolboxFeatureModel<Opts extends ToolboxFeatureOption = ToolboxFeatureOption> extends Model<Opts> {
@@ -98,7 +98,7 @@ export interface UserDefinedToolboxFeature {
 
     featureName?: string
 
-    onclick(ecModel: GlobalModel, api: ExtensionAPI, type: string, event: ZRElementEvent): void
+    onclick(): void
 }
 
 type ToolboxFeatureCtor = {

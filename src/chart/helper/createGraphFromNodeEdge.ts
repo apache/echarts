@@ -32,7 +32,7 @@ import {
 import SeriesModel from '../../model/Series';
 import { convertOptionIdName } from '../../util/model';
 
-export default function (
+export default function createGraphFromNodeEdge(
     nodes: OptionSourceDataOriginal<OptionDataValue, OptionDataItemObject<OptionDataValue>>,
     edges: OptionSourceDataOriginal<OptionDataValue, GraphEdgeItemObject<OptionDataValue>>,
     seriesModel: SeriesModel,

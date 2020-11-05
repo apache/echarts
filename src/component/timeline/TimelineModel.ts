@@ -36,7 +36,7 @@ import {
 } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel, { GlobalModelSetOptionOpts } from '../../model/Global';
-import { each, isObject, clone, isString } from 'zrender/src/core/util';
+import { each, isObject, clone } from 'zrender/src/core/util';
 import { convertOptionIdName, getDataItemValue } from '../../util/model';
 
 

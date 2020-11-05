@@ -30,7 +30,7 @@ function dataToCoordSize(this: Single, dataSize: number | number[], dataItem: nu
         : Math.abs(axis.dataToCoord(val - halfSize) - axis.dataToCoord(val + halfSize));
 }
 
-export default function (coordSys: Single) {
+export default function singlePrepareCustom(coordSys: Single) {
     const rect = coordSys.getRect();
 
     return {

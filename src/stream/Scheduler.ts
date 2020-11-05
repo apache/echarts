@@ -257,7 +257,7 @@ class Scheduler {
 
     prepareStageTasks(): void {
         const stageTaskMap = this._stageTaskMap;
-        const ecModel = this.ecInstance.getModel();
+        const ecModel = this.api.getModel();
         const api = this.api;
 
         each(this._allHandlers, function (handler) {

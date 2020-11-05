@@ -24,7 +24,7 @@ import {Dictionary} from 'zrender/src/core/types';
 import {PathStyleProps} from 'zrender/src/graphic/Path';
 import Model from '../Model';
 
-export default function (properties: readonly string[][], ignoreParent?: boolean) {
+export default function makeStyleMapper(properties: readonly string[][], ignoreParent?: boolean) {
     // Normalize
     for (let i = 0; i < properties.length; i++) {
         if (!properties[i][1]) {

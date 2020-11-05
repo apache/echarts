@@ -27,7 +27,7 @@ import { StageHandler, ParsedValueNumeric } from '../util/types';
 import { createFloat32Array } from '../util/vendor';
 
 
-export default function (seriesType: string, forceStoreInTypedArray?: boolean): StageHandler {
+export default function pointsLayout(seriesType: string, forceStoreInTypedArray?: boolean): StageHandler {
     return {
         seriesType: seriesType,
 

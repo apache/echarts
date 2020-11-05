@@ -21,7 +21,7 @@ import {circularLayout} from './circularLayoutHelper';
 import GlobalModel from '../../model/Global';
 import GraphSeriesModel from './GraphSeries';
 
-export default function (ecModel: GlobalModel) {
+export default function graphCircularLayout(ecModel: GlobalModel) {
     ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
         if (seriesModel.get('layout') === 'circular') {
             circularLayout(seriesModel, 'symbolSize');

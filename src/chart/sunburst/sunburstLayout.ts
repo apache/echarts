@@ -27,7 +27,7 @@ import { TreeNode } from '../../data/Tree';
 // let PI2 = Math.PI * 2;
 const RADIAN = Math.PI / 180;
 
-export default function (
+export default function sunburstLayout(
     seriesType: 'sunburst',
     ecModel: GlobalModel,
     api: ExtensionAPI

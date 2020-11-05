@@ -23,7 +23,7 @@ import GlobalModel from '../../model/Global';
 import MapSeries from './MapSeries';
 import { Dictionary } from '../../util/types';
 
-export default function (ecModel: GlobalModel) {
+export default function mapSymbolLayout(ecModel: GlobalModel) {
 
     const processedMapType = {} as {[mapType: string]: boolean};
 

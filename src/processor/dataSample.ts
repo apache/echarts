@@ -71,7 +71,7 @@ const indexSampler = function (frame: ArrayLike<number>) {
     return Math.round(frame.length / 2);
 };
 
-export default function (seriesType: string): StageHandler {
+export default function dataSample(seriesType: string): StageHandler {
     return {
 
         seriesType: seriesType,

@@ -245,7 +245,7 @@ function labelLayout(data: List) {
     });
 }
 
-export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachSeriesByType('funnel', function (seriesModel: FunnelSeriesModel) {
         const data = seriesModel.getData();
         const valueDim = data.mapDimension('value');

@@ -21,7 +21,7 @@ import ExtensionAPI from '../ExtensionAPI';
 import GlobalModel from '../model/Global';
 import {createOrUpdatePatternFromDecal} from '../util/decal';
 
-export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+export default function decalVisual(ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachRawSeries(seriesModel => {
         if (ecModel.isSeriesFiltered(seriesModel)) {
             return;

@@ -256,7 +256,7 @@ function toObj(o: any) {
     return (zrUtil.isArray(o) ? o[0] : o) || {};
 }
 
-export default function (option: any, isTheme?: boolean) {
+export default function globalCompatStyle(option: any, isTheme?: boolean) {
     each(toArr(option.series), function (seriesOpt) {
         isObject(seriesOpt) && processSeries(seriesOpt);
     });

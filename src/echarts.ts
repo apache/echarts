@@ -595,11 +595,12 @@ class ECharts extends Eventful {
     /**
      * @DEPRECATED
      */
-    setTheme(): void {
+    private setTheme(): void {
         console.error('ECharts#setTheme() is DEPRECATED in ECharts 3.0');
     }
 
-    getModel(): GlobalModel {
+    // We don't want developers to use getModel directly.
+    private getModel(): GlobalModel {
         return this._model;
     }
 
@@ -933,14 +934,14 @@ class ECharts extends Eventful {
     /**
      * Get view of corresponding component model
      */
-    getViewOfComponentModel(componentModel: ComponentModel): ComponentView {
+    private getViewOfComponentModel(componentModel: ComponentModel): ComponentView {
         return this._componentsMap[componentModel.__viewId];
     }
 
     /**
      * Get view of corresponding series model
      */
-    getViewOfSeriesModel(seriesModel: SeriesModel): ChartView {
+    private getViewOfSeriesModel(seriesModel: SeriesModel): ChartView {
         return this._chartsMap[seriesModel.__viewId];
     }
 
@@ -1051,7 +1052,7 @@ class ECharts extends Eventful {
             }
         );
 
-        handleLegacySelectEvents(this._messageCenter, this);
+        handleLegacySelectEvents(this._messageCenter, this, this._model);
     }
 
     isDisposed(): boolean {
@@ -1442,13 +1443,13 @@ class ECharts extends Eventful {
                 if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
                     if (isHighDownPayload(payload) && !payload.notBlur) {
                         if (model instanceof SeriesModel) {
-                            toggleSeriesBlurStateFromPayload(model, payload, ecIns);
+                            toggleSeriesBlurStateFromPayload(model, payload, ecIns._api);
                         }
                     }
                     else if (isSelectChangePayload(payload)) {
                         // TODO geo
                         if (model instanceof SeriesModel) {
-                            toggleSelectionFromPayload(model, payload, ecIns);
+                            toggleSelectionFromPayload(model, payload, ecIns._api);
                             updateSeriesElementSelection(model);
                             markStatusToUpdate(ecIns);
                         }
@@ -1868,7 +1869,7 @@ class ECharts extends Eventful {
                     // Try blur all in the related series. Then emphasis the hoverred.
                     // TODO. progressive mode.
                     toggleSeriesBlurState(
-                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, true
+                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns._api, true
                     );
                     enterEmphasisWhenMouseOver(dispatcher, e);
 
@@ -1880,7 +1881,7 @@ class ECharts extends Eventful {
                 if (dispatcher) {
                     const ecData = getECData(dispatcher);
                     toggleSeriesBlurState(
-                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, false
+                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns._api, false
                     );
 
                     leaveEmphasisWhenMouseOut(dispatcher, e);
@@ -2276,6 +2277,15 @@ class ECharts extends Eventful {
                 leaveSelect(el: Element) {
                     leaveSelect(el);
                     markStatusToUpdate(ecIns);
+                }
+                getModel(): GlobalModel {
+                    return ecIns.getModel();
+                }
+                getViewOfComponentModel(componentModel: ComponentModel): ComponentView {
+                    return ecIns.getViewOfComponentModel(componentModel);
+                }
+                getViewOfSeriesModel(seriesModel: SeriesModel): ChartView {
+                    return ecIns.getViewOfSeriesModel(seriesModel);
                 }
             })(ecIns);
         };

@@ -26,7 +26,7 @@ import { setDefaultStateProxy, enableHoverEmphasis } from '../util/states';
 import * as labelStyleHelper from '../label/labelStyle';
 import {getDefaultLabel} from './helper/labelHelper';
 import createListFromArray from './helper/createListFromArray';
-import {getLayoutOnAxis} from '../layout/barGrid';
+import {getLayoutOnAxis, BarGridLayoutResult, BarGridLayoutOptionForCustomSeries} from '../layout/barGrid';
 import DataDiffer, { DataDiffMode } from '../data/DataDiffer';
 import SeriesModel from '../model/Series';
 import Model from '../model/Model';
@@ -55,7 +55,8 @@ import {
     OrdinalRawValue,
     PayloadAnimationPart,
     DecalObject,
-    InnerDecalObject
+    InnerDecalObject,
+    TextCommonOption
 } from '../util/types';
 import Element, { ElementProps, ElementTextConfig } from 'zrender/src/Element';
 import prepareCartesian2d from '../coord/cartesian/prepareCustom';
@@ -93,6 +94,7 @@ import { AnimationEasing } from 'zrender/src/animation/easing';
 import * as matrix from 'zrender/src/core/matrix';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { createOrUpdatePatternFromDecal } from '../util/decal';
+import { ZRenderType } from 'zrender/src/zrender';
 
 
 const inner = makeInner<{
@@ -229,8 +231,15 @@ type CustomElementOptionOnState = CustomDisplayableOptionOnState | CustomImageOp
 
 
 export interface CustomSeriesRenderItemAPI extends
-        CustomSeriesRenderItemCoordinateSystemAPI,
-        Pick<ExtensionAPI, 'getWidth' | 'getHeight' | 'getZr' | 'getDevicePixelRatio'> {
+        CustomSeriesRenderItemCoordinateSystemAPI {
+
+    // Methods from ExtensionAPI.
+    // NOTE: Not using Pick<ExtensionAPI> here because we don't want to bundle ExtensionAPI into the d.ts
+    getWidth(): number
+    getHeight(): number
+    getZr(): ZRenderType
+    getDevicePixelRatio(): number
+
     value(dim: DimensionLoose, dataIndexInside?: number): ParsedValue;
     ordinalRawValue(dim: DimensionLoose, dataIndexInside?: number): ParsedValue | OrdinalRawValue;
     style(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
@@ -241,9 +250,9 @@ export interface CustomSeriesRenderItemAPI extends
     ): VT extends NonStyleVisualProps ? DefaultDataVisual[VT]
         : VT extends StyleVisualProps ? PathStyleProps[typeof STYLE_VISUAL_TYPE[VT]]
         : void;
-    barLayout(opt: Omit<Parameters<typeof getLayoutOnAxis>[0], 'axis'>): ReturnType<typeof getLayoutOnAxis>;
-    currentSeriesIndices(): ReturnType<GlobalModel['getCurrentSeriesIndices']>;
-    font(opt: Parameters<typeof labelStyleHelper.getFont>[0]): ReturnType<typeof labelStyleHelper.getFont>;
+    barLayout(opt: BarGridLayoutOptionForCustomSeries): BarGridLayoutResult;
+    currentSeriesIndices(): number[];
+    font(opt: Pick<TextCommonOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>): string;
 }
 interface CustomSeriesRenderItemParamsCoordSys {
     type: string;
@@ -266,7 +275,7 @@ export interface CustomSeriesRenderItemParams {
     seriesIndex: number;
     coordSys: CustomSeriesRenderItemParamsCoordSys;
     dataInsideLength: number;
-    encode: ReturnType<typeof wrapEncodeDef>;
+    encode: WrapEncodeDefRet;
 }
 type CustomSeriesRenderItem = (
     params: CustomSeriesRenderItemParams,
@@ -1889,8 +1898,10 @@ function makeRenderItem(
     }
 }
 
-function wrapEncodeDef(data: List<CustomSeriesModel>): Dictionary<number[]> {
-    const encodeDef = {} as Dictionary<number[]>;
+type WrapEncodeDefRet = Dictionary<number[]>;
+
+function wrapEncodeDef(data: List<CustomSeriesModel>): WrapEncodeDefRet {
+    const encodeDef = {} as WrapEncodeDefRet;
     each(data.dimensions, function (dimName, dataDimIndex) {
         const dimInfo = data.getDimensionInfo(dimName);
         if (!dimInfo.isExtraCoord) {
