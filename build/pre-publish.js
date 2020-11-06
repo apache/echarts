@@ -390,7 +390,11 @@ async function readFilePaths({patterns, cwd}) {
 async function bundleDTS() {
     const bundle = await rollup.rollup({
         input: nodePath.resolve(__dirname, '../index.d.ts'),
-        plugins: [dts()]
+        plugins: [
+            dts({
+                respectExternal: true
+            })
+        ]
     });
     await bundle.write({
         file: nodePath.resolve(__dirname, '../types/dist/echarts.d.ts')
