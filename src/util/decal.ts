@@ -105,6 +105,7 @@ export function createOrUpdatePatternFromDecal(
 
         const dashArrayX = normalizeDashArrayX(decalOpt.dashArrayX);
         const dashArrayY = normalizeDashArrayY(decalOpt.dashArrayY);
+        const symbolArray = normalizeSymbolArray(decalOpt.symbol);
         const lineBlockLengthsX = getLineBlockLengthX(dashArrayX);
         const lineBlockLengthY = getLineBlockLengthY(dashArrayY);
 
@@ -152,7 +153,14 @@ export function createOrUpdatePatternFromDecal(
             for (let i = 0, xlen = lineBlockLengthsX.length; i < xlen; ++i) {
                 width = getLeastCommonMultiple(width, lineBlockLengthsX[i]);
             }
-            const height = lineBlockLengthY * lineBlockLengthsX.length;
+
+            let symbolRepeats = 1;
+            for (let i = 0, xlen = symbolArray.length; i < xlen; ++i) {
+                symbolRepeats = getLeastCommonMultiple(symbolRepeats, symbolArray[i].length);
+            }
+            width *= symbolRepeats;
+
+            const height = lineBlockLengthY * lineBlockLengthsX.length * symbolArray.length;
 
             if (__DEV__) {
                 const warn = (attrName: string) => {
@@ -193,11 +201,14 @@ export function createOrUpdatePatternFromDecal(
 
             let y = -lineBlockLengthY;
             let yId = 0;
+            let yIdTotal = 0;
             let xId0 = 0;
             while (y < pSize.height) {
                 if (yId % 2 === 0) {
+                    const symbolYId = (yIdTotal / 2) % symbolArray.length;
                     let x = 0;
                     let xId1 = 0;
+                    let xId1Total = 0;
                     while (x < pSize.width * 2) {
                         let xSum = 0;
                         for (let i = 0; i < dashArrayX[xId0].length; ++i) {
@@ -215,10 +226,13 @@ export function createOrUpdatePatternFromDecal(
                             const top = y + dashArrayY[yId] * size;
                             const width = dashArrayX[xId0][xId1] * decalOpt.symbolSize;
                             const height = dashArrayY[yId] * decalOpt.symbolSize;
-                            brushSymbol(left, top, width, height);
+                            const symbolXId = (xId1Total / 2) % symbolArray[symbolYId].length;
+
+                            brushSymbol(left, top, width, height, symbolArray[symbolYId][symbolXId]);
                         }
 
                         x += dashArrayX[xId0][xId1];
+                        ++xId1Total;
                         ++xId1;
                         if (xId1 === dashArrayX[xId0].length) {
                             xId1 = 0;
@@ -232,16 +246,17 @@ export function createOrUpdatePatternFromDecal(
                 }
                 y += dashArrayY[yId];
 
+                ++yIdTotal;
                 ++yId;
                 if (yId === dashArrayY.length) {
                     yId = 0;
                 }
             }
 
-            function brushSymbol(x: number, y: number, width: number, height: number) {
+            function brushSymbol(x: number, y: number, width: number, height: number, symbolType: string) {
                 const scale = isSVG ? 1 : dpr;
                 const symbol = createSymbol(
-                    decalOpt.symbol,
+                    symbolType,
                     x * scale,
                     y * scale,
                     width * scale,
@@ -259,6 +274,43 @@ export function createOrUpdatePatternFromDecal(
         }
     }
 
+}
+
+/**
+ * Convert symbol array into normalized array
+ *
+ * @param {string | (string | string[])[]} symbol symbol input
+ * @return {string[][]} normolized symbol array
+ */
+function normalizeSymbolArray(symbol: string | (string | string[])[]): string[][] {
+    if (!symbol || (symbol as string[]).length === 0) {
+        return [['rect']];
+    }
+    if (typeof symbol === 'string') {
+        return [[symbol]];
+    }
+
+    let isAllString = true;
+    for (let i = 0; i < symbol.length; ++i) {
+        if (typeof symbol[i] !== 'string') {
+            isAllString = false;
+            break;
+        }
+    }
+    if (isAllString) {
+        return normalizeSymbolArray([symbol as string[]]);
+    }
+
+    const result: string[][] = [];
+    for (let i = 0; i < symbol.length; ++i) {
+        if (typeof symbol[i] === 'string') {
+            result.push([symbol[i] as string]);
+        }
+        else {
+            result.push(symbol[i] as string[]);
+        }
+    }
+    return result;
 }
 
 /**
