@@ -139,9 +139,14 @@ const PRIORITY_VISUAL_LAYOUT = 1000;
 const PRIORITY_VISUAL_PROGRESSIVE_LAYOUT = 1100;
 const PRIORITY_VISUAL_GLOBAL = 2000;
 const PRIORITY_VISUAL_CHART = 3000;
-const PRIORITY_VISUAL_POST_CHART_LAYOUT = 3500;
 const PRIORITY_VISUAL_COMPONENT = 4000;
-const PRIORITY_VISUAL_CHART_DATA_CUSTOM = 4500;    // visual property in data
+// Visual property in data. Greater than `PRIORITY_VISUAL_COMPONENT` to enable to
+// overwrite the viusal result of component (like `visualMap`)
+// using data item specific setting (like itemStyle.xxx on data item)
+const PRIORITY_VISUAL_CHART_DATA_CUSTOM = 4500;
+// Greater than `PRIORITY_VISUAL_CHART_DATA_CUSTOM` to enable to layout based on
+// visual result like `symbolSize`.
+const PRIORITY_VISUAL_POST_CHART_LAYOUT = 4600;
 // FIXME
 // necessary?
 const PRIORITY_VISUAL_BRUSH = 5000;
