@@ -38,6 +38,7 @@ under the License.
 
 
         <div id="change-smooth"></div>
+        <div id="two-cateogry-axis-at-last"></div>
 
 
 
@@ -102,8 +103,7 @@ under the License.
 
             var chart = testHelper.create(echarts, 'change-smooth', {
                 title: [
-                    'Test Case Description of main0',
-                    '(Muliple lines and **emphasis** are supported in description)'
+                    'Click btns one by one'
                 ],
                 option: option,
                 width: 600,
@@ -132,6 +132,56 @@ under the License.
             });
         });
         </script>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                parallelAxis: [{
+                    dim: 3,
+                    name: 'Score',
+                    type: 'category',
+                    data: ['Excellent', 'Good', 'OK', 'Bad']
+                }, {
+                    dim: 4,
+                    name: 'Score',
+                    type: 'category',
+                    data: ['A', 'B', 'C', 'D']
+                }],
+                series: {
+                    type: 'parallel',
+                    lineStyle: {
+                        width: 4
+                    },
+                    data: [
+                        [12.99, 100, 82, 'Good', 'A'],
+                        [9.99, 80, 77, 'OK', 'A'],
+                        [20, 120, 60, 'Excellent', 'C']
+                    ]
+                }
+            };
+
+
+            var chart = testHelper.create(echarts, 'two-cateogry-axis-at-last', {
+                title: [
+                    'Brush on the last axis. lines should be selectable.'
+                ],
+                option: option,
+                width: 600,
+                height: 300
+            });
+        });
+        </script>
+
+
 
 
     </body>
