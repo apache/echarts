@@ -1769,10 +1769,6 @@ class ECharts extends Eventful {
                 }
             });
 
-            if (payload.statusChanged) {
-                markStatusToUpdate(this);
-            }
-
             if (updateMethod !== 'none' && !isStatusChange && !cptType) {
                 // Still dirty
                 if (this[OPTION_UPDATED_KEY]) {

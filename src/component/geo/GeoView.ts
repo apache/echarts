@@ -25,7 +25,6 @@ import ExtensionAPI from '../../ExtensionAPI';
 import GeoModel from '../../coord/geo/GeoModel';
 import { Payload, ZRElementEvent, ECEventData } from '../../util/types';
 import { getECData } from '../../util/innerStore';
-import { enterSelect, leaveSelect } from '../../util/states';
 
 class GeoView extends ComponentView {
 
@@ -63,7 +62,7 @@ class GeoView extends ComponentView {
 
         this._model = geoModel;
 
-        this.updateSelectStatus();
+        this.updateSelectStatus(geoModel, ecModel, api);
     }
 
     private _handleRegionClick(e: ZRElementEvent) {
@@ -78,19 +77,17 @@ class GeoView extends ComponentView {
             this._api.dispatchAction({
                 type: 'geoToggleSelect',
                 geoId: this._model.id,
-                // mark status to update
-                statusChanged: true,
                 name: eventData.name
             });
         }
     }
 
-    updateSelectStatus() {
+    updateSelectStatus(model: GeoModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this._mapDraw.group.traverse((node) => {
             const eventData = getECData(node).eventData;
             if (eventData) {
                 this._model.isSelected(eventData.name)
-                    ? enterSelect(node) : leaveSelect(node);
+                    ? api.enterSelect(node) : api.leaveSelect(node);
                 // No need to traverse children.
                 return true;
             }
