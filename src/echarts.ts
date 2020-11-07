@@ -463,6 +463,14 @@ class ECharts extends Eventful {
             prepare(this);
             updateMethods.update.call(this);
 
+            // At present, in each frame, zrender performs:
+            //   (1) animation step forward.
+            //   (2) trigger('frame') (where this `_onframe` is called)
+            //   (3) zrender flush (render).
+            // If we do nothing here, since we use `setToFinal: true`, the step (3) above
+            // will render the final state of the elements before the real animation started.
+            this._zr.flush();
+
             this[IN_MAIN_PROCESS_KEY] = false;
 
             this[OPTION_UPDATED_KEY] = false;
@@ -579,6 +587,10 @@ class ECharts extends Eventful {
         if (lazyUpdate) {
             this[OPTION_UPDATED_KEY] = {silent: silent};
             this[IN_MAIN_PROCESS_KEY] = false;
+
+            // `setOption(option, {lazyMode: true})` may be called when zrender has been slept.
+            // It should wake it up to make sure zrender start to render at the next frame.
+            this.getZr().wakeUp();
         }
         else {
             prepare(this);
