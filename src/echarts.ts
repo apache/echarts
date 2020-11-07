@@ -579,6 +579,10 @@ class ECharts extends Eventful {
         if (lazyUpdate) {
             this[OPTION_UPDATED_KEY] = {silent: silent};
             this[IN_MAIN_PROCESS_KEY] = false;
+
+            // `setOption(option, {lazyMode: true})` may be called when zrender has been slept.
+            // It should wake it up to make sure zrender start to render at the next frame.
+            this.getZr().wakeUp();
         }
         else {
             prepare(this);
