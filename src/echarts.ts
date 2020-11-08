@@ -147,8 +147,6 @@ const PRIORITY_VISUAL_CHART_DATA_CUSTOM = 4500;
 // Greater than `PRIORITY_VISUAL_CHART_DATA_CUSTOM` to enable to layout based on
 // visual result like `symbolSize`.
 const PRIORITY_VISUAL_POST_CHART_LAYOUT = 4600;
-// FIXME
-// necessary?
 const PRIORITY_VISUAL_BRUSH = 5000;
 const PRIORITY_VISUAL_ARIA = 6000;
 const PRIORITY_VISUAL_DECAL = 7000;

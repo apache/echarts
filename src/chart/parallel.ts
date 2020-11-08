@@ -23,4 +23,4 @@ import './parallel/ParallelSeries';
 import './parallel/ParallelView';
 import parallelVisual from './parallel/parallelVisual';
 
-echarts.registerVisual(parallelVisual);
+echarts.registerVisual(echarts.PRIORITY.VISUAL.BRUSH, parallelVisual);
