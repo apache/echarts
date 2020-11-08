@@ -232,17 +232,19 @@ under the License.
                                         symbol : ['arrow','none'],
                                         symbolSize : [4, 2],
                                         itemStyle : {
-                                            normal: {
-                                                lineStyle: {color:'orange'},
-                                                barBorderColor:'orange',
-                                                label:{
-                                                    position:'left',
-                                                    formatter:function(params){
-                                                        return Math.round(params.value);
-                                                    },
-                                                    textStyle:{color:'orange'}
-                                                }
-                                            }
+                                            lineStyle: {color:'orange'},
+                                            barBorderColor:'orange',
+                                        },
+                                        label:{
+                                            // position: 'left' is a invalid value, but exists in this historical file,
+                                            // while will be ignored before v5.0 .
+                                            // But since v5.0, position: 'left' will cause incorrect result.
+                                            // position: 'left',
+                                            position: 'start',
+                                            formatter:function(params){
+                                                return Math.round(params.value);
+                                            },
+                                            textStyle: {color:'orange'}
                                         },
                                         'data':[{'type':'average','name':'平均值'}]
                                     }
