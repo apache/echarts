@@ -20,7 +20,7 @@
 import Calendar from './Calendar';
 import { OptionDataValueDate } from '../../util/types';
 
-export default function (coordSys: Calendar) {
+export default function calendarPrepareCustom(coordSys: Calendar) {
     const rect = coordSys.getRect();
     const rangeInfo = coordSys.getRangeInfo();
 

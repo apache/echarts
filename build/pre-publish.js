@@ -37,6 +37,9 @@ const ts = require('typescript');
 const globby = require('globby');
 const transformDEVUtil = require('./transform-dev');
 const preamble = require('./preamble');
+// NOTE: v1.4.2 is the latest version that supports ts 3.8.3
+const dts = require('rollup-plugin-dts').default;
+const rollup = require('rollup');
 
 const ecDir = nodePath.resolve(__dirname, '..');
 const tmpDir = nodePath.resolve(ecDir, 'pre-publish-tmp');
@@ -71,47 +74,6 @@ const typesDir = nodePath.resolve(ecDir, 'types');
 
 
 const compileWorkList = [
-    {
-        logLabel: 'main ts -> js-cjs',
-        compilerOptionsOverride: {
-            module: 'CommonJS',
-            // `rootDir` Only use to control the output
-            // directory structure with --outDir.
-            rootDir: ecDir,
-            outDir: tmpDir
-        },
-        srcGlobby: mainSrcGlobby,
-        transformOptions: {
-            filesGlobby: {patterns: ['**/*.js'], cwd: tmpDir},
-            preamble: preamble.js,
-            transformDEV: true
-        },
-        before: async function () {
-            fsExtra.removeSync(tmpDir);
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'lib'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.blank.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.common.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.simple.js'));
-        },
-        after: async function () {
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.all.js'), nodePath.resolve(ecDir, 'index.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'index.blank.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'index.common.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'index.simple.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'lib'));
-
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.js'), 'lib');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.blank.js'), 'lib');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), 'lib');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), 'lib');
-
-            await transformDistributionFiles(nodePath.resolve(ecDir, 'lib'), 'lib');
-            removeESmoduleMark();
-
-            fsExtra.removeSync(tmpDir);
-        }
-    },
     {
         logLabel: 'main ts -> js-esm',
         compilerOptionsOverride: {
@@ -150,6 +112,48 @@ const compileWorkList = [
 
             await transformDistributionFiles(nodePath.resolve(ecDir, 'esm'), 'esm');
             await transformDistributionFiles(nodePath.resolve(ecDir, 'types'), 'esm');
+            fsExtra.removeSync(tmpDir);
+
+            await bundleDTS();
+        }
+    },
+    {
+        logLabel: 'main ts -> js-cjs',
+        compilerOptionsOverride: {
+            module: 'CommonJS',
+            // `rootDir` Only use to control the output
+            // directory structure with --outDir.
+            rootDir: ecDir,
+            outDir: tmpDir
+        },
+        srcGlobby: mainSrcGlobby,
+        transformOptions: {
+            filesGlobby: {patterns: ['**/*.js'], cwd: tmpDir},
+            preamble: preamble.js,
+            transformDEV: true
+        },
+        before: async function () {
+            fsExtra.removeSync(tmpDir);
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'lib'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.blank.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.common.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.simple.js'));
+        },
+        after: async function () {
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.all.js'), nodePath.resolve(ecDir, 'index.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'index.blank.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'index.common.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'index.simple.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'lib'));
+
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.js'), 'lib');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.blank.js'), 'lib');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), 'lib');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), 'lib');
+
+            await transformDistributionFiles(nodePath.resolve(ecDir, 'lib'), 'lib');
+            removeESmoduleMark();
 
             fsExtra.removeSync(tmpDir);
         }
@@ -230,6 +234,41 @@ module.exports = async function () {
     console.log(chalk.green.dim('All done.'));
 };
 
+async function runTsCompile(localTs, compilerOptions, srcPathList) {
+    // Must do it. becuase the value in tsconfig.json might be different from the inner representation.
+    // For example: moduleResolution: "NODE" => moduleResolution: 2
+    const {options, errors} = localTs.convertCompilerOptionsFromJson(compilerOptions, ecDir);
+
+    if (errors.length) {
+        let errMsg = 'tsconfig parse failed: '
+            + errors.map(error => error.messageText).join('. ')
+            + '\n compilerOptions: \n' + JSON.stringify(compilerOptions, null, 4);
+        assert(false, errMsg);
+    }
+
+    // See: https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API
+
+    let program = localTs.createProgram(srcPathList, options);
+    let emitResult = program.emit();
+
+    let allDiagnostics = localTs
+        .getPreEmitDiagnostics(program)
+        .concat(emitResult.diagnostics);
+
+    allDiagnostics.forEach(diagnostic => {
+        if (diagnostic.file) {
+            let {line, character} = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
+            let message = localTs.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+            console.log(chalk.red(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`));
+        }
+        else {
+            console.log(chalk.red(localTs.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
+        }
+    });
+    assert(!emitResult.emitSkipped, 'ts compile failed.');
+}
+module.exports.runTsCompile = runTsCompile;
+
 async function tsCompile(compilerOptionsOverride, srcPathList) {
     assert(
         compilerOptionsOverride
@@ -244,35 +283,7 @@ async function tsCompile(compilerOptionsOverride, srcPathList) {
         sourceMap: false
     };
 
-    // Must do it. becuase the value in tsconfig.json might be different from the inner representation.
-    // For example: moduleResolution: "NODE" => moduleResolution: 2
-    const {options, errors} = ts.convertCompilerOptionsFromJson(compilerOptions, ecDir);
-    if (errors.length) {
-        let errMsg = 'tsconfig parse failed: '
-            + errors.map(error => error.messageText).join('. ')
-            + '\n compilerOptions: \n' + JSON.stringify(compilerOptions, null, 4);
-        assert(false, errMsg);
-    }
-
-    // See: https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API
-    let program = ts.createProgram(srcPathList, options);
-    let emitResult = program.emit();
-
-    let allDiagnostics = ts
-        .getPreEmitDiagnostics(program)
-        .concat(emitResult.diagnostics);
-
-    allDiagnostics.forEach(diagnostic => {
-        if (diagnostic.file) {
-            let {line, character} = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
-            let message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-            console.log(chalk.red(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`));
-        }
-        else {
-            console.log(chalk.red(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
-        }
-    });
-    assert(!emitResult.emitSkipped, 'ts compile failed.');
+    runTsCompile(ts, compilerOptions, srcPathList);
 }
 
 /**
@@ -311,9 +322,9 @@ async function transformDistributionFiles(rooltFolder, replacement) {
         code = singleTransformZRRootFolder(code, replacement);
         // For lower ts version, not use import type
         // TODO Use https://github.com/sandersn/downlevel-dts ?
-        if (fileName.endsWith('.d.ts')) {
-            code = singleTransformImportType(code);
-        }
+        // if (fileName.endsWith('.d.ts')) {
+        //     code = singleTransformImportType(code);
+        // }
         fs.writeFileSync(fileName, code, 'utf-8');
     }
 }
@@ -342,9 +353,9 @@ function singleTransformZRRootFolder(code, replacement) {
     return code.replace(/([\"\'])zrender\/src\//g, `$1zrender/${replacement}/`);
 }
 
-function singleTransformImportType(code) {
-    return code.replace(/import\s+type\s+/g, 'import ');
-}
+// function singleTransformImportType(code) {
+//     return code.replace(/import\s+type\s+/g, 'import ');
+// }
 
 /**
  * @param {Object} transformOptions
@@ -383,6 +394,33 @@ async function readFilePaths({patterns, cwd}) {
     );
 }
 
+async function bundleDTS() {
+    const bundle = await rollup.rollup({
+        input: nodePath.resolve(__dirname, '../index.d.ts'),
+        onwarn(warning, rollupWarn) {
+            // Not warn circular dependency
+            if (warning.code !== 'CIRCULAR_DEPENDENCY') {
+                rollupWarn(warning);
+            }
+        },
+        plugins: [
+            dts({
+                respectExternal: true
+            })
+        ]
+    });
+    const bundleFile = nodePath.resolve(__dirname, '../types/dist/echarts.d.ts');
+    await bundle.write({
+        file: bundleFile
+    });
+    // To support ts 3.4
+    const extra = `
+type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
+`
+    const code = extra + fs.readFileSync(bundleFile, 'utf-8');
+    fs.writeFileSync(bundleFile, code, 'utf-8');
+}
+
 function readTSConfig() {
     // tsconfig.json may have comment string, which is invalid if
     // using `require('tsconfig.json'). So we use a loose parser.
@@ -390,3 +428,4 @@ function readTSConfig() {
     const tsConfigText = fs.readFileSync(filePath, {encoding: 'utf8'});
     return (new Function(`return ( ${tsConfigText} )`))();
 }
+module.exports.readTSConfig = readTSConfig;

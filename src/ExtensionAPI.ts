@@ -22,6 +22,10 @@ import {EChartsType} from './echarts';
 import {CoordinateSystemMaster} from './coord/CoordinateSystem';
 import Element from 'zrender/src/Element';
 import ComponentModel from './model/Component';
+import ComponentView from './view/Component';
+import ChartView from './view/Chart';
+import SeriesModel from './model/Series';
+import GlobalModel from './model/Global';
 
 const availableMethods: (keyof EChartsType)[] = [
     'getDom',
@@ -35,10 +39,10 @@ const availableMethods: (keyof EChartsType)[] = [
     'off',
     'getDataURL',
     'getConnectedDataURL',
-    'getModel',
+    // 'getModel',
     'getOption',
-    'getViewOfComponentModel',
-    'getViewOfSeriesModel',
+    // 'getViewOfComponentModel',
+    // 'getViewOfSeriesModel',
     'getId',
     'updateLabelLayout'
 ];
@@ -62,6 +66,10 @@ abstract class ExtensionAPI {
     abstract leaveSelect(el: Element): void;
     abstract enterBlur(el: Element): void;
     abstract leaveBlur(el: Element): void;
+    // These methods are not planned to be exposed to outside.
+    abstract getViewOfComponentModel(componentModel: ComponentModel): ComponentView;
+    abstract getViewOfSeriesModel(seriesModel: SeriesModel): ChartView;
+    abstract getModel(): GlobalModel;
 }
 
 export default ExtensionAPI;

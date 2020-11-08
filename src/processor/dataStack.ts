@@ -37,7 +37,7 @@ interface StackInfo {
 //     See <module:echarts/stream/Scheduler#performDataProcessorTasks>
 // (2) Only register once when import repeatly.
 //     Should be executed after series filtered and before stack calculation.
-export default function (ecModel: GlobalModel) {
+export default function dataStack(ecModel: GlobalModel) {
     const stackInfoMap = createHashMap<StackInfo[]>();
     ecModel.eachSeries(function (seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>) {
         const stack = seriesModel.get('stack');

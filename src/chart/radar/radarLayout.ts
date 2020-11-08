@@ -23,7 +23,7 @@ import RadarSeriesModel from './RadarSeries';
 import Radar from '../../coord/radar/Radar';
 
 type Point = number[];
-export default function (ecModel: GlobalModel) {
+export default function radarLayout(ecModel: GlobalModel) {
     ecModel.eachSeriesByType('radar', function (seriesModel: RadarSeriesModel) {
         const data = seriesModel.getData();
         const points: Point[][] = [];

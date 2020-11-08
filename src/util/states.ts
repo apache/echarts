@@ -20,13 +20,13 @@ import {
 import { extend, indexOf, isArrayLike, isObject, keys, isArray, each } from 'zrender/src/core/util';
 import { getECData } from './innerStore';
 import * as colorTool from 'zrender/src/tool/color';
-import { EChartsType } from '../echarts';
 import List from '../data/List';
 import SeriesModel from '../model/Series';
 import { CoordinateSystemMaster, CoordinateSystem } from '../coord/CoordinateSystem';
 import { queryDataIndex, makeInner } from './model';
 import Path, { PathStyleProps } from 'zrender/src/graphic/Path';
 import GlobalModel from '../model/Global';
+import ExtensionAPI from '../ExtensionAPI';
 
 // Reserve 0 as default.
 let _highlightNextDigit = 1;
@@ -368,12 +368,12 @@ function shouldSilent(el: Element, e: ElementEvent) {
     return (el as ExtendedElement).__highDownSilentOnTouch && e.zrByTouch;
 }
 
-function allLeaveBlur(ecIns: EChartsType) {
-    const model = ecIns.getModel();
+function allLeaveBlur(api: ExtensionAPI) {
+    const model = api.getModel();
     model.eachComponent(function (componentType, componentModel) {
         const view = componentType === 'series'
-            ? ecIns.getViewOfSeriesModel(componentModel as SeriesModel)
-            : ecIns.getViewOfComponentModel(componentModel);
+            ? api.getViewOfSeriesModel(componentModel as SeriesModel)
+            : api.getViewOfComponentModel(componentModel);
         // Leave blur anyway
         view.group.traverse(function (child) {
             singleLeaveBlur(child);
@@ -385,10 +385,10 @@ export function toggleSeriesBlurState(
     targetSeriesIndex: number,
     focus: InnerFocus,
     blurScope: BlurScope,
-    ecIns: EChartsType,
+    api: ExtensionAPI,
     isBlur: boolean
 ) {
-    const ecModel = ecIns.getModel();
+    const ecModel = api.getModel();
     blurScope = blurScope || 'coordinateSystem';
 
     function leaveBlurOfIndices(data: List, dataIndices: ArrayLike<number>) {
@@ -399,7 +399,7 @@ export function toggleSeriesBlurState(
     }
 
     if (!isBlur) {
-        allLeaveBlur(ecIns);
+        allLeaveBlur(api);
         return;
     }
 
@@ -438,7 +438,7 @@ export function toggleSeriesBlurState(
             || focus === 'series' && sameSeries
             // TODO blurScope: coordinate system
         )) {
-            const view = ecIns.getViewOfSeriesModel(seriesModel);
+            const view = api.getViewOfSeriesModel(seriesModel);
             view.group.traverse(function (child) {
                 singleEnterBlur(child);
             });
@@ -461,7 +461,7 @@ export function toggleSeriesBlurState(
         if (componentType === 'series') {
             return;
         }
-        const view = ecIns.getViewOfComponentModel(componentModel);
+        const view = api.getViewOfComponentModel(componentModel);
         if (view && view.blurSeries) {
             view.blurSeries(blurredSeries, ecModel);
         }
@@ -471,7 +471,7 @@ export function toggleSeriesBlurState(
 export function toggleSeriesBlurStateFromPayload(
     seriesModel: SeriesModel,
     payload: Payload,
-    ecIns: EChartsType
+    api: ExtensionAPI
 ) {
     if (!isHighDownPayload(payload)) {
         return;
@@ -495,7 +495,7 @@ export function toggleSeriesBlurStateFromPayload(
     if (el) {
         const ecData = getECData(el);
         toggleSeriesBlurState(
-            seriesIndex, ecData.focus, ecData.blurScope, ecIns, isHighlight
+            seriesIndex, ecData.focus, ecData.blurScope, api, isHighlight
         );
     }
     else {
@@ -504,7 +504,7 @@ export function toggleSeriesBlurStateFromPayload(
         const focus = seriesModel.get(['emphasis', 'focus']);
         const blurScope = seriesModel.get(['emphasis', 'blurScope']);
         if (focus != null) {
-            toggleSeriesBlurState(seriesIndex, focus, blurScope, ecIns, isHighlight);
+            toggleSeriesBlurState(seriesIndex, focus, blurScope, api, isHighlight);
         }
     }
 }
@@ -512,7 +512,7 @@ export function toggleSeriesBlurStateFromPayload(
 export function toggleSelectionFromPayload(
     seriesModel: SeriesModel,
     payload: Payload,
-    ecIns: EChartsType
+    api: ExtensionAPI
 ) {
     if (!(isSelectChangePayload(payload))) {
         return;

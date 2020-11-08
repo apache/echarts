@@ -2,7 +2,7 @@ import SeriesModel from '../../model/Series';
 import {Dictionary, DecalObject} from '../../util/types';
 import { getDecalFromPalette } from '../../model/mixin/palette';
 
-export default function (seriesModel: SeriesModel) {
+export default function enableAriaDecalForTree(seriesModel: SeriesModel) {
     const data = seriesModel.getData();
     const tree = data.tree;
     const decalPaletteScope: Dictionary<DecalObject> = {};

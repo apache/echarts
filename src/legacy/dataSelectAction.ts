@@ -64,6 +64,7 @@ function handleSeriesLegacySelectEvents(
     type: 'map' | 'pie',
     eventPostfix: 'selectchanged' | 'selected' | 'unselected',
     ecIns: EChartsType,
+    ecModel: GlobalModel,
     payload: SelectChangedPayload
 ) {
     const legacyEventName = type + eventPostfix;
@@ -71,7 +72,6 @@ function handleSeriesLegacySelectEvents(
         if (__DEV__) {
             deprecateLog(`event ${legacyEventName} is deprecated.`);
         }
-        const ecModel = ecIns.getModel();
         ecModel.eachComponent({
             mainType: 'series', subType: 'pie'
         }, function (seriesModel: SeriesModel) {
@@ -93,19 +93,19 @@ function handleSeriesLegacySelectEvents(
     }
 }
 
-export function handleLegacySelectEvents(messageCenter: Eventful, ecIns: EChartsType) {
+export function handleLegacySelectEvents(messageCenter: Eventful, ecIns: EChartsType, ecModel: GlobalModel) {
     messageCenter.on('selectchanged', function (params: SelectChangedPayload) {
         if (params.isFromClick) {
-            handleSeriesLegacySelectEvents('map', 'selectchanged', ecIns, params);
-            handleSeriesLegacySelectEvents('pie', 'selectchanged', ecIns, params);
+            handleSeriesLegacySelectEvents('map', 'selectchanged', ecIns, ecModel, params);
+            handleSeriesLegacySelectEvents('pie', 'selectchanged', ecIns, ecModel, params);
         }
         else if (params.fromAction === 'select') {
-            handleSeriesLegacySelectEvents('map', 'selected', ecIns, params);
-            handleSeriesLegacySelectEvents('pie', 'selected', ecIns, params);
+            handleSeriesLegacySelectEvents('map', 'selected', ecIns, ecModel, params);
+            handleSeriesLegacySelectEvents('pie', 'selected', ecIns, ecModel, params);
         }
         else if (params.fromAction === 'unselect') {
-            handleSeriesLegacySelectEvents('map', 'unselected', ecIns, params);
-            handleSeriesLegacySelectEvents('pie', 'unselected', ecIns, params);
+            handleSeriesLegacySelectEvents('map', 'unselected', ecIns, ecModel, params);
+            handleSeriesLegacySelectEvents('pie', 'unselected', ecIns, ecModel, params);
         }
     });
 }

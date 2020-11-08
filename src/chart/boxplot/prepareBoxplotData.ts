@@ -44,7 +44,7 @@ export interface PrepareBoxplotDataOpt {
  *      default 1.5, means Q1 - 1.5 * (Q3 - Q1).
  *      If 'none'/0 passed, min bound will not be used.
  */
-export default function (
+export default function prepareBoxplotData(
     rawData: number[][],
     opt: PrepareBoxplotDataOpt
 ): {

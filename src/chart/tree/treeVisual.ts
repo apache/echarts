@@ -21,7 +21,7 @@ import GlobalModel from '../../model/Global';
 import TreeSeriesModel, { TreeSeriesNodeItemOption } from './TreeSeries';
 import { extend } from 'zrender/src/core/util';
 
-export default function (ecModel: GlobalModel) {
+export default function treeVisual(ecModel: GlobalModel) {
 
     ecModel.eachSeriesByType('tree', function (seriesModel: TreeSeriesModel) {
         const data = seriesModel.getData();

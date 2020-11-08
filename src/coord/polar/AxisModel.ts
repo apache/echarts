@@ -43,7 +43,7 @@ export interface AngleAxisOption extends AxisBaseOption {
     splitNumber?: number
 
     axisLabel?: Omit<AxisBaseOption['axisLabel'], 'rotate'> & {
-        rotate?: AxisBaseOption['axisLabel']['rotate'] | false
+        rotate?: AxisBaseOption['axisLabel']['rotate']
     }
 }
 
@@ -97,7 +97,7 @@ const angleAxisExtraOption: AngleAxisOption = {
     splitNumber: 12,
 
     axisLabel: {
-        rotate: false
+        rotate: 0
     }
 };
 

@@ -100,7 +100,7 @@ function decodePolygon(
     return result;
 }
 
-export default function (geoJson: GeoJSON | GeoJSONCompressed, nameProperty: string): Region[] {
+export default function parseGeoJSON(geoJson: GeoJSON | GeoJSONCompressed, nameProperty: string): Region[] {
 
     geoJson = decode(geoJson);
 

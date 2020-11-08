@@ -29,7 +29,8 @@ import {
     OptionDataValue,
     CallbackDataParams,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    DefaultExtraEmpasisState
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -65,7 +66,7 @@ interface SunburstDataParams extends CallbackDataParams {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: 'descendant' | 'ancestor'
+        focus?: DefaultExtraEmpasisState['focus'] | 'descendant' | 'ancestor'
     }
 }
 
@@ -95,6 +96,13 @@ export interface SunburstSeriesLevelOption extends SunburstStateOption, StatesOp
         label?: SunburstLabelOption
     }
 }
+
+interface SortParam {
+    dataIndex: number
+    depth: number
+    height: number
+    getValue(): number
+}
 export interface SunburstSeriesOption extends
     SeriesOption<SunburstStateOption, ExtraStateOption>, SunburstStateOption,
     CircleLayoutOptionMixin {
@@ -123,7 +131,7 @@ export interface SunburstSeriesOption extends
 
     animationType?: 'expansion' | 'scale'
 
-    sort?: 'desc' | 'asc' | ((a: TreeNode, b: TreeNode) => number)
+    sort?: 'desc' | 'asc' | ((a: SortParam, b: SortParam) => number)
 }
 
 interface SunburstSeriesModel {

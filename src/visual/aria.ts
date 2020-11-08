@@ -45,7 +45,7 @@ const decalPaletteScope: Dictionary<DecalObject> = {};
 
 type SeriesTypes = keyof LocaleOption['series']['typeNames'];
 
-export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
     const ariaModel: Model<AriaOption> = ecModel.getModel('aria');
 
     // See "area enabled" detection code in `GlobalModel.ts`.

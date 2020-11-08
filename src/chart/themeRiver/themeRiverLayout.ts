@@ -30,7 +30,7 @@ export interface ThemeRiverLayoutInfo {
     boundaryGap: ThemeRiverSeriesOption['boundaryGap']
 }
 
-export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+export default function themeRiverLayout(ecModel: GlobalModel, api: ExtensionAPI) {
 
     ecModel.eachSeriesByType('themeRiver', function (seriesModel: ThemeRiverSeriesModel) {
 
@@ -55,13 +55,13 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
             boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], rect.height);
             boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], rect.height);
             const height = rect.height - boundaryGap[0] - boundaryGap[1];
-            themeRiverLayout(data, seriesModel, height);
+            doThemeRiverLayout(data, seriesModel, height);
         }
         else {
             boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], rect.width);
             boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], rect.width);
             const width = rect.width - boundaryGap[0] - boundaryGap[1];
-            themeRiverLayout(data, seriesModel, width);
+            doThemeRiverLayout(data, seriesModel, width);
         }
 
         data.setLayout('layoutInfo', layoutInfo);
@@ -75,7 +75,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
  * @param seriesModel  the model object of themeRiver series
  * @param height  value used to compute every series height
  */
-function themeRiverLayout(data: List<ThemeRiverSeriesModel>, seriesModel: ThemeRiverSeriesModel, height: number) {
+function doThemeRiverLayout(data: List<ThemeRiverSeriesModel>, seriesModel: ThemeRiverSeriesModel, height: number) {
     if (!data.count()) {
         return;
     }

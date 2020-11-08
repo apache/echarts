@@ -36,7 +36,7 @@ const points = [
     ]
 ];
 
-export default function (mapType: string, region: Region) {
+export default function fixDiaoyuIsland(mapType: string, region: Region) {
     if (mapType === 'china' && region.name === '台湾') {
         region.geometries.push({
             type: 'polygon',

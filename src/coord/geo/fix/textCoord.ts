@@ -31,7 +31,7 @@ const coordsOffsetMap = {
     '天津': [5, 5]
 } as Dictionary<number[]>;
 
-export default function (mapType: string, region: Region) {
+export default function fixTextCoords(mapType: string, region: Region) {
     if (mapType === 'china') {
         const coordFix = coordsOffsetMap[region.name];
         if (coordFix) {

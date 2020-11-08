@@ -36,7 +36,7 @@ function getViewRect(seriesModel: PieSeriesModel, api: ExtensionAPI) {
     );
 }
 
-export default function (
+export default function pieLayout(
     seriesType: 'pie',
     ecModel: GlobalModel,
     api: ExtensionAPI

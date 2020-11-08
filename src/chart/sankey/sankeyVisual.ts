@@ -22,7 +22,7 @@ import VisualMapping from '../../visual/VisualMapping';
 import GlobalModel from '../../model/Global';
 import SankeySeriesModel, { SankeyNodeItemOption } from './SankeySeries';
 
-export default function (ecModel: GlobalModel) {
+export default function sankeyVisual(ecModel: GlobalModel) {
     ecModel.eachSeriesByType('sankey', function (seriesModel: SankeySeriesModel) {
         const graph = seriesModel.getGraph();
         const nodes = graph.nodes;

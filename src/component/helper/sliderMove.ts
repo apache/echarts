@@ -37,7 +37,7 @@
  * @param maxSpan The range of dataZoom can not be larger than that.
  * @return The input handleEnds.
  */
-export default function (
+export default function sliderMove(
     delta: number,
     handleEnds: number[],
     extent: number[],

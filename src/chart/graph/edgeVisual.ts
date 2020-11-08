@@ -30,7 +30,7 @@ function normalize(a: string | number | (string | number)[]): (string | number)[
     return a;
 }
 
-export default function (ecModel: GlobalModel) {
+export default function graphEdgeVisual(ecModel: GlobalModel) {
     ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
         const graph = seriesModel.getGraph();
         const edgeData = seriesModel.getEdgeData();

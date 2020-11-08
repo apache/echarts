@@ -32,7 +32,7 @@ import SeriesModel from '../../model/Series';
  *     dimensionsCount: 5
  * });
  */
-export default function (
+export default function createListSimply(
     seriesModel: SeriesModel,
     opt: CreateDimensionsParams | CreateDimensionsParams['coordDimensions'],
     nameList?: string[]

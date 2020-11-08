@@ -24,7 +24,7 @@ import { ECUnitOption, SeriesOption } from '../../util/types';
 import { ParallelAxisOption } from './AxisModel';
 import { ParallelSeriesOption } from '../../chart/parallel/ParallelSeries';
 
-export default function (option: ECUnitOption): void {
+export default function parallelPreprocessor(option: ECUnitOption): void {
     createParallelIfNeeded(option);
     mergeAxisOptionFromParallel(option);
 }

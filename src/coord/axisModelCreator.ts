@@ -42,10 +42,10 @@ export interface AxisModelExtendedInCreator<Opt extends AxisBaseOption> {
  * Generate sub axis model class
  * @param axisName 'x' 'y' 'radius' 'angle' 'parallel' ...
  */
-export default function <
+export default function axisModelCreator<
     AxisOptionT extends AxisBaseOption,
     AxisModelCtor extends Constructor<ComponentModel<AxisOptionT>>
-> (
+>(
     axisName: DimensionName,
     BaseAxisModelClass: AxisModelCtor,
     extraDefaultOption?: AxisOptionT

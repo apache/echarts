@@ -35,7 +35,7 @@ export interface ForceLayoutInstance {
 }
 
 
-export default function (ecModel: GlobalModel) {
+export default function graphForceLayout(ecModel: GlobalModel) {
     ecModel.eachSeriesByType('graph', function (graphSeries: GraphSeriesModel) {
         const coordSys = graphSeries.coordinateSystem;
         if (coordSys && coordSys.type !== 'view') {

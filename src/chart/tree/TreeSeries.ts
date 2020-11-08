@@ -29,7 +29,8 @@ import {
     LabelOption,
     OptionDataValue,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    DefaultExtraEmpasisState
 } from '../../util/types';
 import List from '../../data/List';
 import View from '../../coord/View';
@@ -52,7 +53,7 @@ export interface TreeSeriesStateOption {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: 'ancestor' | 'descendant'
+        focus?: DefaultExtraEmpasisState['focus'] | 'ancestor' | 'descendant'
         scale?: boolean
     }
 }

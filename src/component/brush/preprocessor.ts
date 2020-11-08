@@ -27,7 +27,7 @@ import { normalizeToArray } from '../../util/model';
 
 const DEFAULT_TOOLBOX_BTNS: BrushToolboxIconType[] = ['rect', 'polygon', 'keep', 'clear'];
 
-export default function (option: ECUnitOption, isNew: boolean): void {
+export default function brushPreprocessor(option: ECUnitOption, isNew: boolean): void {
     const brushComponents = normalizeToArray(option ? option.brush : []);
 
     if (!brushComponents.length) {

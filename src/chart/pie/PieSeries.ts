@@ -35,7 +35,8 @@ import {
     OptionDataValueNumeric,
     SeriesEncodeOptionMixin,
     OptionDataItemObject,
-    StatesOptionMixin
+    StatesOptionMixin,
+    DefaultExtraEmpasisState
 } from '../../util/types';
 import List from '../../data/List';
 
@@ -77,6 +78,7 @@ interface PieLabelLineOption extends LabelLineOption {
 
 interface ExtraStateOption {
     emphasis?: {
+        focus?: DefaultExtraEmpasisState['focus']
         scale?: boolean
         scaleSize?: number
     }

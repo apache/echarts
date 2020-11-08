@@ -42,7 +42,8 @@ import {
     LineLabelOption,
     StatesOptionMixin,
     GraphEdgeItemObject,
-    OptionDataValueNumeric
+    OptionDataValueNumeric,
+    DefaultExtraEmpasisState
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -66,17 +67,16 @@ export interface GraphNodeStateOption {
     label?: LabelOption
 }
 
+
+interface ExtraEmphasisState {
+    focus?: DefaultExtraEmpasisState['focus'] | 'adjacency'
+}
 interface ExtraNodeStateOption {
-    emphasis?: {
-        focus?: 'adjacency'
-        scale?: boolean
-    }
+    emphasis?: ExtraEmphasisState
 }
 
 interface ExtraEdgeStateOption {
-    emphasis?: {
-        focus?: 'adjacency'
-    }
+    emphasis?: ExtraEmphasisState
 }
 
 export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOption,

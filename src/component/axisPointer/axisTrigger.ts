@@ -108,7 +108,7 @@ type ShowValueMap = Dictionary<{
  *
  * @return content of event obj for echarts.connect.
  */
-export default function (
+export default function axisTrigger(
     payload: AxisTriggerPayload,
     ecModel: GlobalModel,
     api: ExtensionAPI

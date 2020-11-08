@@ -22,6 +22,11 @@
 /// Make sure run it before edit this file.                         ///
 ///////////////////////////////////////////////////////////////////////
 
-export * from './types/src/echarts.all';
+
+// Restrict exports
+export {
+    init, connect, disConnect, dispose, getInstanceByDom, getInstanceById,
+    registerMap, registerLocale, getMap, registerTheme
+} from './types/src/echarts.all';
 
 export {EChartsFullOption as EChartsOption} from './types/src/option';

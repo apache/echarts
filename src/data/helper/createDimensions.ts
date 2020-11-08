@@ -58,7 +58,7 @@ export type CreateDimensionsParams = {
  * @param opt.encodeDefine By default `source.encodeDefine` Overwrite source define.
  * @param opt.encodeDefaulter Make default encode if user not specified.
  */
-export default function (
+export default function createDimensions(
     // TODO: TYPE completeDimensions type
     source: Source | List | OptionSourceData,
     opt?: CreateDimensionsParams

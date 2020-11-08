@@ -26,7 +26,8 @@ import {
     AnimationOptionMixin,
     SeriesStackOptionMixin,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    DefaultExtraEmpasisState
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { inheritDefaultOption } from '../../util/component';
@@ -92,6 +93,7 @@ interface PictorialBarSeriesSymbolOption {
 
 interface ExtraStateOption {
     emphasis?: {
+        focus?: DefaultExtraEmpasisState['focus']
         scale?: boolean
     }
 }
