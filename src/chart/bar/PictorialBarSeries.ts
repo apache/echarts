@@ -157,6 +157,8 @@ class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOptio
         progressive: 0,
 
         emphasis: {
+            // By default pictorialBar do not hover scale. Hover scale is not suitable
+            // for the case that both has foreground and background.
             scale: false
         },
 
