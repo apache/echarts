@@ -234,6 +234,41 @@ module.exports = async function () {
     console.log(chalk.green.dim('All done.'));
 };
 
+async function runTsCompile(localTs, compilerOptions, srcPathList) {
+    // Must do it. becuase the value in tsconfig.json might be different from the inner representation.
+    // For example: moduleResolution: "NODE" => moduleResolution: 2
+    const {options, errors} = localTs.convertCompilerOptionsFromJson(compilerOptions, ecDir);
+
+    if (errors.length) {
+        let errMsg = 'tsconfig parse failed: '
+            + errors.map(error => error.messageText).join('. ')
+            + '\n compilerOptions: \n' + JSON.stringify(compilerOptions, null, 4);
+        assert(false, errMsg);
+    }
+
+    // See: https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API
+
+    let program = localTs.createProgram(srcPathList, options);
+    let emitResult = program.emit();
+
+    let allDiagnostics = localTs
+        .getPreEmitDiagnostics(program)
+        .concat(emitResult.diagnostics);
+
+    allDiagnostics.forEach(diagnostic => {
+        if (diagnostic.file) {
+            let {line, character} = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
+            let message = localTs.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+            console.log(chalk.red(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`));
+        }
+        else {
+            console.log(chalk.red(localTs.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
+        }
+    });
+    assert(!emitResult.emitSkipped, 'ts compile failed.');
+}
+module.exports.runTsCompile = runTsCompile;
+
 async function tsCompile(compilerOptionsOverride, srcPathList) {
     assert(
         compilerOptionsOverride
@@ -248,35 +283,7 @@ async function tsCompile(compilerOptionsOverride, srcPathList) {
         sourceMap: false
     };
 
-    // Must do it. becuase the value in tsconfig.json might be different from the inner representation.
-    // For example: moduleResolution: "NODE" => moduleResolution: 2
-    const {options, errors} = ts.convertCompilerOptionsFromJson(compilerOptions, ecDir);
-    if (errors.length) {
-        let errMsg = 'tsconfig parse failed: '
-            + errors.map(error => error.messageText).join('. ')
-            + '\n compilerOptions: \n' + JSON.stringify(compilerOptions, null, 4);
-        assert(false, errMsg);
-    }
-
-    // See: https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API
-    let program = ts.createProgram(srcPathList, options);
-    let emitResult = program.emit();
-
-    let allDiagnostics = ts
-        .getPreEmitDiagnostics(program)
-        .concat(emitResult.diagnostics);
-
-    allDiagnostics.forEach(diagnostic => {
-        if (diagnostic.file) {
-            let {line, character} = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
-            let message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-            console.log(chalk.red(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`));
-        }
-        else {
-            console.log(chalk.red(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
-        }
-    });
-    assert(!emitResult.emitSkipped, 'ts compile failed.');
+    runTsCompile(ts, compilerOptions, srcPathList);
 }
 
 /**
@@ -390,6 +397,12 @@ async function readFilePaths({patterns, cwd}) {
 async function bundleDTS() {
     const bundle = await rollup.rollup({
         input: nodePath.resolve(__dirname, '../index.d.ts'),
+        onwarn(warning, rollupWarn) {
+            // Not warn circular dependency
+            if (warning.code !== 'CIRCULAR_DEPENDENCY') {
+                rollupWarn(warning);
+            }
+        },
         plugins: [
             dts({
                 respectExternal: true
@@ -408,3 +421,4 @@ function readTSConfig() {
     const tsConfigText = fs.readFileSync(filePath, {encoding: 'utf8'});
     return (new Function(`return ( ${tsConfigText} )`))();
 }
+module.exports.readTSConfig = readTSConfig;
