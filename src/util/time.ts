@@ -106,7 +106,9 @@ export function getDefaultFormatPrecisionOfInterval(timeUnit: PrimaryTimeUnit): 
 }
 
 export function format(
-    time: unknown, template: string, lang?: string | Model<LocaleOption>, isUTC?: boolean
+    // Note: The result based on `isUTC` are totally different, which can not be just simply
+    // substituted by the result without `isUTC`. So we make the param `isUTC` mandatory.
+    time: unknown, template: string, isUTC: boolean, lang?: string | Model<LocaleOption>
 ): string {
     const date = numberUtil.parseDate(time);
     const y = date[fullYearGetterName(isUTC)]();
@@ -159,7 +161,7 @@ export function leveledFormat(
     idx: number,
     formatter: TimeAxisLabelFormatterOption,
     lang: string | Model<LocaleOption>,
-    isUTC?: boolean
+    isUTC: boolean
 ) {
     let template = null;
     if (typeof formatter === 'string') {
@@ -212,7 +214,7 @@ export function leveledFormat(
         }
     }
 
-    return format(new Date(tick.value), template, lang, isUTC);
+    return format(new Date(tick.value), template, isUTC, lang);
 }
 
 export function getUnitFromValue(
@@ -259,8 +261,8 @@ export function getUnitFromValue(
 
 export function getUnitValue(
     value: number | Date,
-    unit?: TimeUnit,
-    isUTC?: boolean
+    unit: TimeUnit,
+    isUTC: boolean
 ) : number {
     const date = typeof value === 'number'
         ? numberUtil.parseDate(value)
@@ -291,58 +293,58 @@ export function getUnitValue(
     }
 }
 
-export function fullYearGetterName(isUTC?: boolean) {
+export function fullYearGetterName(isUTC: boolean) {
     return isUTC ? 'getUTCFullYear' : 'getFullYear';
 }
 
-export function monthGetterName(isUTC?: boolean) {
+export function monthGetterName(isUTC: boolean) {
     return isUTC ? 'getUTCMonth' : 'getMonth';
 }
 
-export function dateGetterName(isUTC?: boolean) {
+export function dateGetterName(isUTC: boolean) {
     return isUTC ? 'getUTCDate' : 'getDate';
 }
 
-export function hoursGetterName(isUTC?: boolean) {
+export function hoursGetterName(isUTC: boolean) {
     return isUTC ? 'getUTCHours' : 'getHours';
 }
 
-export function minutesGetterName(isUTC?: boolean) {
+export function minutesGetterName(isUTC: boolean) {
     return isUTC ? 'getUTCMinutes' : 'getMinutes';
 }
 
-export function secondsGetterName(isUTC?: boolean) {
+export function secondsGetterName(isUTC: boolean) {
     return isUTC ? 'getUTCSeconds' : 'getSeconds';
 }
 
-export function millisecondsGetterName(isUTC?: boolean) {
+export function millisecondsGetterName(isUTC: boolean) {
     return isUTC ? 'getUTCSeconds' : 'getSeconds';
 }
 
-export function fullYearSetterName(isUTC?: boolean) {
+export function fullYearSetterName(isUTC: boolean) {
     return isUTC ? 'setUTCFullYear' : 'setFullYear';
 }
 
-export function monthSetterName(isUTC?: boolean) {
+export function monthSetterName(isUTC: boolean) {
     return isUTC ? 'setUTCMonth' : 'setMonth';
 }
 
-export function dateSetterName(isUTC?: boolean) {
+export function dateSetterName(isUTC: boolean) {
     return isUTC ? 'setUTCDate' : 'setDate';
 }
 
-export function hoursSetterName(isUTC?: boolean) {
+export function hoursSetterName(isUTC: boolean) {
     return isUTC ? 'setUTCHours' : 'setHours';
 }
 
-export function minutesSetterName(isUTC?: boolean) {
+export function minutesSetterName(isUTC: boolean) {
     return isUTC ? 'setUTCMinutes' : 'setMinutes';
 }
 
-export function secondsSetterName(isUTC?: boolean) {
+export function secondsSetterName(isUTC: boolean) {
     return isUTC ? 'setUTCSeconds' : 'setSeconds';
 }
 
-export function millisecondsSetterName(isUTC?: boolean) {
+export function millisecondsSetterName(isUTC: boolean) {
     return isUTC ? 'setUTCSeconds' : 'setSeconds';
 }

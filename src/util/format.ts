@@ -79,7 +79,8 @@ export function encodeHTML(source: string): string {
  */
 export function makeValueReadable(
     value: unknown,
-    valueType: DimensionType
+    valueType: DimensionType,
+    useUTC: boolean
 ): string {
     const USER_READABLE_DEFUALT_TIME_PATTERN = 'yyyy-MM-dd hh:mm:ss';
 
@@ -95,7 +96,7 @@ export function makeValueReadable(
     if (isTypeTime || isValueDate) {
         const date = isTypeTime ? parseDate(value) : value;
         if (!isNaN(+date)) {
-            return timeFormat(date, USER_READABLE_DEFUALT_TIME_PATTERN);
+            return timeFormat(date, USER_READABLE_DEFUALT_TIME_PATTERN, useUTC);
         }
         else if (isValueDate) {
             return '-';
@@ -273,7 +274,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
  *           and `module:echarts/util/number#parseDate`.
  * @inner
  */
-export function formatTime(tpl: string, value: unknown, isUTC?: boolean) {
+export function formatTime(tpl: string, value: unknown, isUTC: boolean) {
     if (__DEV__) {
         deprecateReplaceLog('echarts.format.formatTime', 'echarts.time.format');
     }

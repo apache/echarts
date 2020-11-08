@@ -91,7 +91,7 @@ under the License.
                     tooltip: {
                         trigger: 'axis',
                         // test in Safari (NaN-NaN-NaN NaN:NaN:NaN)
-                        formatter: '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}'
+                        // formatter: '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}'
                     },
                     xAxis: [{
                         type: 'time',
@@ -121,15 +121,13 @@ under the License.
                         smooth: true,
                         data: data,
                         label: {
-                            normal: {
-                                show: true,
-                                formatter: function (params) {
-                                    return echarts.time.format(
-                                        params.value[0],
-                                        '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}',
-                                        useUTC
-                                    );
-                                }
+                            show: true,
+                            formatter: function (params) {
+                                return echarts.time.format(
+                                    params.value[0],
+                                    '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}',
+                                    useUTC
+                                );
                             }
                         }
                     }]

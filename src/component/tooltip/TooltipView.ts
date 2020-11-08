@@ -541,7 +541,7 @@ class TooltipView extends ComponentView {
         const orderMode = singleTooltipModel.get('order');
 
         const builtMarkupText = buildTooltipMarkup(
-            articleMarkup, markupStyleCreator, renderMode, orderMode
+            articleMarkup, markupStyleCreator, renderMode, orderMode, ecModel.get('useUTC')
         );
         builtMarkupText && markupTextArrLegacy.unshift(builtMarkupText);
         const blockBreak = renderMode === 'richText' ? '\n\n' : '<br/>';
@@ -619,7 +619,8 @@ class TooltipView extends ComponentView {
                 seriesTooltipResult.markupFragment,
                 markupStyleCreator,
                 renderMode,
-                orderMode
+                orderMode,
+                ecModel.get('useUTC')
             )
             : seriesTooltipResult.markupText;
 
