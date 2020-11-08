@@ -68,7 +68,7 @@
                 'geoJson': '../geoData/geoJson',
                 'theme': 'theme',
                 'data': 'test/data',
-                'map': 'map',
+                'map': 'test/data/map',
                 'extension': 'dist/extension',
             }
             // urlArgs will prevent break point on init in debug tool.
@@ -85,7 +85,7 @@
                 'geoJson': 'geoData/geoJson',
                 'theme': 'theme',
                 'data': 'test/data',
-                'map': 'map',
+                'map': 'test/data/map',
                 'extension': 'extension'
             },
             // urlArgs: '_v_=' + (+new Date()),

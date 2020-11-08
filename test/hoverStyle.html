@@ -1122,7 +1122,7 @@ under the License.
 
 
         <script>
-            $.get('../map/json/china.json', function (chinaJson) {
+            $.get('./data/map/json/china.json', function (chinaJson) {
                 if (typeof chinaJson === 'string') {
                     chinaJson = eval('(' + chinaJson + ')');
                 }
