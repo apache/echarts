@@ -79,7 +79,7 @@ export function encodeHTML(source: string): string {
  */
 export function makeValueReadable(
     value: unknown,
-    valueType?: DimensionType
+    valueType: DimensionType
 ): string {
     const USER_READABLE_DEFUALT_TIME_PATTERN = 'yyyy-MM-dd hh:mm:ss';
 
@@ -95,7 +95,6 @@ export function makeValueReadable(
     if (isTypeTime || isValueDate) {
         const date = isTypeTime ? parseDate(value) : value;
         if (!isNaN(+date)) {
-            // PENDING: add param `useUTC`?
             return timeFormat(date, USER_READABLE_DEFUALT_TIME_PATTERN);
         }
         else if (isValueDate) {
@@ -148,28 +147,35 @@ export function formatTpl(
         return '';
     }
 
-    const isTimeAxis = paramsList[0].axisType && paramsList[0].axisType.indexOf('time') >= 0;
-    if (isTimeAxis) {
-        const axisValue = paramsList[0].data[paramsList[0].axisIndex];
-        const date = parseDate(axisValue);
-        return timeFormat(date, tpl);
+    // TODO:
+    // This commented code is to support `tooltip.formatter: '{yyyy}-{mm}-{dd}'`, but not correct.
+    // It should ensure:
+    // (1) `useUTC` is not forgotten to be set as `true` or `false`.
+    //     The result based on useUTC are totally different, which should not be omitted.
+    // (2) Should not break the original funtion: tooltip.formatter: '{a0} {a1}'
+    // (3) Consider `series.encode: {x: 2}`, that is, `param.data[2]` is time axis value.
+    // const isTimeAxis = paramsList[0].axisType && paramsList[0].axisType.indexOf('time') >= 0;
+    // if (isTimeAxis) {
+    //     const axisValue = paramsList[0].data[paramsList[0].axisIndex];
+    //     const date = parseDate(axisValue);
+    //     return timeFormat(date, tpl);
+    // }
+
+    const $vars = paramsList[0].$vars || [];
+    for (let i = 0; i < $vars.length; i++) {
+        const alias = TPL_VAR_ALIAS[i];
+        tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
     }
-    else {
-        const $vars = paramsList[0].$vars || [];
-        for (let i = 0; i < $vars.length; i++) {
-            const alias = TPL_VAR_ALIAS[i];
-            tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
-        }
-        for (let seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
-            for (let k = 0; k < $vars.length; k++) {
-                const val = paramsList[seriesIdx][$vars[k]];
-                tpl = tpl.replace(
-                    wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
-                    encode ? encodeHTML(val) : val
-                );
-            }
+    for (let seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
+        for (let k = 0; k < $vars.length; k++) {
+            const val = paramsList[seriesIdx][$vars[k]];
+            tpl = tpl.replace(
+                wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
+                encode ? encodeHTML(val) : val
+            );
         }
     }
+
     return tpl;
 }
 
