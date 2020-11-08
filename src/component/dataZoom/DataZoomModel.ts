@@ -138,8 +138,11 @@ class DataZoomAxisInfo {
     indexMap: boolean[] = [];
 
     add(axisCmptIdx: number) {
-        this.indexList.push(axisCmptIdx);
-        this.indexMap[axisCmptIdx] = true;
+        // Remove duplication.
+        if (!this.indexMap[axisCmptIdx]) {
+            this.indexList.push(axisCmptIdx);
+            this.indexMap[axisCmptIdx] = true;
+        }
     }
 }
 export type DataZoomTargetAxisInfoMap = HashMap<DataZoomAxisInfo, DataZoomAxisDimension>;
