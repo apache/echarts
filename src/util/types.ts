@@ -1372,23 +1372,33 @@ export type BlurScope = 'coordinateSystem' | 'series' | 'global';
  */
 export type InnerFocus = string | ArrayLike<number> | Dictionary<ArrayLike<number>>;
 
-export interface StatesOptionMixin<StateOption = unknown, ExtraStateOpts extends {
-    emphasis?: any
+export interface DefaultExtraStateOpts {
+    emphasis: any
+    select: any
+    blur: any
+}
+
+export interface DefaultExtraEmpasisState {
+    /**
+     * self: Focus self and blur all others.
+     * series: Focus series and blur all other series.
+     */
+    focus?: 'none' | 'self' | 'series'
+}
+
+interface ExtraStateOptsBase {
+    emphasis?: {
+        focus?: string
+    },
     select?: any
     blur?: any
-} = unknown> {
+}
+
+export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> {
     /**
      * Emphasis states
      */
-    emphasis?: StateOption & {
-        /**
-         * self: Focus self and blur all others.
-         * series: Focus series and blur all other series.
-         */
-        focus?: 'none' | 'self' | 'series' |
-            (unknown extends ExtraStateOpts['emphasis']['focus']
-                ? never : ExtraStateOpts['emphasis']['focus'])
-
+    emphasis?: StateOption & ExtraStateOpts['emphasis'] & {
         /**
          * Scope of blurred element when focus.
          *
@@ -1399,7 +1409,7 @@ export interface StatesOptionMixin<StateOption = unknown, ExtraStateOpts extends
          * Default to be coordinate system.
          */
         blurScope?: BlurScope
-    } & Omit<ExtraStateOpts['emphasis'], 'focus'>
+    }
     /**
      * Select states
      */
@@ -1410,11 +1420,7 @@ export interface StatesOptionMixin<StateOption = unknown, ExtraStateOpts extends
     blur?: StateOption & ExtraStateOpts['blur']
 }
 
-export interface SeriesOption<StateOption=any, ExtraStateOpts extends {
-    emphasis?: any
-    select?: any
-    blur?: any
-} = unknown> extends
+export interface SeriesOption<StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
     ComponentOption,
     AnimationOptionMixin,
     ColorPaletteOptionMixin,

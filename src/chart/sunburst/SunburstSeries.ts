@@ -29,7 +29,8 @@ import {
     OptionDataValue,
     CallbackDataParams,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    DefaultExtraEmpasisState
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -65,7 +66,7 @@ interface SunburstDataParams extends CallbackDataParams {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: 'descendant' | 'ancestor'
+        focus?: DefaultExtraEmpasisState['focus'] | 'descendant' | 'ancestor'
     }
 }
 

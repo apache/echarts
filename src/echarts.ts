@@ -336,8 +336,9 @@ class ECharts extends Eventful {
     // Can't dispatch action during rendering procedure
     private _pendingActions: Payload[] = [];
 
-    // We use unkown here so ECEventProcessor, which may include many unexpected types won't be exposed in the types to developers.
-    protected _$eventProcessor: unknown;
+    // We use never here so ECEventProcessor will not been exposed.
+    // which may include many unexpected types won't be exposed in the types to developers.
+    protected _$eventProcessor: never;
 
     private _disposed: boolean;
 

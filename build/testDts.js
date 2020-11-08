@@ -8,7 +8,7 @@ const { runTsCompile, readTSConfig } = require('./pre-publish');
 const globby = require('globby');
 const semver = require('semver');
 
-const MIN_VERSION = '3.5.0';
+const MIN_VERSION = '3.4.0';
 
 async function installTs() {
     // await cleanTypeScriptInstalls();

@@ -22,6 +22,7 @@
 /// Make sure run it before edit this file.                         ///
 ///////////////////////////////////////////////////////////////////////
 
+
 // Restrict exports
 export {
     init, connect, disConnect, dispose, getInstanceByDom, getInstanceById,

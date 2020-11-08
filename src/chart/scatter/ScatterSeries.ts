@@ -33,7 +33,8 @@ import {
     SeriesStackOptionMixin,
     SymbolOptionMixin,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    DefaultExtraEmpasisState
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -46,6 +47,7 @@ interface ScatterStateOption {
 
 interface ExtraStateOption {
     emphasis?: {
+        focus?: DefaultExtraEmpasisState['focus']
         scale?: boolean
     }
 }

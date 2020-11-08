@@ -409,9 +409,16 @@ async function bundleDTS() {
             })
         ]
     });
+    const bundleFile = nodePath.resolve(__dirname, '../types/dist/echarts.d.ts');
     await bundle.write({
-        file: nodePath.resolve(__dirname, '../types/dist/echarts.d.ts')
+        file: bundleFile
     });
+    // To support ts 3.4
+    const extra = `
+type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
+`
+    const code = extra + fs.readFileSync(bundleFile, 'utf-8');
+    fs.writeFileSync(bundleFile, code, 'utf-8');
 }
 
 function readTSConfig() {

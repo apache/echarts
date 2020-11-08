@@ -33,7 +33,8 @@ import {
     StatesOptionMixin,
     OptionId,
     OptionName,
-    DecalObject
+    DecalObject,
+    DefaultExtraEmpasisState
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -78,7 +79,7 @@ interface TreemapSeriesCallbackDataParams extends CallbackDataParams {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: 'descendant' | 'ancestor'
+        focus?: DefaultExtraEmpasisState['focus'] | 'descendant' | 'ancestor'
     }
 }
 
@@ -540,7 +541,8 @@ function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
     }
 
     levels = levels || [];
-    let hasColorDefine, hasDecalDefine;
+    let hasColorDefine;
+    let hasDecalDefine;
     zrUtil.each(levels, function (levelDefine) {
         const model = new Model(levelDefine);
         const modelColor = model.get('color');

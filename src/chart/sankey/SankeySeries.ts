@@ -32,7 +32,8 @@ import {
     StatesOptionMixin,
     OptionDataItemObject,
     GraphEdgeItemObject,
-    OptionDataValueNumeric
+    OptionDataValueNumeric,
+    DefaultExtraEmpasisState
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -60,7 +61,7 @@ interface SankeyEdgeStyleOption extends LineStyleOption {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: 'adjacency'
+        focus?: DefaultExtraEmpasisState['focus'] | 'adjacency'
     }
 }
 
