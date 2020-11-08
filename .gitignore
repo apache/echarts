@@ -169,8 +169,8 @@ rat.iml
 
 node_modules
 
-map/tool
-map/raw
+test/data/map/tool
+test/data/map/raw
 theme/thumb
 pre-publish-tmp
 todo

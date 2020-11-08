@@ -239,7 +239,7 @@ under the License.
                     {name: '大庆', value: 279}
                 ];
 
-                $.get('../map/json/china.json', function (chinaJson) {
+                $.get('./data/map/json/china.json', function (chinaJson) {
                     echarts.registerMap('china', chinaJson);
                     var geoCoordMap = {
                         '海门':[121.15,31.89],

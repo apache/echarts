@@ -236,7 +236,7 @@ under the License.
                     }
                     return res;
                 };
-                $.get('../map/json/china.json', function (chinaJson) {
+                $.get('./data/map/json/china.json', function (chinaJson) {
                     echarts.registerMap('china', chinaJson);
 
                     var myChart = echarts.init(document.getElementById('main'));

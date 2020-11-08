@@ -33,7 +33,7 @@ var canvas = createCanvas();
 canvas.width = 2048;
 canvas.height = 1024;
 
-var worldJson = JSON.parse(fs.readFileSync('../../map/json/world.json', 'utf-8'));
+var worldJson = JSON.parse(fs.readFileSync('.././data/map/json/world.json', 'utf-8'));
 echarts.registerMap('world', worldJson);
 
 var chart = echarts.init(canvas);
