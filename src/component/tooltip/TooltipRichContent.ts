@@ -84,6 +84,8 @@ class TooltipRichContent {
             this._zr.remove(this.el);
         }
 
+        const textStyleModel = tooltipModel.getModel('textStyle');
+
         this.el = new ZRText({
             style: {
                 rich: markupStyleCreator.richTextStyles,
@@ -97,6 +99,10 @@ class TooltipRichContent {
                 shadowBlur: tooltipModel.get('shadowBlur'),
                 shadowOffsetX: tooltipModel.get('shadowOffsetX'),
                 shadowOffsetY: tooltipModel.get('shadowOffsetY'),
+                textShadowColor: textStyleModel.get('textShadowColor'),
+                textShadowBlur: textStyleModel.get('textShadowBlur') || 0,
+                textShadowOffsetX: textStyleModel.get('textShadowOffsetX') || 0,
+                textShadowOffsetY: textStyleModel.get('textShadowOffsetY') || 0,
                 fill: tooltipModel.get(['textStyle', 'color']),
                 padding: getPaddingFromTooltipModel(tooltipModel, 'richText'),
                 verticalAlign: 'top',
