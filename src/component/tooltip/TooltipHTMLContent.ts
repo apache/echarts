@@ -119,6 +119,14 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
         // @ts-ignore, leave it to the tooltip refactor.
         && cssText.push('line-height:' + Math.round(fontSize * 3 / 2) + 'px');
 
+    const shadowColor = textStyleModel.get('textShadowColor');
+    const shadowBlur = textStyleModel.get('textShadowBlur') || 0;
+    const shadowOffsetX = textStyleModel.get('textShadowOffsetX') || 0;
+    const shadowOffsetY = textStyleModel.get('textShadowOffsetY') || 0;
+    shadowColor && shadowBlur
+        && cssText.push('text-shadow:' + shadowOffsetX + 'px ' + shadowOffsetY + 'px '
+            + shadowBlur + 'px ' + shadowColor);
+
     each(['decoration', 'align'] as const, function (name) {
         const val = textStyleModel.get(name);
         val && cssText.push('text-' + name + ':' + val);
