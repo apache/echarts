@@ -31,6 +31,7 @@ import * as axisHelper from '../../coord/axisHelper';
 import * as axisPointerViewHelper from '../axisPointer/viewHelper';
 import { getTooltipRenderMode } from '../../util/model';
 import ComponentView from '../../view/Component';
+import { format as timeFormat } from '../../util/time';
 import {
     HorizontalAlign,
     VerticalAlign,
@@ -716,7 +717,14 @@ class TooltipView extends ComponentView {
         );
 
         if (formatter && zrUtil.isString(formatter)) {
-            html = formatUtil.formatTpl(formatter, params, true);
+            const useUTC = tooltipModel.ecModel.get('useUTC');
+            const params0 = zrUtil.isArray(params) ? params[0] : params;
+            const isTimeAxis = params0 && params0.axisType && params0.axisType.indexOf('time') >= 0;
+            html = formatter;
+            if (isTimeAxis) {
+                html = timeFormat(params0.axisValue, html, useUTC);
+            }
+            html = formatUtil.formatTpl(html, params, true);
         }
         else if (zrUtil.isFunction(formatter)) {
             const callback = bind(function (cbTicket: string, html: string | HTMLElement[]) {
