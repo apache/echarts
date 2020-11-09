@@ -45,6 +45,9 @@ type TreeSymbol = SymbolClz & {
     __radialOldRawY: number
     __radialRawX: number
     __radialRawY: number
+
+    __oldX: number
+    __oldY: number
 };
 
 class TreeEdgeShape {
@@ -385,8 +388,8 @@ function updateNode(
     const sourceLayout = source.getLayout() as TreeNodeLayout;
     const sourceOldLayout = sourceSymbolEl
         ? {
-            x: sourceSymbolEl.x,
-            y: sourceSymbolEl.y,
+            x: sourceSymbolEl.__oldX,
+            y: sourceSymbolEl.__oldY,
             rawX: sourceSymbolEl.__radialOldRawX,
             rawY: sourceSymbolEl.__radialOldRawY
         }
@@ -415,6 +418,10 @@ function updateNode(
 
     group.add(symbolEl);
     data.setItemGraphicEl(dataIndex, symbolEl);
+
+    symbolEl.__oldX = symbolEl.x;
+    symbolEl.__oldY = symbolEl.y;
+
     graphic.updateProps(symbolEl, {
         x: targetLayout.x,
         y: targetLayout.y
@@ -606,7 +613,7 @@ function removeNode(
         source = source.parentNode === virtualRoot ? source : source.parentNode || source;
     }
 
-    graphic.updateProps(symbolEl, {
+    graphic.removeElement(symbolEl, {
         x: sourceLayout.x + 1,
         y: sourceLayout.y + 1
     }, seriesModel, function () {
@@ -633,7 +640,7 @@ function removeNode(
 
     if (edge) {
         if (edgeShape === 'curve') {
-            graphic.updateProps(edge as Path, {
+            graphic.removeElement(edge as Path, {
                 shape: getEdgeShape(
                     layoutOpt,
                     orient,
@@ -649,7 +656,7 @@ function removeNode(
             });
         }
         else if (edgeShape === 'polyline' && seriesModel.get('layout') === 'orthogonal') {
-            graphic.updateProps(edge as Path, {
+            graphic.removeElement(edge as Path, {
                 shape: {
                     parentPoint: [sourceLayout.x, sourceLayout.y],
                     childPoints: [[sourceLayout.x, sourceLayout.y]]
