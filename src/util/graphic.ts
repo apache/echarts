@@ -477,6 +477,11 @@ export function removeElement<Props>(
     cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
     during?: AnimateOrSetPropsOption['during']
 ) {
+    // Don't do remove animation twice.
+    if (isElementRemoved(el)) {
+        return;
+    }
+
     animateOrSetProps('remove', el, props, animatableModel, dataIndex, cb, during);
 }
 

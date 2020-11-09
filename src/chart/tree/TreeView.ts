@@ -613,7 +613,7 @@ function removeNode(
         source = source.parentNode === virtualRoot ? source : source.parentNode || source;
     }
 
-    graphic.updateProps(symbolEl, {
+    graphic.removeElement(symbolEl, {
         x: sourceLayout.x + 1,
         y: sourceLayout.y + 1
     }, seriesModel, function () {
@@ -640,7 +640,7 @@ function removeNode(
 
     if (edge) {
         if (edgeShape === 'curve') {
-            graphic.updateProps(edge as Path, {
+            graphic.removeElement(edge as Path, {
                 shape: getEdgeShape(
                     layoutOpt,
                     orient,
@@ -656,7 +656,7 @@ function removeNode(
             });
         }
         else if (edgeShape === 'polyline' && seriesModel.get('layout') === 'orthogonal') {
-            graphic.updateProps(edge as Path, {
+            graphic.removeElement(edge as Path, {
                 shape: {
                     parentPoint: [sourceLayout.x, sourceLayout.y],
                     childPoints: [[sourceLayout.x, sourceLayout.y]]
