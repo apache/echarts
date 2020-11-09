@@ -191,6 +191,7 @@ class SliderZoomView extends DataZoomView {
         thisGroup.removeAll();
 
         this._brushing = false;
+        this._displayables.brushRect = null;
 
         this._resetLocation();
         this._resetInterval();
@@ -988,7 +989,8 @@ class SliderZoomView extends DataZoomView {
             });
             displayables.sliderGroup.add(brushRect);
         }
-        brushRect.ignore = false;
+
+        brushRect.attr('ignore', false);
 
         const brushStart = this._brushStart;
 
