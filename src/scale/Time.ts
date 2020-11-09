@@ -127,8 +127,8 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             fullLeveledFormatter[
                 getDefaultFormatPrecisionOfInterval(getPrimaryTimeUnit(this._minLevelUnit))
             ] || fullLeveledFormatter.second,
-            this.getSetting('locale'),
-            useUTC
+            useUTC,
+            this.getSetting('locale')
         );
     }
 
@@ -337,7 +337,7 @@ function isUnitValueSame(
 //     millisecond: millisecondsGetterName(true)
 // };
 
-// function moveTick(date: Date, unitName: TimeUnit, step: number, isUTC?: boolean) {
+// function moveTick(date: Date, unitName: TimeUnit, step: number, isUTC: boolean) {
 //     step = step || 1;
 //     switch (getPrimaryTimeUnit(unitName)) {
 //         case 'year':

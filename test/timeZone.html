@@ -29,12 +29,11 @@ under the License.
     <body>
         <style>
             h1 {
-                line-height: 60px;
-                height: 60px;
                 background: #ddd;
                 text-align: center;
                 font-weight: bold;
                 font-size: 14px;
+                padding: 20px 0;
             }
             .chart {
                 height: 350px;
@@ -45,8 +44,17 @@ under the License.
         <h1>time scale label should in local time when timestamp (in UTC) input, tick should align with day.</h1>
         <div class="chart" id="chart0"></div>
 
-        <h1>time scale label should in UTC time when option.useUTC is `true`, tick should not align with day.</h1>
+        <h1>
+            time scale label should in UTC time when option.useUTC is `true`, tick should not align with day.<br>
+            tooltip (default) should be OK.
+        </h1>
         <div class="chart" id="chart1"></div>
+
+        <h1>
+            time scale label should in UTC time when option.useUTC is `true`, tick should not align with day.<br>
+            tooltip (formatter: series0 2017-02-09 16:00) should be OK.
+        </h1>
+        <div class="chart" id="chart1-1"></div>
 
         <h1>useUTC: null, should display '00:00 01-03' in tooltip on the 1st point</h1>
         <div class="chart" id="chart2"></div>
@@ -85,13 +93,17 @@ under the License.
                 ['2012-01-06', 290000]
             ];
 
-            function makeTimeScaleOption(data, useUTC) {
+            // opt: {useUTC, tooltipFormatter}
+            function makeTimeScaleOption(data, opt) {
+                opt = opt || {};
+                var useUTC = opt.useUTC;
+                var tooltipFormatter = opt.tooltipFormatter;
                 return {
                     useUTC: useUTC,
                     tooltip: {
                         trigger: 'axis',
                         // test in Safari (NaN-NaN-NaN NaN:NaN:NaN)
-                        formatter: '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}'
+                        formatter: tooltipFormatter
                     },
                     xAxis: [{
                         type: 'time',
@@ -121,15 +133,13 @@ under the License.
                         smooth: true,
                         data: data,
                         label: {
-                            normal: {
-                                show: true,
-                                formatter: function (params) {
-                                    return echarts.time.format(
-                                        params.value[0],
-                                        '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}',
-                                        useUTC
-                                    );
-                                }
+                            show: true,
+                            formatter: function (params) {
+                                return echarts.time.format(
+                                    params.value[0],
+                                    '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}',
+                                    useUTC
+                                );
                             }
                         }
                     }]
@@ -154,14 +164,6 @@ under the License.
 
             require([
                 'echarts'
-                // 'zrender/tool/color',
-                // 'echarts/chart/line',
-                // 'echarts/component/grid',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom'
             ], function (ec) {
                 echarts = ec;
                 colorTool = echarts.color;
@@ -196,14 +198,6 @@ under the License.
 
             require([
                 'echarts'
-                // 'zrender/tool/color',
-                // 'echarts/chart/line',
-                // 'echarts/component/grid',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom'
             ], function (ec) {
                 echarts = ec;
                 colorTool = echarts.color;
@@ -213,7 +207,7 @@ under the License.
                 }
                 chart = myChart = echarts.init(dom);
 
-                var option = makeTimeScaleOption(dataTimestamp, true);
+                var option = makeTimeScaleOption(dataTimestamp, {useUTC: true});
 
                 chart.setOption(option);
             });
@@ -225,6 +219,38 @@ under the License.
 
 
 
+
+
+
+        <script>
+
+            var echarts;
+            var colorTool;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts'
+            ], function (ec) {
+                echarts = ec;
+                colorTool = echarts.color;
+                var dom = document.getElementById('chart1-1');
+                if (!dom) {
+                    return;
+                }
+                chart = myChart = echarts.init(dom);
+
+                var option = makeTimeScaleOption(
+                    dataTimestamp,
+                    {useUTC: true, tooltipFormatter: '{a0} {yyyy}-{MM}-{dd} {HH}:{mm}:{ss}'}
+                );
+
+                chart.setOption(option);
+            });
+
+        </script>
 
 
 
@@ -247,14 +273,6 @@ under the License.
 
             require([
                 'echarts'
-                // 'zrender/tool/color',
-                // 'echarts/chart/line',
-                // 'echarts/component/grid',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom'
             ], function (ec) {
                 echarts = ec;
                 colorTool = echarts.color;
@@ -292,14 +310,6 @@ under the License.
 
             require([
                 'echarts'
-                // 'zrender/tool/color',
-                // 'echarts/chart/line',
-                // 'echarts/component/grid',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom'
             ], function (ec) {
                 echarts = ec;
                 colorTool = echarts.color;
@@ -309,7 +319,7 @@ under the License.
                 }
                 chart = myChart = echarts.init(dom);
 
-                var option = makeTimeScaleOption(dataTimeString, true);
+                var option = makeTimeScaleOption(dataTimeString, {useUTC: true});
 
                 chart.setOption(option);
             });
