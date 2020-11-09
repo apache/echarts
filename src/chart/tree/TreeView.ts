@@ -362,8 +362,7 @@ function symbolNeedsDraw(data: List, dataIndex: number) {
     const layout = data.getItemLayout(dataIndex);
 
     return layout
-        && !isNaN(layout.x) && !isNaN(layout.y)
-        && data.getItemVisual(dataIndex, 'symbol') !== 'none';
+        && !isNaN(layout.x) && !isNaN(layout.y);
 }
 
 
