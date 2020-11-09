@@ -430,7 +430,8 @@ class SliderTimelineView extends TimelineView {
             const progressStyleModel = itemModel.getModel(['progress', 'itemStyle']);
 
             const symbolOpt = {
-                position: [tickCoord, 0],
+                x: tickCoord,
+                y: 0,
                 onclick: bind(this._changeTimeline, this, tick.value)
             };
             const el = giveSymbol(itemModel, itemStyleModel, group, symbolOpt);
