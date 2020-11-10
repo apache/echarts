@@ -260,9 +260,10 @@ export function createOrUpdatePatternFromDecal(
                     x * scale,
                     y * scale,
                     width * scale,
-                    height * scale
+                    height * scale,
+                    decalOpt.color,
+                    decalOpt.symbolKeepAspect
                 );
-                symbol.style.fill = decalOpt.color;
                 if (isSVG) {
                     svgRoot.appendChild((zr.painter as SVGPainter).paintOne(symbol));
                 }
