@@ -855,7 +855,7 @@ function updateStyle(
                 labelDataIndex: dataIndex,
                 defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
                 inheritColor: style.fill as ColorString,
-                inheritOpacity: style.opacity,
+                defaultOpacity: style.opacity,
                 defaultOutsidePosition: labelPositionOutside
             }
         );

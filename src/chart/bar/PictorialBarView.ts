@@ -930,7 +930,7 @@ function updateCommon(
             labelDataIndex: dataIndex,
             defaultText: getDefaultLabel(opt.seriesModel.getData(), dataIndex),
             inheritColor: symbolMeta.style.fill as ColorString,
-            inheritOpacity: symbolMeta.style.opacity,
+            defaultOpacity: symbolMeta.style.opacity,
             defaultOutsidePosition: barPositionOutside
         }
     );

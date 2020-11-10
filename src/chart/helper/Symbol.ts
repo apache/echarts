@@ -319,7 +319,7 @@ class Symbol extends graphic.Group {
                 labelDataIndex: idx,
                 defaultText: getLabelDefaultText,
                 inheritColor: visualColor as ColorString,
-                inheritOpacity: symbolStyle.opacity
+                defaultOpacity: symbolStyle.opacity
             }
         );
 

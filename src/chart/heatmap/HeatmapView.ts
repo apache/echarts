@@ -279,7 +279,7 @@ class HeatmapView extends ChartView {
                 {
                     labelFetcher: seriesModel,
                     labelDataIndex: idx,
-                    inheritOpacity: style.opacity,
+                    defaultOpacity: style.opacity,
                     defaultText: defaultText
                 }
             );

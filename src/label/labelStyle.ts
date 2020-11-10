@@ -53,10 +53,9 @@ type TextCommonParams = {
     inheritColor?: ColorString
 
     /**
-     * Specify a opacity when opacity is 'inherit',
-     * If inheritColor specified, it is used as default textFill.
+     * Specify a opacity when opacity is not given.
      */
-    inheritOpacity?: number
+    defaultOpacity?: number
 
     defaultOutsidePosition?: LabelOption['position']
 
@@ -362,7 +361,7 @@ export function createTextConfig(
 function setTextStyleCommon(
     textStyle: TextStyleProps,
     textStyleModel: Model,
-    opt?: Pick<TextCommonParams, 'inheritColor' | 'inheritOpacity' | 'disableBox'>,
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'defaultOpacity' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean
 ) {
@@ -397,7 +396,9 @@ function setTextStyleCommon(
                 // the default color `'blue'` will not be adopted if no color declared in `rich`.
                 // That might confuses users. So probably we should put `textStyleModel` as the
                 // root ancestor of the `richTextStyle`. But that would be a break change.
-                setTokenTextStyle(richResult[name] = {}, richTextStyle, globalTextStyle, opt, isNotNormal, isAttached);
+                setTokenTextStyle(
+                    richResult[name] = {}, richTextStyle, globalTextStyle, opt, isNotNormal, isAttached, false, true
+                );
             }
         }
     }
@@ -412,7 +413,7 @@ function setTextStyleCommon(
     if (margin != null) {
         textStyle.margin = margin;
     }
-    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true);
+    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true, false);
 }
 // Consider case:
 // {
@@ -463,10 +464,11 @@ function setTokenTextStyle(
     textStyle: TextStyleProps['rich'][string],
     textStyleModel: Model<LabelOption>,
     globalTextStyle: LabelOption,
-    opt?: Pick<TextCommonParams, 'inheritColor' | 'inheritOpacity' | 'disableBox'>,
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'defaultOpacity' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean,
-    isBlock?: boolean
+    isBlock?: boolean,
+    inRich?: boolean
 ) {
     // In merge mode, default value should not be given.
     globalTextStyle = !isNotNormal && globalTextStyle || EMPTY_OBJ;
@@ -527,8 +529,8 @@ function setTokenTextStyle(
         textStyle.lineDashOffset = textBorderDashOffset;
     }
 
-    if (!isNotNormal && (opacity == null)) {
-        opacity = opt && opt.inheritOpacity;
+    if (!isNotNormal && (opacity == null) && !inRich) {
+        opacity = opt && opt.defaultOpacity;
     }
     if (opacity != null) {
         textStyle.opacity = opacity;
