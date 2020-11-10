@@ -31,7 +31,8 @@ import {
     SeriesLargeOptionMixin,
     OptionDataValueNumeric,
     StatesOptionMixin,
-    DefaultExtraEmpasisState
+    DefaultExtraEmpasisState,
+    SeriesEncodeOptionMixin
 } from '../../util/types';
 import List from '../../data/List';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -62,7 +63,8 @@ interface ExtraStateOption {
 export interface CandlestickSeriesOption
     extends SeriesOption<CandlestickStateOption, ExtraStateOption>, CandlestickStateOption,
     SeriesOnCartesianOptionMixin,
-    SeriesLargeOptionMixin {
+    SeriesLargeOptionMixin,
+    SeriesEncodeOptionMixin {
 
     type?: 'candlestick'
 

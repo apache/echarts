@@ -28,7 +28,8 @@ import {
     SeriesLabelOption,
     OptionDataValueNumeric,
     StatesOptionMixin,
-    DefaultExtraEmpasisState
+    DefaultExtraEmpasisState,
+    SeriesEncodeOptionMixin
 } from '../../util/types';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -55,7 +56,7 @@ interface ExtraStateOption {
 }
 
 export interface BoxplotSeriesOption extends SeriesOption<BoxplotStateOption, ExtraStateOption>, BoxplotStateOption,
-    SeriesOnCartesianOptionMixin {
+    SeriesOnCartesianOptionMixin, SeriesEncodeOptionMixin {
     type?: 'boxplot'
 
     coordinateSystem?: 'cartesian2d'

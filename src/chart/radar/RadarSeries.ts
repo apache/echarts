@@ -30,7 +30,8 @@ import {
     AreaStyleOption,
     OptionDataValue,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    SeriesEncodeOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -53,7 +54,7 @@ export interface RadarSeriesDataItemOption extends SymbolOptionMixin,
 }
 
 export interface RadarSeriesOption extends SeriesOption<RadarSeriesStateOption>, RadarSeriesStateOption,
-    SymbolOptionMixin {
+    SymbolOptionMixin, SeriesEncodeOptionMixin {
     type?: 'radar'
     coordinateSystem?: 'radar'
 

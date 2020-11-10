@@ -35,7 +35,8 @@ import {
     OptionDataItemObject,
     LayoutOrient,
     VerticalAlign,
-    SeriesLabelOption
+    SeriesLabelOption,
+    SeriesEncodeOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -64,7 +65,7 @@ export interface FunnelDataItemOption
 }
 
 export interface FunnelSeriesOption extends SeriesOption<FunnelStateOption>, FunnelStateOption,
-    BoxLayoutOptionMixin {
+    BoxLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'funnel'
 
     min?: number

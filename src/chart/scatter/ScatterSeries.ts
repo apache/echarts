@@ -34,7 +34,8 @@ import {
     SymbolOptionMixin,
     StatesOptionMixin,
     OptionDataItemObject,
-    DefaultExtraEmpasisState
+    DefaultExtraEmpasisState,
+    SeriesEncodeOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -61,7 +62,7 @@ export interface ScatterSeriesOption extends SeriesOption<ScatterStateOption, Ex
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SeriesLargeOptionMixin, SeriesStackOptionMixin,
-    SymbolOptionMixin {
+    SymbolOptionMixin, SeriesEncodeOptionMixin {
     type?: 'scatter'
 
     coordinateSystem?: string

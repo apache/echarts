@@ -26,7 +26,8 @@ import {
     StatesOptionMixin,
     OptionDataItemObject,
     SeriesSamplingOptionMixin,
-    SeriesLabelOption
+    SeriesLabelOption,
+    SeriesEncodeOptionMixin
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
@@ -50,7 +51,7 @@ export interface BarDataItemOption extends BarStateOption, StatesOptionMixin<Bar
 }
 
 export interface BarSeriesOption extends BaseBarSeriesOption<BarStateOption>, BarStateOption,
-    SeriesStackOptionMixin, SeriesSamplingOptionMixin {
+    SeriesStackOptionMixin, SeriesSamplingOptionMixin, SeriesEncodeOptionMixin {
 
     type?: 'bar'
 
