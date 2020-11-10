@@ -30,13 +30,13 @@ import {
     CircleLayoutOptionMixin,
     LabelLineOption,
     ItemStyleOption,
-    LabelOption,
     BoxLayoutOptionMixin,
     OptionDataValueNumeric,
     SeriesEncodeOptionMixin,
     OptionDataItemObject,
     StatesOptionMixin,
-    DefaultExtraEmpasisState
+    DefaultExtraEmpasisState,
+    SeriesLabelOption
 } from '../../util/types';
 import List from '../../data/List';
 
@@ -58,14 +58,14 @@ export interface PieStateOption {
     label?: PieLabelOption
     labelLine?: PieLabelLineOption
 }
-interface PieLabelOption extends Omit<LabelOption, 'rotate' | 'position'> {
+interface PieLabelOption extends Omit<SeriesLabelOption, 'rotate' | 'position'> {
     rotate?: number
     alignTo?: 'none' | 'labelLine' | 'edge'
     edgeDistance?: string | number
     bleedMargin?: number
     distanceToLabelLine?: number
 
-    position?: LabelOption['position'] | 'outer' | 'inner' | 'center'
+    position?: SeriesLabelOption['position'] | 'outer' | 'inner' | 'center'
 }
 
 interface PieLabelLineOption extends LabelLineOption {

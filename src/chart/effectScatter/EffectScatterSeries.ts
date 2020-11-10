@@ -29,8 +29,10 @@ import {
     SymbolOptionMixin,
     OptionDataValue,
     ItemStyleOption,
-    LabelOption,
-    StatesOptionMixin
+    SeriesLabelOption,
+    StatesOptionMixin,
+    SeriesEncodeOptionMixin,
+    CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -41,7 +43,7 @@ type ScatterDataValue = OptionDataValue | OptionDataValue[];
 
 export interface EffectScatterStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 export interface EffectScatterDataItemOption extends SymbolOptionMixin,
@@ -56,7 +58,8 @@ export interface EffectScatterDataItemOption extends SymbolOptionMixin,
 
 export interface EffectScatterSeriesOption extends SeriesOption<EffectScatterStateOption>, EffectScatterStateOption,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
-    SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin, SymbolOptionMixin {
+    SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin, SymbolOptionMixin<CallbackDataParams>,
+    SeriesEncodeOptionMixin {
 
     type?: 'effectScatter'
 

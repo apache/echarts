@@ -28,13 +28,15 @@ import {
     SeriesOnSingleOptionMixin,
     OptionDataValue,
     ItemStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     SeriesLargeOptionMixin,
     SeriesStackOptionMixin,
     SymbolOptionMixin,
     StatesOptionMixin,
     OptionDataItemObject,
-    DefaultExtraEmpasisState
+    DefaultExtraEmpasisState,
+    SeriesEncodeOptionMixin,
+    CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -42,7 +44,7 @@ import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 interface ScatterStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 interface ExtraStateOption {
@@ -61,7 +63,7 @@ export interface ScatterSeriesOption extends SeriesOption<ScatterStateOption, Ex
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SeriesLargeOptionMixin, SeriesStackOptionMixin,
-    SymbolOptionMixin {
+    SymbolOptionMixin<CallbackDataParams>, SeriesEncodeOptionMixin {
     type?: 'scatter'
 
     coordinateSystem?: string

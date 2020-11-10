@@ -114,8 +114,8 @@ export interface SymbolDrawSeriesScope {
     focus?: string
     blurScope?: BlurScope
 
-    symbolRotate?: number
-    symbolOffset?: number[]
+    symbolRotate?: ScatterSeriesOption['symbolRotate']
+    symbolOffset?: (number | string)[]
 
     labelStatesModels: Record<DisplayState, Model<LabelOption>>
 

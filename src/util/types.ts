@@ -840,6 +840,7 @@ export interface RoamOptionMixin {
 export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
 export type SymbolCallback<T> = (rawValue: any, params: T) => string;
 export type SymbolRotateCallback<T> = (rawValue: any, params: T) => number;
+// export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => (string | number)[];
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -858,7 +859,7 @@ export interface SymbolOptionMixin<T = unknown> {
 
     symbolKeepAspect?: boolean
 
-    symbolOffset?: number[]
+    symbolOffset?: (string | number)[]
 }
 
 /**
@@ -953,7 +954,7 @@ export interface TextCommonOption extends ShadowOptionMixin {
 
     lineHeight?: number
     backgroundColor?: ColorString | {
-        image: ImageLike
+        image: ImageLike | string
     }
     borderColor?: string
     borderWidth?: number
@@ -1013,6 +1014,10 @@ export interface LabelOption extends TextCommonOption {
     rich?: Dictionary<TextCommonOption>
 }
 
+export interface SeriesLabelOption extends LabelOption {
+    formatter?: string | LabelFormatterCallback<CallbackDataParams>
+}
+
 /**
  * Option for labels on line, like markLine, lines
  */
@@ -1049,6 +1054,11 @@ export interface LabelLineOption {
     minTurnAngle?: number,
     lineStyle?: LineStyleOption
 }
+
+export interface SeriesLineLabelOption extends LineLabelOption {
+    formatter?: string | LabelFormatterCallback<CallbackDataParams>
+}
+
 
 
 export interface LabelLayoutOptionCallbackParams {
@@ -1419,7 +1429,8 @@ export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStat
     blur?: StateOption & ExtraStateOpts['blur']
 }
 
-export interface SeriesOption<StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
+export interface SeriesOption<
+    StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
     ComponentOption,
     AnimationOptionMixin,
     ColorPaletteOptionMixin,

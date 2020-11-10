@@ -34,7 +34,8 @@ import {
     OptionId,
     OptionName,
     DecalObject,
-    DefaultExtraEmpasisState
+    DefaultExtraEmpasisState,
+    SeriesLabelOption
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -51,7 +52,7 @@ interface BreadcrumbItemStyleOption extends ItemStyleOption {
     textStyle?: LabelOption
 }
 
-interface TreemapSeriesLabelOption extends LabelOption {
+interface TreemapSeriesLabelOption extends SeriesLabelOption {
     ellipsis?: boolean
     formatter?: string | ((params: CallbackDataParams) => string)
 }
@@ -162,12 +163,12 @@ export interface TreemapSeriesOption
      */
     clipWindow?: 'origin' | 'fullscreen'
 
-    squareRatio: number
+    squareRatio?: number
     /**
      * Nodes on depth from root are regarded as leaves.
      * Count from zero (zero represents only view root).
      */
-    leafDepth: number
+    leafDepth?: number
 
     drillDownIcon?: string
 

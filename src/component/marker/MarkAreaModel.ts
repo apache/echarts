@@ -18,14 +18,14 @@
 */
 
 import MarkerModel, { MarkerOption, MarkerStatisticType, MarkerPositionOption } from './MarkerModel';
-import { LabelOption, ItemStyleOption, StatesOptionMixin } from '../../util/types';
+import { SeriesLabelOption, ItemStyleOption, StatesOptionMixin } from '../../util/types';
 import ComponentModel from '../../model/Component';
 import GlobalModel from '../../model/Global';
 
 
 interface MarkAreaStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 interface MarkAreaDataItemOptionBase extends MarkAreaStateOption, StatesOptionMixin<MarkAreaStateOption> {

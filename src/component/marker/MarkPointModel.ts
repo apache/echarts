@@ -23,7 +23,7 @@ import GlobalModel from '../../model/Global';
 import {
     SymbolOptionMixin,
     ItemStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     CallbackDataParams,
     StatesOptionMixin
 } from '../../util/types';
@@ -35,7 +35,7 @@ import {
 
 interface MarkPointStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 export interface MarkPointDataItemOption extends
     MarkPointStateOption, StatesOptionMixin<MarkPointStateOption>,

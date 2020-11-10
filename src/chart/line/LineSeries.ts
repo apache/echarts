@@ -24,7 +24,7 @@ import {
     SeriesOption,
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
-    LabelOption,
+    SeriesLabelOption,
     LineStyleOption,
     ItemStyleOption,
     AreaStyleOption,
@@ -32,7 +32,9 @@ import {
     SymbolOptionMixin,
     SeriesSamplingOptionMixin,
     StatesOptionMixin,
-    DefaultExtraEmpasisState
+    DefaultExtraEmpasisState,
+    SeriesEncodeOptionMixin,
+    CallbackDataParams
 } from '../../util/types';
 import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -49,7 +51,7 @@ interface ExtraStateOption {
 
 export interface LineStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 export interface LineDataItemOption extends SymbolOptionMixin,
@@ -59,7 +61,7 @@ export interface LineDataItemOption extends SymbolOptionMixin,
     value?: LineDataValue
 }
 
-export interface LineEndLabelOption extends LabelOption {
+export interface LineEndLabelOption extends SeriesLabelOption {
     valueAnimation: boolean
 }
 
@@ -80,7 +82,8 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
     SeriesSamplingOptionMixin,
-    SymbolOptionMixin {
+    SymbolOptionMixin<CallbackDataParams>,
+    SeriesEncodeOptionMixin {
     type?: 'line'
 
     coordinateSystem?: 'cartesian2d' | 'polar'
@@ -88,7 +91,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     // If clip the overflow value
     clip?: boolean
 
-    label?: LabelOption
+    label?: SeriesLabelOption
     endLabel?: LineEndLabelOption
 
     lineStyle?: LineStyleOption

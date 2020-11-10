@@ -27,7 +27,8 @@ import {
     LabelOption,
     ItemStyleOption,
     OptionDataValueNumeric,
-    StatesOptionMixin
+    StatesOptionMixin,
+    SeriesEncodeOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -110,7 +111,7 @@ export interface GaugeDataItemOption extends GaugeStateOption, StatesOptionMixin
     detail?: DetailOption
 }
 export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, GaugeStateOption,
-    CircleLayoutOptionMixin {
+    CircleLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'gauge'
 
     // override radius
@@ -130,7 +131,7 @@ export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, Gauge
     axisLine?: {
         show?: boolean
         roundCap?: boolean
-        lineStyle: Omit<LineStyleOption, 'color'> & {
+        lineStyle?: Omit<LineStyleOption, 'color'> & {
             color: GaugeColorStop[]
         }
     },

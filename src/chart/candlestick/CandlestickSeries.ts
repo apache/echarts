@@ -27,11 +27,12 @@ import {
     ItemStyleOption,
     ZRColor,
     ColorString,
-    LabelOption,
+    SeriesLabelOption,
     SeriesLargeOptionMixin,
     OptionDataValueNumeric,
     StatesOptionMixin,
-    DefaultExtraEmpasisState
+    DefaultExtraEmpasisState,
+    SeriesEncodeOptionMixin
 } from '../../util/types';
 import List from '../../data/List';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -45,7 +46,7 @@ interface CandlestickItemStyleOption extends ItemStyleOption {
 }
 export interface CandlestickStateOption {
     itemStyle?: CandlestickItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 export interface CandlestickDataItemOption
     extends CandlestickStateOption, StatesOptionMixin<CandlestickStateOption, ExtraStateOption> {
@@ -62,7 +63,8 @@ interface ExtraStateOption {
 export interface CandlestickSeriesOption
     extends SeriesOption<CandlestickStateOption, ExtraStateOption>, CandlestickStateOption,
     SeriesOnCartesianOptionMixin,
-    SeriesLargeOptionMixin {
+    SeriesLargeOptionMixin,
+    SeriesEncodeOptionMixin {
 
     type?: 'candlestick'
 

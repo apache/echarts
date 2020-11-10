@@ -26,11 +26,12 @@ import {
     RoamOptionMixin,
     LineStyleOption,
     ItemStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     OptionDataValue,
     StatesOptionMixin,
     OptionDataItemObject,
-    DefaultExtraEmpasisState
+    DefaultExtraEmpasisState,
+    CallbackDataParams
 } from '../../util/types';
 import List from '../../data/List';
 import View from '../../coord/View';
@@ -48,7 +49,7 @@ export interface TreeSeriesStateOption {
      * Line style of the edge between node and it's parent.
      */
     lineStyle?: CurveLineStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 interface ExtraStateOption {
@@ -58,7 +59,7 @@ interface ExtraStateOption {
     }
 }
 
-export interface TreeSeriesNodeItemOption extends SymbolOptionMixin,
+export interface TreeSeriesNodeItemOption extends SymbolOptionMixin<CallbackDataParams>,
     TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption, ExtraStateOption>,
     OptionDataItemObject<OptionDataValue> {
 

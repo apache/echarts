@@ -191,6 +191,8 @@ interface AxisLabelOption extends Omit<TextCommonOption, 'color'> {
 
     // Color can be callback
     color?: ColorString | ((value?: string | number, index?: number) => ColorString)
+
+    rich?: Dictionary<TextCommonOption>
 }
 
 interface MinorTickOption {

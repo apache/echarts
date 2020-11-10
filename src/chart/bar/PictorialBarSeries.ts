@@ -22,7 +22,7 @@ import SeriesModel from '../../model/Series';
 import {
     OptionDataValue,
     ItemStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     AnimationOptionMixin,
     SeriesStackOptionMixin,
     StatesOptionMixin,
@@ -34,7 +34,7 @@ import { inheritDefaultOption } from '../../util/component';
 
 export interface PictorialBarStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 interface PictorialBarSeriesSymbolOption {
