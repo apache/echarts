@@ -33,7 +33,8 @@ import {
     SeriesSamplingOptionMixin,
     StatesOptionMixin,
     DefaultExtraEmpasisState,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    CallbackDataParams
 } from '../../util/types';
 import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -81,7 +82,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
     SeriesSamplingOptionMixin,
-    SymbolOptionMixin,
+    SymbolOptionMixin<CallbackDataParams>,
     SeriesEncodeOptionMixin {
     type?: 'line'
 

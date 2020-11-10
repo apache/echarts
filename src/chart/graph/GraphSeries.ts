@@ -37,13 +37,13 @@ import {
     LineStyleOption,
     SymbolOptionMixin,
     BoxLayoutOptionMixin,
-    LabelFormatterCallback,
     Dictionary,
     SeriesLineLabelOption,
     StatesOptionMixin,
     GraphEdgeItemObject,
     OptionDataValueNumeric,
-    DefaultExtraEmpasisState
+    DefaultExtraEmpasisState,
+    CallbackDataParams
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -139,7 +139,7 @@ export interface GraphCategoryItemOption extends SymbolOptionMixin,
 export interface GraphSeriesOption extends SeriesOption,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
-    SymbolOptionMixin,
+    SymbolOptionMixin<CallbackDataParams>,
     RoamOptionMixin,
     BoxLayoutOptionMixin {
 

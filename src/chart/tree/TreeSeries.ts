@@ -30,7 +30,8 @@ import {
     OptionDataValue,
     StatesOptionMixin,
     OptionDataItemObject,
-    DefaultExtraEmpasisState
+    DefaultExtraEmpasisState,
+    CallbackDataParams
 } from '../../util/types';
 import List from '../../data/List';
 import View from '../../coord/View';
@@ -58,7 +59,7 @@ interface ExtraStateOption {
     }
 }
 
-export interface TreeSeriesNodeItemOption extends SymbolOptionMixin,
+export interface TreeSeriesNodeItemOption extends SymbolOptionMixin<CallbackDataParams>,
     TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption, ExtraStateOption>,
     OptionDataItemObject<OptionDataValue> {
 

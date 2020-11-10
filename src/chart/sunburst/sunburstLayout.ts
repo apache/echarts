@@ -23,7 +23,6 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption, SunburstSeriesOption } from './SunburstSeries';
 import { TreeNode } from '../../data/Tree';
-import { valueToNode } from '@babel/types';
 
 // let PI2 = Math.PI * 2;
 const RADIAN = Math.PI / 180;

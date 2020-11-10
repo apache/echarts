@@ -38,7 +38,6 @@ import Model from '../../model/Model';
 import GlobalModel, { GlobalModelSetOptionOpts } from '../../model/Global';
 import { each, isObject, clone } from 'zrender/src/core/util';
 import { convertOptionIdName, getDataItemValue } from '../../util/model';
-import { number } from '../../export';
 
 
 export interface TimelineControlStyle extends ItemStyleOption {

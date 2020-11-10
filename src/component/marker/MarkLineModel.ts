@@ -25,7 +25,8 @@ import {
     SeriesLineLabelOption,
     SymbolOptionMixin,
     ItemStyleOption,
-    StatesOptionMixin
+    StatesOptionMixin,
+    CallbackDataParams
 } from '../../util/types';
 
 interface MarkLineStateOption {
