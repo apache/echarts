@@ -1913,8 +1913,6 @@
         sy = Math.sqrt(sy);
       }
 
-      this.rotation = Math.atan2(-m[1] / sy, m[0] / sx);
-
       if (m[0] < 0) {
         sx = -sx;
       }
@@ -1922,6 +1920,8 @@
       if (m[3] < 0) {
         sy = -sy;
       }
+
+      this.rotation = Math.atan2(-m[1] / sy, m[0] / sx);
 
       if (sx < 0 && sy < 0) {
         this.rotation += Math.PI;
@@ -5339,26 +5339,29 @@
     cfg = cfg || {};
     var animators = [];
     animateToShallow(animatable, '', animatable, target, cfg, animationProps, animators, reverse);
-    var doneCount = animators.length;
-    var abortedCount = doneCount;
+    var finishCount = animators.length;
+    var doneHappened = false;
     var cfgDone = cfg.done;
     var cfgAborted = cfg.aborted;
-    var doneCb = cfgDone ? function () {
-      doneCount--;
 
-      if (!doneCount) {
-        cfgDone();
+    var doneCb = function () {
+      doneHappened = true;
+      finishCount--;
+
+      if (finishCount <= 0) {
+        doneHappened ? cfgDone && cfgDone() : cfgAborted && cfgAborted();
       }
-    } : null;
-    var abortedCb = cfgAborted ? function () {
-      abortedCount--;
+    };
 
-      if (!abortedCount) {
-        cfgAborted();
+    var abortedCb = function () {
+      finishCount--;
+
+      if (finishCount <= 0) {
+        doneHappened ? cfgDone && cfgDone() : cfgAborted && cfgAborted();
       }
-    } : null;
+    };
 
-    if (!doneCount) {
+    if (!finishCount) {
       cfgDone && cfgDone();
     }
 
@@ -5472,7 +5475,7 @@
 
     var keyLen = animatableKeys.length;
 
-    if (keyLen > 0 || cfg.force) {
+    if (keyLen > 0 || cfg.force && !animators.length) {
       var existsAnimators = animatable.animators;
       var existsAnimatorsOnSameTarget = [];
 
@@ -6483,7 +6486,7 @@
       animator.animation = null;
     };
 
-    Animation.prototype.update = function (notTriggerStageUpdate) {
+    Animation.prototype.update = function (notTriggerFrameAndStageUpdate) {
       var time = new Date().getTime() - this._pausedTime;
 
       var delta = time - this._time;
@@ -6503,11 +6506,11 @@
       }
 
       this._time = time;
-      this.onframe(delta);
-      this.trigger('frame', delta);
 
-      if (this.stage.update && !notTriggerStageUpdate) {
-        this.stage.update();
+      if (!notTriggerFrameAndStageUpdate) {
+        this.onframe(delta);
+        this.trigger('frame', delta);
+        this.stage.update && this.stage.update();
       }
     };
 
@@ -10353,7 +10356,7 @@
   };
 
   function isImageLike(source) {
-    return source && typeof source !== 'string' && source.width && source.height;
+    return !!(source && typeof source !== 'string' && source.width && source.height);
   }
 
   var ZRImage = function (_super) {
@@ -10367,58 +10370,36 @@
       return createObject(DEFAULT_IMAGE_STYLE, obj);
     };
 
-    ZRImage.prototype.getWidth = function () {
+    ZRImage.prototype._getSize = function (dim) {
       var style = this.style;
-      var imageSource = style.image;
+      var size = style[dim];
 
-      if (isImageLike(imageSource)) {
-        return imageSource.width;
+      if (size != null) {
+        return size;
       }
 
-      if (!this.__image) {
+      var imageSource = isImageLike(style.image) ? style.image : this.__image;
+
+      if (!imageSource) {
         return 0;
       }
 
-      var width = style.width;
-      var height = style.height;
+      var otherDim = dim === 'width' ? 'height' : 'width';
+      var otherDimSize = style[otherDim];
 
-      if (width == null) {
-        if (height == null) {
-          return this.__image.width;
-        } else {
-          var aspect = this.__image.width / this.__image.height;
-          return aspect * height;
-        }
+      if (otherDimSize == null) {
+        return imageSource[dim];
       } else {
-        return width;
+        return imageSource[dim] / imageSource[otherDim] * otherDimSize;
       }
     };
 
+    ZRImage.prototype.getWidth = function () {
+      return this._getSize('width');
+    };
+
     ZRImage.prototype.getHeight = function () {
-      var style = this.style;
-      var imageSource = style.image;
-
-      if (isImageLike(imageSource)) {
-        return imageSource.height;
-      }
-
-      if (!this.__image) {
-        return 0;
-      }
-
-      var width = style.width;
-      var height = style.height;
-
-      if (height == null) {
-        if (width == null) {
-          return this.__image.height;
-        } else {
-          var aspect = this.__image.height / this.__image.width;
-          return aspect * width;
-        }
-      } else {
-        return height;
-      }
+      return this._getSize('height');
     };
 
     ZRImage.prototype.getAnimationStyleProps = function () {
@@ -11232,16 +11213,16 @@
       innerRadius = tmp;
     }
 
-    var x = shape.cx;
-    var y = shape.cy;
     var clockwise = !!shape.clockwise;
     var startAngle = shape.startAngle;
     var endAngle = shape.endAngle;
-    var cornerRadius = shape.cornerRadius || 0;
-    var innerCornerRadius = shape.innerCornerRadius || 0;
     var tmpAngles = [startAngle, endAngle];
     normalizeArcAngles(tmpAngles, !clockwise);
     var arc = mathAbs$1(tmpAngles[0] - tmpAngles[1]);
+    var x = shape.cx;
+    var y = shape.cy;
+    var cornerRadius = shape.cornerRadius || 0;
+    var innerCornerRadius = shape.innerCornerRadius || 0;
 
     if (!(radius > e)) {
       ctx.moveTo(x, y);
@@ -11309,7 +11290,7 @@
         ctx.arc(x, y, radius, startAngle, endAngle, !clockwise);
       }
 
-      if (!(innerRadius > e)) {
+      if (!(innerRadius > e) || !(arc > e)) {
         ctx.lineTo(x + xire, y + yire);
       } else if (cr0 > e) {
         var ct0 = computeCornerTangents(xire, yire, xre, yre, innerRadius, -cr0, clockwise);
@@ -14760,7 +14741,7 @@
     };
   }
 
-  var AREA_STYLE_KEY_MAP = [['fill', 'color'], ['shadowBlur'], ['shadowOffsetX'], ['shadowOffsetY'], ['opacity'], ['shadowColor'], ['decal']];
+  var AREA_STYLE_KEY_MAP = [['fill', 'color'], ['shadowBlur'], ['shadowOffsetX'], ['shadowOffsetY'], ['opacity'], ['shadowColor']];
   var getAreaStyle = makeStyleMapper(AREA_STYLE_KEY_MAP);
 
   var AreaStyleMixin = function () {
@@ -15042,18 +15023,18 @@
     return el.__highDownSilentOnTouch && e.zrByTouch;
   }
 
-  function allLeaveBlur(ecIns) {
-    var model = ecIns.getModel();
+  function allLeaveBlur(api) {
+    var model = api.getModel();
     model.eachComponent(function (componentType, componentModel) {
-      var view = componentType === 'series' ? ecIns.getViewOfSeriesModel(componentModel) : ecIns.getViewOfComponentModel(componentModel);
+      var view = componentType === 'series' ? api.getViewOfSeriesModel(componentModel) : api.getViewOfComponentModel(componentModel);
       view.group.traverse(function (child) {
         singleLeaveBlur(child);
       });
     });
   }
 
-  function toggleSeriesBlurState(targetSeriesIndex, focus, blurScope, ecIns, isBlur) {
-    var ecModel = ecIns.getModel();
+  function toggleSeriesBlurState(targetSeriesIndex, focus, blurScope, api, isBlur) {
+    var ecModel = api.getModel();
     blurScope = blurScope || 'coordinateSystem';
 
     function leaveBlurOfIndices(data, dataIndices) {
@@ -15064,7 +15045,7 @@
     }
 
     if (!isBlur) {
-      allLeaveBlur(ecIns);
+      allLeaveBlur(api);
       return;
     }
 
@@ -15095,7 +15076,7 @@
       var sameCoordSys = coordSys && targetCoordSys ? coordSys === targetCoordSys : sameSeries;
 
       if (!(blurScope === 'series' && !sameSeries || blurScope === 'coordinateSystem' && !sameCoordSys || focus === 'series' && sameSeries)) {
-        var view = ecIns.getViewOfSeriesModel(seriesModel);
+        var view = api.getViewOfSeriesModel(seriesModel);
         view.group.traverse(function (child) {
           singleEnterBlur(child);
         });
@@ -15118,7 +15099,7 @@
         return;
       }
 
-      var view = ecIns.getViewOfComponentModel(componentModel);
+      var view = api.getViewOfComponentModel(componentModel);
 
       if (view && view.blurSeries) {
         view.blurSeries(blurredSeries, ecModel);
@@ -15126,7 +15107,7 @@
     });
   }
 
-  function toggleSeriesBlurStateFromPayload(seriesModel, payload, ecIns) {
+  function toggleSeriesBlurStateFromPayload(seriesModel, payload, api) {
     if (!isHighDownPayload(payload)) {
       return;
     }
@@ -15149,18 +15130,18 @@
 
     if (el) {
       var ecData = getECData(el);
-      toggleSeriesBlurState(seriesIndex, ecData.focus, ecData.blurScope, ecIns, isHighlight);
+      toggleSeriesBlurState(seriesIndex, ecData.focus, ecData.blurScope, api, isHighlight);
     } else {
       var focus_1 = seriesModel.get(['emphasis', 'focus']);
       var blurScope = seriesModel.get(['emphasis', 'blurScope']);
 
       if (focus_1 != null) {
-        toggleSeriesBlurState(seriesIndex, focus_1, blurScope, ecIns, isHighlight);
+        toggleSeriesBlurState(seriesIndex, focus_1, blurScope, api, isHighlight);
       }
     }
   }
 
-  function toggleSelectionFromPayload(seriesModel, payload, ecIns) {
+  function toggleSelectionFromPayload(seriesModel, payload, api) {
     if (!isSelectChangePayload(payload)) {
       return;
     }
@@ -15220,10 +15201,13 @@
   }
 
   function enableHoverFocus(el, focus, blurScope) {
+    var ecData = getECData(el);
+
     if (focus != null) {
-      var ecData = getECData(el);
       ecData.focus = focus;
       ecData.blurScope = blurScope;
+    } else if (ecData.focus) {
+      ecData.focus = null;
     }
   }
 
@@ -15362,6 +15346,7 @@
 
   function animateOrSetProps(animationType, el, props, animatableModel, dataIndex, cb, during) {
     var isFrom = false;
+    var removeOpt;
 
     if (typeof dataIndex === 'function') {
       during = cb;
@@ -15371,6 +15356,7 @@
       cb = dataIndex.cb;
       during = dataIndex.during;
       isFrom = dataIndex.isFrom;
+      removeOpt = dataIndex.removeOpt;
       dataIndex = dataIndex.dataIndex;
     }
 
@@ -15399,21 +15385,22 @@
         animationEasing = animationPayload.easing || 'cubicOut';
         animationDelay = animationPayload.delay || 0;
       } else if (isRemove) {
-        duration = 200;
-        animationEasing = 'cubicOut';
+        removeOpt = removeOpt || {};
+        duration = retrieve2(removeOpt.duration, 200);
+        animationEasing = retrieve2(removeOpt.easing, 'cubicOut');
         animationDelay = 0;
       } else {
         duration = animatableModel.getShallow(isUpdate ? 'animationDurationUpdate' : 'animationDuration');
         animationEasing = animatableModel.getShallow(isUpdate ? 'animationEasingUpdate' : 'animationEasing');
         animationDelay = animatableModel.getShallow(isUpdate ? 'animationDelayUpdate' : 'animationDelay');
+      }
 
-        if (typeof animationDelay === 'function') {
-          animationDelay = animationDelay(dataIndex, animatableModel.getAnimationDelayParams ? animatableModel.getAnimationDelayParams(el, dataIndex) : null);
-        }
+      if (typeof animationDelay === 'function') {
+        animationDelay = animationDelay(dataIndex, animatableModel.getAnimationDelayParams ? animatableModel.getAnimationDelayParams(el, dataIndex) : null);
+      }
 
-        if (typeof duration === 'function') {
-          duration = duration(dataIndex);
-        }
+      if (typeof duration === 'function') {
+        duration = duration(dataIndex);
       }
 
       duration > 0 ? isFrom ? el.animateFrom(props, {
@@ -15451,6 +15438,10 @@
   }
 
   function removeElement(el, props, animatableModel, dataIndex, cb, during) {
+    if (isElementRemoved(el)) {
+      return;
+    }
+
     animateOrSetProps('remove', el, props, animatableModel, dataIndex, cb, during);
   }
 
@@ -15748,7 +15739,7 @@
       for (var name_1 in richItemNames) {
         if (richItemNames.hasOwnProperty(name_1)) {
           var richTextStyle = textStyleModel.getModel(['rich', name_1]);
-          setTokenTextStyle(richResult[name_1] = {}, richTextStyle, globalTextStyle, opt, isNotNormal, isAttached);
+          setTokenTextStyle(richResult[name_1] = {}, richTextStyle, globalTextStyle, opt, isNotNormal, isAttached, false, true);
         }
       }
     }
@@ -15769,7 +15760,7 @@
       textStyle.margin = margin;
     }
 
-    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true);
+    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true, false);
   }
 
   function getRichItemNames(textStyleModel) {
@@ -15794,15 +15785,16 @@
     return richItemNameMap;
   }
 
-  var TEXT_PROPS_WITH_GLOBAL = ['fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'opacity', 'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'];
+  var TEXT_PROPS_WITH_GLOBAL = ['fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'];
   var TEXT_PROPS_SELF = ['align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign'];
   var TEXT_PROPS_BOX = ['padding', 'borderWidth', 'borderRadius', 'borderDashOffset', 'backgroundColor', 'borderColor', 'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'];
 
-  function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, isBlock) {
+  function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, isBlock, inRich) {
     globalTextStyle = !isNotNormal && globalTextStyle || EMPTY_OBJ;
     var inheritColor = opt && opt.inheritColor;
     var fillColor = textStyleModel.getShallow('color');
     var strokeColor = textStyleModel.getShallow('textBorderColor');
+    var opacity = retrieve2(textStyleModel.getShallow('opacity'), globalTextStyle.opacity);
 
     if (fillColor === 'inherit' || fillColor === 'auto') {
       if (true) {
@@ -15861,6 +15853,14 @@
 
     if (textBorderDashOffset != null) {
       textStyle.lineDashOffset = textBorderDashOffset;
+    }
+
+    if (!isNotNormal && opacity == null && !inRich) {
+      opacity = opt && opt.defaultOpacity;
+    }
+
+    if (opacity != null) {
+      textStyle.opacity = opacity;
     }
 
     if (!isNotNormal && !isAttached) {
@@ -16020,7 +16020,7 @@
     return TextStyleMixin;
   }();
 
-  var LINE_STYLE_KEY_MAP = [['lineWidth', 'width'], ['stroke', 'color'], ['opacity'], ['shadowBlur'], ['shadowOffsetX'], ['shadowOffsetY'], ['shadowColor'], ['lineDash', 'type'], ['lineDashOffset', 'dashOffset'], ['lineCap', 'cap'], ['lineJoin', 'join'], ['miterLimit'], ['decal']];
+  var LINE_STYLE_KEY_MAP = [['lineWidth', 'width'], ['stroke', 'color'], ['opacity'], ['shadowBlur'], ['shadowOffsetX'], ['shadowOffsetY'], ['shadowColor'], ['lineDash', 'type'], ['lineDashOffset', 'dashOffset'], ['lineCap', 'cap'], ['lineJoin', 'join'], ['miterLimit']];
   var getLineStyle = makeStyleMapper(LINE_STYLE_KEY_MAP);
 
   var LineStyleMixin = function () {
@@ -16033,7 +16033,7 @@
     return LineStyleMixin;
   }();
 
-  var ITEM_STYLE_KEY_MAP = [['fill', 'color'], ['stroke', 'borderColor'], ['lineWidth', 'borderWidth'], ['opacity'], ['shadowBlur'], ['shadowOffsetX'], ['shadowOffsetY'], ['shadowColor'], ['lineDash', 'borderType'], ['lineDashOffset', 'borderDashOffset'], ['lineCap', 'borderCap'], ['lineJoin', 'borderJoin'], ['miterLimit', 'borderMiterLimit'], ['decal']];
+  var ITEM_STYLE_KEY_MAP = [['fill', 'color'], ['stroke', 'borderColor'], ['lineWidth', 'borderWidth'], ['opacity'], ['shadowBlur'], ['shadowOffsetX'], ['shadowOffsetY'], ['shadowColor'], ['lineDash', 'borderType'], ['lineDashOffset', 'borderDashOffset'], ['lineCap', 'borderCap'], ['lineJoin', 'borderJoin'], ['miterLimit', 'borderMiterLimit']];
   var getItemStyle = makeStyleMapper(ITEM_STYLE_KEY_MAP);
 
   var ItemStyleMixin = function () {
@@ -16627,7 +16627,7 @@
     }
   }
 
-  function format(time, template, lang, isUTC) {
+  function format(time, template, isUTC, lang) {
     var date = parseDate(time);
     var y = date[fullYearGetterName(isUTC)]();
     var M = date[monthGetterName(isUTC)]() + 1;
@@ -16691,7 +16691,7 @@
       }
     }
 
-    return format(new Date(tick.value), template, lang, isUTC);
+    return format(new Date(tick.value), template, isUTC, lang);
   }
 
   function getUnitFromValue(value, isUTC) {
@@ -16861,25 +16861,17 @@
       return '';
     }
 
-    var isTimeAxis = paramsList[0].axisType && paramsList[0].axisType.indexOf('time') >= 0;
+    var $vars = paramsList[0].$vars || [];
 
-    if (isTimeAxis) {
-      var axisValue = paramsList[0].data[paramsList[0].axisIndex];
-      var date = parseDate(axisValue);
-      return format(date, tpl);
-    } else {
-      var $vars = paramsList[0].$vars || [];
+    for (var i = 0; i < $vars.length; i++) {
+      var alias = TPL_VAR_ALIAS[i];
+      tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
+    }
 
-      for (var i = 0; i < $vars.length; i++) {
-        var alias = TPL_VAR_ALIAS[i];
-        tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
-      }
-
-      for (var seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
-        for (var k = 0; k < $vars.length; k++) {
-          var val = paramsList[seriesIdx][$vars[k]];
-          tpl = tpl.replace(wrapVar(TPL_VAR_ALIAS[k], seriesIdx), encode ? encodeHTML(val) : val);
-        }
+    for (var seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
+      for (var k = 0; k < $vars.length; k++) {
+        var val = paramsList[seriesIdx][$vars[k]];
+        tpl = tpl.replace(wrapVar(TPL_VAR_ALIAS[k], seriesIdx), encode ? encodeHTML(val) : val);
       }
     }
 
@@ -17262,40 +17254,44 @@
     darkMode: 'auto',
     color: ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'],
     gradientColor: ['#f6efa6', '#d88273', '#bf444c'],
-    decals: [{
-      color: decalColor,
-      dashArrayX: [1, 0],
-      dashArrayY: [2, 5],
-      symbolSize: 1,
-      rotation: Math.PI / 6
-    }, {
-      color: decalColor,
-      symbol: 'circle',
-      dashArrayX: [[8, 8], [0, 8, 8, 0]],
-      dashArrayY: [6, 0],
-      symbolSize: 0.8
-    }, {
-      color: decalColor,
-      dashArrayX: [1, 0],
-      dashArrayY: [4, 3],
-      dashLineOffset: 0,
-      rotation: -Math.PI / 4
-    }, {
-      color: decalColor,
-      dashArrayX: [[6, 6], [0, 6, 6, 0]],
-      dashArrayY: [6, 0]
-    }, {
-      color: decalColor,
-      dashArrayX: [[1, 0], [1, 6]],
-      dashArrayY: [1, 0, 6, 0],
-      rotation: Math.PI / 4
-    }, {
-      color: decalColor,
-      symbol: 'triangle',
-      dashArrayX: [[9, 9], [0, 9, 9, 0]],
-      dashArrayY: [7, 2],
-      symbolSize: 0.75
-    }],
+    aria: {
+      decal: {
+        decals: [{
+          color: decalColor,
+          dashArrayX: [1, 0],
+          dashArrayY: [2, 5],
+          symbolSize: 1,
+          rotation: Math.PI / 6
+        }, {
+          color: decalColor,
+          symbol: 'circle',
+          dashArrayX: [[8, 8], [0, 8, 8, 0]],
+          dashArrayY: [6, 0],
+          symbolSize: 0.8
+        }, {
+          color: decalColor,
+          dashArrayX: [1, 0],
+          dashArrayY: [4, 3],
+          dashLineOffset: 0,
+          rotation: -Math.PI / 4
+        }, {
+          color: decalColor,
+          dashArrayX: [[6, 6], [0, 6, 6, 0]],
+          dashArrayY: [6, 0]
+        }, {
+          color: decalColor,
+          dashArrayX: [[1, 0], [1, 6]],
+          dashArrayY: [1, 0, 6, 0],
+          rotation: Math.PI / 4
+        }, {
+          color: decalColor,
+          symbol: 'triangle',
+          dashArrayX: [[9, 9], [0, 9, 9, 0]],
+          dashArrayY: [7, 2],
+          symbolSize: 0.75
+        }]
+      }
+    },
     textStyle: {
       fontFamily: platform.match(/^Win/) ? 'Microsoft YaHei' : 'sans-serif',
       fontSize: 12,
@@ -17662,23 +17658,13 @@
       clearPalette(this, innerColor);
     };
 
-    PaletteMixin.prototype.getDecalFromPalette = function (name, scope, requestNum) {
-      var decals = this.get('decals');
-
-      if (!isArray(decals)) {
-        decals = [decals];
-      }
-
-      var defaultDecals = decals;
-      return getFromPalette(this, innerDecal, defaultDecals, [defaultDecals], name, scope, requestNum);
-    };
-
-    PaletteMixin.prototype.clearDecalPalette = function () {
-      clearPalette(this, innerDecal);
-    };
-
     return PaletteMixin;
   }();
+
+  function getDecalFromPalette(ecModel, name, scope, requestNum) {
+    var defaultDecals = normalizeToArray(ecModel.get(['aria', 'decal', 'decals']));
+    return getFromPalette(ecModel, innerDecal, defaultDecals, null, name, scope, requestNum);
+  }
 
   function getNearestPalette(palettes, requestColorNum) {
     var paletteNum = palettes.length;
@@ -18176,6 +18162,12 @@
           series: []
         });
         ecModel._componentsCount = createHashMap();
+        var airaOption = baseOption.aria;
+
+        if (isObject(airaOption) && airaOption.enabled == null) {
+          airaOption.enabled = true;
+        }
+
         mergeTheme(baseOption, ecModel._theme.option);
         merge(baseOption, globalDefault, false);
 
@@ -18255,7 +18247,7 @@
   }
 
   mixin(GlobalModel, PaletteMixin);
-  var availableMethods = ['getDom', 'getZr', 'getWidth', 'getHeight', 'getDevicePixelRatio', 'dispatchAction', 'isDisposed', 'on', 'off', 'getDataURL', 'getConnectedDataURL', 'getModel', 'getOption', 'getViewOfComponentModel', 'getViewOfSeriesModel', 'getId', 'updateLabelLayout'];
+  var availableMethods = ['getDom', 'getZr', 'getWidth', 'getHeight', 'getDevicePixelRatio', 'dispatchAction', 'isDisposed', 'on', 'off', 'getDataURL', 'getConnectedDataURL', 'getOption', 'getId', 'updateLabelLayout'];
 
   var ExtensionAPI = function () {
     function ExtensionAPI(ecInstance) {
@@ -18747,7 +18739,7 @@
     return (isArray(o) ? o[0] : o) || {};
   }
 
-  function compatStyle(option, isTheme) {
+  function globalCompatStyle(option, isTheme) {
     each$2(toArr(option.series), function (seriesOpt) {
       isObject$1(seriesOpt) && processSeries(seriesOpt);
     });
@@ -18946,8 +18938,8 @@
     }
   }
 
-  function backwardCompat(option, isTheme) {
-    compatStyle(option, isTheme);
+  function globalBackwardCompat(option, isTheme) {
+    globalCompatStyle(option, isTheme);
     option.series = normalizeToArray(option.series);
     each(option.series, function (seriesOpt) {
       if (!isObject(seriesOpt)) {
@@ -20845,17 +20837,6 @@
       return color;
     };
 
-    SeriesModel.prototype.getDecalFromPalette = function (name, scope, requestColorNum) {
-      var ecModel = this.ecModel;
-      var decal = PaletteMixin.prototype.getDecalFromPalette.call(this, name, scope, requestColorNum);
-
-      if (!decal) {
-        decal = ecModel.getDecalFromPalette(name, scope, requestColorNum);
-      }
-
-      return decal;
-    };
-
     SeriesModel.prototype.coordDimToDataDim = function (coordDim) {
       return this.getRawData().mapDimensionsAll(coordDim);
     };
@@ -21446,7 +21427,7 @@
   };
   var PI$5 = Math.PI;
 
-  function loadingDefault(api, opts) {
+  function defaultLoading(api, opts) {
     opts = opts || {};
     defaults(opts, {
       text: 'loading',
@@ -21621,7 +21602,7 @@
 
     Scheduler.prototype.prepareStageTasks = function () {
       var stageTaskMap = this._stageTaskMap;
-      var ecModel = this.ecInstance.getModel();
+      var ecModel = this.api.getModel();
       var api = this.api;
       each(this._allHandlers, function (handler) {
         var record = stageTaskMap.get(handler.uid) || stageTaskMap.set(handler.uid, {});
@@ -22071,9 +22052,7 @@
         color: contrastColor
       },
       label: {
-        textStyle: {
-          color: contrastColor
-        }
+        color: contrastColor
       },
       controlStyle: {
         color: contrastColor,
@@ -23552,7 +23531,7 @@
       var textEl = el.getTextContent();
       var guideLine = el.getTextGuideLine();
 
-      if (textEl && !textEl.ignore && !textEl.invisible && !el.disableLabelAnimation) {
+      if (textEl && !textEl.ignore && !textEl.invisible && !el.disableLabelAnimation && !isElementRemoved(el)) {
         var layoutStore = labelLayoutInnerStore(textEl);
         var oldLayout = layoutStore.oldLayout;
         var ecData = getECData(el);
@@ -23670,7 +23649,7 @@
     });
   }
 
-  function handleSeriesLegacySelectEvents(type, eventPostfix, ecIns, payload) {
+  function handleSeriesLegacySelectEvents(type, eventPostfix, ecIns, ecModel, payload) {
     var legacyEventName = type + eventPostfix;
 
     if (!ecIns.isSilent(legacyEventName)) {
@@ -23678,7 +23657,6 @@
         deprecateLog("event " + legacyEventName + " is deprecated.");
       }
 
-      var ecModel = ecIns.getModel();
       ecModel.eachComponent({
         mainType: 'series',
         subType: 'pie'
@@ -23702,17 +23680,17 @@
     }
   }
 
-  function handleLegacySelectEvents(messageCenter, ecIns) {
+  function handleLegacySelectEvents(messageCenter, ecIns, ecModel) {
     messageCenter.on('selectchanged', function (params) {
       if (params.isFromClick) {
-        handleSeriesLegacySelectEvents('map', 'selectchanged', ecIns, params);
-        handleSeriesLegacySelectEvents('pie', 'selectchanged', ecIns, params);
+        handleSeriesLegacySelectEvents('map', 'selectchanged', ecIns, ecModel, params);
+        handleSeriesLegacySelectEvents('pie', 'selectchanged', ecIns, ecModel, params);
       } else if (params.fromAction === 'select') {
-        handleSeriesLegacySelectEvents('map', 'selected', ecIns, params);
-        handleSeriesLegacySelectEvents('pie', 'selected', ecIns, params);
+        handleSeriesLegacySelectEvents('map', 'selected', ecIns, ecModel, params);
+        handleSeriesLegacySelectEvents('pie', 'selected', ecIns, ecModel, params);
       } else if (params.fromAction === 'unselect') {
-        handleSeriesLegacySelectEvents('map', 'unselected', ecIns, params);
-        handleSeriesLegacySelectEvents('pie', 'unselected', ecIns, params);
+        handleSeriesLegacySelectEvents('map', 'unselected', ecIns, ecModel, params);
+        handleSeriesLegacySelectEvents('pie', 'unselected', ecIns, ecModel, params);
       }
     });
   }
@@ -25644,7 +25622,7 @@
     };
 
     WeakMap.prototype.has = function (key) {
-      return this._guard(key)[this._id];
+      return !!this._guard(key)[this._id];
     };
 
     WeakMap.prototype._guard = function (key) {
@@ -25913,6 +25891,10 @@
   var decalKeys = ['symbol', 'symbolSize', 'symbolKeepAspect', 'color', 'backgroundColor', 'dashArrayX', 'dashArrayY', 'dashLineOffset', 'maxTileWidth', 'maxTileHeight'];
 
   function createOrUpdatePatternFromDecal(decalObject, api) {
+    if (decalObject === 'none') {
+      return null;
+    }
+
     var dpr = api.getDevicePixelRatio();
     var zr = api.getZr();
     var isSVG = zr.painter.type === 'svg';
@@ -25984,6 +25966,7 @@
 
       var dashArrayX = normalizeDashArrayX(decalOpt.dashArrayX);
       var dashArrayY = normalizeDashArrayY(decalOpt.dashArrayY);
+      var symbolArray = normalizeSymbolArray(decalOpt.symbol);
       var lineBlockLengthsX = getLineBlockLengthX(dashArrayX);
       var lineBlockLengthY = getLineBlockLengthY(dashArrayY);
       var canvas = !isSVG && createCanvas();
@@ -26015,7 +25998,14 @@
           width = getLeastCommonMultiple(width, lineBlockLengthsX[i]);
         }
 
-        var height = lineBlockLengthY * lineBlockLengthsX.length;
+        var symbolRepeats = 1;
+
+        for (var i = 0, xlen = symbolArray.length; i < xlen; ++i) {
+          symbolRepeats = getLeastCommonMultiple(symbolRepeats, symbolArray[i].length);
+        }
+
+        width *= symbolRepeats;
+        var height = lineBlockLengthY * lineBlockLengthsX.length * symbolArray.length;
 
         if (true) {
           var warn = function (attrName) {
@@ -26059,12 +26049,15 @@
 
         var y = -lineBlockLengthY;
         var yId = 0;
+        var yIdTotal = 0;
         var xId0 = 0;
 
         while (y < pSize.height) {
           if (yId % 2 === 0) {
+            var symbolYId = yIdTotal / 2 % symbolArray.length;
             var x = 0;
             var xId1 = 0;
+            var xId1Total = 0;
 
             while (x < pSize.width * 2) {
               var xSum = 0;
@@ -26083,10 +26076,12 @@
                 var top_1 = y + dashArrayY[yId] * size;
                 var width = dashArrayX[xId0][xId1] * decalOpt.symbolSize;
                 var height = dashArrayY[yId] * decalOpt.symbolSize;
-                brushSymbol(left, top_1, width, height);
+                var symbolXId = xId1Total / 2 % symbolArray[symbolYId].length;
+                brushSymbol(left, top_1, width, height, symbolArray[symbolYId][symbolXId]);
               }
 
               x += dashArrayX[xId0][xId1];
+              ++xId1Total;
               ++xId1;
 
               if (xId1 === dashArrayX[xId0].length) {
@@ -26102,6 +26097,7 @@
           }
 
           y += dashArrayY[yId];
+          ++yIdTotal;
           ++yId;
 
           if (yId === dashArrayY.length) {
@@ -26109,10 +26105,9 @@
           }
         }
 
-        function brushSymbol(x, y, width, height) {
+        function brushSymbol(x, y, width, height, symbolType) {
           var scale = isSVG ? 1 : dpr;
-          var symbol = createSymbol(decalOpt.symbol, x * scale, y * scale, width * scale, height * scale);
-          symbol.style.fill = decalOpt.color;
+          var symbol = createSymbol(symbolType, x * scale, y * scale, width * scale, height * scale, decalOpt.color, decalOpt.symbolKeepAspect);
 
           if (isSVG) {
             svgRoot.appendChild(zr.painter.paintOne(symbol));
@@ -26122,6 +26117,41 @@
         }
       }
     }
+  }
+
+  function normalizeSymbolArray(symbol) {
+    if (!symbol || symbol.length === 0) {
+      return [['rect']];
+    }
+
+    if (typeof symbol === 'string') {
+      return [[symbol]];
+    }
+
+    var isAllString = true;
+
+    for (var i = 0; i < symbol.length; ++i) {
+      if (typeof symbol[i] !== 'string') {
+        isAllString = false;
+        break;
+      }
+    }
+
+    if (isAllString) {
+      return normalizeSymbolArray([symbol]);
+    }
+
+    var result = [];
+
+    for (var i = 0; i < symbol.length; ++i) {
+      if (typeof symbol[i] === 'string') {
+        result.push([symbol[i]]);
+      } else {
+        result.push(symbol[i]);
+      }
+    }
+
+    return result;
   }
 
   function normalizeDashArrayX(dash) {
@@ -26205,7 +26235,7 @@
     return blockLength;
   }
 
-  function decal(ecModel, api) {
+  function decalVisual(ecModel, api) {
     ecModel.eachRawSeries(function (seriesModel) {
       if (ecModel.isSeriesFiltered(seriesModel)) {
         return;
@@ -26237,9 +26267,9 @@
   var each$3 = each;
   var isFunction$1 = isFunction;
   var isObject$2 = isObject;
-  var version = '5.0.0-beta.2';
+  var version = '5.0.0';
   var dependencies = {
-    zrender: '5.0.0-beta.2'
+    zrender: '5.0.0'
   };
   var TEST_FRAME_REMAIN_TIME = 1;
   var PRIORITY_PROCESSOR_SERIES_FILTER = 800;
@@ -26251,9 +26281,9 @@
   var PRIORITY_VISUAL_PROGRESSIVE_LAYOUT = 1100;
   var PRIORITY_VISUAL_GLOBAL = 2000;
   var PRIORITY_VISUAL_CHART = 3000;
-  var PRIORITY_VISUAL_POST_CHART_LAYOUT = 3500;
   var PRIORITY_VISUAL_COMPONENT = 4000;
   var PRIORITY_VISUAL_CHART_DATA_CUSTOM = 4500;
+  var PRIORITY_VISUAL_POST_CHART_LAYOUT = 4600;
   var PRIORITY_VISUAL_BRUSH = 5000;
   var PRIORITY_VISUAL_ARIA = 6000;
   var PRIORITY_VISUAL_DECAL = 7000;
@@ -26391,7 +26421,7 @@
       });
       _this._throttledZrFlush = throttle(bind(zr.flush, zr), 17);
       theme = clone(theme);
-      theme && backwardCompat(theme, true);
+      theme && globalBackwardCompat(theme, true);
       _this._theme = theme;
       _this._locale = createLocaleObject(opts.locale || SYSTEM_LANG);
       _this._coordSysMgr = new CoordinateSystemManager();
@@ -26430,6 +26460,9 @@
         this[IN_MAIN_PROCESS_KEY] = true;
         prepare(this);
         updateMethods.update.call(this);
+
+        this._zr.flush();
+
         this[IN_MAIN_PROCESS_KEY] = false;
         this[OPTION_UPDATED_KEY] = false;
         flushPendingActions.call(this, silent);
@@ -26511,6 +26544,7 @@
           silent: silent
         };
         this[IN_MAIN_PROCESS_KEY] = false;
+        this.getZr().wakeUp();
       } else {
         prepare(this);
         updateMethods.update.call(this);
@@ -26846,7 +26880,7 @@
           this.trigger(eventType, event);
         }, _this);
       });
-      handleLegacySelectEvents(this._messageCenter, this);
+      handleLegacySelectEvents(this._messageCenter, this, this._model);
     };
 
     ECharts.prototype.isDisposed = function () {
@@ -27143,11 +27177,11 @@
           if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
             if (isHighDownPayload(payload) && !payload.notBlur) {
               if (model instanceof SeriesModel) {
-                toggleSeriesBlurStateFromPayload(model, payload, ecIns);
+                toggleSeriesBlurStateFromPayload(model, payload, ecIns._api);
               }
             } else if (isSelectChangePayload(payload)) {
               if (model instanceof SeriesModel) {
-                toggleSelectionFromPayload(model, payload);
+                toggleSelectionFromPayload(model, payload, ecIns._api);
                 updateSeriesElementSelection(model);
                 markStatusToUpdate(ecIns);
               }
@@ -27390,10 +27424,6 @@
           }
         });
 
-        if (payload.statusChanged) {
-          markStatusToUpdate(this);
-        }
-
         if (updateMethod !== 'none' && !isStatusChange && !cptType) {
           if (this[OPTION_UPDATED_KEY]) {
             prepare(this);
@@ -27464,7 +27494,7 @@
 
           if (dispatcher) {
             var ecData = getECData(dispatcher);
-            toggleSeriesBlurState(ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, true);
+            toggleSeriesBlurState(ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns._api, true);
             enterEmphasisWhenMouseOver(dispatcher, e);
             markStatusToUpdate(ecIns);
           }
@@ -27474,7 +27504,7 @@
 
           if (dispatcher) {
             var ecData = getECData(dispatcher);
-            toggleSeriesBlurState(ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, false);
+            toggleSeriesBlurState(ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns._api, false);
             leaveEmphasisWhenMouseOut(dispatcher, e);
             markStatusToUpdate(ecIns);
           }
@@ -27831,6 +27861,18 @@
             markStatusToUpdate(ecIns);
           };
 
+          class_1.prototype.getModel = function () {
+            return ecIns.getModel();
+          };
+
+          class_1.prototype.getViewOfComponentModel = function (componentModel) {
+            return ecIns.getViewOfComponentModel(componentModel);
+          };
+
+          class_1.prototype.getViewOfSeriesModel = function (seriesModel) {
+            return ecIns.getViewOfSeriesModel(seriesModel);
+          };
+
           return class_1;
         }(ExtensionAPI))(ecIns);
       };
@@ -28176,10 +28218,10 @@
   registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataColorPaletteTask);
   registerVisual(PRIORITY_VISUAL_GLOBAL, seriesSymbolTask);
   registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataSymbolTask);
-  registerVisual(PRIORITY_VISUAL_DECAL, decal);
-  registerPreprocessor(backwardCompat);
+  registerVisual(PRIORITY_VISUAL_DECAL, decalVisual);
+  registerPreprocessor(globalBackwardCompat);
   registerProcessor(PRIORITY_PROCESSOR_DATASTACK, dataStack);
-  registerLoading('default', loadingDefault);
+  registerLoading('default', defaultLoading);
   registerAction({
     type: HIGHLIGHT_ACTION_TYPE,
     event: HIGHLIGHT_ACTION_TYPE,
@@ -29603,7 +29645,7 @@
 
       var val = itemVisual[key];
 
-      if (!val) {
+      if (val == null) {
         val = this.getVisual(key);
 
         if (isArray(val)) {
@@ -30260,9 +30302,12 @@
         var axisDim = coordSysDims[index];
         axisMap.set(axisDim, axisModel);
 
-        if (isCategory(axisModel) && result.firstCategoryDimIndex == null) {
+        if (isCategory(axisModel)) {
           categoryAxisMap.set(axisDim, axisModel);
-          result.firstCategoryDimIndex = index;
+
+          if (result.firstCategoryDimIndex == null) {
+            result.firstCategoryDimIndex = index;
+          }
         }
       });
     }
@@ -30743,7 +30788,8 @@
         labelFetcher: seriesModel,
         labelDataIndex: idx,
         defaultText: getLabelDefaultText,
-        inheritColor: visualColor
+        inheritColor: visualColor,
+        defaultOpacity: symbolStyle.opacity
       });
 
       function getLabelDefaultText(idx) {
@@ -30773,15 +30819,42 @@
 
     Symbol.prototype.fadeOut = function (cb, opt) {
       var symbolPath = this.childAt(0);
+      var seriesModel = this._seriesModel;
+      var dataIndex = getECData(this).dataIndex;
+      var animationOpt = opt && opt.animation;
       this.silent = symbolPath.silent = true;
-      !(opt && opt.keepLabel) && symbolPath.removeTextContent();
+
+      if (opt && opt.fadeLabel) {
+        var textContent = symbolPath.getTextContent();
+
+        if (textContent) {
+          removeElement(textContent, {
+            style: {
+              opacity: 0
+            }
+          }, seriesModel, {
+            dataIndex: dataIndex,
+            removeOpt: animationOpt,
+            cb: function () {
+              symbolPath.removeTextContent();
+            }
+          });
+        }
+      } else {
+        symbolPath.removeTextContent();
+      }
+
       removeElement(symbolPath, {
         style: {
           opacity: 0
         },
         scaleX: 0,
         scaleY: 0
-      }, this._seriesModel, getECData(this).dataIndex, cb);
+      }, seriesModel, {
+        dataIndex: dataIndex,
+        cb: cb,
+        removeOpt: animationOpt
+      });
     };
 
     Symbol.getSymbolSize = function (data, idx) {
@@ -32056,8 +32129,7 @@
             return [points[idx * 2], points[idx * 2 + 1]];
           }
         });
-
-        this._initSymbolLabelAnimation(data, coordSys, clipShapeForSymbol);
+        hasAnimation && this._initSymbolLabelAnimation(data, coordSys, clipShapeForSymbol);
 
         if (step) {
           points = turnPointsIntoStep(points, coordSys, step);
@@ -32132,9 +32204,8 @@
         lineJoin: 'bevel'
       }));
       setStatesStylesFromModel(polyline, seriesModel, 'lineStyle');
-      var shouldBolderOnEmphasis = seriesModel.get(['emphasis', 'lineStyle', 'width']) === 'bolder';
 
-      if (shouldBolderOnEmphasis) {
+      if (polyline.style.lineWidth > 0 && seriesModel.get(['emphasis', 'lineStyle', 'width']) === 'bolder') {
         var emphasisLineStyle = polyline.getState('emphasis').style;
         emphasisLineStyle.lineWidth = polyline.style.lineWidth + 1;
       }
@@ -32615,7 +32686,7 @@
 
   ChartView.registerClass(LineView);
 
-  function layoutPoints(seriesType, forceStoreInTypedArray) {
+  function pointsLayout(seriesType, forceStoreInTypedArray) {
     return {
       seriesType: seriesType,
       plan: createRenderPlanner(),
@@ -33203,9 +33274,15 @@
 
       var ordinalMeta = _this.getSetting('ordinalMeta');
 
-      if (!ordinalMeta || isArray(ordinalMeta)) {
+      if (!ordinalMeta) {
+        ordinalMeta = new OrdinalMeta({});
+      }
+
+      if (isArray(ordinalMeta)) {
         ordinalMeta = new OrdinalMeta({
-          categories: ordinalMeta
+          categories: map(ordinalMeta, function (item) {
+            return isObject(item) ? item.value : item;
+          })
         });
       }
 
@@ -33968,8 +34045,8 @@
   var TimeScale = function (_super) {
     __extends(TimeScale, _super);
 
-    function TimeScale() {
-      var _this = _super !== null && _super.apply(this, arguments) || this;
+    function TimeScale(settings) {
+      var _this = _super.call(this, settings) || this;
 
       _this.type = 'time';
       return _this;
@@ -33977,7 +34054,7 @@
 
     TimeScale.prototype.getLabel = function (tick) {
       var useUTC = this.getSetting('useUTC');
-      return format(tick.value, fullLeveledFormatter[getDefaultFormatPrecisionOfInterval(getPrimaryTimeUnit(this._minLevelUnit))] || fullLeveledFormatter.second, useUTC);
+      return format(tick.value, fullLeveledFormatter[getDefaultFormatPrecisionOfInterval(getPrimaryTimeUnit(this._minLevelUnit))] || fullLeveledFormatter.second, useUTC, this.getSetting('locale'));
     };
 
     TimeScale.prototype.getFormattedLabel = function (tick, idx, labelFormatter) {
@@ -36181,7 +36258,7 @@
       option.grid = {};
     }
   });
-  registerLayout(layoutPoints('line', true));
+  registerLayout(pointsLayout('line', true));
   registerProcessor(PRIORITY.PROCESSOR.STATISTIC, dataSample('line'));
 
   var Cartesian = function () {
@@ -36280,15 +36357,17 @@
 
     Cartesian2D.prototype.dataToPoint = function (data, reserved, out) {
       out = out || [];
+      var xVal = data[0];
+      var yVal = data[1];
 
-      if (this._transform && !isNaN(data[0]) && !isNaN(data[1])) {
+      if (this._transform && xVal != null && isFinite(xVal) && yVal != null && isFinite(yVal)) {
         return applyTransform(out, data, this._transform);
       }
 
       var xAxis = this.getAxis('x');
       var yAxis = this.getAxis('y');
-      out[0] = xAxis.toGlobalCoord(xAxis.dataToCoord(data[0]));
-      out[1] = yAxis.toGlobalCoord(yAxis.dataToCoord(data[1]));
+      out[0] = xAxis.toGlobalCoord(xAxis.dataToCoord(xVal));
+      out[1] = yAxis.toGlobalCoord(yAxis.dataToCoord(yVal));
       return out;
     };
 
@@ -38024,6 +38103,7 @@
         labelDataIndex: dataIndex,
         defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
         inheritColor: style.fill,
+        defaultOpacity: style.opacity,
         defaultOutsidePosition: labelPositionOutside
       });
       var label = el.getTextContent();
@@ -38566,7 +38646,7 @@
     return sectorShape.position === 'center';
   }
 
-  function labelLayout(seriesModel) {
+  function pieLabelLayout(seriesModel) {
     var data = seriesModel.getData();
     var labelLayoutList = [];
     var cx;
@@ -38891,7 +38971,6 @@
     PiePiece.prototype._updateLabel = function (seriesModel, data, idx) {
       var sector = this;
       var itemModel = data.getItemModel(idx);
-      var labelModel = itemModel.getModel('label');
       var labelLineModel = itemModel.getModel('labelLine');
       var style = data.getItemVisual(idx, 'style');
       var visualColor = style && style.fill;
@@ -38900,11 +38979,8 @@
         labelFetcher: data.hostModel,
         labelDataIndex: idx,
         inheritColor: visualColor,
+        defaultOpacity: visualOpacity,
         defaultText: seriesModel.getFormattedLabel(idx, 'normal') || data.getName(idx)
-      }, {
-        normal: {
-          opacity: retrieve2(labelModel.get('opacity'), visualOpacity)
-        }
       });
       var labelText = sector.getTextContent();
       sector.setTextConfig({
@@ -38916,7 +38992,7 @@
       });
       setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
         stroke: visualColor,
-        opacity: retrieve2(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity)
+        opacity: retrieve3(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity, 1)
       });
     };
 
@@ -38970,7 +39046,7 @@
         var piePiece = oldData.getItemGraphicEl(idx);
         removeElementWithFadeOut(piePiece, seriesModel, idx);
       }).execute();
-      labelLayout(seriesModel);
+      pieLabelLayout(seriesModel);
 
       if (seriesModel.get('animationTypeUpdate') !== 'expansion') {
         this._data = data;
@@ -39153,8 +39229,7 @@
   createLegacyDataSelectAction('pie', registerAction);
   registerLayout(curry(pieLayout, 'pie'));
   registerProcessor(dataFilter('pie'));
-  var defaultOption$1 = {
-    enabled: true,
+  var DEFAULT_OPTION = {
     label: {
       enabled: true
     },
@@ -39168,16 +39243,13 @@
   function ariaVisual(ecModel, api) {
     var ariaModel = ecModel.getModel('aria');
 
-    if (ariaModel.option) {
-      var labelLocale = ecModel.getLocaleModel().get('aria');
-      defaultOption$1.label = defaults(labelLocale, defaultOption$1.label);
-      ariaModel.option = defaults(ariaModel.option, defaultOption$1);
-    }
-
     if (!ariaModel.get('enabled')) {
       return;
     }
 
+    var defaultOption = clone(DEFAULT_OPTION);
+    merge(defaultOption.label, ecModel.getLocaleModel().get('aria'), false);
+    merge(ariaModel.option, defaultOption, false);
     setDecal();
     setLabel();
 
@@ -39224,18 +39296,21 @@
             var dataCount_1 = dataAll_1.count();
             dataAll_1.each(function (rawIdx) {
               var idx = idxMap_1[rawIdx];
-              var itemStyle = data.ensureUniqueItemVisual(idx, 'style');
               var name = dataAll_1.getName(rawIdx) || rawIdx + '';
-              var paletteDecal = seriesModel.getDecalFromPalette(name, decalScope_1, dataCount_1);
-              var decal = defaults(itemStyle.decal || {}, paletteDecal);
-              data.setItemVisual(idx, 'decal', decal);
+              var paletteDecal = getDecalFromPalette(seriesModel.ecModel, name, decalScope_1, dataCount_1);
+              var specifiedDecal = data.getItemVisual(idx, 'decal');
+              data.setItemVisual(idx, 'decal', mergeDecal(specifiedDecal, paletteDecal));
             });
           } else {
-            var style = data.getVisual('style');
-            var paletteDecal = seriesModel.getDecalFromPalette(seriesModel.name, decalPaletteScope, ecModel.getSeriesCount());
-            var decal = style.decal ? defaults(style.decal, paletteDecal) : paletteDecal;
-            decal.dirty = true;
-            data.setVisual('decal', decal);
+            var paletteDecal = getDecalFromPalette(seriesModel.ecModel, seriesModel.name, decalPaletteScope, ecModel.getSeriesCount());
+            var specifiedDecal = data.getVisual('decal');
+            data.setVisual('decal', mergeDecal(specifiedDecal, paletteDecal));
+          }
+
+          function mergeDecal(specifiedDecal, paletteDecal) {
+            var resultDecal = specifiedDecal ? extend(extend({}, paletteDecal), specifiedDecal) : paletteDecal;
+            resultDecal.dirty = true;
+            return resultDecal;
           }
         });
       }
