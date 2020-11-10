@@ -613,12 +613,21 @@ function removeNode(
         source = source.parentNode === virtualRoot ? source : source.parentNode || source;
     }
 
+    // Use same duration and easing with update to have more consistent animation.
+    const removeAnimationOpt = {
+        duration: seriesModel.get('animationDurationUpdate') as number,
+        easing: seriesModel.get('animationEasingUpdate')
+    };
+
     graphic.removeElement(symbolEl, {
         x: sourceLayout.x + 1,
         y: sourceLayout.y + 1
-    }, seriesModel, function () {
-        group.remove(symbolEl);
-        data.setItemGraphicEl(dataIndex, null);
+    }, seriesModel, {
+        cb() {
+            group.remove(symbolEl);
+            data.setItemGraphicEl(dataIndex, null);
+        },
+        removeOpt: removeAnimationOpt
     });
 
     symbolEl.fadeOut(null, {keepLabel: true});
@@ -651,8 +660,11 @@ function removeNode(
                 style: {
                     opacity: 0
                 }
-            }, seriesModel, function () {
-                group.remove(edge);
+            }, seriesModel, {
+                cb() {
+                    group.remove(edge);
+                },
+                removeOpt: removeAnimationOpt
             });
         }
         else if (edgeShape === 'polyline' && seriesModel.get('layout') === 'orthogonal') {
@@ -664,8 +676,11 @@ function removeNode(
                 style: {
                     opacity: 0
                 }
-            }, seriesModel, function () {
-                group.remove(edge);
+            }, seriesModel, {
+                cb() {
+                    group.remove(edge);
+                },
+                removeOpt: removeAnimationOpt
             });
         }
     }

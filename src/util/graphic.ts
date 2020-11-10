@@ -52,14 +52,16 @@ import {
     AnimationDelayCallbackParam,
     ZRRectLike,
     ZRStyleProps,
-    PayloadAnimationPart
+    PayloadAnimationPart,
+    AnimationOption
 } from './types';
 import {
     extend,
     isArrayLike,
     map,
     defaults,
-    isObject
+    isObject,
+    retrieve2
 } from 'zrender/src/core/util';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import { getECData } from './innerStore';
@@ -292,6 +294,7 @@ type AnimateOrSetPropsOption = {
     dataIndex?: number;
     cb?: () => void;
     during?: (percent: number) => void;
+    removeOpt?: AnimationOption
     isFrom?: boolean;
 };
 
@@ -307,6 +310,7 @@ function animateOrSetProps<Props>(
     during?: AnimateOrSetPropsOption['during']
 ) {
     let isFrom = false;
+    let removeOpt: AnimationOption;
     if (typeof dataIndex === 'function') {
         during = cb;
         cb = dataIndex;
@@ -316,6 +320,7 @@ function animateOrSetProps<Props>(
         cb = dataIndex.cb;
         during = dataIndex.during;
         isFrom = dataIndex.isFrom;
+        removeOpt = dataIndex.removeOpt;
         dataIndex = dataIndex.dataIndex;
     }
     const isUpdate = animationType === 'update';
@@ -346,8 +351,9 @@ function animateOrSetProps<Props>(
             animationDelay = animationPayload.delay || 0;
         }
         else if (isRemove) {
-            duration = 200;
-            animationEasing = 'cubicOut';
+            removeOpt = removeOpt || {};
+            duration = retrieve2(removeOpt.duration, 200);
+            animationEasing = retrieve2(removeOpt.easing, 'cubicOut');
             animationDelay = 0;
         }
         else {
@@ -360,17 +366,17 @@ function animateOrSetProps<Props>(
             animationDelay = animatableModel.getShallow(
                 isUpdate ? 'animationDelayUpdate' : 'animationDelay'
             );
-            if (typeof animationDelay === 'function') {
-                animationDelay = animationDelay(
-                    dataIndex as number,
-                    animatableModel.getAnimationDelayParams
-                        ? animatableModel.getAnimationDelayParams(el, dataIndex as number)
-                        : null
-                );
-            }
-            if (typeof duration === 'function') {
-                duration = duration(dataIndex as number);
-            }
+        }
+        if (typeof animationDelay === 'function') {
+            animationDelay = animationDelay(
+                dataIndex as number,
+                animatableModel.getAnimationDelayParams
+                    ? animatableModel.getAnimationDelayParams(el, dataIndex as number)
+                    : null
+            );
+        }
+        if (typeof duration === 'function') {
+            duration = duration(dataIndex as number);
         }
 
         duration > 0
