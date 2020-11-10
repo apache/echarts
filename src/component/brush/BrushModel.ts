@@ -105,15 +105,15 @@ export interface BrushOption extends ComponentOption, ModelFinderObject {
 
     // --- Current painting brush options ---
     // Default type of brush
-    brushType: BrushTypeUncertain;
-    brushStyle: {
-        borderWidth: number;
-        color: ZRColor;
-        borderColor: ZRColor;
+    brushType?: BrushTypeUncertain;
+    brushStyle?: {
+        borderWidth?: number;
+        color?: ZRColor;
+        borderColor?: ZRColor;
     };
-    transformable: boolean;
-    brushMode: BrushMode;
-    removeOnClick: boolean;
+    transformable?: boolean;
+    brushMode?: BrushMode;
+    removeOnClick?: boolean;
 }
 
 class BrushModel extends ComponentModel<BrushOption> {
