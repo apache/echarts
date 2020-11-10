@@ -165,7 +165,7 @@ class PiePiece extends graphic.Sector {
                 labelFetcher: data.hostModel as PieSeriesModel,
                 labelDataIndex: idx,
                 inheritColor: visualColor,
-                inheritOpacity: visualOpacity,
+                defaultOpacity: visualOpacity,
                 defaultText: seriesModel.getFormattedLabel(idx, 'normal')
                     || data.getName(idx)
             }

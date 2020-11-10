@@ -978,7 +978,7 @@ function renderNode(
             {
                 defaultText: isShow ? text : null,
                 inheritColor: visualColor,
-                inheritOpacity: visualOpacity,
+                defaultOpacity: visualOpacity,
                 labelFetcher: seriesModel,
                 labelDataIndex: thisNode.dataIndex
             }

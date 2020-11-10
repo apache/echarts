@@ -112,7 +112,7 @@ class FunnelPiece extends graphic.Polygon {
             {
                 labelFetcher: data.hostModel as FunnelSeriesModel,
                 labelDataIndex: idx,
-                inheritOpacity: style.opacity,
+                defaultOpacity: style.opacity,
                 defaultText: data.getName(idx)
             },
             { normal: {
