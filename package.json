@@ -1,6 +1,6 @@
 {
   "name": "echarts",
-  "version": "5.0.0-rc.1",
+  "version": "5.0.0",
   "description": "A powerful charting and visualization library for browser",
   "license": "Apache-2.0",
   "keywords": [
@@ -37,7 +37,7 @@
     "lint:dist": "echo 'It might take a while. Please wait ...' && ./node_modules/.bin/jshint --config .jshintrc-dist dist/echarts.js"
   },
   "dependencies": {
-    "zrender": "5.0.0-rc.1",
+    "zrender": "5.0.0",
     "tslib": "1.10.0"
   },
   "devDependencies": {
