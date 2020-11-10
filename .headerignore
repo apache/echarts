@@ -50,3 +50,7 @@ test/lib/countup\.js
 .+\.gif
 .+\.GIF
 .+\.class
+types
+lib
+esm
+dist
