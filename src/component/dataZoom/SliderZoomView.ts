@@ -28,7 +28,12 @@ import sliderMove from '../helper/sliderMove';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import {
-    LayoutOrient, Payload, ZRTextVerticalAlign, ZRTextAlign, ZRElementEvent, ParsedValue
+    LayoutOrient,
+    Payload,
+    ZRTextVerticalAlign,
+    ZRTextAlign,
+    ZRElementEvent,
+    ParsedValue
 } from '../../util/types';
 import SliderZoomModel from './SliderZoomModel';
 import ComponentView from '../../view/Component';
@@ -42,6 +47,7 @@ import { createSymbol, symbolBuildProxies } from '../../util/symbol';
 import { deprecateLog } from '../../util/log';
 import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
+import {validateDimension} from '../../data/List';
 
 const Rect = graphic.Rect;
 
@@ -354,7 +360,7 @@ class SliderZoomView extends DataZoomView {
             ? seriesModel.getShadowDim() // @see candlestick
             : info.otherDim;
 
-        if (otherDim == null) {
+        if (otherDim == null || !validateDimension(data, otherDim)) {
             return;
         }
 
