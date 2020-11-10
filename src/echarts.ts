@@ -117,10 +117,10 @@ const each = zrUtil.each;
 const isFunction = zrUtil.isFunction;
 const isObject = zrUtil.isObject;
 
-export const version = '5.0.0-beta.2';
+export const version = '5.0.0';
 
 export const dependencies = {
-    zrender: '5.0.0-beta.2'
+    zrender: '5.0.0'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
