@@ -19,7 +19,7 @@
 */
 
 
-import { extend, retrieve2 } from 'zrender/src/core/util';
+import { extend, retrieve3 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
@@ -152,7 +152,6 @@ class PiePiece extends graphic.Sector {
     private _updateLabel(seriesModel: PieSeriesModel, data: List, idx: number): void {
         const sector = this;
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
-        const labelModel = itemModel.getModel('label');
         const labelLineModel = itemModel.getModel('labelLine');
 
         const style = data.getItemVisual(idx, 'style');
@@ -166,12 +165,10 @@ class PiePiece extends graphic.Sector {
                 labelFetcher: data.hostModel as PieSeriesModel,
                 labelDataIndex: idx,
                 inheritColor: visualColor,
+                inheritOpacity: visualOpacity,
                 defaultText: seriesModel.getFormattedLabel(idx, 'normal')
                     || data.getName(idx)
-            },
-            { normal: {
-                opacity: retrieve2(labelModel.get('opacity'), visualOpacity)
-            } }
+            }
         );
         const labelText = sector.getTextContent();
 
@@ -191,7 +188,7 @@ class PiePiece extends graphic.Sector {
         // Default use item visual color
         setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
             stroke: visualColor,
-            opacity: retrieve2(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity)
+            opacity: retrieve3(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity, 1)
         });
     }
 }

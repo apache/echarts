@@ -318,7 +318,8 @@ class Symbol extends graphic.Group {
                 labelFetcher: seriesModel,
                 labelDataIndex: idx,
                 defaultText: getLabelDefaultText,
-                inheritColor: visualColor as ColorString
+                inheritColor: visualColor as ColorString,
+                inheritOpacity: symbolStyle.opacity
             }
         );
 

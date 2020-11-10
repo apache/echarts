@@ -916,8 +916,6 @@ function updateCommon(
         path.ensureState('blur').style = blurStyle;
         path.ensureState('select').style = selectStyle;
 
-
-
         cursorStyle && (path.cursor = cursorStyle);
         path.z2 = symbolMeta.z2;
     });
@@ -932,6 +930,7 @@ function updateCommon(
             labelDataIndex: dataIndex,
             defaultText: getDefaultLabel(opt.seriesModel.getData(), dataIndex),
             inheritColor: symbolMeta.style.fill as ColorString,
+            inheritOpacity: symbolMeta.style.opacity,
             defaultOutsidePosition: barPositionOutside
         }
     );

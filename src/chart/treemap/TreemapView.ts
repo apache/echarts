@@ -859,7 +859,8 @@ function renderNode(
         }
         else {
             bg.invisible = false;
-            const visualBorderColor = thisNode.getVisual('style').stroke;
+            const style = thisNode.getVisual('style');
+            const visualBorderColor = style.stroke;
             const normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualBorderColor;
             const emphasisStyle = getStateItemStyle(itemStyleEmphasisModel);
@@ -873,7 +874,7 @@ function renderNode(
                 const upperLabelWidth = thisWidth - 2 * borderWidth;
 
                 prepareText(
-                    bg, visualBorderColor, upperLabelWidth, upperHeight,
+                    bg, visualBorderColor, upperLabelWidth, upperHeight, style.opacity,
                     {x: borderWidth, y: 0, width: upperLabelWidth, height: upperHeight}
                 );
             }
@@ -928,7 +929,7 @@ function renderNode(
             const blurStyle = getStateItemStyle(itemStyleBlurModel);
             const selectStyle = getStateItemStyle(itemStyleSelectModel);
 
-            prepareText(content, visualColor, contentWidth, contentHeight);
+            prepareText(content, visualColor, contentWidth, nodeStyle.opacity, contentHeight);
 
             content.setStyle(normalStyle);
             content.ensureState('emphasis').style = emphasisStyle;
@@ -949,6 +950,7 @@ function renderNode(
     function prepareText(
         rectEl: graphic.Rect,
         visualColor: ColorString,
+        visualOpacity: number,
         width: number,
         height: number,
         upperLabelRect?: RectLike
@@ -976,6 +978,7 @@ function renderNode(
             {
                 defaultText: isShow ? text : null,
                 inheritColor: visualColor,
+                inheritOpacity: visualOpacity,
                 labelFetcher: seriesModel,
                 labelDataIndex: thisNode.dataIndex
             }

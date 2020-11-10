@@ -209,6 +209,7 @@ class HeatmapView extends ChartView {
 
         for (let idx = start; idx < end; idx++) {
             let rect;
+            const style = data.getItemVisual(idx, 'style');
 
             if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
                 const dataDimX = data.get(dataDims[0], idx);
@@ -236,7 +237,7 @@ class HeatmapView extends ChartView {
                         width: Math.ceil(width),
                         height: Math.ceil(height)
                     },
-                    style: data.getItemVisual(idx, 'style')
+                    style
                 });
             }
             else {
@@ -248,7 +249,7 @@ class HeatmapView extends ChartView {
                 rect = new graphic.Rect({
                     z2: 1,
                     shape: coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape,
-                    style: data.getItemVisual(idx, 'style')
+                    style
                 });
             }
 
@@ -278,6 +279,7 @@ class HeatmapView extends ChartView {
                 {
                     labelFetcher: seriesModel,
                     labelDataIndex: idx,
+                    inheritOpacity: style.opacity,
                     defaultText: defaultText
                 }
             );
