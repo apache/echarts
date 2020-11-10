@@ -163,12 +163,12 @@ export interface TreemapSeriesOption
      */
     clipWindow?: 'origin' | 'fullscreen'
 
-    squareRatio: number
+    squareRatio?: number
     /**
      * Nodes on depth from root are regarded as leaves.
      * Count from zero (zero represents only view root).
      */
-    leafDepth: number
+    leafDepth?: number
 
     drillDownIcon?: string
 

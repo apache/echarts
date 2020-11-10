@@ -858,7 +858,7 @@ export interface SymbolOptionMixin<T = unknown> {
 
     symbolKeepAspect?: boolean
 
-    symbolOffset?: number[]
+    symbolOffset?: (string | number)[]
 }
 
 /**
@@ -953,7 +953,7 @@ export interface TextCommonOption extends ShadowOptionMixin {
 
     lineHeight?: number
     backgroundColor?: ColorString | {
-        image: ImageLike
+        image: ImageLike | string
     }
     borderColor?: string
     borderWidth?: number

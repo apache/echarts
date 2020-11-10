@@ -28,7 +28,8 @@ import {
     SeriesLabelOption,
     OptionDataValue,
     StatesOptionMixin,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    SeriesOnCalendarOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -49,7 +50,7 @@ export interface HeatmapDataItemOption extends HeatmapStateOption, StatesOptionM
 }
 
 export interface HeatmapSeriesOption extends SeriesOption<HeatmapStateOption>, HeatmapStateOption,
-    SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesEncodeOptionMixin {
+    SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesOnCalendarOptionMixin, SeriesEncodeOptionMixin {
     type?: 'heatmap'
 
     coordinateSystem?: 'cartesian2d' | 'geo' | 'calendar'

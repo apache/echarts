@@ -61,7 +61,7 @@ export interface RadarSeriesOption extends SeriesOption<RadarSeriesStateOption>,
     radarIndex?: number
     radarId?: string
 
-    data?: RadarSeriesStateOption[]
+    data?: (RadarSeriesDataItemOption | RadarSeriesDataValue)[]
 }
 
 class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {

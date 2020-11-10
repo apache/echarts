@@ -131,7 +131,7 @@ export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, Gauge
     axisLine?: {
         show?: boolean
         roundCap?: boolean
-        lineStyle: Omit<LineStyleOption, 'color'> & {
+        lineStyle?: Omit<LineStyleOption, 'color'> & {
             color: GaugeColorStop[]
         }
     },

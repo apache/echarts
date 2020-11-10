@@ -44,7 +44,7 @@ export interface ParallelAxisOption extends AxisBaseOption {
     /**
      * 0, 1, 2, ...
      */
-    dim?: number[];
+    dim?: number | number[];
     parallelIndex?: number;
     areaSelectStyle?: {
         width?: number;
