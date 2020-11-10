@@ -25,7 +25,7 @@ import {
     SeriesOnCartesianOptionMixin,
     LayoutOrient,
     ItemStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     OptionDataValueNumeric,
     StatesOptionMixin,
     DefaultExtraEmpasisState
@@ -39,7 +39,7 @@ type BoxplotDataValue = OptionDataValueNumeric[];
 
 export interface BoxplotStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 export interface BoxplotDataItemOption

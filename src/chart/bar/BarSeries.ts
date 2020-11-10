@@ -22,11 +22,11 @@ import SeriesModel from '../../model/Series';
 import {
     ItemStyleOption,
     OptionDataValue,
-    LabelOption,
     SeriesStackOptionMixin,
     StatesOptionMixin,
     OptionDataItemObject,
-    SeriesSamplingOptionMixin
+    SeriesSamplingOptionMixin,
+    SeriesLabelOption
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
@@ -37,7 +37,7 @@ import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 export interface BarStateOption {
     itemStyle?: BarItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 export interface BarItemStyleOption extends ItemStyleOption {

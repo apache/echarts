@@ -24,7 +24,7 @@ import {
     SeriesOption,
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
-    LabelOption,
+    SeriesLabelOption,
     LineStyleOption,
     ItemStyleOption,
     AreaStyleOption,
@@ -49,7 +49,7 @@ interface ExtraStateOption {
 
 export interface LineStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 export interface LineDataItemOption extends SymbolOptionMixin,
@@ -59,7 +59,7 @@ export interface LineDataItemOption extends SymbolOptionMixin,
     value?: LineDataValue
 }
 
-export interface LineEndLabelOption extends LabelOption {
+export interface LineEndLabelOption extends SeriesLabelOption {
     valueAnimation: boolean
 }
 
@@ -88,7 +88,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     // If clip the overflow value
     clip?: boolean
 
-    label?: LabelOption
+    label?: SeriesLabelOption
     endLabel?: LineEndLabelOption
 
     lineStyle?: LineStyleOption

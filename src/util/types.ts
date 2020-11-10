@@ -1013,6 +1013,10 @@ export interface LabelOption extends TextCommonOption {
     rich?: Dictionary<TextCommonOption>
 }
 
+export interface SeriesLabelOption extends LabelOption {
+    formatter?: string | LabelFormatterCallback<CallbackDataParams>
+}
+
 /**
  * Option for labels on line, like markLine, lines
  */
@@ -1049,6 +1053,11 @@ export interface LabelLineOption {
     minTurnAngle?: number,
     lineStyle?: LineStyleOption
 }
+
+export interface SeriesLineLabelOption extends LineLabelOption {
+    formatter?: string | LabelFormatterCallback<CallbackDataParams>
+}
+
 
 
 export interface LabelLayoutOptionCallbackParams {
@@ -1419,7 +1428,8 @@ export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStat
     blur?: StateOption & ExtraStateOpts['blur']
 }
 
-export interface SeriesOption<StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
+export interface SeriesOption<
+    StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
     ComponentOption,
     AnimationOptionMixin,
     ColorPaletteOptionMixin,

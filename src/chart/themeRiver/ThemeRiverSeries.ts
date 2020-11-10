@@ -27,13 +27,13 @@ import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
     SeriesOption,
     SeriesOnSingleOptionMixin,
-    LabelOption,
     OptionDataValueDate,
     OptionDataValueNumeric,
     ItemStyleOption,
     BoxLayoutOptionMixin,
     ZRColor,
-    Dictionary
+    Dictionary,
+    SeriesLabelOption
 } from '../../util/types';
 import SingleAxis from '../../coord/single/SingleAxis';
 import GlobalModel from '../../model/Global';
@@ -42,7 +42,7 @@ import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
 const DATA_NAME_INDEX = 2;
 
-interface ThemeRiverSeriesLabelOption extends LabelOption {
+interface ThemeRiverSeriesLabelOption extends SeriesLabelOption {
     margin?: number
 }
 

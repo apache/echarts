@@ -32,8 +32,8 @@ import {
     SeriesLargeOptionMixin,
     LineStyleOption,
     OptionDataValue,
-    LineLabelOption,
-    StatesOptionMixin
+    StatesOptionMixin,
+    SeriesLineLabelOption
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import type { LineDrawModelOption } from '../helper/LineDraw';
@@ -83,7 +83,7 @@ interface LegacyDataItemOption {
 
 export interface LinesStateOption {
     lineStyle?: LinesLineStyleOption
-    label?: LineLabelOption
+    label?: SeriesLineLabelOption
 }
 
 export interface LinesDataItemOption extends LinesStateOption, StatesOptionMixin<LinesStateOption> {

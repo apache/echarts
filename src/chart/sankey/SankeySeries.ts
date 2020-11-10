@@ -24,7 +24,7 @@ import {
     SeriesOption,
     BoxLayoutOptionMixin,
     OptionDataValue,
-    LabelOption,
+    SeriesLabelOption,
     ItemStyleOption,
     LineStyleOption,
     LayoutOrient,
@@ -44,7 +44,7 @@ import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
 
 export interface SankeyNodeStateOption {
-    label?: LabelOption
+    label?: SeriesLabelOption
     itemStyle?: ItemStyleOption
 }
 

@@ -28,7 +28,7 @@ import {
     SeriesOnSingleOptionMixin,
     OptionDataValue,
     ItemStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     SeriesLargeOptionMixin,
     SeriesStackOptionMixin,
     SymbolOptionMixin,
@@ -42,7 +42,7 @@ import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 interface ScatterStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 interface ExtraStateOption {

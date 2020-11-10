@@ -25,7 +25,7 @@ import {
     SeriesOnCartesianOptionMixin,
     SeriesOnGeoOptionMixin,
     ItemStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     OptionDataValue,
     StatesOptionMixin
 } from '../../util/types';
@@ -40,7 +40,7 @@ type HeatmapDataValue = OptionDataValue[];
 export interface HeatmapStateOption {
     // Available on cartesian2d coordinate system
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 export interface HeatmapDataItemOption extends HeatmapStateOption, StatesOptionMixin<HeatmapStateOption> {

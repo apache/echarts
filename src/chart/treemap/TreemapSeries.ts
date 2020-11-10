@@ -34,7 +34,8 @@ import {
     OptionId,
     OptionName,
     DecalObject,
-    DefaultExtraEmpasisState
+    DefaultExtraEmpasisState,
+    SeriesLabelOption
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -51,7 +52,7 @@ interface BreadcrumbItemStyleOption extends ItemStyleOption {
     textStyle?: LabelOption
 }
 
-interface TreemapSeriesLabelOption extends LabelOption {
+interface TreemapSeriesLabelOption extends SeriesLabelOption {
     ellipsis?: boolean
     formatter?: string | ((params: CallbackDataParams) => string)
 }

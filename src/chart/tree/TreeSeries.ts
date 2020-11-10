@@ -26,7 +26,7 @@ import {
     RoamOptionMixin,
     LineStyleOption,
     ItemStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     OptionDataValue,
     StatesOptionMixin,
     OptionDataItemObject,
@@ -48,7 +48,7 @@ export interface TreeSeriesStateOption {
      * Line style of the edge between node and it's parent.
      */
     lineStyle?: CurveLineStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 interface ExtraStateOption {

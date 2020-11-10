@@ -34,14 +34,15 @@ import {
     StatesOptionMixin,
     OptionDataItemObject,
     LayoutOrient,
-    VerticalAlign
+    VerticalAlign,
+    SeriesLabelOption
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import ComponentModel from '../../model/Component';
 
 
-type FunnelLabelOption = Omit<LabelOption, 'position'> & {
+type FunnelLabelOption = Omit<SeriesLabelOption, 'position'> & {
     position?: LabelOption['position']
         | 'outer' | 'inner' | 'center' | 'rightTop' | 'rightBottom' | 'leftTop' | 'leftBottom'
 };

@@ -29,7 +29,7 @@ import {
     SymbolOptionMixin,
     OptionDataValue,
     ItemStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     StatesOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
@@ -41,7 +41,7 @@ type ScatterDataValue = OptionDataValue | OptionDataValue[];
 
 export interface EffectScatterStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 export interface EffectScatterDataItemOption extends SymbolOptionMixin,

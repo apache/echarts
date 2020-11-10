@@ -24,7 +24,7 @@ import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
     SeriesOption,
     LineStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     SymbolOptionMixin,
     ItemStyleOption,
     AreaStyleOption,
@@ -44,7 +44,7 @@ type RadarSeriesDataValue = OptionDataValue[];
 export interface RadarSeriesStateOption {
     lineStyle?: LineStyleOption
     areaStyle?: AreaStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
     itemStyle?: ItemStyleOption
 }
 export interface RadarSeriesDataItemOption extends SymbolOptionMixin,

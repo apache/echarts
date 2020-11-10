@@ -38,6 +38,7 @@ import Model from '../../model/Model';
 import GlobalModel, { GlobalModelSetOptionOpts } from '../../model/Global';
 import { each, isObject, clone } from 'zrender/src/core/util';
 import { convertOptionIdName, getDataItemValue } from '../../util/model';
+import { number } from '../../export';
 
 
 export interface TimelineControlStyle extends ItemStyleOption {
@@ -76,6 +77,7 @@ interface TimelineLabelOption extends Omit<LabelOption, 'position'> {
     // number can be distance to the timeline axis. sign will determine the side.
     position?: 'auto' | 'left' | 'right' | 'top' | 'bottom' | number
     interval?: 'auto' | number
+    formatter?: string | ((value: string | number, index: number) => string)
 }
 
 export interface TimelineDataItemOption extends SymbolOptionMixin {

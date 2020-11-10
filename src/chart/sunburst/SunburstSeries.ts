@@ -24,7 +24,7 @@ import {wrapTreePathInfo} from '../helper/treeHelper';
 import {
     SeriesOption,
     CircleLayoutOptionMixin,
-    LabelOption,
+    SeriesLabelOption,
     ItemStyleOption,
     OptionDataValue,
     CallbackDataParams,
@@ -49,11 +49,11 @@ interface SunburstItemStyleOption extends ItemStyleOption {
     borderRadius?: (number | string)[] | number | string
 }
 
-interface SunburstLabelOption extends Omit<LabelOption, 'rotate' | 'position'> {
+interface SunburstLabelOption extends Omit<SeriesLabelOption, 'rotate' | 'position'> {
     rotate?: 'radial' | 'tangential' | number
     minAngle?: number
     silent?: boolean
-    position?: LabelOption['position'] | 'outside'
+    position?: SeriesLabelOption['position'] | 'outside'
 }
 
 interface SunburstDataParams extends CallbackDataParams {

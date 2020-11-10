@@ -32,14 +32,14 @@ import {
     SeriesOnSingleOptionMixin,
     OptionDataValue,
     RoamOptionMixin,
-    LabelOption,
+    SeriesLabelOption,
     ItemStyleOption,
     LineStyleOption,
     SymbolOptionMixin,
     BoxLayoutOptionMixin,
     LabelFormatterCallback,
     Dictionary,
-    LineLabelOption,
+    SeriesLineLabelOption,
     StatesOptionMixin,
     GraphEdgeItemObject,
     OptionDataValueNumeric,
@@ -64,7 +64,7 @@ interface GraphEdgeLineStyleOption extends LineStyleOption {
 
 export interface GraphNodeStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 
@@ -110,7 +110,7 @@ export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOp
 
 export interface GraphEdgeStateOption {
     lineStyle?: GraphEdgeLineStyleOption
-    label?: LineLabelOption
+    label?: SeriesLineLabelOption
 }
 export interface GraphEdgeItemOption extends
         GraphEdgeStateOption,
@@ -171,12 +171,8 @@ export interface GraphSeriesOption extends SeriesOption,
     edgeSymbol?: string | string[]
     edgeSymbolSize?: number | number[]
 
-    edgeLabel?: LineLabelOption & {
-        formatter?: LabelFormatterCallback | string
-    }
-    label?: LabelOption & {
-        formatter?: LabelFormatterCallback | string
-    }
+    edgeLabel?: SeriesLineLabelOption
+    label?: SeriesLabelOption
 
     itemStyle?: ItemStyleOption
     lineStyle?: GraphEdgeLineStyleOption
@@ -184,22 +180,22 @@ export interface GraphSeriesOption extends SeriesOption,
     emphasis?: {
         focus?: GraphNodeItemOption['emphasis']['focus']
         scale?: boolean
-        label?: LabelOption
-        edgeLabel?: LabelOption
+        label?: SeriesLabelOption
+        edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption
         lineStyle?: LineStyleOption
     }
 
     blur?: {
-        label?: LabelOption
-        edgeLabel?: LabelOption
+        label?: SeriesLabelOption
+        edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption
         lineStyle?: LineStyleOption
     }
 
     select?: {
-        label?: LabelOption
-        edgeLabel?: LabelOption
+        label?: SeriesLabelOption
+        edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption
         lineStyle?: LineStyleOption
     }

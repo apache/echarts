@@ -27,7 +27,7 @@ import {
     ItemStyleOption,
     ZRColor,
     ColorString,
-    LabelOption,
+    SeriesLabelOption,
     SeriesLargeOptionMixin,
     OptionDataValueNumeric,
     StatesOptionMixin,
@@ -45,7 +45,7 @@ interface CandlestickItemStyleOption extends ItemStyleOption {
 }
 export interface CandlestickStateOption {
     itemStyle?: CandlestickItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 export interface CandlestickDataItemOption
     extends CandlestickStateOption, StatesOptionMixin<CandlestickStateOption, ExtraStateOption> {
