@@ -255,7 +255,8 @@ class RadarView extends ChartView {
                         labelDataIndex: idx,
                         labelDimIndex: symbolPath.__dimIdx,
                         defaultText: defaultText as string,
-                        inheritColor: color as ColorString
+                        inheritColor: color as ColorString,
+                        inheritOpacity: itemStyle.opacity
                     }
                 );
             });

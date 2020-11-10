@@ -256,6 +256,7 @@ class Line extends graphic.Group {
                 }
             },
             inheritColor: visualColor as ColorString || '#000',
+            inheritOpacity: lineStyle.opacity,
             defaultText: (rawVal == null
                 ? lineData.getName(idx)
                 : isFinite(rawVal)

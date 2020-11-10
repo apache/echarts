@@ -24,7 +24,8 @@ import {
     BoundingRect,
     Polyline,
     updateProps,
-    initProps
+    initProps,
+    isElementRemoved
 } from '../util/graphic';
 import { getECData } from '../util/innerStore';
 import ExtensionAPI from '../ExtensionAPI';
@@ -493,7 +494,12 @@ class LabelManager {
         const textEl = el.getTextContent();
         const guideLine = el.getTextGuideLine();
         // Animate
-        if (textEl && !textEl.ignore && !textEl.invisible && !(el as ECElement).disableLabelAnimation) {
+        if (textEl
+            && !textEl.ignore
+            && !textEl.invisible
+            && !(el as ECElement).disableLabelAnimation
+            && !isElementRemoved(el)
+        ) {
             const layoutStore = labelLayoutInnerStore(textEl);
             const oldLayout = layoutStore.oldLayout;
             const ecData = getECData(el);

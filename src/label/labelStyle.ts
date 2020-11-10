@@ -52,6 +52,12 @@ type TextCommonParams = {
      */
     inheritColor?: ColorString
 
+    /**
+     * Specify a opacity when opacity is 'inherit',
+     * If inheritColor specified, it is used as default textFill.
+     */
+    inheritOpacity?: number
+
     defaultOutsidePosition?: LabelOption['position']
 
     /**
@@ -356,7 +362,7 @@ export function createTextConfig(
 function setTextStyleCommon(
     textStyle: TextStyleProps,
     textStyleModel: Model,
-    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'inheritOpacity' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean
 ) {
@@ -441,7 +447,7 @@ function getRichItemNames(textStyleModel: Model<LabelOption>) {
     return richItemNameMap;
 }
 const TEXT_PROPS_WITH_GLOBAL = [
-    'fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'opacity',
+    'fontStyle', 'fontWeight', 'fontSize', 'fontFamily',
     'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'
 ] as const;
 const TEXT_PROPS_SELF = [
@@ -457,7 +463,7 @@ function setTokenTextStyle(
     textStyle: TextStyleProps['rich'][string],
     textStyleModel: Model<LabelOption>,
     globalTextStyle: LabelOption,
-    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'inheritOpacity' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean,
     isBlock?: boolean
@@ -467,6 +473,7 @@ function setTokenTextStyle(
     const inheritColor = opt && opt.inheritColor;
     let fillColor = textStyleModel.getShallow('color');
     let strokeColor = textStyleModel.getShallow('textBorderColor');
+    let opacity = retrieve2(textStyleModel.getShallow('opacity'), globalTextStyle.opacity);
     if (fillColor === 'inherit' || fillColor === 'auto') {
         if (__DEV__) {
             if (fillColor === 'auto') {
@@ -518,6 +525,13 @@ function setTokenTextStyle(
     );
     if (textBorderDashOffset != null) {
         textStyle.lineDashOffset = textBorderDashOffset;
+    }
+
+    if (!isNotNormal && (opacity == null)) {
+        opacity = opt && opt.inheritOpacity;
+    }
+    if (opacity != null) {
+        textStyle.opacity = opacity;
     }
 
     // TODO

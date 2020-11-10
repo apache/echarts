@@ -629,7 +629,10 @@ function removeNode(
         removeOpt: removeAnimationOpt
     });
 
-    symbolEl.fadeOut(null, {keepLabel: true});
+    symbolEl.fadeOut(null, {
+        fadeLabel: true,
+        animation: removeAnimationOpt
+    });
 
     const sourceSymbolEl = data.getItemGraphicEl(source.dataIndex) as TreeSymbol;
     const sourceEdge = sourceSymbolEl.__edge;
