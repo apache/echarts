@@ -22,6 +22,7 @@ const fs = require('fs');
 const preamble = require('./preamble');
 const ts = require('typescript');
 const path = require('path');
+const fsExtra = require('fs-extra');
 
 const umdWrapperHead = `
 ${preamble.js}
@@ -97,6 +98,8 @@ async function buildI18nWrap() {
         // Simple regexp replace is enough
         const outputCode = code.replace(/export\s+?default/, 'var localeObj =')
             .replace(/\/\*([\w\W]*?)\*\//, '');
+
+        fsExtra.ensureDirSync(targetDir);
 
         fs.writeFileSync(path.join(targetDir, fileName + '.js'), umdWrapperHeadWithEcharts + outputCode + echartsRegister + umdWrapperTail, 'utf-8');
         fs.writeFileSync(path.join(targetDir, fileName + '-obj.js'), umdWrapperHead + outputCode + pureExports + umdWrapperTail, 'utf-8');
