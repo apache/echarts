@@ -290,14 +290,13 @@ under the License.
 
         <script type="text/javascript">
             require([
-                'echarts'
+                'echarts',
+                'map/js/world'
                 // 'echarts/chart/map',
                 // 'echarts/component/legend',
                 // 'echarts/component/visualMapContinuous',
             ], function (echarts) {
-                require(['map/js/world'], function () {
-                    renderWorldMap(echarts);
-                });
+                renderWorldMap(echarts);
             });
 
             function renderWorldMap(echarts) {

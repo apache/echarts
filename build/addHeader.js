@@ -21,7 +21,7 @@
 const fs = require('fs');
 const preamble = require('./preamble');
 const pathTool = require('path');
-const {color} = require('zrender/build/helper');
+const chalk = require('chalk');
 
 // In the `.headerignore`, each line is a pattern in RegExp.
 // all relative path (based on the echarts base directory) is tested.
@@ -88,11 +88,11 @@ function run() {
     if (passFiles.length) {
         if (isVerbose) {
             passFiles.forEach(function (path) {
-                console.log(color('fgGreen', 'dim')(path));
+                console.log(chalk.green.dim(path));
             });
         }
         else {
-            console.log(color('fgGreen', 'dim')(passFiles.length + ' files. (use argument "--verbose" see details)'));
+            console.log(chalk.green.dim(passFiles.length + ' files. (use argument "--verbose" see details)'));
         }
     }
     else {
@@ -105,7 +105,7 @@ function run() {
     console.log('--------------------');
     if (updatedFiles.length) {
         updatedFiles.forEach(function (path) {
-            console.log(color('fgGreen', 'bright')(path));
+            console.log(chalk.green.bright(path));
         });
     }
     else {
@@ -118,7 +118,7 @@ function run() {
     console.log('----------------');
     if (pendingFiles.length) {
         pendingFiles.forEach(function (path) {
-            console.log(color('fgRed', 'dim')(path));
+            console.log(chalk.red.dim(path));
         });
     }
     else {

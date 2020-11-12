@@ -67,7 +67,6 @@ under the License.
                                 trigger: 'item',
                                 triggerOn: 'mousemove'
                             },
-                            animation: false,
                             series: [
                                 {
                                     type: 'sankey',
@@ -75,10 +74,8 @@ under the License.
                                     data: data.nodes,
                                     links: data.links,
                                     lineStyle: {
-                                        normal: {
-                                            color: 'source',
-                                            curveness: 0.5
-                                        }
+                                        color: 'gradient',
+                                        curveness: 0.5
                                     }
                                 }
                             ]

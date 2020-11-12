@@ -60,6 +60,7 @@ under the License.
         <div class="chart" id="main-specify-x-axis"></div>
 
         <div id="main0"></div>
+        <div id="main-refer-by-axis-id"></div>
 
         <script>
 
@@ -739,6 +740,91 @@ under the License.
             });
         });
         </script>
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                toolbox: {
+                    feature: {
+                        dataZoom: {
+                            xAxisId: 'xr',
+                            yAxisId: ['yl0', 'yl1']
+                        }
+                    }
+                },
+                legend: {},
+                grid: [{
+                    right: '60%',
+                    bottom: '60%',
+                }, {
+                    id: 'gr',
+                    left: '60%',
+                    bottom: '60%',
+                }, {
+                    id: 'gb',
+                    top: '60%',
+                }],
+                xAxis: [{
+
+                }, {
+                    id: 'xr',
+                    gridId: 'gr'
+                }, {
+                    id: 'xb',
+                    gridId: 'gb'
+                }],
+                yAxis: [{
+                    id: 'yl0'
+                }, {
+                    id: 'yl1'
+                }, {
+                    id: 'yr',
+                    gridId: 'gr'
+                }, {
+                    id: 'yb',
+                    gridId: 'gb'
+                }],
+                series: [{
+                    type: 'line',
+                    yAxisId: 'yl0',
+                    data: [[11, 12], [22, 45], [33, 76]]
+                }, {
+                    type: 'line',
+                    yAxisId: 'yl1',
+                    data: [[11, 2212], [22, 3345], [33, 4476]]
+                }, {
+                    type: 'line',
+                    xAxisId: 'xr',
+                    yAxisId: 'yr',
+                    data: [[45, 65], [13, 25], [56, 71]]
+                }, {
+                    type: 'line',
+                    xAxisId: 'xb',
+                    yAxisId: 'yb',
+                    data: [[123, 654], [234, 321], [345, 812]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main-refer-by-axis-id', {
+                title: [
+                    'Test toolbox datazoom refer with axis id',
+                    'left grid: toolbox only work **on two yAxis**',
+                    'right grid: toolbox only work **on xAxis**',
+                    'bottom grid: toolbox **does not work**'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
 
 
     </body>

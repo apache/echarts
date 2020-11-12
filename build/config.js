@@ -17,31 +17,59 @@
 * under the License.
 */
 
+const assert = require('assert');
 const nodeResolvePlugin = require('rollup-plugin-node-resolve');
-const uglifyPlugin = require('rollup-plugin-uglify');
-const ecRemoveDevPlugin = require('./rollup-plugin-ec-remove-dev');
-const ecLangPlugin = require('./rollup-plugin-ec-lang');
-const {resolve} = require('path');
-const preamble = require('./preamble');
+const nodePath = require('path');
+const ecDir = nodePath.resolve(__dirname, '..');
+const typescriptPlugin = require('rollup-plugin-typescript2');
+const fs = require('fs');
+const progress = require('./progress');
 
-function getPathBasedOnECharts(path) {
-    return resolve(__dirname, '../', path);
-}
+function preparePlugins(
+    {sourcemap, addBundleVersion, totalFiles, clean},
+    {include, exclude}
+) {
+    assert(include);
 
-function getPlugins({min, lang, sourcemap, removeDev, addBundleVersion}) {
-    let plugins = [];
+    // In case node_modules/zrender is a symlink
+    const zrNodeModulePath = nodePath.resolve(ecDir, 'node_modules/zrender');
+    const zrRealPath = fs.realpathSync(zrNodeModulePath);
+    // if (zrRealPath !== zrNodeModulePath) {
+    //     include.push(zrRealPath + '/**/*.ts');
+    // }
+    include.push(zrRealPath + '/**/*.ts');
 
-    removeDev && plugins.push(
-        ecRemoveDevPlugin({sourcemap})
-    );
+    if (clean) {
+        console.log('Built in clean mode without cache.');
+    }
 
-    lang && plugins.push(
-        ecLangPlugin({lang})
-    );
-
-    plugins.push(
-        nodeResolvePlugin()
-    );
+    let plugins = [
+        typescriptPlugin({
+            tsconfig: nodePath.resolve(ecDir, 'tsconfig.json'),
+            tsconfigOverride: {
+                // See: https://www.typescriptlang.org/docs/handbook/compiler-options.html
+                compilerOptions: {
+                    // By default: target === "ES3" or "ES5" ? "CommonJS" : "ES6".
+                    // But rollup don't use CommonJS.
+                    module: 'ES2015',
+                    sourceMap: !!sourcemap,
+                    // Use the esm d.ts
+                    declaration: false
+                }
+                // include: include,
+                // exclude: exclude || []
+            },
+            clean: clean || false,
+            include: include,
+            exclude: exclude || []
+        }),
+        nodeResolvePlugin(),
+        progress({
+            scope: {
+                total: totalFiles || 0
+            }
+        })
+    ];
 
     addBundleVersion && plugins.push({
         outro: function () {
@@ -49,130 +77,138 @@ function getPlugins({min, lang, sourcemap, removeDev, addBundleVersion}) {
         }
     });
 
-    min && plugins.push(uglifyPlugin({
-        compress: {
-            // Eliminate __DEV__ code.
-            // Currently, in uglify:
-            // `var vx; if(vx) {...}` can not be removed.
-            // `if (__DEV__) {...}` can be removed if `__DEV__` is defined as `false` in `global_defs`.
-            // 'global_defs': {
-            //     __DEV__: false
-            // },
-            'dead_code': true
-        },
-        output: {
-            preamble: preamble.js
-        }
-    }));
-
     return plugins;
 }
 
 /**
  * @param {Object} [opt]
  * @param {string} [opt.type=''] '' or 'simple' or 'common'
- * @param {boolean} [opt.min=false]
- * @param {string} [opt.lang=undefined] null/undefined/'' or 'en' or 'fi' or a file path.
  * @param {string} [opt.input=undefined] If set, `opt.output` is required too, and `opt.type` is ignored.
  * @param {string} [opt.output=undefined] If set, `opt.input` is required too, and `opt.type` is ignored.
  * @param {boolean} [opt.sourcemap] If set, `opt.input` is required too, and `opt.type` is ignored.
- * @param {boolean} [opt.removeDev]
  * @param {string} [opt.format='umd'] If set, `opt.input` is required too, and `opt.type` is ignored.
  * @param {boolean} [opt.addBundleVersion=false] Only for debug in watch, prompt that the two build is different.
+ * @param {Object} [opt.totalFiles] Total files to bundle
  */
 exports.createECharts = function (opt = {}) {
-    let min = opt.min;
     let srcType = opt.type ? '.' + opt.type : '.all';
     let postfixType = opt.type ? '.' + opt.type : '';
-    let postfixMin = min ? '.min' : '';
-    let postfixLang = opt.lang ? '-' + opt.lang.toLowerCase() : '';
     let input = opt.input;
     let output = opt.output;
     let sourcemap = opt.sourcemap;
     let format = opt.format || 'umd';
+    let postfixFormat = (format !== 'umd') ? '.' + format.toLowerCase() : '';
 
     if (input != null || output != null) {
         // Based on process.cwd();
-        input = resolve(input);
-        output = resolve(output);
+        input = nodePath.resolve(input);
+        output = nodePath.resolve(output);
     }
     else {
-        input = getPathBasedOnECharts(`./echarts${srcType}.js`);
-        output = getPathBasedOnECharts(`dist/echarts${postfixLang}${postfixType}${postfixMin}.js`);
+        input = nodePath.resolve(ecDir, `src/echarts${srcType}.ts`);
+        output = nodePath.resolve(ecDir, `dist/echarts${postfixFormat}${postfixType}.js`);
     }
 
+    const include = [
+        nodePath.resolve(ecDir, 'src/**/*.ts')
+    ];
+
     return {
-        plugins: getPlugins(opt),
+        plugins: preparePlugins(opt, {
+            include
+        }),
+
+        // external: ['zrender'],
+        // external: id => ['zrender'].includes(id),
+
         input: input,
-        legacy: true, // Support IE8-
+        // FIXME ??? ie8 support removed since rollup 0.60
+        // legacy: true, // Support IE8-
+
+        // onwarn ({loc, frame, message}) {
+        //     if (loc) {
+        //         console.warn(`${loc.file} (${loc.line}:${loc.column}) ${message}`);
+        //         if (frame) {
+        //             console.warn(frame);
+        //         }
+        //     }
+        //     else {
+        //         console.warn(message);
+        //     }
+        // },
+
         output: {
             name: 'echarts',
             format: format,
             sourcemap: sourcemap,
-            legacy: true, // Must be declared both in inputOptions and outputOptions.
+            // legacy: true, // Must be declared both in inputOptions and outputOptions.
             file: output
         },
         watch: {
-            include: [
-                getPathBasedOnECharts('./src/**'),
-                getPathBasedOnECharts('./echarts*.js'),
-                getPathBasedOnECharts('../zrender/src/**')
-            ]
+            include
         }
     };
 };
 
-/**
- * @param {boolean} [min=false]
- */
-exports.createBMap = function (min) {
-    let postfix = min ? '.min' : '';
+exports.createBMap = function () {
+    let input = nodePath.resolve(ecDir, `extension-src/bmap/bmap.ts`);
 
     return {
-        plugins: getPlugins({min}),
-        input: getPathBasedOnECharts(`./extension-src/bmap/bmap.js`),
+        plugins: preparePlugins({
+            // Always clean
+            clean: true
+        }, {
+            include: [
+                nodePath.resolve(ecDir, 'extension-src/bmap/**/*.ts')
+            ]
+        }),
+        input: input,
         legacy: true, // Support IE8-
         external: ['echarts'],
         output: {
             name: 'bmap',
             format: 'umd',
-            sourcemap: !min,
+            sourcemap: true,
             legacy: true, // Must be declared both in inputOptions and outputOptions.
             globals: {
                 // For UMD `global.echarts`
                 echarts: 'echarts'
             },
-            file: getPathBasedOnECharts(`dist/extension/bmap${postfix}.js`)
+            file: nodePath.resolve(ecDir, `dist/extension/bmap.js`)
         },
         watch: {
-            include: [getPathBasedOnECharts('./extension-src/bmap/**')]
+            include: [nodePath.resolve(ecDir, 'extension-src/bmap/**')]
         }
     };
 };
 
-/**
- * @param {boolean} [min=false]
- */
-exports.createDataTool = function (min) {
-    let postfix = min ? '.min' : '';
+exports.createDataTool = function () {
+    let input = nodePath.resolve(ecDir, `extension-src/dataTool/index.ts`);
+
     return {
-        plugins: getPlugins({min}),
-        input: getPathBasedOnECharts(`./extension-src/dataTool/index.js`),
+        plugins: preparePlugins({
+            clean: true
+        }, {
+            include: [
+                nodePath.resolve(ecDir, 'extension-src/dataTool/**/*.ts')
+            ]
+        }),
+        input: input,
         legacy: true, // Support IE8-
         external: ['echarts'],
         output: {
             name: 'dataTool',
             format: 'umd',
-            sourcemap: !min,
+            sourcemap: true,
             legacy: true, // Must be declared both in inputOptions and outputOptions.
             globals: {
                 // For UMD `global.echarts`
                 echarts: 'echarts'
             },
-            file: getPathBasedOnECharts(`dist/extension/dataTool${postfix}.js`)
+            file: nodePath.resolve(ecDir, `dist/extension/dataTool.js`)
         },
         watch: {
-            include: [getPathBasedOnECharts('./extension-src/dataTool/**')]
+            include: [nodePath.resolve(ecDir, 'extension-src/dataTool/**')]
         }
     };
 };

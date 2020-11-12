@@ -1,0 +1,124 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="./lib/esl.js"></script>
+        <script src="./lib/config.js"></script>
+        <script src="./lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #ddd;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .chart {
+                height: 500px;
+            }
+        </style>
+
+
+        <div class="chart" id="bar-incremental-large"></div>
+
+
+        <script>
+            function makeToggleChartButtons(toggleClip) {
+                return  [{
+                    text: 'Set Clip',
+                    onclick: function () {
+                        toggleClip(true);
+                    }
+                }, {
+                    text: 'Set Visible',
+                    onclick: function () {
+                        toggleClip(false);
+                    }
+                }];
+            }
+        </script>
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var data = [];
+                var rawDataCount = 2e5;
+                var rate = 1000;
+
+                for (var i = 0; i < rawDataCount; i++) {
+                    var val = 1000 * Math.sin(i / rate) + 1500;
+                    data.push([i, val]);
+                }
+
+                var option = {
+                    color: ['rgba(123,213,012,0.5)'],
+                    xAxis: {
+                    },
+                    yAxis: {
+                        scale: true
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    dataZoom: [{
+                        type: 'slider',
+                        start: 5,
+                        end: 95
+                    }, {
+                        type: 'inside',
+                        start: 5,
+                        end: 95
+                    }],
+                    series: {
+                        type: 'bar',
+                        large: true,
+                        sampling: 'lttb',
+                        data: data
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'bar-incremental-large', {
+                    option: option,
+                    height: 400,
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }]
+                        })
+                    })
+                });
+            })
+        </script>
+
+    </body>
+</html>

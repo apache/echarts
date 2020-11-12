@@ -548,15 +548,15 @@ under the License.
                 var chart = testHelper.create(echarts, 'main7', {
                     option: option,
                     title: [
-                        'background barBorderRadius'
+                        'background borderRadius'
                     ],
                     buttons: [{
-                        text: 'update barBorderRadius to [30, 40, 0, 60]',
+                        text: 'update borderRadius to [30, 40, 0, 60]',
                         onclick: function () {
                             chart.setOption({
                                 series: {
                                     backgroundStyle: {
-                                        barBorderRadius: [30, 40, 0, 60]
+                                        borderRadius: [30, 40, 0, 60]
                                     }
                                 }
                             });

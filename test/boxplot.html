@@ -49,48 +49,26 @@ under the License.
 
             require([
                 'echarts',
-                'data/Michelson-Morley.json',
-                'extension/dataTool'
-                // 'zrender/core/env'
-                // 'echarts/chart/boxplot',
-                // 'echarts/chart/scatter',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/markLine',
-                // 'echarts/component/markPoint',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'zrender/vml/vml'
-            ], function (echarts, rawData, dataTool) {
-                var prepareBoxplotData = dataTool.prepareBoxplotData;
+                'data/Michelson-Morley.json'
+            ], function (echarts, rawData) {
                 var env = echarts.env;
 
-                chart = echarts.init(document.getElementById('main'), null, {
-
-                });
+                chart = echarts.init(document.getElementById('main'));
 
                 update('horizontal');
-                // update('vertical');
 
                 initControlPanel(env);
 
                 function update(layout) {
 
-                    data = prepareBoxplotData(rawData, {
-                        layout: layout
-                    });
-                    mean = calculateMean(rawData);
+                    // mean = calculateMean(rawData);
 
                     var categoryAxis = {
                         type: 'category',
-                        data: data.axisData,
                         boundaryGap: true,
                         nameGap: 30,
                         splitArea: {
                             show: false
-                        },
-                        axisLabel: {
-                            formatter: 'expr {value}'
                         },
                         splitLine: {
                             show: false
@@ -108,6 +86,17 @@ under the License.
                         aria: {
                             show: true
                         },
+                        dataset: [{
+                            source: rawData
+                        }, {
+                            transform: {
+                                type: 'boxplot',
+                                config: { itemNameFormatter: 'expr {value}' }
+                            }
+                        }, {
+                            fromDatasetIndex: 1,
+                            fromTransformResult: 1
+                        }],
                         title: [
                             {
                                 text: 'Michelson-Morley Experiment',
@@ -125,7 +114,7 @@ under the License.
                             }
                         ],
                         legend: {
-                            data: ['line', 'line2', 'line3']
+                            left: 'right'
                         },
                         tooltip: {
                             trigger: 'item',
@@ -144,7 +133,7 @@ under the License.
                             {
                                 name: 'boxplot',
                                 type: 'boxplot',
-                                data: data.boxData,
+                                datasetIndex: 1,
 
                                 markPoint: {
                                     data: [
@@ -219,26 +208,26 @@ under the License.
                             {
                                 name: 'outlier',
                                 type: 'scatter',
-                                data: data.outliers
+                                datasetIndex: 2
                             }
                         ]
                     });
                 }
 
-                function calculateMean(rawData) {
-                    var sum = 0;
-                    var count = 0;
-                    for (var i = 0, len = rawData.length; i < len; i++) {
-                        for (var j = 0, lenj = rawData[i].length; j < lenj; j++) {
-                            var value = rawData[i][j];
-                            count++;
-                            if (!isNaN(value) && value != null && value !== '') {
-                                sum += value;
-                            }
-                        }
-                    }
-                    return sum / count;
-                };
+                // function calculateMean(rawData) {
+                //     var sum = 0;
+                //     var count = 0;
+                //     for (var i = 0, len = rawData.length; i < len; i++) {
+                //         for (var j = 0, lenj = rawData[i].length; j < lenj; j++) {
+                //             var value = rawData[i][j];
+                //             count++;
+                //             if (!isNaN(value) && value != null && value !== '') {
+                //                 sum += value;
+                //             }
+                //         }
+                //     }
+                //     return sum / count;
+                // };
 
 
                 function initControlPanel(env) {

@@ -74,7 +74,7 @@ under the License.
 
                 echarts = ec;
 
-                $.get('../map/json/world.json', function (worldJson) {
+                $.get('./data/map/json/world.json', function (worldJson) {
                     echarts.registerMap('world', worldJson);
 
                     $.getJSON('./data/global-wind.json', function (windData) {

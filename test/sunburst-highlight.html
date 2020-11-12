@@ -32,8 +32,17 @@ under the License.
                 /* background-image: url(old_mathematics.png); */
                 /* background-repeat: repeat; */
             }
+            #toolbar {
+                position: absolute;
+                left: 10px;
+                top: 10px;
+            }
         </style>
         <div id="main"></div>
+        <div id="toolbar">
+            <button id="highlight">Highlight</button>
+            <button id="downplay">Downplay</button>
+        </div>
         <script>
             var chart;
             require([
@@ -105,10 +114,18 @@ under the License.
 
                 chart.setOption(option);
 
-                chart.dispatchAction({
-                    type: 'sunburstHighlight',
-                    targetNodeId: 'target'
-                });
+                document.querySelector('#highlight').onclick = function () {
+                    chart.dispatchAction({
+                        type: 'sunburstHighlight',
+                        targetNodeId: 'target'
+                    });
+                }
+                document.querySelector('#downplay').onclick = function () {
+                    chart.dispatchAction({
+                        type: 'sunburstUnhighlight',
+                        targetNodeId: 'target'
+                    });
+                }
             });
 
         </script>
