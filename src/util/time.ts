@@ -45,7 +45,7 @@ const fullDayFormatter = '{yyyy}-{MM}-{dd}';
 
 export const fullLeveledFormatter = {
     year: '{yyyy}',
-    month: '{yyyy}:{MM}',
+    month: '{yyyy}-{MM}',
     day: fullDayFormatter,
     hour: fullDayFormatter + ' ' + defaultLeveledFormatter.hour,
     minute: fullDayFormatter + ' ' + defaultLeveledFormatter.minute,
