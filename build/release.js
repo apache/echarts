@@ -19,7 +19,7 @@
 * under the License.
 */
 
-const {spawn} = require('child_process');
+const spawn = require('cross-spawn');
 const path = require('path');
 const chalk = require('chalk');
 const fsExtra = require('fs-extra');
