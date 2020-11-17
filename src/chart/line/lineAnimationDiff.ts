@@ -132,30 +132,7 @@ export default function lineAnimationDiff(
                 rawIndices.push(newData.getRawIndex(newIdx));
                 break;
             case '-':
-                const oldIdx = diffItem.idx;
-                const rawIndex = oldData.getRawIndex(oldIdx);
-                const oldDataDimsForPoint = oldDataNewCoordInfo.dataDimsForPoint;
-                oldIdx2 = oldIdx * 2;
-                // Data is replaced. In the case of dynamic data queue
-                // FIXME FIXME FIXME
-                if (rawIndex !== oldIdx) {
-                    const newPt = newCoordSys.dataToPoint([
-                        oldData.get(oldDataDimsForPoint[0], oldIdx),
-                        oldData.get(oldDataDimsForPoint[1], oldIdx)
-                    ]);
-                    const newStackedOnPt = getStackedOnPoint(oldDataNewCoordInfo, newCoordSys, oldData, oldIdx);
-
-                    currPoints.push(oldPoints[oldIdx2], oldPoints[oldIdx2 + 1]);
-                    nextPoints.push(newPt[0], newPt[1]);
-
-                    currStackedPoints.push(oldStackedOnPoints[oldIdx2], oldStackedOnPoints[oldIdx2 + 1]);
-                    nextStackedPoints.push(newStackedOnPt[0], newStackedOnPt[1]);
-
-                    rawIndices.push(rawIndex);
-                }
-                else {
-                    pointAdded = false;
-                }
+                pointAdded = false;
         }
 
         // Original indices
