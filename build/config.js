@@ -37,7 +37,7 @@ function preparePlugins(
     // if (zrRealPath !== zrNodeModulePath) {
     //     include.push(zrRealPath + '/**/*.ts');
     // }
-    include.push(zrRealPath + '/**/*.ts');
+    include.push(zrRealPath + '/src/**/*.ts');
 
     if (clean) {
         console.log('Built in clean mode without cache.');

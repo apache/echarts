@@ -311,10 +311,10 @@ function transformRootFolderInEntry(entryFile, replacement) {
  * Transform `zrender/src` to `zrender/esm` in all files
  */
 async function transformDistributionFiles(rooltFolder, replacement) {
-    const files = await globby([
-        rooltFolder + '/**/*.js',
-        rooltFolder + '/**/*.d.ts',
-    ]);
+    const files = await readFilePaths({
+        patterns: ['**/*.js', '**/*.d.ts'],
+        cwd: rooltFolder
+    });
     // Simple regex replacement
     // TODO More robust way?
     for (let fileName of files) {
