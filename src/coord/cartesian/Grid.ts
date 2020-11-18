@@ -185,7 +185,12 @@ class Grid implements CoordinateSystemMaster {
             }
             const unionExtent = gridExtent / finalSplitNumber;
             const extent = axis.scale.getExtent();
-            axis.setExtent(0, unionExtent * (extent[1] - extent[0]) / ((axis.scale) as IntervalScale).getInterval());
+            const [niceExtent] = (axis.scale as IntervalScale).getNiceExtent();
+            const interval = (axis.scale as IntervalScale).getInterval();
+            const offset = niceExtent === extent[0] ? extent[0] : niceExtent - interval;
+            const start = unionExtent * ((extent[0] - offset) / interval);
+            const end = unionExtent * (extent[1] - offset) / interval;
+            axis.setExtent(start, end);
         });
     }
 

@@ -39,7 +39,6 @@ under the License.
             width: 100vw;
             height: 50vh;
         }
-
     </style>
     <div id="main1" class="chart"></div>
     <div id="main2" class="chart"></div>
@@ -57,6 +56,8 @@ under the License.
     <div id="main14" class="chart"></div>
     <div id="main15" class="chart"></div>
     <div id="main16" class="chart"></div>
+    <div id="main17" class="chart"></div>
+    <div id="main18" class="chart"></div>
     <script>
         require([
             'echarts'
@@ -163,23 +164,23 @@ under the License.
                     }
                 ],
                 "series": [{
-                        "name": "A",
-                        "type": "bar",
-                        "data": [
-                            12,
-                            7
-                        ],
-                        "yAxisIndex": 0
-                    },
-                    {
-                        "name": "B",
-                        "type": "bar",
-                        "data": [
-                            6,
-                            23
-                        ],
-                        "yAxisIndex": 1
-                    }
+                    "name": "A",
+                    "type": "bar",
+                    "data": [
+                        12,
+                        7
+                    ],
+                    "yAxisIndex": 0
+                },
+                {
+                    "name": "B",
+                    "type": "bar",
+                    "data": [
+                        6,
+                        23
+                    ],
+                    "yAxisIndex": 1
+                }
                 ]
             };
 
@@ -207,23 +208,23 @@ under the License.
                     }
                 ],
                 "series": [{
-                        "name": "A",
-                        "type": "bar",
-                        "data": [
-                            12,
-                            7
-                        ],
-                        "yAxisIndex": 0
-                    },
-                    {
-                        "name": "B",
-                        "type": "bar",
-                        "data": [
-                            6,
-                            23
-                        ],
-                        "yAxisIndex": 1
-                    }
+                    "name": "A",
+                    "type": "bar",
+                    "data": [
+                        12,
+                        7
+                    ],
+                    "yAxisIndex": 0
+                },
+                {
+                    "name": "B",
+                    "type": "bar",
+                    "data": [
+                        6,
+                        23
+                    ],
+                    "yAxisIndex": 1
+                }
                 ]
             };
 
@@ -241,31 +242,31 @@ under the License.
                     "data": ["test", 'test2']
                 }],
                 "yAxis": [{
-                        "name": "A",
-                        interval: 7
-                    },
-                    {
-                        "name": "B",
-                    }
+                    "name": "A",
+                    interval: 7
+                },
+                {
+                    "name": "B",
+                }
                 ],
                 "series": [{
-                        "name": "A",
-                        "type": "bar",
-                        "data": [
-                            12,
-                            7
-                        ],
-                        "yAxisIndex": 0
-                    },
-                    {
-                        "name": "B",
-                        "type": "bar",
-                        "data": [
-                            6,
-                            23
-                        ],
-                        "yAxisIndex": 1
-                    }
+                    "name": "A",
+                    "type": "bar",
+                    "data": [
+                        12,
+                        7
+                    ],
+                    "yAxisIndex": 0
+                },
+                {
+                    "name": "B",
+                    "type": "bar",
+                    "data": [
+                        6,
+                        23
+                    ],
+                    "yAxisIndex": 1
+                }
                 ]
             };
 
@@ -283,32 +284,32 @@ under the License.
                     "data": ["test", 'test2']
                 }],
                 "yAxis": [{
-                        "name": "A",
-                        interval: 7
-                    },
-                    {
-                        "name": "B",
-                        interval: 6
-                    }
+                    "name": "A",
+                    interval: 7
+                },
+                {
+                    "name": "B",
+                    interval: 6
+                }
                 ],
                 "series": [{
-                        "name": "A",
-                        "type": "bar",
-                        "data": [
-                            12,
-                            7
-                        ],
-                        "yAxisIndex": 1
-                    },
-                    {
-                        "name": "B",
-                        "type": "bar",
-                        "data": [
-                            6,
-                            23
-                        ],
-                        "yAxisIndex": 0
-                    }
+                    "name": "A",
+                    "type": "bar",
+                    "data": [
+                        12,
+                        7
+                    ],
+                    "yAxisIndex": 1
+                },
+                {
+                    "name": "B",
+                    "type": "bar",
+                    "data": [
+                        6,
+                        23
+                    ],
+                    "yAxisIndex": 0
+                }
                 ]
             };
 
@@ -326,34 +327,34 @@ under the License.
                     "data": ["test", 'test2']
                 }],
                 "yAxis": [{
-                        "name": "A",
-                        max: 26,
-                    },
-                    {
-                        "name": "B"
-                    }
+                    "name": "A",
+                    max: 26,
+                },
+                {
+                    "name": "B"
+                }
                 ],
                 "series": [{
-                        "name": "A",
-                        "type": "bar",
-                        "data": [
-                            12,
-                            -3
-                        ],
-                        "yAxisIndex": 1
-                    },
-                    {
-                        "name": "B",
-                        "type": "bar",
-                        "data": [
-                            6,
-                            23
-                        ],
-                        "yAxisIndex": 0
-                    }
+                    "name": "A",
+                    "type": "bar",
+                    "data": [
+                        12,
+                        -3
+                    ],
+                    "yAxisIndex": 1
+                },
+                {
+                    "name": "B",
+                    "type": "bar",
+                    "data": [
+                        6,
+                        23
+                    ],
+                    "yAxisIndex": 0
+                }
                 ]
             };
-            
+
             chart = testHelper.create(echarts, 'main6', {
                 title: [
                     'Axis auto align',
@@ -464,7 +465,7 @@ under the License.
                     }
                 ]
             };
-            
+
             chart = testHelper.create(echarts, 'main8', {
                 title: [
                     'Axis auto align',
@@ -527,7 +528,7 @@ under the License.
                     }
                 ]
             };
-            
+
             chart = testHelper.create(echarts, 'main12', {
                 title: [
                     'Axis auto align',
@@ -542,37 +543,37 @@ under the License.
                     "data": ["test", 'test2']
                 }],
                 "yAxis": [{
-                        "name": "A",
-                        interval: 7,
-                        splitNumber: 3
-                    },
-                    {
-                        "name": "B",
-                        interval: 6,
-                        splitNumber: 4
-                    }
+                    "name": "A",
+                    interval: 7,
+                    splitNumber: 3
+                },
+                {
+                    "name": "B",
+                    interval: 6,
+                    splitNumber: 4
+                }
                 ],
                 "series": [{
-                        "name": "A",
-                        "type": "bar",
-                        "data": [
-                            22,
-                            7
-                        ],
-                        "yAxisIndex": 1
-                    },
-                    {
-                        "name": "B",
-                        "type": "bar",
-                        "data": [
-                            6,
-                            23
-                        ],
-                        "yAxisIndex": 0
-                    }
+                    "name": "A",
+                    "type": "bar",
+                    "data": [
+                        22,
+                        7
+                    ],
+                    "yAxisIndex": 1
+                },
+                {
+                    "name": "B",
+                    "type": "bar",
+                    "data": [
+                        6,
+                        23
+                    ],
+                    "yAxisIndex": 0
+                }
                 ]
             };
-           
+
             chart = testHelper.create(echarts, 'main9', {
                 title: [
                     'Axis auto align',
@@ -587,39 +588,39 @@ under the License.
                     "data": ["test", 'test2']
                 }],
                 "yAxis": [{
-                        "name": "A",
-                        interval: 7,
-                        splitNumber: 3,
-                        max: 23
-                    },
-                    {
-                        "name": "B",
-                        interval: 6,
-                        splitNumber: 4,
-                        max: 25
-                    }
+                    "name": "A",
+                    interval: 7,
+                    splitNumber: 3,
+                    max: 23
+                },
+                {
+                    "name": "B",
+                    interval: 6,
+                    splitNumber: 4,
+                    max: 25
+                }
                 ],
                 "series": [{
-                        "name": "A",
-                        "type": "bar",
-                        "data": [
-                            22,
-                            7
-                        ],
-                        "yAxisIndex": 1
-                    },
-                    {
-                        "name": "B",
-                        "type": "bar",
-                        "data": [
-                            6,
-                            23
-                        ],
-                        "yAxisIndex": 0
-                    }
+                    "name": "A",
+                    "type": "bar",
+                    "data": [
+                        22,
+                        7
+                    ],
+                    "yAxisIndex": 1
+                },
+                {
+                    "name": "B",
+                    "type": "bar",
+                    "data": [
+                        6,
+                        23
+                    ],
+                    "yAxisIndex": 0
+                }
                 ]
             };
-           
+
             chart = testHelper.create(echarts, 'main10', {
                 title: [
                     'Axis auto align',
@@ -634,31 +635,31 @@ under the License.
                     "data": ["test", 'test2', "test3", 'test4', "test5", 'test6', "test7"]
                 }],
                 "yAxis": [{
-                        "name": "A",
-                        splitNumber: 3,
-                        minInterval: 333
-                    },
-                    {
-                        "name": "B",
-                        splitNumber: 4,
-                        minInterval: 11
-                    }
+                    "name": "A",
+                    splitNumber: 3,
+                    minInterval: 333
+                },
+                {
+                    "name": "B",
+                    splitNumber: 4,
+                    minInterval: 11
+                }
                 ],
                 "series": [{
-                        "name": "A",
-                        "type": "bar",
-                        "data": [10, 2, 20, 33, 39, 33, 22],
-                        "yAxisIndex": 1
-                    },
-                    {
-                        "name": "B",
-                        "type": "bar",
-                        "data": [10, 52, 200, 334, 390, 330, 220],
-                        "yAxisIndex": 0
-                    }
+                    "name": "A",
+                    "type": "bar",
+                    "data": [10, 2, 20, 33, 39, 33, 22],
+                    "yAxisIndex": 1
+                },
+                {
+                    "name": "B",
+                    "type": "bar",
+                    "data": [10, 52, 200, 334, 390, 330, 220],
+                    "yAxisIndex": 0
+                }
                 ]
             };
-           
+
             chart = testHelper.create(echarts, 'main11', {
                 title: [
                     'Axis auto align',
@@ -673,28 +674,28 @@ under the License.
                     "data": ["test", 'test2', "test3", 'test4', "test5", 'test6', "test7"]
                 }],
                 "yAxis": [{
-                        "name": "A",
-                        minInterval: 333
-                    },
-                    {
-                        "name": "B"
-                    }
+                    "name": "A",
+                    minInterval: 333
+                },
+                {
+                    "name": "B"
+                }
                 ],
                 "series": [{
-                        "name": "A",
-                        "type": "bar",
-                        "data": [10, 2, 20, 33, 39, 33, 22],
-                        "yAxisIndex": 1
-                    },
-                    {
-                        "name": "B",
-                        "type": "bar",
-                        "data": [10, 52, 200, 334, 390, 330, 220],
-                        "yAxisIndex": 0
-                    }
+                    "name": "A",
+                    "type": "bar",
+                    "data": [10, 2, 20, 33, 39, 33, 22],
+                    "yAxisIndex": 1
+                },
+                {
+                    "name": "B",
+                    "type": "bar",
+                    "data": [10, 52, 200, 334, 390, 330, 220],
+                    "yAxisIndex": 0
+                }
                 ]
             };
-           
+
             chart = testHelper.create(echarts, 'main14', {
                 title: [
                     'Axis auto align',
@@ -709,28 +710,28 @@ under the License.
                     "data": ["test", 'test2', "test3", 'test4', "test5", 'test6', "test7"]
                 }],
                 "yAxis": [{
-                        "name": "A",
-                        maxInterval: 98
-                    },
-                    {
-                        "name": "B"
-                    }
+                    "name": "A",
+                    maxInterval: 98
+                },
+                {
+                    "name": "B"
+                }
                 ],
                 "series": [{
-                        "name": "A",
-                        "type": "bar",
-                        "data": [10, 2, 20, 33, 39, 33, 22],
-                        "yAxisIndex": 1
-                    },
-                    {
-                        "name": "B",
-                        "type": "bar",
-                        "data": [10, 52, 200, 334, 390, 330, 220],
-                        "yAxisIndex": 0
-                    }
+                    "name": "A",
+                    "type": "bar",
+                    "data": [10, 2, 20, 33, 39, 33, 22],
+                    "yAxisIndex": 1
+                },
+                {
+                    "name": "B",
+                    "type": "bar",
+                    "data": [10, 52, 200, 334, 390, 330, 220],
+                    "yAxisIndex": 0
+                }
                 ]
             };
-           
+
             chart = testHelper.create(echarts, 'main15', {
                 title: [
                     'Axis auto align',
@@ -738,7 +739,7 @@ under the License.
                 ],
                 option: option
             });
-        
+
 
             option = {
                 tooltip: {},
@@ -746,29 +747,29 @@ under the License.
                     "data": ["test", 'test2', "test3", 'test4', "test5", 'test6', "test7"]
                 }],
                 "yAxis": [{
-                        "name": "A",
-                        maxInterval: 98
-                    },
-                    {
-                        "name": "B",
-                        maxInterval: 7
-                    }
+                    "name": "A",
+                    maxInterval: 98
+                },
+                {
+                    "name": "B",
+                    maxInterval: 7
+                }
                 ],
                 "series": [{
-                        "name": "A",
-                        "type": "bar",
-                        "data": [10, 2, 20, 33, 39, 33, 22],
-                        "yAxisIndex": 1
-                    },
-                    {
-                        "name": "B",
-                        "type": "bar",
-                        "data": [10, 52, 200, 334, 390, 330, 220],
-                        "yAxisIndex": 0
-                    }
+                    "name": "A",
+                    "type": "bar",
+                    "data": [10, 2, 20, 33, 39, 33, 22],
+                    "yAxisIndex": 1
+                },
+                {
+                    "name": "B",
+                    "type": "bar",
+                    "data": [10, 52, 200, 334, 390, 330, 220],
+                    "yAxisIndex": 0
+                }
                 ]
             };
-           
+
             chart = testHelper.create(echarts, 'main16', {
                 title: [
                     'Axis auto align',
@@ -776,7 +777,80 @@ under the License.
                 ],
                 option: option
             });
-        
+
+            option = {
+                tooltip: {},
+                "xAxis": [{
+                    "data": ["test", 'test2', "test3", 'test4', "test5", 'test6', "test7"]
+                }],
+                "yAxis": [{
+                    "name": "A",
+                    min: 3
+                },
+                {
+                    "name": "B"
+                }
+                ],
+                "series": [{
+                    "name": "A",
+                    "type": "bar",
+                    "data": [10, 2, 20, 33, 39, 33, 22],
+                    "yAxisIndex": 0
+                },
+                {
+                    "name": "B",
+                    "type": "bar",
+                    "data": [10, 52, 200, 334, 390, 330, 220],
+                    "yAxisIndex": 1
+                }
+                ]
+            };
+
+            chart = testHelper.create(echarts, 'main17', {
+                title: [
+                    'Axis auto align',
+                    'One axis has min option'
+                ],
+                option: option
+            });
+
+            option = {
+                tooltip: {},
+                "xAxis": [{
+                    "data": ["test", 'test2', "test3", 'test4', "test5", 'test6', "test7"]
+                }],
+                "yAxis": [{
+                    "name": "A",
+                    min: 3
+                },
+                {
+                    "name": "B",
+                    min: 7
+                }
+                ],
+                "series": [{
+                    "name": "A",
+                    "type": "bar",
+                    "data": [10, 2, 20, 33, 39, 33, 22],
+                    "yAxisIndex": 0
+                },
+                {
+                    "name": "B",
+                    "type": "bar",
+                    "data": [10, 52, 200, 334, 390, 330, 220],
+                    "yAxisIndex": 1
+                }
+                ]
+            };
+
+            chart = testHelper.create(echarts, 'main18', {
+                title: [
+                    'Axis auto align',
+                    'Both axis have min option'
+                ],
+                option: option
+            });
+
         });
 
     </script>

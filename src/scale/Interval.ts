@@ -64,6 +64,10 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         }
     }
 
+    getNiceExtent(): number[] {
+        return this._niceExtent.slice();
+    }
+
     unionExtent(other: [number, number]): void {
         const extent = this._extent;
         other[0] < extent[0] && (extent[0] = other[0]);
