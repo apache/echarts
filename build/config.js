@@ -212,3 +212,27 @@ exports.createDataTool = function () {
         }
     };
 };
+
+exports.createMyTransform = function () {
+    let input = nodePath.resolve(ecDir, `test/lib/myTransform/src/index.ts`);
+
+    return {
+        plugins: preparePlugins({
+            clean: true
+        }, {
+            include: [
+                nodePath.resolve(ecDir, 'test/lib/myTransform/src/**/*.ts')
+            ]
+        }),
+        input: input,
+        output: {
+            name: 'myTransform',
+            format: 'umd',
+            sourcemap: true,
+            file: nodePath.resolve(ecDir, `test/lib/myTransform/dist/myTransform.js`)
+        },
+        watch: {
+            include: [nodePath.resolve(ecDir, 'test/lib/myTransform/src/**')]
+        }
+    };
+};

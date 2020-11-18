@@ -27,7 +27,6 @@ under the License.
         <script src='lib/jquery.min.js'></script>
         <script src="../dist/echarts.js"></script>
         <script src="lib/testHelper.js"></script>
-        <script src="lib/myTransform/aggregate.js"></script>
         <script src="lib/transitionPlayer.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
@@ -76,9 +75,9 @@ under the License.
 
         <script>
 
-            require(['echarts', 'ecStat'], function (echarts, ecStat) {
+            require(['echarts', 'ecStat', 'myTransform'], function (echarts, ecStat, myTransform) {
 
-                echarts.registerTransform(window.myTransform.aggregate);
+                echarts.registerTransform(myTransform.aggregate);
                 echarts.registerTransform(ecStat.transform.clustering);
 
 
