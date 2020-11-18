@@ -40,6 +40,12 @@ export function warn(str: string) {
     }
 }
 
+export function error(str: string) {
+    if (hasConsole) {
+        console.error(ECHARTS_PREFIX + str);
+    }
+}
+
 export function deprecateLog(str: string) {
     if (__DEV__) {
         if (storedLogs[str]) {  // Not display duplicate message.

@@ -32,17 +32,18 @@ import {
     SeriesOnSingleOptionMixin,
     OptionDataValue,
     RoamOptionMixin,
-    LabelOption,
+    SeriesLabelOption,
     ItemStyleOption,
     LineStyleOption,
     SymbolOptionMixin,
     BoxLayoutOptionMixin,
-    LabelFormatterCallback,
     Dictionary,
-    LineLabelOption,
+    SeriesLineLabelOption,
     StatesOptionMixin,
     GraphEdgeItemObject,
-    OptionDataValueNumeric
+    OptionDataValueNumeric,
+    DefaultExtraEmpasisState,
+    CallbackDataParams
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -52,6 +53,8 @@ import { ForceLayoutInstance } from './forceLayout';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
+import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
+
 
 type GraphDataValue = OptionDataValue | OptionDataValue[];
 
@@ -61,20 +64,19 @@ interface GraphEdgeLineStyleOption extends LineStyleOption {
 
 export interface GraphNodeStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
+
+interface ExtraEmphasisState {
+    focus?: DefaultExtraEmpasisState['focus'] | 'adjacency'
+}
 interface ExtraNodeStateOption {
-    emphasis?: {
-        focus?: 'adjacency'
-        scale?: boolean
-    }
+    emphasis?: ExtraEmphasisState
 }
 
 interface ExtraEdgeStateOption {
-    emphasis?: {
-        focus?: 'adjacency'
-    }
+    emphasis?: ExtraEmphasisState
 }
 
 export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOption,
@@ -108,7 +110,7 @@ export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOp
 
 export interface GraphEdgeStateOption {
     lineStyle?: GraphEdgeLineStyleOption
-    label?: LineLabelOption
+    label?: SeriesLineLabelOption
 }
 export interface GraphEdgeItemOption extends
         GraphEdgeStateOption,
@@ -137,7 +139,7 @@ export interface GraphCategoryItemOption extends SymbolOptionMixin,
 export interface GraphSeriesOption extends SeriesOption,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
-    SymbolOptionMixin,
+    SymbolOptionMixin<CallbackDataParams>,
     RoamOptionMixin,
     BoxLayoutOptionMixin {
 
@@ -169,12 +171,8 @@ export interface GraphSeriesOption extends SeriesOption,
     edgeSymbol?: string | string[]
     edgeSymbolSize?: number | number[]
 
-    edgeLabel?: LineLabelOption & {
-        formatter?: LabelFormatterCallback | string
-    }
-    label?: LabelOption & {
-        formatter?: LabelFormatterCallback | string
-    }
+    edgeLabel?: SeriesLineLabelOption
+    label?: SeriesLabelOption
 
     itemStyle?: ItemStyleOption
     lineStyle?: GraphEdgeLineStyleOption
@@ -182,22 +180,22 @@ export interface GraphSeriesOption extends SeriesOption,
     emphasis?: {
         focus?: GraphNodeItemOption['emphasis']['focus']
         scale?: boolean
-        label?: LabelOption
-        edgeLabel?: LabelOption
+        label?: SeriesLabelOption
+        edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption
         lineStyle?: LineStyleOption
     }
 
     blur?: {
-        label?: LabelOption
-        edgeLabel?: LabelOption
+        label?: SeriesLabelOption
+        edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption
         lineStyle?: LineStyleOption
     }
 
     select?: {
-        label?: LabelOption
-        edgeLabel?: LabelOption
+        label?: SeriesLabelOption
+        edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption
         lineStyle?: LineStyleOption
     }
@@ -275,7 +273,13 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         const self = this;
 
         if (nodes && edges) {
-            return createGraphFromNodeEdge(nodes as GraphNodeItemOption[], edges, this, true, beforeLink).data;
+            // auto curveness
+            initCurvenessList(this);
+            const graph = createGraphFromNodeEdge(nodes as GraphNodeItemOption[], edges, this, true, beforeLink);
+            zrUtil.each(graph.edges, function (edge) {
+                createEdgeMapForCurveness(edge.node1, edge.node2, this, edge.dataIndex);
+            }, this);
+            return graph.data;
         }
 
         function beforeLink(nodeData: List, edgeData: List) {
@@ -482,7 +486,6 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         lineStyle: {
             color: '#aaa',
             width: 1,
-            curveness: 0,
             opacity: 0.5
         },
         emphasis: {

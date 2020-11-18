@@ -32,14 +32,18 @@ import {
     ItemStyleOption,
     OptionDataValueNumeric,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    LayoutOrient,
+    VerticalAlign,
+    SeriesLabelOption,
+    SeriesEncodeOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import ComponentModel from '../../model/Component';
 
 
-type FunnelLabelOption = Omit<LabelOption, 'position'> & {
+type FunnelLabelOption = Omit<SeriesLabelOption, 'position'> & {
     position?: LabelOption['position']
         | 'outer' | 'inner' | 'center' | 'rightTop' | 'rightBottom' | 'leftTop' | 'leftBottom'
 };
@@ -55,12 +59,13 @@ export interface FunnelDataItemOption
     OptionDataItemObject<OptionDataValueNumeric> {
 
     itemStyle?: ItemStyleOption & {
+        width?: number | string
         height?: number | string
     }
 }
 
 export interface FunnelSeriesOption extends SeriesOption<FunnelStateOption>, FunnelStateOption,
-    BoxLayoutOptionMixin {
+    BoxLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'funnel'
 
     min?: number
@@ -74,9 +79,11 @@ export interface FunnelSeriesOption extends SeriesOption<FunnelStateOption>, Fun
 
     sort?: 'ascending' | 'descending' | 'none'
 
+    orient?: LayoutOrient
+
     gap?: number
 
-    funnelAlign?: HorizontalAlign
+    funnelAlign?: HorizontalAlign | VerticalAlign
 
     data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | FunnelDataItemOption)[]
 }
@@ -149,6 +156,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
         minSize: '0%',
         maxSize: '100%',
         sort: 'descending', // 'ascending', 'descending'
+        orient: 'vertical',
         gap: 0,
         funnelAlign: 'center',
         label: {

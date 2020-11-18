@@ -24,14 +24,17 @@ import {
     SeriesOption,
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
-    LabelOption,
+    SeriesLabelOption,
     LineStyleOption,
     ItemStyleOption,
     AreaStyleOption,
     OptionDataValue,
     SymbolOptionMixin,
     SeriesSamplingOptionMixin,
-    StatesOptionMixin
+    StatesOptionMixin,
+    DefaultExtraEmpasisState,
+    SeriesEncodeOptionMixin,
+    CallbackDataParams
 } from '../../util/types';
 import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -41,13 +44,14 @@ type LineDataValue = OptionDataValue | OptionDataValue[];
 
 interface ExtraStateOption {
     emphasis?: {
+        focus?: DefaultExtraEmpasisState['focus']
         scale?: boolean
     }
 }
 
 export interface LineStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 export interface LineDataItemOption extends SymbolOptionMixin,
@@ -55,6 +59,10 @@ export interface LineDataItemOption extends SymbolOptionMixin,
     name?: string
 
     value?: LineDataValue
+}
+
+export interface LineEndLabelOption extends SeriesLabelOption {
+    valueAnimation: boolean
 }
 
 
@@ -74,7 +82,8 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
     SeriesSamplingOptionMixin,
-    SymbolOptionMixin {
+    SymbolOptionMixin<CallbackDataParams>,
+    SeriesEncodeOptionMixin {
     type?: 'line'
 
     coordinateSystem?: 'cartesian2d' | 'polar'
@@ -82,7 +91,8 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     // If clip the overflow value
     clip?: boolean
 
-    label?: LabelOption
+    label?: SeriesLabelOption
+    endLabel?: LineEndLabelOption
 
     lineStyle?: LineStyleOption
 
@@ -131,7 +141,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
     static defaultOption: LineSeriesOption = {
         zlevel: 0,
-        z: 2,
+        z: 3,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
 
@@ -139,6 +149,12 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         label: {
             position: 'top'
+        },
+
+        endLabel: {
+            show: false,
+            valueAnimation: true,
+            distance: 8
         },
 
         lineStyle: {
@@ -179,7 +195,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         // Whether to connect break point.
         connectNulls: false,
 
-        // Sampling for large data. Can be: 'average', 'max', 'min', 'sum'.
+        // Sampling for large data. Can be: 'average', 'max', 'min', 'sum', 'lttb'.
         sampling: 'none',
 
         animationEasing: 'linear',

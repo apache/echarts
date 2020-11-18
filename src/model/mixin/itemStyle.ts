@@ -36,12 +36,15 @@ export const ITEM_STYLE_KEY_MAP = [
     ['lineCap', 'borderCap'],
     ['lineJoin', 'borderJoin'],
     ['miterLimit', 'borderMiterLimit']
+    // Option decal is in `DecalObject` but style.decal is in `PatternObject`.
+    // So do not transfer decal directly.
 ];
 
 const getItemStyle = makeStyleMapper(ITEM_STYLE_KEY_MAP);
 
 type ItemStyleKeys = 'fill'
     | 'stroke'
+    | 'decal'
     | 'lineWidth'
     | 'opacity'
     | 'shadowBlur'

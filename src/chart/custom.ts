@@ -18,15 +18,16 @@
 */
 
 import {
-    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike, bind
+    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each,
+    keys, isArrayLike, bind, isFunction, eqNaN, indexOf, clone
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
 import { setDefaultStateProxy, enableHoverEmphasis } from '../util/states';
 import * as labelStyleHelper from '../label/labelStyle';
 import {getDefaultLabel} from './helper/labelHelper';
 import createListFromArray from './helper/createListFromArray';
-import {getLayoutOnAxis} from '../layout/barGrid';
-import DataDiffer from '../data/DataDiffer';
+import {getLayoutOnAxis, BarGridLayoutResult, BarGridLayoutOptionForCustomSeries} from '../layout/barGrid';
+import DataDiffer, { DataDiffMode } from '../data/DataDiffer';
 import SeriesModel from '../model/Series';
 import Model from '../model/Model';
 import ChartView from '../view/Chart';
@@ -35,7 +36,6 @@ import {
     EventQueryItem, ECEvent, SeriesOption, SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin, SeriesOnSingleOptionMixin, SeriesOnGeoOptionMixin,
     SeriesOnCalendarOptionMixin, ItemStyleOption, SeriesEncodeOptionMixin,
-    SeriesTooltipOption,
     DimensionLoose,
     ParsedValue,
     Dictionary,
@@ -50,7 +50,12 @@ import {
     ECElement,
     DisplayStateNonNormal,
     BlurScope,
-    SeriesDataType
+    SeriesDataType,
+    OrdinalRawValue,
+    PayloadAnimationPart,
+    DecalObject,
+    InnerDecalObject,
+    TextCommonOption
 } from '../util/types';
 import Element, { ElementProps, ElementTextConfig } from 'zrender/src/Element';
 import prepareCartesian2d from '../coord/cartesian/prepareCustom';
@@ -66,7 +71,7 @@ import ExtensionAPI from '../ExtensionAPI';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Axis2D from '../coord/cartesian/Axis2D';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import { PathProps } from 'zrender/src/graphic/Path';
+import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import { CoordinateSystem } from '../coord/CoordinateSystem';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
@@ -80,6 +85,15 @@ import {
 import Transformable from 'zrender/src/core/Transformable';
 import { ItemStyleProps } from '../model/mixin/itemStyle';
 import { cloneValue } from 'zrender/src/animation/Animator';
+import { warn, throwError } from '../util/log';
+import {
+    combine, isInAnyMorphing, morphPath, isCombiningPath, CombineSeparateConfig, separate, CombineSeparateResult
+} from 'zrender/src/tool/morphPath';
+import { AnimationEasing } from 'zrender/src/animation/easing';
+import * as matrix from 'zrender/src/core/matrix';
+import { PatternObject } from 'zrender/src/graphic/Pattern';
+import { createOrUpdatePatternFromDecal } from '../util/decal';
+import { ZRenderType } from 'zrender/src/zrender';
 
 
 const inner = makeInner<{
@@ -90,6 +104,8 @@ const inner = makeInner<{
     // customText: string;
     txConZ2Set: number;
     leaveToProps: ElementProps;
+    // Can morph: "morph" specified in option and el is Path.
+    canMorph: boolean;
     userDuring: CustomBaseElementOption['during'];
 }, Element>();
 
@@ -103,25 +119,32 @@ const TRANSFORM_PROPS = {
     originY: 1,
     rotation: 1
 } as const;
-type TransformProps = keyof typeof TRANSFORM_PROPS;
+type TransformProp = keyof typeof TRANSFORM_PROPS;
 const transformPropNamesStr = keys(TRANSFORM_PROPS).join(', ');
 
-type TransitionAnyProps = string | string[];
-type TransitionTransformProps = TransformProps | TransformProps[];
 // Do not declare "Dictionary" in TransitionAnyOption to restrict the type check.
 type TransitionAnyOption = {
     transition?: TransitionAnyProps;
     enterFrom?: Dictionary<unknown>;
     leaveTo?: Dictionary<unknown>;
 };
+type TransitionAnyProps = string | string[];
 type TransitionTransformOption = {
-    transition?: TransitionTransformProps;
+    transition?: ElementRootTransitionProp | ElementRootTransitionProp[];
     enterFrom?: Dictionary<unknown>;
     leaveTo?: Dictionary<unknown>;
 };
+type ElementRootTransitionProp = TransformProp | 'shape' | 'extra' | 'style';
+type ShapeMorphingOption = {
+    /**
+     * If do shape morphing animation when type is changed.
+     * Only available on path.
+     */
+    morph?: boolean
+};
 
 interface CustomBaseElementOption extends Partial<Pick<
-    Element, TransformProps | 'silent' | 'ignore' | 'textConfig'
+    Element, TransformProp | 'silent' | 'ignore' | 'textConfig'
 >>, TransitionTransformOption {
     // element type, mandatory.
     type: string;
@@ -152,7 +175,7 @@ interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<
     select?: CustomDisplayableOptionOnState;
 }
 interface CustomDisplayableOptionOnState extends Partial<Pick<
-    Displayable, TransformProps | 'textConfig' | 'z2'
+    Displayable, TransformProp | 'textConfig' | 'z2'
 >> {
     // `false` means remove emphasis trigger.
     style?: (ZRStyleProps & TransitionAnyOption) | false;
@@ -167,10 +190,15 @@ interface CustomGroupOption extends CustomBaseElementOption {
     children: Omit<CustomElementOption, 'focus' | 'blurScope'>[];
     $mergeChildren: false | 'byName' | 'byIndex';
 }
-interface CustomZRPathOption extends CustomDisplayableOption {
+interface CustomZRPathOption extends CustomDisplayableOption, ShapeMorphingOption {
     shape?: PathProps['shape'] & TransitionAnyOption;
+    style?: CustomDisplayableOption['style'] & {
+        decal?: DecalObject;
+        // Only internal usage. Any user specified value will be overwritten.
+        __decalPattern?: PatternObject;
+    };
 }
-interface CustomSVGPathOption extends CustomDisplayableOption {
+interface CustomSVGPathOption extends CustomDisplayableOption, ShapeMorphingOption {
     type: 'path';
     shape?: {
         // SVG Path, like 'M0,0 L0,-20 L70,-1 L70,0 Z'
@@ -201,16 +229,29 @@ type CustomElementOption = CustomZRPathOption | CustomSVGPathOption | CustomImag
 type CustomElementOptionOnState = CustomDisplayableOptionOnState | CustomImageOptionOnState;
 
 
-interface CustomSeriesRenderItemAPI extends
-        CustomSeriesRenderItemCoordinateSystemAPI,
-        Pick<ExtensionAPI, 'getWidth' | 'getHeight' | 'getZr' | 'getDevicePixelRatio'> {
+export interface CustomSeriesRenderItemAPI extends
+        CustomSeriesRenderItemCoordinateSystemAPI {
+
+    // Methods from ExtensionAPI.
+    // NOTE: Not using Pick<ExtensionAPI> here because we don't want to bundle ExtensionAPI into the d.ts
+    getWidth(): number
+    getHeight(): number
+    getZr(): ZRenderType
+    getDevicePixelRatio(): number
+
     value(dim: DimensionLoose, dataIndexInside?: number): ParsedValue;
+    ordinalRawValue(dim: DimensionLoose, dataIndexInside?: number): ParsedValue | OrdinalRawValue;
     style(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
     styleEmphasis(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
-    visual(visualType: string, dataIndexInside?: number): ReturnType<List['getItemVisual']>;
-    barLayout(opt: Omit<Parameters<typeof getLayoutOnAxis>[0], 'axis'>): ReturnType<typeof getLayoutOnAxis>;
-    currentSeriesIndices(): ReturnType<GlobalModel['getCurrentSeriesIndices']>;
-    font(opt: Parameters<typeof labelStyleHelper.getFont>[0]): ReturnType<typeof labelStyleHelper.getFont>;
+    visual<VT extends NonStyleVisualProps | StyleVisualProps>(
+        visualType: VT,
+        dataIndexInside?: number
+    ): VT extends NonStyleVisualProps ? DefaultDataVisual[VT]
+        : VT extends StyleVisualProps ? PathStyleProps[typeof STYLE_VISUAL_TYPE[VT]]
+        : void;
+    barLayout(opt: BarGridLayoutOptionForCustomSeries): BarGridLayoutResult;
+    currentSeriesIndices(): number[];
+    font(opt: Pick<TextCommonOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>): string;
 }
 interface CustomSeriesRenderItemParamsCoordSys {
     type: string;
@@ -226,14 +267,14 @@ interface CustomSeriesRenderItemCoordinateSystemAPI {
         dataItem: OptionDataValue | OptionDataValue[]
     ): number | number[];
 }
-interface CustomSeriesRenderItemParams {
+export interface CustomSeriesRenderItemParams {
     context: Dictionary<unknown>;
     seriesId: string;
     seriesName: string;
     seriesIndex: number;
     coordSys: CustomSeriesRenderItemParamsCoordSys;
     dataInsideLength: number;
-    encode: ReturnType<typeof wrapEncodeDef>;
+    encode: WrapEncodeDefRet;
 }
 type CustomSeriesRenderItem = (
     params: CustomSeriesRenderItemParams,
@@ -263,9 +304,6 @@ export interface CustomSeriesOption extends
 
     // Only works on polar and cartesian2d coordinate system.
     clip?: boolean;
-
-    // FIXME needed?
-    tooltip?: SeriesTooltipOption;
 }
 
 interface LegacyCustomSeriesOption extends SeriesOption<CustomSeriesStateOption>, CustomSeriesStateOption {}
@@ -282,15 +320,18 @@ const STYLE_VISUAL_TYPE = {
     color: 'fill',
     borderColor: 'stroke'
 } as const;
+type StyleVisualProps = keyof typeof STYLE_VISUAL_TYPE;
 
-const VISUAL_PROPS = {
+const NON_STYLE_VISUAL_PROPS = {
     symbol: 1,
     symbolSize: 1,
     symbolKeepAspect: 1,
     legendSymbol: 1,
     visualMeta: 1,
-    liftZ: 1
+    liftZ: 1,
+    decal: 1
 } as const;
+type NonStyleVisualProps = keyof typeof NON_STYLE_VISUAL_PROPS;
 
 const EMPHASIS = 'emphasis' as const;
 const NORMAL = 'normal' as const;
@@ -350,6 +391,8 @@ export type PrepareCustomInfo = (coordSys: CoordinateSystem) => {
     coordSys: CustomSeriesRenderItemParamsCoordSys;
     api: CustomSeriesRenderItemCoordinateSystemAPI
 };
+
+const tmpTransformable = new Transformable();
 
 /**
  * To reduce total package size of each coordinate systems, the modules `prepareCustom`
@@ -450,22 +493,93 @@ class CustomSeriesView extends ChartView {
         // is complicated, where merge mode is probably necessary for optimization.
         // For example, reuse graphic elements and only update the transform when
         // roam or data zoom according to `actionType`.
-        data.diff(oldData)
+
+        const transOpt = customSeries.__transientTransitionOpt;
+
+        // Enable user to disable transition animation by both set
+        // `from` and `to` dimension as `null`/`undefined`.
+        if (transOpt && (transOpt.from == null || transOpt.to == null)) {
+            oldData && oldData.each(function (oldIdx) {
+                doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
+            });
+            data.each(function (newIdx) {
+                createOrUpdateItem(
+                    api, null, newIdx, renderItem(newIdx, payload), customSeries, group, data, null
+                );
+            });
+        }
+        else {
+            const morphPreparation = new MorphPreparation(customSeries, transOpt);
+            const diffMode: DataDiffMode = transOpt ? 'multiple' : 'oneToOne';
+
+            (new DataDiffer(
+                oldData ? oldData.getIndices() : [],
+                data.getIndices(),
+                createGetKey(oldData, diffMode, transOpt && transOpt.from),
+                createGetKey(data, diffMode, transOpt && transOpt.to),
+                null,
+                diffMode
+            ))
             .add(function (newIdx) {
                 createOrUpdateItem(
-                    null, newIdx, renderItem(newIdx, payload), customSeries, group, data
-                );
-            })
-            .update(function (newIdx, oldIdx) {
-                createOrUpdateItem(
-                    oldData.getItemGraphicEl(oldIdx),
-                    newIdx, renderItem(newIdx, payload), customSeries, group, data
+                    api, null, newIdx, renderItem(newIdx, payload), customSeries, group,
+                    data, null
                 );
             })
             .remove(function (oldIdx) {
                 doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
             })
+            .update(function (newIdx, oldIdx) {
+                morphPreparation.reset('oneToOne');
+                let oldEl = oldData.getItemGraphicEl(oldIdx);
+                morphPreparation.findAndAddFrom(oldEl);
+
+                // PENDING:
+                // if may morph, currently we alway recreate the whole el.
+                // because if reuse some of the el in the group tree, the old el has to
+                // be removed from the group, and consequently we can not calculate
+                // the "global transition" of the old element.
+                // But is there performance issue?
+                if (morphPreparation.hasFrom()) {
+                    removeElementDirectly(oldEl, group);
+                    oldEl = null;
+                }
+                createOrUpdateItem(
+                    api, oldEl, newIdx, renderItem(newIdx, payload), customSeries, group,
+                    data, morphPreparation
+                );
+                morphPreparation.applyMorphing();
+            })
+            .updateManyToOne(function (newIdx, oldIndices) {
+                morphPreparation.reset('manyToOne');
+                for (let i = 0; i < oldIndices.length; i++) {
+                    const oldEl = oldData.getItemGraphicEl(oldIndices[i]);
+                    morphPreparation.findAndAddFrom(oldEl);
+                    removeElementDirectly(oldEl, group);
+                }
+                createOrUpdateItem(
+                    api, null, newIdx, renderItem(newIdx, payload), customSeries, group,
+                    data, morphPreparation
+                );
+                morphPreparation.applyMorphing();
+            })
+            .updateOneToMany(function (newIndices, oldIdx) {
+                morphPreparation.reset('oneToMany');
+                const newLen = newIndices.length;
+                const oldEl = oldData.getItemGraphicEl(oldIdx);
+                morphPreparation.findAndAddFrom(oldEl);
+                removeElementDirectly(oldEl, group);
+
+                for (let i = 0; i < newLen; i++) {
+                    createOrUpdateItem(
+                        api, null, newIndices[i], renderItem(newIndices[i], payload), customSeries, group,
+                        data, morphPreparation
+                    );
+                }
+                morphPreparation.applyMorphing();
+            })
             .execute();
+        }
 
         // Do clipping
         const clipPath = customSeries.get('clip', true)
@@ -506,7 +620,9 @@ class CustomSeriesView extends ChartView {
             }
         }
         for (let idx = params.start; idx < params.end; idx++) {
-            const el = createOrUpdateItem(null, idx, renderItem(idx, payload), customSeries, this.group, data);
+            const el = createOrUpdateItem(
+                null, null, idx, renderItem(idx, payload), customSeries, this.group, data, null
+            );
             el.traverse(setIncrementalAndHoverLayer);
         }
     }
@@ -521,7 +637,7 @@ class CustomSeriesView extends ChartView {
 
         // Enable to give a name on a group made by `renderItem`, and listen
         // events that triggerd by its descendents.
-        while ((targetEl = targetEl.parent) && targetEl !== this.group) {
+        while ((targetEl = (targetEl.__hostTarget || targetEl.parent)) && targetEl !== this.group) {
             if (targetEl.name === elementName) {
                 return true;
             }
@@ -532,6 +648,44 @@ class CustomSeriesView extends ChartView {
 }
 
 ChartView.registerClass(CustomSeriesView);
+
+
+function createGetKey(
+    data: List,
+    diffMode: DataDiffMode,
+    dimension: DimensionLoose
+) {
+    if (!data) {
+        return;
+    }
+
+    if (diffMode === 'oneToOne') {
+        return function (rawIdx: number, dataIndex: number) {
+            return data.getId(dataIndex);
+        };
+    }
+
+    const diffByDimName = data.getDimension(dimension);
+    const dimInfo = data.getDimensionInfo(diffByDimName);
+
+    if (!dimInfo) {
+        let errMsg = '';
+        if (__DEV__) {
+            errMsg = `${dimension} is not a valid dimension.`;
+        }
+        throwError(errMsg);
+    }
+    const ordinalMeta = dimInfo.ordinalMeta;
+    return function (rawIdx: number, dataIndex: number) {
+        let key = data.get(diffByDimName, dataIndex);
+        if (ordinalMeta) {
+            key = ordinalMeta.categories[key as number];
+        }
+        return (key == null || eqNaN(key))
+            ? rawIdx + ''
+            : '_ec_' + key;
+    };
+}
 
 
 function createEl(elOption: CustomElementOption): Element {
@@ -572,11 +726,13 @@ function createEl(elOption: CustomElementOption): Element {
     }
     else {
         const Clz = graphicUtil.getShapeClass(graphicType);
-
-        if (__DEV__) {
-            assert(Clz, 'graphic type "' + graphicType + '" can not be found.');
+        if (!Clz) {
+            let errMsg = '';
+            if (__DEV__) {
+                errMsg = 'graphic type "' + graphicType + '" can not be found.';
+            }
+            throwError(errMsg);
         }
-
         el = new Clz();
     }
 
@@ -641,9 +797,15 @@ function createEl(elOption: CustomElementOption): Element {
  * + Break:
  *      Since ec5, do not make transition to shape by default, because it might result in
  *      performance issue (especially `points` of polygon) and do not necessary in most cases.
+ *
+ * @return if `isMorphTo`, return `allPropsFinal`.
  */
 function updateElNormal(
+    // Can be null/undefined
+    api: ExtensionAPI,
     el: Element,
+    // Whether be a morph target.
+    isMorphTo: boolean,
     dataIndex: number,
     elOption: CustomElementOption,
     styleOpt: CustomElementOption['style'],
@@ -651,14 +813,21 @@ function updateElNormal(
     seriesModel: CustomSeriesModel,
     isInit: boolean,
     isTextContent: boolean
-): void {
+): ElementProps {
     const transFromProps = {} as ElementProps;
-    const allProps = {} as ElementProps;
+    const allPropsFinal = {} as ElementProps;
     const elDisplayable = el.isGroup ? null : el as Displayable;
 
-    prepareShapeOrExtraUpdate('shape', el, elOption, allProps, transFromProps, isInit);
-    prepareShapeOrExtraUpdate('extra', el, elOption, allProps, transFromProps, isInit);
-    prepareTransformUpdate(el, elOption, allProps, transFromProps, isInit);
+    // If be "morph to", delay the `updateElNormal` when all of the els in
+    // this data item processed. Because at that time we can get all of the
+    // "morph from" and make correct separate/combine.
+
+    !isMorphTo && prepareShapeOrExtraTransitionFrom('shape', el, null, elOption, transFromProps, isInit);
+    prepareShapeOrExtraAllPropsFinal('shape', elOption, allPropsFinal);
+    !isMorphTo && prepareShapeOrExtraTransitionFrom('extra', el, null, elOption, transFromProps, isInit);
+    prepareShapeOrExtraAllPropsFinal('extra', elOption, allPropsFinal);
+    !isMorphTo && prepareTransformTransitionFrom(el, null, elOption, transFromProps, isInit);
+    prepareTransformAllPropsFinal(elOption, allPropsFinal);
 
     const txCfgOpt = attachedTxInfo && attachedTxInfo.normal.cfg;
     if (txCfgOpt) {
@@ -678,12 +847,70 @@ function updateElNormal(
         );
     }
 
-    prepareStyleUpdate(el, styleOpt, transFromProps, isInit);
+    if (styleOpt) {
+        let decalPattern;
+        const decalObj = isPath(el) ? (styleOpt as CustomZRPathOption['style']).decal : null;
+        if (api && decalObj) {
+            (decalObj as InnerDecalObject).dirty = true;
+            decalPattern = createOrUpdatePatternFromDecal(decalObj, api);
+        }
+        // Always overwrite in case user specify this prop.
+        (styleOpt as CustomZRPathOption['style']).__decalPattern = decalPattern;
+    }
+
+    !isMorphTo && prepareStyleTransitionFrom(el, null, elOption, styleOpt, transFromProps, isInit);
 
     if (elDisplayable) {
+        hasOwn(elOption, 'invisible') && (elDisplayable.invisible = elOption.invisible);
+    }
+
+    // If `isMorphTo`, we should not update these props to el directly, otherwise,
+    // when applying morph finally, the original prop are missing for making "animation from".
+    if (!isMorphTo) {
+        applyPropsFinal(el, allPropsFinal, styleOpt);
+        applyTransitionFrom(el, dataIndex, elOption, seriesModel, transFromProps, isInit);
+    }
+
+    // Merge by default.
+    hasOwn(elOption, 'silent') && (el.silent = elOption.silent);
+    hasOwn(elOption, 'ignore') && (el.ignore = elOption.ignore);
+
+    if (!isTextContent) {
+        // `elOption.info` enables user to mount some info on
+        // elements and use them in event handlers.
+        // Update them only when user specified, otherwise, remain.
+        hasOwn(elOption, 'info') && (inner(el).info = elOption.info);
+    }
+
+    styleOpt ? el.dirty() : el.markRedraw();
+
+    return isMorphTo ? allPropsFinal : null;
+}
+
+function applyPropsFinal(
+    el: Element,
+    // Can be null/undefined
+    allPropsFinal: ElementProps,
+    styleOpt: CustomElementOption['style']
+) {
+    const elDisplayable = el.isGroup ? null : el as Displayable;
+
+    if (elDisplayable && styleOpt) {
+
+        const decalPattern = (styleOpt as CustomZRPathOption['style']).__decalPattern;
+        let originalDecalObj;
+        if (decalPattern) {
+            originalDecalObj = (styleOpt as CustomZRPathOption['style']).decal;
+            (styleOpt as any).decal = decalPattern;
+        }
+
         // PENDING: here the input style object is used directly.
         // Good for performance but bad for compatibility control.
-        styleOpt && elDisplayable.useStyle(styleOpt);
+        elDisplayable.useStyle(styleOpt);
+
+        if (decalPattern) {
+            (styleOpt as CustomZRPathOption['style']).decal = originalDecalObj;
+        }
 
         // When style object changed, how to trade the existing animation?
         // It is probably conplicated and not needed to cover all the cases.
@@ -707,51 +934,49 @@ function updateElNormal(
                 animator.changeTarget(elDisplayable.style);
             }
         }
-
-        hasOwn(elOption, 'invisible') && (elDisplayable.invisible = elOption.invisible);
     }
 
-    // Do not use `el.updateDuringAnimation` here becuase `el.updateDuringAnimation` will
-    // be called mutiple time in each animation frame. For example, if both "transform" props
-    // and shape props and style props changed, it will generate three animator and called
-    // one-by-one in each animation frame.
-    // We use the during in `animateTo/From` params.
-    const userDuring = elOption.during;
-    // For simplicity, if during not specified, the previous during will not work any more.
-    inner(el).userDuring = userDuring;
-    const cfgDuringCall = userDuring ? bind(duringCall, { el: el, userDuring: userDuring }) : null;
+    // Set el to the final state firstly.
+    allPropsFinal && el.attr(allPropsFinal);
+}
 
-    el.attr(allProps);
-    const cfg = {
-        dataIndex: dataIndex,
-        isFrom: true,
-        during: cfgDuringCall
-    };
-    isInit
-        ? graphicUtil.initProps(el, transFromProps, seriesModel, cfg)
-        : graphicUtil.updateProps(el, transFromProps, seriesModel, cfg);
-
-    // Merge by default.
-    hasOwn(elOption, 'silent') && (el.silent = elOption.silent);
-    hasOwn(elOption, 'ignore') && (el.ignore = elOption.ignore);
-
-    if (!isTextContent) {
-        // `elOption.info` enables user to mount some info on
-        // elements and use them in event handlers.
-        // Update them only when user specified, otherwise, remain.
-        hasOwn(elOption, 'info') && (inner(el).info = elOption.info);
+function applyTransitionFrom(
+    el: Element,
+    dataIndex: number,
+    elOption: CustomElementOption,
+    seriesModel: CustomSeriesModel,
+    // Can be null/undefined
+    transFromProps: ElementProps,
+    isInit: boolean
+): void {
+    if (transFromProps) {
+        // Do not use `el.updateDuringAnimation` here becuase `el.updateDuringAnimation` will
+        // be called mutiple time in each animation frame. For example, if both "transform" props
+        // and shape props and style props changed, it will generate three animator and called
+        // one-by-one in each animation frame.
+        // We use the during in `animateTo/From` params.
+        const userDuring = elOption.during;
+        // For simplicity, if during not specified, the previous during will not work any more.
+        inner(el).userDuring = userDuring;
+        const cfgDuringCall = userDuring ? bind(duringCall, { el: el, userDuring: userDuring }) : null;
+        const cfg = {
+            dataIndex: dataIndex,
+            isFrom: true,
+            during: cfgDuringCall
+        };
+        isInit
+            ? graphicUtil.initProps(el, transFromProps, seriesModel, cfg)
+            : graphicUtil.updateProps(el, transFromProps, seriesModel, cfg);
     }
-
-    styleOpt ? el.dirty() : el.markRedraw();
 }
 
 
 // See [STRATEGY_TRANSITION]
-function prepareShapeOrExtraUpdate(
+function prepareShapeOrExtraTransitionFrom(
     mainAttr: 'shape' | 'extra',
     el: Element,
+    morphFromEl: graphicUtil.Path,
     elOption: CustomElementOption,
-    allProps: LooseElementProps,
     transFromProps: LooseElementProps,
     isInit: boolean
 ): void {
@@ -777,27 +1002,35 @@ function prepareShapeOrExtraUpdate(
         }
     }
 
-    if (!isInit && elPropsInAttr && attrOpt.transition) {
-        !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
-        const transitionKeys = normalizeToArray(attrOpt.transition);
-        for (let i = 0; i < transitionKeys.length; i++) {
-            const key = transitionKeys[i];
-            const elVal = elPropsInAttr[key];
-            if (__DEV__) {
-                checkTansitionRefer(key, (attrOpt as any)[key], elVal);
+    if (!isInit
+        && elPropsInAttr
+        // Just ignore shape animation in morphing.
+        && !(morphFromEl != null && mainAttr === 'shape')
+    ) {
+        if (attrOpt.transition) {
+            !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
+            const transitionKeys = normalizeToArray(attrOpt.transition);
+            for (let i = 0; i < transitionKeys.length; i++) {
+                const key = transitionKeys[i];
+                const elVal = elPropsInAttr[key];
+                if (__DEV__) {
+                    checkNonStyleTansitionRefer(key, (attrOpt as any)[key], elVal);
+                }
+                // Do not clone, see `checkNonStyleTansitionRefer`.
+                transFromPropsInAttr[key] = elVal;
             }
-            // Do not clone, see `checkTansitionRefer`.
-            transFromPropsInAttr[key] = elVal;
         }
-    }
-
-    const allPropsInAttr = allProps[mainAttr] = {} as Dictionary<unknown>;
-    const keysInAttr = keys(attrOpt);
-    for (let i = 0; i < keysInAttr.length; i++) {
-        const key = keysInAttr[i];
-        // To avoid share one object with different element, and
-        // to avoid user modify the object inexpectedly, have to clone.
-        allPropsInAttr[key] = cloneValue((attrOpt as any)[key]);
+        else if (indexOf(elOption.transition, mainAttr) >= 0) {
+            !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
+            const elPropsInAttrKeys = keys(elPropsInAttr);
+            for (let i = 0; i < elPropsInAttrKeys.length; i++) {
+                const key = elPropsInAttrKeys[i];
+                const elVal = elPropsInAttr[key];
+                if (isNonStyleTransitionEnabled((attrOpt as any)[key], elVal)) {
+                    transFromPropsInAttr[key] = elVal;
+                }
+            }
+        }
     }
 
     const leaveTo = attrOpt.leaveTo;
@@ -812,11 +1045,30 @@ function prepareShapeOrExtraUpdate(
     }
 }
 
-// See [STRATEGY_TRANSITION].
-function prepareTransformUpdate(
-    el: Element,
+function prepareShapeOrExtraAllPropsFinal(
+    mainAttr: 'shape' | 'extra',
     elOption: CustomElementOption,
-    allProps: ElementProps,
+    allProps: LooseElementProps
+): void {
+    const attrOpt: Dictionary<unknown> & TransitionAnyOption = (elOption as any)[mainAttr];
+    if (!attrOpt) {
+        return;
+    }
+    const allPropsInAttr = allProps[mainAttr] = {} as Dictionary<unknown>;
+    const keysInAttr = keys(attrOpt);
+    for (let i = 0; i < keysInAttr.length; i++) {
+        const key = keysInAttr[i];
+        // To avoid share one object with different element, and
+        // to avoid user modify the object inexpectedly, have to clone.
+        allPropsInAttr[key] = cloneValue((attrOpt as any)[key]);
+    }
+}
+
+// See [STRATEGY_TRANSITION].
+function prepareTransformTransitionFrom(
+    el: Element,
+    morphFromEl: graphicUtil.Path,
+    elOption: CustomElementOption,
     transFromProps: ElementProps,
     isInit: boolean
 ): void {
@@ -824,7 +1076,7 @@ function prepareTransformUpdate(
     if (isInit && enterFrom) {
         const enterFromKeys = keys(enterFrom);
         for (let i = 0; i < enterFromKeys.length; i++) {
-            const key = enterFromKeys[i] as TransformProps;
+            const key = enterFromKeys[i] as TransformProp;
             if (__DEV__) {
                 checkTransformPropRefer(key, 'el.enterFrom');
             }
@@ -834,44 +1086,47 @@ function prepareTransformUpdate(
     }
 
     if (!isInit) {
-        if (elOption.transition) {
+        // If morphing, force transition all transform props.
+        // otherwise might have incorrect morphing animation.
+        if (morphFromEl) {
+            const fromTransformable = calcOldElLocalTransformBasedOnNewElParent(morphFromEl, el);
+            setTransformPropToTransitionFrom(transFromProps, 'x', fromTransformable);
+            setTransformPropToTransitionFrom(transFromProps, 'y', fromTransformable);
+            setTransformPropToTransitionFrom(transFromProps, 'scaleX', fromTransformable);
+            setTransformPropToTransitionFrom(transFromProps, 'scaleY', fromTransformable);
+            setTransformPropToTransitionFrom(transFromProps, 'originX', fromTransformable);
+            setTransformPropToTransitionFrom(transFromProps, 'originY', fromTransformable);
+            setTransformPropToTransitionFrom(transFromProps, 'rotation', fromTransformable);
+        }
+        else if (elOption.transition) {
             const transitionKeys = normalizeToArray(elOption.transition);
             for (let i = 0; i < transitionKeys.length; i++) {
                 const key = transitionKeys[i];
+                if (key === 'style' || key === 'shape' || key === 'extra') {
+                    continue;
+                }
                 const elVal = el[key];
                 if (__DEV__) {
                     checkTransformPropRefer(key, 'el.transition');
-                    checkTansitionRefer(key, elOption[key], elVal);
+                    checkNonStyleTansitionRefer(key, elOption[key], elVal);
                 }
-                // Do not clone, see `checkTansitionRefer`.
+                // Do not clone, see `checkNonStyleTansitionRefer`.
                 transFromProps[key] = elVal;
             }
         }
         // This default transition see [STRATEGY_TRANSITION]
         else {
-            setLagecyProp(elOption, transFromProps, 'position', el);
-            setTransProp(elOption, transFromProps, 'x', el);
-            setTransProp(elOption, transFromProps, 'y', el);
+            setTransformPropToTransitionFrom(transFromProps, 'x', el);
+            setTransformPropToTransitionFrom(transFromProps, 'y', el);
         }
     }
-
-    setLagecyProp(elOption, allProps, 'position');
-    setLagecyProp(elOption, allProps, 'scale');
-    setLagecyProp(elOption, allProps, 'origin');
-    setTransProp(elOption, allProps, 'x');
-    setTransProp(elOption, allProps, 'y');
-    setTransProp(elOption, allProps, 'scaleX');
-    setTransProp(elOption, allProps, 'scaleY');
-    setTransProp(elOption, allProps, 'originX');
-    setTransProp(elOption, allProps, 'originY');
-    setTransProp(elOption, allProps, 'rotation');
 
     const leaveTo = elOption.leaveTo;
     if (leaveTo) {
         const leaveToProps = getOrCreateLeaveToPropsFromEl(el);
         const leaveToKeys = keys(leaveTo);
         for (let i = 0; i < leaveToKeys.length; i++) {
-            const key = leaveToKeys[i] as TransformProps;
+            const key = leaveToKeys[i] as TransformProp;
             if (__DEV__) {
                 checkTransformPropRefer(key, 'el.leaveTo');
             }
@@ -880,9 +1135,27 @@ function prepareTransformUpdate(
     }
 }
 
+function prepareTransformAllPropsFinal(
+    elOption: CustomElementOption,
+    allProps: ElementProps
+): void {
+    setLagecyTransformProp(elOption, allProps, 'position');
+    setLagecyTransformProp(elOption, allProps, 'scale');
+    setLagecyTransformProp(elOption, allProps, 'origin');
+    setTransformProp(elOption, allProps, 'x');
+    setTransformProp(elOption, allProps, 'y');
+    setTransformProp(elOption, allProps, 'scaleX');
+    setTransformProp(elOption, allProps, 'scaleY');
+    setTransformProp(elOption, allProps, 'originX');
+    setTransformProp(elOption, allProps, 'originY');
+    setTransformProp(elOption, allProps, 'rotation');
+}
+
 // See [STRATEGY_TRANSITION].
-function prepareStyleUpdate(
+function prepareStyleTransitionFrom(
     el: Element,
+    morphFromEl: graphicUtil.Path,
+    elOption: CustomElementOption,
     styleOpt: CustomElementOption['style'],
     transFromProps: LooseElementProps,
     isInit: boolean
@@ -891,7 +1164,11 @@ function prepareStyleUpdate(
         return;
     }
 
-    const elStyle = (el as LooseElementProps).style as LooseElementProps['style'];
+    // At present in "many-to-one"/"one-to-many" case, to not support "many" have
+    // different styles and make style transitions. That might be a rare case.
+    const fromEl = morphFromEl || el;
+
+    const fromElStyle = (fromEl as LooseElementProps).style as LooseElementProps['style'];
     let transFromStyleProps: LooseElementProps['style'];
 
     const enterFrom = styleOpt.enterFrom;
@@ -905,17 +1182,34 @@ function prepareStyleUpdate(
         }
     }
 
-    if (!isInit && elStyle && styleOpt.transition) {
-        const transitionKeys = normalizeToArray(styleOpt.transition);
-        !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
-        for (let i = 0; i < transitionKeys.length; i++) {
-            const key = transitionKeys[i];
-            const elVal = (elStyle as any)[key];
-            if (__DEV__) {
-                checkTansitionRefer(key, (styleOpt as any)[key], elVal);
+    if (!isInit && fromElStyle) {
+        if (styleOpt.transition) {
+            const transitionKeys = normalizeToArray(styleOpt.transition);
+            !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
+            for (let i = 0; i < transitionKeys.length; i++) {
+                const key = transitionKeys[i];
+                const elVal = (fromElStyle as any)[key];
+                // Do not clone, see `checkNonStyleTansitionRefer`.
+                (transFromStyleProps as any)[key] = elVal;
             }
-            // Do not clone, see `checkTansitionRefer`.
-            (transFromStyleProps as any)[key] = elVal;
+        }
+        else if (
+            (el as Displayable).getAnimationStyleProps
+            && indexOf(elOption.transition, 'style') >= 0
+        ) {
+            const animationProps = (el as Displayable).getAnimationStyleProps();
+            const animationStyleProps = animationProps ? animationProps.style : null;
+            if (animationStyleProps) {
+                !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
+                const styleKeys = keys(styleOpt);
+                for (let i = 0; i < styleKeys.length; i++) {
+                    const key = styleKeys[i];
+                    if ((animationStyleProps as Dictionary<unknown>)[key]) {
+                        const elVal = (fromElStyle as any)[key];
+                        (transFromStyleProps as any)[key] = elVal;
+                    }
+                }
+            }
         }
     }
 
@@ -931,26 +1225,90 @@ function prepareStyleUpdate(
     }
 }
 
-function checkTansitionRefer(propName: string, optVal: unknown, elVal: unknown): void {
-    const isArrLike = isArrayLike(optVal);
-    assert(
-        isArrLike || (optVal != null && isFinite(optVal as number)),
-        'Prop `' + propName + '` must refer to a finite number or ArrayLike for transition.'
-    );
-    // Try not to copy array for performance, but if user use the same object in different
-    // call of `renderItem`, it will casue animation transition fail.
-    assert(
-        !isArrLike || optVal !== elVal,
-        'Prop `' + propName + '` must use different Array object each time for transition.'
-    );
+/**
+ * If make "transform"(x/y/scaleX/scaleY/orient/originX/originY) transition between
+ * two path elements that have different hierarchy, before we retrieve the "from" props,
+ * we have to calculate the local transition of the "oldPath" based on the parent of
+ * the "newPath".
+ * At present, the case only happend in "morphing". Without morphing, the transform
+ * transition are all between elements in the same hierarchy, where this kind of process
+ * is not needed.
+ *
+ * [CAVEAT]:
+ * This method makes sense only if: (very tricky)
+ * (1) "newEl" has been added to its final parent.
+ * (2) Local transform props of "newPath.parent" are not at their final value but already
+ * have been at the "from value".
+ *     This is currently ensured by:
+ *     (2.1) "graphicUtil.animationFrom", which will set the element to the "from value"
+ *     immediately.
+ *     (2.2) "morph" option is not allowed to be set on Group, so all of the groups have
+ *     been finished their "updateElNormal" when calling this method in morphing process.
+ */
+function calcOldElLocalTransformBasedOnNewElParent(oldEl: Element, newEl: Element): Transformable {
+    if (!oldEl || oldEl === newEl || oldEl.parent === newEl.parent) {
+        return oldEl;
+    }
+
+    // Not sure oldEl is rendered (may have "lazyUpdate"),
+    // so always call `getComputedTransform`.
+    const tmpM = tmpTransformable.transform
+        || (tmpTransformable.transform = matrix.identity([]));
+
+    const oldGlobalTransform = oldEl.getComputedTransform();
+    oldGlobalTransform
+        ? matrix.copy(tmpM, oldGlobalTransform)
+        : matrix.identity(tmpM);
+
+    const newParent = newEl.parent;
+    if (newParent) {
+        newParent.getComputedTransform();
+    }
+
+    tmpTransformable.originX = oldEl.originX;
+    tmpTransformable.originY = oldEl.originY;
+    tmpTransformable.parent = newParent;
+    tmpTransformable.decomposeTransform();
+
+    return tmpTransformable;
 }
 
-function checkTransformPropRefer(key: string, usedIn: string): void {
-    assert(
-        hasOwn(TRANSFORM_PROPS, key),
-        'Prop `' + key + '` is not a permitted in `' + usedIn + '`. '
-            + 'Only `' + keys(TRANSFORM_PROPS).join('`, `') + '` are permitted.'
-    );
+let checkNonStyleTansitionRefer: (propName: string, optVal: unknown, elVal: unknown) => void;
+if (__DEV__) {
+    checkNonStyleTansitionRefer = function (propName: string, optVal: unknown, elVal: unknown): void {
+        if (!isArrayLike(optVal)) {
+            assert(
+                optVal != null && isFinite(optVal as number),
+                'Prop `' + propName + '` must refer to a finite number or ArrayLike for transition.'
+            );
+        }
+        else {
+            // Try not to copy array for performance, but if user use the same object in different
+            // call of `renderItem`, it will casue animation transition fail.
+            assert(
+                optVal !== elVal,
+                'Prop `' + propName + '` must use different Array object each time for transition.'
+            );
+        }
+    };
+}
+
+function isNonStyleTransitionEnabled(optVal: unknown, elVal: unknown): boolean {
+    // The same as `checkNonStyleTansitionRefer`.
+    return !isArrayLike(optVal)
+        ? (optVal != null && isFinite(optVal as number))
+        : optVal !== elVal;
+}
+
+let checkTransformPropRefer: (key: string, usedIn: string) => void;
+if (__DEV__) {
+    checkTransformPropRefer = function (key: string, usedIn: string): void {
+        assert(
+            hasOwn(TRANSFORM_PROPS, key),
+            'Prop `' + key + '` is not a permitted in `' + usedIn + '`. '
+                + 'Only `' + keys(TRANSFORM_PROPS).join('`, `') + '` are permitted.'
+        );
+    };
 }
 
 function getOrCreateLeaveToPropsFromEl(el: Element): LooseElementProps {
@@ -966,14 +1324,14 @@ const tmpDuringScope = {} as {
 };
 const customDuringAPI = {
     // Usually other props do not need to be changed in animation during.
-    setTransform(key: TransformProps, val: unknown) {
+    setTransform(key: TransformProp, val: unknown) {
         if (__DEV__) {
             assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `setTransform`.');
         }
         tmpDuringScope.el[key] = val as number;
         return this;
     },
-    getTransform(key: TransformProps): unknown {
+    getTransform(key: TransformProp): unknown {
         if (__DEV__) {
             assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `getTransform`.');
         }
@@ -1004,6 +1362,11 @@ const customDuringAPI = {
         }
         const style = (tmpDuringScope.el as Displayable).style;
         if (style) {
+            if (__DEV__) {
+                if (eqNaN(val)) {
+                    warn('style.' + key + ' must not be assigned with NaN.');
+                }
+            }
             style[key] = val;
             tmpDuringScope.isStyleDirty = true;
         }
@@ -1180,18 +1543,18 @@ function updateZForEachState(
     }
 }
 
-function setLagecyProp(
+function setLagecyTransformProp(
     elOption: CustomElementOption,
-    targetProps: Partial<Pick<Transformable, TransformProps>>,
+    targetProps: Partial<Pick<Transformable, TransformProp>>,
     legacyName: LegacyTransformProp,
-    fromEl?: Element // If provided, retrieve from the element.
+    fromTransformable?: Transformable // If provided, retrieve from the element.
 ): void {
     const legacyArr = (elOption as any)[legacyName];
     const xyName = LEGACY_TRANSFORM_PROPS[legacyName];
     if (legacyArr) {
-        if (fromEl) {
-            targetProps[xyName[0]] = fromEl[xyName[0]];
-            targetProps[xyName[1]] = fromEl[xyName[1]];
+        if (fromTransformable) {
+            targetProps[xyName[0]] = fromTransformable[xyName[0]];
+            targetProps[xyName[1]] = fromTransformable[xyName[1]];
         }
         else {
             targetProps[xyName[0]] = legacyArr[0];
@@ -1200,16 +1563,27 @@ function setLagecyProp(
     }
 }
 
-function setTransProp(
+function setTransformProp(
     elOption: CustomElementOption,
-    targetProps: Partial<Pick<Transformable, TransformProps>>,
-    name: TransformProps,
-    fromEl?: Element // If provided, retrieve from the element.
+    allProps: Partial<Pick<Transformable, TransformProp>>,
+    name: TransformProp,
+    fromTransformable?: Transformable // If provided, retrieve from the element.
 ): void {
     if (elOption[name] != null) {
-        targetProps[name] = fromEl ? fromEl[name] : elOption[name];
+        allProps[name] = fromTransformable ? fromTransformable[name] : elOption[name];
     }
 }
+
+function setTransformPropToTransitionFrom(
+    transitionFrom: Partial<Pick<Transformable, TransformProp>>,
+    name: TransformProp,
+    fromTransformable?: Transformable // If provided, retrieve from the element.
+): void {
+    if (fromTransformable) {
+        transitionFrom[name] = fromTransformable[name];
+    }
+}
+
 
 function makeRenderItem(
     customSeries: CustomSeriesModel,
@@ -1243,6 +1617,7 @@ function makeRenderItem(
         getDevicePixelRatio: api.getDevicePixelRatio,
         value: value,
         style: style,
+        ordinalRawValue: ordinalRawValue,
         styleEmphasis: styleEmphasis,
         visual: visual,
         barLayout: barLayout,
@@ -1334,6 +1709,24 @@ function makeRenderItem(
     function value(dim?: DimensionLoose, dataIndexInside?: number): ParsedValue {
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
         return data.get(data.getDimension(dim || 0), dataIndexInside);
+    }
+
+    /**
+     * @public
+     * @param dim by default 0.
+     * @param dataIndexInside by default `currDataIndexInside`.
+     */
+    function ordinalRawValue(dim?: DimensionLoose, dataIndexInside?: number): ParsedValue | OrdinalRawValue {
+        dataIndexInside == null && (dataIndexInside = currDataIndexInside);
+        const dimInfo = data.getDimensionInfo(dim || 0);
+        if (!dimInfo) {
+            return;
+        }
+        const val = data.get(dimInfo.name, dataIndexInside);
+        const ordinalMeta = dimInfo && dimInfo.ordinalMeta;
+        return ordinalMeta
+            ? ordinalMeta.categories[val as number]
+            : val;
     }
 
     /**
@@ -1448,22 +1841,25 @@ function makeRenderItem(
      * @public
      * @param dataIndexInside by default `currDataIndexInside`.
      */
-    function visual(
-        visualType: keyof DefaultDataVisual,
+    function visual<VT extends NonStyleVisualProps | StyleVisualProps>(
+        visualType: VT,
         dataIndexInside?: number
-    ): ReturnType<List['getItemVisual']> {
+    ): VT extends NonStyleVisualProps ? DefaultDataVisual[VT]
+            : VT extends StyleVisualProps ? PathStyleProps[typeof STYLE_VISUAL_TYPE[VT]]
+            : never {
+
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
 
         if (hasOwn(STYLE_VISUAL_TYPE, visualType)) {
             const style = data.getItemVisual(dataIndexInside, 'style');
             return style
-                ? style[STYLE_VISUAL_TYPE[visualType as keyof typeof STYLE_VISUAL_TYPE]] as any
+                ? style[STYLE_VISUAL_TYPE[visualType as StyleVisualProps]] as any
                 : null;
         }
         // Only support these visuals. Other visual might be inner tricky
         // for performance (like `style`), do not expose to users.
-        if (hasOwn(VISUAL_PROPS, visualType)) {
-            return data.getItemVisual(dataIndexInside, visualType);
+        if (hasOwn(NON_STYLE_VISUAL_PROPS, visualType)) {
+            return data.getItemVisual(dataIndexInside, visualType as NonStyleVisualProps) as any;
         }
     }
 
@@ -1498,8 +1894,10 @@ function makeRenderItem(
     }
 }
 
-function wrapEncodeDef(data: List<CustomSeriesModel>): Dictionary<number[]> {
-    const encodeDef = {} as Dictionary<number[]>;
+type WrapEncodeDefRet = Dictionary<number[]>;
+
+function wrapEncodeDef(data: List<CustomSeriesModel>): WrapEncodeDefRet {
+    const encodeDef = {} as WrapEncodeDefRet;
     each(data.dimensions, function (dimName, dataDimIndex) {
         const dimInfo = data.getDimensionInfo(dimName);
         if (!dimInfo.isExtraCoord) {
@@ -1512,12 +1910,14 @@ function wrapEncodeDef(data: List<CustomSeriesModel>): Dictionary<number[]> {
 }
 
 function createOrUpdateItem(
+    api: ExtensionAPI,
     el: Element,
     dataIndex: number,
     elOption: CustomElementOption,
     seriesModel: CustomSeriesModel,
     group: ViewRootGroup,
-    data: List<CustomSeriesModel>
+    data: List<CustomSeriesModel>,
+    morphPreparation: MorphPreparation
 ): Element {
     // [Rule]
     // If `renderItem` returns `null`/`undefined`/`false`, remove the previous el if existing.
@@ -1528,10 +1928,10 @@ function createOrUpdateItem(
 
     // If `elOption` is `null`/`undefined`/`false` (when `renderItem` returns nothing).
     if (!elOption) {
-        el && group.remove(el);
+        removeElementDirectly(el, group);
         return;
     }
-    el = doCreateOrUpdateEl(el, dataIndex, elOption, seriesModel, group, true);
+    el = doCreateOrUpdateEl(api, el, dataIndex, elOption, seriesModel, group, true, morphPreparation);
     el && data.setItemGraphicEl(dataIndex, el);
 
     enableHoverEmphasis(el, elOption.focus, elOption.blurScope);
@@ -1540,12 +1940,14 @@ function createOrUpdateItem(
 }
 
 function doCreateOrUpdateEl(
+    api: ExtensionAPI,
     el: Element,
     dataIndex: number,
     elOption: CustomElementOption,
     seriesModel: CustomSeriesModel,
     group: ViewRootGroup,
-    isRoot: boolean
+    isRoot: boolean,
+    morphPreparation: MorphPreparation
 ): Element {
 
     if (__DEV__) {
@@ -1553,14 +1955,23 @@ function doCreateOrUpdateEl(
     }
 
     let toBeReplacedIdx = -1;
-
-    if (el && doesElNeedRecreate(el, elOption)) {
+    if (
+        el && (
+            doesElNeedRecreate(el, elOption)
+            // || (
+            //     // PENDING: even in one-to-one mapping case, if el is marked as morph,
+            //     // do not sure whether the el will be mapped to another el with different
+            //     // hierarchy in Group tree. So always recreate el rather than reuse the el.
+            //     morphPreparation && morphPreparation.isOneToOneFrom(el)
+            // )
+        )
+    ) {
         // Should keep at the original index, otherwise "merge by index" will be incorrect.
         toBeReplacedIdx = group.childrenRef().indexOf(el);
         el = null;
     }
 
-    const isInit = !el;
+    const elIsNewCreated = !el;
 
     if (!el) {
         el = createEl(elOption);
@@ -1571,6 +1982,12 @@ function doCreateOrUpdateEl(
         // do not clearState but update cached normal state directly.
         el.clearStates();
     }
+
+    const canMorph = inner(el).canMorph = (elOption as CustomZRPathOption).morph && isPath(el);
+    const thisElIsMorphTo = canMorph && morphPreparation && morphPreparation.hasFrom();
+
+    // Use update animation when morph is enabled.
+    const isInit = elIsNewCreated && !thisElIsMorphTo;
 
     attachedTxInfoTmp.normal.cfg = attachedTxInfoTmp.normal.conOpt =
         attachedTxInfoTmp.emphasis.cfg = attachedTxInfoTmp.emphasis.conOpt =
@@ -1587,7 +2004,22 @@ function doCreateOrUpdateEl(
         el, dataIndex, elOption, seriesModel, isInit
     );
 
-    updateElNormal(el, dataIndex, elOption, elOption.style, attachedTxInfoTmp, seriesModel, isInit, false);
+    const pendingAllPropsFinal = updateElNormal(
+        api,
+        el,
+        thisElIsMorphTo,
+        dataIndex,
+        elOption,
+        elOption.style,
+        attachedTxInfoTmp,
+        seriesModel,
+        isInit,
+        false
+    );
+
+    if (thisElIsMorphTo) {
+        morphPreparation.addTo(el as graphicUtil.Path, elOption, dataIndex, pendingAllPropsFinal);
+    }
 
     for (let i = 0; i < STATES.length; i++) {
         const stateName = STATES[i];
@@ -1601,7 +2033,9 @@ function doCreateOrUpdateEl(
     updateZ(el, elOption, seriesModel, attachedTxInfoTmp);
 
     if (elOption.type === 'group') {
-        mergeChildren(el as graphicUtil.Group, dataIndex, elOption as CustomGroupOption, seriesModel);
+        mergeChildren(
+            api, el as graphicUtil.Group, dataIndex, elOption as CustomGroupOption, seriesModel, morphPreparation
+        );
     }
 
     if (toBeReplacedIdx >= 0) {
@@ -1673,7 +2107,7 @@ function doCreateOrUpdateClipPath(
             el.setClipPath(clipPath);
         }
         updateElNormal(
-            clipPath, dataIndex, clipPathOpt, null, null, seriesModel, isInit, false
+            null, clipPath, null, dataIndex, clipPathOpt, null, null, seriesModel, isInit, false
         );
     }
     // If not define `clipPath` in option, do nothing unnecessary.
@@ -1726,7 +2160,7 @@ function doCreateOrUpdateAttachedTx(
             const txConStlOptNormal = txConOptNormal && txConOptNormal.style;
 
             updateElNormal(
-                textContent, dataIndex, txConOptNormal, txConStlOptNormal, null, seriesModel, isInit, true
+                null, textContent, null, dataIndex, txConOptNormal, txConStlOptNormal, null, seriesModel, isInit, true
             );
             for (let i = 0; i < STATES.length; i++) {
                 const stateName = STATES[i];
@@ -1833,10 +2267,12 @@ function retrieveStyleOptionOnState(
 // child (otherwise the total indicies of the children array have to be modified).
 // User can remove a single child by set its `ignore` as `true`.
 function mergeChildren(
+    api: ExtensionAPI,
     el: graphicUtil.Group,
     dataIndex: number,
     elOption: CustomGroupOption,
-    seriesModel: CustomSeriesModel
+    seriesModel: CustomSeriesModel,
+    morphPreparation: MorphPreparation
 ): void {
 
     const newChildren = elOption.children;
@@ -1853,11 +2289,13 @@ function mergeChildren(
 
     if (byName) {
         diffGroupChildren({
+            api: api,
             oldChildren: el.children() || [],
             newChildren: newChildren || [],
             dataIndex: dataIndex,
             seriesModel: seriesModel,
-            group: el
+            group: el,
+            morphPreparation: morphPreparation
         });
         return;
     }
@@ -1869,12 +2307,14 @@ function mergeChildren(
     let index = 0;
     for (; index < newLen; index++) {
         newChildren[index] && doCreateOrUpdateEl(
+            api,
             el.childAt(index),
             dataIndex,
             newChildren[index],
             seriesModel,
             el,
-            false
+            false,
+            morphPreparation
         );
     }
     for (let i = el.childCount() - 1; i >= index; i--) {
@@ -1886,11 +2326,13 @@ function mergeChildren(
 }
 
 type DiffGroupContext = {
-    oldChildren: Element[],
-    newChildren: CustomElementOption[],
-    dataIndex: number,
-    seriesModel: CustomSeriesModel,
-    group: graphicUtil.Group
+    api: ExtensionAPI;
+    oldChildren: Element[];
+    newChildren: CustomElementOption[];
+    dataIndex: number;
+    seriesModel: CustomSeriesModel;
+    group: graphicUtil.Group;
+    morphPreparation: MorphPreparation;
 };
 function diffGroupChildren(context: DiffGroupContext) {
     (new DataDiffer(
@@ -1921,12 +2363,14 @@ function processAddUpdate(
     const child = oldIndex != null ? context.oldChildren[oldIndex] : null;
 
     doCreateOrUpdateEl(
+        context.api,
         child,
         context.dataIndex,
         childOption,
         context.seriesModel,
         context.group,
-        false
+        false,
+        context.morphPreparation
     );
 }
 
@@ -1965,3 +2409,375 @@ function hasOwnPathData(shape: CustomSVGPathOption['shape']): boolean {
     return shape && (hasOwn(shape, 'pathData') || hasOwn(shape, 'd'));
 }
 
+function isPath(el: Element): el is graphicUtil.Path {
+    return el && el instanceof graphicUtil.Path;
+}
+
+function removeElementDirectly(el: Element, group: ViewRootGroup): void {
+    el && group.remove(el);
+}
+
+
+type MorphPreparationType = 'oneToOne' | 'oneToMany' | 'manyToOne';
+
+/**
+ * Any morph-potential el should added by `morphPreparation.addTo(el)`.
+ * And they may apply morph or not when `morphPreparation.applyMorphing()`.
+ * But at least, all of the "to" elements will apply all of the updates
+ * as `doCreateOrUpdateItem` did.
+ */
+class MorphPreparation {
+    private _type: MorphPreparationType;
+    private _fromList: graphicUtil.Path[] = [];
+    private _toList: graphicUtil.Path[] = [];
+    private _toElOptionList: CustomElementOption[] = [];
+    private _allPropsFinalList: ElementProps[] = [];
+    private _toDataIndices: number[] = [];
+    private _transOpt: SeriesModel['__transientTransitionOpt'];
+    private _seriesModel: CustomSeriesModel;
+    // Key: `toDataIndex`, not `toIdx`
+    private _morphConfigList: CombineSeparateConfig[] = [];
+
+    constructor(
+        seriesModel: CustomSeriesModel,
+        transOpt: SeriesModel['__transientTransitionOpt']
+    ) {
+        this._seriesModel = seriesModel;
+        this._transOpt = transOpt;
+    }
+
+    hasFrom(): boolean {
+        return !!this._fromList.length;
+    }
+
+    // isOneToOneFrom(el: Element): boolean {
+    //     if (el && inner(el).canMorph) {
+    //         const fromList = this._fromList;
+    //         for (let i = 0; i < fromList.length; i++) {
+    //             if (fromList[i] === el) {
+    //                 return true;
+    //             }
+    //         }
+    //     }
+    // }
+
+    findAndAddFrom(el: Element): void {
+        if (!el) {
+            return;
+        }
+        if (inner(el).canMorph) {
+            this._fromList.push(el as graphicUtil.Path);
+        }
+        if (el.isGroup) {
+            const children = (el as graphicUtil.Group).childrenRef();
+            for (let i = 0; i < children.length; i++) {
+                this.findAndAddFrom(children[i]);
+            }
+        }
+    }
+
+    addTo(
+        path: graphicUtil.Path,
+        elOption: CustomElementOption,
+        dataIndex: number,
+        allPropsFinal: ElementProps
+    ): void {
+        if (path) {
+            this._toList.push(path);
+            this._toElOptionList.push(elOption);
+            this._toDataIndices.push(dataIndex);
+            this._allPropsFinalList.push(allPropsFinal);
+        }
+    }
+
+    applyMorphing(): void {
+        // [MORPHING_LOGIC_HINT]
+        // Pay attention to the order:
+        // (A) Apply `allPropsFinal` and `styleOption` to "to".
+        //     (Then "to" becomes to the final state.)
+        // (B) Apply `morphPath`/`combine`/`separate`.
+        //     (Based on the current state of "from" and the final state of "to".)
+        //     (Then we may get "from.subList" or "to.subList".)
+        // (C) Copy the related props from "from" to "from.subList", from "to" to "to.subList".
+        // (D) Collect `transitionFromProps` for "to" and "to.subList"
+        //     (Based on "from" or "from.subList".)
+        // (E) Apply `transitionFromProps` to "to" and "to.subList"
+        //     (It might change the prop values to the first frame value.)
+        // Case_I:
+        //     If (D) should be after (C), we use sequence: A - B - C - D - E
+        // Case_II:
+        //     If (A) should be after (D), we use sequence: D - A - B - C - E
+
+        // [MORPHING_LOGIC_HINT]
+        // zrender `morphPath`/`combine`/`separate` only manages the shape animation.
+        // Other props (like transfrom, style transition) will handled in echarts).
+
+        // [MORPHING_LOGIC_HINT]
+        // Make sure `applyPropsFinal` always be called for "to".
+
+        const type = this._type;
+        const fromList = this._fromList;
+        const toList = this._toList;
+        const toListLen = toList.length;
+        const fromListLen = fromList.length;
+
+        if (!fromListLen || !toListLen) {
+            return;
+        }
+
+        if (type === 'oneToOne') {
+            // In one-to-one case, we by default apply a simple rule:
+            // map "from" and "to" one by one.
+            // For this case: old_data_item_el and new_data_item_el
+            // has the same hierarchy of group tree but only some path type changed.
+            for (let toIdx = 0; toIdx < toListLen; toIdx++) {
+                this._oneToOneForSingleTo(toIdx, toIdx);
+            }
+        }
+
+        else if (type === 'manyToOne') {
+            // A rough strategy: if there are more than one "to", we simply divide "fromList" equally.
+            const fromSingleSegLen = Math.max(1, Math.floor(fromListLen / toListLen));
+            for (
+                let toIdx = 0, fromIdxStart = 0;
+                toIdx < toListLen;
+                toIdx++, fromIdxStart += fromSingleSegLen
+            ) {
+                const fromCount = toIdx + 1 >= toListLen
+                    ? fromListLen - fromIdxStart
+                    : fromSingleSegLen;
+                this._manyToOneForSingleTo(
+                    toIdx, fromIdxStart >= fromListLen ? null : fromIdxStart, fromCount
+                );
+            }
+        }
+
+        else if (type === 'oneToMany') {
+            // A rough strategy: if there are more than one "from", we simply divide "toList" equally.
+            const toSingleSegLen = Math.max(1, Math.floor(toListLen / fromListLen));
+            for (
+                let toIdxStart = 0, fromIdx = 0;
+                toIdxStart < toListLen;
+                toIdxStart += toSingleSegLen, fromIdx++
+            ) {
+                const toCount = toIdxStart + toSingleSegLen >= toListLen
+                    ? toListLen - toIdxStart
+                    : toSingleSegLen;
+                this._oneToManyForSingleFrom(
+                    toIdxStart, toCount, fromIdx >= fromListLen ? null : fromIdx
+                );
+            }
+        }
+    }
+
+    private _oneToOneForSingleTo(
+        // "to" must NOT be null/undefined.
+        toIdx: number,
+        // May `fromIdx >= this._fromList.length`
+        fromIdx: number
+    ): void {
+        const to = this._toList[toIdx];
+        const toElOption = this._toElOptionList[toIdx];
+        const toDataIndex = this._toDataIndices[toIdx];
+        const allPropsFinal = this._allPropsFinalList[toIdx];
+        const from = this._fromList[fromIdx];
+
+        const elAnimationConfig = this._getOrCreateMorphConfig(toDataIndex);
+        const morphDuration = elAnimationConfig.duration;
+
+        if (from && isCombiningPath(from)) {
+            applyPropsFinal(to, allPropsFinal, toElOption.style);
+
+            if (morphDuration) {
+                const combineResult = combine([from], to, elAnimationConfig, copyPropsWhenDivided);
+                this._processResultIndividuals(combineResult, toIdx, null);
+            }
+            // The target el will not be displayed and transition from multiple path.
+            // transition on the target el does not make sense.
+        }
+        else {
+            const morphFrom = (
+                morphDuration
+                // from === to usually happen in scenarios where internal update like
+                // "dataZoom", "legendToggle" happen. If from is not in any morphing,
+                // we do not need to call `morphPath`.
+                && from
+                && (from !== to || isInAnyMorphing(from))
+            ) ? from : null;
+
+            // See [Case_II] above.
+            // In this case, there is probably `from === to`. And the `transitionFromProps` collecting
+            // does not depends on morphing. So we collect `transitionFromProps` first.
+            const transFromProps = {} as ElementProps;
+            prepareShapeOrExtraTransitionFrom('shape', to, morphFrom, toElOption, transFromProps, false);
+            prepareShapeOrExtraTransitionFrom('extra', to, morphFrom, toElOption, transFromProps, false);
+            prepareTransformTransitionFrom(to, morphFrom, toElOption, transFromProps, false);
+            prepareStyleTransitionFrom(to, morphFrom, toElOption, toElOption.style, transFromProps, false);
+
+            applyPropsFinal(to, allPropsFinal, toElOption.style);
+
+            if (morphFrom) {
+                morphPath(morphFrom, to, elAnimationConfig);
+            }
+            applyTransitionFrom(to, toDataIndex, toElOption, this._seriesModel, transFromProps, false);
+        }
+    }
+
+    private _manyToOneForSingleTo(
+        // "to" must NOT be null/undefined.
+        toIdx: number,
+        // May be null.
+        fromIdxStart: number,
+        fromCount: number
+    ): void {
+        const to = this._toList[toIdx];
+        const toElOption = this._toElOptionList[toIdx];
+        const allPropsFinal = this._allPropsFinalList[toIdx];
+
+        applyPropsFinal(to, allPropsFinal, toElOption.style);
+
+        const elAnimationConfig = this._getOrCreateMorphConfig(this._toDataIndices[toIdx]);
+        if (elAnimationConfig.duration && fromIdxStart != null) {
+            const combineFromList = [];
+            for (let fromIdx = fromIdxStart; fromIdx < fromCount; fromIdx++) {
+                combineFromList.push(this._fromList[fromIdx]);
+            }
+            const combineResult = combine(combineFromList, to, elAnimationConfig, copyPropsWhenDivided);
+            this._processResultIndividuals(combineResult, toIdx, null);
+        }
+    }
+
+    private _oneToManyForSingleFrom(
+        // "to" must NOT be null/undefined.
+        toIdxStart: number,
+        toCount: number,
+        // May be null
+        fromIdx: number
+    ): void {
+        const from = fromIdx == null ? null : this._fromList[fromIdx];
+        const toList = this._toList;
+
+        const separateToList = [];
+        for (let toIdx = toIdxStart; toIdx < toCount; toIdx++) {
+            const to = toList[toIdx];
+            applyPropsFinal(to, this._allPropsFinalList[toIdx], this._toElOptionList[toIdx].style);
+            separateToList.push(to);
+        }
+
+        const elAnimationConfig = this._getOrCreateMorphConfig(this._toDataIndices[toIdxStart]);
+        if (elAnimationConfig.duration && from) {
+            const separateResult = separate(from, separateToList, elAnimationConfig, copyPropsWhenDivided);
+            this._processResultIndividuals(separateResult, toIdxStart, toCount);
+        }
+    }
+
+    private _processResultIndividuals(
+        combineSeparateResult: CombineSeparateResult,
+        toIdxStart: number,
+        toCount: number
+    ): void {
+        const isSeparate = toCount != null;
+
+        for (let i = 0; i < combineSeparateResult.count; i++) {
+            const fromIndividual = combineSeparateResult.fromIndividuals[i];
+            const toIndividual = combineSeparateResult.toIndividuals[i];
+            // Here it's a trick:
+            // For "combine" case, all of the `toIndividuals` map to the same `toIdx`.
+            // For "separate" case, the `toIndividuals` map to some certain segment of `_toList` accurately.
+            const toIdx = toIdxStart + (isSeparate ? i : 0);
+
+            const toElOption = this._toElOptionList[toIdx];
+            const dataIndex = this._toDataIndices[toIdx];
+
+            const transFromProps = {} as ElementProps;
+            prepareTransformTransitionFrom(
+                toIndividual, fromIndividual, toElOption, transFromProps, false
+            );
+            prepareStyleTransitionFrom(
+                toIndividual, fromIndividual, toElOption, toElOption.style, transFromProps, false
+            );
+            applyTransitionFrom(
+                toIndividual, dataIndex, toElOption, this._seriesModel, transFromProps, false
+            );
+        }
+    }
+
+    _getOrCreateMorphConfig(dataIndex: number): CombineSeparateConfig {
+        const morphConfigList = this._morphConfigList;
+        let config = morphConfigList[dataIndex];
+        if (config) {
+            return config;
+        }
+
+        let duration: number;
+        let easing: AnimationEasing;
+        let delay: number;
+        const seriesModel = this._seriesModel;
+        const transOpt = this._transOpt;
+
+        if (seriesModel.isAnimationEnabled()) {
+            // PENDING: refactor? this is the same logic as `src/util/graphic.ts#animateOrSetProps`.
+            let animationPayload: PayloadAnimationPart;
+            if (seriesModel && seriesModel.ecModel) {
+                const updatePayload = seriesModel.ecModel.getUpdatePayload();
+                animationPayload = (updatePayload && updatePayload.animation) as PayloadAnimationPart;
+            }
+            if (animationPayload) {
+                duration = animationPayload.duration || 0;
+                easing = animationPayload.easing || 'cubicOut';
+                delay = animationPayload.delay || 0;
+            }
+            else {
+                easing = seriesModel.get('animationEasingUpdate');
+                const delayOption = seriesModel.get('animationDelayUpdate');
+                delay = isFunction(delayOption) ? delayOption(dataIndex) : delayOption;
+                const durationOption = seriesModel.get('animationDurationUpdate');
+                duration = isFunction(durationOption) ? durationOption(dataIndex) : durationOption;
+            }
+        }
+
+        config = {
+            duration: duration || 0,
+            delay: delay,
+            easing: easing,
+            dividingMethod: transOpt ? transOpt.dividingMethod : null
+        };
+        morphConfigList[dataIndex] = config;
+
+        return config;
+    }
+
+    reset(type: MorphPreparationType): void {
+        // `this._morphConfigList` can be kept. It only related to `dataIndex`.
+        this._type = type;
+        this._fromList.length =
+            this._toList.length =
+            this._toElOptionList.length =
+            this._allPropsFinalList.length =
+            this._toDataIndices.length = 0;
+    }
+}
+
+function copyPropsWhenDivided(
+    srcPath: graphicUtil.Path,
+    tarPath: graphicUtil.Path,
+    willClone: boolean
+): void {
+    // Do not copy transform props.
+    // Sub paths are transfrom based on their host path.
+    // tarPath.x = srcPath.x;
+    // tarPath.y = srcPath.y;
+    // tarPath.scaleX = srcPath.scaleX;
+    // tarPath.scaleY = srcPath.scaleY;
+    // tarPath.originX = srcPath.originX;
+    // tarPath.originY = srcPath.originY;
+
+    // If just carry the style, will not be modifed, so do not copy.
+    tarPath.style = willClone
+        ? clone(srcPath.style)
+        : srcPath.style;
+
+    tarPath.zlevel = srcPath.zlevel;
+    tarPath.z = srcPath.z;
+    tarPath.z2 = srcPath.z2;
+}

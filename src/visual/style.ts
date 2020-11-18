@@ -18,7 +18,7 @@
 */
 
 import { isFunction, extend, createHashMap } from 'zrender/src/core/util';
-import { StageHandler, CallbackDataParams, ZRColor, Dictionary } from '../util/types';
+import { StageHandler, CallbackDataParams, ZRColor, Dictionary, InnerDecalObject } from '../util/types';
 import makeStyleMapper from '../model/mixin/makeStyleMapper';
 import { ITEM_STYLE_KEY_MAP } from '../model/mixin/itemStyle';
 import { LINE_STYLE_KEY_MAP } from '../model/mixin/lineStyle';
@@ -76,6 +76,12 @@ const seriesStyleTask: StageHandler = {
 
         const globalStyle = getStyle(styleModel);
 
+        const decalOption = styleModel.getShallow('decal') as InnerDecalObject;
+        if (decalOption) {
+            data.setVisual('decal', decalOption);
+            decalOption.dirty = true;
+        }
+
         // TODO
         const colorKey = getDefaultColorKey(seriesModel, stylePath);
         const color = globalStyle[colorKey];
@@ -84,6 +90,9 @@ const seriesStyleTask: StageHandler = {
         const colorCallback = isFunction(color) ? color as unknown as ColorCallback : null;
         // Get from color palette by default.
         if (!globalStyle[colorKey] || colorCallback) {
+            // Note: if some series has color specified (e.g., by itemStyle.color), we DO NOT
+            // make it effect palette. Bacause some scenarios users need to make some series
+            // transparent or as background, which should better not effect the palette.
             globalStyle[colorKey] = seriesModel.getColorFromPalette(
                 // TODO series count changed.
                 seriesModel.name, null, ecModel.getSeriesCount()
@@ -138,6 +147,11 @@ const dataStyleTask: StageHandler = {
                     const existsStyle = data.ensureUniqueItemVisual(idx, 'style');
                     extend(existsStyle, style);
 
+                    if (sharedModel.option.decal) {
+                        data.setItemVisual(idx, 'decal', sharedModel.option.decal);
+                        sharedModel.option.decal.dirty = true;
+                    }
+
                     if (colorKey in style) {
                         data.setItemVisual(idx, 'colorFromPalette', false);
                     }
@@ -148,8 +162,8 @@ const dataStyleTask: StageHandler = {
 };
 
 // Pick color from palette for the data which has not been set with color yet.
+// Note: do not support stream rendering. No such cases yet.
 const dataColorPaletteTask: StageHandler = {
-    createOnAllSeries: true,
     performRawSeries: true,
     overallReset(ecModel) {
         // Each type of series use one scope.
@@ -198,11 +212,9 @@ const dataColorPaletteTask: StageHandler = {
                 // 2. color is encoded by visualMap
                 if (fromPalette) {
                     const itemStyle = data.ensureUniqueItemVisual(idx, 'style');
-                    itemStyle[colorKey] = seriesModel.getColorFromPalette(
-                        dataAll.getName(rawIdx) || (rawIdx + ''),
-                        colorScope,
-                        dataAll.count()
-                    );
+                    const name = dataAll.getName(rawIdx) || (rawIdx + '');
+                    const dataCount = dataAll.count();
+                    itemStyle[colorKey] = seriesModel.getColorFromPalette(name, colorScope, dataCount);
                 }
             });
         });

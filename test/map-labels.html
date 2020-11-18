@@ -63,7 +63,7 @@ under the License.
                 colorTool = echarts.color;
                 chart = myChart = echarts.init(document.getElementById('main'));
 
-                $.get('../map/json/world.json', function (worldJson) {
+                $.get('./data/map/json/world.json', function (worldJson) {
                     echarts.registerMap('world', worldJson);
 
                     option = {

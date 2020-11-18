@@ -33,7 +33,7 @@ function dataToCoordSize(this: Cartesian2D, dataSize: number[], dataItem: number
     }, this);
 }
 
-export default function (coordSys: Cartesian2D) {
+export default function cartesianPrepareCustom(coordSys: Cartesian2D) {
     const rect = coordSys.master.getRect();
     return {
         coordSys: {

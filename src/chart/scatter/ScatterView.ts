@@ -84,7 +84,7 @@ class ScatterView extends ChartView {
             };
         }
         else {
-            const res = pointsLayout().reset(seriesModel, ecModel, api) as StageHandlerProgressExecutor;
+            const res = pointsLayout('').reset(seriesModel, ecModel, api) as StageHandlerProgressExecutor;
             if (res.progress) {
                 res.progress({ start: 0, end: data.count(), count: data.count() }, data);
             }

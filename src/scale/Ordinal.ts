@@ -37,10 +37,14 @@ import {
     ScaleTick
 } from '../util/types';
 import { AxisBaseOption } from '../coord/axisCommonTypes';
-import { isArray } from 'zrender/src/core/util';
+import { isArray, map, isObject } from 'zrender/src/core/util';
 
+type OrdinalScaleSetting = {
+    ordinalMeta?: OrdinalMeta | AxisBaseOption['data'];
+    extent?: [number, number];
+};
 
-class OrdinalScale extends Scale {
+class OrdinalScale extends Scale<OrdinalScaleSetting> {
 
     static type = 'ordinal';
     readonly type = 'ordinal';
@@ -48,20 +52,21 @@ class OrdinalScale extends Scale {
     private _ordinalMeta: OrdinalMeta;
     private _categorySortInfo: OrdinalSortInfo[];
 
-
-    constructor(setting?: {
-        ordinalMeta?: OrdinalMeta | AxisBaseOption['data'],
-        extent?: [number, number]
-    }) {
+    constructor(setting?: OrdinalScaleSetting) {
         super(setting);
 
         let ordinalMeta = this.getSetting('ordinalMeta');
         // Caution: Should not use instanceof, consider ec-extensions using
         // import approach to get OrdinalMeta class.
-        if (!ordinalMeta || isArray(ordinalMeta)) {
-            ordinalMeta = new OrdinalMeta({categories: ordinalMeta});
+        if (!ordinalMeta) {
+            ordinalMeta = new OrdinalMeta({});
         }
-        this._ordinalMeta = ordinalMeta;
+        if (isArray(ordinalMeta)) {
+            ordinalMeta = new OrdinalMeta({
+                categories: map(ordinalMeta, item => (isObject(item) ? item.value : item))
+            });
+        }
+        this._ordinalMeta = ordinalMeta as OrdinalMeta;
         this._categorySortInfo = [];
         this._extent = this.getSetting('extent') || [0, ordinalMeta.categories.length - 1];
     }

@@ -30,13 +30,19 @@ import {
     RoamOptionMixin,
     CallbackDataParams,
     ColorString,
-    StatesOptionMixin
+    StatesOptionMixin,
+    OptionId,
+    OptionName,
+    DecalObject,
+    DefaultExtraEmpasisState,
+    SeriesLabelOption
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
 import List from '../../data/List';
 import { normalizeToArray } from '../../util/model';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
 
 // Only support numberic value.
 type TreemapSeriesDataValue = number | number[];
@@ -46,7 +52,7 @@ interface BreadcrumbItemStyleOption extends ItemStyleOption {
     textStyle?: LabelOption
 }
 
-interface TreemapSeriesLabelOption extends LabelOption {
+interface TreemapSeriesLabelOption extends SeriesLabelOption {
     ellipsis?: boolean
     formatter?: string | ((params: CallbackDataParams) => string)
 }
@@ -74,7 +80,7 @@ interface TreemapSeriesCallbackDataParams extends CallbackDataParams {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: 'descendant' | 'ancestor'
+        focus?: DefaultExtraEmpasisState['focus'] | 'descendant' | 'ancestor'
     }
 }
 
@@ -114,19 +120,22 @@ export interface TreemapSeriesVisualOption {
 export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption,
     TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
 
-    color?: ColorString[] | 'none'
+    color?: ColorString[] | 'none',
+    decal?: DecalObject[] | 'none'
 }
 
 export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
     TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
-    id?: string
-    name?: string
+    id?: OptionId
+    name?: OptionName
 
     value?: TreemapSeriesDataValue
 
     children?: TreemapSeriesNodeItemOption[]
 
     color?: ColorString[] | 'none'
+
+    decal?: DecalObject[] | 'none'
 }
 
 export interface TreemapSeriesOption
@@ -154,12 +163,12 @@ export interface TreemapSeriesOption
      */
     clipWindow?: 'origin' | 'fullscreen'
 
-    squareRatio: number
+    squareRatio?: number
     /**
      * Nodes on depth from root are regarded as leaves.
      * Count from zero (zero represents only view root).
      */
-    leafDepth: number
+    leafDepth?: number
 
     drillDownIcon?: string
 
@@ -203,6 +212,8 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
     preventUsingHoverLayer = true;
 
     layoutInfo: LayoutRect;
+
+    designatedVisualItemStyle: TreemapSeriesItemStyleOption;
 
     private _viewRoot: TreeNode;
     private _idIndexMap: zrUtil.HashMap<number>;
@@ -338,21 +349,29 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
 
         let levels = option.levels || [];
 
+        // Used in "visual priority" in `treemapVisual.js`.
+        // This way is a little tricky, must satisfy the precondition:
+        //   1. There is no `treeNode.getModel('itemStyle.xxx')` used.
+        //   2. The `Model.prototype.getModel()` will not use any clone-like way.
+        const designatedVisualItemStyle = this.designatedVisualItemStyle = {};
+        const designatedVisualModel = new Model({itemStyle: designatedVisualItemStyle}, this, ecModel);
+
         levels = option.levels = setDefault(levels, ecModel);
         const levelModels = zrUtil.map(levels || [], function (levelDefine) {
-            return new Model(levelDefine, this, ecModel);
+            return new Model(levelDefine, designatedVisualModel, ecModel);
         }, this);
 
         // Make sure always a new tree is created when setOption,
         // in TreemapView, we check whether oldTree === newTree
         // to choose mappings approach among old shapes and new shapes.
-        const tree = Tree.createTree(root, this, null, beforeLink);
+        const tree = Tree.createTree(root, this, beforeLink);
 
         function beforeLink(nodeData: List) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 const node = tree.getNodeByDataIndex(idx);
                 const levelModel = levelModels[node.depth];
-                levelModel && (model.parentModel = levelModel);
+                // If no levelModel, we also need `designatedVisualModel`.
+                model.parentModel = levelModel || designatedVisualModel;
                 return model;
             });
         }
@@ -468,6 +487,10 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             this._viewRoot = root;
         }
     }
+
+    enableAriaDecal() {
+        enableAriaDecalForTree(this);
+    }
 }
 
 /**
@@ -512,6 +535,7 @@ function completeTreeValue(dataNode: TreemapSeriesNodeItemOption) {
  */
 function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
     const globalColorList = normalizeToArray(ecModel.get('color')) as ColorString[];
+    const globalDecalList = normalizeToArray(ecModel.get('decals')) as DecalObject[];
 
     if (!globalColorList) {
         return;
@@ -519,20 +543,30 @@ function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
 
     levels = levels || [];
     let hasColorDefine;
+    let hasDecalDefine;
     zrUtil.each(levels, function (levelDefine) {
         const model = new Model(levelDefine);
         const modelColor = model.get('color');
+        const modelDecal = model.get('decal');
 
         if (model.get(['itemStyle', 'color'])
             || (modelColor && modelColor !== 'none')
         ) {
             hasColorDefine = true;
         }
+        if (model.get(['itemStyle', 'decal'])
+            || (modelDecal && modelDecal !== 'none')
+        ) {
+            hasDecalDefine = true;
+        }
     });
 
+    const level0 = levels[0] || (levels[0] = {});
     if (!hasColorDefine) {
-        const level0 = levels[0] || (levels[0] = {});
         level0.color = globalColorList.slice();
+    }
+    if (!hasDecalDefine && globalDecalList) {
+        level0.decal = globalDecalList.slice();
     }
 
     return levels;

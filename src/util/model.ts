@@ -41,13 +41,18 @@ import {
     OptionDataItem,
     OptionDataValue,
     TooltipRenderMode,
-    Payload
+    Payload,
+    OptionId,
+    OptionName,
+    ParsedValue
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
-import { isNumeric, getRandomIdBase } from './number';
+import { isNumeric, getRandomIdBase, getPrecisionSafe, round } from './number';
+import { interpolateNumber } from 'zrender/src/animation/Animator';
+import { warn } from './log';
 
 /**
  * Make the name displayable. But we should
@@ -150,7 +155,7 @@ export function isDataItemOption(dataItem: OptionDataItem): boolean {
 // number id will not be converted to string in option.
 // number id will be converted to string in component instance id.
 export interface MappingExistingItem {
-    id?: string | number;
+    id?: OptionId;
     name?: string;
 };
 /**
@@ -228,8 +233,17 @@ export function mappingToExists<T extends MappingExistingItem>(
             newCmptOptions[index] = null;
             return;
         }
-        cmptOption.id == null || validateIdOrName(cmptOption.id);
-        cmptOption.name == null || validateIdOrName(cmptOption.name);
+
+        if (__DEV__) {
+            // There is some legacy case that name is set as `false`.
+            // But should work normally rather than throw error.
+            if (cmptOption.id != null && !isValidIdOrName(cmptOption.id)) {
+                warnInvalidateIdOrName(cmptOption.id);
+            }
+            if (cmptOption.name != null && !isValidIdOrName(cmptOption.name)) {
+                warnInvalidateIdOrName(cmptOption.name);
+            }
+        }
     });
 
     const result = prepareResult(existings, existingIdIdxMap, mode);
@@ -352,7 +366,6 @@ function mappingByIndex<T extends MappingExistingItem>(
     newCmptOptions: ComponentOption[],
     brandNew: boolean
 ): void {
-    let nextIdx = 0;
     each(newCmptOptions, function (cmptOption) {
         if (!cmptOption) {
             return;
@@ -360,6 +373,7 @@ function mappingByIndex<T extends MappingExistingItem>(
 
         // Find the first place that not mapped by id and not internal component (consider the "hole").
         let resultItem;
+        let nextIdx = 0;
         while (
             // Be `!resultItem` only when `nextIdx >= result.length`.
             (resultItem = result[nextIdx])
@@ -499,31 +513,44 @@ function makeIdAndName(
     });
 }
 
-function keyExistAndEqual(attr: 'id' | 'name', obj1: MappingExistingItem, obj2: MappingExistingItem): boolean {
-    const key1 = obj1[attr];
-    const key2 = obj2[attr];
+function keyExistAndEqual(
+    attr: 'id' | 'name',
+    obj1: { id?: OptionId, name?: OptionName },
+    obj2: { id?: OptionId, name?: OptionName }
+): boolean {
+    const key1 = convertOptionIdName(obj1[attr], null);
+    const key2 = convertOptionIdName(obj2[attr], null);
     // See `MappingExistingItem`. `id` and `name` trade string equals to number.
-    return key1 != null && key2 != null && key1 + '' === key2 + '';
+    return key1 != null && key2 != null && key1 === key2;
 }
 
 /**
  * @return return null if not exist.
  */
-function makeComparableKey(val: string | number): string {
+function makeComparableKey(val: unknown): string {
     if (__DEV__) {
         if (val == null) {
             throw new Error();
         }
     }
-    return val + '';
+    return convertOptionIdName(val, '');
 }
 
-export function validateIdOrName(idOrName: unknown) {
+export function convertOptionIdName(idOrName: unknown, defaultValue: string): string {
+    if (idOrName == null) {
+        return defaultValue;
+    }
+    const type = typeof idOrName;
+    return type === 'string'
+        ? idOrName as string
+        : (type === 'number' || isStringSafe(idOrName))
+        ? idOrName + ''
+        : defaultValue;
+}
+
+function warnInvalidateIdOrName(idOrName: unknown) {
     if (__DEV__) {
-        assert(
-            isValidIdOrName(idOrName),
-            '`' + idOrName + '` is invalid id or name. Must be a string.'
-        );
+        warn('`' + idOrName + '` is invalid id or name. Must be a string or number.');
     }
 }
 
@@ -542,7 +569,7 @@ export function isNameSpecified(componentModel: ComponentModel): boolean {
  * @param {Object} cmptOption
  * @return {boolean}
  */
-export function isComponentIdInternal(cmptOption: MappingExistingItem): boolean {
+export function isComponentIdInternal(cmptOption: { id?: MappingExistingItem['id'] }): boolean {
     return cmptOption
         && cmptOption.id != null
         && makeComparableKey(cmptOption.id).indexOf(INTERNAL_COMPONENT_ID_PREFIX) === 0;
@@ -586,8 +613,8 @@ function determineSubType(
 
 
 type BatchItem = {
-    seriesId: string,
-    dataIndex: number[]
+    seriesId: OptionId,
+    dataIndex: number | number[]
 };
 /**
  * A helper for removing duplicate items between batchA and batchB,
@@ -617,7 +644,10 @@ export function compressBatches(
 
     function makeMap(sourceBatch: BatchItem[], map: InnerMap, otherMap?: InnerMap): void {
         for (let i = 0, len = sourceBatch.length; i < len; i++) {
-            const seriesId = sourceBatch[i].seriesId;
+            const seriesId = convertOptionIdName(sourceBatch[i].seriesId, null);
+            if (seriesId == null) {
+                return;
+            }
             const dataIndices = normalizeToArray(sourceBatch[i].dataIndex);
             const otherDataIndices = otherMap && otherMap[seriesId];
 
@@ -733,8 +763,9 @@ let innerUniqueIndex = getRandomIdBase();
  * The priority is: index > id > name, the same with `ecModel.queryComponents`.
  */
 export type ModelFinderIndexQuery = number | number[] | 'all' | 'none' | false;
-export type ModelFinderIdQuery = number | number[] | string | string[];
-export type ModelFinderNameQuery = number | number[] | string | string[];
+export type ModelFinderIdQuery = OptionId | OptionId[];
+export type ModelFinderNameQuery = OptionId | OptionId[];
+// If string, like 'series', means { seriesIndex: 0 }.
 export type ModelFinder = string | ModelFinderObject;
 export type ModelFinderObject = {
     seriesIndex?: ModelFinderIndexQuery, seriesId?: ModelFinderIdQuery, seriesName?: ModelFinderNameQuery
@@ -778,7 +809,14 @@ export type ParsedModelFinder = ParsedModelFinderKnown & {
 export function parseFinder(
     ecModel: GlobalModel,
     finderInput: ModelFinder,
-    opt?: {defaultMainType?: ComponentMainType, includeMainTypes?: ComponentMainType[]}
+    opt?: {
+        // If no main type specified, use this main type.
+        defaultMainType?: ComponentMainType;
+        // If pervided, types out of this list will be ignored.
+        includeMainTypes?: ComponentMainType[];
+        enableAll?: boolean;
+        enableNone?: boolean;
+    }
 ): ParsedModelFinder {
     let finder: ModelFinderObject;
     if (isString(finderInput)) {
@@ -790,9 +828,9 @@ export function parseFinder(
         finder = finderInput;
     }
 
-    const defaultMainType = opt ? opt.defaultMainType : null;
     const queryOptionMap = createHashMap<QueryReferringUserOption, ComponentMainType>();
     const result = {} as ParsedModelFinder;
+    let mainTypeSpecified = false;
 
     each(finder, function (value, key) {
         // Exclude 'dataIndex' and other illgal keys.
@@ -808,15 +846,21 @@ export function parseFinder(
         if (
             !mainType
             || !queryType
-            || (mainType !== defaultMainType && value == null)
             || (opt && opt.includeMainTypes && indexOf(opt.includeMainTypes, mainType) < 0)
         ) {
             return;
         }
 
+        mainTypeSpecified = mainTypeSpecified || !!mainType;
+
         const queryOption = queryOptionMap.get(mainType) || queryOptionMap.set(mainType, {});
         queryOption[queryType] = value as any;
     });
+
+    const defaultMainType = opt ? opt.defaultMainType : null;
+    if (!mainTypeSpecified && defaultMainType) {
+        queryOptionMap.set(defaultMainType, {});
+    }
 
     queryOptionMap.each(function (queryOption, mainType) {
         const queryResult = queryReferringComponents(
@@ -824,9 +868,9 @@ export function parseFinder(
             mainType,
             queryOption,
             {
-                useDefault: mainType === defaultMainType,
-                enableAll: true,
-                enableNone: true
+                useDefault: defaultMainType === mainType,
+                enableAll: (opt && opt.enableAll != null) ? opt.enableAll : true,
+                enableNone: (opt && opt.enableNone != null) ? opt.enableNone : true
             }
         );
         result[mainType + 'Models'] = queryResult.models;
@@ -847,24 +891,25 @@ export const MULTIPLE_REFERRING: QueryReferringOpt = { useDefault: false, enable
 
 export type QueryReferringOpt = {
     // Whether to use the first componet as the default if none of index/id/name are specified.
-    useDefault: boolean;
+    useDefault?: boolean;
     // Whether to enable `'all'` on index option.
-    enableAll: boolean;
+    enableAll?: boolean;
     // Whether to enable `'none'`/`false` on index option.
-    enableNone: boolean;
+    enableNone?: boolean;
 };
 
 export function queryReferringComponents(
     ecModel: GlobalModel,
     mainType: ComponentMainType,
     userOption: QueryReferringUserOption,
-    opt: QueryReferringOpt
+    opt?: QueryReferringOpt
 ): {
     // Always be array rather than null/undefined, which is convenient to use.
     models: ComponentModel[];
     // Whether there is indexOption/id/name specified
     specified: boolean;
 } {
+    opt = opt || SINGLE_REFERRING as QueryReferringOpt;
     let indexOption = userOption.index;
     let idOption = userOption.id;
     let nameOption = userOption.name;
@@ -950,4 +995,77 @@ export function groupData<T, R extends string | number>(
         keys: keys,
         buckets: buckets
     };
+}
+
+
+/**
+ * Interpolate raw values of a series with percent
+ *
+ * @param data         data
+ * @param labelModel   label model of the text element
+ * @param sourceValue  start value
+ * @param targetValue  end value
+ * @param percent      0~1 percentage; 0 uses start value while 1 uses end value
+ * @return             interpolated values
+ */
+export function interpolateRawValues(
+    data: List,
+    precision: number | 'auto',
+    sourceValue: ParsedValue[] | ParsedValue,
+    targetValue: ParsedValue[] | ParsedValue,
+    percent: number
+): (string | number)[] | string | number {
+    const isAutoPrecision = precision == null || precision === 'auto';
+
+    if (targetValue == null) {
+        return targetValue;
+    }
+
+    if (typeof targetValue === 'number') {
+        const value = interpolateNumber(
+            sourceValue as number || 0,
+            targetValue as number,
+            percent
+        );
+        return round(
+            value,
+            isAutoPrecision ? Math.max(
+                getPrecisionSafe(sourceValue as number || 0),
+                getPrecisionSafe(targetValue as number)
+            )
+            : precision as number
+        );
+    }
+    else if (typeof targetValue === 'string') {
+        return percent < 1 ? sourceValue : targetValue;
+    }
+    else {
+        const interpolated = [];
+        const leftArr = sourceValue as (string | number)[] || [];
+        const rightArr = targetValue as (string | number[]);
+        const length = Math.max(leftArr.length, rightArr.length);
+        for (let i = 0; i < length; ++i) {
+            const info = data.getDimensionInfo(i);
+            // Don't interpolate ordinal dims
+            if (info.type === 'ordinal') {
+                interpolated[i] = (percent < 1 ? leftArr : rightArr)[i] as number;
+            }
+            else {
+                const leftVal = leftArr && leftArr[i] ? leftArr[i] as number : 0;
+                const rightVal = rightArr[i] as number;
+                const value = leftArr == null
+                    ? (targetValue as [])[i]
+                    : interpolateNumber(leftVal, rightVal, percent);
+                interpolated[i] = round(
+                    value,
+                    isAutoPrecision ? Math.max(
+                        getPrecisionSafe(leftVal),
+                        getPrecisionSafe(rightVal)
+                    )
+                    : precision as number
+                );
+            }
+        }
+        return interpolated;
+    }
 }

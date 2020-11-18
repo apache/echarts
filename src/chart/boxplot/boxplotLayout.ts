@@ -37,7 +37,7 @@ export interface BoxplotItemLayout {
     initBaseline: number
 }
 
-export default function (ecModel: GlobalModel) {
+export default function boxplotLayout(ecModel: GlobalModel) {
 
     const groupResult = groupSeriesByAxis(ecModel);
 

@@ -22,7 +22,7 @@ import * as zrUtil from 'zrender/src/core/util';
 
 const each = zrUtil.each;
 
-export default function (option) {
+export default function visualMapPreprocessor(option) {
     let visualMap = option && option.visualMap;
 
     if (!zrUtil.isArray(visualMap)) {

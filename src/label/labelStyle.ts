@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Dictionary } from 'zrender/src/core/types';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
@@ -17,6 +36,10 @@ import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 import { deprecateReplaceLog } from '../util/log';
+import { makeInner, interpolateRawValues } from '../util/model';
+import List from '../data/List';
+import SeriesModel from '../model/Series';
+import { initProps, updateProps } from '../util/graphic';
 
 type TextCommonParams = {
     /**
@@ -28,6 +51,11 @@ type TextCommonParams = {
      * If inheritColor specified, it is used as default textFill.
      */
     inheritColor?: ColorString
+
+    /**
+     * Specify a opacity when opacity is not given.
+     */
+    defaultOpacity?: number
 
     defaultOutsidePosition?: LabelOption['position']
 
@@ -41,7 +69,9 @@ type TextCommonParams = {
 const EMPTY_OBJ = {};
 
 interface SetLabelStyleOpt<LDI> extends TextCommonParams {
-    defaultText?: string | ((labelDataIndex: LDI, opt: SetLabelStyleOpt<LDI>) => string);
+    defaultText?: string | ((
+        labelDataIndex: LDI, opt: SetLabelStyleOpt<LDI>, overrideValue?: ParsedValue | ParsedValue[]
+    ) => string);
     // Fetch text by:
     // opt.labelFetcher.getFormattedLabel(
     //     opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex, opt.labelProp
@@ -59,9 +89,15 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
     };
     labelDataIndex?: LDI;
     labelDimIndex?: number;
+
+    /**
+     * Inject a setter of text for the text animation case.
+     */
+    enableTextSetter?: boolean
 }
 type LabelModel = Model<LabelOption & {
     formatter?: string | ((params: any) => string);
+    showDuringLabel?: boolean // Currently only supported by line charts
 }>;
 type LabelModelForText = Model<Omit<
     // Remove
@@ -70,6 +106,21 @@ type LabelModelForText = Model<Omit<
     }>;
 
 type LabelStatesModels<LabelModel> = Partial<Record<DisplayStateNonNormal, LabelModel>> & {normal: LabelModel};
+
+export function setLabelText(label: ZRText, labelTexts: Record<DisplayState, string>) {
+    for (let i = 0; i < SPECIAL_STATES.length; i++) {
+        const stateName = SPECIAL_STATES[i];
+        const text = labelTexts[stateName];
+        const state = label.ensureState(stateName);
+        state.style = state.style || {};
+        state.style.text = text;
+    }
+
+    const oldStates = label.currentStates.slice();
+    label.clearStates(true);
+    label.setStyle({ text: labelTexts.normal });
+    label.useStates(oldStates, true);
+}
 
 export function getLabelText<LDI>(
     opt: SetLabelStyleOpt<LDI>,
@@ -93,7 +144,7 @@ export function getLabelText<LDI>(
         );
     }
     if (baseText == null) {
-        baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
+        baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt, overrideValue) : opt.defaultText;
     }
 
     const statesText = {
@@ -155,11 +206,10 @@ function setLabelStyle<LDI>(
             break;
         }
     }
-    let textContent = isSetOnText ? targetEl as ZRText : null;
+    let textContent = isSetOnText ? targetEl as ZRText : targetEl.getTextContent();
     if (needsCreateText) {
         if (!isSetOnText) {
             // Reuse the previous
-            textContent = targetEl.getTextContent();
             if (!textContent) {
                 textContent = new ZRText();
                 targetEl.setTextContent(textContent);
@@ -172,7 +222,7 @@ function setLabelStyle<LDI>(
         const labelStatesTexts = getLabelText(opt, labelStatesModels);
 
         const normalModel = labelStatesModels.normal;
-        const showNormal = normalModel.getShallow('show');
+        const showNormal = !!normalModel.getShallow('show');
         const normalStyle = createTextStyle(
             normalModel, stateSpecified && stateSpecified.normal, opt, false, !isSetOnText
         );
@@ -188,7 +238,10 @@ function setLabelStyle<LDI>(
 
             if (stateModel) {
                 const stateObj = textContent.ensureState(stateName);
-                stateObj.ignore = !retrieve2(stateModel.getShallow('show'), showNormal);
+                const stateShow = !!retrieve2(stateModel.getShallow('show'), showNormal);
+                if (stateShow !== showNormal) {
+                    stateObj.ignore = !stateShow;
+                }
                 stateObj.style = createTextStyle(
                     stateModel, stateSpecified && stateSpecified[stateName], opt, true, !isSetOnText
                 );
@@ -216,6 +269,13 @@ function setLabelStyle<LDI>(
         // Always create new style.
         textContent.useStyle(normalStyle);
         textContent.dirty();
+
+        if (opt.enableTextSetter) {
+            labelInner(textContent).setLabelText = function (overrideValue: ParsedValue | ParsedValue[]) {
+                const labelStatesTexts = getLabelText(opt, labelStatesModels, overrideValue);
+                setLabelText(textContent, labelStatesTexts);
+            };
+        }
     }
     else if (textContent) {
         // Not display rich text.
@@ -244,7 +304,7 @@ export function getLabelStatesModels<LabelName extends string = 'label'>(
  */
 export function createTextStyle(
     textStyleModel: Model,
-    specifiedTextStyle?: TextStyleProps, // Can be overrided by settings in model.
+    specifiedTextStyle?: TextStyleProps, // Fixed style in the code. Can't be set by model.
     opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
     isNotNormal?: boolean, isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
 ) {
@@ -301,7 +361,7 @@ export function createTextConfig(
 function setTextStyleCommon(
     textStyle: TextStyleProps,
     textStyleModel: Model,
-    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'defaultOpacity' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean
 ) {
@@ -336,7 +396,9 @@ function setTextStyleCommon(
                 // the default color `'blue'` will not be adopted if no color declared in `rich`.
                 // That might confuses users. So probably we should put `textStyleModel` as the
                 // root ancestor of the `richTextStyle`. But that would be a break change.
-                setTokenTextStyle(richResult[name] = {}, richTextStyle, globalTextStyle, opt, isNotNormal, isAttached);
+                setTokenTextStyle(
+                    richResult[name] = {}, richTextStyle, globalTextStyle, opt, isNotNormal, isAttached, false, true
+                );
             }
         }
     }
@@ -351,7 +413,7 @@ function setTextStyleCommon(
     if (margin != null) {
         textStyle.margin = margin;
     }
-    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true);
+    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true, false);
 }
 // Consider case:
 // {
@@ -386,7 +448,7 @@ function getRichItemNames(textStyleModel: Model<LabelOption>) {
     return richItemNameMap;
 }
 const TEXT_PROPS_WITH_GLOBAL = [
-    'fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'opacity',
+    'fontStyle', 'fontWeight', 'fontSize', 'fontFamily',
     'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'
 ] as const;
 const TEXT_PROPS_SELF = [
@@ -402,16 +464,18 @@ function setTokenTextStyle(
     textStyle: TextStyleProps['rich'][string],
     textStyleModel: Model<LabelOption>,
     globalTextStyle: LabelOption,
-    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'defaultOpacity' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean,
-    isBlock?: boolean
+    isBlock?: boolean,
+    inRich?: boolean
 ) {
     // In merge mode, default value should not be given.
     globalTextStyle = !isNotNormal && globalTextStyle || EMPTY_OBJ;
     const inheritColor = opt && opt.inheritColor;
     let fillColor = textStyleModel.getShallow('color');
     let strokeColor = textStyleModel.getShallow('textBorderColor');
+    let opacity = retrieve2(textStyleModel.getShallow('opacity'), globalTextStyle.opacity);
     if (fillColor === 'inherit' || fillColor === 'auto') {
         if (__DEV__) {
             if (fillColor === 'auto') {
@@ -458,9 +522,18 @@ function setTokenTextStyle(
     if (textBorderType != null) {
         textStyle.lineDash = textBorderType as any;
     }
-    const textBorderDashOffset = retrieve2(textStyleModel.getShallow('textBorderDashOffset'), globalTextStyle.textBorderDashOffset);
+    const textBorderDashOffset = retrieve2(
+        textStyleModel.getShallow('textBorderDashOffset'), globalTextStyle.textBorderDashOffset
+    );
     if (textBorderDashOffset != null) {
         textStyle.lineDashOffset = textBorderDashOffset;
+    }
+
+    if (!isNotNormal && (opacity == null) && !inRich) {
+        opacity = opt && opt.defaultOpacity;
+    }
+    if (opacity != null) {
+        textStyle.opacity = opacity;
     }
 
     // TODO
@@ -538,4 +611,100 @@ export function getFont(
         (opt.fontSize || gTextStyleModel && gTextStyleModel.getShallow('fontSize') || 12) + 'px',
         opt.fontFamily || gTextStyleModel && gTextStyleModel.getShallow('fontFamily') || 'sans-serif'
     ].join(' '));
+}
+
+export const labelInner = makeInner<{
+    /**
+     * Previous value stored used for label.
+     * It's mainly for text animation
+     */
+    prevValue?: ParsedValue | ParsedValue[]
+    /**
+     * Current value stored used for label.
+     */
+    value?: ParsedValue | ParsedValue[]
+    /**
+     * If enable value animation
+     */
+    valueAnimation?: boolean
+    /**
+     * Label value precision during animation.
+     */
+    precision?: number | 'auto'
+
+    /**
+     * If enable value animation
+     */
+    statesModels?: LabelStatesModels<LabelModelForText>
+    /**
+     * Default text getter during interpolation
+     */
+    defaultInterpolatedText?: (value: ParsedValue[] | ParsedValue) => string
+    /**
+     * Change label text from interpolated text during animation
+     */
+    setLabelText?(overrideValue?: ParsedValue | ParsedValue[]): void
+}, ZRText>();
+
+export function setLabelValueAnimation(
+    label: ZRText,
+    labelStatesModels: LabelStatesModels<LabelModelForText>,
+    value: ParsedValue | ParsedValue[],
+    getDefaultText: (value: ParsedValue[] | ParsedValue) => string
+) {
+    if (!label) {
+        return;
+    }
+
+    const obj = labelInner(label);
+    obj.prevValue = obj.value;
+    obj.value = value;
+
+    const normalLabelModel = labelStatesModels.normal;
+
+    obj.valueAnimation = normalLabelModel.get('valueAnimation');
+
+    if (obj.valueAnimation) {
+        obj.precision = normalLabelModel.get('precision');
+        obj.defaultInterpolatedText = getDefaultText;
+        obj.statesModels = labelStatesModels;
+    }
+}
+
+export function animateLabelValue(
+    textEl: ZRText,
+    dataIndex: number,
+    data: List,
+    seriesModel: SeriesModel
+) {
+    const labelInnerStore = labelInner(textEl);
+    if (!labelInnerStore.valueAnimation) {
+        return;
+    }
+    const defaultInterpolatedText = labelInnerStore.defaultInterpolatedText;
+    const prevValue = labelInnerStore.prevValue;
+    const currentValue = labelInnerStore.value;
+
+    function during(percent: number) {
+        const interpolated = interpolateRawValues(
+            data,
+            labelInnerStore.precision,
+            prevValue,
+            currentValue,
+            percent
+        );
+
+        const labelText = getLabelText({
+            labelDataIndex: dataIndex,
+            // labelFetcher: seriesModel,
+            defaultText: defaultInterpolatedText
+                ? defaultInterpolatedText(interpolated)
+                : interpolated + ''
+        }, labelInnerStore.statesModels, interpolated);
+
+        setLabelText(textEl, labelText);
+    }
+
+    (prevValue == null ? initProps
+        : updateProps)(textEl, {}, seriesModel, dataIndex, null, during);
 }

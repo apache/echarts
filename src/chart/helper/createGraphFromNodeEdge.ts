@@ -30,8 +30,9 @@ import {
     OptionDataItemObject
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
+import { convertOptionIdName } from '../../util/model';
 
-export default function (
+export default function createGraphFromNodeEdge(
     nodes: OptionSourceDataOriginal<OptionDataValue, OptionDataItemObject<OptionDataValue>>,
     edges: OptionSourceDataOriginal<OptionDataValue, GraphEdgeItemObject<OptionDataValue>>,
     seriesModel: SeriesModel,
@@ -59,7 +60,7 @@ export default function (
         if (graph.addEdge(source, target, linkCount)) {
             validEdges.push(link);
             linkNameList.push(zrUtil.retrieve(
-                link.id != null ? link.id + '' : null,
+                convertOptionIdName(link.id, null),
                 source + ' > ' + target
             ));
             linkCount++;

@@ -44,7 +44,7 @@ export interface ParallelAxisOption extends AxisBaseOption {
     /**
      * 0, 1, 2, ...
      */
-    dim?: number[];
+    dim?: number | number[];
     parallelIndex?: number;
     areaSelectStyle?: {
         width?: number;
@@ -80,6 +80,8 @@ class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
                 ['stroke', 'borderColor'],
                 ['width', 'width'],
                 ['opacity', 'opacity']
+                // Option decal is in `DecalObject` but style.decal is in `PatternObject`.
+                // So do not transfer decal directly.
             ]
         )(this.getModel('areaSelectStyle')) as ParallelAreaSelectStyleProps;
     }

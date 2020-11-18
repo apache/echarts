@@ -28,7 +28,7 @@ import {createSymbol} from '../../util/symbol';
 import * as numberUtil from '../../util/number';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { merge, each, extend, clone, isString, bind, defaults, retrieve2 } from 'zrender/src/core/util';
+import { merge, each, extend, isString, bind, defaults, retrieve2 } from 'zrender/src/core/util';
 import SliderTimelineModel from './SliderTimelineModel';
 import ComponentView from '../../view/Component';
 import { LayoutOrient, ZRTextAlign, ZRTextVerticalAlign, ZRElementEvent, ScaleTick } from '../../util/types';
@@ -43,9 +43,10 @@ import IntervalScale from '../../scale/Interval';
 import { VectorArray } from 'zrender/src/core/vector';
 import { parsePercent } from 'zrender/src/contain/text';
 import { makeInner } from '../../util/model';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis } from '../../util/states';
 import { createTooltipMarkup } from '../tooltip/tooltipMarkup';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 const PI = Math.PI;
 
@@ -429,7 +430,8 @@ class SliderTimelineView extends TimelineView {
             const progressStyleModel = itemModel.getModel(['progress', 'itemStyle']);
 
             const symbolOpt = {
-                position: [tickCoord, 0],
+                x: tickCoord,
+                y: 0,
                 onclick: bind(this._changeTimeline, this, tick.value)
             };
             const el = giveSymbol(itemModel, itemStyleModel, group, symbolOpt);
@@ -737,7 +739,7 @@ function createScaleByModel(model: SliderTimelineModel, axisType?: string): Scal
                 });
             case 'time':
                 return new TimeScale({
-                    lang: model.ecModel.getLocaleModel(),
+                    locale: model.ecModel.getLocaleModel(),
                     useUTC: model.ecModel.get('useUTC')
                 });
             default:
@@ -765,12 +767,18 @@ function makeControlIcon(
     rect: number[],
     opts: PathProps
 ) {
-    const icon = graphic.makePath(
-        timelineModel.get(['controlStyle', objPath]).replace(/^path:\/\//, ''),
-        clone(opts || {}),
-        new BoundingRect(rect[0], rect[1], rect[2], rect[3]),
-        'center'
+    const style = opts.style;
+
+    const icon = graphic.createIcon(
+        timelineModel.get(['controlStyle', objPath]),
+        opts || {},
+        new BoundingRect(rect[0], rect[1], rect[2], rect[3])
     );
+
+    // TODO createIcon won't use style in opt.
+    if (style) {
+        (icon as Displayable).setStyle(style);
+    }
 
     return icon;
 }

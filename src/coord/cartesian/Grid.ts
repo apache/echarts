@@ -194,8 +194,11 @@ class Grid implements CoordinateSystemMaster {
      */
     resize(gridModel: GridModel, api: ExtensionAPI, ignoreContainLabel?: boolean): void {
 
+        const boxLayoutParams = gridModel.getBoxLayoutParams();
+        const isContainLabel = !ignoreContainLabel && gridModel.get('containLabel');
+
         const gridRect = getLayoutRect(
-            gridModel.getBoxLayoutParams(), {
+            boxLayoutParams, {
                 width: api.getWidth(),
                 height: api.getHeight()
             });
@@ -207,7 +210,7 @@ class Grid implements CoordinateSystemMaster {
         adjustAxes();
 
         // Minus label size
-        if (!ignoreContainLabel && gridModel.get('containLabel')) {
+        if (isContainLabel) {
             each(axesList, function (axis) {
                 if (!axis.model.get(['axisLabel', 'inside'])) {
                     const labelUnionRect = estimateLabelUnionRect(axis);
@@ -227,6 +230,12 @@ class Grid implements CoordinateSystemMaster {
 
             adjustAxes();
         }
+
+        each(this._coordsList, function (coord) {
+            // Calculate affine matrix to accelerate the data to point transform.
+            // If all the axes scales are time or value.
+            coord.calcAffineTransform();
+        });
 
         function adjustAxes() {
             each(axesList, function (axis) {
@@ -483,10 +492,6 @@ class Grid implements CoordinateSystemMaster {
      * Update cartesian properties from series.
      */
     private _updateScale(ecModel: GlobalModel, gridModel: GridModel): void {
-        const sortedDataValue: number[] = [];
-        const sortedDataIndex: number[] = [];
-        let hasCategoryIndices = false;
-
         // Reset scale
         each(this._axesList, function (axis) {
             axis.scale.setExtent(Infinity, -Infinity);

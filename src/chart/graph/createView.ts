@@ -36,7 +36,7 @@ function getViewRect(seriesModel: GraphSeriesModel, api: ExtensionAPI, aspect: n
     });
 }
 
-export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+export default function createViewCoordSys(ecModel: GlobalModel, api: ExtensionAPI) {
     const viewList: View[] = [];
     ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
         const coordSysType = seriesModel.get('coordinateSystem');

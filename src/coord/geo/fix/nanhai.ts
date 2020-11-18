@@ -51,7 +51,7 @@ for (let i = 0; i < points.length; i++) {
     }
 }
 
-export default function (mapType: string, regions: Region[]) {
+export default function fixNanhai(mapType: string, regions: Region[]) {
     if (mapType === 'china') {
         regions.push(new Region(
             '南海诸岛',

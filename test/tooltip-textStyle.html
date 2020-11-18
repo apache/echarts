@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+
+
+        <div id="main1"></div>
+
+
+        <div id="main2"></div>
+
+
+        <div id="main3"></div>
+
+
+        <div id="main4"></div>
+
+
+        <div id="main5"></div>
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            option = {
+                xAxis: {},
+                yAxis: {},
+                tooltip: {
+                    textStyle: {
+                        fontSize: 20,
+                        textShadowColor: 'red',
+                        textShadowBlur: 10
+                    },
+                    formatter: '{a}: {c}',
+                    alwaysShowContent: true
+                },
+                series: {
+                    type: 'line',
+                    data: [[11, 22], [33, 44]]
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'trigger: **"item"**',
+                    'renderMode: **"html"**',
+                    'It should have red text shadow and font size being 20px'
+                ],
+                option: option
+            });
+
+            chart.dispatchAction({
+                type: 'showTip',
+                seriesIndex: 0,
+                dataIndex: 0
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            option = {
+                xAxis: {},
+                yAxis: {},
+                tooltip: {
+                    textStyle: {
+                        fontSize: 20,
+                        textShadowColor: 'red',
+                        textShadowBlur: 10,
+                        textShadowOffsetX: 10,
+                        textShadowOffsetY: 10
+                    },
+                    formatter: '{a}: {c}',
+                    alwaysShowContent: true,
+                    renderMode: 'richText'
+                },
+                series: {
+                    type: 'line',
+                    data: [[11, 22], [33, 44]]
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'trigger: **"item"**',
+                    'renderMode: **"richText"**',
+                    'It should have red text shadow and font size being 20px'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            chart.dispatchAction({
+                type: 'showTip',
+                seriesIndex: 0,
+                dataIndex: 0
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            option = {
+                xAxis: {},
+                yAxis: {},
+                tooltip: {
+                    textStyle: {
+                        color: '#fff',
+                        fontStyle: 'italic',
+                        fontWeight: 'bold',
+                        fontFamily: 'monospace',
+                        fontSize: 20,
+                        textBorderColor: 'blue',
+                        textBorderWidth: 1,
+                        textShadowColor: 'red',
+                        textShadowBlur: 10
+                    },
+                    formatter: function (params) {
+                        return params.map(function (param) {
+                            return param.seriesName + ': ' + param.value;
+                        }).join('<br>');
+                    },
+                    alwaysShowContent: true,
+                    trigger: 'axis'
+                },
+                series: [{
+                    type: 'line',
+                    data: [[11, 22], [33, 44]]
+                }, {
+                    type: 'line',
+                    data: [[11, 33], [22, 55]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'trigger: **"axis"**',
+                    'renderMode: **"html"**',
+                    'It should have **two lines** of red text shadow and font size being 20px'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            chart.dispatchAction({
+                type: 'showTip',
+                // dataIndex: 0,
+                x: 300,
+                y: 100
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            option = {
+                xAxis: {},
+                yAxis: {},
+                tooltip: {
+                    textStyle: {
+                        color: '#fff',
+                        fontStyle: 'italic',
+                        fontWeight: 'bold',
+                        fontFamily: 'monospace',
+                        fontSize: 20,
+                        textBorderColor: 'blue',
+                        textBorderWidth: 1,
+                        textShadowColor: 'red',
+                        textShadowBlur: 10
+                    },
+                    formatter: function (params) {
+                        return params.map(function (param) {
+                            return param.seriesName + ': ' + param.value;
+                        }).join('\n');
+                    },
+                    alwaysShowContent: true,
+                    trigger: 'axis',
+                    renderMode: 'richText'
+                },
+                series: [{
+                    type: 'line',
+                    data: [[11, 22], [33, 44]]
+                }, {
+                    type: 'line',
+                    data: [[11, 33], [22, 55]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main3', {
+                title: [
+                    'trigger: **"axis"**',
+                    'renderMode: **"richText"**',
+                    'It should have **two lines** of red text shadow and font size being 20px'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            chart.dispatchAction({
+                type: 'showTip',
+                // dataIndex: 0,
+                x: 300,
+                y: 100
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            option = {
+                tooltip: {
+                    alwaysShowContent: true,
+                    textStyle: {
+                        fontSize: 20,
+                        textShadowColor: 'red',
+                        textShadowBlur: 10
+                    }
+                },
+                radar: {
+                    radius: [50, '70%'],
+                    name: {
+                        formatter:'【{value}】',
+                        color:'#72ACD1'
+                    },
+                    triggerEvent: true,
+                    indicator: [
+                        { text: '销售（sales）', max: 100},
+                        { text: '管理（Administration）', max: 16000},
+                        { text: '信息技术（Information Techology）', max: 30000},
+                        { text: '客服（Customer Support）', max: 38000},
+                        { text: '研发（Development）', max: 52000},
+                        { text: '市场（Marketing）', max: 25000}
+                    ]
+                },
+                series: [{
+                    name: '预算 vs 开销（Budget vs spending）',
+                    type: 'radar',
+                    label: {
+                        normal: {
+                            show: true
+                        }
+                    },
+                    // areaStyle: {normal: {}},
+                    data : [
+                        {
+                            value : [0, 10000, 28000, 35000, 50000, 19000],
+                            name : '预算分配（Allocated Budget）'
+                        },
+                            {
+                            value : [50, 14000, 28000, 31000, '-', 21000],
+                            name : '实际开销（Actual Spending）含有 "-" 数据'
+                        },
+                        {
+                            value: ['-', 8000, 20000, 20000, 40000, 10000],
+                            name: '第一个元素是 null'
+                        }
+                    ]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main4', {
+                title: [
+                    'renderMode: **"richText"**',
+                    'Radar series tooltip'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            chart.dispatchAction({
+                type: 'showTip',
+                seriesIndex: 0,
+                dataIndex: 0
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            option = {
+                tooltip: {
+                    renderMode: 'richText',
+                    textStyle: {
+                        alwaysShowContent: true,
+                        fontSize: 20,
+                        textShadowColor: 'red',
+                        textShadowBlur: 10
+                    }
+                },
+                radar: {
+                    radius: [50, '70%'],
+                    name: {
+                        formatter:'【{value}】',
+                        color:'#72ACD1'
+                    },
+                    triggerEvent: true,
+                    indicator: [
+                        { text: '销售（sales）', max: 100},
+                        { text: '管理（Administration）', max: 16000},
+                        { text: '信息技术（Information Techology）', max: 30000},
+                        { text: '客服（Customer Support）', max: 38000},
+                        { text: '研发（Development）', max: 52000},
+                        { text: '市场（Marketing）', max: 25000}
+                    ]
+                },
+                series: [{
+                    name: '预算 vs 开销（Budget vs spending）',
+                    type: 'radar',
+                    label: {
+                        normal: {
+                            show: true
+                        }
+                    },
+                    // areaStyle: {normal: {}},
+                    data : [
+                        {
+                            value : [0, 10000, 28000, 35000, 50000, 19000],
+                            name : '预算分配（Allocated Budget）'
+                        },
+                            {
+                            value : [50, 14000, 28000, 31000, '-', 21000],
+                            name : '实际开销（Actual Spending）含有 "-" 数据'
+                        },
+                        {
+                            value: ['-', 8000, 20000, 20000, 40000, 10000],
+                            name: '第一个元素是 null'
+                        }
+                    ]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main5', {
+                title: [
+                    'renderMode: **"richText"**',
+                    'Radar series tooltip'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            chart.dispatchAction({
+                type: 'showTip',
+                seriesIndex: 0,
+                dataIndex: 0
+            });
+        });
+        </script>
+
+
+    </body>
+</html>
+

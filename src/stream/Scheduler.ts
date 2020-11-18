@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {each, map, isFunction, createHashMap, noop, HashMap} from 'zrender/src/core/util';
+import {each, map, isFunction, createHashMap, noop, HashMap, assert} from 'zrender/src/core/util';
 import {
     createTask, Task, TaskContext,
     TaskProgressCallback, TaskProgressParams, TaskPlanCallbackReturn, PerformArgs
@@ -41,7 +41,7 @@ export type OverallTask = Task<OverallTaskContext> & {
     agentStubMap?: HashMap<StubTask>
 };
 export type StubTask = Task<StubTaskContext> & {
-    agent?: OverallTask
+    agent?: OverallTask;
 };
 
 export type Pipeline = {
@@ -137,7 +137,7 @@ class Scheduler {
     }
 
     restoreData(ecModel: GlobalModel, payload: Payload): void {
-        // TODO: Only restroe needed series and components, but not all components.
+        // TODO: Only restore needed series and components, but not all components.
         // Currently `restoreData` of all of the series and component will be called.
         // But some independent components like `title`, `legend`, `graphic`, `toolbox`,
         // `tooltip`, `axisPointer`, etc, do not need series refresh when `setOption`,
@@ -257,11 +257,18 @@ class Scheduler {
 
     prepareStageTasks(): void {
         const stageTaskMap = this._stageTaskMap;
-        const ecModel = this.ecInstance.getModel();
+        const ecModel = this.api.getModel();
         const api = this.api;
 
         each(this._allHandlers, function (handler) {
             const record = stageTaskMap.get(handler.uid) || stageTaskMap.set(handler.uid, {});
+
+            let errMsg = '';
+            if (__DEV__) {
+                // Currently do not need to support to sepecify them both.
+                errMsg = '"reset" and "overallReset" must not be both specified.';
+            }
+            assert(!(handler.reset && handler.overallReset), errMsg);
 
             handler.reset && this._createSeriesStageTask(handler, record, ecModel, api);
             handler.overallReset && this._createOverallStageTask(handler, record, ecModel, api);
@@ -408,8 +415,10 @@ class Scheduler {
         api: ExtensionAPI
     ): void {
         const scheduler = this;
-        const seriesTaskMap = stageHandlerRecord.seriesTaskMap
-            || (stageHandlerRecord.seriesTaskMap = createHashMap());
+        const oldSeriesTaskMap = stageHandlerRecord.seriesTaskMap;
+        // The count of stages are totally about only several dozen, so
+        // do not need to reuse the map.
+        const newSeriesTaskMap = stageHandlerRecord.seriesTaskMap = createHashMap();
         const seriesType = stageHandler.seriesType;
         const getTargetSeries = stageHandler.getTargetSeries;
 
@@ -431,12 +440,15 @@ class Scheduler {
 
             // Init tasks for each seriesModel only once.
             // Reuse original task instance.
-            const task = seriesTaskMap.get(pipelineId)
-                || seriesTaskMap.set(pipelineId, createTask<SeriesTaskContext>({
+            const task = newSeriesTaskMap.set(
+                pipelineId,
+                oldSeriesTaskMap && oldSeriesTaskMap.get(pipelineId)
+                || createTask<SeriesTaskContext>({
                     plan: seriesTaskPlan,
                     reset: seriesTaskReset,
                     count: seriesTaskCount
-                }));
+                })
+            );
             task.context = {
                 model: seriesModel,
                 ecModel: ecModel,
@@ -449,15 +461,6 @@ class Scheduler {
             };
             scheduler._pipe(seriesModel, task);
         }
-
-        // Clear unused series tasks.
-        const pipelineMap = scheduler._pipelineMap;
-        seriesTaskMap.each(function (task, pipelineId) {
-            if (!pipelineMap.get(pipelineId)) {
-                task.dispose();
-                seriesTaskMap.removeKey(pipelineId);
-            }
-        });
     }
 
     private _createOverallStageTask(
@@ -478,13 +481,15 @@ class Scheduler {
             scheduler: scheduler
         };
 
-        // Reuse orignal stubs.
-        const agentStubMap = overallTask.agentStubMap = overallTask.agentStubMap
-            || createHashMap<StubTask>();
+        const oldAgentStubMap = overallTask.agentStubMap;
+        // The count of stages are totally about only several dozen, so
+        // do not need to reuse the map.
+        const newAgentStubMap = overallTask.agentStubMap = createHashMap<StubTask>();
 
         const seriesType = stageHandler.seriesType;
         const getTargetSeries = stageHandler.getTargetSeries;
         let overallProgress = true;
+        let shouldOverallTaskDirty = false;
         // FIXME:TS never used, so comment it
         // let modifyOutputEnd = stageHandler.modifyOutputEnd;
 
@@ -492,6 +497,12 @@ class Scheduler {
         // stub in each pipelines, it will set the overall task dirty when the pipeline
         // progress. Moreover, to avoid call the overall task each frame (too frequent),
         // we set the pipeline block.
+        let errMsg = '';
+        if (__DEV__) {
+            errMsg = '"createOnAllSeries" do not supported for "overallReset", '
+                + 'becuase it will block all streams.';
+        }
+        assert(!stageHandler.createOnAllSeries, errMsg);
         if (seriesType) {
             ecModel.eachRawSeriesByType(seriesType, createStub);
         }
@@ -509,15 +520,18 @@ class Scheduler {
 
         function createStub(seriesModel: SeriesModel): void {
             const pipelineId = seriesModel.uid;
-            let stub = agentStubMap.get(pipelineId);
-            if (!stub) {
-                stub = agentStubMap.set(pipelineId, createTask<StubTaskContext>(
-                    {reset: stubReset, onDirty: stubOnDirty}
-                ));
-                // When the result of `getTargetSeries` changed, the overallTask
-                // should be set as dirty and re-performed.
-                overallTask.dirty();
-            }
+            const stub = newAgentStubMap.set(
+                pipelineId,
+                oldAgentStubMap && oldAgentStubMap.get(pipelineId)
+                || (
+                    // When the result of `getTargetSeries` changed, the overallTask
+                    // should be set as dirty and re-performed.
+                    shouldOverallTaskDirty = true,
+                    createTask<StubTaskContext>(
+                        {reset: stubReset, onDirty: stubOnDirty}
+                    )
+                )
+            );
             stub.context = {
                 model: seriesModel,
                 overallProgress: overallProgress
@@ -530,17 +544,9 @@ class Scheduler {
             scheduler._pipe(seriesModel, stub);
         }
 
-        // Clear unused stubs.
-        const pipelineMap = scheduler._pipelineMap;
-        agentStubMap.each(function (stub, pipelineId) {
-            if (!pipelineMap.get(pipelineId)) {
-                stub.dispose();
-                // When the result of `getTargetSeries` changed, the overallTask
-                // should be set as dirty and re-performed.
-                overallTask.dirty();
-                agentStubMap.removeKey(pipelineId);
-            }
-        });
+        if (shouldOverallTaskDirty) {
+            overallTask.dirty();
+        }
     }
 
     private _pipe(seriesModel: SeriesModel, task: GeneralTask) {

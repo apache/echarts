@@ -29,7 +29,7 @@ import Polar from '../../coord/polar/Polar';
 import ComponentView from '../../view/Component';
 import AngleAxis from '../../coord/polar/AngleAxis';
 import { ZRTextAlign, ZRTextVerticalAlign, ColorString } from '../../util/types';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 
 const elementList = [
     'axisLine',

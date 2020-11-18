@@ -33,7 +33,7 @@ const PI = Math.PI;
  * @param {string} [opts.textColor]
  * @return {module:zrender/Element}
  */
-export default function (
+export default function defaultLoading(
     api: ExtensionAPI,
     opts?: {
         text?: string;

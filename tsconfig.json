@@ -22,7 +22,6 @@
     },
     "include": [
         "src/**/*.ts",
-        "echarts.*.ts",
         "extension-src/**/*.ts"
     ]
 }

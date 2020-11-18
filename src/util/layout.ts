@@ -24,7 +24,7 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import {parsePercent} from './number';
 import * as formatUtil from './format';
 import { BoxLayoutOptionMixin, ComponentLayoutMode } from './types';
-import { Group } from 'zrender/src/export';
+import Group from 'zrender/src/graphic/Group';
 import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
 
@@ -337,7 +337,7 @@ export function positionElement(
     containerRect: {width: number, height: number},
     margin?: number[] | number,
     opt?: {
-        hv: [1 | 0, 1 | 0],
+        hv: [1 | 0 | boolean, 1 | 0 | boolean],
         boundingMode: 'all' | 'raw'
     }
 ) {

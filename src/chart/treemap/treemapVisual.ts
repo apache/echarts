@@ -18,7 +18,7 @@
 */
 
 import VisualMapping, { VisualMappingOption } from '../../visual/VisualMapping';
-import { map, each, extend, isArray } from 'zrender/src/core/util';
+import { each, extend, isArray } from 'zrender/src/core/util';
 import TreemapSeriesModel, { TreemapSeriesNodeItemOption, TreemapSeriesOption } from './TreemapSeries';
 import { TreemapLayoutNode, TreemapItemLayout } from './treemapLayout';
 import Model from '../../model/Model';
@@ -48,21 +48,14 @@ export default {
     reset(seriesModel: TreemapSeriesModel) {
         const tree = seriesModel.getData().tree;
         const root = tree.root;
-        const seriesItemStyleModel = seriesModel.getModel(ITEM_STYLE_NORMAL);
 
         if (root.isRemoved()) {
             return;
         }
 
-        const levelItemStyles = map(tree.levelModels, function (levelModel) {
-            return levelModel ? levelModel.get(ITEM_STYLE_NORMAL) : null;
-        });
-
         travelTree(
             root, // Visual should calculate from tree root but not view root.
             {},
-            levelItemStyles,
-            seriesItemStyleModel,
             seriesModel.getViewRoot().getAncestors(),
             seriesModel
         );
@@ -72,8 +65,6 @@ export default {
 function travelTree(
     node: TreemapLayoutNode,
     designatedVisual: TreemapVisual,
-    levelItemStyles: TreemapLevelItemStyleOption[],
-    seriesItemStyleModel: Model<TreemapSeriesOption['itemStyle']>,
     viewRootAncestors: TreemapLayoutNode[],
     seriesModel: TreemapSeriesModel
 ) {
@@ -85,12 +76,8 @@ function travelTree(
     if (!nodeLayout || nodeLayout.invisible || !nodeLayout.isInView) {
         return;
     }
-
     const nodeItemStyleModel = nodeModel.getModel(ITEM_STYLE_NORMAL);
-    const levelItemStyle = levelItemStyles[node.depth];
-    const visuals = buildVisuals(
-        nodeItemStyleModel, designatedVisual, levelItemStyle, seriesItemStyleModel
-    );
+    const visuals = buildVisuals(nodeItemStyleModel, designatedVisual, seriesModel);
 
     const existsStyle = data.ensureUniqueItemVisual(node.dataIndex, 'style');
     // calculate border color
@@ -124,10 +111,7 @@ function travelTree(
                 const childVisual = mapVisual(
                     nodeModel, visuals, child, index, mapping, seriesModel
                 );
-                travelTree(
-                    child, childVisual, levelItemStyles, seriesItemStyleModel,
-                    viewRootAncestors, seriesModel
-                );
+                travelTree(child, childVisual, viewRootAncestors, seriesModel);
             }
         });
     }
@@ -136,17 +120,16 @@ function travelTree(
 function buildVisuals(
     nodeItemStyleModel: Model<TreemapSeriesNodeItemOption['itemStyle']>,
     designatedVisual: TreemapVisual,
-    levelItemStyle: TreemapLevelItemStyleOption,
-    seriesItemStyleModel: Model<TreemapSeriesOption['itemStyle']>
+    seriesModel: TreemapSeriesModel
 ) {
     const visuals = extend({}, designatedVisual);
+    const designatedVisualItemStyle = seriesModel.designatedVisualItemStyle;
 
     each(['color', 'colorAlpha', 'colorSaturation'] as const, function (visualName) {
         // Priority: thisNode > thisLevel > parentNodeDesignated > seriesModel
-        let val = nodeItemStyleModel.get(visualName, true); // Ignore parent
-        val == null && levelItemStyle && (val = levelItemStyle[visualName]);
-        val == null && (val = designatedVisual[visualName]);
-        val == null && (val = seriesItemStyleModel.get(visualName));
+        (designatedVisualItemStyle as any)[visualName] = designatedVisual[visualName];
+        const val = nodeItemStyleModel.get(visualName);
+        designatedVisualItemStyle[visualName] = null;
 
         val != null && ((visuals as any)[visualName] = val);
     });

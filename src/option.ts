@@ -38,11 +38,9 @@ import type {SliderTimelineOption} from './component/timeline/SliderTimelineMode
 import type {LegendOption} from './component/legend/LegendModel';
 import type {ScrollableLegendOption} from './component/legend/ScrollableLegendModel';
 
-import type {DataZoomOption} from './component/dataZoom/DataZoomModel';
 import type {SliderDataZoomOption} from './component/dataZoom/SliderZoomModel';
 import type {InsideDataZoomOption} from './component/dataZoom/InsideZoomModel';
 
-import type {VisualMapOption} from './component/visualMap/VisualMapModel';
 import type {ContinousVisualMapOption} from './component/visualMap/ContinuousModel';
 import type {PiecewiseVisualMapOption} from './component/visualMap/PiecewiseModel';
 
@@ -76,9 +74,13 @@ import {ToolboxMagicTypeFeatureOption} from './component/toolbox/feature/MagicTy
 import {ToolboxRestoreFeatureOption} from './component/toolbox/feature/Restore';
 import {ToolboxSaveAsImageFeatureOption} from './component/toolbox/feature/SaveAsImage';
 import {ToolboxFeatureOption} from './component/toolbox/featureManager';
+import { MarkAreaOption } from './component/marker/MarkAreaModel';
 
 
-import { ECOption } from './util/types';
+import { ECOption, SeriesTooltipOption } from './util/types';
+import { GraphicComponentLooseOption } from './component/graphic';
+import { MarkLineOption } from './component/marker/MarkLineModel';
+import { MarkPointOption } from './component/marker/MarkPointModel';
 
 interface ToolboxFullOptionWithFeatures extends ToolboxOption {
     feature?: {
@@ -95,7 +97,7 @@ interface ToolboxFullOptionWithFeatures extends ToolboxOption {
     }
 }
 
-type SeriesOption = LineSeriesOption
+type SeriesOption = (LineSeriesOption
     | BarSeriesOption
     | ScatterSeriesOption
     | PieSeriesOption
@@ -116,7 +118,13 @@ type SeriesOption = LineSeriesOption
     | PictorialBarSeriesOption
     | ThemeRiverSeriesOption
     | SunburstSeriesOption
-    | CustomSeriesOption;
+    | CustomSeriesOption) & {
+        // Inject markArea markLine
+        markArea?: MarkAreaOption
+        markLine?: MarkLineOption
+        markPoint?: MarkPointOption
+        tooltip?: SeriesTooltipOption
+    };
 
 export interface EChartsFullOption extends ECOption {
     title?: TitleOption | TitleOption[]
@@ -140,6 +148,7 @@ export interface EChartsFullOption extends ECOption {
     dataZoom?: SliderDataZoomOption | InsideDataZoomOption | (SliderDataZoomOption | InsideDataZoomOption)[]
     visualMap?: ContinousVisualMapOption | PiecewiseVisualMapOption
         | (ContinousVisualMapOption | PiecewiseVisualMapOption)[]
+    graphic?: GraphicComponentLooseOption | GraphicComponentLooseOption[]
 
     // TODO Generally we support specify a single object on series.
     // But in practice we found the error hint in monaco editor is not clear if we also support

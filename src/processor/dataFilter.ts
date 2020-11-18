@@ -19,7 +19,7 @@ import { StageHandler } from '../util/types';
 * under the License.
 */
 
-export default function (seriesType: string): StageHandler {
+export default function dataFilter(seriesType: string): StageHandler {
     return {
         seriesType: seriesType,
         reset: function (seriesModel, ecModel) {

@@ -24,20 +24,36 @@ import {wrapTreePathInfo} from '../helper/treeHelper';
 import {
     SeriesOption,
     CircleLayoutOptionMixin,
-    LabelOption,
+    SeriesLabelOption,
     ItemStyleOption,
     OptionDataValue,
     CallbackDataParams,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    DefaultExtraEmpasisState
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
+import List from '../../data/List';
+import Model from '../../model/Model';
+import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
 
-interface SunburstLabelOption extends Omit<LabelOption, 'rotate' | 'position'> {
+interface SunburstItemStyleOption extends ItemStyleOption {
+    // can be 10
+    // which means that both innerCornerRadius and outerCornerRadius are 10
+    // can also be an array [20, 10]
+    // which means that innerCornerRadius is 20
+    // and outerCornerRadius is 10
+    // can also be a string or string array, such as ['20%', '50%']
+    // which means that innerCornerRadius is 20% of the innerRadius
+    // and outerCornerRadius is half of outerRadius.
+    borderRadius?: (number | string)[] | number | string
+}
+
+interface SunburstLabelOption extends Omit<SeriesLabelOption, 'rotate' | 'position'> {
     rotate?: 'radial' | 'tangential' | number
     minAngle?: number
     silent?: boolean
-    position?: LabelOption['position'] | 'outside'
+    position?: SeriesLabelOption['position'] | 'outside'
 }
 
 interface SunburstDataParams extends CallbackDataParams {
@@ -50,12 +66,12 @@ interface SunburstDataParams extends CallbackDataParams {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: 'descendant' | 'ancestor'
+        focus?: DefaultExtraEmpasisState['focus'] | 'descendant' | 'ancestor'
     }
 }
 
 export interface SunburstStateOption {
-    itemStyle?: ItemStyleOption
+    itemStyle?: SunburstItemStyleOption
     label?: SunburstLabelOption
 }
 
@@ -76,9 +92,16 @@ export interface SunburstSeriesNodeItemOption extends
 }
 export interface SunburstSeriesLevelOption extends SunburstStateOption, StatesOptionMixin<SunburstStateOption> {
     highlight?: {
-        itemStyle?: ItemStyleOption
+        itemStyle?: SunburstItemStyleOption
         label?: SunburstLabelOption
     }
+}
+
+interface SortParam {
+    dataIndex: number
+    depth: number
+    height: number
+    getValue(): number
 }
 export interface SunburstSeriesOption extends
     SeriesOption<SunburstStateOption, ExtraStateOption>, SunburstStateOption,
@@ -108,7 +131,7 @@ export interface SunburstSeriesOption extends
 
     animationType?: 'expansion' | 'scale'
 
-    sort?: 'desc' | 'asc' | ((a: TreeNode, b: TreeNode) => number)
+    sort?: 'desc' | 'asc' | ((a: SortParam, b: SortParam) => number)
 }
 
 interface SunburstSeriesModel {
@@ -132,18 +155,24 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
         completeTreeValue(root);
 
-        const levels = option.levels || [];
-
-        // levels = option.levels = setDefault(levels, ecModel);
-
-        const treeOption = {
-            levels: levels
-        };
+        const levelModels = zrUtil.map(option.levels || [], function (levelDefine) {
+            return new Model(levelDefine, this, ecModel);
+        }, this);
 
         // Make sure always a new tree is created when setOption,
         // in TreemapView, we check whether oldTree === newTree
         // to choose mappings approach among old shapes and new shapes.
-        return Tree.createTree(root, this, treeOption).data;
+        const tree = Tree.createTree(root, this, beforeLink);
+
+        function beforeLink(nodeData: List) {
+            nodeData.wrapMethod('getItemModel', function (model, idx) {
+                const node = tree.getNodeByDataIndex(idx);
+                const levelModel = levelModels[node.depth];
+                levelModel && (model.parentModel = levelModel);
+                return model;
+            });
+        }
+        return tree.data;
     }
 
     optionUpdated() {
@@ -258,6 +287,10 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         ) {
             this._viewRoot = root;
         }
+    }
+
+    enableAriaDecal() {
+        enableAriaDecalForTree(this);
     }
 }
 

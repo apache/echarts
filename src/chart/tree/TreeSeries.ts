@@ -26,10 +26,12 @@ import {
     RoamOptionMixin,
     LineStyleOption,
     ItemStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     OptionDataValue,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    DefaultExtraEmpasisState,
+    CallbackDataParams
 } from '../../util/types';
 import List from '../../data/List';
 import View from '../../coord/View';
@@ -47,17 +49,17 @@ export interface TreeSeriesStateOption {
      * Line style of the edge between node and it's parent.
      */
     lineStyle?: CurveLineStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: 'ancestor' | 'descendant'
+        focus?: DefaultExtraEmpasisState['focus'] | 'ancestor' | 'descendant'
         scale?: boolean
     }
 }
 
-export interface TreeSeriesNodeItemOption extends SymbolOptionMixin,
+export interface TreeSeriesNodeItemOption extends SymbolOptionMixin<CallbackDataParams>,
     TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption, ExtraStateOption>,
     OptionDataItemObject<OptionDataValue> {
 
@@ -142,7 +144,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         const leaves = option.leaves || {};
         const leavesModel = new Model(leaves, this, this.ecModel);
 
-        const tree = Tree.createTree(root, this, {}, beforeLink);
+        const tree = Tree.createTree(root, this, beforeLink);
 
         function beforeLink(nodeData: List) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {

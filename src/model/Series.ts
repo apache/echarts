@@ -1,4 +1,4 @@
-    /*
+/*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
 * distributed with this work for additional information
@@ -19,14 +19,15 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
+import {MorphDividingMethod} from 'zrender/src/tool/morphPath';
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
     SeriesOption, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType
+    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType, DimensionLoose, DecalObject
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
-import {ColorPaletteMixin} from './mixin/colorPalette';
+import {PaletteMixin} from './mixin/palette';
 import { DataFormatMixin } from '../model/mixin/dataFormat';
 import Model from '../model/Model';
 import {
@@ -99,6 +100,8 @@ interface SeriesModel {
         selectors: BrushCommonSelectorsForSeries,
         area: BrushSelectableArea
     ): boolean;
+
+    enableAriaDecal(): void;
 }
 
 class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentModel<Opt> {
@@ -129,6 +132,18 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     dataTask: SeriesTask;
     // Injected outside
     pipelineContext: PipelineContext;
+
+    // only avalible in `render()` caused by `setOption`.
+    __transientTransitionOpt: {
+        // [MEMO] Currently only support single "from". If intending to
+        // support multiple "from", if not hard to implement "merge morph",
+        // but correspondingly not easy to implement "split morph".
+
+        // Both from and to can be null/undefined, which meams no transform mapping.
+        from: DimensionLoose;
+        to: DimensionLoose;
+        dividingMethod: MorphDividingMethod;
+    };
 
     // ---------------------------------------
     // Props to tell visual/style.ts about how to do visual encoding.
@@ -438,7 +453,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     getColorFromPalette(name: string, scope: any, requestColorNum?: number): ZRColor {
         const ecModel = this.ecModel;
         // PENDING
-        let color = ColorPaletteMixin.prototype.getColorFromPalette.call(this, name, scope, requestColorNum);
+        let color = PaletteMixin.prototype.getColorFromPalette.call(this, name, scope, requestColorNum);
         if (!color) {
             color = ecModel.getColorFromPalette(name, scope, requestColorNum);
         }
@@ -584,7 +599,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 }
 
 interface SeriesModel<Opt extends SeriesOption = SeriesOption>
-    extends DataFormatMixin, ColorPaletteMixin<Opt>, DataHost {
+    extends DataFormatMixin, PaletteMixin<Opt>, DataHost {
 
     // methods that can be implemented optionally to provide to components
     /**
@@ -593,7 +608,7 @@ interface SeriesModel<Opt extends SeriesOption = SeriesOption>
     getShadowDim?(): string
 }
 zrUtil.mixin(SeriesModel, DataFormatMixin);
-zrUtil.mixin(SeriesModel, ColorPaletteMixin);
+zrUtil.mixin(SeriesModel, PaletteMixin);
 
 export type SeriesModelConstructor = typeof SeriesModel & ExtendableConstructor;
 mountExtend(SeriesModel, ComponentModel as SeriesModelConstructor);
@@ -643,17 +658,18 @@ function dataTaskProgress(param: StageHandlerProgressParams, context: SeriesTask
 
 // TODO refactor
 function wrapData(data: List, seriesModel: SeriesModel): void {
-    zrUtil.each(data.CHANGABLE_METHODS, function (methodName) {
-        data.wrapMethod(methodName as any, zrUtil.curry(onDataSelfChange, seriesModel));
+    zrUtil.each([...data.CHANGABLE_METHODS, ...data.DOWNSAMPLE_METHODS], function (methodName) {
+        data.wrapMethod(methodName as any, zrUtil.curry(onDataChange, seriesModel));
     });
 }
 
-function onDataSelfChange(this: List, seriesModel: SeriesModel): void {
+function onDataChange(this: List, seriesModel: SeriesModel, newList: List): List {
     const task = getCurrentTask(seriesModel);
     if (task) {
         // Consider case: filter, selectRange
-        task.setOutputEnd(this.count());
+        task.setOutputEnd((newList || this).count());
     }
+    return newList;
 }
 
 function getCurrentTask(seriesModel: SeriesModel): GeneralTask {

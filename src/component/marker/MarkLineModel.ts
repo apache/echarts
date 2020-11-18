@@ -22,10 +22,11 @@ import ComponentModel from '../../model/Component';
 import GlobalModel from '../../model/Global';
 import {
     LineStyleOption,
-    LineLabelOption,
+    SeriesLineLabelOption,
     SymbolOptionMixin,
     ItemStyleOption,
-    StatesOptionMixin
+    StatesOptionMixin,
+    CallbackDataParams
 } from '../../util/types';
 
 interface MarkLineStateOption {
@@ -34,7 +35,7 @@ interface MarkLineStateOption {
      * itemStyle for symbol
      */
     itemStyle?: ItemStyleOption
-    label?: LineLabelOption
+    label?: SeriesLineLabelOption
 }
 interface MarkLineDataItemOptionBase extends MarkLineStateOption, StatesOptionMixin<MarkLineStateOption> {
     name?: string

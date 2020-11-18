@@ -212,7 +212,7 @@ const builderMap: { [key in TooltipMarkupBlockFragment['type']]: TooltipMarkupFr
                 return subMarkupText;
             }
 
-            const displayableHeader = makeValueReadable(fragment.header, 'ordinal');
+            const displayableHeader = makeValueReadable(fragment.header, 'ordinal', ctx.useUTC);
             if (ctx.renderMode === 'richText') {
                 return wrapInlineNameRichText(ctx, displayableHeader) + gaps.richText
                     + subMarkupText;
@@ -247,6 +247,7 @@ const builderMap: { [key in TooltipMarkupBlockFragment['type']]: TooltipMarkupFr
             const noMarker = !fragment.markerType;
             const name = fragment.name;
             const value = fragment.value;
+            const useUTC = ctx.useUTC;
 
             if (noName && noValue) {
                 return;
@@ -261,16 +262,16 @@ const builderMap: { [key in TooltipMarkupBlockFragment['type']]: TooltipMarkupFr
                 );
             const readableName = noName
                 ? ''
-                : makeValueReadable(name, 'ordinal');
+                : makeValueReadable(name, 'ordinal', useUTC);
             const valueTypeOption = fragment.valueType;
             const readableValueList = noValue
                 ? []
                 : (isArray(value)
                     ? map(value, (val, idx) => makeValueReadable(
-                        val, isArray(valueTypeOption) ? valueTypeOption[idx] : valueTypeOption
+                        val, isArray(valueTypeOption) ? valueTypeOption[idx] : valueTypeOption, useUTC
                     ))
                     : [makeValueReadable(
-                        value, isArray(valueTypeOption) ? valueTypeOption[0] : valueTypeOption
+                        value, isArray(valueTypeOption) ? valueTypeOption[0] : valueTypeOption, useUTC
                     )]
                 );
             const valueAlignRight = !noMarker || !noName;
@@ -346,6 +347,7 @@ function buildSubBlocks(
 }
 
 interface TooltipMarkupBuildContext {
+    useUTC: boolean;
     renderMode: TooltipRenderMode;
     orderMode: TooltipOrderMode;
     markupStyleCreator: TooltipMarkupStyleCreator;
@@ -358,7 +360,8 @@ export function buildTooltipMarkup(
     fragment: TooltipMarkupBlockFragment,
     markupStyleCreator: TooltipMarkupStyleCreator,
     renderMode: TooltipRenderMode,
-    orderMode: TooltipOrderMode
+    orderMode: TooltipOrderMode,
+    useUTC: boolean
 ): MarkupText {
     if (!fragment) {
         return;
@@ -367,6 +370,7 @@ export function buildTooltipMarkup(
     const builder = getBuilder(fragment);
     builder.planLayout(fragment);
     const ctx: TooltipMarkupBuildContext = {
+        useUTC: useUTC,
         renderMode: renderMode,
         orderMode: orderMode,
         markupStyleCreator: markupStyleCreator

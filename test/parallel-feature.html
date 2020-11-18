@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="change-smooth"></div>
+        <div id="two-cateogry-axis-at-last"></div>
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            function generate_data(n, m, lb, ub) {
+                let s = [];
+                for (let i = 0; i < n; i++) {
+                    let vec = [];
+                    for (let j = 0; j < m; j++) {
+                        vec.push(lb + (Math.random() * (ub - lb)));
+                    }
+                    s.push(vec);
+                }
+                return s;
+            }
+            data = generate_data(20, 3, 0.0, 1.0);
+
+            var option = {
+                parallelAxis: [{
+                    dim: 0,
+                    name: 'f0'
+                    },
+                    {
+                    dim: 1,
+                    name: 'f1'
+                    },
+                    {
+                    dim: 2,
+                    name: 'f2'
+                    }
+                ],
+                legend: {
+                    data: "data",
+                },
+                series: [{
+                    name: "data",
+                    type: "parallel",
+                    data: data,
+                    smooth: 0,
+                    lineStyle: {
+                    color: 'red',
+                    },
+                }, ],
+            };
+
+            function updateSmooth(smoothValue) {
+                chart.setOption({
+                    series: {
+                        smooth: smoothValue
+                    }
+                });
+            }
+
+            var chart = testHelper.create(echarts, 'change-smooth', {
+                title: [
+                    'Click btns one by one'
+                ],
+                option: option,
+                width: 600,
+                height: 300,
+                buttons: [{
+                    text: 'smooth: true',
+                    onclick: function () {
+                        updateSmooth(true);
+                    }
+                }, {
+                    text: 'smooth: false',
+                    onclick: function () {
+                        updateSmooth(false);
+                    }
+                }, {
+                    text: 'smooth: 0.5',
+                    onclick: function () {
+                        updateSmooth(0.5);
+                    }
+                }, {
+                    text: 'smooth: 0',
+                    onclick: function () {
+                        updateSmooth(0);
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                parallelAxis: [{
+                    dim: 3,
+                    name: 'Score',
+                    type: 'category',
+                    data: ['Excellent', 'Good', 'OK', 'Bad']
+                }, {
+                    dim: 4,
+                    name: 'Score',
+                    type: 'category',
+                    data: ['A', 'B', 'C', 'D']
+                }],
+                series: {
+                    type: 'parallel',
+                    lineStyle: {
+                        width: 4
+                    },
+                    data: [
+                        [12.99, 100, 82, 'Good', 'A'],
+                        [9.99, 80, 77, 'OK', 'A'],
+                        [20, 120, 60, 'Excellent', 'C']
+                    ]
+                }
+            };
+
+
+            var chart = testHelper.create(echarts, 'two-cateogry-axis-at-last', {
+                title: [
+                    'Brush on the last axis. lines should be selectable.'
+                ],
+                option: option,
+                width: 600,
+                height: 300
+            });
+        });
+        </script>
+
+
+
+
+    </body>
+</html>
+

@@ -39,7 +39,7 @@ import { getDefaultLabel } from '../helper/labelHelper';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
-import { getECData } from '../../util/ecData';
+import { getECData } from '../../util/innerStore';
 
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
@@ -888,6 +888,7 @@ function updateCommon(
 
     const focus = emphasisModel.get('focus');
     const blurScope = emphasisModel.get('blurScope');
+    const hoverScale = emphasisModel.get('scale');
 
     eachPath(bar, function (path) {
         if (path instanceof ZRImage) {
@@ -905,14 +906,15 @@ function updateCommon(
 
         const emphasisState = path.ensureState('emphasis');
         emphasisState.style = emphasisStyle;
-        // NOTE: Must after scale is set after updateAttr
-        emphasisState.scaleX = path.scaleX * 1.1;
-        emphasisState.scaleY = path.scaleY * 1.1;
+
+        if (hoverScale) {
+            // NOTE: Must after scale is set after updateAttr
+            emphasisState.scaleX = path.scaleX * 1.1;
+            emphasisState.scaleY = path.scaleY * 1.1;
+        }
 
         path.ensureState('blur').style = blurStyle;
         path.ensureState('select').style = selectStyle;
-
-
 
         cursorStyle && (path.cursor = cursorStyle);
         path.z2 = symbolMeta.z2;
@@ -928,6 +930,7 @@ function updateCommon(
             labelDataIndex: dataIndex,
             defaultText: getDefaultLabel(opt.seriesModel.getData(), dataIndex),
             inheritColor: symbolMeta.style.fill as ColorString,
+            defaultOpacity: symbolMeta.style.opacity,
             defaultOutsidePosition: barPositionOutside
         }
     );

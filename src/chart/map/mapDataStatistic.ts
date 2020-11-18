@@ -66,7 +66,7 @@ function dataStatistics(datas: List[], statisticType: MapValueCalculationType): 
     });
 }
 
-export default function (ecModel: GlobalModel): void {
+export default function mapDataStatistic(ecModel: GlobalModel): void {
     const seriesGroups = {} as {[key: string]: MapSeries[]};
     ecModel.eachSeriesByType('map', function (seriesModel: MapSeries) {
         const hostGeoModel = seriesModel.getHostGeoModel();

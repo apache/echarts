@@ -109,6 +109,14 @@ under the License.
                             fontSize: 10
                         };
                     }
+                    else if (series.type === 'line') {
+                        series.endLabel = {
+                            show: true
+                        };
+                        series.labelLayout = {
+                            hideOverlap: true
+                        }
+                    }
                 });
                 const dom = document.createElement('div');
                 dom.className = 'chart';

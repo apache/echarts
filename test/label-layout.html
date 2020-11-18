@@ -50,6 +50,7 @@ under the License.
         <div id="main7"></div>
         <div id="main8"></div>
         <div id="main9"></div>
+        <div id="main10"></div>
 
 
 
@@ -555,6 +556,95 @@ under the License.
             });
         </script>
 
+        <script>
+            require(['echarts'], function (echarts) {
+                const color = [
+                    '#1576d2',
+                    '#d14a82',
+                    '#26c1f2',
+                    '#a166ff',
+                    '#1271cc',
+                    '#272f67'
+                ];
+                let data = [{
+                        name: 'Mon',
+                        value: 182
+                    },
+                    {
+                        name: 'Tue',
+                        value: 191
+                    },
+                    {
+                        name: 'Wed',
+                        value: 234
+                    },
+                    {
+                        name: 'Thu',
+                        value: 290
+                    },
+                    {
+                        name: 'Fri',
+                        value: 330
+                    }
+                ];
+
+                // 指定数据块中 label 的相应效果，以保证label的正常显示
+                const dataArcStyle = {
+                    label: {
+                        show: true
+                    },
+                    labelLine: {
+                        show: true
+                    },
+                    emphasis: {
+                        labelLine: {
+                            show: true
+                        }
+                    }
+                }
+                data = data.map(d => {
+                    d = Object.assign(d, dataArcStyle)
+                    return d;
+                });
+
+                const sum = data.reduce((prev, curr) => prev + curr.value, 0);
+                data.push({
+                    name: null,
+                    value: sum,
+                    itemStyle: {
+                        opacity: 0
+                    },
+                    label: {
+                        show: false
+                    },
+                    tooltip: {
+                        show: false
+                    }
+                });
+
+                option = {
+                    backgroundColor: '#000',
+                    color,
+                    tooltip: {
+                        show: true
+                    },
+                    series: [{
+                        type: 'pie',
+                        center: ['50%', '75%'],
+                        radius: ['50%', '80%'],
+                        startAngle: 180,
+                        data
+                    }]
+                };
+                var chart = testHelper.create(echarts, 'main8', {
+                    title: [
+                        'Case from https://gallery.echartsjs.com/editor.html?c=xFcvAMHjr1&v=1'
+                    ],
+                    option: option,
+                    height: 500
+                });
+            });
+        </script>
 
         <script>
             require(['echarts', 'map/js/china'], function (echarts) {
@@ -593,6 +683,7 @@ under the License.
                         },
                         labelLine: {
                             show: true,
+                            showAbove: true,
                             length2: 10
                         },
                         labelLayout: function (params) {
@@ -627,7 +718,7 @@ under the License.
                     }]
                 };
 
-                var chart = testHelper.create(echarts, 'main8', {
+                var chart = testHelper.create(echarts, 'main9', {
                     title: [
                         'Draggable label'
                     ],
@@ -699,7 +790,7 @@ under the License.
                         ]
                     };
 
-                    var chart = testHelper.create(echarts, 'main9', {
+                    var chart = testHelper.create(echarts, 'main10', {
                         title: [
                             'Hide overlap in graph zooming.'
                         ],

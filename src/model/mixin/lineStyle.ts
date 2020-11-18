@@ -35,6 +35,8 @@ export const LINE_STYLE_KEY_MAP = [
     ['lineCap', 'cap'],
     ['lineJoin', 'join'],
     ['miterLimit']
+    // Option decal is in `DecalObject` but style.decal is in `PatternObject`.
+    // So do not transfer decal directly.
 ];
 
 const getLineStyle = makeStyleMapper(LINE_STYLE_KEY_MAP);

@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import { ECUnitOption } from '../../util/types';
 
-export default function (option: ECUnitOption) {
+export default function candlestickPreprocessor(option: ECUnitOption) {
     if (!option || !zrUtil.isArray(option.series)) {
         return;
     }

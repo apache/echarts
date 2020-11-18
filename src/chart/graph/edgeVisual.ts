@@ -19,7 +19,6 @@
 
 import GlobalModel from '../../model/Global';
 import GraphSeriesModel, { GraphEdgeItemOption } from './GraphSeries';
-import { DefaultDataVisual } from '../../data/List';
 import { extend } from 'zrender/src/core/util';
 
 function normalize(a: string | string[]): string[];
@@ -31,14 +30,7 @@ function normalize(a: string | number | (string | number)[]): (string | number)[
     return a;
 }
 
-interface EdgeLineDataVisual extends DefaultDataVisual {
-    fromSymbol: string
-    toSymbol: string
-    fromSymbolSize: number
-    toSymbolSize: number
-}
-
-export default function (ecModel: GlobalModel) {
+export default function graphEdgeVisual(ecModel: GlobalModel) {
     ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
         const graph = seriesModel.getGraph();
         const edgeData = seriesModel.getEdgeData();

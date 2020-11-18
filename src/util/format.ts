@@ -79,7 +79,8 @@ export function encodeHTML(source: string): string {
  */
 export function makeValueReadable(
     value: unknown,
-    valueType?: DimensionType
+    valueType: DimensionType,
+    useUTC: boolean
 ): string {
     const USER_READABLE_DEFUALT_TIME_PATTERN = 'yyyy-MM-dd hh:mm:ss';
 
@@ -95,8 +96,7 @@ export function makeValueReadable(
     if (isTypeTime || isValueDate) {
         const date = isTypeTime ? parseDate(value) : value;
         if (!isNaN(+date)) {
-            // PENDING: add param `useUTC`?
-            return timeFormat(date, USER_READABLE_DEFUALT_TIME_PATTERN);
+            return timeFormat(date, USER_READABLE_DEFUALT_TIME_PATTERN, useUTC);
         }
         else if (isValueDate) {
             return '-';
@@ -148,28 +148,21 @@ export function formatTpl(
         return '';
     }
 
-    const isTimeAxis = paramsList[0].axisType && paramsList[0].axisType.indexOf('time') >= 0;
-    if (isTimeAxis) {
-        const axisValue = paramsList[0].data[paramsList[0].axisIndex];
-        const date = parseDate(axisValue);
-        return timeFormat(date, tpl);
+    const $vars = paramsList[0].$vars || [];
+    for (let i = 0; i < $vars.length; i++) {
+        const alias = TPL_VAR_ALIAS[i];
+        tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
     }
-    else {
-        const $vars = paramsList[0].$vars || [];
-        for (let i = 0; i < $vars.length; i++) {
-            const alias = TPL_VAR_ALIAS[i];
-            tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
-        }
-        for (let seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
-            for (let k = 0; k < $vars.length; k++) {
-                const val = paramsList[seriesIdx][$vars[k]];
-                tpl = tpl.replace(
-                    wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
-                    encode ? encodeHTML(val) : val
-                );
-            }
+    for (let seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
+        for (let k = 0; k < $vars.length; k++) {
+            const val = paramsList[seriesIdx][$vars[k]];
+            tpl = tpl.replace(
+                wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
+                encode ? encodeHTML(val) : val
+            );
         }
     }
+
     return tpl;
 }
 
@@ -267,7 +260,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
  *           and `module:echarts/util/number#parseDate`.
  * @inner
  */
-export function formatTime(tpl: string, value: unknown, isUTC?: boolean) {
+export function formatTime(tpl: string, value: unknown, isUTC: boolean) {
     if (__DEV__) {
         deprecateReplaceLog('echarts.format.formatTime', 'echarts.time.format');
     }

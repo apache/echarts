@@ -23,7 +23,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import GraphSeriesModel from './GraphSeries';
 
-export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+export default function graphSimpleLayout(ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
         const layout = seriesModel.get('layout');
         const coordSys = seriesModel.coordinateSystem;
@@ -54,7 +54,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                 }
             }
 
-            simpleLayoutEdge(data.graph);
+            simpleLayoutEdge(data.graph, seriesModel);
         }
         else if (!layout || layout === 'none') {
             simpleLayout(seriesModel);

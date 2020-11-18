@@ -26,7 +26,7 @@ import { GraphNode, GraphEdge } from '../../data/Graph';
 import { LayoutOrient } from '../../util/types';
 import GlobalModel from '../../model/Global';
 
-export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+export default function sankeyLayout(ecModel: GlobalModel, api: ExtensionAPI) {
 
     ecModel.eachSeriesByType('sankey', function (seriesModel: SankeySeriesModel) {
 

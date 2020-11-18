@@ -209,14 +209,19 @@ class HeatmapView extends ChartView {
 
         for (let idx = start; idx < end; idx++) {
             let rect;
+            const style = data.getItemVisual(idx, 'style');
 
             if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
                 const dataDimX = data.get(dataDims[0], idx);
                 const dataDimY = data.get(dataDims[1], idx);
 
                 // Ignore empty data and out of extent data
-                if (isNaN(data.get(dataDims[2], idx) as number) || dataDimX < xAxisExtent[0] || dataDimX > xAxisExtent[1]
-                    || dataDimY < yAxisExtent[0] || dataDimY > yAxisExtent[1]) {
+                if (isNaN(data.get(dataDims[2], idx) as number)
+                    || dataDimX < xAxisExtent[0]
+                    || dataDimX > xAxisExtent[1]
+                    || dataDimY < yAxisExtent[0]
+                    || dataDimY > yAxisExtent[1]
+                ) {
                     continue;
                 }
 
@@ -232,7 +237,7 @@ class HeatmapView extends ChartView {
                         width: Math.ceil(width),
                         height: Math.ceil(height)
                     },
-                    style: data.getItemVisual(idx, 'style')
+                    style
                 });
             }
             else {
@@ -244,7 +249,7 @@ class HeatmapView extends ChartView {
                 rect = new graphic.Rect({
                     z2: 1,
                     shape: coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape,
-                    style: data.getItemVisual(idx, 'style')
+                    style
                 });
             }
 
@@ -274,6 +279,7 @@ class HeatmapView extends ChartView {
                 {
                     labelFetcher: seriesModel,
                     labelDataIndex: idx,
+                    defaultOpacity: style.opacity,
                     defaultText: defaultText
                 }
             );

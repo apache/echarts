@@ -23,6 +23,8 @@ import {getSymbolSize, getNodeGlobalScale} from './graphHelper';
 import GraphSeriesModel, { GraphEdgeItemOption } from './GraphSeries';
 import Graph from '../../data/Graph';
 import List from '../../data/List';
+import * as zrUtil from 'zrender/src/core/util';
+import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
 
 const PI = Math.PI;
 
@@ -77,8 +79,12 @@ export function circularLayout(
 
     _layoutNodesBasedOn[basedOn](seriesModel, graph, nodeData, r, cx, cy, count);
 
-    graph.eachEdge(function (edge) {
-        let curveness = edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'curveness']) || 0;
+    graph.eachEdge(function (edge, index) {
+        let curveness = zrUtil.retrieve3(
+            edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'curveness']),
+            getCurvenessForEdge(edge, seriesModel, index),
+            0
+        );
         const p1 = vec2.clone(edge.node1.getLayout());
         const p2 = vec2.clone(edge.node2.getLayout());
         let cp1;

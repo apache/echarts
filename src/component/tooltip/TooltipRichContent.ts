@@ -25,12 +25,15 @@ import { ZRColor } from '../../util/types';
 import Model from '../../model/Model';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { TooltipMarkupStyleCreator, getPaddingFromTooltipModel } from './tooltipMarkup';
+import { throwError } from '../../util/log';
 
 class TooltipRichContent {
 
     private _zr: ZRenderType;
 
     private _show = false;
+
+    private _styleCoord: [number, number, number, number] = [0, 0, 0, 0];
 
     private _hideTimeout: number;
 
@@ -44,13 +47,15 @@ class TooltipRichContent {
 
     constructor(api: ExtensionAPI) {
         this._zr = api.getZr();
+        makeStyleCoord(this._styleCoord, this._zr, api.getWidth() / 2, api.getHeight() / 2);
     }
 
     /**
      * Update when tooltip is rendered
      */
-    update() {
-        // noop
+    update(tooltipModel: Model<TooltipOption>) {
+        const alwaysShowContent = tooltipModel.get('alwaysShowContent');
+        alwaysShowContent && this._moveIfResized();
     }
 
     show() {
@@ -66,20 +71,25 @@ class TooltipRichContent {
      * Set tooltip content
      */
     setContent(
-        content: string,
+        content: string | HTMLElement[],
         markupStyleCreator: TooltipMarkupStyleCreator,
         tooltipModel: Model<TooltipOption>,
         borderColor: ZRColor,
         arrowPosition: TooltipOption['position']
     ) {
+        if (zrUtil.isObject(content)) {
+            throwError(__DEV__ ? 'Passing DOM nodes as content is not supported in richText tooltip!' : '');
+        }
         if (this.el) {
             this._zr.remove(this.el);
         }
 
+        const textStyleModel = tooltipModel.getModel('textStyle');
+
         this.el = new ZRText({
             style: {
                 rich: markupStyleCreator.richTextStyles,
-                text: content,
+                text: content as string,
                 lineHeight: 22,
                 backgroundColor: tooltipModel.get('backgroundColor'),
                 borderRadius: tooltipModel.get('borderRadius'),
@@ -89,6 +99,10 @@ class TooltipRichContent {
                 shadowBlur: tooltipModel.get('shadowBlur'),
                 shadowOffsetX: tooltipModel.get('shadowOffsetX'),
                 shadowOffsetY: tooltipModel.get('shadowOffsetY'),
+                textShadowColor: textStyleModel.get('textShadowColor'),
+                textShadowBlur: textStyleModel.get('textShadowBlur') || 0,
+                textShadowOffsetX: textStyleModel.get('textShadowOffsetX') || 0,
+                textShadowOffsetY: textStyleModel.get('textShadowOffsetY') || 0,
                 fill: tooltipModel.get(['textStyle', 'color']),
                 padding: getPaddingFromTooltipModel(tooltipModel, 'richText'),
                 verticalAlign: 'top',
@@ -136,6 +150,10 @@ class TooltipRichContent {
     moveTo(x: number, y: number) {
         const el = this.el;
         if (el) {
+            const styleCoord = this._styleCoord;
+            makeStyleCoord(styleCoord, this._zr, x, y);
+            x = styleCoord[0];
+            y = styleCoord[1];
             const style = el.style;
             const borderWidth = mathMaxWith0(style.borderWidth || 0);
             const shadowOuterSize = calcShadowOuterSize(style);
@@ -144,6 +162,22 @@ class TooltipRichContent {
             el.y = y + borderWidth + shadowOuterSize.top;
             el.markRedraw();
         }
+    }
+
+
+    /**
+     * when `alwaysShowContent` is true,
+     * move the tooltip after chart resized
+     */
+    _moveIfResized() {
+        // The ratio of left to width
+        const ratioX = this._styleCoord[2];
+        // The ratio of top to height
+        const ratioY = this._styleCoord[3];
+        this.moveTo(
+            ratioX * this._zr.getWidth(),
+            ratioY * this._zr.getHeight()
+        );
     }
 
     hide() {
@@ -157,7 +191,7 @@ class TooltipRichContent {
         if (this._show && !(this._inContent && this._enterable)) {
             if (time) {
                 this._hideDelay = time;
-                // Set show false to avoid invoke hideLater mutiple times
+                // Set show false to avoid invoke hideLater multiple times
                 this._show = false;
                 this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time) as any;
             }
@@ -198,6 +232,13 @@ function calcShadowOuterSize(style: TextStyleProps) {
         top: mathMaxWith0(shadowBlur - shadowOffsetY),
         bottom: mathMaxWith0(shadowBlur + shadowOffsetY)
     };
+}
+
+function makeStyleCoord(out: number[], zr: ZRenderType, zrX: number, zrY: number) {
+    out[0] = zrX;
+    out[1] = zrY;
+    out[2] = out[0] / zr.getWidth();
+    out[3] = out[1] / zr.getHeight();
 }
 
 export default TooltipRichContent;

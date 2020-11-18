@@ -26,7 +26,7 @@ const geoCoordMap = {
     'United States of America': [-99, 38]
 } as Dictionary<number[]>;
 
-export default function (mapType: string, region: Region) {
+export default function fixGeoCoords(mapType: string, region: Region) {
     if (mapType === 'world') {
         const geoCoord = geoCoordMap[region.name];
         if (geoCoord) {

@@ -1,3 +1,4 @@
+import { AriaOption } from './../component/aria';
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -133,7 +134,7 @@ export interface DataModel extends DataHost, DataFormatMixin {}
     // Pick<DataFormatMixin, 'getDataParams' | 'formatTooltip'> {}
 
 interface PayloadItem {
-    excludeSeriesId?: string | string[];
+    excludeSeriesId?: OptionId | OptionId[];
     animation?: PayloadAnimationPart
     [other: string]: any;
 }
@@ -141,7 +142,6 @@ interface PayloadItem {
 export interface Payload extends PayloadItem {
     type: string;
     escapeConnect?: boolean;
-    statusChanged?: boolean;
     batch?: PayloadItem[];
 }
 
@@ -237,13 +237,42 @@ export interface StageHandlerOverallReset {
     (ecModel: GlobalModel, api: ExtensionAPI, payload?: Payload): void
 }
 export interface StageHandler {
-    seriesType?: string;
+    /**
+     * Indicate that the task will be piped all series
+     * (`performRawSeries` indicate whether includes filtered series).
+     */
     createOnAllSeries?: boolean;
-    performRawSeries?: boolean;
-    plan?: StageHandlerPlan;
-    overallReset?: StageHandlerOverallReset;
-    reset?: StageHandlerReset;
+    /**
+     * Indicate that the task will be only piped in the pipeline of this type of series.
+     * (`performRawSeries` indicate whether includes filtered series).
+     */
+    seriesType?: string;
+    /**
+     * Indicate that the task will be only piped in the pipeline of the returned series.
+     */
     getTargetSeries?: (ecModel: GlobalModel, api: ExtensionAPI) => HashMap<SeriesModel>;
+
+    /**
+     * If `true`, filtered series will also be "performed".
+     */
+    performRawSeries?: boolean;
+
+    /**
+     * Called only when this task in a pipeline.
+     */
+    plan?: StageHandlerPlan;
+    /**
+     * If `overallReset` specified, an "overall task" will be created.
+     * "overall task" does not belong to a certain pipeline.
+     * They always be "performed" in certain phase (depends on when they declared).
+     * They has "stub"s to connect with pipelines (one stub for one pipeline),
+     * delivering info like "dirty" and "output end".
+     */
+    overallReset?: StageHandlerOverallReset;
+    /**
+     * Called only when this task in a pipeline, and "dirty".
+     */
+    reset?: StageHandlerReset;
 }
 
 export interface StageHandlerInternal extends StageHandler {
@@ -295,19 +324,34 @@ export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'seriesAsc' | 'seriesD
 // `Date` will be parsed to timestamp.
 // Ordinal/category data will be parsed to its index if possible, otherwise
 // keep its original string in list._storage.
-// Check `convertDataValue` for more details.
+// Check `convertValue` for more details.
 export type OrdinalRawValue = string | number;
 export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
 export type OrdinalSortInfo = {
     ordinalNumber: OrdinalNumber,
     beforeSortIndex: number
 };
-export type ParsedValueNumeric = number | OrdinalNumber;
+
+/**
+ * `OptionDataValue` is the primitive value in `series.data` or `dataset.source`.
+ * `OptionDataValue` are parsed (see `src/data/helper/dataValueHelper.parseDataValue`)
+ * into `ParsedValue` and stored into `data/List` storage.
+ * Note:
+ * (1) The term "parse" does not mean `src/scale/Scale['parse']`.
+ * (2) If a category dimension is not mapped to any axis, its raw value will NOT be
+ * parsed to `OrdinalNumber` but keep the original `OrdinalRawValue` in `src/data/List` storage.
+ */
 export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
-// FIXME:TS better name?
-// This is not `OptionDataPrimitive` because the "dataProvider parse"
-// will not be performed. But "scale parse" will be performed.
-export type ScaleDataValue = ParsedValue | Date;
+export type ParsedValueNumeric = number | OrdinalNumber;
+/**
+ * `ScaleDataValue` means that the user input primitive value to `src/scale/Scale`.
+ * (For example, used in `axis.min`, `axis.max`, `convertToPixel`).
+ * Note:
+ * `ScaleDataValue` is a little different from `OptionDataValue`, because it will not go through
+ * `src/data/helper/dataValueHelper.parseDataValue`, but go through `src/scale/Scale['parse']`.
+ */
+export type ScaleDataValue = ParsedValueNumeric | OrdinalRawValue | Date;
+
 export interface ScaleTick {
     value: number
 };
@@ -353,7 +397,7 @@ export interface DataVisualDimensions {
 
 export type DimensionDefinition = {
     type?: ListDimensionType,
-    name: DimensionName,
+    name?: DimensionName,
     displayName?: string
 };
 export type DimensionDefinitionLoose = DimensionDefinition['name'] | DimensionDefinition;
@@ -432,10 +476,12 @@ export type ECUnitOption = {
     backgroundColor?: ZRColor
     darkMode?: boolean | 'auto'
     textStyle?: Pick<LabelOption, 'color' | 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>
+    useUTC?: boolean
 
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
-} & AnimationOptionMixin & ColorPaletteOptionMixin;
+    stateAnimation?: AnimationOption
+} & AnimationOptionMixin & ColorPaletteOptionMixin & AriaOptionMixin;
 
 /**
  * [ECOption]:
@@ -501,9 +547,9 @@ export type OptionSourceDataOriginal<
     ORIITEM extends OptionDataItemOriginal<VAL> = OptionDataItemOriginal<VAL>
 > = ArrayLike<ORIITEM>;
 export type OptionSourceDataObjectRows<VAL extends OptionDataValue = OptionDataValue> =
-    ArrayLike<Dictionary<VAL>>;
+    Array<Dictionary<VAL>>;
 export type OptionSourceDataArrayRows<VAL extends OptionDataValue = OptionDataValue> =
-    ArrayLike<ArrayLike<VAL>>;
+    Array<Array<VAL>>;
 export type OptionSourceDataKeyedColumns<VAL extends OptionDataValue = OptionDataValue> =
     Dictionary<ArrayLike<VAL>>;
 export type OptionSourceDataTypedArray = ArrayLike<number>;
@@ -517,11 +563,15 @@ export type OptionDataItem =
     | OptionDataItemObject<OptionDataValue>;
 // Only for `SOURCE_FORMAT_KEYED_ORIGINAL`
 export type OptionDataItemObject<T> = {
-    id?: string | number;
-    name?: string;
+    id?: OptionId;
+    name?: OptionName;
     value?: T[] | T;
     selected?: boolean;
 };
+// Compat number because it is usually used and not easy to
+// restrict it in practise.
+export type OptionId = string | number;
+export type OptionName = string | number;
 export interface GraphEdgeItemObject<
     VAL extends OptionDataValue
 > extends OptionDataItemObject<VAL> {
@@ -607,6 +657,42 @@ export type DimensionUserOuput = {
     encode: DimensionUserOuputEncode
 };
 
+export type DecalDashArrayX = number | (number | number[])[];
+export type DecalDashArrayY = number | number[];
+export interface DecalObject {
+    // 'image', 'triangle', 'diamond', 'pin', 'arrow', 'line', 'rect', 'roundRect', 'square', 'circle'
+    symbol?: string | (string | string[])
+
+    // size relative to the dash bounding box; valued from 0 to 1
+    symbolSize?: number
+    // keep the aspect ratio and use the smaller one of width and height as bounding box size
+    symbolKeepAspect?: boolean
+
+    // foreground color of the pattern
+    color?: string
+    // background color of the pattern; default value is 'none' (same as 'transparent') so that the underlying series color is displayed
+    backgroundColor?: string
+
+    // dash-gap pattern on x
+    dashArrayX?: DecalDashArrayX
+    // dash-gap pattern on y
+    dashArrayY?: DecalDashArrayY
+
+    // in radians; valued from -Math.PI to Math.PI
+    rotation?: number,
+
+    // boundary of largest tile width
+    maxTileWidth?: number,
+    // boundary of largest tile height
+    maxTileHeight?: number
+};
+
+export interface InnerDecalObject extends DecalObject {
+    // Mark dirty when object may be changed.
+    // The record in WeakMap will be deleted.
+    dirty?: boolean
+}
+
 export interface MediaQuery {
     minWidth?: number;
     maxWidth?: number;
@@ -616,19 +702,25 @@ export interface MediaQuery {
     maxAspectRatio?: number;
 };
 export type MediaUnit = {
-    query: MediaQuery,
+    query?: MediaQuery,
     option: ECUnitOption
 };
 
 export type ComponentLayoutMode = {
     // Only support 'box' now.
-    type: 'box',
+    type?: 'box',
     ignoreSize?: boolean | boolean[]
 };
 /******************* Mixins for Common Option Properties   ********************** */
+export type PaletteOptionMixin = ColorPaletteOptionMixin;
+
 export interface ColorPaletteOptionMixin {
     color?: ZRColor | ZRColor[]
     colorLayer?: ZRColor[][]
+}
+
+export interface AriaOptionMixin {
+    aria?: AriaOption
 }
 
 /**
@@ -678,6 +770,7 @@ export interface AnimationOption {
     duration?: number
     easing?: AnimationEasing
     delay?: number
+    // additive?: boolean
 }
 /**
  * Mixin of option set to control the animation of series.
@@ -705,7 +798,7 @@ export interface AnimationOptionMixin {
      * Delay of initialize animation
      * Can be a callback to specify duration of each element
      */
-    animationDelay?: AnimationDelayCallback
+    animationDelay?: number | AnimationDelayCallback
     // For update animation
     /**
      * Delay of data update animation.
@@ -747,6 +840,7 @@ export interface RoamOptionMixin {
 export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
 export type SymbolCallback<T> = (rawValue: any, params: T) => string;
 export type SymbolRotateCallback<T> = (rawValue: any, params: T) => number;
+// export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => (string | number)[];
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -765,7 +859,7 @@ export interface SymbolOptionMixin<T = unknown> {
 
     symbolKeepAspect?: boolean
 
-    symbolOffset?: number[]
+    symbolOffset?: (string | number)[]
 }
 
 /**
@@ -775,6 +869,7 @@ export interface SymbolOptionMixin<T = unknown> {
 export interface ItemStyleOption extends ShadowOptionMixin, BorderOptionMixin {
     color?: ZRColor
     opacity?: number
+    decal?: DecalObject | 'none'
 }
 
 /**
@@ -815,6 +910,7 @@ export interface VisualOptionUnit {
     colorLightness?: number
     colorSaturation?: number
     colorHue?: number
+    decal?: DecalObject
 
     // Not exposed?
     liftZ?: number
@@ -858,7 +954,7 @@ export interface TextCommonOption extends ShadowOptionMixin {
 
     lineHeight?: number
     backgroundColor?: ColorString | {
-        image: ImageLike
+        image: ImageLike | string
     }
     borderColor?: string
     borderWidth?: number
@@ -918,6 +1014,10 @@ export interface LabelOption extends TextCommonOption {
     rich?: Dictionary<TextCommonOption>
 }
 
+export interface SeriesLabelOption extends LabelOption {
+    formatter?: string | LabelFormatterCallback<CallbackDataParams>
+}
+
 /**
  * Option for labels on line, like markLine, lines
  */
@@ -944,6 +1044,10 @@ export interface LineLabelOption extends Omit<LabelOption, 'distance' | 'positio
 
 export interface LabelLineOption {
     show?: boolean
+    /**
+     * If displayed above other elements
+     */
+    showAbove?: boolean
     length?: number
     length2?: number
     smooth?: boolean | number
@@ -951,10 +1055,23 @@ export interface LabelLineOption {
     lineStyle?: LineStyleOption
 }
 
+export interface SeriesLineLabelOption extends LineLabelOption {
+    formatter?: string | LabelFormatterCallback<CallbackDataParams>
+}
+
+
 
 export interface LabelLayoutOptionCallbackParams {
-    dataIndex: number,
-    dataType: SeriesDataType,
+    /**
+     * Index of data which the label represents.
+     * It can be null if label does't represent any data.
+     */
+    dataIndex?: number,
+    /**
+     * Type of data which the label represents.
+     * It can be null if label does't represent any data.
+     */
+    dataType?: SeriesDataType,
     seriesIndex: number,
     text: string
     align: ZRTextAlign
@@ -1020,12 +1137,13 @@ interface TooltipFormatterCallback<T> {
      * For sync callback
      * params will be an array on axis trigger.
      */
-    (params: T, asyncTicket: string): string
+    (params: T, asyncTicket: string): string | HTMLElement[]
     /**
      * For async callback.
      * Returned html string will be a placeholder when callback is not invoked.
      */
-    (params: T, asyncTicket: string, callback: (cbTicket: string, html: string) => void): string
+    (params: T, asyncTicket: string, callback: (cbTicket: string, htmlOrDomNodes: string | HTMLElement[]) => void)
+        : string | HTMLElement[]
 }
 
 type TooltipBuiltinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom';
@@ -1247,8 +1365,8 @@ export interface CommonAxisPointerOption {
 export interface ComponentOption {
     type?: string;
 
-    id?: string;
-    name?: string;
+    id?: OptionId;
+    name?: OptionName;
 
     z?: number;
     zlevel?: number;
@@ -1263,23 +1381,33 @@ export type BlurScope = 'coordinateSystem' | 'series' | 'global';
  */
 export type InnerFocus = string | ArrayLike<number> | Dictionary<ArrayLike<number>>;
 
-export interface StatesOptionMixin<StateOption = unknown, ExtraStateOpts extends {
-    emphasis?: any
+export interface DefaultExtraStateOpts {
+    emphasis: any
+    select: any
+    blur: any
+}
+
+export interface DefaultExtraEmpasisState {
+    /**
+     * self: Focus self and blur all others.
+     * series: Focus series and blur all other series.
+     */
+    focus?: 'none' | 'self' | 'series'
+}
+
+interface ExtraStateOptsBase {
+    emphasis?: {
+        focus?: string
+    },
     select?: any
     blur?: any
-} = unknown> {
+}
+
+export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> {
     /**
      * Emphasis states
      */
-    emphasis?: StateOption & {
-        /**
-         * self: Focus self and blur all others.
-         * series: Focus series and blur all other series.
-         */
-        focus?: 'none' | 'self' | 'series' |
-            (unknown extends ExtraStateOpts['emphasis']['focus']
-                ? never : ExtraStateOpts['emphasis']['focus'])
-
+    emphasis?: StateOption & ExtraStateOpts['emphasis'] & {
         /**
          * Scope of blurred element when focus.
          *
@@ -1290,7 +1418,7 @@ export interface StatesOptionMixin<StateOption = unknown, ExtraStateOpts extends
          * Default to be coordinate system.
          */
         blurScope?: BlurScope
-    } & Omit<ExtraStateOpts['emphasis'], 'focus'>
+    }
     /**
      * Select states
      */
@@ -1301,18 +1429,13 @@ export interface StatesOptionMixin<StateOption = unknown, ExtraStateOpts extends
     blur?: StateOption & ExtraStateOpts['blur']
 }
 
-export interface SeriesOption<StateOption=any, ExtraStateOpts extends {
-    emphasis?: any
-    select?: any
-    blur?: any
-} = unknown> extends
+export interface SeriesOption<
+    StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
     ComponentOption,
     AnimationOptionMixin,
     ColorPaletteOptionMixin,
     StatesOptionMixin<StateOption, ExtraStateOpts>
 {
-    name?: string
-
     silent?: boolean
 
     blendMode?: string
@@ -1410,7 +1533,7 @@ export interface SeriesStackOptionMixin {
 type SamplingFunc = (frame: ArrayLike<number>) => number;
 
 export interface SeriesSamplingOptionMixin {
-    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | SamplingFunc
+    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | 'lttb' | SamplingFunc
 }
 
 export interface SeriesEncodeOptionMixin {

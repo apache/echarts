@@ -26,8 +26,12 @@ import Model from '../model/Model';
 import linkList from './helper/linkList';
 import List from './List';
 import createDimensions from './helper/createDimensions';
-import { DimensionLoose, ParsedValue } from '../util/types';
+import {
+    DimensionLoose, ParsedValue, OptionDataValue,
+    OptionDataItemObject
+} from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
+import { convertOptionIdName } from '../util/model';
 
 type TreeTraverseOrder = 'preorder' | 'postorder';
 type TreeTraverseCallback<Ctx> = (this: Ctx, node: TreeNode) => boolean | void;
@@ -36,10 +40,8 @@ type TreeTraverseOption = {
     attr?: 'children' | 'viewChildren'
 };
 
-interface TreeNodeData {
-    name?: string
-    value?: any
-    children?: TreeNodeData[]
+interface TreeNodeOption extends Pick<OptionDataItemObject<OptionDataValue>, 'name' | 'value'> {
+    children?: TreeNodeOption[];
 }
 
 export class TreeNode {
@@ -65,9 +67,9 @@ export class TreeNode {
 
     isExpand: boolean = false;
 
-    readonly hostTree: Tree<Model, any, any>; // TODO: TYPE TreeNode use generic?
+    readonly hostTree: Tree<Model>;
 
-    constructor(name: string, hostTree: Tree<Model, any, any>) {
+    constructor(name: string, hostTree: Tree<Model>) {
         this.name = name || '';
 
         this.hostTree = hostTree;
@@ -232,15 +234,7 @@ export class TreeNode {
         }
         const hostTree = this.hostTree;
         const itemModel = hostTree.data.getItemModel(this.dataIndex);
-        const levelModel = this.getLevelModel();
-
-        // FIXME: refactor levelModel to "beforeLink", and remove levelModel here.
-        if (levelModel) {
-            return itemModel.getModel(path as any, levelModel.getModel(path));
-        }
-        else {
-            return itemModel.getModel(path as any);
-        }
+        return itemModel.getModel(path as any);
     }
 
     // TODO: TYPE More specific model
@@ -306,7 +300,7 @@ export class TreeNode {
     }
 };
 
-class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = any> {
+class Tree<HostModel extends Model = Model, LevelOption = any> {
 
     type: 'tree' = 'tree';
 
@@ -320,13 +314,9 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
 
     private _nodes: TreeNode[] = [];
 
-    constructor(hostModel: HostModel, levelOptions: LevelOption[]) {
+    constructor(hostModel: HostModel) {
 
         this.hostModel = hostModel;
-
-        this.levelModels = zrUtil.map(levelOptions || [], function (levelDefine) {
-            return new Model(levelDefine, hostModel, hostModel.ecModel);
-        });
     }
     /**
      * Travel this subtree (include this node).
@@ -405,28 +395,25 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
      *     ]
      * }
      */
-    static createTree<T extends TreeNodeData, HostModel extends Model, LevelOption>(
+    static createTree<T extends TreeNodeOption, HostModel extends Model, LevelOption>(
         dataRoot: T,
         hostModel: HostModel,
-        treeOptions?: {
-            levels?: LevelOption[]
-        },
         beforeLink?: (data: List) => void
     ) {
 
-        const tree = new Tree(hostModel, treeOptions && treeOptions.levels);
-        const listData: TreeNodeData[] = [];
+        const tree = new Tree(hostModel);
+        const listData: TreeNodeOption[] = [];
         let dimMax = 1;
 
         buildHierarchy(dataRoot);
 
-        function buildHierarchy(dataNode: TreeNodeData, parentNode?: TreeNode) {
+        function buildHierarchy(dataNode: TreeNodeOption, parentNode?: TreeNode) {
             const value = dataNode.value;
             dimMax = Math.max(dimMax, zrUtil.isArray(value) ? value.length : 1);
 
             listData.push(dataNode);
 
-            const node = new TreeNode(dataNode.name, tree);
+            const node = new TreeNode(convertOptionIdName(dataNode.name, ''), tree);
             parentNode
                 ? addChild(node, parentNode)
                 : (tree.root = node);

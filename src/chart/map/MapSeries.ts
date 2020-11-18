@@ -27,13 +27,12 @@ import {
     SeriesOption,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin,
-    LabelOption,
-    SeriesTooltipOption,
     OptionDataItemObject,
     OptionDataValueNumeric,
     ParsedValue,
     SeriesOnGeoOptionMixin,
-    StatesOptionMixin
+    StatesOptionMixin,
+    SeriesLabelOption
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
@@ -44,8 +43,7 @@ import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
 export interface MapStateOption {
     itemStyle?: GeoItemStyleOption
-    // FIXME:TS formatter?
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 export interface MapDataItemOption extends MapStateOption, StatesOptionMixin<MapStateOption>,
     OptionDataItemObject<OptionDataValueNumeric> {
@@ -69,8 +67,6 @@ export interface MapSeriesOption extends
     coordinateSystem?: string;
     silent?: boolean;
 
-    tooltip?: SeriesTooltipOption;
-
     // FIXME:TS add marker types
     markLine?: any;
     markPoint?: any;
@@ -86,7 +82,7 @@ export interface MapSeriesOption extends
     data?: OptionDataValueNumeric[] | OptionDataValueNumeric[][] | MapDataItemOption[]
 
 
-    nameProperty: string;
+    nameProperty?: string;
 }
 
 class MapSeries extends SeriesModel<MapSeriesOption> {

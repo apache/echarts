@@ -17,9 +17,9 @@
 * under the License.
 */
 
-import {bind, each, indexOf, curry, extend, retrieve, normalizeCssArray} from 'zrender/src/core/util';
+import {bind, each, indexOf, curry, extend, retrieve, normalizeCssArray, isFunction} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import {getECData} from '../../util/ecData';
+import {getECData} from '../../util/innerStore';
 import {
     isHighDownDispatcher,
     setAsHighDownDispatcher,
@@ -44,7 +44,7 @@ import { LayoutRect } from '../../util/layout';
 import { TreemapLayoutNode } from './treemapLayout';
 import Element from 'zrender/src/Element';
 import Displayable from 'zrender/src/graphic/Displayable';
-import { makeInner } from '../../util/model';
+import { makeInner, convertOptionIdName } from '../../util/model';
 import { PathStyleProps, PathProps } from 'zrender/src/graphic/Path';
 import { TreeSeriesNodeItemOption } from '../tree/TreeSeries';
 import {
@@ -78,6 +78,8 @@ const getStateItemStyle = makeStyleMapper([
     ['shadowOffsetX'],
     ['shadowOffsetY'],
     ['shadowColor']
+    // Option decal is in `DecalObject` but style.decal is in `PatternObject`.
+    // So do not transfer decal directly.
 ]);
 const getItemStyleNormal = function (model: Model<TreemapSeriesNodeItemOption['itemStyle']>): PathStyleProps {
     // Normal style props should include emphasis style props.
@@ -357,8 +359,11 @@ class TreemapView extends ChartView {
             return;
         }
 
-        const duration = seriesModel.get('animationDurationUpdate');
-        const easing = seriesModel.get('animationEasing');
+        const durationOption = seriesModel.get('animationDurationUpdate');
+        const easingOption = seriesModel.get('animationEasing');
+        // TODO: do not support function until necessary.
+        const duration = (isFunction(durationOption) ? 0 : durationOption) || 0;
+        const easing = (isFunction(easingOption) ? null : easingOption) || 'cubicOut';
         const animationWrap = animationUtil.createWrap();
 
         // Make delete animations.
@@ -410,8 +415,9 @@ class TreemapView extends ChartView {
                             style: {opacity: 0}
                         };
                 }
-                // @ts-ignore
-                target && animationWrap.add(el, target, duration, easing);
+
+                // TODO: do not support delay until necessary.
+                target && animationWrap.add(el, target, duration, 0, easing);
             });
         });
 
@@ -450,15 +456,14 @@ class TreemapView extends ChartView {
                     }
                 }
 
-                // @ts-ignore
-                animationWrap.add(el, target, duration, easing);
+                animationWrap.add(el, target, duration, 0, easing);
             });
         }, this);
 
         this._state = 'animating';
 
         animationWrap
-            .done(bind(function () {
+            .finished(bind(function () {
                 this._state = 'ready';
                 renderResult.renderFinally();
             }, this))
@@ -854,7 +859,8 @@ function renderNode(
         }
         else {
             bg.invisible = false;
-            const visualBorderColor = thisNode.getVisual('style').stroke;
+            const style = thisNode.getVisual('style');
+            const visualBorderColor = style.stroke;
             const normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualBorderColor;
             const emphasisStyle = getStateItemStyle(itemStyleEmphasisModel);
@@ -868,7 +874,7 @@ function renderNode(
                 const upperLabelWidth = thisWidth - 2 * borderWidth;
 
                 prepareText(
-                    bg, visualBorderColor, upperLabelWidth, upperHeight,
+                    bg, visualBorderColor, upperLabelWidth, upperHeight, style.opacity,
                     {x: borderWidth, y: 0, width: upperLabelWidth, height: upperHeight}
                 );
             }
@@ -914,14 +920,16 @@ function renderNode(
         }
         else {
             content.invisible = false;
-            const visualColor = thisNode.getVisual('style').fill;
+            const nodeStyle = thisNode.getVisual('style');
+            const visualColor = nodeStyle.fill;
             const normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualColor;
+            normalStyle.decal = nodeStyle.decal;
             const emphasisStyle = getStateItemStyle(itemStyleEmphasisModel);
             const blurStyle = getStateItemStyle(itemStyleBlurModel);
             const selectStyle = getStateItemStyle(itemStyleSelectModel);
 
-            prepareText(content, visualColor, contentWidth, contentHeight);
+            prepareText(content, visualColor, contentWidth, nodeStyle.opacity, contentHeight);
 
             content.setStyle(normalStyle);
             content.ensureState('emphasis').style = emphasisStyle;
@@ -942,6 +950,7 @@ function renderNode(
     function prepareText(
         rectEl: graphic.Rect,
         visualColor: ColorString,
+        visualOpacity: number,
         width: number,
         height: number,
         upperLabelRect?: RectLike
@@ -954,7 +963,7 @@ function renderNode(
             seriesModel.getFormattedLabel(
                 thisNode.dataIndex, 'normal', null, null, normalLabelModel.get('formatter')
             ),
-            nodeModel.get('name')
+            convertOptionIdName(nodeModel.get('name'), null)
         );
         if (!upperLabelRect && thisLayout.isLeafRoot) {
             const iconChar = seriesModel.get('drillDownIcon', true);
@@ -964,10 +973,12 @@ function renderNode(
         const isShow = normalLabelModel.getShallow('show');
 
         setLabelStyle(
-            rectEl, getLabelStatesModels(nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL),
+            rectEl,
+            getLabelStatesModels(nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL),
             {
                 defaultText: isShow ? text : null,
                 inheritColor: visualColor,
+                defaultOpacity: visualOpacity,
                 labelFetcher: seriesModel,
                 labelDataIndex: thisNode.dataIndex
             }

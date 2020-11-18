@@ -29,6 +29,7 @@ const transformDEV = require('./transform-dev');
 const UglifyJS = require("uglify-js");
 const preamble = require('./preamble');
 const {buildI18n} = require('./build-i18n')
+const terser = require('terser');
 
 async function run() {
 
@@ -89,7 +90,7 @@ async function run() {
         )
         .option(
             '--format <format>',
-            'The format of output bundle. Can be "umd", "amd", "iife", "cjs", "es".'
+            'The format of output bundle. Can be "umd", "amd", "iife", "cjs", "esm".'
         )
         .option(
             '-i, --input <input file path>',
@@ -125,7 +126,7 @@ async function run() {
     validateIO(opt.input, opt.output);
 
     if (isWatch) {
-        watch(config.createECharts(opt));
+        watch(config.createECharts(opt), opt.sourcemap);
     }
     else if (isPrePublish) {
         await prePublish();
@@ -220,19 +221,28 @@ async function build(configs, min, sourcemap) {
                 chalk.cyan.dim(' ...')
             )
             console.time('Minify');
-            const uglifyResult = UglifyJS.minify(
-                // Convert __DEV__ to false and let uglify remove the dead code;
-                transformDEV.transform(sourceCode, false, 'false').code,
-                {
+            // Convert __DEV__ to false and let uglify remove the dead code;
+            const transformedCode = transformDEV.transform(sourceCode, false, 'false').code;
+            let minifyResult;
+            if (singleConfig.output.format !== 'esm') {
+                minifyResult = UglifyJS.minify(transformedCode, {
                     output: {
                         preamble: preamble.js
                     }
+                });
+                if (minifyResult.error) {
+                    throw new Error(minifyResult.error);
                 }
-            );
-            if (uglifyResult.error) {
-                throw new Error(uglifyResult.error);
             }
-            fs.writeFileSync(fileMinPath, uglifyResult.code, 'utf-8');
+            else {
+                // Use terser for esm minify because uglify doesn't support esm code.
+                minifyResult = await terser.minify(transformedCode, {
+                    format: {
+                        preamble: preamble.js
+                    }
+                })
+            }
+            fs.writeFileSync(fileMinPath, minifyResult.code, 'utf-8');
 
             console.timeEnd('Minify');
             console.log(
@@ -257,7 +267,7 @@ async function build(configs, min, sourcemap) {
  *      watch: {chokidar, include, exclude}
  *  }
  */
-function watch(singleConfig) {
+function watch(singleConfig, sourcemap) {
 
     let watcher = rollup.watch(singleConfig);
 
@@ -280,6 +290,12 @@ function watch(singleConfig) {
             printCodeError(event.error);
         }
         if (event.code === 'BUNDLE_END') {
+
+            const sourceCode = fs.readFileSync(singleConfig.output.file, 'utf-8');
+            // Convert __DEV__ to true;
+            const transformResult = transformDEV.transform(sourceCode, sourcemap, 'true');
+            fs.writeFileSync(singleConfig.output.file, transformResult.code, 'utf-8');
+
             printWatchResult(event);
         }
     });

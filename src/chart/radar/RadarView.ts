@@ -66,13 +66,15 @@ class RadarView extends ChartView {
             const symbolPath = symbolUtil.createSymbol(
                 symbolType, -1, -1, 2, 2
             );
+            const symbolRotate = data.getItemVisual(idx, 'symbolRotate') || 0;
             symbolPath.attr({
                 style: {
                     strokeNoScale: true
                 },
                 z2: 100,
                 scaleX: symbolSize[0] / 2,
-                scaleY: symbolSize[1] / 2
+                scaleY: symbolSize[1] / 2,
+                rotation: symbolRotate * Math.PI / 180 || 0
             });
             return symbolPath as RadarSymbol;
         }
@@ -219,7 +221,8 @@ class RadarView extends ChartView {
                     areaStyleModel.getAreaStyle(),
                     {
                         fill: color,
-                        opacity: 0.7
+                        opacity: 0.7,
+                        decal: itemStyle.decal
                     }
                 )
             );
@@ -252,7 +255,8 @@ class RadarView extends ChartView {
                         labelDataIndex: idx,
                         labelDimIndex: symbolPath.__dimIdx,
                         defaultText: defaultText as string,
-                        inheritColor: color as ColorString
+                        inheritColor: color as ColorString,
+                        defaultOpacity: itemStyle.opacity
                     }
                 );
             });

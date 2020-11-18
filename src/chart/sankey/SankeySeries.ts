@@ -24,7 +24,7 @@ import {
     SeriesOption,
     BoxLayoutOptionMixin,
     OptionDataValue,
-    LabelOption,
+    SeriesLabelOption,
     ItemStyleOption,
     LineStyleOption,
     LayoutOrient,
@@ -32,18 +32,19 @@ import {
     StatesOptionMixin,
     OptionDataItemObject,
     GraphEdgeItemObject,
-    OptionDataValueNumeric
+    OptionDataValueNumeric,
+    DefaultExtraEmpasisState
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { LayoutRect } from '../../util/layout';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
-import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
+
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
 
 export interface SankeyNodeStateOption {
-    label?: LabelOption
+    label?: SeriesLabelOption
     itemStyle?: ItemStyleOption
 }
 
@@ -60,7 +61,7 @@ interface SankeyEdgeStyleOption extends LineStyleOption {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: 'adjacency'
+        focus?: DefaultExtraEmpasisState['focus'] | 'adjacency'
     }
 }
 

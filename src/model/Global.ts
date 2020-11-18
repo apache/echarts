@@ -41,7 +41,6 @@ import * as modelUtil from '../util/model';
 import Model from './Model';
 import ComponentModel, {ComponentModelConstructor} from './Component';
 import globalDefault from './globalDefault';
-import {ColorPaletteMixin} from './mixin/colorPalette';
 import {resetSourceDefaulter} from '../data/helper/sourceHelper';
 import SeriesModel from './Series';
 import {
@@ -52,12 +51,15 @@ import {
     ThemeOption,
     ComponentOption,
     ComponentMainType,
-    ComponentSubType
+    ComponentSubType,
+    OptionId,
+    OptionName
 } from '../util/types';
 import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
 import { concatInternalOptions } from './internalComponentCreator';
 import { LocaleOption } from '../locale';
+import {PaletteMixin} from './mixin/palette';
 
 export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
@@ -141,7 +143,7 @@ class GlobalModel extends Model<ECUnitOption> {
             'please use chart.getOption()'
         );
 
-        const innerOpt = normalizeReplaceMergeInput(opts);
+        const innerOpt = normalizeSetOptionInput(opts);
 
         this._optionManager.setOption(option, optionPreprocessorFuncs, innerOpt);
 
@@ -157,9 +159,9 @@ class GlobalModel extends Model<ECUnitOption> {
      */
     resetOption(
         type: 'recreate' | 'timeline' | 'media',
-        opt?: GlobalModelSetOptionOpts
+        opt?: Pick<GlobalModelSetOptionOpts, 'replaceMerge'>
     ): boolean {
-        return this._resetOption(type, normalizeReplaceMergeInput(opt));
+        return this._resetOption(type, normalizeSetOptionInput(opt));
     }
 
     private _resetOption(
@@ -258,7 +260,7 @@ class GlobalModel extends Model<ECUnitOption> {
             // (1) for normal merge, `{xxx: null/undefined}` are the same meaning as `{xxx: []}`.
             // (2) some preprocessor may convert some of `{xxx: null/undefined}` to `{xxx: []}`.
             replaceMergeMainTypeMap.each(function (val, mainTypeInReplaceMerge) {
-                if (!newCmptTypeMap.get(mainTypeInReplaceMerge)) {
+                if (ComponentModel.hasClass(mainTypeInReplaceMerge) && !newCmptTypeMap.get(mainTypeInReplaceMerge)) {
                     newCmptTypes.push(mainTypeInReplaceMerge);
                     newCmptTypeMap.set(mainTypeInReplaceMerge, true);
                 }
@@ -540,8 +542,8 @@ class GlobalModel extends Model<ECUnitOption> {
                     mainType: mainType,
                     // subType will be filtered finally.
                     index: q[indexAttr] as (number | number[]),
-                    id: q[idAttr] as (string | string[]),
-                    name: q[nameAttr] as (string | string[])
+                    id: q[idAttr] as (OptionId | OptionId[]),
+                    name: q[nameAttr] as (OptionName | OptionName[])
                 }
                 : null;
         }
@@ -622,10 +624,11 @@ class GlobalModel extends Model<ECUnitOption> {
     /**
      * Get series list before filtered by name.
      */
-    getSeriesByName(name: string): SeriesModel[] {
+    getSeriesByName(name: OptionName): SeriesModel[] {
+        const nameStr = modelUtil.convertOptionIdName(name, null);
         return filter(
             this._componentsMap.get('series') as SeriesModel[],
-            oneSeries => !!oneSeries && oneSeries.name === name
+            oneSeries => !!oneSeries && nameStr != null && oneSeries.name === nameStr
         );
     }
 
@@ -755,7 +758,9 @@ class GlobalModel extends Model<ECUnitOption> {
         const componentsMap = this._componentsMap;
         const componentTypes: string[] = [];
         componentsMap.each(function (components, componentType) {
-            componentTypes.push(componentType);
+            if (ComponentModel.hasClass(componentType)) {
+                componentTypes.push(componentType);
+            }
         });
 
         (ComponentModel as ComponentModelConstructor).topologicalTravel(
@@ -808,6 +813,13 @@ class GlobalModel extends Model<ECUnitOption> {
             ecModel._componentsMap = createHashMap({series: []});
             ecModel._componentsCount = createHashMap();
 
+            // If user spefied `option.aria`, aria will be enable. This detection should be
+            // performed before theme and globalDefault merge.
+            const airaOption = baseOption.aria;
+            if (isObject(airaOption) && airaOption.enabled == null) {
+                airaOption.enabled = true;
+            }
+
             mergeTheme(baseOption, ecModel._theme.option);
 
             // TODO Needs clone when merging to the unexisted property
@@ -851,8 +863,8 @@ export interface QueryConditionKindB {
     mainType: ComponentMainType;
     subType?: ComponentSubType;
     index?: number | number[];
-    id?: string | number | (string | number)[];
-    name?: (string | number) | (string | number)[];
+    id?: OptionId | OptionId[];
+    name?: OptionName | OptionName[];
 }
 export interface EachComponentAllCallback {
     (mainType: string, model: ComponentModel, componentIndex: number): void;
@@ -907,18 +919,18 @@ function queryByIdOrName<T extends { id?: string, name?: string }>(
     // Here is a break from echarts4: string and number are
     // traded as equal.
     if (isArray(idOrName)) {
-        const keyMap = createHashMap<boolean>(idOrName);
+        const keyMap = createHashMap<boolean>();
         each(idOrName, function (idOrNameItem) {
             if (idOrNameItem != null) {
-                modelUtil.validateIdOrName(idOrNameItem);
-                keyMap.set(idOrNameItem, true);
+                const idName = modelUtil.convertOptionIdName(idOrNameItem, null);
+                idName != null && keyMap.set(idOrNameItem, true);
             }
         });
         return filter(cmpts, cmpt => cmpt && keyMap.get(cmpt[attr]));
     }
     else {
-        modelUtil.validateIdOrName(idOrName);
-        return filter(cmpts, cmpt => cmpt && cmpt[attr] === idOrName + '');
+        const idName = modelUtil.convertOptionIdName(idOrName, null);
+        return filter(cmpts, cmpt => cmpt && idName != null && cmpt[attr] === idName);
     }
 }
 
@@ -933,7 +945,7 @@ function filterBySubType(
         : components;
 }
 
-function normalizeReplaceMergeInput(opts: GlobalModelSetOptionOpts): InnerSetOptionOpts {
+function normalizeSetOptionInput(opts: GlobalModelSetOptionOpts): InnerSetOptionOpts {
     const replaceMergeMainTypeMap = createHashMap<boolean, string>();
     opts && each(modelUtil.normalizeToArray(opts.replaceMerge), function (mainType) {
         if (__DEV__) {
@@ -949,7 +961,7 @@ function normalizeReplaceMergeInput(opts: GlobalModelSetOptionOpts): InnerSetOpt
     };
 }
 
-interface GlobalModel extends ColorPaletteMixin<ECUnitOption> {}
-mixin(GlobalModel, ColorPaletteMixin);
+interface GlobalModel extends PaletteMixin<ECUnitOption> {}
+mixin(GlobalModel, PaletteMixin);
 
 export default GlobalModel;

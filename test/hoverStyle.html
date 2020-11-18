@@ -95,8 +95,8 @@ under the License.
                     '<span style="color:yellow">'
                         + (useHoverLayer ? 'Using HoverLayer' : 'NOT using HoverLayer')
                     + '</span>',
-                    'hoverLayerThreshold: ' + hoverLayerThreshold,
-                    'zr refresh base layer at: <span style="color:yellow">' + (zrRefreshTimestamp || null) + '</span>'
+                    'hoverLayerThreshold: ' + hoverLayerThreshold
+                    // 'zr refresh base layer at: <span style="color:yellow">' + (zrRefreshTimestamp || null) + '</span>'
                 ].join('<br>');
             }
 
@@ -613,7 +613,7 @@ under the License.
 
                 var chart = testHelper.create(echarts, 'mainb4', {
                     title: [
-                        'normal style is **line: green dashed width 3, node: red**,',
+                        'normal style is **line: green dashed width 3, node: default color**,',
                         'should become **line: orange solid width 8, node: only "dd" blue** when hovered'
                     ],
                     option: option,
@@ -1018,7 +1018,7 @@ under the License.
                         'trigger hover by API: **should scaled and color-lifted**.',
                         'Test mouse hover and leave, should NOT return to normal.',
                         'Only click downplay to return normal',
-                        'Click the red sector, it **keep scaled and color-lifted**',
+                        'Click the top-right sector, it **keep scaled and color-lifted**',
                         'Only click downplay to return normal'
                     ],
                     option: option,
@@ -1122,7 +1122,7 @@ under the License.
 
 
         <script>
-            $.get('../map/json/china.json', function (chinaJson) {
+            $.get('./data/map/json/china.json', function (chinaJson) {
                 if (typeof chinaJson === 'string') {
                     chinaJson = eval('(' + chinaJson + ')');
                 }
@@ -1140,7 +1140,18 @@ under the License.
                                 min: 1.5,
                                 max: 10
                             },
-                            selectedMode: 'multiple'
+                            selectedMode: 'multiple',
+                            // emphasis: {
+                            //     itemStyle: {
+                            //         color: 'none',
+                            //         borderWidth: 2
+                            //     }
+                            // },
+                            select: {
+                                itemStyle: {
+                                    color: 'green'
+                                }
+                            }
                         }]
                     };
 
