@@ -36,7 +36,7 @@ const decalCache = new LRU<HTMLCanvasElement | SVGElement>(100);
 const decalKeys = [
     'symbol', 'symbolSize', 'symbolKeepAspect',
     'color', 'backgroundColor',
-    'dashArrayX', 'dashArrayY', 'dashLineOffset',
+    'dashArrayX', 'dashArrayY',
     'maxTileWidth', 'maxTileHeight'
 ];
 
@@ -75,7 +75,6 @@ export function createOrUpdatePatternFromDecal(
         backgroundColor: null,
         dashArrayX: 5,
         dashArrayY: 5,
-        dashLineOffset: 0,
         rotation: 0,
         maxTileWidth: 512,
         maxTileHeight: 512

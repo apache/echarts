@@ -74,7 +74,6 @@ export default {
                 color: decalColor,
                 dashArrayX: [1, 0],
                 dashArrayY: [4, 3],
-                dashLineOffset: 0,
                 rotation: -Math.PI / 4
             }, {
                 color: decalColor,
