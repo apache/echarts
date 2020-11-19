@@ -221,7 +221,8 @@ exports.createMyTransform = function () {
             clean: true
         }, {
             include: [
-                nodePath.resolve(ecDir, 'test/lib/myTransform/src/**/*.ts')
+                nodePath.resolve(ecDir, 'test/lib/myTransform/src/**/*.ts'),
+                nodePath.resolve(ecDir, 'src/**/*.ts')
             ]
         }),
         input: input,
