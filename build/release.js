@@ -42,7 +42,7 @@ function release() {
         }
     }
 
-    const argsList = ['', 'simple', 'common', 'extension', 'myTransform'].map((type) => {
+    const argsList = ['', 'simple', 'common', 'extension'].map((type) => {
         return [
             '--type',
             type,
