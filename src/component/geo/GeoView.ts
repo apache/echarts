@@ -69,7 +69,7 @@ class GeoView extends ComponentView {
         let current = e.target;
         let eventData: ECEventData;
         // TODO extract a util function
-        while ((eventData = getECData(current).eventData) == null) {
+        while (current && (eventData = getECData(current).eventData) == null) {
             current = current.__hostTarget || current.parent;
         }
 
