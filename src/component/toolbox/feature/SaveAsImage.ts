@@ -74,7 +74,19 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
         // IE
         else {
             if (window.navigator.msSaveOrOpenBlob) {
-                const bstr = atob(url.split(',')[1]);
+                const parts = url.split(',');
+                // data:[<mime type>][;charset=<charset>][;base64],<encoded data>
+                // see https://css-tricks.com/data-uris/
+                const base64Encoded = parts[0].indexOf('base64') > -1;
+                let bstr = isSvg
+                    // should decode the svg data uri first
+                    ? decodeURIComponent(parts[1])
+                    : parts[1];
+                // only `atob` when the data uri is encoded with base64
+                // otherwise, like `svg` data uri exported by zrender,
+                // there will be an error, for it's not encoded with base64.
+                // (just a url-encoded string through `encodeURIComponent`)
+                base64Encoded && (bstr = atob(bstr));
                 let n = bstr.length;
                 const u8arr = new Uint8Array(n);
                 while (n--) {
@@ -91,6 +103,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
                     + '</body>';
                 const tab = window.open();
                 tab.document.write(html);
+                tab.document.title = title as string;
             }
         }
     }
