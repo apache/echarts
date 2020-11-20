@@ -143,7 +143,7 @@ class Grid implements CoordinateSystemMaster {
             finalSplitNum = splitNum > finalSplitNum ? splitNum : finalSplitNum;
         });
 
-        return finalSplitNum;
+        return Math.ceil(finalSplitNum);
     }
 
     update(ecModel: GlobalModel, api: ExtensionAPI): void {
