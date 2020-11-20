@@ -189,7 +189,7 @@
     }
 
     if (typeof console !== 'undefined') {
-      console.error.apply(args);
+      console.error.apply(console, args);
     }
   }
 
@@ -3349,7 +3349,7 @@
       this._target = target;
       this._loop = loop;
 
-      if (loop) {
+      if (loop && additiveTo) {
         logError('Can\' use additive animation on looped animation.');
         return;
       }
@@ -13614,7 +13614,7 @@
     ZRender.prototype.refreshHoverImmediately = function () {
       this._needsRefreshHover = false;
 
-      if (this.painter.refreshHover) {
+      if (this.painter.refreshHover && this.painter.getType() === 'canvas') {
         this.painter.refreshHover();
       }
     };
@@ -16575,7 +16575,7 @@
   var fullDayFormatter = '{yyyy}-{MM}-{dd}';
   var fullLeveledFormatter = {
     year: '{yyyy}',
-    month: '{yyyy}:{MM}',
+    month: '{yyyy}-{MM}',
     day: fullDayFormatter,
     hour: fullDayFormatter + ' ' + defaultLeveledFormatter.hour,
     minute: fullDayFormatter + ' ' + defaultLeveledFormatter.minute,
@@ -26269,7 +26269,7 @@
   var isObject$2 = isObject;
   var version = '5.0.0';
   var dependencies = {
-    zrender: '5.0.0'
+    zrender: '5.0.1'
   };
   var TEST_FRAME_REMAIN_TIME = 1;
   var PRIORITY_PROCESSOR_SERIES_FILTER = 800;
