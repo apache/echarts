@@ -73,7 +73,8 @@ abstract class MarkerView extends ComponentView {
 
     blurSeries(seriesModelList: SeriesModel[]) {
         each(seriesModelList, seriesModel => {
-            const markerModel = MarkerModel.getMarkerModelFromSeries(seriesModel, this.type as 'markPoint' | 'markLine' | 'markArea');
+            const markerModel = MarkerModel.getMarkerModelFromSeries(seriesModel,
+                this.type as 'markPoint' | 'markLine' | 'markArea');
             if (markerModel) {
                 const data = markerModel.getData();
                 data.eachItemGraphicEl(function (el) {

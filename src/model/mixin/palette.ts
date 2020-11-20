@@ -18,7 +18,6 @@
 */
 
 import {Dictionary} from 'zrender/src/core/types';
-import {isArray} from 'zrender/src/core/util';
 import {makeInner, normalizeToArray} from '../../util/model';
 import Model from '../Model';
 import {ZRColor, PaletteOptionMixin, DecalObject} from '../../util/types';

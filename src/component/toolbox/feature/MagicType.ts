@@ -163,7 +163,7 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
             newTitle = zrUtil.merge({
                 stack: model.option.title.tiled,
                 tiled: model.option.title.stack
-            }, model.option.title)
+            }, model.option.title);
         }
 
         api.dispatchAction({
