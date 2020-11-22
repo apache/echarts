@@ -73,7 +73,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
         }
         // IE
         else {
-            if (window.navigator.msSaveOrOpenBlob) {
+            if (window.navigator.msSaveOrOpenBlob || isSvg) {
                 const parts = url.split(',');
                 // data:[<mime type>][;charset=<charset>][;base64],<encoded data>
                 // see https://css-tricks.com/data-uris/
@@ -87,13 +87,28 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
                 // there will be an error, for it's not encoded with base64.
                 // (just a url-encoded string through `encodeURIComponent`)
                 base64Encoded && (bstr = atob(bstr));
-                let n = bstr.length;
-                const u8arr = new Uint8Array(n);
-                while (n--) {
-                    u8arr[n] = bstr.charCodeAt(n);
+                const filename = title + '.' + type;
+                if (window.navigator.msSaveOrOpenBlob) {
+                    let n = bstr.length;
+                    const u8arr = new Uint8Array(n);
+                    while (n--) {
+                        u8arr[n] = bstr.charCodeAt(n);
+                    }
+                    const blob = new Blob([u8arr]);
+                    window.navigator.msSaveOrOpenBlob(blob, filename);
                 }
-                const blob = new Blob([u8arr]);
-                window.navigator.msSaveOrOpenBlob(blob, title + '.' + type);
+                else {
+                    const frame = document.createElement('iframe');
+                    document.body.appendChild(frame);
+                    const cw = frame.contentWindow;
+                    const doc = cw.document;
+                    doc.open('image/svg+xml', 'replace');
+                    doc.write(bstr);
+                    doc.close();
+                    cw.focus();
+                    doc.execCommand('SaveAs', true, filename);
+                    document.body.removeChild(frame);
+                }
             }
             else {
                 const lang = model.get('lang');
