@@ -37,8 +37,8 @@
     "lint:dist": "echo 'It might take a while. Please wait ...' && ./node_modules/.bin/jshint --config .jshintrc-dist dist/echarts.js"
   },
   "dependencies": {
-    "zrender": "5.0.0",
-    "tslib": "1.10.0"
+    "tslib": "1.10.0",
+    "zrender": "5.0.1"
   },
   "devDependencies": {
     "@babel/core": "7.3.4",

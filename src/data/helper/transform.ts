@@ -83,7 +83,7 @@ export interface ExternalDataTransformResultItem {
      */
     dimensions?: DimensionDefinitionLoose[];
 }
-interface ExternalDimensionDefinition extends Partial<DimensionDefinition> {
+export interface ExternalDimensionDefinition extends Partial<DimensionDefinition> {
     // Mandatory
     index: DimensionIndex;
 }
