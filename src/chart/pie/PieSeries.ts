@@ -301,6 +301,4 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
 }
 
-SeriesModel.registerClass(PieSeriesModel);
-
 export default PieSeriesModel;

@@ -1030,4 +1030,4 @@ function isCenterAlign(align: HorizontalAlign | VerticalAlign) {
     return align === 'center' || align === 'middle';
 }
 
-ComponentView.registerClass(TooltipView);
+export default TooltipView;

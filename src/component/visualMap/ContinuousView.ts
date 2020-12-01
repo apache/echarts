@@ -949,6 +949,4 @@ function getCursor(orient: Orient) {
     return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
 }
 
-ComponentView.registerClass(ContinuousView);
-
 export default ContinuousView;

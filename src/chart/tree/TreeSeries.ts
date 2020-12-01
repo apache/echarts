@@ -288,6 +288,4 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
     };
 }
 
-SeriesModel.registerClass(TreeSeriesModel);
-
 export default TreeSeriesModel;

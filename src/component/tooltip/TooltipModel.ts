@@ -177,6 +177,4 @@ class TooltipModel extends ComponentModel<TooltipOption> {
     };
 }
 
-ComponentModel.registerClass(TooltipModel);
-
 export default TooltipModel;

@@ -17,9 +17,11 @@
 * under the License.
 */
 
-import Component from '../../model/Component';
+import {install as installSimple} from './installSimple';
+import {install as installAxisPointer} from '../axisPointer/install';
+import { EChartsExtensionInstallRegisters } from '../../extension';
 
-Component.registerSubTypeDefaulter('timeline', function () {
-    // Only slider now.
-    return 'slider';
-});
+export function install(registers: EChartsExtensionInstallRegisters) {
+    installSimple(registers);
+    installAxisPointer(registers);
+}

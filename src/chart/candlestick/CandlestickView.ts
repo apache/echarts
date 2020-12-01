@@ -199,8 +199,6 @@ class CandlestickView extends ChartView {
     }
 }
 
-ChartView.registerClass(CandlestickView);
-
 class NormalBoxPathShape {
     points: number[][];
 }

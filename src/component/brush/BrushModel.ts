@@ -30,7 +30,6 @@ import {
 } from '../helper/BrushController';
 import { ModelFinderObject } from '../../util/model';
 
-
 const DEFAULT_OUT_OF_BRUSH_COLOR = '#ddd';
 
 /**
@@ -212,8 +211,6 @@ class BrushModel extends ComponentModel<BrushOption> {
     }
 
 }
-
-ComponentModel.registerClass(BrushModel);
 
 
 function generateBrushOption(

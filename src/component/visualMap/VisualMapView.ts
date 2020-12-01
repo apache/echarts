@@ -173,6 +173,4 @@ class VisualMapView extends ComponentView {
     ) {}
 }
 
-ComponentView.registerClass(VisualMapView);
-
 export default VisualMapView;

@@ -143,6 +143,4 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
 
 }
 
-SeriesModel.registerClass(BarSeriesModel);
-
 export default BarSeriesModel;

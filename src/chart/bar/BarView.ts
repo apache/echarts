@@ -1103,6 +1103,4 @@ function createBackgroundEl(
     });
 }
 
-ChartView.registerClass(BarView);
-
 export default BarView;

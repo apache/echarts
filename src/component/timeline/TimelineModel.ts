@@ -334,6 +334,4 @@ class TimelineModel extends ComponentModel<TimelineOption> {
 
 }
 
-ComponentModel.registerClass(TimelineModel);
-
 export default TimelineModel;

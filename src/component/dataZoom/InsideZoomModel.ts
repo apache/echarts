@@ -62,6 +62,4 @@ class InsideZoomModel extends DataZoomModel<InsideDataZoomOption> {
     });
 }
 
-ComponentModel.registerClass(InsideZoomModel);
-
 export default InsideZoomModel;

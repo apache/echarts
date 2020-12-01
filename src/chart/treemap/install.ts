@@ -17,5 +17,19 @@
 * under the License.
 */
 
-import '../coord/polar/polarCreator';
-import './axis/RadiusAxisView';
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import { installTreemapAction } from './treemapAction';
+import TreemapSeriesModel from './TreemapSeries';
+import TreemapView from './TreemapView';
+import treemapVisual from './treemapVisual';
+import treemapLayout from './treemapLayout';
+
+
+export function install(registers: EChartsExtensionInstallRegisters) {
+    registers.registerSeriesModel(TreemapSeriesModel);
+    registers.registerChartView(TreemapView);
+    registers.registerVisual(treemapVisual);
+    registers.registerLayout(treemapLayout);
+
+    installTreemapAction(registers);
+}

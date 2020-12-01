@@ -358,9 +358,8 @@ class ToolboxView extends ComponentView {
     }
 }
 
-ComponentView.registerClass(ToolboxView);
-
 
 function isUserFeatureName(featureName: string): boolean {
     return featureName.indexOf('my') === 0;
 }
+export default ToolboxView;

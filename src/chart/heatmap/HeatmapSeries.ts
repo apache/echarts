@@ -115,6 +115,4 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
     };
 }
 
-SeriesModel.registerClass(HeatmapSeriesModel);
-
 export default HeatmapSeriesModel;

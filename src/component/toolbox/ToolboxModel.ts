@@ -151,6 +151,4 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
     };
 }
 
-ComponentModel.registerClass(ToolboxModel);
-
 export default ToolboxModel;

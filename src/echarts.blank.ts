@@ -18,6 +18,6 @@
 */
 
 export * from './echarts';
-export * from './export';
+export * from './exportAPI';
 
 import './component/dataset';

@@ -92,6 +92,4 @@ class MarkPointModel extends MarkerModel<MarkPointOption> {
     };
 }
 
-ComponentModel.registerClass(MarkPointModel);
-
 export default MarkPointModel;

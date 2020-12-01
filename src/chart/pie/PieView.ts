@@ -273,6 +273,4 @@ class PieView extends ChartView {
     }
 }
 
-ChartView.registerClass(PieView);
-
 export default PieView;

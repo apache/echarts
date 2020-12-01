@@ -379,6 +379,4 @@ class HeatmapView extends ChartView {
     }
 }
 
-ChartView.registerClass(HeatmapView);
-
 export default HeatmapView;

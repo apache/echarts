@@ -17,11 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import { use } from '../extension';
+import { install } from './effectScatter/install';
 
-import './effectScatter/EffectScatterSeries';
-import './effectScatter/EffectScatterView';
-
-import layoutPoints from '../layout/points';
-
-echarts.registerLayout(layoutPoints('effectScatter'));
+use(install);

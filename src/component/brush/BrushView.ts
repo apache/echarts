@@ -110,4 +110,4 @@ class BrushView extends ComponentView {
 
 }
 
-ComponentView.registerClass(BrushView);
+export default BrushView;

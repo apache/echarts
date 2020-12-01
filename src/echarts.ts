@@ -116,6 +116,7 @@ const assert = zrUtil.assert;
 const each = zrUtil.each;
 const isFunction = zrUtil.isFunction;
 const isObject = zrUtil.isObject;
+const indexOf = zrUtil.indexOf;
 
 export const version = '5.0.0';
 
@@ -2627,7 +2628,9 @@ export function registerTheme(name: string, theme: ThemeOption): void {
  * Register option preprocessor
  */
 export function registerPreprocessor(preprocessorFunc: OptionPreprocessor): void {
-    optionPreprocessorFuncs.push(preprocessorFunc);
+    if (indexOf(optionPreprocessorFuncs, preprocessorFunc) < 0) {
+        optionPreprocessorFuncs.push(preprocessorFunc);
+    }
 }
 
 export function registerProcessor(
@@ -2643,7 +2646,9 @@ export function registerProcessor(
  * @param {Function} postInitFunc
  */
 export function registerPostInit(postInitFunc: PostIniter): void {
-    postInitFunc && postInitFuncs.push(postInitFunc);
+    if (indexOf(postInitFuncs, postInitFunc) < 0) {
+        postInitFunc && postInitFuncs.push(postInitFunc);
+    }
 }
 
 /**
@@ -2651,7 +2656,9 @@ export function registerPostInit(postInitFunc: PostIniter): void {
  * @param {Function} postUpdateFunc
  */
 export function registerPostUpdate(postUpdateFunc: PostUpdater): void {
-    postUpdateFunc && postUpdateFuncs.push(postUpdateFunc);
+    if (indexOf(postUpdateFuncs, postUpdateFunc) < 0) {
+        postUpdateFunc && postUpdateFuncs.push(postUpdateFunc);
+    }
 }
 
 /**
@@ -2693,6 +2700,11 @@ export function registerAction(
         (actionInfo as ActionInfo).event || actionType as string
     ).toLowerCase();
     eventName = (actionInfo as ActionInfo).event;
+
+    if (eventActionMap[eventName as string]) {
+        // Already registered.
+        return;
+    }
 
     // Validate action type and event name.
     assert(ACTION_REG.test(actionType as string) && ACTION_REG.test(eventName));
@@ -2751,6 +2763,8 @@ function registerVisual(
 
 export {registerLayout, registerVisual};
 
+const registeredTasks: (StageHandler | StageHandlerOverallReset)[] = [];
+
 function normalizeRegister(
     targetList: StageHandler[],
     priority: number | StageHandler | StageHandlerOverallReset,
@@ -2758,6 +2772,13 @@ function normalizeRegister(
     defaultPriority: number,
     visualType?: StageHandlerInternal['visualType']
 ): void {
+
+    // Already registered
+    if (indexOf(registeredTasks, fn) >= 0) {
+        return;
+    }
+    registeredTasks.push(fn);
+
     if (isFunction(priority) || isObject(priority)) {
         fn = priority as (StageHandler | StageHandlerOverallReset);
         priority = defaultPriority;

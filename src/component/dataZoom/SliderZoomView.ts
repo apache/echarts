@@ -1062,6 +1062,4 @@ function getCursor(orient: LayoutOrient) {
     return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
 }
 
-ComponentView.registerClass(SliderZoomView);
-
 export default SliderZoomView;

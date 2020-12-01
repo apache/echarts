@@ -1110,4 +1110,4 @@ function calculateZ(depth: number, zInLevel: number) {
     return (zb - 1) / zb;
 }
 
-ChartView.registerClass(TreemapView);
+export default TreemapView;

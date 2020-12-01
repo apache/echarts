@@ -591,6 +591,4 @@ function normalizeReverse(thisOption: PiecewiseVisualMapOption, pieceList: Inner
     }
 }
 
-ComponentModel.registerClass(PiecewiseModel);
-
 export default PiecewiseModel;

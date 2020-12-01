@@ -210,4 +210,4 @@ function createList(
     return mpData;
 }
 
-ComponentView.registerClass(MarkPointView);
+export default MarkPointView;

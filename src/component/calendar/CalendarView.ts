@@ -546,4 +546,4 @@ class CalendarView extends ComponentView {
     }
 }
 
-ComponentView.registerClass(CalendarView);
+export default CalendarView;

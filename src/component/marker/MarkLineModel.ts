@@ -138,6 +138,4 @@ class MarkLineModel extends MarkerModel<MarkLineOption> {
     };
 }
 
-ComponentModel.registerClass(MarkLineModel);
-
 export default MarkLineModel;

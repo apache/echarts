@@ -17,139 +17,101 @@
 * under the License.
 */
 
-/**
- * Do not mount those modules on 'src/echarts' for better tree shaking.
- */
+export * from './echarts';
+export * from './exportAPI';
 
-import * as zrender from 'zrender/src/zrender';
-import * as matrix from 'zrender/src/core/matrix';
-import * as vector from 'zrender/src/core/vector';
-import * as zrUtil from 'zrender/src/core/util';
-import * as colorTool from 'zrender/src/tool/color';
-import * as graphicUtil from './util/graphic';
-import * as numberUtil from './util/number';
-import * as formatUtil from './util/format';
-import * as timeUtil from './util/time';
-import {throttle} from './util/throttle';
-import * as ecHelper from './helper';
-import parseGeoJSON from './coord/geo/parseGeoJson';
+export {use} from './extension';
 
-// Only for GL
-export {brushSingle as innerDrawElementOnCanvas} from 'zrender/src/canvas/graphic';
+import './component/dataset';
+import './component/transform';
 
-export {zrender};
-export {default as List} from './data/List';
-export {default as Model} from './model/Model';
-export {default as Axis} from './coord/Axis';
-export {throttle};
-export {ecHelper as helper};
-export {matrix};
-export {vector};
-export {colorTool as color};
-export {default as env} from 'zrender/src/core/env';
-
-export {parseGeoJSON};
-export const parseGeoJson = parseGeoJSON;
-
-export const number = {};
-zrUtil.each(
-    [
-        'linearMap',
-        'round',
-        'asc',
-        'getPrecision',
-        'getPrecisionSafe',
-        'getPixelPrecision',
-        'getPercentWithPrecision',
-        'MAX_SAFE_INTEGER',
-        'remRadian',
-        'isRadianAroundZero',
-        'parseDate',
-        'quantity',
-        'quantityExponent',
-        'nice',
-        'quantile',
-        'reformIntervals',
-        'isNumeric',
-        'numericToNumber'
-    ],
-    function (name) {
-        (number as any)[name] = (numberUtil as any)[name];
-    }
-);
+// ----------------------------------------------
+// All of the modules that are allowed to be
+// imported are listed below.
+//
+// Users MUST NOT import other modules that are
+// not included in this list.
+// ----------------------------------------------
 
 
-export const format = {};
-zrUtil.each(
-    [
-        'addCommas',
-        'toCamelCase',
-        'normalizeCssArray',
-        'encodeHTML',
-        'formatTpl',
-        'getTooltipMarker',
-        'formatTime',
-        'capitalFirst',
-        'truncateText',
-        'getTextRect'
-    ],
-    function (name) {
-        (format as any)[name] = (formatUtil as any)[name];
-    }
-);
+// In somehow. If we export like
+// export * as LineChart './chart/line/install'
+// The exported code will be transformed to
+// import * as LineChart_1 './chart/line/install'; export {LineChart_1 as LineChart};
+// Treeshaking in webpack will not work even if we configured sideEffects to false in package.json
+
+export {install as LineChart} from './chart/line/install';
+export {install as BarChart} from './chart/bar/install';
+
+export {install as PieChart} from './chart/pie/install';
+export {install as ScatterChart} from './chart/scatter/install';
+export {install as RadarChart} from './chart/radar/install';
+export {install as MapChart} from './chart/map/install';
+export {install as TreeChart} from './chart/tree/install';
+export {install as TreemapChart} from './chart/treemap/install';
+export {install as GraphChart} from './chart/graph/install';
+export {install as GaugeChart} from './chart/gauge/install';
+export {install as FunnelChart} from './chart/funnel/install';
+export {install as ParallelChart} from './chart/parallel/install';
+export {install as SankeyChart} from './chart/sankey/install';
+export {install as BoxplotChart} from './chart/boxplot/install';
+export {install as CandlestickChart} from './chart/candlestick/install';
+export {install as EffectScatterChart} from './chart/effectScatter/install';
+export {install as LinesChart} from './chart/lines/install';
+export {install as HeatmapChart} from './chart/heatmap/install';
+export {install as PictorialBarChart} from './chart/bar/installPictorialBar';
+export {install as ThemeRiverChart} from './chart/themeRiver/install';
+export {install as SunburstChart} from './chart/sunburst/install';
+export {install as CustomChart} from './chart/custom/install';
 
 
-export const time = {
-    parse: numberUtil.parseDate,
-    format: timeUtil.format
-};
+export {install as GridSimple} from './component/grid/installSimple';
 
-const ecUtil = {};
-zrUtil.each(
-    [
-        'map', 'each', 'filter', 'indexOf', 'inherits', 'reduce', 'filter',
-        'bind', 'curry', 'isArray', 'isString', 'isObject', 'isFunction',
-        'extend', 'defaults', 'clone', 'merge'
-    ],
-    function (name) {
-        (ecUtil as any)[name] = (zrUtil as any)[name];
-    }
-);
-export {ecUtil as util};
+export {install as Polar} from './component/polar/install';
 
-const GRAPHIC_KEYS = [
-    'extendShape', 'extendPath', 'makePath', 'makeImage',
-    'mergePath', 'resizePath', 'createIcon',
-    // 'setHoverStyle',
-    // 'setLabelStyle', 'createTextStyle',
-    // 'getFont',
-    'updateProps', 'initProps', 'getTransform',
-    'clipPointsByRect', 'clipRectByRect',
-    'registerShape', 'getShapeClass',
-    'Group',
-    'Image',
-    'Text',
-    'Circle',
-    'Ellipse',
-    'Sector',
-    'Ring',
-    'Polygon',
-    'Polyline',
-    'Rect',
-    'Line',
-    'BezierCurve',
-    'Arc',
-    'IncrementalDisplayable',
-    'CompoundPath',
-    'LinearGradient',
-    'RadialGradient',
-    'BoundingRect'
-] as const;
+export {install as Geo} from './component/geo/install';
 
-export const graphic = {} as Record<typeof GRAPHIC_KEYS[number], any>;
-zrUtil.each(
-    GRAPHIC_KEYS,
-    function (name) {
-        (graphic as any)[name] = (graphicUtil as any)[name];
-    }
-);
+export {install as SingleAxis} from './component/singleAxis/install';
+export {install as Parallel} from './component/parallel/install';
+export {install as Calendar} from './component/calendar/install';
+
+
+
+export {install as Graphic} from './component/graphic/install';
+
+export {install as Toolbox} from './component/toolbox/install';
+
+export {install as Tooltip} from './component/tooltip/install';
+
+export {install as AxisPointer} from './component/axisPointer/install';
+export {install as Brush} from './component/brush/install';
+export {install as Title} from './component/title/install';
+export {install as Timeline} from './component/timeline/install';
+export {install as MarkPoint} from './component/marker/installMarkPoint';
+export {install as MarkLine} from './component/marker/installMarkLine';
+export {install as MarkArea} from './component/marker/installMarkArea';
+export {install as LegendScroll} from './component/legend/installLegendScroll';
+
+export {install as Legend} from './component/legend/install';
+
+export {install as DataZoom} from './component/dataZoom/install';
+
+export {install as DataZoomInside} from './component/dataZoom/installDataZoomInside';
+
+export {install as DataZoomSlider} from './component/dataZoom/installDataZoomSlider';
+
+export {install as VisualMap} from './component/visualMap/install';
+
+export {install as VisualMapContinuous} from './component/visualMap/installVisualMapContinuous';
+
+export {install as VisualMapPiecewise} from './component/visualMap/installVisualMapPiecewise';
+
+export {install as Aria} from './component/aria/install';
+
+
+
+// Provide IE 6,7,8 compatibility.
+// import 'zrender/vml/vml';
+
+// Render via SVG rather than canvas.
+import 'zrender/src/svg/svg';

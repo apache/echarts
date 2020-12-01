@@ -572,6 +572,4 @@ function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
     return levels;
 }
 
-SeriesModel.registerClass(TreemapSeriesModel);
-
 export default TreemapSeriesModel;

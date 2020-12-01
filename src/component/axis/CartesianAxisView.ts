@@ -227,16 +227,13 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
     }
 };
 
-class CartesianXAxisView extends CartesianAxisView {
+export class CartesianXAxisView extends CartesianAxisView {
     static type = 'xAxis';
     type = CartesianXAxisView.type;
 }
-class CartesianYAxisView extends CartesianAxisView {
+export class CartesianYAxisView extends CartesianAxisView {
     static type = 'yAxis';
     type = CartesianXAxisView.type;
 }
-
-ComponentView.registerClass(CartesianXAxisView);
-ComponentView.registerClass(CartesianYAxisView);
 
 export default CartesianAxisView;

@@ -17,16 +17,11 @@
 * under the License.
 */
 
-import * as echarts from '../../echarts';
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import {filterTransform} from './filterTransform';
+import {sortTransform} from './sortTransform';
 
-echarts.registerAction({
-    type: 'focusNodeAdjacency',
-    event: 'focusNodeAdjacency',
-    update: 'series:focusNodeAdjacency'
-}, function () {});
-
-echarts.registerAction({
-    type: 'unfocusNodeAdjacency',
-    event: 'unfocusNodeAdjacency',
-    update: 'series:unfocusNodeAdjacency'
-}, function () {});
+export function install(registers: EChartsExtensionInstallRegisters) {
+    registers.registerTransform(filterTransform);
+    registers.registerTransform(sortTransform);
+}

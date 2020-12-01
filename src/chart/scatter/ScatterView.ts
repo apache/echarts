@@ -126,6 +126,4 @@ class ScatterView extends ChartView {
     dispose() {}
 }
 
-ChartView.registerClass(ScatterView);
-
 export default ScatterView;

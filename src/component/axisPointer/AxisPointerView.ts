@@ -63,6 +63,4 @@ class AxisPointerView extends ComponentView {
     }
 }
 
-ComponentView.registerClass(AxisPointerView);
-
 export default AxisPointerView;

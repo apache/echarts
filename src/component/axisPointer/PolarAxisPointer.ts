@@ -191,7 +191,4 @@ const pointerShapeBuilder = {
     }
 };
 
-// @ts-ignore
-AxisView.registerAxisPointerClass('PolarAxisPointer', PolarAxisPointer);
-
 export default PolarAxisPointer;

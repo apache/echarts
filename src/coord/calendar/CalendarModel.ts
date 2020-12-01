@@ -281,6 +281,4 @@ function mergeAndNormalizeLayoutParams(target: CalendarOption, raw: BoxLayoutOpt
     });
 }
 
-ComponentModel.registerClass(CalendarModel);
-
 export default CalendarModel;

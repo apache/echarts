@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import {WhiskerBoxCommonMixin} from '../helper/whiskerBoxCommon';
 import {
@@ -33,6 +32,7 @@ import {
 } from '../../util/types';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import { mixin } from 'zrender/src/core/util';
 
 // [min,  Q1,  median (or Q2),  Q3,  max]
 type BoxplotDataValue = OptionDataValueNumeric[];
@@ -132,8 +132,6 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
 interface BoxplotSeriesModel extends WhiskerBoxCommonMixin<BoxplotSeriesOption> {
     getBaseAxis(): Axis2D
 }
-zrUtil.mixin(BoxplotSeriesModel, WhiskerBoxCommonMixin, true);
-
-SeriesModel.registerClass(BoxplotSeriesModel);
+mixin(BoxplotSeriesModel, WhiskerBoxCommonMixin, true);
 
 export default BoxplotSeriesModel;

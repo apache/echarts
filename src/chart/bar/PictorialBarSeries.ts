@@ -18,7 +18,6 @@
 */
 
 import BaseBarSeriesModel, { BaseBarSeriesOption } from './BaseBarSeries';
-import SeriesModel from '../../model/Series';
 import {
     OptionDataValue,
     ItemStyleOption,
@@ -175,7 +174,5 @@ class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOptio
         return super.getInitialData.apply(this, arguments as any);
     }
 }
-
-SeriesModel.registerClass(PictorialBarSeriesModel);
 
 export default PictorialBarSeriesModel;

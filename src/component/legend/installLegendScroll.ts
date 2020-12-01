@@ -17,5 +17,17 @@
 * under the License.
 */
 
-import '../coord/cartesian/AxisModel';
-import './axis/CartesianAxisView';
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import {install as installLegend} from './install';
+import LegendModel from './LegendModel';
+import LegendView from './LegendView';
+import installScrollableLegendAction from './scrollableLegendAction';
+
+export function install(registers: EChartsExtensionInstallRegisters) {
+    installLegend(registers);
+
+    registers.registerComponentModel(LegendModel);
+    registers.registerComponentView(LegendView);
+
+    installScrollableLegendAction(registers);
+}

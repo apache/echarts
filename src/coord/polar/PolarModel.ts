@@ -59,6 +59,4 @@ class PolarModel extends ComponentModel<PolarOption> {
     };
 }
 
-ComponentModel.registerClass(PolarModel);
-
 export default PolarModel;

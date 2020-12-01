@@ -8,7 +8,7 @@
     "canvas"
   ],
   "main": "index.js",
-  "module": "echarts.all.js",
+  "module": "esm/export.js",
   "jsdelivr": "dist/echarts.min.js",
   "types": "types/dist/echarts.d.ts",
   "homepage": "http://echarts.apache.org",

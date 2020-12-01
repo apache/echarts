@@ -150,6 +150,4 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
 
 }
 
-SeriesModel.registerClass(ScatterSeriesModel);
-
 export default ScatterSeriesModel;

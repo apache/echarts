@@ -75,8 +75,4 @@ class EffectScatterView extends ChartView {
     }
 
 }
-
-ChartView.registerClass(EffectScatterView);
-
-
 export default EffectScatterView;

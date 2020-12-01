@@ -393,5 +393,4 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
     }
 };
 
-
-ComponentView.registerClass(AngleAxisView);
+export default AngleAxisView;

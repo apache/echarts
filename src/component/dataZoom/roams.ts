@@ -23,7 +23,6 @@
 // pan or zoom, only dispatch one action for those data zoom
 // components.
 
-import * as echarts from '../../echarts';
 import RoamController, { RoamType } from '../../component/helper/RoamController';
 import * as throttleUtil from '../../util/throttle';
 import { makeInner } from '../../util/model';
@@ -38,6 +37,7 @@ import {
 import GlobalModel from '../../model/Global';
 import { CoordinateSystemHostModel } from '../../coord/CoordinateSystem';
 import { DataZoomGetRangeHandlers } from './InsideZoomView';
+import { EChartsExtensionInstallRegisters } from '../../extension';
 
 
 interface DataZoomInfo {
@@ -62,76 +62,6 @@ const inner = makeInner<{
     // key: coordSysModel.uid
     coordSysRecordMap: HashMap<CoordSysRecord, string>;
 }, ExtensionAPI>();
-
-
-echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER, function (ecModel: GlobalModel, api: ExtensionAPI): void {
-    const apiInner = inner(api);
-    const coordSysRecordMap = apiInner.coordSysRecordMap
-        || (apiInner.coordSysRecordMap = createHashMap<CoordSysRecord, string>());
-
-    coordSysRecordMap.each(function (coordSysRecord) {
-        // `coordSysRecordMap` always exists (becuase it hold the `roam controller`, which should
-        // better not re-create each time), but clear `dataZoomInfoMap` each round of the workflow.
-        coordSysRecord.dataZoomInfoMap = null;
-    });
-
-    ecModel.eachComponent(
-        { mainType: 'dataZoom', subType: 'inside' },
-        function (dataZoomModel: InsideZoomModel) {
-            const dzReferCoordSysWrap = collectReferCoordSysModelInfo(dataZoomModel);
-
-            each(dzReferCoordSysWrap.infoList, function (dzCoordSysInfo) {
-
-                const coordSysUid = dzCoordSysInfo.model.uid;
-                const coordSysRecord = coordSysRecordMap.get(coordSysUid)
-                    || coordSysRecordMap.set(coordSysUid, createCoordSysRecord(api, dzCoordSysInfo.model));
-
-                const dataZoomInfoMap = coordSysRecord.dataZoomInfoMap
-                    || (coordSysRecord.dataZoomInfoMap = createHashMap<DataZoomInfo, string>());
-                // Notice these props might be changed each time for a single dataZoomModel.
-                dataZoomInfoMap.set(dataZoomModel.uid, {
-                    dzReferCoordSysInfo: dzCoordSysInfo,
-                    model: dataZoomModel,
-                    getRange: null
-                });
-            });
-        }
-    );
-
-    // (1) Merge dataZoom settings for each coord sys and set to the roam controller.
-    // (2) Clear coord sys if not refered by any dataZoom.
-    coordSysRecordMap.each(function (coordSysRecord) {
-        const controller = coordSysRecord.controller;
-        let firstDzInfo: DataZoomInfo;
-        const dataZoomInfoMap = coordSysRecord.dataZoomInfoMap;
-
-        if (dataZoomInfoMap) {
-            const firstDzKey = dataZoomInfoMap.keys()[0];
-            if (firstDzKey != null) {
-                firstDzInfo = dataZoomInfoMap.get(firstDzKey);
-            }
-        }
-
-        if (!firstDzInfo) {
-            disposeCoordSysRecord(coordSysRecordMap, coordSysRecord);
-            return;
-        }
-
-        const controllerParams = mergeControllerParams(dataZoomInfoMap);
-        controller.enable(controllerParams.controlType, controllerParams.opt);
-
-        controller.setPointerChecker(coordSysRecord.containsPoint);
-
-        throttleUtil.createOrUpdate(
-            coordSysRecord,
-            'dispatchAction',
-            firstDzInfo.model.get('throttle', true),
-            'fixRate'
-        );
-    });
-
-});
-
 
 export function setViewInfoToCoordSysRecord(
     api: ExtensionAPI,
@@ -289,4 +219,77 @@ function mergeControllerParams(dataZoomInfoMap: HashMap<{ model: InsideZoomModel
             preventDefaultMouseMove: !!preventDefaultMouseMove
         }
     };
+}
+
+export function installDataZoomRoamProcessor(registers: EChartsExtensionInstallRegisters) {
+
+    registers.registerProcessor(
+        registers.PRIORITY.PROCESSOR.FILTER,
+        function (ecModel: GlobalModel, api: ExtensionAPI): void {
+            const apiInner = inner(api);
+            const coordSysRecordMap = apiInner.coordSysRecordMap
+                || (apiInner.coordSysRecordMap = createHashMap<CoordSysRecord, string>());
+
+            coordSysRecordMap.each(function (coordSysRecord) {
+                // `coordSysRecordMap` always exists (becuase it hold the `roam controller`, which should
+                // better not re-create each time), but clear `dataZoomInfoMap` each round of the workflow.
+                coordSysRecord.dataZoomInfoMap = null;
+            });
+
+            ecModel.eachComponent(
+                { mainType: 'dataZoom', subType: 'inside' },
+                function (dataZoomModel: InsideZoomModel) {
+                    const dzReferCoordSysWrap = collectReferCoordSysModelInfo(dataZoomModel);
+
+                    each(dzReferCoordSysWrap.infoList, function (dzCoordSysInfo) {
+
+                        const coordSysUid = dzCoordSysInfo.model.uid;
+                        const coordSysRecord = coordSysRecordMap.get(coordSysUid)
+                            || coordSysRecordMap.set(coordSysUid, createCoordSysRecord(api, dzCoordSysInfo.model));
+
+                        const dataZoomInfoMap = coordSysRecord.dataZoomInfoMap
+                            || (coordSysRecord.dataZoomInfoMap = createHashMap<DataZoomInfo, string>());
+                        // Notice these props might be changed each time for a single dataZoomModel.
+                        dataZoomInfoMap.set(dataZoomModel.uid, {
+                            dzReferCoordSysInfo: dzCoordSysInfo,
+                            model: dataZoomModel,
+                            getRange: null
+                        });
+                    });
+                }
+            );
+
+            // (1) Merge dataZoom settings for each coord sys and set to the roam controller.
+            // (2) Clear coord sys if not refered by any dataZoom.
+            coordSysRecordMap.each(function (coordSysRecord) {
+                const controller = coordSysRecord.controller;
+                let firstDzInfo: DataZoomInfo;
+                const dataZoomInfoMap = coordSysRecord.dataZoomInfoMap;
+
+                if (dataZoomInfoMap) {
+                    const firstDzKey = dataZoomInfoMap.keys()[0];
+                    if (firstDzKey != null) {
+                        firstDzInfo = dataZoomInfoMap.get(firstDzKey);
+                    }
+                }
+
+                if (!firstDzInfo) {
+                    disposeCoordSysRecord(coordSysRecordMap, coordSysRecord);
+                    return;
+                }
+
+                const controllerParams = mergeControllerParams(dataZoomInfoMap);
+                controller.enable(controllerParams.controlType, controllerParams.opt);
+
+                controller.setPointerChecker(coordSysRecord.containsPoint);
+
+                throttleUtil.createOrUpdate(
+                    coordSysRecord,
+                    'dispatchAction',
+                    firstDzInfo.model.get('throttle', true),
+                    'fixRate'
+                );
+            });
+    });
+
 }

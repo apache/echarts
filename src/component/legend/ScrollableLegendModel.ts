@@ -121,6 +121,4 @@ function mergeAndNormalizeLayoutParams(
     });
 }
 
-ComponentModel.registerClass(ScrollableLegendModel);
-
 export default ScrollableLegendModel;

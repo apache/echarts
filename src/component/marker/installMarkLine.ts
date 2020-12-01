@@ -16,11 +16,16 @@
 * specific language governing permissions and limitations
 * under the License.
 */
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import MarkLineModel from './MarkLineModel';
+import MarkLineView from './MarkLineView';
 
-import '../coord/parallel/parallelCreator';
+export function install(registers: EChartsExtensionInstallRegisters) {
+    registers.registerComponentModel(MarkLineModel);
+    registers.registerComponentView(MarkLineView);
 
-import '../coord/parallel/AxisModel';
-import '../coord/parallel/ParallelModel';
-
-import './axis/parallelAxisAction';
-import './axis/ParallelAxisView';
+    registers.registerPreprocessor(function (opt) {
+        // Make sure markLine component is enabled
+        opt.markLine = opt.markLine || {};
+    });
+}

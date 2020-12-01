@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import {WhiskerBoxCommonMixin} from '../helper/whiskerBoxCommon';
 import {
@@ -37,6 +36,7 @@ import {
 import List from '../../data/List';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
+import { mixin } from 'zrender/src/core/util';
 
 type CandlestickDataValue = OptionDataValueNumeric[];
 
@@ -157,8 +157,6 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
     }
 }
 
-zrUtil.mixin(CandlestickSeriesModel, WhiskerBoxCommonMixin, true);
-
-SeriesModel.registerClass(CandlestickSeriesModel);
+mixin(CandlestickSeriesModel, WhiskerBoxCommonMixin, true);
 
 export default CandlestickSeriesModel;

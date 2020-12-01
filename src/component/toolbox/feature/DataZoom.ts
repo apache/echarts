@@ -24,7 +24,7 @@ import BrushController, { BrushControllerEvents, BrushDimensionMinMax } from '..
 import BrushTargetManager, { BrushTargetInfoCartesian2D } from '../../helper/BrushTargetManager';
 import * as history from '../../dataZoom/history';
 import sliderMove from '../../helper/sliderMove';
-// Use dataZoomSelect
+// TODO: REGISTER IN INSTALL
 import '../../dataZoomSelect';
 import {
     ToolboxFeature,

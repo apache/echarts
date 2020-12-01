@@ -170,7 +170,4 @@ function getGlobalExtent(coordSys: Single, dimIndex: number) {
     return [rect[XY[dimIndex]], rect[XY[dimIndex]] + rect[WH[dimIndex]]];
 }
 
-// @ts-ignore
-AxisView.registerAxisPointerClass('SingleAxisPointer', SingleAxisPointer);
-
 export default SingleAxisPointer;

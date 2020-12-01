@@ -549,7 +549,4 @@ function getCoordSys(finder: ParsedModelFinder): Calendar {
     return coordSys as Calendar;
 }
 
-
-CoordinateSystemManager.register('calendar', Calendar);
-
 export default Calendar;

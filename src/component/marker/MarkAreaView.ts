@@ -418,4 +418,4 @@ function createList(
     return areaData;
 }
 
-ComponentView.registerClass(MarkAreaView);
+export default MarkAreaView;

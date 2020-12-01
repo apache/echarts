@@ -27,7 +27,6 @@ import {
     niceScaleExtent,
     getDataDimensionsOnAxis
 } from '../../coord/axisHelper';
-import CoordinateSystem from '../../CoordinateSystem';
 
 import PolarModel from './PolarModel';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -187,4 +186,4 @@ const polarCreator = {
     }
 };
 
-CoordinateSystem.register('polar', polarCreator);
+export default polarCreator;

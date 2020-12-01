@@ -153,6 +153,4 @@ interface SliderTimelineModel extends DataFormatMixin {
 
 mixin(SliderTimelineModel, DataFormatMixin.prototype);
 
-ComponentModel.registerClass(SliderTimelineModel);
-
 export default SliderTimelineModel;

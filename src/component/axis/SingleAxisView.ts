@@ -154,6 +154,4 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
     }
 };
 
-ComponentView.registerClass(SingleAxisView);
-
 export default SingleAxisView;

@@ -438,6 +438,4 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     };
 }
 
-ComponentModel.registerClass(LegendModel);
-
 export default LegendModel;

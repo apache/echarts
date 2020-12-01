@@ -273,4 +273,4 @@ class RadarView extends ChartView {
     }
 }
 
-ChartView.registerClass(RadarView);
+export default RadarView;

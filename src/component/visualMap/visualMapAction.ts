@@ -17,19 +17,19 @@
 * under the License.
 */
 
-import * as echarts from '../../echarts';
 import VisualMapModel from './VisualMapModel';
+import { Payload } from '../../util/types';
+import GlobalModel from '../../model/Global';
 
-const actionInfo = {
+export const visualMapActionInfo = {
     type: 'selectDataRange',
     event: 'dataRangeSelected',
     // FIXME use updateView appears wrong
     update: 'update'
 };
 
-echarts.registerAction(actionInfo, function (payload, ecModel) {
-
+export const visualMapActionHander = function (payload: Payload, ecModel: GlobalModel) {
     ecModel.eachComponent({mainType: 'visualMap', query: payload}, function (model) {
         (model as VisualMapModel).setSelected(payload.selected);
     });
-});
+}

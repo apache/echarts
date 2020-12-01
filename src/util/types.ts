@@ -1,4 +1,3 @@
-import { AriaOption } from './../component/aria';
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -47,6 +46,7 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
+import { AriaOption } from './../component/aria/install';
 
 
 

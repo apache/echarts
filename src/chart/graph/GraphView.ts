@@ -305,6 +305,4 @@ class GraphView extends ChartView {
     }
 }
 
-ChartView.registerClass(GraphView);
-
 export default GraphView;

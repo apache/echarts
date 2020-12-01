@@ -758,6 +758,4 @@ function getEdgeShape(
     };
 }
 
-ChartView.registerClass(TreeView);
-
 export default TreeView;

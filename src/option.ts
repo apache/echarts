@@ -30,7 +30,7 @@ import type {ToolboxOption} from './component/toolbox/ToolboxModel';
 import type {TooltipOption} from './component/tooltip/TooltipModel';
 import type {AxisPointerOption} from './component/axisPointer/AxisPointerModel';
 import type {BrushOption} from './component/brush/BrushModel';
-import type {TitleOption} from './component/title';
+import type {TitleOption} from './component/title/install';
 
 import type {TimelineOption} from './component/timeline/TimelineModel';
 import type {SliderTimelineOption} from './component/timeline/SliderTimelineModel';
@@ -65,7 +65,7 @@ import type {HeatmapSeriesOption} from './chart/heatmap/HeatmapSeries';
 import type {PictorialBarSeriesOption} from './chart/bar/PictorialBarSeries';
 import type {ThemeRiverSeriesOption} from './chart/themeRiver/ThemeRiverSeries';
 import type {SunburstSeriesOption} from './chart/sunburst/SunburstSeries';
-import type {CustomSeriesOption} from './chart/custom';
+import type {CustomSeriesOption} from './chart/custom/install';
 
 import {ToolboxBrushFeatureOption} from './component/toolbox/feature/Brush';
 import {ToolboxDataViewFeatureOption} from './component/toolbox/feature/DataView';
@@ -78,7 +78,7 @@ import { MarkAreaOption } from './component/marker/MarkAreaModel';
 
 
 import { ECOption, SeriesTooltipOption } from './util/types';
-import { GraphicComponentLooseOption } from './component/graphic';
+import { GraphicComponentLooseOption } from './component/graphic/install';
 import { MarkLineOption } from './component/marker/MarkLineModel';
 import { MarkPointOption } from './component/marker/MarkPointModel';
 

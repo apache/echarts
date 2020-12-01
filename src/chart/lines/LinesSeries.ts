@@ -405,6 +405,4 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
     };
 }
 
-SeriesModel.registerClass(LinesSeriesModel);
-
 export default LinesSeriesModel;

@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
-import axisModelCreator, { AxisModelExtendedInCreator } from '../axisModelCreator';
+import { AxisModelExtendedInCreator } from '../axisModelCreator';
 import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 import { AxisBaseOption } from '../axisCommonTypes';
 import AngleAxis from './AngleAxis';
@@ -88,23 +88,3 @@ export class RadiusAxisModel extends PolarAxisModel<RadiusAxisOption> {
     type = RadiusAxisModel.type;
     axis: RadiusAxis;
 }
-
-const angleAxisExtraOption: AngleAxisOption = {
-    startAngle: 90,
-
-    clockwise: true,
-
-    splitNumber: 12,
-
-    axisLabel: {
-        rotate: 0
-    }
-};
-
-const radiusAxisExtraOption: RadiusAxisOption = {
-    splitNumber: 5
-};
-
-
-axisModelCreator('angle', AngleAxisModel, angleAxisExtraOption);
-axisModelCreator('radius', RadiusAxisModel, radiusAxisExtraOption);

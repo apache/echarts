@@ -249,7 +249,4 @@ class SunburstView extends ChartView {
 
 }
 
-
-ChartView.registerClass(SunburstView);
-
 export default SunburstView;

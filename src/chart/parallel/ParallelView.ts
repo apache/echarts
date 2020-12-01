@@ -235,6 +235,4 @@ function isEmptyValue(val: ParsedValue, axisType: OptionAxisType) {
         : (val == null || isNaN(val as number)); // axisType === 'value'
 }
 
-ChartView.registerClass(ParallelView);
-
 export default ParallelView;

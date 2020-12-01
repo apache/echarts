@@ -241,6 +241,4 @@ class PiecewiseVisualMapView extends VisualMapView {
     }
 }
 
-ComponentView.registerClass(PiecewiseVisualMapView);
-
 export default PiecewiseVisualMapView;

@@ -336,6 +336,4 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
     };
 }
 
-SeriesModel.registerClass(SankeySeriesModel);
-
 export default SankeySeriesModel;

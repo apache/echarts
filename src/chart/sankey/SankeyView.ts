@@ -344,6 +344,4 @@ function createGridClipShape(rect: RectLike, seriesModel: SankeySeriesModel, cb:
     return rectEl;
 }
 
-ChartView.registerClass(SankeyView);
-
 export default SankeyView;

@@ -39,7 +39,6 @@ type BrushVisualState = 'inBrush' | 'outOfBrush';
 const STATE_LIST = ['inBrush', 'outOfBrush'] as const;
 const DISPATCH_METHOD = '__ecBrushSelect' as const;
 const DISPATCH_FLAG = '__ecInBrushSelectEvent' as const;
-const PRIORITY_BRUSH = echarts.PRIORITY.VISUAL.BRUSH;
 
 interface BrushGlobalDispatcher extends ZRenderType {
     [DISPATCH_FLAG]: boolean;
@@ -69,7 +68,7 @@ export function layoutCovers(ecModel: GlobalModel): void {
 /**
  * Register the visual encoding if this modules required.
  */
-echarts.registerVisual(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
+export default function brushVisual(ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
 
     const brushSelected: BrushSelectedItem[] = [];
     let throttleType;
@@ -235,7 +234,7 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: Exte
     });
 
     dispatchAction(api, throttleType, throttleDelay, brushSelected, payload);
-});
+};
 
 function dispatchAction(
     api: ExtensionAPI,

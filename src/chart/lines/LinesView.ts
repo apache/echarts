@@ -216,6 +216,4 @@ class LinesView extends ChartView {
 
 }
 
-ChartView.registerClass(LinesView);
-
 export default LinesView;

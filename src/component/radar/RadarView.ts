@@ -203,4 +203,4 @@ class RadarView extends ComponentView {
     }
 }
 
-ComponentView.registerClass(RadarView);
+export default RadarView;

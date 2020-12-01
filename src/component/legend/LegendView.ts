@@ -635,7 +635,4 @@ function dispatchDownplayAction(
     }
 }
 
-
-ComponentView.registerClass(LegendView);
-
 export default LegendView;

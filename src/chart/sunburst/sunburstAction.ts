@@ -21,93 +21,95 @@
  * @file Sunburst action
  */
 
-import * as echarts from '../../echarts';
-import * as helper from '../helper/treeHelper';
 import SunburstSeriesModel from './SunburstSeries';
 import { Payload } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { extend } from 'zrender/src/core/util';
 import { deprecateReplaceLog } from '../../util/log';
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import { retrieveTargetInfo, aboveViewRoot } from '../helper/treeHelper';
 
 export const ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
 
 interface SunburstRootToNodePayload extends Payload {}
 
-echarts.registerAction(
-    {type: ROOT_TO_NODE_ACTION, update: 'updateView'},
-    function (payload: SunburstRootToNodePayload, ecModel: GlobalModel) {
-
-        ecModel.eachComponent(
-            {mainType: 'series', subType: 'sunburst', query: payload},
-            handleRootToNode
-        );
-
-        function handleRootToNode(model: SunburstSeriesModel, index: number) {
-            const targetInfo = helper
-                .retrieveTargetInfo(payload, [ROOT_TO_NODE_ACTION], model);
-
-            if (targetInfo) {
-                const originViewRoot = model.getViewRoot();
-                if (originViewRoot) {
-                    payload.direction = helper.aboveViewRoot(originViewRoot, targetInfo.node)
-                        ? 'rollUp' : 'drillDown';
-                }
-                model.resetViewRoot(targetInfo.node);
-            }
-        }
-    }
-);
 
 const HIGHLIGHT_ACTION = 'sunburstHighlight';
 
 interface SunburstHighlightPayload extends Payload {}
-
-echarts.registerAction(
-    {type: HIGHLIGHT_ACTION, update: 'none'},
-    function (payload: SunburstHighlightPayload, ecModel: GlobalModel, api: ExtensionAPI) {
-        // Clone
-        payload = extend({}, payload);
-        ecModel.eachComponent(
-            {mainType: 'series', subType: 'sunburst', query: payload},
-            handleHighlight
-        );
-
-        function handleHighlight(model: SunburstSeriesModel) {
-            const targetInfo = helper
-                .retrieveTargetInfo(payload, [HIGHLIGHT_ACTION], model);
-            if (targetInfo) {
-                payload.dataIndex = targetInfo.node.dataIndex;
-            }
-        }
-
-        if (__DEV__) {
-            deprecateReplaceLog('highlight', 'sunburstHighlight');
-        }
-
-        // Fast forward action
-        api.dispatchAction(extend(payload, {
-            type: 'highlight'
-        }));
-    }
-);
 
 
 const UNHIGHLIGHT_ACTION = 'sunburstUnhighlight';
 
 interface SunburstUnhighlightPayload extends Payload {}
 
-echarts.registerAction(
-    {type: UNHIGHLIGHT_ACTION, update: 'updateView'},
-    function (payload: SunburstUnhighlightPayload, ecModel: GlobalModel, api: ExtensionAPI) {
-        payload = extend({}, payload);
+export function installSunburstAction(registers: EChartsExtensionInstallRegisters) {
+    registers.registerAction(
+        {type: ROOT_TO_NODE_ACTION, update: 'updateView'},
+        function (payload: SunburstRootToNodePayload, ecModel: GlobalModel) {
 
-        if (__DEV__) {
-            deprecateReplaceLog('downplay', 'sunburstUnhighlight');
+            ecModel.eachComponent(
+                {mainType: 'series', subType: 'sunburst', query: payload},
+                handleRootToNode
+            );
+
+            function handleRootToNode(model: SunburstSeriesModel, index: number) {
+                const targetInfo = retrieveTargetInfo(payload, [ROOT_TO_NODE_ACTION], model);
+
+                if (targetInfo) {
+                    const originViewRoot = model.getViewRoot();
+                    if (originViewRoot) {
+                        payload.direction = aboveViewRoot(originViewRoot, targetInfo.node)
+                            ? 'rollUp' : 'drillDown';
+                    }
+                    model.resetViewRoot(targetInfo.node);
+                }
+            }
         }
+    );
 
-        api.dispatchAction(extend(payload, {
-            type: 'downplay'
-        }));
-    }
-);
+    registers.registerAction(
+        {type: HIGHLIGHT_ACTION, update: 'none'},
+        function (payload: SunburstHighlightPayload, ecModel: GlobalModel, api: ExtensionAPI) {
+            // Clone
+            payload = extend({}, payload);
+            ecModel.eachComponent(
+                {mainType: 'series', subType: 'sunburst', query: payload},
+                handleHighlight
+            );
+
+            function handleHighlight(model: SunburstSeriesModel) {
+                const targetInfo = retrieveTargetInfo(payload, [HIGHLIGHT_ACTION], model);
+                if (targetInfo) {
+                    payload.dataIndex = targetInfo.node.dataIndex;
+                }
+            }
+
+            if (__DEV__) {
+                deprecateReplaceLog('highlight', 'sunburstHighlight');
+            }
+
+            // Fast forward action
+            api.dispatchAction(extend(payload, {
+                type: 'highlight'
+            }));
+        }
+    );
+
+    registers.registerAction(
+        {type: UNHIGHLIGHT_ACTION, update: 'updateView'},
+        function (payload: SunburstUnhighlightPayload, ecModel: GlobalModel, api: ExtensionAPI) {
+            payload = extend({}, payload);
+
+            if (__DEV__) {
+                deprecateReplaceLog('downplay', 'sunburstUnhighlight');
+            }
+
+            api.dispatchAction(extend(payload, {
+                type: 'downplay'
+            }));
+        }
+    );
+
+}

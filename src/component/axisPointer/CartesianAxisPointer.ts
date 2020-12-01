@@ -176,7 +176,4 @@ function getAxisDimIndex(axis: Axis2D) {
     return axis.dim === 'x' ? 0 : 1;
 }
 
-// @ts-ignore
-AxisView.registerAxisPointerClass('CartesianAxisPointer', CartesianAxisPointer);
-
 export default CartesianAxisPointer;

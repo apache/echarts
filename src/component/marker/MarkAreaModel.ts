@@ -105,6 +105,4 @@ class MarkAreaModel extends MarkerModel<MarkAreaOption> {
     };
 }
 
-ComponentModel.registerClass(MarkAreaModel);
-
 export default MarkAreaModel;

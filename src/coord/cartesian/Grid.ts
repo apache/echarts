@@ -34,7 +34,6 @@ import {
 } from '../../coord/axisHelper';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
-import CoordinateSystemManager from '../../CoordinateSystem';
 import {ParsedModelFinder, SINGLE_REFERRING} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
@@ -620,7 +619,5 @@ function updateAxisTransform(axis: Axis2D, coordBase: number) {
             return axisExtentSum - coord + coordBase;
         };
 }
-
-CoordinateSystemManager.register('cartesian2d', Grid);
 
 export default Grid;

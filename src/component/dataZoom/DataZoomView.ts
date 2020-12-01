@@ -39,6 +39,4 @@ class DataZoomView extends ComponentView {
 
 }
 
-ComponentView.registerClass(DataZoomView);
-
 export default DataZoomView;

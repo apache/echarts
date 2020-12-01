@@ -461,4 +461,4 @@ function createList(coordSys: CoordinateSystem, seriesModel: SeriesModel, mlMode
     };
 }
 
-ComponentView.registerClass(MarkLineView);
+export default MarkLineView;

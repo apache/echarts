@@ -171,6 +171,4 @@ class ParallelModel extends ComponentModel<ParallelCoordinateSystemOption> {
 
 }
 
-ComponentModel.registerClass(ParallelModel);
-
 export default ParallelModel;

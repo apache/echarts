@@ -196,6 +196,4 @@ function transInit(points: number[][], dim: number, itemLayout: BoxplotItemLayou
     });
 }
 
-ChartView.registerClass(BoxplotView);
-
 export default BoxplotView;

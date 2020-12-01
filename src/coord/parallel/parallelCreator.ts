@@ -28,10 +28,9 @@ import ExtensionAPI from '../../ExtensionAPI';
 import ParallelModel from './ParallelModel';
 import { CoordinateSystemMaster } from '../CoordinateSystem';
 import ParallelSeriesModel from '../../chart/parallel/ParallelSeries';
-import CoordinateSystemManager from '../../CoordinateSystem';
 import { SINGLE_REFERRING } from '../../util/model';
 
-function create(ecModel: GlobalModel, api: ExtensionAPI): CoordinateSystemMaster[] {
+function createParallelCoordSys(ecModel: GlobalModel, api: ExtensionAPI): CoordinateSystemMaster[] {
     const coordSysList: CoordinateSystemMaster[] = [];
 
     ecModel.eachComponent('parallel', function (parallelModel: ParallelModel, idx: number) {
@@ -58,5 +57,8 @@ function create(ecModel: GlobalModel, api: ExtensionAPI): CoordinateSystemMaster
 
     return coordSysList;
 }
+const parallelCoordSysCreator = {
+    create: createParallelCoordSys
+};
 
-CoordinateSystemManager.register('parallel', {create: create});
+export default parallelCoordSysCreator;

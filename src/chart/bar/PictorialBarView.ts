@@ -946,6 +946,4 @@ function toIntTimes(times: number) {
         : Math.ceil(times);
 }
 
-ChartView.registerClass(PictorialBarView);
-
 export default PictorialBarView;

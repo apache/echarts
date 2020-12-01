@@ -192,5 +192,4 @@ function createGridClipShape(rect: RectLike, seriesModel: ThemeRiverSeriesModel,
     return rectEl;
 }
 
-
-ChartView.registerClass(ThemeRiverView);
+export default ThemeRiverView;

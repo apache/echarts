@@ -26,7 +26,7 @@ import { BoundingRect } from '../util/graphic';
 import { MatrixArray } from 'zrender/src/core/matrix';
 import ComponentModel from '../model/Component';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import { PrepareCustomInfo } from '../chart/custom';
+import type { PrepareCustomInfo } from '../chart/custom/install';
 
 
 export interface CoordinateSystemCreator {

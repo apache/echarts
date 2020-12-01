@@ -17,12 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import { use } from '../extension';
+import { install } from './marker/installMarkLine';
 
-import './marker/MarkLineModel';
-import './marker/MarkLineView';
-
-echarts.registerPreprocessor(function (opt) {
-    // Make sure markLine component is enabled
-    opt.markLine = opt.markLine || {};
-});
+use(install);

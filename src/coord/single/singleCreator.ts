@@ -61,7 +61,9 @@ function create(ecModel: GlobalModel, api: ExtensionAPI) {
     return singles;
 }
 
-CoordinateSystem.register('single', {
+const singleCreator = {
     create: create,
     dimensions: Single.prototype.dimensions
-});
+};
+
+export default singleCreator;

@@ -209,7 +209,5 @@ class FunnelView extends ChartView {
     dispose() {}
 }
 
-ChartView.registerClass(FunnelView);
-
 
 export default FunnelView;

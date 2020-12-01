@@ -17,9 +17,18 @@
 * under the License.
 */
 
-import Component from '../../model/Component';
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import ScatterSeriesModel from './ScatterSeries';
+import ScatterView from './ScatterView';
+import {install as installGridSimple} from '../../component/grid/installSimple';
+import layoutPoints from '../../layout/points';
 
-Component.registerSubTypeDefaulter('dataZoom', function () {
-    // Default 'slider' when no type specified.
-    return 'slider';
-});
+export function install(registers: EChartsExtensionInstallRegisters) {
+    // In case developer forget to include grid component
+    installGridSimple(registers);
+
+    registers.registerSeriesModel(ScatterSeriesModel);
+    registers.registerChartView(ScatterView);
+    registers.registerLayout(layoutPoints('scatter'));
+
+}

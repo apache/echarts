@@ -16,34 +16,22 @@
 * specific language governing permissions and limitations
 * under the License.
 */
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import SliderTimelineModel from './SliderTimelineModel';
+import SliderTimelineView from './SliderTimelineView';
+import { installTimelineAction } from './timelineAction';
+import preprocessor from './preprocessor';
 
-// @ts-nocheck
+export function install(registers: EChartsExtensionInstallRegisters) {
+    registers.registerComponentModel(SliderTimelineModel);
+    registers.registerComponentView(SliderTimelineView);
 
-import * as echarts from '../echarts';
+    registers.registerSubTypeDefaulter('timeline', function () {
+        // Only slider now.
+        return 'slider';
+    });
 
+    installTimelineAction(registers);
 
-/**
- * @payload
- * @property {string} [componentType=series]
- * @property {number} [dx]
- * @property {number} [dy]
- * @property {number} [zoom]
- * @property {number} [originX]
- * @property {number} [originY]
- */
-echarts.registerAction({
-    type: 'changeAxisOrder',
-    event: 'changeAxisOrder',
-    update: 'update'
-}, function (payload, ecModel) {
-    const componentType = payload.componentType || 'series';
-
-    ecModel.eachComponent(
-        { mainType: componentType, query: payload },
-        function (componentModel) {
-            if (payload.sortInfo) {
-                componentModel.axis.setCategorySortInfo(payload.sortInfo);
-            }
-        }
-    );
-});
+    registers.registerPreprocessor(preprocessor);
+}

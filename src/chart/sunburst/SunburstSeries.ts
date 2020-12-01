@@ -331,6 +331,4 @@ function completeTreeValue(dataNode: SunburstSeriesNodeItemOption) {
 }
 
 
-SeriesModel.registerClass(SunburstSeriesModel);
-
 export default SunburstSeriesModel;

@@ -895,7 +895,4 @@ function pointerMoveTo(
     }
 }
 
-
-ComponentView.registerClass(SliderTimelineView);
-
 export default SliderTimelineView;

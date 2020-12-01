@@ -338,6 +338,4 @@ function getColorStopValues(
     return stopValues;
 }
 
-ComponentModel.registerClass(ContinuousModel);
-
 export default ContinuousModel;

@@ -17,5 +17,15 @@
 * under the License.
 */
 
-import '../coord/polar/polarCreator';
-import './axis/AngleAxisView';
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import FunnelView from './FunnelView';
+import FunnelSeriesModel from './FunnelSeries';
+import funnelLayout from './funnelLayout';
+import dataFilter from '../../processor/dataFilter';
+
+export function install(registers: EChartsExtensionInstallRegisters) {
+    registers.registerChartView(FunnelView);
+    registers.registerSeriesModel(FunnelSeriesModel);
+    registers.registerLayout(funnelLayout);
+    registers.registerProcessor(dataFilter('funnel'));
+}

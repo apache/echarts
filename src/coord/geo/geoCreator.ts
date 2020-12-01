@@ -244,6 +244,4 @@ class GeoCreator implements CoordinateSystemCreator {
 
 const geoCreator = new GeoCreator();
 
-echarts.registerCoordinateSystem('geo', geoCreator);
-
 export default geoCreator;

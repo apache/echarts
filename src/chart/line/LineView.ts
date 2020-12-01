@@ -1300,6 +1300,4 @@ class LineView extends ChartView {
     }
 }
 
-ChartView.registerClass(LineView);
-
-export default ChartView;
+export default LineView;

@@ -550,6 +550,4 @@ class ScrollableLegendView extends LegendView {
     }
 }
 
-ComponentView.registerClass(ScrollableLegendView);
-
 export default ScrollableLegendView;

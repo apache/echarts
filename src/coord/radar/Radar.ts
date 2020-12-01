@@ -19,7 +19,6 @@
 
 // TODO clockwise
 
-import * as zrUtil from 'zrender/src/core/util';
 import IndicatorAxis from './IndicatorAxis';
 import IntervalScale from '../../scale/Interval';
 import * as numberUtil from '../../util/number';
@@ -35,6 +34,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { ScaleDataValue } from '../../util/types';
 import { ParsedModelFinder } from '../../util/model';
 import { parseAxisModelMinMax } from '../scaleRawExtentInfo';
+import { map, each } from 'zrender/src/core/util';
 
 
 class Radar implements CoordinateSystem, CoordinateSystemMaster {
@@ -63,7 +63,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
     constructor(radarModel: RadarModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this._model = radarModel;
 
-        this._indicatorAxes = zrUtil.map(radarModel.getIndicatorModels(), function (indicatorModel, idx) {
+        this._indicatorAxes = map(radarModel.getIndicatorModels(), function (indicatorModel, idx) {
             const dim = 'indicator_' + idx;
             const indicatorAxis = new IndicatorAxis(dim,
                 new IntervalScale()
@@ -167,7 +167,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
                 return;
             }
             const data = radarSeries.getData();
-            zrUtil.each(indicatorAxes, function (indicatorAxis) {
+            each(indicatorAxes, function (indicatorAxis) {
                 indicatorAxis.scale.unionExtentFromData(data, data.mapDimension(indicatorAxis.dim));
             });
         }, this);
@@ -187,7 +187,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
             return f * exp10;
         }
         // Force all the axis fixing the maxSplitNumber.
-        zrUtil.each(indicatorAxes, function (indicatorAxis, idx) {
+        each(indicatorAxes, function (indicatorAxis, idx) {
             const rawExtent = getScaleExtent(indicatorAxis.scale, indicatorAxis.model).extent;
             niceScaleExtent(indicatorAxis.scale, indicatorAxis.model);
 
@@ -276,7 +276,5 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
     }
 }
 
-
-CoordinateSystemManager.register('radar', Radar);
 
 export default Radar;
