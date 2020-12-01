@@ -138,6 +138,12 @@ async function run() {
         ];
         await build(cfgs, opt.min, opt.sourcemap);
     }
+    else if (opt.type === 'myTransform') {
+        const cfgs = [
+            config.createMyTransform()
+        ];
+        await build(cfgs, opt.min, opt.sourcemap);
+    }
     else {
         const cfg = config.createECharts(opt);
         await build([cfg], opt.min, opt.sourcemap);

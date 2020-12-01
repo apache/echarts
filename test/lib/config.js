@@ -64,6 +64,7 @@
                 'echarts': ecDistPath,
                 'zrender': 'node_modules/zrender/dist/zrender',
                 'ecStat': 'test/lib/ecStat.min',
+                'myTransform': 'test/lib/myTransform/dist/myTransform',
                 // 'ecStat': 'http://localhost:8001/echarts/echarts-stat/dist/ecStat',
                 'geoJson': '../geoData/geoJson',
                 'theme': 'theme',

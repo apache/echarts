@@ -37,7 +37,7 @@ function preparePlugins(
     // if (zrRealPath !== zrNodeModulePath) {
     //     include.push(zrRealPath + '/**/*.ts');
     // }
-    include.push(zrRealPath + '/**/*.ts');
+    include.push(zrRealPath + '/src/**/*.ts');
 
     if (clean) {
         console.log('Built in clean mode without cache.');
@@ -209,6 +209,31 @@ exports.createDataTool = function () {
         },
         watch: {
             include: [nodePath.resolve(ecDir, 'extension-src/dataTool/**')]
+        }
+    };
+};
+
+exports.createMyTransform = function () {
+    let input = nodePath.resolve(ecDir, `test/lib/myTransform/src/index.ts`);
+
+    return {
+        plugins: preparePlugins({
+            clean: true
+        }, {
+            include: [
+                nodePath.resolve(ecDir, 'test/lib/myTransform/src/**/*.ts'),
+                nodePath.resolve(ecDir, 'src/**/*.ts')
+            ]
+        }),
+        input: input,
+        output: {
+            name: 'myTransform',
+            format: 'umd',
+            sourcemap: true,
+            file: nodePath.resolve(ecDir, `test/lib/myTransform/dist/myTransform.js`)
+        },
+        watch: {
+            include: [nodePath.resolve(ecDir, 'test/lib/myTransform/src/**')]
         }
     };
 };
