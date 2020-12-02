@@ -17,13 +17,13 @@
 * under the License.
 */
 
-import { EChartsExtensionInstallRegisters } from '../../extension';
+import { EChartsExtensionInstallRegisters, use } from '../../extension';
 import {install as installDataZoomInside} from './installDataZoomInside';
 import {install as installDataZoomSlider} from './installDataZoomSlider';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
-    installDataZoomInside(registers);
-    installDataZoomSlider(registers);
+    use(installDataZoomInside);
+    use(installDataZoomSlider);
 
     // Do not install './dataZoomSelect',
     // since it only work for toolbox dataZoom.

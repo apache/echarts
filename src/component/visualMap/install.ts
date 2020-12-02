@@ -17,13 +17,13 @@
 * under the License.
 */
 
-import { EChartsExtensionInstallRegisters } from '../../extension';
+import { EChartsExtensionInstallRegisters, use } from '../../extension';
 import {install as installVisualMapContinuous} from './installVisualMapContinuous';
 import {install as installVisualMapPiecewise} from './installVisualMapPiecewise';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
-    installVisualMapContinuous(registers);
-    installVisualMapPiecewise(registers);
+    use(installVisualMapContinuous);
+    use(installVisualMapPiecewise);
 
     // Do not install './dataZoomSelect',
     // since it only work for toolbox dataZoom.

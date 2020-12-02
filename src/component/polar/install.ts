@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { EChartsExtensionInstallRegisters } from '../../extension';
+import { EChartsExtensionInstallRegisters, use } from '../../extension';
 import AxisView from '../axis/AxisView';
 import PolarAxisPointer from '../axisPointer/PolarAxisPointer';
 import {install as installAxisPointer} from '../axisPointer/install';
@@ -60,7 +60,7 @@ class PolarView extends ComponentView {
 
 export function install(registers: EChartsExtensionInstallRegisters) {
 
-    installAxisPointer(registers);
+    use(installAxisPointer);
 
     AxisView.registerAxisPointerClass('PolarAxisPointer', PolarAxisPointer);
 

@@ -19,9 +19,9 @@
 
 import {install as installSimple} from './installSimple';
 import {install as installAxisPointer} from '../axisPointer/install';
-import { EChartsExtensionInstallRegisters } from '../../extension';
+import { EChartsExtensionInstallRegisters, use } from '../../extension';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
-    installSimple(registers);
-    installAxisPointer(registers);
+    use(installSimple);
+    use(installAxisPointer);
 }

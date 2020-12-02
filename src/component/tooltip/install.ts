@@ -18,12 +18,12 @@
 */
 
 import {install as installAxisPointer} from '../axisPointer/install';
-import { EChartsExtensionInstallRegisters } from '../../extension';
+import { EChartsExtensionInstallRegisters, use } from '../../extension';
 import TooltipModel from './TooltipModel';
 import TooltipView from './TooltipView';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
-    installAxisPointer(registers);
+    use(installAxisPointer);
 
     registers.registerComponentModel(TooltipModel);
     registers.registerComponentView(TooltipView);

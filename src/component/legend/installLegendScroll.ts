@@ -17,14 +17,14 @@
 * under the License.
 */
 
-import { EChartsExtensionInstallRegisters } from '../../extension';
+import { EChartsExtensionInstallRegisters, use } from '../../extension';
 import {install as installLegend} from './install';
 import LegendModel from './LegendModel';
 import LegendView from './LegendView';
 import installScrollableLegendAction from './scrollableLegendAction';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
-    installLegend(registers);
+    use(installLegend);
 
     registers.registerComponentModel(LegendModel);
     registers.registerComponentView(LegendView);

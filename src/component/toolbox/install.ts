@@ -29,5 +29,5 @@ import ToolboxView from './ToolboxView';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerComponentModel(ToolboxModel);
-    registers.registerComponentModel(ToolboxView);
+    registers.registerComponentView(ToolboxView);
 }

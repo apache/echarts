@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { EChartsExtensionInstallRegisters } from '../../extension';
+import { EChartsExtensionInstallRegisters, use } from '../../extension';
 import ComponentView from '../../view/Component';
 import SingleAxisView from '../axis/SingleAxisView';
 import axisModelCreator from '../../coord/axisModelCreator';
@@ -33,7 +33,8 @@ class SingleView extends ComponentView {
 }
 
 export function install(registers: EChartsExtensionInstallRegisters) {
-    installAxisPointer(registers);
+    use(installAxisPointer);
+
     AxisView.registerAxisPointerClass('SingleAxisPointer', SingleAxisPointer);
 
     registers.registerComponentView(SingleView);

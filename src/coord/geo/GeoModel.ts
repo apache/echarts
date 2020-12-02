@@ -290,6 +290,4 @@ class GeoModel extends ComponentModel<GeoOption> {
     }
 }
 
-ComponentModel.registerClass(GeoModel);
-
 export default GeoModel;

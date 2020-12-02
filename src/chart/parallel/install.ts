@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { EChartsExtensionInstallRegisters } from '../../extension';
+import { EChartsExtensionInstallRegisters, use } from '../../extension';
 import ParallelView from './ParallelView';
 import ParallelSeriesModel from './ParallelSeries';
 import parallelVisual from './parallelVisual';
@@ -25,7 +25,7 @@ import {install as installParallelComponent} from '../../component/parallel/inst
 
 export function install(registers: EChartsExtensionInstallRegisters) {
 
-    installParallelComponent(registers);
+    use(installParallelComponent);
 
     registers.registerChartView(ParallelView);
     registers.registerSeriesModel(ParallelSeriesModel);

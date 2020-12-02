@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { EChartsExtensionInstallRegisters } from '../../extension';
+import { EChartsExtensionInstallRegisters, use } from '../../extension';
 import ScatterSeriesModel from './ScatterSeries';
 import ScatterView from './ScatterView';
 import {install as installGridSimple} from '../../component/grid/installSimple';
@@ -25,7 +25,7 @@ import layoutPoints from '../../layout/points';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     // In case developer forget to include grid component
-    installGridSimple(registers);
+    use(installGridSimple);
 
     registers.registerSeriesModel(ScatterSeriesModel);
     registers.registerChartView(ScatterView);
