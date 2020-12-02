@@ -583,9 +583,7 @@ class GaugeView extends ChartView {
                     }, {inheritColor: autoColor})
                 });
                 setLabelValueAnimation(
-                    labelEl, {normal: itemTitleModel},
-                    seriesModel.getRawValue(idx) as ParsedValue,
-                    () => data.getName(idx)
+                    labelEl, {normal: itemTitleModel}, seriesModel.getRawValue(idx) as ParsedValue, () => data.getName(idx)
                 );
                 hasAnimation && animateLabelValue(labelEl, idx, data, seriesModel);
 
