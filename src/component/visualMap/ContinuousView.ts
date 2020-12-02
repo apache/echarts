@@ -26,7 +26,6 @@ import * as numberUtil from '../../util/number';
 import sliderMove from '../helper/sliderMove';
 import * as helper from './helper';
 import * as modelUtil from '../../util/model';
-import ComponentView from '../../view/Component';
 import VisualMapModel from './VisualMapModel';
 import ContinuousModel from './ContinuousModel';
 import GlobalModel from '../../model/Global';

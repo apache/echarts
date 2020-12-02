@@ -1070,7 +1070,7 @@ class ECharts extends Eventful {
             }
         );
 
-        handleLegacySelectEvents(this._messageCenter, this, this._model);
+        handleLegacySelectEvents(this._messageCenter, this, this._api);
     }
 
     isDisposed(): boolean {
@@ -2772,13 +2772,6 @@ function normalizeRegister(
     defaultPriority: number,
     visualType?: StageHandlerInternal['visualType']
 ): void {
-
-    // Already registered
-    if (indexOf(registeredTasks, fn) >= 0) {
-        return;
-    }
-    registeredTasks.push(fn);
-
     if (isFunction(priority) || isObject(priority)) {
         fn = priority as (StageHandler | StageHandlerOverallReset);
         priority = defaultPriority;
@@ -2793,6 +2786,12 @@ function normalizeRegister(
             assert((wrap as StageHandlerInternal).__raw !== fn);
         });
     }
+
+    // Already registered
+    if (indexOf(registeredTasks, fn) >= 0) {
+        return;
+    }
+    registeredTasks.push(fn);
 
     const stageHandler = Scheduler.wrapStageHandler(fn, visualType);
 

@@ -18,7 +18,6 @@
 */
 
 import DataZoomModel, {DataZoomOption} from './DataZoomModel';
-import ComponentModel from '../../model/Component';
 import { inheritDefaultOption } from '../../util/component';
 
 export interface InsideDataZoomOption extends DataZoomOption {

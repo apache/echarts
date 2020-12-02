@@ -22,11 +22,62 @@
 /// Make sure run it before edit this file.                         ///
 ///////////////////////////////////////////////////////////////////////
 
+// Use an empty flag function to avoid import unecessary types.
+type EChartsExtensionInstaller = (registers: any) => void;
+
 
 // Restrict exports
 export {
     init, connect, disConnect, dispose, getInstanceByDom, getInstanceById,
     registerMap, registerLocale, getMap, registerTheme
-} from './types/src/echarts.all';
+} from './types/src/export';
+
+export declare const ChartLine: EChartsExtensionInstaller;
+export declare const ChartBar: EChartsExtensionInstaller;
+export declare const ChartPie: EChartsExtensionInstaller;
+export declare const ChartScatter: EChartsExtensionInstaller;
+export declare const ChartRadar: EChartsExtensionInstaller;
+export declare const ChartMap: EChartsExtensionInstaller;
+export declare const ChartTree: EChartsExtensionInstaller;
+export declare const ChartTreemap: EChartsExtensionInstaller;
+export declare const ChartGraph: EChartsExtensionInstaller;
+export declare const ChartGauge: EChartsExtensionInstaller;
+export declare const ChartFunnel: EChartsExtensionInstaller;
+export declare const ChartParallel: EChartsExtensionInstaller;
+export declare const ChartSankey: EChartsExtensionInstaller;
+export declare const ChartBoxplot: EChartsExtensionInstaller;
+export declare const ChartCandlestick: EChartsExtensionInstaller;
+export declare const ChartEffectScatter: EChartsExtensionInstaller;
+export declare const ChartLines: EChartsExtensionInstaller;
+export declare const ChartHeatmap: EChartsExtensionInstaller;
+export declare const ChartPictorialBar: EChartsExtensionInstaller;
+export declare const ChartThemeRiver: EChartsExtensionInstaller;
+export declare const ChartSunburst: EChartsExtensionInstaller;
+export declare const ChartCustom: EChartsExtensionInstaller;
+export declare const ComponentGridSimple: EChartsExtensionInstaller;
+export declare const ComponentPolar: EChartsExtensionInstaller;
+export declare const ComponentGeo: EChartsExtensionInstaller;
+export declare const ComponentSingleAxis: EChartsExtensionInstaller;
+export declare const ComponentParallel: EChartsExtensionInstaller;
+export declare const ComponentCalendar: EChartsExtensionInstaller;
+export declare const ComponentGraphic: EChartsExtensionInstaller;
+export declare const ComponentToolbox: EChartsExtensionInstaller;
+export declare const ComponentTooltip: EChartsExtensionInstaller;
+export declare const ComponentAxisPointer: EChartsExtensionInstaller;
+export declare const ComponentBrush: EChartsExtensionInstaller;
+export declare const ComponentTitle: EChartsExtensionInstaller;
+export declare const ComponentTimeline: EChartsExtensionInstaller;
+export declare const ComponentMarkPoint: EChartsExtensionInstaller;
+export declare const ComponentMarkLine: EChartsExtensionInstaller;
+export declare const ComponentMarkArea: EChartsExtensionInstaller;
+export declare const ComponentLegendScroll: EChartsExtensionInstaller;
+export declare const ComponentLegend: EChartsExtensionInstaller;
+export declare const ComponentDataZoom: EChartsExtensionInstaller;
+export declare const ComponentDataZoomInside: EChartsExtensionInstaller;
+export declare const ComponentDataZoomSlider: EChartsExtensionInstaller;
+export declare const ComponentVisualMap: EChartsExtensionInstaller;
+export declare const ComponentVisualMapContinuous: EChartsExtensionInstaller;
+export declare const ComponentVisualMapPiecewise: EChartsExtensionInstaller;
+export declare const ComponentAri: EChartsExtensionInstaller;
 
 export {EChartsFullOption as EChartsOption} from './types/src/option';

@@ -33,7 +33,6 @@ import MarkAreaModel, { MarkArea2DDataItemOption } from './MarkAreaModel';
 import SeriesModel from '../../model/Series';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import DataDimensionInfo from '../../data/DataDimensionInfo';
-import ComponentView from '../../view/Component';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import MarkerModel from './MarkerModel';

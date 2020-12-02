@@ -35,7 +35,7 @@ import ComponentView from './view/Component';
 import ChartView from './view/Chart';
 import ComponentModel from './model/Component';
 import SeriesModel from './model/Series';
-import { isFunction, indexOf } from 'zrender/src/core/util';
+import { isFunction, indexOf, isArray, each } from 'zrender/src/core/util';
 import { Constructor } from './util/clazz';
 import { SubTypeDefaulter } from './util/component';
 
@@ -54,6 +54,7 @@ const extensionRegisters = {
     registerLoading,
     registerMap,
     PRIORITY,
+    // TODO Use ComponentModel and SeriesModel instead of Constructor
     registerComponentModel(ComponentModelClass: Constructor) {
         ComponentModel.registerClass(ComponentModelClass);
     },
@@ -78,7 +79,17 @@ export interface EChartsExtension {
     install: EChartsExtensionInstaller
 }
 
-export function use(ext: EChartsExtensionInstaller | EChartsExtension) {
+export function use(
+    ext: EChartsExtensionInstaller | EChartsExtension | (EChartsExtensionInstaller | EChartsExtension)[]
+) {
+    if (isArray(ext)) {
+        // use([ChartLine, ChartBar]);
+        each(ext, (singleExt) => {
+            use(singleExt);
+        });
+        return;
+    }
+
     if (indexOf(extensions, ext) >= 0) {
         return;
     }

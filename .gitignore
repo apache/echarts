@@ -179,10 +179,10 @@ todo
 *.sublime-project
 
 /esm
-/echarts.all.js
-/echarts.simple.js
-/echarts.common.js
-/echarts.blank.js
+/index.all.esm.js
+/index.simple.esm.js
+/index.common.esm.js
+/index.blank.esm.js
 /lib
 /types
 /index.js

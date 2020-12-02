@@ -19,7 +19,6 @@
 
 import MarkerModel, { MarkerOption, MarkerStatisticType, MarkerPositionOption } from './MarkerModel';
 import { SeriesLabelOption, ItemStyleOption, StatesOptionMixin } from '../../util/types';
-import ComponentModel from '../../model/Component';
 import GlobalModel from '../../model/Global';
 
 

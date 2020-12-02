@@ -24,7 +24,6 @@ import {createSymbol} from '../../util/symbol';
 import * as layout from '../../util/layout';
 import * as helper from './helper';
 import PiecewiseModel from './PiecewiseModel';
-import ComponentView from '../../view/Component';
 import { TextAlign } from 'zrender/src/core/types';
 import { VisualMappingOption } from '../../visual/VisualMapping';
 

@@ -30,7 +30,6 @@ import ExtensionAPI from '../../ExtensionAPI';
 import GlobalModel from '../../model/Global';
 import ScrollableLegendModel, {ScrollableLegendOption} from './ScrollableLegendModel';
 import Displayable from 'zrender/src/graphic/Displayable';
-import ComponentView from '../../view/Component';
 import Element from 'zrender/src/Element';
 import { ZRRectLike } from '../../util/types';
 

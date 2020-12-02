@@ -20,18 +20,8 @@
 export * from './echarts';
 export * from './exportAPI';
 
-export {use} from './extension';
-
 import './component/dataset';
 import './component/transform';
-
-// ----------------------------------------------
-// All of the modules that are allowed to be
-// imported are listed below.
-//
-// Users MUST NOT import other modules that are
-// not included in this list.
-// ----------------------------------------------
 
 
 // In somehow. If we export like
@@ -40,75 +30,85 @@ import './component/transform';
 // import * as LineChart_1 './chart/line/install'; export {LineChart_1 as LineChart};
 // Treeshaking in webpack will not work even if we configured sideEffects to false in package.json
 
-export {install as LineChart} from './chart/line/install';
-export {install as BarChart} from './chart/bar/install';
+export {install as ChartLine} from './chart/line/install';
+export {install as ChartBar} from './chart/bar/install';
 
-export {install as PieChart} from './chart/pie/install';
-export {install as ScatterChart} from './chart/scatter/install';
-export {install as RadarChart} from './chart/radar/install';
-export {install as MapChart} from './chart/map/install';
-export {install as TreeChart} from './chart/tree/install';
-export {install as TreemapChart} from './chart/treemap/install';
-export {install as GraphChart} from './chart/graph/install';
-export {install as GaugeChart} from './chart/gauge/install';
-export {install as FunnelChart} from './chart/funnel/install';
-export {install as ParallelChart} from './chart/parallel/install';
-export {install as SankeyChart} from './chart/sankey/install';
-export {install as BoxplotChart} from './chart/boxplot/install';
-export {install as CandlestickChart} from './chart/candlestick/install';
-export {install as EffectScatterChart} from './chart/effectScatter/install';
-export {install as LinesChart} from './chart/lines/install';
-export {install as HeatmapChart} from './chart/heatmap/install';
-export {install as PictorialBarChart} from './chart/bar/installPictorialBar';
-export {install as ThemeRiverChart} from './chart/themeRiver/install';
-export {install as SunburstChart} from './chart/sunburst/install';
-export {install as CustomChart} from './chart/custom/install';
-
-
-export {install as GridSimple} from './component/grid/installSimple';
-
-export {install as Polar} from './component/polar/install';
-
-export {install as Geo} from './component/geo/install';
-
-export {install as SingleAxis} from './component/singleAxis/install';
-export {install as Parallel} from './component/parallel/install';
-export {install as Calendar} from './component/calendar/install';
+export {install as ChartPie} from './chart/pie/install';
+export {install as ChartScatter} from './chart/scatter/install';
+export {install as ChartRadar} from './chart/radar/install';
+export {install as ChartMap} from './chart/map/install';
+export {install as ChartTree} from './chart/tree/install';
+export {install as ChartTreemap} from './chart/treemap/install';
+export {install as ChartGraph} from './chart/graph/install';
+export {install as ChartGauge} from './chart/gauge/install';
+export {install as ChartFunnel} from './chart/funnel/install';
+export {install as ChartParallel} from './chart/parallel/install';
+export {install as ChartSankey} from './chart/sankey/install';
+export {install as ChartBoxplot} from './chart/boxplot/install';
+export {install as ChartCandlestick} from './chart/candlestick/install';
+export {install as ChartEffectScatter} from './chart/effectScatter/install';
+export {install as ChartLines} from './chart/lines/install';
+export {install as ChartHeatmap} from './chart/heatmap/install';
+export {install as ChartPictorialBar} from './chart/bar/installPictorialBar';
+export {install as ChartThemeRiver} from './chart/themeRiver/install';
+export {install as ChartSunburst} from './chart/sunburst/install';
+export {install as ChartCustom} from './chart/custom/install';
 
 
+export {install as ComponentGridSimple} from './component/grid/installSimple';
 
-export {install as Graphic} from './component/graphic/install';
+export {install as ComponentPolar} from './component/polar/install';
 
-export {install as Toolbox} from './component/toolbox/install';
+export {install as ComponentGeo} from './component/geo/install';
 
-export {install as Tooltip} from './component/tooltip/install';
-
-export {install as AxisPointer} from './component/axisPointer/install';
-export {install as Brush} from './component/brush/install';
-export {install as Title} from './component/title/install';
-export {install as Timeline} from './component/timeline/install';
-export {install as MarkPoint} from './component/marker/installMarkPoint';
-export {install as MarkLine} from './component/marker/installMarkLine';
-export {install as MarkArea} from './component/marker/installMarkArea';
-export {install as LegendScroll} from './component/legend/installLegendScroll';
-
-export {install as Legend} from './component/legend/install';
-
-export {install as DataZoom} from './component/dataZoom/install';
-
-export {install as DataZoomInside} from './component/dataZoom/installDataZoomInside';
-
-export {install as DataZoomSlider} from './component/dataZoom/installDataZoomSlider';
-
-export {install as VisualMap} from './component/visualMap/install';
-
-export {install as VisualMapContinuous} from './component/visualMap/installVisualMapContinuous';
-
-export {install as VisualMapPiecewise} from './component/visualMap/installVisualMapPiecewise';
-
-export {install as Aria} from './component/aria/install';
+export {install as ComponentSingleAxis} from './component/singleAxis/install';
+export {install as ComponentParallel} from './component/parallel/install';
+export {install as ComponentCalendar} from './component/calendar/install';
 
 
+
+export {install as ComponentGraphic} from './component/graphic/install';
+
+export {install as ComponentToolbox} from './component/toolbox/install';
+
+export {install as ComponentTooltip} from './component/tooltip/install';
+
+export {install as ComponentAxisPointer} from './component/axisPointer/install';
+export {install as ComponentBrush} from './component/brush/install';
+export {install as ComponentTitle} from './component/title/install';
+export {install as ComponentTimeline} from './component/timeline/install';
+export {install as ComponentMarkPoint} from './component/marker/installMarkPoint';
+export {install as ComponentMarkLine} from './component/marker/installMarkLine';
+export {install as ComponentMarkArea} from './component/marker/installMarkArea';
+export {install as ComponentLegendScroll} from './component/legend/installLegendScroll';
+
+export {install as ComponentLegend} from './component/legend/install';
+
+export {install as ComponentDataZoom} from './component/dataZoom/install';
+
+export {install as ComponentDataZoomInside} from './component/dataZoom/installDataZoomInside';
+
+export {install as ComponentDataZoomSlider} from './component/dataZoom/installDataZoomSlider';
+
+export {install as ComponentVisualMap} from './component/visualMap/install';
+
+export {install as ComponentVisualMapContinuous} from './component/visualMap/installVisualMapContinuous';
+
+export {install as ComponentVisualMapPiecewise} from './component/visualMap/installVisualMapPiecewise';
+
+export {install as ComponentAria} from './component/aria/install';
+
+/**
+ * If developers write
+ * import * as echarts from 'echarts'.
+ * It will use all components by default.
+ *
+ * But if developers want to import partially.
+ * import {use, ChartLine} from 'echarts';
+ *
+ * This will be treeshaked.
+ */
+export {_$useAll} from './importsAll';
 
 // Provide IE 6,7,8 compatibility.
 // import 'zrender/vml/vml';

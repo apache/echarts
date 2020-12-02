@@ -34,6 +34,8 @@ import {throttle} from './util/throttle';
 import * as ecHelper from './helper';
 import parseGeoJSON from './coord/geo/parseGeoJson';
 
+export {use} from './extension';
+
 // Only for GL
 export {brushSingle as innerDrawElementOnCanvas} from 'zrender/src/canvas/graphic';
 

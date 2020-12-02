@@ -32,4 +32,4 @@ export const visualMapActionHander = function (payload: Payload, ecModel: Global
     ecModel.eachComponent({mainType: 'visualMap', query: payload}, function (model) {
         (model as VisualMapModel).setSelected(payload.selected);
     });
-}
+};

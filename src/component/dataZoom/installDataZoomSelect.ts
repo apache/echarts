@@ -20,7 +20,7 @@
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import SelectZoomModel from './SelectZoomModel';
 import SelectZoomView from './SelectZoomView';
-import installCommon from '../visualMap/installCommon';
+import installCommon from './installCommon';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
 

@@ -20,7 +20,7 @@
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import SliderZoomModel from './SliderZoomModel';
 import SliderZoomView from './SliderZoomView';
-import installCommon from '../visualMap/installCommon';
+import installCommon from './installCommon';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
 

@@ -22,7 +22,6 @@
  */
 
 import Single from './Single';
-import CoordinateSystem from '../../CoordinateSystem';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import SingleAxisModel from './AxisModel';

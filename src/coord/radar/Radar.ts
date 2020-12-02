@@ -144,7 +144,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
         this.r0 = numberUtil.parsePercent(radius[0], viewSize);
         this.r = numberUtil.parsePercent(radius[1], viewSize);
 
-        zrUtil.each(this._indicatorAxes, function (indicatorAxis, idx) {
+        each(this._indicatorAxes, function (indicatorAxis, idx) {
             indicatorAxis.setExtent(this.r0, this.r);
             let angle = (this.startAngle + idx * Math.PI * 2 / this._indicatorAxes.length);
             // Normalize to [-PI, PI]
@@ -156,7 +156,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
     update(ecModel: GlobalModel, api: ExtensionAPI) {
         const indicatorAxes = this._indicatorAxes;
         const radarModel = this._model;
-        zrUtil.each(indicatorAxes, function (indicatorAxis) {
+        each(indicatorAxes, function (indicatorAxis) {
             indicatorAxis.scale.setExtent(Infinity, -Infinity);
         });
         ecModel.eachSeriesByType('radar', function (radarSeries, idx) {

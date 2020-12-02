@@ -188,8 +188,6 @@ class ParallelAxisView extends ComponentView {
     }
 }
 
-ComponentView.registerClass(ParallelAxisView);
-
 function fromAxisAreaSelect(
     axisModel: ParallelAxisModel, ecModel: GlobalModel, payload: Payload
 ): boolean {

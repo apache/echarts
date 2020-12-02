@@ -45,7 +45,6 @@ import {
     filter,
     HashMap
 } from 'zrender/src/core/util';
-import ComponentView from '../../view/Component';
 import { makeInner } from '../../util/model';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { getVisualFromData } from '../../visual/helper';

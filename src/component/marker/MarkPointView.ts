@@ -23,7 +23,6 @@ import * as numberUtil from '../../util/number';
 import List from '../../data/List';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
-import ComponentView from '../../view/Component';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import SeriesModel from '../../model/Series';
 import MarkPointModel, {MarkPointDataItemOption} from './MarkPointModel';

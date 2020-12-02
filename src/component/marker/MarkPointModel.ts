@@ -18,7 +18,6 @@
 */
 
 import MarkerModel, { MarkerOption, MarkerPositionOption } from './MarkerModel';
-import ComponentModel from '../../model/Component';
 import GlobalModel from '../../model/Global';
 import {
     SymbolOptionMixin,

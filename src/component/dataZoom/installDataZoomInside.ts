@@ -21,7 +21,7 @@ import { EChartsExtensionInstallRegisters } from '../../extension';
 import InsideZoomModel from './InsideZoomModel';
 import InsideZoomView from './InsideZoomView';
 import {installDataZoomRoamProcessor} from './roams';
-import installCommon from '../visualMap/installCommon';
+import installCommon from './installCommon';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
 
