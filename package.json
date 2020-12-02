@@ -8,7 +8,7 @@
     "canvas"
   ],
   "main": "index.js",
-  "module": "esm/export.js",
+  "module": "index.esm.js",
   "jsdelivr": "dist/echarts.min.js",
   "types": "types/dist/echarts.d.ts",
   "homepage": "http://echarts.apache.org",
@@ -16,6 +16,7 @@
     "type": "git",
     "url": "https://github.com/apache/incubator-echarts.git"
   },
+  "sideEffects": false,
   "scripts": {
     "prepublish": "node build/build.js --prepublish",
     "build": "node build/build.js",

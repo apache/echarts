@@ -178,8 +178,12 @@ todo
 *.sublime-workspace
 *.sublime-project
 
+# Result of node.js perf
+*.asm
+
+# Distribution files
 /esm
-/index.all.esm.js
+/index.esm.js
 /index.simple.esm.js
 /index.common.esm.js
 /index.blank.esm.js
@@ -191,7 +195,10 @@ todo
 /index.blank.js
 /extension-esm
 /extension
+/core.js
+/core.d.ts
+/charts.js
+/charts.d.ts
+/components.js
+/components.d.ts
 *.tgz
-
-# Result of node.js perf
-*.asm

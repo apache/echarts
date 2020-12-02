@@ -26,23 +26,23 @@ import * as matrix from 'zrender/src/core/matrix';
 import * as vector from 'zrender/src/core/vector';
 import * as zrUtil from 'zrender/src/core/util';
 import * as colorTool from 'zrender/src/tool/color';
-import * as graphicUtil from './util/graphic';
-import * as numberUtil from './util/number';
-import * as formatUtil from './util/format';
-import * as timeUtil from './util/time';
-import {throttle} from './util/throttle';
-import * as ecHelper from './helper';
-import parseGeoJSON from './coord/geo/parseGeoJson';
+import * as graphicUtil from '../util/graphic';
+import * as numberUtil from '../util/number';
+import * as formatUtil from '../util/format';
+import * as timeUtil from '../util/time';
+import {throttle} from '../util/throttle';
+import * as ecHelper from '../helper';
+import parseGeoJSON from '../coord/geo/parseGeoJson';
 
-export {use} from './extension';
+export {use} from '../extension';
 
 // Only for GL
 export {brushSingle as innerDrawElementOnCanvas} from 'zrender/src/canvas/graphic';
 
 export {zrender};
-export {default as List} from './data/List';
-export {default as Model} from './model/Model';
-export {default as Axis} from './coord/Axis';
+export {default as List} from '../data/List';
+export {default as Model} from '../model/Model';
+export {default as Axis} from '../coord/Axis';
 export {throttle};
 export {ecHelper as helper};
 export {matrix};

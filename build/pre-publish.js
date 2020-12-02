@@ -93,28 +93,26 @@ const compileWorkList = [
         before: async function () {
             fsExtra.removeSync(tmpDir);
             fsExtra.removeSync(nodePath.resolve(ecDir, 'esm'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.all.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.blank.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.common.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.simple.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.esm.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.blank.esm.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.common.esm.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.simple.esm.js'));
         },
         after: async function () {
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.all.js'), nodePath.resolve(ecDir, 'echarts.all.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'echarts.blank.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'echarts.common.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'echarts.simple.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.all.js'), nodePath.resolve(ecDir, 'index.esm.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'index.blank.esm.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'index.common.esm.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'index.simple.esm.js'));
             fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'esm'));
 
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.all.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.blank.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.common.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.simple.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.esm.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.blank.esm.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.esm.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.esm.js'), 'esm');
 
             await transformDistributionFiles(nodePath.resolve(ecDir, 'esm'), 'esm');
             await transformDistributionFiles(nodePath.resolve(ecDir, 'types'), 'esm');
             fsExtra.removeSync(tmpDir);
-
-            await bundleDTS();
         }
     },
     {
@@ -156,6 +154,7 @@ const compileWorkList = [
             removeESmoduleMark();
 
             fsExtra.removeSync(tmpDir);
+
         }
     },
     {
@@ -230,6 +229,11 @@ module.exports = async function () {
 
         process.stdout.write(chalk.green.dim(` done \n`));
     }
+
+    process.stdout.write(chalk.green.dim(`Generating entries ...`));
+    generateEntries();
+    process.stdout.write(chalk.green.dim(`Bundling DTS ...`));
+    await bundleDTS();
 
     console.log(chalk.green.dim('All done.'));
 };
@@ -428,4 +432,28 @@ function readTSConfig() {
     const tsConfigText = fs.readFileSync(filePath, {encoding: 'utf8'});
     return (new Function(`return ( ${tsConfigText} )`))();
 }
+
+
+function generateEntries() {
+    ['charts', 'components', 'core'].forEach(entryName => {
+        const jsCode = fs.readFileSync(nodePath.join(__dirname, `template/${entryName}.js`), 'utf-8');
+        let dtsCode = fs.readFileSync(nodePath.join(__dirname, `/template/${entryName}.d.ts`), 'utf-8');
+
+        fs.writeFileSync(nodePath.join(__dirname, `../${entryName}.js`), jsCode, 'utf-8');
+
+        if (entryName === 'charts' || entryName === 'components') {
+            const exportModulesCode = [];
+            const modules = require(`../lib/export/${entryName}`);
+            for (let key in modules) {
+                if (modules.hasOwnProperty(key) && !key.startsWith('_')) {
+                    exportModulesCode.push(`export declare const ${key}: EChartsExtensionInstaller;`);
+                }
+            }
+
+            dtsCode = dtsCode.replace('{{body}}', exportModulesCode.join('\n'));
+        }
+        fs.writeFileSync(nodePath.join(__dirname, `../${entryName}.d.ts`), dtsCode, 'utf-8');
+    });
+}
+
 module.exports.readTSConfig = readTSConfig;

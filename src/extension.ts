@@ -102,3 +102,7 @@ export function use(
     }
     ext.install(extensionRegisters);
 }
+
+// A simpler use type for exporting to reduce exported inner modules.
+type SimpleEChartsExtensionType = Function | { install: Function };
+export declare function useSimple(ext: SimpleEChartsExtensionType | (SimpleEChartsExtensionType)[]): void;
