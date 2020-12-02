@@ -146,9 +146,17 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
      */
     getRawIndex(displayIndex: OrdinalNumber): OrdinalNumber {
         if (this._categorySortInfo.length) {
-            return this._categorySortInfo[displayIndex].ordinalNumber;
+            // Sorted
+            if (this._categorySortInfo[displayIndex] == null) {
+                // Out of range, e.g., when axis max is larger than cagetory number
+                return null;
+            }
+            else {
+                return this._categorySortInfo[displayIndex].ordinalNumber;
+            }
         }
         else {
+            // Not sorted
             return displayIndex;
         }
     }
@@ -159,10 +167,15 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
     getLabel(tick: ScaleTick): string {
         if (!this.isBlank()) {
             const rawIndex = this.getRawIndex(tick.value);
-            const cateogry = this._ordinalMeta.categories[rawIndex];
-            // Note that if no data, ordinalMeta.categories is an empty array.
-            // Return empty if it's not exist.
-            return cateogry == null ? '' : cateogry + '';
+            if (rawIndex == null) {
+                return '';
+            }
+            else {
+                const cateogry = this._ordinalMeta.categories[rawIndex];
+                // Note that if no data, ordinalMeta.categories is an empty array.
+                // Return empty if it's not exist.
+                return cateogry == null ? '' : cateogry + '';
+            }
         }
     }
 
