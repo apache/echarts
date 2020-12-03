@@ -22,7 +22,7 @@ const path = require('path');
 const babel = require('@babel/core');
 const fs = require('fs');
 // See require('@babel/plugin-transform-modules-commonjs')
-const esm2cjsPlugin = path.resolve(__dirname, '../../build/babel-plugin-transform-modules-commonjs-ec');
+// const esm2cjsPlugin = path.resolve(__dirname, '../../build/babel-plugin-transform-modules-commonjs-ec');
 const removeDEVPlugin = path.resolve(__dirname, '../../build/babel-plugin-transform-remove-dev');
 
 function run() {
@@ -69,7 +69,8 @@ function esm2cjs() {
 
         function transformSingle() {
             let result = babel.transformFileSync(filePath, {
-                plugins: [removeDEVPlugin, esm2cjsPlugin]
+                // plugins: [removeDEVPlugin, esm2cjsPlugin]
+                plugins: [removeDEVPlugin]
             });
 
             suite.writeToExpectFile(fileName, result.code);

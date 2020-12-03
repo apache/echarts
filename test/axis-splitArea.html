@@ -40,6 +40,10 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
+        <div id="polarCategory12"></div>
+        <div id="polarValue12"></div>
+        <div id="cartesianCatetory12"></div>
+        <div id="cartesianValue12"></div>
 
 
 
@@ -176,6 +180,172 @@ under the License.
             });
         });
         </script>
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                var option = {
+                    angleAxis: {
+                        type: 'category',
+                        data: [0,1,2,3,4,5,6,7,8,9,10,11],
+                        boundaryGap: false,
+                        splitArea: { show: true },
+                        splitLine: { show: true },
+                        axisLabel: { interval: 0 }
+                    },
+                    radiusAxis: {
+                        type: 'value',
+                        axisLine: { show: false },
+                        splitLine: { show: false },
+                    },
+                    polar: {
+                    },
+                    tooltip: {},
+                    series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'polar',
+                        data: []
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'polarCategory12', {
+                    title: [
+                        'interval area in "category" angleAxis',
+                    ],
+                    height: 300,
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                var option = {
+                    angleAxis: {
+                        type: 'value',
+                        // splitLine: { show: false },
+                        splitArea: { show: true },
+                        min: 0,
+                        max: 12
+                    },
+                    radiusAxis: {
+                        type: 'value',
+                        axisLine: { show: false },
+                        splitLine: { show: false },
+                    },
+                    polar: {
+                    },
+                    tooltip: {},
+                    series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'polar',
+                        data: []
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'polarValue12', {
+                    title: [
+                        'interval area in "value" angleAxis',
+                    ],
+                    height: 300,
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                var option = {
+                    xAxis: {
+                        type: 'category',
+                        data: [0,1,2,3,4,5,6,7,8,9,10,11,12],
+                        boundaryGap: false,
+                        splitArea: { show: true },
+                        splitLine: { show: true },
+                        axisLabel: { interval: 0 },
+                        min: 0,
+                        max: 12
+                    },
+                    yAxis: {
+                        type: 'value',
+                        splitLine: { show: false }
+                    },
+                    tooltip: {},
+                    series: [{
+                        type: 'scatter',
+                        data: []
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'cartesianCatetory12', {
+                    title: [
+                        'interval axisArea in on "category" xAxis',
+                    ],
+                    height: 200,
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+        <script>
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                var option = {
+                    xAxis: {
+                        type: 'value',
+                        splitArea: { show: true },
+                        interval: 1,
+                        min: 0,
+                        max: 12
+                    },
+                    yAxis: {
+                        type: 'value',
+                        splitLine: { show: false }
+                    },
+                    tooltip: {},
+                    series: [{
+                        type: 'scatter',
+                        data: []
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'cartesianValue12', {
+                    title: [
+                        'interval axisArea in on "value" xAxis',
+                    ],
+                    height: 200,
+                    option: option
+                });
+            });
+        </script>
+
+
+
 
     </body>
 </html>

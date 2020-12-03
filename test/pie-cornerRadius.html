@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+        <style>
+            .test-title-inner {
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+
+        <div id="main0"></div>
+
+        <script>
+        require([
+            'echarts',
+            // 'echarts/chart/pie',
+            // 'echarts/component/tooltip',
+            // 'echarts/component/legend'
+        ], function (echarts) {
+            var option;
+
+            var colorList = ['#dc67ce', '#7ddc67', '#8067dc', '#dc6967', '#dcd267', '#67b7dc'];
+            // cornerRadius can be an array [innerCornerRadius, outerCornerRadius]
+            var outerCornerRadius = 5;
+            var innerCornerRadius = 5;
+            var usePercent = false;
+            var isCircular = false;
+            var isRounderOnEmphasis = false;
+            var roseType = 'area';
+            var randomTimer;
+            var data = [
+                {
+                    name: "America",
+                    value: 260
+                },
+                {
+                    name: "Zambia",
+                    value: 230
+                },
+                {
+                    name: "Ireland",
+                    value: 200
+                },
+                {
+                    name: "Germany",
+                    value: 165
+                },
+                {
+                    name: "Australia",
+                    value: 139
+                },
+                {
+                    name: "Japan",
+                    value: 128
+                }
+            ];
+
+            option = {
+                color: colorList,
+                title: {
+                    text: getTitle()
+                },
+                tooltip: {},
+                legend: {
+                    bottom: 0
+                },
+                series: {
+                    type: 'pie',
+                    roseType: roseType,
+                    selectedMode: 'single',
+                    selectedOffset: 30,
+                    label: {
+                        formatter: '{b} {c}({d}%)'
+                    },
+                    itemStyle: {
+                        borderRadius: getCornerRadius(),
+                    },
+                    // itemStyle: {
+                    //     borderColor: '#fff',
+                    //     borderWidth: 5
+                    // },
+                    data: echarts.util.clone(data)
+                }
+            };
+
+            function getTitle() {
+                return 'cornerRadius ['
+                    + innerCornerRadius + (usePercent ? '%' : '')
+                    + ', '
+                    + outerCornerRadius + (usePercent ? '%' : '')
+                    + ']';
+            }
+
+            function getCornerRadius() {
+                return [
+                    innerCornerRadius + (usePercent ? '%' : ''),
+                    outerCornerRadius + (usePercent ? '%' : '')
+                ];
+            }
+
+            function getEmphasisCornerRadius() {
+                const cornerRadius = getCornerRadius();
+                if (!isRounderOnEmphasis) {
+                    return cornerRadius;
+                }
+                const emphasisCornerRadius = [
+                    parseInt(cornerRadius[0], 10) * 2,
+                    parseInt(cornerRadius[1], 10) * 2
+                ];
+                if (usePercent) {
+                    emphasisCornerRadius[0] = emphasisCornerRadius[0] + '%';
+                    emphasisCornerRadius[1] = emphasisCornerRadius[1] + '%';
+                }
+                return emphasisCornerRadius;
+            }
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Test Pie with **cornerRadius**',
+                    '**cornerRadius** can be a number | string | number array | string array'
+                ],
+                option: option,
+                buttons: [
+                    {
+                        text: 'increase innerCornerRadius',
+                        onclick: function () {
+                            innerCornerRadius += 5;
+                            chart.setOption({
+                                title: {
+                                    text: getTitle()
+                                },
+                                series: [{
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
+                                    }
+                                }]
+                            });
+                        }
+                    },
+                    {
+                        text: 'decrease innerCornerRadius',
+                        onclick: function () {
+                            innerCornerRadius -= 5;
+                            if (innerCornerRadius < 0) {
+                                innerCornerRadius = 0;
+                            }
+                            chart.setOption({
+                                title: {
+                                    text: getTitle()
+                                },
+                                series: [{
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
+                                    }
+                                }]
+                            });
+                        }
+                    },
+                    {
+                        text: 'increase outerCornerRadius',
+                        onclick: function () {
+                            outerCornerRadius += 5;
+                            chart.setOption({
+                                title: {
+                                    text: getTitle()
+                                },
+                                series: [{
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
+                                    }
+                                }]
+                            });
+                        }
+                    },
+                    {
+                        text: 'decrease outerCornerRadius',
+                        onclick: function () {
+                            outerCornerRadius -= 5;
+                            if (outerCornerRadius < 0) {
+                                outerCornerRadius = 0;
+                            }
+                            chart.setOption({
+                                title: {
+                                    text: getTitle()
+                                },
+                                series: [{
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
+                                    }
+                                }]
+                            });
+                        }
+                    },
+                    {
+                        text: 'use percent',
+                        onclick: function () {
+                            usePercent = !usePercent;
+                            chart.setOption({
+                                title: {
+                                    text: getTitle()
+                                },
+                                series: [{
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
+                                    }
+                                }]
+                            });
+                        }
+                    },
+                    {
+                        text: 'random cornerRadius',
+                        onclick: function () {
+                            // clearInterval(randomTimer);
+                            // if (randomTimer) {
+                            //     randomTimer = null;
+                            // }
+                            // else {
+                            //     randomTimer = setInterval(function () {
+                            outerCornerRadius = ~~(Math.random() * 50);
+                            innerCornerRadius = ~~(Math.random() * 50);
+                            chart.setOption({
+                                title: {
+                                    text: getTitle()
+                                },
+                                series: [{
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
+                                    }
+                                }]
+                            });
+                            //     }, 2e3);
+                            // }
+                        }
+                    },
+                    {
+                        text: 'roseType',
+                        onclick: function () {
+                            roseType = roseType ? false : 'area';
+                            chart.setOption({
+                                series: [{
+                                    roseType: roseType
+                                }]
+                            });
+                        }
+                    },
+                    {
+                        text: 'circular',
+                        onclick: function () {
+                            var innerRadius;
+                            if (!isCircular) {
+                                innerRadius = ~~(Math.random() * 70);
+                            }
+                            chart.setOption({
+                                series: [{
+                                    radius: isCircular ? [0, '75%'] : [innerRadius + '%', '75%']
+                                }]
+                            });
+                            this.innerText = 'circular' + (innerRadius ? ' ' + innerRadius + '%' : '');
+                            isCircular = !isCircular;
+                        }
+                    },
+                    {
+                        text: 'random data',
+                        onclick: function () {
+                            var randomData = echarts.util.clone(data);
+                            echarts.util.each(randomData, function (e) {
+                                e.value = ~~(Math.random() * 1e3);
+                            });
+                            chart.setOption({
+                                series: [{
+                                    data: randomData
+                                }]
+                            });
+                        }
+                    },
+                    {
+                        text: 'rounder on emphasis',
+                        onclick: function () {
+                            isRounderOnEmphasis = !isRounderOnEmphasis;
+                            chart.setOption({
+                                series: [{
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
+                                    }
+                                }]
+                            });
+                        }
+                    },
+                    {
+                        text: 'reset',
+                        onclick: function () {
+                            outerCornerRadius = 5;
+                            innerCornerRadius = 5;
+                            usePercent = false;
+                            isCircular = false;
+                            roseType = 'area';
+                            isRounderOnEmphasis = false;
+                            chart.setOption({
+                                title: {
+                                    text: getTitle()
+                                },
+                                series: [{
+                                    itemStyle: { borderRadius: getCornerRadius() },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
+                                    },
+                                    roseType: roseType,
+                                    radius: [0, '75%'],
+                                    data: data
+                                }]
+                            });
+                        }
+                    }
+                ]
+            });
+        });
+        </script>
+
+    </body>
+</html>
+

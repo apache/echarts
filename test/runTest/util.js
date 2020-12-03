@@ -24,7 +24,6 @@ const fs = require('fs');
 const rollup = require('rollup');
 const resolve = require('rollup-plugin-node-resolve');
 const commonjs = require('rollup-plugin-commonjs');
-const util = require('util');
 const config = require('./config');
 
 function modifyEChartsCode(code) {
@@ -126,11 +125,11 @@ module.exports.buildRuntimeCode = async function () {
             }
         ]
     });
-    const output = await bundle.generate({
+    const { output } = await bundle.generate({
         format: 'iife',
         name: 'autorun'
     });
-    return output.code;
+    return output[0].code;
 };
 
 module.exports.waitTime = function (time) {
@@ -139,4 +138,4 @@ module.exports.waitTime = function (time) {
             resolve();
         }, time);
     });
-}
+};

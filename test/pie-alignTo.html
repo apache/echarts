@@ -68,12 +68,12 @@ under the License.
                     type: 'pie',
                     radius: '50%',
                     data: data,
-                    animation: false,
+
                     labelLine: {
                         length2: 15
                     },
                     label: {
-                        margin: 20,
+                        edgeDistance: 20,
                         position: 'outer'
                     }
                 }]
@@ -84,12 +84,12 @@ under the License.
                     type: 'pie',
                     radius: '50%',
                     data: data,
-                    animation: false,
+
                     labelLine: {
                         length2: 15
                     },
                     label: {
-                        margin: 20,
+                        edgeDistance: 20,
                         position: 'outer',
                         alignTo: 'labelLine'
                     }
@@ -101,12 +101,12 @@ under the License.
                     type: 'pie',
                     radius: '50%',
                     data: data,
-                    animation: false,
+
                     labelLine: {
                         length2: 15
                     },
                     label: {
-                        margin: 20,
+                        edgeDistance: 20,
                         position: 'outer',
                         alignTo: 'edge'
                     }
@@ -119,7 +119,7 @@ under the License.
                     radius: '25%',
                     center: ['50%', '50%'],
                     data: data,
-                    animation: false,
+
                     labelLine: {
                         length2: 15
                     },
@@ -136,12 +136,12 @@ under the License.
                     radius: '25%',
                     center: ['50%', '50%'],
                     data: data,
-                    animation: false,
+
                     labelLine: {
                         length2: 15
                     },
                     label: {
-                        margin: 20,
+                        edgeDistance: 20,
                         position: 'outer',
                         alignTo: 'labelLine'
                     },
@@ -154,7 +154,7 @@ under the License.
                     radius: '25%',
                     center: ['50%', '50%'],
                     data: data,
-                    animation: false,
+
                     labelLine: {
                         length2: 15
                     },
@@ -171,12 +171,12 @@ under the License.
                     radius: '25%',
                     center: ['50%', '50%'],
                     data: data,
-                    animation: false,
+
                     labelLine: {
                         length2: 15
                     },
                     label: {
-                        margin: 20,
+                        edgeDistance: 20,
                         position: 'outer',
                         alignTo: 'labelLine'
                     },
@@ -207,52 +207,49 @@ under the License.
                 option: option2
             });
 
-            var gui = new dat.GUI({
-            });
+            var gui = new dat.GUI();
             var config = {
                 length2: 15,
-                margin: 20
+                edgeDistance: 20,
+                overflow: 'truncate'
             };
 
-            gui
-                .add(config, 'length2', 0, 300)
-                .onChange(function (value) {
-                    if (chart0) {
-                        option0.series[0].labelLine.length2 = value;
-                        option1.series[0].labelLine.length2 = value;
-                        optionNone.series[0].labelLine.length2 = value;
-                        chart0.setOption(option0);
-                        chart1.setOption(option1);
-                        chartNone.setOption(optionNone);
-
-                        for (var i = 0; i < 4; ++i) {
-                            option2.series[i].labelLine.length2 = value;
+            function update() {
+                const newOpt = {
+                    series: [{
+                        labelLine: {
+                            length2: config.length2
+                        },
+                        label: {
+                            edgeDistance: config.edgeDistance,
+                            overflow: config.overflow
                         }
-                        chart2.setOption(option2);
-                    }
-                });
+                    }]
+                }
+                chart0.setOption(newOpt);
+                chart1.setOption(newOpt);
+                chartNone.setOption(newOpt);
 
-            gui
-                .add(config, 'margin', 0, 300)
-                .onChange(function (value) {
-                    if (chart0) {
-                        option0.series[0].label.margin = value;
-                        option1.series[0].label.margin = value;
-                        optionNone.series[0].label.margin = value;
-                        chart0.setOption(option0);
-                        chart1.setOption(option1);
-                        chartNone.setOption(optionNone);
-
-                        for (var i = 0; i < 4; ++i) {
-                            option2.series[i].label.margin = value;
+                const newOpt2 = { series: [] };
+                for (var i = 0; i < 4; ++i) {
+                    newOpt2.series.push({
+                        labelLine: {
+                            length2: config.length2,
+                        },
+                        label: {
+                            edgeDistance: config.edgeDistance,
+                            overflow: config.overflow
                         }
-                        chart2.setOption(option2);
-                    }
-                });
-            });
+                    })
+                }
+                chart2.setOption(newOpt2);
+            }
+
+            gui.add(config, 'length2', 0, 300).onChange(update);
+            gui.add(config, 'edgeDistance', 0, 300).onChange(update);
+            gui.add(config, 'overflow', ['truncate', 'break', 'breakAll']).onChange(update);
+        });
         </script>
-
-
     </body>
 </html>
 

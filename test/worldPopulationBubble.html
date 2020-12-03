@@ -46,7 +46,7 @@ under the License.
                 // 'echarts/component/visualMap'
             ], function (echarts) {
 
-                $.get('../map/json/world.json', function (worldJson) {
+                $.get('./data/map/json/world.json', function (worldJson) {
                     echarts.registerMap('world', worldJson);
 
                     var latlong = {};

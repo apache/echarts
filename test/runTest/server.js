@@ -151,7 +151,7 @@ function startTests(testsNameList, socket, {
         }
         threadsCount = Math.min(threadsCount, pendingTests.length);
         // Assigning tests to threads
-        runningThreads = new Array(threadsCount).fill(0).map(a => new Thread() );
+        runningThreads = new Array(threadsCount).fill(0).map(() => new Thread() );
         for (let i = 0; i < pendingTests.length; i++) {
             runningThreads[i % threadsCount].tests.push(pendingTests[i]);
         }
@@ -162,7 +162,7 @@ function startTests(testsNameList, socket, {
                 '--speed', replaySpeed || 5,
                 '--actual', actualVersion,
                 '--expected', expectedVersion,
-                '--renderer', renderer,
+                '--renderer', renderer || '',
                 ...(noHeadless ? ['--no-headless'] : []),
                 ...(noSave ? ['--no-save'] : [])
             ]);
@@ -178,6 +178,7 @@ function startTests(testsNameList, socket, {
 function checkPuppeteer() {
     try {
         const packageConfig = require('puppeteer/package.json');
+        console.log(`puppeteer version: ${packageConfig.version}`);
         return semver.satisfies(packageConfig.version, '>=1.19.0');
     }
     catch (e) {
@@ -297,7 +298,7 @@ async function start() {
                     replaySpeed: 2,
                     actualVersion: data.actualVersion,
                     expectedVersion: data.expectedVersion,
-                    renderer: data.renderer,
+                    renderer: data.renderer || '',
                     noSave: true
                 });
             }

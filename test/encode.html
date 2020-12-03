@@ -178,7 +178,6 @@ under the License.
 
             require([
                 'echarts',
-                'extension/dataTool'
                 // 'echarts/chart/boxplot',
                 // 'echarts/chart/scatter',
                 // 'echarts/component/title',
@@ -186,9 +185,7 @@ under the License.
                 // 'echarts/component/grid',
                 // 'echarts/component/tooltip',
                 // 'echarts/component/dataZoom'
-            ], function (echarts, dataTool) {
-
-                var prepareBoxplotData = dataTool.prepareBoxplotData;
+            ], function (echarts) {
 
                 data = [];
                 for (var seriesIndex = 0; seriesIndex < 5; seriesIndex++) {
@@ -200,7 +197,7 @@ under the License.
                         }
                         seriesData.push(cate);
                     }
-                    data.push(prepareBoxplotData(seriesData, {layout: 'horizontal'}));
+                    data.push(seriesData);
                 }
 
                 var option = {
@@ -265,6 +262,19 @@ under the License.
                             end: 20
                         }
                     ],
+                    dataset: [{
+                        source: data[0]
+                    }, {
+                        source: data[1]
+                    }, {
+                        transform: {
+                            type: 'boxplot'
+                        }
+                    }, {
+                        transform: {
+                            type: 'boxplot'
+                        }
+                    }],
                     series: [
                         {
                             name: 'category0',
@@ -273,12 +283,12 @@ under the License.
                             encode: {
                                 tooltip: [3, 2, 4]
                             },
-                            data: data[0].boxData
+                            datasetIndex: 2
                         },
                         {
                             name: 'category1',
                             type: 'boxplot',
-                            data: data[1].boxData
+                            datasetIndex: 3
                         }
                     ]
                 };

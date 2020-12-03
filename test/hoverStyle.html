@@ -95,8 +95,8 @@ under the License.
                     '<span style="color:yellow">'
                         + (useHoverLayer ? 'Using HoverLayer' : 'NOT using HoverLayer')
                     + '</span>',
-                    'hoverLayerThreshold: ' + hoverLayerThreshold,
-                    'zr refresh base layer at: <span style="color:yellow">' + (zrRefreshTimestamp || null) + '</span>'
+                    'hoverLayerThreshold: ' + hoverLayerThreshold
+                    // 'zr refresh base layer at: <span style="color:yellow">' + (zrRefreshTimestamp || null) + '</span>'
                 ].join('<br>');
             }
 
@@ -368,7 +368,16 @@ under the License.
                         type: 'scatter',
                         symbolSize: 30,
                         data: [
-                            [12, 331], [55, 131], [55, 531]
+                            {
+                                value: [12, 331],
+                                label: {
+                                    show: true,
+                                    formatter: 'position top\neven hoverred',
+                                    fontSize: 20,
+                                    position: 'top'
+                                }
+                            },
+                            [55, 131], [55, 531]
                         ]
                     }, {
                         type: 'scatter',
@@ -392,7 +401,8 @@ under the License.
                         symbolSize: 40,
                         label: {
                             show: true,
-                            formatter: 'label inside\n{c}'
+                            formatter: 'label inside\n{c}',
+                            silent: true
                         },
                         emphasis: {
                             label: {
@@ -603,7 +613,7 @@ under the License.
 
                 var chart = testHelper.create(echarts, 'mainb4', {
                     title: [
-                        'normal style is **line: green dashed width 3, node: red**,',
+                        'normal style is **line: green dashed width 3, node: default color**,',
                         'should become **line: orange solid width 8, node: only "dd" blue** when hovered'
                     ],
                     option: option,
@@ -667,8 +677,11 @@ under the License.
                     series: [{
                         type: 'scatter',
                         symbolSize: 30,
+                        // silent: true,
                         label: {
-                            show: true
+                            show: true,
+                            // silent: true,
+                            position: 'top'
                         },
                         itemStyle: {
                             color: 'green',
@@ -679,7 +692,7 @@ under the License.
                                 position: 'top'
                             }
                         },
-                        data: [[12, 331221], [20, 331221], [55, 331221]]
+                        data: [[12, 3312212121], [20, 3311212221], [55, 3311212221]]
                     }]
                 };
 
@@ -715,7 +728,8 @@ under the License.
                         type: 'scatter',
                         symbolSize: 30,
                         label: {
-                            show: true
+                            show: true,
+                            silent: true
                         },
                         itemStyle: {
                             color: 'green',
@@ -788,7 +802,8 @@ under the License.
                         id: 's',
                         symbolSize: 30,
                         label: {
-                            show: true
+                            show: true,
+                            silent: true
                         },
                         itemStyle: {
                             color: 'green',
@@ -1003,7 +1018,7 @@ under the License.
                         'trigger hover by API: **should scaled and color-lifted**.',
                         'Test mouse hover and leave, should NOT return to normal.',
                         'Only click downplay to return normal',
-                        'Click the red sector, it **keep scaled and color-lifted**',
+                        'Click the top-right sector, it **keep scaled and color-lifted**',
                         'Only click downplay to return normal'
                     ],
                     option: option,
@@ -1107,7 +1122,7 @@ under the License.
 
 
         <script>
-            $.get('../map/json/china.json', function (chinaJson) {
+            $.get('./data/map/json/china.json', function (chinaJson) {
                 if (typeof chinaJson === 'string') {
                     chinaJson = eval('(' + chinaJson + ')');
                 }
@@ -1125,7 +1140,18 @@ under the License.
                                 min: 1.5,
                                 max: 10
                             },
-                            selectedMode: 'multiple'
+                            selectedMode: 'multiple',
+                            // emphasis: {
+                            //     itemStyle: {
+                            //         color: 'none',
+                            //         borderWidth: 2
+                            //     }
+                            // },
+                            select: {
+                                itemStyle: {
+                                    color: 'green'
+                                }
+                            }
                         }]
                     };
 

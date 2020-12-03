@@ -3,7 +3,10 @@
 /map/raw
 /theme/tool
 /theme/thumb
-todo
-npm-debug.log
+/todo
+/npm-debug.log
 /benchmark
-echarts.d.ts
+/src
+.DS_Store
+Thumbs.db
+Desktop.ini

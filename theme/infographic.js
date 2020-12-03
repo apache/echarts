@@ -218,9 +218,7 @@
                 }
             },
             axisLabel: {
-                textStyle: {
-                    color: '#fff'
-                }
+                color: '#fff'
             },
             splitLine: {
                 length: '5%',
