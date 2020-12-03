@@ -18,7 +18,6 @@
 */
 
 
-import './AxisModel';
 import ComponentModel from '../../model/Component';
 import { ComponentOption, BoxLayoutOptionMixin, ZRColor, ShadowOptionMixin } from '../../util/types';
 import Grid from './Grid';

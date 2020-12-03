@@ -435,13 +435,13 @@ function readTSConfig() {
 
 
 function generateEntries() {
-    ['charts', 'components', 'core'].forEach(entryName => {
+    ['charts', 'components', 'renderers', 'core'].forEach(entryName => {
         const jsCode = fs.readFileSync(nodePath.join(__dirname, `template/${entryName}.js`), 'utf-8');
         let dtsCode = fs.readFileSync(nodePath.join(__dirname, `/template/${entryName}.d.ts`), 'utf-8');
 
         fs.writeFileSync(nodePath.join(__dirname, `../${entryName}.js`), jsCode, 'utf-8');
 
-        if (entryName === 'charts' || entryName === 'components') {
+        if (dtsCode.indexOf('{{body}}') >= 0) {
             const exportModulesCode = [];
             const modules = require(`../lib/export/${entryName}`);
             for (let key in modules) {

@@ -70,7 +70,6 @@ import loadingDefault from './loading/default';
 import Scheduler from './stream/Scheduler';
 import lightTheme from './theme/light';
 import darkTheme from './theme/dark';
-import './component/dataset';
 import mapDataStorage from './coord/geo/mapDataStorage';
 import {CoordinateSystemMaster, CoordinateSystemCreator, CoordinateSystemHostModel} from './coord/CoordinateSystem';
 import { parseClassType } from './util/clazz';
@@ -99,8 +98,6 @@ import LabelManager from './label/LabelManager';
 import { deprecateLog, throwError } from './util/log';
 import { handleLegacySelectEvents } from './legacy/dataSelectAction';
 
-// At least canvas renderer.
-import 'zrender/src/canvas/canvas';
 import { registerExternalTransform } from './data/helper/transform';
 import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 

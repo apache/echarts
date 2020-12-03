@@ -16,7 +16,13 @@
     "type": "git",
     "url": "https://github.com/apache/incubator-echarts.git"
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "index.esm.js",
+    "index.blank.esm.js",
+    "index.common.esm.js",
+    "esm/chart/*.js",
+    "esm/components/*.js"
+  ],
   "scripts": {
     "prepublish": "node build/build.js --prepublish",
     "build": "node build/build.js",

@@ -17,45 +17,9 @@
 * under the License.
 */
 
-import {use} from './extension';
+import { EChartsExtensionInstallRegisters } from '../extension';
+import CanvasPainter from 'zrender/src/canvas/Painter';
 
-export * from './export/core';
-// ----------------------------------------------
-// All of the modules that are allowed to be
-// imported are listed below.
-//
-// Users MUST NOT import other modules that are
-// not included in this list.
-// ----------------------------------------------
-
-import {
-    RendererCanvas
-} from './export/renderers';
-
-import {
-    ChartLine,
-    ChartBar,
-    ChartPie
-} from './export/charts';
-
-import {
-    ComponentGridSimple,
-    ComponentAria,
-    ComponentDataset
-} from './export/components';
-
-// Render via Canvas.
-// echarts.init(dom, null, { renderer: 'canvas' })
-use([RendererCanvas]);
-
-use([
-    ChartLine,
-    ChartBar,
-    ChartPie
-]);
-
-use([
-    ComponentGridSimple,
-    ComponentAria,
-    ComponentDataset
-]);
+export function install(registers: EChartsExtensionInstallRegisters) {
+    registers.registerPainter('canvas', CanvasPainter);
+}

@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { DatasetModel } from '../../component/dataset';
+import { DatasetModel } from '../../component/dataset/install';
 import SeriesModel from '../../model/Series';
 import { setAsPrimitive, map, isTypedArray, assert, each } from 'zrender/src/core/util';
 import { SourceMetaRawOption, Source, createSource, cloneSourceShallow } from '../Source';

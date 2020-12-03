@@ -21,7 +21,7 @@ import * as echarts from '../../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../../model/Global';
 import SeriesModel from '../../../model/Series';
-import { ToolboxFeature, registerFeature, ToolboxFeatureOption } from '../featureManager';
+import { ToolboxFeature, ToolboxFeatureOption } from '../featureManager';
 import { ColorString, ECUnitOption, SeriesOption, Payload, Dictionary } from '../../../util/types';
 import ExtensionAPI from '../../../ExtensionAPI';
 import { addEventListener } from 'zrender/src/core/event';
@@ -486,8 +486,6 @@ function tryMergeDataOption(newData: DataList, originalData: DataList) {
         }
     });
 }
-
-registerFeature('dataView', DataView);
 
 echarts.registerAction({
     type: 'changeDataView',

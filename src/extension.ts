@@ -38,6 +38,7 @@ import SeriesModel from './model/Series';
 import { isFunction, indexOf, isArray, each } from 'zrender/src/core/util';
 import { Constructor } from './util/clazz';
 import { SubTypeDefaulter } from './util/component';
+import { registerPainter } from 'zrender/src/zrender';
 
 const extensions: (EChartsExtensionInstaller | EChartsExtension)[] = [];
 
@@ -69,6 +70,9 @@ const extensionRegisters = {
     },
     registerSubTypeDefaulter(componentType: string, defaulter: SubTypeDefaulter) {
         ComponentModel.registerSubTypeDefaulter(componentType, defaulter);
+    },
+    registerPainter(painterType: string, PainterCtor: Parameters<typeof registerPainter>[1]) {
+        registerPainter(painterType, PainterCtor);
     }
 };
 

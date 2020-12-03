@@ -17,17 +17,28 @@
 * under the License.
 */
 
-// TODO: REGISTER IN INSTALL
-import './feature/SaveAsImage';
-import './feature/MagicType';
-import './feature/DataView';
-import './feature/DataZoom';
-import './feature/Restore';
-import { EChartsExtensionInstallRegisters } from '../../extension';
+import { EChartsExtensionInstallRegisters, use } from '../../extension';
+import { install as installDataZoomSelect } from '../../component/dataZoom/installDataZoomSelect';
 import ToolboxModel from './ToolboxModel';
 import ToolboxView from './ToolboxView';
+
+// TODOD: REGISTER IN INSTALL
+import { registerFeature } from './featureManager';
+import SaveAsImage from './feature/SaveAsImage';
+import MagicType from './feature/MagicType';
+import DataView from './feature/DataView';
+import Restore from './feature/Restore';
+import DataZoom from './feature/DataZoom';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerComponentModel(ToolboxModel);
     registers.registerComponentView(ToolboxView);
+
+    registerFeature('saveAsImage', SaveAsImage);
+    registerFeature('magicType', MagicType);
+    registerFeature('dataView', DataView);
+    registerFeature('dataZoom', DataZoom);
+    registerFeature('restore', Restore);
+
+    use(installDataZoomSelect);
 }

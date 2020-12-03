@@ -21,7 +21,6 @@ import * as zrUtil from 'zrender/src/core/util';
 import {
     ToolboxFeatureModel,
     ToolboxFeatureOption,
-    registerFeature,
     ToolboxFeature
 } from '../featureManager';
 import GlobalModel from '../../../model/Global';
@@ -150,7 +149,5 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
         return defaultOption;
     }
 }
-
-registerFeature('brush', BrushFeature);
 
 export default BrushFeature;

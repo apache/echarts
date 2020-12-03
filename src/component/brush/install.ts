@@ -26,7 +26,8 @@ import { Payload } from '../../util/types';
 import GlobalModel from '../../model/Global';
 
 // TODO
-import '../toolbox/feature/Brush';
+import BrushFeature from '../toolbox/feature/Brush';
+import { registerFeature } from '../toolbox/featureManager';
 
 interface BrushPayload extends Payload {
     // If "areas" is empty, all of the select-boxes will be deleted
@@ -85,4 +86,5 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         function () {}
     );
 
+    registerFeature('brush', BrushFeature);
 }

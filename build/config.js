@@ -117,7 +117,9 @@ exports.createECharts = function (opt = {}) {
         plugins: preparePlugins(opt, {
             include
         }),
-
+        treeshake: {
+            moduleSideEffects: false
+        },
         // external: ['zrender'],
         // external: id => ['zrender'].includes(id),
 

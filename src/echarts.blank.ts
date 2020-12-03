@@ -17,7 +17,14 @@
 * under the License.
 */
 
-export * from './echarts';
-export * from './export/api';
+export * from './export/core';
+import { use } from './extension';
 
-import './component/dataset';
+import {
+    RendererCanvas
+} from './export/renderers';
+import {
+    ComponentDataset
+} from './export/components';
+// Default to have canvas renderer and dataset for compitatble reason.
+use([RendererCanvas, ComponentDataset]);

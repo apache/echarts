@@ -24,13 +24,10 @@ import BrushController, { BrushControllerEvents, BrushDimensionMinMax } from '..
 import BrushTargetManager, { BrushTargetInfoCartesian2D } from '../../helper/BrushTargetManager';
 import * as history from '../../dataZoom/history';
 import sliderMove from '../../helper/sliderMove';
-// TODO: REGISTER IN INSTALL
-import '../../dataZoomSelect';
 import {
     ToolboxFeature,
     ToolboxFeatureModel,
-    ToolboxFeatureOption,
-    registerFeature
+    ToolboxFeatureOption
 } from '../featureManager';
 import GlobalModel from '../../../model/Global';
 import ExtensionAPI from '../../../ExtensionAPI';
@@ -319,8 +316,6 @@ function updateZoomBtnStatus(
             : false
         );
 }
-
-registerFeature('dataZoom', DataZoomFeature);
 
 registerInternalOptionCreator('dataZoom', function (ecModel: GlobalModel): ComponentOption[] {
     const toolboxModel = ecModel.getComponent('toolbox', 0) as ToolboxModel;

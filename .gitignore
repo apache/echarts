@@ -201,4 +201,6 @@ todo
 /charts.d.ts
 /components.js
 /components.d.ts
+/renderers.js
+/renderers.d.ts
 *.tgz

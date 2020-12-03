@@ -17,29 +17,77 @@
 * under the License.
 */
 
-export * from './echarts';
-export * from './export/api';
+import {use} from './extension';
 
-import './component/dataset';
+export * from './export/core';
+// ----------------------------------------------
+// All of the modules that are allowed to be
+// imported are listed below.
+//
+// Users MUST NOT import other modules that are
+// not included in this list.
+// ----------------------------------------------
 
-import './chart/line';
-import './chart/bar';
-import './chart/pie';
-import './chart/scatter';
-import './component/graphic';
-import './component/tooltip';
-import './component/axisPointer';
-import './component/legendScroll';
+import {
+    RendererSVG,
+    RendererCanvas
+} from './export/renderers';
 
-import './component/grid';
-import './component/title';
+import {
+    ChartLine,
+    ChartBar,
+    ChartPie,
+    ChartScatter
+} from './export/charts';
 
-import './component/markPoint';
-import './component/markLine';
-import './component/markArea';
-import './component/dataZoom';
-import './component/toolbox';
-import './component/aria';
+import {
+    ComponentGrid,
+    ComponentGraphic,
+    ComponentToolbox,
+    ComponentTooltip,
+    ComponentAxisPointer,
+    ComponentTitle,
+    ComponentMarkPoint,
+    ComponentMarkLine,
+    ComponentMarkArea,
+    ComponentLegendScroll,
+    ComponentDataZoom,
+    ComponentAria,
+    ComponentDataset
+} from './export/components';
 
-// import 'zrender/vml/vml';
-import 'zrender/src/svg/svg';
+
+// -----------------
+// Render engines
+// -----------------
+
+
+// Render via Canvas.
+// echarts.init(dom, null, { renderer: 'canvas' })
+use([RendererCanvas]);
+// Render via SVG.
+// echarts.init(dom, null, { renderer: 'svg' })
+use([RendererSVG]);
+
+use([
+    ChartLine,
+    ChartBar,
+    ChartPie,
+    ChartScatter
+]);
+
+use([
+    ComponentGraphic,
+    ComponentTooltip,
+    ComponentAxisPointer,
+    ComponentLegendScroll,
+    ComponentGrid,
+    ComponentTitle,
+    ComponentMarkPoint,
+    ComponentMarkLine,
+    ComponentMarkArea,
+    ComponentDataZoom,
+    ComponentToolbox,
+    ComponentAria,
+    ComponentDataset
+]);

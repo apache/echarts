@@ -19,7 +19,7 @@
 
 import * as echarts from '../../../echarts';
 import * as history from '../../dataZoom/history';
-import { ToolboxFeatureOption, ToolboxFeature, registerFeature } from '../featureManager';
+import { ToolboxFeatureOption, ToolboxFeature } from '../featureManager';
 import ExtensionAPI from '../../../ExtensionAPI';
 import GlobalModel from '../../../model/Global';
 
@@ -51,11 +51,12 @@ class RestoreOption extends ToolboxFeature<ToolboxRestoreFeatureOption> {
     }
 }
 
-registerFeature('restore', RestoreOption);
-
 echarts.registerAction(
     {type: 'restore', event: 'restore', update: 'prepareAndUpdate'},
     function (payload, ecModel) {
         ecModel.resetOption('recreate');
     }
 );
+
+
+export default RestoreOption;

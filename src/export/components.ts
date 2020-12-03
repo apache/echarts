@@ -60,3 +60,6 @@ export {install as ComponentVisualMapPiecewise} from '../component/visualMap/ins
 export {install as ComponentAria} from '../component/aria/install';
 
 export {install as ComponentTransform} from '../component/transform/install';
+
+export {install as ComponentDataset} from '../component/dataset/install';
+

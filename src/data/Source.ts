@@ -43,7 +43,7 @@ import {
     OptionSourceDataOriginal,
     OptionSourceDataKeyedColumns
 } from '../util/types';
-import { DatasetOption } from '../component/dataset';
+import { DatasetOption } from '../component/dataset/install';
 import { getDataItemValue } from '../util/model';
 
 /**

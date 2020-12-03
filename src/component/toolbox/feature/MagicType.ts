@@ -19,7 +19,7 @@
 
 import * as echarts from '../../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
-import {ToolboxFeature, ToolboxFeatureOption, ToolboxFeatureModel, registerFeature} from '../featureManager';
+import {ToolboxFeature, ToolboxFeatureOption, ToolboxFeatureModel} from '../featureManager';
 import { SeriesOption, ECUnitOption } from '../../../util/types';
 import GlobalModel from '../../../model/Global';
 import ExtensionAPI from '../../../ExtensionAPI';
@@ -238,7 +238,5 @@ echarts.registerAction({
 }, function (payload, ecModel) {
     ecModel.mergeOption(payload.newOption);
 });
-
-registerFeature('magicType', MagicType);
 
 export default MagicType;
