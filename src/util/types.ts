@@ -661,7 +661,7 @@ export type DecalDashArrayX = number | (number | number[])[];
 export type DecalDashArrayY = number | number[];
 export interface DecalObject {
     // 'image', 'triangle', 'diamond', 'pin', 'arrow', 'line', 'rect', 'roundRect', 'square', 'circle'
-    symbol?: string | (string | string[])
+    symbol?: string | string[]
 
     // size relative to the dash bounding box; valued from 0 to 1
     symbolSize?: number
@@ -679,10 +679,10 @@ export interface DecalObject {
     dashArrayY?: DecalDashArrayY
 
     // in radians; valued from -Math.PI to Math.PI
-    rotation?: number,
+    rotation?: number
 
     // boundary of largest tile width
-    maxTileWidth?: number,
+    maxTileWidth?: number
     // boundary of largest tile height
     maxTileHeight?: number
 };
