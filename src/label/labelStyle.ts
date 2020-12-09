@@ -696,7 +696,7 @@ export function animateLabelValue(
 
         const labelText = getLabelText({
             labelDataIndex: dataIndex,
-            // labelFetcher: seriesModel,
+            labelFetcher: seriesModel,
             defaultText: defaultInterpolatedText
                 ? defaultInterpolatedText(interpolated)
                 : interpolated + ''
