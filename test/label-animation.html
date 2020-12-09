@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+
+
+
+        <script>
+            function makeSource1() {
+                return [
+                    [ 'Int','Country', 'Float', 'Num'],
+                    [900, 'Germany', 90.55, 0],
+                    [300, 'Germany', 30.55, 1],
+                    [800, 'Germany', 80.55, 2],
+                    [200, 'Germany', 20.55, 3],
+                    [1900, 'France', 190.55, 0],
+                    [1300, 'France', 130.55, 1],
+                    [1800, 'France', 180.55, 2],
+                    [1200, 'France', 120.55, 3],
+                ];
+            }
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            var currNum = 0;
+
+            function makeTransformDataset() {
+                return {
+                    id: 'singleA',
+                    transform: {
+                        type: 'filter',
+                        print: true,
+                        config: {
+                            and: [{
+                                or: [{
+                                    dimension: 'Country', eq: 'Germany'
+                                }, {
+                                    dimension: 'Country', eq: 'France'
+                                }]
+                            }, {
+                                dimension: 'Num', eq: currNum
+                            }]
+                        }
+                    }
+                };
+            }
+
+            option = {
+                animationDuration: 5000,
+                animationDurationUpdate: 5000,
+                dataset: [{
+                    source: makeSource1(),
+                },
+                    makeTransformDataset()
+                ],
+                xAxis: {},
+                yAxis: { type: 'category' },
+                grid: {
+                    right: 160
+                },
+                series: [{
+                    type: 'bar',
+                    datasetId: 'singleA',
+                    encode: {
+                        x: 'Int',
+                        y: 'Country'
+                    },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        fontSize: 16,
+                        formatter: '(StrFmt) {c} 元',
+                        valueAnimation: true
+                    }
+                }, {
+                    type: 'bar',
+                    datasetId: 'singleA',
+                    encode: {
+                        x: 'Int',
+                        y: 'Country'
+                    },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        fontSize: 16,
+                        formatter: function (params) {
+                            console.log(params);
+                            return '(CbFmt) ' + params.value.join(',') + ' 元';
+                        },
+                        valueAnimation: true
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Check init and **click next once**',
+                    'label text anmiation should OK. **except Country**',
+                    'label should display like : "910,France,617.52,0 元"',
+                ],
+                option: option,
+                buttons: [{
+                    text: 'next', onclick: function () {
+                        currNum++;
+                        chart.setOption({
+                            dataset: makeTransformDataset()
+                        });
+                    }
+                }],
+            });
+        });
+        </script>
+
+
+    </body>
+</html>
+
