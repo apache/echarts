@@ -35,7 +35,8 @@ export function getDefaultLabel(
 
     // Simple optimization (in lots of cases, label dims length is 1)
     if (len === 1) {
-        return retrieveRawValue(data, dataIndex, labelDims[0]);
+        const rawVal = retrieveRawValue(data, dataIndex, labelDims[0]);
+        return rawVal != null ? rawVal + '' : void 0;
     }
     else if (len) {
         const vals = [];

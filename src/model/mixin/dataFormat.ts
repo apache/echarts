@@ -146,7 +146,8 @@ export class DataFormatMixin {
                 if (dim.charAt(0) === '[' && dim.charAt(len - 1) === ']') {
                     dim = +dim.slice(1, len - 1); // Also: '[]' => 0
                 }
-                return retrieveRawValue(data, dataIndex, dim);
+                const val = retrieveRawValue(data, dataIndex, dim) as OptionDataValue;
+                return val != null ? val + '' : '';
             });
         }
     }

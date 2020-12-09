@@ -631,9 +631,9 @@ export interface CallbackDataParams {
     seriesName?: string;
     name: string;
     dataIndex: number;
-    data: any;
+    data: OptionDataItem;
     dataType?: SeriesDataType;
-    value: any;
+    value: OptionDataItem | OptionDataValue;
     color?: ZRColor;
     borderColor?: string;
     dimensionNames?: DimensionName[];
