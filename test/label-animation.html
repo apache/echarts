@@ -38,6 +38,7 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main1"></div>
 
 
 
@@ -152,6 +153,113 @@ under the License.
             });
         });
         </script>
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            var currNum = 0;
+
+            function makeTransformDataset() {
+                return {
+                    id: 'singleA',
+                    transform: {
+                        type: 'filter',
+                        print: true,
+                        config: {
+                            and: [{
+                                or: [{
+                                    dimension: 'Country', eq: 'Germany'
+                                }, {
+                                    dimension: 'Country', eq: 'France'
+                                }]
+                            }, {
+                                dimension: 'Num', eq: currNum
+                            }]
+                        }
+                    }
+                };
+            }
+
+            option = {
+                animationDuration: 5000,
+                animationDurationUpdate: 5000,
+                dataset: [{
+                    source: makeSource1(),
+                },
+                    makeTransformDataset()
+                ],
+                xAxis: {},
+                yAxis: { type: 'category' },
+                grid: {
+                    right: 160
+                },
+                series: [{
+                    type: 'bar',
+                    datasetId: 'singleA',
+                    encode: {
+                        x: 'Int',
+                        y: 'Country'
+                    },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        fontSize: 16,
+                        formatter: '(StrFmt1) {@Country} {@Int} 元',
+                        valueAnimation: true
+                    }
+                }, {
+                    type: 'bar',
+                    datasetId: 'singleA',
+                    encode: {
+                        x: 'Int',
+                        y: 'Country'
+                    },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        fontSize: 16,
+                        formatter: '(StrFmt2) {@[1]} {@[0]} 元',
+                        valueAnimation: true
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'Check init and **click next once**',
+                    'label text anmiation should OK. **except Country**',
+                    'label should display like : "France 910 元"',
+                ],
+                option: option,
+                buttons: [{
+                    text: 'next', onclick: function () {
+                        currNum++;
+                        chart.setOption({
+                            dataset: makeTransformDataset()
+                        });
+                    }
+                }],
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+
+
 
 
     </body>
