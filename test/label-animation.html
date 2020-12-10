@@ -39,11 +39,13 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
+
 
 
 
         <script>
-            function makeSource1() {
+            function makeSource0() {
                 return [
                     [ 'Int','Country', 'Float', 'Num'],
                     [900, 'Germany', 90.55, 0],
@@ -56,6 +58,17 @@ under the License.
                     [1200, 'France', 120.55, 3],
                 ];
             }
+            function makeSource1() {
+                return {
+                    category: ['Germany', 'France'],
+                    dataList: [
+                        [900, 1900],
+                        [300, 1300],
+                        [800, 1800],
+                        [200, 1200]
+                    ]
+                };
+            }
         </script>
 
 
@@ -66,6 +79,42 @@ under the License.
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
             var currNum = 0;
+
+            var formatterConfigs = [
+                {
+                    text: 'formatter: {c} 元',
+                    formatter: '{c} 元'
+                },
+                {
+                    text: 'formatter: {@[1]} {@[0]} 元',
+                    formatter: '{@[1]} {@[0]} 元'
+                },
+                {
+                    text: 'formatter: {@Country} {@Int} 元',
+                    formatter: '{@Country} {@Int} 元'
+                },
+                {
+                    text: 'formatter: callback',
+                    formatter: function (params) {
+                        return params.value.join(',') + ' 元';
+                    }
+                }
+            ];
+            var formatterSwitchButtons = [];
+            for (var i = 0; i < formatterConfigs.length; i++) {
+                var config = formatterConfigs[i];
+                formatterSwitchButtons.push({
+                    text: config.text,
+                    onclick: (function (cfg) {
+                        return function () {
+                            currNum = 0;
+                            var option = makeOption(cfg.formatter);
+                            chart.__testHelper.updateInfo(cfg.formatter.toString(), 'formatter');
+                            chart.setOption(option, { notMerge: true } );
+                        };
+                    })(config)
+                });
+            }
 
             function makeTransformDataset() {
                 return {
@@ -88,71 +137,66 @@ under the License.
                 };
             }
 
-            option = {
-                animationDuration: 5000,
-                animationDurationUpdate: 5000,
-                dataset: [{
-                    source: makeSource1(),
-                },
-                    makeTransformDataset()
-                ],
-                xAxis: {},
-                yAxis: { type: 'category' },
-                grid: {
-                    right: 160
-                },
-                series: [{
-                    type: 'bar',
-                    datasetId: 'singleA',
-                    encode: {
-                        x: 'Int',
-                        y: 'Country'
+            function makeOption(labelFormatter) {
+                return {
+                    animationDuration: 3000,
+                    animationDurationUpdate: 3000,
+                    dataset: [{
+                        source: makeSource0(),
                     },
-                    label: {
-                        show: true,
-                        position: 'right',
-                        fontSize: 16,
-                        formatter: '(StrFmt) {c} 元',
-                        valueAnimation: true
-                    }
-                }, {
-                    type: 'bar',
-                    datasetId: 'singleA',
-                    encode: {
-                        x: 'Int',
-                        y: 'Country'
+                        makeTransformDataset()
+                    ],
+                    xAxis: {},
+                    yAxis: { type: 'category' },
+                    grid: {
+                        right: 160
                     },
-                    label: {
-                        show: true,
-                        position: 'right',
-                        fontSize: 16,
-                        formatter: function (params) {
-                            console.log(params);
-                            return '(CbFmt) ' + params.value.join(',') + ' 元';
+                    series: [{
+                        id: Math.random(),
+                        type: 'bar',
+                        datasetId: 'singleA',
+                        encode: {
+                            x: 'Int',
+                            y: 'Country'
                         },
-                        valueAnimation: true
-                    }
-                }]
-            };
+                        label: {
+                            show: true,
+                            position: 'right',
+                            fontSize: 16,
+                            formatter: labelFormatter,
+                            valueAnimation: true
+                        }
+                    }]
+                };
+            }
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'Check init and **click next once**',
-                    'label text anmiation should OK. **except Country**',
-                    'label should display like : "910,France,617.52,0 元"',
+                    'Check **init** valueAnimation should be OK',
+                    'Swithch formatter, for each formatter **click next once**',
+                    'label text anmiation should OK. **except Country**'
                 ],
-                option: option,
+                option: makeOption(formatterConfigs[0].formatter),
+                info: formatterConfigs[0].formatter.toString(),
+                infoKey: 'formatter',
                 buttons: [{
-                    text: 'next', onclick: function () {
+                    text: 'next',
+                    onclick: function () {
                         currNum++;
                         chart.setOption({
                             dataset: makeTransformDataset()
                         });
                     }
-                }],
+                }].concat(formatterSwitchButtons)
             });
         });
         </script>
+
+
+
+
+
+
 
 
 
@@ -167,86 +211,87 @@ under the License.
             var option;
             var currNum = 0;
 
-            function makeTransformDataset() {
-                return {
-                    id: 'singleA',
-                    transform: {
-                        type: 'filter',
-                        print: true,
-                        config: {
-                            and: [{
-                                or: [{
-                                    dimension: 'Country', eq: 'Germany'
-                                }, {
-                                    dimension: 'Country', eq: 'France'
-                                }]
-                            }, {
-                                dimension: 'Num', eq: currNum
-                            }]
-                        }
+            var formatterConfigs = [
+                {
+                    text: 'formatter: {c} 元',
+                    formatter: '{c} 元'
+                },
+                // { // not supportted in this case
+                //     text: 'formatter: {@[1]} {@[0]} 元',
+                //     formatter: '{@[1]} {@[0]} 元'
+                // },
+                {
+                    text: 'formatter: callback',
+                    formatter: function (params) {
+                        return params.value + ' 元';
                     }
+                }
+            ];
+            var formatterSwitchButtons = [];
+            for (var i = 0; i < formatterConfigs.length; i++) {
+                var config = formatterConfigs[i];
+                formatterSwitchButtons.push({
+                    text: config.text,
+                    onclick: (function (cfg) {
+                        return function () {
+                            currNum = 0;
+                            var option = makeOption(cfg.formatter);
+                            chart.__testHelper.updateInfo(cfg.formatter.toString(), 'formatter');
+                            chart.setOption(option, { notMerge: true } );
+                        };
+                    })(config)
+                });
+            }
+
+            var source1 = makeSource1();
+
+            function makeOption(labelFormatter) {
+                return {
+                    animationDuration: 3000,
+                    animationDurationUpdate: 3000,
+                    xAxis: {},
+                    yAxis: {
+                        type: 'category',
+                        data: source1.category
+                    },
+                    grid: {
+                        right: 160
+                    },
+                    series: [{
+                        id: Math.random(),
+                        type: 'bar',
+                        data: source1.dataList[currNum],
+                        label: {
+                            show: true,
+                            position: 'right',
+                            fontSize: 16,
+                            formatter: labelFormatter,
+                            valueAnimation: true
+                        }
+                    }]
                 };
             }
 
-            option = {
-                animationDuration: 5000,
-                animationDurationUpdate: 5000,
-                dataset: [{
-                    source: makeSource1(),
-                },
-                    makeTransformDataset()
-                ],
-                xAxis: {},
-                yAxis: { type: 'category' },
-                grid: {
-                    right: 160
-                },
-                series: [{
-                    type: 'bar',
-                    datasetId: 'singleA',
-                    encode: {
-                        x: 'Int',
-                        y: 'Country'
-                    },
-                    label: {
-                        show: true,
-                        position: 'right',
-                        fontSize: 16,
-                        formatter: '(StrFmt1) {@Country} {@Int} 元',
-                        valueAnimation: true
-                    }
-                }, {
-                    type: 'bar',
-                    datasetId: 'singleA',
-                    encode: {
-                        x: 'Int',
-                        y: 'Country'
-                    },
-                    label: {
-                        show: true,
-                        position: 'right',
-                        fontSize: 16,
-                        formatter: '(StrFmt2) {@[1]} {@[0]} 元',
-                        valueAnimation: true
-                    }
-                }]
-            };
-
             var chart = testHelper.create(echarts, 'main1', {
                 title: [
-                    'Check init and **click next once**',
-                    'label text anmiation should OK. **except Country**',
-                    'label should display like : "France 910 元"',
+                    'Check **init** valueAnimation should be OK',
+                    'Swithch formatter, for each formatter **click next once**',
+                    'label text anmiation should OK. **except Country**'
                 ],
-                option: option,
+                option: makeOption(formatterConfigs[0].formatter),
+                info: formatterConfigs[0].formatter.toString(),
+                infoKey: 'formatter',
                 buttons: [{
-                    text: 'next', onclick: function () {
+                    text: 'next',
+                    onclick: function () {
                         currNum++;
                         chart.setOption({
-                            dataset: makeTransformDataset()
+                            series: {
+                                data: source1.dataList[currNum]
+                            }
                         });
                     }
-                }],
+                }].concat(formatterSwitchButtons)
             });
         });
         </script>
@@ -256,6 +301,72 @@ under the License.
 
 
 
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var valueA = 100;
+            var valueB = 200;
+
+            var option = {
+                animationDuration: 5000,
+                animationDurationUpdate: 5000,
+                animationEasing: 'linear',
+                animationEasingUpdate: 'linear',
+                xAxis: {},
+                yAxis: {
+                    type: 'category',
+                    data: ['A', 'B']
+                },
+                grid: {
+                    right: 160
+                },
+                series: [{
+                    type: 'bar',
+                    data: [valueA, valueB],
+                    label: {
+                        show: true,
+                        position: 'right',
+                        fontSize: 16,
+                        formatter: '{c} ton',
+                        valueAnimation: true
+                    }
+                }]
+            };
+
+            function updateChart() {
+                chart.setOption({
+                    series: [{
+                        data: [valueA, valueB]
+                    }]
+                });
+            }
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'Check A++ **before value animation finished**.',
+                    'B should keep on label animation, rather than jump to the final label.',
+                    'B should finally reach at 200. A should finally reach at 600'
+                ],
+                option: option,
+                buttons: [{
+                    text: 'A++',
+                    onclick: function () {
+                        valueA += 500;
+                        updateChart();
+                    }
+                }, {
+                    text: 'B++',
+                    onclick: function () {
+                        valueB += 500;
+                        updateChart();
+                    }
+                }]
+            });
+
+        });
+        </script>
 
 
 
