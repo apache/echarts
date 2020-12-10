@@ -122,12 +122,11 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
     static type = 'series.pie' as const;
 
-    useColorPaletteOnData = true;
-
     /**
      * @overwrite
      */
     init(option: PieSeriesOption): void {
+        console.log('init');
         super.init.apply(this, arguments as any);
 
         // Enable legend selection for each data item
@@ -196,6 +195,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         zlevel: 0,
         z: 2,
         legendHoverLink: true,
+
+        colorBy: 'item',
 
         // 默认全局居中
         center: ['50%', '50%'],

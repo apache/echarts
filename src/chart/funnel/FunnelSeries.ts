@@ -92,8 +92,6 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
     static type = 'series.funnel' as const;
     type = FunnelSeriesModel.type;
 
-    useColorPaletteOnData = true;
-
     init(option: FunnelSeriesOption) {
         super.init.apply(this, arguments as any);
 
@@ -143,6 +141,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
         zlevel: 0,                  // 一级层叠
         z: 2,                       // 二级层叠
         legendHoverLink: true,
+        colorBy: 'item',
         left: 80,
         top: 60,
         right: 80,

@@ -69,7 +69,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
             // Pie and funnel are using diferrent scopes
             const paletteScopeGroupByType = zrUtil.createHashMap<object>();
             ecModel.eachSeries(function (seriesModel) {
-                if (!seriesModel.useColorPaletteOnData) {
+                if (seriesModel.get('colorBy') !== 'item') {
                     return;
                 }
                 let decalScope = paletteScopeGroupByType.get(seriesModel.type);
@@ -92,7 +92,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
 
                 const data = seriesModel.getData();
 
-                if (seriesModel.useColorPaletteOnData) {
+                if (seriesModel.get('colorBy') === 'item') {
                     const dataAll = seriesModel.getRawData();
                     const idxMap: Dictionary<number> = {};
                     const decalScope = inner(seriesModel).scope;

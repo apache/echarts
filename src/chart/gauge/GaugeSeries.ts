@@ -178,7 +178,6 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
     type = GaugeSeriesModel.type;
 
     visualStyleAccessPath = 'itemStyle';
-    useColorPaletteOnData = true;
 
     getInitialData(option: GaugeSeriesOption, ecModel: GlobalModel): List {
         return createListSimply(this, ['value']);
@@ -187,6 +186,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
     static defaultOption: GaugeSeriesOption = {
         zlevel: 0,
         z: 2,
+        colorBy: 'item',
         // 默认全局居中
         center: ['50%', '50%'],
         legendHoverLink: true,

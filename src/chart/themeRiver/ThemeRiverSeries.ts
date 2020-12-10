@@ -81,8 +81,6 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
 
     coordinateSystem: Single;
 
-    useColorPaletteOnData = true;
-
     /**
      * @override
      */
@@ -292,6 +290,8 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
     static defaultOption: ThemeRiverSeriesOption = {
         zlevel: 0,
         z: 2,
+
+        colorBy: 'item',
 
         coordinateSystem: 'singleAxis',
 

@@ -74,8 +74,6 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
 
     coordinateSystem: Radar;
 
-    useColorPaletteOnData = true;
-
     hasSymbolVisual = true;
 
     // Overwrite
@@ -147,6 +145,7 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
     static defaultOption: RadarSeriesOption = {
         zlevel: 0,
         z: 2,
+        colorBy: 'item',
         coordinateSystem: 'radar',
         legendHoverLink: true,
         radarIndex: 0,

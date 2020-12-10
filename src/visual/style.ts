@@ -170,7 +170,7 @@ const dataColorPaletteTask: StageHandler = {
         // Pie and funnel are using diferrent scopes
         const paletteScopeGroupByType = createHashMap<object>();
         ecModel.eachSeries(function (seriesModel) {
-            if (!seriesModel.useColorPaletteOnData) {
+            if (seriesModel.get('colorBy') !== 'item') {
                 return;
             }
             let colorScope = paletteScopeGroupByType.get(seriesModel.type);
@@ -183,7 +183,7 @@ const dataColorPaletteTask: StageHandler = {
 
 
         ecModel.eachSeries(function (seriesModel) {
-            if (!seriesModel.useColorPaletteOnData || ecModel.isSeriesFiltered(seriesModel)) {
+            if (seriesModel.get('colorBy') !== 'item' || ecModel.isSeriesFiltered(seriesModel)) {
                 return;
             }
 

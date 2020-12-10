@@ -160,8 +160,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // If ignore style on data. It's only for global visual/style.ts
     // Enabled when series it self will handle it.
     ignoreStyleOnData: boolean;
-    // If use palette on each data.
-    useColorPaletteOnData: boolean;
     // If do symbol visual encoding
     hasSymbolVisual: boolean;
     // Default symbol type.
@@ -180,7 +178,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const proto = SeriesModel.prototype;
         proto.type = 'series.__base__';
         proto.seriesIndex = 0;
-        proto.useColorPaletteOnData = false;
         proto.ignoreStyleOnData = false;
         proto.hasSymbolVisual = false;
         proto.defaultSymbol = 'circle';

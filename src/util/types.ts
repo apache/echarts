@@ -1429,6 +1429,8 @@ export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStat
     blur?: StateOption & ExtraStateOpts['blur']
 }
 
+export type ColorBy = 'series' | 'item';
+
 export interface SeriesOption<
     StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
     ComponentOption,
@@ -1447,6 +1449,9 @@ export interface SeriesOption<
 
     // Needs to be override
     data?: unknown
+
+    // Color palette policy
+    colorBy?: ColorBy
 
     legendHoverLink?: boolean
 
