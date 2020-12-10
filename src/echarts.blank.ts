@@ -24,7 +24,7 @@ import {
     RendererCanvas
 } from './export/renderers';
 import {
-    ComponentDataset
+    DatasetComponent
 } from './export/components';
 // Default to have canvas renderer and dataset for compitatble reason.
-use([RendererCanvas, ComponentDataset]);
+use([RendererCanvas, DatasetComponent]);

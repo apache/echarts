@@ -23,6 +23,7 @@ import Polar from './Polar';
 import { AngleAxisModel, RadiusAxisModel } from './AxisModel';
 
 export interface PolarOption extends ComponentOption, CircleLayoutOptionMixin {
+    mainType?: 'polar';
 }
 
 class PolarModel extends ComponentModel<PolarOption> {

@@ -34,58 +34,58 @@ import {
 } from './export/renderers';
 
 import {
-    ChartLine,
-    ChartBar,
-    ChartPie,
-    ChartScatter,
-    ChartRadar,
-    ChartMap,
-    ChartTree,
-    ChartTreemap,
-    ChartGraph,
-    ChartGauge,
-    ChartFunnel,
-    ChartParallel,
-    ChartSankey,
-    ChartBoxplot,
-    ChartCandlestick,
-    ChartEffectScatter,
-    ChartLines,
-    ChartHeatmap,
-    ChartPictorialBar,
-    ChartThemeRiver,
-    ChartSunburst,
-    ChartCustom
+    LineChart,
+    BarChart,
+    PieChart,
+    ScatterChart,
+    RadarChart,
+    MapChart,
+    TreeChart,
+    TreemapChart,
+    GraphChart,
+    GaugeChart,
+    FunnelChart,
+    ParallelChart,
+    SankeyChart,
+    BoxplotChart,
+    CandlestickChart,
+    EffectScatterChart,
+    LinesChart,
+    HeatmapChart,
+    PictorialBarChart,
+    ThemeRiverChart,
+    SunburstChart,
+    CustomChart
 } from './export/charts';
 
 import {
-    ComponentGrid,
-    ComponentPolar,
-    ComponentGeo,
-    ComponentSingleAxis,
-    ComponentParallel,
-    ComponentCalendar,
-    ComponentGraphic,
-    ComponentToolbox,
-    ComponentTooltip,
-    ComponentAxisPointer,
-    ComponentBrush,
-    ComponentTitle,
-    ComponentTimeline,
-    ComponentMarkPoint,
-    ComponentMarkLine,
-    ComponentMarkArea,
-    ComponentLegendScroll,
-    ComponentLegend,
-    ComponentDataZoom,
-    ComponentDataZoomInside,
-    ComponentDataZoomSlider,
-    ComponentVisualMap,
-    ComponentVisualMapContinuous,
-    ComponentVisualMapPiecewise,
-    ComponentAria,
-    ComponentDataset,
-    ComponentTransform
+    GridComponent,
+    PolarComponent,
+    GeoComponent,
+    SingleAxisComponent,
+    ParallelComponent,
+    CalendarComponent,
+    GraphicComponent,
+    ToolboxComponent,
+    TooltipComponent,
+    AxisPointerComponent,
+    BrushComponent,
+    TitleComponent,
+    TimelineComponent,
+    MarkPointComponent,
+    MarkLineComponent,
+    MarkAreaComponent,
+    LegendScrollComponent,
+    LegendComponent,
+    DataZoomComponent,
+    DataZoomInsideComponent,
+    DataZoomSliderComponent,
+    VisualMapComponent,
+    VisualMapContinuousComponent,
+    VisualMapPiecewiseComponent,
+    AriaComponent,
+    DatasetComponent,
+    TransformComponent
 } from './export/components';
 
 
@@ -114,28 +114,28 @@ use([RendererSVG]);
 
 
 use([
-    ChartLine,
-    ChartBar,
-    ChartPie,
-    ChartScatter,
-    ChartRadar,
-    ChartMap,
-    ChartTree,
-    ChartTreemap,
-    ChartGraph,
-    ChartGauge,
-    ChartFunnel,
-    ChartParallel,
-    ChartSankey,
-    ChartBoxplot,
-    ChartCandlestick,
-    ChartEffectScatter,
-    ChartLines,
-    ChartHeatmap,
-    ChartPictorialBar,
-    ChartThemeRiver,
-    ChartSunburst,
-    ChartCustom
+    LineChart,
+    BarChart,
+    PieChart,
+    ScatterChart,
+    RadarChart,
+    MapChart,
+    TreeChart,
+    TreemapChart,
+    GraphChart,
+    GaugeChart,
+    FunnelChart,
+    ParallelChart,
+    SankeyChart,
+    BoxplotChart,
+    CandlestickChart,
+    EffectScatterChart,
+    LinesChart,
+    HeatmapChart,
+    PictorialBarChart,
+    ThemeRiverChart,
+    SunburstChart,
+    CustomChart
 ]);
 
 // -------------------
@@ -156,7 +156,7 @@ use([
 //     yAxis: {...},
 //     series: [{...}]
 // });
-use(ComponentGrid);
+use(GridComponent);
 
 // `polar` coordinate system, for example:
 // chart.setOption({
@@ -167,7 +167,7 @@ use(ComponentGrid);
 //         coordinateSystem: 'polar'
 //     }]
 // });
-use(ComponentPolar);
+use(PolarComponent);
 
 // `geo` coordinate system, for example:
 // chart.setOption({
@@ -176,7 +176,7 @@ use(ComponentPolar);
 //         coordinateSystem: 'geo'
 //     }]
 // });
-use(ComponentGeo);
+use(GeoComponent);
 
 // `singleAxis` coordinate system (notice, it is a coordinate system
 // with only one axis, work for chart like theme river), for example:
@@ -184,7 +184,7 @@ use(ComponentGeo);
 //     singleAxis: {...}
 //     series: [{type: 'themeRiver', ...}]
 // });
-use(ComponentSingleAxis);
+use(SingleAxisComponent);
 
 // `parallel` coordinate system, only work for parallel series, for example:
 // chart.setOption({
@@ -194,7 +194,7 @@ use(ComponentSingleAxis);
 //         type: 'parallel'
 //     }]
 // });
-use(ComponentParallel);
+use(ParallelComponent);
 
 // `calendar` coordinate system. for example,
 // chart.setOptionp({
@@ -203,7 +203,7 @@ use(ComponentParallel);
 //         coordinateSystem: 'calendar'
 //     }]
 // );
-use(ComponentCalendar);
+use(CalendarComponent);
 
 
 
@@ -217,19 +217,19 @@ use(ComponentCalendar);
 // chart.setOption({
 //     graphic: {...}
 // });
-use(ComponentGraphic);
+use(GraphicComponent);
 
 // `toolbox` component, for example:
 // chart.setOption({
 //     toolbox: {...}
 // });
-use(ComponentToolbox);
+use(ToolboxComponent);
 
 // `tooltip` component, for example:
 // chart.setOption({
 //     tooltip: {...}
 // });
-use(ComponentTooltip);
+use(TooltipComponent);
 
 // `axisPointer` component, for example:
 // chart.setOption({
@@ -239,7 +239,7 @@ use(ComponentTooltip);
 // chart.setOption({
 //     axisPointer: {...}
 // });
-use(ComponentAxisPointer);
+use(AxisPointerComponent);
 
 // `brush` component, for example:
 // chart.setOption({
@@ -249,86 +249,86 @@ use(ComponentAxisPointer);
 // chart.setOption({
 //     tooltip: {feature: {brush: {...}}
 // })
-use(ComponentBrush);
+use(BrushComponent);
 
 // `title` component, for example:
 // chart.setOption({
 //     title: {...}
 // });
-use(ComponentTitle);
+use(TitleComponent);
 
 // `timeline` component, for example:
 // chart.setOption({
 //     timeline: {...}
 // });
-use(ComponentTimeline);
+use(TimelineComponent);
 
 // `markPoint` component, for example:
 // chart.setOption({
 //     series: [{markPoint: {...}}]
 // });
-use(ComponentMarkPoint);
+use(MarkPointComponent);
 
 // `markLine` component, for example:
 // chart.setOption({
 //     series: [{markLine: {...}}]
 // });
-use(ComponentMarkLine);
+use(MarkLineComponent);
 
 // `markArea` component, for example:
 // chart.setOption({
 //     series: [{markArea: {...}}]
 // });
-use(ComponentMarkArea);
+use(MarkAreaComponent);
 
 // `legend` component scrollable, for example:
 // chart.setOption({
 //     legend: {type: 'scroll'}
 // });
-use(ComponentLegendScroll);
+use(LegendScrollComponent);
 
 // `legend` component not scrollable. for example:
 // chart.setOption({
 //     legend: {...}
 // });
-use(ComponentLegend);
+use(LegendComponent);
 
 // `dataZoom` component including both `dataZoomInside` and `dataZoomSlider`.
-use(ComponentDataZoom);
+use(DataZoomComponent);
 
 // `dataZoom` component providing drag, pinch, wheel behaviors
 // inside coodinate system, for example:
 // chart.setOption({
 //     dataZoom: {type: 'inside'}
 // });
-use(ComponentDataZoomInside);
+use(DataZoomInsideComponent);
 
 // `dataZoom` component providing a slider bar, for example:
 // chart.setOption({
 //     dataZoom: {type: 'slider'}
 // });
-use(ComponentDataZoomSlider);
+use(DataZoomSliderComponent);
 
 // `dataZoom` component including both `visualMapContinuous` and `visualMapPiecewise`.
-use(ComponentVisualMap);
+use(VisualMapComponent);
 
 // `visualMap` component providing continuous bar, for example:
 // chart.setOption({
 //     visualMap: {type: 'continuous'}
 // });
-use(ComponentVisualMapContinuous);
+use(VisualMapContinuousComponent);
 
 // `visualMap` component providing pieces bar, for example:
 // chart.setOption({
 //     visualMap: {type: 'piecewise'}
 // });
-use(ComponentVisualMapPiecewise);
+use(VisualMapPiecewiseComponent);
 
 // `aria` component providing aria, for example:
 // chart.setOption({
 //     aria: {...}
 // });
-use(ComponentAria);
+use(AriaComponent);
 
 
 // dataset transform
@@ -337,6 +337,6 @@ use(ComponentAria);
 //          transform: []
 //     }
 // });
-use(ComponentTransform);
+use(TransformComponent);
 
-use(ComponentDataset);
+use(DatasetComponent);

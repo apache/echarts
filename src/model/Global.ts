@@ -46,14 +46,15 @@ import SeriesModel from './Series';
 import {
     Payload,
     OptionPreprocessor,
-    ECOption,
+    ECBasicOption,
     ECUnitOption,
     ThemeOption,
     ComponentOption,
     ComponentMainType,
     ComponentSubType,
     OptionId,
-    OptionName
+    OptionName,
+    AriaOptionMixin
 } from '../util/types';
 import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
@@ -119,7 +120,7 @@ class GlobalModel extends Model<ECUnitOption> {
 
 
     init(
-        option: ECOption,
+        option: ECBasicOption,
         parentModel: Model,
         ecModel: GlobalModel,
         theme: object,
@@ -134,7 +135,7 @@ class GlobalModel extends Model<ECUnitOption> {
     }
 
     setOption(
-        option: ECOption,
+        option: ECBasicOption,
         opts: GlobalModelSetOptionOpts,
         optionPreprocessorFuncs: OptionPreprocessor[]
     ): void {
@@ -802,7 +803,7 @@ class GlobalModel extends Model<ECUnitOption> {
             }
         };
 
-        initBase = function (ecModel: GlobalModel, baseOption: ECUnitOption): void {
+        initBase = function (ecModel: GlobalModel, baseOption: ECUnitOption & AriaOptionMixin): void {
             // Using OPTION_INNER_KEY to mark that this option can not be used outside,
             // i.e. `chart.setOption(chart.getModel().option);` is forbiden.
             ecModel.option = {} as ECUnitOption;

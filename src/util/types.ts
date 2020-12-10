@@ -481,7 +481,7 @@ export type ECUnitOption = {
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
     stateAnimation?: AnimationOption
-} & AnimationOptionMixin & ColorPaletteOptionMixin & AriaOptionMixin;
+} & AnimationOptionMixin & ColorPaletteOptionMixin;
 
 /**
  * [ECOption]:
@@ -522,7 +522,7 @@ export type ECUnitOption = {
  * };
  * ```
  */
-export interface ECOption extends ECUnitOption {
+export interface ECBasicOption extends ECUnitOption {
     baseOption?: ECUnitOption;
     timeline?: ComponentOption | ComponentOption[];
     options?: ECUnitOption[];
@@ -1363,6 +1363,8 @@ export interface CommonAxisPointerOption {
 }
 
 export interface ComponentOption {
+    mainType?: string;
+
     type?: string;
 
     id?: OptionId;
@@ -1436,6 +1438,8 @@ export interface SeriesOption<
     ColorPaletteOptionMixin,
     StatesOptionMixin<StateOption, ExtraStateOpts>
 {
+    mainType?: 'series'
+
     silent?: boolean
 
     blendMode?: string

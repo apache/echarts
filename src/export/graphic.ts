@@ -17,45 +17,28 @@
 * under the License.
 */
 
-import {use} from './extension';
-
-export * from './export/core';
-// ----------------------------------------------
-// All of the modules that are allowed to be
-// imported are listed below.
-//
-// Users MUST NOT import other modules that are
-// not included in this list.
-// ----------------------------------------------
-
-import {
-    RendererCanvas
-} from './export/renderers';
-
-import {
-    LineChart,
-    BarChart,
-    PieChart
-} from './export/charts';
-
-import {
-    GridSimpleComponent,
-    AriaComponent,
-    DatasetComponent
-} from './export/components';
-
-// Render via Canvas.
-// echarts.init(dom, null, { renderer: 'canvas' })
-use([RendererCanvas]);
-
-use([
-    LineChart,
-    BarChart,
-    PieChart
-]);
-
-use([
-    GridSimpleComponent,
-    AriaComponent,
-    DatasetComponent
-]);
+export {
+    extendShape, extendPath, makePath, makeImage,
+    mergePath, resizePath, createIcon,
+    updateProps, initProps, getTransform,
+    clipPointsByRect, clipRectByRect,
+    registerShape, getShapeClass,
+    Group,
+    Image,
+    Text,
+    Circle,
+    Ellipse,
+    Sector,
+    Ring,
+    Polygon,
+    Polyline,
+    Rect,
+    Line,
+    BezierCurve,
+    Arc,
+    IncrementalDisplayable,
+    CompoundPath,
+    LinearGradient,
+    RadialGradient,
+    BoundingRect
+} from '../util/graphic';

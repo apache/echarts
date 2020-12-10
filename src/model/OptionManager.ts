@@ -25,7 +25,7 @@
 // import ComponentModel, { ComponentModelConstructor } from './Component';
 import ExtensionAPI from '../ExtensionAPI';
 import {
-    OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECOption, SeriesOption
+    OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECBasicOption, SeriesOption
 } from '../util/types';
 import GlobalModel, { InnerSetOptionOpts } from './Global';
 import {
@@ -91,7 +91,7 @@ class OptionManager {
     }
 
     setOption(
-        rawOption: ECOption,
+        rawOption: ECBasicOption,
         optionPreprocessorFuncs: OptionPreprocessor[],
         opt: InnerSetOptionOpts
     ): void {
@@ -299,7 +299,7 @@ class OptionManager {
  */
 function parseRawOption(
     // `rawOption` May be modified
-    rawOption: ECOption,
+    rawOption: ECBasicOption,
     optionPreprocessorFuncs: OptionPreprocessor[],
     isNew: boolean
 ): ParsedRawOption {

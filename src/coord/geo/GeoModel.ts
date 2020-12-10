@@ -92,6 +92,7 @@ export interface GeoOption extends
     AnimationOptionMixin,
     GeoCommonOptionMixin,
     StatesOptionMixin<GeoStateOption>, GeoStateOption {
+    mainType?: 'geo';
 
     show?: boolean;
     silent?: boolean;

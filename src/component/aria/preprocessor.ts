@@ -18,9 +18,9 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import { ECUnitOption } from '../../util/types';
+import { ECUnitOption, AriaOptionMixin } from '../../util/types';
 
-export default function ariaPreprocessor(option: ECUnitOption) {
+export default function ariaPreprocessor(option: ECUnitOption & AriaOptionMixin) {
     if (!option || !option.aria) {
         return;
     }

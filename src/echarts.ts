@@ -80,7 +80,7 @@ import {
     LoadingEffect, LoadingEffectCreator, StageHandlerInternal,
     StageHandlerOverallReset, StageHandler,
     ViewRootGroup, DimensionDefinitionLoose, ECEventData, ThemeOption,
-    ECOption,
+    ECBasicOption,
     ECUnitOption,
     ZRColor,
     ComponentMainType,
@@ -101,10 +101,10 @@ import { handleLegacySelectEvents } from './legacy/dataSelectAction';
 import { registerExternalTransform } from './data/helper/transform';
 import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 
-import type {EChartsFullOption} from './option';
+import type {EChartsOption} from './export/option';
 import { findEventDispatcher } from './util/event';
 import decal from './visual/decal';
-import {MorphDividingMethod} from 'zrender/src/tool/morphPath';
+import type {MorphDividingMethod} from 'zrender/src/tool/morphPath';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -546,9 +546,9 @@ class ECharts extends Eventful {
      * @param opts.replaceMerge Default undefined.
      */
     // Expose to user full option.
-    setOption(option: EChartsFullOption, notMerge?: boolean, lazyUpdate?: boolean): void;
-    setOption(option: EChartsFullOption, opts?: SetOptionOpts): void;
-    setOption(option: EChartsFullOption, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
+    setOption(option: EChartsOption, notMerge?: boolean, lazyUpdate?: boolean): void;
+    setOption(option: EChartsOption, opts?: SetOptionOpts): void;
+    setOption(option: EChartsOption, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
         if (__DEV__) {
             assert(!this[IN_MAIN_PROCESS_KEY], '`setOption` should not be called during main process.');
         }
@@ -578,7 +578,7 @@ class ECharts extends Eventful {
             ecModel.init(null, null, null, theme, this._locale, optionManager);
         }
 
-        this._model.setOption(option as ECOption, { replaceMerge }, optionPreprocessorFuncs);
+        this._model.setOption(option as ECBasicOption, { replaceMerge }, optionPreprocessorFuncs);
 
         setTransitionOpt(this, transitionOpt);
 
@@ -619,8 +619,8 @@ class ECharts extends Eventful {
         return this._model;
     }
 
-    getOption(): EChartsFullOption {
-        return this._model && this._model.getOption() as EChartsFullOption;
+    getOption(): EChartsOption {
+        return this._model && this._model.getOption() as EChartsOption;
     }
 
     getWidth(): number {
@@ -1079,7 +1079,7 @@ class ECharts extends Eventful {
             disposedWarning(this.id);
             return;
         }
-        this.setOption({ series: [] } as EChartsFullOption, true);
+        this.setOption({ series: [] } as EChartsOption, true);
     }
 
     dispose(): void {
@@ -2496,7 +2496,7 @@ export function init(
         height?: number,
         locale?: string | LocaleOption
     }
-): ECharts {
+): EChartsType {
     if (__DEV__) {
         if (!dom) {
             throw new Error('Initialize failed: invalid dom.');
@@ -2558,7 +2558,7 @@ export function init(
  * echarts.connect('xxx', [chart1, chart2]);
  * ```
  */
-export function connect(groupId: string | ECharts[]): string {
+export function connect(groupId: string | EChartsType[]): string {
     // Is array of charts
     if (zrUtil.isArray(groupId)) {
         const charts = groupId;
@@ -2593,7 +2593,7 @@ export const disconnect = disConnect;
 /**
  * Dispose a chart instance
  */
-export function dispose(chart: ECharts | HTMLElement | string): void {
+export function dispose(chart: EChartsType | HTMLElement | string): void {
     if (typeof chart === 'string') {
         chart = instances[chart];
     }
@@ -2606,11 +2606,11 @@ export function dispose(chart: ECharts | HTMLElement | string): void {
     }
 }
 
-export function getInstanceByDom(dom: HTMLElement): ECharts {
+export function getInstanceByDom(dom: HTMLElement): EChartsType {
     return instances[modelUtil.getAttribute(dom, DOM_ATTRIBUTE_KEY)];
 }
 
-export function getInstanceById(key: string): ECharts {
+export function getInstanceById(key: string): EChartsType {
     return instances[key];
 }
 

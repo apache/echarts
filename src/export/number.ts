@@ -17,45 +17,23 @@
 * under the License.
 */
 
-import {use} from './extension';
-
-export * from './export/core';
-// ----------------------------------------------
-// All of the modules that are allowed to be
-// imported are listed below.
-//
-// Users MUST NOT import other modules that are
-// not included in this list.
-// ----------------------------------------------
-
-import {
-    RendererCanvas
-} from './export/renderers';
-
-import {
-    LineChart,
-    BarChart,
-    PieChart
-} from './export/charts';
-
-import {
-    GridSimpleComponent,
-    AriaComponent,
-    DatasetComponent
-} from './export/components';
-
-// Render via Canvas.
-// echarts.init(dom, null, { renderer: 'canvas' })
-use([RendererCanvas]);
-
-use([
-    LineChart,
-    BarChart,
-    PieChart
-]);
-
-use([
-    GridSimpleComponent,
-    AriaComponent,
-    DatasetComponent
-]);
+export {
+    linearMap,
+    round,
+    asc,
+    getPrecision,
+    getPrecisionSafe,
+    getPixelPrecision,
+    getPercentWithPrecision,
+    MAX_SAFE_INTEGER,
+    remRadian,
+    isRadianAroundZero,
+    parseDate,
+    quantity,
+    quantityExponent,
+    nice,
+    quantile,
+    reformIntervals,
+    isNumeric,
+    numericToNumber
+} from '../util/number';

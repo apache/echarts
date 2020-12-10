@@ -24,6 +24,8 @@ import Grid from './Grid';
 import { CoordinateSystemHostModel } from '../CoordinateSystem';
 
 export interface GridOption extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
+    mainType?: 'grid';
+
     show?: boolean;
 
     // Whether grid size contain label.

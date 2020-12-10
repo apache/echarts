@@ -34,26 +34,26 @@ import {
 } from './export/renderers';
 
 import {
-    ChartLine,
-    ChartBar,
-    ChartPie,
-    ChartScatter
+    LineChart,
+    BarChart,
+    PieChart,
+    ScatterChart
 } from './export/charts';
 
 import {
-    ComponentGrid,
-    ComponentGraphic,
-    ComponentToolbox,
-    ComponentTooltip,
-    ComponentAxisPointer,
-    ComponentTitle,
-    ComponentMarkPoint,
-    ComponentMarkLine,
-    ComponentMarkArea,
-    ComponentLegendScroll,
-    ComponentDataZoom,
-    ComponentAria,
-    ComponentDataset
+    GridComponent,
+    GraphicComponent,
+    ToolboxComponent,
+    TooltipComponent,
+    AxisPointerComponent,
+    TitleComponent,
+    MarkPointComponent,
+    MarkLineComponent,
+    MarkAreaComponent,
+    LegendScrollComponent,
+    DataZoomComponent,
+    AriaComponent,
+    DatasetComponent
 } from './export/components';
 
 
@@ -70,24 +70,24 @@ use([RendererCanvas]);
 use([RendererSVG]);
 
 use([
-    ChartLine,
-    ChartBar,
-    ChartPie,
-    ChartScatter
+    LineChart,
+    BarChart,
+    PieChart,
+    ScatterChart
 ]);
 
 use([
-    ComponentGraphic,
-    ComponentTooltip,
-    ComponentAxisPointer,
-    ComponentLegendScroll,
-    ComponentGrid,
-    ComponentTitle,
-    ComponentMarkPoint,
-    ComponentMarkLine,
-    ComponentMarkArea,
-    ComponentDataZoom,
-    ComponentToolbox,
-    ComponentAria,
-    ComponentDataset
+    GraphicComponent,
+    TooltipComponent,
+    AxisPointerComponent,
+    LegendScrollComponent,
+    GridComponent,
+    TitleComponent,
+    MarkPointComponent,
+    MarkLineComponent,
+    MarkAreaComponent,
+    DataZoomComponent,
+    ToolboxComponent,
+    AriaComponent,
+    DatasetComponent
 ]);

@@ -92,6 +92,7 @@ const compileWorkList = [
         },
         before: async function () {
             fsExtra.removeSync(tmpDir);
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'types'));
             fsExtra.removeSync(nodePath.resolve(ecDir, 'esm'));
             fsExtra.removeSync(nodePath.resolve(ecDir, 'index.esm.js'));
             fsExtra.removeSync(nodePath.resolve(ecDir, 'index.blank.esm.js'));

@@ -1,8 +1,20 @@
 import {init, use} from '../../core';
-import {ChartBar, ChartLine} from '../../charts';
-import {ComponentGrid, ComponentDataZoom} from '../../components';
+import {
+    BarChart,
+    BarSeriesOption,
+    LineChart,
+    LineSeriesOption
+} from '../../charts';
+import {
+    GridComponent,
+    GridComponentOption,
 
-use([ChartBar, ChartLine, ComponentGrid, ComponentDataZoom]);
+    DataZoomComponent,
+    DataZoomComponentOption
+} from '../../components';
+
+
+use([BarChart, LineChart, GridComponent, DataZoomComponent]);
 
 const dom = document.createElement('div');
 dom.className = 'chart';

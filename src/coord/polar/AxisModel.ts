@@ -28,34 +28,36 @@ import { AxisBaseModel } from '../AxisBaseModel';
 import { SINGLE_REFERRING } from '../../util/model';
 
 export interface AngleAxisOption extends AxisBaseOption {
+    mainType?: 'angleAxis';
     /**
      * Index of host polar component
      */
-    polarIndex?: number
+    polarIndex?: number;
     /**
      * Id of host polar component
      */
-    polarId?: string
+    polarId?: string;
 
-    startAngle?: number
-    clockwise?: boolean
+    startAngle?: number;
+    clockwise?: boolean;
 
-    splitNumber?: number
+    splitNumber?: number;
 
     axisLabel?: Omit<AxisBaseOption['axisLabel'], 'rotate'> & {
         rotate?: AxisBaseOption['axisLabel']['rotate']
-    }
+    };
 }
 
 export interface RadiusAxisOption extends AxisBaseOption {
+    mainType?: 'radiusAxis';
     /**
      * Index of host polar component
      */
-    polarIndex?: number
+    polarIndex?: number;
     /**
      * Id of host polar component
      */
-    polarId?: string
+    polarId?: string;
 }
 
 type PolarAxisOption = AngleAxisOption | RadiusAxisOption;

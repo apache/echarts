@@ -24,9 +24,10 @@
 // Restrict exports
 export {
     init, connect, disConnect, dispose, getInstanceByDom, getInstanceById,
-    registerMap, registerLocale, getMap, registerTheme
-} from './types/src/export';
+    registerMap, registerLocale, getMap, registerTheme,
+    graphic, util, format, EChartsType as ECharts
+} from './types/src/export/core';
 
 export {useSimple as use} from './types/src/extension';
 
-export {EChartsFullOption as EChartsOption} from './types/src/option';
+export * from './types/src/export/option';

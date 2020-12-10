@@ -17,45 +17,6 @@
 * under the License.
 */
 
-import {use} from './extension';
+export {parseDate as parse} from '../util/number';
 
-export * from './export/core';
-// ----------------------------------------------
-// All of the modules that are allowed to be
-// imported are listed below.
-//
-// Users MUST NOT import other modules that are
-// not included in this list.
-// ----------------------------------------------
-
-import {
-    RendererCanvas
-} from './export/renderers';
-
-import {
-    LineChart,
-    BarChart,
-    PieChart
-} from './export/charts';
-
-import {
-    GridSimpleComponent,
-    AriaComponent,
-    DatasetComponent
-} from './export/components';
-
-// Render via Canvas.
-// echarts.init(dom, null, { renderer: 'canvas' })
-use([RendererCanvas]);
-
-use([
-    LineChart,
-    BarChart,
-    PieChart
-]);
-
-use([
-    GridSimpleComponent,
-    AriaComponent,
-    DatasetComponent
-]);
+export {format} from '../util/time';

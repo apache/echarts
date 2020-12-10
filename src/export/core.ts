@@ -17,5 +17,22 @@
 * under the License.
 */
 
+import { ComponentOption, ECBasicOption as EChartsCoreOption, SeriesOption } from '../util/types';
+
 export * from '../echarts';
 export * from './api';
+
+export {EChartsCoreOption};
+
+type ComposeUnitOption<ComponentsOptionUnion extends ComponentOption, SeriesOptionUnion extends SeriesOption> =
+    EChartsCoreOption & {
+        [key in ComponentsOptionUnion['mainType']]: ComponentsOptionUnion | ComponentsOptionUnion[];
+    } & {
+        series?: SeriesOptionUnion | SeriesOptionUnion[]
+    };
+
+export type ComposeOption<ComponentsOptionUnion extends ComponentOption, SeriesOptionUnion extends SeriesOption> =
+    ComposeUnitOption<ComponentsOptionUnion, SeriesOptionUnion> & {
+        baseOption?: ComposeUnitOption<ComponentsOptionUnion, SeriesOptionUnion>
+        options?: ComposeUnitOption<ComponentsOptionUnion, SeriesOptionUnion>[]
+    };

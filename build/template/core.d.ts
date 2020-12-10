@@ -17,4 +17,4 @@
 * under the License.
 */
 
-export * from './types/dist/echarts';
+export * from './types/src/export/core';
