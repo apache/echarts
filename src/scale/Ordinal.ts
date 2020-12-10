@@ -67,7 +67,6 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
             });
         }
         this._ordinalMeta = ordinalMeta as OrdinalMeta;
-        this._categorySortInfo = null;
         this._extent = this.getSetting('extent') || [0, ordinalMeta.categories.length - 1];
     }
 
@@ -134,7 +133,9 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
         const categorySortInfo = this._categorySortInfo;
         if (categorySortInfo) {
             // Sorted
-            return categorySortInfo[n] && categorySortInfo[n].beforeSortIndex;
+            return categorySortInfo[n]
+                ? categorySortInfo[n].beforeSortIndex
+                : -1;
         }
         else {
             // Not sorted
