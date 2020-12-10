@@ -67,7 +67,6 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
             });
         }
         this._ordinalMeta = ordinalMeta as OrdinalMeta;
-        this._categorySortInfo = [];
         this._extent = this.getSetting('extent') || [0, ordinalMeta.categories.length - 1];
     }
 
@@ -131,10 +130,15 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
      * @param {OrdinalNumber} n index of raw data
      */
     getCategoryIndex(n: OrdinalNumber): OrdinalNumber {
-        if (this._categorySortInfo.length) {
-            return this._categorySortInfo[n].beforeSortIndex;
+        const categorySortInfo = this._categorySortInfo;
+        if (categorySortInfo) {
+            // Sorted
+            return categorySortInfo[n]
+                ? categorySortInfo[n].beforeSortIndex
+                : -1;
         }
         else {
+            // Not sorted
             return n;
         }
     }
@@ -145,10 +149,17 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
      * @param {OrdinalNumber} displayIndex index of display
      */
     getRawIndex(displayIndex: OrdinalNumber): OrdinalNumber {
-        if (this._categorySortInfo.length) {
-            return this._categorySortInfo[displayIndex].ordinalNumber;
+        const categorySortInfo = this._categorySortInfo;
+        if (categorySortInfo) {
+            // Sorted
+            return categorySortInfo[displayIndex]
+                // In range, return ordinalNumber
+                ? categorySortInfo[displayIndex].ordinalNumber
+                // Out of range, e.g., when axis max is larger than cagetory number
+                : -1;
         }
         else {
+            // Not sorted
             return displayIndex;
         }
     }
