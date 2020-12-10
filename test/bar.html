@@ -97,15 +97,16 @@ under the License.
                         }
                     },
                     emphasis: {
+                        focus: 'series',
                         label: {
                             position: 'outside'
                         },
-                        barBorderColor: '#fff',
-                        barBorderWidth: 1,
-                        shadowBlur: 10,
-                        shadowOffsetX: 0,
-                        shadowOffsetY: 0,
-                        shadowColor: 'rgba(0,0,0,0.5)'
+                        // barBorderColor: '#fff',
+                        // barBorderWidth: 1,
+                        // shadowBlur: 10,
+                        // shadowOffsetX: 0,
+                        // shadowOffsetY: 0,
+                        shadowColor: 'rgba(0,0,0,0.3)'
                     }
                 };
 
@@ -164,7 +165,7 @@ under the License.
                             myTool2: {
                                 show: true,
                                 title: '自定义扩展方法2',
-                                icon: 'image://http://echarts.baidu.com/images/favicon.png',
+                                icon: 'image://./asset/echarts-logo.png',
                                 onclick: function (){
                                     alert('myToolHandler2')
                                 }
@@ -233,6 +234,7 @@ under the License.
                         type: 'bar',
                         stack: 'one',
                         itemStyle: itemStyle,
+                        selectedMode: true,
                         cursor: 'move',
                         data: data1
                     }, {
@@ -240,6 +242,7 @@ under the License.
                         type: 'bar',
                         stack: 'one',
                         itemStyle: itemStyle,
+                        selectedMode: true,
                         cursor: 'default',
                         data: data2
                     }, {
@@ -247,12 +250,14 @@ under the License.
                         type: 'bar',
                         stack: 'two',
                         itemStyle: itemStyle,
+                        selectedMode: true,
                         data: data3
                     }, {
                         name: 'bar4',
                         type: 'bar',
                         stack: 'two',
                         itemStyle: itemStyle,
+                        selectedMode: true,
                         data: data4
                     }]
                 });

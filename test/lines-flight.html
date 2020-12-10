@@ -51,7 +51,7 @@ under the License.
             // 'extension/bmap'
         ], function (echarts) {
 
-            $.get('../map/json/world.json', function (worldJson) {
+            $.get('./data/map/json/world.json', function (worldJson) {
                 echarts.registerMap('world', worldJson);
 
                 $.get(dataURL, function (data) {

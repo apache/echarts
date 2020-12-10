@@ -1,0 +1,368 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #146402;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 600px;
+            }
+        </style>
+
+        <div id="main1" class="chart"></div>
+
+
+        <button id='btn-1'>A++</button>
+        <button id='btn-2'>B++</button>
+        <button id='btn-3'>C++</button>
+        <button id='btn-4'>D++</button>
+        <div id="main2" class="chart"></div>
+
+
+        <div id="main3" class="chart"></div>
+
+
+        <script>
+
+        require(
+            (testHelper.hasURLParam('en')
+                ? [
+                    'echarts',
+                    // 'echarts/lang/en',
+                ]
+                : [
+                    'echarts'
+                ]
+            ).concat(
+                [
+                    // 'echarts/chart/bar',
+                    // 'echarts/chart/line',
+                    // 'echarts/component/legend',
+                    // 'echarts/component/graphic',
+                    // 'echarts/component/grid',
+                    // 'echarts/component/tooltip',
+                    // 'echarts/component/brush',
+                    // 'echarts/component/toolbox',
+                    // 'echarts/component/title',
+                    // 'zrender/vml/vml'
+                ]
+            ),
+            function (echarts) {
+
+                function loadLifeData(cb) {
+                    $.getJSON('data/life-expectancy-table.json', function (data) {
+                        cb(data);
+                    })
+                }
+
+                var chart = echarts.init(document.getElementById('main1'), null, {
+                    // renderer: 'svg'
+                });
+
+                var updateFrequency = 5000;
+                var dimension = 1;
+
+                loadLifeData(function (data) {
+                    var years = [];
+                    for (var i = 0; i < data.length; ++i) {
+                        if (years.length === 0 || years[years.length - 1] !== data[i][4]) {
+                            years.push(data[i][4]);
+                        }
+                    }
+
+                    var option = {
+                        grid: {
+                            left: 150,
+                            right: 150
+                        },
+                        xAxis: {
+                            max: 'dataMax',
+                            label: {
+                                formatter: function (n) {
+                                    return Math.round(n);
+                                }
+                            }
+                        },
+                        dataset: {
+                            source: data.slice(1).filter(d => {
+                                return d[4] === 1800;
+                            })
+                        },
+                        yAxis: {
+                            type: 'category',
+                            inverse: true,
+                            max: 10,
+                            axisLabel: {
+                                show: true
+                            },
+                            animationDuration: 300,
+                            animationDurationUpdate: 300
+                        },
+                        series: [{
+                            realtimeSort: true,
+                            seriesLayoutBy: 'column',
+                            type: 'bar',
+                            encode: {
+                                x: dimension,
+                                y: 3
+                            },
+                            label: {
+                                show: true,
+                                position: 'right',
+                                formatter: function (param) {
+                                    return param.value[dimension];
+                                },
+                                valueAnimation: true,
+                                fontFamily: 'monospace'
+                            }
+                        }],
+                        animationDurationUpdate: updateFrequency,
+                        animationEasing: 'linear',
+                        animationEasingUpdate: 'linear',
+                        graphic: {
+                            elements: [{
+                                type: 'text',
+                                right: 160,
+                                bottom: 60,
+                                style: {
+                                    text: '1960',
+                                    font: 'bolder 80px monospace',
+                                    fill: 'rgba(100, 100, 100, 0.25)'
+                                },
+                                z: 100
+                            }]
+                        }
+                    };
+
+                    // console.log(option);
+                    chart.setOption(option);
+
+                    for (var i = 1; i < years.length; ++i) {
+                        (function (i) {
+                            setTimeout(function () {
+                                updateYear(years[i + 1]);
+                            }, (i - 1) * updateFrequency);
+                        })(i);
+                    }
+
+                    function updateYear(year) {
+                        var source = data.slice(1).filter(d => {
+                            return d[4] === year;
+                        });
+                        option.series[0].data = source;
+                        option.graphic.elements[0].style.text = year;
+                        chart.setOption(option);
+                    }
+                });
+
+            }
+
+        );
+        </script>
+
+
+
+        <script>
+
+        require(
+            (testHelper.hasURLParam('en')
+                ? [
+                    'echarts',
+                    // 'echarts/lang/en',
+                ]
+                : [
+                    'echarts'
+                ]
+            ).concat(
+                [
+                    // 'echarts/chart/bar',
+                    // 'echarts/chart/line',
+                    // 'echarts/component/legend',
+                    // 'echarts/component/graphic',
+                    // 'echarts/component/grid',
+                    // 'echarts/component/tooltip',
+                    // 'echarts/component/brush',
+                    // 'echarts/component/toolbox',
+                    // 'echarts/component/title',
+                    // 'zrender/vml/vml'
+                ]
+            ),
+            function (echarts) {
+                var chart = echarts.init(document.getElementById('main2'), null, {
+                });
+                var option = {
+                    xAxis: {
+                        max: 'dataMax'
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: ['A', 'B', 'C', 'D'],
+                        inverse: true,
+                        axisLabel: {
+                            formatter: function (label, id) {
+                                return label + 0 + id;
+                            }
+                        },
+                        animationDuration: 300,
+                        animationDurationUpdate: 300,
+                        max: 2
+                    },
+                    series: [{
+                        realtimeSort: true,
+                        name: 'X',
+                        type: 'bar',
+                        data: [{
+                            value: 120,
+                            itemStyle: {
+                                color: 'red'
+                            }
+                        }, {
+                            value: 200,
+                            itemStyle: {
+                                color: 'orange'
+                            }
+                        }, {
+                            value: 90,
+                            itemStyle: {
+                                color: 'yellow'
+                            }
+                        }, {
+                            value: 240,
+                            itemStyle: {
+                                color: 'green'
+                            }
+                        }],
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: '{c}元',
+                            valueAnimation: true
+                        }
+                    }],
+                    legend: {
+                        show: true
+                    },
+                    animationDurationUpdate: 5000,
+                    animationEasing: 'linear',
+                    animationEasingUpdate: 'linear'
+                };
+
+                chart.setOption(option);
+
+                setTimeout(() => {
+                    var data = option.series[0].data;
+                    data[1].value += 100;
+                    chart.setOption(option);
+                }, 1000);
+
+                setTimeout(() => {
+                    var data = option.series[0].data;
+                    data[3].value += 100;
+                    chart.setOption(option);
+                }, 3400);
+
+                for (var x = 0; x < 4; ++x) {
+                    (function (x) {
+                        var btn = document.getElementById('btn-' + (x + 1));
+                        btn.onclick = function () {
+                            var data = option.series[0].data;
+                            data[x].value += Math.round(100 * Math.random());
+                            chart.setOption(option);
+                        };
+                    })(x);
+                }
+            }
+
+        );
+        </script>
+
+
+
+        <script>
+
+        require(
+            (testHelper.hasURLParam('en')
+                ? [
+                    'echarts',
+                    // 'echarts/lang/en',
+                ]
+                : [
+                    'echarts'
+                ]
+            ).concat(
+                [
+                    // 'echarts/chart/bar',
+                    // 'echarts/chart/line',
+                    // 'echarts/component/legend',
+                    // 'echarts/component/graphic',
+                    // 'echarts/component/grid',
+                    // 'echarts/component/tooltip',
+                    // 'echarts/component/brush',
+                    // 'echarts/component/toolbox',
+                    // 'echarts/component/title',
+                    // 'zrender/vml/vml'
+                ]
+            ),
+            function (echarts) {
+                var chart = echarts.init(document.getElementById('main3'), null, {
+                });
+                var option = {
+                    title: {
+                        text: 'When yAxis max is larger than yAxis data length, it should not get error'
+                    },
+                    xAxis: {
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: ['A', 'B', 'C'],
+                        max: 5
+                    },
+                    series: [{
+                        realtimeSort: true,
+                        type: 'bar',
+                        data: [10, 8, 2]
+                    }]
+                };
+
+                chart.setOption(option);
+            }
+
+        );
+        </script>
+    </body>
+</html>

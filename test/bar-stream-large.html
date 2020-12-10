@@ -25,8 +25,11 @@ under the License.
         <script src='lib/config.js'></script>
         <script src='lib/jquery.min.js'></script>
         <script src='lib/testHelper.js'></script>
+        <!-- <script src="lib/canteen.js"></script> -->
         <link rel="stylesheet" href="lib/reset.css" />
         <meta name='viewport' content='width=device-width, initial-scale=1' />
+        <link rel="stylesheet" href="./stream-basic.css" />
+        <script src="./stream-basic.js"></script>
     </head>
     <body>
         <style>
@@ -38,8 +41,18 @@ under the License.
             }
         </style>
         <div id='main0'></div>
+        <div id='record'></div>
         <img id="snapshot"/>
         <script>
+
+        var chart;
+        var recordContainer = document.getElementById('record');
+        // testHelper.controlFrame({
+        //     pauseAt: 20,
+        //     onFrame: function (frameNumber) {
+        //         window.printIncrementalOnFrame(chart, frameNumber, recordContainer);
+        //     }
+        // });
 
         require(['echarts'], function (echarts) {
 
@@ -77,7 +90,7 @@ under the License.
                 }]
             };
 
-            var chart = testHelper.create(echarts, 'main0', {
+            chart = testHelper.create(echarts, 'main0', {
                 title: [
                     count + ' points should be rendered from left to right.',
                     '(1) Check all bars rendered (full of xAxis)',

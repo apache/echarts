@@ -23,13 +23,15 @@ function getNthChild(el) {
     let i = 1;
     let elTagName = el.tagName;
     let elClassName = el.className;
+    let nthSameClass = 1;
     while (el.previousSibling) {
         el = el.previousSibling;
-        if (el.tagName === elTagName && el.className === elClassName) { // TODO extra space in class name?
-            i++;
+        if (el.tagName === elTagName && el.className === elClassName) {
+            nthSameClass++;
         }
+        i++;
     }
-    return i;
+    return [i, nthSameClass];
 }
 function getUniqueSelector(el) {
     if (el.tagName.toLowerCase() === 'body') {
@@ -45,8 +47,8 @@ function getUniqueSelector(el) {
         for (let className of el.classList) {
             selector += '.' + className;
         }
-        let idx = getNthChild(el);
-        if (idx > 1) {
+        let [idx, nthSameClass] = getNthChild(el);
+        if (nthSameClass > 1) {
             selector += `:nth-child(${idx})`;
         }
     }

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html lang="EN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/esl.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <!-- <script src="ut/lib/canteen.js"></script> -->
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+<body>
+<style>
+    body {
+        background: #eee;
+        margin: 0;
+        text-align: center;
+    }
+    #container {
+        box-sizing: border-box;
+        margin: 0 auto;
+        width: 800px;
+        max-width: 100%;
+        text-align: center;
+    }
+    .chart {
+        width: 100%;
+        height: 300px;
+
+        border-radius: 5px;
+        margin: 20px 0;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        background: #fff;
+    }
+</style>
+
+<div id="container">
+    <div id="main2" class="chart"></div>
+    <div id="main1" class="chart"></div>
+    <div id="main3" class="chart"></div>
+    <div id="main4" class="chart"></div>
+    <div id="main-FI" class="chart"></div>
+    <div id="main-DE" class="chart"></div>
+    <div id="main-FR" class="chart"></div>
+    <div id="main-JA" class="chart"></div>
+    <div id="main-TH" class="chart"></div>
+</div>
+
+<script>
+    var base = +new Date(2010, 9, 3);
+    var oneDay = 24 * 3600 * 1000;
+
+    var data = [[base, Math.random() * 300]];
+
+    for (var i = 1; i < 2000; i++) {
+        var now = new Date(base += oneDay);
+        data.push([
+            [now.getFullYear(), now.getMonth() + 1, now.getDate()].join('/'),
+            Math.round((Math.random() - 0.5) * 20 + data[i - 1][1])
+        ]);
+    }
+
+    window.option = {
+        tooltip: {
+            trigger: 'axis',
+            position: function (pt) {
+                return [pt[0], '10%'];
+            }
+        },
+        toolbox: {
+            show: true,
+            feature: {
+                restore: {},
+                saveAsImage: {},
+                dataZoom: {},
+                dataView: {},
+                brush: ['rect']
+            },
+            orient: 'vertical',
+            right: 5
+        },
+        legend: {
+            selector: true
+        },
+        xAxis: {
+            type: 'time',
+            boundaryGap: false
+        },
+        yAxis: {
+            type: 'value',
+            boundaryGap: [0, '100%']
+        },
+        dataZoom: [{
+            type: 'inside',
+            start: 0,
+            end: 20
+        }, {
+            start: 0,
+            end: 20,
+            height: 25,
+            bottom: 10
+        }],
+        series: [
+            {
+                type: 'line',
+                smooth: true,
+                symbol: 'none',
+                areaStyle: {},
+                data: data
+            }
+        ]
+    };
+</script>
+
+<script>
+    // auto with default
+    require(['echarts'], function (echarts) {
+        var chart = echarts.init(document.getElementById('main2'), null);
+        chart.setOption(window.option);
+    });
+</script>
+
+<script>
+    // lang object
+    require(['echarts', 'i18n/langEN-obj'], function (echarts, lang) {
+        echarts.registerLocale('EN', lang);
+        var chart = echarts.init(document.getElementById('main1'), null, {
+            locale: lang
+        });
+        chart.setOption(window.option);
+    });
+</script>
+
+<script>
+    // Modified lang
+    require(['echarts', 'i18n/langZH-obj'], function (echarts, lang) {
+        echarts.registerLocale('ZH-mod', lang);
+        lang.legend.selector.inverse = '反選';
+        lang.legend.selector.all = '全選';
+        var chart = echarts.init(document.getElementById('main4'), null, {
+            locale: 'ZH-mod'
+        });
+        chart.setOption(window.option);
+    });
+</script>
+
+<script>
+    // register neither zh or en lang
+    require(['echarts', 'i18n/langES-obj'], function (echarts, lang) {
+        echarts.registerLocale('ES', lang);
+        var chart = echarts.init(document.getElementById('main3'), null, {
+            locale: 'ES'
+        });
+        chart.setOption(window.option);
+    });
+</script>
+
+
+<script>
+    require(['echarts', 'i18n/langFI'], function (echarts) {
+        var chart = echarts.init(document.getElementById('main-FI'), null, {
+            locale: 'FI'
+        });
+        chart.setOption(window.option);
+    });
+</script>
+
+<script>
+    require(['echarts', 'i18n/langDE'], function (echarts) {
+        var chart = echarts.init(document.getElementById('main-DE'), null, {
+            locale: 'DE'
+        });
+        chart.setOption(window.option);
+    });
+</script>
+
+<script>
+    require(['echarts', 'i18n/langFR'], function (echarts) {
+        var chart = echarts.init(document.getElementById('main-FR'), null, {
+            locale: 'FR'
+        });
+        chart.setOption(window.option);
+    });
+</script>
+
+<script>
+    require(['echarts', 'i18n/langJA'], function (echarts) {
+        var chart = echarts.init(document.getElementById('main-JA'), null, {
+            locale: 'JA'
+        });
+        chart.setOption(window.option);
+    });
+</script>
+
+<script>
+    require(['echarts', 'i18n/langTH'], function (echarts) {
+        var chart = echarts.init(document.getElementById('main-TH'), null, {
+            locale: 'TH'
+        });
+        chart.setOption(window.option);
+    });
+</script>
+
+</body>
+</html>
+

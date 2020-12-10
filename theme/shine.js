@@ -152,9 +152,7 @@
                 }
             },
             axisLabel: {
-                textStyle: {
-                    color: 'auto'
-                }
+                color: 'auto'
             },
             splitLine: {
                 length: 12,
@@ -168,14 +166,10 @@
                 color: 'auto'
             },
             title: {
-                textStyle: {
-                    color: '#333'
-                }
+                color: '#333'
             },
             detail: {
-                textStyle: {
-                    color: 'auto'
-                }
+                color: 'auto'
             }
         }
     };

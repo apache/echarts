@@ -24,6 +24,8 @@ under the License.
         <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <!-- <link href="https://fonts.googleapis.com/css2?family=Open+Sans+Condensed:wght@300&display=swap" rel="stylesheet"> -->
+        <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300&family=Open+Sans+Condensed:wght@300&display=swap" rel="stylesheet">
     </head>
     <body>
         <style>
@@ -234,14 +236,31 @@ under the License.
                         colorMappingBy: 'id',
                         itemStyle: {
                             borderWidth: 3,
-                            gapWidth: 3
+                            gapWidth: 3,
+                            borderRadius: 5,
+                            shadowBlur: 20,
+                            shadowColor: 'rgba(20, 20, 40, 1)',
                         }
                     },
                     {
                         colorAlpha: mode === 2
-                            ? [0.5, 1] : null,
+                            ? [0.3, 0.5] : null,
                         itemStyle: {
-                            gapWidth: 1
+                            borderWidth: 2,
+                            gapWidth: 1,
+                            borderRadius: 5,
+                            shadowBlur: 5,
+                            shadowColor: 'rgba(20, 20, 40, 0.5)'
+                        }
+                    },
+                    {
+                        upperLabel: {
+                            show: false
+                        },
+                        itemStyle: {
+                            borderWidth: 0,
+                            gapWidth: 0,
+                            borderRadius: 1
                         }
                     }
                 ];
@@ -297,6 +316,7 @@ under the License.
                 });
 
                 chart.setOption({
+                    // backgroundColor: '#000',
 
                     legend: {
                         data: [SERIES_NAME]
@@ -315,10 +335,31 @@ under the License.
                             label: {
                                 show: true,
                                 formatter: "{b}",
-                                ellipsis: true
+                                fontSize: 10,
+                                fontWeight: 100,
+                                fontFamily: 'Barlow Condensed',
+                                overflow: 'break'
+                            },
+                            labelLayout: function (params) {
+                                if (params.rect.width < 5 || params.rect.height < 5) {
+                                    return {
+                                        fontSize: 0
+                                    };
+                                }
+                                return {
+                                    fontSize: Math.min(Math.sqrt(params.rect.width * params.rect.height) / 10, 20)
+                                };
                             },
                             itemStyle: {
-                                borderColor: 'black'
+                                borderColor: 'rgba(100, 100, 200, 0.2)',
+                                borderWidth: 0
+                            },
+                            upperLabel: {
+                                show: true,
+                                height: 15,
+                                fontSize: 10,
+                                fontFamily: 'Barlow Condensed',
+                                color: null
                             },
                             levels: getLevelOption(0),
                             data: buildData('2012 Amount', window.obama_budget_2012)

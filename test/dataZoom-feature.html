@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="refer_by_id"></div>
+        <div id="auto_axis_second_setOption_only_toolbox_dz"></div>
+        <div id="auto_axis_second_setOption_normal_dz"></div>
+        <div id="specified_axis_second_setOption_normal_dz"></div>
+        <div id="remove_dz"></div>
+        <div id="duplicated_dataZoom_ref"></div>
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option;
+
+            option = {
+                grid: [{
+                    bottom: '55%'
+                }, {
+                    id: 'g1',
+                    top: '55%'
+                }],
+                xAxis: [{
+
+                }, {
+                    id: 'x1',
+                    gridId: 'g1'
+                }],
+                yAxis: [{
+
+                }, {
+                    id: 'y1',
+                    gridId: 'g1'
+                }],
+                dataZoom: [{
+                    xAxisId: 'x1',
+                    type: 'slider'
+                }, {
+                    xAxisId: 'x1',
+                    type: 'inside'
+                }],
+                series: [{
+                    type: 'line',
+                    data: [[11, 22], [33, 44]]
+                }, {
+                    type: 'line',
+                    xAxisId: 'x1',
+                    yAxisId: 'y1',
+                    data: [[233, 432], [154, 552]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'refer_by_id', {
+                title: [
+                    'refer axis by id',
+                    'Two grids, dataZoom should **only refer to bottom grid**',
+                ],
+                option: option,
+                height: 300,
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            function makeFirstGridOption() {
+                return {
+                    grid: [{
+                        bottom: '60%'
+                    }],
+                    xAxis: [{
+                    }, {
+                    }],
+                    yAxis: [{
+                    }],
+                    series: [{
+                        type: 'line',
+                        data: [[333, 22], [666, 44]]
+                    }, {
+                        type: 'line',
+                        xAxisIndex: 1,
+                        data: [[88888, 52], [99999, 74]]
+                    }]
+                };
+            }
+
+            var option = makeFirstGridOption();
+
+            option.toolbox = {
+                left: 'center',
+                feature: {
+                    dataZoom: {}
+                }
+            };
+            option.grid.push(
+                {
+                    id: 'gb',
+                    top: '60%'
+                }
+            );
+            option.xAxis.push(
+                {
+                    id: 'xb0',
+                    type: 'category',
+                    gridIndex: 1
+                }, {
+                    id: 'xb1',
+                    type: 'category',
+                    gridIndex: 1
+                }
+            );
+            option.yAxis.push(
+                {
+                    id: 'yb',
+                    gridIndex: 1
+                }
+            );
+            option.series.push(
+                {
+                    id: 'sb0',
+                    type: 'line',
+                    xAxisIndex: 2,
+                    yAxisIndex: 1,
+                    data: [[63, 432], [98, 552]]
+                }, {
+                    id: 'sb1',
+                    type: 'line',
+                    xAxisIndex: 3,
+                    yAxisIndex: 1,
+                    data: [[87654, 1432], [56789, 1552]]
+                }
+            );
+
+            var chart = testHelper.create(echarts, 'auto_axis_second_setOption_only_toolbox_dz', {
+                title: [
+                    '[Only toolbox dataZoom] two grids, each has two xAxis.',
+                    'toolbox zoom should work on **all grids**.',
+                    'Click btn "remove top grid".',
+                    'toolbox zoom should work only on **bottom grids**.',
+                    'Click btn "addback top grid".',
+                    'toolbox zoom should work on **all grids**.',
+                    'Click btn "remove all grids".',
+                    'Should **no error**.',
+                    'Check toolbox zoom should **not work on the original area**.',
+                    'Click btn "addback top grid".',
+                    'toolbox zoom should work only on **top grids**.',
+                ],
+                option: option,
+                height: 350,
+                buttons: [{
+                    text: 'remove top grid',
+                    onclick: function () {
+                        chart.setOption({
+                            grid: [{
+                                id: 'gb',
+                            }],
+                            xAxis: [{
+                                id: 'xb0',
+                            }, {
+                                id: 'xb1',
+                            }],
+                            yAxis: [{
+                                id: 'yb'
+                            }],
+                            series: [{
+                                id: 'sb0',
+                            }, {
+                                id: 'sb1',
+                            }]
+                        }, { replaceMerge: ['grid', 'xAxis', 'yAxis', 'series'] });
+                    }
+                }, {
+                    text: 'addback top grid',
+                    onclick: function () {
+                        chart.setOption(makeFirstGridOption());
+                    }
+                }, {
+                    text: 'remove all grids',
+                    onclick: function () {
+                        chart.setOption({
+                            grid: [],
+                            xAxis: [],
+                            yAxis: [],
+                            series: []
+                        }, { replaceMerge: ['grid', 'xAxis', 'yAxis', 'series'] });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+
+            function makeFirstGridOption() {
+                return {
+                    grid: [{
+                        bottom: '60%'
+                    }],
+                    xAxis: [{
+                    }, {
+                    }],
+                    yAxis: [{
+                    }],
+                    series: [{
+                        type: 'line',
+                        symbolSize: 20,
+                        data: [[11, 22], [33, 44]]
+                    }, {
+                        type: 'line',
+                        xAxisIndex: 1,
+                        symbolSize: 20,
+                        data: [[11111, 52], [21133, 74]]
+                    }]
+                };
+            }
+
+            var option = makeFirstGridOption();
+
+            option.toolbox = {
+                left: 'center',
+                feature: {
+                    dataZoom: {}
+                }
+            };
+            option.grid.push(
+                {
+                    id: 'gb',
+                    top: '60%'
+                }
+            );
+            option.xAxis.push(
+                {
+                    id: 'xb0',
+                    type: 'category',
+                    gridIndex: 1
+                }, {
+                    id: 'xb1',
+                    type: 'category',
+                    gridIndex: 1
+                }
+            );
+            option.yAxis.push(
+                {
+                    id: 'yb',
+                    gridIndex: 1
+                }
+            );
+            option.dataZoom = [
+                {
+                    type: 'slider'
+                }, {
+                    type: 'inside'
+                }
+            ];
+            option.series.push(
+                {
+                    id: 'sb0',
+                    type: 'line',
+                    symbolSize: 20,
+                    xAxisIndex: 2,
+                    yAxisIndex: 1,
+                    data: [[23, 432], [54, 552]]
+                }, {
+                    id: 'sb1',
+                    type: 'line',
+                    symbolSize: 20,
+                    xAxisIndex: 3,
+                    yAxisIndex: 1,
+                    data: [[222233, 1432], [111154, 1552]]
+                }
+            );
+
+            var chart = testHelper.create(echarts, 'auto_axis_second_setOption_normal_dz', {
+                title: [
+                    'Test: **Auto axis** remove coord sys (dataZoom not remove)',
+                    'two grids, each has two xAxis.',
+                    'dataZoom should **only control all 2 xAxis of top** grid.',
+                    'Click btn "remove top grid".',
+                    'dataZoom should **only control all 2 xAxis of bottom** grid.',
+                    '**inside dataZoom** on top grid area **should be removed**.',
+                    '**toolbox zoom** should only control bottom grid.',
+                    'Click btn "addback top grid".',
+                    'dataZoom should **only control all 2 xAxis of top** grid.',
+                    '**inside dataZoom** on bottom grid area **should be removed**.',
+                    'Click btn "remove all grids".',
+                    'Should no error.',
+                    'Click btn "addback top grid".',
+                    'Functionalities should be OK.'
+                ],
+                option: option,
+                height: 350,
+                buttons: [{
+                    text: 'remove top grid',
+                    onclick: function () {
+                        chart.setOption({
+                            grid: [{
+                                id: 'gb',
+                            }],
+                            xAxis: [{
+                                id: 'xb0',
+                            }, {
+                                id: 'xb1',
+                            }],
+                            yAxis: [{
+                                id: 'yb'
+                            }],
+                            series: [{
+                                id: 'sb0',
+                            }, {
+                                id: 'sb1',
+                            }]
+                        }, { replaceMerge: ['grid', 'xAxis', 'yAxis', 'series'] });
+                    }
+                }, {
+                    text: 'addback top grid',
+                    onclick: function () {
+                        chart.setOption(makeFirstGridOption());
+                    }
+                }, {
+                    text: 'remove all grids',
+                    onclick: function () {
+                        chart.setOption({
+                            grid: [],
+                            xAxis: [],
+                            yAxis: [],
+                            series: []
+                        }, { replaceMerge: ['grid', 'xAxis', 'yAxis', 'series'] });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+
+            function makeFirstGridOption() {
+                return {
+                    grid: [{
+                        bottom: '60%'
+                    }],
+                    xAxis: [{
+                    }, {
+                    }],
+                    yAxis: [{
+                    }],
+                    series: [{
+                        type: 'line',
+                        symbol: 'emptyTriangle',
+                        symbolSize: 20,
+                        data: [[11, 22], [33, 44]]
+                    }, {
+                        type: 'line',
+                        symbol: 'emptyTriangle',
+                        symbolSize: 20,
+                        xAxisIndex: 1,
+                        data: [[11111, 52], [21133, 74]]
+                    }]
+                };
+            }
+
+            var option = makeFirstGridOption();
+
+            option.toolbox = {
+                left: 'center',
+                feature: {
+                    dataZoom: {}
+                }
+            };
+            option.grid.push(
+                {
+                    id: 'gb',
+                    top: '60%'
+                }
+            );
+            option.xAxis.push(
+                {
+                    id: 'xb0',
+                    type: 'category',
+                    gridIndex: 1
+                }, {
+                    id: 'xb1',
+                    type: 'category',
+                    gridIndex: 1
+                }
+            );
+            option.yAxis.push(
+                {
+                    id: 'yb',
+                    gridIndex: 1
+                }
+            );
+            option.dataZoom = [
+                {
+                    type: 'slider',
+                    xAxisIndex: 'all'
+                }, {
+                    type: 'inside',
+                    xAxisIndex: 'all'
+                }
+            ];
+            option.series.push(
+                {
+                    id: 'sb0',
+                    type: 'line',
+                    symbol: 'emptyTriangle',
+                    symbolSize: 20,
+                    xAxisIndex: 2,
+                    yAxisIndex: 1,
+                    data: [[23, 432], [54, 552], [124, 324], [341, 134], [888, 213]]
+                }, {
+                    id: 'sb1',
+                    type: 'line',
+                    symbol: 'emptyTriangle',
+                    symbolSize: 20,
+                    xAxisIndex: 3,
+                    yAxisIndex: 1,
+                    data: [[222233, 1432], [111154, 1552], [222223, 1231], [131313, 3322], [717171, 5512]]
+                }
+            );
+
+            var chart = testHelper.create(echarts, 'specified_axis_second_setOption_normal_dz', {
+                title: [
+                    'Test: **xAxisIndex: "all"** remove coord sys (dataZoom not remove)',
+                    'two grids, each has two xAxis.',
+                    'dataZoom should **only control all 4 xAxis**.',
+                    'Click btn "remove top grid".',
+                    'dataZoom should **only control all 2 xAxis of bottom** grid.',
+                    '**inside dataZoom** on top grid area **should be removed**.',
+                    '**toolbox zoom** should only control bottom grid.',
+                    'Click btn "addback top grid".',
+                    'dataZoom should **only control all 4 xAxis**.',
+                    '**inside dataZoom** on bottom grid area **should be removed**.',
+                    'Click btn "remove all grids".',
+                    'Should no error.',
+                    'Click btn "addback top grid".',
+                    'Functionalities should be OK.'
+                ],
+                option: option,
+                height: 350,
+                buttons: [{
+                    text: 'remove top grid',
+                    onclick: function () {
+                        chart.setOption({
+                            grid: [{
+                                id: 'gb',
+                            }],
+                            xAxis: [{
+                                id: 'xb0',
+                            }, {
+                                id: 'xb1',
+                            }],
+                            yAxis: [{
+                                id: 'yb'
+                            }],
+                            series: [{
+                                id: 'sb0',
+                            }, {
+                                id: 'sb1',
+                            }]
+                        }, { replaceMerge: ['grid', 'xAxis', 'yAxis', 'series'] });
+                    }
+                }, {
+                    text: 'addback top grid',
+                    onclick: function () {
+                        chart.setOption(makeFirstGridOption());
+                    }
+                }, {
+                    text: 'remove all grids',
+                    onclick: function () {
+                        chart.setOption({
+                            grid: [],
+                            xAxis: [],
+                            yAxis: [],
+                            series: []
+                        }, { replaceMerge: ['grid', 'xAxis', 'yAxis', 'series'] });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+
+            function makeFirstGridOption() {
+                return {
+                    grid: [{
+                        bottom: '60%'
+                    }],
+                    xAxis: [{
+                    }, {
+                    }],
+                    yAxis: [{
+                    }],
+                    series: [{
+                        type: 'line',
+                        symbol: 'emptyTriangle',
+                        symbolSize: 20,
+                        data: [[11, 22], [33, 44]]
+                    }, {
+                        type: 'line',
+                        symbol: 'emptyTriangle',
+                        symbolSize: 20,
+                        xAxisIndex: 1,
+                        data: [[11111, 52], [21133, 74]]
+                    }]
+                };
+            }
+
+            var option = makeFirstGridOption();
+
+            var option = {
+                toolbox: {
+                    left: 'center',
+                    feature: {
+                        dataZoom: {}
+                    }
+                },
+                grid: [{
+                    right: '60%'
+                }, {
+                    id: 'gb',
+                    left: '60%'
+                }],
+                xAxis: [{
+                }, {
+                    id: 'xb',
+                    gridIndex: 1
+                }],
+                yAxis: [{
+                }, {
+                }, {
+                    id: 'yb0',
+                    type: 'category',
+                    gridIndex: 1
+                }, {
+                    id: 'yb1',
+                    type: 'category',
+                    gridIndex: 1
+                }],
+                dataZoom: [{
+                    type: 'slider',
+                    left: 10,
+                    yAxisIndex: [0, 1]
+                }, {
+                    type: 'inside',
+                    yAxisIndex: [0, 1]
+                }],
+                series: [{
+                    type: 'line',
+                    symbol: 'emptyTriangle',
+                    symbolSize: 20,
+                    data: [[22, 11], [44, 33]]
+                }, {
+                    type: 'line',
+                    symbol: 'emptyTriangle',
+                    symbolSize: 20,
+                    yAxisIndex: 1,
+                    data: [[52, 11111], [74, 21133]]
+                }, {
+                    id: 'sb0',
+                    type: 'line',
+                    symbol: 'emptyTriangle',
+                    symbolSize: 20,
+                    xAxisIndex: 1,
+                    yAxisIndex: 2,
+                    data: [[432, 23], [552, 54], [324, 124], [134, 341], [213, 888]]
+                }, {
+                    id: 'sb1',
+                    type: 'line',
+                    symbol: 'emptyTriangle',
+                    symbolSize: 20,
+                    xAxisIndex: 1,
+                    yAxisIndex: 3,
+                    data: [[1432, 222233], [1552, 111154], [1231, 222223], [3322, 131313], [5512, 717171]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'remove_dz', {
+                title: [
+                    'Test: remove dataZoom',
+                    'two grids, each has two yAxis.',
+                    'dataZoom should **only control all 2 yAxis of left** grid.',
+                    'Click btn "remove left dataZoom".',
+                    'dz disappear and insideZoom should **no longer work**.',
+                    '**toolbox zoom** should still work.',
+                    'Click btn "add right dataZoom".',
+                    'dataZoom should **only control all 2 yAxis of right** grid.',
+                    'Click btn "dataZoom control x".',
+                    'dataZoom should lay full of bottom and **only control all xAxis**.',
+                ],
+                option: option,
+                height: 350,
+                buttons: [{
+                    text: 'remove left dataZoom',
+                    onclick: function () {
+                        chart.setOption({
+                        }, { replaceMerge: ['dataZoom'] });
+                    }
+                }, {
+                    text: 'add right dataZoom',
+                    onclick: function () {
+                        chart.setOption({
+                            dataZoom: [{
+                                type: 'slider',
+                                right: 10,
+                                yAxisIndex: [2, 3]
+                            }, {
+                                type: 'inside',
+                                yAxisIndex: [2, 3]
+                            }]
+                        });
+                    }
+                }, {
+                    text: 'dataZoom control x',
+                    onclick: function () {
+                        chart.setOption({
+                            dataZoom: [{
+                                bottom: 10,
+                                left: 20,
+                                right: 20,
+                                width: null,
+                                xAxisIndex: 'all',
+                                yAxisIndex: 'none'
+                            }, {
+                                xAxisIndex: 'all',
+                                yAxisIndex: 'none'
+                            }]
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+
+            var option = {
+                toolbox: {
+                    left: 'center',
+                    feature: {
+                        dataZoom: {}
+                    }
+                },
+                xAxis: [{
+                }],
+                yAxis: [{
+                }],
+                dataZoom: [{
+                    type: 'slider',
+                    // Duplicated declaration
+                    yAxisIndex: [0, 0]
+                }, {
+                    type: 'inside',
+                    // Duplicated declaration
+                    yAxisIndex: [0, 0]
+                }],
+                series: [{
+                    type: 'line',
+                    data: [[22, 11], [44, 33]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'duplicated_dataZoom_ref', {
+                title: [
+                    'Use dataZoom, should no error thrown.',
+                ],
+                option: option,
+                height: 350
+            });
+        });
+        </script>
+
+
+
+
+
+    </body>
+</html>
+

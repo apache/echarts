@@ -38,7 +38,7 @@ under the License.
                 font-weight: bold;
                 font-size: 14px;
             }
-            .chart {
+            .test-chart {
                 height: 500px;
                 margin: 10px auto;
             }
@@ -156,56 +156,71 @@ under the License.
                             return [bin.x, bin.y, bin.points.length, (made / bin.points.length * 100).toFixed(2)];
                         });
 
-                        function renderItemHexBin(params, api) {
-                            var center = api.coord([api.value(0), api.value(1)]);
-                            var points = [];
-                            var pointsBG = [];
+                        function createItemRenderer(type) {
+                            type = type || 'polygon';
+                            return function renderItemHexBin(params, api) {
+                                var center = api.coord([api.value(0), api.value(1)]);
+                                var points = [];
+                                var pointsBG = [];
 
-                            var maxViewRadius = api.size([hexagonRadiusInGeo, 0])[0];
-                            var minViewRadius = Math.min(maxViewRadius, 4);
-                            var extentMax = Math.log(Math.sqrt(hexBinResult.maxBinLen));
-                            var viewRadius = echarts.number.linearMap(
-                                Math.log(Math.sqrt(api.value(2))),
-                                [0, extentMax],
-                                [minViewRadius, maxViewRadius]
-                            );
+                                var maxViewRadius = api.size([hexagonRadiusInGeo, 0])[0];
+                                var minViewRadius = Math.min(maxViewRadius, 4);
+                                var extentMax = Math.log(Math.sqrt(hexBinResult.maxBinLen));
+                                var viewRadius = echarts.number.linearMap(
+                                    Math.log(Math.sqrt(api.value(2))),
+                                    [0, extentMax],
+                                    [minViewRadius, maxViewRadius]
+                                );
 
-                            var angle = Math.PI / 6;
-                            for (var i = 0; i < 6; i++, angle += Math.PI / 3) {
-                                points.push([
-                                    center[0] + viewRadius * Math.cos(angle),
-                                    center[1] + viewRadius * Math.sin(angle)
-                                ]);
-                                pointsBG.push([
-                                    center[0] + maxViewRadius * Math.cos(angle),
-                                    center[1] + maxViewRadius * Math.sin(angle)
-                                ]);
-                            }
+                                var angle = Math.PI / 6;
+                                for (var i = 0; i < 6; i++, angle += Math.PI / 3) {
+                                    points.push([
+                                        center[0] + viewRadius * Math.cos(angle),
+                                        center[1] + viewRadius * Math.sin(angle)
+                                    ]);
+                                    pointsBG.push([
+                                        center[0] + maxViewRadius * Math.cos(angle),
+                                        center[1] + maxViewRadius * Math.sin(angle)
+                                    ]);
+                                }
 
-                            return {
-                                type: 'group',
-                                children: [{
-                                    type: 'polygon',
-                                    shape: {
-                                        points: points
-                                    },
-                                    style: {
-                                        stroke: '#ccc',
-                                        fill: api.visual('color'),
-                                        lineWidth: 0
-                                    }
-                                }, {
-                                    type: 'polygon',
-                                    shape: {
-                                        points: pointsBG
-                                    },
-                                    style: {
-                                        stroke: null,
-                                        fill: 'rgba(0,0,0,0.5)',
-                                        lineWidth: 0
-                                    },
-                                    z2: -19
-                                }]
+                                return {
+                                    type: 'group',
+                                    children: [{
+                                        type,
+                                        morph: true,
+                                        shape: type === 'polygon' ? {
+                                            points: points
+                                        } : {
+                                            // Circle
+                                            cx: center[0],
+                                            cy: center[1],
+                                            r: viewRadius
+                                        },
+                                        style: {
+                                            stroke: '#ccc',
+                                            fill: api.visual('color'),
+                                            lineWidth: 0
+                                        }
+                                    }, {
+                                        type,
+                                        morph: true,
+                                        shape: type === 'polygon' ? {
+                                            points: pointsBG
+                                        } : {
+                                            // Circle
+                                            cx: center[0],
+                                            cy: center[1],
+                                            r: maxViewRadius
+                                        },
+                                        style: {
+                                            stroke: null,
+                                            fill: 'rgba(0,0,0,0.5)',
+                                            lineWidth: 0
+                                        },
+                                        z2: -19
+                                    }]
+                                };
                             };
                         }
 
@@ -292,7 +307,7 @@ under the License.
                                 type: 'custom',
                                 coordinateSystem: 'geo',
                                 geoIndex: 0,
-                                renderItem: renderItemHexBin,
+                                renderItem: createItemRenderer(),
                                 dimensions: [null, null, 'Field Goals Attempted (hexagon size)', 'Field Goal Percentage (color)'],
                                 encode: {
                                     tooltip: [2, 3]
@@ -308,10 +323,32 @@ under the License.
                             }]
                         };
 
-                        var width = 700;
-                        testHelper.createChart(echarts, 'hexagonal-binning', option, {
-                            width: width,
-                            height: width * nbaCourt.height / nbaCourt.width
+                        // var width = 1000;
+                        const myChart = testHelper.create(echarts, 'hexagonal-binning', {
+                            option,
+                            buttons: [{
+                                text: 'Hexgon',
+                                onClick: function() {
+                                    myChart.setOption({
+                                        series: [{
+                                            type: 'custom',
+                                            renderItem: createItemRenderer('polygon')
+                                        }]
+                                    });
+                                }
+                            }, {
+                                text: 'Circle',
+                                onClick: function() {
+                                    myChart.setOption({
+                                        series: [{
+                                            type: 'custom',
+                                            renderItem: createItemRenderer('circle')
+                                        }]
+                                    });
+                                }
+                            }]
+                            // width: width,
+                            // height: width * nbaCourt.height / nbaCourt.width
                         });
                     });
                 });

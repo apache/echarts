@@ -40,11 +40,13 @@ text {
 </style>
 
 
-<div id="main" style="width:960px; height:960px;"></div>
+<div id="main" style="width:1200px; height:960px;"></div>
 
 <svg width="960" height="960"><g transform="translate(1,1)"></g></svg>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="../dist/echarts.js"></script>
+<script src="./lib/testHelper.js"></script>
+<script src="./lib/config.js"></script>
 <script>
 
 var stratify = d3.stratify()
@@ -81,51 +83,75 @@ d3.csv("data/flare.csv", function(error, rawData) {
                 .size([api.getWidth() - 2, api.getHeight() - 2])
                 .padding(3)(root);
 
-            context.layout = {};
-            root.descendants().forEach(function (node) {
-                context.layout[node.id] = {
-                    x: node.x,
-                    y: node.y,
-                    r: node.r,
-                    isLeaf: !node.children || !node.children.length
-                };
+            context.nodes = {};
+            root.descendants().forEach(function (node, index) {
+                context.nodes[node.id] = {
+                    index: index,
+                    node: node
+                }
             });
         }
 
         var nodePath = api.value(2);
-        var itemLayout = context.layout[nodePath];
+        var node = context.nodes[nodePath].node;
+        var isLeaf = !node.children || !node.children.length;
 
-        var nodeName = '';
         var textFont = api.font({
             fontSize: 12,
             fontFamily: 'Arial'
         });
 
-        if (itemLayout.isLeaf && itemLayout.r > 10) {
-            nodeName = nodePath.slice(nodePath.lastIndexOf('.') + 1).split(/(?=[A-Z][^A-Z])/g).join('\n');
-            nodeName = echarts.format.truncateText(nodeName, itemLayout.r, textFont, '.');
-        }
+        var focus = new Uint32Array(node.descendants().map(function (node) {
+            return context.nodes[node.id].index;
+        }));
+
+        var nodeName = isLeaf ? nodePath.slice(nodePath.lastIndexOf('.') + 1).split(/(?=[A-Z][^A-Z])/g).join('\n') : '';
+
+        var z2 = api.value(1) * 2;
 
         return {
             type: 'circle',
+            focus: focus,
             shape: {
-                cx: itemLayout.x,
-                cy: itemLayout.y,
-                r: itemLayout.r
+                cx: node.x,
+                cy: node.y,
+                r: node.r
             },
-            z2: api.value(1) * 2,
-            style: api.style({
+            z2: z2,
+            textContent: {
+                type: 'text',
+                style: {
+                    text: nodeName,
+                    width: node.r * 1.3,
+                    overflow: 'truncate',
+                    fontSize: node.r / 3
+                    // fill: 'blue'
+                },
+                emphasis: {
+                    style: {
+                        overflow: null,
+                        fontSize: Math.max(node.r / 3, 12)
+                        // fill: 'red'
+                    }
+                }
+            },
+            textConfig: {
+                position: 'inside'
+            },
+            style: {
+                fill: api.visual('color'),
                 text: nodeName,
-                textFont: textFont,
-                textPosition: 'inside'
-            }),
-            styleEmphasis: api.style({
-                text: nodeName,
-                textPosition: 'inside',
-                textFont: textFont,
-                stroke: 'rgba(0,0,0,0.5)',
-                lineWidth: 3
-            })
+                font: textFont,
+            },
+            emphasis: {
+                style: {
+                    font: textFont,
+                    shadowBlur: 20,
+                    shadowOffsetX: 3,
+                    shadowOffsetY: 5,
+                    shadowColor: 'rgba(0,0,0,0.3)'
+                }
+            }
         };
     }
 
@@ -164,6 +190,13 @@ d3.csv("data/flare.csv", function(error, rawData) {
     };
 
     chart.setOption(option);
+
+    // testHelper.printElements(chart, {
+    //     attr: ['z', 'z2', 'style.text', 'style.fill', 'style.stroke'],
+    //     filter: function (el) {
+    //         return el.style && el.style.text;
+    //     }
+    // });
 
 });
 

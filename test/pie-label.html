@@ -26,6 +26,7 @@ under the License.
         <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
+        <script src="data/pie-texture.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
@@ -43,6 +44,10 @@ under the License.
         <div id="main1"></div>
         <div id="main2"></div>
         <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
+        <div id="main6"></div>
+        <div id="main7"></div>
 
 
         <script>
@@ -112,20 +117,20 @@ under the License.
                 'echarts'/*, 'map/js/china' */
             ], function (echarts) {
 
-                var count = 60;
+                var count = 80;
                 var data = [];
                 for (var i = 0; i < count; i++) {
-                    var label = i === 30
-                        ? {
-                            position: 'center',
-                            fontSize: 30,
-                            color: '#fff'
-                        }
-                        : null;
+                    // var label = i === 30
+                    //     ? {
+                    //         position: 'center',
+                    //         fontSize: 30,
+                    //         color: '#fff'
+                    //     }
+                    //     : null;
                     data.push({
-                        name: i + 'A',
+                        name: i + 'Something really Random',
                         value: Math.random(),
-                        label: label
+                        // label: label
                     });
                 }
 
@@ -133,6 +138,11 @@ under the License.
                     series: [{
                         type: 'pie',
                         radius: '50%',
+                        labelLine: {
+                            minTurnAngle: 110,
+                            length2: 10,
+                            smooth: true
+                        },
                         data: data
                     }]
                 };
@@ -142,6 +152,7 @@ under the License.
                     option: option
                 });
             });
+
 
         </script>
 
@@ -312,5 +323,379 @@ under the License.
         </script>
 
 
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            // Pencil sketch texture
+            var patternSrc = window.pieTexture;
+            var img = new Image();
+            img.src = patternSrc;
+
+            option = {
+                title: [{
+                    left: '25%',
+                    top: 10,
+                    text: 'Lable text should be white\n and bordered with each sector color',
+                    textAlign: 'center'
+                }, {
+                    left: '75%',
+                    top: 10,
+                    text: 'Lable text should be white\n and bordered with black',
+                    textAlign: 'center'
+                }],
+                series: [{
+                    type: 'pie',
+                    label: {
+                        position: 'inside'
+                    },
+                    center: ['25%', 150],
+                    radius: [30, 60],
+                    data: [{
+                        name: 'xxxxxxxxxxxx',
+                        value: 100
+                    }, {
+                        name: 'yyyyyyyy',
+                        value: 120
+                    }, {
+                        name: 'zzzzzzzz',
+                        value: 110
+                    }]
+                }, {
+                    type: 'funnel',
+                    label: {
+                        position: 'inside'
+                    },
+                    top: null,
+                    bottom: 30,
+                    height: 100,
+                    width: 50,
+                    left: '25%',
+                    data: [{
+                        name: 'xxxxxxxxxxxx',
+                        value: 100
+                    }, {
+                        name: 'yyyyyyyyyyy',
+                        value: 120
+                    }, {
+                        name: 'zzzzzzzzzzz',
+                        value: 110
+                    }]
+                }, {
+                    type: 'pie',
+                    label: {
+                        position: 'inside'
+                    },
+                    center: ['75%', 150],
+                    radius: [30, 60],
+                    itemStyle: {
+                        color: {
+                            image: img,
+                            repeat: 'repeat'
+                        },
+                        borderWidth: 3,
+                        borderColor: '#111'
+                    },
+                    data: [{
+                        name: 'xxxxxxxxxxxx',
+                        value: 100
+                    }, {
+                        name: 'yyyyyyyyyyy',
+                        value: 120
+                    }, {
+                        name: 'zzzzzzzzzzz',
+                        value: 110
+                    }]
+                }, {
+                    type: 'funnel',
+                    label: {
+                        position: 'inside'
+                    },
+                    top: null,
+                    bottom: 30,
+                    height: 100,
+                    width: 50,
+                    left: null,
+                    right: '25%',
+                    itemStyle: {
+                        color: {
+                            image: img,
+                            repeat: 'repeat'
+                        },
+                        borderWidth: 3,
+                        borderColor: '#111'
+                    },
+                    data: [{
+                        name: 'xxxxxxxxxxxx',
+                        value: 100
+                    }, {
+                        name: 'yyyyyyyyyyyyy',
+                        value: 120
+                    }, {
+                        name: 'zzzzzzzzzzzz',
+                        value: 110
+                    }]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main4', {
+                title: [
+                    'label.position: "inside". And half inside half outside.'
+                ],
+                option: option,
+                height: 400,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                const data = [{
+                    name: 'Something really Random(1)',
+                    value: 1
+                }, {
+                    name: 'Something really Random(2)',
+                    value: 2
+                }, {
+                    name: 'Something really Random(3)',
+                    value: 3
+                }, {
+                    name: 'Something really Random(4)',
+                    value: 2
+                }, {
+                    name: 'Something really Random(5)',
+                    value: 3
+                }];
+
+                for (let i = 0; i < 5 ; i++) {
+                    data.push({
+                        name: 'Something really Random(' + i + ')',
+                        value: Math.random() * 0.1 + 0.1
+                    });
+                }
+
+                data.push({
+                    name: 'Something really Random',
+                    value: 2
+                });
+                for (let i = 0; i < 5 ; i++) {
+                    data.push({
+                        name: 'Something really Random(' + i + ')',
+                        value: Math.random() * 0.1 + 0.1
+                    });
+                }
+
+                var option = {
+                    series: [{
+                        type: 'pie',
+                        radius: '50%',
+                        data: data
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main5', {
+                    title: 'Layout Case 1',
+                    option: option
+                });
+            });
+
+        </script>
+
+        <script>
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                const data = [{
+                    "name": "United States",
+                    "value": [213242, 22.86439111423725, "United States"]
+                }, {
+                    "name": "Italy",
+                    "value": [110574, 11.856047040759652, "Italy"]
+                }, {
+                    "name": "Spain",
+                    "value": [104118, 11.163817043697554, "Spain"]
+                }, {
+                    "name": "China",
+                    "value": [82361, 8.830971931231625, "China"]
+                }, {
+                    "name": "Germany",
+                    "value": [77872, 8.349649059978255, "Germany"]
+                }, {
+                    "name": "France",
+                    "value": [57749, 6.192005901539504, "France"]
+                }, {
+                    "name": "Iran",
+                    "value": [47593, 5.103051773571311, "Iran"]
+                }, {
+                    "name": "United Kingdom",
+                    "value": [29865, 3.202207072840695, "United Kingdom"]
+                }, {
+                    "name": "Switzerland",
+                    "value": [17768, 1.905133610253925, "Switzerland"]
+                }, {
+                    "name": "Turkey",
+                    "value": [15679, 1.6811453103991045, "Turkey"]
+                }, {
+                    "name": "Belgium",
+                    "value": [13964, 1.4972583145872247, "Belgium"]
+                }, {
+                    "name": "Netherlands",
+                    "value": [13696, 1.4685226207810533, "Netherlands"]
+                }, {
+                    "name": "Austria",
+                    "value": [10711, 1.1484627476041078, "Austria"]
+                }, {
+                    "name": "Korea, South",
+                    "value": [9887, 1.0601112114239395, "Korea, South"]
+                }, {
+                    "name": "Canada",
+                    "value": [9560, 1.0250493760708872, "Canada"]
+                }, {
+                    "name": "Portugal",
+                    "value": [8251, 0.8846948119205952, "Portugal"]
+                }, {
+                    "name": "Brazil",
+                    "value": [6836, 0.7329746375335339, "Brazil"]
+                }, {
+                    "name": "Israel",
+                    "value": [6092, 0.6532009203999837, "Israel"]
+                }, {
+                    "name": "Sweden",
+                    "value": [4947, 0.5304308852952593, "Sweden"]
+                }, {
+                    "name": "Norway",
+                    "value": [4863, 0.52142417529631, "Norway"]
+                }, {
+                    "name": "Australia",
+                    "value": [4862, 0.5213169525582273, "Australia"]
+                }, {
+                    "name": "Czechia",
+                    "value": [3508, 0.37613736519421254, "Czechia"]
+                }, {
+                    "name": "Ireland",
+                    "value": [3447, 0.3695967781711661, "Ireland"]
+                }, {
+                    "name": "Denmark",
+                    "value": [3290, 0.35276280829217765, "Denmark"]
+                }, {
+                    "name": "Chile",
+                    "value": [3031, 0.3249921191287509, "Chile"]
+                }, {
+                    "name": "Malaysia",
+                    "value": [2908, 0.31180372234457526, "Malaysia"]
+                }, {
+                    "name": "Russia",
+                    "value": [2777, 0.2977575436557378, "Russia"]
+                }, {
+                    "name": "Ecuador",
+                    "value": [2748, 0.29464808425133865, "Ecuador"]
+                }, {
+                    "name": "Poland",
+                    "value": [2554, 0.2738468730632893, "Poland"]
+                }, {
+                    "name": "Romania",
+                    "value": [2460, 0.2637679356835128, "Romania"]
+                }];
+
+                var option = {
+                    backgroundColor: '#333',
+                    visualMap: {
+                        dimension: 0,
+                        left: 10,
+                        itemWidth: 12,
+                        min: data[29].value[0],
+                        max: data[0].value[0],
+                        text: ['High', 'Low'],
+                        textStyle: {
+                            color: '#ddd'
+                        },
+                        inRange: {
+                            color: ['lightskyblue', 'yellow', 'orangered', 'red']
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        data: data,
+                        roseType: 'radius',
+                        radius: ['30%', '70%']
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main6', {
+                    title: 'Case from https://gallery.echartsjs.com/editor.html?c=xpm1ZhhOCG',
+                    height: 300,
+                    option: option
+                });
+            });
+
+        </script>
+
+        <script>
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                const option = {
+                    backgroundColor: '#2c343c',
+                    visualMap: {
+                        show: false,
+                        min: 80,
+                        max: 600,
+                        inRange: {
+                            colorLightness: [0, 1]
+                        }
+                    },
+                    series : [
+                        {
+                            name: '访问来源',
+                            type: 'pie',
+                            radius: '55%',
+                            data:[
+                                {value:235, name:'视频广告'},
+                                {value:274, name:'联盟广告'},
+                                {value:310, name:'邮件营销'},
+                                {value:335, name:'直接访问'},
+                                {value:400, name:'搜索引擎'}
+                            ],
+                            roseType: 'angle',
+                            label: {
+                                textStyle: {
+                                    color: 'rgba(255, 255, 255, 0.3)'
+                                }
+                            },
+                            labelLine: {
+                                smooth: true,
+                                minTurnAngle: 120,
+                                lineStyle: {
+                                    color: 'rgba(255, 255, 255, 0.3)'
+                                }
+                            },
+                            itemStyle: {
+                                color: '#c23531',
+                                shadowBlur: 200,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    ]
+                };
+                var chart = testHelper.create(echarts, 'main7', {
+                    title: 'Case from https://echarts.apache.org/examples/zh/editor.html?c=doc-example/tutorial-styling-step5',
+                    height: 300,
+                    option: option
+                });
+            });
+
+        </script>
     </body>
 </html>

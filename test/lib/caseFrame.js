@@ -40,8 +40,15 @@
         '    <div class="info-panel">',
         '        <input class="current" />',
         '        <div class="renderer-selector">',
-        '            <input type="radio" value="canvas" name="renderer" /> CANVAS ',
-        '            <input type="radio" value="svg" name="renderer" /> SVG ',
+        '            <div class="render-selector-item">',
+        '               <input type="radio" value="canvas" name="renderer" /> CANVAS ',
+        '            </div>',
+        '           <div class="render-selector-item">',
+        '               <input type="radio" value="dirty-rect" name="renderer" /> CANVAS (dirty rect) ',
+        '            </div>',
+    '                <div class="render-selector-item">',
+        '               <input type="radio" value="svg" name="renderer" /> SVG ',
+        '            </div>',
         '        </div>',
         '        <div class="list-filter"></div>',
         '        <select class="dist-selector">',
@@ -107,13 +114,23 @@
         });
 
         rendererSelector.off('click').on('click', function (e) {
-            setState('renderer', e.target.value);
+            if (e.target.value === 'dirty-rect') {
+                setState('renderer', 'canvas');
+                setState('useDirtyRect', true);
+            }
+            else {
+                setState('renderer', e.target.value);
+                setState('useDirtyRect', false);
+            }
         });
 
         var renderer = getState('renderer');
+        var useDirtyRect = getState('useDirtyRect');
 
         rendererSelector.each(function (index, el) {
-            el.checked = el.value === renderer;
+            el.checked = el.value === 'dirty-rect'
+                ? useDirtyRect
+                : el.value === renderer;
         });
     }
 
@@ -190,6 +207,11 @@
             var matchResult = (pageURL || '').match(/[?&]__RENDERER__=(canvas|svg)(&|$)/);
             return matchResult && matchResult[1] || 'canvas';
         },
+        // true, false
+        useDirtyRect: function (pageURL) {
+            var matchResult = (pageURL || '').match(/[?&]__USE_DIRTY_RECT__=(true|false)(&|$)/);
+            return matchResult && matchResult[1] === 'true';
+        },
         // 'dist', 'webpack', 'webpackold'
         dist: function (pageURL) {
             var matchResult = (pageURL || '').match(/[?&]__ECDIST__=(webpack-req-ec|webpack-req-eclibec|webpackold-req-ec|webpackold-req-eclibec)(&|$)/);
@@ -223,6 +245,7 @@
     function setState(prop, value) {
         var curr = {
             renderer: getState('renderer'),
+            useDirtyRect: getState('useDirtyRect'),
             dist: getState('dist'),
             pagePath: getState('pagePath'),
             listFilterName: getState('listFilterName')
@@ -237,6 +260,7 @@
     function makePageURL(curr) {
         return curr.pagePath + '?' + [
             '__RENDERER__=' + curr.renderer,
+            '__USE_DIRTY_RECT__=' + curr.useDirtyRect,
             '__ECDIST__=' + curr.dist,
             '__FILTER__=' + curr.listFilterName
         ].join('&');

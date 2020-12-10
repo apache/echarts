@@ -319,9 +319,7 @@ socket.on('abort', res => {
 });
 socket.on('versions', versions => {
     app.versions = versions.filter(version => {
-        return !version.startsWith('2.')
-            && !version.match('beta')
-            && !version.match('rc');
+        return !version.startsWith('2.');
     }).reverse();
     if (!app.runConfig.expectedVersion) {
         app.runConfig.expectedVersion = app.versions[0];
