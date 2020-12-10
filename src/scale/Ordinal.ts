@@ -67,7 +67,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
             });
         }
         this._ordinalMeta = ordinalMeta as OrdinalMeta;
-        this._categorySortInfo = [];
+        this._categorySortInfo = null;
         this._extent = this.getSetting('extent') || [0, ordinalMeta.categories.length - 1];
     }
 
@@ -131,10 +131,13 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
      * @param {OrdinalNumber} n index of raw data
      */
     getCategoryIndex(n: OrdinalNumber): OrdinalNumber {
-        if (this._categorySortInfo.length) {
-            return this._categorySortInfo[n].beforeSortIndex;
+        const categorySortInfo = this._categorySortInfo;
+        if (categorySortInfo) {
+            // Sorted
+            return categorySortInfo[n] && categorySortInfo[n].beforeSortIndex;
         }
         else {
+            // Not sorted
             return n;
         }
     }
@@ -145,15 +148,14 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
      * @param {OrdinalNumber} displayIndex index of display
      */
     getRawIndex(displayIndex: OrdinalNumber): OrdinalNumber {
-        if (this._categorySortInfo.length) {
+        const categorySortInfo = this._categorySortInfo;
+        if (categorySortInfo) {
             // Sorted
-            if (this._categorySortInfo[displayIndex] == null) {
+            return categorySortInfo[displayIndex]
+                // In range, return ordinalNumber
+                ? categorySortInfo[displayIndex].ordinalNumber
                 // Out of range, e.g., when axis max is larger than cagetory number
-                return null;
-            }
-            else {
-                return this._categorySortInfo[displayIndex].ordinalNumber;
-            }
+                : -1;
         }
         else {
             // Not sorted
@@ -167,15 +169,10 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
     getLabel(tick: ScaleTick): string {
         if (!this.isBlank()) {
             const rawIndex = this.getRawIndex(tick.value);
-            if (rawIndex == null) {
-                return '';
-            }
-            else {
-                const cateogry = this._ordinalMeta.categories[rawIndex];
-                // Note that if no data, ordinalMeta.categories is an empty array.
-                // Return empty if it's not exist.
-                return cateogry == null ? '' : cateogry + '';
-            }
+            const cateogry = this._ordinalMeta.categories[rawIndex];
+            // Note that if no data, ordinalMeta.categories is an empty array.
+            // Return empty if it's not exist.
+            return cateogry == null ? '' : cateogry + '';
         }
     }
 
