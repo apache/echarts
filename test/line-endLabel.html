@@ -36,7 +36,90 @@ under the License.
                 height: 1000px;
                 margin-bottom: 30px;
             }
+            #formatterSwitchButtons {
+                margin: 10px;
+                padding: 10px;
+            }
+            #currentFormatter {
+                margin: 10px;
+                padding: 10px;
+                border: 1px solid #aaa;
+            }
         </style>
+
+        <div id="formatterSwitchButtons">
+        </div>
+        <div>
+            Current formatter:
+            <pre id="currentFormatter"></pre>
+        </div>
+
+        <script>
+            var _endLabelFormatter;
+
+            // Init formatter switch buttons.
+            (function () {
+
+                var formatterConfigs = [
+                    {
+                        text: 'formatter string {c}',
+                        formatter: '$ {c}'
+                    },
+                    {
+                        text: 'formatter string {@[dimIndex]}',
+                        formatter: '$ {@[1]}'
+                    },
+                    {
+                        text: 'formatter callback',
+                        formatter: function (param) {
+                            return '$ ' + param.value;
+                        }
+                    }
+                ];
+                var END_LABEL_FORMATTER = '__EC_TEST_line-endLabel.html_FOMRATTER___';
+
+                function setLocalStorage(formatterKey) {
+                    window.localStorage.setItem(END_LABEL_FORMATTER, formatterKey);
+                }
+                function getLocalStorage() {
+                    return window.localStorage.getItem(END_LABEL_FORMATTER);
+                }
+
+                var currFormatterKey = getLocalStorage();
+                var fmtBtnBox = document.getElementById('formatterSwitchButtons');
+                for (var i = 0; i < formatterConfigs.length; i++) {
+                    var config = formatterConfigs[i];
+
+                    if (_endLabelFormatter == null
+                        && (
+                            currFormatterKey == null
+                            || currFormatterKey === config.text
+                        )
+                    ) {
+                        _endLabelFormatter = config.formatter;
+                    }
+
+                    var btn = document.createElement('button');
+                    btn.innerHTML = config.text;
+                    btn.onclick = (function (cfg) {
+                        return function () {
+                            setLocalStorage(cfg.text);
+                            location.reload();
+                        };
+                    })(config);
+                    fmtBtnBox.appendChild(btn);
+                }
+
+                if (!_endLabelFormatter) {
+                    throw new Error();
+                }
+                var formatterDisplayBox = document.getElementById('currentFormatter');
+                formatterDisplayBox.innerHTML = _endLabelFormatter.toString();
+            })();
+
+        </script>
+
+
         <div id="main0"></div>
         <div id="main1"></div>
         <script>
@@ -200,9 +283,7 @@ under the License.
                                         },
                                         endLabel: {
                                             show: true,
-                                            formatter: function (param) {
-                                                return '$' + param.value;
-                                            },
+                                            formatter: _endLabelFormatter,
                                             fontSize: 14
                                         },
                                         emphasis: {
