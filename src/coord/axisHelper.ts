@@ -49,7 +49,7 @@ type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>;
  *
  * Caution:
  * Precondition of calling this method:
- * The scale extent has been initailized using series data extent via
+ * The scale extent has been initialized using series data extent via
  * `scale.setExtent` or `scale.unionExtentFromData`;
  */
 export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
@@ -103,7 +103,7 @@ export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
 function adjustScaleForOverflow(
     min: number,
     max: number,
-    model: CartesianAxisModel,  // Onlhy support cartesian coord yet.
+    model: CartesianAxisModel,  // Only support cartesian coord yet.
     barWidthAndOffset: BarWidthAndOffset
 ) {
 
@@ -129,7 +129,7 @@ function adjustScaleForOverflow(
     maxOverflow = Math.abs(maxOverflow);
     const totalOverFlow = minOverflow + maxOverflow;
 
-    // Calulate required buffer based on old range and overflow
+    // Calculate required buffer based on old range and overflow
     const oldRange = max - min;
     const oldRangePercentOfNew = (1 - (minOverflow + maxOverflow) / axisLength);
     const overflowBuffer = ((oldRange / oldRangePercentOfNew) - oldRange);
@@ -203,7 +203,7 @@ export function createScaleByModel(model: AxisBaseModel, axisType?: string): Sca
 }
 
 /**
- * Check if the axis corss 0
+ * Check if the axis cross 0
  */
 export function ifAxisCrossZero(axis: Axis) {
     const dataExtent = axis.scale.getExtent();
@@ -217,7 +217,7 @@ export function ifAxisCrossZero(axis: Axis) {
  * @return Label formatter function.
  *         param: {number} tickValue,
  *         param: {number} idx, the index in all ticks.
- *                         If category axis, this param is not requied.
+ *                         If category axis, this param is not required.
  *         return: {string} label string.
  */
 export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) => string {
@@ -235,7 +235,7 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
         return (function (tpl) {
             return function (tick: ScaleTick) {
                 // For category axis, get raw value; for numeric axis,
-                // get foramtted label like '1,333,444'.
+                // get formatted label like '1,333,444'.
                 const label = axis.scale.getLabel(tick);
                 const text = tpl.replace('{value}', label != null ? label : '');
 
@@ -364,11 +364,11 @@ export function shouldShowAllLabels(axis: Axis): boolean {
 export function getDataDimensionsOnAxis(data: List, axisDim: string): DimensionName[] {
     // Remove duplicated dat dimensions caused by `getStackedDimension`.
     const dataDimMap = {} as Dictionary<boolean>;
-    // Currently `mapDimensionsAll` will contian stack result dimension ('__\0ecstackresult').
+    // Currently `mapDimensionsAll` will contain stack result dimension ('__\0ecstackresult').
     // PENDING: is it reasonable? Do we need to remove the original dim from "coord dim" since
     // there has been stacked result dim?
     zrUtil.each(data.mapDimensionsAll(axisDim), function (dataDim) {
-        // For example, the extent of the orginal dimension
+        // For example, the extent of the original dimension
         // is [0.1, 0.5], the extent of the `stackResultDimension`
         // is [7, 9], the final extent should NOT include [0.1, 0.5],
         // because there is no graphic corresponding to [0.1, 0.5].
