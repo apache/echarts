@@ -252,7 +252,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             const value = node.getLayout().value;
             const name = (this.getDataParams(dataIndex, dataType).data as SankeyNodeItemOption).name;
             return createTooltipMarkup('nameValue', {
-                name: name != null ? name + '' : void 0,
+                name: name != null ? name + '' : null,
                 value: value,
                 noValue: noValue(value)
             });
