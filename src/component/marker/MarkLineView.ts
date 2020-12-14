@@ -48,6 +48,7 @@ import {
 import { makeInner } from '../../util/model';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { getVisualFromData } from '../../visual/helper';
+import Axis2D from '../../coord/cartesian/Axis2D';
 
 // Item option for configuring line and each end of symbol.
 // Line option. be merged from configuration of two ends.
@@ -233,8 +234,9 @@ function updateSingleMarkerEndLayout(
         //    }]
         //  }
         if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
-            const xAxis = coordSys.getAxis('x');
-            const yAxis = coordSys.getAxis('y');
+            // TODO: TYPE ts@4.1 may still infer it as Axis instead of Axis2D. Not sure if it's a bug
+            const xAxis = coordSys.getAxis('x') as Axis2D;
+            const yAxis = coordSys.getAxis('y') as Axis2D;
             const dims = coordSys.dimensions;
             if (isInifinity(data.get(dims[0], idx))) {
                 point[0] = xAxis.toGlobalCoord(xAxis.getExtent()[isFrom ? 0 : 1]);

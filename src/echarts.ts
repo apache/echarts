@@ -546,9 +546,9 @@ class ECharts extends Eventful {
      * @param opts.replaceMerge Default undefined.
      */
     // Expose to user full option.
-    setOption(option: EChartsOption, notMerge?: boolean, lazyUpdate?: boolean): void;
-    setOption(option: EChartsOption, opts?: SetOptionOpts): void;
-    setOption(option: EChartsOption, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
+    setOption<Opt extends ECBasicOption = EChartsOption>(option: Opt, notMerge?: boolean, lazyUpdate?: boolean): void;
+    setOption<Opt extends ECBasicOption = EChartsOption>(option: Opt, opts?: SetOptionOpts): void;
+    setOption<Opt extends ECBasicOption = EChartsOption>(option: Opt, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
         if (__DEV__) {
             assert(!this[IN_MAIN_PROCESS_KEY], '`setOption` should not be called during main process.');
         }
@@ -619,8 +619,8 @@ class ECharts extends Eventful {
         return this._model;
     }
 
-    getOption(): EChartsOption {
-        return this._model && this._model.getOption() as EChartsOption;
+    getOption(): ECBasicOption {
+        return this._model && this._model.getOption() as ECBasicOption;
     }
 
     getWidth(): number {

@@ -1,4 +1,4 @@
-import {init, use} from '../../core';
+import {init, use, ComposeOption} from '../../core';
 import {
     BarChart,
     BarSeriesOption,
@@ -10,9 +10,19 @@ import {
     GridComponentOption,
 
     DataZoomComponent,
-    DataZoomComponentOption
+    DataZoomComponentOption,
 } from '../../components';
 
+type Option = ComposeOption<
+    GridComponentOption | DataZoomComponentOption,
+    BarSeriesOption | LineSeriesOption
+>;
+
+const option: Option= {
+    series: [{
+        type: 'bar'
+    }]
+}
 
 use([BarChart, LineChart, GridComponent, DataZoomComponent]);
 
@@ -20,8 +30,4 @@ const dom = document.createElement('div');
 dom.className = 'chart';
 
 const chart = init(dom);
-chart.setOption({
-    series: [{
-        type: 'bar'
-    }]
-});
+chart.setOption(option);

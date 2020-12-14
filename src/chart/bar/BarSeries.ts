@@ -18,7 +18,6 @@
 */
 
 import BaseBarSeriesModel, {BaseBarSeriesOption} from './BaseBarSeries';
-import SeriesModel from '../../model/Series';
 import {
     ItemStyleOption,
     OptionDataValue,

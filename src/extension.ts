@@ -108,5 +108,6 @@ export function use(
 }
 
 // A simpler use type for exporting to reduce exported inner modules.
-type SimpleEChartsExtensionType = Function | { install: Function };
+export type EChartsExtensionInstallerSimple = (registers: any) => void;
+type SimpleEChartsExtensionType = EChartsExtensionInstallerSimple | { install: EChartsExtensionInstallerSimple };
 export declare function useSimple(ext: SimpleEChartsExtensionType | (SimpleEChartsExtensionType)[]): void;

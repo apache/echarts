@@ -22,11 +22,13 @@ import { ComponentOption, ECBasicOption as EChartsCoreOption, SeriesOption } fro
 export * from '../echarts';
 export * from './api';
 
+export {EChartsType as ECharts} from '../echarts';
+
 export {EChartsCoreOption};
 
 type ComposeUnitOption<ComponentsOptionUnion extends ComponentOption, SeriesOptionUnion extends SeriesOption> =
     EChartsCoreOption & {
-        [key in ComponentsOptionUnion['mainType']]: ComponentsOptionUnion | ComponentsOptionUnion[];
+        [key in ComponentsOptionUnion['mainType']]?: ComponentsOptionUnion | ComponentsOptionUnion[];
     } & {
         series?: SeriesOptionUnion | SeriesOptionUnion[]
     };

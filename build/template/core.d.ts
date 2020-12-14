@@ -17,4 +17,4 @@
 * under the License.
 */
 
-export * from './types/src/export/core';
+export * from './types/dist/core';

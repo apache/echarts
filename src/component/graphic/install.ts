@@ -459,7 +459,7 @@ class GraphicComponentView extends ComponentView {
             if (elOptionStyle
                 && isEC4CompatibleStyle(elOptionStyle, elType, !!textConfig, !!textContentOption)
             ) {
-                const convertResult = convertFromEC4CompatibleStyle(elOptionStyle, elType, true);
+                const convertResult = convertFromEC4CompatibleStyle(elOptionStyle, elType, true) as GraphicComponentZRPathOption;
                 if (!textConfig && convertResult.textConfig) {
                     textConfig = (elOption as GraphicComponentZRPathOption).textConfig = convertResult.textConfig;
                 }

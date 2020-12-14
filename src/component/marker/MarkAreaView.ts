@@ -40,6 +40,7 @@ import { makeInner } from '../../util/model';
 import { getVisualFromData } from '../../visual/helper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
+import Axis2D from '../../coord/cartesian/Axis2D';
 
 interface MarkAreaDrawGroup {
     group: graphic.Group
@@ -167,8 +168,9 @@ function getSingleMarkerEndPoint(
             point = coordSys.dataToPoint(pt, true);
         }
         if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
-            const xAxis = coordSys.getAxis('x');
-            const yAxis = coordSys.getAxis('y');
+            // TODO: TYPE ts@4.1 may still infer it as Axis instead of Axis2D. Not sure if it's a bug
+            const xAxis = coordSys.getAxis('x') as Axis2D;
+            const yAxis = coordSys.getAxis('y') as Axis2D;
             const x = data.get(dims[0], idx) as number;
             const y = data.get(dims[1], idx) as number;
             if (isInifinity(x)) {

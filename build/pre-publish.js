@@ -37,9 +37,9 @@ const ts = require('typescript');
 const globby = require('globby');
 const transformDEVUtil = require('./transform-dev');
 const preamble = require('./preamble');
-// NOTE: v1.4.2 is the latest version that supports ts 3.8.3
-const dts = require('rollup-plugin-dts').default;
+const dts = require('@lang/rollup-plugin-dts').default;
 const rollup = require('rollup');
+const { consoleLogger } = require('@definitelytyped/utils');
 
 const ecDir = nodePath.resolve(__dirname, '..');
 const tmpDir = nodePath.resolve(ecDir, 'pre-publish-tmp');
@@ -400,8 +400,18 @@ async function readFilePaths({patterns, cwd}) {
 }
 
 async function bundleDTS() {
+
+    const parts = [
+        'core', 'charts', 'components', 'renderers', 'option'
+    ];
+    const inputs = {};
+    parts.forEach(partName => {
+        inputs[partName] = nodePath.resolve(__dirname, `../types/src/export/${partName}.d.ts`)
+    });
+
+    const outDir = nodePath.resolve(__dirname, '../types/dist');
     const bundle = await rollup.rollup({
-        input: nodePath.resolve(__dirname, '../index.d.ts'),
+        input: inputs,
         onwarn(warning, rollupWarn) {
             // Not warn circular dependency
             if (warning.code !== 'CIRCULAR_DEPENDENCY') {
@@ -411,19 +421,27 @@ async function bundleDTS() {
         plugins: [
             dts({
                 respectExternal: true
-            })
+            }),
+            {
+                generateBundle(options, bundle) {
+                    for (let chunk of Object.values(bundle)) {
+                        chunk.code = `
+type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
+${chunk.code}`
+                    }
+                }
+            }
         ]
     });
-    const bundleFile = nodePath.resolve(__dirname, '../types/dist/echarts.d.ts');
+    let idx = 1;
     await bundle.write({
-        file: bundleFile
+        dir: outDir,
+        chunkFileNames: (chunkInfo) => {
+            const fileName = `common${idx > 1 ? idx : ''}.d.ts`;
+            idx++;
+            return fileName;
+        }
     });
-    // To support ts 3.4
-    const extra = `
-type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
-`
-    const code = extra + fs.readFileSync(bundleFile, 'utf-8');
-    fs.writeFileSync(bundleFile, code, 'utf-8');
 }
 
 function readTSConfig() {
@@ -437,22 +455,12 @@ function readTSConfig() {
 
 function generateEntries() {
     ['charts', 'components', 'renderers', 'core'].forEach(entryName => {
-        const jsCode = fs.readFileSync(nodePath.join(__dirname, `template/${entryName}.js`), 'utf-8');
-        let dtsCode = fs.readFileSync(nodePath.join(__dirname, `/template/${entryName}.d.ts`), 'utf-8');
-
-        fs.writeFileSync(nodePath.join(__dirname, `../${entryName}.js`), jsCode, 'utf-8');
-
-        if (dtsCode.indexOf('{{body}}') >= 0) {
-            const exportModulesCode = [];
-            const modules = require(`../lib/export/${entryName}`);
-            for (let key in modules) {
-                if (modules.hasOwnProperty(key) && !key.startsWith('_')) {
-                    exportModulesCode.push(`export declare const ${key}: EChartsExtensionInstaller;`);
-                }
-            }
-
-            dtsCode = dtsCode.replace('{{body}}', exportModulesCode.join('\n'));
+        if (entryName !== 'option') {
+            const jsCode = fs.readFileSync(nodePath.join(__dirname, `template/${entryName}.js`), 'utf-8');
+            fs.writeFileSync(nodePath.join(__dirname, `../${entryName}.js`), jsCode, 'utf-8');
         }
+
+        const dtsCode = fs.readFileSync(nodePath.join(__dirname, `/template/${entryName}.d.ts`), 'utf-8');
         fs.writeFileSync(nodePath.join(__dirname, `../${entryName}.d.ts`), dtsCode, 'utf-8');
     });
 }

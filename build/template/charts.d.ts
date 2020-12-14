@@ -17,7 +17,4 @@
 * under the License.
 */
 
-// Use an empty flag function to avoid import unecessary types.
-type EChartsExtensionInstaller = (registers: any) => void;
-
-{{body}}
+export * from './types/dist/charts';

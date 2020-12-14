@@ -138,7 +138,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                 // min: 0,
                 nameTextStyle: iNameTextStyle,
                 triggerEvent: triggerEvent
-            }, false);
+            } as InnerIndicatorAxisOption, false);
             if (!showName) {
                 innerIndicatorOpt.name = '';
             }
