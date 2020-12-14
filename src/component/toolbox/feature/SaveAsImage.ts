@@ -57,8 +57,8 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
             excludeComponents: model.get('excludeComponents'),
             pixelRatio: model.get('pixelRatio')
         });
-        // Chrome and Firefox
-        if (typeof MouseEvent === 'function' && !env.browser.ie && !env.browser.edge) {
+        // Chrome, Firefox, New Edge
+        if (typeof MouseEvent === 'function' && (env.browser.newEdge || (!env.browser.ie && !env.browser.edge))) {
             const $a = document.createElement('a');
             $a.download = title + '.' + type;
             $a.target = '_blank';
@@ -71,12 +71,11 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
             });
             $a.dispatchEvent(evt);
         }
-        // IE
+        // IE or old Edge
         else {
             if (window.navigator.msSaveOrOpenBlob || isSvg) {
                 const parts = url.split(',');
                 // data:[<mime type>][;charset=<charset>][;base64],<encoded data>
-                // see https://css-tricks.com/data-uris/
                 const base64Encoded = parts[0].indexOf('base64') > -1;
                 let bstr = isSvg
                     // should decode the svg data uri first
