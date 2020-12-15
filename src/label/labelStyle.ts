@@ -615,7 +615,7 @@ export function getFont(
 
 export const labelInner = makeInner<{
     /**
-     * Previous value stored used for label.
+     * Previous target value stored used for label.
      * It's mainly for text animation
      */
     prevValue?: ParsedValue | ParsedValue[]
@@ -661,9 +661,7 @@ export function setLabelValueAnimation(
     }
 
     const obj = labelInner(label);
-    // Consider the case that being animating, do not use the `obj.value`,
-    // Otherwise it will jump to the `obj.value` when this new animation started.
-    obj.prevValue = retrieve2(obj.interpolatedValue, obj.value);
+    obj.prevValue = obj.value;
     obj.value = value;
 
     const normalLabelModel = labelStatesModels.normal;
@@ -688,15 +686,17 @@ export function animateLabelValue(
         return;
     }
     const defaultInterpolatedText = labelInnerStore.defaultInterpolatedText;
-    const prevValue = labelInnerStore.prevValue;
-    const currentValue = labelInnerStore.value;
+    // Consider the case that being animating, do not use the `obj.value`,
+    // Otherwise it will jump to the `obj.value` when this new animation started.
+    const currValue = retrieve2(labelInnerStore.interpolatedValue, labelInnerStore.prevValue);
+    const targetValue = labelInnerStore.value;
 
     function during(percent: number) {
         const interpolated = interpolateRawValues(
             data,
             labelInnerStore.precision,
-            prevValue,
-            currentValue,
+            currValue,
+            targetValue,
             percent
         );
         labelInnerStore.interpolatedValue = percent === 1 ? null : interpolated;
@@ -712,7 +712,7 @@ export function animateLabelValue(
         setLabelText(textEl, labelText);
     }
 
-    (prevValue == null
+    (currValue == null
         ? initProps
         : updateProps
     )(textEl, {}, seriesModel, dataIndex, null, during);
