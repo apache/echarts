@@ -758,7 +758,7 @@ class TooltipView extends ComponentView {
     } {
         if (trigger === 'axis' || zrUtil.isArray(tooltipDataParams)) {
             return {
-                color: borderColor || this._renderMode === 'html' ? '#fff' : 'none'
+                color: borderColor || (this._renderMode === 'html' ? '#fff' : 'none')
             };
         }
 
