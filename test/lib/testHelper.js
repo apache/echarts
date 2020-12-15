@@ -144,10 +144,18 @@
         }
 
         if (opt.info) {
-            infoContainer.innerHTML = createObjectHTML(opt.info, opt.infoKey || 'option');
+            updateInfo(opt.info, opt.infoKey);
+        }
+
+        function updateInfo(info, infoKey) {
+            infoContainer.innerHTML = createObjectHTML(info, infoKey || 'option');
         }
 
         initRecordCanvas(opt, chart, recordCanvasContainer);
+
+        chart.__testHelper = {
+            updateInfo: updateInfo
+        };
 
         return chart;
     };
@@ -932,9 +940,15 @@
     }
 
     function createObjectHTML(obj, key) {
+        var html = isObject(obj)
+            ? testHelper.encodeHTML(printObject(obj, key))
+            : obj
+            ? obj.toString()
+            : '';
+
         return [
             '<pre class="test-print-object">',
-            testHelper.encodeHTML(printObject(obj, key)),
+            html,
             '</pre>'
         ].join('');
     }
@@ -975,6 +989,13 @@
     function getParamListFromURL() {
         var params = location.search.replace('?', '');
         return params ? params.split('&') : [];
+    }
+
+    function isObject(value) {
+        // Avoid a V8 JIT bug in Chrome 19-20.
+        // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+        const type = typeof value;
+        return type === 'function' || (!!value && type === 'object');
     }
 
     context.testHelper = testHelper;

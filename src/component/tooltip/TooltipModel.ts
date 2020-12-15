@@ -125,9 +125,6 @@ class TooltipModel extends ComponentModel<TooltipOption> {
         shadowOffsetX: 1,
         shadowOffsetY: 2,
 
-        // tooltip border color
-        borderColor: '#333',
-
         // tooltip border radius, unit is px, default is 4
         borderRadius: 4,
 

@@ -620,9 +620,13 @@ export const labelInner = makeInner<{
      */
     prevValue?: ParsedValue | ParsedValue[]
     /**
-     * Current value stored used for label.
+     * Target value stored used for label.
      */
     value?: ParsedValue | ParsedValue[]
+    /**
+     * Current value in text animation.
+     */
+    interpolatedValue?: ParsedValue | ParsedValue[]
     /**
      * If enable value animation
      */
@@ -657,7 +661,9 @@ export function setLabelValueAnimation(
     }
 
     const obj = labelInner(label);
-    obj.prevValue = obj.value;
+    // Consider the case that being animating, do not use the `obj.value`,
+    // Otherwise it will jump to the `obj.value` when this new animation started.
+    obj.prevValue = retrieve2(obj.interpolatedValue, obj.value);
     obj.value = value;
 
     const normalLabelModel = labelStatesModels.normal;
@@ -693,10 +699,11 @@ export function animateLabelValue(
             currentValue,
             percent
         );
+        labelInnerStore.interpolatedValue = percent === 1 ? null : interpolated;
 
         const labelText = getLabelText({
             labelDataIndex: dataIndex,
-            // labelFetcher: seriesModel,
+            labelFetcher: seriesModel,
             defaultText: defaultInterpolatedText
                 ? defaultInterpolatedText(interpolated)
                 : interpolated + ''
@@ -705,6 +712,8 @@ export function animateLabelValue(
         setLabelText(textEl, labelText);
     }
 
-    (prevValue == null ? initProps
-        : updateProps)(textEl, {}, seriesModel, dataIndex, null, during);
+    (prevValue == null
+        ? initProps
+        : updateProps
+    )(textEl, {}, seriesModel, dataIndex, null, during);
 }
