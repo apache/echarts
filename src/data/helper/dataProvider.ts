@@ -408,8 +408,8 @@ type RawSourceValueGetter = (
     dataItem: OptionDataItem,
     dimIndex: DimensionIndex,
     dimName: DimensionName
-    // If dimIndex not provided, return OptionDataItem.
-    // If dimIndex provided, return OptionDataPrimitive.
+    // If dimIndex is null/undefined, return OptionDataItem.
+    // Otherwise, return OptionDataValue.
 ) => OptionDataValue | OptionDataItem;
 
 const getRawValueSimply = function (
@@ -469,7 +469,9 @@ function getMethodMapKey(sourceFormat: SourceFormat, seriesLayoutBy: SeriesLayou
 // TODO: consider how to treat null/undefined/NaN when display?
 export function retrieveRawValue(
     data: List, dataIndex: number, dim?: DimensionName | DimensionIndexLoose
-): any {
+    // If dimIndex is null/undefined, return OptionDataItem.
+    // Otherwise, return OptionDataValue.
+): OptionDataValue | OptionDataItem {
     if (!data) {
         return;
     }

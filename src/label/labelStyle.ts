@@ -615,14 +615,18 @@ export function getFont(
 
 export const labelInner = makeInner<{
     /**
-     * Previous value stored used for label.
+     * Previous target value stored used for label.
      * It's mainly for text animation
      */
     prevValue?: ParsedValue | ParsedValue[]
     /**
-     * Current value stored used for label.
+     * Target value stored used for label.
      */
     value?: ParsedValue | ParsedValue[]
+    /**
+     * Current value in text animation.
+     */
+    interpolatedValue?: ParsedValue | ParsedValue[]
     /**
      * If enable value animation
      */
@@ -682,21 +686,24 @@ export function animateLabelValue(
         return;
     }
     const defaultInterpolatedText = labelInnerStore.defaultInterpolatedText;
-    const prevValue = labelInnerStore.prevValue;
-    const currentValue = labelInnerStore.value;
+    // Consider the case that being animating, do not use the `obj.value`,
+    // Otherwise it will jump to the `obj.value` when this new animation started.
+    const currValue = retrieve2(labelInnerStore.interpolatedValue, labelInnerStore.prevValue);
+    const targetValue = labelInnerStore.value;
 
     function during(percent: number) {
         const interpolated = interpolateRawValues(
             data,
             labelInnerStore.precision,
-            prevValue,
-            currentValue,
+            currValue,
+            targetValue,
             percent
         );
+        labelInnerStore.interpolatedValue = percent === 1 ? null : interpolated;
 
         const labelText = getLabelText({
             labelDataIndex: dataIndex,
-            // labelFetcher: seriesModel,
+            labelFetcher: seriesModel,
             defaultText: defaultInterpolatedText
                 ? defaultInterpolatedText(interpolated)
                 : interpolated + ''
@@ -705,6 +712,8 @@ export function animateLabelValue(
         setLabelText(textEl, labelText);
     }
 
-    (prevValue == null ? initProps
-        : updateProps)(textEl, {}, seriesModel, dataIndex, null, during);
+    (currValue == null
+        ? initProps
+        : updateProps
+    )(textEl, {}, seriesModel, dataIndex, null, during);
 }
