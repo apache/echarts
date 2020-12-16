@@ -27,7 +27,8 @@ import {
     ColorString,
     ZRColor,
     OptionDataValue,
-    SeriesDataType
+    SeriesDataType,
+    DimensionLoose
 } from '../../util/types';
 import GlobalModel from '../Global';
 import { TooltipMarkupBlockFragment } from '../../component/tooltip/tooltipMarkup';
@@ -118,7 +119,7 @@ export class DataFormatMixin {
             zrUtil.extend(params, extendParams);
         }
 
-        if (labelDimIndex != null && (params.value instanceof Array)) {
+        if (labelDimIndex != null && zrUtil.isArray(params.value)) {
             params.value = params.value[labelDimIndex];
         }
 
@@ -141,12 +142,24 @@ export class DataFormatMixin {
 
             // Support 'aaa{@[3]}bbb{@product}ccc'.
             // Do not support '}' in dim name util have to.
-            return str.replace(DIMENSION_LABEL_REG, function (origin, dim) {
-                const len = dim.length;
-                if (dim.charAt(0) === '[' && dim.charAt(len - 1) === ']') {
-                    dim = +dim.slice(1, len - 1); // Also: '[]' => 0
+            return str.replace(DIMENSION_LABEL_REG, function (origin, dimStr: string) {
+                const len = dimStr.length;
+                const dimLoose: DimensionLoose = (dimStr.charAt(0) === '[' && dimStr.charAt(len - 1) === ']')
+                    ? +dimStr.slice(1, len - 1) // Also support: '[]' => 0
+                    : dimStr;
+
+                let val = retrieveRawValue(data, dataIndex, dimLoose) as OptionDataValue;
+
+                // Tricky: `extendParams.value` is only used in interpolate case
+                // (label animation) currently.
+                if (extendParams && zrUtil.isArray(extendParams.value)) {
+                    const dimInfo = data.getDimensionInfo(dimLoose);
+                    if (dimInfo) {
+                        val = extendParams.value[dimInfo.index];
+                    }
                 }
-                return retrieveRawValue(data, dataIndex, dim);
+
+                return val != null ? val + '' : '';
             });
         }
     }
