@@ -29,8 +29,8 @@ export * from './export/core';
 // ----------------------------------------------
 
 import {
-    RendererSVG,
-    RendererCanvas
+    SVGRenderer,
+    CanvasRenderer
 } from './export/renderers';
 
 import {
@@ -64,10 +64,10 @@ import {
 
 // Render via Canvas.
 // echarts.init(dom, null, { renderer: 'canvas' })
-use([RendererCanvas]);
+use([CanvasRenderer]);
 // Render via SVG.
 // echarts.init(dom, null, { renderer: 'svg' })
-use([RendererSVG]);
+use([SVGRenderer]);
 
 use([
     LineChart,

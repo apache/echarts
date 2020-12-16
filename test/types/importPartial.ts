@@ -12,6 +12,11 @@ import {
     DataZoomComponent,
     DataZoomComponentOption,
 } from '../../components';
+import {
+    CanvasRenderer
+} from '../../renderers';
+
+use([BarChart, LineChart, GridComponent, DataZoomComponent, CanvasRenderer]);
 
 type Option = ComposeOption<
     GridComponentOption | DataZoomComponentOption,
@@ -23,8 +28,6 @@ const option: Option= {
         type: 'bar'
     }]
 }
-
-use([BarChart, LineChart, GridComponent, DataZoomComponent]);
 
 const dom = document.createElement('div');
 dom.className = 'chart';

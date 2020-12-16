@@ -17,5 +17,5 @@
 * under the License.
 */
 
-export {install as RendererSVG} from '../renderer/installSVGRenderer';
-export {install as RendererCanvas} from '../renderer/installCanvasRenderer';
+export {install as SVGRenderer} from '../renderer/installSVGRenderer';
+export {install as CanvasRenderer} from '../renderer/installCanvasRenderer';

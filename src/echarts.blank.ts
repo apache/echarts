@@ -21,10 +21,10 @@ export * from './export/core';
 import { use } from './extension';
 
 import {
-    RendererCanvas
+    CanvasRenderer
 } from './export/renderers';
 import {
     DatasetComponent
 } from './export/components';
 // Default to have canvas renderer and dataset for compitatble reason.
-use([RendererCanvas, DatasetComponent]);
+use([CanvasRenderer, DatasetComponent]);

@@ -29,7 +29,7 @@ export * from './export/core';
 // ----------------------------------------------
 
 import {
-    RendererCanvas
+    CanvasRenderer
 } from './export/renderers';
 
 import {
@@ -46,7 +46,7 @@ import {
 
 // Render via Canvas.
 // echarts.init(dom, null, { renderer: 'canvas' })
-use([RendererCanvas]);
+use([CanvasRenderer]);
 
 use([
     LineChart,
