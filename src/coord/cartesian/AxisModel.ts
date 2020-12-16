@@ -60,8 +60,7 @@ zrUtil.mixin(CartesianAxisModel, AxisModelCommonMixin);
 const extraOption: CartesianAxisOption = {
     // gridIndex: 0,
     // gridId: '',
-    offset: 0,
-    categorySortInfo: []
+    offset: 0
 };
 
 axisModelCreator<CartesianAxisOption, typeof CartesianAxisModel>('x', CartesianAxisModel, extraOption);
