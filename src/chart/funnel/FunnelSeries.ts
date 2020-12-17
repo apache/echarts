@@ -44,6 +44,9 @@ import ComponentModel from '../../model/Component';
 
 
 type FunnelLabelOption = Omit<SeriesLabelOption, 'position'> & {
+    //xsy-bi源码修改点-开始
+    verticalAlignment?: boolean
+    //xsy-bi源码修改点-end
     position?: LabelOption['position']
         | 'outer' | 'inner' | 'center' | 'rightTop' | 'rightBottom' | 'leftTop' | 'leftBottom'
 };
@@ -61,6 +64,10 @@ export interface FunnelDataItemOption
     itemStyle?: ItemStyleOption & {
         width?: number | string
         height?: number | string
+        //xsy-bi源码修改点-开始 - 漏斗块最小高度 最小宽度
+        minHeight?: string
+        minWidth?: string
+        //xsy-bi源码修改点-end
     }
 }
 
@@ -70,7 +77,10 @@ export interface FunnelSeriesOption extends SeriesOption<FunnelStateOption>, Fun
 
     min?: number
     max?: number
-
+    //xsy-bi源码修改点-开始 - 漏斗块最小高度 最小宽度
+    minHeight?: string
+    minWidth?: string
+    //xsy-bi源码修改点-end
     /**
      * Absolute number or percent string
      */

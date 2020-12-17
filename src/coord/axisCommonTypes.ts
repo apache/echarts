@@ -47,7 +47,9 @@ export interface AxisBaseOption extends ComponentOption,
     nameTextStyle?: AxisNameTextStyleOption;
     // The gap between axisName and axisLine.
     nameGap?: number;
-
+    //xsy-bi源码修改点： y轴添加水平Gap控制nameHorizontalGap.
+    nameHorizontalGap?: number;
+    //xsy-bi源码修改点： y轴添加水平Gap控制nameHorizontalGap.
     silent?: boolean;
     triggerEvent?: boolean;
 

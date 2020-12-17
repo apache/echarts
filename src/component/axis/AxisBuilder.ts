@@ -371,6 +371,8 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         const nameDirection = opt.nameDirection;
         const textStyleModel = axisModel.getModel('nameTextStyle');
         const gap = axisModel.get('nameGap') || 0;
+        //xsy-bi源码修改点： y轴添加水平Gap控制nameHorizontalGap.
+        const nameHorizontalGap = axisModel.get('nameHorizontalGap') || 0;
 
         const extent = axisModel.axis.getExtent();
         const gapSignal = extent[0] > extent[1] ? -1 : 1;
@@ -381,7 +383,8 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
                 ? extent[1] + gapSignal * gap
                 : (extent[0] + extent[1]) / 2, // 'middle'
             // Reuse labelOffset.
-            isNameLocationCenter(nameLocation) ? opt.labelOffset + nameDirection * gap : 0
+            //xsy-bi源码修改点： y轴添加水平Gap控制nameHorizontalGap.
+            isNameLocationCenter(nameLocation) ? opt.labelOffset + nameDirection * gap : nameHorizontalGap
         ];
 
         let labelLayout;

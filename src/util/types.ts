@@ -100,6 +100,9 @@ export interface ComponentTypeInfo {
 }
 
 export interface ECElement extends Element {
+    //xsy-bi源码修改点： 添加雷达图tip 数据 index
+    __dimIdx?: number;
+    //xsy-bi源码修改点： 添加雷达图tip 数据 index
     tooltip?: CommonTooltipOption<unknown> & {
         content?: string;
         formatterParams?: unknown;

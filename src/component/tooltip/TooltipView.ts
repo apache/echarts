@@ -737,6 +737,16 @@ class TooltipView extends ComponentView {
                 }
             }, this);
             this._ticket = asyncTicket;
+            //xsy-bi 源码修改点-开始 添加雷达图tip 数据 index
+            if (!zrUtil.isArray(params) && params.seriesType === 'radar') {
+                if (el && el.__dimIdx !== undefined){
+                    params.dimensionIndex = el.__dimIdx;
+                }
+                else {
+                    params.dimensionIndex = -1;
+                }
+            }
+            //xsy-bi 源码修改点-结束
             html = formatter(params, asyncTicket, callback);
         }
 

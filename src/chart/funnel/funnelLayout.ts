@@ -61,13 +61,106 @@ function getSortedIndices(data: List, sort: FunnelSeriesOption['sort']) {
 function labelLayout(data: List) {
     const seriesModel = data.hostModel;
     const orient = seriesModel.get('orient');
+    //xsy-bi源码修改点-开始:漏斗图增加参数verticalAlignment，为true的时候，漏斗图每个文字垂直对齐，根据原有数据生成新的points点
+    let points0 = [[0, 0], [0, 0], [0, 0], [0, 0]];
+    data.each(function (idx) {
+        const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
+        const labelModel = itemModel.getModel('label');
+        const layout = data.getItemLayout(idx);
+        let points = layout.points;
+        const labelPosition = labelModel.get('position');
+        if (labelPosition === 'left') {
+            if (points0[3][0] === 0 || points[3][0] < points0[3][0]) {
+                points0[3][0] = points[3][0];
+            }
+            if (points0[0][0] === 0 || points[0][0] < points0[0][0]) {
+                points0[0][0] = points[0][0];
+            }
+        }
+        else if (labelPosition === 'right') {
+            if (points0[1][0] === 0 || points[1][0] > points0[1][0]) {
+                points0[1][0] = points[1][0];
+            }
+            if (points0[2][0] === 0 || points[2][0] > points0[2][0]) {
+                points0[2][0] = points[2][0];
+            }
+        }
+        else if (labelPosition === 'top') {
+            if (points0[3][1] === 0 || points[3][1] < points0[3][1]) {
+                points0[3][1] = points[3][1];
+            }
+            if (points0[0][1] === 0 || points[0][1] < points0[0][1]) {
+                points0[0][1] = points[0][1];
+            }
+        }
+        else if (labelPosition === 'bottom') {
+            if (points0[1][1] === 0 || points[1][1] > points0[1][1]) {
+                points0[1][1] = points[1][1];
+            }
+            if (points0[2][1] === 0 || points[2][1] > points0[2][1]) {
+                points0[2][1] = points[2][1];
+            }
+        }
+        else if (labelPosition === 'leftTop') {
+            if (orient === 'horizontal') {
+                if (points0[0][1] === 0 || points[0][1] < points0[0][1]) {
+                    points0[0][1] = points[0][1];
+                }
+            }
+            else {
+                if (points0[0][0] === 0 || points[0][0] < points0[0][0]) {
+                    points0[0][0] = points[0][0];
+                }
+            }
+        }
+        else if (labelPosition === 'rightTop') {
+            if (orient === 'horizontal') {
+                if (points0[3][1] === 0 || points[3][1] > points0[3][1]) {
+                    points0[3][1] = points[3][1];
+                }
+            }
+            else {
+                if (points0[1][0] === 0 || points[1][0] > points0[1][0]) {
+                    points0[1][0] = points[1][0];
+                }
+            }
+
+        }
+        else if (labelPosition === 'rightBottom') {
+            if (orient === 'horizontal') {
+                if (points0[2][1] === 0 || points[2][1] > points0[2][1]) {
+                    points0[2][1] = points[2][1];
+                }
+            }
+            else {
+                if (points0[2][0] === 0 || points[2][0] > points0[2][0]) {
+                    points0[2][0] = points[2][0];
+                }
+            }
+        }
+        else if (labelPosition === 'leftBottom') {
+            if (orient === 'horizontal') {
+                if (points0[1][1] === 0 || points[1][1] > points0[1][1]) {
+                    points0[1][1] = points[1][1];
+                }
+            }
+            else {
+                if (points0[3][0] === 0 || points[3][0] < points0[3][0]) {
+                    points0[3][0] = points[3][0];
+                }
+            }
+
+        }
+    });
+    //xsy-bi源码修改点-结束:漏斗图增加参数verticalAlignment，为true的时候，漏斗图每个文字垂直对齐，根据原有数据生成新的points点
     data.each(function (idx) {
         const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
         const labelModel = itemModel.getModel('label');
         let labelPosition = labelModel.get('position');
 
         const labelLineModel = itemModel.getModel('labelLine');
-
+        //xsy-bi源码修改点
+        const verticalAlignment = labelModel.get('verticalAlignment');
         const layout = data.getItemLayout(idx);
         const points = layout.points;
 
@@ -121,6 +214,11 @@ function labelLayout(data: List) {
                 x1 = (points[3][0] + points[0][0]) / 2;
                 y1 = (points[3][1] + points[0][1]) / 2;
                 x2 = x1 - labelLineLen;
+                //xsy-bi源码修改点-开始
+                if (verticalAlignment === true) {
+                    x2 = (points0[3][0] + points0[0][0]) / 2 - labelLineLen;
+                }
+                //xsy-bi源码修改点-结束
                 textX = x2 - 5;
                 textAlign = 'right';
             }
@@ -129,6 +227,11 @@ function labelLayout(data: List) {
                 x1 = (points[1][0] + points[2][0]) / 2;
                 y1 = (points[1][1] + points[2][1]) / 2;
                 x2 = x1 + labelLineLen;
+                //xsy-bi源码修改点-开始
+                if (verticalAlignment === true) {
+                    x2 = (points0[1][0] + points0[2][0]) / 2 + labelLineLen;
+                }
+                //xsy-bi源码修改点-结束
                 textX = x2 + 5;
                 textAlign = 'left';
             }
@@ -137,6 +240,11 @@ function labelLayout(data: List) {
                 x1 = (points[3][0] + points[0][0]) / 2;
                 y1 = (points[3][1] + points[0][1]) / 2;
                 y2 = y1 - labelLineLen;
+                //xsy-bi源码修改点-开始
+                if (verticalAlignment === true) {
+                    y2 = (points0[3][1] + points0[0][1]) / 2 - labelLineLen;
+                }
+                //xsy-bi源码修改点-结束
                 textY = y2 - 5;
                 textAlign = 'center';
             }
@@ -145,6 +253,11 @@ function labelLayout(data: List) {
                 x1 = (points[1][0] + points[2][0]) / 2;
                 y1 = (points[1][1] + points[2][1]) / 2;
                 y2 = y1 + labelLineLen;
+                //xsy-bi源码修改点-开始
+                if (verticalAlignment === true) {
+                    y2 = (points0[1][1] + points0[2][1]) / 2 + labelLineLen;
+                }
+                //xsy-bi源码修改点-结束
                 textY = y2 + 5;
                 textAlign = 'center';
             }
@@ -154,11 +267,21 @@ function labelLayout(data: List) {
                 y1 = orient === 'horizontal' ? points[3][1] : points[1][1];
                 if (orient === 'horizontal') {
                     y2 = y1 - labelLineLen;
+                    //xsy-bi源码修改点-开始
+                    if (verticalAlignment === true) {
+                        y2 = points0[3][1] - labelLineLen;
+                    }
+                    //xsy-bi源码修改点-结束
                     textY = y2 - 5;
                     textAlign = 'center';
                 }
                 else {
                     x2 = x1 + labelLineLen;
+                    //xsy-bi源码修改点-开始
+                    if (verticalAlignment === true) {
+                        x2 = points0[1][0] + labelLineLen;
+                    }
+                    //xsy-bi源码修改点-结束
                     textX = x2 + 5;
                     textAlign = 'top';
                 }
@@ -169,11 +292,21 @@ function labelLayout(data: List) {
                 y1 = points[2][1];
                 if (orient === 'horizontal') {
                     y2 = y1 + labelLineLen;
+                    //xsy-bi源码修改点-开始
+                    if (verticalAlignment === true) {
+                        y2 = points0[2][1] + labelLineLen;
+                    }
+                    //xsy-bi源码修改点-结束
                     textY = y2 + 5;
                     textAlign = 'center';
                 }
                 else {
                     x2 = x1 + labelLineLen;
+                    //xsy-bi源码修改点-开始
+                    if (verticalAlignment === true) {
+                        x2 = points0[2][0] + labelLineLen;
+                    }
+                    //xsy-bi源码修改点-结束
                     textX = x2 + 5;
                     textAlign = 'bottom';
                 }
@@ -184,11 +317,21 @@ function labelLayout(data: List) {
                 y1 = orient === 'horizontal' ? points[0][1] : points[1][1];
                 if (orient === 'horizontal') {
                     y2 = y1 - labelLineLen;
+                    //xsy-bi源码修改点-开始
+                    if (verticalAlignment === true) {
+                        y2 = points0[0][1] - labelLineLen;
+                    }
+                    //xsy-bi源码修改点-结束
                     textY = y2 - 5;
                     textAlign = 'center';
                 }
                 else {
                     x2 = x1 - labelLineLen;
+                    //xsy-bi源码修改点-开始
+                    if (verticalAlignment === true) {
+                        x2 = points0[0][0] - labelLineLen;
+                    }
+                    //xsy-bi源码修改点-结束
                     textX = x2 - 5;
                     textAlign = 'right';
                 }
@@ -199,11 +342,21 @@ function labelLayout(data: List) {
                 y1 = orient === 'horizontal' ? points[1][1] : points[2][1];
                 if (orient === 'horizontal') {
                     y2 = y1 + labelLineLen;
+                    //xsy-bi源码修改点-开始
+                    if (verticalAlignment === true) {
+                        y2 = points0[1][1] + labelLineLen;
+                    }
+                    //xsy-bi源码修改点-结束
                     textY = y2 + 5;
                     textAlign = 'center';
                 }
                 else {
                     x2 = x1 - labelLineLen;
+                    //xsy-bi源码修改点-开始
+                    if (verticalAlignment === true) {
+                        x2 = points0[3][0] - labelLineLen;
+                    }
+                    //xsy-bi源码修改点-结束
                     textX = x2 - 5;
                     textAlign = 'right';
                 }
@@ -284,7 +437,9 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
             // End point index is data.count() and we assign it 0
             if (orient === 'horizontal') {
                 const val = data.get(valueDim, idx) as number || 0;
-                const itemHeight = linearMap(val, [min, max], sizeExtent, true);
+                let itemHeight = linearMap(val, [min, max], sizeExtent, true);
+                //xsy-bi源码修改点:添加漏斗图最小宽度，优先级高于顶层
+                itemHeight = getItemMinSizeBySizeKey('minHeight', idx, itemHeight);
                 let y0;
                 switch (funnelAlign) {
                     case 'top':
@@ -304,7 +459,9 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                 ];
             }
             const val = data.get(valueDim, idx) as number || 0;
-            const itemWidth = linearMap(val, [min, max], sizeExtent, true);
+            let itemWidth = linearMap(val, [min, max], sizeExtent, true);
+            //xsy-bi源码修改点:添加漏斗图最小宽度，优先级高于顶层
+            itemWidth = getItemMinSizeBySizeKey('minWidth', idx, itemWidth);
             let x0;
             switch (funnelAlign) {
                 case 'left':
@@ -345,9 +502,13 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                 let width = itemModel.get(['itemStyle', 'width']);
                 if (width == null) {
                     width = itemSize;
+                    //xsy-bi源码修改点:添加漏斗图最小宽度，优先级高于顶层
+                    width = getItemMinSizeBySizeKey('minWidth', idx, width);
                 }
                 else {
                     width = parsePercent(width, viewWidth);
+                    //xsy-bi源码修改点:添加漏斗图最小宽度，优先级高于顶层
+                    width = getItemMinSizeBySizeKey('minWidth', idx, width);
                     if (sort === 'ascending') {
                         width = -width;
                     }
@@ -366,9 +527,13 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                 let height = itemModel.get(['itemStyle', 'height']);
                 if (height == null) {
                     height = itemSize;
+                    //xsy-bi源码修改点:添加漏斗图最小高度，优先级高于顶层
+                    height = getItemMinSizeBySizeKey('minHeight', idx, height);
                 }
                 else {
                     height = parsePercent(height, viewHeight);
+                    //xsy-bi源码修改点:添加漏斗图最小高度，优先级高于顶层
+                    height = getItemMinSizeBySizeKey('minHeight', idx, height);
                     if (sort === 'ascending') {
                         height = -height;
                     }
@@ -384,7 +549,18 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                 });
             }
         }
-
+        //xsy-bi 源码修改点-开始：添加漏斗图最小宽度，最小高度，优先级高于顶层
+        function getItemMinSizeBySizeKey(sizeKey: 'minHeight' | 'minWidth', idx: number, baseItemSize: number) {
+            var minSize = seriesModel.get([sizeKey]);
+            var itemModel = data.getItemModel<FunnelDataItemOption>(idx);
+            var itemMinSize = itemModel.get(['itemStyle', sizeKey]);
+            var currentMinSize = itemMinSize !== undefined ? itemMinSize : minSize;
+            if (currentMinSize !== undefined && baseItemSize < Number(currentMinSize)) {
+                return Number(currentMinSize);
+            }
+            return baseItemSize;
+        }
+        //xsy-bi 源码修改点-结束：添加漏斗图最小宽度，最小高度，优先级高于顶层
         labelLayout(data);
     });
 }
