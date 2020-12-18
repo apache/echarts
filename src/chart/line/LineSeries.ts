@@ -102,7 +102,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
 
     step?: false | 'start' | 'end' | 'middle'
 
-    smooth?: boolean
+    smooth?: boolean | number
 
     smoothMonotone?: 'x' | 'y' | 'none'
 
