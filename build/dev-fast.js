@@ -68,7 +68,7 @@ async function wrapUMDCode() {
 
 function rebuild() {
     build({
-        stdio: 'inherit',
+        // stdio: 'inherit',
         entryPoints: [path.resolve(__dirname, '../src/echarts.all.ts')],
         outfile: outFilePath,
         format: 'cjs',

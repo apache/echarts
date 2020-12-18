@@ -64,7 +64,7 @@
     "chokidar": "^3.4.0",
     "commander": "2.11.0",
     "dtslint": "^4.0.5",
-    "esbuild": "^0.4.1",
+    "esbuild": "^0.8.23",
     "eslint": "^7.15.0",
     "fs-extra": "0.26.7",
     "glob": "7.0.0",
