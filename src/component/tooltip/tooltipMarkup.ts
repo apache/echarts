@@ -32,19 +32,65 @@ import { getRandomIdBase } from '../../util/number';
 import Model from '../../model/Model';
 import { TooltipOption } from './TooltipModel';
 
+type RichTextStyle = {
+    fontSize: number | string,
+    fill: string,
+    fontWeight?: number | string
+};
 
-const TOOLTIP_NAME_TEXT_STYLE_CSS = 'font-size:12px;color:#6e7079';
-const TOOLTIP_TEXT_STYLE_RICH = {
-    fontSize: 12,
-    fill: '#6e7079'
-};
-const TOOLTIP_VALUE_TEXT_STYLE_CSS = 'font-size:14px;color:#464646;font-weight:900';
-const TOOLTIP_VALUE_TEXT_STYLE_RICH = {
-    fontSize: 14,
-    fill: '#464646',
-    fontWeight: 900
-};
+type TextStyle = string | RichTextStyle;
+
 const TOOLTIP_LINE_HEIGHT_CSS = 'line-height:1';
+
+// TODO: more textStyle option
+function getTooltipTextStyle(
+    textStyle: TooltipOption['textStyle'],
+    renderMode: TooltipRenderMode,
+    tooltipModel?: Model<TooltipOption>
+): {
+    nameStyle: TextStyle
+    valueStyle: TextStyle
+} {
+    const nameFontColor = textStyle.color || '#6e7079';
+    const nameFontSize = textStyle.fontSize || '12px';
+    const valueFontColor = textStyle.color || '#464646';
+    const valueFontSize = textStyle.fontSize || '14px';
+    const valueFontWeight = textStyle.fontWeight || '900';
+    // const fontStyle = textStyleModel.get('fontStyle');
+    // const fontWeight = textStyleModel.get('fontWeight');
+    // const fontFamily = textStyleModel.get('fontFamily');
+    // const lineHeight = textStyleModel.get('lineHeight');
+    // const width = textStyleModel.get('width');
+    // const height = textStyleModel.get('height');
+    // const textBorderColor = textStyleModel.get('textBorderColor');
+    // const textBorderWidth = textStyleModel.get('textBorderWidth');
+    // const textShadowColor = textStyleModel.get('textShadowColor');
+    // const textShadowBlur = textStyleModel.get('textShadowBlur');
+    // const textShadowOffsetX = textStyleModel.get('textShadowOffsetX');
+    // const textShadowOffsetY = textStyleModel.get('textShadowOffsetY');
+    // const overflow = textStyleModel.get('overflow');
+    // const ellipsis = textStyleModel.get('ellipsis');
+    // const lineOverflow = textStyleModel.get('lineOverflow');
+    if (renderMode === 'html') {
+        return {
+            nameStyle: `font-size:${nameFontSize};color:${nameFontColor}`,
+            valueStyle: `font-size:${valueFontSize};color:${valueFontColor};font-weight:${valueFontWeight}`
+        };
+    }
+    else {
+        return {
+            nameStyle: {
+                fontSize: nameFontSize,
+                fill: nameFontColor
+            },
+            valueStyle: {
+                fontSize: valueFontSize,
+                fill: valueFontColor,
+                fontWeight: valueFontWeight
+            }
+        };
+    }
+}
 
 // 0: no gap in this block.
 // 1: has max gap in level 1 in this block.
@@ -150,7 +196,8 @@ interface TooltipMarkupFragmentBuilder {
     build(
         ctx: TooltipMarkupBuildContext,
         fragment: TooltipMarkupBlockFragment,
-        topMarginForOuterGap: number
+        topMarginForOuterGap: number,
+        toolTipTextStyle: TooltipOption['textStyle']
     ): MarkupText;
 }
 
@@ -198,14 +245,20 @@ const builderMap: { [key in TooltipMarkupBlockFragment['type']]: TooltipMarkupFr
             fragment.__gapLevelBetweenSubBlocks = thisGapLevelBetweenSubBlocks;
         },
 
-        build(ctx, fragment: TooltipMarkupSection, topMarginForOuterGap): string {
+        build(
+            ctx,
+            fragment: TooltipMarkupSection,
+            topMarginForOuterGap,
+            toolTipTextStyle
+        ): string {
             const noHeader = fragment.noHeader;
             const gaps = getGap(fragment);
 
             const subMarkupText = buildSubBlocks(
                 ctx,
                 fragment,
-                noHeader ? topMarginForOuterGap : gaps.html
+                noHeader ? topMarginForOuterGap : gaps.html,
+                toolTipTextStyle
             );
 
             if (noHeader) {
@@ -213,13 +266,14 @@ const builderMap: { [key in TooltipMarkupBlockFragment['type']]: TooltipMarkupFr
             }
 
             const displayableHeader = makeValueReadable(fragment.header, 'ordinal', ctx.useUTC);
+            const {nameStyle} = getTooltipTextStyle(toolTipTextStyle, ctx.renderMode);
             if (ctx.renderMode === 'richText') {
-                return wrapInlineNameRichText(ctx, displayableHeader) + gaps.richText
+                return wrapInlineNameRichText(ctx, displayableHeader, nameStyle as RichTextStyle) + gaps.richText
                     + subMarkupText;
             }
             else {
                 return wrapBlockHTML(
-                    `<div style="${TOOLTIP_NAME_TEXT_STYLE_CSS};${TOOLTIP_LINE_HEIGHT_CSS};">`
+                    `<div style="${nameStyle};${TOOLTIP_LINE_HEIGHT_CSS};">`
                         + encodeHTML(displayableHeader)
                         + '</div>'
                         + subMarkupText,
@@ -240,7 +294,7 @@ const builderMap: { [key in TooltipMarkupBlockFragment['type']]: TooltipMarkupFr
             fragment.__gapLevelBetweenSubBlocks = 0;
         },
 
-        build(ctx, fragment: TooltipMarkupNameValueBlock, topMarginForOuterGap) {
+        build(ctx, fragment: TooltipMarkupNameValueBlock, topMarginForOuterGap, toolTipTextStyle) {
             const renderMode = ctx.renderMode;
             const noName = fragment.noName;
             const noValue = fragment.noValue;
@@ -278,20 +332,22 @@ const builderMap: { [key in TooltipMarkupBlockFragment['type']]: TooltipMarkupFr
             // It little weird if only value next to marker but far from marker.
             const valueCloseToMarker = !noMarker && noName;
 
+            const {nameStyle, valueStyle} = getTooltipTextStyle(toolTipTextStyle, renderMode);
+
             return renderMode === 'richText'
                 ? (
                     (noMarker ? '' : markerStr)
-                    + (noName ? '' : wrapInlineNameRichText(ctx, readableName))
+                    + (noName ? '' : wrapInlineNameRichText(ctx, readableName, nameStyle as RichTextStyle))
                     // Value has commas inside, so use ' ' as delimiter for multiple values.
                     + (noValue ? '' : wrapInlineValueRichText(
-                        ctx, readableValueList, valueAlignRight, valueCloseToMarker
+                        ctx, readableValueList, valueAlignRight, valueCloseToMarker, valueStyle as RichTextStyle
                     ))
                 )
                 : wrapBlockHTML(
                     (noMarker ? '' : markerStr)
-                    + (noName ? '' : wrapInlineNameHTML(readableName, !noMarker))
+                    + (noName ? '' : wrapInlineNameHTML(readableName, !noMarker, nameStyle as string))
                     + (noValue ? '' : wrapInlineValueHTML(
-                        readableValueList, valueAlignRight, valueCloseToMarker
+                        readableValueList, valueAlignRight, valueCloseToMarker, valueStyle as string
                     )),
                     topMarginForOuterGap
                 );
@@ -303,7 +359,8 @@ const builderMap: { [key in TooltipMarkupBlockFragment['type']]: TooltipMarkupFr
 function buildSubBlocks(
     ctx: TooltipMarkupBuildContext,
     fragment: TooltipMarkupSection,
-    topMarginForOuterGap: number
+    topMarginForOuterGap: number,
+    toolTipTextStyle: TooltipOption['textStyle']
 ): MarkupText {
     const subMarkupTextList: string[] = [];
     let subBlocks = fragment.blocks || [];
@@ -329,7 +386,8 @@ function buildSubBlocks(
         const subMarkupText = getBuilder(subBlock).build(
             ctx,
             subBlock,
-            idx > 0 ? gaps.html : 0
+            idx > 0 ? gaps.html : 0,
+            toolTipTextStyle
         );
         subMarkupText != null && subMarkupTextList.push(subMarkupText);
     });
@@ -361,7 +419,8 @@ export function buildTooltipMarkup(
     markupStyleCreator: TooltipMarkupStyleCreator,
     renderMode: TooltipRenderMode,
     orderMode: TooltipOrderMode,
-    useUTC: boolean
+    useUTC: boolean,
+    toolTipTextStyle: TooltipOption['textStyle']
 ): MarkupText {
     if (!fragment) {
         return;
@@ -375,7 +434,7 @@ export function buildTooltipMarkup(
         orderMode: orderMode,
         markupStyleCreator: markupStyleCreator
     };
-    return builder.build(ctx, fragment, 0);
+    return builder.build(ctx, fragment, 0, toolTipTextStyle);
 }
 
 
@@ -401,36 +460,46 @@ function wrapBlockHTML(
         + '</div>';
 }
 
-function wrapInlineNameHTML(name: string, leftHasMarker: boolean): string {
+function wrapInlineNameHTML(
+    name: string,
+    leftHasMarker: boolean,
+    style: string
+): string {
     const marginCss = leftHasMarker ? 'margin-left:2px' : '';
-    return `<span style="${TOOLTIP_NAME_TEXT_STYLE_CSS};${marginCss}">`
+    return `<span style="${style};${marginCss}">`
         + encodeHTML(name)
         + '</span>';
 }
 
-function wrapInlineValueHTML(valueList: string[], alignRight: boolean, valueCloseToMarker: boolean): string {
+function wrapInlineValueHTML(
+    valueList: string[],
+    alignRight: boolean,
+    valueCloseToMarker: boolean,
+    style: string
+): string {
     // Do not too close to marker, considering there are multiple values separated by spaces.
     const paddingStr = valueCloseToMarker ? '10px' : '20px';
     const alignCSS = alignRight ? `float:right;margin-left:${paddingStr}` : '';
     return (
-        `<span style="${alignCSS};${TOOLTIP_VALUE_TEXT_STYLE_CSS}">`
+        `<span style="${alignCSS};${style}">`
         // Value has commas inside, so use '  ' as delimiter for multiple values.
         + map(valueList, value => encodeHTML(value)).join('&nbsp;&nbsp;')
         + '</span>'
     );
 }
 
-function wrapInlineNameRichText(ctx: TooltipMarkupBuildContext, name: string): string {
-    return ctx.markupStyleCreator.wrapRichTextStyle(name, TOOLTIP_TEXT_STYLE_RICH);
+function wrapInlineNameRichText(ctx: TooltipMarkupBuildContext, name: string, style: RichTextStyle): string {
+    return ctx.markupStyleCreator.wrapRichTextStyle(name, style as Dictionary<unknown>);
 }
 
 function wrapInlineValueRichText(
     ctx: TooltipMarkupBuildContext,
     valueList: string[],
     alignRight: boolean,
-    valueCloseToMarker: boolean
+    valueCloseToMarker: boolean,
+    style: RichTextStyle
 ): string {
-    const styles: Dictionary<unknown>[] = [TOOLTIP_VALUE_TEXT_STYLE_RICH];
+    const styles: Dictionary<unknown>[] = [style];
     const paddingLeft = valueCloseToMarker ? 10 : 20;
     alignRight && styles.push({ padding: [0, 0, 0, paddingLeft], align: 'right' });
     // Value has commas inside, so use '  ' as delimiter for multiple values.
