@@ -19,8 +19,8 @@ import {
 use([BarChart, LineChart, GridComponent, DataZoomComponent, CanvasRenderer]);
 
 type Option = ComposeOption<
-    GridComponentOption | DataZoomComponentOption,
-    BarSeriesOption | LineSeriesOption
+    GridComponentOption | DataZoomComponentOption
+    | BarSeriesOption | LineSeriesOption
 >;
 
 const option: Option= {
