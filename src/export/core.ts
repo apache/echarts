@@ -28,7 +28,7 @@ export {EChartsCoreOption};
 
 type ComposeUnitOption<OptionUnion extends ComponentOption = never> =
     EChartsCoreOption & {
-        [key in OptionUnion['mainType']]?: OptionUnion | OptionUnion[];
+        [key in Exclude<OptionUnion['mainType'], undefined>]?: OptionUnion | OptionUnion[];
     };
 
 export type ComposeOption<OptionUnion extends ComponentOption> =

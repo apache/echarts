@@ -37,7 +37,8 @@ import SeriesModel from '../../model/Series';
 import { Dictionary } from '../../util/types';
 import {
     ModelFinderObject, ParsedModelFinder, ModelFinder,
-    parseFinder as modelUtilParseFinder
+    parseFinder as modelUtilParseFinder,
+    ParsedModelFinderKnown
 } from '../../util/model';
 
 
@@ -286,14 +287,14 @@ function formatMinMax(minMax: BrushDimensionMinMax): BrushDimensionMinMax {
 
 function parseFinder(
     ecModel: GlobalModel, finder: ModelFinder
-): ParsedModelFinder {
+): ParsedModelFinderKnown {
     return modelUtilParseFinder(
         ecModel, finder, {includeMainTypes: INCLUDE_FINDER_MAIN_TYPES}
     );
 }
 
 type TargetInfoBuilder = (
-    foundCpts: ParsedModelFinder, targetInfoList: BrushTargetInfo[]
+    foundCpts: ParsedModelFinderKnown, targetInfoList: BrushTargetInfo[]
 ) => void;
 const targetInfoBuilders: Record<BrushTargetBuilderKey, TargetInfoBuilder> = {
 
@@ -367,7 +368,7 @@ const targetInfoBuilders: Record<BrushTargetBuilderKey, TargetInfoBuilder> = {
 };
 
 type TargetInfoMatcher = (
-    foundCpts: ParsedModelFinder, targetInfo: BrushTargetInfo
+    foundCpts: ParsedModelFinderKnown, targetInfo: BrushTargetInfo
 ) => boolean;
 const targetInfoMatchers: TargetInfoMatcher[] = [
 

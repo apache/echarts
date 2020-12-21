@@ -27,7 +27,9 @@ import {
     ColorString,
     ZRColor,
     OptionDataValue,
-    SeriesDataType
+    SeriesDataType,
+    ComponentMainType,
+    ComponentSubType
 } from '../../util/types';
 import GlobalModel from '../Global';
 import { TooltipMarkupBlockFragment } from '../../component/tooltip/tooltipMarkup';
@@ -38,8 +40,8 @@ const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
 export interface DataFormatMixin extends DataHost {
     ecModel: GlobalModel;
-    mainType: string;
-    subType: string;
+    mainType: ComponentMainType;
+    subType: ComponentSubType;
     componentIndex: number;
     id: string;
     name: string;

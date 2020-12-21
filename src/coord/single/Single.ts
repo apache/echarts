@@ -30,7 +30,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import SingleAxisModel from './AxisModel';
-import { ParsedModelFinder } from '../../util/model';
+import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
 
 /**
@@ -249,7 +249,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
     }
 }
 
-function getCoordSys(finder: ParsedModelFinder): Single {
+function getCoordSys(finder: ParsedModelFinderKnown): Single {
     const seriesModel = finder.seriesModel;
     const singleModel = finder.singleAxisModel as SingleAxisModel;
     return singleModel && singleModel.coordinateSystem

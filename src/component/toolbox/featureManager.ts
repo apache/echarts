@@ -38,16 +38,16 @@ export interface ToolboxFeatureOption {
 
     show?: boolean
 
-    title?: string | Dictionary<string>
+    title?: string | Partial<Dictionary<string>>
 
-    icon?: string | Dictionary<string>
+    icon?: string | Partial<Dictionary<string>>
 
     iconStyle?: IconStyle
     emphasis?: {
         iconStyle?: IconStyle
     }
 
-    iconStatus?: Dictionary<DisplayState>
+    iconStatus?: Partial<Dictionary<DisplayState>>
 
     onclick?: () => void
 }
@@ -58,7 +58,7 @@ export interface ToolboxFeatureModel<Opts extends ToolboxFeatureOption = Toolbox
      * Collection of icon paths.
      * Will be injected during rendering in the view.
      */
-    iconPaths: Dictionary<Displayable>
+    iconPaths: Partial<Dictionary<Displayable>>
 
     setIconStatus(iconName: string, status: DisplayState): void
 }

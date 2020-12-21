@@ -87,7 +87,7 @@ export type ZRStyleProps = PathStyleProps | ImageStyleProps | TSpanStyleProps | 
 // See `checkClassType` check the restict definition.
 export type ComponentFullType = string;
 export type ComponentMainType = keyof ECUnitOption & string;
-export type ComponentSubType = ComponentOption['type'];
+export type ComponentSubType = Exclude<ComponentOption['type'], undefined>;
 /**
  * Use `parseClassType` to parse componentType declaration to componentTypeInfo.
  * For example:
@@ -611,7 +611,7 @@ export interface OptionEncodeVisualDimensions {
     // Notice: `value` is coordDim, not nonCoordDim.
 }
 export interface OptionEncode extends OptionEncodeVisualDimensions {
-    [coordDim: string]: OptionEncodeValue
+    [coordDim: string]: OptionEncodeValue | undefined
 }
 export type OptionEncodeValue = DimensionLoose | DimensionLoose[];
 export type EncodeDefaulter = (source: Source, dimCount: number) => OptionEncode;
@@ -1389,12 +1389,14 @@ export interface DefaultExtraStateOpts {
     blur: any
 }
 
+export type DefaultEmphasisFocus = 'none' | 'self' | 'series';
+
 export interface DefaultExtraEmpasisState {
     /**
      * self: Focus self and blur all others.
      * series: Focus series and blur all other series.
      */
-    focus?: 'none' | 'self' | 'series'
+    focus?: DefaultEmphasisFocus
 }
 
 interface ExtraStateOptsBase {

@@ -548,6 +548,7 @@ class ECharts extends Eventful {
     // Expose to user full option.
     setOption<Opt extends ECBasicOption = EChartsOption>(option: Opt, notMerge?: boolean, lazyUpdate?: boolean): void;
     setOption<Opt extends ECBasicOption = EChartsOption>(option: Opt, opts?: SetOptionOpts): void;
+    /* eslint-disable-next-line */
     setOption<Opt extends ECBasicOption = EChartsOption>(option: Opt, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
         if (__DEV__) {
             assert(!this[IN_MAIN_PROCESS_KEY], '`setOption` should not be called during main process.');
@@ -923,7 +924,7 @@ class ECharts extends Eventful {
 
         const parsedFinder = modelUtil.parseFinder(ecModel, finder, {
             defaultMainType: 'series'
-        });
+        }) as modelUtil.ParsedModelFinderKnown;
 
         const seriesModel = parsedFinder.seriesModel;
 
@@ -2362,7 +2363,7 @@ class ECharts extends Eventful {
                     enableNone: false
                 };
                 const fromResult = fromOpt ? modelUtil.parseFinder(ecModel, fromOpt, finderOpt) : null;
-                const toResult = modelUtil.parseFinder(ecModel, toOpt, finderOpt);
+                const toResult = modelUtil.parseFinder(ecModel, toOpt, finderOpt) as modelUtil.ParsedModelFinderKnown;
                 const toSeries = toResult.seriesModel;
 
                 if (toSeries == null) {

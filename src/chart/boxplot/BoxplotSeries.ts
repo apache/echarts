@@ -27,8 +27,8 @@ import {
     SeriesLabelOption,
     OptionDataValueNumeric,
     StatesOptionMixin,
-    DefaultExtraEmpasisState,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -50,7 +50,7 @@ export interface BoxplotDataItemOption
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus']
+        focus?: DefaultEmphasisFocus
         scale?: boolean
     }
 }

@@ -71,7 +71,7 @@ export interface ToolboxOption extends ComponentOption,
     /**
      * Write all supported features in the final export option.
      */
-    feature?: Dictionary<featureManager.ToolboxFeatureOption>
+    feature?: Partial<Dictionary<featureManager.ToolboxFeatureOption>>
 }
 
 class ToolboxModel extends ComponentModel<ToolboxOption> {

@@ -30,8 +30,8 @@ import {
     SeriesLargeOptionMixin,
     OptionDataValueNumeric,
     StatesOptionMixin,
-    DefaultExtraEmpasisState,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import List from '../../data/List';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -55,7 +55,7 @@ export interface CandlestickDataItemOption
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus']
+        focus?: DefaultEmphasisFocus
         scale?: boolean
     }
 }

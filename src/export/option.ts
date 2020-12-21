@@ -100,7 +100,7 @@ interface ToolboxComponentOption extends ToolboxOption {
         // custom feature
         [key: string]: ToolboxFeatureOption | {
             [key: string]: any
-        }
+        } | undefined
     }
 }
 

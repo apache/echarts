@@ -40,7 +40,7 @@ import {
 } from '../../dataZoom/helper';
 import {
     ModelFinderObject, ModelFinderIndexQuery, makeInternalComponentId,
-    ModelFinderIdQuery, parseFinder
+    ModelFinderIdQuery, parseFinder, ParsedModelFinderKnown
 } from '../../../util/model';
 import ToolboxModel from '../ToolboxModel';
 import { registerInternalOptionCreator } from '../../../model/internalComponentCreator';
@@ -326,7 +326,7 @@ registerInternalOptionCreator('dataZoom', function (ecModel: GlobalModel): Compo
     const dzOptions = [] as ComponentOption[];
 
     const finder = makeAxisFinder(dzFeatureModel);
-    const finderResult = parseFinder(ecModel, finder);
+    const finderResult = parseFinder(ecModel, finder) as ParsedModelFinderKnown;
 
     each(finderResult.xAxisModels, axisModel => buildInternalOptions(axisModel, 'xAxis', 'xAxisIndex'));
     each(finderResult.yAxisModels, axisModel => buildInternalOptions(axisModel, 'yAxis', 'yAxisIndex'));

@@ -43,9 +43,7 @@ export interface AngleAxisOption extends AxisBaseOption {
 
     splitNumber?: number;
 
-    axisLabel?: Omit<AxisBaseOption['axisLabel'], 'rotate'> & {
-        rotate?: AxisBaseOption['axisLabel']['rotate']
-    };
+    axisLabel?: AxisBaseOption['axisLabel']
 }
 
 export interface RadiusAxisOption extends AxisBaseOption {

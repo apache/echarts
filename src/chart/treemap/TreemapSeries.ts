@@ -34,8 +34,8 @@ import {
     OptionId,
     OptionName,
     DecalObject,
-    DefaultExtraEmpasisState,
-    SeriesLabelOption
+    SeriesLabelOption,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -80,7 +80,7 @@ interface TreemapSeriesCallbackDataParams extends CallbackDataParams {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus'] | 'descendant' | 'ancestor'
+        focus?: DefaultEmphasisFocus | 'descendant' | 'ancestor'
     }
 }
 

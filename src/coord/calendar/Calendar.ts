@@ -31,7 +31,7 @@ import {
     SeriesOption,
     SeriesOnCalendarOptionMixin
 } from '../../util/types';
-import { ParsedModelFinder } from '../../util/model';
+import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import SeriesModel from '../../model/Series';
 import CoordinateSystemManager from '../../CoordinateSystem';
@@ -536,7 +536,7 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
     }
 }
 
-function getCoordSys(finder: ParsedModelFinder): Calendar {
+function getCoordSys(finder: ParsedModelFinderKnown): Calendar {
     const calendarModel = finder.calendarModel as CalendarModel;
     const seriesModel = finder.seriesModel;
 

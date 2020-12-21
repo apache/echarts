@@ -32,9 +32,9 @@ import {
     SymbolOptionMixin,
     SeriesSamplingOptionMixin,
     StatesOptionMixin,
-    DefaultExtraEmpasisState,
     SeriesEncodeOptionMixin,
-    CallbackDataParams
+    CallbackDataParams,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -44,7 +44,7 @@ type LineDataValue = OptionDataValue | OptionDataValue[];
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus']
+        focus?: DefaultEmphasisFocus
         scale?: boolean
     }
 }
