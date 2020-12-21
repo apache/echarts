@@ -56,21 +56,7 @@ function getTooltipTextStyle(
     const valueFontColor = textStyle.color || '#464646';
     const valueFontSize = textStyle.fontSize || '14px';
     const valueFontWeight = textStyle.fontWeight || '900';
-    // const fontStyle = textStyleModel.get('fontStyle');
-    // const fontWeight = textStyleModel.get('fontWeight');
-    // const fontFamily = textStyleModel.get('fontFamily');
-    // const lineHeight = textStyleModel.get('lineHeight');
-    // const width = textStyleModel.get('width');
-    // const height = textStyleModel.get('height');
-    // const textBorderColor = textStyleModel.get('textBorderColor');
-    // const textBorderWidth = textStyleModel.get('textBorderWidth');
-    // const textShadowColor = textStyleModel.get('textShadowColor');
-    // const textShadowBlur = textStyleModel.get('textShadowBlur');
-    // const textShadowOffsetX = textStyleModel.get('textShadowOffsetX');
-    // const textShadowOffsetY = textStyleModel.get('textShadowOffsetY');
-    // const overflow = textStyleModel.get('overflow');
-    // const ellipsis = textStyleModel.get('ellipsis');
-    // const lineOverflow = textStyleModel.get('lineOverflow');
+
     if (renderMode === 'html') {
         return {
             nameStyle: `font-size:${nameFontSize};color:${nameFontColor}`,
