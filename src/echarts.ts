@@ -546,10 +546,10 @@ class ECharts extends Eventful {
      * @param opts.replaceMerge Default undefined.
      */
     // Expose to user full option.
-    setOption<Opt extends ECBasicOption = EChartsOption>(option: Opt, notMerge?: boolean, lazyUpdate?: boolean): void;
-    setOption<Opt extends ECBasicOption = EChartsOption>(option: Opt, opts?: SetOptionOpts): void;
+    setOption<Opt extends ECBasicOption>(option: Opt, notMerge?: boolean, lazyUpdate?: boolean): void;
+    setOption<Opt extends ECBasicOption>(option: Opt, opts?: SetOptionOpts): void;
     /* eslint-disable-next-line */
-    setOption<Opt extends ECBasicOption = EChartsOption>(option: Opt, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
+    setOption<Opt extends ECBasicOption>(option: Opt, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
         if (__DEV__) {
             assert(!this[IN_MAIN_PROCESS_KEY], '`setOption` should not be called during main process.');
         }

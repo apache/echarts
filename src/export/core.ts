@@ -19,6 +19,11 @@
 
 import { ComponentOption, ECBasicOption as EChartsCoreOption } from '../util/types';
 
+import { AxisPointerOption } from '../component/axisPointer/AxisPointerModel';
+import { XAXisOption, YAXisOption } from '../coord/cartesian/AxisModel';
+import { AngleAxisOption, RadiusAxisOption } from '../coord/polar/AxisModel';
+import { ParallelAxisOption } from '../coord/parallel/AxisModel';
+
 export * from '../echarts';
 export * from './api';
 
@@ -26,10 +31,27 @@ export {EChartsType as ECharts} from '../echarts';
 
 export {EChartsCoreOption};
 
+// TODO: Handwritten dependencies
+type Dependencies = {
+    grid: XAXisOption | YAXisOption | AxisPointerOption;
+    polar: AngleAxisOption | RadiusAxisOption
+    parallel: ParallelAxisOption
+};
+
+type GetMainType<OptionUnion extends ComponentOption> = Exclude<OptionUnion['mainType'], undefined>;
+
+type GetDependencies<MainType extends string> = MainType extends keyof Dependencies & string
+    // Add dependencies
+    ? {
+        [key in GetMainType<Dependencies[MainType]>]
+            : Dependencies[MainType] | Dependencies[MainType][]
+    }
+    : any;
+
 type ComposeUnitOption<OptionUnion extends ComponentOption = never> =
     EChartsCoreOption & {
-        [key in Exclude<OptionUnion['mainType'], undefined>]?: OptionUnion | OptionUnion[];
-    };
+        [key in GetMainType<OptionUnion>]?: OptionUnion | OptionUnion[];
+    } & GetDependencies<GetMainType<OptionUnion>>;
 
 export type ComposeOption<OptionUnion extends ComponentOption> =
     ComposeUnitOption<OptionUnion> & {

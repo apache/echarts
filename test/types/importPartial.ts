@@ -24,6 +24,15 @@ type Option = ComposeOption<
 >;
 
 const option: Option= {
+    // xAxis and yAxis should been add as dependencies
+    xAxis: {
+        min: 0,
+        max: 10
+    },
+    yAxis: {
+        min: 0,
+        max: 10
+    },
     series: [{
         type: 'bar'
     }]

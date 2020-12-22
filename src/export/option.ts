@@ -24,7 +24,10 @@ import type {
     RadiusAxisOption as RadiusAxisComponentOption,
     AngleAxisOption as AngleAxisComponentOption
 } from '../coord/polar/AxisModel';
-import type {CartesianAxisOption as CartesianAxisComponentOption} from '../coord/cartesian/AxisModel';
+import type {
+    XAXisOption as XAXisComponentOption,
+    YAXisOption as YAXisComponentOption
+} from '../coord/cartesian/AxisModel';
 import type {SingleAxisOption as SingleAxisComponentOption} from '../coord/single/AxisModel';
 import type {ParallelAxisOption as ParallelAxisComponentOption} from '../coord/parallel/AxisModel';
 import type {ParallelCoordinateSystemOption as ParallelComponentOption} from '../coord/parallel/ParallelModel';
@@ -107,13 +110,12 @@ interface ToolboxComponentOption extends ToolboxOption {
 export type DataZoomComponentOption = SliderDataZoomOption | InsideDataZoomOption;
 export type VisualMapComponentOption = ContinousVisualMapOption | PiecewiseVisualMapOption;
 export type LegendComponentOption = LegendOption | ScrollableLegendOption;
-export type XAXisComponentOption = CartesianAxisComponentOption;
-export type YAXisComponentOption = CartesianAxisComponentOption;
 export {
     GridComponentOption,
     PolarComponentOption,
     GeoComponentOption,
-    CartesianAxisComponentOption,
+    XAXisComponentOption,
+    YAXisComponentOption,
     SingleAxisComponentOption,
     RadiusAxisComponentOption,
     AngleAxisComponentOption,
@@ -197,8 +199,8 @@ export interface EChartsOption extends ECBasicOption {
     geo?: GeoComponentOption | GeoComponentOption[];
     angleAxis?: AngleAxisComponentOption | AngleAxisComponentOption[];
     radiusAxis?: RadiusAxisComponentOption | RadiusAxisComponentOption[];
-    xAxis?: CartesianAxisComponentOption | CartesianAxisComponentOption[];
-    yAxis?: CartesianAxisComponentOption | CartesianAxisComponentOption[];
+    xAxis?: XAXisComponentOption | XAXisComponentOption[];
+    yAxis?: YAXisComponentOption | YAXisComponentOption[];
     singleAxis?: SingleAxisComponentOption | SingleAxisComponentOption[];
     parallel?: ParallelComponentOption | ParallelComponentOption[];
     parallelAxis?: ParallelAxisComponentOption | ParallelAxisComponentOption[];

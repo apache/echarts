@@ -40,6 +40,13 @@ export interface CartesianAxisOption extends AxisBaseOption {
     categorySortInfo?: OrdinalSortInfo[];
 }
 
+export interface XAXisOption extends CartesianAxisOption {
+    mainType?: 'xAxis'
+}
+export interface YAXisOption extends CartesianAxisOption {
+    mainType?: 'yAxis'
+}
+
 export class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
     implements AxisBaseModel<CartesianAxisOption> {
 
