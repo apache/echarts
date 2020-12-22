@@ -412,16 +412,16 @@ async function bundleDTS() {
         plugins: [
             dts({
                 respectExternal: true
-            }),
-            {
-                generateBundle(options, bundle) {
-                    for (let chunk of Object.values(bundle)) {
-                        chunk.code = `
-type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
-${chunk.code}`
-                    }
-                }
-            }
+            })
+//             {
+//                 generateBundle(options, bundle) {
+//                     for (let chunk of Object.values(bundle)) {
+//                         chunk.code = `
+// type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
+// ${chunk.code}`
+//                     }
+//                 }
+//             }
         ]
     };
 
