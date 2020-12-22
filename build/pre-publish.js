@@ -39,6 +39,7 @@ const transformDEVUtil = require('./transform-dev');
 const preamble = require('./preamble');
 const dts = require('@lang/rollup-plugin-dts').default;
 const rollup = require('rollup');
+const { path } = require('zrender');
 
 const ecDir = nodePath.resolve(__dirname, '..');
 const tmpDir = nodePath.resolve(ecDir, 'pre-publish-tmp');
@@ -400,17 +401,8 @@ async function readFilePaths({patterns, cwd}) {
 
 async function bundleDTS() {
 
-    const parts = [
-        'core', 'charts', 'components', 'renderers', 'option'
-    ];
-    const inputs = {};
-    parts.forEach(partName => {
-        inputs[partName] = nodePath.resolve(__dirname, `../types/src/export/${partName}.d.ts`)
-    });
-
     const outDir = nodePath.resolve(__dirname, '../types/dist');
-    const bundle = await rollup.rollup({
-        input: inputs,
+    const commonConfig = {
         onwarn(warning, rollupWarn) {
             // Not warn circular dependency
             if (warning.code !== 'CIRCULAR_DEPENDENCY') {
@@ -431,15 +423,39 @@ ${chunk.code}`
                 }
             }
         ]
+    };
+
+    // Bundle chunks.
+    const parts = [
+        'core', 'charts', 'components', 'renderers', 'option'
+    ];
+    const inputs = {};
+    parts.forEach(partName => {
+        inputs[partName] = nodePath.resolve(__dirname, `../types/src/export/${partName}.d.ts`)
+    });
+
+    const bundle = await rollup.rollup({
+        input: inputs,
+        ...commonConfig
     });
     let idx = 1;
     await bundle.write({
         dir: outDir,
-        chunkFileNames: (chunkInfo) => {
-            const fileName = `common${idx > 1 ? idx : ''}.d.ts`;
-            idx++;
-            return fileName;
-        }
+        minifyInternalExports: false,
+        manualChunks: (id) => {
+            // Only create one chunk.
+            return 'shared';
+        },
+        chunkFileNames: 'shared.d.ts'
+    });
+
+    // Bundle all in one
+    const bundleAllInOne = await rollup.rollup({
+        input: nodePath.resolve(__dirname, `../types/src/export/all.d.ts`),
+        ...commonConfig
+    });
+    await bundleAllInOne.write({
+        file: nodePath.resolve(outDir, 'echarts.d.ts')
     });
 }
 

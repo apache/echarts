@@ -17,6 +17,15 @@
 * under the License.
 */
 
-export {parseDate as parse} from '../util/number';
-
-export {format} from '../util/time';
+export {
+    addCommas,
+    toCamelCase,
+    normalizeCssArray,
+    encodeHTML,
+    formatTpl,
+    getTooltipMarker,
+    formatTime,
+    capitalFirst,
+    truncateText,
+    getTextRect
+} from '../../util/format';

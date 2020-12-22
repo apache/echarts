@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// Core API from echarts/src/echarts
+
 import { ComponentOption, ECBasicOption as EChartsCoreOption } from '../util/types';
 
 import { AxisPointerOption } from '../component/axisPointer/AxisPointerModel';

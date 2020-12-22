@@ -17,23 +17,8 @@
 * under the License.
 */
 
-export {
-    linearMap,
-    round,
-    asc,
-    getPrecision,
-    getPrecisionSafe,
-    getPixelPrecision,
-    getPercentWithPrecision,
-    MAX_SAFE_INTEGER,
-    remRadian,
-    isRadianAroundZero,
-    parseDate,
-    quantity,
-    quantityExponent,
-    nice,
-    quantile,
-    reformIntervals,
-    isNumeric,
-    numericToNumber
-} from '../util/number';
+// This file is for providing types when import whole module.
+// import * as echarts from 'echarts'
+
+export * from './core';
+export * from './option';

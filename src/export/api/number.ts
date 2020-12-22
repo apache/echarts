@@ -18,14 +18,22 @@
 */
 
 export {
-    addCommas,
-    toCamelCase,
-    normalizeCssArray,
-    encodeHTML,
-    formatTpl,
-    getTooltipMarker,
-    formatTime,
-    capitalFirst,
-    truncateText,
-    getTextRect
-} from '../util/format';
+    linearMap,
+    round,
+    asc,
+    getPrecision,
+    getPrecisionSafe,
+    getPixelPrecision,
+    getPercentWithPrecision,
+    MAX_SAFE_INTEGER,
+    remRadian,
+    isRadianAroundZero,
+    parseDate,
+    quantity,
+    quantityExponent,
+    nice,
+    quantile,
+    reformIntervals,
+    isNumeric,
+    numericToNumber
+} from '../../util/number';
