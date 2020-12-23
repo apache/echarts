@@ -1,17 +1,28 @@
 {
   "name": "echarts",
   "version": "5.0.0",
-  "description": "A powerful charting and visualization library for browser",
+  "description": "Apache ECharts (incubating) is a powerful, interactive charting and data visualization library for browser",
   "license": "Apache-2.0",
   "keywords": [
+    "echarts",
+    "data-visualization",
+    "charts",
+    "charting-library",
     "visualization",
-    "canvas"
+    "apache",
+    "data-viz",
+    "canvas",
+    "svg"
   ],
   "main": "index.js",
   "module": "echarts.all.js",
   "jsdelivr": "dist/echarts.min.js",
   "types": "types/dist/echarts.d.ts",
-  "homepage": "http://echarts.apache.org",
+  "homepage": "https://echarts.apache.org",
+  "bugs": {
+    "url": "https://github.com/apache/incubator-echarts/issues",
+    "email": "dev@echarts.apache.org"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/apache/incubator-echarts.git"
