@@ -466,13 +466,89 @@ function retrieveColumnLayout(
 }
 export {retrieveColumnLayout};
 
+export function layout(seriesType: string, ecModel: GlobalModel) {
+    const seriesModels = prepareLayoutBarSeries(seriesType, ecModel);
+    const barWidthAndOffset = makeColumnLayout(seriesModels);
+    const lastStackCoords: Dictionary<{p: number, n: number}[]> = {};
+    let layoutInfo: layoutInfo = {
+        layoutDataList: [],
+        columnOffsetList: []
+    };
+    zrUtil.each(seriesModels, function (seriesModel, seriesIndex) {
+        const data = seriesModel.getData();
+        const cartesian = seriesModel.coordinateSystem as Cartesian2D;
+        const baseAxis = cartesian.getBaseAxis();
+        const stackId = getSeriesStackId(seriesModel);
+        const columnLayoutInfo = barWidthAndOffset[getAxisKey(baseAxis)][stackId];
+        data.setLayout({
+            bandWidth: columnLayoutInfo.bandWidth,
+            offset: columnLayoutInfo.offset,
+            size: columnLayoutInfo.width
+        });
+        lastStackCoords[stackId] = lastStackCoords[stackId] || [];
+        collectingLayoutData(layoutInfo, seriesModel, seriesIndex, {offset: columnLayoutInfo.offset, width: columnLayoutInfo.width});
+    });
+    if (layoutInfo.groupOrder !== undefined) {
+        orderLayoutData(layoutInfo);
+    }
+    setLayoutItemLists(layoutInfo, lastStackCoords);
+}
+function collectingLayoutData(layoutInfo: layoutInfo, seriesModel: BarSeriesModel, seriesIndex: number, columnLayoutInfo: {offset: number, width: number}) {
+
+    const data = seriesModel.getData();
+    const cartesian = seriesModel.coordinateSystem as Cartesian2D;
+    const baseAxis = cartesian.getBaseAxis();
+    const stackId = getSeriesStackId(seriesModel);
+    const valueAxis = cartesian.getOtherAxis(baseAxis);
+    const valueDim = data.mapDimension(valueAxis.dim);
+    const baseDim = data.mapDimension(baseAxis.dim);
+    const stacked = isDimensionStacked(data, valueDim);
+    const valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
+    const barMinHeight = seriesModel.get('barMinHeight') || 0;
+    // Because of the barMinHeight, we can not use the value in
+    const isValueAxisH = valueAxis.isHorizontal();
+
+    let layoutDataList = layoutInfo.layoutDataList;
+    let columnOffsetList = layoutInfo.columnOffsetList;
+    let dataToPointList: number[];
+
+    layoutInfo.groupOrder = seriesModel.get('groupOrder');
+    columnOffsetList[seriesIndex] = columnLayoutInfo.offset;
+    let value, baseValue, sign :'p' | 'n';
+    for (let idx = 0, len = data.count(); idx < len; idx++) {
+        value = data.get(valueDim, idx) as number;
+        baseValue = data.get(baseDim, idx) as number;
+        if (isNaN(value) || isNaN(baseValue)) {
+            //When the value is NaN, it is still set to maintain the original code logic
+            data.setItemLayout(idx, {});
+            continue;
+        }
+        if (layoutDataList[baseValue] === undefined) {
+            layoutDataList[baseValue] = [];
+        }
+        sign = value >= 0 ? 'p' : 'n';
+        dataToPointList = isValueAxisH ? [value, baseValue] : [baseValue, value];
+        layoutDataList[baseValue].push({
+            idx: idx,
+            value: value,
+            baseValue: baseValue,
+            seriesModelData: data,
+            columnWidth: columnLayoutInfo.width,
+            coord: cartesian.dataToPoint(dataToPointList),
+            stacked: stacked,
+            stackId: stackId,
+            sign: sign,
+            valueAxisStart: valueAxisStart,
+            isValueAxisH: isValueAxisH,
+            barMinHeight: barMinHeight
+        })
+    }
+}
 function orderLayoutData(layoutInfo: layoutInfo) {
     const groupOrder = layoutInfo.groupOrder;
     let layoutDataList = layoutInfo.layoutDataList;
     let columnOffsetList = layoutInfo.columnOffsetList;
-    columnOffsetList.sort(function (a, b) {
-        return a - b;
-    });
+    columnOffsetList.sort((a, b) => a - b);
     zrUtil.each(layoutDataList, function (layoutDataListItem) {
         layoutDataListItem.sort(function (a, b) {
             if (groupOrder === 'desc') {
@@ -484,163 +560,71 @@ function orderLayoutData(layoutInfo: layoutInfo) {
         });
     });
 }
-
-export function layout(seriesType: string, ecModel: GlobalModel) {
-
-    const seriesModels = prepareLayoutBarSeries(seriesType, ecModel);
-    const barWidthAndOffset = makeColumnLayout(seriesModels);
-
-    const lastStackCoords: Dictionary<{p: number, n: number}[]> = {};
-
-    let layoutInfo: layoutInfo = {
-        layoutDataList: [],
-        columnOffsetList: []
-    };
+function setLayoutItemLists(layoutInfo: layoutInfo, lastStackCoords: Dictionary<{p: number, n: number}[]>) {
     let layoutDataList = layoutInfo.layoutDataList;
     let columnOffsetList = layoutInfo.columnOffsetList;
-
-    zrUtil.each(seriesModels, function (seriesModel, seriesIndex) {
-
-        const data = seriesModel.getData();
-        const cartesian = seriesModel.coordinateSystem as Cartesian2D;
-        const baseAxis = cartesian.getBaseAxis();
-
-        const stackId = getSeriesStackId(seriesModel);
-        const columnLayoutInfo = barWidthAndOffset[getAxisKey(baseAxis)][stackId];
-        const columnOffset = columnLayoutInfo.offset;
-        const columnWidth = columnLayoutInfo.width;
-        const valueAxis = cartesian.getOtherAxis(baseAxis);
-
-        const barMinHeight = seriesModel.get('barMinHeight') || 0;
-
-        lastStackCoords[stackId] = lastStackCoords[stackId] || [];
-
-        layoutInfo.groupOrder = seriesModel.get('groupOrder');
-        columnOffsetList[seriesIndex] = columnOffset;
-
-        data.setLayout({
-            bandWidth: columnLayoutInfo.bandWidth,
-            offset: columnOffset,
-            size: columnWidth
-        });
-        const valueDim = data.mapDimension(valueAxis.dim);
-        const baseDim = data.mapDimension(baseAxis.dim);
-        const stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
-        const isValueAxisH = valueAxis.isHorizontal();
-
-        const valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
-        let dataToPointList: number[];
-        for (let idx = 0, len = data.count(); idx < len; idx++) {
-            const value = data.get(valueDim, idx) as number;
-            const baseValue = data.get(baseDim, idx) as number;
-            if (isNaN(value) || isNaN(baseValue)) {
-                //When the value is NaN, it is still set to maintain the original code logic
-                data.setItemLayout(idx, {
-                    x: undefined,
-                    y: undefined,
-                    width: undefined,
-                    height: undefined
-                });
-                continue;
-            }
-            if (layoutDataList[baseValue] === undefined) {
-                layoutDataList[baseValue] = [];
-            }
-            const sign = value >= 0 ? 'p' : 'n' as 'p' | 'n';
-            if (isValueAxisH) {
-                dataToPointList = [value, baseValue];
-            } else {
-                dataToPointList = [baseValue, value];
-            }
-            layoutDataList[baseValue].push({
-                idx: idx,
-                value: value,
-                baseValue: baseValue,
-                seriesModelData: data,
-                columnWidth: columnLayoutInfo.width,
-                coord: cartesian.dataToPoint(dataToPointList),
-                stacked: stacked,
-                stackId: stackId,
-                sign: sign,
-                valueAxisStart: valueAxisStart,
-                isValueAxisH: isValueAxisH,
-                barMinHeight: barMinHeight
-            })
-        }
+    zrUtil.each(layoutDataList, function (layoutDataSingleList) {
+        setLayoutItemSingleList(layoutDataSingleList, columnOffsetList, lastStackCoords);
     });
-    if (layoutInfo.groupOrder !== undefined) {
-        orderLayoutData(layoutInfo);
-    }
-    zrUtil.each(layoutDataList, function (layoutDataListItem) {
-        zrUtil.each(layoutDataListItem, function (dataItem, itemIndex) {
-            const idx = dataItem.idx;
-            const baseValue = dataItem.baseValue;
-            const data = dataItem.seriesModelData;
-            const columnWidth = dataItem.columnWidth;
-            const coord = dataItem.coord;
-            const stacked = dataItem.stacked;
-            const stackId = dataItem.stackId;
-            const sign = dataItem.sign;
-            const valueAxisStart = dataItem.valueAxisStart;
-            const isValueAxisH = dataItem.isValueAxisH;
-            const barMinHeight = dataItem.barMinHeight;
-            const columnOffset = columnOffsetList[itemIndex];
-            let baseCoord = valueAxisStart;
-            // Because of the barMinHeight, we can not use the value in
-            // stackResultDimension directly.
-            if (stacked) {
-                // Only ordinal axis can be stacked.
-                if (!lastStackCoords[stackId][baseValue]) {
-                    lastStackCoords[stackId][baseValue] = {
-                        p: valueAxisStart, // Positive stack
-                        n: valueAxisStart  // Negative stack
-                    };
-                }
-                // Should also consider #4243
-                baseCoord = lastStackCoords[stackId][baseValue][sign];
+}
+function setLayoutItemSingleList(layoutDataSingleList: layoutItemInfo[], columnOffsetList: [number?], lastStackCoords: Dictionary<{p: number, n: number}[]>) {
+    zrUtil.each(layoutDataSingleList, function (dataItem, itemIndex) {
+        const idx = dataItem.idx;
+        const baseValue = dataItem.baseValue;
+        const data = dataItem.seriesModelData;
+        const columnWidth = dataItem.columnWidth;
+        const coord = dataItem.coord;
+        const stacked = dataItem.stacked;
+        const stackId = dataItem.stackId;
+        const sign = dataItem.sign;
+        const valueAxisStart = dataItem.valueAxisStart;
+        const isValueAxisH = dataItem.isValueAxisH;
+        const barMinHeight = dataItem.barMinHeight;
+        const columnOffset = columnOffsetList[itemIndex];
+        let baseCoord = valueAxisStart;
+        // stackResultDimension directly.
+        if (stacked) {
+            // Only ordinal axis can be stacked.
+            if (!lastStackCoords[stackId][baseValue]) {
+                lastStackCoords[stackId][baseValue] = {
+                    p: valueAxisStart, // Positive stack
+                    n: valueAxisStart  // Negative stack
+                };
             }
-
-            let x;
-            let y;
-            let width;
-            let height;
-
-            if (isValueAxisH) {
-                x = baseCoord;
-                y = coord[1] + columnOffset;
-                width = coord[0] - valueAxisStart;
-                height = columnWidth;
-
-                if (Math.abs(width) < barMinHeight) {
-                    width = (width < 0 ? -1 : 1) * barMinHeight;
-                }
-                // Ignore stack from NaN value
-                if (!isNaN(width)) {
-                    stacked && (lastStackCoords[stackId][baseValue][sign] += width);
-                }
+            // Should also consider #4243
+            baseCoord = lastStackCoords[stackId][baseValue][sign];
+        }
+        let x, y, width, height, stackedValue;
+        if (isValueAxisH) {
+            x = baseCoord;
+            y = coord[1] + columnOffset;
+            width = coord[0] - valueAxisStart;
+            height = columnWidth;
+            if (Math.abs(width) < barMinHeight) {
+                width = (width < 0 ? -1 : 1) * barMinHeight;
             }
-            else {
-                x = coord[0] + columnOffset;
-                y = baseCoord;
-                width = columnWidth;
-                height = coord[1] - valueAxisStart;
-
-                if (Math.abs(height) < barMinHeight) {
-                    // Include zero to has a positive bar
-                    height = (height <= 0 ? -1 : 1) * barMinHeight;
-                }
-                // Ignore stack from NaN value
-                if (!isNaN(height)) {
-                    stacked && (lastStackCoords[stackId][baseValue][sign] += height);
-                }
+            stackedValue = width;
+        }
+        else {
+            x = coord[0] + columnOffset;
+            y = baseCoord;
+            width = columnWidth;
+            height = coord[1] - valueAxisStart;
+            if (Math.abs(height) < barMinHeight) {
+                // Include zero to has a positive bar
+                height = (height <= 0 ? -1 : 1) * barMinHeight;
             }
-
-            data.setItemLayout(idx, {
-                x: x,
-                y: y,
-                width: width,
-                height: height
-            });
+            stackedValue = height;
+        }
+        // Ignore stack from NaN value
+        if (!isNaN(stackedValue)) {
+            stacked && (lastStackCoords[stackId][baseValue][sign] += stackedValue);
+        }
+        data.setItemLayout(idx, {
+            x: x,
+            y: y,
+            width: width,
+            height: height
         });
     });
 }
