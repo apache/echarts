@@ -94,22 +94,22 @@ const compileWorkList = [
             fsExtra.removeSync(tmpDir);
             fsExtra.removeSync(nodePath.resolve(ecDir, 'types'));
             fsExtra.removeSync(nodePath.resolve(ecDir, 'esm'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.esm.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.blank.esm.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.common.esm.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.simple.esm.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.all.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.blank.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.common.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.simple.js'));
         },
         after: async function () {
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.all.js'), nodePath.resolve(ecDir, 'index.esm.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'index.blank.esm.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'index.common.esm.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'index.simple.esm.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.all.js'), nodePath.resolve(ecDir, 'echarts.all.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'echarts.blank.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'echarts.common.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'echarts.simple.js'));
             fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'esm'));
 
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.esm.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.blank.esm.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.esm.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.esm.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.all.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.blank.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.common.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.simple.js'), 'esm');
 
             await transformDistributionFiles(nodePath.resolve(ecDir, 'esm'), 'esm');
             await transformDistributionFiles(nodePath.resolve(ecDir, 'types'), 'esm');

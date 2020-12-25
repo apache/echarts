@@ -183,10 +183,10 @@ todo
 
 # Distribution files
 /esm
-/index.esm.js
-/index.simple.esm.js
-/index.common.esm.js
-/index.blank.esm.js
+/echarts.all.js
+/echarts.simple.js
+/echarts.common.js
+/echarts.blank.js
 /lib
 /types
 /index.js
