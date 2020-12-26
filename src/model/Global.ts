@@ -421,7 +421,7 @@ class GlobalModel extends Model<ECUnitOption> {
             }
         });
 
-        option[OPTION_INNER_KEY] = 0;
+        delete option[OPTION_INNER_KEY];
 
         return option;
     }
