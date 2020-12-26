@@ -225,6 +225,8 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     static readonly type = 'series.graph';
     readonly type = GraphSeriesModel.type;
 
+    static readonly dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar'];
+
     private _categoriesData: List;
     private _categoriesModels: Model<GraphCategoryItemOption>[];
 

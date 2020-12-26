@@ -68,6 +68,7 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
     static readonly type = 'series.heatmap';
     readonly type = HeatmapSeriesModel.type;
 
+    static readonly dependencies = ['grid', 'geo', 'calendar'];
     // @ts-ignore
     coordinateSystem: Cartesian2D | Geo | Calendar;
 
