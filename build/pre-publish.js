@@ -94,22 +94,22 @@ const compileWorkList = [
             fsExtra.removeSync(tmpDir);
             fsExtra.removeSync(nodePath.resolve(ecDir, 'types'));
             fsExtra.removeSync(nodePath.resolve(ecDir, 'esm'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.all.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.blank.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.common.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.simple.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.blank.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.common.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.simple.js'));
         },
         after: async function () {
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.all.js'), nodePath.resolve(ecDir, 'echarts.all.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'echarts.blank.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'echarts.common.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'echarts.simple.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.all.js'), nodePath.resolve(ecDir, 'index.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'index.blank.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'index.common.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'index.simple.js'));
             fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'esm'));
 
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.all.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.blank.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.common.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.simple.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.blank.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), 'esm');
 
             await transformDistributionFiles(nodePath.resolve(ecDir, 'esm'), 'esm');
             await transformDistributionFiles(nodePath.resolve(ecDir, 'types'), 'esm');
@@ -134,28 +134,14 @@ const compileWorkList = [
         before: async function () {
             fsExtra.removeSync(tmpDir);
             fsExtra.removeSync(nodePath.resolve(ecDir, 'lib'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.blank.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.common.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.simple.js'));
         },
         after: async function () {
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.all.js'), nodePath.resolve(ecDir, 'index.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'index.blank.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'index.common.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'index.simple.js'));
             fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'lib'));
-
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.js'), 'lib');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.blank.js'), 'lib');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), 'lib');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), 'lib');
-
             await transformDistributionFiles(nodePath.resolve(ecDir, 'lib'), 'lib');
+
             removeESmoduleMark();
 
             fsExtra.removeSync(tmpDir);
-
         }
     },
     {

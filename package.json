@@ -7,8 +7,8 @@
     "visualization",
     "canvas"
   ],
-  "main": "index.js",
-  "module": "echarts.all.js",
+  "main": "lib/echarts.all.js",
+  "module": "index.js",
   "jsdelivr": "dist/echarts.min.js",
   "types": "index.d.ts",
   "homepage": "http://echarts.apache.org",
@@ -17,9 +17,10 @@
     "url": "https://github.com/apache/incubator-echarts.git"
   },
   "sideEffects": [
-    "echarts.all.js",
-    "index.blank.esm.js",
-    "index.common.esm.js",
+    "index.js",
+    "index.blank.js",
+    "index.common.js",
+    "index.simple.js",
     "esm/chart/*.js",
     "esm/components/*.js"
   ],
