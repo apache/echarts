@@ -21,10 +21,10 @@
 
 import { ComponentOption, ECBasicOption as EChartsCoreOption } from '../util/types';
 
-import { AxisPointerOption } from '../component/axisPointer/AxisPointerModel';
-import { XAXisOption, YAXisOption } from '../coord/cartesian/AxisModel';
-import { AngleAxisOption, RadiusAxisOption } from '../coord/polar/AxisModel';
-import { ParallelAxisOption } from '../coord/parallel/AxisModel';
+import type { AxisPointerOption } from '../component/axisPointer/AxisPointerModel';
+import type { XAXisOption, YAXisOption } from '../coord/cartesian/AxisModel';
+import type { AngleAxisOption, RadiusAxisOption } from '../coord/polar/AxisModel';
+import type { ParallelAxisOption } from '../coord/parallel/AxisModel';
 
 export * from '../echarts';
 export * from './api';

@@ -20,32 +20,17 @@
 import {use} from './extension';
 
 export * from './export/core';
-// ----------------------------------------------
-// All of the modules that are allowed to be
-// imported are listed below.
-//
-// Users MUST NOT import other modules that are
-// not included in this list.
-// ----------------------------------------------
 
-import {
-    CanvasRenderer
-} from './export/renderers';
+import {install as CanvasRenderer} from './renderer/installCanvasRenderer';
 
-import {
-    LineChart,
-    BarChart,
-    PieChart
-} from './export/charts';
+import {install as LineChart} from './chart/line/install';
+import {install as BarChart} from './chart/bar/install';
+import {install as PieChart} from './chart/pie/install';
 
-import {
-    GridSimpleComponent,
-    AriaComponent,
-    DatasetComponent
-} from './export/components';
+import {install as GridSimpleComponent} from './component/grid/installSimple';
+import {install as AriaComponent} from './component/aria/install';
+import {install as DatasetComponent} from './component/dataset/install';
 
-// Render via Canvas.
-// echarts.init(dom, null, { renderer: 'canvas' })
 use([CanvasRenderer]);
 
 use([

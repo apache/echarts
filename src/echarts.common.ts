@@ -20,53 +20,32 @@
 import {use} from './extension';
 
 export * from './export/core';
-// ----------------------------------------------
-// All of the modules that are allowed to be
-// imported are listed below.
-//
-// Users MUST NOT import other modules that are
-// not included in this list.
-// ----------------------------------------------
 
-import {
-    SVGRenderer,
-    CanvasRenderer
-} from './export/renderers';
+import {install as SVGRenderer} from './renderer/installSVGRenderer';
+import {install as CanvasRenderer} from './renderer/installCanvasRenderer';
 
-import {
-    LineChart,
-    BarChart,
-    PieChart,
-    ScatterChart
-} from './export/charts';
-
-import {
-    GridComponent,
-    GraphicComponent,
-    ToolboxComponent,
-    TooltipComponent,
-    AxisPointerComponent,
-    TitleComponent,
-    MarkPointComponent,
-    MarkLineComponent,
-    MarkAreaComponent,
-    LegendScrollComponent,
-    DataZoomComponent,
-    AriaComponent,
-    DatasetComponent
-} from './export/components';
+import {install as LineChart} from './chart/line/install';
+import {install as BarChart} from './chart/bar/install';
+import {install as PieChart} from './chart/pie/install';
+import {install as ScatterChart} from './chart/scatter/install';
 
 
-// -----------------
-// Render engines
-// -----------------
+import {install as GridComponent} from './component/grid/install';
+import {install as GraphicComponent} from './component/graphic/install';
+import {install as ToolboxComponent} from './component/toolbox/install';
+import {install as TooltipComponent} from './component/tooltip/install';
+import {install as AxisPointerComponent} from './component/axisPointer/install';
+import {install as TitleComponent} from './component/title/install';
+import {install as MarkPointComponent} from './component/marker/installMarkPoint';
+import {install as MarkLineComponent} from './component/marker/installMarkLine';
+import {install as MarkAreaComponent} from './component/marker/installMarkArea';
+import {install as LegendScrollComponent} from './component/legend/installLegendScroll';
+import {install as DataZoomComponent} from './component/dataZoom/install';
+import {install as AriaComponent} from './component/aria/install';
+import {install as DatasetComponent} from './component/dataset/install';
 
 
-// Render via Canvas.
-// echarts.init(dom, null, { renderer: 'canvas' })
 use([CanvasRenderer]);
-// Render via SVG.
-// echarts.init(dom, null, { renderer: 'svg' })
 use([SVGRenderer]);
 
 use([
