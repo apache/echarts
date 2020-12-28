@@ -22,8 +22,8 @@ const fse = require('fs-extra');
 const https = require('https');
 const fs = require('fs');
 const rollup = require('rollup');
-const resolve = require('rollup-plugin-node-resolve');
-const commonjs = require('rollup-plugin-commonjs');
+const resolve = require('@rollup/plugin-node-resolve');
+const commonjs = require('@rollup/plugin-commonjs');
 const config = require('./config');
 
 function modifyEChartsCode(code) {
