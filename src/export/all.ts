@@ -18,7 +18,6 @@
 */
 
 // This file is for providing types when import whole module.
-// import * as echarts from 'echarts'
 
 export * from './core';
 export * from './option';

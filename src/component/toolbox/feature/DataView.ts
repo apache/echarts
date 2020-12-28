@@ -487,6 +487,8 @@ function tryMergeDataOption(newData: DataList, originalData: DataList) {
     });
 }
 
+
+// TODO: SELF REGISTERED.
 echarts.registerAction({
     type: 'changeDataView',
     event: 'dataViewChanged',

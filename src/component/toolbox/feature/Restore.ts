@@ -51,6 +51,7 @@ class RestoreOption extends ToolboxFeature<ToolboxRestoreFeatureOption> {
     }
 }
 
+// TODO: SELF REGISTERED.
 echarts.registerAction(
     {type: 'restore', event: 'restore', update: 'prepareAndUpdate'},
     function (payload, ecModel) {

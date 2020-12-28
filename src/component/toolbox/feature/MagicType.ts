@@ -231,6 +231,7 @@ const seriesOptGenreator: Record<IconType, SeriesOptGenreator> = {
 };
 
 
+// TODO: SELF REGISTERED.
 echarts.registerAction({
     type: 'changeMagicType',
     event: 'magicTypeChanged',

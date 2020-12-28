@@ -44,6 +44,7 @@ type SeriesRecord = {
 
 // A tricky: the priority is just after dataZoom processor.
 // If dataZoom has fixed the min/max, this processor do not need to work.
+// TODO: SELF REGISTERED.
 echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER + 10, {
 
     getTargetSeries: function (ecModel) {

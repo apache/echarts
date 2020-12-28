@@ -18,7 +18,6 @@
 */
 
 // @ts-nocheck
-
 import * as echarts from '../../echarts';
 
 const ATTR = '\0_ec_interaction_mutex';
@@ -52,6 +51,7 @@ function getStore(zr) {
  *         If no userKey, release global cursor.
  * }
  */
+// TODO: SELF REGISTERED.
 echarts.registerAction(
     {type: 'takeGlobalCursor', event: 'globalCursorTaken', update: 'update'},
     function () {}
