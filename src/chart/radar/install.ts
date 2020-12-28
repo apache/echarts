@@ -17,14 +17,17 @@
 * under the License.
 */
 
-import { EChartsExtensionInstallRegisters } from '../../extension';
+import { EChartsExtensionInstallRegisters, use } from '../../extension';
 import radarLayout from '../radar/radarLayout';
 import dataFilter from '../../processor/dataFilter';
 import backwardCompat from '../radar/backwardCompat';
 import RadarView from './RadarView';
 import RadarSeriesModel from './RadarSeries';
+import { install as installRadarComponent } from '../../component/radar/install';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
+    use(installRadarComponent);
+
     registers.registerChartView(RadarView);
     registers.registerSeriesModel(RadarSeriesModel);
 

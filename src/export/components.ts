@@ -21,6 +21,7 @@ export {install as GridSimpleComponent} from '../component/grid/installSimple';
 export {install as GridComponent} from '../component/grid/install';
 
 export {install as PolarComponent} from '../component/polar/install';
+export {install as RadarComponent} from '../component/radar/install';
 
 export {install as GeoComponent} from '../component/geo/install';
 
@@ -68,6 +69,8 @@ export {
     GridComponentOption,
 
     PolarComponentOption,
+
+    RadarComponentOption,
 
     GeoComponentOption,
 

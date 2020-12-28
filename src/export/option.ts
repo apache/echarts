@@ -19,6 +19,7 @@
 
 import type {GridOption as GridComponentOption} from '../coord/cartesian/GridModel';
 import type {PolarOption as PolarComponentOption} from '../coord/polar/PolarModel';
+import type {RadarOption as RadarComponentOption} from '../coord/radar/RadarModel';
 import type {GeoOption as GeoComponentOption} from '../coord/geo/GeoModel';
 import type {
     RadiusAxisOption as RadiusAxisComponentOption,
@@ -113,6 +114,7 @@ export type LegendComponentOption = LegendOption | ScrollableLegendOption;
 export {
     GridComponentOption,
     PolarComponentOption,
+    RadarComponentOption,
     GeoComponentOption,
     XAXisComponentOption,
     YAXisComponentOption,
@@ -195,6 +197,7 @@ export interface EChartsOption extends ECBasicOption {
     aria?: AriaComponentOption;
     title?: TitleComponentOption | TitleComponentOption[];
     grid?: GridComponentOption | GridComponentOption[];
+    radar?: RadarComponentOption | RadarComponentOption[];
     polar?: PolarComponentOption | PolarComponentOption[];
     geo?: GeoComponentOption | GeoComponentOption[];
     angleAxis?: AngleAxisComponentOption | AngleAxisComponentOption[];
