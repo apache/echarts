@@ -51,8 +51,7 @@ class GridView extends ComponentView {
 const extraOption: CartesianAxisOption = {
     // gridIndex: 0,
     // gridId: '',
-    offset: 0,
-    categorySortInfo: []
+    offset: 0
 };
 
 export function install(registers: EChartsExtensionInstallRegisters) {
