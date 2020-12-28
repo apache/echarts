@@ -486,7 +486,7 @@ class BarView extends ChartView {
 
         let lastValue = Number.MAX_VALUE;
         for (let i = 0; i < oldOrder.length; ++i) {
-            const value = orderMap(oldOrder[i].ordinalNumber);
+            const value = orderMap(oldOrder[i] && oldOrder[i].ordinalNumber);
             if (value > lastValue) {
                 return true;
             }

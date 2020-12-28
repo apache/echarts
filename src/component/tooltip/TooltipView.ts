@@ -713,7 +713,8 @@ class TooltipView extends ComponentView {
         const nearPoint = this._getNearestPoint(
             [x, y],
             params,
-            tooltipModel.get('trigger')
+            tooltipModel.get('trigger'),
+            tooltipModel.get('borderColor')
         );
 
         if (formatter && zrUtil.isString(formatter)) {
@@ -750,19 +751,20 @@ class TooltipView extends ComponentView {
     private _getNearestPoint(
         point: number[],
         tooltipDataParams: TooltipCallbackDataParams | TooltipCallbackDataParams[],
-        trigger: TooltipOption['trigger']
+        trigger: TooltipOption['trigger'],
+        borderColor: ZRColor
     ): {
         color: ZRColor;
     } {
         if (trigger === 'axis' || zrUtil.isArray(tooltipDataParams)) {
             return {
-                color: this._renderMode === 'html' ? '#fff' : 'none'
+                color: borderColor || (this._renderMode === 'html' ? '#fff' : 'none')
             };
         }
 
         if (!zrUtil.isArray(tooltipDataParams)) {
             return {
-                color: tooltipDataParams.color || tooltipDataParams.borderColor
+                color: borderColor || tooltipDataParams.color || tooltipDataParams.borderColor
             };
         }
     }

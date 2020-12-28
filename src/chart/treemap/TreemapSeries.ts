@@ -535,7 +535,7 @@ function completeTreeValue(dataNode: TreemapSeriesNodeItemOption) {
  */
 function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
     const globalColorList = normalizeToArray(ecModel.get('color')) as ColorString[];
-    const globalDecalList = normalizeToArray(ecModel.get('decals')) as DecalObject[];
+    const globalDecalList = normalizeToArray(ecModel.get(['aria', 'decal', 'decals'])) as DecalObject[];
 
     if (!globalColorList) {
         return;

@@ -54,6 +54,9 @@ under the License.
         <div id="main2" class="chart"></div>
 
 
+        <div id="main3" class="chart"></div>
+
+
         <script>
 
         require(
@@ -303,6 +306,60 @@ under the License.
                         };
                     })(x);
                 }
+            }
+
+        );
+        </script>
+
+
+
+        <script>
+
+        require(
+            (testHelper.hasURLParam('en')
+                ? [
+                    'echarts',
+                    // 'echarts/lang/en',
+                ]
+                : [
+                    'echarts'
+                ]
+            ).concat(
+                [
+                    // 'echarts/chart/bar',
+                    // 'echarts/chart/line',
+                    // 'echarts/component/legend',
+                    // 'echarts/component/graphic',
+                    // 'echarts/component/grid',
+                    // 'echarts/component/tooltip',
+                    // 'echarts/component/brush',
+                    // 'echarts/component/toolbox',
+                    // 'echarts/component/title',
+                    // 'zrender/vml/vml'
+                ]
+            ),
+            function (echarts) {
+                var chart = echarts.init(document.getElementById('main3'), null, {
+                });
+                var option = {
+                    title: {
+                        text: 'When yAxis max is larger than yAxis data length, it should not get error'
+                    },
+                    xAxis: {
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: ['A', 'B', 'C'],
+                        max: 5
+                    },
+                    series: [{
+                        realtimeSort: true,
+                        type: 'bar',
+                        data: [10, 8, 2]
+                    }]
+                };
+
+                chart.setOption(option);
             }
 
         );
