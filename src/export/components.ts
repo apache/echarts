@@ -41,14 +41,13 @@ export {install as TimelineComponent} from '../component/timeline/install';
 export {install as MarkPointComponent} from '../component/marker/installMarkPoint';
 export {install as MarkLineComponent} from '../component/marker/installMarkLine';
 export {install as MarkAreaComponent} from '../component/marker/installMarkArea';
-export {install as LegendScrollComponent} from '../component/legend/installLegendScroll';
 
 export {install as LegendComponent} from '../component/legend/install';
+export {install as LegendScrollComponent} from '../component/legend/installLegendScroll';
+export {install as LegendPlainComponent} from '../component/legend/installLegendPlain';
 
 export {install as DataZoomComponent} from '../component/dataZoom/install';
-
 export {install as DataZoomInsideComponent} from '../component/dataZoom/installDataZoomInside';
-
 export {install as DataZoomSliderComponent} from '../component/dataZoom/installDataZoomSlider';
 
 export {install as VisualMapComponent} from '../component/visualMap/install';

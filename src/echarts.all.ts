@@ -75,7 +75,6 @@ import {
     MarkPointComponent,
     MarkLineComponent,
     MarkAreaComponent,
-    LegendScrollComponent,
     LegendComponent,
     DataZoomComponent,
     DataZoomInsideComponent,
@@ -280,12 +279,6 @@ use(MarkLineComponent);
 //     series: [{markArea: {...}}]
 // });
 use(MarkAreaComponent);
-
-// `legend` component scrollable, for example:
-// chart.setOption({
-//     legend: {type: 'scroll'}
-// });
-use(LegendScrollComponent);
 
 // `legend` component not scrollable. for example:
 // chart.setOption({

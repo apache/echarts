@@ -39,7 +39,7 @@ import {install as TitleComponent} from './component/title/install';
 import {install as MarkPointComponent} from './component/marker/installMarkPoint';
 import {install as MarkLineComponent} from './component/marker/installMarkLine';
 import {install as MarkAreaComponent} from './component/marker/installMarkArea';
-import {install as LegendScrollComponent} from './component/legend/installLegendScroll';
+import {install as LegendComponent} from './component/legend/install';
 import {install as DataZoomComponent} from './component/dataZoom/install';
 import {install as AriaComponent} from './component/aria/install';
 import {install as DatasetComponent} from './component/dataset/install';
@@ -59,7 +59,7 @@ use([
     GraphicComponent,
     TooltipComponent,
     AxisPointerComponent,
-    LegendScrollComponent,
+    LegendComponent,
     GridComponent,
     TitleComponent,
     MarkPointComponent,

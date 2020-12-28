@@ -17,11 +17,20 @@
 * under the License.
 */
 
-import { EChartsExtensionInstallRegisters, use } from '../../extension';
-import {install as installLegendPlain} from './installLegendPlain';
-import {install as installLegendScroll} from './installLegendScroll';
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import LegendModel from './LegendModel';
+import LegendView from './LegendView';
+import legendFilter from './legendFilter';
+import { installLegendAction } from './legendAction';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
-    use(installLegendPlain);
-    use(installLegendScroll);
+    registers.registerComponentModel(LegendModel);
+    registers.registerComponentView(LegendView);
+
+    registers.registerProcessor(registers.PRIORITY.PROCESSOR.SERIES_FILTER, legendFilter);
+    registers.registerSubTypeDefaulter('legend', function () {
+        return 'plain';
+    });
+
+    installLegendAction(registers);
 }

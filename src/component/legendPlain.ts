@@ -17,11 +17,9 @@
 * under the License.
 */
 
-import { EChartsExtensionInstallRegisters, use } from '../../extension';
-import {install as installLegendPlain} from './installLegendPlain';
-import {install as installLegendScroll} from './installLegendScroll';
+// Do not contain scrollable legend, for sake of file size.
 
-export function install(registers: EChartsExtensionInstallRegisters) {
-    use(installLegendPlain);
-    use(installLegendScroll);
-}
+import { use } from '../extension';
+import { install } from './legend/installLegendPlain';
+
+use(install);
