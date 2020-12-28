@@ -18,7 +18,6 @@
 */
 
 
-// import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import AxisBuilder from './AxisBuilder';
 import BrushController, {

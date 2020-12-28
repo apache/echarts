@@ -17,8 +17,6 @@
 * under the License.
 */
 
-
-import * as echarts from '../../echarts';
 import * as helper from '../helper/treeHelper';
 import { Payload } from '../../util/types';
 import TreemapSeriesModel from './TreemapSeries';

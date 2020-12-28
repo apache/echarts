@@ -18,7 +18,6 @@
 */
 
 
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import * as visualSolution from '../../visual/visualSolution';

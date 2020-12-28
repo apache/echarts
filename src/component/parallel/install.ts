@@ -26,6 +26,7 @@ import parallelCoordSysCreator from '../../coord/parallel/parallelCreator';
 import axisModelCreator from '../../coord/axisModelCreator';
 import ParallelAxisModel, {ParallelAxisOption} from '../../coord/parallel/AxisModel';
 import ParallelAxisView from '../axis/ParallelAxisView';
+import { installParallelActions } from '../axis/parallelAxisAction';
 
 const defaultAxisOption: ParallelAxisOption = {
     type: 'value',
@@ -53,4 +54,6 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     axisModelCreator<ParallelAxisOption, typeof ParallelAxisModel>(
         registers, 'parallel', ParallelAxisModel, defaultAxisOption
     );
+
+    installParallelActions(registers);
 }

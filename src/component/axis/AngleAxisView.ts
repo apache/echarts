@@ -26,7 +26,6 @@ import AxisBuilder from './AxisBuilder';
 import { AngleAxisModel } from '../../coord/polar/AxisModel';
 import GlobalModel from '../../model/Global';
 import Polar from '../../coord/polar/Polar';
-import ComponentView from '../../view/Component';
 import AngleAxis from '../../coord/polar/AngleAxis';
 import { ZRTextAlign, ZRTextVerticalAlign, ColorString } from '../../util/types';
 import { getECData } from '../../util/innerStore';
