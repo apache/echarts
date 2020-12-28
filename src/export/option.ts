@@ -79,7 +79,6 @@ import type {ThemeRiverSeriesOption as ThemeRiverSeriesOptionInner} from '../cha
 import type {SunburstSeriesOption as SunburstSeriesOptionInner} from '../chart/sunburst/SunburstSeries';
 import type {CustomSeriesOption as CustomSeriesOptionInner} from '../chart/custom/install';
 import type { GraphicComponentLooseOption as GraphicComponentOption } from '../component/graphic/install';
-import type { AriaOption as AriaComponentOption } from '../component/aria/install';
 import type { DatasetOption as DatasetComponentOption } from '../component/dataset/install';
 
 import type {ToolboxBrushFeatureOption} from '../component/toolbox/feature/Brush';
@@ -91,7 +90,7 @@ import type {ToolboxSaveAsImageFeatureOption} from '../component/toolbox/feature
 import type {ToolboxFeatureOption} from '../component/toolbox/featureManager';
 
 
-import type { ECBasicOption, SeriesTooltipOption } from '../util/types';
+import type { ECBasicOption, SeriesTooltipOption, AriaOption as AriaComponentOption } from '../util/types';
 
 interface ToolboxComponentOption extends ToolboxOption {
     feature?: {

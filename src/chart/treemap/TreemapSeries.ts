@@ -35,7 +35,8 @@ import {
     OptionName,
     DecalObject,
     SeriesLabelOption,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    AriaOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -535,7 +536,9 @@ function completeTreeValue(dataNode: TreemapSeriesNodeItemOption) {
  */
 function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
     const globalColorList = normalizeToArray(ecModel.get('color')) as ColorString[];
-    const globalDecalList = normalizeToArray(ecModel.get(['aria', 'decal', 'decals'])) as DecalObject[];
+    const globalDecalList = normalizeToArray(
+        (ecModel as Model<AriaOptionMixin>).get(['aria', 'decal', 'decals'])
+    ) as DecalObject[];
 
     if (!globalColorList) {
         return;

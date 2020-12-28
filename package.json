@@ -14,7 +14,7 @@
     "canvas",
     "svg"
   ],
-  "main": "lib/echarts.all.js",
+  "main": "dist/echarts.js",
   "module": "index.js",
   "jsdelivr": "dist/echarts.min.js",
   "types": "index.d.ts",
@@ -32,8 +32,10 @@
     "index.blank.js",
     "index.common.js",
     "index.simple.js",
-    "esm/chart/*.js",
-    "esm/components/*.js"
+    "lib/chart/*.js",
+    "lib/components/*.js",
+    "theme/*.js",
+    "i18n/*.js"
   ],
   "scripts": {
     "prepublish": "node build/build.js --prepublish",

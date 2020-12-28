@@ -24,10 +24,9 @@ import GlobalModel from '../model/Global';
 import Model from '../model/Model';
 import SeriesModel from '../model/Series';
 import {makeInner} from '../util/model';
-import {Dictionary, DecalObject, InnerDecalObject} from '../util/types';
+import {Dictionary, DecalObject, InnerDecalObject, AriaOption} from '../util/types';
 import {LocaleOption} from '../locale';
 import { getDecalFromPalette } from '../model/mixin/palette';
-import type {AriaOption} from '../component/aria/install';
 import type {TitleOption} from '../component/title/install';
 
 const DEFAULT_OPTION: AriaOption = {

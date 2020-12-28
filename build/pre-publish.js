@@ -67,10 +67,10 @@ const extensionSrcGlobby = {
     cwd: ecDir
 };
 const extensionSrcDir = nodePath.resolve(ecDir, 'extension-src');
-const extensionCJSDir = nodePath.resolve(ecDir, 'extension');
-const extensionESMDir = nodePath.resolve(ecDir, 'extension-esm');
+const extensionESMDir = nodePath.resolve(ecDir, 'extension');
 
 const typesDir = nodePath.resolve(ecDir, 'types');
+const esmDir = 'lib';
 
 
 const compileWorkList = [
@@ -93,7 +93,7 @@ const compileWorkList = [
         before: async function () {
             fsExtra.removeSync(tmpDir);
             fsExtra.removeSync(nodePath.resolve(ecDir, 'types'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'esm'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, esmDir));
             fsExtra.removeSync(nodePath.resolve(ecDir, 'index.js'));
             fsExtra.removeSync(nodePath.resolve(ecDir, 'index.blank.js'));
             fsExtra.removeSync(nodePath.resolve(ecDir, 'index.common.js'));
@@ -104,64 +104,16 @@ const compileWorkList = [
             fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'index.blank.js'));
             fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'index.common.js'));
             fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'index.simple.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'esm'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, esmDir));
 
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.blank.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.js'), esmDir);
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.blank.js'), esmDir);
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), esmDir);
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), esmDir);
 
-            await transformDistributionFiles(nodePath.resolve(ecDir, 'esm'), 'esm');
-            await transformDistributionFiles(nodePath.resolve(ecDir, 'types'), 'esm');
+            await transformDistributionFiles(nodePath.resolve(ecDir, esmDir), esmDir);
+            await transformDistributionFiles(nodePath.resolve(ecDir, 'types'), esmDir);
             fsExtra.removeSync(tmpDir);
-        }
-    },
-    {
-        logLabel: 'main ts -> js-cjs',
-        compilerOptionsOverride: {
-            module: 'CommonJS',
-            // `rootDir` Only use to control the output
-            // directory structure with --outDir.
-            rootDir: ecDir,
-            outDir: tmpDir
-        },
-        srcGlobby: mainSrcGlobby,
-        transformOptions: {
-            filesGlobby: {patterns: ['**/*.js'], cwd: tmpDir},
-            preamble: preamble.js,
-            transformDEV: true
-        },
-        before: async function () {
-            fsExtra.removeSync(tmpDir);
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'lib'));
-        },
-        after: async function () {
-            fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'lib'));
-            await transformDistributionFiles(nodePath.resolve(ecDir, 'lib'), 'lib');
-
-            removeESmoduleMark();
-
-            fsExtra.removeSync(tmpDir);
-        }
-    },
-    {
-        logLabel: 'extension ts -> js-cjs',
-        compilerOptionsOverride: {
-            module: 'CommonJS',
-            rootDir: extensionSrcDir,
-            outDir: extensionCJSDir
-        },
-        srcGlobby: extensionSrcGlobby,
-        transformOptions: {
-            filesGlobby: {patterns: ['**/*.js'], cwd: extensionCJSDir},
-            preamble: preamble.js,
-            transformDEV: true
-        },
-        before: async function () {
-            fsExtra.removeSync(extensionCJSDir);
-        },
-        after: async function () {
-            await transformDistributionFiles(extensionCJSDir, 'lib');
         }
     },
     {
@@ -181,7 +133,7 @@ const compileWorkList = [
             fsExtra.removeSync(extensionESMDir);
         },
         after: async function () {
-            await transformDistributionFiles(extensionESMDir, 'esm');
+            await transformDistributionFiles(extensionESMDir, 'lib');
         }
     }
 ];

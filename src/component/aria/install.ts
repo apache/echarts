@@ -20,54 +20,6 @@
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import ariaVisual from '../../visual/aria';
 import ariaPreprocessor from './preprocessor';
-import { DecalObject } from '../../util/types';
-
-export interface AriaLabelOption {
-    enabled?: boolean;
-    description?: string;
-    general?: {
-        withTitle?: string;
-        withoutTitle?: string;
-    };
-    series?: {
-        maxCount?: number;
-        single?: {
-            prefix?: string;
-            withName?: string;
-            withoutName?: string;
-        };
-        multiple?: {
-            prefix?: string;
-            withName?: string;
-            withoutName?: string;
-            separator?: {
-                middle?: string;
-                end?: string;
-            }
-        }
-    };
-    data?: {
-        maxCount?: number;
-        allData?: string;
-        partialData?: string;
-        withName?: string;
-        withoutName?: string;
-        separator?: {
-            middle?: string;
-            end?: string;
-        }
-    }
-}
-
-// Extending is for compating ECharts 4
-export interface AriaOption extends AriaLabelOption {
-    enabled?: boolean;
-    label?: AriaLabelOption;
-    decal?: {
-        show?: boolean;
-        decals?: DecalObject | DecalObject[];
-    };
-}
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerPreprocessor(ariaPreprocessor);

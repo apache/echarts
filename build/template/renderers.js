@@ -17,4 +17,4 @@
 * under the License.
 */
 
-export * from './esm/export/renderers';
+export * from './lib/export/renderers';

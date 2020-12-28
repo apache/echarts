@@ -24,4 +24,4 @@
 // import * as LineChart_1 './chart/line/install'; export {LineChart_1 as LineChart};
 // Treeshaking in webpack will not work even if we configured sideEffects to false in package.json
 
-export * from './esm/export/charts';
+export * from './lib/export/charts';
