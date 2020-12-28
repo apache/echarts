@@ -18,7 +18,9 @@
 */
 
 import seedrandom from 'seedrandom';
-import './timer';
+import MockDate from './MockDate';
+
+window.Date = MockDate;
 
 if (typeof __TEST_PLAYBACK_SPEED__ === 'undefined') {
     window.__TEST_PLAYBACK_SPEED__ = 1;

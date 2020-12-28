@@ -37,5 +37,6 @@ function MockDate(...args) {
 MockDate.prototype = Object.create(NativeDate.prototype);
 Object.setPrototypeOf(MockDate, NativeDate);
 MockDate.now = mockNow;
-window.Date = MockDate;
 
+
+export default MockDate;
