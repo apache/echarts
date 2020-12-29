@@ -36,6 +36,11 @@ under the License.
                 height: 1000px;
                 margin-bottom: 30px;
             }
+            #main2 {
+                width: 100%;
+                height: 300px;
+                margin-bottom: 30px;
+            }
             #formatterSwitchButtons {
                 margin: 10px;
                 padding: 10px;
@@ -122,11 +127,11 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
         <script>
 
             require([
                 'echarts',
-                'theme/infographic'
                 // 'echarts/chart/line',
                 // 'echarts/component/title',
                 // 'echarts/component/legend',
@@ -284,7 +289,8 @@ under the License.
                                         endLabel: {
                                             show: true,
                                             formatter: _endLabelFormatter,
-                                            fontSize: 14
+                                            fontSize: 20,
+                                            distance: 10
                                         },
                                         emphasis: {
                                             endLabel: {
@@ -316,6 +322,75 @@ under the License.
                     })(cid);
 
                 }
+
+            })
+
+        </script>
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xData = [];
+                var data = [];
+                var value = 200;
+                var positive = 1;
+                for (var i = 0; i < 12; ++i) {
+                    xData.push(i + '');
+                    var plus = i === 6 || i === 7
+                        ? 0
+                        : positive * Math.round(Math.random() * 1000);
+                    value = plus + value;
+                    data.push(i === 3 ? '-' : value);
+
+                    if (Math.random() > 0.7) {
+                        positive = -1 * positive;
+                    }
+                }
+
+                var chart = echarts.init(document.getElementById('main2'));
+                var option = {
+                    title: [{
+                        text: 'distance 50, offset [0, 20], rotate 5\nonhover: distance -50, offset [0, -20], rotate -5',
+                        textAlign: 'center',
+                        left: '50%',
+                        top: 0
+                    }],
+                    xAxis: [{
+                        data: xData
+                    }],
+                    yAxis: [{
+                    }],
+                    series: [{
+                        type: 'line',
+                        data: data,
+                        label: {
+                            show: true
+                        },
+                        endLabel: {
+                            show: true,
+                            formatter: _endLabelFormatter,
+                            fontSize: 14,
+                            distance: 50,
+                            offset: [0, 20],
+                            rotate: 5
+                        },
+                        emphasis: {
+                            endLabel: {
+                                color: 'red',
+                                distance: -50,
+                                offset: [0, -20],
+                                rotate: -5
+                            }
+                        }
+                    }],
+                    animationDuration: 10000,
+                    animationDurationUpdate: 500
+                };
+                chart.setOption(option);
 
             })
 
