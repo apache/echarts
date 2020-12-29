@@ -24,11 +24,11 @@ import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/st
 import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
 import List from '../../data/List';
-import { ColorString, BlurScope, AnimationOption } from '../../util/types';
+import { ColorString, BlurScope, AnimationOption, SymbolClip } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
-import { extend } from 'zrender/src/core/util';
+import { extend, isArray, isNumber, map } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 
@@ -157,6 +157,7 @@ class Symbol extends graphic.Group {
         const isInit = symbolType !== this._symbolType;
         const disableAnimation = opts && opts.disableAnimation;
 
+
         if (isInit) {
             const keepAspect = data.getItemVisual(idx, 'symbolKeepAspect');
             this._createSymbol(symbolType as string, data, idx, symbolSize, keepAspect);
@@ -278,7 +279,7 @@ class Symbol extends graphic.Group {
                 // TODO other properties like x, y ?
                 image: pathStyle.image,
                 x: pathStyle.x, y: pathStyle.y,
-                width: pathStyle.width, height: pathStyle.height
+                width: pathStyle.width, height: pathStyle.height,
             }, symbolStyle));
         }
         else {
@@ -295,8 +296,8 @@ class Symbol extends graphic.Group {
             symbolPath.style.decal = null;
             symbolPath.setColor(visualColor, opts && opts.symbolInnerColor);
             symbolPath.style.strokeNoScale = true;
-
         }
+
         const liftZ = data.getItemVisual(idx, 'liftZ');
         const z2Origin = this._z2;
         if (liftZ != null) {
@@ -330,6 +331,20 @@ class Symbol extends graphic.Group {
 
         this._sizeX = symbolSize[0] / 2;
         this._sizeY = symbolSize[1] / 2;
+
+        const symbolClip = data.getItemVisual(idx, 'symbolClip');
+        console.log(symbolClip)
+
+        symbolPath.getClipPath() && symbolPath.removeClipPath();
+
+        if (symbolClip) {
+            const clipPath = makeClipPath(symbolClip, symbolSize);
+            if (clipPath) {
+                clipPath.scaleX = 1 / this._sizeX;
+                clipPath.scaleY = 1 / this._sizeY;
+                symbolPath.setClipPath(clipPath);
+            }
+        }
 
         const emphasisState = symbolPath.ensureState('emphasis');
 
@@ -409,5 +424,78 @@ function driftSymbol(this: ECSymbol, dx: number, dy: number) {
     this.parent.drift(dx, dy);
 }
 
+function makeClipPath(clip: SymbolClip, symbolSize: number[]): graphic.Path {
+    if (!clip) {
+        return;
+    }
+    const size = getSymbolClipShapeSize(clip, symbolSize);
+    let radius = clip.radius;
+    switch (clip.type) {
+        case 'circle':
+            // consider circle radius in percentage
+            isArray(radius) && (radius = radius[0]);
+            radius = parsePercent(radius, size[0]);
+            const maxRadius = size[0] / 2;
+            // restrict the max radius
+            if (radius > maxRadius) {
+                radius = maxRadius;
+            }
+            return radius > 0 && new graphic.Circle({shape: {r: radius}});
+        case 'rect':
+            return size[0] > 0 && size[1] > 0 && new graphic.Rect({
+                shape: {
+                    x: -size[0] / 2,
+                    y: -size[1] / 2,
+                    width: size[0],
+                    height: size[1],
+                    // not support ellipse yet
+                    r: radius && isArray(radius)
+                        ? map(radius, r => +r)
+                        : +(radius as number | string)
+                }
+            });
+        case 'polygon':
+            return clip.points && clip.points.length > 0 && new graphic.Polygon({
+                shape: {
+                    points: clip.points
+                }
+            });
+        case 'path':
+            return size[0] > 0 && size[1] > 0
+                ? clip.path instanceof graphic.Path
+                    ? clip.path
+                    : graphic.makePath(clip.path, {}, {
+                        x: -size[0] / 2,
+                        y: -size[1] / 2,
+                        width: size[0],
+                        height: size[1]
+                    }, 'center') as graphic.Path
+                : void 0;
+    }
+}
+
+function getSymbolClipShapeSize(clip: SymbolClip, symbolSize?: number[]): [number, number] {
+    const size = [0, 0] as [number, number];
+    let size0: number | string;
+    let size1: number | string;
+    const clipSize = clip.size;
+
+    if (!clipSize) {
+        size0 = symbolSize[0];
+        size1 = symbolSize[1];
+    }
+    else if (isArray(clipSize)) {
+        size0 = clipSize[0];
+        size1 = clipSize[1];
+    }
+    else {
+        size0 = size1 = clipSize;
+    }
+
+    size0 && (size[0] = parsePercent(size0, symbolSize[0]));
+    size1 && (size[1] = parsePercent(size1, symbolSize[1]));
+
+    return size;
+}
 
 export default Symbol;
