@@ -501,8 +501,7 @@ function getEndLabelStateSpecified(endLabelModel: Model, coordSys: Cartesian2D) 
     return {
         normal: {
             align: endLabelModel.get('align') || align,
-            verticalAlign: endLabelModel.get('verticalAlign') || verticalAlign,
-            padding: endLabelModel.get('padding') || 0
+            verticalAlign: endLabelModel.get('verticalAlign') || verticalAlign
         }
     };
 }

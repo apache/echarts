@@ -354,7 +354,7 @@ under the License.
                 var chart = echarts.init(document.getElementById('main2'));
                 var option = {
                     title: [{
-                        text: 'distance 50, offset [0, 20], rotate 5\nonhover: distance -50, offset [0, -20], rotate -5',
+                        text: 'distance 50, offset [0, 20], rotate 5\nonhover: offset [0, -20], rotate -5',
                         textAlign: 'center',
                         left: '50%',
                         top: 0
@@ -381,7 +381,6 @@ under the License.
                         emphasis: {
                             endLabel: {
                                 color: 'red',
-                                distance: -50,
                                 offset: [0, -20],
                                 rotate: -5
                             }
