@@ -33,7 +33,7 @@ export default {
     init() {
         if (__DEV__) {
             /* eslint-disable-next-line */
-            console.error(`"import echarts from 'echarts/lib/echarts'" is not suggested anymore. Use "import * as echarts from 'echarts/lib/echarts'" instead;`);
+            console.error(`"import echarts from 'echarts/lib/echarts'" is not supported anymore. Use "import * as echarts from 'echarts/lib/echarts'" instead;`);
         }
         // @ts-ignore
         return init.apply(null, arguments);
