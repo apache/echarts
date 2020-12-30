@@ -34,7 +34,7 @@
     "index.simple.js",
     "lib/echarts.js",
     "lib/chart/*.js",
-    "lib/components/*.js",
+    "lib/component/*.js",
     "theme/*.js",
     "i18n/*.js"
   ],
