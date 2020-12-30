@@ -23,7 +23,7 @@ import * as graphic from '../../util/graphic';
 import ComponentView from '../../view/Component';
 import RadarModel from '../../coord/radar/RadarModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { ZRColor } from '../../util/types';
 
 const axisBuilderAttrs = [

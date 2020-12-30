@@ -26,7 +26,7 @@ import * as graphic from '../../util/graphic';
 import * as layoutUtil from '../../util/layout';
 import LegendView from './LegendView';
 import { LegendSelectorButtonOption } from './LegendModel';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import GlobalModel from '../../model/Global';
 import ScrollableLegendModel, {ScrollableLegendOption} from './ScrollableLegendModel';
 import Displayable from 'zrender/src/graphic/Displayable';

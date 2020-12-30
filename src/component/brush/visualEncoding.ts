@@ -25,7 +25,7 @@ import { BrushSelectableArea, makeBrushCommonSelectorForSeries } from './selecto
 import * as throttleUtil from '../../util/throttle';
 import BrushTargetManager from '../helper/BrushTargetManager';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload } from '../../util/types';
 import BrushModel, { BrushAreaParamInternal } from './BrushModel';
 import SeriesModel from '../../model/Series';

@@ -34,7 +34,7 @@ import SeriesModel from '../../model/Series';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import DataDimensionInfo from '../../data/DataDimensionInfo';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import MarkerModel from './MarkerModel';
 import { makeInner } from '../../util/model';
 import { getVisualFromData } from '../../visual/helper';

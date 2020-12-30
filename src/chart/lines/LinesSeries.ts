@@ -22,7 +22,7 @@
 import SeriesModel from '../../model/Series';
 import List from '../../data/List';
 import { concatArray, mergeAll, map } from 'zrender/src/core/util';
-import CoordinateSystem from '../../CoordinateSystem';
+import CoordinateSystem from '../../core/CoordinateSystem';
 import {
     SeriesOption,
     SeriesOnCartesianOptionMixin,

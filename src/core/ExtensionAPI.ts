@@ -19,13 +19,14 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import {EChartsType} from './echarts';
-import {CoordinateSystemMaster} from './coord/CoordinateSystem';
-import Element from 'zrender/src/Element';
-import ComponentModel from './model/Component';
-import ComponentView from './view/Component';
-import ChartView from './view/Chart';
-import SeriesModel from './model/Series';
-import GlobalModel from './model/Global';
+
+import type {CoordinateSystemMaster} from '../coord/CoordinateSystem';
+import type Element from 'zrender/src/Element';
+import type ComponentModel from '../model/Component';
+import type ComponentView from '../view/Component';
+import type ChartView from '../view/Chart';
+import type SeriesModel from '../model/Series';
+import type GlobalModel from '../model/Global';
 
 const availableMethods: (keyof EChartsType)[] = [
     'getDom',

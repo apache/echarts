@@ -18,9 +18,10 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import GlobalModel from './model/Global';
-import ExtensionAPI from './ExtensionAPI';
-import { CoordinateSystemCreator, CoordinateSystemMaster } from './coord/CoordinateSystem';
+
+import type GlobalModel from '../model/Global';
+import type ExtensionAPI from './ExtensionAPI';
+import type { CoordinateSystemCreator, CoordinateSystemMaster } from '../coord/CoordinateSystem';
 
 const coordinateSystemCreators: {[type: string]: CoordinateSystemCreator} = {};
 

@@ -23,7 +23,7 @@ import ChartView from '../../view/Chart';
 import List from '../../data/List';
 import ParallelSeriesModel, { ParallelSeriesDataItemOption } from './ParallelSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { StageHandlerProgressParams, ParsedValue, Payload } from '../../util/types';
 import Parallel from '../../coord/parallel/Parallel';
 import { OptionAxisType } from '../../coord/axisCommonTypes';

@@ -17,10 +17,10 @@
 * under the License.
 */
 
-import * as echarts from '../../../echarts';
+import * as echarts from '../../../core/echarts';
 import * as history from '../../dataZoom/history';
 import { ToolboxFeatureOption, ToolboxFeature } from '../featureManager';
-import ExtensionAPI from '../../../ExtensionAPI';
+import ExtensionAPI from '../../../core/ExtensionAPI';
 import GlobalModel from '../../../model/Global';
 
 export interface ToolboxRestoreFeatureOption extends ToolboxFeatureOption {

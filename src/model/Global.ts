@@ -57,9 +57,9 @@ import {
     AriaOptionMixin
 } from '../util/types';
 import OptionManager from './OptionManager';
-import Scheduler from '../stream/Scheduler';
+import Scheduler from '../core/Scheduler';
 import { concatInternalOptions } from './internalComponentCreator';
-import { LocaleOption } from '../locale';
+import { LocaleOption } from '../core/locale';
 import {PaletteMixin} from './mixin/palette';
 
 export interface GlobalModelSetOptionOpts {

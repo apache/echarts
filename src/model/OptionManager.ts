@@ -23,7 +23,7 @@
 
 
 // import ComponentModel, { ComponentModelConstructor } from './Component';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import {
     OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECBasicOption, SeriesOption
 } from '../util/types';

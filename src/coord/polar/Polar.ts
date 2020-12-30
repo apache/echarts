@@ -24,7 +24,7 @@ import { CoordinateSystem, CoordinateSystemMaster, CoordinateSystemClipArea } fr
 import GlobalModel from '../../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 
 interface Polar {
     update(ecModel: GlobalModel, api: ExtensionAPI): void

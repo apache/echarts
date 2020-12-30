@@ -23,7 +23,7 @@ import BrushController, { BrushControllerEvents, BrushCoverConfig } from '../hel
 import {layoutCovers} from './visualEncoding';
 import BrushModel from './BrushModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload } from '../../util/types';
 import ComponentView from '../../view/Component';
 

@@ -26,7 +26,7 @@ import BrushController, {
 import * as brushHelper from '../helper/brushHelper';
 import * as graphic from '../../util/graphic';
 import ComponentView from '../../view/Component';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import GlobalModel from '../../model/Global';
 import ParallelAxisModel, { ParallelAreaSelectStyleProps } from '../../coord/parallel/AxisModel';
 import { Payload } from '../../util/types';

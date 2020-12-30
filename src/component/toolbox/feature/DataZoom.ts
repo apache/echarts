@@ -30,7 +30,7 @@ import {
     ToolboxFeatureOption
 } from '../featureManager';
 import GlobalModel from '../../../model/Global';
-import ExtensionAPI from '../../../ExtensionAPI';
+import ExtensionAPI from '../../../core/ExtensionAPI';
 import { Payload, Dictionary, ComponentOption, ItemStyleOption } from '../../../util/types';
 import Cartesian2D from '../../../coord/cartesian/Cartesian2D';
 import CartesianAxisModel from '../../../coord/cartesian/AxisModel';

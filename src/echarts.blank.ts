@@ -17,11 +17,4 @@
 * under the License.
 */
 
-export * from './export/core';
-import { use } from './extension';
-
-import {install as CanvasRenderer} from './renderer/installCanvasRenderer';
-import {install as DatasetComponent} from './component/dataset/install';
-
-// Default to have canvas renderer and dataset for compitatble reason.
-use([CanvasRenderer, DatasetComponent]);
+export * from './echarts';

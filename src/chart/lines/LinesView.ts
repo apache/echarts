@@ -28,7 +28,7 @@ import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import ChartView from '../../view/Chart';
 import LinesSeriesModel from './LinesSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import { StageHandlerProgressParams, StageHandlerProgressExecutor } from '../../util/types';
 import List from '../../data/List';

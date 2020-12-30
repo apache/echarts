@@ -24,7 +24,7 @@
 import SunburstSeriesModel from './SunburstSeries';
 import { Payload } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { extend } from 'zrender/src/core/util';
 import { deprecateReplaceLog } from '../../util/log';
 import { EChartsExtensionInstallRegisters } from '../../extension';

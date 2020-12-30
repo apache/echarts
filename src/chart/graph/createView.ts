@@ -22,7 +22,7 @@ import View from '../../coord/View';
 import {getLayoutRect} from '../../util/layout';
 import * as bbox from 'zrender/src/core/bbox';
 import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import GlobalModel from '../../model/Global';
 import { extend } from 'zrender/src/core/util';
 

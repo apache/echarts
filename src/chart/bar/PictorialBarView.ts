@@ -26,7 +26,7 @@ import {createSymbol} from '../../util/symbol';
 import {parsePercent, isNumeric} from '../../util/number';
 import ChartView from '../../view/Chart';
 import PictorialBarSeriesModel, {PictorialBarDataItemOption} from './PictorialBarSeries';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import List from '../../data/List';
 import GlobalModel from '../../model/Global';
 import Model from '../../model/Model';

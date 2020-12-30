@@ -66,7 +66,7 @@ import prepareCalendar from '../../coord/calendar/prepareCustom';
 import List, { DefaultDataVisual } from '../../data/List';
 import GlobalModel from '../../model/Global';
 import { makeInner, normalizeToArray } from '../../util/model';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import { RectLike } from 'zrender/src/core/BoundingRect';

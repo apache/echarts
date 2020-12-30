@@ -32,6 +32,7 @@
     "index.blank.js",
     "index.common.js",
     "index.simple.js",
+    "lib/echarts.js",
     "lib/chart/*.js",
     "lib/components/*.js",
     "theme/*.js",

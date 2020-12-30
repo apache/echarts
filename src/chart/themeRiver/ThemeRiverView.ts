@@ -26,7 +26,7 @@ import DataDiffer from '../../data/DataDiffer';
 import ChartView from '../../view/Chart';
 import ThemeRiverSeriesModel from './ThemeRiverSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { ColorString } from '../../util/types';
 

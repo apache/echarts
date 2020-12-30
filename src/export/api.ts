@@ -26,7 +26,7 @@ export * as vector from 'zrender/src/core/vector';
 export * as zrUtil from 'zrender/src/core/util';
 export * as color from 'zrender/src/tool/color';
 export {throttle} from '../util/throttle';
-export * as helper from '../helper';
+export * as helper from './api/helper';
 
 export {use} from '../extension';
 

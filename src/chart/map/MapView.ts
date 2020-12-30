@@ -23,7 +23,7 @@ import MapDraw from '../../component/helper/MapDraw';
 import ChartView from '../../view/Chart';
 import MapSeries, { MapDataItemOption } from './MapSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, DisplayState, ECElement } from '../../util/types';
 import Model from '../../model/Model';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';

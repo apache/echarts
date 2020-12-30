@@ -34,7 +34,7 @@ import {
 } from '../../util/types';
 import ComponentView from '../../view/Component';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import {windowOpen} from '../../util/format';
 import { EChartsExtensionInstallRegisters } from '../../extension';
 

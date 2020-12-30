@@ -22,20 +22,20 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
-import createListFromArray from './chart/helper/createListFromArray';
+import createListFromArray from '../../chart/helper/createListFromArray';
 // import createGraphFromNodeEdge from './chart/helper/createGraphFromNodeEdge';
-import * as axisHelper from './coord/axisHelper';
-import {AxisModelCommonMixin} from './coord/axisModelCommonMixin';
-import Model from './model/Model';
-import {getLayoutRect} from './util/layout';
+import * as axisHelper from '../../coord/axisHelper';
+import {AxisModelCommonMixin} from '../../coord/axisModelCommonMixin';
+import Model from '../../model/Model';
+import {getLayoutRect} from '../../util/layout';
 import {
     enableDataStack,
     isDimensionStacked,
     getStackedDimension
-} from './data/helper/dataStackHelper';
-import SeriesModel from './model/Series';
-import { AxisBaseModel } from './coord/AxisBaseModel';
-import { getECData } from './util/innerStore';
+} from '../../data/helper/dataStackHelper';
+import SeriesModel from '../../model/Series';
+import { AxisBaseModel } from '../../coord/AxisBaseModel';
+import { getECData } from '../../util/innerStore';
 
 /**
  * Create a muti dimension List structure from seriesModel.
@@ -52,7 +52,7 @@ export function createList(seriesModel: SeriesModel) {
 
 export {getLayoutRect};
 
-export {default as createDimensions} from './data/helper/createDimensions';
+export {default as createDimensions} from '../../data/helper/createDimensions';
 
 export const dataStack = {
     isDimensionStacked: isDimensionStacked,
@@ -69,7 +69,7 @@ export const dataStack = {
  * @param {number} h
  * @param {string} color
  */
-export {createSymbol} from './util/symbol';
+export {createSymbol} from '../../util/symbol';
 
 /**
  * Create scale

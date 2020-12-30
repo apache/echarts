@@ -26,10 +26,10 @@ import type { XAXisOption, YAXisOption } from '../coord/cartesian/AxisModel';
 import type { AngleAxisOption, RadiusAxisOption } from '../coord/polar/AxisModel';
 import type { ParallelAxisOption } from '../coord/parallel/AxisModel';
 
-export * from '../echarts';
+export * from '../core/echarts';
 export * from './api';
 
-export {EChartsType as ECharts} from '../echarts';
+export {EChartsType as ECharts} from '../core/echarts';
 
 export {EChartsCoreOption};
 

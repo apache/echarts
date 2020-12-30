@@ -18,7 +18,7 @@
 */
 
 // @ts-nocheck
-import * as echarts from '../../echarts';
+import * as echarts from '../../core/echarts';
 
 const ATTR = '\0_ec_interaction_mutex';
 

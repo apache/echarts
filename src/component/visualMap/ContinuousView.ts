@@ -29,7 +29,7 @@ import * as modelUtil from '../../util/model';
 import VisualMapModel from './VisualMapModel';
 import ContinuousModel from './ContinuousModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import { TextVerticalAlign, TextAlign } from 'zrender/src/core/types';
 import { ColorString, Payload } from '../../util/types';

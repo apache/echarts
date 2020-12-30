@@ -25,7 +25,7 @@ import SingleAxis from '../../coord/single/SingleAxis';
 import Single from '../../coord/single/Single';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { ScaleDataValue, VerticalAlign, CommonAxisPointerOption } from '../../util/types';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import SingleAxisModel from '../../coord/single/AxisModel';
 import Model from '../../model/Model';
 

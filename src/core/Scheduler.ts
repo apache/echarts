@@ -24,13 +24,13 @@ import {
 } from './task';
 import {getUID} from '../util/component';
 import GlobalModel from '../model/Global';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from './ExtensionAPI';
 import {normalizeToArray} from '../util/model';
 import {
     StageHandlerInternal, StageHandlerOverallReset, StageHandler,
     Payload, StageHandlerReset, StageHandlerPlan, StageHandlerProgressExecutor, SeriesLargeOptionMixin, SeriesOption
 } from '../util/types';
-import { EChartsType } from '../echarts';
+import { EChartsType } from './echarts';
 import SeriesModel from '../model/Series';
 import ChartView from '../view/Chart';
 import List from '../data/List';

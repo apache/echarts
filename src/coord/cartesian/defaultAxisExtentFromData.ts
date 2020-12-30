@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../../echarts';
+import * as echarts from '../../core/echarts';
 import { createHashMap, each, HashMap, hasOwn, keys, map } from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import { isCartesian2DSeries, findAxisModels } from './cartesianAxisHelper';

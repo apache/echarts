@@ -24,9 +24,9 @@ import pointsLayout from '../../layout/points';
 import ChartView from '../../view/Chart';
 import ScatterSeriesModel from './ScatterSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import List from '../../data/List';
-import { TaskProgressParams } from '../../stream/task';
+import { TaskProgressParams } from '../../core/task';
 import type { StageHandlerProgressExecutor } from '../../util/types';
 
 class ScatterView extends ChartView {

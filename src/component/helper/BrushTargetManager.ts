@@ -25,7 +25,7 @@ import {
     BrushPanelConfig, BrushControllerEvents, BrushType,
     BrushAreaRange, BrushDimensionMinMax
 } from './BrushController';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import GridModel from '../../coord/cartesian/GridModel';
 import GeoModel from '../../coord/geo/GeoModel';
 import { CoordinateSystemMaster } from '../../coord/CoordinateSystem';

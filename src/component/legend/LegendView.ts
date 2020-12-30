@@ -27,7 +27,7 @@ import * as layoutUtil from '../../util/layout';
 import ComponentView from '../../view/Component';
 import LegendModel, { LegendOption, LegendSelectorButtonOption, LegendTooltipFormatterParams } from './LegendModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import {
     ZRTextAlign,
     ZRColor,

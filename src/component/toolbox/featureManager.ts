@@ -19,7 +19,7 @@
 import { Dictionary, DisplayState, ZRElementEvent, ItemStyleOption, LabelOption } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 // import * as graphic from '../../util/graphic';
 import Displayable from 'zrender/src/graphic/Displayable';
 

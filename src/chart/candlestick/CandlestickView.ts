@@ -25,7 +25,7 @@ import Path, { PathProps } from 'zrender/src/graphic/Path';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import CandlestickSeriesModel, { CandlestickDataItemOption } from './CandlestickSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { StageHandlerProgressParams } from '../../util/types';
 import List from '../../data/List';
 import {CandlestickItemLayout} from './candlestickLayout';

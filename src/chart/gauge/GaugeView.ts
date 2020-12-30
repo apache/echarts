@@ -25,7 +25,7 @@ import ChartView from '../../view/Chart';
 import {parsePercent, round, linearMap} from '../../util/number';
 import GaugeSeriesModel, { GaugeDataItemOption } from './GaugeSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { ColorString, ECElement, ParsedValue } from '../../util/types';
 import List from '../../data/List';
 import Sausage from '../../util/shape/sausage';

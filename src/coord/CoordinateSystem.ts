@@ -19,7 +19,7 @@
 
 import GlobalModel from '../model/Global';
 import {ParsedModelFinder} from '../util/model';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import { DimensionDefinitionLoose, ScaleDataValue, DimensionName } from '../util/types';
 import Axis from './Axis';
 import { BoundingRect } from '../util/graphic';

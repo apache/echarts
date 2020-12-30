@@ -28,7 +28,7 @@ import MarkLineModel, { MarkLine2DDataItemOption, MarkLineOption } from './MarkL
 import { ScaleDataValue, ColorString } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { getECData } from '../../util/innerStore';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import GlobalModel from '../../model/Global';
 import MarkerModel from './MarkerModel';

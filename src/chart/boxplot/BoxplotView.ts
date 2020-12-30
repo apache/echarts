@@ -24,7 +24,7 @@ import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import BoxplotSeriesModel, { BoxplotDataItemOption } from './BoxplotSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import List from '../../data/List';
 import { BoxplotItemLayout } from './boxplotLayout';
 

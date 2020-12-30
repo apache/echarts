@@ -23,17 +23,17 @@ import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
 import * as modelUtil from '../util/model';
 import { enterEmphasis, leaveEmphasis, getHighlightDigit } from '../util/states';
-import {createTask, TaskResetCallbackReturn} from '../stream/task';
+import {createTask, TaskResetCallbackReturn} from '../core/task';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
 import SeriesModel from '../model/Series';
 import GlobalModel from '../model/Global';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import Element from 'zrender/src/Element';
 import {
     Payload, ViewRootGroup, ECEvent, EventQueryItem,
     StageHandlerPlanReturn, DisplayState, StageHandlerProgressParams
 } from '../util/types';
-import { SeriesTaskContext, SeriesTask } from '../stream/Scheduler';
+import { SeriesTaskContext, SeriesTask } from '../core/Scheduler';
 import List from '../data/List';
 
 const inner = modelUtil.makeInner<{

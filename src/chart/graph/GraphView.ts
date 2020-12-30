@@ -28,7 +28,7 @@ import adjustEdge from './adjustEdge';
 import {getNodeGlobalScale} from './graphHelper';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './GraphSeries';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import View from '../../coord/View';

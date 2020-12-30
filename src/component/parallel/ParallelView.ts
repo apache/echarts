@@ -19,7 +19,7 @@
 
 import GlobalModel from '../../model/Global';
 import ParallelModel, { ParallelCoordinateSystemOption } from '../../coord/parallel/ParallelModel';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import ComponentView from '../../view/Component';
 import { ElementEventName } from 'zrender/src/core/types';
 import { ElementEvent } from 'zrender/src/Element';

@@ -30,7 +30,7 @@ import {
     registerLoading,
     registerMap,
     PRIORITY
-} from './echarts';
+} from './core/echarts';
 import ComponentView from './view/Component';
 import ChartView from './view/Chart';
 import ComponentModel from './model/Component';

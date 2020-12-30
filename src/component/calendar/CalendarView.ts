@@ -25,7 +25,7 @@ import * as numberUtil from '../../util/number';
 import CalendarModel from '../../coord/calendar/CalendarModel';
 import {CalendarParsedDateRangeInfo, CalendarParsedDateInfo} from '../../coord/calendar/Calendar';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { LayoutOrient, OptionDataValueDate, ZRTextAlign, ZRTextVerticalAlign } from '../../util/types';
 import ComponentView from '../../view/Component';
 import { PathStyleProps } from 'zrender/src/graphic/Path';

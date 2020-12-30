@@ -17,13 +17,13 @@
 * under the License.
 */
 
-import * as echarts from '../../../echarts';
+import * as echarts from '../../../core/echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../../model/Global';
 import SeriesModel from '../../../model/Series';
 import { ToolboxFeature, ToolboxFeatureOption } from '../featureManager';
 import { ColorString, ECUnitOption, SeriesOption, Payload, Dictionary } from '../../../util/types';
-import ExtensionAPI from '../../../ExtensionAPI';
+import ExtensionAPI from '../../../core/ExtensionAPI';
 import { addEventListener } from 'zrender/src/core/event';
 import Axis from '../../../coord/Axis';
 import Cartesian2D from '../../../coord/cartesian/Cartesian2D';

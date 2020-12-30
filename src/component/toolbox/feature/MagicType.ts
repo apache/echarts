@@ -17,12 +17,12 @@
 * under the License.
 */
 
-import * as echarts from '../../../echarts';
+import * as echarts from '../../../core/echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import {ToolboxFeature, ToolboxFeatureOption, ToolboxFeatureModel} from '../featureManager';
 import { SeriesOption, ECUnitOption } from '../../../util/types';
 import GlobalModel from '../../../model/Global';
-import ExtensionAPI from '../../../ExtensionAPI';
+import ExtensionAPI from '../../../core/ExtensionAPI';
 import SeriesModel from '../../../model/Series';
 import { SINGLE_REFERRING } from '../../../util/model';
 

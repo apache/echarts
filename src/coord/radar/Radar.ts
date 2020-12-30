@@ -26,11 +26,11 @@ import {
     getScaleExtent,
     niceScaleExtent
 } from '../axisHelper';
-import CoordinateSystemManager from '../../CoordinateSystem';
+import CoordinateSystemManager from '../../core/CoordinateSystem';
 import { CoordinateSystemMaster, CoordinateSystem } from '../CoordinateSystem';
 import RadarModel from './RadarModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { ScaleDataValue } from '../../util/types';
 import { ParsedModelFinder } from '../../util/model';
 import { parseAxisModelMinMax } from '../scaleRawExtentInfo';

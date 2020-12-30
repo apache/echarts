@@ -23,9 +23,9 @@ import { extend, each, isArray } from 'zrender/src/core/util';
 import GlobalModel from '../model/Global';
 import { deprecateReplaceLog, deprecateLog } from '../util/log';
 import Eventful from 'zrender/src/core/Eventful';
-import type { EChartsType, registerAction } from '../echarts';
+import type { EChartsType, registerAction } from '../core/echarts';
 import { queryDataIndex } from '../util/model';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 
 // Legacy data selection action.
 // Inlucdes: pieSelect, pieUnSelect, pieToggleSelect, mapSelect, mapUnSelect, mapToggleSelect

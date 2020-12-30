@@ -25,7 +25,7 @@ import geoSourceManager from './geoSourceManager';
 import mapDataStorage from './mapDataStorage';
 import GeoModel, { GeoOption, RegoinOption } from './GeoModel';
 import MapSeries, { MapSeriesOption } from '../../chart/map/MapSeries';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { CoordinateSystemCreator } from '../CoordinateSystem';
 import { NameMap } from './geoTypes';
 import SeriesModel from '../../model/Series';
