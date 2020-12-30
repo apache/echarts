@@ -47,7 +47,7 @@ export function layout(axisModel: SingleAxisModel, opt?: {
 
     const positionMap = {
         horizontal: {top: rectBound[2], bottom: rectBound[3]},
-        vertical: {left: rectBound[0], right: rectBound[1]}
+        vertical: {left: rectBound[0] + (rect.width / 2), right: rectBound[1] - (rect.width / 2)}
     } as const;
 
     layout.position = [
