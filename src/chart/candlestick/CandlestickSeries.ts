@@ -112,13 +112,11 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
         clip: true,
 
         itemStyle: {
-            color: '#c23531', // 阳线 positive
-            color0: '#314656', // 阴线 negative     '#c23531', '#314656'
-            borderWidth: 1,
-            // FIXME
-            // ec2中使用的是lineStyle.color 和 lineStyle.color0
-            borderColor: '#c23531',
-            borderColor0: '#314656'
+            color: '#eb5454', // positive
+            color0: '#47b262', // negative
+            borderColor: '#d24040',
+            borderColor0: '#398f4f',
+            borderWidth: 1
         },
 
         emphasis: {
