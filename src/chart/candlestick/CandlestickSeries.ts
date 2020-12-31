@@ -114,8 +114,10 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
         itemStyle: {
             color: '#eb5454', // positive
             color0: '#47b262', // negative
-            borderColor: '#d24040',
-            borderColor0: '#398f4f',
+            borderColor: '#eb5454',
+            borderColor0: '#47b262',
+            // borderColor: '#d24040',
+            // borderColor0: '#398f4f',
             borderWidth: 1
         },
 

@@ -200,8 +200,10 @@ const theme = {
         itemStyle: {
             color: '#f64e56',
             color0: '#54ea92',
-            borderColor: '#ca2824',
-            borderColor0: '#09a443'
+            borderColor: '#f64e56',
+            borderColor0: '#54ea92'
+            // borderColor: '#ca2824',
+            // borderColor0: '#09a443'
         }
     }
 };
