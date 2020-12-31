@@ -47,7 +47,6 @@ import Path, { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
-import { VectorArray } from 'zrender/src/core/vector';
 
 
 // ---------------------------
@@ -837,13 +836,7 @@ export interface RoamOptionMixin {
 }
 
 // TODO: TYPE value type?
-export type SymbolClip = {
-    type: 'circle' | 'rect' | 'polygon' | 'path'
-    radius?: number | string | (number | string)[]
-    size?: number | string | (number | string)[]
-    points?: VectorArray[]
-    path?: string | Path
-}
+export type SymbolClip = string | Path;
 export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
 export type SymbolCallback<T> = (rawValue: any, params: T) => string;
 export type SymbolRotateCallback<T> = (rawValue: any, params: T) => number;
