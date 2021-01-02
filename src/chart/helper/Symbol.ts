@@ -329,6 +329,7 @@ class Symbol extends graphic.Group {
         this._sizeY = symbolSize[1] / 2;
 
         // symbol clip
+        symbolPath.removeClipPath();
         const symbolClip = data.getItemVisual(idx, 'symbolClip');
         if (symbolClip) {
             const clipPath = makeSymbolClipPath(symbolClip, symbolSize);
@@ -339,9 +340,6 @@ class Symbol extends graphic.Group {
                 // PENDING: ignore text clip?
                 symbolPath.getTextContent() && (symbolPath.getTextContent().ignoreClip = true);
             }
-        }
-        else {
-            symbolPath.removeClipPath();
         }
 
         // Do not execute util needed.
