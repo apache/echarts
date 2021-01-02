@@ -325,13 +325,29 @@ class Symbol extends graphic.Group {
             }
         );
 
+        this._sizeX = symbolSize[0] / 2;
+        this._sizeY = symbolSize[1] / 2;
+
+        // symbol clip
+        const symbolClip = data.getItemVisual(idx, 'symbolClip');
+        if (symbolClip) {
+            const clipPath = makeSymbolClipPath(symbolClip, symbolSize);
+            if (clipPath) {
+                clipPath.scaleX = 1 / this._sizeX;
+                clipPath.scaleY = 1 / this._sizeY;
+                symbolPath.setClipPath(clipPath);
+                // PENDING: ignore text clip?
+                symbolPath.getTextContent() && (symbolPath.getTextContent().ignoreClip = true);
+            }
+        }
+        else {
+            symbolPath.removeClipPath();
+        }
+
         // Do not execute util needed.
         function getLabelDefaultText(idx: number) {
             return useNameLabel ? data.getName(idx) : getDefaultLabel(data, idx);
         }
-
-        this._sizeX = symbolSize[0] / 2;
-        this._sizeY = symbolSize[1] / 2;
 
         const emphasisState = symbolPath.ensureState('emphasis');
 
@@ -345,20 +361,6 @@ class Symbol extends graphic.Group {
             emphasisState.scaleY = this._sizeY * scaleRatio;
         }
         this.setSymbolScale(1);
-
-        const symbolClip = data.getItemVisual(idx, 'symbolClip');
-        console.log(symbolClip)
-
-        symbolPath.getClipPath() && symbolPath.removeClipPath();
-
-        if (symbolClip) {
-            const clipPath = makeSymbolClipPath(symbolClip, symbolSize);
-            if (clipPath) {
-                clipPath.scaleX = this.scaleX / this._sizeX;
-                clipPath.scaleY = this.scaleY / this._sizeY;
-                symbolPath.setClipPath(clipPath);
-            }
-        }
 
         enableHoverEmphasis(this, focus, blurScope);
     }
