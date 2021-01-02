@@ -167,7 +167,7 @@ function createSymbolClipPath(
     }
     else if (clipType === 'path') {
         if (clip.path) {
-            graphic.makePath(clip.path, {}, {
+            clipPath = graphic.makePath(clip.path, {}, {
                 x: -symbolSize[0] / 2,
                 y: -symbolSize[1] / 2,
                 width: symbolSize[0],
