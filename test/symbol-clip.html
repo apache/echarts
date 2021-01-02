@@ -37,8 +37,11 @@ under the License.
             .test-title-inner {
                 text-align: center;
             }
-            .test-chart-block-left, .test-chart {
+            .test-chart-block-left {
                 height: 100%;
+            }
+            .test-chart {
+                height: calc(100% - 45px);
             }
         </style>
     </head>
@@ -51,7 +54,10 @@ under the License.
         <script>
         require(['echarts'], function (echarts) {
             var CLIP_PATHS = [
+                // no clip
                 'NO CLIPPING', // for test
+
+                // clip path
                 'circle(50px at 50 50)',
                 'ellipse(20px 20px at 50% 50%);',
                 'inset(10% 20% 30% 10% round 100%);',
@@ -74,9 +80,29 @@ under the License.
                 'polygon(40% 0%, 40% 20%, 100% 20%, 100% 80%, 40% 80%, 40% 100%, 0% 50%);',
                 'polygon(20% 0%, 0% 20%, 30% 50%, 0% 80%, 20% 100%, 50% 70%, 80% 100%, 100% 80%, 70% 50%, 100% 20%, 80% 0%, 50% 30%);',
                 'polygon(50% 0%, 80% 10%, 100% 35%, 100% 70%, 80% 90%, 50% 100%, 20% 90%, 0% 70%, 0% 35%, 20% 10%);',
-                'polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);'
+                'polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);',
+
+                // Path
+                new echarts.graphic.Sector({
+                  shape: {
+                    cx: 0,
+                    cy: 0,
+                    r: 50,
+                    endAngle: 230 * Math.PI / 180
+                  }
+                }),
+                new echarts.graphic.Ring({
+                  shape: {
+                    cx: 0,
+                    cy: 0,
+                    r: 50,
+                    r0: 20
+                  }
+                })
             ];
 
+            var CLIPPING = true;
+            var ROTATE = false;
             var symbolSize = 100;
             var dpr = window.devicePixelRatio || 1;
 
@@ -119,19 +145,16 @@ under the License.
                 series: [{
                     type: 'line',
                     symbolSize: symbolSize,
-                    symbol: function(rawValue, params) {
-                        return 'image://https://picsum.photos/' + symbolSize * dpr/* + '?_=' + params.dataIndex;*/
-                    },
-                    // symbolRotate: function(rawValue, params) {
-                    //     return ~~rawValue[1] % 360;
-                    // },
-                    symbolClip: function(rawValue, params) {
-                        return CLIP_PATHS[params.dataIndex % CLIP_PATHS.length];
-                    },
+                    symbol: getSymbolImage(),
+                    symbolRotate: getSymbolRotate(),
+                    symbolClip: getSymbolClip(),
                     label: {
                         show: true,
                         formatter: function (params) {
                             var clip = CLIP_PATHS[params.dataIndex % CLIP_PATHS.length];
+                            if (clip.type) {
+                                return clip.type;
+                            }
                             var idx = clip.indexOf('(');
                             return clip.slice(0, idx === -1 ? undefined : idx)/* + '('+ (~~params.value[1] % 360) +'°)'*/;
                         }
@@ -146,11 +169,79 @@ under the License.
                 }]
             };
 
+            var refreshCounter = 0;
+
+            function getSymbolImage(refresh) {
+                refresh && (refreshCounter++);
+                return function(rawValue, params) {
+                    return 'image://https://picsum.photos/' + symbolSize * dpr + (refresh ? '?_=' + refreshCounter/*params.dataIndex*/ : '');
+                }
+            }
+
+            function getSymbolClip() {
+                return CLIPPING && function(rawValue, params) {
+                    return CLIP_PATHS[params.dataIndex % CLIP_PATHS.length];
+                }
+            }
+
+            function getSymbolRotate() {
+                return ROTATE && function(rawValue, params) {
+                    return ~~rawValue[1] % 360;
+                }
+            }
+
+            function updateChart(refreshImage) {
+                var refreshOption = {
+                    symbolClip: getSymbolClip(),
+                    symbolRotate: getSymbolRotate()
+                };
+                refreshImage && (refreshOption.symbol = getSymbolImage(refreshImage));
+                chart.setOption({
+                    series: [refreshOption]
+                });
+            }
+
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
                     'Various Clipping of Symbol',
                     `The supported currently rules are '**inset**'、'**rect**'、'**circle**'、'**ellipse**'、'**polygon**'、'**path**'`,
                     'https://developer.mozilla.org/en-US/docs/Web/CSS/clip-path'
+                ],
+                buttons: [
+                    {
+                        text: 'Clear clipping',
+                        onclick: function () {
+                            CLIPPING = false;
+                            updateChart();
+                        }
+                    },
+                    {
+                        text: 'Enable clipping',
+                        onclick: function () {
+                            CLIPPING = true;
+                            updateChart();
+                        }
+                    },
+                    {
+                        text: 'Disable Rotating',
+                        onclick: function () {
+                            ROTATE = false;
+                            updateChart();
+                        }
+                    },
+                    {
+                        text: 'Enable rotating',
+                        onclick: function () {
+                            ROTATE = true;
+                            updateChart();
+                        }
+                    },
+                    {
+                        text: 'Refresh image',
+                        onclick: function () {
+                            updateChart(true);
+                        }
+                    }
                 ],
                 option: option
             });
