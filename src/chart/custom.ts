@@ -1708,7 +1708,19 @@ function makeRenderItem(
      */
     function value(dim?: DimensionLoose, dataIndexInside?: number): ParsedValue {
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
-        return data.get(data.getDimension(dim || 0), dataIndexInside);
+        dim == null && (dim = 0);
+
+        const dimInfo = data.getDimensionInfo(dim);
+        if (!dimInfo) {
+            return NaN;
+        }
+        const raw = data.get(dimInfo.name, dataIndexInside);
+
+        // For dimension x, raw is the ordinal index which it's not users' expectation.
+        // So we need to retrieve the origin data from `ordinalMeta`.
+        //
+        // See https://github.com/apache/incubator-echarts/issues/12952
+        return dimInfo?.ordinalMeta?.categories[raw as number] ?? raw;
     }
 
     /**
