@@ -73,7 +73,7 @@ type GetDependencies<MainType extends string> = GetDependency<Dependencies[Extra
 type ComposeUnitOption<OptionUnion extends ComponentOption> =
     // Will be never if some component forget to specify mainType.
     CheckMainType<GetMainType<OptionUnion>> &
-    EChartsCoreOption & {
+    Omit<EChartsCoreOption, 'baseOption' | 'options'> & {
         [key in GetMainType<OptionUnion>]?: Arrayable<
             ExtractComponentOption<OptionUnion, key>
             // TODO: It will make error log too complex.
