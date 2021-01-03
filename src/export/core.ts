@@ -52,6 +52,7 @@ type Arrayable<T> = T | T[];
 
 type GetMainType<OptionUnion extends ComponentOption> = Exclude<OptionUnion['mainType'], undefined>;
 
+// NOTE: Needs to extract the specify ComponentOption for each component type.
 type ExtractComponentOption<OptionUnion, ExtractMainType> = OptionUnion extends {
     mainType?: ExtractMainType
 } ? OptionUnion : never;
