@@ -50,35 +50,47 @@ type DependenciesKeys = keyof Dependencies & string;
 
 type Arrayable<T> = T | T[];
 
-type GetMainType<OptionUnion extends ComponentOption> =
-    // If some component forget to specify mainType. we should exclude it in case the general string taint the whole option
-    string extends OptionUnion['mainType'] ? '_$ecUnkown' :
-        Exclude<OptionUnion['mainType'], undefined>;
+type GetMainType<OptionUnion extends ComponentOption> = Exclude<OptionUnion['mainType'], undefined>;
 
-type GetDependencies<MainType extends string> = MainType extends DependenciesKeys
-    // Add dependencies
-    ? {
-        [key in GetMainType<Dependencies[MainType]>]?: Arrayable<Dependencies[MainType]>
-    }
-    : {};
+type ExtractComponentOption<OptionUnion, ExtractMainType> = OptionUnion extends {
+    mainType?: ExtractMainType
+} ? OptionUnion : never;
+
+type GetDependency<DependencyOption extends ComponentOption> = {
+    [key in GetMainType<DependencyOption>]?: Arrayable<
+        ExtractComponentOption<DependencyOption, key>
+    >
+};
+
+type GetDependencies<MainType extends string> = GetDependency<Dependencies[Extract<MainType, DependenciesKeys>]>;
 
 // NOTE: Can't use GetMainType<OptionUnion> extends xxx ? GetMainType<OptionUnion> : xxx
 // Or the infer can't work.
-type GetSeriesInjectedSubOption<MainType extends string, OptionUnion extends ComponentOption> =
-    MainType extends SeriesSubComponentsTypes ? {
-        [key in MainType]?: OptionUnion
-    } : {};
+type GetSeriesInjectedSubOption<MainType extends string, OptionUnion extends ComponentOption> = {
+    [key in Extract<MainType, SeriesSubComponentsTypes>]?: ExtractComponentOption<OptionUnion, key>
+};
 
 type ComposeUnitOption<OptionUnion extends ComponentOption> =
+    // Will be never if some component forget to specify mainType.
+    CheckMainType<OptionUnion['mainType']> &
     EChartsCoreOption & {
         [key in GetMainType<OptionUnion>]?: Arrayable<
+            // ExtractComponentOption<OptionUnion, key>
             // OptionUnion
             // Inject markPoint, markLine, markArea, tooltip in series.
-            InjectSeriesSubComponents<
-                OptionUnion, GetSeriesInjectedSubOption<GetMainType<OptionUnion>, OptionUnion>
+            ExtractComponentOption<
+                InjectSeriesSubComponents<
+                    OptionUnion, GetSeriesInjectedSubOption<GetMainType<OptionUnion>, OptionUnion>
+                >,
+                key
             >
         >
     } & GetDependencies<GetMainType<OptionUnion>>;
+
+type CheckMainType<OptionUnionMainType extends string> =
+    // If some component forget to specify mainType. we should do a fast check.
+    string extends OptionUnionMainType ? never : {};
+
 
 // TODO Provide a strict option.
 export type ComposeOption<OptionUnion extends ComponentOption> =
