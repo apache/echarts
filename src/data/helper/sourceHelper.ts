@@ -82,31 +82,6 @@ export function resetSourceDefaulter(ecModel: GlobalModel): void {
     innerGlobalModel(ecModel).datasetMap = createHashMap();
 }
 
-// See [DIMENSION_INHERIT_RULE] in `sourceManager.ts`.
-export function inheritSourceMetaRawOption(
-    upstream: Source, // Can be null/undefined
-    newMetaRawOption: SourceMetaRawOption // Can NOT be null/undefined
-): SourceMetaRawOption {
-    const parentMetaRawOption = upstream ? upstream.metaRawOption : null;
-    const seriesLayoutBy = retrieve2(
-        newMetaRawOption.seriesLayoutBy,
-        parentMetaRawOption ? parentMetaRawOption.seriesLayoutBy : null
-    );
-    // sourceHeader and dimensions should use the "detected result" rather than "meta raw".
-    // Consider the case: transform return only "data" but no "dimensions", that should means inherit
-    // dimensions definition from upstream. But the returned data does not contain header line and can not
-    // be used as dimension-detection. In this case we should use "detected dimensions" of upstream directly.
-    const sourceHeader = retrieve2(
-        newMetaRawOption.sourceHeader,
-        upstream ? upstream.startIndex : null
-    );
-    const dimensions = retrieve2(
-        newMetaRawOption.dimensions,
-        upstream ? upstream.dimensionsDefine : null
-    );
-    return { seriesLayoutBy, sourceHeader, dimensions };
-}
-
 /**
  * [The strategy of the arrengment of data dimensions for dataset]:
  * "value way": all axes are non-category axes. So series one by one take
