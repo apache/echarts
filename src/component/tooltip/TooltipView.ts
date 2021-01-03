@@ -906,12 +906,14 @@ class TooltipView extends ComponentView {
 }
 
 type TooltipableOption = {
-    tooltip?: TooltipOption | string
+    tooltip?: Omit<TooltipOption, 'mainType'> | string
 };
 /**
  * From top to bottom. (the last one should be globalTooltipModel);
  */
-function buildTooltipModel(modelCascade: (TooltipModel | Model<TooltipableOption> | TooltipOption | string)[]) {
+function buildTooltipModel(modelCascade: (
+    TooltipModel | Model<TooltipableOption> | Omit<TooltipOption, 'mainType'> | string
+)[]) {
     // Last is always tooltip model.
     let resultModel = modelCascade.pop() as Model<TooltipOption>;
     while (modelCascade.length) {

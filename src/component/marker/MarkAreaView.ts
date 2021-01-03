@@ -204,7 +204,7 @@ class MarkAreaView extends MarkerView {
 
     updateTransform(markAreaModel: MarkAreaModel, ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachSeries(function (seriesModel) {
-            const maModel = MarkerModel.getMarkerModelFromSeries(seriesModel, 'markArea');
+            const maModel = MarkerModel.getMarkerModelFromSeries(seriesModel, 'markArea') as MarkAreaModel;
             if (maModel) {
                 const areaData = maModel.getData();
                 areaData.each(function (idx) {
