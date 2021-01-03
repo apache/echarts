@@ -73,7 +73,7 @@ type GetSeriesInjectedSubOption<MainType extends string, OptionUnion extends Com
 
 type ComposeUnitOption<OptionUnion extends ComponentOption> =
     // Will be never if some component forget to specify mainType.
-    CheckMainType<OptionUnion['mainType']> &
+    CheckMainType<GetMainType<OptionUnion>> &
     EChartsCoreOption & {
         [key in GetMainType<OptionUnion>]?: Arrayable<
             // ExtractComponentOption<OptionUnion, key>
