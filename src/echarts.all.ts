@@ -17,12 +17,9 @@
 * under the License.
 */
 
-export * from './echarts';
-export * from './export';
+import {use} from './extension';
 
-import './component/dataset';
-import './component/transform';
-
+export * from './export/core';
 // ----------------------------------------------
 // All of the modules that are allowed to be
 // imported are listed below.
@@ -31,13 +28,81 @@ import './component/transform';
 // not included in this list.
 // ----------------------------------------------
 
+import {
+    SVGRenderer,
+    CanvasRenderer
+} from './export/renderers';
 
+import {
+    LineChart,
+    BarChart,
+    PieChart,
+    ScatterChart,
+    RadarChart,
+    MapChart,
+    TreeChart,
+    TreemapChart,
+    GraphChart,
+    GaugeChart,
+    FunnelChart,
+    ParallelChart,
+    SankeyChart,
+    BoxplotChart,
+    CandlestickChart,
+    EffectScatterChart,
+    LinesChart,
+    HeatmapChart,
+    PictorialBarChart,
+    ThemeRiverChart,
+    SunburstChart,
+    CustomChart
+} from './export/charts';
+
+import {
+    GridComponent,
+    PolarComponent,
+    GeoComponent,
+    SingleAxisComponent,
+    ParallelComponent,
+    CalendarComponent,
+    GraphicComponent,
+    ToolboxComponent,
+    TooltipComponent,
+    AxisPointerComponent,
+    BrushComponent,
+    TitleComponent,
+    TimelineComponent,
+    MarkPointComponent,
+    MarkLineComponent,
+    MarkAreaComponent,
+    LegendComponent,
+    DataZoomComponent,
+    DataZoomInsideComponent,
+    DataZoomSliderComponent,
+    VisualMapComponent,
+    VisualMapContinuousComponent,
+    VisualMapPiecewiseComponent,
+    AriaComponent,
+    DatasetComponent,
+    TransformComponent
+} from './export/components';
+
+
+// -----------------
+// Render engines
+// -----------------
+
+
+// Render via Canvas.
+// echarts.init(dom, null, { renderer: 'canvas' })
+use([CanvasRenderer]);
+// Render via SVG.
+// echarts.init(dom, null, { renderer: 'svg' })
+use([SVGRenderer]);
 
 // ----------------
 // Charts (series)
 // ----------------
-
-
 
 // All of the series types, for example:
 // chart.setOption({
@@ -46,30 +111,31 @@ import './component/transform';
 //     }]
 // });
 
-import './chart/line';
-import './chart/bar';
-import './chart/pie';
-import './chart/scatter';
-import './chart/radar';
-import './chart/map';
-import './chart/tree';
-import './chart/treemap';
-import './chart/graph';
-import './chart/gauge';
-import './chart/funnel';
-import './chart/parallel';
-import './chart/sankey';
-import './chart/boxplot';
-import './chart/candlestick';
-import './chart/effectScatter';
-import './chart/lines';
-import './chart/heatmap';
-import './chart/pictorialBar';
-import './chart/themeRiver';
-import './chart/sunburst';
-import './chart/custom';
 
-
+use([
+    LineChart,
+    BarChart,
+    PieChart,
+    ScatterChart,
+    RadarChart,
+    MapChart,
+    TreeChart,
+    TreemapChart,
+    GraphChart,
+    GaugeChart,
+    FunnelChart,
+    ParallelChart,
+    SankeyChart,
+    BoxplotChart,
+    CandlestickChart,
+    EffectScatterChart,
+    LinesChart,
+    HeatmapChart,
+    PictorialBarChart,
+    ThemeRiverChart,
+    SunburstChart,
+    CustomChart
+]);
 
 // -------------------
 // Coordinate systems
@@ -89,7 +155,7 @@ import './chart/custom';
 //     yAxis: {...},
 //     series: [{...}]
 // });
-import './component/grid';
+use(GridComponent);
 
 // `polar` coordinate system, for example:
 // chart.setOption({
@@ -100,7 +166,7 @@ import './component/grid';
 //         coordinateSystem: 'polar'
 //     }]
 // });
-import './component/polar';
+use(PolarComponent);
 
 // `geo` coordinate system, for example:
 // chart.setOption({
@@ -109,7 +175,7 @@ import './component/polar';
 //         coordinateSystem: 'geo'
 //     }]
 // });
-import './component/geo';
+use(GeoComponent);
 
 // `singleAxis` coordinate system (notice, it is a coordinate system
 // with only one axis, work for chart like theme river), for example:
@@ -117,7 +183,7 @@ import './component/geo';
 //     singleAxis: {...}
 //     series: [{type: 'themeRiver', ...}]
 // });
-import './component/singleAxis';
+use(SingleAxisComponent);
 
 // `parallel` coordinate system, only work for parallel series, for example:
 // chart.setOption({
@@ -127,7 +193,7 @@ import './component/singleAxis';
 //         type: 'parallel'
 //     }]
 // });
-import './component/parallel';
+use(ParallelComponent);
 
 // `calendar` coordinate system. for example,
 // chart.setOptionp({
@@ -136,7 +202,7 @@ import './component/parallel';
 //         coordinateSystem: 'calendar'
 //     }]
 // );
-import './component/calendar';
+use(CalendarComponent);
 
 
 
@@ -150,19 +216,19 @@ import './component/calendar';
 // chart.setOption({
 //     graphic: {...}
 // });
-import './component/graphic';
+use(GraphicComponent);
 
 // `toolbox` component, for example:
 // chart.setOption({
 //     toolbox: {...}
 // });
-import './component/toolbox';
+use(ToolboxComponent);
 
 // `tooltip` component, for example:
 // chart.setOption({
 //     tooltip: {...}
 // });
-import './component/tooltip';
+use(TooltipComponent);
 
 // `axisPointer` component, for example:
 // chart.setOption({
@@ -172,7 +238,7 @@ import './component/tooltip';
 // chart.setOption({
 //     axisPointer: {...}
 // });
-import './component/axisPointer';
+use(AxisPointerComponent);
 
 // `brush` component, for example:
 // chart.setOption({
@@ -182,97 +248,88 @@ import './component/axisPointer';
 // chart.setOption({
 //     tooltip: {feature: {brush: {...}}
 // })
-import './component/brush';
+use(BrushComponent);
 
 // `title` component, for example:
 // chart.setOption({
 //     title: {...}
 // });
-import './component/title';
+use(TitleComponent);
 
 // `timeline` component, for example:
 // chart.setOption({
 //     timeline: {...}
 // });
-import './component/timeline';
+use(TimelineComponent);
 
 // `markPoint` component, for example:
 // chart.setOption({
 //     series: [{markPoint: {...}}]
 // });
-import './component/markPoint';
+use(MarkPointComponent);
 
 // `markLine` component, for example:
 // chart.setOption({
 //     series: [{markLine: {...}}]
 // });
-import './component/markLine';
+use(MarkLineComponent);
 
 // `markArea` component, for example:
 // chart.setOption({
 //     series: [{markArea: {...}}]
 // });
-import './component/markArea';
-
-// `legend` component scrollable, for example:
-// chart.setOption({
-//     legend: {type: 'scroll'}
-// });
-import './component/legendScroll';
+use(MarkAreaComponent);
 
 // `legend` component not scrollable. for example:
 // chart.setOption({
 //     legend: {...}
 // });
-import './component/legend';
+use(LegendComponent);
 
 // `dataZoom` component including both `dataZoomInside` and `dataZoomSlider`.
-import './component/dataZoom';
+use(DataZoomComponent);
 
 // `dataZoom` component providing drag, pinch, wheel behaviors
 // inside coodinate system, for example:
 // chart.setOption({
 //     dataZoom: {type: 'inside'}
 // });
-import './component/dataZoomInside';
+use(DataZoomInsideComponent);
 
 // `dataZoom` component providing a slider bar, for example:
 // chart.setOption({
 //     dataZoom: {type: 'slider'}
 // });
-import './component/dataZoomSlider';
+use(DataZoomSliderComponent);
 
 // `dataZoom` component including both `visualMapContinuous` and `visualMapPiecewise`.
-import './component/visualMap';
+use(VisualMapComponent);
 
 // `visualMap` component providing continuous bar, for example:
 // chart.setOption({
 //     visualMap: {type: 'continuous'}
 // });
-import './component/visualMapContinuous';
+use(VisualMapContinuousComponent);
 
 // `visualMap` component providing pieces bar, for example:
 // chart.setOption({
 //     visualMap: {type: 'piecewise'}
 // });
-import './component/visualMapPiecewise';
+use(VisualMapPiecewiseComponent);
 
 // `aria` component providing aria, for example:
 // chart.setOption({
 //     aria: {...}
 // });
-import './component/aria';
+use(AriaComponent);
 
 
+// dataset transform
+// chart.setOption({
+//     dataset: {
+//          transform: []
+//     }
+// });
+use(TransformComponent);
 
-// -----------------
-// Render engines
-// -----------------
-
-
-
-// Provide IE 6,7,8 compatibility.
-// import 'zrender/vml/vml';
-
-// Render via SVG rather than canvas.
-import 'zrender/src/svg/svg';
+use(DatasetComponent);

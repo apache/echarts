@@ -21,12 +21,7 @@
  * DataZoom component entry
  */
 
-import * as echarts from '../echarts';
-import preprocessor from './timeline/preprocessor';
+import { use } from '../extension';
+import { install } from './timeline/install';
 
-import './timeline/typeDefaulter';
-import './timeline/timelineAction';
-import './timeline/SliderTimelineModel';
-import './timeline/SliderTimelineView';
-
-echarts.registerPreprocessor(preprocessor);
+use(install);

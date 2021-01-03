@@ -18,12 +18,8 @@
 */
 
 // HINT Markpoint can't be used too much
-import * as echarts from '../echarts';
 
-import './marker/MarkPointModel';
-import './marker/MarkPointView';
+import { use } from '../extension';
+import { install } from './marker/installMarkPoint';
 
-echarts.registerPreprocessor(function (opt) {
-    // Make sure markPoint component is enabled
-    opt.markPoint = opt.markPoint || {};
-});
+use(install);

@@ -17,8 +17,7 @@
 * under the License.
 */
 
-import './dataZoomSlider';
-import './dataZoomInside';
+import { use } from '../extension';
+import { install } from './dataZoom/install';
 
-// Do not include './dataZoomSelect',
-// since it only work for toolbox dataZoom.
+use(install);

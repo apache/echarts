@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import {makeInner} from '../../util/model';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { ZRenderType } from 'zrender/src/zrender';
 import { ZRElementEvent } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';

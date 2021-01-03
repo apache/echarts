@@ -17,17 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
-import * as zrUtil from 'zrender/src/core/util';
+import { use } from '../extension';
+import { install } from './pie/install';
 
-import './pie/PieSeries';
-import './pie/PieView';
-
-import {createLegacyDataSelectAction} from '../legacy/dataSelectAction';
-import pieLayout from './pie/pieLayout';
-import dataFilter from '../processor/dataFilter';
-
-createLegacyDataSelectAction('pie', echarts.registerAction);
-
-echarts.registerLayout(zrUtil.curry(pieLayout, 'pie'));
-echarts.registerProcessor(dataFilter('pie'));
+use(install);

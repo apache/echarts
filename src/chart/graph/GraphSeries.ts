@@ -42,8 +42,8 @@ import {
     StatesOptionMixin,
     GraphEdgeItemObject,
     OptionDataValueNumeric,
-    DefaultExtraEmpasisState,
-    CallbackDataParams
+    CallbackDataParams,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -69,7 +69,7 @@ export interface GraphNodeStateOption {
 
 
 interface ExtraEmphasisState {
-    focus?: DefaultExtraEmpasisState['focus'] | 'adjacency'
+    focus?: DefaultEmphasisFocus | 'adjacency'
 }
 interface ExtraNodeStateOption {
     emphasis?: ExtraEmphasisState
@@ -178,7 +178,7 @@ export interface GraphSeriesOption extends SeriesOption,
     lineStyle?: GraphEdgeLineStyleOption
 
     emphasis?: {
-        focus?: GraphNodeItemOption['emphasis']['focus']
+        focus?: Exclude<GraphNodeItemOption['emphasis'], undefined>['focus']
         scale?: boolean
         label?: SeriesLabelOption
         edgeLabel?: SeriesLabelOption
@@ -224,6 +224,8 @@ export interface GraphSeriesOption extends SeriesOption,
 class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     static readonly type = 'series.graph';
     readonly type = GraphSeriesModel.type;
+
+    static readonly dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar'];
 
     private _categoriesData: List;
     private _categoriesModels: Model<GraphCategoryItemOption>[];
@@ -502,7 +504,5 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         }
     };
 }
-
-SeriesModel.registerClass(GraphSeriesModel);
 
 export default GraphSeriesModel;

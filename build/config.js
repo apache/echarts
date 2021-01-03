@@ -18,7 +18,7 @@
 */
 
 const assert = require('assert');
-const nodeResolvePlugin = require('rollup-plugin-node-resolve');
+const nodeResolvePlugin = require('@rollup/plugin-node-resolve').default;
 const nodePath = require('path');
 const ecDir = nodePath.resolve(__dirname, '..');
 const typescriptPlugin = require('rollup-plugin-typescript2');
@@ -117,7 +117,9 @@ exports.createECharts = function (opt = {}) {
         plugins: preparePlugins(opt, {
             include
         }),
-
+        treeshake: {
+            moduleSideEffects: false
+        },
         // external: ['zrender'],
         // external: id => ['zrender'].includes(id),
 

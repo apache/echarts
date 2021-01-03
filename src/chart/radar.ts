@@ -17,17 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import { use } from '../extension';
+import { install } from './radar/install';
 
-// Must use radar component
-import '../component/radar';
-import './radar/RadarSeries';
-import './radar/RadarView';
-
-import radarLayout from './radar/radarLayout';
-import dataFilter from '../processor/dataFilter';
-import backwardCompat from './radar/backwardCompat';
-
-echarts.registerLayout(radarLayout);
-echarts.registerProcessor(dataFilter('radar'));
-echarts.registerPreprocessor(backwardCompat);
+use(install);

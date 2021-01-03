@@ -18,7 +18,6 @@
 */
 
 import MarkerModel, { MarkerOption, MarkerPositionOption } from './MarkerModel';
-import ComponentModel from '../../model/Component';
 import GlobalModel from '../../model/Global';
 import {
     SymbolOptionMixin,
@@ -48,6 +47,7 @@ export interface MarkPointDataItemOption extends
 export interface MarkPointOption extends MarkerOption,
     SymbolOptionMixin<CallbackDataParams>,
     StatesOptionMixin<MarkPointStateOption>, MarkPointStateOption {
+    mainType?: 'markPoint'
 
     precision?: number
 
@@ -91,7 +91,5 @@ class MarkPointModel extends MarkerModel<MarkPointOption> {
         }
     };
 }
-
-ComponentModel.registerClass(MarkPointModel);
 
 export default MarkPointModel;

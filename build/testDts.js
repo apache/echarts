@@ -24,11 +24,11 @@ const {
     installAllTypeScriptVersions,
     typeScriptPath
 } = require('@definitelytyped/utils');
-const { runTsCompile, readTSConfig } = require('./pre-publish');
+const { runTsCompile } = require('./pre-publish');
 const globby = require('globby');
 const semver = require('semver');
 
-const MIN_VERSION = '3.4.0';
+const MIN_VERSION = '3.5.0';
 
 async function installTs() {
     // await cleanTypeScriptInstalls();
@@ -36,9 +36,7 @@ async function installTs() {
 }
 
 async function runTests() {
-    const tsConfig = readTSConfig();
     const compilerOptions = {
-        ...tsConfig.compilerOptions,
         declaration: false,
         importHelpers: false,
         sourceMap: false,
@@ -47,7 +45,10 @@ async function runTests() {
         allowJs: false,
         outDir: __dirname + '/../test/types/tmp',
         typeRoots: [__dirname + '/../types/dist'],
-        rootDir: __dirname + '/../test/types'
+        rootDir: __dirname + '/../test/types',
+
+        // Must pass in most strict cases
+        strict: true
     };
     const testsList = await globby(__dirname + '/../test/types/*.ts');
 

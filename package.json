@@ -14,11 +14,11 @@
     "canvas",
     "svg"
   ],
-  "main": "index.js",
-  "module": "echarts.all.js",
+  "main": "dist/echarts.js",
+  "module": "index.js",
   "jsdelivr": "dist/echarts.min.js",
-  "types": "types/dist/echarts.d.ts",
-  "homepage": "https://echarts.apache.org",
+  "types": "index.d.ts",
+  "homepage": "http://echarts.apache.org",
   "bugs": {
     "url": "https://github.com/apache/incubator-echarts/issues",
     "email": "dev@echarts.apache.org"
@@ -27,6 +27,17 @@
     "type": "git",
     "url": "git+https://github.com/apache/incubator-echarts.git"
   },
+  "sideEffects": [
+    "index.js",
+    "index.blank.js",
+    "index.common.js",
+    "index.simple.js",
+    "lib/echarts.js",
+    "lib/chart/*.js",
+    "lib/component/*.js",
+    "theme/*.js",
+    "i18n/*.js"
+  ],
   "scripts": {
     "prepublish": "node build/build.js --prepublish",
     "build": "node build/build.js",
@@ -38,8 +49,8 @@
     "help": "node build/build.js --help",
     "test:visual": "node test/runTest/server.js",
     "test:visual:report": "node test/runTest/genReport.js",
-    "test": "jest --config test/ut/jest.config.js",
-    "test:single": "jest --config test/ut/jest.config.js --coverage=false -t",
+    "test": "npx jest --config test/ut/jest.config.js",
+    "test:single": "npx jest --config test/ut/jest.config.js --coverage=false -t",
     "test:dts": "node build/testDts.js",
     "mktest": "node test/build/mktest.js",
     "mktest:help": "node test/build/mktest.js -h",
@@ -48,23 +59,29 @@
     "lint:dist": "echo 'It might take a while. Please wait ...' && ./node_modules/.bin/jshint --config .jshintrc-dist dist/echarts.js"
   },
   "dependencies": {
-    "tslib": "1.10.0",
+    "tslib": "2.0.3",
     "zrender": "5.0.1"
   },
   "devDependencies": {
+    "@babel/code-frame": "7.10.4",
     "@babel/core": "7.3.4",
-    "@babel/types": "^7.10.5",
+    "@babel/types": "7.10.5",
+    "@definitelytyped/typescript-versions": "0.0.64",
+    "@definitelytyped/utils": "0.0.64",
+    "@lang/rollup-plugin-dts": "2.0.2",
     "@microsoft/api-extractor": "7.7.2",
+    "@rollup/plugin-commonjs": "^17.0.0",
+    "@rollup/plugin-node-resolve": "^11.0.0",
     "@types/jest": "^26.0.14",
-    "@typescript-eslint/eslint-plugin": "^2.15.0",
-    "@typescript-eslint/parser": "^2.18.0",
+    "@typescript-eslint/eslint-plugin": "^4.9.1",
+    "@typescript-eslint/parser": "^4.9.1",
     "canvas": "^2.6.0",
     "chalk": "^3.0.0",
     "chokidar": "^3.4.0",
     "commander": "2.11.0",
     "dtslint": "^4.0.5",
-    "esbuild": "^0.4.1",
-    "eslint": "6.3.0",
+    "esbuild": "^0.8.23",
+    "eslint": "^7.15.0",
     "fs-extra": "0.26.7",
     "glob": "7.0.0",
     "globby": "11.0.0",
@@ -76,10 +93,7 @@
     "open": "6.4.0",
     "pixelmatch": "5.0.2",
     "pngjs": "3.4.0",
-    "rollup": "1.28.0",
-    "rollup-plugin-commonjs": "8.4.1",
-    "rollup-plugin-dts": "1.4.2",
-    "rollup-plugin-node-resolve": "3.0.0",
+    "rollup": "2.34.2",
     "rollup-plugin-typescript2": "0.25.3",
     "seedrandom": "3.0.3",
     "semver": "6.3.0",
@@ -88,7 +102,7 @@
     "socket.io": "2.2.0",
     "terser": "^5.3.8",
     "ts-jest": "^26.4.3",
-    "typescript": "3.8.3",
+    "typescript": "^4.1.2",
     "uglify-js": "^3.10.0"
   }
 }

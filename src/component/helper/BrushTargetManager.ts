@@ -25,7 +25,7 @@ import {
     BrushPanelConfig, BrushControllerEvents, BrushType,
     BrushAreaRange, BrushDimensionMinMax
 } from './BrushController';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import GridModel from '../../coord/cartesian/GridModel';
 import GeoModel from '../../coord/geo/GeoModel';
 import { CoordinateSystemMaster } from '../../coord/CoordinateSystem';
@@ -37,7 +37,8 @@ import SeriesModel from '../../model/Series';
 import { Dictionary } from '../../util/types';
 import {
     ModelFinderObject, ParsedModelFinder, ModelFinder,
-    parseFinder as modelUtilParseFinder
+    parseFinder as modelUtilParseFinder,
+    ParsedModelFinderKnown
 } from '../../util/model';
 
 
@@ -286,14 +287,14 @@ function formatMinMax(minMax: BrushDimensionMinMax): BrushDimensionMinMax {
 
 function parseFinder(
     ecModel: GlobalModel, finder: ModelFinder
-): ParsedModelFinder {
+): ParsedModelFinderKnown {
     return modelUtilParseFinder(
         ecModel, finder, {includeMainTypes: INCLUDE_FINDER_MAIN_TYPES}
     );
 }
 
 type TargetInfoBuilder = (
-    foundCpts: ParsedModelFinder, targetInfoList: BrushTargetInfo[]
+    foundCpts: ParsedModelFinderKnown, targetInfoList: BrushTargetInfo[]
 ) => void;
 const targetInfoBuilders: Record<BrushTargetBuilderKey, TargetInfoBuilder> = {
 
@@ -367,7 +368,7 @@ const targetInfoBuilders: Record<BrushTargetBuilderKey, TargetInfoBuilder> = {
 };
 
 type TargetInfoMatcher = (
-    foundCpts: ParsedModelFinder, targetInfo: BrushTargetInfo
+    foundCpts: ParsedModelFinderKnown, targetInfo: BrushTargetInfo
 ) => boolean;
 const targetInfoMatchers: TargetInfoMatcher[] = [
 

@@ -17,20 +17,19 @@
 * under the License.
 */
 
-import * as echarts from '../../echarts';
 import {createHashMap, each} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import DataZoomModel, { DataZoomExtendedAxisBaseModel } from './DataZoomModel';
 import { getAxisMainType, DataZoomAxisDimension } from './helper';
 import AxisProxy from './AxisProxy';
+import { StageHandler } from '../../util/types';
 
-
-echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER, {
+const dataZoomProcessor: StageHandler = {
 
     // `dataZoomProcessor` will only be performed in needed series. Consider if
     // there is a line series and a pie series, it is better not to update the
     // line series if only pie series is needed to be updated.
-    getTargetSeries: function (ecModel) {
+    getTargetSeries(ecModel) {
 
         function eachAxisModel(
             cb: (
@@ -77,7 +76,7 @@ echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER, {
     // Consider appendData, where filter should be performed. Because data process is
     // in block mode currently, it is not need to worry about that the overallProgress
     // execute every frame.
-    overallReset: function (ecModel, api) {
+    overallReset(ecModel, api) {
 
         ecModel.eachComponent('dataZoom', function (dataZoomModel: DataZoomModel) {
             // We calculate window and reset axis here but not in model
@@ -123,4 +122,6 @@ echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER, {
             }
         });
     }
-});
+};
+
+export default dataZoomProcessor;

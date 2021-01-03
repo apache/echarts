@@ -17,9 +17,7 @@
 * under the License.
 */
 
-/**
- * visualMap component entry
- */
+import { use } from '../extension';
+import { install } from './visualMap/install';
 
-import './visualMapContinuous';
-import './visualMapPiecewise';
+use(install);

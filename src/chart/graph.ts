@@ -17,32 +17,8 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
 
-import './graph/GraphSeries';
-import './graph/GraphView';
-import './graph/graphAction';
+import { use } from '../extension';
+import { install } from './graph/install';
 
-import categoryFilter from './graph/categoryFilter';
-import categoryVisual from './graph/categoryVisual';
-import edgeVisual from './graph/edgeVisual';
-import simpleLayout from './graph/simpleLayout';
-import circularLayout from './graph/circularLayout';
-import forceLayout from './graph/forceLayout';
-import createView from './graph/createView';
-import View from '../coord/View';
-
-echarts.registerProcessor(categoryFilter);
-
-echarts.registerVisual(categoryVisual);
-echarts.registerVisual(edgeVisual);
-
-echarts.registerLayout(simpleLayout);
-echarts.registerLayout(echarts.PRIORITY.VISUAL.POST_CHART_LAYOUT, circularLayout);
-echarts.registerLayout(forceLayout);
-
-// Graph view coordinate system
-echarts.registerCoordinateSystem('graphView', {
-    dimensions: View.dimensions,
-    create: createView
-});
+use(install);

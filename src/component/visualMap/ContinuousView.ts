@@ -26,11 +26,10 @@ import * as numberUtil from '../../util/number';
 import sliderMove from '../helper/sliderMove';
 import * as helper from './helper';
 import * as modelUtil from '../../util/model';
-import ComponentView from '../../view/Component';
 import VisualMapModel from './VisualMapModel';
 import ContinuousModel from './ContinuousModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import { TextVerticalAlign, TextAlign } from 'zrender/src/core/types';
 import { ColorString, Payload } from '../../util/types';
@@ -948,7 +947,5 @@ function useHoverLinkOnHandle(visualMapModel: ContinuousModel) {
 function getCursor(orient: Orient) {
     return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
 }
-
-ComponentView.registerClass(ContinuousView);
 
 export default ContinuousView;

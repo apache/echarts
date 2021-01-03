@@ -22,9 +22,8 @@
  */
 
 import Single from './Single';
-import CoordinateSystem from '../../CoordinateSystem';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import SingleAxisModel from './AxisModel';
 import SeriesModel from '../../model/Series';
 import { SeriesOption } from '../../util/types';
@@ -61,7 +60,9 @@ function create(ecModel: GlobalModel, api: ExtensionAPI) {
     return singles;
 }
 
-CoordinateSystem.register('single', {
+const singleCreator = {
     create: create,
     dimensions: Single.prototype.dimensions
-});
+};
+
+export default singleCreator;

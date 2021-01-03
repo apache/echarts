@@ -56,6 +56,9 @@ export interface VisualMapOption<T extends VisualOptionBase = VisualOptionBase> 
     ComponentOption,
     BoxLayoutOptionMixin,
     BorderOptionMixin {
+
+    mainType?: 'visualMap'
+
     show?: boolean
 
     align?: string

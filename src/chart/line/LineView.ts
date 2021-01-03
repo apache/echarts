@@ -31,7 +31,7 @@ import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
 import {createGridClipPath, createPolarClipPath} from '../helper/createClipPathFromCoordSys';
 import LineSeriesModel, { LineSeriesOption } from './LineSeries';
 import type GlobalModel from '../../model/Global';
-import type ExtensionAPI from '../../ExtensionAPI';
+import type ExtensionAPI from '../../core/ExtensionAPI';
 // TODO
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import Polar from '../../coord/polar/Polar';
@@ -1300,6 +1300,4 @@ class LineView extends ChartView {
     }
 }
 
-ChartView.registerClass(LineView);
-
-export default ChartView;
+export default LineView;

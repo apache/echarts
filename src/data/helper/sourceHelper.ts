@@ -47,7 +47,7 @@ import {
     DimensionIndex,
     SeriesEncodableModel
 } from '../../util/types';
-import { DatasetModel } from '../../component/dataset';
+import { DatasetModel } from '../../component/dataset/install';
 import SeriesModel from '../../model/Series';
 import GlobalModel from '../../model/Global';
 import { CoordDimensionDefinition } from './createDimensions';

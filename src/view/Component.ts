@@ -22,7 +22,7 @@ import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
 import ComponentModel from '../model/Component';
 import GlobalModel from '../model/Global';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import {Payload, ViewRootGroup, ECEvent, EventQueryItem} from '../util/types';
 import Element from 'zrender/src/Element';
 import SeriesModel from '../model/Series';
