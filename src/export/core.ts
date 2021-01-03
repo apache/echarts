@@ -33,13 +33,18 @@ export {EChartsType as ECharts} from '../core/echarts';
 
 export {EChartsCoreOption};
 
+// type SeriesSubComponentsTypes = 'markPoint' | 'markLine' | 'markArea' | 'tooltip';
+// type InjectSeriesSubComponents<OptionUnion extends ComponentOption, Injected> =
+//     'series' extends GetMainType<OptionUnion>
+//         ? (OptionUnion & Injected) : OptionUnion;
+// // NOTE: Can't use GetMainType<OptionUnion> extends xxx ? GetMainType<OptionUnion> : xxx
+// // Or the infer can't work.
+// type GetSeriesInjectedSubOption<MainType extends string, OptionUnion extends ComponentOption> = {
+//     [key in Extract<MainType, SeriesSubComponentsTypes>]?: ExtractComponentOption<OptionUnion, key>
+// };
+
 
 // TODO: Handwritten dependencies
-type SeriesSubComponentsTypes = 'markPoint' | 'markLine' | 'markArea' | 'tooltip';
-type InjectSeriesSubComponents<OptionUnion extends ComponentOption, Injected> =
-    'series' extends GetMainType<OptionUnion>
-        ? (OptionUnion & Injected) : OptionUnion;
-
 type Dependencies = {
     grid: XAXisOption | YAXisOption | AxisPointerOption;
     polar: AngleAxisOption | RadiusAxisOption
@@ -65,26 +70,22 @@ type GetDependency<DependencyOption extends ComponentOption> = {
 
 type GetDependencies<MainType extends string> = GetDependency<Dependencies[Extract<MainType, DependenciesKeys>]>;
 
-// NOTE: Can't use GetMainType<OptionUnion> extends xxx ? GetMainType<OptionUnion> : xxx
-// Or the infer can't work.
-type GetSeriesInjectedSubOption<MainType extends string, OptionUnion extends ComponentOption> = {
-    [key in Extract<MainType, SeriesSubComponentsTypes>]?: ExtractComponentOption<OptionUnion, key>
-};
-
 type ComposeUnitOption<OptionUnion extends ComponentOption> =
     // Will be never if some component forget to specify mainType.
     CheckMainType<GetMainType<OptionUnion>> &
     EChartsCoreOption & {
         [key in GetMainType<OptionUnion>]?: Arrayable<
-            // ExtractComponentOption<OptionUnion, key>
-            // OptionUnion
+            ExtractComponentOption<OptionUnion, key>
+            // TODO: It will make error log too complex.
+            // So this more strict type checking will not be used currently to make sure the error msg is friendly.
+            //
             // Inject markPoint, markLine, markArea, tooltip in series.
-            ExtractComponentOption<
-                InjectSeriesSubComponents<
-                    OptionUnion, GetSeriesInjectedSubOption<GetMainType<OptionUnion>, OptionUnion>
-                >,
-                key
-            >
+            // ExtractComponentOption<
+            //     InjectSeriesSubComponents<
+            //         OptionUnion, GetSeriesInjectedSubOption<GetMainType<OptionUnion>, OptionUnion>
+            //     >,
+            //     key
+            // >
         >
     } & GetDependencies<GetMainType<OptionUnion>>;
 

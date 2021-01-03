@@ -49,26 +49,51 @@ export {install as SunburstChart} from '../chart/sunburst/install';
 export {install as CustomChart} from '../chart/custom/install';
 
 
-// NOTE: Don't use XXXSeriesOption from 'option.ts' becuase they have been injected markPoint, markLine etc.
-export {LineSeriesOption} from '../chart/line/LineSeries';
-export {BarSeriesOption} from '../chart/bar/BarSeries';
-export {ScatterSeriesOption} from '../chart/scatter/ScatterSeries';
-export {PieSeriesOption} from '../chart/pie/PieSeries';
-export {RadarSeriesOption} from '../chart/radar/RadarSeries';
-export {MapSeriesOption} from '../chart/map/MapSeries';
-export {TreeSeriesOption} from '../chart/tree/TreeSeries';
-export {TreemapSeriesOption} from '../chart/treemap/TreemapSeries';
-export {GraphSeriesOption} from '../chart/graph/GraphSeries';
-export {GaugeSeriesOption} from '../chart/gauge/GaugeSeries';
-export {FunnelSeriesOption} from '../chart/funnel/FunnelSeries';
-export {ParallelSeriesOption} from '../chart/parallel/ParallelSeries';
-export {SankeySeriesOption} from '../chart/sankey/SankeySeries';
-export {BoxplotSeriesOption} from '../chart/boxplot/BoxplotSeries';
-export {CandlestickSeriesOption} from '../chart/candlestick/CandlestickSeries';
-export {EffectScatterSeriesOption} from '../chart/effectScatter/EffectScatterSeries';
-export {LinesSeriesOption} from '../chart/lines/LinesSeries';
-export {HeatmapSeriesOption} from '../chart/heatmap/HeatmapSeries';
-export {PictorialBarSeriesOption} from '../chart/bar/PictorialBarSeries';
-export {ThemeRiverSeriesOption} from '../chart/themeRiver/ThemeRiverSeries';
-export {SunburstSeriesOption} from '../chart/sunburst/SunburstSeries';
-export {CustomSeriesOption} from '../chart/custom/install';
+// // NOTE: Don't use XXXSeriesOption from 'option.ts' becuase they have been injected markPoint, markLine etc.
+// export {LineSeriesOption} from '../chart/line/LineSeries';
+// export {BarSeriesOption} from '../chart/bar/BarSeries';
+// export {ScatterSeriesOption} from '../chart/scatter/ScatterSeries';
+// export {PieSeriesOption} from '../chart/pie/PieSeries';
+// export {RadarSeriesOption} from '../chart/radar/RadarSeries';
+// export {MapSeriesOption} from '../chart/map/MapSeries';
+// export {TreeSeriesOption} from '../chart/tree/TreeSeries';
+// export {TreemapSeriesOption} from '../chart/treemap/TreemapSeries';
+// export {GraphSeriesOption} from '../chart/graph/GraphSeries';
+// export {GaugeSeriesOption} from '../chart/gauge/GaugeSeries';
+// export {FunnelSeriesOption} from '../chart/funnel/FunnelSeries';
+// export {ParallelSeriesOption} from '../chart/parallel/ParallelSeries';
+// export {SankeySeriesOption} from '../chart/sankey/SankeySeries';
+// export {BoxplotSeriesOption} from '../chart/boxplot/BoxplotSeries';
+// export {CandlestickSeriesOption} from '../chart/candlestick/CandlestickSeries';
+// export {EffectScatterSeriesOption} from '../chart/effectScatter/EffectScatterSeries';
+// export {LinesSeriesOption} from '../chart/lines/LinesSeries';
+// export {HeatmapSeriesOption} from '../chart/heatmap/HeatmapSeries';
+// export {PictorialBarSeriesOption} from '../chart/bar/PictorialBarSeries';
+// export {ThemeRiverSeriesOption} from '../chart/themeRiver/ThemeRiverSeries';
+// export {SunburstSeriesOption} from '../chart/sunburst/SunburstSeries';
+// export {CustomSeriesOption} from '../chart/custom/install';
+
+export {
+    LineSeriesOption,
+    BarSeriesOption,
+    ScatterSeriesOption,
+    PieSeriesOption,
+    RadarSeriesOption,
+    MapSeriesOption,
+    TreeSeriesOption,
+    TreemapSeriesOption,
+    GraphSeriesOption,
+    GaugeSeriesOption,
+    FunnelSeriesOption,
+    ParallelSeriesOption,
+    SankeySeriesOption,
+    BoxplotSeriesOption,
+    CandlestickSeriesOption,
+    EffectScatterSeriesOption,
+    LinesSeriesOption,
+    HeatmapSeriesOption,
+    PictorialBarSeriesOption,
+    ThemeRiverSeriesOption,
+    SunburstSeriesOption,
+    CustomSeriesOption
+} from './option';
