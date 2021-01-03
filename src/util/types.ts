@@ -757,6 +757,8 @@ export interface AriaLabelOption {
 
 // Extending is for compating ECharts 4
 export interface AriaOption extends AriaLabelOption {
+    mainType?: 'aria';
+
     enabled?: boolean;
     label?: AriaLabelOption;
     decal?: {

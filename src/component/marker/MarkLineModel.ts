@@ -78,6 +78,7 @@ export type MarkLine2DDataItemOption = [
 
 export interface MarkLineOption extends MarkerOption,
     MarkLineStateOption, StatesOptionMixin<MarkLineStateOption> {
+    mainType?: 'markLine'
 
     symbol?: string[] | string
     symbolSize?: number[] | number

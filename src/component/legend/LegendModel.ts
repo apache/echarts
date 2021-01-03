@@ -75,6 +75,9 @@ export interface LegendTooltipFormatterParams {
     $vars: ['name']
 }
 export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
+
+    mainType?: 'legend'
+
     show?: boolean
 
     orient?: LayoutOrient

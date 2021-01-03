@@ -47,6 +47,7 @@ export interface MarkPointDataItemOption extends
 export interface MarkPointOption extends MarkerOption,
     SymbolOptionMixin<CallbackDataParams>,
     StatesOptionMixin<MarkPointStateOption>, MarkPointStateOption {
+    mainType?: 'markPoint'
 
     precision?: number
 

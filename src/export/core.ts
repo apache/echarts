@@ -19,7 +19,7 @@
 
 // Core API from echarts/src/echarts
 
-import { ComponentOption, ECBasicOption as EChartsCoreOption } from '../util/types';
+import type { ComponentOption, ECBasicOption as EChartsCoreOption } from '../util/types';
 
 import type { AxisPointerOption } from '../component/axisPointer/AxisPointerModel';
 import type { XAXisOption, YAXisOption } from '../coord/cartesian/AxisModel';
@@ -33,28 +33,54 @@ export {EChartsType as ECharts} from '../core/echarts';
 
 export {EChartsCoreOption};
 
+
 // TODO: Handwritten dependencies
+type SeriesSubComponentsTypes = 'markPoint' | 'markLine' | 'markArea' | 'tooltip';
+type InjectSeriesSubComponents<OptionUnion extends ComponentOption, Injected> =
+    'series' extends GetMainType<OptionUnion>
+        ? (OptionUnion & Injected) : OptionUnion;
+
 type Dependencies = {
     grid: XAXisOption | YAXisOption | AxisPointerOption;
     polar: AngleAxisOption | RadiusAxisOption
     parallel: ParallelAxisOption
 };
 
-type GetMainType<OptionUnion extends ComponentOption> = Exclude<OptionUnion['mainType'], undefined>;
+type DependenciesKeys = keyof Dependencies & string;
 
-type GetDependencies<MainType extends string> = MainType extends keyof Dependencies & string
+type Arrayable<T> = T | T[];
+
+type GetMainType<OptionUnion extends ComponentOption> =
+    // If some component forget to specify mainType. we should exclude it in case the general string taint the whole option
+    string extends OptionUnion['mainType'] ? '_$ecUnkown' :
+        Exclude<OptionUnion['mainType'], undefined>;
+
+type GetDependencies<MainType extends string> = MainType extends DependenciesKeys
     // Add dependencies
     ? {
-        [key in GetMainType<Dependencies[MainType]>]
-            : Dependencies[MainType] | Dependencies[MainType][]
+        [key in GetMainType<Dependencies[MainType]>]?: Arrayable<Dependencies[MainType]>
     }
-    : any;
+    : {};
 
-type ComposeUnitOption<OptionUnion extends ComponentOption = never> =
+// NOTE: Can't use GetMainType<OptionUnion> extends xxx ? GetMainType<OptionUnion> : xxx
+// Or the infer can't work.
+type GetSeriesInjectedSubOption<MainType extends string, OptionUnion extends ComponentOption> =
+    MainType extends SeriesSubComponentsTypes ? {
+        [key in MainType]?: OptionUnion
+    } : {};
+
+type ComposeUnitOption<OptionUnion extends ComponentOption> =
     EChartsCoreOption & {
-        [key in GetMainType<OptionUnion>]?: OptionUnion | OptionUnion[];
+        [key in GetMainType<OptionUnion>]?: Arrayable<
+            // OptionUnion
+            // Inject markPoint, markLine, markArea, tooltip in series.
+            InjectSeriesSubComponents<
+                OptionUnion, GetSeriesInjectedSubOption<GetMainType<OptionUnion>, OptionUnion>
+            >
+        >
     } & GetDependencies<GetMainType<OptionUnion>>;
 
+// TODO Provide a strict option.
 export type ComposeOption<OptionUnion extends ComponentOption> =
     ComposeUnitOption<OptionUnion> & {
         baseOption?: ComposeUnitOption<OptionUnion>

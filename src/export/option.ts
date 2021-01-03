@@ -78,6 +78,7 @@ import type {PictorialBarSeriesOption as PictorialBarSeriesOptionInner} from '..
 import type {ThemeRiverSeriesOption as ThemeRiverSeriesOptionInner} from '../chart/themeRiver/ThemeRiverSeries';
 import type {SunburstSeriesOption as SunburstSeriesOptionInner} from '../chart/sunburst/SunburstSeries';
 import type {CustomSeriesOption as CustomSeriesOptionInner} from '../chart/custom/install';
+
 import type { GraphicComponentLooseOption as GraphicComponentOption } from '../component/graphic/install';
 import type { DatasetOption as DatasetComponentOption } from '../component/dataset/install';
 

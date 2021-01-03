@@ -250,7 +250,9 @@ const preprocessor: OptionPreprocessor = function (option) {
 // Model
 // ------------------------
 
-export type GraphicComponentLooseOption = GraphicComponentOption | GraphicComponentElementOption;
+export type GraphicComponentLooseOption = (GraphicComponentOption | GraphicComponentElementOption) & {
+    mainType?: 'graphic';
+};
 
 export interface GraphicComponentOption extends ComponentOption {
     // Note: elements is always behind its ancestors in this elements array.

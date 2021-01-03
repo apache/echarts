@@ -42,6 +42,8 @@ export interface ToolboxTooltipFormatterParams {
 export interface ToolboxOption extends ComponentOption,
     BoxLayoutOptionMixin,
     BorderOptionMixin {
+    mainType?: 'toolbox'
+
     show?: boolean
 
     orient?: LayoutOrient

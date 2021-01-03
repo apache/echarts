@@ -31,6 +31,8 @@ import SeriesModel from '../../model/Series';
 export type ParallelLayoutDirection = 'horizontal' | 'vertical';
 
 export interface ParallelCoordinateSystemOption extends ComponentOption, BoxLayoutOptionMixin {
+    mainType?: 'parallel';
+
     layout?: ParallelLayoutDirection;
 
     axisExpandable?: boolean;

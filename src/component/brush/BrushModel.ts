@@ -86,6 +86,8 @@ export interface BrushAreaParamInternal extends BrushAreaParam {
 export type BrushToolboxIconType = BrushType | 'keep' | 'clear';
 
 export interface BrushOption extends ComponentOption, ModelFinderObject {
+    mainType?: 'brush';
+
     // Default value see preprocessor.
     toolbox?: BrushToolboxIconType[];
 

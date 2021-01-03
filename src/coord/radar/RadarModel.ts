@@ -51,6 +51,8 @@ export interface RadarIndicatorOption {
 }
 
 export interface RadarOption extends ComponentOption, CircleLayoutOptionMixin {
+    mainType?: 'radar'
+
     startAngle?: number
 
     shape?: 'polygon' | 'circle'

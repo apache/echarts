@@ -42,6 +42,8 @@ import { EChartsExtensionInstallRegisters } from '../../extension';
 export interface DatasetOption extends
         Pick<ComponentOption, 'type' | 'id' | 'name'>,
         Pick<SeriesEncodeOptionMixin, 'dimensions'> {
+    mainType?: 'dataset';
+
     seriesLayoutBy?: SeriesLayoutBy;
     sourceHeader?: OptionSourceHeader;
     source?: OptionSourceData;

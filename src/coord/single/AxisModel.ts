@@ -30,6 +30,7 @@ import { mixin } from 'zrender/src/core/util';
 export type SingleAxisPosition = 'top' | 'bottom' | 'left' | 'right';
 
 export interface SingleAxisOption extends AxisBaseOption, BoxLayoutOptionMixin {
+    mainType?: 'singleAxis'
     position?: SingleAxisPosition
     orient?: LayoutOrient
 }

@@ -40,9 +40,10 @@ import { EChartsExtensionInstallRegisters } from '../../extension';
 
 
 export interface TitleOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
-    show?: boolean
 
-    type?: 'title'
+    mainType?: 'title'
+
+    show?: boolean
 
     text?: string
     /**

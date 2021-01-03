@@ -56,6 +56,7 @@ export type MarkArea2DDataItemOption = [
 ];
 
 export interface MarkAreaOption extends MarkerOption, MarkAreaStateOption, StatesOptionMixin<MarkAreaStateOption> {
+    mainType?: 'markArea'
 
     precision?: number
 

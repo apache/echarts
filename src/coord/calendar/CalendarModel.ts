@@ -64,6 +64,8 @@ export interface CalendarYearLabelFormatterCallbackParams {
 }
 
 export interface CalendarOption extends ComponentOption, BoxLayoutOptionMixin {
+    mainType?: 'calendar'
+
     cellSize?: number | 'auto' | (number | 'auto')[]
     orient?: LayoutOrient
 

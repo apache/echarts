@@ -102,6 +102,7 @@ export interface TimelineDataItemOption extends SymbolOptionMixin {
 }
 
 export interface TimelineOption extends ComponentOption, BoxLayoutOptionMixin, SymbolOptionMixin {
+    mainType?: 'timeline'
 
     backgroundColor?: ZRColor
     borderColor?: ColorString
