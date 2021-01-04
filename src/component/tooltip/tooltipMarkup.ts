@@ -45,21 +45,21 @@ const TOOLTIP_LINE_HEIGHT_CSS = 'line-height:1';
 // TODO: more textStyle option
 function getTooltipTextStyle(
     textStyle: TooltipOption['textStyle'],
-    renderMode: TooltipRenderMode,
-    tooltipModel?: Model<TooltipOption>
+    renderMode: TooltipRenderMode
 ): {
     nameStyle: TextStyle
     valueStyle: TextStyle
 } {
     const nameFontColor = textStyle.color || '#6e7079';
     const nameFontSize = textStyle.fontSize || '12px';
+    const nameFontWeight = textStyle.fontWeight || '400';
     const valueFontColor = textStyle.color || '#464646';
     const valueFontSize = textStyle.fontSize || '14px';
     const valueFontWeight = textStyle.fontWeight || '900';
 
     if (renderMode === 'html') {
         return {
-            nameStyle: `font-size:${nameFontSize};color:${nameFontColor}`,
+            nameStyle: `font-size:${nameFontSize};color:${nameFontColor};font-weight:${nameFontWeight}`,
             valueStyle: `font-size:${valueFontSize};color:${valueFontColor};font-weight:${valueFontWeight}`
         };
     }
@@ -67,7 +67,8 @@ function getTooltipTextStyle(
         return {
             nameStyle: {
                 fontSize: nameFontSize,
-                fill: nameFontColor
+                fill: nameFontColor,
+                fontWeight: nameFontWeight
             },
             valueStyle: {
                 fontSize: valueFontSize,
@@ -346,7 +347,7 @@ function buildSubBlocks(
     ctx: TooltipMarkupBuildContext,
     fragment: TooltipMarkupSection,
     topMarginForOuterGap: number,
-    toolTipTextStyle: TooltipOption['textStyle']
+    tooltipTextStyle: TooltipOption['textStyle']
 ): MarkupText {
     const subMarkupTextList: string[] = [];
     let subBlocks = fragment.blocks || [];
@@ -373,7 +374,7 @@ function buildSubBlocks(
             ctx,
             subBlock,
             idx > 0 ? gaps.html : 0,
-            toolTipTextStyle
+            tooltipTextStyle
         );
         subMarkupText != null && subMarkupTextList.push(subMarkupText);
     });
