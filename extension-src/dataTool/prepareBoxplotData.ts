@@ -42,7 +42,7 @@ function quantile(ascArr: number[], p: number): number {
  * @param {Array.<number>} rawData like
  *        [
  *            [12,232,443], (raw data set for the first box)
- *            [3843,5545,1232], (raw datat set for the second box)
+ *            [3843,5545,1232], (raw data set for the second box)
  *            ...
  *        ]
  * @param {Object} [opt]
