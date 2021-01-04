@@ -28,6 +28,8 @@ import {
     ZRColor,
     OptionDataValue,
     SeriesDataType,
+    ComponentMainType,
+    ComponentSubType,
     DimensionLoose
 } from '../../util/types';
 import GlobalModel from '../Global';
@@ -39,8 +41,8 @@ const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
 export interface DataFormatMixin extends DataHost {
     ecModel: GlobalModel;
-    mainType: string;
-    subType: string;
+    mainType: ComponentMainType;
+    subType: ComponentSubType;
     componentIndex: number;
     id: string;
     name: string;

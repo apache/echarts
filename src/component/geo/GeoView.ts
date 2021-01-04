@@ -21,7 +21,7 @@
 import MapDraw from '../helper/MapDraw';
 import ComponentView from '../../view/Component';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import GeoModel from '../../coord/geo/GeoModel';
 import { Payload, ZRElementEvent, ECEventData } from '../../util/types';
 import { getECData } from '../../util/innerStore';
@@ -99,7 +99,5 @@ class GeoView extends ComponentView {
     }
 
 }
-
-ComponentView.registerClass(GeoView);
 
 export default GeoView;

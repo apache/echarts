@@ -34,7 +34,7 @@ import IntervalScale from '../../scale/Interval';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import { AxisPointerElementOptions } from './BaseAxisPointer';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import Model from '../../model/Model';
 import { PathStyleProps } from 'zrender/src/graphic/Path';

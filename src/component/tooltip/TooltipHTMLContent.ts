@@ -23,7 +23,7 @@ import { normalizeEvent } from 'zrender/src/core/event';
 import { transformLocalCoord } from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
 import { convertToColorString, toCamelCase, normalizeCssArray } from '../../util/format';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { ZRenderType } from 'zrender/src/zrender';
 import { TooltipOption } from './TooltipModel';
 import Model from '../../model/Model';

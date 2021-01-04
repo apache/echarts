@@ -18,7 +18,6 @@
 */
 
 import DataZoomModel, {DataZoomOption} from './DataZoomModel';
-import ComponentModel from '../../model/Component';
 import {
     BoxLayoutOptionMixin,
     ZRColor,
@@ -211,7 +210,5 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         }
     } as SliderDataZoomOption);
 }
-
-ComponentModel.registerClass(SliderZoomModel);
 
 export default SliderZoomModel;

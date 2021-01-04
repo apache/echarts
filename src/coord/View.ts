@@ -29,7 +29,7 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import Transformable from 'zrender/src/core/Transformable';
 import { CoordinateSystemMaster, CoordinateSystem } from './CoordinateSystem';
 import GlobalModel from '../model/Global';
-import { ParsedModelFinder } from '../util/model';
+import { ParsedModelFinder, ParsedModelFinderKnown } from '../util/model';
 
 const v2ApplyTransform = vector.applyTransform;
 
@@ -268,7 +268,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     // }
 }
 
-function getCoordSys(finder: ParsedModelFinder): View {
+function getCoordSys(finder: ParsedModelFinderKnown): View {
     const seriesModel = finder.seriesModel;
     return seriesModel ? seriesModel.coordinateSystem as View : null; // e.g., graph.
 }

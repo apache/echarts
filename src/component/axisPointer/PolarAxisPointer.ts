@@ -30,7 +30,7 @@ import {OptionDataValue,
     ZRTextVerticalAlign
 } from '../../util/types';
 import { PolarAxisModel } from '../../coord/polar/AxisModel';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import Polar from '../../coord/polar/Polar';
 import AngleAxis from '../../coord/polar/AngleAxis';
 import RadiusAxis from '../../coord/polar/RadiusAxis';
@@ -190,8 +190,5 @@ const pointerShapeBuilder = {
             };
     }
 };
-
-// @ts-ignore
-AxisView.registerAxisPointerClass('PolarAxisPointer', PolarAxisPointer);
 
 export default PolarAxisPointer;

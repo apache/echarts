@@ -22,8 +22,8 @@ const fse = require('fs-extra');
 const https = require('https');
 const fs = require('fs');
 const rollup = require('rollup');
-const resolve = require('rollup-plugin-node-resolve');
-const commonjs = require('rollup-plugin-commonjs');
+const {nodeResolve} = require('@rollup/plugin-node-resolve');
+const commonjs = require('@rollup/plugin-commonjs');
 const config = require('./config');
 
 function modifyEChartsCode(code) {
@@ -112,17 +112,18 @@ module.exports.buildRuntimeCode = async function () {
     const bundle = await rollup.rollup({
         input: path.join(__dirname, 'runtime/main.js'),
         plugins: [
-            resolve(),
-            commonjs(),
             {
-                resolveId(importee) {
-                    return importee === 'crypto' ? importee : null;
+                // https://rollupjs.org/guide/en/#a-simple-example
+                resolveId(source, importer) {
+                    return source === 'crypto' ? source : null;
                 },
                 load(id) {
                     // seedrandom use crypto as external module
                     return id === 'crypto' ? 'export default null;' : null;
                 }
-            }
+            },
+            nodeResolve(),
+            commonjs()
         ]
     });
     const { output } = await bundle.generate({

@@ -21,7 +21,7 @@ import * as globalListener from './globalListener';
 import ComponentView from '../../view/Component';
 import AxisPointerModel from './AxisPointerModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import TooltipModel from '../tooltip/TooltipModel';
 
 class AxisPointerView extends ComponentView {
@@ -62,7 +62,5 @@ class AxisPointerView extends ComponentView {
         globalListener.unregister('axisPointer', api);
     }
 }
-
-ComponentView.registerClass(AxisPointerView);
 
 export default AxisPointerView;

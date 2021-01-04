@@ -17,21 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import { use } from '../extension';
+import { install } from './line/install';
 
-import './line/LineSeries';
-import './line/LineView';
-
-import layoutPoints from '../layout/points';
-import dataSample from '../processor/dataSample';
-
-// In case developer forget to include grid component
-import '../component/gridSimple';
-
-echarts.registerLayout(layoutPoints('line', true));
-
-// Down sample after filter
-echarts.registerProcessor(
-    echarts.PRIORITY.PROCESSOR.STATISTIC,
-    dataSample('line')
-);
+use(install);

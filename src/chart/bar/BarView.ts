@@ -36,7 +36,7 @@ import Sausage from '../../util/shape/sausage';
 import ChartView from '../../view/Chart';
 import List, {DefaultDataVisual} from '../../data/List';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import {
     StageHandlerProgressParams,
     ZRElementEvent,
@@ -1102,7 +1102,5 @@ function createBackgroundEl(
         z2: 0
     });
 }
-
-ChartView.registerClass(BarView);
 
 export default BarView;

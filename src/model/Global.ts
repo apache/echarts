@@ -46,19 +46,20 @@ import SeriesModel from './Series';
 import {
     Payload,
     OptionPreprocessor,
-    ECOption,
+    ECBasicOption,
     ECUnitOption,
     ThemeOption,
     ComponentOption,
     ComponentMainType,
     ComponentSubType,
     OptionId,
-    OptionName
+    OptionName,
+    AriaOptionMixin
 } from '../util/types';
 import OptionManager from './OptionManager';
-import Scheduler from '../stream/Scheduler';
+import Scheduler from '../core/Scheduler';
 import { concatInternalOptions } from './internalComponentCreator';
-import { LocaleOption } from '../locale';
+import { LocaleOption } from '../core/locale';
 import {PaletteMixin} from './mixin/palette';
 
 export interface GlobalModelSetOptionOpts {
@@ -76,6 +77,8 @@ let assertSeriesInitialized: (ecModel: GlobalModel) => void;
 let initBase: (ecModel: GlobalModel, baseOption: ECUnitOption) => void;
 
 const OPTION_INNER_KEY = '\0_ec_inner';
+const OPTION_INNER_VALUE = 1;
+
 class GlobalModel extends Model<ECUnitOption> {
     // @readonly
     option: ECUnitOption;
@@ -119,7 +122,7 @@ class GlobalModel extends Model<ECUnitOption> {
 
 
     init(
-        option: ECOption,
+        option: ECBasicOption,
         parentModel: Model,
         ecModel: GlobalModel,
         theme: object,
@@ -134,14 +137,18 @@ class GlobalModel extends Model<ECUnitOption> {
     }
 
     setOption(
-        option: ECOption,
+        option: ECBasicOption,
         opts: GlobalModelSetOptionOpts,
         optionPreprocessorFuncs: OptionPreprocessor[]
     ): void {
-        assert(
-            !(OPTION_INNER_KEY in option),
-            'please use chart.getOption()'
-        );
+
+        if (__DEV__) {
+            assert(option != null, 'option is null/undefined');
+            assert(
+                option[OPTION_INNER_KEY] !== OPTION_INNER_VALUE,
+                'please use chart.getOption()'
+            );
+        }
 
         const innerOpt = normalizeSetOptionInput(opts);
 
@@ -802,11 +809,11 @@ class GlobalModel extends Model<ECUnitOption> {
             }
         };
 
-        initBase = function (ecModel: GlobalModel, baseOption: ECUnitOption): void {
+        initBase = function (ecModel: GlobalModel, baseOption: ECUnitOption & AriaOptionMixin): void {
             // Using OPTION_INNER_KEY to mark that this option can not be used outside,
             // i.e. `chart.setOption(chart.getModel().option);` is forbiden.
             ecModel.option = {} as ECUnitOption;
-            ecModel.option[OPTION_INNER_KEY] = 1;
+            ecModel.option[OPTION_INNER_KEY] = OPTION_INNER_VALUE;
 
             // Init with series: [], in case of calling findSeries method
             // before series initialized.
