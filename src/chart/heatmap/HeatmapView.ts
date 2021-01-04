@@ -149,7 +149,13 @@ class HeatmapView extends ChartView {
     ) {
         const coordSys = seriesModel.coordinateSystem;
         if (coordSys) {
-            this._renderOnCartesianAndCalendar(seriesModel, api, params.start, params.end, true);
+            // geo does not support incremental rendering?
+            if (isGeoCoordSys(coordSys)) {
+                this.render(seriesModel, ecModel, api);
+            }
+            else {
+                this._renderOnCartesianAndCalendar(seriesModel, api, params.start, params.end, true);
+            }
         }
     }
 
