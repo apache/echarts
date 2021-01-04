@@ -20,7 +20,7 @@
 import { parsePercent } from '../../util/number';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption, SunburstSeriesOption } from './SunburstSeries';
 import { TreeNode } from '../../data/Tree';
 

@@ -24,7 +24,7 @@ import { PathProps } from 'zrender/src/graphic/Path';
 import SankeySeriesModel, { SankeyEdgeItemOption, SankeyNodeItemOption } from './SankeySeries';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import List from '../../data/List';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
@@ -343,7 +343,5 @@ function createGridClipShape(rect: RectLike, seriesModel: SankeySeriesModel, cb:
 
     return rectEl;
 }
-
-ChartView.registerClass(SankeyView);
 
 export default SankeyView;

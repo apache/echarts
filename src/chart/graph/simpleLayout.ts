@@ -20,7 +20,7 @@
 import {each} from 'zrender/src/core/util';
 import {simpleLayout, simpleLayoutEdge} from './simpleLayoutHelper';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import GraphSeriesModel from './GraphSeries';
 
 export default function graphSimpleLayout(ecModel: GlobalModel, api: ExtensionAPI) {

@@ -24,16 +24,13 @@ import BrushController, { BrushControllerEvents, BrushDimensionMinMax } from '..
 import BrushTargetManager, { BrushTargetInfoCartesian2D } from '../../helper/BrushTargetManager';
 import * as history from '../../dataZoom/history';
 import sliderMove from '../../helper/sliderMove';
-// Use dataZoomSelect
-import '../../dataZoomSelect';
 import {
     ToolboxFeature,
     ToolboxFeatureModel,
-    ToolboxFeatureOption,
-    registerFeature
+    ToolboxFeatureOption
 } from '../featureManager';
 import GlobalModel from '../../../model/Global';
-import ExtensionAPI from '../../../ExtensionAPI';
+import ExtensionAPI from '../../../core/ExtensionAPI';
 import { Payload, Dictionary, ComponentOption, ItemStyleOption } from '../../../util/types';
 import Cartesian2D from '../../../coord/cartesian/Cartesian2D';
 import CartesianAxisModel from '../../../coord/cartesian/AxisModel';
@@ -43,7 +40,7 @@ import {
 } from '../../dataZoom/helper';
 import {
     ModelFinderObject, ModelFinderIndexQuery, makeInternalComponentId,
-    ModelFinderIdQuery, parseFinder
+    ModelFinderIdQuery, parseFinder, ParsedModelFinderKnown
 } from '../../../util/model';
 import ToolboxModel from '../ToolboxModel';
 import { registerInternalOptionCreator } from '../../../model/internalComponentCreator';
@@ -320,8 +317,6 @@ function updateZoomBtnStatus(
         );
 }
 
-registerFeature('dataZoom', DataZoomFeature);
-
 registerInternalOptionCreator('dataZoom', function (ecModel: GlobalModel): ComponentOption[] {
     const toolboxModel = ecModel.getComponent('toolbox', 0) as ToolboxModel;
     if (!toolboxModel) {
@@ -331,7 +326,7 @@ registerInternalOptionCreator('dataZoom', function (ecModel: GlobalModel): Compo
     const dzOptions = [] as ComponentOption[];
 
     const finder = makeAxisFinder(dzFeatureModel);
-    const finderResult = parseFinder(ecModel, finder);
+    const finderResult = parseFinder(ecModel, finder) as ParsedModelFinderKnown;
 
     each(finderResult.xAxisModels, axisModel => buildInternalOptions(axisModel, 'xAxis', 'xAxisIndex'));
     each(finderResult.yAxisModels, axisModel => buildInternalOptions(axisModel, 'yAxis', 'yAxisIndex'));

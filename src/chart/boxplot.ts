@@ -17,14 +17,8 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
-import './boxplot/BoxplotSeries';
-import './boxplot/BoxplotView';
-import boxplotVisual from './boxplot/boxplotVisual';
-import boxplotLayout from './boxplot/boxplotLayout';
-import { boxplotTransform } from './boxplot/boxplotTransform';
+import { use } from '../extension';
+import { install } from './boxplot/install';
 
-echarts.registerVisual(boxplotVisual);
-echarts.registerLayout(boxplotLayout);
-echarts.registerTransform(boxplotTransform);
 
+use(install);

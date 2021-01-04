@@ -786,7 +786,12 @@ export type ModelFinderObject = {
  *     ...
  * }
  */
-type ParsedModelFinderKnown = {
+export type ParsedModelFinder = {
+    // other components
+    [key: string]: ComponentModel | ComponentModel[] | undefined;
+};
+
+export type ParsedModelFinderKnown = ParsedModelFinder & {
     seriesModels?: SeriesModel[];
     seriesModel?: SeriesModel;
     xAxisModels?: CartesianAxisModel[];
@@ -797,10 +802,6 @@ type ParsedModelFinderKnown = {
     gridModel?: GridModel;
     dataIndex?: number;
     dataIndexInside?: number;
-};
-export type ParsedModelFinder = ParsedModelFinderKnown & {
-    // other components
-    [key: string]: ComponentModel | ComponentModel[];
 };
 
 /**
@@ -829,7 +830,7 @@ export function parseFinder(
     }
 
     const queryOptionMap = createHashMap<QueryReferringUserOption, ComponentMainType>();
-    const result = {} as ParsedModelFinder;
+    const result = {} as ParsedModelFinderKnown;
     let mainTypeSpecified = false;
 
     each(finder, function (value, key) {

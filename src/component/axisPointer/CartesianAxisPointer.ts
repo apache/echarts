@@ -22,7 +22,7 @@ import * as viewHelper from './viewHelper';
 import * as cartesianAxisHelper from '../../coord/cartesian/cartesianAxisHelper';
 import AxisView from '../axis/AxisView';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { ScaleDataValue, VerticalAlign, HorizontalAlign, CommonAxisPointerOption } from '../../util/types';
 import Grid from '../../coord/cartesian/Grid';
 import Axis2D from '../../coord/cartesian/Axis2D';
@@ -175,8 +175,5 @@ const pointerShapeBuilder = {
 function getAxisDimIndex(axis: Axis2D) {
     return axis.dim === 'x' ? 0 : 1;
 }
-
-// @ts-ignore
-AxisView.registerAxisPointerClass('CartesianAxisPointer', CartesianAxisPointer);
 
 export default CartesianAxisPointer;

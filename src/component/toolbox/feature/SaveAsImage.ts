@@ -20,10 +20,10 @@
 /* global Uint8Array */
 
 import env from 'zrender/src/core/env';
-import { ToolboxFeature, ToolboxFeatureOption, registerFeature } from '../featureManager';
+import { ToolboxFeature, ToolboxFeatureOption } from '../featureManager';
 import { ZRColor } from '../../../util/types';
 import GlobalModel from '../../../model/Global';
-import ExtensionAPI from '../../../ExtensionAPI';
+import ExtensionAPI from '../../../core/ExtensionAPI';
 
 export interface ToolboxSaveAsImageFeatureOption extends ToolboxFeatureOption {
     icon?: string
@@ -142,7 +142,5 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
 }
 
 SaveAsImage.prototype.unusable = !env.canvasSupported;
-
-registerFeature('saveAsImage', SaveAsImage);
 
 export default SaveAsImage;

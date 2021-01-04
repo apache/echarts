@@ -19,7 +19,7 @@
 */
 
 import { findEffectedDataZooms } from '../../../../../src/component/dataZoom/helper';
-import { createChart } from '../../../core/utHelper';
+import { createChart, getECModel } from '../../../core/utHelper';
 import { EChartsType } from '../../../../../src/echarts';
 
 
@@ -50,12 +50,12 @@ describe('dataZoom/helper', function () {
             });
 
             const payload = { type: 'dataZoom', dataZoomIndex: 0 };
-            const dzModels = findEffectedDataZooms(chart.getModel(), payload);
+            const dzModels = findEffectedDataZooms(getECModel(chart), payload);
 
             expect(dzModels.length === 3);
-            expect(dzModels[0] === chart.getModel().getComponent('dataZoom', 0)).toEqual(true);
-            expect(dzModels[1] === chart.getModel().getComponent('dataZoom', 3)).toEqual(true);
-            expect(dzModels[2] === chart.getModel().getComponent('dataZoom', 2)).toEqual(true);
+            expect(dzModels[0] === getECModel(chart).getComponent('dataZoom', 0)).toEqual(true);
+            expect(dzModels[1] === getECModel(chart).getComponent('dataZoom', 3)).toEqual(true);
+            expect(dzModels[2] === getECModel(chart).getComponent('dataZoom', 2)).toEqual(true);
         });
 
         it('findLinkedNodes_crossXY', function () {
@@ -72,13 +72,13 @@ describe('dataZoom/helper', function () {
             });
 
             const payload = { type: 'dataZoom', dataZoomIndex: 0 };
-            const dzModels = findEffectedDataZooms(chart.getModel(), payload);
+            const dzModels = findEffectedDataZooms(getECModel(chart), payload);
 
             expect(dzModels.length === 4);
-            expect(dzModels[0] === chart.getModel().getComponent('dataZoom', 0)).toEqual(true);
-            expect(dzModels[1] === chart.getModel().getComponent('dataZoom', 1)).toEqual(true);
-            expect(dzModels[2] === chart.getModel().getComponent('dataZoom', 2)).toEqual(true);
-            expect(dzModels[3] === chart.getModel().getComponent('dataZoom', 3)).toEqual(true);
+            expect(dzModels[0] === getECModel(chart).getComponent('dataZoom', 0)).toEqual(true);
+            expect(dzModels[1] === getECModel(chart).getComponent('dataZoom', 1)).toEqual(true);
+            expect(dzModels[2] === getECModel(chart).getComponent('dataZoom', 2)).toEqual(true);
+            expect(dzModels[3] === getECModel(chart).getComponent('dataZoom', 3)).toEqual(true);
         });
 
         it('findLinkedNodes_emptySourceModel', function () {
@@ -95,7 +95,7 @@ describe('dataZoom/helper', function () {
             });
 
             const payload = { type: 'other' };
-            const dzModels = findEffectedDataZooms(chart.getModel(), payload);
+            const dzModels = findEffectedDataZooms(getECModel(chart), payload);
 
             expect(dzModels.length === 0);
         });

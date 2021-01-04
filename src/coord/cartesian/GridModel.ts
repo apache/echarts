@@ -18,13 +18,14 @@
 */
 
 
-import './AxisModel';
 import ComponentModel from '../../model/Component';
 import { ComponentOption, BoxLayoutOptionMixin, ZRColor, ShadowOptionMixin } from '../../util/types';
 import Grid from './Grid';
 import { CoordinateSystemHostModel } from '../CoordinateSystem';
 
 export interface GridOption extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
+    mainType?: 'grid';
+
     show?: boolean;
 
     // Whether grid size contain label.

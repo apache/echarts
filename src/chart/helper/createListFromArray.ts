@@ -22,7 +22,7 @@ import List from '../../data/List';
 import createDimensions from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
-import CoordinateSystem from '../../CoordinateSystem';
+import CoordinateSystem from '../../core/CoordinateSystem';
 import {getCoordSysInfoBySeries} from '../../model/referHelper';
 import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../../data/Source';
 import {enableDataStack} from '../../data/helper/dataStackHelper';

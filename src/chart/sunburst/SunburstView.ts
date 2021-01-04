@@ -23,7 +23,7 @@ import SunburstPiece from './SunburstPiece';
 import DataDiffer from '../../data/DataDiffer';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption } from './SunburstSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import { ROOT_TO_NODE_ACTION } from './sunburstAction';
 import { windowOpen } from '../../util/format';
@@ -248,8 +248,5 @@ class SunburstView extends ChartView {
     }
 
 }
-
-
-ChartView.registerClass(SunburstView);
 
 export default SunburstView;

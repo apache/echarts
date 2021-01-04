@@ -18,7 +18,7 @@
 * under the License.
 */
 
-import { createChart } from '../../../core/utHelper';
+import { createChart, getECModel } from '../../../core/utHelper';
 import { EChartsType } from '../../../../../src/echarts';
 import { EChartsFullOption } from '../../../../../src/option';
 import { ContinousVisualMapOption } from '../../../../../src/component/visualMap/ContinuousModel';
@@ -256,7 +256,7 @@ describe('vsiaulMap_setOption', function () {
             ]
         });
 
-        const ecModel = chart.getModel();
+        const ecModel = getECModel(chart);
 
         function getVisual(idx: number, visualType: 'color' | 'opacity' | 'symbol') {
             return (ecModel.getComponent('visualMap', idx) as VisualMapModel)

@@ -17,13 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import { use } from '../extension';
+import { install } from './funnel/install';
 
-import './funnel/FunnelSeries';
-import './funnel/FunnelView';
-
-import funnelLayout from './funnel/funnelLayout';
-import dataFilter from '../processor/dataFilter';
-
-echarts.registerLayout(funnelLayout);
-echarts.registerProcessor(dataFilter('funnel'));
+use(install);

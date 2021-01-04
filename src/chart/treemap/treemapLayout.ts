@@ -34,7 +34,7 @@ import * as layout from '../../util/layout';
 import * as helper from '../helper/treeHelper';
 import TreemapSeriesModel, { TreemapSeriesNodeItemOption } from './TreemapSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import Model from '../../model/Model';
 import { TreemapRenderPayload, TreemapMovePayload, TreemapZoomToNodePayload } from './treemapAction';

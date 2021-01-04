@@ -17,14 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import { use } from '../extension';
+import { install } from './scatter/install';
 
-import './scatter/ScatterSeries';
-import './scatter/ScatterView';
-
-import layoutPoints from '../layout/points';
-
-// In case developer forget to include grid component
-import '../component/gridSimple';
-
-echarts.registerLayout(layoutPoints('scatter'));
+use(install);

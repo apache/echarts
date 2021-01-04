@@ -17,10 +17,7 @@
 * under the License.
 */
 
-import './toolbox/ToolboxModel';
-import './toolbox/ToolboxView';
-import './toolbox/feature/SaveAsImage';
-import './toolbox/feature/MagicType';
-import './toolbox/feature/DataView';
-import './toolbox/feature/DataZoom';
-import './toolbox/feature/Restore';
+import { use } from '../extension';
+import { install } from './toolbox/install';
+
+use(install);

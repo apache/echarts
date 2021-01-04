@@ -17,13 +17,8 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
 
-import './lines/LinesSeries';
-import './lines/LinesView';
+import { use } from '../extension';
+import { install } from './lines/install';
 
-import linesLayout from './lines/linesLayout';
-import linesVisual from './lines/linesVisual';
-
-echarts.registerLayout(linesLayout);
-echarts.registerVisual(linesVisual);
+use(install);

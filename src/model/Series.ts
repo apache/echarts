@@ -19,12 +19,12 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import {MorphDividingMethod} from 'zrender/src/tool/morphPath';
+import type {MorphDividingMethod} from 'zrender/src/tool/morphPath';
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
     SeriesOption, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType, DimensionLoose, DecalObject
+    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType, DimensionLoose
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {PaletteMixin} from './mixin/palette';
@@ -35,11 +35,11 @@ import {
     mergeLayoutParam,
     fetchLayoutMode
 } from '../util/layout';
-import {createTask} from '../stream/task';
+import {createTask} from '../core/task';
 import GlobalModel from './Global';
 import { CoordinateSystem } from '../coord/CoordinateSystem';
 import { ExtendableConstructor, mountExtend, Constructor } from '../util/clazz';
-import { PipelineContext, SeriesTaskContext, GeneralTask, OverallTask, SeriesTask } from '../stream/Scheduler';
+import { PipelineContext, SeriesTaskContext, GeneralTask, OverallTask, SeriesTask } from '../core/Scheduler';
 import LegendVisualProvider from '../visual/LegendVisualProvider';
 import List from '../data/List';
 import Axis from '../coord/Axis';

@@ -17,14 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import { use } from '../extension';
+import { install } from './themeRiver/install';
 
-import '../component/singleAxis';
-import './themeRiver/ThemeRiverSeries';
-import './themeRiver/ThemeRiverView';
-
-import themeRiverLayout from './themeRiver/themeRiverLayout';
-import dataFilter from '../processor/dataFilter';
-
-echarts.registerLayout(themeRiverLayout);
-echarts.registerProcessor(dataFilter('themeRiver'));
+use(install);

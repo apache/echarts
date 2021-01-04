@@ -24,7 +24,7 @@ import * as layout from '../../util/layout';
 import VisualMapping from '../../visual/VisualMapping';
 import ComponentView from '../../view/Component';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import VisualMapModel from './VisualMapModel';
 import { VisualOptionUnit, ColorString } from '../../util/types';
 import PiecewiseModel from './PiecewiseModel';
@@ -172,7 +172,5 @@ class VisualMapView extends ComponentView {
         payload: unknown
     ) {}
 }
-
-ComponentView.registerClass(VisualMapView);
 
 export default VisualMapView;

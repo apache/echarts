@@ -44,7 +44,7 @@ import {
     ZRColor
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import TooltipModel, {TooltipOption} from './TooltipModel';
 import Element from 'zrender/src/Element';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
@@ -908,12 +908,14 @@ class TooltipView extends ComponentView {
 }
 
 type TooltipableOption = {
-    tooltip?: TooltipOption | string
+    tooltip?: Omit<TooltipOption, 'mainType'> | string
 };
 /**
  * From top to bottom. (the last one should be globalTooltipModel);
  */
-function buildTooltipModel(modelCascade: (TooltipModel | Model<TooltipableOption> | TooltipOption | string)[]) {
+function buildTooltipModel(modelCascade: (
+    TooltipModel | Model<TooltipableOption> | Omit<TooltipOption, 'mainType'> | string
+)[]) {
     // Last is always tooltip model.
     let resultModel = modelCascade.pop() as Model<TooltipOption>;
     while (modelCascade.length) {
@@ -1034,4 +1036,4 @@ function isCenterAlign(align: HorizontalAlign | VerticalAlign) {
     return align === 'center' || align === 'middle';
 }
 
-ComponentView.registerClass(TooltipView);
+export default TooltipView;

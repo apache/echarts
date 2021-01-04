@@ -23,13 +23,12 @@ import * as numberUtil from '../../util/number';
 import List from '../../data/List';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
-import ComponentView from '../../view/Component';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import SeriesModel from '../../model/Series';
 import MarkPointModel, {MarkPointDataItemOption} from './MarkPointModel';
 import GlobalModel from '../../model/Global';
 import MarkerModel from './MarkerModel';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { HashMap, isFunction, map, defaults, filter, curry } from 'zrender/src/core/util';
 import { getECData } from '../../util/innerStore';
 import { getVisualFromData } from '../../visual/helper';
@@ -210,4 +209,4 @@ function createList(
     return mpData;
 }
 
-ComponentView.registerClass(MarkPointView);
+export default MarkPointView;

@@ -59,6 +59,8 @@ interface AxisPointerLink {
 
 // TODO: TYPE AxisPointerOption for each axis
 export interface AxisPointerOption extends ComponentOption, Omit<CommonAxisPointerOption, 'type'> {
+    mainType?: 'axisPointer'
+
     type?: 'line' | 'shadow' | 'cross' | 'none'
 
     link?: AxisPointerLink[]

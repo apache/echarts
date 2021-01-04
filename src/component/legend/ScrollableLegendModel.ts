@@ -24,7 +24,6 @@ import {
 } from '../../util/layout';
 import { ZRColor, LabelOption } from '../../util/types';
 import Model from '../../model/Model';
-import ComponentModel from '../../model/Component';
 import GlobalModel from '../../model/Global';
 import { inheritDefaultOption } from '../../util/component';
 
@@ -120,7 +119,5 @@ function mergeAndNormalizeLayoutParams(
         type: 'box', ignoreSize: !!ignoreSize
     });
 }
-
-ComponentModel.registerClass(ScrollableLegendModel);
 
 export default ScrollableLegendModel;

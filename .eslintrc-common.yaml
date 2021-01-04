@@ -28,6 +28,7 @@
 # ```
 # Note that it should be "workingDirectories" rather than "WorkingDirectories".
 
+root: true
 rules:
     # Check the rules in: node_modules/@typescript-eslint/eslint-plugin/README.md
     no-console:
@@ -80,7 +81,6 @@ rules:
     no-octal: 2
     no-octal-escape: 2
     no-proto: 2
-    no-redeclare: 2
     no-self-compare: 2
     no-unneeded-ternary: 2
     no-with: 2
@@ -216,3 +216,4 @@ rules:
         -
             vars: "local"
             args: "none"
+    "@typescript-eslint/no-redeclare": 2
