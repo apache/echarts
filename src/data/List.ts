@@ -24,6 +24,7 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
+import {PathStyleProps} from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
 import {DefaultDataProvider, DataProvider} from './helper/dataProvider';
@@ -34,16 +35,16 @@ import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
     ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput,
-    ModelOption, SeriesDataType, OrdinalRawValue
+    ModelOption, SeriesDataType, OptionSourceData, SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL, DecalObject
 } from '../util/types';
 import {isDataItemOption, convertOptionIdName} from '../util/model';
 import { getECData } from '../util/innerStore';
-import { PathStyleProps } from 'zrender/src/graphic/Path';
 import type Graph from './Graph';
 import type Tree from './Tree';
 import type { VisualMeta } from '../component/visualMap/VisualMapModel';
 import { parseDataValue } from './helper/dataValueHelper';
-import { isSourceInstance } from './Source';
+import {isSourceInstance, Source} from './Source';
+import OrdinalMeta from './OrdinalMeta';
 
 const mathFloor = Math.floor;
 const isObject = zrUtil.isObject;
@@ -144,6 +145,8 @@ export interface DefaultDataVisual {
 
     // If color is encoded from palette
     colorFromPalette?: boolean
+
+    decal?: DecalObject
 }
 
 export interface DataCalculationInfo<SERIES_MODEL> {
@@ -160,21 +163,22 @@ export interface DataCalculationInfo<SERIES_MODEL> {
 // -----------------------------
 let defaultDimValueGetters: {[sourceFormat: string]: DimValueGetter};
 let prepareInvertedIndex: (list: List) => void;
-let getRawValueFromStore: (list: List, dimIndex: number, rawIndex: number) => ParsedValue | OrdinalRawValue;
 let getIndicesCtor: (list: List) => DataArrayLikeConstructor;
 let prepareStorage: (
     storage: DataStorage, dimInfo: DataDimensionInfo, end: number, append?: boolean
 ) => void;
 let getRawIndexWithoutIndices: (this: List, idx: number) => number;
 let getRawIndexWithIndices: (this: List, idx: number) => number;
-let getIdFromName: (list: List, name: string) => string;
 let getId: (list: List, rawIndex: number) => string;
+let getIdNameFromStore: (list: List, dimIdx: number, ordinalMeta: OrdinalMeta, rawIndex: number) => string;
+let makeIdFromName: (list: List, idx: number) => void;
 let normalizeDimensions: (dimensions: ItrParamDims) => Array<DimensionLoose>;
 let validateDimensions: (list: List, dims: DimensionName[]) => void;
 let cloneListForMapAndSample: (original: List, excludeDimensions: DimensionName[]) => List;
 let getInitialExtent: () => [number, number];
 let setItemDataAndSeriesIndex: (this: Element, child: Element) => void;
 let transferProperties: (target: List, source: List) => void;
+
 
 class List<
     HostModel extends Model = Model,
@@ -217,7 +221,7 @@ class List<
     // We have an extra array store here. It's faster to be acessed than KV structured `_storage`.
     // We profile the code `storage[dim]` and it seems to be KeyedLoadIC_Megamorphic instead of fast property access.
     // Not sure why this happens. But using an extra array seems leads to faster `initData`
-    // See https://github.com/apache/incubator-echarts/pull/13314 for more explaination.
+    // See https://github.com/apache/incubator-echarts/pull/13314 for more explanation.
     private _storageArr: DataValueChunk[] = [];
     private _nameList: string[] = [];
     private _idList: string[] = [];
@@ -267,7 +271,10 @@ class List<
     // avoid clone them too many times.
     readonly userOutput: DimensionUserOuput;
 
-    // If each data item has it's own option
+    // Having detected that there is data item is non primitive type
+    // (in type `OptionDataItemObject`).
+    // Like `data: [ { value: xx, itemStyle: {...} }, ...]`
+    // At present it only happen in `SOURCE_FORMAT_ORIGINAL`.
     hasItemOption: boolean = true;
 
     // @readonly
@@ -275,9 +282,14 @@ class List<
     private _dimValueGetter: DimValueGetter;
     private _dimValueGetterArrayRows: DimValueGetter;
 
+    // id or name is used on dynamic data, mapping old and new items.
+    // When generating id from name, avoid repeat.
     private _nameRepeatCount: NameRepeatCount;
     private _nameDimIdx: number;
+    private _nameOrdinalMeta: OrdinalMeta;
     private _idDimIdx: number;
+    private _idOrdinalMeta: OrdinalMeta;
+    private _dontMakeIdFromName: boolean;
 
     private __wrappedMethods: string[];
 
@@ -318,7 +330,7 @@ class List<
                 dimensionInfo.coordDimIndex = 0;
             }
 
-            dimensionInfo.otherDims = dimensionInfo.otherDims || {};
+            const otherDims = dimensionInfo.otherDims = dimensionInfo.otherDims || {};
             dimensionNames.push(dimensionName);
             dimensionInfos[dimensionName] = dimensionInfo;
 
@@ -326,6 +338,14 @@ class List<
 
             if (dimensionInfo.createInvertedIndices) {
                 invertedIndicesMap[dimensionName] = [];
+            }
+            if (otherDims.itemName === 0) {
+                this._nameDimIdx = i;
+                this._nameOrdinalMeta = dimensionInfo.ordinalMeta;
+            }
+            if (otherDims.itemId === 0) {
+                this._idDimIdx = i;
+                this._idOrdinalMeta = dimensionInfo.ordinalMeta;
             }
         }
 
@@ -417,39 +437,45 @@ class List<
     /**
      * Initialize from data
      * @param data source or data or data provider.
-     * @param nameLIst The name of a datum is used on data diff and
+     * @param nameList The name of a datum is used on data diff and
      *        default label/tooltip.
      *        A name can be specified in encode.itemName,
      *        or dataItem.name (only for series option data),
      *        or provided in nameList from outside.
      */
     initData(
-        data: any,
+        data: Source | OptionSourceData | DataProvider,
         nameList?: string[],
         dimValueGetter?: DimValueGetter
     ): void {
 
         const notProvider = isSourceInstance(data) || zrUtil.isArrayLike(data);
-        if (notProvider) {
-            data = new DefaultDataProvider(data, this.dimensions.length);
-        }
+        const provider: DataProvider = notProvider
+            ? new DefaultDataProvider(data as Source | OptionSourceData, this.dimensions.length)
+            : data as DataProvider;
 
         if (__DEV__) {
-            if (!notProvider
-                && (typeof data.getItem !== 'function' || typeof data.count !== 'function')
-            ) {
-                throw new Error('Inavlid data provider.');
-            }
+            zrUtil.assert(
+                notProvider || (
+                    zrUtil.isFunction(provider.getItem)
+                    && zrUtil.isFunction(provider.count)
+                ),
+                'Inavlid data provider.'
+            );
         }
 
-        this._rawData = data;
+        this._rawData = provider;
+        const sourceFormat = provider.getSource().sourceFormat;
 
         // Clear
         this._storage = {};
         this._indices = null;
+        this._dontMakeIdFromName =
+            this._idDimIdx != null
+            || sourceFormat === SOURCE_FORMAT_TYPED_ARRAY // Cosndier performance.
+            || !!provider.fillStorage;
 
-        this._nameList = nameList || [];
-
+        this._nameList = (nameList || []).slice();
         this._idList = [];
 
         this._nameRepeatCount = {};
@@ -458,9 +484,7 @@ class List<
             this.hasItemOption = false;
         }
 
-        this.defaultDimValueGetter = defaultDimValueGetters[
-            this._rawData.getSource().sourceFormat
-        ];
+        this.defaultDimValueGetter = defaultDimValueGetters[sourceFormat];
         // Default dim value getter
         this._dimValueGetter = dimValueGetter = dimValueGetter
             || this.defaultDimValueGetter;
@@ -469,10 +493,10 @@ class List<
         // Reset raw extent.
         this._rawExtent = {};
 
-        this._initDataFromProvider(0, data.count());
+        this._initDataFromProvider(0, provider.count());
 
         // If data has no item option.
-        if (data.pure) {
+        if (provider.pure) {
             this.hasItemOption = false;
         }
     }
@@ -557,6 +581,9 @@ class List<
 
             if (names) {
                 this._nameList[idx] = names[sourceIdx];
+                if (!this._dontMakeIdFromName) {
+                    makeIdFromName(this, idx);
+                }
             }
         }
 
@@ -581,24 +608,15 @@ class List<
         const nameList = this._nameList;
         const idList = this._idList;
         const rawExtent = this._rawExtent;
-        this._nameRepeatCount = {};
-        let nameDimIdx;
+        const sourceFormat = rawData.getSource().sourceFormat;
+        const isFormatOriginal = sourceFormat === SOURCE_FORMAT_ORIGINAL;
 
         for (let i = 0; i < dimLen; i++) {
             const dim = dimensions[i];
             if (!rawExtent[dim]) {
                 rawExtent[dim] = getInitialExtent();
             }
-
-            const dimInfo = dimensionInfoMap[dim];
-            if (dimInfo.otherDims.itemName === 0) {
-                nameDimIdx = this._nameDimIdx = i;
-            }
-            if (dimInfo.otherDims.itemId === 0) {
-                this._idDimIdx = i;
-            }
-
-            prepareStorage(storage, dimInfo, end, append);
+            prepareStorage(storage, dimensionInfoMap[dim], end, append);
         }
 
         const storageArr = this._storageArr = map(dimensions, (dim) => {
@@ -637,46 +655,25 @@ class List<
                     val > dimRawExtent[1] && (dimRawExtent[1] = val);
                 }
 
-                // ??? FIXME not check by pure but sourceFormat?
-                // TODO refactor these logic.
-                if (!rawData.pure) {
-                    let name: string = nameList[idx];
-
-                    if (dataItem && name == null) {
-                        // If dataItem is {name: ...}, it has highest priority.
-                        // That is appropriate for many common cases.
-                        if ((dataItem as any).name != null) {
-                            // There is no other place to persistent dataItem.name,
-                            // so save it to nameList.
-                            nameList[idx] = name = convertOptionIdName((dataItem as any).name, null);
-                        }
-                        else if (nameDimIdx != null) {
-                            const nameDim = dimensions[nameDimIdx];
-                            const nameDimChunk = storage[nameDim];
-                            if (nameDimChunk) {
-                                const ordinalMeta = dimensionInfoMap[nameDim].ordinalMeta;
-                                name = convertOptionIdName(
-                                    (ordinalMeta && ordinalMeta.categories.length)
-                                        ? ordinalMeta.categories[nameDimChunk[idx] as number]
-                                        : nameDimChunk[idx],
-                                    null
-                                );
-                            }
-                        }
+                // If dataItem is {name: ...} or {id: ...}, it has highest priority.
+                // This kind of ids and names are always stored `_nameList` and `_idList`.
+                if (isFormatOriginal && !rawData.pure && dataItem) {
+                    const itemName = (dataItem as any).name;
+                    if (nameList[idx] == null && itemName != null) {
+                        nameList[idx] = convertOptionIdName(itemName, null);
                     }
-
-                    // Try using the id in option
-                    // id or name is used on dynamical data, mapping old and new items.
-                    let id: string = dataItem == null ? null : convertOptionIdName((dataItem as any).id, null);
-
-                    if (id == null && name != null) {
-                        // Use name as id and add counter to avoid same name
-                        id = getIdFromName(this, name);
+                    const itemId = (dataItem as any).id;
+                    if (idList[idx] == null && itemId != null) {
+                        idList[idx] = convertOptionIdName(itemId, null);
                     }
-                    id != null && (idList[idx] = id);
+                }
+
+                if (!this._dontMakeIdFromName) {
+                    makeIdFromName(this, idx);
                 }
             }
         }
+
         if (!rawData.persistent && rawData.clean) {
             // Clean unused data if data source is typed array.
             rawData.clean();
@@ -1132,9 +1129,14 @@ class List<
      */
     getName(idx: number): string {
         const rawIndex = this.getRawIndex(idx);
-        return this._nameList[rawIndex]
-            || convertOptionIdName(getRawValueFromStore(this, this._nameDimIdx, rawIndex), '')
-            || '';
+        let name = this._nameList[rawIndex];
+        if (name == null && this._nameDimIdx != null) {
+            name = getIdNameFromStore(this, this._nameDimIdx, this._nameOrdinalMeta, rawIndex);
+        }
+        if (name == null) {
+            name = '';
+        }
+        return name;
     }
 
     /**
@@ -1775,10 +1777,16 @@ class List<
     }
 
     /**
+     * If exists visual property of single data item
+     */
+    hasItemVisual() {
+        return this._itemVisuals.length > 0;
+    }
+
+    /**
      * Make sure itemVisual property is unique
      */
     // TODO: use key to save visual to reduce memory.
-    // eslint-disable-next-line
     ensureUniqueItemVisual<K extends keyof Visual>(idx: number, key: K): Visual[K] {
         const itemVisuals = this._itemVisuals;
         let itemVisual = itemVisuals[idx] as Visual;
@@ -1786,7 +1794,7 @@ class List<
             itemVisual = itemVisuals[idx] = {} as Visual;
         }
         let val = itemVisual[key];
-        if (!val) {
+        if (val == null) {
             val = this.getVisual(key);
 
             // TODO Performance?
@@ -2008,7 +2016,7 @@ class List<
                 // Performance sensitive, do not use modelUtil.getDataItemValue.
                 // If dataItem is an plain object with no value field, the let `value`
                 // will be assigned with the object, but it will be tread correctly
-                // in the `convertDataValue`.
+                // in the `convertValue`.
                 const value = dataItem && (dataItem.value == null ? dataItem : dataItem.value);
 
                 // If any dataItem is like { value: 10 }
@@ -2062,22 +2070,18 @@ class List<
             });
         };
 
-        getRawValueFromStore = function (
-            list: List, dimIndex: number, rawIndex: number
-        ): ParsedValue | OrdinalRawValue {
+        getIdNameFromStore = function (
+            list: List, dimIdx: number, ordinalMeta: OrdinalMeta, rawIndex: number
+        ): string {
             let val;
-            if (dimIndex != null) {
-                const dim = list.dimensions[dimIndex];
-                const chunk = list._storage[dim];
-                if (chunk) {
-                    val = chunk[rawIndex];
-                    const ordinalMeta = list._dimensionInfos[dim].ordinalMeta;
-                    if (ordinalMeta && ordinalMeta.categories.length) {
-                        val = ordinalMeta.categories[val as OrdinalNumber];
-                    }
+            const chunk = list._storageArr[dimIdx];
+            if (chunk) {
+                val = chunk[rawIndex];
+                if (ordinalMeta && ordinalMeta.categories.length) {
+                    val = ordinalMeta.categories[val as OrdinalNumber];
                 }
             }
-            return val;
+            return convertOptionIdName(val, null);
         };
 
         getIndicesCtor = function (list: List): DataArrayLikeConstructor {
@@ -2123,37 +2127,16 @@ class List<
             return -1;
         };
 
-        getIdFromName = function (list: List, name: string) {
-            const nameRepeatCount = list._nameRepeatCount;
-            nameRepeatCount[name] = nameRepeatCount[name] || 0;
-            let id = name;
-            if (nameRepeatCount[name] > 0) {
-                id += '__ec__' + nameRepeatCount[name];
-            }
-            nameRepeatCount[name]++;
-            return id;
-        };
-
         /**
          * @see the comment of `List['getId']`.
          */
         getId = function (list: List, rawIndex: number): string {
             let id = list._idList[rawIndex];
-            if (id == null) {
-                id = convertOptionIdName(getRawValueFromStore(list, list._idDimIdx, rawIndex), null);
+            if (id == null && list._idDimIdx != null) {
+                id = getIdNameFromStore(list, list._idDimIdx, list._idOrdinalMeta, rawIndex);
             }
             if (id == null) {
-                // Use name
-                id = convertOptionIdName(getRawValueFromStore(list, list._nameDimIdx, rawIndex), null);
-                if (id != null) {
-                    id = getIdFromName(list, id);
-                    // Cache the id. Avoid getting twice.
-                    list._idList[rawIndex] = id;
-                }
-                else {
-                    // FIXME Check the usage in graph, should not use prefix.
-                    id = ID_PREFIX + rawIndex;
-                }
+                id = ID_PREFIX + rawIndex;
             }
             return id;
         };
@@ -2162,7 +2145,7 @@ class List<
             dimensions: ItrParamDims
         ): Array<DimensionLoose> {
             if (!zrUtil.isArray(dimensions)) {
-                dimensions = [dimensions];
+                dimensions = dimensions != null ? [dimensions] : [];
             }
             return dimensions;
         };
@@ -2251,6 +2234,32 @@ class List<
             });
 
             target._calculationInfo = zrUtil.extend({}, source._calculationInfo);
+        };
+
+        makeIdFromName = function (list: List, idx: number): void {
+            const nameList = list._nameList;
+            const idList = list._idList;
+            const nameDimIdx = list._nameDimIdx;
+            const idDimIdx = list._idDimIdx;
+
+            let name = nameList[idx];
+            let id = idList[idx];
+
+            if (name == null && nameDimIdx != null) {
+                nameList[idx] = name = getIdNameFromStore(list, nameDimIdx, list._nameOrdinalMeta, idx);
+            }
+            if (id == null && idDimIdx != null) {
+                idList[idx] = id = getIdNameFromStore(list, idDimIdx, list._idOrdinalMeta, idx);
+            }
+            if (id == null && name != null) {
+                const nameRepeatCount = list._nameRepeatCount;
+                const nmCnt = nameRepeatCount[name] = (nameRepeatCount[name] || 0) + 1;
+                id = name;
+                if (nmCnt > 1) {
+                    id += '__ec__' + nmCnt;
+                }
+                idList[idx] = id;
+            }
         };
 
     })();

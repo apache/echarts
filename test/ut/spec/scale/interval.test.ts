@@ -18,7 +18,7 @@
 * under the License.
 */
 
-import { createChart, isValueFinite } from '../../core/utHelper';
+import { createChart, isValueFinite, getECModel } from '../../core/utHelper';
 import { EChartsType } from '../../../../src/echarts';
 import CartesianAxisModel from '../../../../src/coord/cartesian/AxisModel';
 import IntervalScale from '../../../../src/scale/Interval';
@@ -57,7 +57,7 @@ describe('scale_interval', function () {
                 series: [{type: 'line', data: []}]
             });
 
-            const yAxis = chart.getModel().getComponent('yAxis', 0) as CartesianAxisModel;
+            const yAxis = getECModel(chart).getComponent('yAxis', 0) as CartesianAxisModel;
             const scale = yAxis.axis.scale;
             const ticks = scale.getTicks();
 
@@ -91,7 +91,7 @@ describe('scale_interval', function () {
                 ]
             });
 
-            const yAxis = chart.getModel().getComponent('yAxis', 0) as CartesianAxisModel;
+            const yAxis = getECModel(chart).getComponent('yAxis', 0) as CartesianAxisModel;
             const scale = yAxis.axis.scale as IntervalScale;
             const ticks = scale.getTicks();
             const labels = yAxis.axis.getViewLabels().map(function (item) {

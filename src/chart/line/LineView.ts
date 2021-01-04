@@ -31,7 +31,7 @@ import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
 import {createGridClipPath, createPolarClipPath} from '../helper/createClipPathFromCoordSys';
 import LineSeriesModel, { LineSeriesOption } from './LineSeries';
 import type GlobalModel from '../../model/Global';
-import type ExtensionAPI from '../../ExtensionAPI';
+import type ExtensionAPI from '../../core/ExtensionAPI';
 // TODO
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import Polar from '../../coord/polar/Polar';
@@ -171,7 +171,7 @@ function turnPointsIntoStep(
                 stepPt[1 - baseIndex] = pt[1 - baseIndex];
                 stepPt2[1 - baseIndex] = nextPt[1 - baseIndex];
                 stepPoints.push(stepPt[0], stepPt[1]);
-                stepPoints.push(stepPt2[0], stepPt[1]);
+                stepPoints.push(stepPt2[0], stepPt2[1]);
                 break;
             default:
                 // default is start
@@ -621,7 +621,7 @@ class LineView extends ChartView {
                 }
             });
 
-            this._initSymbolLabelAnimation(
+            hasAnimation && this._initSymbolLabelAnimation(
                 data,
                 coordSys,
                 clipShapeForSymbol
@@ -734,8 +734,7 @@ class LineView extends ChartView {
 
         setStatesStylesFromModel(polyline, seriesModel, 'lineStyle');
 
-        const shouldBolderOnEmphasis = seriesModel.get(['emphasis', 'lineStyle', 'width']) === 'bolder';
-        if (shouldBolderOnEmphasis) {
+        if (polyline.style.lineWidth > 0 && seriesModel.get(['emphasis', 'lineStyle', 'width']) === 'bolder') {
             const emphasisLineStyle = polyline.getState('emphasis').style;
             emphasisLineStyle.lineWidth = polyline.style.lineWidth + 1;
         }
@@ -762,7 +761,8 @@ class LineView extends ChartView {
                 {
                     fill: visualColor,
                     opacity: 0.7,
-                    lineJoin: 'bevel' as CanvasLineJoin
+                    lineJoin: 'bevel' as CanvasLineJoin,
+                    decal: data.getVisual('style').decal
                 }
             ));
 
@@ -1008,16 +1008,18 @@ class LineView extends ChartView {
                 const delay = typeof seriesDalay === 'function' ? seriesDalay(idx)
                     : (seriesDuration * ratio) + seriesDalayValue;
 
-                el.animateFrom({
-                    scaleX: 0,
-                    scaleY: 0
+                const symbolPath = el.getSymbolPath();
+                const text = symbolPath.getTextContent();
+
+                el.attr({ scaleX: 0, scaleY: 0});
+                el.animateTo({
+                    scaleX: 1,
+                    scaleY: 1
                 }, {
                     duration: 200,
                     delay: delay
                 });
 
-                const symbolPath = el.getSymbolPath();
-                const text = symbolPath.getTextContent();
                 if (text) {
                     text.animateFrom({
                         style: {
@@ -1298,6 +1300,4 @@ class LineView extends ChartView {
     }
 }
 
-ChartView.registerClass(LineView);
-
-export default ChartView;
+export default LineView;

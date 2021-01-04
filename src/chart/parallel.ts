@@ -17,10 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
-import '../component/parallel';
-import './parallel/ParallelSeries';
-import './parallel/ParallelView';
-import parallelVisual from './parallel/parallelVisual';
+import { use } from '../extension';
+import { install } from './parallel/install';
 
-echarts.registerVisual(parallelVisual);
+use(install);

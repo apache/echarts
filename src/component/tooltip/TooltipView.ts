@@ -31,6 +31,7 @@ import * as axisHelper from '../../coord/axisHelper';
 import * as axisPointerViewHelper from '../axisPointer/viewHelper';
 import { getTooltipRenderMode } from '../../util/model';
 import ComponentView from '../../view/Component';
+import { format as timeFormat } from '../../util/time';
 import {
     HorizontalAlign,
     VerticalAlign,
@@ -43,7 +44,7 @@ import {
     ZRColor
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import TooltipModel, {TooltipOption} from './TooltipModel';
 import Element from 'zrender/src/Element';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
@@ -541,7 +542,7 @@ class TooltipView extends ComponentView {
         const orderMode = singleTooltipModel.get('order');
 
         const builtMarkupText = buildTooltipMarkup(
-            articleMarkup, markupStyleCreator, renderMode, orderMode
+            articleMarkup, markupStyleCreator, renderMode, orderMode, ecModel.get('useUTC')
         );
         builtMarkupText && markupTextArrLegacy.unshift(builtMarkupText);
         const blockBreak = renderMode === 'richText' ? '\n\n' : '<br/>';
@@ -619,7 +620,8 @@ class TooltipView extends ComponentView {
                 seriesTooltipResult.markupFragment,
                 markupStyleCreator,
                 renderMode,
-                orderMode
+                orderMode,
+                ecModel.get('useUTC')
             )
             : seriesTooltipResult.markupText;
 
@@ -707,18 +709,26 @@ class TooltipView extends ComponentView {
 
         const formatter = tooltipModel.get('formatter');
         positionExpr = positionExpr || tooltipModel.get('position');
-        let html = defaultHtml;
+        let html: string | HTMLElement[] = defaultHtml;
         const nearPoint = this._getNearestPoint(
             [x, y],
             params,
-            tooltipModel.get('trigger')
+            tooltipModel.get('trigger'),
+            tooltipModel.get('borderColor')
         );
 
         if (formatter && zrUtil.isString(formatter)) {
-            html = formatUtil.formatTpl(formatter, params, true);
+            const useUTC = tooltipModel.ecModel.get('useUTC');
+            const params0 = zrUtil.isArray(params) ? params[0] : params;
+            const isTimeAxis = params0 && params0.axisType && params0.axisType.indexOf('time') >= 0;
+            html = formatter;
+            if (isTimeAxis) {
+                html = timeFormat(params0.axisValue, html, useUTC);
+            }
+            html = formatUtil.formatTpl(html, params, true);
         }
         else if (zrUtil.isFunction(formatter)) {
-            const callback = bind(function (cbTicket: string, html: string) {
+            const callback = bind(function (cbTicket: string, html: string | HTMLElement[]) {
                 if (cbTicket === this._ticket) {
                     tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPoint.color, positionExpr);
                     this._updatePosition(
@@ -741,19 +751,20 @@ class TooltipView extends ComponentView {
     private _getNearestPoint(
         point: number[],
         tooltipDataParams: TooltipCallbackDataParams | TooltipCallbackDataParams[],
-        trigger: TooltipOption['trigger']
+        trigger: TooltipOption['trigger'],
+        borderColor: ZRColor
     ): {
         color: ZRColor;
     } {
         if (trigger === 'axis' || zrUtil.isArray(tooltipDataParams)) {
             return {
-                color: this._renderMode === 'html' ? '#fff' : 'none'
+                color: borderColor || (this._renderMode === 'html' ? '#fff' : 'none')
             };
         }
 
         if (!zrUtil.isArray(tooltipDataParams)) {
             return {
-                color: tooltipDataParams.color || tooltipDataParams.borderColor
+                color: borderColor || tooltipDataParams.color || tooltipDataParams.borderColor
             };
         }
     }
@@ -895,12 +906,14 @@ class TooltipView extends ComponentView {
 }
 
 type TooltipableOption = {
-    tooltip?: TooltipOption | string
+    tooltip?: Omit<TooltipOption, 'mainType'> | string
 };
 /**
  * From top to bottom. (the last one should be globalTooltipModel);
  */
-function buildTooltipModel(modelCascade: (TooltipModel | Model<TooltipableOption> | TooltipOption | string)[]) {
+function buildTooltipModel(modelCascade: (
+    TooltipModel | Model<TooltipableOption> | Omit<TooltipOption, 'mainType'> | string
+)[]) {
     // Last is always tooltip model.
     let resultModel = modelCascade.pop() as Model<TooltipOption>;
     while (modelCascade.length) {
@@ -1021,4 +1034,4 @@ function isCenterAlign(align: HorizontalAlign | VerticalAlign) {
     return align === 'center' || align === 'middle';
 }
 
-ComponentView.registerClass(TooltipView);
+export default TooltipView;

@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Dictionary } from 'zrender/src/core/types';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
@@ -17,7 +36,10 @@ import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 import { deprecateReplaceLog } from '../util/log';
-import { makeInner } from '../util/model';
+import { makeInner, interpolateRawValues } from '../util/model';
+import List from '../data/List';
+import SeriesModel from '../model/Series';
+import { initProps, updateProps } from '../util/graphic';
 
 type TextCommonParams = {
     /**
@@ -29,6 +51,11 @@ type TextCommonParams = {
      * If inheritColor specified, it is used as default textFill.
      */
     inheritColor?: ColorString
+
+    /**
+     * Specify a opacity when opacity is not given.
+     */
+    defaultOpacity?: number
 
     defaultOutsidePosition?: LabelOption['position']
 
@@ -334,7 +361,7 @@ export function createTextConfig(
 function setTextStyleCommon(
     textStyle: TextStyleProps,
     textStyleModel: Model,
-    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'defaultOpacity' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean
 ) {
@@ -369,7 +396,9 @@ function setTextStyleCommon(
                 // the default color `'blue'` will not be adopted if no color declared in `rich`.
                 // That might confuses users. So probably we should put `textStyleModel` as the
                 // root ancestor of the `richTextStyle`. But that would be a break change.
-                setTokenTextStyle(richResult[name] = {}, richTextStyle, globalTextStyle, opt, isNotNormal, isAttached);
+                setTokenTextStyle(
+                    richResult[name] = {}, richTextStyle, globalTextStyle, opt, isNotNormal, isAttached, false, true
+                );
             }
         }
     }
@@ -384,7 +413,7 @@ function setTextStyleCommon(
     if (margin != null) {
         textStyle.margin = margin;
     }
-    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true);
+    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true, false);
 }
 // Consider case:
 // {
@@ -419,7 +448,7 @@ function getRichItemNames(textStyleModel: Model<LabelOption>) {
     return richItemNameMap;
 }
 const TEXT_PROPS_WITH_GLOBAL = [
-    'fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'opacity',
+    'fontStyle', 'fontWeight', 'fontSize', 'fontFamily',
     'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'
 ] as const;
 const TEXT_PROPS_SELF = [
@@ -435,16 +464,18 @@ function setTokenTextStyle(
     textStyle: TextStyleProps['rich'][string],
     textStyleModel: Model<LabelOption>,
     globalTextStyle: LabelOption,
-    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'defaultOpacity' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean,
-    isBlock?: boolean
+    isBlock?: boolean,
+    inRich?: boolean
 ) {
     // In merge mode, default value should not be given.
     globalTextStyle = !isNotNormal && globalTextStyle || EMPTY_OBJ;
     const inheritColor = opt && opt.inheritColor;
     let fillColor = textStyleModel.getShallow('color');
     let strokeColor = textStyleModel.getShallow('textBorderColor');
+    let opacity = retrieve2(textStyleModel.getShallow('opacity'), globalTextStyle.opacity);
     if (fillColor === 'inherit' || fillColor === 'auto') {
         if (__DEV__) {
             if (fillColor === 'auto') {
@@ -496,6 +527,13 @@ function setTokenTextStyle(
     );
     if (textBorderDashOffset != null) {
         textStyle.lineDashOffset = textBorderDashOffset;
+    }
+
+    if (!isNotNormal && (opacity == null) && !inRich) {
+        opacity = opt && opt.defaultOpacity;
+    }
+    if (opacity != null) {
+        textStyle.opacity = opacity;
     }
 
     // TODO
@@ -577,16 +615,105 @@ export function getFont(
 
 export const labelInner = makeInner<{
     /**
-     * Previous value stored used for label.
+     * Previous target value stored used for label.
      * It's mainly for text animation
      */
     prevValue?: ParsedValue | ParsedValue[]
     /**
-     * Current value stored used for label.
+     * Target value stored used for label.
      */
     value?: ParsedValue | ParsedValue[]
+    /**
+     * Current value in text animation.
+     */
+    interpolatedValue?: ParsedValue | ParsedValue[]
+    /**
+     * If enable value animation
+     */
+    valueAnimation?: boolean
+    /**
+     * Label value precision during animation.
+     */
+    precision?: number | 'auto'
+
+    /**
+     * If enable value animation
+     */
+    statesModels?: LabelStatesModels<LabelModelForText>
+    /**
+     * Default text getter during interpolation
+     */
+    defaultInterpolatedText?: (value: ParsedValue[] | ParsedValue) => string
     /**
      * Change label text from interpolated text during animation
      */
     setLabelText?(overrideValue?: ParsedValue | ParsedValue[]): void
 }, ZRText>();
+
+export function setLabelValueAnimation(
+    label: ZRText,
+    labelStatesModels: LabelStatesModels<LabelModelForText>,
+    value: ParsedValue | ParsedValue[],
+    getDefaultText: (value: ParsedValue[] | ParsedValue) => string
+) {
+    if (!label) {
+        return;
+    }
+
+    const obj = labelInner(label);
+    obj.prevValue = obj.value;
+    obj.value = value;
+
+    const normalLabelModel = labelStatesModels.normal;
+
+    obj.valueAnimation = normalLabelModel.get('valueAnimation');
+
+    if (obj.valueAnimation) {
+        obj.precision = normalLabelModel.get('precision');
+        obj.defaultInterpolatedText = getDefaultText;
+        obj.statesModels = labelStatesModels;
+    }
+}
+
+export function animateLabelValue(
+    textEl: ZRText,
+    dataIndex: number,
+    data: List,
+    seriesModel: SeriesModel
+) {
+    const labelInnerStore = labelInner(textEl);
+    if (!labelInnerStore.valueAnimation) {
+        return;
+    }
+    const defaultInterpolatedText = labelInnerStore.defaultInterpolatedText;
+    // Consider the case that being animating, do not use the `obj.value`,
+    // Otherwise it will jump to the `obj.value` when this new animation started.
+    const currValue = retrieve2(labelInnerStore.interpolatedValue, labelInnerStore.prevValue);
+    const targetValue = labelInnerStore.value;
+
+    function during(percent: number) {
+        const interpolated = interpolateRawValues(
+            data,
+            labelInnerStore.precision,
+            currValue,
+            targetValue,
+            percent
+        );
+        labelInnerStore.interpolatedValue = percent === 1 ? null : interpolated;
+
+        const labelText = getLabelText({
+            labelDataIndex: dataIndex,
+            labelFetcher: seriesModel,
+            defaultText: defaultInterpolatedText
+                ? defaultInterpolatedText(interpolated)
+                : interpolated + ''
+        }, labelInnerStore.statesModels, interpolated);
+
+        setLabelText(textEl, labelText);
+    }
+
+    (currValue == null
+        ? initProps
+        : updateProps
+    )(textEl, {}, seriesModel, dataIndex, null, during);
+}

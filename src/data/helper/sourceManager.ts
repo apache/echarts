@@ -17,9 +17,9 @@
 * under the License.
 */
 
-import { DatasetModel } from '../../component/dataset';
+import { DatasetModel } from '../../component/dataset/install';
 import SeriesModel from '../../model/Series';
-import { setAsPrimitive, map, isTypedArray, assert, each } from 'zrender/src/core/util';
+import { setAsPrimitive, map, isTypedArray, assert, each, retrieve2 } from 'zrender/src/core/util';
 import { SourceMetaRawOption, Source, createSource, cloneSourceShallow } from '../Source';
 import {
     SeriesEncodableModel, OptionSourceData,
@@ -27,8 +27,7 @@ import {
     SourceFormat, SeriesLayoutBy, OptionSourceHeader, DimensionDefinitionLoose
 } from '../../util/types';
 import {
-    querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels,
-    inheritSourceMetaRawOption
+    querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels
 } from './sourceHelper';
 import { applyDataTransform } from './transform';
 
@@ -63,7 +62,6 @@ import { applyDataTransform } from './transform';
  * }, {
  *     transform: { type: 'filter', ... }
  * }]
- *
  * dataset: [{
  *     dimension: ['Product', 'Sales', 'Prise'],
  *     source: [ ['Cookies', 321, 44.21], ...]
@@ -193,7 +191,7 @@ export class SourceManager {
             const seriesModel = sourceHost as SeriesEncodableModel;
             let data;
             let sourceFormat: SourceFormat;
-            let upSource;
+            let upSource: Source;
 
             // Has upstream dataset
             if (hasUpstream) {
@@ -213,14 +211,27 @@ export class SourceManager {
             }
 
             // See [REQUIREMENT_MEMO], merge settings on series and parent dataset if it is root.
-            const thisMetaRawOption = inheritSourceMetaRawOption({
-                parent: upSource ? upSource.metaRawOption : null,
-                thisNew: this._createSourceMetaRawOption()
-            });
+            const newMetaRawOption = this._getSourceMetaRawOption();
+            const upMetaRawOption = upSource ? upSource.metaRawOption : null;
+            const seriesLayoutBy = retrieve2(
+                newMetaRawOption.seriesLayoutBy,
+                upMetaRawOption ? upMetaRawOption.seriesLayoutBy : null
+            );
+            const sourceHeader = retrieve2(
+                newMetaRawOption.sourceHeader,
+                upMetaRawOption ? upMetaRawOption.sourceHeader : null
+            );
+            // Note here we should not use `upSource.dimensionsDefine`. Consider the case:
+            // `upSource.dimensionsDefine` is detected by `seriesLayoutBy: 'column'`,
+            // but series need `seriesLayoutBy: 'row'`.
+            const dimensions = retrieve2(
+                newMetaRawOption.dimensions,
+                upMetaRawOption ? upMetaRawOption.dimensions : null
+            );
 
             resultSourceList = [createSource(
                 data,
-                thisMetaRawOption,
+                { seriesLayoutBy, sourceHeader, dimensions },
                 sourceFormat,
                 seriesModel.get('encode', true)
             )];
@@ -239,7 +250,7 @@ export class SourceManager {
                 const sourceData = datasetModel.get('source', true);
                 resultSourceList = [createSource(
                     sourceData,
-                    this._createSourceMetaRawOption(),
+                    this._getSourceMetaRawOption(),
                     null,
                     // Note: dataset option does not have `encode`.
                     null
@@ -361,7 +372,7 @@ export class SourceManager {
         }
     }
 
-    private _createSourceMetaRawOption(): SourceMetaRawOption {
+    private _getSourceMetaRawOption(): SourceMetaRawOption {
         const sourceHost = this._sourceHost;
         let seriesLayoutBy: SeriesLayoutBy;
         let sourceHeader: OptionSourceHeader;

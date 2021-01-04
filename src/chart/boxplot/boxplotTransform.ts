@@ -19,8 +19,8 @@
 
 import { DataTransformOption, ExternalDataTransform } from '../../data/helper/transform';
 import prepareBoxplotData, { PrepareBoxplotDataOpt } from './prepareBoxplotData';
-import { isArray } from 'zrender/src/core/util';
 import { throwError, makePrintable } from '../../util/log';
+import { SOURCE_FORMAT_ARRAY_ROWS } from '../../util/types';
 
 
 export interface BoxplotTransformOption extends DataTransformOption {
@@ -33,28 +33,25 @@ export const boxplotTransform: ExternalDataTransform<BoxplotTransformOption> = {
     type: 'echarts:boxplot',
 
     transform: function transform(params) {
-        const source = params.source;
-        const sourceData = source.data;
-        if (
-            !isArray(sourceData)
-            || (sourceData[0] && !isArray(sourceData[0]))
-        ) {
+        const upstream = params.upstream;
+
+        if (upstream.sourceFormat !== SOURCE_FORMAT_ARRAY_ROWS) {
             let errMsg = '';
             if (__DEV__) {
                 errMsg = makePrintable(
-                    'source data is not applicable for this boxplot transform. Expect number[][].',
-                    'But actually', sourceData
+                    'source data is not applicable for this boxplot transform. Expect number[][].'
                 );
             }
             throwError(errMsg);
         }
 
         const result = prepareBoxplotData(
-            source.data as number[][],
+            upstream.getRawData() as number[][],
             params.config
         );
 
         return [{
+            dimensions: ['ItemName', 'Low', 'Q1', 'Q2', 'Q3', 'High'],
             data: result.boxData
         }, {
             data: result.outliers

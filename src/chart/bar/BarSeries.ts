@@ -18,14 +18,15 @@
 */
 
 import BaseBarSeriesModel, {BaseBarSeriesOption} from './BaseBarSeries';
-import SeriesModel from '../../model/Series';
 import {
     ItemStyleOption,
     OptionDataValue,
-    LabelOption,
     SeriesStackOptionMixin,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    SeriesSamplingOptionMixin,
+    SeriesLabelOption,
+    SeriesEncodeOptionMixin
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
@@ -36,7 +37,7 @@ import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 export interface BarStateOption {
     itemStyle?: BarItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 export interface BarItemStyleOption extends ItemStyleOption {
@@ -49,7 +50,7 @@ export interface BarDataItemOption extends BarStateOption, StatesOptionMixin<Bar
 }
 
 export interface BarSeriesOption extends BaseBarSeriesOption<BarStateOption>, BarStateOption,
-    SeriesStackOptionMixin {
+    SeriesStackOptionMixin, SeriesSamplingOptionMixin, SeriesEncodeOptionMixin {
 
     type?: 'bar'
 
@@ -140,7 +141,5 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
     });
 
 }
-
-SeriesModel.registerClass(BarSeriesModel);
 
 export default BarSeriesModel;

@@ -24,10 +24,11 @@ import {
     BoundingRect,
     Polyline,
     updateProps,
-    initProps
+    initProps,
+    isElementRemoved
 } from '../util/graphic';
 import { getECData } from '../util/innerStore';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import {
     ZRTextAlign,
     ZRTextVerticalAlign,
@@ -51,6 +52,7 @@ import { retrieve2, each, keys, isFunction, filter, indexOf } from 'zrender/src/
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
+import { labelInner, animateLabelValue } from './labelStyle';
 
 interface LabelDesc {
     label: ZRText
@@ -492,23 +494,34 @@ class LabelManager {
         const textEl = el.getTextContent();
         const guideLine = el.getTextGuideLine();
         // Animate
-        if (textEl && !textEl.ignore && !textEl.invisible && !(el as ECElement).disableLabelAnimation) {
+        if (textEl
+            && !textEl.ignore
+            && !textEl.invisible
+            && !(el as ECElement).disableLabelAnimation
+            && !isElementRemoved(el)
+        ) {
             const layoutStore = labelLayoutInnerStore(textEl);
             const oldLayout = layoutStore.oldLayout;
-            const dataIndex = getECData(el).dataIndex;
+            const ecData = getECData(el);
+            const dataIndex = ecData.dataIndex;
             const newProps = {
                 x: textEl.x,
                 y: textEl.y,
                 rotation: textEl.rotation
             };
+            const data = seriesModel.getData(ecData.dataType);
+
             if (!oldLayout) {
                 textEl.attr(newProps);
-                const oldOpacity = retrieve2(textEl.style.opacity, 1);
-                // Fade in animation
-                textEl.style.opacity = 0;
-                initProps(textEl, {
-                    style: { opacity: oldOpacity }
-                }, seriesModel, dataIndex);
+                // Disable fade in animation if value animation is enabled.
+                if (!labelInner(textEl).valueAnimation) {
+                    const oldOpacity = retrieve2(textEl.style.opacity, 1);
+                    // Fade in animation
+                    textEl.style.opacity = 0;
+                    initProps(textEl, {
+                        style: { opacity: oldOpacity }
+                    }, seriesModel, dataIndex);
+                }
             }
             else {
                 textEl.attr(oldLayout);
@@ -538,6 +551,8 @@ class LabelManager {
                 extendWithKeys(layoutEmphasis, newProps, LABEL_LAYOUT_PROPS);
                 extendWithKeys(layoutEmphasis, textEl.states.emphasis, LABEL_LAYOUT_PROPS);
             }
+
+            animateLabelValue(textEl, dataIndex, data, seriesModel);
         }
 
         if (guideLine && !guideLine.ignore && !guideLine.invisible) {

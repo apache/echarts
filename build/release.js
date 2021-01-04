@@ -19,7 +19,7 @@
 * under the License.
 */
 
-const {spawn} = require('child_process');
+const spawn = require('cross-spawn');
 const path = require('path');
 const chalk = require('chalk');
 const fsExtra = require('fs-extra');
@@ -42,19 +42,28 @@ function release() {
         }
     }
 
-    ['', 'simple', 'common', 'extension'].forEach(function (type) {
-
-        const args = [
-            `--type`,
+    const argsList = ['', 'simple', 'common', 'extension'].map((type) => {
+        return [
+            '--type',
             type,
-            `--clean`,
-            `--sourcemap`,
-            `--min`
+            '--clean',
+            '--sourcemap',
+            '--min'
         ];
+    });
+
+    argsList.push([
+        '--type', '', '--clean', '--sourcemap', '--min', '--format', 'esm'
+    ])
+
+    argsList.forEach(function (args) {
 
         const p = spawn(path.join(__dirname, 'build.js'), args);
 
-        const scope = `[${type || 'all'}]`;
+        let scope = `[${args[1] || 'all'}]`;
+        if (args[6]) {
+            scope += `[${args[6]}]`;
+        }
 
         function createOnDataHandler(idx)  {
             return function (data) {

@@ -36,7 +36,7 @@ import {
 } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel, { GlobalModelSetOptionOpts } from '../../model/Global';
-import { each, isObject, clone, isString } from 'zrender/src/core/util';
+import { each, isObject, clone } from 'zrender/src/core/util';
 import { convertOptionIdName, getDataItemValue } from '../../util/model';
 
 
@@ -76,6 +76,7 @@ interface TimelineLabelOption extends Omit<LabelOption, 'position'> {
     // number can be distance to the timeline axis. sign will determine the side.
     position?: 'auto' | 'left' | 'right' | 'top' | 'bottom' | number
     interval?: 'auto' | number
+    formatter?: string | ((value: string | number, index: number) => string)
 }
 
 export interface TimelineDataItemOption extends SymbolOptionMixin {
@@ -101,6 +102,7 @@ export interface TimelineDataItemOption extends SymbolOptionMixin {
 }
 
 export interface TimelineOption extends ComponentOption, BoxLayoutOptionMixin, SymbolOptionMixin {
+    mainType?: 'timeline'
 
     backgroundColor?: ZRColor
     borderColor?: ColorString
@@ -332,7 +334,5 @@ class TimelineModel extends ComponentModel<TimelineOption> {
     };
 
 }
-
-ComponentModel.registerClass(TimelineModel);
 
 export default TimelineModel;

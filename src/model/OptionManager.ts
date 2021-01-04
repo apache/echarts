@@ -23,9 +23,9 @@
 
 
 // import ComponentModel, { ComponentModelConstructor } from './Component';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import {
-    OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECOption, SeriesOption
+    OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECBasicOption, SeriesOption
 } from '../util/types';
 import GlobalModel, { InnerSetOptionOpts } from './Global';
 import {
@@ -33,10 +33,11 @@ import {
     // , MappingExistingItem, setComponentTypeToKeyInfo, mappingToExists
 } from '../util/model';
 import {
-    each, clone, map, isTypedArray, setAsPrimitive
+    each, clone, map, isTypedArray, setAsPrimitive, isArray, isObject
     // , HashMap , createHashMap, extend, merge,
 } from 'zrender/src/core/util';
-import { DatasetOption } from '../component/dataset';
+import { DatasetOption } from '../component/dataset/install';
+import { error } from '../util/log';
 
 const QUERY_REG = /^(min|max)?(.+)$/;
 
@@ -90,7 +91,7 @@ class OptionManager {
     }
 
     setOption(
-        rawOption: ECOption,
+        rawOption: ECBasicOption,
         optionPreprocessorFuncs: OptionPreprocessor[],
         opt: InnerSetOptionOpts
     ): void {
@@ -298,7 +299,7 @@ class OptionManager {
  */
 function parseRawOption(
     // `rawOption` May be modified
-    rawOption: ECOption,
+    rawOption: ECBasicOption,
     optionPreprocessorFuncs: OptionPreprocessor[],
     isNew: boolean
 ): ParsedRawOption {
@@ -333,17 +334,35 @@ function parseRawOption(
     }
 
     if (hasMedia) {
-        each(mediaOnRoot, function (singleMedia) {
-            if (singleMedia && singleMedia.option) {
-                if (singleMedia.query) {
-                    mediaList.push(singleMedia);
+        if (isArray(mediaOnRoot)) {
+            each(mediaOnRoot, function (singleMedia) {
+                if (__DEV__) {
+                    // Real case of wrong config.
+                    if (singleMedia
+                        && !singleMedia.option
+                        && isObject(singleMedia.query)
+                        && isObject((singleMedia.query as any).option)
+                    ) {
+                        error('Illegal media option. Must be like { media: [ { query: {}, option: {} } ] }');
+                    }
                 }
-                else if (!mediaDefault) {
-                    // Use the first media default.
-                    mediaDefault = singleMedia;
+                if (singleMedia && singleMedia.option) {
+                    if (singleMedia.query) {
+                        mediaList.push(singleMedia);
+                    }
+                    else if (!mediaDefault) {
+                        // Use the first media default.
+                        mediaDefault = singleMedia;
+                    }
                 }
+            });
+        }
+        else {
+            if (__DEV__) {
+                // Real case of wrong config.
+                error('Illegal media option. Must be an array. Like { media: [ {...}, {...} ] }');
             }
-        });
+        }
     }
 
     doPreprocess(baseOption);

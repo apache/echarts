@@ -29,10 +29,10 @@ import Group from 'zrender/src/graphic/Group';
 import Element, {ElementEvent, ElementTextConfig} from 'zrender/src/Element';
 import { DataFormatMixin } from '../model/mixin/dataFormat';
 import GlobalModel from '../model/Global';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import SeriesModel from '../model/Series';
 import { createHashMap, HashMap } from 'zrender/src/core/util';
-import { TaskPlanCallbackReturn, TaskProgressParams } from '../stream/task';
+import { TaskPlanCallbackReturn, TaskProgressParams } from '../core/task';
 import List, {ListDimensionType} from '../data/List';
 import { Dictionary, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
@@ -86,7 +86,7 @@ export type ZRStyleProps = PathStyleProps | ImageStyleProps | TSpanStyleProps | 
 // See `checkClassType` check the restict definition.
 export type ComponentFullType = string;
 export type ComponentMainType = keyof ECUnitOption & string;
-export type ComponentSubType = ComponentOption['type'];
+export type ComponentSubType = Exclude<ComponentOption['type'], undefined>;
 /**
  * Use `parseClassType` to parse componentType declaration to componentTypeInfo.
  * For example:
@@ -141,7 +141,6 @@ interface PayloadItem {
 export interface Payload extends PayloadItem {
     type: string;
     escapeConnect?: boolean;
-    statusChanged?: boolean;
     batch?: PayloadItem[];
 }
 
@@ -237,13 +236,42 @@ export interface StageHandlerOverallReset {
     (ecModel: GlobalModel, api: ExtensionAPI, payload?: Payload): void
 }
 export interface StageHandler {
-    seriesType?: string;
+    /**
+     * Indicate that the task will be piped all series
+     * (`performRawSeries` indicate whether includes filtered series).
+     */
     createOnAllSeries?: boolean;
-    performRawSeries?: boolean;
-    plan?: StageHandlerPlan;
-    overallReset?: StageHandlerOverallReset;
-    reset?: StageHandlerReset;
+    /**
+     * Indicate that the task will be only piped in the pipeline of this type of series.
+     * (`performRawSeries` indicate whether includes filtered series).
+     */
+    seriesType?: string;
+    /**
+     * Indicate that the task will be only piped in the pipeline of the returned series.
+     */
     getTargetSeries?: (ecModel: GlobalModel, api: ExtensionAPI) => HashMap<SeriesModel>;
+
+    /**
+     * If `true`, filtered series will also be "performed".
+     */
+    performRawSeries?: boolean;
+
+    /**
+     * Called only when this task in a pipeline.
+     */
+    plan?: StageHandlerPlan;
+    /**
+     * If `overallReset` specified, an "overall task" will be created.
+     * "overall task" does not belong to a certain pipeline.
+     * They always be "performed" in certain phase (depends on when they declared).
+     * They has "stub"s to connect with pipelines (one stub for one pipeline),
+     * delivering info like "dirty" and "output end".
+     */
+    overallReset?: StageHandlerOverallReset;
+    /**
+     * Called only when this task in a pipeline, and "dirty".
+     */
+    reset?: StageHandlerReset;
 }
 
 export interface StageHandlerInternal extends StageHandler {
@@ -295,7 +323,7 @@ export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'seriesAsc' | 'seriesD
 // `Date` will be parsed to timestamp.
 // Ordinal/category data will be parsed to its index if possible, otherwise
 // keep its original string in list._storage.
-// Check `convertDataValue` for more details.
+// Check `convertValue` for more details.
 export type OrdinalRawValue = string | number;
 export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
 export type OrdinalSortInfo = {
@@ -447,6 +475,7 @@ export type ECUnitOption = {
     backgroundColor?: ZRColor
     darkMode?: boolean | 'auto'
     textStyle?: Pick<LabelOption, 'color' | 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>
+    useUTC?: boolean
 
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
@@ -492,7 +521,7 @@ export type ECUnitOption = {
  * };
  * ```
  */
-export interface ECOption extends ECUnitOption {
+export interface ECBasicOption extends ECUnitOption {
     baseOption?: ECUnitOption;
     timeline?: ComponentOption | ComponentOption[];
     options?: ECUnitOption[];
@@ -517,9 +546,9 @@ export type OptionSourceDataOriginal<
     ORIITEM extends OptionDataItemOriginal<VAL> = OptionDataItemOriginal<VAL>
 > = ArrayLike<ORIITEM>;
 export type OptionSourceDataObjectRows<VAL extends OptionDataValue = OptionDataValue> =
-    ArrayLike<Dictionary<VAL>>;
+    Array<Dictionary<VAL>>;
 export type OptionSourceDataArrayRows<VAL extends OptionDataValue = OptionDataValue> =
-    ArrayLike<ArrayLike<VAL>>;
+    Array<Array<VAL>>;
 export type OptionSourceDataKeyedColumns<VAL extends OptionDataValue = OptionDataValue> =
     Dictionary<ArrayLike<VAL>>;
 export type OptionSourceDataTypedArray = ArrayLike<number>;
@@ -581,7 +610,7 @@ export interface OptionEncodeVisualDimensions {
     // Notice: `value` is coordDim, not nonCoordDim.
 }
 export interface OptionEncode extends OptionEncodeVisualDimensions {
-    [coordDim: string]: OptionEncodeValue
+    [coordDim: string]: OptionEncodeValue | undefined
 }
 export type OptionEncodeValue = DimensionLoose | DimensionLoose[];
 export type EncodeDefaulter = (source: Source, dimCount: number) => OptionEncode;
@@ -601,9 +630,9 @@ export interface CallbackDataParams {
     seriesName?: string;
     name: string;
     dataIndex: number;
-    data: any;
+    data: OptionDataItem;
     dataType?: SeriesDataType;
-    value: any;
+    value: OptionDataItem | OptionDataValue;
     color?: ZRColor;
     borderColor?: string;
     dimensionNames?: DimensionName[];
@@ -627,6 +656,42 @@ export type DimensionUserOuput = {
     encode: DimensionUserOuputEncode
 };
 
+export type DecalDashArrayX = number | (number | number[])[];
+export type DecalDashArrayY = number | number[];
+export interface DecalObject {
+    // 'image', 'triangle', 'diamond', 'pin', 'arrow', 'line', 'rect', 'roundRect', 'square', 'circle'
+    symbol?: string | string[]
+
+    // size relative to the dash bounding box; valued from 0 to 1
+    symbolSize?: number
+    // keep the aspect ratio and use the smaller one of width and height as bounding box size
+    symbolKeepAspect?: boolean
+
+    // foreground color of the pattern
+    color?: string
+    // background color of the pattern; default value is 'none' (same as 'transparent') so that the underlying series color is displayed
+    backgroundColor?: string
+
+    // dash-gap pattern on x
+    dashArrayX?: DecalDashArrayX
+    // dash-gap pattern on y
+    dashArrayY?: DecalDashArrayY
+
+    // in radians; valued from -Math.PI to Math.PI
+    rotation?: number
+
+    // boundary of largest tile width
+    maxTileWidth?: number
+    // boundary of largest tile height
+    maxTileHeight?: number
+};
+
+export interface InnerDecalObject extends DecalObject {
+    // Mark dirty when object may be changed.
+    // The record in WeakMap will be deleted.
+    dirty?: boolean
+}
+
 export interface MediaQuery {
     minWidth?: number;
     maxWidth?: number;
@@ -646,9 +711,64 @@ export type ComponentLayoutMode = {
     ignoreSize?: boolean | boolean[]
 };
 /******************* Mixins for Common Option Properties   ********************** */
+export type PaletteOptionMixin = ColorPaletteOptionMixin;
+
 export interface ColorPaletteOptionMixin {
     color?: ZRColor | ZRColor[]
     colorLayer?: ZRColor[][]
+}
+
+export interface AriaLabelOption {
+    enabled?: boolean;
+    description?: string;
+    general?: {
+        withTitle?: string;
+        withoutTitle?: string;
+    };
+    series?: {
+        maxCount?: number;
+        single?: {
+            prefix?: string;
+            withName?: string;
+            withoutName?: string;
+        };
+        multiple?: {
+            prefix?: string;
+            withName?: string;
+            withoutName?: string;
+            separator?: {
+                middle?: string;
+                end?: string;
+            }
+        }
+    };
+    data?: {
+        maxCount?: number;
+        allData?: string;
+        partialData?: string;
+        withName?: string;
+        withoutName?: string;
+        separator?: {
+            middle?: string;
+            end?: string;
+        }
+    }
+}
+
+// Extending is for compating ECharts 4
+export interface AriaOption extends AriaLabelOption {
+    mainType?: 'aria';
+
+    enabled?: boolean;
+    label?: AriaLabelOption;
+    decal?: {
+        show?: boolean;
+        decals?: DecalObject | DecalObject[];
+    };
+}
+
+export interface AriaOptionMixin {
+    aria?: AriaOption
 }
 
 /**
@@ -698,7 +818,7 @@ export interface AnimationOption {
     duration?: number
     easing?: AnimationEasing
     delay?: number
-    additive?: boolean
+    // additive?: boolean
 }
 /**
  * Mixin of option set to control the animation of series.
@@ -768,6 +888,7 @@ export interface RoamOptionMixin {
 export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
 export type SymbolCallback<T> = (rawValue: any, params: T) => string;
 export type SymbolRotateCallback<T> = (rawValue: any, params: T) => number;
+// export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => (string | number)[];
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -786,7 +907,7 @@ export interface SymbolOptionMixin<T = unknown> {
 
     symbolKeepAspect?: boolean
 
-    symbolOffset?: number[]
+    symbolOffset?: (string | number)[]
 }
 
 /**
@@ -796,6 +917,7 @@ export interface SymbolOptionMixin<T = unknown> {
 export interface ItemStyleOption extends ShadowOptionMixin, BorderOptionMixin {
     color?: ZRColor
     opacity?: number
+    decal?: DecalObject | 'none'
 }
 
 /**
@@ -836,6 +958,7 @@ export interface VisualOptionUnit {
     colorLightness?: number
     colorSaturation?: number
     colorHue?: number
+    decal?: DecalObject
 
     // Not exposed?
     liftZ?: number
@@ -879,7 +1002,7 @@ export interface TextCommonOption extends ShadowOptionMixin {
 
     lineHeight?: number
     backgroundColor?: ColorString | {
-        image: ImageLike
+        image: ImageLike | string
     }
     borderColor?: string
     borderWidth?: number
@@ -939,6 +1062,10 @@ export interface LabelOption extends TextCommonOption {
     rich?: Dictionary<TextCommonOption>
 }
 
+export interface SeriesLabelOption extends LabelOption {
+    formatter?: string | LabelFormatterCallback<CallbackDataParams>
+}
+
 /**
  * Option for labels on line, like markLine, lines
  */
@@ -975,6 +1102,11 @@ export interface LabelLineOption {
     minTurnAngle?: number,
     lineStyle?: LineStyleOption
 }
+
+export interface SeriesLineLabelOption extends LineLabelOption {
+    formatter?: string | LabelFormatterCallback<CallbackDataParams>
+}
+
 
 
 export interface LabelLayoutOptionCallbackParams {
@@ -1053,12 +1185,13 @@ interface TooltipFormatterCallback<T> {
      * For sync callback
      * params will be an array on axis trigger.
      */
-    (params: T, asyncTicket: string): string
+    (params: T, asyncTicket: string): string | HTMLElement[]
     /**
      * For async callback.
      * Returned html string will be a placeholder when callback is not invoked.
      */
-    (params: T, asyncTicket: string, callback: (cbTicket: string, html: string) => void): string
+    (params: T, asyncTicket: string, callback: (cbTicket: string, htmlOrDomNodes: string | HTMLElement[]) => void)
+        : string | HTMLElement[]
 }
 
 type TooltipBuiltinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom';
@@ -1278,6 +1411,8 @@ export interface CommonAxisPointerOption {
 }
 
 export interface ComponentOption {
+    mainType?: string;
+
     type?: string;
 
     id?: OptionId;
@@ -1296,23 +1431,35 @@ export type BlurScope = 'coordinateSystem' | 'series' | 'global';
  */
 export type InnerFocus = string | ArrayLike<number> | Dictionary<ArrayLike<number>>;
 
-export interface StatesOptionMixin<StateOption = unknown, ExtraStateOpts extends {
-    emphasis?: any
+export interface DefaultExtraStateOpts {
+    emphasis: any
+    select: any
+    blur: any
+}
+
+export type DefaultEmphasisFocus = 'none' | 'self' | 'series';
+
+export interface DefaultExtraEmpasisState {
+    /**
+     * self: Focus self and blur all others.
+     * series: Focus series and blur all other series.
+     */
+    focus?: DefaultEmphasisFocus
+}
+
+interface ExtraStateOptsBase {
+    emphasis?: {
+        focus?: string
+    },
     select?: any
     blur?: any
-} = unknown> {
+}
+
+export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> {
     /**
      * Emphasis states
      */
-    emphasis?: StateOption & {
-        /**
-         * self: Focus self and blur all others.
-         * series: Focus series and blur all other series.
-         */
-        focus?: 'none' | 'self' | 'series' |
-            (unknown extends ExtraStateOpts['emphasis']['focus']
-                ? never : ExtraStateOpts['emphasis']['focus'])
-
+    emphasis?: StateOption & ExtraStateOpts['emphasis'] & {
         /**
          * Scope of blurred element when focus.
          *
@@ -1323,7 +1470,7 @@ export interface StatesOptionMixin<StateOption = unknown, ExtraStateOpts extends
          * Default to be coordinate system.
          */
         blurScope?: BlurScope
-    } & Omit<ExtraStateOpts['emphasis'], 'focus'>
+    }
     /**
      * Select states
      */
@@ -1334,16 +1481,15 @@ export interface StatesOptionMixin<StateOption = unknown, ExtraStateOpts extends
     blur?: StateOption & ExtraStateOpts['blur']
 }
 
-export interface SeriesOption<StateOption=any, ExtraStateOpts extends {
-    emphasis?: any
-    select?: any
-    blur?: any
-} = unknown> extends
+export interface SeriesOption<
+    StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
     ComponentOption,
     AnimationOptionMixin,
     ColorPaletteOptionMixin,
     StatesOptionMixin<StateOption, ExtraStateOpts>
 {
+    mainType?: 'series'
+
     silent?: boolean
 
     blendMode?: string

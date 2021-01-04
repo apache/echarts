@@ -34,14 +34,13 @@ import {
 } from '../../coord/axisHelper';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
-import CoordinateSystemManager from '../../CoordinateSystem';
-import {ParsedModelFinder, SINGLE_REFERRING} from '../../util/model';
+import {ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
 import GridModel from './GridModel';
 import CartesianAxisModel from './AxisModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { Dictionary } from 'zrender/src/core/types';
 import {CoordinateSystemMaster} from '../CoordinateSystem';
 import { ScaleDataValue } from '../../util/types';
@@ -118,8 +117,11 @@ class Grid implements CoordinateSystemMaster {
      */
     resize(gridModel: GridModel, api: ExtensionAPI, ignoreContainLabel?: boolean): void {
 
+        const boxLayoutParams = gridModel.getBoxLayoutParams();
+        const isContainLabel = !ignoreContainLabel && gridModel.get('containLabel');
+
         const gridRect = getLayoutRect(
-            gridModel.getBoxLayoutParams(), {
+            boxLayoutParams, {
                 width: api.getWidth(),
                 height: api.getHeight()
             });
@@ -131,7 +133,7 @@ class Grid implements CoordinateSystemMaster {
         adjustAxes();
 
         // Minus label size
-        if (!ignoreContainLabel && gridModel.get('containLabel')) {
+        if (isContainLabel) {
             each(axesList, function (axis) {
                 if (!axis.model.get(['axisLabel', 'inside'])) {
                     const labelUnionRect = estimateLabelUnionRect(axis);
@@ -253,7 +255,7 @@ class Grid implements CoordinateSystemMaster {
             : null;
     }
 
-    private _findConvertTarget(finder: ParsedModelFinder): {
+    private _findConvertTarget(finder: ParsedModelFinderKnown): {
         cartesian: Cartesian2D,
         axis: Axis2D
     } {
@@ -617,7 +619,5 @@ function updateAxisTransform(axis: Axis2D, coordBase: number) {
             return axisExtentSum - coord + coordBase;
         };
 }
-
-CoordinateSystemManager.register('cartesian2d', Grid);
 
 export default Grid;

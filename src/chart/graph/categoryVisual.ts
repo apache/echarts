@@ -22,7 +22,7 @@ import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
 import { Dictionary, ColorString } from '../../util/types';
 import { extend } from 'zrender/src/core/util';
 
-export default function (ecModel: GlobalModel) {
+export default function categoryVisual(ecModel: GlobalModel) {
 
     const paletteScope: Dictionary<ColorString> = {};
     ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {

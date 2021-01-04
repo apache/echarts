@@ -24,7 +24,7 @@ import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/st
 import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
 import List from '../../data/List';
-import { ColorString, BlurScope } from '../../util/types';
+import { ColorString, BlurScope, AnimationOption } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
@@ -177,20 +177,24 @@ class Symbol extends graphic.Group {
         if (isInit) {
             const symbolPath = this.childAt(0) as ECSymbol;
 
-            const target: PathProps = {
-                scaleX: this._sizeX,
-                scaleY: this._sizeY,
-                style: {
-                    // Always fadeIn. Because it has fadeOut animation when symbol is removed..
-                    opacity: symbolPath.style.opacity
-                }
-            };
+            if (!disableAnimation) {
+                const target: PathProps = {
+                    scaleX: this._sizeX,
+                    scaleY: this._sizeY,
+                    style: {
+                        // Always fadeIn. Because it has fadeOut animation when symbol is removed..
+                        opacity: symbolPath.style.opacity
+                    }
+                };
+                symbolPath.scaleX = symbolPath.scaleY = 0;
+                symbolPath.style.opacity = 0;
+                graphic.initProps(symbolPath, target, seriesModel, idx);
+            }
+        }
 
-            symbolPath.scaleX = symbolPath.scaleY = 0;
-            symbolPath.style.opacity = 0;
-
-            disableAnimation ? symbolPath.attr(target)
-                : graphic.initProps(symbolPath, target, seriesModel, idx);
+        if (disableAnimation) {
+            // Must stop remove animation manually if don't call initProps or updateProps.
+            this.childAt(0).stopAnimation('remove');
         }
 
         this._seriesModel = seriesModel;
@@ -287,6 +291,8 @@ class Symbol extends graphic.Group {
             else {
                 symbolPath.useStyle(symbolStyle);
             }
+            // Disable decal because symbol scale will been applied on the decal.
+            symbolPath.style.decal = null;
             symbolPath.setColor(visualColor, opts && opts.symbolInnerColor);
             symbolPath.style.strokeNoScale = true;
 
@@ -312,7 +318,8 @@ class Symbol extends graphic.Group {
                 labelFetcher: seriesModel,
                 labelDataIndex: idx,
                 defaultText: getLabelDefaultText,
-                inheritColor: visualColor as ColorString
+                inheritColor: visualColor as ColorString,
+                defaultOpacity: symbolStyle.opacity
             }
         );
 
@@ -335,7 +342,6 @@ class Symbol extends graphic.Group {
             emphasisState.scaleX = this._sizeX * scaleRatio;
             emphasisState.scaleY = this._sizeY * scaleRatio;
         }
-
         this.setSymbolScale(1);
 
         enableHoverEmphasis(this, focus, blurScope);
@@ -346,13 +352,35 @@ class Symbol extends graphic.Group {
     }
 
     fadeOut(cb: () => void, opt?: {
-        keepLabel: boolean
+        fadeLabel: boolean,
+        animation?: AnimationOption
     }) {
         const symbolPath = this.childAt(0) as ECSymbol;
+        const seriesModel = this._seriesModel;
+        const dataIndex = getECData(this).dataIndex;
+        const animationOpt = opt && opt.animation;
         // Avoid mistaken hover when fading out
         this.silent = symbolPath.silent = true;
         // Not show text when animating
-        !(opt && opt.keepLabel) && (symbolPath.removeTextContent());
+        if (opt && opt.fadeLabel) {
+            const textContent = symbolPath.getTextContent();
+            if (textContent) {
+                graphic.removeElement(textContent, {
+                    style: {
+                        opacity: 0
+                    }
+                }, seriesModel, {
+                    dataIndex,
+                    removeOpt: animationOpt,
+                    cb() {
+                        symbolPath.removeTextContent();
+                    }
+                });
+            }
+        }
+        else {
+            symbolPath.removeTextContent();
+        }
 
         graphic.removeElement(
             symbolPath,
@@ -363,9 +391,8 @@ class Symbol extends graphic.Group {
                 scaleX: 0,
                 scaleY: 0
             },
-            this._seriesModel,
-            getECData(this).dataIndex,
-            cb
+            seriesModel,
+            { dataIndex, cb, removeOpt: animationOpt}
         );
     }
 

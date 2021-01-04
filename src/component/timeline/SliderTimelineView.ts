@@ -27,7 +27,7 @@ import TimelineAxis from './TimelineAxis';
 import {createSymbol} from '../../util/symbol';
 import * as numberUtil from '../../util/number';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { merge, each, extend, isString, bind, defaults, retrieve2 } from 'zrender/src/core/util';
 import SliderTimelineModel from './SliderTimelineModel';
 import ComponentView from '../../view/Component';
@@ -430,7 +430,8 @@ class SliderTimelineView extends TimelineView {
             const progressStyleModel = itemModel.getModel(['progress', 'itemStyle']);
 
             const symbolOpt = {
-                position: [tickCoord, 0],
+                x: tickCoord,
+                y: 0,
                 onclick: bind(this._changeTimeline, this, tick.value)
             };
             const el = giveSymbol(itemModel, itemStyleModel, group, symbolOpt);
@@ -738,7 +739,7 @@ function createScaleByModel(model: SliderTimelineModel, axisType?: string): Scal
                 });
             case 'time':
                 return new TimeScale({
-                    lang: model.ecModel.getLocaleModel(),
+                    locale: model.ecModel.getLocaleModel(),
                     useUTC: model.ecModel.get('useUTC')
                 });
             default:
@@ -893,8 +894,5 @@ function pointerMoveTo(
         }, animationCfg);
     }
 }
-
-
-ComponentView.registerClass(SliderTimelineView);
 
 export default SliderTimelineView;

@@ -21,7 +21,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 
-export default function (option) {
+export default function timelinePreprocessor(option) {
     let timelineOpt = option && option.timeline;
 
     if (!zrUtil.isArray(timelineOpt)) {

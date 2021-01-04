@@ -32,7 +32,7 @@ import ChartView from '../../view/Chart';
 import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeItemOption } from './TreeSeries';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import List from '../../data/List';
 import { setStatesStylesFromModel, setStatesFlag, setDefaultStateProxy, HOVER_STATE_BLUR } from '../../util/states';
@@ -45,6 +45,9 @@ type TreeSymbol = SymbolClz & {
     __radialOldRawY: number
     __radialRawX: number
     __radialRawY: number
+
+    __oldX: number
+    __oldY: number
 };
 
 class TreeEdgeShape {
@@ -359,8 +362,7 @@ function symbolNeedsDraw(data: List, dataIndex: number) {
     const layout = data.getItemLayout(dataIndex);
 
     return layout
-        && !isNaN(layout.x) && !isNaN(layout.y)
-        && data.getItemVisual(dataIndex, 'symbol') !== 'none';
+        && !isNaN(layout.x) && !isNaN(layout.y);
 }
 
 
@@ -385,8 +387,8 @@ function updateNode(
     const sourceLayout = source.getLayout() as TreeNodeLayout;
     const sourceOldLayout = sourceSymbolEl
         ? {
-            x: sourceSymbolEl.x,
-            y: sourceSymbolEl.y,
+            x: sourceSymbolEl.__oldX,
+            y: sourceSymbolEl.__oldY,
             rawX: sourceSymbolEl.__radialOldRawX,
             rawY: sourceSymbolEl.__radialOldRawY
         }
@@ -415,6 +417,10 @@ function updateNode(
 
     group.add(symbolEl);
     data.setItemGraphicEl(dataIndex, symbolEl);
+
+    symbolEl.__oldX = symbolEl.x;
+    symbolEl.__oldY = symbolEl.y;
+
     graphic.updateProps(symbolEl, {
         x: targetLayout.x,
         y: targetLayout.y
@@ -606,15 +612,27 @@ function removeNode(
         source = source.parentNode === virtualRoot ? source : source.parentNode || source;
     }
 
-    graphic.updateProps(symbolEl, {
+    // Use same duration and easing with update to have more consistent animation.
+    const removeAnimationOpt = {
+        duration: seriesModel.get('animationDurationUpdate') as number,
+        easing: seriesModel.get('animationEasingUpdate')
+    };
+
+    graphic.removeElement(symbolEl, {
         x: sourceLayout.x + 1,
         y: sourceLayout.y + 1
-    }, seriesModel, function () {
-        group.remove(symbolEl);
-        data.setItemGraphicEl(dataIndex, null);
+    }, seriesModel, {
+        cb() {
+            group.remove(symbolEl);
+            data.setItemGraphicEl(dataIndex, null);
+        },
+        removeOpt: removeAnimationOpt
     });
 
-    symbolEl.fadeOut(null, {keepLabel: true});
+    symbolEl.fadeOut(null, {
+        fadeLabel: true,
+        animation: removeAnimationOpt
+    });
 
     const sourceSymbolEl = data.getItemGraphicEl(source.dataIndex) as TreeSymbol;
     const sourceEdge = sourceSymbolEl.__edge;
@@ -633,7 +651,7 @@ function removeNode(
 
     if (edge) {
         if (edgeShape === 'curve') {
-            graphic.updateProps(edge as Path, {
+            graphic.removeElement(edge as Path, {
                 shape: getEdgeShape(
                     layoutOpt,
                     orient,
@@ -644,12 +662,15 @@ function removeNode(
                 style: {
                     opacity: 0
                 }
-            }, seriesModel, function () {
-                group.remove(edge);
+            }, seriesModel, {
+                cb() {
+                    group.remove(edge);
+                },
+                removeOpt: removeAnimationOpt
             });
         }
         else if (edgeShape === 'polyline' && seriesModel.get('layout') === 'orthogonal') {
-            graphic.updateProps(edge as Path, {
+            graphic.removeElement(edge as Path, {
                 shape: {
                     parentPoint: [sourceLayout.x, sourceLayout.y],
                     childPoints: [[sourceLayout.x, sourceLayout.y]]
@@ -657,8 +678,11 @@ function removeNode(
                 style: {
                     opacity: 0
                 }
-            }, seriesModel, function () {
-                group.remove(edge);
+            }, seriesModel, {
+                cb() {
+                    group.remove(edge);
+                },
+                removeOpt: removeAnimationOpt
             });
         }
     }
@@ -733,7 +757,5 @@ function getEdgeShape(
         cpy2: cpy2
     };
 }
-
-ChartView.registerClass(TreeView);
 
 export default TreeView;

@@ -128,14 +128,20 @@ under the License.
                 ];
             }
 
-            function getEmphassiCornerRadius() {
+            function getEmphasisCornerRadius() {
                 const cornerRadius = getCornerRadius();
-                const emphasisCornerRadius = [+cornerRadius[0] * 2, +cornerRadius[1] * 2];
+                if (!isRounderOnEmphasis) {
+                    return cornerRadius;
+                }
+                const emphasisCornerRadius = [
+                    parseInt(cornerRadius[0], 10) * 2,
+                    parseInt(cornerRadius[1], 10) * 2
+                ];
                 if (usePercent) {
                     emphasisCornerRadius[0] = emphasisCornerRadius[0] + '%';
                     emphasisCornerRadius[1] = emphasisCornerRadius[1] + '%';
                 }
-                return isRounderOnEmphasis ? null : emphasisCornerRadius;
+                return emphasisCornerRadius;
             }
 
             var chart = testHelper.create(echarts, 'main0', {
@@ -156,7 +162,7 @@ under the License.
                                 series: [{
                                     itemStyle: { borderRadius: getCornerRadius() },
                                     emphasis: {
-                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
                                     }
                                 }]
                             });
@@ -176,7 +182,7 @@ under the License.
                                 series: [{
                                     itemStyle: { borderRadius: getCornerRadius() },
                                     emphasis: {
-                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
                                     }
                                 }]
                             });
@@ -193,7 +199,7 @@ under the License.
                                 series: [{
                                     itemStyle: { borderRadius: getCornerRadius() },
                                     emphasis: {
-                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
                                     }
                                 }]
                             });
@@ -213,7 +219,7 @@ under the License.
                                 series: [{
                                     itemStyle: { borderRadius: getCornerRadius() },
                                     emphasis: {
-                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
                                     }
                                 }]
                             });
@@ -230,7 +236,7 @@ under the License.
                                 series: [{
                                     itemStyle: { borderRadius: getCornerRadius() },
                                     emphasis: {
-                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
                                     }
                                 }]
                             });
@@ -254,7 +260,7 @@ under the License.
                                 series: [{
                                     itemStyle: { borderRadius: getCornerRadius() },
                                     emphasis: {
-                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
                                     }
                                 }]
                             });
@@ -306,11 +312,12 @@ under the License.
                     {
                         text: 'rounder on emphasis',
                         onclick: function () {
+                            isRounderOnEmphasis = !isRounderOnEmphasis;
                             chart.setOption({
                                 series: [{
                                     itemStyle: { borderRadius: getCornerRadius() },
                                     emphasis: {
-                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
                                     }
                                 }]
                             });
@@ -324,6 +331,7 @@ under the License.
                             usePercent = false;
                             isCircular = false;
                             roseType = 'area';
+                            isRounderOnEmphasis = false;
                             chart.setOption({
                                 title: {
                                     text: getTitle()
@@ -331,7 +339,7 @@ under the License.
                                 series: [{
                                     itemStyle: { borderRadius: getCornerRadius() },
                                     emphasis: {
-                                        itemStyle: { borderRadius: getEmphassiCornerRadius() }
+                                        itemStyle: { borderRadius: getEmphasisCornerRadius() }
                                     },
                                     roseType: roseType,
                                     radius: [0, '75%'],

@@ -17,13 +17,13 @@
 * under the License.
 */
 
-import { isString, indexOf, map, each, bind } from 'zrender/src/core/util';
+import { isString, indexOf, map, each, bind, isArray, isDom } from 'zrender/src/core/util';
 import { toHex } from 'zrender/src/tool/color';
 import { normalizeEvent } from 'zrender/src/core/event';
 import { transformLocalCoord } from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
 import { convertToColorString, toCamelCase, normalizeCssArray } from '../../util/format';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { ZRenderType } from 'zrender/src/zrender';
 import { TooltipOption } from './TooltipModel';
 import Model from '../../model/Model';
@@ -118,6 +118,14 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
     fontSize
         // @ts-ignore, leave it to the tooltip refactor.
         && cssText.push('line-height:' + Math.round(fontSize * 3 / 2) + 'px');
+
+    const shadowColor = textStyleModel.get('textShadowColor');
+    const shadowBlur = textStyleModel.get('textShadowBlur') || 0;
+    const shadowOffsetX = textStyleModel.get('textShadowOffsetX') || 0;
+    const shadowOffsetY = textStyleModel.get('textShadowOffsetY') || 0;
+    shadowColor && shadowBlur
+        && cssText.push('text-shadow:' + shadowOffsetX + 'px ' + shadowOffsetY + 'px '
+            + shadowBlur + 'px ' + shadowColor);
 
     each(['decoration', 'align'] as const, function (name) {
         const val = textStyleModel.get(name);
@@ -298,12 +306,14 @@ class TooltipHTMLContent {
             }
         };
         el.onmouseleave = function () {
+            // set `_inContent` to `false` before `hideLater`
+            self._inContent = false;
+
             if (self._enterable) {
                 if (self._show) {
                     self.hideLater(self._hideDelay);
                 }
             }
-            self._inContent = false;
         };
     }
 
@@ -363,7 +373,7 @@ class TooltipHTMLContent {
     }
 
     setContent(
-        content: string,
+        content: string | HTMLElement[],
         markers: unknown,
         tooltipModel: Model<TooltipOption>,
         borderColor?: ZRColor,
@@ -373,12 +383,27 @@ class TooltipHTMLContent {
             return;
         }
 
+        const el = this.el;
+
         if (isString(arrowPosition) && tooltipModel.get('trigger') === 'item'
             && !shouldTooltipConfine(tooltipModel)) {
             content += assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition);
         }
-
-        this.el.innerHTML = content;
+        if (isString(content)) {
+            el.innerHTML = content;
+        }
+        else if (content) {
+            // Clear previous
+            el.innerHTML = '';
+            if (!isArray(content)) {
+                content = [content];
+            }
+            for (let i = 0; i < content.length; i++) {
+                if (isDom(content[i]) && content[i].parentNode !== el) {
+                    el.appendChild(content[i]);
+                }
+            }
+        }
     }
 
     setEnterable(enterable: boolean) {

@@ -27,7 +27,7 @@ import * as layoutUtil from '../../util/layout';
 import ComponentView from '../../view/Component';
 import LegendModel, { LegendOption, LegendSelectorButtonOption, LegendTooltipFormatterParams } from './LegendModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import {
     ZRTextAlign,
     ZRColor,
@@ -41,6 +41,7 @@ import Model from '../../model/Model';
 import Displayable, { DisplayableState } from 'zrender/src/graphic/Displayable';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { parse, stringify } from 'zrender/src/tool/color';
+import {PatternObject} from 'zrender/src/graphic/Pattern';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -199,6 +200,7 @@ class LegendView extends ComponentView {
                 const style = data.getVisual('style');
                 const color = style[data.getVisual('drawType')] || style.fill;
                 const borderColor = style.stroke;
+                const decal = style.decal;
 
                 // Using rect symbol defaultly
                 const legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
@@ -207,7 +209,7 @@ class LegendView extends ComponentView {
                 const itemGroup = this._createItem(
                     name, dataIndex, itemModel, legendModel,
                     legendSymbolType, symbolType,
-                    itemAlign, color, borderColor,
+                    itemAlign, color, borderColor, decal,
                     selectMode
                 );
 
@@ -236,6 +238,7 @@ class LegendView extends ComponentView {
 
                         const style = provider.getItemVisual(idx, 'style') as PathStyleProps;
                         const borderColor = style.stroke;
+                        const decal = style.decal;
                         let color = style.fill;
                         const colorArr = parse(style.fill as ColorString);
                         // Color may be set to transparent in visualMap when data is out of range.
@@ -251,7 +254,7 @@ class LegendView extends ComponentView {
                         const itemGroup = this._createItem(
                             name, dataIndex, itemModel, legendModel,
                             legendSymbolType, null,
-                            itemAlign, color, borderColor,
+                            itemAlign, color, borderColor, decal,
                             selectMode
                         );
 
@@ -333,6 +336,7 @@ class LegendView extends ComponentView {
         itemAlign: LegendOption['align'],
         color: ZRColor,
         borderColor: ZRColor,
+        decal: PatternObject,
         selectMode: LegendOption['selectedMode']
     ) {
         const itemWidth = legendModel.get('itemWidth');
@@ -367,7 +371,7 @@ class LegendView extends ComponentView {
         itemGroup.add(
             setSymbolStyle(
                 legendSymbol, legendSymbolType, legendModelItemStyle,
-                borderColor, inactiveBorderColor, isSelected
+                borderColor, inactiveBorderColor, decal, isSelected
             )
         );
 
@@ -395,7 +399,7 @@ class LegendView extends ComponentView {
             itemGroup.add(
                 setSymbolStyle(
                     legendSymbolCenter, symbolType, legendModelItemStyle,
-                    borderColor, inactiveBorderColor, isSelected
+                    borderColor, inactiveBorderColor, decal, isSelected
                 )
             );
         }
@@ -550,12 +554,14 @@ function setSymbolStyle(
     legendModelItemStyle: Model<ItemStyleOption>,
     borderColor: ZRColor,
     inactiveBorderColor: ZRColor,
+    decal: PatternObject,
     isSelected: boolean
 ) {
     let itemStyle;
     if (symbolType !== 'line' && symbolType.indexOf('empty') < 0) {
         itemStyle = legendModelItemStyle.getItemStyle();
         (symbol as graphic.Path).style.stroke = borderColor;
+        (symbol as graphic.Path).style.decal = decal;
         if (!isSelected) {
             itemStyle.stroke = inactiveBorderColor;
         }
@@ -628,8 +634,5 @@ function dispatchDownplayAction(
         });
     }
 }
-
-
-ComponentView.registerClass(LegendView);
 
 export default LegendView;

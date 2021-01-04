@@ -256,6 +256,7 @@ class Line extends graphic.Group {
                 }
             },
             inheritColor: visualColor as ColorString || '#000',
+            defaultOpacity: lineStyle.opacity,
             defaultText: (rawVal == null
                 ? lineData.getName(idx)
                 : isFinite(rawVal)
@@ -359,24 +360,13 @@ class Line extends graphic.Group {
 
         if (symbolFrom) {
             symbolFrom.setPosition(fromPos);
-
             setSymbolRotation(symbolFrom, 0);
-
-            const tangent = line.tangentAt(0);
-            symbolFrom.rotation = Math.PI / 2 - Math.atan2(
-                tangent[1], tangent[0]
-            );
             symbolFrom.scaleX = symbolFrom.scaleY = invScale * percent;
             symbolFrom.markRedraw();
         }
         if (symbolTo) {
             symbolTo.setPosition(toPos);
-            const tangent = line.tangentAt(1);
             setSymbolRotation(symbolTo, 1);
-
-            symbolTo.rotation = -Math.PI / 2 - Math.atan2(
-                tangent[1], tangent[0]
-            );
             symbolTo.scaleX = symbolTo.scaleY = invScale * percent;
             symbolTo.markRedraw();
         }

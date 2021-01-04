@@ -26,7 +26,7 @@ import {createSymbol} from '../../util/symbol';
 import {parsePercent, isNumeric} from '../../util/number';
 import ChartView from '../../view/Chart';
 import PictorialBarSeriesModel, {PictorialBarDataItemOption} from './PictorialBarSeries';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import List from '../../data/List';
 import GlobalModel from '../../model/Global';
 import Model from '../../model/Model';
@@ -888,6 +888,7 @@ function updateCommon(
 
     const focus = emphasisModel.get('focus');
     const blurScope = emphasisModel.get('blurScope');
+    const hoverScale = emphasisModel.get('scale');
 
     eachPath(bar, function (path) {
         if (path instanceof ZRImage) {
@@ -905,14 +906,15 @@ function updateCommon(
 
         const emphasisState = path.ensureState('emphasis');
         emphasisState.style = emphasisStyle;
-        // NOTE: Must after scale is set after updateAttr
-        emphasisState.scaleX = path.scaleX * 1.1;
-        emphasisState.scaleY = path.scaleY * 1.1;
+
+        if (hoverScale) {
+            // NOTE: Must after scale is set after updateAttr
+            emphasisState.scaleX = path.scaleX * 1.1;
+            emphasisState.scaleY = path.scaleY * 1.1;
+        }
 
         path.ensureState('blur').style = blurStyle;
         path.ensureState('select').style = selectStyle;
-
-
 
         cursorStyle && (path.cursor = cursorStyle);
         path.z2 = symbolMeta.z2;
@@ -928,6 +930,7 @@ function updateCommon(
             labelDataIndex: dataIndex,
             defaultText: getDefaultLabel(opt.seriesModel.getData(), dataIndex),
             inheritColor: symbolMeta.style.fill as ColorString,
+            defaultOpacity: symbolMeta.style.opacity,
             defaultOutsidePosition: barPositionOutside
         }
     );
@@ -942,7 +945,5 @@ function toIntTimes(times: number) {
         ? roundedTimes
         : Math.ceil(times);
 }
-
-ChartView.registerClass(PictorialBarView);
 
 export default PictorialBarView;

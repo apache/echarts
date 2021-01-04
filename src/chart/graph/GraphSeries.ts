@@ -32,17 +32,18 @@ import {
     SeriesOnSingleOptionMixin,
     OptionDataValue,
     RoamOptionMixin,
-    LabelOption,
+    SeriesLabelOption,
     ItemStyleOption,
     LineStyleOption,
     SymbolOptionMixin,
     BoxLayoutOptionMixin,
-    LabelFormatterCallback,
     Dictionary,
-    LineLabelOption,
+    SeriesLineLabelOption,
     StatesOptionMixin,
     GraphEdgeItemObject,
-    OptionDataValueNumeric
+    OptionDataValueNumeric,
+    CallbackDataParams,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -63,20 +64,19 @@ interface GraphEdgeLineStyleOption extends LineStyleOption {
 
 export interface GraphNodeStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
+
+interface ExtraEmphasisState {
+    focus?: DefaultEmphasisFocus | 'adjacency'
+}
 interface ExtraNodeStateOption {
-    emphasis?: {
-        focus?: 'adjacency'
-        scale?: boolean
-    }
+    emphasis?: ExtraEmphasisState
 }
 
 interface ExtraEdgeStateOption {
-    emphasis?: {
-        focus?: 'adjacency'
-    }
+    emphasis?: ExtraEmphasisState
 }
 
 export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOption,
@@ -110,7 +110,7 @@ export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOp
 
 export interface GraphEdgeStateOption {
     lineStyle?: GraphEdgeLineStyleOption
-    label?: LineLabelOption
+    label?: SeriesLineLabelOption
 }
 export interface GraphEdgeItemOption extends
         GraphEdgeStateOption,
@@ -139,7 +139,7 @@ export interface GraphCategoryItemOption extends SymbolOptionMixin,
 export interface GraphSeriesOption extends SeriesOption,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
-    SymbolOptionMixin,
+    SymbolOptionMixin<CallbackDataParams>,
     RoamOptionMixin,
     BoxLayoutOptionMixin {
 
@@ -171,35 +171,31 @@ export interface GraphSeriesOption extends SeriesOption,
     edgeSymbol?: string | string[]
     edgeSymbolSize?: number | number[]
 
-    edgeLabel?: LineLabelOption & {
-        formatter?: LabelFormatterCallback | string
-    }
-    label?: LabelOption & {
-        formatter?: LabelFormatterCallback | string
-    }
+    edgeLabel?: SeriesLineLabelOption
+    label?: SeriesLabelOption
 
     itemStyle?: ItemStyleOption
     lineStyle?: GraphEdgeLineStyleOption
 
     emphasis?: {
-        focus?: GraphNodeItemOption['emphasis']['focus']
+        focus?: Exclude<GraphNodeItemOption['emphasis'], undefined>['focus']
         scale?: boolean
-        label?: LabelOption
-        edgeLabel?: LabelOption
+        label?: SeriesLabelOption
+        edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption
         lineStyle?: LineStyleOption
     }
 
     blur?: {
-        label?: LabelOption
-        edgeLabel?: LabelOption
+        label?: SeriesLabelOption
+        edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption
         lineStyle?: LineStyleOption
     }
 
     select?: {
-        label?: LabelOption
-        edgeLabel?: LabelOption
+        label?: SeriesLabelOption
+        edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption
         lineStyle?: LineStyleOption
     }
@@ -228,6 +224,8 @@ export interface GraphSeriesOption extends SeriesOption,
 class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     static readonly type = 'series.graph';
     readonly type = GraphSeriesModel.type;
+
+    static readonly dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar'];
 
     private _categoriesData: List;
     private _categoriesModels: Model<GraphCategoryItemOption>[];
@@ -506,7 +504,5 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         }
     };
 }
-
-SeriesModel.registerClass(GraphSeriesModel);
 
 export default GraphSeriesModel;

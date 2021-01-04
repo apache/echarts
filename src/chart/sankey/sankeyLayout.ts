@@ -20,13 +20,13 @@
 import * as layout from '../../util/layout';
 import * as zrUtil from 'zrender/src/core/util';
 import {groupData} from '../../util/model';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import SankeySeriesModel, { SankeySeriesOption, SankeyNodeItemOption } from './SankeySeries';
 import { GraphNode, GraphEdge } from '../../data/Graph';
 import { LayoutOrient } from '../../util/types';
 import GlobalModel from '../../model/Global';
 
-export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+export default function sankeyLayout(ecModel: GlobalModel, api: ExtensionAPI) {
 
     ecModel.eachSeriesByType('sankey', function (seriesModel: SankeySeriesModel) {
 

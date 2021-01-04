@@ -23,13 +23,12 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
         <script src="../dist/echarts.js"></script>
-        <script src="../../echarts-stat/dist/ecStat.js"></script>
-        <!-- <script src="lib/ecStat-1.1.1.min.js"></script> -->
-        <!-- <script src="lib/ecStatTransform.js"></script> -->
         <!-- <script src="ut/lib/canteen.js"></script> -->
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
@@ -45,6 +44,8 @@ under the License.
 
 
         <script>
+
+        require(['echarts', 'ecStat'], function (echarts, ecStat) {
 
             echarts.registerTransform(ecStat.transform.regression);
 
@@ -100,18 +101,24 @@ under the License.
                 }, {
                     name: 'regression',
                     type: 'line',
-                    symbol: 'none',
-                    datasetIndex: 1
+                    symbolSize: 0.1,
+                    symbol: 'circle',
+                    datasetIndex: 1,
+                    label: { show: true, fontSize: 16 },
+                    labelLayout: { dx: -20 },
+                    encode: { label: 2, tooltip: 1 }
                 }]
             };
 
             var chart = testHelper.create(echarts, 'main_regression', {
                 title: [
-                    'Regression',
+                    'Regression: the **expression string** should be displayed',
                 ],
                 option: option
             });
 
+
+        });
 
         </script>
 

@@ -18,54 +18,8 @@
 */
 
 
-import * as echarts from '../echarts';
-import * as zrUtil from 'zrender/src/core/util';
 
-import '../coord/geo/geoCreator';
-import './geo/GeoView';
-import '../action/geoRoam';
-import { ActionInfo } from '../util/types';
+import { use } from '../extension';
+import { install } from './geo/install';
 
-// NOTE: DONT Remove this import, or GeoModel will be treeshaked.
-import '../coord/geo/GeoModel';
-/* eslint-disable-next-line */
-import GeoModel from '../coord/geo/GeoModel';
-
-function makeAction(
-    method: 'toggleSelected' | 'select' | 'unSelect',
-    actionInfo: ActionInfo
-): void {
-    actionInfo.update = 'geo:updateSelectStatus';
-    echarts.registerAction(actionInfo, function (payload, ecModel) {
-        const selected = {} as {[regionName: string]: boolean};
-
-        ecModel.eachComponent(
-            { mainType: 'geo', query: payload},
-            function (geoModel: GeoModel) {
-                geoModel[method](payload.name);
-                const geo = geoModel.coordinateSystem;
-                zrUtil.each(geo.regions, function (region) {
-                    selected[region.name] = geoModel.isSelected(region.name) || false;
-                });
-            }
-        );
-
-        return {
-            selected: selected,
-            name: payload.name
-        };
-    });
-}
-
-makeAction('toggleSelected', {
-    type: 'geoToggleSelect',
-    event: 'geoselectchanged'
-});
-makeAction('select', {
-    type: 'geoSelect',
-    event: 'geoselected'
-});
-makeAction('unSelect', {
-    type: 'geoUnSelect',
-    event: 'geounselected'
-});
+use(install);

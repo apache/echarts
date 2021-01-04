@@ -17,11 +17,30 @@
 * under the License.
 */
 
-export * from './echarts';
+import {use} from './extension';
 
-import './component/dataset';
+export * from './export/core';
 
-import './chart/line';
-import './chart/bar';
-import './chart/pie';
-import './component/gridSimple';
+import {install as CanvasRenderer} from './renderer/installCanvasRenderer';
+
+import {install as LineChart} from './chart/line/install';
+import {install as BarChart} from './chart/bar/install';
+import {install as PieChart} from './chart/pie/install';
+
+import {install as GridSimpleComponent} from './component/grid/installSimple';
+import {install as AriaComponent} from './component/aria/install';
+import {install as DatasetComponent} from './component/dataset/install';
+
+use([CanvasRenderer]);
+
+use([
+    LineChart,
+    BarChart,
+    PieChart
+]);
+
+use([
+    GridSimpleComponent,
+    AriaComponent,
+    DatasetComponent
+]);

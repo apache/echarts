@@ -20,7 +20,7 @@
 import * as layout from '../../util/layout';
 import {parsePercent, linearMap} from '../../util/number';
 import FunnelSeriesModel, { FunnelSeriesOption, FunnelDataItemOption } from './FunnelSeries';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import List from '../../data/List';
 import GlobalModel from '../../model/Global';
 
@@ -245,7 +245,7 @@ function labelLayout(data: List) {
     });
 }
 
-export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachSeriesByType('funnel', function (seriesModel: FunnelSeriesModel) {
         const data = seriesModel.getData();
         const valueDim = data.mapDimension('value');

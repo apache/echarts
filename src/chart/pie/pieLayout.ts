@@ -21,7 +21,7 @@ import {parsePercent, linearMap} from '../../util/number';
 import * as layout from '../../util/layout';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import PieSeriesModel from './PieSeries';
 
 const PI2 = Math.PI * 2;
@@ -36,7 +36,7 @@ function getViewRect(seriesModel: PieSeriesModel, api: ExtensionAPI) {
     );
 }
 
-export default function (
+export default function pieLayout(
     seriesType: 'pie',
     ecModel: GlobalModel,
     api: ExtensionAPI

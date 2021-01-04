@@ -23,7 +23,7 @@ import SunburstPiece from './SunburstPiece';
 import DataDiffer from '../../data/DataDiffer';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption } from './SunburstSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import { ROOT_TO_NODE_ACTION } from './sunburstAction';
 import { windowOpen } from '../../util/format';
@@ -116,7 +116,8 @@ class SunburstView extends ChartView {
                     if (newNode) {
                         // Update
                         oldNode.piece.updateData(
-                            false, newNode, seriesModel, ecModel);
+                            false, newNode, seriesModel, ecModel, api
+                        );
 
                         // For tooltip
                         data.setItemGraphicEl(newNode.dataIndex, oldNode.piece);
@@ -131,7 +132,8 @@ class SunburstView extends ChartView {
                     const piece = new SunburstPiece(
                         newNode,
                         seriesModel,
-                        ecModel
+                        ecModel,
+                        api
                     );
                     group.add(piece);
 
@@ -158,14 +160,16 @@ class SunburstView extends ChartView {
                 if (self.virtualPiece) {
                     // Update
                     self.virtualPiece.updateData(
-                        false, virtualRoot, seriesModel, ecModel);
+                        false, virtualRoot, seriesModel, ecModel, api
+                    );
                 }
                 else {
                     // Add
                     self.virtualPiece = new SunburstPiece(
                         virtualRoot,
                         seriesModel,
-                        ecModel
+                        ecModel,
+                        api
                     );
                     group.add(self.virtualPiece);
                 }
@@ -244,8 +248,5 @@ class SunburstView extends ChartView {
     }
 
 }
-
-
-ChartView.registerClass(SunburstView);
 
 export default SunburstView;

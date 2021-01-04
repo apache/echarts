@@ -18,12 +18,11 @@
 */
 
 import MarkerModel, { MarkerOption, MarkerPositionOption } from './MarkerModel';
-import ComponentModel from '../../model/Component';
 import GlobalModel from '../../model/Global';
 import {
     SymbolOptionMixin,
     ItemStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     CallbackDataParams,
     StatesOptionMixin
 } from '../../util/types';
@@ -35,7 +34,7 @@ import {
 
 interface MarkPointStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 export interface MarkPointDataItemOption extends
     MarkPointStateOption, StatesOptionMixin<MarkPointStateOption>,
@@ -48,6 +47,7 @@ export interface MarkPointDataItemOption extends
 export interface MarkPointOption extends MarkerOption,
     SymbolOptionMixin<CallbackDataParams>,
     StatesOptionMixin<MarkPointStateOption>, MarkPointStateOption {
+    mainType?: 'markPoint'
 
     precision?: number
 
@@ -91,7 +91,5 @@ class MarkPointModel extends MarkerModel<MarkPointOption> {
         }
     };
 }
-
-ComponentModel.registerClass(MarkPointModel);
 
 export default MarkPointModel;

@@ -42,6 +42,7 @@ under the License.
         <div id="auto_axis_second_setOption_normal_dz"></div>
         <div id="specified_axis_second_setOption_normal_dz"></div>
         <div id="remove_dz"></div>
+        <div id="duplicated_dataZoom_ref"></div>
 
 
 
@@ -696,6 +697,51 @@ under the License.
                         });
                     }
                 }]
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+
+            var option = {
+                toolbox: {
+                    left: 'center',
+                    feature: {
+                        dataZoom: {}
+                    }
+                },
+                xAxis: [{
+                }],
+                yAxis: [{
+                }],
+                dataZoom: [{
+                    type: 'slider',
+                    // Duplicated declaration
+                    yAxisIndex: [0, 0]
+                }, {
+                    type: 'inside',
+                    // Duplicated declaration
+                    yAxisIndex: [0, 0]
+                }],
+                series: [{
+                    type: 'line',
+                    data: [[22, 11], [44, 33]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'duplicated_dataZoom_ref', {
+                title: [
+                    'Use dataZoom, should no error thrown.',
+                ],
+                option: option,
+                height: 350
             });
         });
         </script>

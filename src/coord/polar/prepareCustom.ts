@@ -45,7 +45,7 @@ function dataToCoordSize(this: Polar, dataSize: number[], dataItem: number[]) {
     }, this);
 }
 
-export default function (coordSys: Polar) {
+export default function polarPrepareCustom(coordSys: Polar) {
     const radiusAxis = coordSys.getRadiusAxis();
     const angleAxis = coordSys.getAngleAxis();
     const radius = radiusAxis.getExtent();

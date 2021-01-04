@@ -1,7 +1,28 @@
+
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 const fs = require('fs');
 const preamble = require('./preamble');
 const ts = require('typescript');
 const path = require('path');
+const fsExtra = require('fs-extra');
 
 const umdWrapperHead = `
 ${preamble.js}
@@ -39,7 +60,7 @@ ${preamble.js}
         typeof exports.nodeName !== 'string'
     ) {
         // CommonJS
-        factory(exports, require('echarts'));
+        factory(exports, require('echarts/lib/echarts'));
     } else {
         // Browser globals
         factory({}, root.echarts);
@@ -77,6 +98,8 @@ async function buildI18nWrap() {
         // Simple regexp replace is enough
         const outputCode = code.replace(/export\s+?default/, 'var localeObj =')
             .replace(/\/\*([\w\W]*?)\*\//, '');
+
+        fsExtra.ensureDirSync(targetDir);
 
         fs.writeFileSync(path.join(targetDir, fileName + '.js'), umdWrapperHeadWithEcharts + outputCode + echartsRegister + umdWrapperTail, 'utf-8');
         fs.writeFileSync(path.join(targetDir, fileName + '-obj.js'), umdWrapperHead + outputCode + pureExports + umdWrapperTail, 'utf-8');

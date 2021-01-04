@@ -17,18 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
-import * as zrUtil from 'zrender/src/core/util';
+import { use } from '../extension';
+import { install } from './bar/installPictorialBar';
 
-import '../coord/cartesian/Grid';
-import './bar/PictorialBarSeries';
-import './bar/PictorialBarView';
-
-import { layout } from '../layout/barGrid';
-
-// In case developer forget to include grid component
-import '../component/gridSimple';
-
-echarts.registerLayout(zrUtil.curry(
-    layout, 'pictorialBar'
-));
+use(install);

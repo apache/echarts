@@ -35,10 +35,10 @@ module.exports = {
     testMatch: [
         '**/spec/api/*.test.ts',
         '**/spec/component/**/*.test.ts',
+        '**/spec/series/**/*.test.ts',
         '**/spec/data/*.test.ts',
         '**/spec/model/*.test.ts',
         '**/spec/scale/*.test.ts',
-        '**/spec/util/*.test.ts',
-        '!**/spec/component/graphic/setOption.test.ts'
+        '**/spec/util/*.test.ts'
     ]
 };

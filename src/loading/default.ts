@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../util/graphic';
 import { LoadingEffect } from '../util/types';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import * as textContain from 'zrender/src/contain/text';
 
 const PI = Math.PI;
@@ -33,7 +33,7 @@ const PI = Math.PI;
  * @param {string} [opts.textColor]
  * @return {module:zrender/Element}
  */
-export default function (
+export default function defaultLoading(
     api: ExtensionAPI,
     opts?: {
         text?: string;

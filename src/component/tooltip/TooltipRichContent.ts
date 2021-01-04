@@ -18,13 +18,14 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { ZRenderType } from 'zrender/src/zrender';
 import { TooltipOption } from './TooltipModel';
 import { ZRColor } from '../../util/types';
 import Model from '../../model/Model';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { TooltipMarkupStyleCreator, getPaddingFromTooltipModel } from './tooltipMarkup';
+import { throwError } from '../../util/log';
 
 class TooltipRichContent {
 
@@ -70,20 +71,25 @@ class TooltipRichContent {
      * Set tooltip content
      */
     setContent(
-        content: string,
+        content: string | HTMLElement[],
         markupStyleCreator: TooltipMarkupStyleCreator,
         tooltipModel: Model<TooltipOption>,
         borderColor: ZRColor,
         arrowPosition: TooltipOption['position']
     ) {
+        if (zrUtil.isObject(content)) {
+            throwError(__DEV__ ? 'Passing DOM nodes as content is not supported in richText tooltip!' : '');
+        }
         if (this.el) {
             this._zr.remove(this.el);
         }
 
+        const textStyleModel = tooltipModel.getModel('textStyle');
+
         this.el = new ZRText({
             style: {
                 rich: markupStyleCreator.richTextStyles,
-                text: content,
+                text: content as string,
                 lineHeight: 22,
                 backgroundColor: tooltipModel.get('backgroundColor'),
                 borderRadius: tooltipModel.get('borderRadius'),
@@ -93,6 +99,10 @@ class TooltipRichContent {
                 shadowBlur: tooltipModel.get('shadowBlur'),
                 shadowOffsetX: tooltipModel.get('shadowOffsetX'),
                 shadowOffsetY: tooltipModel.get('shadowOffsetY'),
+                textShadowColor: textStyleModel.get('textShadowColor'),
+                textShadowBlur: textStyleModel.get('textShadowBlur') || 0,
+                textShadowOffsetX: textStyleModel.get('textShadowOffsetX') || 0,
+                textShadowOffsetY: textStyleModel.get('textShadowOffsetY') || 0,
                 fill: tooltipModel.get(['textStyle', 'color']),
                 padding: getPaddingFromTooltipModel(tooltipModel, 'richText'),
                 verticalAlign: 'top',

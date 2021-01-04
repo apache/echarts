@@ -233,7 +233,7 @@ function isPositionCenter(sectorShape: LabelLayout) {
     return sectorShape.position === 'center';
 }
 
-export default function (
+export default function pieLabelLayout(
     seriesModel: PieSeriesModel
 ) {
     const data = seriesModel.getData();

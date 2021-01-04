@@ -23,7 +23,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as symbolUtil from '../../util/symbol';
 import ChartView from '../../view/Chart';
 import RadarSeriesModel, { RadarSeriesDataItemOption } from './RadarSeries';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import List from '../../data/List';
 import { ColorString } from '../../util/types';
 import GlobalModel from '../../model/Global';
@@ -221,7 +221,8 @@ class RadarView extends ChartView {
                     areaStyleModel.getAreaStyle(),
                     {
                         fill: color,
-                        opacity: 0.7
+                        opacity: 0.7,
+                        decal: itemStyle.decal
                     }
                 )
             );
@@ -254,7 +255,8 @@ class RadarView extends ChartView {
                         labelDataIndex: idx,
                         labelDimIndex: symbolPath.__dimIdx,
                         defaultText: defaultText as string,
-                        inheritColor: color as ColorString
+                        inheritColor: color as ColorString,
+                        defaultOpacity: itemStyle.opacity
                     }
                 );
             });
@@ -271,4 +273,4 @@ class RadarView extends ChartView {
     }
 }
 
-ChartView.registerClass(RadarView);
+export default RadarView;

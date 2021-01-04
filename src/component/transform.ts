@@ -17,9 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
-import {filterTransform} from './transform/filterTransform';
-import {sortTransform} from './transform/sortTransform';
+import { use } from '../extension';
+import { install } from './transform/install';
 
-echarts.registerTransform(filterTransform);
-echarts.registerTransform(sortTransform);
+use(install);

@@ -18,14 +18,13 @@
 */
 
 import MarkerModel, { MarkerOption, MarkerStatisticType, MarkerPositionOption } from './MarkerModel';
-import { LabelOption, ItemStyleOption, StatesOptionMixin } from '../../util/types';
-import ComponentModel from '../../model/Component';
+import { SeriesLabelOption, ItemStyleOption, StatesOptionMixin } from '../../util/types';
 import GlobalModel from '../../model/Global';
 
 
 interface MarkAreaStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 interface MarkAreaDataItemOptionBase extends MarkAreaStateOption, StatesOptionMixin<MarkAreaStateOption> {
@@ -57,6 +56,7 @@ export type MarkArea2DDataItemOption = [
 ];
 
 export interface MarkAreaOption extends MarkerOption, MarkAreaStateOption, StatesOptionMixin<MarkAreaStateOption> {
+    mainType?: 'markArea'
 
     precision?: number
 
@@ -104,7 +104,5 @@ class MarkAreaModel extends MarkerModel<MarkAreaOption> {
         }
     };
 }
-
-ComponentModel.registerClass(MarkAreaModel);
 
 export default MarkAreaModel;

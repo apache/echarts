@@ -20,14 +20,14 @@
 import { parsePercent } from '../../util/number';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption, SunburstSeriesOption } from './SunburstSeries';
 import { TreeNode } from '../../data/Tree';
 
 // let PI2 = Math.PI * 2;
 const RADIAN = Math.PI / 180;
 
-export default function (
+export default function sunburstLayout(
     seriesType: 'sunburst',
     ecModel: GlobalModel,
     api: ExtensionAPI
@@ -202,7 +202,25 @@ function initChildren(node: TreeNode, sortOrder?: SunburstSeriesOption['sort']) 
  */
 function sort(children: TreeNode[], sortOrder: SunburstSeriesOption['sort']) {
     if (typeof sortOrder === 'function') {
-        return children.sort(sortOrder);
+        const sortTargets = zrUtil.map(children, (child, idx) => {
+            const value = child.getValue() as number;
+            return {
+                params: {
+                    depth: child.depth,
+                    height: child.height,
+                    dataIndex: child.dataIndex,
+                    getValue: () => value
+                },
+                index: idx
+            };
+        });
+        sortTargets.sort((a, b) => {
+            return sortOrder(a.params, b.params);
+        });
+
+        return zrUtil.map(sortTargets, (target) => {
+            return children[target.index];
+        });
     }
     else {
         const isAsc = sortOrder === 'asc';

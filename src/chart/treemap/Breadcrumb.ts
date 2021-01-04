@@ -22,7 +22,7 @@ import {getECData} from '../../util/innerStore';
 import * as layout from '../../util/layout';
 import {wrapTreePathInfo} from '../helper/treeHelper';
 import TreemapSeriesModel, { TreemapSeriesNodeItemOption, TreemapSeriesOption } from './TreemapSeries';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import { curry, defaults } from 'zrender/src/core/util';
 import { ZRElementEvent, BoxLayoutOptionMixin, ECElement } from '../../util/types';

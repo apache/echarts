@@ -26,7 +26,7 @@
         typeof exports.nodeName !== 'string'
     ) {
         // CommonJS
-        factory(exports, require('echarts'));
+        factory(exports, require('echarts/lib/echarts'));
     } else {
         // Browser globals
         factory({}, root.echarts);
@@ -55,9 +55,7 @@
                 }
             },
             axisLabel: {
-                textStyle: {
-                    color: contrastColor
-                }
+                color: contrastColor
             },
             splitLine: {
                 lineStyle: {
@@ -108,9 +106,7 @@
         },
         toolbox: {
             iconStyle: {
-                normal: {
-                    borderColor: contrastColor
-                }
+                borderColor: contrastColor
             }
         },
 

@@ -74,8 +74,7 @@ type BarWidthAndOffset = Dictionary<Dictionary<{
     width: number
 }>>;
 
-interface LayoutOption {
-    axis: Axis2D
+export interface BarGridLayoutOptionForCustomSeries {
     count: number
 
     barWidth?: number
@@ -84,10 +83,15 @@ interface LayoutOption {
     barGap?: number
     barCategoryGap?: number
 }
+interface LayoutOption extends BarGridLayoutOptionForCustomSeries {
+    axis: Axis2D
+}
+
+export type BarGridLayoutResult = BarWidthAndOffset[string][string][];
 /**
  * @return {Object} {width, offset, offsetCenter} If axis.type is not 'category', return undefined.
  */
-export function getLayoutOnAxis(opt: LayoutOption) {
+export function getLayoutOnAxis(opt: LayoutOption): BarGridLayoutResult {
     const params: LayoutSeriesInfo[] = [];
     const baseAxis = opt.axis;
     const axisKey = 'axis0';

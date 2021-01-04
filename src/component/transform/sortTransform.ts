@@ -17,12 +17,14 @@
 * under the License.
 */
 
-import { DataTransformOption, ExternalDataTransform } from '../../data/helper/transform';
 import {
-    DimensionLoose, SOURCE_FORMAT_KEYED_COLUMNS, DimensionIndex, OptionDataValue
+    DataTransformOption, ExternalDataTransform, ExternalDataTransformResultItem
+} from '../../data/helper/transform';
+import {
+    DimensionLoose, DimensionIndex, OptionDataValue, SOURCE_FORMAT_ARRAY_ROWS, SOURCE_FORMAT_OBJECT_ROWS
 } from '../../util/types';
 import { makePrintable, throwError } from '../../util/log';
-import { isArray, each } from 'zrender/src/core/util';
+import { each } from 'zrender/src/core/util';
 import { normalizeToArray } from '../../util/model';
 import {
     RawValueParserType, getRawValueParser, SortOrderComparator
@@ -76,8 +78,8 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
 
     type: 'echarts:sort',
 
-    transform: function transform(params) {
-        const source = params.source;
+    transform: function (params) {
+        const upstream = params.upstream;
         const config = params.config;
         let errMsg = '';
 
@@ -134,12 +136,12 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
                 throwError(errMsg);
             }
 
-            const dimInfo = source.getDimensionInfo(dimLoose);
+            const dimInfo = upstream.getDimensionInfo(dimLoose);
             if (!dimInfo) {
                 if (__DEV__) {
                     errMsg = makePrintable(
                         'Can not find dimension info via: ' + dimLoose + '.\n',
-                        'Existing dimensions: ', source.getDimensionInfoAll(), '.\n',
+                        'Existing dimensions: ', upstream.cloneAllDimensionInfo(), '.\n',
                         'Illegal config:', orderExpr, '.\n'
                     );
                 }
@@ -165,39 +167,27 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
         });
 
         // TODO: support it?
-        if (!isArray(source.data)) {
+        const sourceFormat = upstream.sourceFormat;
+        if (sourceFormat !== SOURCE_FORMAT_ARRAY_ROWS
+            && sourceFormat !== SOURCE_FORMAT_OBJECT_ROWS
+        ) {
             if (__DEV__) {
-                errMsg = source.sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS
-                    ? 'sourceFormat ' + SOURCE_FORMAT_KEYED_COLUMNS + ' is not supported yet'
-                    : source.data == null
-                    ? 'Upstream source data is null/undefined'
-                    : 'Unsupported source format.';
+                errMsg = 'sourceFormat "' + sourceFormat + '" is not supported yet';
             }
             throwError(errMsg);
         }
 
-        // Other source format are all array.
-        const sourceHeaderCount = source.sourceHeaderCount;
+        // Other upstream format are all array.
         const resultData = [];
-        const headerPlaceholder = {};
-        for (let i = 0; i < sourceHeaderCount; i++) {
-            resultData.push(headerPlaceholder);
-        }
-        for (let i = 0, len = source.count(); i < len; i++) {
-            resultData.push(source.getRawDataItem(i));
+        for (let i = 0, len = upstream.count(); i < len; i++) {
+            resultData.push(upstream.getRawDataItem(i));
         }
 
         resultData.sort(function (item0, item1) {
-            if (item0 === headerPlaceholder) {
-                return -1;
-            }
-            if (item1 === headerPlaceholder) {
-                return 1;
-            }
             for (let i = 0; i < orderDefList.length; i++) {
                 const orderDef = orderDefList[i];
-                let val0 = source.retrieveItemValue(item0, orderDef.dimIdx);
-                let val1 = source.retrieveItemValue(item1, orderDef.dimIdx);
+                let val0 = upstream.retrieveValueFromItem(item0, orderDef.dimIdx);
+                let val1 = upstream.retrieveValueFromItem(item1, orderDef.dimIdx);
                 if (orderDef.parser) {
                     val0 = orderDef.parser(val0) as OptionDataValue;
                     val1 = orderDef.parser(val1) as OptionDataValue;
@@ -210,12 +200,8 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
             return 0;
         });
 
-        for (let i = 0; i < sourceHeaderCount; i++) {
-            resultData[i] = source.getRawHeaderItem(i);
-        }
-
         return {
-            data: resultData
+            data: resultData as ExternalDataTransformResultItem['data']
         };
     }
 };

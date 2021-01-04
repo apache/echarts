@@ -27,7 +27,7 @@ import {
     isObject,
     isTypedArray,
     HashMap,
-    defaults
+    retrieve2
 } from 'zrender/src/core/util';
 import { SourceMetaRawOption, Source } from '../Source';
 
@@ -47,7 +47,7 @@ import {
     DimensionIndex,
     SeriesEncodableModel
 } from '../../util/types';
-import { DatasetModel } from '../../component/dataset';
+import { DatasetModel } from '../../component/dataset/install';
 import SeriesModel from '../../model/Series';
 import GlobalModel from '../../model/Global';
 import { CoordDimensionDefinition } from './createDimensions';
@@ -80,14 +80,6 @@ type SeriesEncodeInternal = {
 export function resetSourceDefaulter(ecModel: GlobalModel): void {
     // `datasetMap` is used to make default encode.
     innerGlobalModel(ecModel).datasetMap = createHashMap();
-}
-
-// See [DIMENSION_INHERIT_RULE] in `sourceManager.ts`.
-export function inheritSourceMetaRawOption(opt: {
-    parent: SourceMetaRawOption, // Can be null/undefined
-    thisNew: SourceMetaRawOption // Must be object
-}) {
-    return defaults(opt.thisNew, opt.parent);
 }
 
 /**

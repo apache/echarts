@@ -29,6 +29,8 @@ import { ColorString } from '../../util/types';
 import Model from '../../model/Model';
 import { getECData } from '../../util/innerStore';
 import { getSectorCornerRadius } from '../helper/pieHelper';
+import {createOrUpdatePatternFromDecal} from '../../util/decal';
+import ExtensionAPI from '../../core/ExtensionAPI';
 
 const DEFAULT_SECTOR_Z = 2;
 const DEFAULT_TEXT_Z = 4;
@@ -45,7 +47,7 @@ class SunburstPiece extends graphic.Sector {
     private _seriesModel: SunburstSeriesModel;
     private _ecModel: GlobalModel;
 
-    constructor(node: TreeNode, seriesModel: SunburstSeriesModel, ecModel: GlobalModel) {
+    constructor(node: TreeNode, seriesModel: SunburstSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         super();
 
         this.z2 = DEFAULT_SECTOR_Z;
@@ -61,15 +63,16 @@ class SunburstPiece extends graphic.Sector {
         });
         this.setTextContent(text);
 
-        this.updateData(true, node, seriesModel, ecModel);
+        this.updateData(true, node, seriesModel, ecModel, api);
     }
 
     updateData(
         firstCreate: boolean,
         node: TreeNode,
         // state: 'emphasis' | 'normal' | 'highlight' | 'downplay',
-        seriesModel?: SunburstSeriesModel,
-        ecModel?: GlobalModel
+        seriesModel: SunburstSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
     ) {
         this.node = node;
         (node as DrawTreeNode).piece = this;
@@ -89,6 +92,11 @@ class SunburstPiece extends graphic.Sector {
 
         const normalStyle = node.getVisual('style') as PathStyleProps;
         normalStyle.lineJoin = 'bevel';
+
+        const decal = node.getVisual('decal');
+        if (decal) {
+            normalStyle.decal = createOrUpdatePatternFromDecal(decal, api);
+        }
 
         const cornerRadius = getSectorCornerRadius(itemModel.getModel('itemStyle'), sectorShape);
         zrUtil.extend(sectorShape, cornerRadius);
@@ -162,13 +170,16 @@ class SunburstPiece extends graphic.Sector {
         const sector = this;
         const label = sector.getTextContent();
         const dataIndex = this.node.dataIndex;
+        const labelMinAngle = normalLabelModel.get('minAngle') / 180 * Math.PI;
+        const isNormalShown = normalLabelModel.get('show')
+            && !(labelMinAngle != null && Math.abs(angle) < labelMinAngle);
+        label.ignore = !isNormalShown;
 
         // TODO use setLabelStyle
         zrUtil.each(DISPLAY_STATES, (stateName) => {
 
             const labelStateModel = stateName === 'normal' ? itemModel.getModel('label')
                 : itemModel.getModel([stateName, 'label']);
-            const labelMinAngle = labelStateModel.get('minAngle') / 180 * Math.PI;
             const isNormal = stateName === 'normal';
 
             const state = isNormal ? label : label.ensureState(stateName);
@@ -177,13 +188,15 @@ class SunburstPiece extends graphic.Sector {
                 text = text || this.node.name;
             }
 
-            state.style = createTextStyle(labelStateModel, {
-            }, null, stateName !== 'normal', true);
+            state.style = createTextStyle(labelStateModel, {}, null, stateName !== 'normal', true);
             if (text) {
                 state.style.text = text;
             }
             // Not displaying text when angle is too small
-            state.ignore = labelMinAngle != null && Math.abs(angle) < labelMinAngle;
+            const isShown = labelStateModel.get('show');
+            if (isShown != null && !isNormal) {
+                state.ignore = !isShown;
+            }
 
             const labelPosition = getLabelAttr(labelStateModel, 'position');
 

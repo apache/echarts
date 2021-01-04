@@ -35,7 +35,8 @@ export function getDefaultLabel(
 
     // Simple optimization (in lots of cases, label dims length is 1)
     if (len === 1) {
-        return retrieveRawValue(data, dataIndex, labelDims[0]);
+        const rawVal = retrieveRawValue(data, dataIndex, labelDims[0]);
+        return rawVal != null ? rawVal + '' : null;
     }
     else if (len) {
         const vals = [];
@@ -49,7 +50,7 @@ export function getDefaultLabel(
 export function getDefaultInterpolatedLabel(
     data: List,
     interpolatedValue: ParsedValue | ParsedValue[]
-) {
+): string {
     const labelDims = data.mapDimensionsAll('defaultedLabel');
     if (!isArray(interpolatedValue)) {
         return interpolatedValue + '';

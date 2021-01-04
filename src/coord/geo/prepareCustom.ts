@@ -34,7 +34,7 @@ function dataToCoordSize(this: Geo, dataSize: number[], dataItem: number[]): num
     }, this);
 }
 
-export default function (coordSys: Geo) {
+export default function geoPrepareCustom(coordSys: Geo) {
     const rect = coordSys.getBoundingRect();
     return {
         coordSys: {

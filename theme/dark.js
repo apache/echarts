@@ -26,7 +26,7 @@
         typeof exports.nodeName !== 'string'
     ) {
         // CommonJS
-        factory(exports, require('echarts'));
+        factory(exports, require('echarts/lib/echarts'));
     } else {
         // Browser globals
         factory({}, root.echarts);
@@ -172,9 +172,7 @@
                 color: contrastColor
             },
             label: {
-                textStyle: {
-                    color: contrastColor
-                }
+                color: contrastColor
             },
             controlStyle: {
                 color: contrastColor,
@@ -208,9 +206,7 @@
         },
         gauge: {
             title: {
-                textStyle: {
-                    color: contrastColor
-                }
+                color: contrastColor
             }
         },
         candlestick: {

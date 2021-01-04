@@ -23,8 +23,9 @@ import { extend, each, isArray } from 'zrender/src/core/util';
 import GlobalModel from '../model/Global';
 import { deprecateReplaceLog, deprecateLog } from '../util/log';
 import Eventful from 'zrender/src/core/Eventful';
-import type { EChartsType, registerAction } from '../echarts';
+import type { EChartsType, registerAction } from '../core/echarts';
 import { queryDataIndex } from '../util/model';
+import ExtensionAPI from '../core/ExtensionAPI';
 
 // Legacy data selection action.
 // Inlucdes: pieSelect, pieUnSelect, pieToggleSelect, mapSelect, mapUnSelect, mapToggleSelect
@@ -64,6 +65,7 @@ function handleSeriesLegacySelectEvents(
     type: 'map' | 'pie',
     eventPostfix: 'selectchanged' | 'selected' | 'unselected',
     ecIns: EChartsType,
+    ecModel: GlobalModel,
     payload: SelectChangedPayload
 ) {
     const legacyEventName = type + eventPostfix;
@@ -71,7 +73,6 @@ function handleSeriesLegacySelectEvents(
         if (__DEV__) {
             deprecateLog(`event ${legacyEventName} is deprecated.`);
         }
-        const ecModel = ecIns.getModel();
         ecModel.eachComponent({
             mainType: 'series', subType: 'pie'
         }, function (seriesModel: SeriesModel) {
@@ -93,19 +94,20 @@ function handleSeriesLegacySelectEvents(
     }
 }
 
-export function handleLegacySelectEvents(messageCenter: Eventful, ecIns: EChartsType) {
+export function handleLegacySelectEvents(messageCenter: Eventful, ecIns: EChartsType, api: ExtensionAPI) {
     messageCenter.on('selectchanged', function (params: SelectChangedPayload) {
+        const ecModel = api.getModel();
         if (params.isFromClick) {
-            handleSeriesLegacySelectEvents('map', 'selectchanged', ecIns, params);
-            handleSeriesLegacySelectEvents('pie', 'selectchanged', ecIns, params);
+            handleSeriesLegacySelectEvents('map', 'selectchanged', ecIns, ecModel, params);
+            handleSeriesLegacySelectEvents('pie', 'selectchanged', ecIns, ecModel, params);
         }
         else if (params.fromAction === 'select') {
-            handleSeriesLegacySelectEvents('map', 'selected', ecIns, params);
-            handleSeriesLegacySelectEvents('pie', 'selected', ecIns, params);
+            handleSeriesLegacySelectEvents('map', 'selected', ecIns, ecModel, params);
+            handleSeriesLegacySelectEvents('pie', 'selected', ecIns, ecModel, params);
         }
         else if (params.fromAction === 'unselect') {
-            handleSeriesLegacySelectEvents('map', 'unselected', ecIns, params);
-            handleSeriesLegacySelectEvents('pie', 'unselected', ecIns, params);
+            handleSeriesLegacySelectEvents('map', 'unselected', ecIns, ecModel, params);
+            handleSeriesLegacySelectEvents('pie', 'unselected', ecIns, ecModel, params);
         }
     });
 }

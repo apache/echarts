@@ -30,7 +30,6 @@ import {
 } from '../helper/BrushController';
 import { ModelFinderObject } from '../../util/model';
 
-
 const DEFAULT_OUT_OF_BRUSH_COLOR = '#ddd';
 
 /**
@@ -87,6 +86,8 @@ export interface BrushAreaParamInternal extends BrushAreaParam {
 export type BrushToolboxIconType = BrushType | 'keep' | 'clear';
 
 export interface BrushOption extends ComponentOption, ModelFinderObject {
+    mainType?: 'brush';
+
     // Default value see preprocessor.
     toolbox?: BrushToolboxIconType[];
 
@@ -105,15 +106,15 @@ export interface BrushOption extends ComponentOption, ModelFinderObject {
 
     // --- Current painting brush options ---
     // Default type of brush
-    brushType: BrushTypeUncertain;
-    brushStyle: {
-        borderWidth: number;
-        color: ZRColor;
-        borderColor: ZRColor;
+    brushType?: BrushTypeUncertain;
+    brushStyle?: {
+        borderWidth?: number;
+        color?: ZRColor;
+        borderColor?: ZRColor;
     };
-    transformable: boolean;
-    brushMode: BrushMode;
-    removeOnClick: boolean;
+    transformable?: boolean;
+    brushMode?: BrushMode;
+    removeOnClick?: boolean;
 }
 
 class BrushModel extends ComponentModel<BrushOption> {
@@ -212,8 +213,6 @@ class BrushModel extends ComponentModel<BrushOption> {
     }
 
 }
-
-ComponentModel.registerClass(BrushModel);
 
 
 function generateBrushOption(

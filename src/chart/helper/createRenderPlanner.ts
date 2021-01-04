@@ -24,7 +24,7 @@ import { StageHandlerPlanReturn } from '../../util/types';
 /**
  * @return {string} If large mode changed, return string 'reset';
  */
-export default function () {
+export default function createRenderPlanner() {
     const inner = makeInner<{
         large: boolean
         progressiveRender: boolean

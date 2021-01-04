@@ -58,10 +58,14 @@ under the License.
 
 <div id="container">
     <div id="main2" class="chart"></div>
-    <div id="main0" class="chart"></div>
     <div id="main1" class="chart"></div>
     <div id="main3" class="chart"></div>
     <div id="main4" class="chart"></div>
+    <div id="main-FI" class="chart"></div>
+    <div id="main-DE" class="chart"></div>
+    <div id="main-FR" class="chart"></div>
+    <div id="main-JA" class="chart"></div>
+    <div id="main-TH" class="chart"></div>
 </div>
 
 <script>
@@ -139,15 +143,6 @@ under the License.
 </script>
 
 <script>
-    require(['echarts', 'i18n/langFI'], function (echarts) {
-        var chart = echarts.init(document.getElementById('main0'), null, {
-            locale: 'FI'
-        });
-        chart.setOption(window.option);
-    });
-</script>
-
-<script>
     // lang object
     require(['echarts', 'i18n/langEN-obj'], function (echarts, lang) {
         echarts.registerLocale('EN', lang);
@@ -182,6 +177,51 @@ under the License.
     });
 </script>
 
+
+<script>
+    require(['echarts', 'i18n/langFI'], function (echarts) {
+        var chart = echarts.init(document.getElementById('main-FI'), null, {
+            locale: 'FI'
+        });
+        chart.setOption(window.option);
+    });
+</script>
+
+<script>
+    require(['echarts', 'i18n/langDE'], function (echarts) {
+        var chart = echarts.init(document.getElementById('main-DE'), null, {
+            locale: 'DE'
+        });
+        chart.setOption(window.option);
+    });
+</script>
+
+<script>
+    require(['echarts', 'i18n/langFR'], function (echarts) {
+        var chart = echarts.init(document.getElementById('main-FR'), null, {
+            locale: 'FR'
+        });
+        chart.setOption(window.option);
+    });
+</script>
+
+<script>
+    require(['echarts', 'i18n/langJA'], function (echarts) {
+        var chart = echarts.init(document.getElementById('main-JA'), null, {
+            locale: 'JA'
+        });
+        chart.setOption(window.option);
+    });
+</script>
+
+<script>
+    require(['echarts', 'i18n/langTH'], function (echarts) {
+        var chart = echarts.init(document.getElementById('main-TH'), null, {
+            locale: 'TH'
+        });
+        chart.setOption(window.option);
+    });
+</script>
 
 </body>
 </html>

@@ -537,6 +537,9 @@ function makeComparableKey(val: unknown): string {
 }
 
 export function convertOptionIdName(idOrName: unknown, defaultValue: string): string {
+    if (idOrName == null) {
+        return defaultValue;
+    }
     const type = typeof idOrName;
     return type === 'string'
         ? idOrName as string
@@ -547,7 +550,7 @@ export function convertOptionIdName(idOrName: unknown, defaultValue: string): st
 
 function warnInvalidateIdOrName(idOrName: unknown) {
     if (__DEV__) {
-            warn('`' + idOrName + '` is invalid id or name. Must be a string or number.');
+        warn('`' + idOrName + '` is invalid id or name. Must be a string or number.');
     }
 }
 
@@ -762,6 +765,7 @@ let innerUniqueIndex = getRandomIdBase();
 export type ModelFinderIndexQuery = number | number[] | 'all' | 'none' | false;
 export type ModelFinderIdQuery = OptionId | OptionId[];
 export type ModelFinderNameQuery = OptionId | OptionId[];
+// If string, like 'series', means { seriesIndex: 0 }.
 export type ModelFinder = string | ModelFinderObject;
 export type ModelFinderObject = {
     seriesIndex?: ModelFinderIndexQuery, seriesId?: ModelFinderIdQuery, seriesName?: ModelFinderNameQuery
@@ -782,7 +786,12 @@ export type ModelFinderObject = {
  *     ...
  * }
  */
-type ParsedModelFinderKnown = {
+export type ParsedModelFinder = {
+    // other components
+    [key: string]: ComponentModel | ComponentModel[] | undefined;
+};
+
+export type ParsedModelFinderKnown = ParsedModelFinder & {
     seriesModels?: SeriesModel[];
     seriesModel?: SeriesModel;
     xAxisModels?: CartesianAxisModel[];
@@ -794,10 +803,6 @@ type ParsedModelFinderKnown = {
     dataIndex?: number;
     dataIndexInside?: number;
 };
-export type ParsedModelFinder = ParsedModelFinderKnown & {
-    // other components
-    [key: string]: ComponentModel | ComponentModel[];
-};
 
 /**
  * The same behavior as `component.getReferringComponents`.
@@ -807,9 +812,11 @@ export function parseFinder(
     finderInput: ModelFinder,
     opt?: {
         // If no main type specified, use this main type.
-        defaultMainType?: ComponentMainType,
+        defaultMainType?: ComponentMainType;
         // If pervided, types out of this list will be ignored.
-        includeMainTypes?: ComponentMainType[]
+        includeMainTypes?: ComponentMainType[];
+        enableAll?: boolean;
+        enableNone?: boolean;
     }
 ): ParsedModelFinder {
     let finder: ModelFinderObject;
@@ -823,7 +830,7 @@ export function parseFinder(
     }
 
     const queryOptionMap = createHashMap<QueryReferringUserOption, ComponentMainType>();
-    const result = {} as ParsedModelFinder;
+    const result = {} as ParsedModelFinderKnown;
     let mainTypeSpecified = false;
 
     each(finder, function (value, key) {
@@ -862,9 +869,9 @@ export function parseFinder(
             mainType,
             queryOption,
             {
-                useDefault: mainType === defaultMainType,
-                enableAll: true,
-                enableNone: true
+                useDefault: defaultMainType === mainType,
+                enableAll: (opt && opt.enableAll != null) ? opt.enableAll : true,
+                enableNone: (opt && opt.enableNone != null) ? opt.enableNone : true
             }
         );
         result[mainType + 'Models'] = queryResult.models;
@@ -997,7 +1004,7 @@ export function groupData<T, R extends string | number>(
  *
  * @param data         data
  * @param labelModel   label model of the text element
- * @param sourceValue  start value
+ * @param sourceValue  start value. May be null/undefined when init.
  * @param targetValue  end value
  * @param percent      0~1 percentage; 0 uses start value while 1 uses end value
  * @return             interpolated values
@@ -1010,6 +1017,10 @@ export function interpolateRawValues(
     percent: number
 ): (string | number)[] | string | number {
     const isAutoPrecision = precision == null || precision === 'auto';
+
+    if (targetValue == null) {
+        return targetValue;
+    }
 
     if (typeof targetValue === 'number') {
         const value = interpolateNumber(
@@ -1031,21 +1042,20 @@ export function interpolateRawValues(
     }
     else {
         const interpolated = [];
-        const leftArr = sourceValue as (string | number)[] || [];
+        const leftArr = sourceValue as (string | number)[];
         const rightArr = targetValue as (string | number[]);
-        const length = Math.max(leftArr.length, rightArr.length);
+        const length = Math.max(leftArr ? leftArr.length : 0, rightArr.length);
         for (let i = 0; i < length; ++i) {
             const info = data.getDimensionInfo(i);
             // Don't interpolate ordinal dims
             if (info.type === 'ordinal') {
-                interpolated[i] = (percent < 1 ? leftArr : rightArr)[i] as number;
+                // In init, there is no `sourceValue`, but should better not to get undefined result.
+                interpolated[i] = (percent < 1 && leftArr ? leftArr : rightArr)[i] as number;
             }
             else {
                 const leftVal = leftArr && leftArr[i] ? leftArr[i] as number : 0;
                 const rightVal = rightArr[i] as number;
-                const value = leftArr == null
-                    ? (targetValue as [])[i]
-                    : interpolateNumber(leftVal, rightVal, percent);
+                const value = interpolateNumber(leftVal, rightVal, percent);
                 interpolated[i] = round(
                     value,
                     isAutoPrecision ? Math.max(

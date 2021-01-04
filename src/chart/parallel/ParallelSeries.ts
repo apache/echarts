@@ -25,7 +25,7 @@ import {
     SeriesOption,
     SeriesEncodeOptionMixin,
     LineStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     SeriesTooltipOption,
     DimensionName,
     OptionDataValue,
@@ -44,7 +44,7 @@ type ParallelSeriesDataValue = OptionDataValue[];
 
 export interface ParallelStateOption {
     lineStyle?: LineStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 export interface ParallelSeriesDataItemOption extends ParallelStateOption, StatesOptionMixin<ParallelStateOption> {
@@ -71,7 +71,7 @@ export interface ParallelSeriesOption extends
     parallelAxisDefault?: ParallelAxisOption;
 
     emphasis?: {
-        label?: LabelOption;
+        label?: SeriesLabelOption;
         lineStyle?: LineStyleOption;
     }
 
@@ -148,8 +148,6 @@ class ParallelSeriesModel extends SeriesModel<ParallelSeriesOption> {
     };
 
 }
-
-SeriesModel.registerClass(ParallelSeriesModel);
 
 function makeDefaultEncode(seriesModel: ParallelSeriesModel): OptionEncode {
     // The mapping of parallelAxis dimension to data dimension can

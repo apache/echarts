@@ -18,22 +18,22 @@
 */
 
 import BaseBarSeriesModel, { BaseBarSeriesOption } from './BaseBarSeries';
-import SeriesModel from '../../model/Series';
 import {
     OptionDataValue,
     ItemStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     AnimationOptionMixin,
     SeriesStackOptionMixin,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { inheritDefaultOption } from '../../util/component';
 
 export interface PictorialBarStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 interface PictorialBarSeriesSymbolOption {
@@ -92,6 +92,7 @@ interface PictorialBarSeriesSymbolOption {
 
 interface ExtraStateOption {
     emphasis?: {
+        focus?: DefaultEmphasisFocus
         scale?: boolean
     }
 }
@@ -155,6 +156,8 @@ class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOptio
         progressive: 0,
 
         emphasis: {
+            // By default pictorialBar do not hover scale. Hover scale is not suitable
+            // for the case that both has foreground and background.
             scale: false
         },
 
@@ -171,7 +174,5 @@ class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOptio
         return super.getInitialData.apply(this, arguments as any);
     }
 }
-
-SeriesModel.registerClass(PictorialBarSeriesModel);
 
 export default PictorialBarSeriesModel;

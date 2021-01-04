@@ -76,7 +76,7 @@ import Scale from './Scale';
 import {TimeScaleTick, ScaleTick} from '../util/types';
 import {TimeAxisLabelFormatterOption} from '../coord/axisCommonTypes';
 import { warn } from '../util/log';
-import { LocaleOption } from '../locale';
+import { LocaleOption } from '../core/locale';
 import Model from '../model/Model';
 import { filter, map } from 'zrender/src/core/util';
 
@@ -99,14 +99,12 @@ const bisect = function (
     return lo;
 };
 
-interface TimeScale {
-    constructor(settings?: {
-        locale: Model<LocaleOption>,
-        useUTC: boolean
-    }): void
-}
+type TimeScaleSetting = {
+    locale: Model<LocaleOption>;
+    useUTC: boolean;
+};
 
-class TimeScale extends IntervalScale {
+class TimeScale extends IntervalScale<TimeScaleSetting> {
 
     static type = 'time';
     readonly type = 'time';
@@ -114,6 +112,10 @@ class TimeScale extends IntervalScale {
     _approxInterval: number;
 
     _minLevelUnit: TimeUnit;
+
+    constructor(settings?: TimeScaleSetting) {
+        super(settings);
+    }
 
     /**
      * Get label is mainly for other components like dataZoom, tooltip.
@@ -125,7 +127,8 @@ class TimeScale extends IntervalScale {
             fullLeveledFormatter[
                 getDefaultFormatPrecisionOfInterval(getPrimaryTimeUnit(this._minLevelUnit))
             ] || fullLeveledFormatter.second,
-            useUTC
+            useUTC,
+            this.getSetting('locale')
         );
     }
 
@@ -334,7 +337,7 @@ function isUnitValueSame(
 //     millisecond: millisecondsGetterName(true)
 // };
 
-// function moveTick(date: Date, unitName: TimeUnit, step: number, isUTC?: boolean) {
+// function moveTick(date: Date, unitName: TimeUnit, step: number, isUTC: boolean) {
 //     step = step || 1;
 //     switch (getPrimaryTimeUnit(unitName)) {
 //         case 'year':

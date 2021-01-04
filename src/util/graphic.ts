@@ -45,30 +45,26 @@ import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as subPixelOptimizeUtil from 'zrender/src/graphic/helper/subPixelOptimize';
 import { Dictionary } from 'zrender/src/core/types';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
-import Element, { ElementProps } from 'zrender/src/Element';
+import Element from 'zrender/src/Element';
 import Model from '../model/Model';
 import {
     AnimationOptionMixin,
-    LabelOption,
     AnimationDelayCallbackParam,
     ZRRectLike,
     ZRStyleProps,
-    ParsedValue,
-    PayloadAnimationPart
+    PayloadAnimationPart,
+    AnimationOption
 } from './types';
 import {
     extend,
     isArrayLike,
     map,
     defaults,
-    isObject
+    isObject,
+    retrieve2
 } from 'zrender/src/core/util';
-import SeriesModel from '../model/Series';
-import List from '../data/List';
-import { getLabelText, setLabelText, labelInner } from '../label/labelStyle';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import { getECData } from './innerStore';
-import {interpolateRawValues} from './model';
 
 
 const mathMax = Math.max;
@@ -298,6 +294,7 @@ type AnimateOrSetPropsOption = {
     dataIndex?: number;
     cb?: () => void;
     during?: (percent: number) => void;
+    removeOpt?: AnimationOption
     isFrom?: boolean;
 };
 
@@ -313,6 +310,7 @@ function animateOrSetProps<Props>(
     during?: AnimateOrSetPropsOption['during']
 ) {
     let isFrom = false;
+    let removeOpt: AnimationOption;
     if (typeof dataIndex === 'function') {
         during = cb;
         cb = dataIndex;
@@ -322,6 +320,7 @@ function animateOrSetProps<Props>(
         cb = dataIndex.cb;
         during = dataIndex.during;
         isFrom = dataIndex.isFrom;
+        removeOpt = dataIndex.removeOpt;
         dataIndex = dataIndex.dataIndex;
     }
     const isUpdate = animationType === 'update';
@@ -337,6 +336,11 @@ function animateOrSetProps<Props>(
     }
     const animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
 
+    if (!isRemove) {
+        // Must stop the remove animation.
+        el.stopAnimation('remove');
+    }
+
     if (animationEnabled) {
         let duration: number | Function;
         let animationEasing: AnimationEasing;
@@ -347,8 +351,9 @@ function animateOrSetProps<Props>(
             animationDelay = animationPayload.delay || 0;
         }
         else if (isRemove) {
-            duration = 200;
-            animationEasing = 'cubicOut';
+            removeOpt = removeOpt || {};
+            duration = retrieve2(removeOpt.duration, 200);
+            animationEasing = retrieve2(removeOpt.easing, 'cubicOut');
             animationDelay = 0;
         }
         else {
@@ -361,22 +366,17 @@ function animateOrSetProps<Props>(
             animationDelay = animatableModel.getShallow(
                 isUpdate ? 'animationDelayUpdate' : 'animationDelay'
             );
-            if (typeof animationDelay === 'function') {
-                animationDelay = animationDelay(
-                    dataIndex as number,
-                    animatableModel.getAnimationDelayParams
-                        ? animatableModel.getAnimationDelayParams(el, dataIndex as number)
-                        : null
-                );
-            }
-            if (typeof duration === 'function') {
-                duration = duration(dataIndex as number);
-            }
         }
-
-        if (!isRemove) {
-            // Must stop the remove animation.
-            el.stopAnimation('remove');
+        if (typeof animationDelay === 'function') {
+            animationDelay = animationDelay(
+                dataIndex as number,
+                animatableModel.getAnimationDelayParams
+                    ? animatableModel.getAnimationDelayParams(el, dataIndex as number)
+                    : null
+            );
+        }
+        if (typeof duration === 'function') {
+            duration = duration(dataIndex as number);
         }
 
         duration > 0
@@ -402,7 +402,17 @@ function animateOrSetProps<Props>(
                         during: during
                     })
             )
-            : (el.stopAnimation(), el.attr(props), cb && (cb as AnimateOrSetPropsOption['cb'])());
+            // FIXME:
+            // If `duration` is 0, only the animation on props
+            // can be stoped, other animation should be continued?
+            // But at present using duration 0 in `animateTo`, `animateFrom`
+            // might cause unexpected behavior.
+            : (
+                el.stopAnimation(),
+                // If `isFrom`, the props is the "from" props.
+                !isFrom && el.attr(props),
+                cb && (cb as AnimateOrSetPropsOption['cb'])()
+            );
     }
     else {
         el.stopAnimation();
@@ -473,6 +483,11 @@ export function removeElement<Props>(
     cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
     during?: AnimateOrSetPropsOption['during']
 ) {
+    // Don't do remove animation twice.
+    if (isElementRemoved(el)) {
+        return;
+    }
+
     animateOrSetProps('remove', el, props, animatableModel, dataIndex, cb, during);
 }
 
@@ -529,76 +544,6 @@ export function isElementRemoved(el: Element) {
         }
     }
     return false;
-}
-
-function animateOrSetLabel<Props extends PathProps>(
-    animationType: 'init' | 'update' | 'remove',
-    el: Element<Props>,
-    data: List,
-    dataIndex: number,
-    labelModel: Model<LabelOption>,
-    seriesModel: SeriesModel,
-    animatableModel?: Model<AnimationOptionMixin>,
-    getDefaultText?: (value: ParsedValue[] | ParsedValue) => string
-) {
-    const valueAnimationEnabled = labelModel && labelModel.get('valueAnimation');
-    const label = el.getTextContent();
-    if (valueAnimationEnabled && label) {
-        const precision = labelModel ? labelModel.get('precision') : null;
-        const host = labelInner(label);
-
-        const sourceValue = host.prevValue;
-        const targetValue = host.value;
-
-        const during = (percent: number) => {
-            const text = el.getTextContent();
-            if (!text || !host) {
-                return;
-            }
-
-            const interpolated = interpolateRawValues(data, precision, sourceValue, targetValue, percent);
-
-            const labelText = getLabelText({
-                labelDataIndex: dataIndex,
-                labelFetcher: seriesModel,
-                defaultText: getDefaultText
-                    ? getDefaultText(interpolated)
-                    : interpolated + ''
-            }, {normal: labelModel}, interpolated);
-
-            setLabelText(text, labelText);
-        };
-
-        host.prevValue = targetValue;
-
-        const props: ElementProps = {};
-        animateOrSetProps(animationType, el, props, animatableModel, dataIndex, null, during);
-    }
-}
-
-
-export function updateLabel<Props>(
-    el: Element<Props>,
-    data: List,
-    dataIndex: number,
-    labelModel: Model<LabelOption>,
-    seriesModel: SeriesModel,
-    animatableModel?: Model<AnimationOptionMixin>,
-    defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
-) {
-    animateOrSetLabel('update', el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
-}
-
-export function initLabel<Props>(
-    el: Element<Props>,
-    data: List,
-    dataIndex: number,
-    labelModel: Model<LabelOption>,
-    seriesModel: SeriesModel,
-    animatableModel?: Model<AnimationOptionMixin>,
-    defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
-) {
-    animateOrSetLabel('init', el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
 }
 
 /**

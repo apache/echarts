@@ -22,7 +22,7 @@ import View from '../../coord/View';
 import {getLayoutRect} from '../../util/layout';
 import * as bbox from 'zrender/src/core/bbox';
 import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import GlobalModel from '../../model/Global';
 import { extend } from 'zrender/src/core/util';
 
@@ -36,7 +36,7 @@ function getViewRect(seriesModel: GraphSeriesModel, api: ExtensionAPI, aspect: n
     });
 }
 
-export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+export default function createViewCoordSys(ecModel: GlobalModel, api: ExtensionAPI) {
     const viewList: View[] = [];
     ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
         const coordSysType = seriesModel.get('coordinateSystem');

@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import {WhiskerBoxCommonMixin} from '../helper/whiskerBoxCommon';
 import {
@@ -27,14 +26,17 @@ import {
     ItemStyleOption,
     ZRColor,
     ColorString,
-    LabelOption,
+    SeriesLabelOption,
     SeriesLargeOptionMixin,
     OptionDataValueNumeric,
-    StatesOptionMixin
+    StatesOptionMixin,
+    SeriesEncodeOptionMixin,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import List from '../../data/List';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
+import { mixin } from 'zrender/src/core/util';
 
 type CandlestickDataValue = OptionDataValueNumeric[];
 
@@ -44,7 +46,7 @@ interface CandlestickItemStyleOption extends ItemStyleOption {
 }
 export interface CandlestickStateOption {
     itemStyle?: CandlestickItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 export interface CandlestickDataItemOption
     extends CandlestickStateOption, StatesOptionMixin<CandlestickStateOption, ExtraStateOption> {
@@ -53,6 +55,7 @@ export interface CandlestickDataItemOption
 
 interface ExtraStateOption {
     emphasis?: {
+        focus?: DefaultEmphasisFocus
         scale?: boolean
     }
 }
@@ -60,7 +63,8 @@ interface ExtraStateOption {
 export interface CandlestickSeriesOption
     extends SeriesOption<CandlestickStateOption, ExtraStateOption>, CandlestickStateOption,
     SeriesOnCartesianOptionMixin,
-    SeriesLargeOptionMixin {
+    SeriesLargeOptionMixin,
+    SeriesEncodeOptionMixin {
 
     type?: 'candlestick'
 
@@ -108,13 +112,13 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
         clip: true,
 
         itemStyle: {
-            color: '#c23531', // 阳线 positive
-            color0: '#314656', // 阴线 negative     '#c23531', '#314656'
-            borderWidth: 1,
-            // FIXME
-            // ec2中使用的是lineStyle.color 和 lineStyle.color0
-            borderColor: '#c23531',
-            borderColor0: '#314656'
+            color: '#eb5454', // positive
+            color0: '#47b262', // negative
+            borderColor: '#eb5454',
+            borderColor0: '#47b262',
+            // borderColor: '#d24040',
+            // borderColor0: '#398f4f',
+            borderWidth: 1
         },
 
         emphasis: {
@@ -153,8 +157,6 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
     }
 }
 
-zrUtil.mixin(CandlestickSeriesModel, WhiskerBoxCommonMixin, true);
-
-SeriesModel.registerClass(CandlestickSeriesModel);
+mixin(CandlestickSeriesModel, WhiskerBoxCommonMixin, true);
 
 export default CandlestickSeriesModel;

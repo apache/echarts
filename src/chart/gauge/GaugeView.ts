@@ -20,13 +20,13 @@
 import PointerPath from './PointerPath';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
-import {createTextStyle} from '../../label/labelStyle';
+import {createTextStyle, setLabelValueAnimation, animateLabelValue} from '../../label/labelStyle';
 import ChartView from '../../view/Chart';
 import {parsePercent, round, linearMap} from '../../util/number';
 import GaugeSeriesModel, { GaugeDataItemOption } from './GaugeSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
-import { ColorString, ECElement } from '../../util/types';
+import ExtensionAPI from '../../core/ExtensionAPI';
+import { ColorString, ECElement, ParsedValue } from '../../util/types';
 import List from '../../data/List';
 import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
@@ -74,7 +74,10 @@ class GaugeView extends ChartView {
     type = GaugeView.type;
 
     private _data: List;
-    private _progressData: graphic.Path[];
+    private _progressEls: graphic.Path[];
+
+    private _titleEls: graphic.Text[];
+    private _detailEls: graphic.Text[];
 
     render(seriesModel: GaugeSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
 
@@ -86,6 +89,8 @@ class GaugeView extends ChartView {
         this._renderMain(
             seriesModel, ecModel, api, colorList, posInfo
         );
+
+        this._data = seriesModel.getData();
     }
 
     dispose() {}
@@ -330,7 +335,7 @@ class GaugeView extends ChartView {
 
         const group = this.group;
         const oldData = this._data;
-        const oldProgressData = this._progressData;
+        const oldProgressData = this._progressEls;
         const progressList = [] as graphic.Path[];
 
         const showPointer = seriesModel.get(['pointer', 'show']);
@@ -491,8 +496,7 @@ class GaugeView extends ChartView {
                 }
             });
 
-            this._data = data;
-            this._progressData = progressList;
+            this._progressEls = progressList;
         }
     }
 
@@ -536,6 +540,25 @@ class GaugeView extends ChartView {
 
         const contentGroup = new graphic.Group();
 
+        const newTitleEls: graphic.Text[] = [];
+        const newDetailEls: graphic.Text[] = [];
+        const hasAnimation = seriesModel.isAnimationEnabled();
+
+        data.diff(this._data)
+            .add((idx) => {
+                newTitleEls[idx] = new graphic.Text({
+                    silent: true
+                });
+                newDetailEls[idx] = new graphic.Text({
+                    silent: true
+                });
+            })
+            .update((idx, oldIdx) => {
+                newTitleEls[idx] = this._titleEls[oldIdx];
+                newDetailEls[idx] = this._detailEls[oldIdx];
+            })
+            .execute();
+
         data.each(function (idx) {
             const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
             const value = data.get(valueDim, idx) as number;
@@ -549,8 +572,8 @@ class GaugeView extends ChartView {
                 const titleOffsetCenter = itemTitleModel.get('offsetCenter');
                 const titleX = posInfo.cx + parsePercent(titleOffsetCenter[0], posInfo.r);
                 const titleY = posInfo.cy + parsePercent(titleOffsetCenter[1], posInfo.r);
-                itemGroup.add(new graphic.Text({
-                    silent: true,
+                const labelEl = newTitleEls[idx];
+                labelEl.attr({
                     style: createTextStyle(itemTitleModel, {
                         x: titleX,
                         y: titleY,
@@ -558,7 +581,13 @@ class GaugeView extends ChartView {
                         align: 'center',
                         verticalAlign: 'middle'
                     }, {inheritColor: autoColor})
-                }));
+                });
+                setLabelValueAnimation(
+                    labelEl, {normal: itemTitleModel}, seriesModel.getRawValue(idx) as ParsedValue, () => data.getName(idx)
+                );
+                hasAnimation && animateLabelValue(labelEl, idx, data, seriesModel);
+
+                itemGroup.add(labelEl);
             }
 
             const itemDetailModel = itemModel.getModel('detail');
@@ -571,29 +600,35 @@ class GaugeView extends ChartView {
                 const detailColor = (
                     seriesModel.get(['progress', 'show']) ? data.getItemVisual(idx, 'style').fill : autoColor
                 ) as string;
-                itemGroup.add(new graphic.Text({
-                    silent: true,
+                const labelEl = newDetailEls[idx];
+                const formatter = itemDetailModel.get('formatter');
+                labelEl.attr({
                     style: createTextStyle(itemDetailModel, {
                         x: detailX,
                         y: detailY,
-                        text: formatLabel(
-                            value, itemDetailModel.get('formatter')
-                        ),
+                        text: formatLabel(value, formatter),
                         width: isNaN(width) ? null : width,
                         height: isNaN(height) ? null : height,
                         align: 'center',
                         verticalAlign: 'middle'
                     }, {inheritColor: detailColor})
-                }));
+                });
+                setLabelValueAnimation(
+                    labelEl, {normal: itemDetailModel}, seriesModel.getRawValue(idx) as ParsedValue,
+                    (value: number) => formatLabel(value, formatter)
+                );
+                hasAnimation && animateLabelValue(labelEl, idx, data, seriesModel);
+
+                itemGroup.add(labelEl);
             }
 
             contentGroup.add(itemGroup);
         });
         this.group.add(contentGroup);
 
+        this._titleEls = newTitleEls;
+        this._detailEls = newDetailEls;
     }
 }
-
-ChartView.registerClass(GaugeView);
 
 export default GaugeView;

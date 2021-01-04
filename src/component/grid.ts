@@ -17,6 +17,8 @@
 * under the License.
 */
 
-import './gridSimple';
-import './axisPointer/CartesianAxisPointer';
-import './axisPointer';
+
+import { use } from '../extension';
+import { install } from './grid/install';
+
+use(install);

@@ -21,7 +21,7 @@ import * as axisPointerModelHelper from '../axisPointer/modelHelper';
 import ComponentView from '../../view/Component';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, Dictionary } from '../../util/types';
 import type BaseAxisPointer from '../axisPointer/BaseAxisPointer';
 

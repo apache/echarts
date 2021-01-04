@@ -26,7 +26,7 @@ import {linearMap, asc, parsePercent} from '../../util/number';
 import * as layout from '../../util/layout';
 import sliderMove from '../helper/sliderMove';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import {
     LayoutOrient, Payload, ZRTextVerticalAlign, ZRTextAlign, ZRElementEvent, ParsedValue
 } from '../../util/types';
@@ -191,6 +191,7 @@ class SliderZoomView extends DataZoomView {
         thisGroup.removeAll();
 
         this._brushing = false;
+        this._displayables.brushRect = null;
 
         this._resetLocation();
         this._resetInterval();
@@ -715,7 +716,9 @@ class SliderZoomView extends DataZoomView {
             (handle as graphic.Path).attr({
                 scaleX: handleHeight / 2,
                 scaleY: handleHeight / 2,
-                x: handleEnds[handleIndex],
+                // This is a trick, by adding an extra tiny offset to let the default handle's end point align to the drag window.
+                // NOTE: It may affect some custom shapes a bit. But we prefer to have better result by default.
+                x: handleEnds[handleIndex] + (handleIndex ? -1 : 1),
                 y: size[1] / 2 - handleHeight / 2
             });
         }, this);
@@ -986,7 +989,8 @@ class SliderZoomView extends DataZoomView {
             });
             displayables.sliderGroup.add(brushRect);
         }
-        brushRect.ignore = false;
+
+        brushRect.attr('ignore', false);
 
         const brushStart = this._brushStart;
 
@@ -1057,7 +1061,5 @@ function getOtherDim(thisDim: 'x' | 'y' | 'radius' | 'angle' | 'single' | 'z') {
 function getCursor(orient: LayoutOrient) {
     return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
 }
-
-ComponentView.registerClass(SliderZoomView);
 
 export default SliderZoomView;

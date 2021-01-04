@@ -63,11 +63,14 @@
             paths: {
                 'echarts': ecDistPath,
                 'zrender': 'node_modules/zrender/dist/zrender',
+                'ecStat': 'test/lib/ecStat.min',
+                'myTransform': 'test/lib/myTransform/dist/myTransform',
+                // 'ecStat': 'http://localhost:8001/echarts/echarts-stat/dist/ecStat',
                 'geoJson': '../geoData/geoJson',
                 'theme': 'theme',
                 'data': 'test/data',
-                'map': 'map',
-                'extension': 'dist/extension'
+                'map': 'test/data/map',
+                'extension': 'dist/extension',
             }
             // urlArgs will prevent break point on init in debug tool.
             // urlArgs: '_v_=' + (+new Date())
@@ -83,7 +86,7 @@
                 'geoJson': 'geoData/geoJson',
                 'theme': 'theme',
                 'data': 'test/data',
-                'map': 'map',
+                'map': 'test/data/map',
                 'extension': 'extension'
             },
             // urlArgs: '_v_=' + (+new Date()),

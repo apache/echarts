@@ -22,11 +22,12 @@ import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states
 import ChartView from '../../view/Chart';
 import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import List from '../../data/List';
 import { ColorString } from '../../util/types';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { retrieveVisualColorForTooltipMarker } from '../../component/tooltip/tooltipMarkup';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 
@@ -101,9 +102,8 @@ class FunnelPiece extends graphic.Polygon {
         const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
         const layout = data.getItemLayout(idx);
         const labelLayout = layout.label;
-        // let visualColor = data.getItemVisual(idx, 'color');
-
-        const visualColor = data.getItemVisual(idx, 'style').fill as ColorString;
+        const style = data.getItemVisual(idx, 'style');
+        const visualColor = style.fill as ColorString;
 
         setLabelStyle(
             // position will not be used in setLabelStyle
@@ -112,6 +112,7 @@ class FunnelPiece extends graphic.Polygon {
             {
                 labelFetcher: data.hostModel as FunnelSeriesModel,
                 labelDataIndex: idx,
+                defaultOpacity: style.opacity,
                 defaultText: data.getName(idx)
             },
             { normal: {
@@ -207,8 +208,6 @@ class FunnelView extends ChartView {
 
     dispose() {}
 }
-
-ChartView.registerClass(FunnelView);
 
 
 export default FunnelView;

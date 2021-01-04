@@ -18,11 +18,10 @@
 */
 
 import MarkerModel, { MarkerOption, MarkerStatisticType, MarkerPositionOption } from './MarkerModel';
-import ComponentModel from '../../model/Component';
 import GlobalModel from '../../model/Global';
 import {
     LineStyleOption,
-    LineLabelOption,
+    SeriesLineLabelOption,
     SymbolOptionMixin,
     ItemStyleOption,
     StatesOptionMixin
@@ -34,7 +33,7 @@ interface MarkLineStateOption {
      * itemStyle for symbol
      */
     itemStyle?: ItemStyleOption
-    label?: LineLabelOption
+    label?: SeriesLineLabelOption
 }
 interface MarkLineDataItemOptionBase extends MarkLineStateOption, StatesOptionMixin<MarkLineStateOption> {
     name?: string
@@ -79,6 +78,7 @@ export type MarkLine2DDataItemOption = [
 
 export interface MarkLineOption extends MarkerOption,
     MarkLineStateOption, StatesOptionMixin<MarkLineStateOption> {
+    mainType?: 'markLine'
 
     symbol?: string[] | string
     symbolSize?: number[] | number
@@ -136,7 +136,5 @@ class MarkLineModel extends MarkerModel<MarkLineOption> {
         animationEasing: 'linear'
     };
 }
-
-ComponentModel.registerClass(MarkLineModel);
 
 export default MarkLineModel;

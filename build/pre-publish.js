@@ -37,6 +37,8 @@ const ts = require('typescript');
 const globby = require('globby');
 const transformDEVUtil = require('./transform-dev');
 const preamble = require('./preamble');
+const dts = require('@lang/rollup-plugin-dts').default;
+const rollup = require('rollup');
 
 const ecDir = nodePath.resolve(__dirname, '..');
 const tmpDir = nodePath.resolve(ecDir, 'pre-publish-tmp');
@@ -64,54 +66,13 @@ const extensionSrcGlobby = {
     cwd: ecDir
 };
 const extensionSrcDir = nodePath.resolve(ecDir, 'extension-src');
-const extensionCJSDir = nodePath.resolve(ecDir, 'extension');
-const extensionESMDir = nodePath.resolve(ecDir, 'extension-esm');
+const extensionESMDir = nodePath.resolve(ecDir, 'extension');
 
 const typesDir = nodePath.resolve(ecDir, 'types');
+const esmDir = 'lib';
 
 
 const compileWorkList = [
-    {
-        logLabel: 'main ts -> js-cjs',
-        compilerOptionsOverride: {
-            module: 'CommonJS',
-            // `rootDir` Only use to control the output
-            // directory structure with --outDir.
-            rootDir: ecDir,
-            outDir: tmpDir
-        },
-        srcGlobby: mainSrcGlobby,
-        transformOptions: {
-            filesGlobby: {patterns: ['**/*.js'], cwd: tmpDir},
-            preamble: preamble.js,
-            transformDEV: true
-        },
-        before: async function () {
-            fsExtra.removeSync(tmpDir);
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'lib'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.blank.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.common.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.simple.js'));
-        },
-        after: async function () {
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.all.js'), nodePath.resolve(ecDir, 'index.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'index.blank.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'index.common.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'index.simple.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'lib'));
-
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.js'), 'lib');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.blank.js'), 'lib');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), 'lib');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), 'lib');
-
-            await transformDistributionFiles(nodePath.resolve(ecDir, 'lib'), 'lib');
-            removeESmoduleMark();
-
-            fsExtra.removeSync(tmpDir);
-        }
-    },
     {
         logLabel: 'main ts -> js-esm',
         compilerOptionsOverride: {
@@ -130,48 +91,28 @@ const compileWorkList = [
         },
         before: async function () {
             fsExtra.removeSync(tmpDir);
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'esm'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.all.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.blank.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.common.js'));
-            fsExtra.removeSync(nodePath.resolve(ecDir, 'echarts.simple.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'types'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, esmDir));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.blank.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.common.js'));
+            fsExtra.removeSync(nodePath.resolve(ecDir, 'index.simple.js'));
         },
         after: async function () {
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.all.js'), nodePath.resolve(ecDir, 'echarts.all.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'echarts.blank.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'echarts.common.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'echarts.simple.js'));
-            fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'esm'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.all.js'), nodePath.resolve(ecDir, 'index.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.blank.js'), nodePath.resolve(ecDir, 'index.blank.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.common.js'), nodePath.resolve(ecDir, 'index.common.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src/echarts.simple.js'), nodePath.resolve(ecDir, 'index.simple.js'));
+            fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, esmDir));
 
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.all.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.blank.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.common.js'), 'esm');
-            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.simple.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.js'), esmDir);
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.blank.js'), esmDir);
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), esmDir);
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), esmDir);
 
-            await transformDistributionFiles(nodePath.resolve(ecDir, 'esm'), 'esm');
-            await transformDistributionFiles(nodePath.resolve(ecDir, 'types'), 'esm');
-
+            await transformDistributionFiles(nodePath.resolve(ecDir, esmDir), esmDir);
+            await transformDistributionFiles(nodePath.resolve(ecDir, 'types'), esmDir);
             fsExtra.removeSync(tmpDir);
-        }
-    },
-    {
-        logLabel: 'extension ts -> js-cjs',
-        compilerOptionsOverride: {
-            module: 'CommonJS',
-            rootDir: extensionSrcDir,
-            outDir: extensionCJSDir
-        },
-        srcGlobby: extensionSrcGlobby,
-        transformOptions: {
-            filesGlobby: {patterns: ['**/*.js'], cwd: extensionCJSDir},
-            preamble: preamble.js,
-            transformDEV: true
-        },
-        before: async function () {
-            fsExtra.removeSync(extensionCJSDir);
-        },
-        after: async function () {
-            await transformDistributionFiles(extensionCJSDir, 'lib');
         }
     },
     {
@@ -191,7 +132,7 @@ const compileWorkList = [
             fsExtra.removeSync(extensionESMDir);
         },
         after: async function () {
-            await transformDistributionFiles(extensionESMDir, 'esm');
+            await transformDistributionFiles(extensionESMDir, 'lib');
         }
     }
 ];
@@ -227,8 +168,48 @@ module.exports = async function () {
         process.stdout.write(chalk.green.dim(` done \n`));
     }
 
+    process.stdout.write(chalk.green.dim(`Generating entries ...`));
+    generateEntries();
+    process.stdout.write(chalk.green.dim(`Bundling DTS ...`));
+    await bundleDTS();
+
     console.log(chalk.green.dim('All done.'));
 };
+
+async function runTsCompile(localTs, compilerOptions, srcPathList) {
+    // Must do it. becuase the value in tsconfig.json might be different from the inner representation.
+    // For example: moduleResolution: "NODE" => moduleResolution: 2
+    const {options, errors} = localTs.convertCompilerOptionsFromJson(compilerOptions, ecDir);
+
+    if (errors.length) {
+        let errMsg = 'tsconfig parse failed: '
+            + errors.map(error => error.messageText).join('. ')
+            + '\n compilerOptions: \n' + JSON.stringify(compilerOptions, null, 4);
+        assert(false, errMsg);
+    }
+
+    // See: https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API
+
+    let program = localTs.createProgram(srcPathList, options);
+    let emitResult = program.emit();
+
+    let allDiagnostics = localTs
+        .getPreEmitDiagnostics(program)
+        .concat(emitResult.diagnostics);
+
+    allDiagnostics.forEach(diagnostic => {
+        if (diagnostic.file) {
+            let {line, character} = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
+            let message = localTs.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+            console.log(chalk.red(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`));
+        }
+        else {
+            console.log(chalk.red(localTs.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
+        }
+    });
+    assert(!emitResult.emitSkipped, 'ts compile failed.');
+}
+module.exports.runTsCompile = runTsCompile;
 
 async function tsCompile(compilerOptionsOverride, srcPathList) {
     assert(
@@ -244,35 +225,7 @@ async function tsCompile(compilerOptionsOverride, srcPathList) {
         sourceMap: false
     };
 
-    // Must do it. becuase the value in tsconfig.json might be different from the inner representation.
-    // For example: moduleResolution: "NODE" => moduleResolution: 2
-    const {options, errors} = ts.convertCompilerOptionsFromJson(compilerOptions, ecDir);
-    if (errors.length) {
-        let errMsg = 'tsconfig parse failed: '
-            + errors.map(error => error.messageText).join('. ')
-            + '\n compilerOptions: \n' + JSON.stringify(compilerOptions, null, 4);
-        assert(false, errMsg);
-    }
-
-    // See: https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API
-    let program = ts.createProgram(srcPathList, options);
-    let emitResult = program.emit();
-
-    let allDiagnostics = ts
-        .getPreEmitDiagnostics(program)
-        .concat(emitResult.diagnostics);
-
-    allDiagnostics.forEach(diagnostic => {
-        if (diagnostic.file) {
-            let {line, character} = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
-            let message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-            console.log(chalk.red(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`));
-        }
-        else {
-            console.log(chalk.red(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
-        }
-    });
-    assert(!emitResult.emitSkipped, 'ts compile failed.');
+    runTsCompile(ts, compilerOptions, srcPathList);
 }
 
 /**
@@ -300,10 +253,10 @@ function transformRootFolderInEntry(entryFile, replacement) {
  * Transform `zrender/src` to `zrender/esm` in all files
  */
 async function transformDistributionFiles(rooltFolder, replacement) {
-    const files = await globby([
-        rooltFolder + '/**/*.js',
-        rooltFolder + '/**/*.d.ts',
-    ]);
+    const files = await readFilePaths({
+        patterns: ['**/*.js', '**/*.d.ts'],
+        cwd: rooltFolder
+    });
     // Simple regex replacement
     // TODO More robust way?
     for (let fileName of files) {
@@ -311,9 +264,9 @@ async function transformDistributionFiles(rooltFolder, replacement) {
         code = singleTransformZRRootFolder(code, replacement);
         // For lower ts version, not use import type
         // TODO Use https://github.com/sandersn/downlevel-dts ?
-        if (fileName.endsWith('.d.ts')) {
-            code = singleTransformImportType(code);
-        }
+        // if (fileName.endsWith('.d.ts')) {
+        //     code = singleTransformImportType(code);
+        // }
         fs.writeFileSync(fileName, code, 'utf-8');
     }
 }
@@ -342,9 +295,9 @@ function singleTransformZRRootFolder(code, replacement) {
     return code.replace(/([\"\'])zrender\/src\//g, `$1zrender/${replacement}/`);
 }
 
-function singleTransformImportType(code) {
-    return code.replace(/import\s+type\s+/g, 'import ');
-}
+// function singleTransformImportType(code) {
+//     return code.replace(/import\s+type\s+/g, 'import ');
+// }
 
 /**
  * @param {Object} transformOptions
@@ -383,6 +336,66 @@ async function readFilePaths({patterns, cwd}) {
     );
 }
 
+async function bundleDTS() {
+
+    const outDir = nodePath.resolve(__dirname, '../types/dist');
+    const commonConfig = {
+        onwarn(warning, rollupWarn) {
+            // Not warn circular dependency
+            if (warning.code !== 'CIRCULAR_DEPENDENCY') {
+                rollupWarn(warning);
+            }
+        },
+        plugins: [
+            dts({
+                respectExternal: true
+            })
+//             {
+//                 generateBundle(options, bundle) {
+//                     for (let chunk of Object.values(bundle)) {
+//                         chunk.code = `
+// type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
+// ${chunk.code}`
+//                     }
+//                 }
+//             }
+        ]
+    };
+
+    // Bundle chunks.
+    const parts = [
+        'core', 'charts', 'components', 'renderers', 'option'
+    ];
+    const inputs = {};
+    parts.forEach(partName => {
+        inputs[partName] = nodePath.resolve(__dirname, `../types/src/export/${partName}.d.ts`)
+    });
+
+    const bundle = await rollup.rollup({
+        input: inputs,
+        ...commonConfig
+    });
+    let idx = 1;
+    await bundle.write({
+        dir: outDir,
+        minifyInternalExports: false,
+        manualChunks: (id) => {
+            // Only create one chunk.
+            return 'shared';
+        },
+        chunkFileNames: 'shared.d.ts'
+    });
+
+    // Bundle all in one
+    const bundleAllInOne = await rollup.rollup({
+        input: nodePath.resolve(__dirname, `../types/src/export/all.d.ts`),
+        ...commonConfig
+    });
+    await bundleAllInOne.write({
+        file: nodePath.resolve(outDir, 'echarts.d.ts')
+    });
+}
+
 function readTSConfig() {
     // tsconfig.json may have comment string, which is invalid if
     // using `require('tsconfig.json'). So we use a loose parser.
@@ -390,3 +403,18 @@ function readTSConfig() {
     const tsConfigText = fs.readFileSync(filePath, {encoding: 'utf8'});
     return (new Function(`return ( ${tsConfigText} )`))();
 }
+
+
+function generateEntries() {
+    ['charts', 'components', 'renderers', 'core'].forEach(entryName => {
+        if (entryName !== 'option') {
+            const jsCode = fs.readFileSync(nodePath.join(__dirname, `template/${entryName}.js`), 'utf-8');
+            fs.writeFileSync(nodePath.join(__dirname, `../${entryName}.js`), jsCode, 'utf-8');
+        }
+
+        const dtsCode = fs.readFileSync(nodePath.join(__dirname, `/template/${entryName}.d.ts`), 'utf-8');
+        fs.writeFileSync(nodePath.join(__dirname, `../${entryName}.d.ts`), dtsCode, 'utf-8');
+    });
+}
+
+module.exports.readTSConfig = readTSConfig;

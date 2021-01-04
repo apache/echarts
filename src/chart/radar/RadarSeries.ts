@@ -24,13 +24,15 @@ import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
     SeriesOption,
     LineStyleOption,
-    LabelOption,
+    SeriesLabelOption,
     SymbolOptionMixin,
     ItemStyleOption,
     AreaStyleOption,
     OptionDataValue,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    SeriesEncodeOptionMixin,
+    CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -44,7 +46,7 @@ type RadarSeriesDataValue = OptionDataValue[];
 export interface RadarSeriesStateOption {
     lineStyle?: LineStyleOption
     areaStyle?: AreaStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
     itemStyle?: ItemStyleOption
 }
 export interface RadarSeriesDataItemOption extends SymbolOptionMixin,
@@ -53,14 +55,14 @@ export interface RadarSeriesDataItemOption extends SymbolOptionMixin,
 }
 
 export interface RadarSeriesOption extends SeriesOption<RadarSeriesStateOption>, RadarSeriesStateOption,
-    SymbolOptionMixin {
+    SymbolOptionMixin<CallbackDataParams>, SeriesEncodeOptionMixin {
     type?: 'radar'
     coordinateSystem?: 'radar'
 
     radarIndex?: number
     radarId?: string
 
-    data?: RadarSeriesStateOption[]
+    data?: (RadarSeriesDataItemOption | RadarSeriesDataValue)[]
 }
 
 class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
@@ -163,7 +165,5 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
         // symbolRotate: null
     };
 }
-
-SeriesModel.registerClass(RadarSeriesModel);
 
 export default RadarSeriesModel;

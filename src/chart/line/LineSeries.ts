@@ -24,14 +24,17 @@ import {
     SeriesOption,
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
-    LabelOption,
+    SeriesLabelOption,
     LineStyleOption,
     ItemStyleOption,
     AreaStyleOption,
     OptionDataValue,
     SymbolOptionMixin,
     SeriesSamplingOptionMixin,
-    StatesOptionMixin
+    StatesOptionMixin,
+    SeriesEncodeOptionMixin,
+    CallbackDataParams,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -41,13 +44,14 @@ type LineDataValue = OptionDataValue | OptionDataValue[];
 
 interface ExtraStateOption {
     emphasis?: {
+        focus?: DefaultEmphasisFocus
         scale?: boolean
     }
 }
 
 export interface LineStateOption {
     itemStyle?: ItemStyleOption
-    label?: LabelOption
+    label?: SeriesLabelOption
 }
 
 export interface LineDataItemOption extends SymbolOptionMixin,
@@ -57,7 +61,7 @@ export interface LineDataItemOption extends SymbolOptionMixin,
     value?: LineDataValue
 }
 
-export interface LineEndLabelOption extends LabelOption {
+export interface LineEndLabelOption extends SeriesLabelOption {
     valueAnimation: boolean
 }
 
@@ -78,7 +82,8 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
     SeriesSamplingOptionMixin,
-    SymbolOptionMixin {
+    SymbolOptionMixin<CallbackDataParams>,
+    SeriesEncodeOptionMixin {
     type?: 'line'
 
     coordinateSystem?: 'cartesian2d' | 'polar'
@@ -86,7 +91,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     // If clip the overflow value
     clip?: boolean
 
-    label?: LabelOption
+    label?: SeriesLabelOption
     endLabel?: LineEndLabelOption
 
     lineStyle?: LineStyleOption
@@ -97,7 +102,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
 
     step?: false | 'start' | 'end' | 'middle'
 
-    smooth?: boolean
+    smooth?: boolean | number
 
     smoothMonotone?: 'x' | 'y' | 'none'
 
@@ -136,7 +141,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
     static defaultOption: LineSeriesOption = {
         zlevel: 0,
-        z: 2,
+        z: 3,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
 
@@ -200,7 +205,5 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         hoverLayerThreshold: Infinity
     };
 }
-
-SeriesModel.registerClass(LineSeriesModel);
 
 export default LineSeriesModel;

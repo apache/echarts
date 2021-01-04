@@ -23,7 +23,7 @@ import List from '../../data/List';
 import Graph from '../../data/Graph';
 import linkList from '../../data/helper/linkList';
 import createDimensions from '../../data/helper/createDimensions';
-import CoordinateSystem from '../../CoordinateSystem';
+import CoordinateSystem from '../../core/CoordinateSystem';
 import createListFromArray from './createListFromArray';
 import {
     OptionSourceDataOriginal, GraphEdgeItemObject, OptionDataValue,
@@ -32,7 +32,7 @@ import {
 import SeriesModel from '../../model/Series';
 import { convertOptionIdName } from '../../util/model';
 
-export default function (
+export default function createGraphFromNodeEdge(
     nodes: OptionSourceDataOriginal<OptionDataValue, OptionDataItemObject<OptionDataValue>>,
     edges: OptionSourceDataOriginal<OptionDataValue, GraphEdgeItemObject<OptionDataValue>>,
     seriesModel: SeriesModel,

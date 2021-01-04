@@ -31,10 +31,10 @@ import {
     TreeLayoutNode
 } from './layoutHelper';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import TreeSeriesModel from './TreeSeries';
 
-export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+export default function treeLayout(ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachSeriesByType('tree', function (seriesModel: TreeSeriesModel) {
         commonLayout(seriesModel, api);
     });

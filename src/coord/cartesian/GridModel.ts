@@ -18,13 +18,14 @@
 */
 
 
-import './AxisModel';
 import ComponentModel from '../../model/Component';
 import { ComponentOption, BoxLayoutOptionMixin, ZRColor, ShadowOptionMixin } from '../../util/types';
 import Grid from './Grid';
 import { CoordinateSystemHostModel } from '../CoordinateSystem';
 
 export interface GridOption extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
+    mainType?: 'grid';
+
     show?: boolean;
 
     // Whether grid size contain label.
@@ -54,7 +55,7 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
         left: '10%',
         top: 60,
         right: '10%',
-        bottom: 60,
+        bottom: 70,
         // If grid size contain label
         containLabel: false,
         // width: {totalWidth} - left - right,

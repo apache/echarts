@@ -27,7 +27,8 @@ import {
     LabelOption,
     ItemStyleOption,
     OptionDataValueNumeric,
-    StatesOptionMixin
+    StatesOptionMixin,
+    SeriesEncodeOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -77,6 +78,11 @@ interface TitleOption extends LabelOption {
      */
     offsetCenter?: (number | string)[]
     formatter?: LabelFormatter | string
+
+    /**
+     * If do value animtion.
+     */
+    valueAnimation?: boolean
 }
 
 interface DetailOption extends LabelOption {
@@ -85,6 +91,11 @@ interface DetailOption extends LabelOption {
      */
     offsetCenter?: (number | string)[]
     formatter?: LabelFormatter | string
+
+    /**
+     * If do value animtion.
+     */
+    valueAnimation?: boolean
 }
 
 export interface GaugeStateOption {
@@ -100,7 +111,7 @@ export interface GaugeDataItemOption extends GaugeStateOption, StatesOptionMixin
     detail?: DetailOption
 }
 export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, GaugeStateOption,
-    CircleLayoutOptionMixin {
+    CircleLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'gauge'
 
     // override radius
@@ -120,7 +131,7 @@ export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, Gauge
     axisLine?: {
         show?: boolean
         roundCap?: boolean
-        lineStyle: Omit<LineStyleOption, 'color'> & {
+        lineStyle?: Omit<LineStyleOption, 'color'> & {
             color: GaugeColorStop[]
         }
     },
@@ -273,7 +284,8 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             offsetCenter: [0, '20%'],
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
             color: '#464646',
-            fontSize: 16
+            fontSize: 16,
+            valueAnimation: false
         },
         detail: {
             show: true,
@@ -290,12 +302,11 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             color: '#464646',
             fontSize: 30,
             fontWeight: 'bold',
-            lineHeight: 30
+            lineHeight: 30,
+            valueAnimation: false
         }
     };
 }
-
-SeriesModel.registerClass(GaugeSeriesModel);
 
 
 export default GaugeSeriesModel;

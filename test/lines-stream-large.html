@@ -46,7 +46,7 @@ under the License.
             'echarts'
         ], function (echarts) {
 
-            $.get('../map/json/world.json', function (worldJson) {
+            $.get('./data/map/json/world.json', function (worldJson) {
                 echarts.registerMap('world', worldJson);
 
                 var linesCount = 35663;

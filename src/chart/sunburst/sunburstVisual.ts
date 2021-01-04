@@ -24,7 +24,7 @@ import { Dictionary, ColorString } from '../../util/types';
 import { TreeNode } from '../../data/Tree';
 import { lift } from 'zrender/src/tool/color';
 
-export default function (ecModel: GlobalModel) {
+export default function sunburstVisual(ecModel: GlobalModel) {
 
     const paletteScope: Dictionary<ColorString> = {};
 

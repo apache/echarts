@@ -24,16 +24,18 @@ import {wrapTreePathInfo} from '../helper/treeHelper';
 import {
     SeriesOption,
     CircleLayoutOptionMixin,
-    LabelOption,
+    SeriesLabelOption,
     ItemStyleOption,
     OptionDataValue,
     CallbackDataParams,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import Model from '../../model/Model';
+import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
 
 interface SunburstItemStyleOption extends ItemStyleOption {
     // can be 10
@@ -47,11 +49,11 @@ interface SunburstItemStyleOption extends ItemStyleOption {
     borderRadius?: (number | string)[] | number | string
 }
 
-interface SunburstLabelOption extends Omit<LabelOption, 'rotate' | 'position'> {
+interface SunburstLabelOption extends Omit<SeriesLabelOption, 'rotate' | 'position'> {
     rotate?: 'radial' | 'tangential' | number
     minAngle?: number
     silent?: boolean
-    position?: LabelOption['position'] | 'outside'
+    position?: SeriesLabelOption['position'] | 'outside'
 }
 
 interface SunburstDataParams extends CallbackDataParams {
@@ -64,7 +66,7 @@ interface SunburstDataParams extends CallbackDataParams {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: 'descendant' | 'ancestor'
+        focus?: DefaultEmphasisFocus | 'descendant' | 'ancestor'
     }
 }
 
@@ -94,6 +96,13 @@ export interface SunburstSeriesLevelOption extends SunburstStateOption, StatesOp
         label?: SunburstLabelOption
     }
 }
+
+interface SortParam {
+    dataIndex: number
+    depth: number
+    height: number
+    getValue(): number
+}
 export interface SunburstSeriesOption extends
     SeriesOption<SunburstStateOption, ExtraStateOption>, SunburstStateOption,
     CircleLayoutOptionMixin {
@@ -122,7 +131,7 @@ export interface SunburstSeriesOption extends
 
     animationType?: 'expansion' | 'scale'
 
-    sort?: 'desc' | 'asc' | ((a: TreeNode, b: TreeNode) => number)
+    sort?: 'desc' | 'asc' | ((a: SortParam, b: SortParam) => number)
 }
 
 interface SunburstSeriesModel {
@@ -279,6 +288,10 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
             this._viewRoot = root;
         }
     }
+
+    enableAriaDecal() {
+        enableAriaDecalForTree(this);
+    }
 }
 
 
@@ -317,7 +330,5 @@ function completeTreeValue(dataNode: SunburstSeriesNodeItemOption) {
         : (dataNode.value = thisValue);
 }
 
-
-SeriesModel.registerClass(SunburstSeriesModel);
 
 export default SunburstSeriesModel;

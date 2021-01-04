@@ -32,6 +32,9 @@ import type PolarModel from '../coord/polar/PolarModel';
 import type { SeriesOption, SeriesOnCartesianOptionMixin } from '../util/types';
 import type { AxisBaseModel } from '../coord/AxisBaseModel';
 import { SINGLE_REFERRING } from '../util/model';
+import { ParallelSeriesOption } from '../chart/parallel/ParallelSeries';
+import ParallelModel from '../coord/parallel/ParallelModel';
+import ParallelAxisModel from '../coord/parallel/AxisModel';
 
 /**
  * @class
@@ -183,26 +186,20 @@ const fetchers: Record<SupportedCoordSys, Fetcher> = {
     parallel: function (seriesModel, result, axisMap, categoryAxisMap) {
         const ecModel = seriesModel.ecModel;
         const parallelModel = ecModel.getComponent(
-            // @ts-ignore
-            'parallel', seriesModel.get('parallelIndex')
-        );
-        // @ts-ignore
+            'parallel', (seriesModel as SeriesModel<ParallelSeriesOption>).get('parallelIndex')
+        ) as ParallelModel;
         const coordSysDims = result.coordSysDims = parallelModel.dimensions.slice();
 
-            // @ts-ignore
         each(parallelModel.parallelAxisIndex, function (axisIndex, index) {
-            // @ts-ignore
-            const axisModel = ecModel.getComponent('parallelAxis', axisIndex);
+            const axisModel = ecModel.getComponent('parallelAxis', axisIndex) as ParallelAxisModel;
             const axisDim = coordSysDims[index];
-            // @ts-ignore
             axisMap.set(axisDim, axisModel);
 
-            // @ts-ignore
-            if (isCategory(axisModel) && result.firstCategoryDimIndex == null) {
-                // @ts-ignore
+            if (isCategory(axisModel)) {
                 categoryAxisMap.set(axisDim, axisModel);
-                // @ts-ignore
-                result.firstCategoryDimIndex = index;
+                if (result.firstCategoryDimIndex == null) {
+                    result.firstCategoryDimIndex = index;
+                }
             }
         });
     }

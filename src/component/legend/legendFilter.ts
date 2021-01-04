@@ -21,7 +21,7 @@ import LegendModel from './LegendModel';
 * under the License.
 */
 
-export default function (ecModel: GlobalModel) {
+export default function legendFilter(ecModel: GlobalModel) {
 
     const legendModels = ecModel.findComponents({
         mainType: 'legend'

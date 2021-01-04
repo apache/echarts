@@ -48,7 +48,7 @@ function diffData(oldData: List, newData: List) {
     return diffResult;
 }
 
-export default function (
+export default function lineAnimationDiff(
     oldData: List, newData: List,
     oldStackedOnPoints: ArrayLike<number>, newStackedOnPoints: ArrayLike<number>,
     oldCoordSys: Cartesian2D | Polar, newCoordSys: Cartesian2D | Polar,

@@ -141,7 +141,7 @@ function traverseTree(data: any[], cb: Function) {
     }
 }
 
-export default function (option: ECUnitOption, isTheme?: boolean) {
+export default function globalBackwardCompat(option: ECUnitOption, isTheme?: boolean) {
     compatStyle(option, isTheme);
 
     // Make sure series array for model initialization.

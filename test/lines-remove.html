@@ -46,7 +46,7 @@ under the License.
                 // 'echarts/chart/effectScatter',
                 'extension/bmap'
             ], function (echarts) {
-                $.get('../map/json/china.json', function (json) {
+                $.get('./data/map/json/china.json', function (json) {
                     echarts.registerMap('china', json);
 
                     var myChart = echarts.init(document.getElementById('main'));
