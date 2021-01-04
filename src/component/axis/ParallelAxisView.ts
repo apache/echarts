@@ -18,7 +18,6 @@
 */
 
 
-// import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import AxisBuilder from './AxisBuilder';
 import BrushController, {
@@ -27,7 +26,7 @@ import BrushController, {
 import * as brushHelper from '../helper/brushHelper';
 import * as graphic from '../../util/graphic';
 import ComponentView from '../../view/Component';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import GlobalModel from '../../model/Global';
 import ParallelAxisModel, { ParallelAreaSelectStyleProps } from '../../coord/parallel/AxisModel';
 import { Payload } from '../../util/types';
@@ -187,8 +186,6 @@ class ParallelAxisView extends ComponentView {
         this._brushController.dispose();
     }
 }
-
-ComponentView.registerClass(ParallelAxisView);
 
 function fromAxisAreaSelect(
     axisModel: ParallelAxisModel, ecModel: GlobalModel, payload: Payload

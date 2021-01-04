@@ -34,9 +34,9 @@ import {
     SymbolOptionMixin,
     StatesOptionMixin,
     OptionDataItemObject,
-    DefaultExtraEmpasisState,
     SeriesEncodeOptionMixin,
-    CallbackDataParams
+    CallbackDataParams,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -49,7 +49,7 @@ interface ScatterStateOption {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus']
+        focus?: DefaultEmphasisFocus
         scale?: boolean
     }
 }
@@ -149,7 +149,5 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
     };
 
 }
-
-SeriesModel.registerClass(ScatterSeriesModel);
 
 export default ScatterSeriesModel;

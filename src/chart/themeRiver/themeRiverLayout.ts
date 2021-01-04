@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as numberUtil from '../../util/number';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import ThemeRiverSeriesModel, { ThemeRiverSeriesOption } from './ThemeRiverSeries';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import List from '../../data/List';

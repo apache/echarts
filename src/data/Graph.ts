@@ -432,10 +432,26 @@ class GraphEdge {
 
 type GetDataName<Host> = Host extends GraphEdge ? 'edgeData' : 'data';
 
+interface GraphDataProxyMixin {
+    getValue(dimension?: DimensionLoose): ParsedValue;
+    // TODO: TYPE stricter type.
+    setVisual(key: string | Dictionary<any>, value?: any): void;
+
+    getVisual(key: string): any,
+
+    setLayout(layout: any, merge?: boolean): void;
+
+    getLayout(): any
+
+    getGraphicEl(): Element
+
+    getRawIndex(): number
+}
+
 function createGraphDataProxyMixin<Host extends GraphEdge | GraphNode>(
     hostName: 'hostGraph',
     dataName: GetDataName<Host>
-) {
+): GraphDataProxyMixin {
     return {
         /**
          * @param Default 'value'. can be 'a', 'b', 'c', 'd', 'e'.
@@ -474,8 +490,8 @@ function createGraphDataProxyMixin<Host extends GraphEdge | GraphNode>(
 };
 
 
-interface GraphEdge extends ReturnType<typeof createGraphDataProxyMixin> {};
-interface GraphNode extends ReturnType<typeof createGraphDataProxyMixin> {};
+interface GraphEdge extends GraphDataProxyMixin {};
+interface GraphNode extends GraphDataProxyMixin {};
 
 zrUtil.mixin(GraphNode, createGraphDataProxyMixin('hostGraph', 'data'));
 zrUtil.mixin(GraphEdge, createGraphDataProxyMixin('hostGraph', 'edgeData'));

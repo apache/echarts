@@ -18,7 +18,6 @@
 */
 
 import BaseBarSeriesModel, {BaseBarSeriesOption} from './BaseBarSeries';
-import SeriesModel from '../../model/Series';
 import {
     ItemStyleOption,
     OptionDataValue,
@@ -142,7 +141,5 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
     });
 
 }
-
-SeriesModel.registerClass(BarSeriesModel);
 
 export default BarSeriesModel;

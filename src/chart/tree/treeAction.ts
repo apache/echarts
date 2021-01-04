@@ -17,50 +17,53 @@
 * under the License.
 */
 
-import * as echarts from '../../echarts';
 import {updateCenterAndZoom, RoamPaylod} from '../../action/roamHelper';
 import { Payload } from '../../util/types';
 import TreeSeriesModel from './TreeSeries';
 import GlobalModel from '../../model/Global';
+import { EChartsExtensionInstallRegisters } from '../../extension';
 
 export interface TreeExpandAndCollapsePayload extends Payload {
     dataIndex: number
 }
 
-echarts.registerAction({
-    type: 'treeExpandAndCollapse',
-    event: 'treeExpandAndCollapse',
-    update: 'update'
-}, function (payload: TreeExpandAndCollapsePayload, ecModel) {
-    ecModel.eachComponent({
-        mainType: 'series', subType: 'tree', query: payload
-    }, function (seriesModel: TreeSeriesModel) {
-        const dataIndex = payload.dataIndex;
-        const tree = seriesModel.getData().tree;
-        const node = tree.getNodeByDataIndex(dataIndex);
-        node.isExpand = !node.isExpand;
+export function installTreeAction(registers: EChartsExtensionInstallRegisters) {
+    registers.registerAction({
+        type: 'treeExpandAndCollapse',
+        event: 'treeExpandAndCollapse',
+        update: 'update'
+    }, function (payload: TreeExpandAndCollapsePayload, ecModel) {
+        ecModel.eachComponent({
+            mainType: 'series', subType: 'tree', query: payload
+        }, function (seriesModel: TreeSeriesModel) {
+            const dataIndex = payload.dataIndex;
+            const tree = seriesModel.getData().tree;
+            const node = tree.getNodeByDataIndex(dataIndex);
+            node.isExpand = !node.isExpand;
+        });
     });
-});
 
-echarts.registerAction({
-    type: 'treeRoam',
-    event: 'treeRoam',
-    // Here we set 'none' instead of 'update', because roam action
-    // just need to update the transform matrix without having to recalculate
-    // the layout. So don't need to go through the whole update process, such
-    // as 'dataPrcocess', 'coordSystemUpdate', 'layout' and so on.
-    update: 'none'
-}, function (payload: RoamPaylod, ecModel: GlobalModel) {
-    ecModel.eachComponent({
-        mainType: 'series', subType: 'tree', query: payload
-    }, function (seriesModel: TreeSeriesModel) {
-        const coordSys = seriesModel.coordinateSystem;
-        const res = updateCenterAndZoom(coordSys, payload);
+    registers.registerAction({
+        type: 'treeRoam',
+        event: 'treeRoam',
+        // Here we set 'none' instead of 'update', because roam action
+        // just need to update the transform matrix without having to recalculate
+        // the layout. So don't need to go through the whole update process, such
+        // as 'dataPrcocess', 'coordSystemUpdate', 'layout' and so on.
+        update: 'none'
+    }, function (payload: RoamPaylod, ecModel: GlobalModel) {
+        ecModel.eachComponent({
+            mainType: 'series', subType: 'tree', query: payload
+        }, function (seriesModel: TreeSeriesModel) {
+            const coordSys = seriesModel.coordinateSystem;
+            const res = updateCenterAndZoom(coordSys, payload);
 
-        seriesModel.setCenter
-            && seriesModel.setCenter(res.center);
+            seriesModel.setCenter
+                && seriesModel.setCenter(res.center);
 
-        seriesModel.setZoom
-            && seriesModel.setZoom(res.zoom);
+            seriesModel.setZoom
+                && seriesModel.setZoom(res.zoom);
+        });
     });
-});
+
+}

@@ -17,8 +17,10 @@
 * under the License.
 */
 
-import { DataTransformOption, ExternalDataTransform } from '../../data/helper/transform';
-import { DimensionIndex, OptionDataItem } from '../../util/types';
+import {
+    DataTransformOption, ExternalDataTransform, DataTransformDataItem, ExternalDataTransformResultItem
+} from '../../data/helper/transform';
+import { DimensionIndex } from '../../util/types';
 import { parseConditionalExpression, ConditionalExpressionOption } from '../../util/conditionalExpression';
 import { hasOwn, createHashMap } from 'zrender/src/core/util';
 import { makePrintable, throwError } from '../../util/log';
@@ -41,7 +43,7 @@ export const filterTransform: ExternalDataTransform<FilterTransformOption> = {
         // is better than return the entire raw soruce for user to find the mistake.
 
         const upstream = params.upstream;
-        let rawItem: OptionDataItem;
+        let rawItem: DataTransformDataItem;
 
         const condition = parseConditionalExpression<{ dimIdx: DimensionIndex }>(params.config, {
 
@@ -84,12 +86,12 @@ export const filterTransform: ExternalDataTransform<FilterTransformOption> = {
         for (let i = 0, len = upstream.count(); i < len; i++) {
             rawItem = upstream.getRawDataItem(i);
             if (condition.evaluate()) {
-                resultData.push(rawItem);
+                resultData.push(rawItem as any);
             }
         }
 
         return {
-            data: resultData
+            data: resultData as ExternalDataTransformResultItem['data']
         };
     }
 };

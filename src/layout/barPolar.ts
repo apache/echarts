@@ -25,7 +25,7 @@ import type Polar from '../coord/polar/Polar';
 import AngleAxis from '../coord/polar/AngleAxis';
 import RadiusAxis from '../coord/polar/RadiusAxis';
 import GlobalModel from '../model/Global';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import { Dictionary } from '../util/types';
 
 type PolarAxis = AngleAxis | RadiusAxis;

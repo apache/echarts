@@ -18,7 +18,7 @@
 */
 
 import {createHashMap, isString, isArray, each, assert} from 'zrender/src/core/util';
-import {parseXML} from 'zrender/src/tool/parseSVG';
+import {parseXML} from 'zrender/src/tool/parseXML';
 import { GeoSpecialAreas, GeoJSON, GeoJSONCompressed } from './geoTypes';
 import { Dictionary } from 'zrender/src/core/types';
 

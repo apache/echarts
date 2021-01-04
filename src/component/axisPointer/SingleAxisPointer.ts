@@ -25,7 +25,7 @@ import SingleAxis from '../../coord/single/SingleAxis';
 import Single from '../../coord/single/Single';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { ScaleDataValue, VerticalAlign, CommonAxisPointerOption } from '../../util/types';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import SingleAxisModel from '../../coord/single/AxisModel';
 import Model from '../../model/Model';
 
@@ -169,8 +169,5 @@ function getGlobalExtent(coordSys: Single, dimIndex: number) {
     const rect = coordSys.getRect();
     return [rect[XY[dimIndex]], rect[XY[dimIndex]] + rect[WH[dimIndex]]];
 }
-
-// @ts-ignore
-AxisView.registerAxisPointerClass('SingleAxisPointer', SingleAxisPointer);
 
 export default SingleAxisPointer;

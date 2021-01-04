@@ -21,11 +21,10 @@ import * as zrUtil from 'zrender/src/core/util';
 import {
     ToolboxFeatureModel,
     ToolboxFeatureOption,
-    registerFeature,
     ToolboxFeature
 } from '../featureManager';
 import GlobalModel from '../../../model/Global';
-import ExtensionAPI from '../../../ExtensionAPI';
+import ExtensionAPI from '../../../core/ExtensionAPI';
 import BrushModel from '../../brush/BrushModel';
 import { BrushTypeUncertain } from '../../helper/BrushController';
 
@@ -150,7 +149,5 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
         return defaultOption;
     }
 }
-
-registerFeature('brush', BrushFeature);
 
 export default BrushFeature;

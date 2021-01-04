@@ -38,7 +38,7 @@ import ChartView from '../../view/Chart';
 import Tree, { TreeNode } from '../../data/Tree';
 import TreemapSeriesModel, { TreemapSeriesNodeItemOption } from './TreemapSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import Model from '../../model/Model';
 import { LayoutRect } from '../../util/layout';
 import { TreemapLayoutNode } from './treemapLayout';
@@ -1110,4 +1110,4 @@ function calculateZ(depth: number, zInLevel: number) {
     return (zb - 1) / zb;
 }
 
-ChartView.registerClass(TreemapView);
+export default TreemapView;

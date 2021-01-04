@@ -17,14 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import { use } from '../extension';
+import { install } from './tree/install';
 
-import './tree/TreeSeries';
-import './tree/TreeView';
-import './tree/treeAction';
-
-import treeLayout from './tree/treeLayout';
-import treeVisual from './tree/treeVisual';
-
-echarts.registerLayout(treeLayout);
-echarts.registerVisual(treeVisual);
+use(install);
