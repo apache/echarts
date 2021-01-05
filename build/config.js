@@ -17,225 +17,143 @@
 * under the License.
 */
 
-const assert = require('assert');
 const nodeResolvePlugin = require('@rollup/plugin-node-resolve').default;
 const nodePath = require('path');
 const ecDir = nodePath.resolve(__dirname, '..');
-const typescriptPlugin = require('rollup-plugin-typescript2');
-const fs = require('fs');
-const progress = require('./progress');
+const {terser} = require('rollup-plugin-terser');
+const replace = require('@rollup/plugin-replace');
 
-function preparePlugins(
-    {sourcemap, addBundleVersion, totalFiles, clean},
-    {include, exclude}
-) {
-    assert(include);
-
-    // In case node_modules/zrender is a symlink
-    const zrNodeModulePath = nodePath.resolve(ecDir, 'node_modules/zrender');
-    const zrRealPath = fs.realpathSync(zrNodeModulePath);
-    // if (zrRealPath !== zrNodeModulePath) {
-    //     include.push(zrRealPath + '/**/*.ts');
-    // }
-    include.push(zrRealPath + '/src/**/*.ts');
-
-    if (clean) {
-        console.log('Built in clean mode without cache.');
+function createOutputs(basename, { min }, commonOutputOpts) {
+    commonOutputOpts = {
+        format: 'umd',
+        ...commonOutputOpts
     }
+    function createReplacePlugin(replacement) {
+        const plugin = replace({
+            'process.env.NODE_ENV': JSON.stringify(replacement)
+        });
+        // Remove transform hook. It will have warning when using in output
+        delete plugin.transform;
+        return plugin;
+    }
+    const output = [{
+        ...commonOutputOpts,
+        // Disable sourcemap in
+        sourcemap: true,
+        plugins: [
+            createReplacePlugin('development')
+        ],
+        file: basename + '.js'
+    }];
 
-    let plugins = [
-        typescriptPlugin({
-            tsconfig: nodePath.resolve(ecDir, 'tsconfig.json'),
-            tsconfigOverride: {
-                // See: https://www.typescriptlang.org/docs/handbook/compiler-options.html
-                compilerOptions: {
-                    // By default: target === "ES3" or "ES5" ? "CommonJS" : "ES6".
-                    // But rollup don't use CommonJS.
-                    module: 'ES2015',
-                    sourceMap: !!sourcemap,
-                    // Use the esm d.ts
-                    declaration: false
-                }
-                // include: include,
-                // exclude: exclude || []
-            },
-            clean: clean || false,
-            include: include,
-            exclude: exclude || []
-        }),
-        nodeResolvePlugin(),
-        progress({
-            scope: {
-                total: totalFiles || 0
-            }
+    if (min) {
+        output.push({
+            ...commonOutputOpts,
+            // Disable sourcemap in min file.
+            sourcemap: false,
+            // TODO preamble
+            plugins: [
+                createReplacePlugin('production'),
+                terser()
+            ],
+            file: basename + '.min.js'
         })
-    ];
-
-    addBundleVersion && plugins.push({
-        outro: function () {
-            return 'exports.bundleVersion = \'' + (+new Date()) + '\';';
-        }
-    });
-
-    return plugins;
+    }
+    return output;
 }
 
 /**
  * @param {Object} [opt]
- * @param {string} [opt.type=''] '' or 'simple' or 'common'
- * @param {string} [opt.input=undefined] If set, `opt.output` is required too, and `opt.type` is ignored.
- * @param {string} [opt.output=undefined] If set, `opt.input` is required too, and `opt.type` is ignored.
+ * @param {string} [opt.type=''] 'all' or 'simple' or 'common', default is 'all'
  * @param {boolean} [opt.sourcemap] If set, `opt.input` is required too, and `opt.type` is ignored.
  * @param {string} [opt.format='umd'] If set, `opt.input` is required too, and `opt.type` is ignored.
+ * @param {string} [opt.min=false] If build minified output
  * @param {boolean} [opt.addBundleVersion=false] Only for debug in watch, prompt that the two build is different.
- * @param {Object} [opt.totalFiles] Total files to bundle
  */
 exports.createECharts = function (opt = {}) {
-    let srcType = opt.type ? '.' + opt.type : '.all';
-    let postfixType = opt.type ? '.' + opt.type : '';
-    let input = opt.input;
-    let output = opt.output;
-    let sourcemap = opt.sourcemap;
-    let format = opt.format || 'umd';
-    let postfixFormat = (format !== 'umd') ? '.' + format.toLowerCase() : '';
+    const srcType = opt.type !== 'all' ? '.' + opt.type : '';
+    const postfixType = srcType;
+    const format = opt.format || 'umd';
+    const postfixFormat = (format !== 'umd') ? '.' + format.toLowerCase() : '';
 
-    if (input != null || output != null) {
-        // Based on process.cwd();
-        input = nodePath.resolve(input);
-        output = nodePath.resolve(output);
-    }
-    else {
-        input = nodePath.resolve(ecDir, `src/echarts${srcType}.ts`);
-        output = nodePath.resolve(ecDir, `dist/echarts${postfixFormat}${postfixType}.js`);
-    }
-
-    const include = [
-        nodePath.resolve(ecDir, 'src/**/*.ts')
-    ];
+    const input = nodePath.resolve(ecDir, `index${srcType}.js`);
 
     return {
-        plugins: preparePlugins(opt, {
-            include
-        }),
+        plugins: [nodeResolvePlugin()],
         treeshake: {
             moduleSideEffects: false
         },
-        // external: ['zrender'],
-        // external: id => ['zrender'].includes(id),
 
         input: input,
-        // FIXME ??? ie8 support removed since rollup 0.60
-        // legacy: true, // Support IE8-
 
-        // onwarn ({loc, frame, message}) {
-        //     if (loc) {
-        //         console.warn(`${loc.file} (${loc.line}:${loc.column}) ${message}`);
-        //         if (frame) {
-        //             console.warn(frame);
-        //         }
-        //     }
-        //     else {
-        //         console.warn(message);
-        //     }
-        // },
-
-        output: {
-            name: 'echarts',
-            format: format,
-            sourcemap: sourcemap,
-            // legacy: true, // Must be declared both in inputOptions and outputOptions.
-            file: output
-        },
-        watch: {
-            include
-        }
+        output: createOutputs(
+            nodePath.resolve(ecDir, `dist/echarts${postfixFormat}${postfixType}`),
+            opt,
+            {
+                name: 'echarts',
+                // Ignore default exports, which is only for compitable code like:
+                // import echarts from 'echarts/lib/echarts';
+                exports: 'named',
+                format: format
+            }
+        )
     };
 };
 
-exports.createBMap = function () {
-    let input = nodePath.resolve(ecDir, `extension-src/bmap/bmap.ts`);
+exports.createBMap = function (opt) {
+    const input = nodePath.resolve(ecDir, `extension/bmap/bmap.js`);
 
     return {
-        plugins: preparePlugins({
-            // Always clean
-            clean: true
-        }, {
-            include: [
-                nodePath.resolve(ecDir, 'extension-src/bmap/**/*.ts')
-            ]
-        }),
+        plugins: [nodeResolvePlugin()],
         input: input,
-        legacy: true, // Support IE8-
         external: ['echarts'],
-        output: {
-            name: 'bmap',
-            format: 'umd',
-            sourcemap: true,
-            legacy: true, // Must be declared both in inputOptions and outputOptions.
-            globals: {
-                // For UMD `global.echarts`
-                echarts: 'echarts'
-            },
-            file: nodePath.resolve(ecDir, `dist/extension/bmap.js`)
-        },
-        watch: {
-            include: [nodePath.resolve(ecDir, 'extension-src/bmap/**')]
-        }
+        output: createOutputs(
+            nodePath.resolve(ecDir, `dist/extension/bmap`),
+            opt,
+            {
+                name: 'bmap',
+                globals: {
+                    // For UMD `global.echarts`
+                    echarts: 'echarts'
+                }
+            }
+        )
     };
 };
 
-exports.createDataTool = function () {
-    let input = nodePath.resolve(ecDir, `extension-src/dataTool/index.ts`);
+exports.createDataTool = function (opt) {
+    let input = nodePath.resolve(ecDir, `extension/dataTool/index.js`);
 
     return {
-        plugins: preparePlugins({
-            clean: true
-        }, {
-            include: [
-                nodePath.resolve(ecDir, 'extension-src/dataTool/**/*.ts')
-            ]
-        }),
+        plugins: [nodeResolvePlugin()],
         input: input,
-        legacy: true, // Support IE8-
         external: ['echarts'],
-        output: {
-            name: 'dataTool',
-            format: 'umd',
-            sourcemap: true,
-            legacy: true, // Must be declared both in inputOptions and outputOptions.
-            globals: {
-                // For UMD `global.echarts`
-                echarts: 'echarts'
-            },
-            file: nodePath.resolve(ecDir, `dist/extension/dataTool.js`)
-        },
-        watch: {
-            include: [nodePath.resolve(ecDir, 'extension-src/dataTool/**')]
-        }
+        output: createOutputs(
+            nodePath.resolve(ecDir, `dist/extension/dataTool`),
+            opt,
+            {
+                name: 'dataTool',
+                globals: {
+                    // For UMD `global.echarts`
+                    echarts: 'echarts'
+                }
+            }
+        )
     };
 };
 
-exports.createMyTransform = function () {
+exports.createMyTransform = function (opt) {
     let input = nodePath.resolve(ecDir, `test/lib/myTransform/src/index.ts`);
 
     return {
-        plugins: preparePlugins({
-            clean: true
-        }, {
-            include: [
-                nodePath.resolve(ecDir, 'test/lib/myTransform/src/**/*.ts'),
-                nodePath.resolve(ecDir, 'src/**/*.ts')
-            ]
-        }),
+        plugins: [nodeResolvePlugin()],
         input: input,
-        output: {
-            name: 'myTransform',
-            format: 'umd',
-            sourcemap: true,
-            file: nodePath.resolve(ecDir, `test/lib/myTransform/dist/myTransform.js`)
-        },
-        watch: {
-            include: [nodePath.resolve(ecDir, 'test/lib/myTransform/src/**')]
-        }
+        output: createOutputs(
+            nodePath.resolve(ecDir, `test/lib/myTransform/dist/myTransform`),
+            opt,
+            {
+                name: 'myTransform'
+            }
+        )
     };
 };

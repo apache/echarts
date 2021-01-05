@@ -33,11 +33,12 @@ jobs:
       - name: jshint
         run: |
           jshint
+      - name: check type
+        run: |
+          npm run checktype
       - name: build release
         run: |
           npm run release
-        env:
-          CI: true
 
   test:
     runs-on: ubuntu-latest
