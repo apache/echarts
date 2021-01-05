@@ -22,6 +22,21 @@ const nodePath = require('path');
 const ecDir = nodePath.resolve(__dirname, '..');
 const {terser} = require('rollup-plugin-terser');
 const replace = require('@rollup/plugin-replace');
+const MagicString = require('magic-string');
+const preamble = require('./preamble');
+
+function createAddLicensePlugin(sourcemap) {
+    return {
+        renderChunk(code, chunk) {
+            const s = new MagicString(code);
+            s.prepend(preamble.js);
+            return {
+                code: s.toString(),
+                map: sourcemap ? s.generateMap({ hires: true }).toString() : null
+            };
+        }
+    }
+}
 
 function createOutputs(basename, { min }, commonOutputOpts) {
     commonOutputOpts = {
@@ -41,7 +56,8 @@ function createOutputs(basename, { min }, commonOutputOpts) {
         // Disable sourcemap in
         sourcemap: true,
         plugins: [
-            createReplacePlugin('development')
+            createReplacePlugin('development'),
+            createAddLicensePlugin(true)
         ],
         file: basename + '.js'
     }];
@@ -54,7 +70,8 @@ function createOutputs(basename, { min }, commonOutputOpts) {
             // TODO preamble
             plugins: [
                 createReplacePlugin('production'),
-                terser()
+                terser(),
+                createAddLicensePlugin(false)
             ],
             file: basename + '.min.js'
         })

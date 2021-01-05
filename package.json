@@ -94,6 +94,7 @@
     "jest-canvas-mock": "^2.2.0",
     "jshint": "2.10.2",
     "lodash.debounce": "^4.0.8",
+    "magic-string": "^0.25.7",
     "open": "6.4.0",
     "pixelmatch": "5.0.2",
     "pngjs": "3.4.0",
