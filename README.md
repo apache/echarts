@@ -53,23 +53,14 @@ Execute the instructions in the root directory of the echarts:
 # Install the dependencies from NPM:
 npm install
 
+# Rebuild source code immediately in watch mode when changing the source code.
+npm run dev
+
+# Check correctness of TypeScript code.
+npm run checktype
+
 # If intending to build and get all types of the "production" files:
 npm run release
-# The same as `node build/build.js --release`
-
-# If only intending to get `dist/echarts.js`, which is usually
-# enough in dev or running the tests:
-npm run build
-# The same as `node build/build.js`
-
-# Get the same "production" files as `node build/build.js`, while
-# watching the editing of the source code. Usually used in dev.
-npm run watch
-# The same as `node build/build.js -w`
-
-# Check the manual:
-npm run help
-# The same as `node build/build.js --help`
 ```
 
 Then the "production" files are generated in the `dist` directory.
