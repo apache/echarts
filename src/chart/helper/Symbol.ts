@@ -158,7 +158,6 @@ class Symbol extends graphic.Group {
         const isInit = symbolType !== this._symbolType;
         const disableAnimation = opts && opts.disableAnimation;
 
-
         if (isInit) {
             const keepAspect = data.getItemVisual(idx, 'symbolKeepAspect');
             this._createSymbol(symbolType as string, data, idx, symbolSize, keepAspect);
@@ -280,7 +279,7 @@ class Symbol extends graphic.Group {
                 // TODO other properties like x, y ?
                 image: pathStyle.image,
                 x: pathStyle.x, y: pathStyle.y,
-                width: pathStyle.width, height: pathStyle.height,
+                width: pathStyle.width, height: pathStyle.height
             }, symbolStyle));
         }
         else {
