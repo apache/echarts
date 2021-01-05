@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../../echarts';
+import * as echarts from '../../core/echarts';
 import { createHashMap, each, HashMap, hasOwn, keys, map } from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import { isCartesian2DSeries, findAxisModels } from './cartesianAxisHelper';
@@ -44,6 +44,7 @@ type SeriesRecord = {
 
 // A tricky: the priority is just after dataZoom processor.
 // If dataZoom has fixed the min/max, this processor do not need to work.
+// TODO: SELF REGISTERED.
 echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER + 10, {
 
     getTargetSeries: function (ecModel) {

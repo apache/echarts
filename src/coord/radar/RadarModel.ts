@@ -51,6 +51,8 @@ export interface RadarIndicatorOption {
 }
 
 export interface RadarOption extends ComponentOption, CircleLayoutOptionMixin {
+    mainType?: 'radar'
+
     startAngle?: number
 
     shape?: 'polygon' | 'circle'
@@ -138,7 +140,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                 // min: 0,
                 nameTextStyle: iNameTextStyle,
                 triggerEvent: triggerEvent
-            }, false);
+            } as InnerIndicatorAxisOption, false);
             if (!showName) {
                 innerIndicatorOpt.name = '';
             }
@@ -215,7 +217,5 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
         indicator: []
     };
 }
-
-ComponentModel.registerClass(RadarModel);
 
 export default RadarModel;

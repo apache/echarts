@@ -24,7 +24,6 @@ import visualDefault from '../../visual/visualDefault';
 import {reformIntervals} from '../../util/number';
 import { VisualOptionPiecewise, BuiltinVisualProperty } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
-import ComponentModel from '../../model/Component';
 import { inheritDefaultOption } from '../../util/component';
 
 
@@ -590,7 +589,5 @@ function normalizeReverse(thisOption: PiecewiseVisualMapOption, pieceList: Inner
             pieceList.reverse();
     }
 }
-
-ComponentModel.registerClass(PiecewiseModel);
 
 export default PiecewiseModel;

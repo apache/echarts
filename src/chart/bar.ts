@@ -17,34 +17,8 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
-import * as zrUtil from 'zrender/src/core/util';
-import {layout, largeLayout} from '../layout/barGrid';
+import { use } from '../extension';
+import { install } from './bar/install';
 
-import '../coord/cartesian/Grid';
-import './bar/BarSeries';
-import './bar/BarView';
-import '../action/changeAxisOrder';
-// In case developer forget to include grid component
-import '../component/gridSimple';
-import dataSample from '../processor/dataSample';
+use(install);
 
-
-echarts.registerLayout(echarts.PRIORITY.VISUAL.LAYOUT, zrUtil.curry(layout, 'bar'));
-// Use higher prority to avoid to be blocked by other overall layout, which do not
-// only exist in this module, but probably also exist in other modules, like `barPolar`.
-echarts.registerLayout(echarts.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, largeLayout);
-
-echarts.registerVisual({
-    seriesType: 'bar',
-    reset: function (seriesModel) {
-        // Visual coding for legend
-        seriesModel.getData().setVisual('legendSymbol', 'roundRect');
-    }
-});
-
-// Down sample after filter
-echarts.registerProcessor(
-    echarts.PRIORITY.PROCESSOR.STATISTIC,
-    dataSample('bar')
-);

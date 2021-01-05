@@ -46,7 +46,7 @@ import { CoordinateSystemMaster, CoordinateSystem } from '../coord/CoordinateSys
 import { queryDataIndex, makeInner } from './model';
 import Path, { PathStyleProps } from 'zrender/src/graphic/Path';
 import GlobalModel from '../model/Global';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 
 // Reserve 0 as default.
 let _highlightNextDigit = 1;

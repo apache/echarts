@@ -198,10 +198,12 @@ const theme = {
     },
     candlestick: {
         itemStyle: {
-            color: '#FD1050',
-            color0: '#0CF49B',
-            borderColor: '#FD1050',
-            borderColor0: '#0CF49B'
+            color: '#f64e56',
+            color0: '#54ea92',
+            borderColor: '#f64e56',
+            borderColor0: '#54ea92'
+            // borderColor: '#ca2824',
+            // borderColor0: '#09a443'
         }
     }
 };

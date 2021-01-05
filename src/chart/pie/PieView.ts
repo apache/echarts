@@ -24,7 +24,7 @@ import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, ColorString } from '../../util/types';
 import List from '../../data/List';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
@@ -272,7 +272,5 @@ class PieView extends ChartView {
         }
     }
 }
-
-ChartView.registerClass(PieView);
 
 export default PieView;

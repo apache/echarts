@@ -22,7 +22,7 @@ import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states
 import ChartView from '../../view/Chart';
 import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import List from '../../data/List';
 import { ColorString } from '../../util/types';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
@@ -208,8 +208,6 @@ class FunnelView extends ChartView {
 
     dispose() {}
 }
-
-ChartView.registerClass(FunnelView);
 
 
 export default FunnelView;

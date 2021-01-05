@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import {getLayoutRect} from '../../util/layout';
 import VisualMapModel from './VisualMapModel';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload } from '../../util/types';
 
 const paramsSet = [

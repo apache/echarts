@@ -17,10 +17,10 @@
 * under the License.
 */
 
-import * as echarts from '../../../echarts';
+import * as echarts from '../../../core/echarts';
 import * as history from '../../dataZoom/history';
-import { ToolboxFeatureOption, ToolboxFeature, registerFeature } from '../featureManager';
-import ExtensionAPI from '../../../ExtensionAPI';
+import { ToolboxFeatureOption, ToolboxFeature } from '../featureManager';
+import ExtensionAPI from '../../../core/ExtensionAPI';
 import GlobalModel from '../../../model/Global';
 
 export interface ToolboxRestoreFeatureOption extends ToolboxFeatureOption {
@@ -51,11 +51,13 @@ class RestoreOption extends ToolboxFeature<ToolboxRestoreFeatureOption> {
     }
 }
 
-registerFeature('restore', RestoreOption);
-
+// TODO: SELF REGISTERED.
 echarts.registerAction(
     {type: 'restore', event: 'restore', update: 'prepareAndUpdate'},
     function (payload, ecModel) {
         ecModel.resetOption('recreate');
     }
 );
+
+
+export default RestoreOption;

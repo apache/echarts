@@ -26,10 +26,7 @@ const chalk = require('chalk');
 const rollup = require('rollup');
 const prePublish = require('./pre-publish');
 const transformDEV = require('./transform-dev');
-const UglifyJS = require("uglify-js");
 const preamble = require('./preamble');
-const {buildI18n} = require('./build-i18n')
-const terser = require('terser');
 
 async function run() {
 
@@ -67,11 +64,6 @@ async function run() {
                 + '\n' + descIndent + '# Take `<cwd>/my/index.js` as input and generate `<cwd>/my/bundle.js`,'
         ].join('\n'))
         .option(
-            '-w, --watch', [
-            'Watch modifications of files and auto-compile to dist file. For example,',
-            descIndent + '`echarts/dist/echarts.js`.'
-        ].join('\n'))
-        .option(
             '--prepublish',
             'Build all for release'
         )
@@ -81,84 +73,63 @@ async function run() {
         )
         .option(
             '--type <type name>', [
-            'Can be "simple" or "common" or "" (default). For example,',
+            'Can be "simple" or "common" or "all" (default). Or can be simple,common,all to build multiple. For example,',
             descIndent + '`--type ""` or `--type "common"`.'
         ].join('\n'))
-        .option(
-            '--sourcemap',
-            'Whether output sourcemap.'
-        )
         .option(
             '--format <format>',
             'The format of output bundle. Can be "umd", "amd", "iife", "cjs", "esm".'
         )
-        .option(
-            '-i, --input <input file path>',
-            'If input file path is specified, output file path must be specified too.'
-        )
-        .option(
-            '-o, --output <output file path>',
-            'If output file path is specified, input file path must be specified too.'
-        )
-        .option(
-            '--clean',
-            'If cleaning build without cache. Maybe useful if some unexpected happens.'
-        )
         .parse(process.argv);
 
-    let isWatch = !!commander.watch;
-    let isRelease = !!commander.release;
     let isPrePublish = !!commander.prepublish;
+    let buildType = commander.type || 'all';
 
     let opt = {
         min: commander.min,
-        type: commander.type || '',
-        input: commander.input,
-        output: commander.output,
-        format: commander.format,
-        sourcemap: commander.sourcemap,
-        addBundleVersion: isWatch,
-        // Force to disable cache in release build.
-        // TODO npm run build also disable cache?
-        clean: commander.clean || isRelease
+        format: commander.format || 'umd'
     };
 
     validateIO(opt.input, opt.output);
 
-    if (isWatch) {
-        watch(config.createECharts(opt), opt.sourcemap);
-    }
-    else if (isPrePublish) {
+    if (isPrePublish) {
         await prePublish();
     }
-    else if (opt.type === 'extension') {
+    else if (buildType === 'extension') {
         const cfgs = [
-            config.createBMap(),
-            config.createDataTool()
+            config.createBMap(opt),
+            config.createDataTool(opt)
         ];
-        await build(cfgs, opt.min, opt.sourcemap);
+        await build(cfgs);
     }
-    else if (opt.type === 'myTransform') {
+    else if (buildType === 'myTransform') {
         const cfgs = [
-            config.createMyTransform()
+            config.createMyTransform(opt)
         ];
-        await build(cfgs, opt.min, opt.sourcemap);
+        await build(cfgs);
     }
     else {
-        const cfg = config.createECharts(opt);
-        await build([cfg], opt.min, opt.sourcemap);
-        checkBundleCode(cfg);
+        const types = buildType.split(',').map(a => a.trim());
+        const cfgs = types.map(type =>
+            config.createECharts({
+                ...opt,
+                type
+            })
+        );
+        await build(cfgs);
     }
 }
 
 function checkBundleCode(cfg) {
-    // Make sure __DEV__ is eliminated.
-    let code = fs.readFileSync(cfg.output.file, {encoding: 'utf-8'});
-    if (!code) {
-        throw new Error(`${cfg.output.file} is empty`);
+    // Make sure process.env.NODE_ENV is eliminated.
+    for (let output of cfg.output) {
+        let code = fs.readFileSync(output.file, {encoding: 'utf-8'});
+        if (!code) {
+            throw new Error(`${output.file} is empty`);
+        }
+        transformDEV.recheckDEV(code);
+        console.log(chalk.green.dim('Check code: correct.'));
     }
-    transformDEV.recheckDEV(code);
-    console.log(chalk.green.dim('Check code: correct.'));
 }
 
 function validateIO(input, output) {
@@ -177,168 +148,43 @@ function validateIO(input, output) {
  *      {
  *          ...inputOptions,
  *          output: [outputOptions],
- *          watch: {chokidar, include, exclude}
  *      },
  *      ...
  *  ]
  */
-async function build(configs, min, sourcemap) {
-    // buildI18n JSON before build when build
-    buildI18n();
+async function build(configs) {
+    console.log(chalk.yellow(`
+    NOTICE: If you are using 'npm run build'. Run 'npm run prepublish' before build !!!
+`));
 
-    // ensureZRenderCode.prepare();
+    console.log(chalk.yellow(`
+    NOTICE: If you are using syslink on zrender. Run 'npm run prepublish' in zrender first !!
+`));
 
     for (let singleConfig of configs) {
-
         console.log(
             chalk.cyan.dim('\Bundling '),
-            chalk.cyan(singleConfig.input),
-            chalk.cyan.dim('=>'),
-            chalk.cyan(singleConfig.output.file),
-            chalk.cyan.dim(' ...')
+            chalk.cyan(singleConfig.input)
         );
 
-        console.time('rollup build');
         const bundle = await rollup.rollup(singleConfig);
-        console.timeEnd('rollup build');
 
-        await bundle.write(singleConfig.output);
-        const sourceCode = fs.readFileSync(singleConfig.output.file, 'utf-8');
-        // Convert __DEV__ to true;
-        const transformResult = transformDEV.transform(sourceCode, sourcemap, 'true');
-        fs.writeFileSync(singleConfig.output.file, transformResult.code, 'utf-8');
-        if (transformResult.map) {
-            fs.writeFileSync(singleConfig.output.file + '.map', JSON.stringify(transformResult.map), 'utf-8');
-        }
-
-        console.log(
-            chalk.green.dim('Created '),
-            chalk.green(singleConfig.output.file),
-            chalk.green.dim(' successfully.')
-        );
-
-        if (min) {
-            const fileMinPath = singleConfig.output.file.replace(/.js$/, '.min.js');
-            console.log(
-                chalk.cyan.dim('Minifying '),
-                chalk.cyan(singleConfig.output.file),
-                chalk.cyan.dim('=>'),
-                chalk.cyan(fileMinPath),
-                chalk.cyan.dim(' ...')
-            )
-            console.time('Minify');
-            // Convert __DEV__ to false and let uglify remove the dead code;
-            const transformedCode = transformDEV.transform(sourceCode, false, 'false').code;
-            let minifyResult;
-            if (singleConfig.output.format !== 'esm') {
-                minifyResult = UglifyJS.minify(transformedCode, {
-                    output: {
-                        preamble: preamble.js
-                    }
-                });
-                if (minifyResult.error) {
-                    throw new Error(minifyResult.error);
-                }
-            }
-            else {
-                // Use terser for esm minify because uglify doesn't support esm code.
-                minifyResult = await terser.minify(transformedCode, {
-                    format: {
-                        preamble: preamble.js
-                    }
-                })
-            }
-            fs.writeFileSync(fileMinPath, minifyResult.code, 'utf-8');
-
-            console.timeEnd('Minify');
+        for (let output of singleConfig.output) {
             console.log(
                 chalk.green.dim('Created '),
-                chalk.green(fileMinPath),
+                chalk.green(output.file),
                 chalk.green.dim(' successfully.')
             );
-        }
 
+            await bundle.write(output);
+
+            console.time('rollup build');
+            console.timeEnd('rollup build');
+        };
+
+        checkBundleCode(singleConfig);
     }
-
-    // ensureZRenderCode.clear();
 }
-
-/**
- * @param {Object} singleConfig A single rollup config:
- *  See: <https://rollupjs.org/#big-list-of-options>
- *  For example:
- *  {
- *      ...inputOptions,
- *      output: [outputOptions],
- *      watch: {chokidar, include, exclude}
- *  }
- */
-function watch(singleConfig, sourcemap) {
-
-    let watcher = rollup.watch(singleConfig);
-
-    watcher.on('event', function (event) {
-        // event.code can be one of:
-        //   START        — the watcher is (re)starting
-        //   BUNDLE_START — building an individual bundle
-        //   BUNDLE_END   — finished building a bundle
-        //   END          — finished building all bundles
-        //   ERROR        — encountered an error while bundling
-        //   FATAL        — encountered an unrecoverable error
-        if (event.code !== 'START' && event.code !== 'END') {
-            console.log(
-                chalk.blue('[' + getTimeString() + ']'),
-                chalk.blue.dim('build'),
-                event.code.replace(/_/g, ' ').toLowerCase()
-            );
-        }
-        if (event.code === 'ERROR' || event.code === 'FATAL') {
-            printCodeError(event.error);
-        }
-        if (event.code === 'BUNDLE_END') {
-
-            const sourceCode = fs.readFileSync(singleConfig.output.file, 'utf-8');
-            // Convert __DEV__ to true;
-            const transformResult = transformDEV.transform(sourceCode, sourcemap, 'true');
-            fs.writeFileSync(singleConfig.output.file, transformResult.code, 'utf-8');
-
-            printWatchResult(event);
-        }
-    });
-}
-
-function printWatchResult(event) {
-    console.log(
-        chalk.green.dim('Created'),
-        chalk.green(event.output.join(', ')),
-        chalk.green.dim('in'),
-        chalk.green(event.duration),
-        chalk.green.dim('ms.')
-    );
-}
-
-function printCodeError(error) {
-    console.log('\n' + error.code);
-    if (error.code === 'PARSE_ERROR') {
-        console.log(
-            'line',
-            chalk.cyan(error.loc.line),
-            'column',
-            chalk.cyan(error.loc.column),
-            'in',
-            chalk.cyan(error.loc.file)
-        );
-    }
-    if (error.frame) {
-        console.log('\n' + chalk.red(error.frame));
-    }
-    console.log(chalk.red.dim('\n' + error.stack));
-}
-
-function getTimeString() {
-    return (new Date()).toLocaleString();
-}
-
 
 async function main() {
     try {

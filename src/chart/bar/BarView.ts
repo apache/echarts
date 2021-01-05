@@ -36,7 +36,7 @@ import Sausage from '../../util/shape/sausage';
 import ChartView from '../../view/Chart';
 import List, {DefaultDataVisual} from '../../data/List';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import {
     StageHandlerProgressParams,
     ZRElementEvent,
@@ -512,7 +512,7 @@ class BarView extends ChartView {
                  * bars are both out of sight, we don't wish to trigger reorder action
                  * as long as the order in the view doesn't change.
                  */
-                if (!oldOrder[i] || oldOrder[i].ordinalNumber !== newOrder[i].ordinalNumber) {
+                if (!oldOrder || !oldOrder[i] || oldOrder[i].ordinalNumber !== newOrder[i].ordinalNumber) {
                     this.removeOnRenderedListener(api);
 
                     const action = {
@@ -1102,7 +1102,5 @@ function createBackgroundEl(
         z2: 0
     });
 }
-
-ChartView.registerClass(BarView);
 
 export default BarView;

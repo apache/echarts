@@ -17,14 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import { use } from '../extension';
+import { install } from './sankey/install';
 
-import './sankey/SankeySeries';
-import './sankey/SankeyView';
-import './sankey/sankeyAction';
-
-import sankeyLayout from './sankey/sankeyLayout';
-import sankeyVisual from './sankey/sankeyVisual';
-
-echarts.registerLayout(sankeyLayout);
-echarts.registerVisual(sankeyVisual);
+use(install);

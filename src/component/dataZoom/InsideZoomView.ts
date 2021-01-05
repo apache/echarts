@@ -22,8 +22,7 @@ import sliderMove from '../helper/sliderMove';
 import * as roams from './roams';
 import InsideZoomModel from './InsideZoomModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
-import ComponentView from '../../view/Component';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { bind } from 'zrender/src/core/util';
 import RoamController, {RoamEventParams} from '../helper/RoamController';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
@@ -285,7 +284,5 @@ const getDirectionInfo: Record<'grid' | 'polar' | 'singleAxis', GetDirectionInfo
         return ret;
     }
 };
-
-ComponentView.registerClass(InsideZoomView);
 
 export default InsideZoomView;

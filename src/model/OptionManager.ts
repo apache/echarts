@@ -23,9 +23,9 @@
 
 
 // import ComponentModel, { ComponentModelConstructor } from './Component';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import {
-    OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECOption, SeriesOption
+    OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECBasicOption, SeriesOption
 } from '../util/types';
 import GlobalModel, { InnerSetOptionOpts } from './Global';
 import {
@@ -36,7 +36,7 @@ import {
     each, clone, map, isTypedArray, setAsPrimitive, isArray, isObject
     // , HashMap , createHashMap, extend, merge,
 } from 'zrender/src/core/util';
-import { DatasetOption } from '../component/dataset';
+import { DatasetOption } from '../component/dataset/install';
 import { error } from '../util/log';
 
 const QUERY_REG = /^(min|max)?(.+)$/;
@@ -91,7 +91,7 @@ class OptionManager {
     }
 
     setOption(
-        rawOption: ECOption,
+        rawOption: ECBasicOption,
         optionPreprocessorFuncs: OptionPreprocessor[],
         opt: InnerSetOptionOpts
     ): void {
@@ -299,7 +299,7 @@ class OptionManager {
  */
 function parseRawOption(
     // `rawOption` May be modified
-    rawOption: ECOption,
+    rawOption: ECBasicOption,
     optionPreprocessorFuncs: OptionPreprocessor[],
     isNew: boolean
 ): ParsedRawOption {

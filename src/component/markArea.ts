@@ -17,12 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import { use } from '../extension';
+import { install } from './marker/installMarkArea';
 
-import './marker/MarkAreaModel';
-import './marker/MarkAreaView';
-
-echarts.registerPreprocessor(function (opt) {
-    // Make sure markArea component is enabled
-    opt.markArea = opt.markArea || {};
-});
+use(install);

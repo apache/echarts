@@ -149,8 +149,6 @@ class ParallelSeriesModel extends SeriesModel<ParallelSeriesOption> {
 
 }
 
-SeriesModel.registerClass(ParallelSeriesModel);
-
 function makeDefaultEncode(seriesModel: ParallelSeriesModel): OptionEncode {
     // The mapping of parallelAxis dimension to data dimension can
     // be specified in parallelAxis.option.dim. For example, if

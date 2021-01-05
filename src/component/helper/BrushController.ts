@@ -117,8 +117,6 @@ export interface BrushPanelConfig {
 // `true` represents global panel;
 type BrushPanelConfigOrGlobal = BrushPanelConfig | typeof BRUSH_PANEL_GLOBAL;
 
-interface BrushPanelElement extends graphic.Group {
-}
 
 interface BrushCover extends graphic.Group {
     __brushOption: BrushCoverConfig;
