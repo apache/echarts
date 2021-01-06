@@ -2811,7 +2811,9 @@ export function extendComponentModel(proto: object): ComponentModel {
     //     let classType = parseClassType(superClass);
     //     Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
     // }
-    return (ComponentModel as ComponentModelConstructor).extend(proto) as any;
+    const Model = (ComponentModel as ComponentModelConstructor).extend(proto) as any;
+    ComponentModel.registerClass(Model);
+    return Model;
 }
 
 export function extendComponentView(proto: object): ChartView {
@@ -2820,7 +2822,9 @@ export function extendComponentView(proto: object): ChartView {
     //     let classType = parseClassType(superClass);
     //     Clazz = ComponentView.getClass(classType.main, classType.sub, true);
     // }
-    return (ComponentView as ComponentViewConstructor).extend(proto) as any;
+    const View = (ComponentView as ComponentViewConstructor).extend(proto) as any;
+    ComponentView.registerClass(View);
+    return View;
 }
 
 export function extendSeriesModel(proto: object): SeriesModel {
@@ -2830,7 +2834,9 @@ export function extendSeriesModel(proto: object): SeriesModel {
     //     let classType = parseClassType(superClass);
     //     Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
     // }
-    return (SeriesModel as SeriesModelConstructor).extend(proto) as any;
+    const Model = (SeriesModel as SeriesModelConstructor).extend(proto) as any;
+    SeriesModel.registerClass(Model);
+    return Model;
 }
 
 export function extendChartView(proto: object): ChartView {
@@ -2840,7 +2846,9 @@ export function extendChartView(proto: object): ChartView {
     //     let classType = parseClassType(superClass);
     //     Clazz = ChartView.getClass(classType.main, true);
     // }
-    return (ChartView as ChartViewConstructor).extend(proto) as any;
+    const View = (ChartView as ChartViewConstructor).extend(proto) as any;
+    ChartView.registerClass(View);
+    return View;
 }
 
 /**
