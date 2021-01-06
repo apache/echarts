@@ -606,17 +606,24 @@ const clip: {
             layout.height = -layout.height;
         }
 
+        const coordSysX2 = coordSysBoundingRect.x + coordSysBoundingRect.width;
+        const coordSysY2 = coordSysBoundingRect.y + coordSysBoundingRect.height;
         const x = mathMax(layout.x, coordSysBoundingRect.x);
-        const x2 = mathMin(layout.x + layout.width, coordSysBoundingRect.x + coordSysBoundingRect.width);
+        const x2 = mathMin(layout.x + layout.width, coordSysX2);
         const y = mathMax(layout.y, coordSysBoundingRect.y);
-        const y2 = mathMin(layout.y + layout.height, coordSysBoundingRect.y + coordSysBoundingRect.height);
+        const y2 = mathMin(layout.y + layout.height, coordSysY2);
 
-        layout.x = x;
-        layout.y = y;
-        layout.width = x2 - x;
-        layout.height = y2 - y;
+        const xClipped = x2 < x;
+        const yClipped = y2 < y;
 
-        const clipped = layout.width < 0 || layout.height < 0;
+        // When xClipped or yClipped, the element will be marked as `ignore`.
+        // But we should also place the element at the edge of the coord sys bounding rect.
+        // Beause if data changed and the bar show again, its transition animaiton
+        // will begin at this place.
+        layout.x = (xClipped && x > coordSysX2) ? x2 : x;
+        layout.y = (yClipped && y > coordSysY2) ? y2 : y;
+        layout.width = xClipped ? 0 : x2 - x;
+        layout.height = yClipped ? 0 : y2 - y;
 
         // Reverse back
         if (signWidth < 0) {
@@ -628,7 +635,7 @@ const clip: {
             layout.height = -layout.height;
         }
 
-        return clipped;
+        return xClipped || yClipped;
     },
 
     polar(coordSysClipArea: PolarCoordArea, layout: Sector['shape']) {
