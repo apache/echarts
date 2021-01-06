@@ -51,16 +51,16 @@ function getTooltipTextStyle(
     valueStyle: TextStyle
 } {
     const nameFontColor = textStyle.color || '#6e7079';
-    const nameFontSize = textStyle.fontSize || '12px';
+    const nameFontSize = textStyle.fontSize || 12;
     const nameFontWeight = textStyle.fontWeight || '400';
     const valueFontColor = textStyle.color || '#464646';
-    const valueFontSize = textStyle.fontSize || '14px';
+    const valueFontSize = textStyle.fontSize || 14;
     const valueFontWeight = textStyle.fontWeight || '900';
 
     if (renderMode === 'html') {
         return {
-            nameStyle: `font-size:${nameFontSize};color:${nameFontColor};font-weight:${nameFontWeight}`,
-            valueStyle: `font-size:${valueFontSize};color:${valueFontColor};font-weight:${valueFontWeight}`
+            nameStyle: `font-size:${nameFontSize}px;color:${nameFontColor};font-weight:${nameFontWeight}`,
+            valueStyle: `font-size:${valueFontSize}px;color:${valueFontColor};font-weight:${valueFontWeight}`
         };
     }
     else {
