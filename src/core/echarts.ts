@@ -2805,52 +2805,6 @@ export function registerLoading(
     loadingEffects[name] = loadingFx;
 }
 
-export function extendComponentModel(proto: object): ComponentModel {
-    // let Clazz = ComponentModel;
-    // if (superClass) {
-    //     let classType = parseClassType(superClass);
-    //     Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
-    // }
-    const Model = (ComponentModel as ComponentModelConstructor).extend(proto) as any;
-    ComponentModel.registerClass(Model);
-    return Model;
-}
-
-export function extendComponentView(proto: object): ChartView {
-    // let Clazz = ComponentView;
-    // if (superClass) {
-    //     let classType = parseClassType(superClass);
-    //     Clazz = ComponentView.getClass(classType.main, classType.sub, true);
-    // }
-    const View = (ComponentView as ComponentViewConstructor).extend(proto) as any;
-    ComponentView.registerClass(View);
-    return View;
-}
-
-export function extendSeriesModel(proto: object): SeriesModel {
-    // let Clazz = SeriesModel;
-    // if (superClass) {
-    //     superClass = 'series.' + superClass.replace('series.', '');
-    //     let classType = parseClassType(superClass);
-    //     Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
-    // }
-    const Model = (SeriesModel as SeriesModelConstructor).extend(proto) as any;
-    SeriesModel.registerClass(Model);
-    return Model;
-}
-
-export function extendChartView(proto: object): ChartView {
-    // let Clazz = ChartView;
-    // if (superClass) {
-    //     superClass = superClass.replace('series.', '');
-    //     let classType = parseClassType(superClass);
-    //     Clazz = ChartView.getClass(classType.main, true);
-    // }
-    const View = (ChartView as ChartViewConstructor).extend(proto) as any;
-    ChartView.registerClass(View);
-    return View;
-}
-
 /**
  * ZRender need a canvas context to do measureText.
  * But in node environment canvas may be created by node-canvas.
