@@ -44,7 +44,7 @@ import {
     Payload,
     OptionId,
     OptionName,
-    ParsedValue
+    InterpolatableValue
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
@@ -1008,14 +1008,18 @@ export function groupData<T, R extends string | number>(
  * @param targetValue  end value
  * @param percent      0~1 percentage; 0 uses start value while 1 uses end value
  * @return             interpolated values
+ *                     If `sourceValue` and `targetValue` are `number`, return `number`.
+ *                     If `sourceValue` and `targetValue` are `string`, return `string`.
+ *                     If `sourceValue` and `targetValue` are `(string | number)[]`, return `(string | number)[]`.
+ *                     Other cases do not supported.
  */
 export function interpolateRawValues(
     data: List,
     precision: number | 'auto',
-    sourceValue: ParsedValue[] | ParsedValue,
-    targetValue: ParsedValue[] | ParsedValue,
+    sourceValue: InterpolatableValue,
+    targetValue: InterpolatableValue,
     percent: number
-): (string | number)[] | string | number {
+): InterpolatableValue {
     const isAutoPrecision = precision == null || precision === 'auto';
 
     if (targetValue == null) {

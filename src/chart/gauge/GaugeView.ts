@@ -26,7 +26,7 @@ import {parsePercent, round, linearMap} from '../../util/number';
 import GaugeSeriesModel, { GaugeDataItemOption } from './GaugeSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { ColorString, ECElement, ParsedValue } from '../../util/types';
+import { ColorString, ECElement } from '../../util/types';
 import List from '../../data/List';
 import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
@@ -586,10 +586,6 @@ class GaugeView extends ChartView {
                         verticalAlign: 'middle'
                     }, {inheritColor: autoColor})
                 });
-                setLabelValueAnimation(
-                    labelEl, {normal: itemTitleModel}, seriesModel.getRawValue(idx) as ParsedValue, () => data.getName(idx)
-                );
-                hasAnimation && animateLabelValue(labelEl, idx, data, seriesModel);
 
                 itemGroup.add(labelEl);
             }
@@ -618,10 +614,23 @@ class GaugeView extends ChartView {
                     }, {inheritColor: detailColor})
                 });
                 setLabelValueAnimation(
-                    labelEl, {normal: itemDetailModel}, seriesModel.getRawValue(idx) as ParsedValue,
+                    labelEl,
+                    {normal: itemDetailModel},
+                    value,
                     (value: number) => formatLabel(value, formatter)
                 );
-                hasAnimation && animateLabelValue(labelEl, idx, data, seriesModel);
+                hasAnimation && animateLabelValue(labelEl, idx, data, seriesModel, {
+                    getFormattedLabel(
+                        labelDataIndex, status, dataType, labelDimIndex, fmt, extendParams
+                    ) {
+                        return formatLabel(
+                            extendParams
+                                ? extendParams.interpolatedValue as typeof value
+                                : value,
+                            formatter
+                        );
+                    }
+                });
 
                 itemGroup.add(labelEl);
             }
@@ -633,6 +642,7 @@ class GaugeView extends ChartView {
         this._titleEls = newTitleEls;
         this._detailEls = newDetailEls;
     }
+
 }
 
 export default GaugeView;
