@@ -459,9 +459,8 @@ MapDraw.prototype = {
             }
         }, this);
 
-        controller.setPointerChecker(function (e, x, y) {
-            return geo.getViewRectAfterRoam().contain(x, y)
-                && !onIrrelevantElement(e, api, mapOrGeoModel);
+        controller.setPointerChecker(function (e) {
+            return !onIrrelevantElement(e, api, mapOrGeoModel);
         });
     }
 };
