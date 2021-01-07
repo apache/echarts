@@ -552,7 +552,7 @@ class LabelManager {
                 extendWithKeys(layoutEmphasis, textEl.states.emphasis, LABEL_LAYOUT_PROPS);
             }
 
-            animateLabelValue(textEl, dataIndex, data, seriesModel);
+            animateLabelValue(textEl, dataIndex, data, seriesModel, seriesModel);
         }
 
         if (guideLine && !guideLine.ignore && !guideLine.invisible) {

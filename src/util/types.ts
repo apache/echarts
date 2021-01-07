@@ -342,6 +342,7 @@ export type OrdinalSortInfo = {
  */
 export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
 export type ParsedValueNumeric = number | OrdinalNumber;
+
 /**
  * `ScaleDataValue` means that the user input primitive value to `src/scale/Scale`.
  * (For example, used in `axis.min`, `axis.max`, `convertToPixel`).
@@ -645,6 +646,7 @@ export interface CallbackDataParams {
     // Param name list for mapping `a`, `b`, `c`, `d`, `e`
     $vars: string[];
 }
+export type InterpolatableValue = ParsedValue | ParsedValue[];
 export type DimensionUserOuputEncode = {
     [coordOrVisualDimName: string]:
         // index: coordDimIndex, value: dataDimIndex

@@ -1064,8 +1064,9 @@ class LineView extends ChartView {
                     {
                         labelFetcher: seriesModel,
                         labelDataIndex: dataIndex,
-                        defaultText(dataIndex, opt, overrideValue) {
-                            return overrideValue ? getDefaultInterpolatedLabel(data, overrideValue)
+                        defaultText(dataIndex, opt, interpolatedValue) {
+                            return interpolatedValue != null
+                                ? getDefaultInterpolatedLabel(data, interpolatedValue)
                                 : getDefaultLabel(data, dataIndex);
                         },
                         enableTextSetter: true
