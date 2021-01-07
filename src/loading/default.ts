@@ -51,7 +51,7 @@ export default function defaultLoading(
     zrUtil.defaults(opts, {
         text: 'loading',
         textColor: '#000',
-        fontSize: '12px',
+        fontSize: 12,
         maskColor: 'rgba(255, 255, 255, 0.8)',
         showSpinner: true,
         color: '#5470c6',
@@ -68,7 +68,8 @@ export default function defaultLoading(
         z: 10000
     });
     group.add(mask);
-    const font = opts.fontSize + ' sans-serif';
+
+    const font = `${parseInt(opts.fontSize + '', 10)}px sans-serif`;
     const labelRect = new graphic.Rect({
         style: {
             fill: 'none'
@@ -127,8 +128,11 @@ export default function defaultLoading(
         // cx = (containerWidth - arcDiameter - textDistance - textWidth) / 2
         // textDistance needs to be calculated when both animation and text exist
         const cx = (api.getWidth() - r * 2 - (opts.showSpinner && textWidth ? 10 : 0) - textWidth) / 2
+            - (opts.showSpinner && textWidth ? 0 : 5 + textWidth / 2)
             // only show the text
-            - (opts.showSpinner ? 0 : textWidth / 2);
+            + (opts.showSpinner ? 0 : textWidth / 2)
+            // only show the spinner
+            + (textWidth ? 0 : r);
         const cy = api.getHeight() / 2;
         opts.showSpinner && arc.setShape({
             cx: cx,
