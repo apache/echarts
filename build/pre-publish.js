@@ -220,8 +220,8 @@ async function tsCompile(compilerOptionsOverride, srcPathList) {
 
     let compilerOptions = {
         ...tsConfig.compilerOptions,
-        ...compilerOptionsOverride
-        // sourceMap: true
+        ...compilerOptionsOverride,
+        sourceMap: false
     };
 
     runTsCompile(ts, compilerOptions, srcPathList);
