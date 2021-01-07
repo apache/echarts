@@ -356,6 +356,8 @@ class GaugeView extends ChartView {
             const pointerLength = parsePercent(pointerModel.get('length'), posInfo.r);
             const pointerStr = seriesModel.get(['pointer', 'icon']);
             const pointerOffset = pointerModel.get('offsetCenter');
+            const pointerOffsetX = parsePercent(pointerOffset[0], posInfo.r);
+            const pointerOffsetY = parsePercent(pointerOffset[1], posInfo.r);
             const pointerKeepAspect = pointerModel.get('keepAspect');
 
             let pointer;
@@ -363,8 +365,8 @@ class GaugeView extends ChartView {
             if (pointerStr) {
                 pointer = createSymbol(
                     pointerStr,
-                    parsePercent(pointerOffset[0], posInfo.r) - pointerWidth / 2,
-                    parsePercent(pointerOffset[1], posInfo.r) - pointerLength,
+                    pointerOffsetX - pointerWidth / 2,
+                    pointerOffsetY - pointerLength,
                     pointerWidth,
                     pointerLength,
                     null,
@@ -375,8 +377,10 @@ class GaugeView extends ChartView {
                 pointer = new PointerPath({
                     shape: {
                         angle: -Math.PI / 2,
-                        width: parsePercent(pointerModel.get('width'), posInfo.r),
-                        r: parsePercent(pointerModel.get('length'), posInfo.r)
+                        width: pointerWidth,
+                        r: pointerLength,
+                        x: pointerOffsetX,
+                        y: pointerOffsetY
                     }
                 });
             }
