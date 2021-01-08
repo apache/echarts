@@ -138,6 +138,8 @@ under the License.
     <div id="main31" class="chart"></div>
     <h1>tooltip.borderColor has higher priority</h1>
     <div id="main32" class="chart"></div>
+    <h1>tooltip.textStyle.color</h1>
+    <div id="main33" class="chart"></div>
 
 
     <script>
@@ -216,6 +218,7 @@ under the License.
             var chart30 = createChart('main30');
             var chart31 = createChart('main31');
             var chart32 = createChart('main32');
+            var chart33 = createChart('main33');
 
             option1 = {
                 tooltip: {
@@ -3595,6 +3598,27 @@ under the License.
                 ]
             };
 
+            option33 = {
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                    trigger: 'item',
+                    textStyle: {
+                        color: 'red'
+                    },
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: [150, 230, 224, 218, 135, 147, 260],
+                    type: 'line'
+                }]
+            };
+
 
             chart1 && chart1.setOption(option1);
             chart2 && chart2.setOption(option2);
@@ -3628,6 +3652,7 @@ under the License.
             chart30 && chart30.setOption(option30);
             chart31 && chart31.setOption(option31);
             chart32 && chart32.setOption(option32);
+            chart33 && chart33.setOption(option33);
 
 
         });
