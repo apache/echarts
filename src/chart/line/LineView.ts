@@ -492,7 +492,7 @@ function getEndLabelStateSpecified(endLabelModel: Model, coordSys: Cartesian2D) 
     const isHorizontal = baseAxis.isHorizontal();
     const isBaseInversed = baseAxis.inverse;
     const align = isHorizontal
-        ? isBaseInversed ? 'right' : 'left'
+        ? (isBaseInversed ? 'right' : 'left')
         : 'center';
     const verticalAlign = isHorizontal
         ? 'middle'
@@ -501,8 +501,7 @@ function getEndLabelStateSpecified(endLabelModel: Model, coordSys: Cartesian2D) 
     return {
         normal: {
             align: endLabelModel.get('align') || align,
-            verticalAlign: endLabelModel.get('verticalAlign') || verticalAlign,
-            padding: endLabelModel.get('distance') || 0
+            verticalAlign: endLabelModel.get('verticalAlign') || verticalAlign
         }
     };
 }
@@ -1059,7 +1058,7 @@ class LineView extends ChartView {
             const dataIndex = getLastIndexNotNull(data.getLayout('points'));
             if (dataIndex >= 0) {
                 setLabelStyle(
-                    endLabel,
+                    polyline,
                     getLabelStatesModels(seriesModel, 'endLabel'),
                     {
                         labelFetcher: seriesModel,
@@ -1073,6 +1072,7 @@ class LineView extends ChartView {
                     },
                     getEndLabelStateSpecified(endLabelModel, coordSys)
                 );
+                polyline.textConfig.position = null;
             }
         }
         else if (this._endLabel) {
@@ -1105,6 +1105,7 @@ class LineView extends ChartView {
             const seriesModel = data.hostModel as LineSeriesModel;
             const connectNulls = seriesModel.get('connectNulls');
             const precision = endLabelModel.get('precision');
+            const distance = endLabelModel.get('distance') || 0;
 
             const baseAxis = coordSys.getBaseAxis();
             const isHorizontal = baseAxis.isHorizontal();
@@ -1114,6 +1115,8 @@ class LineView extends ChartView {
             const xOrY = isBaseInversed
                 ? isHorizontal ? clipShape.x : (clipShape.y + clipShape.height)
                 : isHorizontal ? (clipShape.x + clipShape.width) : clipShape.y;
+            const distanceX = (isHorizontal ? distance : 0) * (isBaseInversed ? -1 : 1);
+            const distanceY = (isHorizontal ? 0 : -distance) * (isBaseInversed ? -1 : 1);
             const dim = isHorizontal ? 'x' : 'y';
 
             const dataIndexRange = getIndexRange(points, xOrY, dim);
@@ -1125,12 +1128,18 @@ class LineView extends ChartView {
                 // diff > 1 && connectNulls, which is on the null data.
                 if (diff > 1 && !connectNulls) {
                     const pt = getPointAtIndex(points, indices[0]);
-                    endLabel.attr({ x: pt[0], y: pt[1] });
+                    endLabel.attr({
+                        x: pt[0] + distanceX,
+                        y: pt[1] + distanceY
+                    });
                     valueAnimation && (value = seriesModel.getRawValue(indices[0]) as ParsedValue);
                 }
                 else {
                     const pt = polyline.getPointOn(xOrY, dim);
-                    pt && endLabel.attr({ x: pt[0], y: pt[1] });
+                    pt && endLabel.attr({
+                        x: pt[0] + distanceX,
+                        y: pt[1] + distanceY
+                    });
 
                     const startValue = seriesModel.getRawValue(indices[0]) as ParsedValue;
                     const endValue = seriesModel.getRawValue(indices[1]) as ParsedValue;
@@ -1146,7 +1155,10 @@ class LineView extends ChartView {
                 const idx = (percent === 1 || animationRecord.lastFrameIndex > 0) ? indices[0] : 0;
                 const pt = getPointAtIndex(points, idx);
                 valueAnimation && (value = seriesModel.getRawValue(idx) as ParsedValue);
-                endLabel.attr({ x: pt[0], y: pt[1] });
+                endLabel.attr({
+                    x: pt[0] + distanceX,
+                    y: pt[1] + distanceY
+                });
             }
             if (valueAnimation) {
                 labelInner(endLabel).setLabelText(value);
