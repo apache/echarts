@@ -107,6 +107,7 @@ import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
 
 declare let global: any;
+
 type ModelFinder = modelUtil.ModelFinder;
 
 const assert = zrUtil.assert;
@@ -114,6 +115,8 @@ const each = zrUtil.each;
 const isFunction = zrUtil.isFunction;
 const isObject = zrUtil.isObject;
 const indexOf = zrUtil.indexOf;
+
+const hasWindow = typeof window !== 'undefined';
 
 export const version = '5.0.0';
 
@@ -377,13 +380,14 @@ class ECharts extends Eventful {
 
         this._dom = dom;
 
-        const root = (
-            typeof window === 'undefined' ? global : window
-        ) as any;
-
         let defaultRenderer = 'canvas';
         let defaultUseDirtyRect = false;
         if (__DEV__) {
+            const root = (
+                /* eslint-disable-next-line */
+                hasWindow ? window : global
+            ) as any;
+
             defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
 
             const devUseDirtyRect = root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
@@ -633,7 +637,9 @@ class ECharts extends Eventful {
     }
 
     getDevicePixelRatio(): number {
-        return (this._zr.painter as CanvasPainter).dpr || window.devicePixelRatio || 1;
+        return (this._zr.painter as CanvasPainter).dpr
+            /* eslint-disable-next-line */
+            || (hasWindow && window.devicePixelRatio) || 1;
     }
 
     /**
