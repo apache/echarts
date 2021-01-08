@@ -334,6 +334,7 @@ export {truncateText} from 'zrender/src/graphic/helper/parseText';
  * @param target blank or self
  */
 export function windowOpen(link: string, target: string): void {
+    /* global window */
     if (target === '_blank' || target === 'blank') {
         const blank = window.open();
         blank.opener = null;

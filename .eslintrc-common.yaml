@@ -216,4 +216,14 @@ rules:
         -
             vars: "local"
             args: "none"
-    "@typescript-eslint/no-redeclare": 2
+    # Avoid dangerous usage of globals.
+    "no-restricted-globals":
+        - 2
+        - "event"
+        - "name"
+        - "length"
+        - "orientation"
+        - "top"
+        - "parent"
+        - "location"
+        - "closed"
