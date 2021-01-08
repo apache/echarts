@@ -576,7 +576,7 @@ class TooltipView extends ComponentView {
         el: ECElement,
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
-        const dispatcher = findEventDispatcher(el, (target) => getECData(target).dataIndex != null);
+        const dispatcher = findEventDispatcher(el, (target) => getECData(target).dataIndex != null, true);
         const ecModel = this._ecModel;
         const ecData = getECData(dispatcher);
         // Use dataModel in element if possible
