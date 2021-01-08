@@ -107,6 +107,6 @@ export type ComponentViewConstructor = typeof ComponentView
     & clazzUtil.ClassManager;
 
 clazzUtil.enableClassExtend(ComponentView as ComponentViewConstructor);
-clazzUtil.enableClassManagement(ComponentView as ComponentViewConstructor, {registerWhenExtend: true});
+clazzUtil.enableClassManagement(ComponentView as ComponentViewConstructor);
 
 export default ComponentView;

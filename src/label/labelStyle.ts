@@ -313,7 +313,8 @@ export function createTextStyle(
     textStyleModel: Model,
     specifiedTextStyle?: TextStyleProps, // Fixed style in the code. Can't be set by model.
     opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
-    isNotNormal?: boolean, isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
+    isNotNormal?: boolean,
+    isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
 ) {
     const textStyle: TextStyleProps = {};
     setTextStyleCommon(textStyle, textStyleModel, opt, isNotNormal, isAttached);

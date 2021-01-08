@@ -55,6 +55,11 @@ const extensionRegisters = {
     registerLoading,
     registerMap,
     PRIORITY,
+
+    ComponentModel,
+    ComponentView,
+    SeriesModel,
+    ChartView,
     // TODO Use ComponentModel and SeriesModel instead of Constructor
     registerComponentModel(ComponentModelClass: Constructor) {
         ComponentModel.registerClass(ComponentModelClass);

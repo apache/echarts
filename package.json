@@ -35,6 +35,7 @@
     "lib/echarts.js",
     "lib/chart/*.js",
     "lib/component/*.js",
+    "extension/**/*.js",
     "theme/*.js",
     "i18n/*.js"
   ],

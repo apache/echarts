@@ -230,7 +230,7 @@ export type ChartViewConstructor = typeof ChartView
     & clazzUtil.ClassManager;
 
 clazzUtil.enableClassExtend(ChartView as ChartViewConstructor, ['dispose']);
-clazzUtil.enableClassManagement(ChartView as ChartViewConstructor, {registerWhenExtend: true});
+clazzUtil.enableClassManagement(ChartView as ChartViewConstructor);
 
 
 function renderTaskPlan(context: SeriesTaskContext): StageHandlerPlanReturn {
