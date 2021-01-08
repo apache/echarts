@@ -36,6 +36,8 @@ import {
 import SeriesModel from '../../model/Series';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { getECData } from '../../util/innerStore';
+import { createTextStyle as innerCreateTextStyle } from '../../label/labelStyle';
+import { TextCommonOption } from '../../util/types';
 
 /**
  * Create a muti dimension List structure from seriesModel.
@@ -113,3 +115,9 @@ export function mixinAxisModelCommonMethods(Model: Model) {
 }
 
 export {getECData};
+
+export {enableHoverEmphasis} from '../../util/states';
+
+export function createTextStyle(textStyleModel: Model<TextCommonOption>) {
+    return innerCreateTextStyle(textStyleModel);
+}
