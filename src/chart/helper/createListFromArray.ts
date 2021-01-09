@@ -35,6 +35,8 @@ import SeriesModel from '../../model/Series';
 function createListFromArray(source: Source | OptionSourceData, seriesModel: SeriesModel, opt?: {
     generateCoord?: string
     useEncodeDefaulter?: boolean | EncodeDefaulter
+    // By default: auto. If `true`, create inverted indices for all ordinal dimension on coordSys.
+    createInvertedIndices?: boolean
 }): List {
     opt = opt || {};
 
@@ -94,6 +96,9 @@ function createListFromArray(source: Source | OptionSourceData, seriesModel: Ser
                 firstCategoryDimIndex = dimIndex;
             }
             dimInfo.ordinalMeta = categoryAxisModel.getOrdinalMeta();
+            if (opt.createInvertedIndices) {
+                dimInfo.createInvertedIndices = true;
+            }
         }
         if (dimInfo.otherDims.itemName != null) {
             hasNameEncode = true;

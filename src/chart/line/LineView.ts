@@ -319,7 +319,9 @@ function getIsIgnoreFunc(
     const labelMap: Dictionary<1> = {};
 
     zrUtil.each(categoryAxis.getViewLabels(), function (labelItem) {
-        labelMap[labelItem.tickValue] = 1;
+        const ordinalNumber = (categoryAxis.scale as OrdinalScale)
+            .getRawOrdinalNumber(labelItem.tickValue);
+        labelMap[ordinalNumber] = 1;
     });
 
     return function (dataIndex: number) {

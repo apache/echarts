@@ -924,7 +924,7 @@ function queryByIdOrName<T extends { id?: string, name?: string }>(
     cmpts: T[]
 ): T[] {
     // Here is a break from echarts4: string and number are
-    // traded as equal.
+    // treated as equal.
     if (isArray(idOrName)) {
         const keyMap = createHashMap<boolean>();
         each(idOrName, function (idOrNameItem) {

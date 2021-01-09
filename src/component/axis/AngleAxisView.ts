@@ -29,6 +29,7 @@ import Polar from '../../coord/polar/Polar';
 import AngleAxis from '../../coord/polar/AngleAxis';
 import { ZRTextAlign, ZRTextVerticalAlign, ColorString } from '../../util/types';
 import { getECData } from '../../util/innerStore';
+import OrdinalScale from '../../scale/Ordinal';
 
 const elementList = [
     'axisLine',
@@ -97,7 +98,11 @@ class AngleAxisView extends AxisView {
 
         const labels = zrUtil.map(angleAxis.getViewLabels(), function (labelItem: TickLabel) {
             labelItem = zrUtil.clone(labelItem);
-            labelItem.coord = angleAxis.dataToCoord(labelItem.tickValue);
+            const scale = angleAxis.scale;
+            const tickValue = scale.type === 'ordinal'
+                ? (scale as OrdinalScale).getRawOrdinalNumber(labelItem.tickValue)
+                : labelItem.tickValue;
+            labelItem.coord = angleAxis.dataToCoord(tickValue);
             return labelItem;
         });
 
