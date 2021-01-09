@@ -326,9 +326,17 @@ export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'seriesAsc' | 'seriesD
 // Check `convertValue` for more details.
 export type OrdinalRawValue = string | number;
 export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
+
+/**
+ * @usage For example,
+ * ```js
+ * { ordinalNumbers: [2, 5, 3, 4] }
+ * ```
+ * means that ordinal 2 should be diplayed on tick 0,
+ * ordinal 5 should be displayed on tick 1, ...
+ */
 export type OrdinalSortInfo = {
-    ordinalNumber: OrdinalNumber,
-    beforeSortIndex: number
+    ordinalNumbers: OrdinalNumber[];
 };
 
 /**
@@ -366,7 +374,22 @@ export interface TimeScaleTick extends ScaleTick {
     level?: number
 };
 export interface OrdinalScaleTick extends ScaleTick {
-    value: OrdinalNumber
+    /**
+     * Represents where the tick will be placed visually.
+     * Notice:
+     * The value is not the raw ordinal value. And do not changed
+     * after ordinal scale sorted.
+     * We need to:
+     * ```js
+     * const coord = dataToCoord(ordinalScale.getRawOrdinalNumber(tick.value)).
+     * ```
+     * Why place the tick value here rather than the raw ordinal value (like LogScale did)?
+     * Becuase ordinal scale sort is the different case from LogScale, where
+     * axis tick, splitArea should better not to be sorted, especially in
+     * anid(animation id) when `boundaryGap: true`.
+     * Only axis label are sorted.
+     */
+    value: number
 };
 
 // Can only be string or index, because it is used in object key in some code.
