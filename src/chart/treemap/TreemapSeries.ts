@@ -34,8 +34,9 @@ import {
     OptionId,
     OptionName,
     DecalObject,
-    DefaultExtraEmpasisState,
-    SeriesLabelOption
+    SeriesLabelOption,
+    DefaultEmphasisFocus,
+    AriaOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -80,7 +81,7 @@ interface TreemapSeriesCallbackDataParams extends CallbackDataParams {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus'] | 'descendant' | 'ancestor'
+        focus?: DefaultEmphasisFocus | 'descendant' | 'ancestor'
     }
 }
 
@@ -535,7 +536,9 @@ function completeTreeValue(dataNode: TreemapSeriesNodeItemOption) {
  */
 function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
     const globalColorList = normalizeToArray(ecModel.get('color')) as ColorString[];
-    const globalDecalList = normalizeToArray(ecModel.get('decals')) as DecalObject[];
+    const globalDecalList = normalizeToArray(
+        (ecModel as Model<AriaOptionMixin>).get(['aria', 'decal', 'decals'])
+    ) as DecalObject[];
 
     if (!globalColorList) {
         return;
@@ -571,7 +574,5 @@ function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
 
     return levels;
 }
-
-SeriesModel.registerClass(TreemapSeriesModel);
 
 export default TreemapSeriesModel;

@@ -24,7 +24,7 @@ import geoSourceManager from './geoSourceManager';
 import Region from './Region';
 import { NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
-import { ParsedModelFinder, SINGLE_REFERRING } from '../../util/model';
+import { ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING } from '../../util/model';
 import GeoModel from './GeoModel';
 import { resizeGeoType } from './geoCreator';
 
@@ -165,7 +165,7 @@ class Geo extends View {
 
 zrUtil.mixin(Geo, View);
 
-function getCoordSys(finder: ParsedModelFinder): Geo {
+function getCoordSys(finder: ParsedModelFinderKnown): Geo {
     const geoModel = finder.geoModel as GeoModel;
     const seriesModel = finder.seriesModel;
     return geoModel

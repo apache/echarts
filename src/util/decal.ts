@@ -24,7 +24,7 @@ import LRU from 'zrender/src/core/LRU';
 import {defaults, createCanvas, map, isArray} from 'zrender/src/core/util';
 import {getLeastCommonMultiple} from './number';
 import {createSymbol} from './symbol';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import type SVGPainter from 'zrender/src/svg/Painter';
 import { brushSingle } from 'zrender/src/canvas/graphic';
 import {DecalDashArrayX, DecalDashArrayY, InnerDecalObject, DecalObject} from './types';
@@ -36,7 +36,7 @@ const decalCache = new LRU<HTMLCanvasElement | SVGElement>(100);
 const decalKeys = [
     'symbol', 'symbolSize', 'symbolKeepAspect',
     'color', 'backgroundColor',
-    'dashArrayX', 'dashArrayY', 'dashLineOffset',
+    'dashArrayX', 'dashArrayY',
     'maxTileWidth', 'maxTileHeight'
 ];
 
@@ -75,7 +75,6 @@ export function createOrUpdatePatternFromDecal(
         backgroundColor: null,
         dashArrayX: 5,
         dashArrayY: 5,
-        dashLineOffset: 0,
         rotation: 0,
         maxTileWidth: 512,
         maxTileHeight: 512

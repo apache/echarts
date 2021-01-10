@@ -137,6 +137,4 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
     };
 }
 
-SeriesModel.registerClass(EffectScatterSeriesModel);
-
 export default EffectScatterSeriesModel;

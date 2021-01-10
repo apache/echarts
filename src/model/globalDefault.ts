@@ -21,6 +21,7 @@
 let platform = '';
 // Navigator not exists in node
 if (typeof navigator !== 'undefined') {
+    /* global navigator */
     platform = navigator.platform || '';
 }
 
@@ -74,7 +75,6 @@ export default {
                 color: decalColor,
                 dashArrayX: [1, 0],
                 dashArrayY: [4, 3],
-                dashLineOffset: 0,
                 rotation: -Math.PI / 4
             }, {
                 color: decalColor,

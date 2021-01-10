@@ -23,7 +23,7 @@ import SeriesModel from '../../../../src/model/Series';
 import { ParsedValue } from '../../../../src/util/types';
 import { LegendOption } from '../../../../src/component/legend/LegendModel';
 import TimelineModel from '../../../../src/component/timeline/TimelineModel';
-import { createChart } from '../../core/utHelper';
+import { createChart, getECModel } from '../../core/utHelper';
 import { EChartsFullOption } from '../../../../src/option';
 
 
@@ -33,13 +33,13 @@ describe('timelineMediaOptions', function () {
         return getSeries(chart, seriesIndex).getData().get('y', 0);
     }
     function getSeries(chart: EChartsType, seriesIndex: number): SeriesModel {
-        return chart.getModel().getComponent('series', seriesIndex) as SeriesModel;
+        return getECModel(chart).getComponent('series', seriesIndex) as SeriesModel;
     }
     function getLegendOption(chart: EChartsType): LegendOption {
-        return chart.getModel().getComponent('legend', 0).option;
+        return getECModel(chart).getComponent('legend', 0).option;
     }
     function getTimelineComponent(chart: EChartsType): TimelineModel {
-        return chart.getModel().getComponent('timeline', 0) as TimelineModel;
+        return getECModel(chart).getComponent('timeline', 0) as TimelineModel;
     }
 
     let chart: EChartsType;
@@ -388,7 +388,7 @@ describe('timelineMediaOptions', function () {
             };
             chart.setOption(option);
 
-            let ecModel = chart.getModel();
+            let ecModel = getECModel(chart);
             expect(getData0(chart, 0)).toEqual(1111);
             expect(getData0(chart, 1)).toEqual(2222);
 
@@ -410,7 +410,7 @@ describe('timelineMediaOptions', function () {
                 }]
             });
 
-            ecModel = chart.getModel();
+            ecModel = getECModel(chart);
             const optionGotten = ecModel.getOption();
             expect(optionGotten.backgroundColor).toEqual('#987654');
             expect(getData0(chart, 0)).toEqual(1111);

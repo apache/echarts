@@ -19,7 +19,7 @@
 
 import SeriesModel from '../../model/Series';
 import createListFromArray from '../helper/createListFromArray';
-import CoordinateSystem from '../../CoordinateSystem';
+import CoordinateSystem from '../../core/CoordinateSystem';
 import {
     SeriesOption,
     SeriesOnCartesianOptionMixin,
@@ -68,6 +68,7 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
     static readonly type = 'series.heatmap';
     readonly type = HeatmapSeriesModel.type;
 
+    static readonly dependencies = ['grid', 'geo', 'calendar'];
     // @ts-ignore
     coordinateSystem: Cartesian2D | Geo | Calendar;
 
@@ -114,7 +115,5 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
         }
     };
 }
-
-SeriesModel.registerClass(HeatmapSeriesModel);
 
 export default HeatmapSeriesModel;

@@ -26,11 +26,10 @@ import * as graphic from '../../util/graphic';
 import * as layoutUtil from '../../util/layout';
 import LegendView from './LegendView';
 import { LegendSelectorButtonOption } from './LegendModel';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import GlobalModel from '../../model/Global';
 import ScrollableLegendModel, {ScrollableLegendOption} from './ScrollableLegendModel';
 import Displayable from 'zrender/src/graphic/Displayable';
-import ComponentView from '../../view/Component';
 import Element from 'zrender/src/Element';
 import { ZRRectLike } from '../../util/types';
 
@@ -549,7 +548,5 @@ class ScrollableLegendView extends LegendView {
         return index != null ? index : defaultIndex;
     }
 }
-
-ComponentView.registerClass(ScrollableLegendView);
 
 export default ScrollableLegendView;

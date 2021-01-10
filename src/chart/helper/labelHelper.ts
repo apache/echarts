@@ -20,7 +20,7 @@
 
 import {retrieveRawValue} from '../../data/helper/dataProvider';
 import List from '../../data/List';
-import { ParsedValue } from '../../util/types';
+import { InterpolatableValue } from '../../util/types';
 import { isArray } from 'zrender/src/core/util';
 
 /**
@@ -35,7 +35,8 @@ export function getDefaultLabel(
 
     // Simple optimization (in lots of cases, label dims length is 1)
     if (len === 1) {
-        return retrieveRawValue(data, dataIndex, labelDims[0]);
+        const rawVal = retrieveRawValue(data, dataIndex, labelDims[0]);
+        return rawVal != null ? rawVal + '' : null;
     }
     else if (len) {
         const vals = [];
@@ -48,7 +49,7 @@ export function getDefaultLabel(
 
 export function getDefaultInterpolatedLabel(
     data: List,
-    interpolatedValue: ParsedValue | ParsedValue[]
+    interpolatedValue: InterpolatableValue
 ): string {
     const labelDims = data.mapDimensionsAll('defaultedLabel');
     if (!isArray(interpolatedValue)) {

@@ -22,13 +22,7 @@
  * MUST NOT import this module directly.
  */
 
-import './dataZoom/typeDefaulter';
+import { use } from '../extension';
+import { install } from './dataZoom/installDataZoomSelect';
 
-import './dataZoom/DataZoomModel';
-import './dataZoom/DataZoomView';
-
-import './dataZoom/SelectZoomModel';
-import './dataZoom/SelectZoomView';
-
-import './dataZoom/dataZoomProcessor';
-import './dataZoom/dataZoomAction';
+use(install);

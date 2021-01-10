@@ -25,7 +25,7 @@ import AxisView from './AxisView';
 import {rectCoordAxisBuildSplitArea, rectCoordAxisHandleRemove} from './axisSplitHelper';
 import SingleAxisModel from '../../coord/single/AxisModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload } from '../../util/types';
 import ComponentView from '../../view/Component';
 
@@ -153,7 +153,5 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         rectCoordAxisBuildSplitArea(axisView, axisGroup, axisModel, axisModel);
     }
 };
-
-ComponentView.registerClass(SingleAxisView);
 
 export default SingleAxisView;

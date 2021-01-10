@@ -17,5 +17,7 @@
 * under the License.
 */
 
-import './gauge/GaugeSeries';
-import './gauge/GaugeView';
+import { use } from '../extension';
+import { install } from './gauge/install';
+
+use(install);

@@ -24,7 +24,7 @@ import AxisView from './AxisView';
 import * as cartesianAxisHelper from '../../coord/cartesian/cartesianAxisHelper';
 import {rectCoordAxisBuildSplitArea, rectCoordAxisHandleRemove} from './axisSplitHelper';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
 import ComponentView from '../../view/Component';
@@ -227,16 +227,13 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
     }
 };
 
-class CartesianXAxisView extends CartesianAxisView {
+export class CartesianXAxisView extends CartesianAxisView {
     static type = 'xAxis';
     type = CartesianXAxisView.type;
 }
-class CartesianYAxisView extends CartesianAxisView {
+export class CartesianYAxisView extends CartesianAxisView {
     static type = 'yAxis';
     type = CartesianXAxisView.type;
 }
-
-ComponentView.registerClass(CartesianXAxisView);
-ComponentView.registerClass(CartesianYAxisView);
 
 export default CartesianAxisView;

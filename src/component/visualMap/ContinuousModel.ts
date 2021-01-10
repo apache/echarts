@@ -20,7 +20,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import VisualMapModel, { VisualMapOption, VisualMeta } from './VisualMapModel';
 import * as numberUtil from '../../util/number';
-import ComponentModel from '../../model/Component';
 import { VisualMappingOption } from '../../visual/VisualMapping';
 import { inheritDefaultOption } from '../../util/component';
 import { ItemStyleOption } from '../../util/types';
@@ -337,7 +336,5 @@ function getColorStopValues(
 
     return stopValues;
 }
-
-ComponentModel.registerClass(ContinuousModel);
 
 export default ContinuousModel;

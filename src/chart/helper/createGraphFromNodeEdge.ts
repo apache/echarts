@@ -23,7 +23,7 @@ import List from '../../data/List';
 import Graph from '../../data/Graph';
 import linkList from '../../data/helper/linkList';
 import createDimensions from '../../data/helper/createDimensions';
-import CoordinateSystem from '../../CoordinateSystem';
+import CoordinateSystem from '../../core/CoordinateSystem';
 import createListFromArray from './createListFromArray';
 import {
     OptionSourceDataOriginal, GraphEdgeItemObject, OptionDataValue,

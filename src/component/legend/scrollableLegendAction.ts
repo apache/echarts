@@ -17,25 +17,27 @@
 * under the License.
 */
 
-import * as echarts from '../../echarts';
 import ScrollableLegendModel from './ScrollableLegendModel';
+import { EChartsExtensionInstallRegisters } from '../../extension';
 
-/**
- * @event legendScroll
- * @type {Object}
- * @property {string} type 'legendScroll'
- * @property {string} scrollDataIndex
- */
-echarts.registerAction(
-    'legendScroll', 'legendscroll',
-    function (payload, ecModel) {
-        const scrollDataIndex = payload.scrollDataIndex;
+export default function installScrollableLegendAction(registers: EChartsExtensionInstallRegisters) {
+    /**
+     * @event legendScroll
+     * @type {Object}
+     * @property {string} type 'legendScroll'
+     * @property {string} scrollDataIndex
+     */
+    registers.registerAction(
+        'legendScroll', 'legendscroll',
+        function (payload, ecModel) {
+            const scrollDataIndex = payload.scrollDataIndex;
 
-        scrollDataIndex != null && ecModel.eachComponent(
-            {mainType: 'legend', subType: 'scroll', query: payload},
-            function (legendModel: ScrollableLegendModel) {
-                legendModel.setScrollDataIndex(scrollDataIndex);
-            }
-        );
-    }
-);
+            scrollDataIndex != null && ecModel.eachComponent(
+                {mainType: 'legend', subType: 'scroll', query: payload},
+                function (legendModel: ScrollableLegendModel) {
+                    legendModel.setScrollDataIndex(scrollDataIndex);
+                }
+            );
+        }
+    );
+}

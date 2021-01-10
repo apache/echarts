@@ -17,23 +17,25 @@
 * under the License.
 */
 
-import * as echarts from '../../echarts';
-import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
 import { findEffectedDataZooms } from './helper';
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import { each } from 'zrender/src/core/util';
 
 
-echarts.registerAction('dataZoom', function (payload, ecModel: GlobalModel) {
+export default function installDataZoomAction(registers: EChartsExtensionInstallRegisters) {
+    registers.registerAction('dataZoom', function (payload, ecModel: GlobalModel) {
 
-    const effectedModels = findEffectedDataZooms(ecModel, payload);
+        const effectedModels = findEffectedDataZooms(ecModel, payload);
 
-    zrUtil.each(effectedModels, function (dataZoomModel) {
-        dataZoomModel.setRawRange({
-            start: payload.start,
-            end: payload.end,
-            startValue: payload.startValue,
-            endValue: payload.endValue
+        each(effectedModels, function (dataZoomModel) {
+            dataZoomModel.setRawRange({
+                start: payload.start,
+                end: payload.end,
+                startValue: payload.startValue,
+                endValue: payload.endValue
+            });
         });
-    });
 
-});
+    });
+}

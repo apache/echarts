@@ -18,11 +18,11 @@
 */
 
 
-import * as echarts from '../../echarts';
 import { Payload } from '../../util/types';
 import ParallelAxisModel, { ParallelAxisInterval } from '../../coord/parallel/AxisModel';
 import GlobalModel from '../../model/Global';
 import ParallelModel from '../../coord/parallel/ParallelModel';
+import { EChartsExtensionInstallRegisters } from '../../extension';
 
 interface ParallelAxisAreaSelectPayload extends Payload {
     parallelAxisId: string;
@@ -35,28 +35,32 @@ const actionInfo = {
     // update: 'updateVisual'
 };
 
-echarts.registerAction(actionInfo, function (payload: ParallelAxisAreaSelectPayload, ecModel: GlobalModel) {
-    ecModel.eachComponent(
-        {mainType: 'parallelAxis', query: payload},
-        function (parallelAxisModel: ParallelAxisModel) {
-            parallelAxisModel.axis.model.setActiveIntervals(payload.intervals);
-        }
-    );
-});
-
 export interface ParallelAxisExpandPayload extends Payload {
     axisExpandWindow?: number[];
 }
 
-/**
- * @payload
- */
-echarts.registerAction('parallelAxisExpand', function (payload: ParallelAxisExpandPayload, ecModel) {
-    ecModel.eachComponent(
-        {mainType: 'parallel', query: payload},
-        function (parallelModel: ParallelModel) {
-            parallelModel.setAxisExpand(payload);
-        }
-    );
+export function installParallelActions(registers: EChartsExtensionInstallRegisters) {
 
-});
+    registers.registerAction(actionInfo, function (payload: ParallelAxisAreaSelectPayload, ecModel: GlobalModel) {
+        ecModel.eachComponent(
+            {mainType: 'parallelAxis', query: payload},
+            function (parallelAxisModel: ParallelAxisModel) {
+                parallelAxisModel.axis.model.setActiveIntervals(payload.intervals);
+            }
+        );
+    });
+
+    /**
+     * @payload
+     */
+    registers.registerAction('parallelAxisExpand', function (payload: ParallelAxisExpandPayload, ecModel) {
+        ecModel.eachComponent(
+            {mainType: 'parallel', query: payload},
+            function (parallelModel: ParallelModel) {
+                parallelModel.setAxisExpand(payload);
+            }
+        );
+    });
+
+
+}

@@ -76,7 +76,7 @@ import Scale from './Scale';
 import {TimeScaleTick, ScaleTick} from '../util/types';
 import {TimeAxisLabelFormatterOption} from '../coord/axisCommonTypes';
 import { warn } from '../util/log';
-import { LocaleOption } from '../locale';
+import { LocaleOption } from '../core/locale';
 import Model from '../model/Model';
 import { filter, map } from 'zrender/src/core/util';
 

@@ -24,7 +24,7 @@ import * as matrix from 'zrender/src/core/matrix';
 import pointsLayout from '../../layout/points';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import EffectScatterSeriesModel from './EffectScatterSeries';
 import { StageHandlerProgressExecutor } from '../../util/types';
 
@@ -75,8 +75,4 @@ class EffectScatterView extends ChartView {
     }
 
 }
-
-ChartView.registerClass(EffectScatterView);
-
-
 export default EffectScatterView;

@@ -21,7 +21,7 @@
  * Legend component entry file8
  */
 
-import './legend';
-import './legend/ScrollableLegendModel';
-import './legend/ScrollableLegendView';
-import './legend/scrollableLegendAction';
+import { use } from '../extension';
+import { install } from './legend/installLegendScroll';
+
+use(install);

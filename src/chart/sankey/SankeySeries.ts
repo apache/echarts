@@ -33,7 +33,7 @@ import {
     OptionDataItemObject,
     GraphEdgeItemObject,
     OptionDataValueNumeric,
-    DefaultExtraEmpasisState
+    DefaultEmphasisFocus
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -61,7 +61,7 @@ interface SankeyEdgeStyleOption extends LineStyleOption {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus'] | 'adjacency'
+        focus?: DefaultEmphasisFocus | 'adjacency'
     }
 }
 
@@ -237,7 +237,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         // dataType === 'node' or empty do not show tooltip by default
         if (dataType === 'edge') {
             const params = this.getDataParams(dataIndex, dataType);
-            const rawDataOpt = params.data;
+            const rawDataOpt = params.data as SankeyEdgeItemOption;
             const edgeValue = params.value;
             const edgeName = rawDataOpt.source + ' -- ' + rawDataOpt.target;
             return createTooltipMarkup('nameValue', {
@@ -250,9 +250,9 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         else {
             const node = this.getGraph().getNodeByIndex(dataIndex);
             const value = node.getLayout().value;
-            const name = this.getDataParams(dataIndex, dataType).data.name;
+            const name = (this.getDataParams(dataIndex, dataType).data as SankeyNodeItemOption).name;
             return createTooltipMarkup('nameValue', {
-                name: name,
+                name: name != null ? name + '' : null,
                 value: value,
                 noValue: noValue(value)
             });
@@ -335,7 +335,5 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         animationDuration: 1000
     };
 }
-
-SeriesModel.registerClass(SankeySeriesModel);
 
 export default SankeySeriesModel;

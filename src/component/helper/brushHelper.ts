@@ -21,7 +21,7 @@
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import {onIrrelevantElement} from './cursorHelper';
 import * as graphicUtil from '../../util/graphic';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { ElementEvent } from 'zrender/src/Element';
 import ComponentModel from '../../model/Component';
 

@@ -228,11 +228,8 @@ export interface ClassManager {
  * ```
  */
 export function enableClassManagement(
-    target: ClassManager,
-    options?: {registerWhenExtend?: boolean}
+    target: ClassManager
 ): void {
-
-    options = options || {};
 
     /**
      * Component model classes
@@ -353,17 +350,6 @@ export function enableClassManagement(
             container[IS_CONTAINER] = true;
         }
         return container as SubclassContainer;
-    }
-
-    // FIXME:TS remove `registerWhenExtend` finally when ts migration completed?
-    if (options.registerWhenExtend) {
-        const originalExtend = (target as any).extend;
-        if (originalExtend) {
-            (target as any).extend = function (proto: any) {
-                const ExtendedClass = originalExtend.call(this, proto);
-                return target.registerClass(ExtendedClass);
-            };
-        }
     }
 }
 

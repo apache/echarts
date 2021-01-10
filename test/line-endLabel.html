@@ -36,14 +36,102 @@ under the License.
                 height: 1000px;
                 margin-bottom: 30px;
             }
+            #main2 {
+                width: 100%;
+                height: 300px;
+                margin-bottom: 30px;
+            }
+            #formatterSwitchButtons {
+                margin: 10px;
+                padding: 10px;
+            }
+            #currentFormatter {
+                margin: 10px;
+                padding: 10px;
+                border: 1px solid #aaa;
+            }
         </style>
+
+        <div id="formatterSwitchButtons">
+        </div>
+        <div>
+            Current formatter:
+            <pre id="currentFormatter"></pre>
+        </div>
+
+        <script>
+            var _endLabelFormatter;
+
+            // Init formatter switch buttons.
+            (function () {
+
+                var formatterConfigs = [
+                    {
+                        text: 'formatter string {c}',
+                        formatter: '$ {c}'
+                    },
+                    {
+                        text: 'formatter string {@[dimIndex]}',
+                        formatter: '$ {@[1]}'
+                    },
+                    {
+                        text: 'formatter callback',
+                        formatter: function (param) {
+                            return '$ ' + param.value;
+                        }
+                    }
+                ];
+                var END_LABEL_FORMATTER = '__EC_TEST_line-endLabel.html_FOMRATTER___';
+
+                function setLocalStorage(formatterKey) {
+                    window.localStorage.setItem(END_LABEL_FORMATTER, formatterKey);
+                }
+                function getLocalStorage() {
+                    return window.localStorage.getItem(END_LABEL_FORMATTER);
+                }
+
+                var currFormatterKey = getLocalStorage();
+                var fmtBtnBox = document.getElementById('formatterSwitchButtons');
+                for (var i = 0; i < formatterConfigs.length; i++) {
+                    var config = formatterConfigs[i];
+
+                    if (_endLabelFormatter == null
+                        && (
+                            currFormatterKey == null
+                            || currFormatterKey === config.text
+                        )
+                    ) {
+                        _endLabelFormatter = config.formatter;
+                    }
+
+                    var btn = document.createElement('button');
+                    btn.innerHTML = config.text;
+                    btn.onclick = (function (cfg) {
+                        return function () {
+                            setLocalStorage(cfg.text);
+                            location.reload();
+                        };
+                    })(config);
+                    fmtBtnBox.appendChild(btn);
+                }
+
+                if (!_endLabelFormatter) {
+                    throw new Error();
+                }
+                var formatterDisplayBox = document.getElementById('currentFormatter');
+                formatterDisplayBox.innerHTML = _endLabelFormatter.toString();
+            })();
+
+        </script>
+
+
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
         <script>
 
             require([
                 'echarts',
-                'theme/infographic'
                 // 'echarts/chart/line',
                 // 'echarts/component/title',
                 // 'echarts/component/legend',
@@ -200,10 +288,9 @@ under the License.
                                         },
                                         endLabel: {
                                             show: true,
-                                            formatter: function (param) {
-                                                return '$' + param.value;
-                                            },
-                                            fontSize: 14
+                                            formatter: _endLabelFormatter,
+                                            fontSize: 20,
+                                            distance: 10
                                         },
                                         emphasis: {
                                             endLabel: {
@@ -235,6 +322,74 @@ under the License.
                     })(cid);
 
                 }
+
+            })
+
+        </script>
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xData = [];
+                var data = [];
+                var value = 200;
+                var positive = 1;
+                for (var i = 0; i < 12; ++i) {
+                    xData.push(i + '');
+                    var plus = i === 6 || i === 7
+                        ? 0
+                        : positive * Math.round(Math.random() * 1000);
+                    value = plus + value;
+                    data.push(i === 3 ? '-' : value);
+
+                    if (Math.random() > 0.7) {
+                        positive = -1 * positive;
+                    }
+                }
+
+                var chart = echarts.init(document.getElementById('main2'));
+                var option = {
+                    title: [{
+                        text: 'distance 50, offset [0, 20], rotate 5\nonhover: offset [0, -20], rotate -5',
+                        textAlign: 'center',
+                        left: '50%',
+                        top: 0
+                    }],
+                    xAxis: [{
+                        data: xData
+                    }],
+                    yAxis: [{
+                    }],
+                    series: [{
+                        type: 'line',
+                        data: data,
+                        label: {
+                            show: true
+                        },
+                        endLabel: {
+                            show: true,
+                            formatter: _endLabelFormatter,
+                            fontSize: 14,
+                            distance: 50,
+                            offset: [0, 20],
+                            rotate: 5
+                        },
+                        emphasis: {
+                            endLabel: {
+                                color: 'red',
+                                offset: [0, -20],
+                                rotate: -5
+                            }
+                        }
+                    }],
+                    animationDuration: 10000,
+                    animationDurationUpdate: 500
+                };
+                chart.setOption(option);
 
             })
 

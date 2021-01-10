@@ -17,6 +17,7 @@
 * under the License.
 */
 
-import '../coord/calendar/Calendar';
-import '../coord/calendar/CalendarModel';
-import './calendar/CalendarView';
+import { use } from '../extension';
+import { install } from './calendar/install';
+
+use(install);

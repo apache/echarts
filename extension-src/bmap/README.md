@@ -1,19 +1,19 @@
 ## 百度地图扩展
 
-ECharts 百度地图扩展，可以在百度地图上展现 [点图](http://echarts.baidu.com/option.html#series-scatter)，[线图](http://echarts.baidu.com/option.html#series-line)，[热力图](http://echarts.baidu.com/option.html#series-heatmap) 等可视化。
+ECharts 百度地图扩展，可以在百度地图上展现 [点图](https://echarts.apache.org/zh/option.html#series-scatter)，[线图](https://echarts.apache.org/zh/option.html#series-line)，[热力图](https://echarts.apache.org/zh/option.html#series-heatmap) 等可视化。
 
 
 ### 示例
 
-[全国主要城市空气质量](http://echarts.baidu.com/demo.html#effectScatter-bmap)
+[全国主要城市空气质量](https://echarts.apache.org/examples/zh/editor.html?c=effectScatter-bmap)
 
-[北京公交路线](http://echarts.baidu.com/demo.html#lines-bmap-bus)
+[北京公交路线](https://echarts.apache.org/examples/zh/editor.html?c=lines-bmap-bus)
 
-[北京公交路线特效](http://echarts.baidu.com/demo.html#lines-bmap-effect)
+[北京公交路线特效](https://echarts.apache.org/examples/zh/editor.html?c=lines-bmap-effect)
 
-[北京公交路线特效](http://echarts.baidu.com/demo.html#lines-bmap-effect)
+[北京公交路线特效](https://echarts.apache.org/examples/zh/editor.html?c=lines-bmap-effect)
 
-[杭州热门步行路线](http://echarts.baidu.com/demo.html#heatmap-bmap)
+[杭州热门步行路线](https://echarts.apache.org/examples/zh/editor.html?c=heatmap-bmap)
 
 
 ### 引入

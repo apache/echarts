@@ -308,7 +308,5 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
     };
 }
 
-SeriesModel.registerClass(GaugeSeriesModel);
-
 
 export default GaugeSeriesModel;

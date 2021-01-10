@@ -1,4 +1,3 @@
-
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -17,8 +16,8 @@
 # under the License.
 
 github:
-  description: A powerful, interactive charting and data visualization library for browser
-  homepage: https://echarts.apache.org/
+  description: Apache ECharts (incubating) is a powerful, interactive charting and data visualization library for browser
+  homepage: https://echarts.apache.org
   labels:
     - echarts
     - data-visualization

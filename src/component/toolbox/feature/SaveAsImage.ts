@@ -20,10 +20,10 @@
 /* global Uint8Array */
 
 import env from 'zrender/src/core/env';
-import { ToolboxFeature, ToolboxFeatureOption, registerFeature } from '../featureManager';
+import { ToolboxFeature, ToolboxFeatureOption } from '../featureManager';
 import { ZRColor } from '../../../util/types';
 import GlobalModel from '../../../model/Global';
-import ExtensionAPI from '../../../ExtensionAPI';
+import ExtensionAPI from '../../../core/ExtensionAPI';
 
 export interface ToolboxSaveAsImageFeatureOption extends ToolboxFeatureOption {
     icon?: string
@@ -57,8 +57,8 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
             excludeComponents: model.get('excludeComponents'),
             pixelRatio: model.get('pixelRatio')
         });
-        // Chrome and Firefox
-        if (typeof MouseEvent === 'function' && !env.browser.ie && !env.browser.edge) {
+        // Chrome, Firefox, New Edge
+        if (typeof MouseEvent === 'function' && (env.browser.newEdge || (!env.browser.ie && !env.browser.edge))) {
             const $a = document.createElement('a');
             $a.download = title + '.' + type;
             $a.target = '_blank';
@@ -71,17 +71,43 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
             });
             $a.dispatchEvent(evt);
         }
-        // IE
+        // IE or old Edge
         else {
-            if (window.navigator.msSaveOrOpenBlob) {
-                const bstr = atob(url.split(',')[1]);
-                let n = bstr.length;
-                const u8arr = new Uint8Array(n);
-                while (n--) {
-                    u8arr[n] = bstr.charCodeAt(n);
+            if (window.navigator.msSaveOrOpenBlob || isSvg) {
+                const parts = url.split(',');
+                // data:[<mime type>][;charset=<charset>][;base64],<encoded data>
+                const base64Encoded = parts[0].indexOf('base64') > -1;
+                let bstr = isSvg
+                    // should decode the svg data uri first
+                    ? decodeURIComponent(parts[1])
+                    : parts[1];
+                // only `atob` when the data uri is encoded with base64
+                // otherwise, like `svg` data uri exported by zrender,
+                // there will be an error, for it's not encoded with base64.
+                // (just a url-encoded string through `encodeURIComponent`)
+                base64Encoded && (bstr = atob(bstr));
+                const filename = title + '.' + type;
+                if (window.navigator.msSaveOrOpenBlob) {
+                    let n = bstr.length;
+                    const u8arr = new Uint8Array(n);
+                    while (n--) {
+                        u8arr[n] = bstr.charCodeAt(n);
+                    }
+                    const blob = new Blob([u8arr]);
+                    window.navigator.msSaveOrOpenBlob(blob, filename);
                 }
-                const blob = new Blob([u8arr]);
-                window.navigator.msSaveOrOpenBlob(blob, title + '.' + type);
+                else {
+                    const frame = document.createElement('iframe');
+                    document.body.appendChild(frame);
+                    const cw = frame.contentWindow;
+                    const doc = cw.document;
+                    doc.open('image/svg+xml', 'replace');
+                    doc.write(bstr);
+                    doc.close();
+                    cw.focus();
+                    doc.execCommand('SaveAs', true, filename);
+                    document.body.removeChild(frame);
+                }
             }
             else {
                 const lang = model.get('lang');
@@ -91,6 +117,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
                     + '</body>';
                 const tab = window.open();
                 tab.document.write(html);
+                tab.document.title = title as string;
             }
         }
     }
@@ -115,7 +142,5 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
 }
 
 SaveAsImage.prototype.unusable = !env.canvasSupported;
-
-registerFeature('saveAsImage', SaveAsImage);
 
 export default SaveAsImage;

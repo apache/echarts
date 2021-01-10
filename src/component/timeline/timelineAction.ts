@@ -17,11 +17,11 @@
 * under the License.
 */
 
-import * as echarts from '../../echarts';
 import GlobalModel from '../../model/Global';
 import TimelineModel from './TimelineModel';
 import { defaults } from 'zrender/src/core/util';
 import { Payload } from '../../util/types';
+import { EChartsExtensionInstallRegisters } from '../../extension';
 
 export interface TimelineChangePayload extends Payload {
     type: 'timelineChange'
@@ -32,38 +32,41 @@ export interface TimelinePlayChangePayload extends Payload {
     playState: boolean
 }
 
-echarts.registerAction(
 
-    {type: 'timelineChange', event: 'timelineChanged', update: 'prepareAndUpdate'},
+export function installTimelineAction(registers: EChartsExtensionInstallRegisters) {
+    registers.registerAction(
 
-    function (payload: TimelineChangePayload, ecModel: GlobalModel) {
+        {type: 'timelineChange', event: 'timelineChanged', update: 'prepareAndUpdate'},
 
-        const timelineModel = ecModel.getComponent('timeline') as TimelineModel;
-        if (timelineModel && payload.currentIndex != null) {
-            timelineModel.setCurrentIndex(payload.currentIndex);
+        function (payload: TimelineChangePayload, ecModel: GlobalModel) {
 
-            if (!timelineModel.get('loop', true) && timelineModel.isIndexMax()) {
-                timelineModel.setPlayState(false);
+            const timelineModel = ecModel.getComponent('timeline') as TimelineModel;
+            if (timelineModel && payload.currentIndex != null) {
+                timelineModel.setCurrentIndex(payload.currentIndex);
+
+                if (!timelineModel.get('loop', true) && timelineModel.isIndexMax()) {
+                    timelineModel.setPlayState(false);
+                }
+            }
+
+            // Set normalized currentIndex to payload.
+            ecModel.resetOption('timeline', { replaceMerge: timelineModel.get('replaceMerge', true) });
+
+            return defaults({
+                currentIndex: timelineModel.option.currentIndex
+            }, payload);
+        }
+    );
+
+    registers.registerAction(
+
+        {type: 'timelinePlayChange', event: 'timelinePlayChanged', update: 'update'},
+
+        function (payload: TimelinePlayChangePayload, ecModel: GlobalModel) {
+            const timelineModel = ecModel.getComponent('timeline') as TimelineModel;
+            if (timelineModel && payload.playState != null) {
+                timelineModel.setPlayState(payload.playState);
             }
         }
-
-        // Set normalized currentIndex to payload.
-        ecModel.resetOption('timeline', { replaceMerge: timelineModel.get('replaceMerge', true) });
-
-        return defaults({
-            currentIndex: timelineModel.option.currentIndex
-        }, payload);
-    }
-);
-
-echarts.registerAction(
-
-    {type: 'timelinePlayChange', event: 'timelinePlayChanged', update: 'update'},
-
-    function (payload: TimelinePlayChangePayload, ecModel: GlobalModel) {
-        const timelineModel = ecModel.getComponent('timeline') as TimelineModel;
-        if (timelineModel && payload.playState != null) {
-            timelineModel.setPlayState(payload.playState);
-        }
-    }
-);
+    );
+}

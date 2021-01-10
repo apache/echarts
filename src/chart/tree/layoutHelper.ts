@@ -36,7 +36,7 @@
 import * as layout from '../../util/layout';
 import { TreeNode } from '../../data/Tree';
 import TreeSeriesModel from './TreeSeries';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 
 interface HierNode {
     defaultAncestor: TreeLayoutNode,

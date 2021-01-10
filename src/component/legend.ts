@@ -19,19 +19,7 @@
 
 // Do not contain scrollable legend, for sake of file size.
 
-import * as echarts from '../echarts';
+import { use } from '../extension';
+import { install } from './legend/install';
 
-import './legend/LegendModel';
-import './legend/legendAction';
-import './legend/LegendView';
-
-import legendFilter from './legend/legendFilter';
-import Component from '../model/Component';
-
-// Series Filter
-echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.SERIES_FILTER, legendFilter);
-
-Component.registerSubTypeDefaulter('legend', function () {
-    // Default 'plain' when no type specified.
-    return 'plain';
-});
+use(install);
