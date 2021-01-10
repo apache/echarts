@@ -43,7 +43,8 @@ import type {
     ECElement,
     DisplayState,
     LabelOption,
-    ParsedValue
+    ParsedValue,
+    ZRColor
 } from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -609,6 +610,8 @@ class LineView extends ChartView {
             }
         }
         this._clipShapeForSymbol = clipShapeForSymbol;
+        const visualColor = getVisualGradient(data, coordSys)
+            || data.getVisual('style')[data.getVisual('drawType')];
         // Initialization animation or coordinate system changed
         if (
             !(polyline && prevCoordSys.type === coordSys.type && step === this._step)
@@ -646,7 +649,7 @@ class LineView extends ChartView {
 
             // NOTE: Must update _endLabel before setClipPath.
             if (!isCoordSysPolar) {
-                this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D);
+                this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D, visualColor);
             }
 
             lineGroup.setClipPath(
@@ -668,7 +671,7 @@ class LineView extends ChartView {
 
             // NOTE: Must update _endLabel before setClipPath.
             if (!isCoordSysPolar) {
-                this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D);
+                this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D, visualColor);
             }
 
             // Update clipPath
@@ -718,8 +721,6 @@ class LineView extends ChartView {
             }
         }
 
-        const visualColor = getVisualGradient(data, coordSys)
-            || data.getVisual('style')[data.getVisual('drawType')];
         const focus = seriesModel.get(['emphasis', 'focus']);
         const blurScope = seriesModel.get(['emphasis', 'blurScope']);
 
@@ -1039,7 +1040,8 @@ class LineView extends ChartView {
 
     _initOrUpdateEndLabel(
         seriesModel: LineSeriesModel,
-        coordSys: Cartesian2D
+        coordSys: Cartesian2D,
+        inheritColor: ZRColor
     ) {
         const endLabelModel = seriesModel.getModel('endLabel');
 
@@ -1063,6 +1065,7 @@ class LineView extends ChartView {
                     polyline,
                     getLabelStatesModels(seriesModel, 'endLabel'),
                     {
+                        inheritColor: inheritColor as string,
                         labelFetcher: seriesModel,
                         labelDataIndex: dataIndex,
                         defaultText(dataIndex, opt, interpolatedValue) {
