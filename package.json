@@ -1,7 +1,7 @@
 {
   "name": "echarts",
   "version": "5.0.0",
-  "description": "Apache ECharts (incubating) is a powerful, interactive charting and data visualization library for browser",
+  "description": "Apache ECharts is a powerful, interactive charting and data visualization library for browser",
   "license": "Apache-2.0",
   "keywords": [
     "echarts",
