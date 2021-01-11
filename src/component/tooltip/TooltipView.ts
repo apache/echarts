@@ -429,7 +429,7 @@ class TooltipView extends ComponentView {
             this._showAxisTooltip(dataByCoordSys, e);
         }
         // Always show item tooltip if mouse is on the element with dataIndex
-        else if (el && findEventDispatcher(el, (target) => getECData(target).dataIndex != null)) {
+        else if (el && findEventDispatcher(el, (target) => getECData(target).dataIndex != null, true)) {
             this._lastDataByCoordSys = null;
             this._showSeriesItemTooltip(e, el, dispatchAction);
         }
@@ -542,7 +542,8 @@ class TooltipView extends ComponentView {
         const orderMode = singleTooltipModel.get('order');
 
         const builtMarkupText = buildTooltipMarkup(
-            articleMarkup, markupStyleCreator, renderMode, orderMode, ecModel.get('useUTC')
+            articleMarkup, markupStyleCreator, renderMode, orderMode, ecModel.get('useUTC'),
+            singleTooltipModel.get('textStyle')
         );
         builtMarkupText && markupTextArrLegacy.unshift(builtMarkupText);
         const blockBreak = renderMode === 'richText' ? '\n\n' : '<br/>';
@@ -575,7 +576,7 @@ class TooltipView extends ComponentView {
         el: ECElement,
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
-        const dispatcher = findEventDispatcher(el, (target) => getECData(target).dataIndex != null);
+        const dispatcher = findEventDispatcher(el, (target) => getECData(target).dataIndex != null, true);
         const ecModel = this._ecModel;
         const ecData = getECData(dispatcher);
         // Use dataModel in element if possible
@@ -621,7 +622,8 @@ class TooltipView extends ComponentView {
                 markupStyleCreator,
                 renderMode,
                 orderMode,
-                ecModel.get('useUTC')
+                ecModel.get('useUTC'),
+                tooltipModel.get('textStyle')
             )
             : seriesTooltipResult.markupText;
 

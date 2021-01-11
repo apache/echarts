@@ -167,6 +167,7 @@ async function build(configs) {
             chalk.cyan(singleConfig.input)
         );
 
+        console.time('rollup build');
         const bundle = await rollup.rollup(singleConfig);
 
         for (let output of singleConfig.output) {
@@ -178,9 +179,8 @@ async function build(configs) {
 
             await bundle.write(output);
 
-            console.time('rollup build');
-            console.timeEnd('rollup build');
         };
+        console.timeEnd('rollup build');
 
         checkBundleCode(singleConfig);
     }

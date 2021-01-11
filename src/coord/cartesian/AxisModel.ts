@@ -37,7 +37,7 @@ export interface CartesianAxisOption extends AxisBaseOption {
     position?: CartesianAxisPosition;
     // Offset is for multiple axis on the same position.
     offset?: number;
-    categorySortInfo?: OrdinalSortInfo[];
+    categorySortInfo?: OrdinalSortInfo;
 }
 
 export interface XAXisOption extends CartesianAxisOption {

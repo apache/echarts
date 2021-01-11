@@ -107,6 +107,7 @@ import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
 
 declare let global: any;
+
 type ModelFinder = modelUtil.ModelFinder;
 
 const assert = zrUtil.assert;
@@ -114,6 +115,8 @@ const each = zrUtil.each;
 const isFunction = zrUtil.isFunction;
 const isObject = zrUtil.isObject;
 const indexOf = zrUtil.indexOf;
+
+const hasWindow = typeof window !== 'undefined';
 
 export const version = '5.0.0';
 
@@ -377,13 +380,14 @@ class ECharts extends Eventful {
 
         this._dom = dom;
 
-        const root = (
-            typeof window === 'undefined' ? global : window
-        ) as any;
-
         let defaultRenderer = 'canvas';
         let defaultUseDirtyRect = false;
         if (__DEV__) {
+            const root = (
+                /* eslint-disable-next-line */
+                hasWindow ? window : global
+            ) as any;
+
             defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
 
             const devUseDirtyRect = root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
@@ -633,7 +637,9 @@ class ECharts extends Eventful {
     }
 
     getDevicePixelRatio(): number {
-        return (this._zr.painter as CanvasPainter).dpr || window.devicePixelRatio || 1;
+        return (this._zr.painter as CanvasPainter).dpr
+            /* eslint-disable-next-line */
+            || (hasWindow && window.devicePixelRatio) || 1;
     }
 
     /**
@@ -647,7 +653,7 @@ class ECharts extends Eventful {
             return;
         }
         opts = zrUtil.extend({}, opts || {});
-        opts.pixelRatio = opts.pixelRatio || 1;
+        opts.pixelRatio = opts.pixelRatio || this.getDevicePixelRatio();
         opts.backgroundColor = opts.backgroundColor
             || this._model.get('backgroundColor');
         const zr = this._zr;
@@ -749,7 +755,7 @@ class ECharts extends Eventful {
             let right = -MAX_NUMBER;
             let bottom = -MAX_NUMBER;
             const canvasList: {dom: HTMLCanvasElement | string, left: number, top: number}[] = [];
-            const dpr = (opts && opts.pixelRatio) || 1;
+            const dpr = (opts && opts.pixelRatio) || this.getDevicePixelRatio();
 
             zrUtil.each(instances, function (chart, id) {
                 if (chart.group === groupId) {
@@ -2803,44 +2809,6 @@ export function registerLoading(
     loadingFx: LoadingEffectCreator
 ): void {
     loadingEffects[name] = loadingFx;
-}
-
-export function extendComponentModel(proto: object): ComponentModel {
-    // let Clazz = ComponentModel;
-    // if (superClass) {
-    //     let classType = parseClassType(superClass);
-    //     Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
-    // }
-    return (ComponentModel as ComponentModelConstructor).extend(proto) as any;
-}
-
-export function extendComponentView(proto: object): ChartView {
-    // let Clazz = ComponentView;
-    // if (superClass) {
-    //     let classType = parseClassType(superClass);
-    //     Clazz = ComponentView.getClass(classType.main, classType.sub, true);
-    // }
-    return (ComponentView as ComponentViewConstructor).extend(proto) as any;
-}
-
-export function extendSeriesModel(proto: object): SeriesModel {
-    // let Clazz = SeriesModel;
-    // if (superClass) {
-    //     superClass = 'series.' + superClass.replace('series.', '');
-    //     let classType = parseClassType(superClass);
-    //     Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
-    // }
-    return (SeriesModel as SeriesModelConstructor).extend(proto) as any;
-}
-
-export function extendChartView(proto: object): ChartView {
-    // let Clazz = ChartView;
-    // if (superClass) {
-    //     superClass = superClass.replace('series.', '');
-    //     let classType = parseClassType(superClass);
-    //     Clazz = ChartView.getClass(classType.main, true);
-    // }
-    return (ChartView as ChartViewConstructor).extend(proto) as any;
 }
 
 /**

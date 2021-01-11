@@ -30,7 +30,8 @@ import {
     SeriesDataType,
     ComponentMainType,
     ComponentSubType,
-    DimensionLoose
+    DimensionLoose,
+    InterpolatableValue
 } from '../../util/types';
 import GlobalModel from '../Global';
 import { TooltipMarkupBlockFragment } from '../../component/tooltip/tooltipMarkup';
@@ -110,7 +111,9 @@ export class DataFormatMixin {
         dataType?: SeriesDataType,
         labelDimIndex?: number,
         formatter?: string | ((params: object) => string),
-        extendParams?: Partial<CallbackDataParams>
+        extendParams?: {
+            interpolatedValue: InterpolatableValue
+        }
     ): string {
         status = status || 'normal';
         const data = this.getData(dataType);
@@ -118,7 +121,7 @@ export class DataFormatMixin {
         const params = this.getDataParams(dataIndex, dataType);
 
         if (extendParams) {
-            zrUtil.extend(params, extendParams);
+            params.value = extendParams.interpolatedValue;
         }
 
         if (labelDimIndex != null && zrUtil.isArray(params.value)) {
@@ -152,12 +155,10 @@ export class DataFormatMixin {
 
                 let val = retrieveRawValue(data, dataIndex, dimLoose) as OptionDataValue;
 
-                // Tricky: `extendParams.value` is only used in interpolate case
-                // (label animation) currently.
-                if (extendParams && zrUtil.isArray(extendParams.value)) {
+                if (extendParams && zrUtil.isArray(extendParams.interpolatedValue)) {
                     const dimInfo = data.getDimensionInfo(dimLoose);
                     if (dimInfo) {
-                        val = extendParams.value[dimInfo.index];
+                        val = extendParams.interpolatedValue[dimInfo.index];
                     }
                 }
 

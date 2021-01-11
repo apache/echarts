@@ -1,19 +1,16 @@
-# Apache ECharts (incubating)
+# Apache ECharts
 
 <a href="https://echarts.apache.org/">
     <img style="vertical-align: top;" src="./asset/logo.png?raw=true" alt="logo" height="50px">
 </a>
 
-Apache ECharts (incubating) is a free, powerful charting and visualization library offering an easy way of adding intuitive, interactive, and highly customizable charts to your commercial products. It is written in pure JavaScript and based on <a href="https://github.com/ecomfe/zrender">zrender</a>, which is a whole new lightweight canvas library.
-
-Now ECharts is an incubator project of Apache Software Foundation.
-Please check its incubator status [here](http://incubator.apache.org/projects/echarts.html)
+Apache ECharts is a free, powerful charting and visualization library offering an easy way of adding intuitive, interactive, and highly customizable charts to your commercial products. It is written in pure JavaScript and based on <a href="https://github.com/ecomfe/zrender">zrender</a>, which is a whole new lightweight canvas library.
 
 **[中文官网](https://echarts.apache.org/zh/index.html)** | **[ENGLISH HOMEPAGE](https://echarts.apache.org/en/index.html)**
 
 [![Build Status](https://travis-ci.org/apache/incubator-echarts.svg?branch=master)](https://travis-ci.org/apache/incubator-echarts) [![](https://img.shields.io/npm/dw/echarts.svg?label=npm%20downloads&style=flat)](https://www.npmjs.com/package/echarts) [![Last npm release](https://img.shields.io/npm/v/echarts)](https://www.npmjs.com/package/echarts)
 
-## Get Apache ECharts (incubating)
+## Get Apache ECharts
 
 You may choose one of the following methods:
 

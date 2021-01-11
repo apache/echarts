@@ -21,7 +21,6 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../util/graphic';
 import { LoadingEffect } from '../util/types';
 import ExtensionAPI from '../core/ExtensionAPI';
-import * as textContain from 'zrender/src/contain/text';
 
 const PI = Math.PI;
 
@@ -45,13 +44,19 @@ export default function defaultLoading(
         spinnerRadius?: number;
         lineWidth?: number;
         fontSize?: number;
+        fontWeight?: 'normal' | 'bold' | 'bolder' | 'lighter' | number;
+        fontStyle?: 'normal' | 'italic' | 'oblique';
+        fontFamily?: string
     }
 ): LoadingEffect {
     opts = opts || {};
     zrUtil.defaults(opts, {
         text: 'loading',
         textColor: '#000',
-        fontSize: '12px',
+        fontSize: 12,
+        fontWeight: 'normal',
+        fontStyle: 'normal',
+        fontFamily: 'sans-serif',
         maskColor: 'rgba(255, 255, 255, 0.8)',
         showSpinner: true,
         color: '#5470c6',
@@ -68,18 +73,23 @@ export default function defaultLoading(
         z: 10000
     });
     group.add(mask);
-    const font = opts.fontSize + ' sans-serif';
+
+    const textContent = new graphic.Text({
+        style: {
+            text: opts.text,
+            fill: opts.textColor,
+            fontSize: opts.fontSize,
+            fontWeight: opts.fontWeight,
+            fontStyle: opts.fontStyle,
+            fontFamily: opts.fontFamily
+        }
+    });
+
     const labelRect = new graphic.Rect({
         style: {
             fill: 'none'
         },
-        textContent: new graphic.Text({
-            style: {
-                text: opts.text,
-                fill: opts.textColor,
-                font: font
-            }
-        }),
+        textContent: textContent,
         textConfig: {
             position: 'right',
             distance: 10
@@ -122,13 +132,16 @@ export default function defaultLoading(
 
     // Inject resize
     group.resize = function () {
-        const textWidth = textContain.getWidth(opts.text, font);
+        const textWidth = textContent.getBoundingRect().width;
         const r = opts.showSpinner ? opts.spinnerRadius : 0;
         // cx = (containerWidth - arcDiameter - textDistance - textWidth) / 2
         // textDistance needs to be calculated when both animation and text exist
         const cx = (api.getWidth() - r * 2 - (opts.showSpinner && textWidth ? 10 : 0) - textWidth) / 2
+            - (opts.showSpinner && textWidth ? 0 : 5 + textWidth / 2)
             // only show the text
-            - (opts.showSpinner ? 0 : textWidth / 2);
+            + (opts.showSpinner ? 0 : textWidth / 2)
+            // only show the spinner
+            + (textWidth ? 0 : r);
         const cy = api.getHeight() / 2;
         opts.showSpinner && arc.setShape({
             cx: cx,
