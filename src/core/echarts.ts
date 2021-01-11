@@ -653,7 +653,7 @@ class ECharts extends Eventful {
             return;
         }
         opts = zrUtil.extend({}, opts || {});
-        opts.pixelRatio = opts.pixelRatio || 1;
+        opts.pixelRatio = opts.pixelRatio || this.getDevicePixelRatio();
         opts.backgroundColor = opts.backgroundColor
             || this._model.get('backgroundColor');
         const zr = this._zr;
@@ -755,7 +755,7 @@ class ECharts extends Eventful {
             let right = -MAX_NUMBER;
             let bottom = -MAX_NUMBER;
             const canvasList: {dom: HTMLCanvasElement | string, left: number, top: number}[] = [];
-            const dpr = (opts && opts.pixelRatio) || 1;
+            const dpr = (opts && opts.pixelRatio) || this.getDevicePixelRatio();
 
             zrUtil.each(instances, function (chart, id) {
                 if (chart.group === groupId) {

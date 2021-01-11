@@ -44,7 +44,6 @@ export interface ToolboxSaveAsImageFeatureOption extends ToolboxFeatureOption {
 class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
 
     onclick(ecModel: GlobalModel, api: ExtensionAPI) {
-
         const model = this.model;
         const title = model.get('name') || ecModel.get('title.0.text') || 'echarts';
         const isSvg = api.getZr().painter.getType() === 'svg';
@@ -133,7 +132,8 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
             connectedBackgroundColor: '#fff',
             name: '',
             excludeComponents: ['toolbox'],
-            pixelRatio: 1,
+            // use current pixel ratio of device by default
+            // pixelRatio: 1,
             lang: ecModel.getLocale(['toolbox', 'saveAsImage', 'lang'])
         };
 
