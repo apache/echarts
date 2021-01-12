@@ -65,7 +65,7 @@ interface PieLabelOption extends Omit<SeriesLabelOption, 'rotate' | 'position'> 
     bleedMargin?: number
     distanceToLabelLine?: number
 
-    position?: SeriesLabelOption['position'] | 'outer' | 'inner' | 'center'
+    position?: SeriesLabelOption['position'] | 'outer' | 'inner' | 'center' | 'outside'
 }
 
 interface PieLabelLineOption extends LabelLineOption {
