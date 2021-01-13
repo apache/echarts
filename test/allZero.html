@@ -1,3 +1,4 @@
+
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -18,203 +19,67 @@ under the License.
 -->
 
 <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/facePrint.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="info"></div>
+        <div id="main"></div>
+        <script>
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="lib/esl.js"></script>
-    <script src="lib/config.js"></script>
-    <script src="lib/facePrint.js"></script>
-</head>
+            require([
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoomInside'
+            ], function (echarts) {
 
-<body>
-    <style>
-        html,
-        body,
-        #main {
-            width: 100%;
-            height: 100%;
-        }
-    </style>
-    <div id="info"></div>
-    <div id="main"></div>
-    <script>
+                var chart = echarts.init(document.getElementById('main'));
 
-        require([
-            'data/les-miserables.json',
-            'echarts'
-        ], function (graph, echarts) {
-            var chart = echarts.init(document.getElementById('main'));
-            // graph.nodes.forEach(function (node) {
-            //     node.label = {
-            //         show: node.symbolSize > 30
-            //     };
-            // });
-            // option = {
-            //     title: {
-            //         text: 'Les Miserables',
-            //         subtext: 'Default layout',
-            //         top: 'bottom',
-            //         left: 'right'
-            //     },
-            //     tooltip: {},
-            //     legend: [{
-            //         // selectedMode: 'single',
-            //         data: graph.categories.map(function (a) {
-            //             return a.name;
-            //         })
-            //     }],
-            //     animationDuration: 1500,
-            //     animationEasingUpdate: 'quinticInOut',
-            //     series: [
-            //         {
-            //             name: 'Les Miserables',
-            //             type: 'graph',
-            //             layout: 'none',
-            //             data: graph.nodes,
-            //             links: graph.links,
-            //             categories: graph.categories,
-            //             roam: true,
-            //             label: {
-            //                 position: 'right',
-            //                 formatter: '{b}'
-            //             },
-            //             lineStyle: {
-            //                 color: 'source',
-            //                 curveness: 0.3
-            //             },
-            //             emphasis: {
-            //                 focus: 'adjacency',
-            //                 lineStyle: {
-            //                     width: 10
-            //                 }
-            //             }
-            //         }
-            //     ]
-            // };
-            const source = [{
-                "sceneName": "基准场景",
-                "stockName": "DC1",
-                "totalCount": 29,
-                "totalWeight": 37.3,
-                "totalSquare": 42.3,
-                "totalStockCost": 1630.7,
-                "totalStockInCost": 29,
-                "totalStockOutCost": 58,
-                "totalStorageCost": 1100.7,
-                "totalStockHoldCost": 443
-            }, {
-                "sceneName": "基准场景",
-                "stockName": "DC2",
-                "totalCount": 280,
-                "totalWeight": 460,
-                "totalSquare": 540,
-                "totalStockCost": 19665.7,
-                "totalStockInCost": 560,
-                "totalStockOutCost": 840,
-                "totalStorageCost": 12599.3,
-                "totalStockHoldCost": 5666.4
-            }]
+                var xAxisData = [];
+                var data = [];
 
-            option = {
-                dataset: {
-                    dimensions: [
-                        {
-                            name: 'stockName',
-                            displayName: '仓库名称'
-                        },
-
-                        {
-                            name: 'totalStockInCost',
-                            displayName: '入库成本'
-                        },
-                        {
-                            name: 'totalStockOutCost',
-                            displayName: '出库成本'
-                        },
-                        {
-                            name: 'totalStorageCost',
-                            displayName: '存储成本'
-                        },
-                        {
-                            name: 'totalStockHoldCost',
-                            displayName: '持有成本'
-                        },
-
-                        {
-                            name: 'totalCount',
-                            displayName: '数量'
-                        },
-                        {
-                            name: 'totalWeight',
-                            displayName: '重量'
-                        },
-                        {
-                            name: 'totalSquare',
-                            displayName: '体积'
-                        },
-                    ],
-                    source,
-                },
-                legend: [
-                    {
-                        data: ['数量', '重量', '体积'],
-                        selectedMode: 'single',
+                for (var i = 0; i < 10; i++) {
+                    xAxisData.push('类目' + i);
+                    data.push(0);
+                }
+                chart.setOption({
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
                     },
-                    {
-                        top: 24,
-                        data: ['入库成本', '出库成本', '存储成本', '持有成本'],
-                        selectedMode: 'single',
+                    xAxis: {
+                        data: xAxisData
                     },
-                ],
-                xAxis: {
-                    type: 'category',
-                },
-                yAxis: [
-                    {
-                        type: 'value'
+                    yAxis: {
+                        splitArea: {
+                            show: true
+                        }
                     },
-                    {
-                        type: 'value',
-                    }
-                ],
-                series: [
-                    {
-                        type: 'bar',
-                    },
-                    {
-                        type: 'bar',
-                    },
-                    {
-                        type: 'bar',
-                    },
-                    {
-                        type: 'bar',
-                    },
-
-                    {
+                    series: [{
+                        name: 'line',
                         type: 'line',
-                        stack: 'totalCount',
-                        yAxisIndex: 1,
-                    },
-                    {
-                        type: 'line',
-                        stack: 'totalWeight',
-                        yAxisIndex: 1,
-                    },
-                    {
-                        type: 'line',
-                        stack: 'totalSquare',
-                        yAxisIndex: 1,
-                    },
-                ]
-            };
+                        symbol: 'circle',
+                        symbolSize: 10,
+                        data: data
+                    }]
+                });
+            });
 
-            chart.setOption(option);
-
-        })
-
-    </script>
-</body>
-
+        </script>
+    </body>
 </html>

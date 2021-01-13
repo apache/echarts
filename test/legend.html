@@ -72,6 +72,7 @@ under the License.
         <div id="only-single-item"></div>
         <div id="vary-size"></div>
         <div id="index-to-no-name"></div>
+        <div id="legend-selected-mode"></div>
 
         <script>
 
@@ -1168,6 +1169,141 @@ under the License.
                 });
             })
         </script>
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                const source = [{
+                    "sceneName": "基准场景",
+                    "stockName": "DC1",
+                    "totalCount": 29,
+                    "totalWeight": 37.3,
+                    "totalSquare": 42.3,
+                    "totalStockCost": 1630.7,
+                    "totalStockInCost": 29,
+                    "totalStockOutCost": 58,
+                    "totalStorageCost": 1100.7,
+                    "totalStockHoldCost": 443
+                }, {
+                    "sceneName": "基准场景",
+                    "stockName": "DC2",
+                    "totalCount": 280,
+                    "totalWeight": 460,
+                    "totalSquare": 540,
+                    "totalStockCost": 19665.7,
+                    "totalStockInCost": 560,
+                    "totalStockOutCost": 840,
+                    "totalStorageCost": 12599.3,
+                    "totalStockHoldCost": 5666.4
+                }]
+
+                const option = {
+                    dataset: {
+                        dimensions: [
+                            {
+                                name: 'stockName',
+                                displayName: '仓库名称'
+                            },
+
+                            {
+                                name: 'totalStockInCost',
+                                displayName: '入库成本'
+                            },
+                            {
+                                name: 'totalStockOutCost',
+                                displayName: '出库成本'
+                            },
+                            {
+                                name: 'totalStorageCost',
+                                displayName: '存储成本'
+                            },
+                            {
+                                name: 'totalStockHoldCost',
+                                displayName: '持有成本'
+                            },
+
+                            {
+                                name: 'totalCount',
+                                displayName: '数量'
+                            },
+                            {
+                                name: 'totalWeight',
+                                displayName: '重量'
+                            },
+                            {
+                                name: 'totalSquare',
+                                displayName: '体积'
+                            },
+                        ],
+                        source,
+                    },
+                    legend: [
+                        {
+                            data: ['数量', '重量', '体积'],
+                            selectedMode: 'single',
+                        },
+                        {
+                            top: 24,
+                            data: ['入库成本', '出库成本', '存储成本', '持有成本'],
+                            selectedMode: 'single',
+                        },
+                    ],
+                    xAxis: {
+                        type: 'category',
+                    },
+                    yAxis: [
+                        {
+                            type: 'value'
+                        },
+                        {
+                            type: 'value',
+                        }
+                    ],
+                    series: [
+                        {
+                            type: 'bar',
+                        },
+                        {
+                            type: 'bar',
+                        },
+                        {
+                            type: 'bar',
+                        },
+                        {
+                            type: 'bar',
+                        },
+
+                        {
+                            type: 'line',
+                            stack: 'totalCount',
+                            yAxisIndex: 1,
+                        },
+                        {
+                            type: 'line',
+                            stack: 'totalWeight',
+                            yAxisIndex: 1,
+                        },
+                        {
+                            type: 'line',
+                            stack: 'totalSquare',
+                            yAxisIndex: 1,
+                        },
+                    ]
+                };
+
+ 
+                testHelper.create(echarts, 'legend-selected-mode', {
+                    option: option,
+                    title: [
+                        'select one legend won\'t affect others'
+                    ],
+                    draggable: true
+                });
+            })
+        </script>
+
+
 
 
     </body>
