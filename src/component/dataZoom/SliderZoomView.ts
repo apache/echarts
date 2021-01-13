@@ -321,6 +321,10 @@ class SliderZoomView extends DataZoomView {
             onclick: bind(this._onClickPanel, this)
         });
 
+        if (dataZoomModel.get('zoomLock')) {
+            return;
+        }
+
         const zr = this.api.getZr();
         if (brushSelect) {
             clickPanel.on('mousedown', this._onBrushStart, this);
