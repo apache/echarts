@@ -27,7 +27,7 @@ function legendSelectActionHandler(methodName, payload, ecModel) {
     let isSelected;
     // Update all legend components
     ecModel.eachComponent('legend', function (legendModel) {
-        if (isToggleSelect && isSelected != null) {
+        if (isToggleSelect && isSelected != null && legendModel.option.data.includes(payload.name)) {
             // Force other legend has same selected status
             // Or the first is toggled to true and other are toggled to false
             // In the case one legend has some item unSelected in option. And if other legend
