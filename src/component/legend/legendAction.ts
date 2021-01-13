@@ -17,16 +17,18 @@
 * under the License.
 */
 
-// @ts-nocheck
+import { curry, each } from 'zrender/src/core/util';
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import GlobalModel from '../../model/Global';
+import { Payload } from '../../util/types';
+import LegendModel from './LegendModel';
 
-import {curry, each} from 'zrender/src/core/util';
-
-function legendSelectActionHandler(methodName, payload, ecModel) {
-    const selectedMap = {};
+function legendSelectActionHandler(methodName: keyof LegendModel, payload: Payload, ecModel: GlobalModel) {
+    const selectedMap: {[key: string]: boolean} = {};
     const isToggleSelect = methodName === 'toggleSelected';
-    let isSelected;
+    let isSelected: boolean;
     // Update all legend components
-    ecModel.eachComponent('legend', function (legendModel) {
+    ecModel.eachComponent('legend', function (legendModel: LegendModel) {
         if (isToggleSelect && isSelected != null && legendModel.option.data.includes(payload.name)) {
             // Force other legend has same selected status
             // Or the first is toggled to true and other are toggled to false
@@ -38,7 +40,7 @@ function legendSelectActionHandler(methodName, payload, ecModel) {
             legendModel[methodName]();
         }
         else {
-            legendModel[methodName](payload.name);
+            (legendModel[methodName] as (name: string) => void)(payload.name);
             isSelected = legendModel.isSelected(payload.name);
         }
         const legendData = legendModel.getData();
@@ -69,7 +71,7 @@ function legendSelectActionHandler(methodName, payload, ecModel) {
         };
 }
 
-export function installLegendAction(registers) {
+export function installLegendAction(registers: EChartsExtensionInstallRegisters) {
     /**
      * @event legendToggleSelect
      * @type {Object}
