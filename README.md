@@ -8,7 +8,7 @@ Apache ECharts is a free, powerful charting and visualization library offering a
 
 **[中文官网](https://echarts.apache.org/zh/index.html)** | **[ENGLISH HOMEPAGE](https://echarts.apache.org/en/index.html)**
 
-[![Build Status](https://travis-ci.org/apache/incubator-echarts.svg?branch=master)](https://travis-ci.org/apache/incubator-echarts) [![](https://img.shields.io/npm/dw/echarts.svg?label=npm%20downloads&style=flat)](https://www.npmjs.com/package/echarts) [![Last npm release](https://img.shields.io/npm/v/echarts)](https://www.npmjs.com/package/echarts)
+[![Build Status](https://travis-ci.org/apache/echarts.svg?branch=master)](https://travis-ci.org/apache/echarts) [![](https://img.shields.io/npm/dw/echarts.svg?label=npm%20downloads&style=flat)](https://www.npmjs.com/package/echarts) [![Last npm release](https://img.shields.io/npm/v/echarts)](https://www.npmjs.com/package/echarts)
 
 ## Get Apache ECharts
 
@@ -35,7 +35,7 @@ You may choose one of the following methods:
 
 ## Get Help
 
-+ [GitHub Issues](https://github.com/apache/incubator-echarts/issues) for bug report and feature requests
++ [GitHub Issues](https://github.com/apache/echarts/issues) for bug report and feature requests
 + Email [dev@echarts.apache.org](mailto:dev@echarts.apache.org) for general questions
 + Subscribe [mailing list](https://echarts.apache.org/en/maillist.html) to get updated with the project
 
@@ -66,7 +66,7 @@ More custom build approaches can be checked in this tutorial: [Create Custom Bui
 
 ## Contribution
 
-If you wish to debug locally or make pull requests, please refer to [contributing](https://github.com/apache/incubator-echarts/blob/master/CONTRIBUTING.md) document.
+If you wish to debug locally or make pull requests, please refer to [contributing](https://github.com/apache/echarts/blob/master/CONTRIBUTING.md) document.
 
 ## Resources
 
@@ -82,7 +82,7 @@ If you wish to debug locally or make pull requests, please refer to [contributin
 
 + [Wordcloud 字符云](https://github.com/ecomfe/echarts-wordcloud)
 
-+ [Extension for Baidu Map 百度地图扩展](https://github.com/apache/incubator-echarts/tree/master/extension-src/bmap) An extension provides a wrapper of Baidu Map Service SDK.
++ [Extension for Baidu Map 百度地图扩展](https://github.com/apache/echarts/tree/master/extension-src/bmap) An extension provides a wrapper of Baidu Map Service SDK.
 
 + [vue-echarts](https://github.com/ecomfe/vue-echarts) ECharts component for Vue.js
 

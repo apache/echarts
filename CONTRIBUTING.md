@@ -21,7 +21,7 @@ Contributions can be made in varied ways:
 
 When opening new issues, please use the [echarts issue helper](https://ecomfe.github.io/echarts-issue-helper/), opening issues in any other way will cause our bot to close them automatically.
 
-And before doing so, please search for similar questions in our [issues list](https://github.com/apache/incubator-echarts/issues?utf8=%E2%9C%93&q=is%3Aissue). If you are able to reproduce an issue found in a closed issue, please create a new issue and reference the closed one.
+And before doing so, please search for similar questions in our [issues list](https://github.com/apache/echarts/issues?utf8=%E2%9C%93&q=is%3Aissue). If you are able to reproduce an issue found in a closed issue, please create a new issue and reference the closed one.
 
 Please read the [documentation](http://echarts.apache.org/option.html) carefully before asking any questions.
 
@@ -34,16 +34,16 @@ We will start the discussion about the bugs to fix and features of each release 
 About our release plan, we will release a mior version at the end of every month. Here is some detail.
 
 1. Assume our current stable release is 4.3.0. We will start the discussion of milestone of the release two versions ahead, which is 4.5.0 at the beginning of each month. At this time we should also kickoff the developing of the next release, which is 4.4.0.
-2. Finish 4.4.0 developing at about 22th of this month and start the testing. And the 4.5.0 milestone discussion is frozen and published on the [GitHub](https://github.com/apache/incubator-echarts/milestone/14)
+2. Finish 4.4.0 developing at about 22th of this month and start the testing. And the 4.5.0 milestone discussion is frozen and published on the [GitHub](https://github.com/apache/echarts/milestone/14)
 3. Vote in the mailing list for the 4.4.0 release at the end of this month.
 
 ## Pull Requests
 
-Wiki: [How to make a pull request](https://github.com/apache/incubator-echarts/wiki/How-to-make-a-pull-request)
+Wiki: [How to make a pull request](https://github.com/apache/echarts/wiki/How-to-make-a-pull-request)
 
 ## How to Debug ECharts
 
-Wiki: [How to setup the dev environment](https://github.com/apache/incubator-echarts/wiki/How-to-setup-the-dev-environment)
+Wiki: [How to setup the dev environment](https://github.com/apache/echarts/wiki/How-to-setup-the-dev-environment)
 
 ## Some hints about using code from other authors
 
@@ -67,6 +67,3 @@ Wiki: [How to setup the dev environment](https://github.com/apache/incubator-ech
     + https://issues.apache.org/jira/browse/LEGAL-471
 + Wikipedia:
     + Wikipedia is licensed CC 4.0 BY_SA and is incompatible with the Apache license. So we should not copy code from Wikipedia.
-+ Working in progress disclaimer:
-    + In some cases we might use the work in progress disclaimer and document the issues in that until they are fixed.
-    + https://incubator.apache.org/policy/incubation.html#disclaimers
