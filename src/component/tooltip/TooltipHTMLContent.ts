@@ -17,6 +17,8 @@
 * under the License.
 */
 
+/* global document, window */
+
 import { isString, indexOf, map, each, bind, isArray, isDom } from 'zrender/src/core/util';
 import { toHex } from 'zrender/src/tool/color';
 import { normalizeEvent } from 'zrender/src/core/event';

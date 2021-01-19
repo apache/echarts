@@ -17,6 +17,8 @@
 * under the License.
 */
 
+/* global document */
+
 import * as echarts from '../../../core/echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../../model/Global';

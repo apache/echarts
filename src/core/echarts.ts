@@ -29,8 +29,8 @@ import CoordinateSystemManager from './CoordinateSystem';
 import OptionManager from '../model/OptionManager';
 import backwardCompat from '../preprocessor/backwardCompat';
 import dataStack from '../processor/dataStack';
-import ComponentModel, { ComponentModelConstructor } from '../model/Component';
-import SeriesModel, { SeriesModelConstructor } from '../model/Series';
+import ComponentModel from '../model/Component';
+import SeriesModel from '../model/Series';
 import ComponentView, {ComponentViewConstructor} from '../view/Component';
 import ChartView, {ChartViewConstructor} from '../view/Chart';
 import * as graphic from '../util/graphic';
@@ -102,7 +102,6 @@ import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 import type {EChartsOption} from '../export/option';
 import { findEventDispatcher } from '../util/event';
 import decal from '../visual/decal';
-import type {MorphDividingMethod} from 'zrender/src/tool/morphPath';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
 
@@ -207,7 +206,6 @@ export interface SetOptionTransitionOptItem {
     // which might bring about misleading.
     from?: SetOptionTransitionOptFinder;
     to: SetOptionTransitionOptFinder;
-    dividingMethod: MorphDividingMethod;
 }
 interface SetOptionTransitionOptFinder extends modelUtil.ModelFinderObject {
     dimension: DimensionLoose;
@@ -2391,8 +2389,7 @@ class ECharts extends Eventful {
                 // Just a temp solution: mount them on series.
                 toSeries.__transientTransitionOpt = {
                     from: fromOpt ? fromOpt.dimension : null,
-                    to: toOpt.dimension,
-                    dividingMethod: transOpt.dividingMethod
+                    to: toOpt.dimension
                 };
             });
         };

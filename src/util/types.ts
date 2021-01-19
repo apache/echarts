@@ -185,7 +185,7 @@ export interface ViewRootGroup extends Group {
  * The echarts event type to user.
  * Also known as packedEvent.
  */
-export interface ECEvent extends ECEventData{
+export interface ECEvent extends ECEventData {
     // event type
     type: string;
     componentType?: string;

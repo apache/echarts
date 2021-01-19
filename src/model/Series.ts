@@ -19,7 +19,6 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import type {MorphDividingMethod} from 'zrender/src/tool/morphPath';
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
@@ -142,7 +141,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         // Both from and to can be null/undefined, which meams no transform mapping.
         from: DimensionLoose;
         to: DimensionLoose;
-        dividingMethod: MorphDividingMethod;
     };
 
     // ---------------------------------------

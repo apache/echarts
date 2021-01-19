@@ -17,7 +17,7 @@
 * under the License.
 */
 
-/* global Uint8Array */
+/* global Uint8Array, document */
 
 import env from 'zrender/src/core/env';
 import { ToolboxFeature, ToolboxFeatureOption } from '../featureManager';
