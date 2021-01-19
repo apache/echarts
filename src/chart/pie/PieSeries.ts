@@ -62,6 +62,10 @@ interface PieLabelOption extends Omit<SeriesLabelOption, 'rotate' | 'position'> 
     rotate?: number
     alignTo?: 'none' | 'labelLine' | 'edge'
     edgeDistance?: string | number
+    /**
+     * @deprecated Use `edgeDistance` instead
+     */
+    margin?: string | number
     bleedMargin?: number
     distanceToLabelLine?: number
 
