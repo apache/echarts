@@ -54,11 +54,10 @@ import prepareCalendar from '../../coord/calendar/prepareCustom';
 import List, { DefaultDataVisual } from '../../data/List';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import Displayable from 'zrender/src/graphic/Displayable';
+import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
-import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import {
     convertToEC4StyleForCustomSerise,
@@ -78,8 +77,6 @@ import CustomSeriesModel, {
     CustomBaseElementOption,
     CustomElementOption,
     CustomElementOptionOnState,
-    CustomSeriesRenderItemParamsCoordSys,
-    CustomSeriesRenderItemCoordinateSystemAPI,
     CustomSVGPathOption,
     CustomZRPathOption,
     CustomDisplayableOption,
@@ -96,7 +93,7 @@ import CustomSeriesModel, {
     LooseElementProps,
     PrepareCustomInfo
 } from './CustomSeries';
-import {applyMorphAnimation} from './transitionHelper';
+import {getPathList, applyMorphAnimation } from './transitionHelper';
 import {
     prepareShapeOrExtraAllPropsFinal,
     prepareShapeOrExtraTransitionFrom,
@@ -105,7 +102,6 @@ import {
     prepareTransformTransitionFrom
 } from './prepare';
 import { isMorphing } from 'zrender/src/tool/morphPath';
-import { graphic } from '../../export/api';
 
 const transformPropNamesStr = keys(TRANSFORM_PROPS).join(', ');
 
@@ -184,7 +180,6 @@ export default class CustomChartView extends ChartView {
 
     private _data: List;
 
-
     render(
         customSeries: CustomSeriesModel,
         ecModel: GlobalModel,
@@ -230,7 +225,9 @@ export default class CustomChartView extends ChartView {
             });
         }
         else {
+
             const diffMode: DataDiffMode = transOpt ? 'multiple' : 'oneToOne';
+
 
             (new DataDiffer(
                 oldData ? oldData.getIndices() : [],
@@ -252,15 +249,17 @@ export default class CustomChartView extends ChartView {
             .update(function (newIdx, oldIdx) {
                 const oldEl = oldData.getItemGraphicEl(oldIdx);
 
+                const oldPathList = getPathList(oldEl);
+
                 const newEl = createOrUpdateItem(
                     api, oldEl, newIdx, renderItem(newIdx, payload), customSeries, group,
                     data
                 );
-                if (oldEl !== newEl) {
-                    applyMorphAnimation(
-                        oldEl, newEl, customSeries, newIdx, curry(updateMorphingPathProps, newIdx)
-                    );
-                }
+
+                const newPathList = getPathList(newEl);
+                applyMorphAnimation(
+                    oldPathList, newPathList, customSeries, newIdx, curry(updateMorphingPathProps, newIdx)
+                );
             })
             .updateManyToOne(function (newIdx, oldIndices) {
                 const oldElList = [];
@@ -270,20 +269,26 @@ export default class CustomChartView extends ChartView {
                     oldElList.push(oldEl);
                 }
 
+                const oldPathList = getPathList(oldElList);
+
                 const updateMorphingPathPropsWithIdx = curry(updateMorphingPathProps, newIdx);
 
                 const newEl = createOrUpdateItem(
                     api, null, newIdx, renderItem(newIdx, payload), customSeries, group,
                     data
                 );
+
+                const newPathLiat = getPathList(newEl);
                 applyMorphAnimation(
-                    oldElList, newEl, customSeries, newIdx, updateMorphingPathPropsWithIdx
+                    oldPathList, newPathLiat, customSeries, newIdx, updateMorphingPathPropsWithIdx
                 );
             })
             .updateOneToMany(function (newIndices, oldIdx) {
                 const newLen = newIndices.length;
                 const oldEl = oldData.getItemGraphicEl(oldIdx);
                 removeElementDirectly(oldEl, group);
+
+                const oldPathList = getPathList(oldEl);
 
                 const newElList = [];
                 for (let i = 0; i < newLen; i++) {
@@ -293,10 +298,12 @@ export default class CustomChartView extends ChartView {
                     ));
                 }
 
+                const newPathLiat = getPathList(newElList);
+
                 // TODO Different animation config in different indices?
                 const updateMorphingPathPropsWithIdx = curry(updateMorphingPathProps, newIndices[0]);
                 applyMorphAnimation(
-                    oldEl, newElList, customSeries, newIndices[0], updateMorphingPathPropsWithIdx
+                    oldPathList, newPathLiat, customSeries, newIndices[0], updateMorphingPathPropsWithIdx
                 );
             })
             .execute();
@@ -534,9 +541,6 @@ function updateElNormal(
     const transFromProps = {} as ElementProps;
     const propsToSet = {} as ElementProps;
 
-    const needsMorph = (el instanceof graphicUtil.Path)
-        && (elOption as CustomZRPathOption).morph;
-
     // TODO Ignore shape on morphing elements.
     prepareShapeOrExtraTransitionFrom('shape', el, elOption, transFromProps, isInit);
     prepareShapeOrExtraAllPropsFinal('shape', elOption, propsToSet);
@@ -579,11 +583,11 @@ function updateElNormal(
 
     // Save the meta info for further morphing. Like apply on the sub morphing elements.
     const store = customInnerStore(el);
-    store.morph = needsMorph;
     store.propsToSet = propsToSet;
     store.propsToAnimate = transFromProps;
     store.userDuring = elOption.during;
 
+    (propsToSet as DisplayableProps).style = styleOpt;
     applyPropsDirectly(el, propsToSet);
     applyPropsTransition(el, dataIndex, seriesModel, transFromProps, isInit);
     applyMiscProps(el, elOption, isTextContent);
@@ -1312,11 +1316,14 @@ function doCreateOrUpdateEl(
         // do not clearState but update cached normal state directly.
         el.clearStates();
     }
-
-    const canMorph = isPath(el) && isMorphing(el);
+    customInnerStore(el).morph = (el instanceof graphicUtil.Path)
+        && (elOption as CustomZRPathOption).morph
+        // Don't need morph if element type are same.
+        // shaping transition is enough
+        && elIsNewCreated;
 
     // Use update animation when morph is enabled.
-    const isInit = elIsNewCreated && !canMorph;
+    const isInit = elIsNewCreated;
 
     attachedTxInfoTmp.normal.cfg = attachedTxInfoTmp.normal.conOpt =
         attachedTxInfoTmp.emphasis.cfg = attachedTxInfoTmp.emphasis.conOpt =

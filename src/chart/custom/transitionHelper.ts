@@ -30,8 +30,16 @@ import { Path } from '../../util/graphic';
 import { SeriesModel } from '../../export/api';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { AnimationEasing } from 'zrender/src/animation/easing';
-import { PayloadAnimationPart } from '../../util/types';
-import { clone, isArray, isFunction } from 'zrender/src/core/util';
+import { Dictionary, PayloadAnimationPart } from '../../util/types';
+import { isArray, isFunction } from 'zrender/src/core/util';
+
+
+type DescendentElements = Element[];
+type DescendentPaths = Path[];
+
+function isMultiple(elements: DescendentElements | DescendentElements[]): elements is DescendentElements[] {
+    return isArray(elements[0]);
+}
 
 export function getMorphAnimationConfig(seriesModel: SeriesModel, dataIndex: number): ElementAnimateConfig {
     let duration: number;
@@ -68,63 +76,51 @@ export function getMorphAnimationConfig(seriesModel: SeriesModel, dataIndex: num
     return config;
 }
 
-function getMorphPathList(el: Element): Path[] {
-    const pathList: Path[] = [];
-    el.traverse(child => {
-        if ((child instanceof Path) && customInnerStore(child).morph) {
-            pathList.push(child);
-        }
-    });
-    return pathList;
-}
-
 export function applyMorphAnimation(
-    from: Element[] | Element,
-    to: Element[] | Element,
+    from: DescendentPaths | DescendentPaths[],
+    to: DescendentPaths | DescendentPaths[],
     seriesModel: SeriesModel,
     dataIndex: number,
     updateOtherProps: (fromIndividual: Path, toIndividual: Path, rawFrom: Path, rawTo: Path) => void
 ) {
+    if (!from.length || !to.length) {
+        return;
+    }
+
     const animationCfg = getMorphAnimationConfig(seriesModel, dataIndex);
 
-    let many: Element[];
-    let one: Element;
-    if (isArray(from)) {    // manyToOne
+    let many: DescendentPaths[];
+    let one: DescendentPaths;
+    if (isMultiple(from)) {    // manyToOne
         many = from;
-        one = to as Element;
+        one = to as DescendentPaths;
     }
-    if (isArray(to)) { // oneToMany
+    if (isMultiple(to)) { // oneToMany
         many = to;
-        one = from as Element;
+        one = from as DescendentPaths;
     }
 
     if (many) {
         // TODO mergeByName
-        const manyPathsList: Path[][] = [];
-        for (let i = 0; i < many.length; i++) {
-            manyPathsList[i] = getMorphPathList(many[i]);
-        }
-        const onePaths = getMorphPathList(one as Element);
-
-        for (let i = 0; i < onePaths.length; i++) {
+        for (let i = 0; i < one.length; i++) {
             const manyPaths: Path[] = [];
-            for (let k = 0; k < manyPathsList.length; k++) {
-                if (manyPathsList[k][i]) {
-                    manyPaths.push(manyPathsList[k][i]);
+            for (let k = 0; k < many.length; k++) {
+                if (many[k][i]) {
+                    manyPaths.push(many[k][i]);
                 }
             }
             let fromIndividuals;
             let toIndividuals;
             if (many === from) {    // manyToOne
                 const res = combineMorph(
-                    manyPaths, onePaths[i], animationCfg as CombineConfig
+                    manyPaths, one[i], animationCfg as CombineConfig
                 );
                 fromIndividuals = res.fromIndividuals;
                 toIndividuals = res.toIndividuals;
             }
             else {  // oneToMany
                 const res = separateMorph(
-                    onePaths[i], manyPaths, animationCfg as SeparateConfig
+                    one[i], manyPaths, animationCfg as SeparateConfig
                 );
 
                 fromIndividuals = res.fromIndividuals;
@@ -135,22 +131,23 @@ export function applyMorphAnimation(
                 updateOtherProps(
                     fromIndividuals[i],
                     toIndividuals[i],
-                    many === from ? manyPaths[i] : onePaths[i],
-                    many === from ? onePaths[i] : manyPaths[i]
+                    many === from ? manyPaths[i] : one[i],
+                    many === from ? one[i] : manyPaths[i]
                 );
             }
         }
     }
     else {  // oneToOne
-        const fromPaths = getMorphPathList(from as Element);
-        const toPaths = getMorphPathList(to as Element);
-
-        for (let i = 0; i < toPaths.length; i++) {
-            if (fromPaths[i]) {
-                if (isCombineMorphing(fromPaths[i])) {
+        for (let i = 0; i < to.length; i++) {
+            if (from[i]) {
+                // Reuse the path.
+                if (from[i] === to[i]) {
+                    continue;
+                }
+                if (isCombineMorphing(from[i] as Path)) {
                     // Keep doing combine animation.
                     const {fromIndividuals, toIndividuals} = combineMorph(
-                        [fromPaths[i]], toPaths[i], animationCfg as CombineConfig
+                        [from[i] as Path], to[i] as Path, animationCfg as CombineConfig
                     );
                     for (let k = 0; k < fromIndividuals.length; k++) {
                         updateOtherProps(
@@ -162,25 +159,37 @@ export function applyMorphAnimation(
                     }
                 }
                 else {
-                    morphPath(fromPaths[i], toPaths[i], animationCfg);
-                    updateOtherProps(fromPaths[i], toPaths[i], fromPaths[i], toPaths[i]);
+                    morphPath(from[i] as Path, to[i] as Path, animationCfg);
+                    updateOtherProps(from[i] as Path, to[i] as Path, from[i] as Path, to[i] as Path);
                 }
             }
         }
     }
 }
 
-function copyPropsWhenDivided(
-    srcPath: Path,
-    tarPath: Path,
-    willClone: boolean
-): void {
-    // If just carry the style, will not be modifed, so do not copy.
-    tarPath.style = willClone
-        ? clone(srcPath.style)
-        : srcPath.style;
+export function getPathList(
+    elements: Element, needsMorph?: boolean
+): DescendentPaths;
+export function getPathList(
+    elements: Element[], needsMorph?: boolean
+): DescendentPaths[];
+export function getPathList(
+    elements: Element | Element[], needsMorph?: boolean
+): DescendentPaths | DescendentPaths[] {
+    if (isArray(elements)) {
+        const pathList = [];
+        for (let i = 0; i < elements.length; i++) {
+            pathList.push(getPathList(elements[i]));
+        }
+        return pathList as DescendentPaths[];
+    }
 
-    tarPath.zlevel = srcPath.zlevel;
-    tarPath.z = srcPath.z;
-    tarPath.z2 = srcPath.z2;
+    const pathList: DescendentPaths = [];
+
+    elements.traverse(el => {
+        if ((el instanceof Path) && (!needsMorph || customInnerStore(el).morph)) {
+            pathList.push(el);
+        }
+    });
+    return pathList;
 }
