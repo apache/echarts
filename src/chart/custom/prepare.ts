@@ -28,13 +28,10 @@ import {
     TRANSFORM_PROPS,
     TransitionAnyOption
 } from './CustomSeries';
-import * as graphicUtil from '../../util/graphic';
 import { normalizeToArray } from '../../util/model';
 import { assert, hasOwn, indexOf, isArrayLike, keys } from 'zrender/src/core/util';
 import { cloneValue } from 'zrender/src/animation/Animator';
 import Displayable from 'zrender/src/graphic/Displayable';
-import * as matrix from 'zrender/src/core/matrix';
-import { isMorphing } from 'zrender/src/tool/morphPath';
 
 const LEGACY_TRANSFORM_PROPS = {
     position: ['x', 'y'],
@@ -43,36 +40,32 @@ const LEGACY_TRANSFORM_PROPS = {
 } as const;
 type LegacyTransformProp = keyof typeof LEGACY_TRANSFORM_PROPS;
 
-const tmpTransformable = new Transformable();
-
 function setLagecyTransformProp(
     elOption: CustomElementOption,
     targetProps: Partial<Pick<Transformable, TransformProp>>,
-    legacyName: LegacyTransformProp,
-    fromTransformable?: Transformable // If provided, retrieve from the element.
+    legacyName: LegacyTransformProp
 ): void {
     const legacyArr = (elOption as any)[legacyName];
     const xyName = LEGACY_TRANSFORM_PROPS[legacyName];
     if (legacyArr) {
-        if (fromTransformable) {
-            targetProps[xyName[0]] = fromTransformable[xyName[0]];
-            targetProps[xyName[1]] = fromTransformable[xyName[1]];
-        }
-        else {
-            targetProps[xyName[0]] = legacyArr[0];
-            targetProps[xyName[1]] = legacyArr[1];
-        }
+        targetProps[xyName[0]] = legacyArr[0];
+        targetProps[xyName[1]] = legacyArr[1];
     }
 }
 
 function setTransformProp(
+    el: Element,
     elOption: CustomElementOption,
     allProps: Partial<Pick<Transformable, TransformProp>>,
     name: TransformProp,
-    fromTransformable?: Transformable // If provided, retrieve from the element.
+    defaultVal: number
 ): void {
     if (elOption[name] != null) {
-        allProps[name] = fromTransformable ? fromTransformable[name] : elOption[name];
+        allProps[name] = elOption[name];
+    }
+    else if (el[name] !== defaultVal) {
+        // Set to default val.
+        allProps[name] = defaultVal;
     }
 }
 
@@ -178,7 +171,6 @@ export function prepareShapeOrExtraAllPropsFinal(
 // See [STRATEGY_TRANSITION].
 export function prepareTransformTransitionFrom(
     el: Element,
-    morphFromEl: graphicUtil.Path,
     elOption: CustomElementOption,
     transFromProps: ElementProps,
     isInit: boolean
@@ -197,19 +189,7 @@ export function prepareTransformTransitionFrom(
     }
 
     if (!isInit) {
-        // If morphing, force transition all transform props.
-        // otherwise might have incorrect morphing animation.
-        if (morphFromEl) {
-            const fromTransformable = calcOldElLocalTransformBasedOnNewElParent(morphFromEl, el);
-            setTransformPropToTransitionFrom(transFromProps, 'x', fromTransformable);
-            setTransformPropToTransitionFrom(transFromProps, 'y', fromTransformable);
-            setTransformPropToTransitionFrom(transFromProps, 'scaleX', fromTransformable);
-            setTransformPropToTransitionFrom(transFromProps, 'scaleY', fromTransformable);
-            setTransformPropToTransitionFrom(transFromProps, 'originX', fromTransformable);
-            setTransformPropToTransitionFrom(transFromProps, 'originY', fromTransformable);
-            setTransformPropToTransitionFrom(transFromProps, 'rotation', fromTransformable);
-        }
-        else if (elOption.transition) {
+        if (elOption.transition) {
             const transitionKeys = normalizeToArray(elOption.transition);
             for (let i = 0; i < transitionKeys.length; i++) {
                 const key = transitionKeys[i];
@@ -247,19 +227,21 @@ export function prepareTransformTransitionFrom(
 }
 
 export function prepareTransformAllPropsFinal(
+    el: Element,
     elOption: CustomElementOption,
     allProps: ElementProps
 ): void {
     setLagecyTransformProp(elOption, allProps, 'position');
     setLagecyTransformProp(elOption, allProps, 'scale');
     setLagecyTransformProp(elOption, allProps, 'origin');
-    setTransformProp(elOption, allProps, 'x');
-    setTransformProp(elOption, allProps, 'y');
-    setTransformProp(elOption, allProps, 'scaleX');
-    setTransformProp(elOption, allProps, 'scaleY');
-    setTransformProp(elOption, allProps, 'originX');
-    setTransformProp(elOption, allProps, 'originY');
-    setTransformProp(elOption, allProps, 'rotation');
+
+    setTransformProp(el, elOption, allProps, 'x', 0);
+    setTransformProp(el, elOption, allProps, 'y', 0);
+    setTransformProp(el, elOption, allProps, 'scaleX', 1);
+    setTransformProp(el, elOption, allProps, 'scaleY', 1);
+    setTransformProp(el, elOption, allProps, 'originX', 0);
+    setTransformProp(el, elOption, allProps, 'originY', 0);
+    setTransformProp(el, elOption, allProps, 'rotation', 0);
 }
 
 // See [STRATEGY_TRANSITION].
@@ -329,54 +311,6 @@ export function prepareStyleTransitionFrom(
             (leaveToStyleProps as any)[key] = leaveTo[key];
         }
     }
-}
-
-/**
- * If make "transform"(x/y/scaleX/scaleY/orient/originX/originY) transition between
- * two path elements that have different hierarchy, before we retrieve the "from" props,
- * we have to calculate the local transition of the "oldPath" based on the parent of
- * the "newPath".
- * At present, the case only happend in "morphing". Without morphing, the transform
- * transition are all between elements in the same hierarchy, where this kind of process
- * is not needed.
- *
- * [CAVEAT]:
- * This method makes sense only if: (very tricky)
- * (1) "newEl" has been added to its final parent.
- * (2) Local transform props of "newPath.parent" are not at their final value but already
- * have been at the "from value".
- *     This is currently ensured by:
- *     (2.1) "graphicUtil.animationFrom", which will set the element to the "from value"
- *     immediately.
- *     (2.2) "morph" option is not allowed to be set on Group, so all of the groups have
- *     been finished their "updateElNormal" when calling this method in morphing process.
- */
-function calcOldElLocalTransformBasedOnNewElParent(oldEl: Element, newEl: Element): Transformable {
-    if (!oldEl || oldEl === newEl || oldEl.parent === newEl.parent) {
-        return oldEl;
-    }
-
-    // Not sure oldEl is rendered (may have "lazyUpdate"),
-    // so always call `getComputedTransform`.
-    const tmpM = tmpTransformable.transform
-        || (tmpTransformable.transform = matrix.identity([]));
-
-    const oldGlobalTransform = oldEl.getComputedTransform();
-    oldGlobalTransform
-        ? matrix.copy(tmpM, oldGlobalTransform)
-        : matrix.identity(tmpM);
-
-    const newParent = newEl.parent;
-    if (newParent) {
-        newParent.getComputedTransform();
-    }
-
-    tmpTransformable.originX = oldEl.originX;
-    tmpTransformable.originY = oldEl.originY;
-    tmpTransformable.parent = newParent;
-    tmpTransformable.decomposeTransform();
-
-    return tmpTransformable;
 }
 
 let checkNonStyleTansitionRefer: (propName: string, optVal: unknown, elVal: unknown) => void;

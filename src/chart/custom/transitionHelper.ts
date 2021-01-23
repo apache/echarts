@@ -30,8 +30,9 @@ import { Path } from '../../util/graphic';
 import { SeriesModel } from '../../export/api';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { AnimationEasing } from 'zrender/src/animation/easing';
-import { Dictionary, PayloadAnimationPart } from '../../util/types';
+import { PayloadAnimationPart } from '../../util/types';
 import { isArray, isFunction } from 'zrender/src/core/util';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 
 type DescendentElements = Element[];
@@ -192,4 +193,28 @@ export function getPathList(
         }
     });
     return pathList;
+}
+
+
+export function isPath(el: Element): el is Path {
+    return el instanceof Path;
+}
+export function isDisplayable(el: Element) : el is Displayable {
+    return el instanceof Displayable;
+}
+
+export function copyElement(sourceEl: Element, targetEl: Element) {
+    targetEl.copyTransform(sourceEl);
+    if (isDisplayable(targetEl) && isDisplayable(sourceEl)) {
+        targetEl.setStyle(sourceEl.style);
+        targetEl.z = sourceEl.z;
+        targetEl.z2 = sourceEl.z2;
+        targetEl.zlevel = sourceEl.zlevel;
+        targetEl.invisible = sourceEl.invisible;
+        targetEl.ignore = sourceEl.ignore;
+
+        if (isPath(targetEl) && isPath(sourceEl)) {
+            targetEl.setShape(sourceEl.shape);
+        }
+    }
 }

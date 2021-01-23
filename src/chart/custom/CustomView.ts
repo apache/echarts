@@ -93,7 +93,7 @@ import CustomSeriesModel, {
     LooseElementProps,
     PrepareCustomInfo
 } from './CustomSeries';
-import {getPathList, applyMorphAnimation } from './transitionHelper';
+import {getPathList, applyMorphAnimation, isPath, isDisplayable, copyElement } from './transitionHelper';
 import {
     prepareShapeOrExtraAllPropsFinal,
     prepareShapeOrExtraTransitionFrom,
@@ -101,7 +101,6 @@ import {
     prepareTransformAllPropsFinal,
     prepareTransformTransitionFrom
 } from './prepare';
-import { isMorphing } from 'zrender/src/tool/morphPath';
 
 const transformPropNamesStr = keys(TRANSFORM_PROPS).join(', ');
 
@@ -265,7 +264,7 @@ export default class CustomChartView extends ChartView {
                 const oldElList = [];
                 for (let i = 0; i < oldIndices.length; i++) {
                     const oldEl = oldData.getItemGraphicEl(oldIndices[i]);
-                    removeElementDirectly(oldEl, group);
+                    group.remove(oldEl);
                     oldElList.push(oldEl);
                 }
 
@@ -286,7 +285,7 @@ export default class CustomChartView extends ChartView {
             .updateOneToMany(function (newIndices, oldIdx) {
                 const newLen = newIndices.length;
                 const oldEl = oldData.getItemGraphicEl(oldIdx);
-                removeElementDirectly(oldEl, group);
+                group.remove(oldEl);
 
                 const oldPathList = getPathList(oldEl);
 
@@ -541,14 +540,20 @@ function updateElNormal(
     const transFromProps = {} as ElementProps;
     const propsToSet = {} as ElementProps;
 
-    // TODO Ignore shape on morphing elements.
-    prepareShapeOrExtraTransitionFrom('shape', el, elOption, transFromProps, isInit);
-    prepareShapeOrExtraAllPropsFinal('shape', elOption, propsToSet);
+    // TODO el may can't be morphed
+    const willMorph = customInnerStore(el).morph;
+    if (willMorph) {
+        (el as graphicUtil.Path).attr('shape', (elOption as CustomZRPathOption).shape);
+    }
+    else {
+        prepareShapeOrExtraTransitionFrom('shape', el, elOption, transFromProps, isInit);
+        prepareShapeOrExtraAllPropsFinal('shape', elOption, propsToSet);
+    }
 
     prepareShapeOrExtraTransitionFrom('extra', el, elOption, transFromProps, isInit);
     prepareShapeOrExtraAllPropsFinal('extra', elOption, propsToSet);
-    prepareTransformTransitionFrom(el, null, elOption, transFromProps, isInit);
-    prepareTransformAllPropsFinal(elOption, propsToSet);
+    prepareTransformTransitionFrom(el, elOption, transFromProps, isInit);
+    prepareTransformAllPropsFinal(el, elOption, propsToSet);
 
     const txCfgOpt = attachedTxInfo && attachedTxInfo.normal.cfg;
     if (txCfgOpt) {
@@ -601,7 +606,7 @@ function applyMiscProps(
     // Merge by default.
     hasOwn(elOption, 'silent') && (el.silent = elOption.silent);
     hasOwn(elOption, 'ignore') && (el.ignore = elOption.ignore);
-    if (el instanceof Displayable) {
+    if (isDisplayable(el)) {
         hasOwn(elOption, 'invisible') && (el.invisible = elOption.invisible);
     }
 
@@ -1262,7 +1267,7 @@ function createOrUpdateItem(
 
     // If `elOption` is `null`/`undefined`/`false` (when `renderItem` returns nothing).
     if (!elOption) {
-        removeElementDirectly(existsEl, group);
+        group.remove(existsEl);
         return;
     }
     const el = doCreateOrUpdateEl(api, existsEl, dataIndex, elOption, seriesModel, group, true);
@@ -1288,6 +1293,7 @@ function doCreateOrUpdateEl(
     }
 
     let toBeReplacedIdx = -1;
+    const oldEl = existsEl;
     if (
         existsEl && (
             doesElNeedRecreate(existsEl, elOption)
@@ -1309,6 +1315,9 @@ function doCreateOrUpdateEl(
 
     if (!el) {
         el = createEl(elOption);
+        if (oldEl) {
+            copyElement(oldEl, el);
+        }
     }
     else {
         // FIMXE:NEXT unified clearState?
@@ -1316,14 +1325,15 @@ function doCreateOrUpdateEl(
         // do not clearState but update cached normal state directly.
         el.clearStates();
     }
-    customInnerStore(el).morph = (el instanceof graphicUtil.Path)
+    const morph = customInnerStore(el).morph = isPath(el)
         && (elOption as CustomZRPathOption).morph
         // Don't need morph if element type are same.
         // shaping transition is enough
         && elIsNewCreated;
 
     // Use update animation when morph is enabled.
-    const isInit = elIsNewCreated;
+    // TODO: can't morph if from element is not valid.
+    const isInit = elIsNewCreated && !morph;
 
     attachedTxInfoTmp.normal.cfg = attachedTxInfoTmp.normal.conOpt =
         attachedTxInfoTmp.emphasis.cfg = attachedTxInfoTmp.emphasis.conOpt =
@@ -1431,7 +1441,7 @@ function doCreateOrUpdateClipPath(
             clipPath = createEl(clipPathOpt) as graphicUtil.Path;
             if (__DEV__) {
                 assert(
-                    clipPath instanceof graphicUtil.Path,
+                    isPath(clipPath),
                     'Only any type of `path` can be used in `clipPath`, rather than ' + clipPath.type + '.'
                 );
             }
@@ -1733,12 +1743,4 @@ function getPathData(shape: CustomSVGPathOption['shape']): string {
 
 function hasOwnPathData(shape: CustomSVGPathOption['shape']): boolean {
     return shape && (hasOwn(shape, 'pathData') || hasOwn(shape, 'd'));
-}
-
-function isPath(el: Element): el is graphicUtil.Path {
-    return el && el instanceof graphicUtil.Path;
-}
-
-function removeElementDirectly(el: Element, group: ViewRootGroup): void {
-    el && group.remove(el);
 }
