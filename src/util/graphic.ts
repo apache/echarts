@@ -388,6 +388,7 @@ function animateOrSetProps<Props>(
                         easing: animationEasing,
                         done: cb,
                         force: !!cb || !!during,
+                        setToFinal: true,
                         scope: animationType,
                         during: during
                     })

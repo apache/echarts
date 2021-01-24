@@ -83,7 +83,7 @@ function setTransformPropToTransitionFrom(
 // See [STRATEGY_TRANSITION]
 export function prepareShapeOrExtraTransitionFrom(
     mainAttr: 'shape' | 'extra',
-    el: Element,
+    fromEl: Element,
     elOption: CustomElementOption,
     transFromProps: LooseElementProps,
     isInit: boolean
@@ -94,7 +94,7 @@ export function prepareShapeOrExtraTransitionFrom(
         return;
     }
 
-    const elPropsInAttr = (el as LooseElementProps)[mainAttr];
+    const elPropsInAttr = (fromEl as LooseElementProps)[mainAttr];
     let transFromPropsInAttr: Dictionary<unknown>;
 
     const enterFrom = attrOpt.enterFrom;
@@ -139,7 +139,7 @@ export function prepareShapeOrExtraTransitionFrom(
 
     const leaveTo = attrOpt.leaveTo;
     if (leaveTo) {
-        const leaveToProps = getOrCreateLeaveToPropsFromEl(el);
+        const leaveToProps = getOrCreateLeaveToPropsFromEl(fromEl);
         const leaveToPropsInAttr: Dictionary<unknown> = leaveToProps[mainAttr] || (leaveToProps[mainAttr] = {});
         const leaveToKeys = keys(leaveTo);
         for (let i = 0; i < leaveToKeys.length; i++) {

@@ -301,8 +301,7 @@ export const customInnerStore = makeInner<{
     leaveToProps: ElementProps;
     // Can morph: "morph" specified in option and el is Path.
     morph: boolean;
-    propsToSet: ElementProps;
-    propsToAnimate: ElementProps;
+    option: CustomElementOption;
     userDuring: CustomBaseElementOption['during'];
 }, Element>();
 
