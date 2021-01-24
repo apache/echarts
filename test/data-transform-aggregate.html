@@ -45,11 +45,11 @@ under the License.
 
 
         <script>
-        require(['echarts', 'myTransform'], function (echarts, myTransform) {
+        require(['echarts', 'ecSimpleTransform'], function (echarts, ecSimpleTransform) {
 
             $.get('data/life-expectancy-table.json', function (_rawData) {
 
-                echarts.registerTransform(myTransform.aggregate);
+                echarts.registerTransform(ecSimpleTransform.aggregate);
 
                 option = {
                     dataset: [{
@@ -64,7 +64,7 @@ under the License.
                                 dimension: 'Year', gte: 1950
                             }
                         }, {
-                            type: 'myTransform:aggregate',
+                            type: 'ecSimpleTransform:aggregate',
                             config: {
                                 resultDimensions: [
                                     { from: 'Income', method: 'sum' },
@@ -121,11 +121,11 @@ under the License.
 
 
         <script>
-        require(['echarts', 'myTransform'], function (echarts, myTransform) {
+        require(['echarts', 'ecSimpleTransform'], function (echarts, ecSimpleTransform) {
 
             $.get('data/life-expectancy-table.json', function (_rawData) {
 
-                echarts.registerTransform(myTransform.aggregate);
+                echarts.registerTransform(ecSimpleTransform.aggregate);
 
                 option = {
                     dataset: [{
@@ -144,7 +144,7 @@ under the License.
                                 }]
                             }
                         }, {
-                            type: 'myTransform:aggregate',
+                            type: 'ecSimpleTransform:aggregate',
                             config: {
                                 resultDimensions: [
                                     { name: 'min', from: 'Income', method: 'min' },
@@ -209,11 +209,11 @@ under the License.
 
 
         <script>
-        require(['echarts', 'myTransform'], function (echarts, myTransform) {
+        require(['echarts', 'ecSimpleTransform'], function (echarts, ecSimpleTransform) {
 
             $.get('data/life-expectancy-table.json', function (_rawData) {
 
-                echarts.registerTransform(myTransform.aggregate);
+                echarts.registerTransform(ecSimpleTransform.aggregate);
 
                 option = {
                     dataset: [{
@@ -233,7 +233,7 @@ under the License.
                                 }]
                             }
                         }, {
-                            type: 'myTransform:aggregate',
+                            type: 'ecSimpleTransform:aggregate',
                             config: {
                                 resultDimensions: [
                                     { from: 'Income', method: 'average' },

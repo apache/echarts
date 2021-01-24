@@ -1,7 +1,7 @@
 {
   "name": "echarts",
-  "version": "5.0.0",
-  "description": "Apache ECharts (incubating) is a powerful, interactive charting and data visualization library for browser",
+  "version": "5.0.1",
+  "description": "Apache ECharts is a powerful, interactive charting and data visualization library for browser",
   "license": "Apache-2.0",
   "keywords": [
     "echarts",
@@ -20,12 +20,12 @@
   "types": "index.d.ts",
   "homepage": "http://echarts.apache.org",
   "bugs": {
-    "url": "https://github.com/apache/incubator-echarts/issues",
+    "url": "https://github.com/apache/echarts/issues",
     "email": "dev@echarts.apache.org"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/apache/incubator-echarts.git"
+    "url": "git+https://github.com/apache/echarts.git"
   },
   "sideEffects": [
     "index.js",
@@ -64,7 +64,7 @@
   },
   "dependencies": {
     "tslib": "2.0.3",
-    "zrender": "5.0.1"
+    "zrender": "5.0.3"
   },
   "devDependencies": {
     "@babel/code-frame": "7.10.4",
