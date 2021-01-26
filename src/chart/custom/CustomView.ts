@@ -210,9 +210,9 @@ export default class CustomChartView extends ChartView {
                 const transFromProps = {} as ElementProps;
                 const propsToSet = {} as ElementProps;
                 const styleOpt = elOption.style;
-                prepareShapeOrExtraTransitionFrom('extra', rawFrom, elOption, transFromProps, false);
+                prepareShapeOrExtraTransitionFrom('extra', from, elOption, transFromProps, false);
                 prepareShapeOrExtraAllPropsFinal('extra', elOption, propsToSet);
-                prepareStyleTransitionFrom(rawFrom, elOption, styleOpt, transFromProps, false);
+                prepareStyleTransitionFrom(from, elOption, styleOpt, transFromProps, false);
                 (propsToSet as DisplayableProps).style = styleOpt;
 
                 applyPropsDirectly(to, propsToSet);
@@ -236,7 +236,6 @@ export default class CustomChartView extends ChartView {
         else {
 
             const diffMode: DataDiffMode = transOpt ? 'multiple' : 'oneToOne';
-
 
             (new DataDiffer(
                 oldData ? oldData.getIndices() : [],

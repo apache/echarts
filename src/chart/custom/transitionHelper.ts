@@ -24,15 +24,17 @@ import {
     morphPath,
     isCombineMorphing,
     SeparateConfig,
-    CombineConfig
+    CombineConfig,
+    SplitPathParams
 } from 'zrender/src/tool/morphPath';
 import { Path } from '../../util/graphic';
 import { SeriesModel } from '../../export/api';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import { PayloadAnimationPart } from '../../util/types';
-import { isArray, isFunction } from 'zrender/src/core/util';
+import { defaults, extend, isArray, isFunction } from 'zrender/src/core/util';
 import Displayable from 'zrender/src/graphic/Displayable';
+import { clonePath } from 'zrender/src/tool/path';
 
 
 type DescendentElements = Element[];
@@ -77,6 +79,14 @@ export function getMorphAnimationConfig(seriesModel: SeriesModel, dataIndex: num
     return config;
 }
 
+function clonePaths({ path, count }: SplitPathParams) {
+    const paths = [];
+    for (let i = 0; i < count; i++) {
+        paths.push(clonePath(path));
+    }
+    return paths;
+}
+
 export function applyMorphAnimation(
     from: DescendentPaths | DescendentPaths[],
     to: DescendentPaths | DescendentPaths[],
@@ -102,6 +112,9 @@ export function applyMorphAnimation(
     }
 
     if (many) {
+        const animationCfgWithSplitPath = defaults({
+            splitPath: clonePaths
+        }, animationCfg);
         // TODO mergeByName
         for (let i = 0; i < one.length; i++) {
             const manyPaths: Path[] = [];
@@ -112,28 +125,29 @@ export function applyMorphAnimation(
             }
             let fromIndividuals;
             let toIndividuals;
+
             if (many === from) {    // manyToOne
                 const res = combineMorph(
-                    manyPaths, one[i], animationCfg as CombineConfig
+                    manyPaths, one[i], animationCfgWithSplitPath
                 );
                 fromIndividuals = res.fromIndividuals;
                 toIndividuals = res.toIndividuals;
             }
             else {  // oneToMany
                 const res = separateMorph(
-                    one[i], manyPaths, animationCfg as SeparateConfig
+                    one[i], manyPaths, animationCfgWithSplitPath
                 );
 
                 fromIndividuals = res.fromIndividuals;
                 toIndividuals = res.toIndividuals;
             }
 
-            for (let i = 0; i < fromIndividuals.length; i++) {
+            for (let k = 0; k < fromIndividuals.length; k++) {
                 updateOtherProps(
-                    fromIndividuals[i],
-                    toIndividuals[i],
-                    many === from ? manyPaths[i] : one[i],
-                    many === from ? one[i] : manyPaths[i]
+                    fromIndividuals[k],
+                    toIndividuals[k],
+                    many === from ? manyPaths[k] : one[i],
+                    many === from ? one[i] : manyPaths[k]
                 );
             }
         }
