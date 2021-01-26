@@ -185,7 +185,8 @@ class PiePiece extends graphic.Sector {
             z2: 10
         });
 
-        if (seriesModel.get('label').position !== 'outside') {
+        const labelPosition = seriesModel.get(['label', 'position']);
+        if (labelPosition !== 'outside' && labelPosition !== 'outer') {
             sector.getTextGuideLine()?.hide();
             return;
         }
