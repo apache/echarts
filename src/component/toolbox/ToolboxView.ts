@@ -27,7 +27,7 @@ import * as listComponentHelper from '../helper/listComponent';
 import ComponentView from '../../view/Component';
 import ToolboxModel from './ToolboxModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { DisplayState, Dictionary, ECElement, Payload } from '../../util/types';
 import {
     ToolboxFeature,
@@ -358,9 +358,8 @@ class ToolboxView extends ComponentView {
     }
 }
 
-ComponentView.registerClass(ToolboxView);
-
 
 function isUserFeatureName(featureName: string): boolean {
     return featureName.indexOf('my') === 0;
 }
+export default ToolboxView;

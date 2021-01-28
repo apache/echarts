@@ -30,7 +30,7 @@ import TextStyleMixin from './mixin/textStyle';
 import {LineStyleMixin} from './mixin/lineStyle';
 import {ItemStyleMixin} from './mixin/itemStyle';
 import GlobalModel from './Global';
-import { ModelOption } from '../util/types';
+import { AnimationOptionMixin, ModelOption } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import { mixin, clone, merge } from 'zrender/src/core/util';
 
@@ -42,7 +42,9 @@ type Value<Opt, R> = Opt extends Dictionary<any>
     ? (R extends keyof Opt ? Opt[R] : ModelOption)
     : ModelOption;
 
-class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown insteadof any?
+interface Model<Opt = ModelOption>
+    extends LineStyleMixin, ItemStyleMixin, TextStyleMixin, AreaStyleMixin {}
+class Model<Opt = ModelOption> {    // TODO: TYPE use unkown insteadof any?
 
     // [Caution]: Becuase this class or desecendants can be used as `XXX.extend(subProto)`,
     // the class members must not be initialized in constructor or declaration place.
@@ -127,7 +129,7 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
                 val = parentModel.getShallow(key);
             }
         }
-        return val;
+        return val as Opt[R];
     }
 
     // TODO At most 3 depth?
@@ -242,8 +244,8 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
     // FIXME:TS check whether put this method here
     isAnimationEnabled(): boolean {
         if (!env.node && this.option) {
-            if (this.option.animation != null) {
-                return !!this.option.animation;
+            if ((this.option as AnimationOptionMixin).animation != null) {
+                return !!(this.option as AnimationOptionMixin).animation;
             }
             else if (this.parentModel) {
                 return this.parentModel.isAnimationEnabled();
@@ -263,7 +265,8 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
                 continue;
             }
             // obj could be number/string/... (like 0)
-            obj = (obj && typeof obj === 'object') ? obj[pathArr[i] as keyof ModelOption] : null;
+            obj = (obj && typeof obj === 'object')
+                ? (obj as ModelOption)[pathArr[i] as keyof ModelOption] : null;
             if (obj == null) {
                 break;
             }
@@ -287,7 +290,7 @@ type ModelConstructor = typeof Model
 enableClassExtend(Model as ModelConstructor);
 enableClassCheck(Model as ModelConstructor);
 
-interface Model extends LineStyleMixin, ItemStyleMixin, TextStyleMixin, AreaStyleMixin {}
+
 mixin(Model, LineStyleMixin);
 mixin(Model, ItemStyleMixin);
 mixin(Model, AreaStyleMixin);

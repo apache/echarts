@@ -18,17 +18,16 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import {retrieveRawValue} from '../data/helper/dataProvider';
 import GlobalModel from '../model/Global';
 import Model from '../model/Model';
 import SeriesModel from '../model/Series';
-import {AriaOption} from '../component/aria';
-import {TitleOption} from '../component/title';
 import {makeInner} from '../util/model';
-import {Dictionary, DecalObject, InnerDecalObject} from '../util/types';
-import {LocaleOption} from '../locale';
+import {Dictionary, DecalObject, InnerDecalObject, AriaOption} from '../util/types';
+import {LocaleOption} from '../core/locale';
 import { getDecalFromPalette } from '../model/mixin/palette';
+import type {TitleOption} from '../component/title/install';
 
 const DEFAULT_OPTION: AriaOption = {
     label: {

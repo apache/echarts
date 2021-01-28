@@ -19,7 +19,7 @@
 import { Dictionary, DisplayState, ZRElementEvent, ItemStyleOption, LabelOption } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 // import * as graphic from '../../util/graphic';
 import Displayable from 'zrender/src/graphic/Displayable';
 
@@ -38,16 +38,16 @@ export interface ToolboxFeatureOption {
 
     show?: boolean
 
-    title?: string | Dictionary<string>
+    title?: string | Partial<Dictionary<string>>
 
-    icon?: string | Dictionary<string>
+    icon?: string | Partial<Dictionary<string>>
 
     iconStyle?: IconStyle
     emphasis?: {
         iconStyle?: IconStyle
     }
 
-    iconStatus?: Dictionary<DisplayState>
+    iconStatus?: Partial<Dictionary<DisplayState>>
 
     onclick?: () => void
 }
@@ -58,7 +58,7 @@ export interface ToolboxFeatureModel<Opts extends ToolboxFeatureOption = Toolbox
      * Collection of icon paths.
      * Will be injected during rendering in the view.
      */
-    iconPaths: Dictionary<Displayable>
+    iconPaths: Partial<Dictionary<Displayable>>
 
     setIconStatus(iconName: string, status: DisplayState): void
 }

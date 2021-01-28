@@ -30,7 +30,7 @@ import Model from '../../model/Model';
 import { getECData } from '../../util/innerStore';
 import { getSectorCornerRadius } from '../helper/pieHelper';
 import {createOrUpdatePatternFromDecal} from '../../util/decal';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 
 const DEFAULT_SECTOR_Z = 2;
 const DEFAULT_TEXT_Z = 4;

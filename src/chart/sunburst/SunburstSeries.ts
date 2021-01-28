@@ -30,7 +30,7 @@ import {
     CallbackDataParams,
     StatesOptionMixin,
     OptionDataItemObject,
-    DefaultExtraEmpasisState
+    DefaultEmphasisFocus
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -66,7 +66,7 @@ interface SunburstDataParams extends CallbackDataParams {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus'] | 'descendant' | 'ancestor'
+        focus?: DefaultEmphasisFocus | 'descendant' | 'ancestor'
     }
 }
 
@@ -330,7 +330,5 @@ function completeTreeValue(dataNode: SunburstSeriesNodeItemOption) {
         : (dataNode.value = thisValue);
 }
 
-
-SeriesModel.registerClass(SunburstSeriesModel);
 
 export default SunburstSeriesModel;

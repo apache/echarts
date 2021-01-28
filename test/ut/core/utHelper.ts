@@ -27,6 +27,7 @@ import {
 import { ComponentMainType } from '../../../src/util/types';
 import Group from 'zrender/src/graphic/Group';
 import Element from 'zrender/src/Element';
+import GlobalModel from '../../../src/model/Global';
 
 
 export function createChart(params?: {
@@ -137,9 +138,13 @@ export function getViewGroup(
     mainType: ComponentMainType,
     index?: number
 ): Group {
-    const component = chart.getModel().getComponent(mainType, index);
+    const component = getECModel(chart).getComponent(mainType, index);
     return component ? chart[
         mainType === 'series' ? '_chartsMap' : '_componentsMap'
     ][component.__viewId].group : null;
 }
 
+export function getECModel(chart: EChartsType): GlobalModel {
+    // @ts-ignore
+    return chart.getModel();
+}

@@ -33,7 +33,7 @@ import * as numberUtil from '../../util/number';
 import sliderMove from '../../component/helper/sliderMove';
 import ParallelModel, { ParallelLayoutDirection } from './ParallelModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { Dictionary, DimensionName, ScaleDataValue } from '../../util/types';
 import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import ParallelAxisModel, { ParallelActiveState } from './AxisModel';

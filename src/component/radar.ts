@@ -17,6 +17,8 @@
 * under the License.
 */
 
-import '../coord/radar/Radar';
-import '../coord/radar/RadarModel';
-import './radar/RadarView';
+
+import { use } from '../extension';
+import { install } from './radar/install';
+
+use(install);

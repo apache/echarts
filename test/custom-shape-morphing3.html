@@ -27,7 +27,6 @@ under the License.
         <script src='lib/jquery.min.js'></script>
         <script src="../dist/echarts.js"></script>
         <script src="lib/testHelper.js"></script>
-        <script src="lib/transitionPlayer.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
@@ -40,11 +39,13 @@ under the License.
 
         <script>
 
-        require(['echarts', 'ecStat', 'myTransform'], function (echarts, ecStat, myTransform) {
+        require([
+            'echarts', 'ecStat', 'ecSimpleTransform', 'ecSimpleOptionPlayer'
+        ], function (echarts, ecStat, ecSimpleTransform, ecSimpleOptionPlayer) {
             $.get('data/life-expectancy-table.json', function (rawData) {
 
-                echarts.registerTransform(myTransform.aggregate);
-                echarts.registerTransform(myTransform.id);
+                echarts.registerTransform(ecSimpleTransform.aggregate);
+                echarts.registerTransform(ecSimpleTransform.id);
 
                 const COLORS = [
                     '#37A2DA', '#e06343', '#37a354', '#b55dba', '#b5bd48', '#8378EA', '#96BFFF'
@@ -92,7 +93,7 @@ under the License.
                                 dimension: 'Year', gte: 1950
                             }
                         }, {
-                            type: 'myTransform:id',
+                            type: 'ecSimpleTransform:id',
                             config: {
                                 dimensionIndex: ID_RAW_DATA_DIMENSIONS.indexOf('Id'),
                                 dimensionName: 'Id'
@@ -115,7 +116,7 @@ under the License.
                         id: 'CountryABSumIncome',
                         fromDatasetId: 'CountryABData',
                         transform: {
-                            type: 'myTransform:aggregate',
+                            type: 'ecSimpleTransform:aggregate',
                             config: {
                                 resultDimensions: [
                                     { from: 'Income', method: 'sum' },
@@ -347,7 +348,7 @@ under the License.
 
                 };
 
-                var player = transitionPlayer.create({
+                var player = ecSimpleOptionPlayer.create({
                     chart: function () {
                         return chart;
                     },

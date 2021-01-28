@@ -16,7 +16,7 @@
 # under the License.
 
 github:
-  description: Apache ECharts (incubating) is a powerful, interactive charting and data visualization library for browser
+  description: Apache ECharts is a powerful, interactive charting and data visualization library for browser
   homepage: https://echarts.apache.org
   labels:
     - echarts

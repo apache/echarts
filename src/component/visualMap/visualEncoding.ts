@@ -17,71 +17,69 @@
 * under the License.
 */
 
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import * as visualSolution from '../../visual/visualSolution';
 import VisualMapping from '../../visual/VisualMapping';
 import VisualMapModel, { VisualMeta } from './VisualMapModel';
-import { StageHandlerProgressExecutor, BuiltinVisualProperty, ParsedValue } from '../../util/types';
+import { StageHandlerProgressExecutor, BuiltinVisualProperty, ParsedValue, StageHandler } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { getVisualFromData } from '../../visual/helper';
 
-const VISUAL_PRIORITY = echarts.PRIORITY.VISUAL.COMPONENT;
-
-echarts.registerVisual(VISUAL_PRIORITY, {
-    createOnAllSeries: true,
-    reset: function (seriesModel, ecModel) {
-        const resetDefines: StageHandlerProgressExecutor[] = [];
-        ecModel.eachComponent('visualMap', function (visualMapModel: VisualMapModel) {
-            const pipelineContext = seriesModel.pipelineContext;
-            if (!visualMapModel.isTargetSeries(seriesModel)
-                || (pipelineContext && pipelineContext.large)
-            ) {
-                return;
-            }
-
-            resetDefines.push(visualSolution.incrementalApplyVisual(
-                visualMapModel.stateList,
-                visualMapModel.targetVisuals,
-                zrUtil.bind(visualMapModel.getValueState, visualMapModel),
-                visualMapModel.getDataDimension(seriesModel.getData())
-            ));
-        });
-
-        return resetDefines;
-    }
-});
-
-// Only support color.
-echarts.registerVisual(VISUAL_PRIORITY, {
-    createOnAllSeries: true,
-    reset: function (seriesModel, ecModel) {
-        const data = seriesModel.getData();
-        const visualMetaList: VisualMeta[] = [];
-
-        ecModel.eachComponent('visualMap', function (visualMapModel: VisualMapModel) {
-            if (visualMapModel.isTargetSeries(seriesModel)) {
-                const visualMeta = visualMapModel.getVisualMeta(
-                    zrUtil.bind(getColorVisual, null, seriesModel, visualMapModel)
-                ) || {
-                    stops: [],
-                    outerColors: []
-                } as VisualMeta;
-
-                const concreteDim = visualMapModel.getDataDimension(data);
-                const dimInfo = data.getDimensionInfo(concreteDim);
-                if (dimInfo != null) {
-                    // visualMeta.dimension should be dimension index, but not concrete dimension.
-                    visualMeta.dimension = dimInfo.index;
-                    visualMetaList.push(visualMeta);
+export const visualMapEncodingHandlers: StageHandler[] = [
+    {
+        createOnAllSeries: true,
+        reset: function (seriesModel, ecModel) {
+            const resetDefines: StageHandlerProgressExecutor[] = [];
+            ecModel.eachComponent('visualMap', function (visualMapModel: VisualMapModel) {
+                const pipelineContext = seriesModel.pipelineContext;
+                if (!visualMapModel.isTargetSeries(seriesModel)
+                    || (pipelineContext && pipelineContext.large)
+                ) {
+                    return;
                 }
-            }
-        });
 
-        // console.log(JSON.stringify(visualMetaList.map(a => a.stops)));
-        seriesModel.getData().setVisual('visualMeta', visualMetaList);
+                resetDefines.push(visualSolution.incrementalApplyVisual(
+                    visualMapModel.stateList,
+                    visualMapModel.targetVisuals,
+                    zrUtil.bind(visualMapModel.getValueState, visualMapModel),
+                    visualMapModel.getDataDimension(seriesModel.getData())
+                ));
+            });
+
+            return resetDefines;
+        }
+    },
+    // Only support color.
+    {
+        createOnAllSeries: true,
+        reset: function (seriesModel, ecModel) {
+            const data = seriesModel.getData();
+            const visualMetaList: VisualMeta[] = [];
+
+            ecModel.eachComponent('visualMap', function (visualMapModel: VisualMapModel) {
+                if (visualMapModel.isTargetSeries(seriesModel)) {
+                    const visualMeta = visualMapModel.getVisualMeta(
+                        zrUtil.bind(getColorVisual, null, seriesModel, visualMapModel)
+                    ) || {
+                        stops: [],
+                        outerColors: []
+                    } as VisualMeta;
+
+                    const concreteDim = visualMapModel.getDataDimension(data);
+                    const dimInfo = data.getDimensionInfo(concreteDim);
+                    if (dimInfo != null) {
+                        // visualMeta.dimension should be dimension index, but not concrete dimension.
+                        visualMeta.dimension = dimInfo.index;
+                        visualMetaList.push(visualMeta);
+                    }
+                }
+            });
+
+            // console.log(JSON.stringify(visualMetaList.map(a => a.stops)));
+            seriesModel.getData().setVisual('visualMeta', visualMetaList);
+        }
     }
-});
+];
 
 // FIXME
 // performance and export for heatmap?

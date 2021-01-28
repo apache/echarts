@@ -19,14 +19,14 @@
 
 import GlobalModel from '../model/Global';
 import {ParsedModelFinder} from '../util/model';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import { DimensionDefinitionLoose, ScaleDataValue, DimensionName } from '../util/types';
 import Axis from './Axis';
 import { BoundingRect } from '../util/graphic';
 import { MatrixArray } from 'zrender/src/core/matrix';
 import ComponentModel from '../model/Component';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import { PrepareCustomInfo } from '../chart/custom';
+import type { PrepareCustomInfo } from '../chart/custom/install';
 
 
 export interface CoordinateSystemCreator {

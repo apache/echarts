@@ -28,7 +28,7 @@ import {
     isElementRemoved
 } from '../util/graphic';
 import { getECData } from '../util/innerStore';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import {
     ZRTextAlign,
     ZRTextVerticalAlign,
@@ -552,7 +552,7 @@ class LabelManager {
                 extendWithKeys(layoutEmphasis, textEl.states.emphasis, LABEL_LAYOUT_PROPS);
             }
 
-            animateLabelValue(textEl, dataIndex, data, seriesModel);
+            animateLabelValue(textEl, dataIndex, data, seriesModel, seriesModel);
         }
 
         if (guideLine && !guideLine.ignore && !guideLine.invisible) {

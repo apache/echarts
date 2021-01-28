@@ -311,6 +311,4 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
 }
 
-SeriesModel.registerClass(MapSeries);
-
 export default MapSeries;

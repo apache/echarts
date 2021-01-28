@@ -21,7 +21,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
 import makeStyleMapper from '../../model/mixin/makeStyleMapper';
-import axisModelCreator, { AxisModelExtendedInCreator } from '../axisModelCreator';
+import { AxisModelExtendedInCreator } from '../axisModelCreator';
 import * as numberUtil from '../../util/number';
 import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 import ParallelAxis from './ParallelAxis';
@@ -139,29 +139,9 @@ class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
     }
 
 }
-
-const defaultOption: ParallelAxisOption = {
-    type: 'value',
-    areaSelectStyle: {
-        width: 20,
-        borderWidth: 1,
-        borderColor: 'rgba(160,197,232)',
-        color: 'rgba(160,197,232)',
-        opacity: 0.3
-    },
-    realtime: true,
-    z: 10
-};
-
-ComponentModel.registerClass(ParallelAxisModel);
-
 interface ParallelAxisModel extends AxisModelCommonMixin<ParallelAxisOption>,
     AxisModelExtendedInCreator<ParallelAxisOption> {}
 
 zrUtil.mixin(ParallelAxisModel, AxisModelCommonMixin);
-
-axisModelCreator<ParallelAxisOption, typeof ParallelAxisModel>(
-    'parallel', ParallelAxisModel, defaultOption
-);
 
 export default ParallelAxisModel;

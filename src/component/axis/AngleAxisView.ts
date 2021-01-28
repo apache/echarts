@@ -26,10 +26,10 @@ import AxisBuilder from './AxisBuilder';
 import { AngleAxisModel } from '../../coord/polar/AxisModel';
 import GlobalModel from '../../model/Global';
 import Polar from '../../coord/polar/Polar';
-import ComponentView from '../../view/Component';
 import AngleAxis from '../../coord/polar/AngleAxis';
 import { ZRTextAlign, ZRTextVerticalAlign, ColorString } from '../../util/types';
 import { getECData } from '../../util/innerStore';
+import OrdinalScale from '../../scale/Ordinal';
 
 const elementList = [
     'axisLine',
@@ -98,7 +98,11 @@ class AngleAxisView extends AxisView {
 
         const labels = zrUtil.map(angleAxis.getViewLabels(), function (labelItem: TickLabel) {
             labelItem = zrUtil.clone(labelItem);
-            labelItem.coord = angleAxis.dataToCoord(labelItem.tickValue);
+            const scale = angleAxis.scale;
+            const tickValue = scale.type === 'ordinal'
+                ? (scale as OrdinalScale).getRawOrdinalNumber(labelItem.tickValue)
+                : labelItem.tickValue;
+            labelItem.coord = angleAxis.dataToCoord(tickValue);
             return labelItem;
         });
 
@@ -393,5 +397,4 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
     }
 };
 
-
-ComponentView.registerClass(AngleAxisView);
+export default AngleAxisView;

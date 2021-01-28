@@ -43,7 +43,7 @@ import {
     OptionSourceDataOriginal,
     OptionSourceDataKeyedColumns
 } from '../util/types';
-import { DatasetOption } from '../component/dataset';
+import { DatasetOption } from '../component/dataset/install';
 import { getDataItemValue } from '../util/model';
 
 /**
@@ -287,7 +287,10 @@ function makeEncodeDefine(
         : null;
 }
 
-function detectSourceFormat(data: DatasetOption['source']): SourceFormat {
+/**
+ * Note: An empty array will be detected as `SOURCE_FORMAT_ARRAY_ROWS`.
+ */
+export function detectSourceFormat(data: DatasetOption['source']): SourceFormat {
     let sourceFormat: SourceFormat = SOURCE_FORMAT_UNKNOWN;
 
     if (isTypedArray(data)) {
@@ -322,9 +325,6 @@ function detectSourceFormat(data: DatasetOption['source']): SourceFormat {
                 break;
             }
         }
-    }
-    else if (data != null) {
-        throw new Error('Invalid data');
     }
 
     return sourceFormat;
@@ -471,7 +471,7 @@ function normalizeDimensionsOption(dimensionsDefine: DimensionDefinitionLoose[])
         // User can set null in dimensions.
         // We dont auto specify name, othewise a given name may
         // cause it be refered unexpectedly.
-        if (name == null) {
+        if (item.name == null) {
             return item;
         }
 

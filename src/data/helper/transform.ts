@@ -18,26 +18,22 @@
 */
 
 import {
-    Dictionary, OptionSourceData, DimensionDefinitionLoose,
-    SourceFormat, DimensionDefinition, OptionDataItem, DimensionIndex,
+    Dictionary, DimensionDefinitionLoose,
+    SourceFormat, DimensionDefinition, DimensionIndex,
     OptionDataValue, DimensionLoose, DimensionName, ParsedValue,
     SERIES_LAYOUT_BY_COLUMN, SOURCE_FORMAT_OBJECT_ROWS, SOURCE_FORMAT_ARRAY_ROWS,
     OptionSourceDataObjectRows, OptionSourceDataArrayRows
 } from '../../util/types';
 import { normalizeToArray } from '../../util/model';
 import {
-    createHashMap, bind, each, hasOwn, map, clone, isObject,
-    isArrayLike,
-    extend,
-    isArray
+    createHashMap, bind, each, hasOwn, map, clone, isObject, extend
 } from 'zrender/src/core/util';
 import {
     getRawSourceItemGetter, getRawSourceDataCounter, getRawSourceValueGetter
 } from './dataProvider';
 import { parseDataValue } from './dataValueHelper';
-import { inheritSourceMetaRawOption } from './sourceHelper';
 import { consoleLog, makePrintable, throwError } from '../../util/log';
-import { createSource, Source } from '../Source';
+import { createSource, Source, SourceMetaRawOption, detectSourceFormat } from '../Source';
 
 
 export type PipedDataTransformOption = DataTransformOption[];
@@ -71,7 +67,7 @@ export interface ExternalDataTransformResultItem {
     /**
      * If `data` is null/undefined, inherit upstream data.
      */
-    data: OptionSourceData;
+    data: OptionSourceDataArrayRows | OptionSourceDataObjectRows;
     /**
      * A `transform` can optionally return a dimensions definition.
      * The rule:
@@ -83,6 +79,7 @@ export interface ExternalDataTransformResultItem {
      */
     dimensions?: DimensionDefinitionLoose[];
 }
+export type DataTransformDataItem = ExternalDataTransformResultItem['data'][number];
 export interface ExternalDimensionDefinition extends Partial<DimensionDefinition> {
     // Mandatory
     index: DimensionIndex;
@@ -110,7 +107,7 @@ export class ExternalSource {
         throw new Error('not supported');
     }
 
-    getRawDataItem(dataIndex: number): OptionDataItem {
+    getRawDataItem(dataIndex: number): DataTransformDataItem {
         // Only built-in transform available.
         throw new Error('not supported');
     }
@@ -152,7 +149,7 @@ export class ExternalSource {
         return;
     }
 
-    retrieveValueFromItem(dataItem: OptionDataItem, dimIndex: DimensionIndex): OptionDataValue {
+    retrieveValueFromItem(dataItem: DataTransformDataItem, dimIndex: DimensionIndex): OptionDataValue {
         return;
     }
 
@@ -168,6 +165,17 @@ function createExternalSource(internalSource: Source, externalTransform: Externa
     const data = internalSource.data;
     const sourceFormat = extSource.sourceFormat = internalSource.sourceFormat;
     const sourceHeaderCount = internalSource.startIndex;
+
+    let errMsg = '';
+    if (internalSource.seriesLayoutBy !== SERIES_LAYOUT_BY_COLUMN) {
+        // For the logic simplicity in transformer, only 'culumn' is
+        // supported in data transform. Otherwise, the `dimensionsDefine`
+        // might be detected by 'row', which probably confuses users.
+        if (__DEV__) {
+            errMsg = '`seriesLayoutBy` of upstream dataset can only be "column" in data transform.';
+        }
+        throwError(errMsg);
+    }
 
     // [MEMO]
     // Create a new dimensions structure for exposing.
@@ -219,7 +227,7 @@ function createExternalSource(internalSource: Source, externalTransform: Externa
     const rawItemGetter = getRawSourceItemGetter(sourceFormat, SERIES_LAYOUT_BY_COLUMN);
     if (externalTransform.__isBuiltIn) {
         extSource.getRawDataItem = function (dataIndex) {
-            return rawItemGetter(data, sourceHeaderCount, dimensions, dataIndex);
+            return rawItemGetter(data, sourceHeaderCount, dimensions, dataIndex) as DataTransformDataItem;
         };
         extSource.getRawData = bind(getRawData, null, internalSource);
     }
@@ -231,7 +239,7 @@ function createExternalSource(internalSource: Source, externalTransform: Externa
 
     const rawValueGetter = getRawSourceValueGetter(sourceFormat);
     extSource.retrieveValue = function (dataIndex, dimIndex) {
-        const rawItem = rawItemGetter(data, sourceHeaderCount, dimensions, dataIndex);
+        const rawItem = rawItemGetter(data, sourceHeaderCount, dimensions, dataIndex) as DataTransformDataItem;
         return retrieveValueFromItem(rawItem, dimIndex);
     };
     const retrieveValueFromItem = extSource.retrieveValueFromItem = function (dataItem, dimIndex) {
@@ -253,34 +261,31 @@ function createExternalSource(internalSource: Source, externalTransform: Externa
 
 function getRawData(upstream: Source): Source['data'] {
     const sourceFormat = upstream.sourceFormat;
-    const data = upstream.data;
 
-    if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS
-        || sourceFormat === SOURCE_FORMAT_OBJECT_ROWS
-        || !data
-        || (isArray(data) && !data.length)
-    ) {
-        return upstream.data;
+    if (!isSupportedSourceFormat(sourceFormat)) {
+        let errMsg = '';
+        if (__DEV__) {
+            errMsg = '`getRawData` is not supported in source format ' + sourceFormat;
+        }
+        throwError(errMsg);
     }
 
-    let errMsg = '';
-    if (__DEV__) {
-        errMsg = '`getRawData` is not supported in source format ' + sourceFormat;
-    }
-    throwError(errMsg);
+    return upstream.data;
 }
 
 function cloneRawData(upstream: Source): Source['data'] {
     const sourceFormat = upstream.sourceFormat;
     const data = upstream.data;
 
-    if (!data) {
-        return data;
+    if (!isSupportedSourceFormat(sourceFormat)) {
+        let errMsg = '';
+        if (__DEV__) {
+            errMsg = '`cloneRawData` is not supported in source format ' + sourceFormat;
+        }
+        throwError(errMsg);
     }
-    else if (isArray(data) && !data.length) {
-        return [];
-    }
-    else if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
+
+    if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
         const result = [];
         for (let i = 0, len = data.length; i < len; i++) {
             // Not strictly clone for performance
@@ -442,39 +447,91 @@ function applySingleDataTransform(
         }
     }
 
-    return map(resultList, function (result) {
+    return map(resultList, function (result, resultIndex) {
         let errMsg = '';
+
         if (!isObject(result)) {
             if (__DEV__) {
                 errMsg = 'A transform should not return some empty results.';
             }
             throwError(errMsg);
         }
-        let resultData = result.data;
-        if (resultData != null) {
-            if (!isObject(resultData) && !isArrayLike(resultData)) {
-                if (__DEV__) {
-                    errMsg = 'Result data should be object or array in data transform.';
-                }
-                throwError(errMsg);
+
+        if (!result.data) {
+            if (__DEV__) {
+                errMsg = 'Transform result data should be not be null or undefined';
             }
-        }
-        else {
-            // Inherit from upstream[0]
-            resultData = upSourceList[0].data;
+            throwError(errMsg);
         }
 
-        const resultMetaRawOption = inheritSourceMetaRawOption(
-            upSourceList[0],
-            {
+        const sourceFormat = detectSourceFormat(result.data);
+        if (!isSupportedSourceFormat(sourceFormat)) {
+            if (__DEV__) {
+                errMsg = 'Transform result data should be array rows or object rows.';
+            }
+            throwError(errMsg);
+        }
+
+        let resultMetaRawOption: SourceMetaRawOption;
+        const firstUpSource = upSourceList[0];
+
+        /**
+         * Intuitively, the end users known the content of the original `dataset.source`,
+         * calucating the transform result in mind.
+         * Suppose the original `dataset.source` is:
+         * ```js
+         * [
+         *     ['product', '2012', '2013', '2014', '2015'],
+         *     ['AAA', 41.1, 30.4, 65.1, 53.3],
+         *     ['BBB', 86.5, 92.1, 85.7, 83.1],
+         *     ['CCC', 24.1, 67.2, 79.5, 86.4]
+         * ]
+         * ```
+         * The dimension info have to be detected from the source data.
+         * Some of the transformers (like filter, sort) will follow the dimension info
+         * of upstream, while others use new dimensions (like aggregate).
+         * Transformer can output a field `dimensions` to define the its own output dimensions.
+         * We also allow transformers to ignore the output `dimensions` field, and
+         * inherit the upstream dimensions definition. It can reduce the burden of handling
+         * dimensions in transformers.
+         *
+         * See also [DIMENSION_INHERIT_RULE] in `sourceManager.ts`.
+         */
+        if (
+            firstUpSource
+            && resultIndex === 0
+            // If transformer returns `dimensions`, it means that the transformer has different
+            // dimensions definitions. We do not inherit anything from upstream.
+            && !result.dimensions
+        ) {
+            const startIndex = firstUpSource.startIndex;
+            // We copy the header of upstream to the result becuase:
+            // (1) The returned data always does not contain header line and can not be used
+            // as dimension-detection. In this case we can not use "detected dimensions" of
+            // upstream directly, because it might be detected based on different `seriesLayoutBy`.
+            // (2) We should support that the series read the upstream source in `seriesLayoutBy: 'row'`.
+            // So the original detected header should be add to the result, otherwise they can not be read.
+            if (startIndex) {
+                result.data = (firstUpSource.data as []).slice(0, startIndex)
+                    .concat(result.data as []);
+            }
+
+            resultMetaRawOption = {
+                seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN,
+                sourceHeader: startIndex,
+                dimensions: firstUpSource.metaRawOption.dimensions
+            };
+        }
+        else {
+            resultMetaRawOption = {
                 seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN,
                 sourceHeader: 0,
                 dimensions: result.dimensions
-            }
-        );
+            };
+        }
 
         return createSource(
-            resultData,
+            result.data,
             resultMetaRawOption,
             null,
             null
@@ -482,3 +539,6 @@ function applySingleDataTransform(
     });
 }
 
+function isSupportedSourceFormat(sourceFormat: SourceFormat): boolean {
+    return sourceFormat === SOURCE_FORMAT_ARRAY_ROWS || sourceFormat === SOURCE_FORMAT_OBJECT_ROWS;
+}

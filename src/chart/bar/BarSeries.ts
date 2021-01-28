@@ -18,7 +18,6 @@
 */
 
 import BaseBarSeriesModel, {BaseBarSeriesOption} from './BaseBarSeries';
-import SeriesModel from '../../model/Series';
 import {
     ItemStyleOption,
     OptionDataValue,
@@ -30,6 +29,7 @@ import {
     SeriesEncodeOptionMixin
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import createListFromArray from '../helper/createListFromArray';
 import type Polar from '../../coord/polar/Polar';
 import { inheritDefaultOption } from '../../util/component';
 import List from '../../data/List';
@@ -83,6 +83,13 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
     static dependencies = ['grid', 'polar'];
 
     coordinateSystem: Cartesian2D | Polar;
+
+    getInitialData(): List {
+        return createListFromArray(this.getSource(), this, {
+            useEncodeDefaulter: true,
+            createInvertedIndices: !!this.get('realtimeSort', true) || null
+        });
+    }
 
     /**
      * @override
@@ -142,7 +149,5 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
     });
 
 }
-
-SeriesModel.registerClass(BarSeriesModel);
 
 export default BarSeriesModel;
