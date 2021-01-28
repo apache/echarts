@@ -470,7 +470,7 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
     const seriesModels = prepareLayoutBarSeries(seriesType, ecModel);
     const barWidthAndOffset = makeColumnLayout(seriesModels);
     const lastStackCoords: Dictionary<{p: number, n: number}[]> = {};
-    let layoutInfo: layoutInfo = {
+    const layoutInfo: layoutInfo = {
         layoutDataList: [],
         columnOffsetList: []
     };
@@ -486,14 +486,24 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
             size: columnLayoutInfo.width
         });
         lastStackCoords[stackId] = lastStackCoords[stackId] || [];
-        collectingLayoutData(layoutInfo, seriesModel, seriesIndex, {offset: columnLayoutInfo.offset, width: columnLayoutInfo.width});
+        collectingLayoutData(
+            layoutInfo,
+            seriesModel,
+            seriesIndex,
+            {offset: columnLayoutInfo.offset, width: columnLayoutInfo.width}
+            );
     });
     if (layoutInfo.groupOrder !== undefined) {
         orderLayoutData(layoutInfo);
     }
     setLayoutItemLists(layoutInfo, lastStackCoords);
 }
-function collectingLayoutData(layoutInfo: layoutInfo, seriesModel: BarSeriesModel, seriesIndex: number, columnLayoutInfo: {offset: number, width: number}) {
+function collectingLayoutData(
+    layoutInfo: layoutInfo,
+    seriesModel: BarSeriesModel,
+    seriesIndex: number,
+    columnLayoutInfo: {offset: number, width: number}
+    ) {
 
     const data = seriesModel.getData();
     const cartesian = seriesModel.coordinateSystem as Cartesian2D;
@@ -508,13 +518,15 @@ function collectingLayoutData(layoutInfo: layoutInfo, seriesModel: BarSeriesMode
     // Because of the barMinHeight, we can not use the value in
     const isValueAxisH = valueAxis.isHorizontal();
 
-    let layoutDataList = layoutInfo.layoutDataList;
-    let columnOffsetList = layoutInfo.columnOffsetList;
+    const layoutDataList = layoutInfo.layoutDataList;
+    const columnOffsetList = layoutInfo.columnOffsetList;
     let dataToPointList: number[];
 
     layoutInfo.groupOrder = seriesModel.get('groupOrder');
     columnOffsetList[seriesIndex] = columnLayoutInfo.offset;
-    let value, baseValue, sign :'p' | 'n';
+    let value;
+    let baseValue;
+    let sign :'p' | 'n';
     for (let idx = 0, len = data.count(); idx < len; idx++) {
         value = data.get(valueDim, idx) as number;
         baseValue = data.get(baseDim, idx) as number;
@@ -541,13 +553,13 @@ function collectingLayoutData(layoutInfo: layoutInfo, seriesModel: BarSeriesMode
             valueAxisStart: valueAxisStart,
             isValueAxisH: isValueAxisH,
             barMinHeight: barMinHeight
-        })
+        });
     }
 }
 function orderLayoutData(layoutInfo: layoutInfo) {
     const groupOrder = layoutInfo.groupOrder;
-    let layoutDataList = layoutInfo.layoutDataList;
-    let columnOffsetList = layoutInfo.columnOffsetList;
+    const layoutDataList = layoutInfo.layoutDataList;
+    const columnOffsetList = layoutInfo.columnOffsetList;
     columnOffsetList.sort((a, b) => a - b);
     zrUtil.each(layoutDataList, function (layoutDataListItem) {
         layoutDataListItem.sort(function (a, b) {
@@ -561,13 +573,17 @@ function orderLayoutData(layoutInfo: layoutInfo) {
     });
 }
 function setLayoutItemLists(layoutInfo: layoutInfo, lastStackCoords: Dictionary<{p: number, n: number}[]>) {
-    let layoutDataList = layoutInfo.layoutDataList;
-    let columnOffsetList = layoutInfo.columnOffsetList;
+    const layoutDataList = layoutInfo.layoutDataList;
+    const columnOffsetList = layoutInfo.columnOffsetList;
     zrUtil.each(layoutDataList, function (layoutDataSingleList) {
         setLayoutItemSingleList(layoutDataSingleList, columnOffsetList, lastStackCoords);
     });
 }
-function setLayoutItemSingleList(layoutDataSingleList: layoutItemInfo[], columnOffsetList: [number?], lastStackCoords: Dictionary<{p: number, n: number}[]>) {
+function setLayoutItemSingleList(
+    layoutDataSingleList: layoutItemInfo[],
+    columnOffsetList: [number?],
+    lastStackCoords: Dictionary<{p: number, n: number}[]>
+) {
     zrUtil.each(layoutDataSingleList, function (dataItem, itemIndex) {
         const idx = dataItem.idx;
         const baseValue = dataItem.baseValue;
@@ -594,7 +610,11 @@ function setLayoutItemSingleList(layoutDataSingleList: layoutItemInfo[], columnO
             // Should also consider #4243
             baseCoord = lastStackCoords[stackId][baseValue][sign];
         }
-        let x, y, width, height, stackedValue;
+        let x;
+        let y;
+        let width;
+        let height;
+        let stackedValue;
         if (isValueAxisH) {
             x = baseCoord;
             y = coord[1] + columnOffset;
