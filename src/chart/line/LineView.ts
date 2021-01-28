@@ -43,8 +43,7 @@ import type {
     ECElement,
     DisplayState,
     LabelOption,
-    ParsedValue,
-    ZRColor
+    ParsedValue
 } from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -56,6 +55,7 @@ import {getDefaultLabel, getDefaultInterpolatedLabel} from '../helper/labelHelpe
 
 import { getECData } from '../../util/innerStore';
 import { createFloat32Array } from '../../util/vendor';
+import { convertToColorString } from '../../util/format';
 
 type PolarArea = ReturnType<Polar['getArea']>;
 type Cartesian2DArea = ReturnType<Cartesian2D['getArea']>;
@@ -649,7 +649,7 @@ class LineView extends ChartView {
 
             // NOTE: Must update _endLabel before setClipPath.
             if (!isCoordSysPolar) {
-                this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D, visualColor);
+                this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D, convertToColorString(visualColor));
             }
 
             lineGroup.setClipPath(
@@ -671,7 +671,7 @@ class LineView extends ChartView {
 
             // NOTE: Must update _endLabel before setClipPath.
             if (!isCoordSysPolar) {
-                this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D, visualColor);
+                this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D, convertToColorString(visualColor));
             }
 
             // Update clipPath
@@ -1041,7 +1041,7 @@ class LineView extends ChartView {
     _initOrUpdateEndLabel(
         seriesModel: LineSeriesModel,
         coordSys: Cartesian2D,
-        inheritColor: ZRColor
+        inheritColor: string
     ) {
         const endLabelModel = seriesModel.getModel('endLabel');
 
@@ -1065,7 +1065,7 @@ class LineView extends ChartView {
                     polyline,
                     getLabelStatesModels(seriesModel, 'endLabel'),
                     {
-                        inheritColor: inheritColor as string,
+                        inheritColor,
                         labelFetcher: seriesModel,
                         labelDataIndex: dataIndex,
                         defaultText(dataIndex, opt, interpolatedValue) {
