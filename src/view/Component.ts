@@ -23,7 +23,7 @@ import * as clazzUtil from '../util/clazz';
 import ComponentModel from '../model/Component';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../core/ExtensionAPI';
-import {Payload, ViewRootGroup, ECEvent, EventQueryItem} from '../util/types';
+import {Payload, ViewRootGroup, ECActionEvent, EventQueryItem, ECElementEvent} from '../util/types';
 import Element from 'zrender/src/Element';
 import SeriesModel from '../model/Series';
 
@@ -40,7 +40,7 @@ interface ComponentView {
      * Implement it if needed.
      */
     filterForExposedEvent(
-        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
+        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECActionEvent | ECElementEvent
     ): boolean;
 }
 

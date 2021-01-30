@@ -34,7 +34,7 @@ import SeriesModel from '../model/Series';
 import { createHashMap, HashMap } from 'zrender/src/core/util';
 import { TaskPlanCallbackReturn, TaskProgressParams } from '../core/task';
 import List, {ListDimensionType} from '../data/List';
-import { Dictionary, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
+import { Dictionary, ElementEventName, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { TooltipMarker } from './format';
 import { AnimationEasing } from 'zrender/src/animation/easing';
@@ -79,6 +79,8 @@ export type ZRElementEvent = ElementEvent;
 export type ZRRectLike = RectLike;
 
 export type ZRStyleProps = PathStyleProps | ImageStyleProps | TSpanStyleProps | TextStyleProps;
+
+export type ZRElementEventName = ElementEventName | 'globalout';
 
 // ComponentFullType can be:
 //     'xxx.yyy': means ComponentMainType.ComponentSubType.
@@ -135,6 +137,7 @@ export interface DataModel extends DataHost, DataFormatMixin {}
 interface PayloadItem {
     excludeSeriesId?: OptionId | OptionId[];
     animation?: PayloadAnimationPart
+    // TODO use unknown
     [other: string]: any;
 }
 
@@ -181,25 +184,34 @@ export interface ViewRootGroup extends Group {
     };
 }
 
+export interface ECElementEvent extends
+    ECEventData,
+    CallbackDataParams {
+
+    type: ZRElementEventName;
+    event?: ElementEvent;
+
+}
 /**
  * The echarts event type to user.
  * Also known as packedEvent.
  */
-export interface ECEvent extends ECEventData{
+export interface ECActionEvent extends ECEventData {
     // event type
     type: string;
     componentType?: string;
     componentIndex?: number;
     seriesIndex?: number;
     escapeConnect?: boolean;
-    event?: ElementEvent;
     batch?: ECEventData;
 }
 export interface ECEventData {
+    // TODO use unknown
     [key: string]: any;
 }
 
-export interface EventQueryItem{
+export interface EventQueryItem {
+    // TODO use unknown
     [key: string]: any;
 }
 export interface NormalizedEventQuery {
