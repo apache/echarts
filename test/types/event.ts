@@ -11,3 +11,13 @@ const option: echarts.EChartsOption = {
     }]
 };
 chart.setOption(option);
+
+// Mouse event.
+chart.on('click', function (params) {
+    console.log(params.name);
+});
+
+// Rendered event.
+chart.on('rendered', function (params) {
+    console.log(params.elapsedTime);
+});

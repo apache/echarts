@@ -33,7 +33,7 @@ import Model from '../../model/Model';
 import ChartView from '../../view/Chart';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import {
-    EventQueryItem, ECEvent, SeriesOption, SeriesOnCartesianOptionMixin,
+    EventQueryItem, SeriesOption, SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin, SeriesOnSingleOptionMixin, SeriesOnGeoOptionMixin,
     SeriesOnCalendarOptionMixin, ItemStyleOption, SeriesEncodeOptionMixin,
     DimensionLoose,
@@ -55,7 +55,8 @@ import {
     PayloadAnimationPart,
     DecalObject,
     InnerDecalObject,
-    TextCommonOption
+    TextCommonOption,
+    ECActionEvent
 } from '../../util/types';
 import Element, { ElementProps, ElementTextConfig } from 'zrender/src/Element';
 import prepareCartesian2d from '../../coord/cartesian/prepareCustom';
@@ -626,7 +627,7 @@ class CustomSeriesView extends ChartView {
     }
 
     filterForExposedEvent(
-        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
+        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECActionEvent
     ): boolean {
         const elementName = query.element;
         if (elementName == null || targetEl.name === elementName) {

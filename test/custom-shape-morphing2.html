@@ -27,7 +27,6 @@ under the License.
         <script src='lib/jquery.min.js'></script>
         <script src="../dist/echarts.js"></script>
         <script src="lib/testHelper.js"></script>
-        <script src="lib/transitionPlayer.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
@@ -75,9 +74,11 @@ under the License.
 
         <script>
 
-            require(['echarts', 'ecStat', 'myTransform'], function (echarts, ecStat, myTransform) {
+            require([
+                'echarts', 'ecStat', 'ecSimpleTransform', 'ecSimpleOptionPlayer'
+            ], function (echarts, ecStat, ecSimpleTransform, ecSimpleOptionPlayer) {
 
-                echarts.registerTransform(myTransform.aggregate);
+                echarts.registerTransform(ecSimpleTransform.aggregate);
                 echarts.registerTransform(ecStat.transform.clustering);
 
 
@@ -145,7 +146,7 @@ under the License.
                         id: 'mTagSum',
                         fromDatasetId: 'raw',
                         transform: {
-                            type: 'myTransform:aggregate',
+                            type: 'ecSimpleTransform:aggregate',
                             config: {
                                 resultDimensions: [
                                     { from: 'ATA', method: 'sum' },
@@ -182,7 +183,7 @@ under the License.
                         id: 'rawClusterCenters',
                         fromDatasetId: 'rawClusters',
                         transform: {
-                            type: 'myTransform:aggregate',
+                            type: 'ecSimpleTransform:aggregate',
                             print: true,
                             config: {
                                 resultDimensions: [
@@ -582,7 +583,7 @@ under the License.
                 });
 
 
-                var player = transitionPlayer.create({
+                var player = ecSimpleOptionPlayer.create({
                     chart: function () {
                         return chart;
                     },

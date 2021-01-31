@@ -17,14 +17,17 @@
 * under the License.
 */
 
-import { EChartsExtensionInstallRegisters } from '../../extension';
+import { EChartsExtensionInstallRegisters, use } from '../../extension';
 import MapView from './MapView';
 import MapSeries from './MapSeries';
 import mapDataStatistic from './mapDataStatistic';
 import mapSymbolLayout from './mapSymbolLayout';
 import {createLegacyDataSelectAction} from '../../legacy/dataSelectAction';
+import {install as installGeo} from '../../component/geo/install';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
+    use(installGeo);
+
     registers.registerChartView(MapView);
     registers.registerSeriesModel(MapSeries);
 

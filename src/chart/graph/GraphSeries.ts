@@ -159,6 +159,9 @@ export interface GraphSeriesOption extends SeriesOption,
 
     categories?: GraphCategoryItemOption[]
 
+    /**
+     * @deprecated
+     */
     focusNodeAdjacency?: boolean
 
     /**
@@ -416,8 +419,6 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         legendHoverLink: true,
 
         layout: null,
-
-        focusNodeAdjacency: false,
 
         // Configuration of circular layout
         circular: {
