@@ -88,11 +88,11 @@ function run() {
     if (passFiles.length) {
         if (isVerbose) {
             passFiles.forEach(function (path) {
-                console.log(chalk.green.dim(path));
+                console.log(chalk.green(path));
             });
         }
         else {
-            console.log(chalk.green.dim(passFiles.length + ' files. (use argument "--verbose" see details)'));
+            console.log(chalk.green(passFiles.length + ' files. (use argument "--verbose" see details)'));
         }
     }
     else {
@@ -105,7 +105,7 @@ function run() {
     console.log('--------------------');
     if (updatedFiles.length) {
         updatedFiles.forEach(function (path) {
-            console.log(chalk.green.bright(path));
+            console.log(chalk.green(path));
         });
     }
     else {
@@ -118,7 +118,7 @@ function run() {
     console.log('----------------');
     if (pendingFiles.length) {
         pendingFiles.forEach(function (path) {
-            console.log(chalk.red.dim(path));
+            console.log(chalk.red(path));
         });
     }
     else {

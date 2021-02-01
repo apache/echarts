@@ -120,10 +120,10 @@ const indexOf = zrUtil.indexOf;
 
 const hasWindow = typeof window !== 'undefined';
 
-export const version = '5.0.1';
+export const version = '5.0.2';
 
 export const dependencies = {
-    zrender: '5.0.3'
+    zrender: '5.0.4'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
