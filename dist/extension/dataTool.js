@@ -127,7 +127,8 @@
         };
         var vizSizeDom = getChildByTagName(nodeDom, 'viz:size');
         var vizPosDom = getChildByTagName(nodeDom, 'viz:position');
-        var vizColorDom = getChildByTagName(nodeDom, 'viz:color');
+        var vizColorDom = getChildByTagName(nodeDom, 'viz:color'); // let vizShapeDom = getChildByTagName(nodeDom, 'viz:shape');
+
         var attvaluesDom = getChildByTagName(nodeDom, 'attvalues');
 
         if (vizSizeDom) {
@@ -136,12 +137,15 @@
 
         if (vizPosDom) {
           node.x = parseFloat(getAttr(vizPosDom, 'x'));
-          node.y = parseFloat(getAttr(vizPosDom, 'y'));
+          node.y = parseFloat(getAttr(vizPosDom, 'y')); // z
         }
 
         if (vizColorDom) {
           node.itemStyle.normal.color = 'rgb(' + [getAttr(vizColorDom, 'r') | 0, getAttr(vizColorDom, 'g') | 0, getAttr(vizColorDom, 'b') | 0].join(',') + ')';
-        }
+        } // if (vizShapeDom) {
+        // node.shape = getAttr(vizShapeDom, 'shape');
+        // }
+
 
         if (attvaluesDom) {
           var attvalueDomList = getChildrenByTagName(attvaluesDom, 'attvalue');
@@ -196,7 +200,7 @@
         };
         var lineStyle = edge.lineStyle.normal;
         var vizThicknessDom = getChildByTagName(edgeDom, 'viz:thickness');
-        var vizColorDom = getChildByTagName(edgeDom, 'viz:color');
+        var vizColorDom = getChildByTagName(edgeDom, 'viz:color'); // let vizShapeDom = getChildByTagName(edgeDom, 'viz:shape');
 
         if (vizThicknessDom) {
           lineStyle.width = parseFloat(vizThicknessDom.getAttribute('value'));
@@ -204,7 +208,10 @@
 
         if (vizColorDom) {
           lineStyle.color = 'rgb(' + [getAttr(vizColorDom, 'r') | 0, getAttr(vizColorDom, 'g') | 0, getAttr(vizColorDom, 'b') | 0].join(',') + ')';
-        }
+        } // if (vizShapeDom) {
+        //     edge.shape = vizShapeDom.getAttribute('shape');
+        // }
+
 
         return edge;
       }) : [];
@@ -272,6 +279,24 @@
      * AUTO-GENERATED FILE. DO NOT MODIFY.
      */
 
+    /*
+    * Licensed to the Apache Software Foundation (ASF) under one
+    * or more contributor license agreements.  See the NOTICE file
+    * distributed with this work for additional information
+    * regarding copyright ownership.  The ASF licenses this file
+    * to you under the Apache License, Version 2.0 (the
+    * "License"); you may not use this file except in compliance
+    * with the License.  You may obtain a copy of the License at
+    *
+    *   http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing,
+    * software distributed under the License is distributed on an
+    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    * KIND, either express or implied.  See the License for the
+    * specific language governing permissions and limitations
+    * under the License.
+    */
     function asc(arr) {
       arr.sort(function (a, b) {
         return a - b;
@@ -286,6 +311,33 @@
       var e = H - h;
       return e ? v + e * (ascArr[h] - v) : v;
     }
+    /**
+     * See:
+     *  <https://en.wikipedia.org/wiki/Box_plot#cite_note-frigge_hoaglin_iglewicz-2>
+     *  <http://stat.ethz.ch/R-manual/R-devel/library/grDevices/html/boxplot.stats.html>
+     *
+     * Helper method for preparing data.
+     *
+     * @param {Array.<number>} rawData like
+     *        [
+     *            [12,232,443], (raw data set for the first box)
+     *            [3843,5545,1232], (raw data set for the second box)
+     *            ...
+     *        ]
+     * @param {Object} [opt]
+     *
+     * @param {(number|string)} [opt.boundIQR=1.5] Data less than min bound is outlier.
+     *      default 1.5, means Q1 - 1.5 * (Q3 - Q1).
+     *      If 'none'/0 passed, min bound will not be used.
+     * @param {(number|string)} [opt.layout='horizontal']
+     *      Box plot layout, can be 'horizontal' or 'vertical'
+     * @return {Object} {
+     *      boxData: Array.<Array.<number>>
+     *      outliers: Array.<Array.<number>>
+     *      axisData: Array.<string>
+     * }
+     */
+
 
     function prepareBoxplotData (rawData, opt) {
       opt = opt || {};
@@ -327,11 +379,15 @@
     }
 
     var version = '1.0.0';
+    // For backward compatibility, where the namespace `dataTool` will
+    // be mounted on `echarts` is the extension `dataTool` is imported.
+    // But the old version of echarts do not have `dataTool` namespace,
+    // so check it before mounting.
 
     if (echarts.dataTool) {
       echarts.dataTool.version = version;
       echarts.dataTool.gexf = gexf;
-      echarts.dataTool.prepareBoxplotData = prepareBoxplotData;
+      echarts.dataTool.prepareBoxplotData = prepareBoxplotData; // echarts.dataTool.boxplotTransform = boxplotTransform;
     }
 
     exports.gexf = gexf;
