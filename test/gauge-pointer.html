@@ -45,6 +45,7 @@ under the License.
         <div id="main5"></div>
         <div id="main6"></div>
         <div id="main7"></div>
+        <div id="main8"></div>
 
 
 
@@ -546,6 +547,48 @@ under the License.
                 chart7.setOption(option7, true);
                 date = null;
             }, 1000);
+
+
+            var option8 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        anchor: {
+                            show: true,
+                            icon: "image://https://www.apache.org/img/support-apache.jpg",
+                            size: 50,
+                            showAbove: true
+                        },
+                        pointer: {
+                            icon: "image://https://www.apache.org/img/support-apache.jpg",
+                            length: "70%"
+                        },
+                        detail: {formatter: '{value}%'},
+                        data: [{value: 58.46, name: '完成率'}]
+                    }
+                ]
+            };
+
+            var chart8 = testHelper.create(echarts, 'main8', {
+                title: [
+                    'pointer.icon: "image://url"',
+                    'anchor.icon: "image://url"'
+                ],
+                option: option8
+                // height: 1200,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
 
         });
         </script>

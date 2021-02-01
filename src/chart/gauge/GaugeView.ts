@@ -30,6 +30,7 @@ import { ColorString, ECElement } from '../../util/types';
 import List from '../../data/List';
 import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
+import type Displayable from 'zrender/src/graphic/Displayable';
 
 interface PosInfo {
     cx: number
@@ -476,8 +477,8 @@ class GaugeView extends ChartView {
                 const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
                 const emphasisModel = itemModel.getModel('emphasis');
                 if (showPointer) {
-                    const pointer = data.getItemGraphicEl(idx) as PointerPath;
-                    pointer.useStyle(data.getItemVisual(idx, 'style'));
+                    const pointer = data.getItemGraphicEl(idx) as Displayable;
+                    pointer.type !== 'image' && pointer.useStyle(data.getItemVisual(idx, 'style'));
                     pointer.setStyle(itemModel.getModel(['pointer', 'itemStyle']).getItemStyle());
                     if (pointer.style.fill === 'auto') {
                         pointer.setStyle('fill', getColor(
