@@ -18,11 +18,9 @@
 * under the License.
 */
 
-const chokidar = require('chokidar');
 const path = require('path');
 const {build} = require('esbuild');
 const fs = require('fs');
-const debounce = require('lodash.debounce');
 
 const outFilePath = path.resolve(__dirname, '../dist/echarts.js');
 
@@ -66,28 +64,26 @@ async function wrapUMDCode() {
     fs.writeFileSync(outFilePath + '.map', JSON.stringify(sourceMap), 'utf-8');
 }
 
-function rebuild() {
-    build({
-        // stdio: 'inherit',
-        entryPoints: [path.resolve(__dirname, '../src/echarts.all.ts')],
-        outfile: outFilePath,
-        format: 'cjs',
-        sourcemap: true,
-        bundle: true,
-    }).catch(e => {
-        console.error(e.toString());
-    }).then(async () => {
-        console.time('Wrap UMD');
-        await wrapUMDCode();
-        console.timeEnd('Wrap UMD');
-    })
-}
-
-const debouncedRebuild = debounce(rebuild, 100);
-
-chokidar.watch([
-    path.resolve(__dirname, '../src/**/*.ts'),
-    path.resolve(__dirname, '../node_modules/zrender/src/**/*.ts'),
-], {
-    persistent: true
-}).on('all', debouncedRebuild);
+build({
+    // stdio: 'inherit',
+    entryPoints: [path.resolve(__dirname, '../src/echarts.all.ts')],
+    outfile: outFilePath,
+    format: 'cjs',
+    sourcemap: true,
+    bundle: true,
+    watch: {
+        async onRebuild(error, result) {
+            if (error) {
+                console.error('watch build failed:', error)
+            } else {
+                console.time('Wrap UMD');
+                await wrapUMDCode();
+                console.timeEnd('Wrap UMD');
+            }
+        },
+    },
+}).then(async (result) => {
+    console.time('Wrap UMD');
+    await wrapUMDCode();
+    console.timeEnd('Wrap UMD');
+}).catch(e => console.error(e.toString()))
