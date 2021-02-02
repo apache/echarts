@@ -159,7 +159,7 @@ export function applyMorphAnimation(
     }
 
     const animationCfgWithSplitPath = defaults({
-        splitPath: clonePaths
+        dividePath: clonePaths
     }, animationCfg);
 
     function morphOneBatch(batch: MorphingBatch, fromIsMany: boolean, forceManyOne?: boolean) {
