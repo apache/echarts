@@ -603,9 +603,17 @@ function updateElNormal(
     }
     else {
         // Needs shape and transform info in morphing.
+        // Will set all properties in prepare
         prepareTransformAllPropsFinal(el, elOption, propsToSet);
         prepareShapeOrExtraAllPropsFinal('shape', elOption, propsToSet);
+
+        // Other properties also needs to be set.
+        prepareShapeOrExtraAllPropsFinal('extra', elOption, propsToSet);
+        prepareStyleTransitionFrom(el, elOption, styleOpt, transFromProps, isInit);
+        (propsToSet as DisplayableProps).style = styleOpt;
+
         applyPropsDirectly(el, propsToSet);
+        applyMiscProps(el, elOption, isTextContent);
 
         store.option = elOption;
     }

@@ -23,8 +23,6 @@ import {
     combineMorph,
     morphPath,
     isCombineMorphing,
-    SeparateConfig,
-    CombineConfig,
     SplitPathParams
 } from 'zrender/src/tool/morphPath';
 import { Path } from '../../util/graphic';
@@ -32,7 +30,7 @@ import { SeriesModel } from '../../export/api';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import { PayloadAnimationPart } from '../../util/types';
-import { defaults, extend, isArray, isFunction } from 'zrender/src/core/util';
+import { defaults, isArray, isFunction } from 'zrender/src/core/util';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { clonePath } from 'zrender/src/tool/path';
 
@@ -87,6 +85,55 @@ function clonePaths({ path, count }: SplitPathParams) {
     return paths;
 }
 
+interface MorphingBatch {
+    one: Path;
+    many: Path[];
+}
+
+function prepareMorphBatches(one: DescendentPaths, many: DescendentPaths[]) {
+    const batches: MorphingBatch[] = [];
+    const batchCount = one.length;
+    for (let i = 0; i < batchCount; i++) {
+        batches.push({
+            one: one[i],
+            many: []
+        });
+    }
+
+    for (let i = 0; i < many.length; i++) {
+        const len = many[i].length;
+        let k;
+        for (k = 0; k < len; k++) {
+            batches[k % batchCount].many.push(many[i][k]);
+        }
+    }
+
+    let off = 0;
+    // If one has more paths than each one of many. average them.
+    for (let i = batchCount - 1; i >= 0; i--) {
+        if (!batches[i].many.length) {
+            const moveFrom = batches[off].many;
+            if (moveFrom.length <= 1) { // Not enough
+                // Start from the first one.
+                if (off) {
+                    off = 0;
+                }
+                else {
+                    return batches;
+                }
+            }
+            const len = moveFrom.length;
+            const mid = Math.ceil(len / 2);
+            batches[i].many = moveFrom.slice(mid, len);
+            batches[off].many = moveFrom.slice(0, mid);
+
+            off++;
+        }
+    }
+
+    return batches;
+}
+
 export function applyMorphAnimation(
     from: DescendentPaths | DescendentPaths[],
     to: DescendentPaths | DescendentPaths[],
@@ -111,74 +158,67 @@ export function applyMorphAnimation(
         one = from as DescendentPaths;
     }
 
-    if (many) {
-        const animationCfgWithSplitPath = defaults({
-            splitPath: clonePaths
-        }, animationCfg);
-        // TODO mergeByName
-        for (let i = 0; i < one.length; i++) {
-            const manyPaths: Path[] = [];
-            for (let k = 0; k < many.length; k++) {
-                if (many[k][i]) {
-                    manyPaths.push(many[k][i]);
-                }
-            }
-            let fromIndividuals;
-            let toIndividuals;
+    const animationCfgWithSplitPath = defaults({
+        splitPath: clonePaths
+    }, animationCfg);
 
-            if (many === from) {    // manyToOne
-                const res = combineMorph(
-                    manyPaths, one[i], animationCfgWithSplitPath
-                );
-                fromIndividuals = res.fromIndividuals;
-                toIndividuals = res.toIndividuals;
+    function morphOneBatch(batch: MorphingBatch, fromIsMany: boolean, forceManyOne?: boolean) {
+        const batchMany = batch.many;
+        const batchOne = batch.one;
+        if (batchMany.length === 1 && !forceManyOne) {
+            // Is one to one
+            const batchFrom: Path = fromIsMany ? batchMany[0] : batchOne;
+            const batchTo: Path = fromIsMany ? batchOne : batchMany[0];
+            // Path is reused.
+            if (batchFrom === batchTo) {
+                return;
             }
-            else {  // oneToMany
-                const res = separateMorph(
-                    one[i], manyPaths, animationCfgWithSplitPath
-                );
 
-                fromIndividuals = res.fromIndividuals;
-                toIndividuals = res.toIndividuals;
+            if (isCombineMorphing(batchFrom as Path)) {
+                // Keep doing combine animation.
+                morphOneBatch({
+                    many: [batchFrom as Path],
+                    one: batchTo as Path
+                }, true, true);
             }
+            else {
+                morphPath(batchFrom, batchTo, animationCfg);
+                updateOtherProps(batchFrom, batchTo, batchFrom, batchTo);
+            }
+        }
+        else {
+            const {
+                fromIndividuals,
+                toIndividuals
+            } = fromIsMany
+                ? combineMorph(batchMany, batchOne, animationCfgWithSplitPath)
+                : separateMorph(batchOne, batchMany, animationCfgWithSplitPath);
 
             for (let k = 0; k < fromIndividuals.length; k++) {
                 updateOtherProps(
                     fromIndividuals[k],
                     toIndividuals[k],
-                    many === from ? manyPaths[k] : one[i],
-                    many === from ? one[i] : manyPaths[k]
+                    fromIsMany ? batchMany[k] : batch.one,
+                    fromIsMany ? batch.one : batchMany[k]
                 );
             }
         }
     }
-    else {  // oneToOne
-        for (let i = 0; i < to.length; i++) {
-            if (from[i]) {
-                // Reuse the path.
-                if (from[i] === to[i]) {
-                    continue;
-                }
-                if (isCombineMorphing(from[i] as Path)) {
-                    // Keep doing combine animation.
-                    const {fromIndividuals, toIndividuals} = combineMorph(
-                        [from[i] as Path], to[i] as Path, animationCfg as CombineConfig
-                    );
-                    for (let k = 0; k < fromIndividuals.length; k++) {
-                        updateOtherProps(
-                            fromIndividuals[k],
-                            toIndividuals[k],
-                            fromIndividuals[k],
-                            toIndividuals[k]
-                        );
-                    }
-                }
-                else {
-                    morphPath(from[i] as Path, to[i] as Path, animationCfg);
-                    updateOtherProps(from[i] as Path, to[i] as Path, from[i] as Path, to[i] as Path);
-                }
-            }
-        }
+
+    const fromIsMany = many
+        ? many === from
+        // Is one to one. If the path number not match. also needs do merge and separate morphing.
+        : from.length > to.length;
+
+    // TODO mergeByName
+    const morphBatches = many
+        ? prepareMorphBatches(one, many)
+        : prepareMorphBatches(
+                (fromIsMany ? to : from) as DescendentPaths,
+                [(fromIsMany ? from : to) as DescendentPaths]
+            );
+    for (let i = 0; i < morphBatches.length; i++) {
+        morphOneBatch(morphBatches[i], fromIsMany);
     }
 }
 
