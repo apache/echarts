@@ -231,6 +231,10 @@ export function getPathList(
 export function getPathList(
     elements: Element | Element[], needsMorph?: boolean
 ): DescendentPaths | DescendentPaths[] {
+    if (!elements) {
+        return [];
+    }
+
     if (isArray(elements)) {
         const pathList = [];
         for (let i = 0; i < elements.length; i++) {
