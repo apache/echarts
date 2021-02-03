@@ -23,7 +23,7 @@ import {
     combineMorph,
     morphPath,
     isCombineMorphing,
-    SplitPathParams
+    DividePathParams
 } from 'zrender/src/tool/morphPath';
 import { Path } from '../../util/graphic';
 import { SeriesModel } from '../../export/api';
@@ -32,7 +32,7 @@ import { AnimationEasing } from 'zrender/src/animation/easing';
 import { PayloadAnimationPart } from '../../util/types';
 import { defaults, isArray, isFunction } from 'zrender/src/core/util';
 import Displayable from 'zrender/src/graphic/Displayable';
-import { clonePath } from 'zrender/src/tool/path';
+import { split } from './dividePath';
 
 
 type DescendentElements = Element[];
@@ -75,14 +75,6 @@ export function getMorphAnimationConfig(seriesModel: SeriesModel, dataIndex: num
     };
 
     return config;
-}
-
-function clonePaths({ path, count }: SplitPathParams) {
-    const paths = [];
-    for (let i = 0; i < count; i++) {
-        paths.push(clonePath(path));
-    }
-    return paths;
 }
 
 interface MorphingBatch {
@@ -159,7 +151,9 @@ export function applyMorphAnimation(
     }
 
     const animationCfgWithSplitPath = defaults({
-        dividePath: clonePaths
+        dividePath: (param: DividePathParams) => {
+            return split(param.path, param.count);
+        }
     }, animationCfg);
 
     function morphOneBatch(batch: MorphingBatch, fromIsMany: boolean, forceManyOne?: boolean) {
