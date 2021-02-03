@@ -17,44 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
-import * as zrUtil from 'zrender/src/core/util';
-import * as graphic from '../util/graphic';
+import { use } from '../extension';
+import { install } from './grid/installSimple';
 
-import './axis';
-import '../coord/cartesian/defaultAxisExtentFromData';
-import ComponentView from '../view/Component';
-import GlobalModel from '../model/Global';
-import GridModel from '../coord/cartesian/GridModel';
-import ComponentModel from '../model/Component';
-
-// Grid view
-class GridView extends ComponentView {
-    static readonly type = 'grid';
-    readonly type = 'grid';
-
-    render(gridModel: GridModel, ecModel: GlobalModel) {
-        this.group.removeAll();
-        if (gridModel.get('show')) {
-            this.group.add(new graphic.Rect({
-                shape: gridModel.coordinateSystem.getRect(),
-                style: zrUtil.defaults({
-                    fill: gridModel.get('backgroundColor')
-                }, gridModel.getItemStyle()),
-                silent: true,
-                z2: -1
-            }));
-        }
-    }
-
-}
-
-ComponentView.registerClass(GridView);
-ComponentModel.registerClass(GridModel);
-
-echarts.registerPreprocessor(function (option) {
-    // Only create grid when need
-    if (option.xAxis && option.yAxis && !option.grid) {
-        option.grid = {};
-    }
-});
+use(install);

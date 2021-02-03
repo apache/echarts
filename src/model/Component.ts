@@ -336,7 +336,7 @@ export type ComponentModelConstructor = typeof ComponentModel
     & componentUtil.TopologicalTravelable<object>;
 
 mountExtend(ComponentModel, Model);
-enableClassManagement(ComponentModel as ComponentModelConstructor, {registerWhenExtend: true});
+enableClassManagement(ComponentModel as ComponentModelConstructor);
 componentUtil.enableSubTypeDefaulter(ComponentModel as ComponentModelConstructor);
 componentUtil.enableTopologicalTravel(ComponentModel as ComponentModelConstructor, getDependencies);
 

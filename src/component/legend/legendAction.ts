@@ -19,8 +19,7 @@
 
 // @ts-nocheck
 
-import * as echarts from '../../echarts';
-import * as zrUtil from 'zrender/src/core/util';
+import {curry, each} from 'zrender/src/core/util';
 
 function legendSelectActionHandler(methodName, payload, ecModel) {
     const selectedMap = {};
@@ -43,7 +42,7 @@ function legendSelectActionHandler(methodName, payload, ecModel) {
             isSelected = legendModel.isSelected(payload.name);
         }
         const legendData = legendModel.getData();
-        zrUtil.each(legendData, function (model) {
+        each(legendData, function (model) {
             const name = model.get('name');
             // Wrap element
             if (name === '\n' || name === '') {
@@ -69,46 +68,49 @@ function legendSelectActionHandler(methodName, payload, ecModel) {
             selected: selectedMap
         };
 }
-/**
- * @event legendToggleSelect
- * @type {Object}
- * @property {string} type 'legendToggleSelect'
- * @property {string} [from]
- * @property {string} name Series name or data item name
- */
-echarts.registerAction(
-    'legendToggleSelect', 'legendselectchanged',
-    zrUtil.curry(legendSelectActionHandler, 'toggleSelected')
-);
 
-echarts.registerAction(
-    'legendAllSelect', 'legendselectall',
-    zrUtil.curry(legendSelectActionHandler, 'allSelect')
-);
+export function installLegendAction(registers) {
+    /**
+     * @event legendToggleSelect
+     * @type {Object}
+     * @property {string} type 'legendToggleSelect'
+     * @property {string} [from]
+     * @property {string} name Series name or data item name
+     */
+    registers.registerAction(
+        'legendToggleSelect', 'legendselectchanged',
+        curry(legendSelectActionHandler, 'toggleSelected')
+    );
 
-echarts.registerAction(
-    'legendInverseSelect', 'legendinverseselect',
-    zrUtil.curry(legendSelectActionHandler, 'inverseSelect')
-);
+    registers.registerAction(
+        'legendAllSelect', 'legendselectall',
+        curry(legendSelectActionHandler, 'allSelect')
+    );
 
-/**
- * @event legendSelect
- * @type {Object}
- * @property {string} type 'legendSelect'
- * @property {string} name Series name or data item name
- */
-echarts.registerAction(
-    'legendSelect', 'legendselected',
-    zrUtil.curry(legendSelectActionHandler, 'select')
-);
+    registers.registerAction(
+        'legendInverseSelect', 'legendinverseselect',
+        curry(legendSelectActionHandler, 'inverseSelect')
+    );
 
-/**
- * @event legendUnSelect
- * @type {Object}
- * @property {string} type 'legendUnSelect'
- * @property {string} name Series name or data item name
- */
-echarts.registerAction(
-    'legendUnSelect', 'legendunselected',
-    zrUtil.curry(legendSelectActionHandler, 'unSelect')
-);
+    /**
+     * @event legendSelect
+     * @type {Object}
+     * @property {string} type 'legendSelect'
+     * @property {string} name Series name or data item name
+     */
+    registers.registerAction(
+        'legendSelect', 'legendselected',
+        curry(legendSelectActionHandler, 'select')
+    );
+
+    /**
+     * @event legendUnSelect
+     * @type {Object}
+     * @property {string} type 'legendUnSelect'
+     * @property {string} name Series name or data item name
+     */
+    registers.registerAction(
+        'legendUnSelect', 'legendunselected',
+        curry(legendSelectActionHandler, 'unSelect')
+    );
+}

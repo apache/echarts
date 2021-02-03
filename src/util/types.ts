@@ -1,4 +1,3 @@
-import { AriaOption } from './../component/aria';
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -30,12 +29,12 @@ import Group from 'zrender/src/graphic/Group';
 import Element, {ElementEvent, ElementTextConfig} from 'zrender/src/Element';
 import { DataFormatMixin } from '../model/mixin/dataFormat';
 import GlobalModel from '../model/Global';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import SeriesModel from '../model/Series';
 import { createHashMap, HashMap } from 'zrender/src/core/util';
-import { TaskPlanCallbackReturn, TaskProgressParams } from '../stream/task';
+import { TaskPlanCallbackReturn, TaskProgressParams } from '../core/task';
 import List, {ListDimensionType} from '../data/List';
-import { Dictionary, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
+import { Dictionary, ElementEventName, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { TooltipMarker } from './format';
 import { AnimationEasing } from 'zrender/src/animation/easing';
@@ -81,13 +80,15 @@ export type ZRRectLike = RectLike;
 
 export type ZRStyleProps = PathStyleProps | ImageStyleProps | TSpanStyleProps | TextStyleProps;
 
+export type ZRElementEventName = ElementEventName | 'globalout';
+
 // ComponentFullType can be:
 //     'xxx.yyy': means ComponentMainType.ComponentSubType.
 //     'xxx': means ComponentMainType.
 // See `checkClassType` check the restict definition.
 export type ComponentFullType = string;
 export type ComponentMainType = keyof ECUnitOption & string;
-export type ComponentSubType = ComponentOption['type'];
+export type ComponentSubType = Exclude<ComponentOption['type'], undefined>;
 /**
  * Use `parseClassType` to parse componentType declaration to componentTypeInfo.
  * For example:
@@ -136,6 +137,7 @@ export interface DataModel extends DataHost, DataFormatMixin {}
 interface PayloadItem {
     excludeSeriesId?: OptionId | OptionId[];
     animation?: PayloadAnimationPart
+    // TODO use unknown
     [other: string]: any;
 }
 
@@ -182,25 +184,34 @@ export interface ViewRootGroup extends Group {
     };
 }
 
+export interface ECElementEvent extends
+    ECEventData,
+    CallbackDataParams {
+
+    type: ZRElementEventName;
+    event?: ElementEvent;
+
+}
 /**
  * The echarts event type to user.
  * Also known as packedEvent.
  */
-export interface ECEvent extends ECEventData{
+export interface ECActionEvent extends ECEventData {
     // event type
     type: string;
     componentType?: string;
     componentIndex?: number;
     seriesIndex?: number;
     escapeConnect?: boolean;
-    event?: ElementEvent;
     batch?: ECEventData;
 }
 export interface ECEventData {
+    // TODO use unknown
     [key: string]: any;
 }
 
-export interface EventQueryItem{
+export interface EventQueryItem {
+    // TODO use unknown
     [key: string]: any;
 }
 export interface NormalizedEventQuery {
@@ -327,9 +338,17 @@ export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'seriesAsc' | 'seriesD
 // Check `convertValue` for more details.
 export type OrdinalRawValue = string | number;
 export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
+
+/**
+ * @usage For example,
+ * ```js
+ * { ordinalNumbers: [2, 5, 3, 4] }
+ * ```
+ * means that ordinal 2 should be diplayed on tick 0,
+ * ordinal 5 should be displayed on tick 1, ...
+ */
 export type OrdinalSortInfo = {
-    ordinalNumber: OrdinalNumber,
-    beforeSortIndex: number
+    ordinalNumbers: OrdinalNumber[];
 };
 
 /**
@@ -343,6 +362,7 @@ export type OrdinalSortInfo = {
  */
 export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
 export type ParsedValueNumeric = number | OrdinalNumber;
+
 /**
  * `ScaleDataValue` means that the user input primitive value to `src/scale/Scale`.
  * (For example, used in `axis.min`, `axis.max`, `convertToPixel`).
@@ -367,7 +387,22 @@ export interface TimeScaleTick extends ScaleTick {
     level?: number
 };
 export interface OrdinalScaleTick extends ScaleTick {
-    value: OrdinalNumber
+    /**
+     * Represents where the tick will be placed visually.
+     * Notice:
+     * The value is not the raw ordinal value. And do not changed
+     * after ordinal scale sorted.
+     * We need to:
+     * ```js
+     * const coord = dataToCoord(ordinalScale.getRawOrdinalNumber(tick.value)).
+     * ```
+     * Why place the tick value here rather than the raw ordinal value (like LogScale did)?
+     * Becuase ordinal scale sort is the different case from LogScale, where
+     * axis tick, splitArea should better not to be sorted, especially in
+     * anid(animation id) when `boundaryGap: true`.
+     * Only axis label are sorted.
+     */
+    value: number
 };
 
 // Can only be string or index, because it is used in object key in some code.
@@ -481,7 +516,7 @@ export type ECUnitOption = {
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
     stateAnimation?: AnimationOption
-} & AnimationOptionMixin & ColorPaletteOptionMixin & AriaOptionMixin;
+} & AnimationOptionMixin & ColorPaletteOptionMixin;
 
 /**
  * [ECOption]:
@@ -522,7 +557,7 @@ export type ECUnitOption = {
  * };
  * ```
  */
-export interface ECOption extends ECUnitOption {
+export interface ECBasicOption extends ECUnitOption {
     baseOption?: ECUnitOption;
     timeline?: ComponentOption | ComponentOption[];
     options?: ECUnitOption[];
@@ -611,7 +646,7 @@ export interface OptionEncodeVisualDimensions {
     // Notice: `value` is coordDim, not nonCoordDim.
 }
 export interface OptionEncode extends OptionEncodeVisualDimensions {
-    [coordDim: string]: OptionEncodeValue
+    [coordDim: string]: OptionEncodeValue | undefined
 }
 export type OptionEncodeValue = DimensionLoose | DimensionLoose[];
 export type EncodeDefaulter = (source: Source, dimCount: number) => OptionEncode;
@@ -646,6 +681,7 @@ export interface CallbackDataParams {
     // Param name list for mapping `a`, `b`, `c`, `d`, `e`
     $vars: string[];
 }
+export type InterpolatableValue = ParsedValue | ParsedValue[];
 export type DimensionUserOuputEncode = {
     [coordOrVisualDimName: string]:
         // index: coordDimIndex, value: dataDimIndex
@@ -717,6 +753,55 @@ export type PaletteOptionMixin = ColorPaletteOptionMixin;
 export interface ColorPaletteOptionMixin {
     color?: ZRColor | ZRColor[]
     colorLayer?: ZRColor[][]
+}
+
+export interface AriaLabelOption {
+    enabled?: boolean;
+    description?: string;
+    general?: {
+        withTitle?: string;
+        withoutTitle?: string;
+    };
+    series?: {
+        maxCount?: number;
+        single?: {
+            prefix?: string;
+            withName?: string;
+            withoutName?: string;
+        };
+        multiple?: {
+            prefix?: string;
+            withName?: string;
+            withoutName?: string;
+            separator?: {
+                middle?: string;
+                end?: string;
+            }
+        }
+    };
+    data?: {
+        maxCount?: number;
+        allData?: string;
+        partialData?: string;
+        withName?: string;
+        withoutName?: string;
+        separator?: {
+            middle?: string;
+            end?: string;
+        }
+    }
+}
+
+// Extending is for compating ECharts 4
+export interface AriaOption extends AriaLabelOption {
+    mainType?: 'aria';
+
+    enabled?: boolean;
+    label?: AriaLabelOption;
+    decal?: {
+        show?: boolean;
+        decals?: DecalObject | DecalObject[];
+    };
 }
 
 export interface AriaOptionMixin {
@@ -1363,6 +1448,8 @@ export interface CommonAxisPointerOption {
 }
 
 export interface ComponentOption {
+    mainType?: string;
+
     type?: string;
 
     id?: OptionId;
@@ -1387,12 +1474,14 @@ export interface DefaultExtraStateOpts {
     blur: any
 }
 
+export type DefaultEmphasisFocus = 'none' | 'self' | 'series';
+
 export interface DefaultExtraEmpasisState {
     /**
      * self: Focus self and blur all others.
      * series: Focus series and blur all other series.
      */
-    focus?: 'none' | 'self' | 'series'
+    focus?: DefaultEmphasisFocus
 }
 
 interface ExtraStateOptsBase {
@@ -1438,6 +1527,8 @@ export interface SeriesOption<
     ColorPaletteOptionMixin,
     StatesOptionMixin<StateOption, ExtraStateOpts>
 {
+    mainType?: 'series'
+
     silent?: boolean
 
     blendMode?: string

@@ -21,7 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import {TimeAxisLabelFormatterOption} from './../coord/axisCommonTypes';
 import * as numberUtil from './number';
 import {TimeScaleTick} from './types';
-import { getDefaultLocaleModel, getLocaleModel, SYSTEM_LANG, LocaleOption } from '../locale';
+import { getDefaultLocaleModel, getLocaleModel, SYSTEM_LANG, LocaleOption } from '../core/locale';
 import Model from '../model/Model';
 
 export const ONE_SECOND = 1000;

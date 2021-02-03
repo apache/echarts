@@ -19,7 +19,7 @@
 */
 
 import { EChartsType } from '../../../../src/echarts';
-import { createChart } from '../../core/utHelper';
+import { createChart, getECModel } from '../../core/utHelper';
 import { ComponentMainType, ParsedValue } from '../../../../src/util/types';
 import SeriesModel from '../../../../src/model/Series';
 import ComponentModel from '../../../../src/model/Component';
@@ -39,11 +39,11 @@ describe('modelAndOptionMapping', function () {
     }
 
     function getSeries(chart: EChartsType, seriesIndex: number): SeriesModel {
-        return chart.getModel().getComponent('series', seriesIndex) as SeriesModel;
+        return getECModel(chart).getComponent('series', seriesIndex) as SeriesModel;
     }
 
     function getModel(chart: EChartsType, type: ComponentMainType, index: number): ComponentModel {
-        return chart.getModel().getComponent(type, index);
+        return getECModel(chart).getComponent(type, index);
     }
 
     function countSeries(chart: EChartsType): number {
@@ -54,7 +54,7 @@ describe('modelAndOptionMapping', function () {
         // FIXME
         // access private
         // @ts-ignore
-        return chart.getModel()._componentsMap.get(type).length;
+        return getECModel(chart)._componentsMap.get(type).length;
     }
 
     function getChartView(chart: EChartsType, series: SeriesModel): ChartView {
@@ -801,14 +801,14 @@ describe('modelAndOptionMapping', function () {
                 ]
             };
             chart.setOption(option);
-            expect(chart.getModel().option.backgroundColor).toEqual('rgba(1,1,1,1)');
+            expect(getECModel(chart).option.backgroundColor).toEqual('rgba(1,1,1,1)');
 
             // Not merge
             chart.setOption({
                 backgroundColor: '#fff'
             }, true);
 
-            expect(chart.getModel().option.backgroundColor).toEqual('#fff');
+            expect(getECModel(chart).option.backgroundColor).toEqual('#fff');
         });
 
         it('innerId', function () {

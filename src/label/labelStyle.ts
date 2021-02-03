@@ -25,12 +25,12 @@ import {
     LabelOption,
     DisplayState,
     TextCommonOption,
-    ParsedValue,
-    CallbackDataParams,
     StatesOptionMixin,
     DisplayStateNonNormal,
     ColorString,
-    ZRStyleProps
+    ZRStyleProps,
+    AnimationOptionMixin,
+    InterpolatableValue
 } from '../util/types';
 import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
@@ -38,7 +38,6 @@ import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 import { deprecateReplaceLog } from '../util/log';
 import { makeInner, interpolateRawValues } from '../util/model';
 import List from '../data/List';
-import SeriesModel from '../model/Series';
 import { initProps, updateProps } from '../util/graphic';
 
 type TextCommonParams = {
@@ -68,9 +67,11 @@ type TextCommonParams = {
 };
 const EMPTY_OBJ = {};
 
-interface SetLabelStyleOpt<LDI> extends TextCommonParams {
+interface SetLabelStyleOpt<TLabelDataIndex> extends TextCommonParams {
     defaultText?: string | ((
-        labelDataIndex: LDI, opt: SetLabelStyleOpt<LDI>, overrideValue?: ParsedValue | ParsedValue[]
+        labelDataIndex: TLabelDataIndex,
+        opt: SetLabelStyleOpt<TLabelDataIndex>,
+        interpolatedValue?: InterpolatableValue
     ) => string);
     // Fetch text by:
     // opt.labelFetcher.getFormattedLabel(
@@ -79,15 +80,19 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
     labelFetcher?: {
         getFormattedLabel: (
             // In MapDraw case it can be string (region name)
-            labelDataIndex: LDI,
+            labelDataIndex: TLabelDataIndex,
             status: DisplayState,
             dataType?: string,
             labelDimIndex?: number,
             formatter?: string | ((params: object) => string),
-            extendParams?: Partial<CallbackDataParams>
+            // If provided, the implementation of `getFormattedLabel` can use it
+            // to generate the final label text.
+            extendParams?: {
+                interpolatedValue: InterpolatableValue
+            }
         ) => string;
     };
-    labelDataIndex?: LDI;
+    labelDataIndex?: TLabelDataIndex;
     labelDimIndex?: number;
 
     /**
@@ -122,10 +127,10 @@ export function setLabelText(label: ZRText, labelTexts: Record<DisplayState, str
     label.useStates(oldStates, true);
 }
 
-export function getLabelText<LDI>(
-    opt: SetLabelStyleOpt<LDI>,
-    stateModels?: LabelStatesModels<LabelModel>,
-    overrideValue?: ParsedValue | ParsedValue[]
+function getLabelText<TLabelDataIndex>(
+    opt: SetLabelStyleOpt<TLabelDataIndex>,
+    stateModels: LabelStatesModels<LabelModel>,
+    interpolatedValue?: InterpolatableValue
 ): Record<DisplayState, string> {
     const labelFetcher = opt.labelFetcher;
     const labelDataIndex = opt.labelDataIndex;
@@ -138,13 +143,15 @@ export function getLabelText<LDI>(
             null,
             labelDimIndex,
             normalModel && normalModel.get('formatter'),
-            overrideValue != null ? {
-                value: overrideValue
+            interpolatedValue != null ? {
+                interpolatedValue: interpolatedValue
             } : null
         );
     }
     if (baseText == null) {
-        baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt, overrideValue) : opt.defaultText;
+        baseText = isFunction(opt.defaultText)
+            ? opt.defaultText(labelDataIndex, opt, interpolatedValue)
+            : opt.defaultText;
     }
 
     const statesText = {
@@ -176,23 +183,23 @@ export function getLabelText<LDI>(
  * So please update the style on ZRText after use this method.
  */
 // eslint-disable-next-line
-function setLabelStyle<LDI>(
+function setLabelStyle<TLabelDataIndex>(
     targetEl: ZRText,
     labelStatesModels: LabelStatesModels<LabelModelForText>,
-    opt?: SetLabelStyleOpt<LDI>,
+    opt?: SetLabelStyleOpt<TLabelDataIndex>,
     stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
 ): void;
 // eslint-disable-next-line
-function setLabelStyle<LDI>(
+function setLabelStyle<TLabelDataIndex>(
     targetEl: Element,
     labelStatesModels: LabelStatesModels<LabelModel>,
-    opt?: SetLabelStyleOpt<LDI>,
+    opt?: SetLabelStyleOpt<TLabelDataIndex>,
     stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
 ): void;
-function setLabelStyle<LDI>(
+function setLabelStyle<TLabelDataIndex>(
     targetEl: Element,
     labelStatesModels: LabelStatesModels<LabelModel>,
-    opt?: SetLabelStyleOpt<LDI>,
+    opt?: SetLabelStyleOpt<TLabelDataIndex>,
     stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
     // TODO specified position?
 ) {
@@ -271,8 +278,8 @@ function setLabelStyle<LDI>(
         textContent.dirty();
 
         if (opt.enableTextSetter) {
-            labelInner(textContent).setLabelText = function (overrideValue: ParsedValue | ParsedValue[]) {
-                const labelStatesTexts = getLabelText(opt, labelStatesModels, overrideValue);
+            labelInner(textContent).setLabelText = function (interpolatedValue: InterpolatableValue) {
+                const labelStatesTexts = getLabelText(opt, labelStatesModels, interpolatedValue);
                 setLabelText(textContent, labelStatesTexts);
             };
         }
@@ -306,7 +313,8 @@ export function createTextStyle(
     textStyleModel: Model,
     specifiedTextStyle?: TextStyleProps, // Fixed style in the code. Can't be set by model.
     opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
-    isNotNormal?: boolean, isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
+    isNotNormal?: boolean,
+    isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
 ) {
     const textStyle: TextStyleProps = {};
     setTextStyleCommon(textStyle, textStyleModel, opt, isNotNormal, isAttached);
@@ -615,18 +623,18 @@ export function getFont(
 
 export const labelInner = makeInner<{
     /**
-     * Previous value stored used for label.
+     * Previous target value stored used for label.
      * It's mainly for text animation
      */
-    prevValue?: ParsedValue | ParsedValue[]
+    prevValue?: InterpolatableValue
     /**
      * Target value stored used for label.
      */
-    value?: ParsedValue | ParsedValue[]
+    value?: InterpolatableValue
     /**
      * Current value in text animation.
      */
-    interpolatedValue?: ParsedValue | ParsedValue[]
+    interpolatedValue?: InterpolatableValue
     /**
      * If enable value animation
      */
@@ -643,27 +651,26 @@ export const labelInner = makeInner<{
     /**
      * Default text getter during interpolation
      */
-    defaultInterpolatedText?: (value: ParsedValue[] | ParsedValue) => string
+    defaultInterpolatedText?: (value: InterpolatableValue) => string
     /**
      * Change label text from interpolated text during animation
      */
-    setLabelText?(overrideValue?: ParsedValue | ParsedValue[]): void
+    setLabelText?: (interpolatedValue?: InterpolatableValue) => void
+
 }, ZRText>();
 
 export function setLabelValueAnimation(
     label: ZRText,
     labelStatesModels: LabelStatesModels<LabelModelForText>,
-    value: ParsedValue | ParsedValue[],
-    getDefaultText: (value: ParsedValue[] | ParsedValue) => string
+    value: InterpolatableValue,
+    getDefaultText: (value: InterpolatableValue) => string
 ) {
     if (!label) {
         return;
     }
 
     const obj = labelInner(label);
-    // Consider the case that being animating, do not use the `obj.value`,
-    // Otherwise it will jump to the `obj.value` when this new animation started.
-    obj.prevValue = retrieve2(obj.interpolatedValue, obj.value);
+    obj.prevValue = obj.value;
     obj.value = value;
 
     const normalLabelModel = labelStatesModels.normal;
@@ -681,29 +688,32 @@ export function animateLabelValue(
     textEl: ZRText,
     dataIndex: number,
     data: List,
-    seriesModel: SeriesModel
+    animatableModel: Model<AnimationOptionMixin>,
+    labelFetcher: SetLabelStyleOpt<number>['labelFetcher']
 ) {
     const labelInnerStore = labelInner(textEl);
     if (!labelInnerStore.valueAnimation) {
         return;
     }
     const defaultInterpolatedText = labelInnerStore.defaultInterpolatedText;
-    const prevValue = labelInnerStore.prevValue;
-    const currentValue = labelInnerStore.value;
+    // Consider the case that being animating, do not use the `obj.value`,
+    // Otherwise it will jump to the `obj.value` when this new animation started.
+    const currValue = retrieve2(labelInnerStore.interpolatedValue, labelInnerStore.prevValue);
+    const targetValue = labelInnerStore.value;
 
     function during(percent: number) {
         const interpolated = interpolateRawValues(
             data,
             labelInnerStore.precision,
-            prevValue,
-            currentValue,
+            currValue,
+            targetValue,
             percent
         );
         labelInnerStore.interpolatedValue = percent === 1 ? null : interpolated;
 
         const labelText = getLabelText({
             labelDataIndex: dataIndex,
-            labelFetcher: seriesModel,
+            labelFetcher: labelFetcher,
             defaultText: defaultInterpolatedText
                 ? defaultInterpolatedText(interpolated)
                 : interpolated + ''
@@ -712,8 +722,8 @@ export function animateLabelValue(
         setLabelText(textEl, labelText);
     }
 
-    (prevValue == null
+    (currValue == null
         ? initProps
         : updateProps
-    )(textEl, {}, seriesModel, dataIndex, null, during);
+    )(textEl, {}, animatableModel, dataIndex, null, during);
 }

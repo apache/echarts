@@ -190,6 +190,4 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
 
 }
 
-ComponentModel.registerClass(FunnelSeriesModel);
-
 export default FunnelSeriesModel;

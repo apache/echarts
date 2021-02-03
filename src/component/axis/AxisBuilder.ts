@@ -764,7 +764,7 @@ function buildAxisLabel(
 
     each(labels, function (labelItem, index) {
         const tickValue = axis.scale.type === 'ordinal'
-            ? (axis.scale as OrdinalScale).getRawIndex(labelItem.tickValue)
+            ? (axis.scale as OrdinalScale).getRawOrdinalNumber(labelItem.tickValue)
             : labelItem.tickValue;
         const formattedLabel = labelItem.formattedLabel;
         const rawLabel = labelItem.rawLabel;

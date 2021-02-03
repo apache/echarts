@@ -33,7 +33,7 @@ import {
     OptionDataItemObject,
     GraphEdgeItemObject,
     OptionDataValueNumeric,
-    DefaultExtraEmpasisState
+    DefaultEmphasisFocus
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -61,7 +61,7 @@ interface SankeyEdgeStyleOption extends LineStyleOption {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus'] | 'adjacency'
+        focus?: DefaultEmphasisFocus | 'adjacency'
     }
 }
 
@@ -119,6 +119,7 @@ export interface SankeySeriesOption
     draggable?: boolean
     /**
      * Will be allEdges if true.
+     * @deprecated
      */
     focusNodeAdjacency?: FocusNodeAdjacency
     /**
@@ -261,9 +262,6 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
     optionUpdated() {
         const option = this.option;
-        if (option.focusNodeAdjacency === true) {
-            option.focusNodeAdjacency = 'allEdges';
-        }
     }
 
     // Override Series.getDataParams()
@@ -294,8 +292,6 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
         nodeGap: 8,
         draggable: true,
-
-        focusNodeAdjacency: false,
 
         layoutIterations: 32,
 
@@ -335,7 +331,5 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         animationDuration: 1000
     };
 }
-
-SeriesModel.registerClass(SankeySeriesModel);
 
 export default SankeySeriesModel;

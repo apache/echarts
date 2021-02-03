@@ -17,7 +17,9 @@
 * under the License.
 */
 
-import { DataTransformOption, ExternalDataTransform } from '../../data/helper/transform';
+import {
+    DataTransformOption, ExternalDataTransform, ExternalDataTransformResultItem
+} from '../../data/helper/transform';
 import {
     DimensionLoose, DimensionIndex, OptionDataValue, SOURCE_FORMAT_ARRAY_ROWS, SOURCE_FORMAT_OBJECT_ROWS
 } from '../../util/types';
@@ -199,7 +201,7 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
         });
 
         return {
-            data: resultData
+            data: resultData as ExternalDataTransformResultItem['data']
         };
     }
 };

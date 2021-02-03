@@ -20,7 +20,7 @@
 import * as layout from '../../util/layout';
 import * as zrUtil from 'zrender/src/core/util';
 import {groupData} from '../../util/model';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import SankeySeriesModel, { SankeySeriesOption, SankeyNodeItemOption } from './SankeySeries';
 import { GraphNode, GraphEdge } from '../../data/Graph';
 import { LayoutOrient } from '../../util/types';

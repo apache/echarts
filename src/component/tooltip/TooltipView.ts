@@ -44,7 +44,7 @@ import {
     ZRColor
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import TooltipModel, {TooltipOption} from './TooltipModel';
 import Element from 'zrender/src/Element';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
@@ -429,7 +429,7 @@ class TooltipView extends ComponentView {
             this._showAxisTooltip(dataByCoordSys, e);
         }
         // Always show item tooltip if mouse is on the element with dataIndex
-        else if (el && findEventDispatcher(el, (target) => getECData(target).dataIndex != null)) {
+        else if (el && findEventDispatcher(el, (target) => getECData(target).dataIndex != null, true)) {
             this._lastDataByCoordSys = null;
             this._showSeriesItemTooltip(e, el, dispatchAction);
         }
@@ -542,7 +542,8 @@ class TooltipView extends ComponentView {
         const orderMode = singleTooltipModel.get('order');
 
         const builtMarkupText = buildTooltipMarkup(
-            articleMarkup, markupStyleCreator, renderMode, orderMode, ecModel.get('useUTC')
+            articleMarkup, markupStyleCreator, renderMode, orderMode, ecModel.get('useUTC'),
+            singleTooltipModel.get('textStyle')
         );
         builtMarkupText && markupTextArrLegacy.unshift(builtMarkupText);
         const blockBreak = renderMode === 'richText' ? '\n\n' : '<br/>';
@@ -575,7 +576,7 @@ class TooltipView extends ComponentView {
         el: ECElement,
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
-        const dispatcher = findEventDispatcher(el, (target) => getECData(target).dataIndex != null);
+        const dispatcher = findEventDispatcher(el, (target) => getECData(target).dataIndex != null, true);
         const ecModel = this._ecModel;
         const ecData = getECData(dispatcher);
         // Use dataModel in element if possible
@@ -621,7 +622,8 @@ class TooltipView extends ComponentView {
                 markupStyleCreator,
                 renderMode,
                 orderMode,
-                ecModel.get('useUTC')
+                ecModel.get('useUTC'),
+                tooltipModel.get('textStyle')
             )
             : seriesTooltipResult.markupText;
 
@@ -758,7 +760,7 @@ class TooltipView extends ComponentView {
     } {
         if (trigger === 'axis' || zrUtil.isArray(tooltipDataParams)) {
             return {
-                color: borderColor || this._renderMode === 'html' ? '#fff' : 'none'
+                color: borderColor || (this._renderMode === 'html' ? '#fff' : 'none')
             };
         }
 
@@ -906,12 +908,14 @@ class TooltipView extends ComponentView {
 }
 
 type TooltipableOption = {
-    tooltip?: TooltipOption | string
+    tooltip?: Omit<TooltipOption, 'mainType'> | string
 };
 /**
  * From top to bottom. (the last one should be globalTooltipModel);
  */
-function buildTooltipModel(modelCascade: (TooltipModel | Model<TooltipableOption> | TooltipOption | string)[]) {
+function buildTooltipModel(modelCascade: (
+    TooltipModel | Model<TooltipableOption> | Omit<TooltipOption, 'mainType'> | string
+)[]) {
     // Last is always tooltip model.
     let resultModel = modelCascade.pop() as Model<TooltipOption>;
     while (modelCascade.length) {
@@ -1032,4 +1036,4 @@ function isCenterAlign(align: HorizontalAlign | VerticalAlign) {
     return align === 'center' || align === 'middle';
 }
 
-ComponentView.registerClass(TooltipView);
+export default TooltipView;

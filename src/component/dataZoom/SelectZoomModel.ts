@@ -18,11 +18,10 @@
 */
 
 import DataZoomModel from './DataZoomModel';
-import ComponentModel from '../../model/Component';
 
 class SelectDataZoomModel extends DataZoomModel {
     static type = 'dataZoom.select';
     type = SelectDataZoomModel.type;
 }
 
-ComponentModel.registerClass(SelectDataZoomModel);
+export default SelectDataZoomModel;

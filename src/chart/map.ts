@@ -17,18 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import { use } from '../extension';
+import { install } from './map/install';
 
-import './map/MapSeries';
-import './map/MapView';
-import '../action/geoRoam';
-import '../coord/geo/geoCreator';
-
-import mapSymbolLayout from './map/mapSymbolLayout';
-import mapDataStatistic from './map/mapDataStatistic';
-import {createLegacyDataSelectAction} from '../legacy/dataSelectAction';
-
-echarts.registerLayout(mapSymbolLayout);
-echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.STATISTIC, mapDataStatistic);
-
-createLegacyDataSelectAction('map', echarts.registerAction);
+use(install);

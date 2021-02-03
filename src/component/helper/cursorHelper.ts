@@ -19,7 +19,7 @@
 
 
 import { ElementEvent } from 'zrender/src/Element';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesModel from '../../model/Series';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 

@@ -20,7 +20,7 @@
 import * as layout from '../../util/layout';
 import {parsePercent, linearMap} from '../../util/number';
 import FunnelSeriesModel, { FunnelSeriesOption, FunnelDataItemOption } from './FunnelSeries';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import List from '../../data/List';
 import GlobalModel from '../../model/Global';
 

@@ -21,6 +21,7 @@
 let platform = '';
 // Navigator not exists in node
 if (typeof navigator !== 'undefined') {
+    /* global navigator */
     platform = navigator.platform || '';
 }
 

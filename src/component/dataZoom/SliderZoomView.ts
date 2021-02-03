@@ -26,7 +26,7 @@ import {linearMap, asc, parsePercent} from '../../util/number';
 import * as layout from '../../util/layout';
 import sliderMove from '../helper/sliderMove';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import {
     LayoutOrient, Payload, ZRTextVerticalAlign, ZRTextAlign, ZRElementEvent, ParsedValue
 } from '../../util/types';
@@ -547,7 +547,11 @@ class SliderZoomView extends DataZoomView {
         // Left and right handle to resize
         each([0, 1] as const, function (handleIndex) {
             let iconStr = dataZoomModel.get('handleIcon');
-            if (!symbolBuildProxies[iconStr] && iconStr.indexOf('path://') < 0) {
+            if (
+                !symbolBuildProxies[iconStr]
+                && iconStr.indexOf('path://') < 0
+                && iconStr.indexOf('image://') < 0
+            ) {
                 // Compatitable with the old icon parsers. Which can use a path string without path://
                 iconStr = 'path://' + iconStr;
                 if (__DEV__) {
@@ -1061,7 +1065,5 @@ function getOtherDim(thisDim: 'x' | 'y' | 'radius' | 'angle' | 'single' | 'z') {
 function getCursor(orient: LayoutOrient) {
     return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
 }
-
-ComponentView.registerClass(SliderZoomView);
 
 export default SliderZoomView;

@@ -165,6 +165,4 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
     };
 }
 
-SeriesModel.registerClass(RadarSeriesModel);
-
 export default RadarSeriesModel;

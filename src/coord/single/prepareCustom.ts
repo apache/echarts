@@ -17,8 +17,8 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import Single from './Single';
+import { bind } from 'zrender/src/core/util';
 
 function dataToCoordSize(this: Single, dataSize: number | number[], dataItem: number | number[]) {
     // dataItem is necessary in log axis.
@@ -46,7 +46,7 @@ export default function singlePrepareCustom(coordSys: Single) {
                 // do not provide "out" param
                 return coordSys.dataToPoint(val);
             },
-            size: zrUtil.bind(dataToCoordSize, coordSys)
+            size: bind(dataToCoordSize, coordSys)
         }
     };
 }

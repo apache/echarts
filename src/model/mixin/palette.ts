@@ -21,7 +21,7 @@ import {Dictionary} from 'zrender/src/core/types';
 import {isArray} from 'zrender/src/core/util';
 import {makeInner, normalizeToArray} from '../../util/model';
 import Model from '../Model';
-import {ZRColor, PaletteOptionMixin, DecalObject} from '../../util/types';
+import {ZRColor, PaletteOptionMixin, DecalObject, AriaOptionMixin} from '../../util/types';
 import GlobalModel from '../Global';
 
 type Inner<T> = (hostObj: PaletteMixin<PaletteOptionMixin>) => {
@@ -67,7 +67,7 @@ export function getDecalFromPalette(
     scope?: any,
     requestNum?: number
 ): DecalObject {
-    const defaultDecals = normalizeToArray(ecModel.get(['aria', 'decal', 'decals']));
+    const defaultDecals = normalizeToArray((ecModel as Model<AriaOptionMixin>).get(['aria', 'decal', 'decals']));
     return getFromPalette<DecalObject>(ecModel, innerDecal, defaultDecals, null, name, scope, requestNum);
 }
 
