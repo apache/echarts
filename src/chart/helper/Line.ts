@@ -261,7 +261,9 @@ class Line extends graphic.Group {
                 ? lineData.getName(idx)
                 : isFinite(rawVal)
                 ? round(rawVal)
-                : rawVal) + ''
+                : rawVal) + '',
+            // @ts-ignore
+            z: seriesModel.getData(lineData.dataType).getItemModel(idx).get('z') + 1
         });
         const label = this.getTextContent() as InnerLineLabel;
 

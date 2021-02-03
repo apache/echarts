@@ -98,7 +98,8 @@ interface SetLabelStyleOpt<TLabelDataIndex> extends TextCommonParams {
     /**
      * Inject a setter of text for the text animation case.
      */
-    enableTextSetter?: boolean
+    enableTextSetter?: boolean;
+    z?: number;
 }
 type LabelModel = Model<LabelOption & {
     formatter?: string | ((params: any) => string);
@@ -275,6 +276,7 @@ function setLabelStyle<TLabelDataIndex>(
         textContent.ignore = !showNormal;
         // Always create new style.
         textContent.useStyle(normalStyle);
+        textContent.z = opt.z ?? textContent.z;
         textContent.dirty();
 
         if (opt.enableTextSetter) {
@@ -287,6 +289,7 @@ function setLabelStyle<TLabelDataIndex>(
     else if (textContent) {
         // Not display rich text.
         textContent.ignore = true;
+        textContent.z = opt.z ?? textContent.z;
     }
     targetEl.dirty();
 }
