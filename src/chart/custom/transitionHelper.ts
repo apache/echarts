@@ -32,7 +32,6 @@ import { AnimationEasing } from 'zrender/src/animation/easing';
 import { PayloadAnimationPart } from '../../util/types';
 import { defaults, isArray, isFunction } from 'zrender/src/core/util';
 import Displayable from 'zrender/src/graphic/Displayable';
-import { split } from './dividePath';
 
 
 type DescendentElements = Element[];
@@ -151,9 +150,6 @@ export function applyMorphAnimation(
     }
 
     const animationCfgWithSplitPath = defaults({
-        dividePath: (param: DividePathParams) => {
-            return split(param.path, param.count);
-        }
     }, animationCfg);
 
     function morphOneBatch(batch: MorphingBatch, fromIsMany: boolean, forceManyOne?: boolean) {
