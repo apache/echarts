@@ -1345,6 +1345,8 @@ export interface CommonTooltipOption<FormatterParams> {
 
         // Available when renderMode is html
         decoration?: string
+        overflow?: 'none' | 'truncate' | 'break' | 'breakAll'
+        ellipsis?: string
     }
 }
 

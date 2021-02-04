@@ -358,6 +358,34 @@ class TooltipHTMLContent {
             + `border-color: ${nearPointColor};`
             + (tooltipModel.get('extraCssText') || '');
 
+        const userWidth = tooltipModel.get(['textStyle', 'width']);
+        if (userWidth != null) {
+            el.style.cssText += `;width:${userWidth}px;`;
+            // `text-overflow_string` has very humble compatibility
+            // shttps://caniuse.com/mdn-css_properties_text-overflow_string
+            const ellipsis = tooltipModel.get(['textStyle', 'ellipsis']);
+            const userOverflow = tooltipModel.get(['textStyle', 'overflow']);
+            switch (userOverflow) {
+                case 'truncate':
+                    el.style.cssText += ';overflow:hidden;'
+                        + `text-overflow:${ellipsis != null ? `\'${ellipsis}\'` : 'ellipsis'};`
+                        + 'white-space:nowrap;';
+                    break;
+
+                case 'break':
+                    el.style.cssText += ';word-break:break-word;white-space:normal;';
+                    break;
+
+                case 'breakAll':
+                    el.style.cssText += ';word-break:break-all;white-space:normal;';
+                    break;
+
+                default:
+                    el.style.cssText += '';
+                    break;
+            }
+        }
+
         el.style.display = el.innerHTML ? 'block' : 'none';
 
         // If mouse occasionally move over the tooltip, a mouseout event will be
