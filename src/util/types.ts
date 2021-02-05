@@ -844,6 +844,14 @@ export interface BorderOptionMixin {
     borderMiterLimit?: number
 }
 
+export interface ColorByMixin {
+    colorBy?: 'seriesName' | 'seriesIndex' | 'seriesId' | 'name' | 'dataIndex' | 'id'
+}
+
+export interface TreemapColorByMixin {
+    colorBy?: 'seriesName' | 'seriesIndex' | 'seriesId' | 'name' | 'dataIndex' | 'id' | 'childIndex'
+}
+
 export type AnimationDelayCallbackParam = {
     count: number
     index: number
@@ -1540,9 +1548,6 @@ export interface SeriesOption<
 
     // Needs to be override
     data?: unknown
-
-    // Color palette policy
-    colorBy?: ColorBy
 
     legendHoverLink?: boolean
 

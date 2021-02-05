@@ -33,7 +33,8 @@ import {
     LineStyleOption,
     OptionDataValue,
     StatesOptionMixin,
-    SeriesLineLabelOption
+    SeriesLineLabelOption,
+    ColorByMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import type { LineDrawModelOption } from '../helper/LineDraw';
@@ -101,6 +102,7 @@ export interface LinesDataItemOption extends LinesStateOption, StatesOptionMixin
 }
 
 export interface LinesSeriesOption extends SeriesOption<LinesStateOption>, LinesStateOption,
+    ColorByMixin,
     SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesOnPolarOptionMixin,
     SeriesOnCalendarOptionMixin, SeriesLargeOptionMixin {
 
@@ -364,6 +366,8 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         zlevel: 0,
         z: 2,
         legendHoverLink: true,
+
+        colorBy: 'seriesName',
 
         // Cartesian coordinate system
         xAxisIndex: 0,

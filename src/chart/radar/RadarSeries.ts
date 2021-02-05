@@ -32,7 +32,8 @@ import {
     StatesOptionMixin,
     OptionDataItemObject,
     SeriesEncodeOptionMixin,
-    CallbackDataParams
+    CallbackDataParams,
+    ColorByMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -55,6 +56,7 @@ export interface RadarSeriesDataItemOption extends SymbolOptionMixin,
 }
 
 export interface RadarSeriesOption extends SeriesOption<RadarSeriesStateOption>, RadarSeriesStateOption,
+    ColorByMixin,
     SymbolOptionMixin<CallbackDataParams>, SeriesEncodeOptionMixin {
     type?: 'radar'
     coordinateSystem?: 'radar'
@@ -145,7 +147,7 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
     static defaultOption: RadarSeriesOption = {
         zlevel: 0,
         z: 2,
-        colorBy: 'item',
+        colorBy: 'name',
         coordinateSystem: 'radar',
         legendHoverLink: true,
         radarIndex: 0,

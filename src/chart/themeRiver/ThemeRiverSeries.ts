@@ -33,7 +33,8 @@ import {
     BoxLayoutOptionMixin,
     ZRColor,
     Dictionary,
-    SeriesLabelOption
+    SeriesLabelOption,
+    ColorByMixin
 } from '../../util/types';
 import SingleAxis from '../../coord/single/SingleAxis';
 import GlobalModel from '../../model/Global';
@@ -54,6 +55,7 @@ export interface ThemeRiverStateOption {
 }
 
 export interface ThemeRiverSeriesOption extends SeriesOption<ThemeRiverStateOption>, ThemeRiverStateOption,
+    ColorByMixin,
     SeriesOnSingleOptionMixin, BoxLayoutOptionMixin {
     type?: 'themeRiver'
 
@@ -291,7 +293,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
         zlevel: 0,
         z: 2,
 
-        colorBy: 'item',
+        colorBy: 'name',
 
         coordinateSystem: 'singleAxis',
 

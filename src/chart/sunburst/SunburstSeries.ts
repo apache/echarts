@@ -30,7 +30,8 @@ import {
     CallbackDataParams,
     StatesOptionMixin,
     OptionDataItemObject,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    ColorByMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -105,6 +106,7 @@ interface SortParam {
 }
 export interface SunburstSeriesOption extends
     SeriesOption<SunburstStateOption, ExtraStateOption>, SunburstStateOption,
+    ColorByMixin,
     CircleLayoutOptionMixin {
 
     type?: 'sunburst'
@@ -194,6 +196,8 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
     static defaultOption: SunburstSeriesOption = {
         zlevel: 0,
         z: 2,
+
+        colorBy: 'id',
 
         // 默认全局居中
         center: ['50%', '50%'],

@@ -36,7 +36,8 @@ import {
     OptionDataItemObject,
     SeriesEncodeOptionMixin,
     CallbackDataParams,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    ColorByMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -60,6 +61,7 @@ export interface ScatterDataItemOption extends SymbolOptionMixin,
 }
 
 export interface ScatterSeriesOption extends SeriesOption<ScatterStateOption, ExtraStateOption>, ScatterStateOption,
+    ColorByMixin,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SeriesLargeOptionMixin, SeriesStackOptionMixin,
@@ -121,6 +123,8 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
 
         symbolSize: 10,          // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
         // symbolRotate: null,  // 图形旋转控制
+
+        colorBy: 'seriesName',
 
         large: false,
         // Available when large is true

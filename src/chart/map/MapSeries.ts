@@ -32,7 +32,8 @@ import {
     ParsedValue,
     SeriesOnGeoOptionMixin,
     StatesOptionMixin,
-    SeriesLabelOption
+    SeriesLabelOption,
+    ColorByMixin
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
@@ -54,6 +55,8 @@ export type MapValueCalculationType = 'sum' | 'average' | 'min' | 'max';
 
 export interface MapSeriesOption extends
     SeriesOption<MapStateOption>, MapStateOption,
+
+    ColorByMixin,
 
     GeoCommonOptionMixin,
     // If `geoIndex` is not specified, a exclusive geo will be
@@ -231,6 +234,8 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         z: 2,
 
         coordinateSystem: 'geo',
+
+        colorBy: 'seriesName',
 
         // map should be explicitly specified since ec3.
         map: '',

@@ -36,7 +36,8 @@ import {
     OptionDataItemObject,
     StatesOptionMixin,
     SeriesLabelOption,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    ColorByMixin
 } from '../../util/types';
 import List from '../../data/List';
 
@@ -96,6 +97,7 @@ export interface PieDataItemOption extends
 }
 export interface PieSeriesOption extends
     Omit<SeriesOption<PieStateOption, ExtraStateOption>, 'labelLine'>, PieStateOption,
+    ColorByMixin,
     CircleLayoutOptionMixin,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {
@@ -130,7 +132,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
      * @overwrite
      */
     init(option: PieSeriesOption): void {
-        console.log('init');
         super.init.apply(this, arguments as any);
 
         // Enable legend selection for each data item
@@ -200,7 +201,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         z: 2,
         legendHoverLink: true,
 
-        colorBy: 'item',
+        colorBy: 'name',
 
         // 默认全局居中
         center: ['50%', '50%'],

@@ -31,7 +31,8 @@ import {
     StatesOptionMixin,
     OptionDataItemObject,
     CallbackDataParams,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    ColorByMixin
 } from '../../util/types';
 import List from '../../data/List';
 import View from '../../coord/View';
@@ -80,6 +81,7 @@ export interface TreeSeriesLeavesOption extends TreeSeriesStateOption, StatesOpt
 
 export interface TreeSeriesOption extends
     SeriesOption<TreeSeriesStateOption, ExtraStateOption>, TreeSeriesStateOption,
+    ColorByMixin,
     SymbolOptionMixin, BoxLayoutOptionMixin, RoamOptionMixin {
     type?: 'tree'
 
@@ -225,6 +227,8 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
     }
 
     static defaultOption: TreeSeriesOption = {
+        colorBy: 'seriesName',
+
         zlevel: 0,
         z: 2,
         coordinateSystem: 'view',
