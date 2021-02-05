@@ -108,8 +108,10 @@ class TooltipRichContent {
                 verticalAlign: 'top',
                 align: 'left',
                 width: +tooltipModel.get(['textStyle', 'width']) || null,
+                height: +tooltipModel.get(['textStyle', 'height']) || null,
                 overflow: tooltipModel.get(['textStyle', 'overflow']),
-                ellipsis: tooltipModel.get(['textStyle', 'ellipsis'])
+                ellipsis: tooltipModel.get(['textStyle', 'ellipsis']),
+                lineOverflow: tooltipModel.get(['textStyle', 'lineOverflow'])
             },
             z: tooltipModel.get('z')
         });

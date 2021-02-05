@@ -421,6 +421,14 @@ function setTextStyleCommon(
     if (margin != null) {
         textStyle.margin = margin;
     }
+    const ellipsis = textStyleModel.get('ellipsis');
+    if (ellipsis) {
+        textStyle.ellipsis = ellipsis;
+    }
+    const lineOverflow = textStyleModel.get('lineOverflow');
+    if (lineOverflow) {
+        textStyle.lineOverflow = lineOverflow;
+    }
     setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true, false);
 }
 // Consider case:
