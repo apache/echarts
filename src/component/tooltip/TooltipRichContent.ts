@@ -103,15 +103,15 @@ class TooltipRichContent {
                 textShadowBlur: textStyleModel.get('textShadowBlur') || 0,
                 textShadowOffsetX: textStyleModel.get('textShadowOffsetX') || 0,
                 textShadowOffsetY: textStyleModel.get('textShadowOffsetY') || 0,
-                fill: tooltipModel.get(['textStyle', 'color']),
+                fill: textStyleModel.get('color'),
                 padding: getPaddingFromTooltipModel(tooltipModel, 'richText'),
                 verticalAlign: 'top',
                 align: 'left',
-                width: +tooltipModel.get(['textStyle', 'width']) || null,
-                height: +tooltipModel.get(['textStyle', 'height']) || null,
-                overflow: tooltipModel.get(['textStyle', 'overflow']),
-                ellipsis: tooltipModel.get(['textStyle', 'ellipsis']),
-                lineOverflow: tooltipModel.get(['textStyle', 'lineOverflow'])
+                width: +textStyleModel.get('width') || null,
+                height: +textStyleModel.get('height') || null,
+                overflow: textStyleModel.get('overflow'),
+                ellipsis: textStyleModel.get('ellipsis'),
+                lineOverflow: textStyleModel.get('lineOverflow')
             },
             z: tooltipModel.get('z')
         });

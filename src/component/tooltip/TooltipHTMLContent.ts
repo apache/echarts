@@ -358,13 +358,14 @@ class TooltipHTMLContent {
             + `border-color: ${nearPointColor};`
             + (tooltipModel.get('extraCssText') || '');
 
-        const userWidth = tooltipModel.get(['textStyle', 'width']);
+        const textStyleModel = tooltipModel.getModel('textStyle');
+        const userWidth = textStyleModel.get('width');
         if (userWidth != null) {
             el.style.cssText += `;width:${userWidth}px;`;
             // `text-overflow_string` has very humble compatibility
             // shttps://caniuse.com/mdn-css_properties_text-overflow_string
-            const ellipsis = retrieve(tooltipModel.get(['textStyle', 'ellipsis']), 'ellipsis');
-            const userOverflow = tooltipModel.get(['textStyle', 'overflow']);
+            const ellipsis = retrieve(textStyleModel.get('ellipsis'), 'ellipsis');
+            const userOverflow = textStyleModel.get('overflow');
             if (userOverflow) {
                 let overflowStyle;
                 if (userOverflow === 'truncate') {
