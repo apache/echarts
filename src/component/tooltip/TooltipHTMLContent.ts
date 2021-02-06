@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { isString, indexOf, map, each, bind, isArray, isDom } from 'zrender/src/core/util';
+import { isString, indexOf, map, each, bind, isArray, isDom, retrieve } from 'zrender/src/core/util';
 import { toHex } from 'zrender/src/tool/color';
 import { normalizeEvent } from 'zrender/src/core/event';
 import { transformLocalCoord } from 'zrender/src/core/dom';
@@ -363,26 +363,21 @@ class TooltipHTMLContent {
             el.style.cssText += `;width:${userWidth}px;`;
             // `text-overflow_string` has very humble compatibility
             // shttps://caniuse.com/mdn-css_properties_text-overflow_string
-            const ellipsis = tooltipModel.get(['textStyle', 'ellipsis']);
+            const ellipsis = retrieve(tooltipModel.get(['textStyle', 'ellipsis']), 'ellipsis');
             const userOverflow = tooltipModel.get(['textStyle', 'overflow']);
-            switch (userOverflow) {
-                case 'truncate':
-                    el.style.cssText += ';overflow:hidden;'
-                        + `text-overflow:${ellipsis != null ? `\'${ellipsis}\'` : 'ellipsis'};`
-                        + 'white-space:nowrap;';
-                    break;
-
-                case 'break':
-                    el.style.cssText += ';word-break:break-word;white-space:normal;';
-                    break;
-
-                case 'breakAll':
-                    el.style.cssText += ';word-break:break-all;white-space:normal;';
-                    break;
-
-                default:
-                    el.style.cssText += '';
-                    break;
+            if (userOverflow) {
+                let overflowStyle;
+                if (userOverflow === 'truncate') {
+                    overflowStyle = `overflow:hidden;text-overflow:${ellipsis};white-space:nowrap;`;
+                }
+                else {
+                    const breakMode = userOverflow === 'break'
+                        ? 'break-word'
+                        : userOverflow === 'breakAll'
+                            ? 'break-all' : '';
+                    breakMode && (overflowStyle = `word-break:${breakMode};white-space:normal;`);
+                }
+                el.style.cssText += overflowStyle;
             }
         }
 
