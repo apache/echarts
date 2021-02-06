@@ -44,7 +44,6 @@ import List from '../../data/List';
 import { normalizeToArray } from '../../util/model';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
-import { TextStyleProps } from 'zrender/src/graphic/Text';
 
 // Only support numberic value.
 type TreemapSeriesDataValue = number | number[];
@@ -55,7 +54,6 @@ interface BreadcrumbItemStyleOption extends ItemStyleOption {
 }
 
 interface TreemapSeriesLabelOption extends SeriesLabelOption {
-    ellipsis?: TextStyleProps['ellipsis']
     formatter?: string | ((params: CallbackDataParams) => string)
 }
 
