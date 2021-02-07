@@ -90,7 +90,7 @@ class TooltipRichContent {
             style: {
                 rich: markupStyleCreator.richTextStyles,
                 text: content as string,
-                lineHeight: +tooltipModel.get(['textStyle', 'lineHeight']) || 22,
+                lineHeight: +textStyleModel.get('lineHeight') || 22,
                 backgroundColor: tooltipModel.get('backgroundColor'),
                 borderRadius: tooltipModel.get('borderRadius'),
                 borderWidth: 1,
