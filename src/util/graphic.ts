@@ -53,7 +53,9 @@ import {
     ZRRectLike,
     ZRStyleProps,
     PayloadAnimationPart,
-    AnimationOption
+    AnimationOption,
+    ColorByMixin,
+    ColorBy
 } from './types';
 import {
     extend,

@@ -24,7 +24,7 @@ import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
     SeriesOption, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType, DimensionLoose
+    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType, DimensionLoose, ColorBy, ColorByMixin
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {PaletteMixin} from './mixin/palette';
@@ -390,6 +390,11 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      */
     getRawData(): List {
         return inner(this).dataBeforeProcessed;
+    }
+
+    getColorBy(): ColorBy {
+        const colorBy = (this as SeriesModel<SeriesOption & ColorByMixin>).get('colorBy');
+        return colorBy || 'seriesName';
     }
 
     /**

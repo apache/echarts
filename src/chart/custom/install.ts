@@ -56,7 +56,8 @@ import {
     DecalObject,
     InnerDecalObject,
     TextCommonOption,
-    ECActionEvent
+    ECActionEvent,
+    ColorByMixin
 } from '../../util/types';
 import Element, { ElementProps, ElementTextConfig } from 'zrender/src/Element';
 import prepareCartesian2d from '../../coord/cartesian/prepareCustom';
@@ -289,6 +290,7 @@ interface CustomSeriesStateOption {
 
 export interface CustomSeriesOption extends
     SeriesOption<never>,    // don't support StateOption in custom series.
+    ColorByMixin,
     SeriesEncodeOptionMixin,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
@@ -427,6 +429,8 @@ class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
     currentZ: number;
 
     static defaultOption: CustomSeriesOption = {
+        colorBy: 'seriesName',
+
         coordinateSystem: 'cartesian2d', // Can be set as 'none'
         zlevel: 0,
         z: 2,

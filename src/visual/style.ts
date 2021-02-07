@@ -18,7 +18,8 @@
 */
 
 import { isFunction, extend, createHashMap } from 'zrender/src/core/util';
-import { StageHandler, CallbackDataParams, ZRColor, Dictionary, InnerDecalObject } from '../util/types';
+import { StageHandler, CallbackDataParams, ZRColor, Dictionary, InnerDecalObject, SeriesOption, ColorByMixin }
+    from '../util/types';
 import makeStyleMapper from '../model/mixin/makeStyleMapper';
 import { ITEM_STYLE_KEY_MAP } from '../model/mixin/itemStyle';
 import { LINE_STYLE_KEY_MAP } from '../model/mixin/lineStyle';
@@ -169,8 +170,9 @@ const dataColorPaletteTask: StageHandler = {
         // Each type of series use one scope.
         // Pie and funnel are using diferrent scopes
         const paletteScopeGroupByType = createHashMap<object>();
-        ecModel.eachSeries(function (seriesModel) {
-            if (seriesModel.get('colorBy') !== 'item') {
+        ecModel.eachSeries((seriesModel: SeriesModel<SeriesOption & ColorByMixin>) => {
+            const colorBy = seriesModel.getColorBy();
+            if (colorBy === 'seriesId' || colorBy === 'seriesIndex' || colorBy === 'seriesName') {
                 return;
             }
             let colorScope = paletteScopeGroupByType.get(seriesModel.type);
@@ -182,8 +184,9 @@ const dataColorPaletteTask: StageHandler = {
         });
 
 
-        ecModel.eachSeries(function (seriesModel) {
-            if (seriesModel.get('colorBy') !== 'item' || ecModel.isSeriesFiltered(seriesModel)) {
+        ecModel.eachSeries((seriesModel: SeriesModel<SeriesOption & ColorByMixin>) => {
+            const colorBy = seriesModel.getColorBy();
+            if (colorBy === 'seriesId' || colorBy === 'seriesIndex' || colorBy === 'seriesName') {
                 return;
             }
 

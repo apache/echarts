@@ -844,12 +844,16 @@ export interface BorderOptionMixin {
     borderMiterLimit?: number
 }
 
+export type ColorBy = 'seriesName' | 'seriesIndex' | 'seriesId' | 'name' | 'dataIndex' | 'id';
+
+export type TreeColorBy = ColorBy | 'inherit' | 'childIndex';
+
 export interface ColorByMixin {
-    colorBy?: 'seriesName' | 'seriesIndex' | 'seriesId' | 'name' | 'dataIndex' | 'id'
+    colorBy?: ColorBy
 }
 
 export interface TreemapColorByMixin {
-    colorBy?: 'seriesName' | 'seriesIndex' | 'seriesId' | 'name' | 'dataIndex' | 'id' | 'childIndex'
+    colorBy?: TreeColorBy
 }
 
 export type AnimationDelayCallbackParam = {
@@ -1525,8 +1529,6 @@ export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStat
      */
     blur?: StateOption & ExtraStateOpts['blur']
 }
-
-export type ColorBy = 'series' | 'item';
 
 export interface SeriesOption<
     StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
