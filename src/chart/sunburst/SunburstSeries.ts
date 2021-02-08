@@ -31,7 +31,7 @@ import {
     StatesOptionMixin,
     OptionDataItemObject,
     DefaultEmphasisFocus,
-    ColorByMixin
+    SunburstColorByMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -78,6 +78,7 @@ export interface SunburstStateOption {
 
 export interface SunburstSeriesNodeItemOption extends
     SunburstStateOption, StatesOptionMixin<SunburstStateOption, ExtraStateOption>,
+    SunburstColorByMixin,
     OptionDataItemObject<OptionDataValue>
 {
     nodeClick?: 'rootToNode' | 'link'
@@ -91,7 +92,9 @@ export interface SunburstSeriesNodeItemOption extends
 
     cursor?: string
 }
-export interface SunburstSeriesLevelOption extends SunburstStateOption, StatesOptionMixin<SunburstStateOption> {
+export interface SunburstSeriesLevelOption extends SunburstStateOption, StatesOptionMixin<SunburstStateOption>,
+    SunburstColorByMixin
+{
     highlight?: {
         itemStyle?: SunburstItemStyleOption
         label?: SunburstLabelOption
@@ -106,7 +109,7 @@ interface SortParam {
 }
 export interface SunburstSeriesOption extends
     SeriesOption<SunburstStateOption, ExtraStateOption>, SunburstStateOption,
-    ColorByMixin,
+    SunburstColorByMixin,
     CircleLayoutOptionMixin {
 
     type?: 'sunburst'
@@ -197,7 +200,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         zlevel: 0,
         z: 2,
 
-        colorBy: 'id',
+        colorBy: 'lighter',
 
         // 默认全局居中
         center: ['50%', '50%'],
@@ -259,7 +262,16 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
         data: [],
 
-        levels: [],
+        levels: [
+            {
+                itemStyle: {
+                    color: '#ccc'
+                }
+            },
+            {
+                colorBy: 'childIndex'
+            }
+        ],
 
         /**
          * Sort order.

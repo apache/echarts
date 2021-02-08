@@ -846,14 +846,20 @@ export interface BorderOptionMixin {
 
 export type ColorBy = 'seriesName' | 'seriesIndex' | 'seriesId' | 'name' | 'dataIndex' | 'id';
 
-export type TreeColorBy = ColorBy | 'inherit' | 'childIndex';
+export type SunburstColorBy = ColorBy | 'inherit' | 'childIndex' | 'lighter';
+
+export type TreemapColorBy = ColorBy  | 'inherit' | 'childIndex' | 'value';
 
 export interface ColorByMixin {
     colorBy?: ColorBy
 }
 
+export interface SunburstColorByMixin {
+    colorBy?: SunburstColorBy
+}
+
 export interface TreemapColorByMixin {
-    colorBy?: TreeColorBy
+    colorBy?: TreemapColorBy
 }
 
 export type AnimationDelayCallbackParam = {
