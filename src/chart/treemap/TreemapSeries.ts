@@ -123,14 +123,16 @@ export interface TreemapSeriesVisualOption {
 }
 
 export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption,
-    TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
+    TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption>,
+    TreemapColorByMixin {
 
     color?: ColorString[] | 'none',
     decal?: DecalObject[] | 'none'
 }
 
 export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
-    TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
+    TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption>,
+    TreemapColorByMixin {
     id?: OptionId
     name?: OptionName
 
@@ -324,7 +326,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         colorAlpha: null,           // Array. Specify color alpha range of each level, like [0.2, 0.8]
         colorSaturation: null,      // Array. Specify color saturation of each level, like [0.2, 0.5]
         // colorMappingBy: 'index',    // 'value' or 'index' or 'id'.
-        colorBy: 'dataIndex',
+        colorBy: 'inherit',
         visibleMin: 10,             // If area less than this threshold (unit: pixel^2), node will not
                                     // be rendered. Only works when sort is 'asc' or 'desc'.
         childrenVisibleMin: null,   // If area of a node less than this threshold (unit: pixel^2),
@@ -332,7 +334,10 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
                                     // Why grandchildren? If not grandchildren but children,
                                     // some siblings show children and some not,
                                     // the appearance may be mess and not consistent,
-        levels: []                  // Each item: {
+        levels: [{
+            colorBy: 'childIndex'
+        }]
+                                    // Each item: {
                                     //     visibleMin, itemStyle, visualDimension, label
                                     // }
         // data: {
