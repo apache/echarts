@@ -77,14 +77,14 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     }
 
     setViewRect(x: number, y: number, width: number, height: number): void {
-        this.transformTo(x, y, width, height);
+        this._transformTo(x, y, width, height);
         this._viewRect = new BoundingRect(x, y, width, height);
     }
 
     /**
      * Transformed to particular position and size
      */
-    transformTo(x: number, y: number, width: number, height: number): void {
+    protected _transformTo(x: number, y: number, width: number, height: number): void {
         const rect = this.getBoundingRect();
         const rawTransform = this._rawTransformable;
 
@@ -92,6 +92,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
             new BoundingRect(x, y, width, height)
         );
 
+        // Hint: only works before `this._updateTransform` firstly called.
         rawTransform.decomposeTransform();
 
         this._updateTransform();

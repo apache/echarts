@@ -82,7 +82,7 @@ class Geo extends View {
         return false;
     }
 
-    transformTo(x: number, y: number, width: number, height: number): void {
+    protected _transformTo(x: number, y: number, width: number, height: number): void {
         let rect = this.getBoundingRect();
         const invertLongitute = this._invertLongitute;
 
@@ -99,6 +99,7 @@ class Geo extends View {
             new BoundingRect(x, y, width, height)
         );
 
+        // Hint: only works before `this._updateTransform` firstly called.
         rawTransformable.decomposeTransform();
 
         if (invertLongitute) {
