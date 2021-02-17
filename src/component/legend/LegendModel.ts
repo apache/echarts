@@ -98,6 +98,11 @@ export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, Bor
      */
     padding?: number | number[]
     /**
+     * Icon of the legend items.
+     * @default 'roundRect'
+     */
+    icon?: string
+    /**
      * Gap between each legend item.
      * @default 10
      */
