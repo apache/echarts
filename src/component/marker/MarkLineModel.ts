@@ -43,8 +43,8 @@ interface MarkLineDataItemOptionBase extends MarkLineStateOption, StatesOptionMi
 export interface MarkLine1DDataItemOption extends MarkLineDataItemOptionBase {
 
     // On cartesian coordinate system
-    xAxis?: number
-    yAxis?: number
+    xAxis?: number | string
+    yAxis?: number | string
 
     // Use statistic method
     type?: MarkerStatisticType
