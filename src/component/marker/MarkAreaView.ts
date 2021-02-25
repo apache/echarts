@@ -26,7 +26,7 @@ import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
-import { retrieve, mergeAll, map, defaults, curry, filter, HashMap, each } from 'zrender/src/core/util';
+import { retrieve, mergeAll, map, defaults, curry, filter, HashMap } from 'zrender/src/core/util';
 import { ScaleDataValue, ParsedValue, ZRColor } from '../../util/types';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import MarkAreaModel, { MarkArea2DDataItemOption } from './MarkAreaModel';
@@ -248,16 +248,16 @@ class MarkAreaView extends MarkerView {
             const points = map(dimPermutations, function (dim) {
                 return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
             });
-            const xScale = coordSys.getAxis('x').scale;
-            const yScale = coordSys.getAxis('y').scale;
-            const xAxis = xScale.getExtent();
-            const yAxis = yScale.getExtent();
-            const xPoint = [xScale.parse(areaData.get('x0', idx)), xScale.parse(areaData.get('x1', idx))];
-            const yPoint = [yScale.parse(areaData.get('y0', idx)), yScale.parse(areaData.get('y1', idx))];
-            xPoint.sort();
-            yPoint.sort();
-            const overlapped = !(xAxis[0] > xPoint[1] || xAxis[1] < xPoint[0]
-                                || yAxis[0] > yPoint[1] || yAxis[1] < yPoint[0]);
+            const xAxisScale = coordSys.getAxis('x').scale;
+            const yAxisScale = coordSys.getAxis('y').scale;
+            const xAxisExtent = xAxisScale.getExtent();
+            const yAxisExtent = yAxisScale.getExtent();
+            const xPointExtent = [xAxisScale.parse(areaData.get('x0', idx)), xAxisScale.parse(areaData.get('x1', idx))];
+            const yPointExtent = [yAxisScale.parse(areaData.get('y0', idx)), yAxisScale.parse(areaData.get('y1', idx))];
+            numberUtil.asc(xPointExtent);
+            numberUtil.asc(yPointExtent);
+            const overlapped = !(xAxisExtent[0] > xPointExtent[1] || xAxisExtent[1] < xPointExtent[0]
+                                || yAxisExtent[0] > yPointExtent[1] || yAxisExtent[1] < yPointExtent[0]);
             // If none of the area is inside coordSys, allClipped is set to be true
             // in layout so that label will not be displayed. See #12591
             const allClipped = !overlapped;
