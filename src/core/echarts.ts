@@ -193,7 +193,7 @@ type ConnectStatus =
     | typeof CONNECT_STATUS_UPDATING
     | typeof CONNECT_STATUS_UPDATED;
 
-interface SetOptionOpts {
+export interface SetOptionOpts {
     notMerge?: boolean;
     lazyUpdate?: boolean;
     silent?: boolean;

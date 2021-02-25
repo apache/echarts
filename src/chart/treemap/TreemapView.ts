@@ -959,16 +959,7 @@ function renderNode(
             upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL
         );
 
-        let text = retrieve(
-            seriesModel.getFormattedLabel(
-                thisNode.dataIndex, 'normal', null, null, normalLabelModel.get('formatter')
-            ),
-            convertOptionIdName(nodeModel.get('name'), null)
-        );
-        if (!upperLabelRect && thisLayout.isLeafRoot) {
-            const iconChar = seriesModel.get('drillDownIcon', true);
-            text = iconChar ? iconChar + ' ' + text : text;
-        }
+        const defaultText = convertOptionIdName(nodeModel.get('name'), null);
 
         const isShow = normalLabelModel.getShallow('show');
 
@@ -976,7 +967,7 @@ function renderNode(
             rectEl,
             getLabelStatesModels(nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL),
             {
-                defaultText: isShow ? text : null,
+                defaultText: isShow ? defaultText : null,
                 inheritColor: visualColor,
                 defaultOpacity: visualOpacity,
                 labelFetcher: seriesModel,
