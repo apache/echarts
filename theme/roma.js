@@ -27,7 +27,7 @@
         typeof exports.nodeName !== 'string'
     ) {
         // CommonJS
-        factory(exports, require('echarts/lib/echarts'));
+        factory(exports, require('echarts'));
     } else {
         // Browser globals
         factory({}, root.echarts);
