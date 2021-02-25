@@ -248,22 +248,19 @@ class MarkAreaView extends MarkerView {
             const points = map(dimPermutations, function (dim) {
                 return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
             });
+            const xAxis = coordSys.getAxis('x').scale.getExtent();
+            const yAxis = coordSys.getAxis('y').scale.getExtent();
+            const xPoint = [coordSys.getAxis('x').scale.parse(areaData.get('x0', idx)),
+                                coordSys.getAxis('x').scale.parse(areaData.get('x1', idx))];
+            const yPoint = [coordSys.getAxis('y').scale.parse(areaData.get('y0', idx)),
+                                coordSys.getAxis('y').scale.parse(areaData.get('y1', idx))];
+            xPoint.sort();
+            yPoint.sort();
+            const overlapped = !(xAxis[0] > xPoint[1] || xAxis[1] < xPoint[0]
+                                || yAxis[0] > yPoint[1] || yAxis[1] < yPoint[0]);
             // If none of the area is inside coordSys, allClipped is set to be true
             // in layout so that label will not be displayed. See #12591
-            let allClipped = true;
-            each(dimPermutations, function (dim) {
-                if (!allClipped) {
-                    return;
-                }
-                const xValue = areaData.get(dim[0], idx);
-                const yValue = areaData.get(dim[1], idx);
-                // If is infinity, the axis should be considered not clipped
-                if ((isInifinity(xValue) || coordSys.getAxis('x').containData(xValue))
-                    && (isInifinity(yValue) || coordSys.getAxis('y').containData(yValue))
-                ) {
-                    allClipped = false;
-                }
-            });
+            const allClipped = !overlapped;
             areaData.setItemLayout(idx, {
                 points: points,
                 allClipped: allClipped
