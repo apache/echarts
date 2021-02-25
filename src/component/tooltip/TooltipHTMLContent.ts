@@ -91,7 +91,7 @@ function assembleTransition(duration: number, onlyFade?: boolean): string {
     let transitionText = 'opacity ' + (duration / 2) + 's ' + transitionCurve
                        + ',visibility ' + (duration / 2) + 's ' + transitionCurve;
     if (!onlyFade) {
-        transitionText += env.transform3dSupported
+        transitionText += env.transformSupported
             ? `,${TRANSFORM_VENDOR} ${duration}s ${transitionCurve}`
             : `,left ${duration}s ${transitionCurve},top ${duration}s ${transitionCurve}`;
     }
@@ -105,7 +105,7 @@ function assembleTransform(el: HTMLElement, x: number, y: number, zrHeight: numb
     const x0 = x.toFixed(0);
     let y0;
     // not support transform, use `left` and `top` instead.
-    if (!env.transform3dSupported) {
+    if (!env.transformSupported) {
         y0 = (y - el.offsetHeight / 2).toFixed(0);
         return toString
             ? `top:${y0}px;left:${x0}px;`
@@ -113,8 +113,8 @@ function assembleTransform(el: HTMLElement, x: number, y: number, zrHeight: numb
     }
     // support transform
     y0 = (y - zrHeight).toFixed(0);
-    const ie3d = env.ieTransform3dSupported;
-    const translate = `translate${ie3d ? '' : '3d'}(${x0}px,${y0}px${ie3d ? '' : ',0'})`;
+    const is3d = env.transform3dSupported;
+    const translate = `translate${is3d ? '3d' : ''}(${x0}px,${y0}px${is3d ? ',0' : ''})`;
     return toString
         ? CSS_TRANSFORM_VENDOR + ':' + translate + ';'
         : [[TRANSFORM_VENDOR, translate]];
@@ -382,7 +382,7 @@ class TooltipHTMLContent {
                 // stop, "unfocusAdjacency". Here `pointer-events: none` is used to solve
                 // it. Although it is not supported by IE8~IE10, fortunately it is a rare
                 // scenario.
-                + `pointer-event:${this._enterable ? 'auto' : 'none'}`;
+                + `;pointer-event:${this._enterable ? 'auto' : 'none'}`;
         }
 
         this._show = true;

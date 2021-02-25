@@ -31,7 +31,7 @@ export function shouldTooltipConfine(tooltipModel: Model<TooltipOption>): boolea
         : tooltipModel.get('renderMode') === 'richText';
 }
 
-function testStyle(styleProps: string[]) {
+function testStyle(styleProps: string[]): string | undefined {
 	const style = document.documentElement.style;
 	for (let i = 0, len = styleProps.length; i < len; i++) {
 		if (styleProps[i] in style) {
