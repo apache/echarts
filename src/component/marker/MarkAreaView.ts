@@ -248,12 +248,12 @@ class MarkAreaView extends MarkerView {
             const points = map(dimPermutations, function (dim) {
                 return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
             });
-            const xAxis = coordSys.getAxis('x').scale.getExtent();
-            const yAxis = coordSys.getAxis('y').scale.getExtent();
-            const xPoint = [coordSys.getAxis('x').scale.parse(areaData.get('x0', idx)),
-                                coordSys.getAxis('x').scale.parse(areaData.get('x1', idx))];
-            const yPoint = [coordSys.getAxis('y').scale.parse(areaData.get('y0', idx)),
-                                coordSys.getAxis('y').scale.parse(areaData.get('y1', idx))];
+            const xScale = coordSys.getAxis('x').scale;
+            const yScale = coordSys.getAxis('y').scale;
+            const xAxis = xScale.getExtent();
+            const yAxis = yScale.getExtent();
+            const xPoint = [xScale.parse(areaData.get('x0', idx)), xScale.parse(areaData.get('x1', idx))];
+            const yPoint = [yScale.parse(areaData.get('y0', idx)), yScale.parse(areaData.get('y1', idx))];
             xPoint.sort();
             yPoint.sort();
             const overlapped = !(xAxis[0] > xPoint[1] || xAxis[1] < xPoint[0]
