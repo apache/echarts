@@ -63,7 +63,7 @@ export type VerticalAlign = 'top' | 'middle' | 'bottom';
 
 // Types from zrender
 export type ColorString = string;
-export type ZRColor = ColorString | LinearGradientObject | RadialGradientObject | PatternObject;
+export type ZRColor = ColorString | Omit<LinearGradientObject, '__canvasGradient'> | Omit<RadialGradientObject, '__canvasGradient'> | PatternObject;
 export type ZRLineType = 'solid' | 'dotted' | 'dashed' | number | number[];
 
 export type ZRFontStyle = 'normal' | 'italic' | 'oblique';
