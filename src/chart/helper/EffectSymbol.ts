@@ -110,7 +110,8 @@ class EffectSymbol extends Group {
             // TODO Configurable effectCfg.period
             ripplePath.animate('', true)
                 .when(effectCfg.period, {
-                    scale: [effectCfg.rippleScale / 2, effectCfg.rippleScale / 2]
+                    scaleX: effectCfg.rippleScale / 2,
+                    scaleY: effectCfg.rippleScale / 2
                 })
                 .delay(delay)
                 .start();
