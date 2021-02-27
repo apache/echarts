@@ -104,17 +104,19 @@ function assembleTransition(duration: number, onlyFade?: boolean): string {
 function assembleTransform(el: HTMLElement, x: number, y: number, zrHeight: number, toString?: boolean) {
     // If using float on style, the final width of the dom might
     // keep changing slightly while mouse move. So `toFixed(0)` them.
-    const x0 = x.toFixed(0);
+    const x0 = (x - 10).toFixed(0);
     let y0;
     // not support transform, use `left` and `top` instead.
     if (!env.transformSupported) {
-        y0 = (y - el.offsetHeight / 2).toFixed(0);
+        y0 = y.toFixed(0);
         return toString
             ? `top:${y0}px;left:${x0}px;`
             : [['top', `${y0}px`], ['left', `${x0}px`]];
     }
     // support transform
-    y0 = (y - zrHeight).toFixed(0);
+    // PENDING: don't minus `zrHeight` and keep consistent with top?
+    // why there is a 10px gap?
+    y0 = (y - zrHeight - 10).toFixed(0);
     const is3d = env.transform3dSupported;
     const translate = `translate${is3d ? '3d' : ''}(${x0}px,${y0}px${is3d ? ',0' : ''})`;
     return toString
@@ -370,13 +372,15 @@ class TooltipHTMLContent {
         clearTimeout(this._longHideTimeout);
         const el = this.el;
         const style = el.style;
+        const styleCoord = this._styleCoord;
         if (!el.innerHTML) {
             style.display = 'none';
         }
         else {
             style.cssText = gCssText
                 + assembleCssText(tooltipModel, !this._firstShow, this._longHide)
-                + `${TRANSFORM_VENDOR}:${style[TRANSFORM_VENDOR as any]};`
+                // initial transform
+                + assembleTransform(el, styleCoord[0], styleCoord[1], this._zr.getHeight(), true)
                 + `border-color:${convertToColorString(nearPointColor)};`
                 + (tooltipModel.get('extraCssText') || '')
                 // If mouse occasionally move over the tooltip, a mouseout event will be
