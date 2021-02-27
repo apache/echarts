@@ -56,3 +56,11 @@ export function toCSSVendorPrefix(styleVendor: string, styleProp: string) {
 		: `-${styleVendor.slice(0, idx)}-${styleProp}`;
 	return styleVendor.toLowerCase();
 }
+
+export function getComputedStyle(el: HTMLElement, style?: string) {
+	const stl = (el as any).currentStyle
+		|| (document.defaultView && document.defaultView.getComputedStyle(el));
+	return stl
+		? style ? stl[style] : stl
+		: null;
+}

@@ -31,7 +31,13 @@ import { ZRRawEvent } from 'zrender/src/core/types';
 import { ColorString, ZRColor } from '../../util/types';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
-import { shouldTooltipConfine, toCSSVendorPrefix, TRANSFORM_VENDOR, TRANSITION_VENDOR } from './helper';
+import {
+    shouldTooltipConfine,
+    toCSSVendorPrefix,
+    getComputedStyle,
+    TRANSFORM_VENDOR,
+    TRANSITION_VENDOR
+} from './helper';
 import { getPaddingFromTooltipModel } from './tooltipMarkup';
 
 /* global document, window */
@@ -101,22 +107,24 @@ function assembleTransition(duration: number, onlyFade?: boolean): string {
     return CSS_TRANSITION_VENDOR + ':' + transitionText;
 }
 
-function assembleTransform(el: HTMLElement, x: number, y: number, zrHeight: number, toString?: boolean) {
+function assembleTransform(el: HTMLElement, x: number, y: number, toString?: boolean) {
     // If using float on style, the final width of the dom might
     // keep changing slightly while mouse move. So `toFixed(0)` them.
-    const x0 = (x - 10).toFixed(0);
+    let x0;
     let y0;
     // not support transform, use `left` and `top` instead.
     if (!env.transformSupported) {
+        x0 = x.toFixed(0);
         y0 = y.toFixed(0);
         return toString
             ? `top:${y0}px;left:${x0}px;`
             : [['top', `${y0}px`], ['left', `${x0}px`]];
     }
     // support transform
-    // PENDING: don't minus `zrHeight` and keep consistent with top?
-    // why there is a 10px gap?
-    y0 = (y - zrHeight - 10).toFixed(0);
+    // FIXME: the padding of parent element will affect the position of tooltip
+    const stl = getComputedStyle(el.parentElement);
+    x0 = (x - parseInt(stl.paddingLeft, 10)).toFixed(0);
+    y0 = (y - parseInt(stl.paddingTop, 10)).toFixed(0);
     const is3d = env.transform3dSupported;
     const translate = `translate${is3d ? '3d' : ''}(${x0}px,${y0}px${is3d ? ',0' : ''})`;
     return toString
@@ -296,7 +304,8 @@ class TooltipHTMLContent {
             document.body.appendChild(el);
         }
         else {
-            container.appendChild(el);
+            // PENDING
+            container.prepend(el);
         }
 
         this._container = container;
@@ -348,10 +357,9 @@ class TooltipHTMLContent {
         // FIXME
         // Move this logic to ec main?
         const container = this._container;
-        const stl = (container as any).currentStyle
-            || document.defaultView.getComputedStyle(container);
+        const position = getComputedStyle(container, 'position');
         const domStyle = container.style;
-        if (domStyle.position !== 'absolute' && stl.position !== 'absolute') {
+        if (domStyle.position !== 'absolute' && position !== 'absolute') {
             domStyle.position = 'relative';
         }
 
@@ -380,7 +388,7 @@ class TooltipHTMLContent {
             style.cssText = gCssText
                 + assembleCssText(tooltipModel, !this._firstShow, this._longHide)
                 // initial transform
-                + assembleTransform(el, styleCoord[0], styleCoord[1], this._zr.getHeight(), true)
+                + assembleTransform(el, styleCoord[0], styleCoord[1], true)
                 + `border-color:${convertToColorString(nearPointColor)};`
                 + (tooltipModel.get('extraCssText') || '')
                 // If mouse occasionally move over the tooltip, a mouseout event will be
@@ -447,8 +455,7 @@ class TooltipHTMLContent {
             const style = this.el.style;
             const transforms = assembleTransform(
                 this.el,
-                styleCoord[0], styleCoord[1],
-                this._zr.getHeight()
+                styleCoord[0], styleCoord[1]
             ) as string[][];
             each(transforms, (transform) => {
               style[transform[0] as any] = transform[1];
@@ -508,12 +515,10 @@ class TooltipHTMLContent {
 
         // Consider browser compatibility.
         // IE8 does not support getComputedStyle.
-        if (document.defaultView && document.defaultView.getComputedStyle) {
-            const stl = document.defaultView.getComputedStyle(this.el);
-            if (stl) {
-                width += parseInt(stl.borderLeftWidth, 10) + parseInt(stl.borderRightWidth, 10);
-                height += parseInt(stl.borderTopWidth, 10) + parseInt(stl.borderBottomWidth, 10);
-            }
+        const stl = getComputedStyle(this.el);
+        if (stl) {
+            width += parseInt(stl.borderLeftWidth, 10) + parseInt(stl.borderRightWidth, 10);
+            height += parseInt(stl.borderTopWidth, 10) + parseInt(stl.borderBottomWidth, 10);
         }
 
         return {width: width, height: height};
