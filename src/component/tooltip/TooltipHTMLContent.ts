@@ -75,25 +75,27 @@ function assembleArrow(
         transformStyle += `translateX(-50%) rotate(${arrowPos === 'top' ? 225 : 45}deg)`;
     }
 
+    const borderStyle = `${borderColor} solid 1px;`;
     const styleCss = [
         'position:absolute;width:10px;height:10px;',
         `${positionStyle};${transformStyle};`,
-        `border-bottom: ${borderColor} solid 1px;`,
-        `border-right: ${borderColor} solid 1px;`,
-        `background-color: ${backgroundColor};`,
-        'box-shadow: 8px 8px 16px -3px #000;'
+        `border-bottom:${borderStyle}`,
+        `border-right:${borderStyle}`,
+        `background-color:${backgroundColor};`,
+        'box-shadow:8px 8px 16px -3px #000;'
     ];
     return `<div style="${styleCss.join('')}"></div>`;
 }
 
 function assembleTransition(duration: number, onlyFade?: boolean): string {
-    const transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
-    let transitionText = 'opacity ' + (duration / 2) + 's ' + transitionCurve
-                       + ',visibility ' + (duration / 2) + 's ' + transitionCurve;
+    const transitionCurve = 'cubic-bezier(0.23,1,0.32,1)';
+    let transitionOption = ` ${duration / 2}s ${transitionCurve}`;
+    let transitionText = `opacity${transitionOption},visibility${transitionOption}`;
     if (!onlyFade) {
+        transitionOption = ` ${duration}s ${transitionCurve}`;
         transitionText += env.transformSupported
-            ? `,${TRANSFORM_VENDOR} ${duration}s ${transitionCurve}`
-            : `,left ${duration}s ${transitionCurve},top ${duration}s ${transitionCurve}`;
+            ? `,${TRANSFORM_VENDOR}${transitionOption}`
+            : `,left${transitionOption},top${transitionOption}`;
     }
 
     return CSS_TRANSITION_VENDOR + ':' + transitionText;
