@@ -23252,9 +23252,7 @@ function defaultLoading(api, opts) {
       fontWeight: opts.fontWeight,
       fontStyle: opts.fontStyle,
       fontFamily: opts.fontFamily
-    },
-    zlevel: opts.zlevel,
-    z: 10001
+    }
   });
   var labelRect = new Rect({
     style: {
@@ -53920,10 +53918,16 @@ function renderNode(seriesModel, thisStorage, oldStorage, reRoot, lastsForAnimat
 
   function prepareText(rectEl, visualColor, visualOpacity, width, height, upperLabelRect) {
     var normalLabelModel = nodeModel.getModel(upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL);
-    var defaultText = convertOptionIdName(nodeModel.get('name'), null);
+    var text = retrieve(seriesModel.getFormattedLabel(thisNode.dataIndex, 'normal', null, null, normalLabelModel.get('formatter')), convertOptionIdName(nodeModel.get('name'), null));
+
+    if (!upperLabelRect && thisLayout.isLeafRoot) {
+      var iconChar = seriesModel.get('drillDownIcon', true);
+      text = iconChar ? iconChar + ' ' + text : text;
+    }
+
     var isShow = normalLabelModel.getShallow('show');
     setLabelStyle(rectEl, getLabelStatesModels(nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL), {
-      defaultText: isShow ? defaultText : null,
+      defaultText: isShow ? text : null,
       inheritColor: visualColor,
       defaultOpacity: visualOpacity,
       labelFetcher: seriesModel,
@@ -54355,26 +54359,6 @@ function () {
     symbolSize: {
       applyVisual: makeApplyVisual('symbolSize'),
       _normalizedToVisual: createNormalizedToNumericVisual([0, 1])
-    },
-    cursor: {
-      applyVisual: function (value, getter, setter) {
-        var symbolCfg = this.mapValueToVisual(value);
-        setter('symbol', symbolCfg);
-      },
-      _normalizedToVisual: {
-        linear: doMapToArray,
-        category: doMapCategory,
-        piecewise: function (normalized, value) {
-          var result = getSpecifiedVisual.call(this, value);
-
-          if (result == null) {
-            result = doMapToArray.call(this, normalized);
-          }
-
-          return result;
-        },
-        fixed: doMapFixed
-      }
     }
   };
   return VisualMapping;
@@ -60626,8 +60610,6 @@ var CURSOR_MAP = {
   se: 'nwse'
 };
 var DEFAULT_BRUSH_OPT = {
-  outOfBrushCursor: 'crosshair',
-  inBrushCursor: 'move',
   brushStyle: {
     lineWidth: 2,
     stroke: 'rgba(210,219,238,0.3)',
@@ -60965,7 +60947,7 @@ function createBaseRectCover(rectRangeConverter, controller, brushOption, edgeNa
     style: makeStyle(brushOption),
     silent: true,
     draggable: true,
-    cursor: brushOption.inBrushCursor,
+    cursor: 'move',
     drift: curry(driftRect, rectRangeConverter, controller, cover, ['n', 's', 'w', 'e']),
     ondragend: curry(trigger$1, controller, {
       isEnd: true
@@ -61025,7 +61007,7 @@ function updateCommon(controller, cover) {
   mainEl.useStyle(makeStyle(brushOption));
   mainEl.attr({
     silent: !transformable,
-    cursor: transformable ? cover.__brushOption.inBrushCursor : 'default'
+    cursor: transformable ? 'move' : 'default'
   });
   each([['w'], ['e'], ['n'], ['s'], ['s', 'e'], ['s', 'w'], ['n', 'e'], ['n', 'w']], function (nameSequence) {
     var el = cover.childOfName(nameSequence.join(''));
@@ -61160,7 +61142,7 @@ function resetCursor(controller, e, localCursorPoint) {
     }
   }
 
-  currPanel && zr.setCursorStyle(controller._brushOption.outOfBrushCursor);
+  currPanel && zr.setCursorStyle('crosshair');
 }
 
 function preventDefault(e) {
@@ -81037,8 +81019,6 @@ function (_super) {
 }(ComponentView);
 
 var DEFAULT_OUT_OF_BRUSH_COLOR = '#ddd';
-var DEFAULT_OUT_OF_BRUSH_CURSOR = 'crosshair';
-var DEFAULT_BRUSH_IN_CURSOR = 'move';
 
 var BrushModel =
 /** @class */
@@ -81069,8 +81049,7 @@ function (_super) {
     var inBrush = thisOption.inBrush = thisOption.inBrush || {}; // Always give default visual, consider setOption at the second time.
 
     thisOption.outOfBrush = thisOption.outOfBrush || {
-      color: DEFAULT_OUT_OF_BRUSH_COLOR,
-      cursor: DEFAULT_OUT_OF_BRUSH_CURSOR
+      color: DEFAULT_OUT_OF_BRUSH_COLOR
     };
 
     if (!inBrush.hasOwnProperty('liftZ')) {
@@ -81120,12 +81099,6 @@ function (_super) {
     brushType: 'rect',
     brushMode: 'single',
     transformable: true,
-    inBrush: {
-      cursor: DEFAULT_BRUSH_IN_CURSOR
-    },
-    outOfBrush: {
-      cursor: DEFAULT_OUT_OF_BRUSH_CURSOR
-    },
     brushStyle: {
       borderWidth: 1,
       color: 'rgba(210,219,238,0.3)',
@@ -81144,8 +81117,6 @@ function generateBrushOption(option, brushOption) {
     brushType: option.brushType,
     brushMode: option.brushMode,
     transformable: option.transformable,
-    outOfBrushCursor: option.outOfBrush.cursor,
-    inBrushCursor: option.inBrush.cursor,
     brushStyle: new Model(option.brushStyle).getItemStyle(),
     removeOnClick: option.removeOnClick,
     z: option.z
@@ -83835,19 +83806,22 @@ function (_super) {
       // Layout
       var points = map(dimPermutations, function (dim) {
         return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
-      });
-      var xAxisScale = coordSys.getAxis('x').scale;
-      var yAxisScale = coordSys.getAxis('y').scale;
-      var xAxisExtent = xAxisScale.getExtent();
-      var yAxisExtent = yAxisScale.getExtent();
-      var xPointExtent = [xAxisScale.parse(areaData.get('x0', idx)), xAxisScale.parse(areaData.get('x1', idx))];
-      var yPointExtent = [yAxisScale.parse(areaData.get('y0', idx)), yAxisScale.parse(areaData.get('y1', idx))];
-      asc(xPointExtent);
-      asc(yPointExtent);
-      var overlapped = !(xAxisExtent[0] > xPointExtent[1] || xAxisExtent[1] < xPointExtent[0] || yAxisExtent[0] > yPointExtent[1] || yAxisExtent[1] < yPointExtent[0]); // If none of the area is inside coordSys, allClipped is set to be true
+      }); // If none of the area is inside coordSys, allClipped is set to be true
       // in layout so that label will not be displayed. See #12591
 
-      var allClipped = !overlapped;
+      var allClipped = true;
+      each(dimPermutations, function (dim) {
+        if (!allClipped) {
+          return;
+        }
+
+        var xValue = areaData.get(dim[0], idx);
+        var yValue = areaData.get(dim[1], idx); // If is infinity, the axis should be considered not clipped
+
+        if ((isInifinity$1(xValue) || coordSys.getAxis('x').containData(xValue)) && (isInifinity$1(yValue) || coordSys.getAxis('y').containData(yValue))) {
+          allClipped = false;
+        }
+      });
       areaData.setItemLayout(idx, {
         points: points,
         allClipped: allClipped
