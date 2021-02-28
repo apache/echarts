@@ -23,14 +23,14 @@ import { normalizeEvent } from 'zrender/src/core/event';
 import { transformLocalCoord } from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
 import { convertToColorString, toCamelCase, normalizeCssArray } from '../../util/format';
-import ExtensionAPI from '../../core/ExtensionAPI';
-import { ZRenderType } from 'zrender/src/zrender';
-import { TooltipOption } from './TooltipModel';
+import type ExtensionAPI from '../../core/ExtensionAPI';
+import type { ZRenderType } from 'zrender/src/zrender';
+import type { TooltipOption } from './TooltipModel';
 import Model from '../../model/Model';
-import { ZRRawEvent } from 'zrender/src/core/types';
-import { ColorString, ZRColor } from '../../util/types';
-import CanvasPainter from 'zrender/src/canvas/Painter';
-import SVGPainter from 'zrender/src/svg/Painter';
+import type { ZRRawEvent } from 'zrender/src/core/types';
+import type { ColorString, ZRColor } from '../../util/types';
+import type CanvasPainter from 'zrender/src/canvas/Painter';
+import type SVGPainter from 'zrender/src/svg/Painter';
 import {
     shouldTooltipConfine,
     toCSSVendorPrefix,
