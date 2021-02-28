@@ -23021,7 +23021,9 @@
           fontWeight: opts.fontWeight,
           fontStyle: opts.fontStyle,
           fontFamily: opts.fontFamily
-        }
+        },
+        zlevel: opts.zlevel,
+        z: 10001
       });
       var labelRect = new Rect({
         style: {
@@ -50837,6 +50839,8 @@
       se: 'nwse'
     };
     var DEFAULT_BRUSH_OPT = {
+      outOfBrushCursor: 'crosshair',
+      inBrushCursor: 'move',
       brushStyle: {
         lineWidth: 2,
         stroke: 'rgba(210,219,238,0.3)',
@@ -51174,7 +51178,7 @@
         style: makeStyle(brushOption),
         silent: true,
         draggable: true,
-        cursor: 'move',
+        cursor: brushOption.inBrushCursor,
         drift: curry(driftRect, rectRangeConverter, controller, cover, ['n', 's', 'w', 'e']),
         ondragend: curry(trigger, controller, {
           isEnd: true
@@ -51234,7 +51238,7 @@
       mainEl.useStyle(makeStyle(brushOption));
       mainEl.attr({
         silent: !transformable,
-        cursor: transformable ? 'move' : 'default'
+        cursor: transformable ? cover.__brushOption.inBrushCursor : 'default'
       });
       each([['w'], ['e'], ['n'], ['s'], ['s', 'e'], ['s', 'w'], ['n', 'e'], ['n', 'w']], function (nameSequence) {
         var el = cover.childOfName(nameSequence.join(''));
@@ -51369,7 +51373,7 @@
         }
       }
 
-      currPanel && zr.setCursorStyle('crosshair');
+      currPanel && zr.setCursorStyle(controller._brushOption.outOfBrushCursor);
     }
 
     function preventDefault(e) {
@@ -55723,22 +55727,19 @@
           // Layout
           var points = map(dimPermutations, function (dim) {
             return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
-          }); // If none of the area is inside coordSys, allClipped is set to be true
+          });
+          var xAxisScale = coordSys.getAxis('x').scale;
+          var yAxisScale = coordSys.getAxis('y').scale;
+          var xAxisExtent = xAxisScale.getExtent();
+          var yAxisExtent = yAxisScale.getExtent();
+          var xPointExtent = [xAxisScale.parse(areaData.get('x0', idx)), xAxisScale.parse(areaData.get('x1', idx))];
+          var yPointExtent = [yAxisScale.parse(areaData.get('y0', idx)), yAxisScale.parse(areaData.get('y1', idx))];
+          asc(xPointExtent);
+          asc(yPointExtent);
+          var overlapped = !(xAxisExtent[0] > xPointExtent[1] || xAxisExtent[1] < xPointExtent[0] || yAxisExtent[0] > yPointExtent[1] || yAxisExtent[1] < yPointExtent[0]); // If none of the area is inside coordSys, allClipped is set to be true
           // in layout so that label will not be displayed. See #12591
 
-          var allClipped = true;
-          each(dimPermutations, function (dim) {
-            if (!allClipped) {
-              return;
-            }
-
-            var xValue = areaData.get(dim[0], idx);
-            var yValue = areaData.get(dim[1], idx); // If is infinity, the axis should be considered not clipped
-
-            if ((isInifinity$1(xValue) || coordSys.getAxis('x').containData(xValue)) && (isInifinity$1(yValue) || coordSys.getAxis('y').containData(yValue))) {
-              allClipped = false;
-            }
-          });
+          var allClipped = !overlapped;
           areaData.setItemLayout(idx, {
             points: points,
             allClipped: allClipped

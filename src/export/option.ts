@@ -42,13 +42,21 @@ import type {TimelineOption as TimelineComponentOption} from '../component/timel
 import type {SliderTimelineOption as TimelineSliderComponentOption} from '../component/timeline/SliderTimelineModel';
 
 import type {LegendOption as PlainLegendComponentOption} from '../component/legend/LegendModel';
-import type {ScrollableLegendOption as ScrollableLegendComponentOption} from '../component/legend/ScrollableLegendModel';
+import type {
+    ScrollableLegendOption as ScrollableLegendComponentOption
+} from '../component/legend/ScrollableLegendModel';
 
 import type {SliderDataZoomOption as SliderDataZoomComponentOption} from '../component/dataZoom/SliderZoomModel';
-import type {InsideDataZoomOption as InsideDataZoomComponentOption} from '../component/dataZoom/InsideZoomModel';
+import type {
+    InsideDataZoomOption as InsideDataZoomComponentOption
+} from '../component/dataZoom/InsideZoomModel';
 
-import type {ContinousVisualMapOption as ContinousVisualMapComponentOption} from '../component/visualMap/ContinuousModel';
-import type {PiecewiseVisualMapOption as PiecewiseVisualMapComponentOption} from '../component/visualMap/PiecewiseModel';
+import type {
+    ContinousVisualMapOption as ContinousVisualMapComponentOption
+} from '../component/visualMap/ContinuousModel';
+import type {
+    PiecewiseVisualMapOption as PiecewiseVisualMapComponentOption
+} from '../component/visualMap/PiecewiseModel';
 
 import type {MarkLineOption as MarkLineComponentOption} from '../component/marker/MarkLineModel';
 import type {MarkPointOption as MarkPointComponentOption} from '../component/marker/MarkPointModel';
@@ -79,8 +87,8 @@ import type {ThemeRiverSeriesOption as ThemeRiverSeriesOptionInner} from '../cha
 import type {SunburstSeriesOption as SunburstSeriesOptionInner} from '../chart/sunburst/SunburstSeries';
 import type {CustomSeriesOption as CustomSeriesOptionInner} from '../chart/custom/install';
 
-import type { GraphicComponentLooseOption as GraphicComponentOption } from '../component/graphic/install';
-import type { DatasetOption as DatasetComponentOption } from '../component/dataset/install';
+import type {GraphicComponentLooseOption as GraphicComponentOption} from '../component/graphic/install';
+import type {DatasetOption as DatasetComponentOption} from '../component/dataset/install';
 
 import type {ToolboxBrushFeatureOption} from '../component/toolbox/feature/Brush';
 import type {ToolboxDataViewFeatureOption} from '../component/toolbox/feature/DataView';
@@ -91,7 +99,7 @@ import type {ToolboxSaveAsImageFeatureOption} from '../component/toolbox/feature
 import type {ToolboxFeatureOption} from '../component/toolbox/featureManager';
 
 
-import type { ECBasicOption, SeriesTooltipOption, AriaOption as AriaComponentOption } from '../util/types';
+import type {ECBasicOption, SeriesTooltipOption, AriaOption as AriaComponentOption} from '../util/types';
 
 interface ToolboxComponentOption extends ToolboxOption {
     feature?: {
@@ -108,11 +116,11 @@ interface ToolboxComponentOption extends ToolboxOption {
     }
 }
 
-export { SliderDataZoomComponentOption, InsideDataZoomComponentOption };
+export {SliderDataZoomComponentOption, InsideDataZoomComponentOption};
 export type DataZoomComponentOption = SliderDataZoomComponentOption | InsideDataZoomComponentOption;
-export { ContinousVisualMapComponentOption, PiecewiseVisualMapComponentOption };
+export {ContinousVisualMapComponentOption, PiecewiseVisualMapComponentOption};
 export type VisualMapComponentOption = ContinousVisualMapComponentOption | PiecewiseVisualMapComponentOption;
-export { PlainLegendComponentOption, ScrollableLegendComponentOption };
+export {PlainLegendComponentOption, ScrollableLegendComponentOption};
 export type LegendComponentOption = PlainLegendComponentOption | ScrollableLegendComponentOption;
 export {
     GridComponentOption,
