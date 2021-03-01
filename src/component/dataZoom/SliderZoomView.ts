@@ -36,7 +36,6 @@ import {
     ParsedValue
 } from '../../util/types';
 import SliderZoomModel from './SliderZoomModel';
-import ComponentView from '../../view/Component';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import Axis from '../../coord/Axis';
 import SeriesModel from '../../model/Series';
@@ -47,7 +46,6 @@ import { createSymbol, symbolBuildProxies } from '../../util/symbol';
 import { deprecateLog } from '../../util/log';
 import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
-import {validateDimension} from '../../data/List';
 
 const Rect = graphic.Rect;
 
@@ -360,7 +358,7 @@ class SliderZoomView extends DataZoomView {
             ? seriesModel.getShadowDim() // @see candlestick
             : info.otherDim;
 
-        if (otherDim == null || !validateDimension(data, otherDim)) {
+        if (otherDim == null || !data.hasDimension(otherDim)) {
             return;
         }
 

@@ -174,7 +174,6 @@ let getIdNameFromStore: (list: List, dimIdx: number, ordinalMeta: OrdinalMeta, r
 let makeIdFromName: (list: List, idx: number) => void;
 let normalizeDimensions: (dimensions: ItrParamDims) => Array<DimensionLoose>;
 let validateDimensions: (list: List, dims: DimensionName[]) => void;
-export let validateDimension: (list: List, dims: DimensionName) => boolean;
 let cloneListForMapAndSample: (original: List, excludeDimensions: DimensionName[]) => List;
 let getInitialExtent: () => [number, number];
 let setItemDataAndSeriesIndex: (this: Element, child: Element) => void;
@@ -390,6 +389,10 @@ class List<
             dim = this.dimensions[dim as DimensionIndex];
         }
         return dim as DimensionName;
+    }
+
+    hasDimension(dim: DimensionLoose): boolean {
+        return !!this.getDimensionInfo(dim);
     }
 
     /**
@@ -2159,10 +2162,6 @@ class List<
                     console.error('Unkown dimension ' + dims[i]);
                 }
             }
-        };
-
-        validateDimension = function (list: List, dim: DimensionName): boolean {
-            return !!list._dimensionInfos[dim];
         };
 
         // Data in excludeDimensions is copied, otherwise transfered.
