@@ -256,12 +256,13 @@ class Symbol extends graphic.Group {
         symbolPath.attr('rotation', (symbolRotate || 0) * Math.PI / 180 || 0);
 
         let symbolOffset = data.getItemVisual(idx, 'symbolOffset') || 0;
-        if (!isArray(symbolOffset)) {
-            symbolOffset = [symbolOffset, symbolOffset];
+        if (symbolOffset) {
+            if (!isArray(symbolOffset)) {
+                symbolOffset = [symbolOffset, symbolOffset];
+            }
+            symbolPath.x = parsePercent(symbolOffset[0], symbolSize[0]);
+            symbolPath.y = parsePercent(retrieve2(symbolOffset[1], symbolOffset[0]) || 0, symbolSize[1]);
         }
-
-        symbolPath.x = parsePercent(symbolOffset[0], symbolSize[0]);
-        symbolPath.y = parsePercent(retrieve2(symbolOffset[1], symbolOffset[0]) || 0, symbolSize[1]);
 
         cursorStyle && symbolPath.attr('cursor', cursorStyle);
 
