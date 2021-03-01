@@ -64,7 +64,10 @@ const seriesSymbolTask: StageHandler = {
         const hasSymbolSizeCallback = isFunction(symbolSize);
         const hasSymbolRotateCallback = isFunction(symbolRotate);
         const hasSymbolOffsetCallback = isFunction(symbolOffset);
-        const hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback || hasSymbolRotateCallback || hasSymbolOffsetCallback;
+        const hasCallback = hasSymbolTypeCallback
+            || hasSymbolSizeCallback
+            || hasSymbolRotateCallback
+            || hasSymbolOffsetCallback;
         const seriesSymbol = (!hasSymbolTypeCallback && symbolType) ? symbolType : seriesModel.defaultSymbol;
         const seriesSymbolSize = !hasSymbolSizeCallback ? symbolSize : null;
         const seriesSymbolRotate = !hasSymbolRotateCallback ? symbolRotate : null;

@@ -71,7 +71,8 @@ function createSymbol(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: 
     const symbolSize = lineData.getItemVisual(idx, name + 'Size' as 'fromSymbolSize' | 'toSymbolSize');
     const symbolRotate = lineData.getItemVisual(idx, name + 'Rotate' as 'fromSymbolRotate' | 'toSymbolRotate');
     const symbolOffset = lineData.getItemVisual(idx, name + 'Offset' as 'fromSymbolOffset' | 'toSymbolOffset');
-    const symbolKeepAspect = lineData.getItemVisual(idx, name + 'KeepAspect' as 'fromSymbolKeepAspect' | 'toSymbolKeepAspect');
+    const symbolKeepAspect = lineData.getItemVisual(idx,
+        name + 'KeepAspect' as 'fromSymbolKeepAspect' | 'toSymbolKeepAspect');
 
     const symbolSizeArr = isArray(symbolSize)
         ? symbolSize : [symbolSize, symbolSize];
