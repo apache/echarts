@@ -136,6 +136,10 @@ under the License.
     <div id="main30" class="chart"></div>
     <h1>tooltip.formatter callback. Markers should be displayed.</h1>
     <div id="main31" class="chart"></div>
+    <h1>tooltip.borderColor has higher priority</h1>
+    <div id="main32" class="chart"></div>
+    <h1>tooltip.textStyle.color</h1>
+    <div id="main33" class="chart"></div>
 
 
     <script>
@@ -213,6 +217,8 @@ under the License.
             var chart29 = createChart('main29');
             var chart30 = createChart('main30');
             var chart31 = createChart('main31');
+            var chart32 = createChart('main32');
+            var chart33 = createChart('main33');
 
             option1 = {
                 tooltip: {
@@ -3557,6 +3563,62 @@ under the License.
                 ]
             };
 
+            option32 = {
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                    trigger: 'item',
+                    borderColor: 'red',
+                },
+                xAxis: [{
+                    type: 'time'
+                }],
+                yAxis: [{
+                }],
+                series: [
+                    {
+                        type: 'line',
+                        data: [
+                            ['2012-05-19', 120],
+                            [new Date(2012, 4, 20), 132],
+                            [+new Date(2012, 4, 21), 101],
+                            ['2012-05-22 00:00:00', 134],
+                            ['2012-05-23T00:00:00', 90]
+                        ]
+                    },
+                    {
+                        type: 'line',
+                        data: [
+                            ['2012-05-19', 220],
+                            ['2012-05-21', 182],
+                            ['2012-05-22', 191],
+                            ['2012-05-23', 234],
+                            ['2012-05-24', 290]
+                        ]
+                    }
+                ]
+            };
+
+            option33 = {
+                tooltip: {
+                    renderMode: CURRENT_RENDER_MODE,
+                    trigger: 'item',
+                    textStyle: {
+                        color: 'red'
+                    },
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: [150, 230, 224, 218, 135, 147, 260],
+                    type: 'line'
+                }]
+            };
+
 
             chart1 && chart1.setOption(option1);
             chart2 && chart2.setOption(option2);
@@ -3589,6 +3651,8 @@ under the License.
             chart29 && chart29.setOption(option29);
             chart30 && chart30.setOption(option30);
             chart31 && chart31.setOption(option31);
+            chart32 && chart32.setOption(option32);
+            chart33 && chart33.setOption(option33);
 
 
         });

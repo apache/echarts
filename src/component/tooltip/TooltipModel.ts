@@ -33,6 +33,7 @@ import {AxisPointerOption} from '../axisPointer/AxisPointerModel';
 type TopLevelFormatterParams = CallbackDataParams | CallbackDataParams[];
 
 export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterParams>, ComponentOption {
+    mainType?: 'tooltip'
 
     axisPointer?: AxisPointerOption & {
         axis?: 'auto' | 'x' | 'y' | 'angle' | 'radius'
@@ -125,9 +126,6 @@ class TooltipModel extends ComponentModel<TooltipOption> {
         shadowOffsetX: 1,
         shadowOffsetY: 2,
 
-        // tooltip border color
-        borderColor: '#333',
-
         // tooltip border radius, unit is px, default is 4
         borderRadius: 4,
 
@@ -176,7 +174,5 @@ class TooltipModel extends ComponentModel<TooltipOption> {
         }
     };
 }
-
-ComponentModel.registerClass(TooltipModel);
 
 export default TooltipModel;

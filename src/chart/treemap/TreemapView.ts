@@ -38,7 +38,7 @@ import ChartView from '../../view/Chart';
 import Tree, { TreeNode } from '../../data/Tree';
 import TreemapSeriesModel, { TreemapSeriesNodeItemOption } from './TreemapSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import Model from '../../model/Model';
 import { LayoutRect } from '../../util/layout';
 import { TreemapLayoutNode } from './treemapLayout';
@@ -959,16 +959,7 @@ function renderNode(
             upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL
         );
 
-        let text = retrieve(
-            seriesModel.getFormattedLabel(
-                thisNode.dataIndex, 'normal', null, null, normalLabelModel.get('formatter')
-            ),
-            convertOptionIdName(nodeModel.get('name'), null)
-        );
-        if (!upperLabelRect && thisLayout.isLeafRoot) {
-            const iconChar = seriesModel.get('drillDownIcon', true);
-            text = iconChar ? iconChar + ' ' + text : text;
-        }
+        const defaultText = convertOptionIdName(nodeModel.get('name'), null);
 
         const isShow = normalLabelModel.getShallow('show');
 
@@ -976,7 +967,7 @@ function renderNode(
             rectEl,
             getLabelStatesModels(nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL),
             {
-                defaultText: isShow ? text : null,
+                defaultText: isShow ? defaultText : null,
                 inheritColor: visualColor,
                 defaultOpacity: visualOpacity,
                 labelFetcher: seriesModel,
@@ -1110,4 +1101,4 @@ function calculateZ(depth: number, zInLevel: number) {
     return (zb - 1) / zb;
 }
 
-ChartView.registerClass(TreemapView);
+export default TreemapView;

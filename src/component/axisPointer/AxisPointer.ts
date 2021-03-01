@@ -18,7 +18,7 @@
 */
 
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { CommonAxisPointerOption } from '../../util/types';
 import Model from '../../model/Model';
 

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main_sum"></div>
+        <div id="main_boxplot"></div>
+        <div id="main_average"></div>
+
+
+
+
+        <script>
+        require(['echarts', 'ecSimpleTransform'], function (echarts, ecSimpleTransform) {
+
+            $.get('data/life-expectancy-table.json', function (_rawData) {
+
+                echarts.registerTransform(ecSimpleTransform.aggregate);
+
+                option = {
+                    dataset: [{
+                        id: 'raw',
+                        source: _rawData
+                    }, {
+                        id: 'income_aggregate',
+                        fromDatasetId: 'raw',
+                        transform: [{
+                            type: 'filter',
+                            config: {
+                                dimension: 'Year', gte: 1950
+                            }
+                        }, {
+                            type: 'ecSimpleTransform:aggregate',
+                            config: {
+                                resultDimensions: [
+                                    { from: 'Income', method: 'sum' },
+                                    { from: 'Country' }
+                                ],
+                                groupBy: 'Country'
+                            }
+                        }]
+                    }],
+                    title: {
+                        text: 'Income sum since 1950'
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: {
+                        name: 'Income',
+                        nameLocation: 'middle',
+                        nameGap: 30
+                    },
+                    yAxis: {
+                        type: 'category'
+                    },
+                    series: {
+                        type: 'bar',
+                        datasetId: 'income_aggregate',
+                        label: {
+                            show: true,
+                            position: 'right'
+                        },
+                        encode: {
+                            x: 'Income',
+                            y: 'Country',
+                            itemName: ['Country'],
+                            tooltip: ['Income']
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_sum', {
+                    title: [
+                        'Aggregate sum'
+                    ],
+                    height: 400,
+                    option: option
+                });
+
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts', 'ecSimpleTransform'], function (echarts, ecSimpleTransform) {
+
+            $.get('data/life-expectancy-table.json', function (_rawData) {
+
+                echarts.registerTransform(ecSimpleTransform.aggregate);
+
+                option = {
+                    dataset: [{
+                        id: 'raw',
+                        source: _rawData
+                    }, {
+                        id: 'income_aggregate',
+                        fromDatasetId: 'raw',
+                        transform: [{
+                            type: 'filter',
+                            config: {
+                                and: [{
+                                    dimension: 'Year', gte: 1950
+                                // }, {
+                                //     dimension: 'Country', eq: 'Japan'
+                                }]
+                            }
+                        }, {
+                            type: 'ecSimpleTransform:aggregate',
+                            config: {
+                                resultDimensions: [
+                                    { name: 'min', from: 'Income', method: 'min' },
+                                    { name: 'Q1', from: 'Income', method: 'Q1' },
+                                    { name: 'Q2', from: 'Income', method: 'Q2' },
+                                    { name: 'Q3', from: 'Income', method: 'Q3' },
+                                    { name: 'max', from: 'Income', method: 'max' },
+                                    { name: 'Country', from: 'Country' }
+                                ],
+                                groupBy: 'Country'
+                            }
+                        }]
+                    }],
+                    title: {
+                        text: 'Income sum since 1950'
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: {
+                        name: 'Income',
+                        nameLocation: 'middle',
+                        nameGap: 30
+                    },
+                    yAxis: {
+                        type: 'category'
+                    },
+                    series: {
+                        type: 'boxplot',
+                        datasetId: 'income_aggregate',
+                        label: {
+                            show: true,
+                            position: 'right'
+                        },
+                        encode: {
+                            x: ['min', 'Q1', 'Q2', 'Q3', 'max'],
+                            y: 'Country',
+                            itemName: ['Country'],
+                            tooltip: ['min', 'Q1', 'Q2', 'Q3', 'max']
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_boxplot', {
+                    title: [
+                        'Aggregate Q1 Q2 Q3 min max'
+                    ],
+                    height: 600,
+                    option: option
+                });
+
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts', 'ecSimpleTransform'], function (echarts, ecSimpleTransform) {
+
+            $.get('data/life-expectancy-table.json', function (_rawData) {
+
+                echarts.registerTransform(ecSimpleTransform.aggregate);
+
+                option = {
+                    dataset: [{
+                        id: 'raw',
+                        source: _rawData
+                    }, {
+                        id: 'income_aggregate',
+                        fromDatasetId: 'raw',
+                        transform: [{
+                            type: 'filter',
+                            print: true,
+                            config: {
+                                and: [{
+                                    dimension: 'Year', gte: 1950
+                                // }, {
+                                //     dimension: 'Country', eq: 'Japan'
+                                }]
+                            }
+                        }, {
+                            type: 'ecSimpleTransform:aggregate',
+                            config: {
+                                resultDimensions: [
+                                    { from: 'Income', method: 'average' },
+                                    { from: 'Country' }
+                                ],
+                                groupBy: 'Country'
+                            }
+                        }]
+                    }],
+                    title: {
+                        text: 'Income sum since 1950'
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: {
+                        name: 'Income',
+                        nameLocation: 'middle',
+                        nameGap: 30
+                    },
+                    yAxis: {
+                        type: 'category'
+                    },
+                    series: {
+                        type: 'bar',
+                        datasetId: 'income_aggregate',
+                        label: {
+                            show: true,
+                            position: 'right'
+                        },
+                        encode: {
+                            x: 'Income',
+                            y: 'Country',
+                            itemName: ['Country'],
+                            tooltip: ['Income']
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_average', {
+                    title: [
+                        'Aggregate average'
+                    ],
+                    height: 600,
+                    option: option
+                });
+
+            });
+        });
+        </script>
+
+
+
+    </body>
+</html>
+

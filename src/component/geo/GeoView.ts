@@ -21,7 +21,7 @@
 import MapDraw from '../helper/MapDraw';
 import ComponentView from '../../view/Component';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import GeoModel from '../../coord/geo/GeoModel';
 import { Payload, ZRElementEvent, ECEventData } from '../../util/types';
 import { getECData } from '../../util/innerStore';
@@ -69,7 +69,7 @@ class GeoView extends ComponentView {
         let current = e.target;
         let eventData: ECEventData;
         // TODO extract a util function
-        while ((eventData = getECData(current).eventData) == null) {
+        while (current && (eventData = getECData(current).eventData) == null) {
             current = current.__hostTarget || current.parent;
         }
 
@@ -99,7 +99,5 @@ class GeoView extends ComponentView {
     }
 
 }
-
-ComponentView.registerClass(GeoView);
 
 export default GeoView;

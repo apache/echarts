@@ -31,7 +31,7 @@ import {
     TreeLayoutNode
 } from './layoutHelper';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import TreeSeriesModel from './TreeSeries';
 
 export default function treeLayout(ecModel: GlobalModel, api: ExtensionAPI) {

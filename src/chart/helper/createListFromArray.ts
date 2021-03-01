@@ -22,7 +22,7 @@ import List from '../../data/List';
 import createDimensions from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
-import CoordinateSystem from '../../CoordinateSystem';
+import CoordinateSystem from '../../core/CoordinateSystem';
 import {getCoordSysInfoBySeries} from '../../model/referHelper';
 import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../../data/Source';
 import {enableDataStack} from '../../data/helper/dataStackHelper';
@@ -35,6 +35,8 @@ import SeriesModel from '../../model/Series';
 function createListFromArray(source: Source | OptionSourceData, seriesModel: SeriesModel, opt?: {
     generateCoord?: string
     useEncodeDefaulter?: boolean | EncodeDefaulter
+    // By default: auto. If `true`, create inverted indices for all ordinal dimension on coordSys.
+    createInvertedIndices?: boolean
 }): List {
     opt = opt || {};
 
@@ -94,6 +96,9 @@ function createListFromArray(source: Source | OptionSourceData, seriesModel: Ser
                 firstCategoryDimIndex = dimIndex;
             }
             dimInfo.ordinalMeta = categoryAxisModel.getOrdinalMeta();
+            if (opt.createInvertedIndices) {
+                dimInfo.createInvertedIndices = true;
+            }
         }
         if (dimInfo.otherDims.itemName != null) {
             hasNameEncode = true;

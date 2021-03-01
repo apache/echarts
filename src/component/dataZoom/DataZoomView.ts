@@ -20,7 +20,7 @@
 import ComponentView from '../../view/Component';
 import DataZoomModel from './DataZoomModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 
 
 class DataZoomView extends ComponentView {
@@ -38,7 +38,5 @@ class DataZoomView extends ComponentView {
     }
 
 }
-
-ComponentView.registerClass(DataZoomView);
 
 export default DataZoomView;

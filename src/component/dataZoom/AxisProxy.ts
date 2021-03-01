@@ -22,7 +22,7 @@ import * as numberUtil from '../../util/number';
 import sliderMove from '../helper/sliderMove';
 import GlobalModel from '../../model/Global';
 import SeriesModel from '../../model/Series';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { Dictionary } from '../../util/types';
 // TODO Polar?
 import DataZoomModel from './DataZoomModel';

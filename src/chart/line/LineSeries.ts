@@ -32,9 +32,9 @@ import {
     SymbolOptionMixin,
     SeriesSamplingOptionMixin,
     StatesOptionMixin,
-    DefaultExtraEmpasisState,
     SeriesEncodeOptionMixin,
-    CallbackDataParams
+    CallbackDataParams,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -44,7 +44,7 @@ type LineDataValue = OptionDataValue | OptionDataValue[];
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus']
+        focus?: DefaultEmphasisFocus
         scale?: boolean
     }
 }
@@ -102,7 +102,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
 
     step?: false | 'start' | 'end' | 'middle'
 
-    smooth?: boolean
+    smooth?: boolean | number
 
     smoothMonotone?: 'x' | 'y' | 'none'
 
@@ -205,7 +205,5 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         hoverLayerThreshold: Infinity
     };
 }
-
-SeriesModel.registerClass(LineSeriesModel);
 
 export default LineSeriesModel;

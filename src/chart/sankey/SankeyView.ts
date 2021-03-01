@@ -19,21 +19,16 @@
 
 import * as graphic from '../../util/graphic';
 import { enterEmphasis, leaveEmphasis, enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
-import { LayoutOrient, Payload, ECElement } from '../../util/types';
+import { LayoutOrient, ECElement } from '../../util/types';
 import { PathProps } from 'zrender/src/graphic/Path';
 import SankeySeriesModel, { SankeyEdgeItemOption, SankeyNodeItemOption } from './SankeySeries';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import List from '../../data/List';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
-
-interface FocusNodeAdjacencyPayload extends Payload {
-    dataIndex?: number
-    edgeDataIndex?: number
-}
 
 class SankeyPathShape {
     x1 = 0;
@@ -343,7 +338,5 @@ function createGridClipShape(rect: RectLike, seriesModel: SankeySeriesModel, cb:
 
     return rectEl;
 }
-
-ChartView.registerClass(SankeyView);
 
 export default SankeyView;

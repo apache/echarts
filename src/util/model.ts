@@ -44,7 +44,7 @@ import {
     Payload,
     OptionId,
     OptionName,
-    ParsedValue
+    InterpolatableValue
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
@@ -786,7 +786,12 @@ export type ModelFinderObject = {
  *     ...
  * }
  */
-type ParsedModelFinderKnown = {
+export type ParsedModelFinder = {
+    // other components
+    [key: string]: ComponentModel | ComponentModel[] | undefined;
+};
+
+export type ParsedModelFinderKnown = ParsedModelFinder & {
     seriesModels?: SeriesModel[];
     seriesModel?: SeriesModel;
     xAxisModels?: CartesianAxisModel[];
@@ -797,10 +802,6 @@ type ParsedModelFinderKnown = {
     gridModel?: GridModel;
     dataIndex?: number;
     dataIndexInside?: number;
-};
-export type ParsedModelFinder = ParsedModelFinderKnown & {
-    // other components
-    [key: string]: ComponentModel | ComponentModel[];
 };
 
 /**
@@ -829,7 +830,7 @@ export function parseFinder(
     }
 
     const queryOptionMap = createHashMap<QueryReferringUserOption, ComponentMainType>();
-    const result = {} as ParsedModelFinder;
+    const result = {} as ParsedModelFinderKnown;
     let mainTypeSpecified = false;
 
     each(finder, function (value, key) {
@@ -1003,18 +1004,22 @@ export function groupData<T, R extends string | number>(
  *
  * @param data         data
  * @param labelModel   label model of the text element
- * @param sourceValue  start value
+ * @param sourceValue  start value. May be null/undefined when init.
  * @param targetValue  end value
  * @param percent      0~1 percentage; 0 uses start value while 1 uses end value
  * @return             interpolated values
+ *                     If `sourceValue` and `targetValue` are `number`, return `number`.
+ *                     If `sourceValue` and `targetValue` are `string`, return `string`.
+ *                     If `sourceValue` and `targetValue` are `(string | number)[]`, return `(string | number)[]`.
+ *                     Other cases do not supported.
  */
 export function interpolateRawValues(
     data: List,
     precision: number | 'auto',
-    sourceValue: ParsedValue[] | ParsedValue,
-    targetValue: ParsedValue[] | ParsedValue,
+    sourceValue: InterpolatableValue,
+    targetValue: InterpolatableValue,
     percent: number
-): (string | number)[] | string | number {
+): InterpolatableValue {
     const isAutoPrecision = precision == null || precision === 'auto';
 
     if (targetValue == null) {
@@ -1041,21 +1046,20 @@ export function interpolateRawValues(
     }
     else {
         const interpolated = [];
-        const leftArr = sourceValue as (string | number)[] || [];
+        const leftArr = sourceValue as (string | number)[];
         const rightArr = targetValue as (string | number[]);
-        const length = Math.max(leftArr.length, rightArr.length);
+        const length = Math.max(leftArr ? leftArr.length : 0, rightArr.length);
         for (let i = 0; i < length; ++i) {
             const info = data.getDimensionInfo(i);
             // Don't interpolate ordinal dims
             if (info.type === 'ordinal') {
-                interpolated[i] = (percent < 1 ? leftArr : rightArr)[i] as number;
+                // In init, there is no `sourceValue`, but should better not to get undefined result.
+                interpolated[i] = (percent < 1 && leftArr ? leftArr : rightArr)[i] as number;
             }
             else {
                 const leftVal = leftArr && leftArr[i] ? leftArr[i] as number : 0;
                 const rightVal = rightArr[i] as number;
-                const value = leftArr == null
-                    ? (targetValue as [])[i]
-                    : interpolateNumber(leftVal, rightVal, percent);
+                const value = interpolateNumber(leftVal, rightVal, percent);
                 interpolated[i] = round(
                     value,
                     isAutoPrecision ? Math.max(

@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import axisDefault from './axisDefault';
 import ComponentModel from '../model/Component';
 import {
@@ -29,6 +28,8 @@ import OrdinalMeta from '../data/OrdinalMeta';
 import { DimensionName, BoxLayoutOptionMixin, OrdinalRawValue } from '../util/types';
 import { AxisBaseOption, AXIS_TYPES } from './axisCommonTypes';
 import GlobalModel from '../model/Global';
+import { each, merge } from 'zrender/src/core/util';
+import { EChartsExtensionInstallRegisters } from '../extension';
 
 
 type Constructor<T> = new (...args: any[]) => T;
@@ -46,15 +47,16 @@ export default function axisModelCreator<
     AxisOptionT extends AxisBaseOption,
     AxisModelCtor extends Constructor<ComponentModel<AxisOptionT>>
 >(
+    registers: EChartsExtensionInstallRegisters,
     axisName: DimensionName,
     BaseAxisModelClass: AxisModelCtor,
     extraDefaultOption?: AxisOptionT
 ) {
 
-    zrUtil.each(AXIS_TYPES, function (v, axisType) {
+    each(AXIS_TYPES, function (v, axisType) {
 
-        const defaultOption = zrUtil.merge(
-            zrUtil.merge({}, axisDefault[axisType], true),
+        const defaultOption = merge(
+            merge({}, axisDefault[axisType], true),
             extraDefaultOption, true
         );
 
@@ -77,8 +79,8 @@ export default function axisModelCreator<
                     ? getLayoutParams(option as BoxLayoutOptionMixin) : {};
 
                 const themeModel = ecModel.getTheme();
-                zrUtil.merge(option, themeModel.get(axisType + 'Axis'));
-                zrUtil.merge(option, this.getDefaultOption());
+                merge(option, themeModel.get(axisType + 'Axis'));
+                merge(option, this.getDefaultOption());
 
                 option.type = getAxisType(option);
 
@@ -115,10 +117,10 @@ export default function axisModelCreator<
             }
         }
 
-        ComponentModel.registerClass(AxisModel);
+        registers.registerComponentModel(AxisModel);
     });
 
-    ComponentModel.registerSubTypeDefaulter(
+    registers.registerSubTypeDefaulter(
         axisName + 'Axis',
         getAxisType
     );

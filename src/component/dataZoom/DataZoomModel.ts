@@ -37,6 +37,8 @@ import { MULTIPLE_REFERRING, SINGLE_REFERRING } from '../../util/model';
 
 export interface DataZoomOption extends ComponentOption {
 
+    mainType?: 'dataZoom'
+
     /**
      * Default auto by axisIndex
      */

@@ -115,13 +115,13 @@ class Axis2D extends Axis {
      * Set ordinalSortInfo
      * @param info new OrdinalSortInfo
      */
-    setCategorySortInfo(info: OrdinalSortInfo[]): boolean {
+    setCategorySortInfo(info: OrdinalSortInfo): boolean {
         if (this.type !== 'category') {
             return false;
         }
 
         this.model.option.categorySortInfo = info;
-        (this.scale as OrdinalScale).setCategorySortInfo(info);
+        (this.scale as OrdinalScale).setSortInfo(info);
     }
 
 }

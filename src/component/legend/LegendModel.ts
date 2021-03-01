@@ -75,6 +75,9 @@ export interface LegendTooltipFormatterParams {
     $vars: ['name']
 }
 export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
+
+    mainType?: 'legend'
+
     show?: boolean
 
     orient?: LayoutOrient
@@ -94,6 +97,11 @@ export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, Bor
      * @default 5
      */
     padding?: number | number[]
+    /**
+     * Icon of the legend items.
+     * @default 'roundRect'
+     */
+    icon?: string
     /**
      * Gap between each legend item.
      * @default 10
@@ -437,7 +445,5 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         }
     };
 }
-
-ComponentModel.registerClass(LegendModel);
 
 export default LegendModel;

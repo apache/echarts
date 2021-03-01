@@ -24,7 +24,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import HeatmapSeriesModel, { HeatmapDataItemOption } from './HeatmapSeries';
 import type GlobalModel from '../../model/Global';
-import type ExtensionAPI from '../../ExtensionAPI';
+import type ExtensionAPI from '../../core/ExtensionAPI';
 import type VisualMapModel from '../../component/visualMap/VisualMapModel';
 import type PiecewiseModel from '../../component/visualMap/PiecewiseModel';
 import type ContinuousModel from '../../component/visualMap/ContinuousModel';
@@ -149,7 +149,13 @@ class HeatmapView extends ChartView {
     ) {
         const coordSys = seriesModel.coordinateSystem;
         if (coordSys) {
-            this._renderOnCartesianAndCalendar(seriesModel, api, params.start, params.end, true);
+            // geo does not support incremental rendering?
+            if (isGeoCoordSys(coordSys)) {
+                this.render(seriesModel, ecModel, api);
+            }
+            else {
+                this._renderOnCartesianAndCalendar(seriesModel, api, params.start, params.end, true);
+            }
         }
     }
 
@@ -378,7 +384,5 @@ class HeatmapView extends ChartView {
         this.group.add(img);
     }
 }
-
-ChartView.registerClass(HeatmapView);
 
 export default HeatmapView;

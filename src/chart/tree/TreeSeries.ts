@@ -30,8 +30,8 @@ import {
     OptionDataValue,
     StatesOptionMixin,
     OptionDataItemObject,
-    DefaultExtraEmpasisState,
-    CallbackDataParams
+    CallbackDataParams,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import List from '../../data/List';
 import View from '../../coord/View';
@@ -54,7 +54,7 @@ export interface TreeSeriesStateOption {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus'] | 'ancestor' | 'descendant'
+        focus?: DefaultEmphasisFocus | 'ancestor' | 'descendant'
         scale?: boolean
     }
 }
@@ -287,7 +287,5 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         animationDurationUpdate: 500
     };
 }
-
-SeriesModel.registerClass(TreeSeriesModel);
 
 export default TreeSeriesModel;

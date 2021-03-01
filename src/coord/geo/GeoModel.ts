@@ -92,6 +92,7 @@ export interface GeoOption extends
     AnimationOptionMixin,
     GeoCommonOptionMixin,
     StatesOptionMixin<GeoStateOption>, GeoStateOption {
+    mainType?: 'geo';
 
     show?: boolean;
     silent?: boolean;
@@ -289,7 +290,5 @@ class GeoModel extends ComponentModel<GeoOption> {
     private _initSelectedMapFromData() {
     }
 }
-
-ComponentModel.registerClass(GeoModel);
 
 export default GeoModel;
