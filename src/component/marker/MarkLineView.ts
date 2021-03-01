@@ -396,7 +396,7 @@ class MarkLineView extends MarkerView {
             if (style.fill == null) {
                 style.fill = getVisualFromData(seriesData, 'color') as ColorString;
             }
-            const a = symbolOffset
+
             data.setItemVisual(idx, {
                 symbolKeepAspect: itemModel.get('symbolKeepAspect'),
                 symbolOffset: itemModel.get('symbolOffset') || (symbolOffset as (string | number)[])[isFrom ? 0 : 1],
