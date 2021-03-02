@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+   http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+        <div id="main1"></div>
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var getData = function (seriesId) {
+                var data = [];
+                for (var i = 0; i < 7; ++i) {
+                    data.push(Math.random() * 100 + (seriesId + 1) * 200);
+                }
+                return data;
+            };
+
+            var option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                legend: {
+                    data: ['Default Line', 'Line with emptyCircle', 'Line with emptyCircle and color', 'Line with style', 'Line with visualMap', 'Pie A', 'Pie B', 'Pie C']
+                },
+                series: [{
+                    data: getData(0),
+                    type: 'line',
+                    name: 'Default Line'
+                }, {
+                    data: getData(1),
+                    type: 'line',
+                    name: 'Line with emptyCircle',
+                    symbol: 'emptyCircle'
+                }, {
+                    data: getData(2),
+                    type: 'line',
+                    name: 'Line with emptyCircle and color',
+                    symbol: 'emptyCircle',
+                    itemStyle: {
+                        color: 'auto'
+                    }
+                }, {
+                    data: getData(3),
+                    type: 'line',
+                    name: 'Line with style',
+                    symbolSize: 12,
+                    itemStyle: {
+                        color: 'auto',
+                        borderColor: 'blue',
+                        borderWidth: 2,
+                        symbolSize: 25
+                    },
+                    lineStyle: {
+                        color: 'red',
+                        width: 4
+                    }
+                }, {
+                    data: getData(4),
+                    type: 'line',
+                    name: 'Line with visualMap',
+                    symbolSize: 30,
+                    itemStyle: {
+                        borderColor: 'green'
+                    }
+                }, {
+                    type: 'pie',
+                    data: [{
+                        name: 'Pie A',
+                        value: 10
+                    }, {
+                        name: 'Pie B',
+                        value: 8
+                    }, {
+                        name: 'Pie C',
+                        value: 14,
+                        itemStyle: {
+                            color: 'blue'
+                        }
+                    }],
+                    center: ['80%', '50%']
+                }],
+                grid: {
+                    left: 60,
+                    width: '55%'
+                },
+                visualMap: {
+                    type: 'continuous',
+                    min: 1000,
+                    max: 1100,
+                    inRange: {
+                        color: ['green', 'yellow', 'red']
+                    },
+                    show: false,
+                    seriesIndex: 4
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'Legend icon being more intuitive'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+    </body>
+</html>

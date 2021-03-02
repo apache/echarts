@@ -19,6 +19,7 @@
 
 import LineSeries from './LineSeries';
 import LineView from './LineView';
+import LineSeriesModel from './LineSeries';
 
 // In case developer forget to include grid component
 
@@ -33,6 +34,21 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerSeriesModel(LineSeries);
 
     registers.registerLayout(layoutPoints('line', true));
+
+    registers.registerVisual({
+        seriesType: 'line',
+        reset: function (seriesModel: LineSeriesModel) {
+            // Visual coding for legend
+            const lineStyle = seriesModel.getModel('lineStyle');
+            console.log(lineStyle.get('color'), lineStyle.get('width'))
+            if (lineStyle) {
+                seriesModel.getData().setVisual('legendSymbolStyle', {
+                    color: lineStyle.get('color'),
+                    borderWidth: lineStyle.get('width')
+                });
+            }
+        }
+    });
 
     // Down sample after filter
     registers.registerProcessor(

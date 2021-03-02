@@ -174,9 +174,7 @@ const Arrow = graphic.Path.extend({
  */
 // TODO Use function to build symbol path.
 const symbolCtors: Dictionary<SymbolCtor> = {
-    // Use small height rect to simulate line.
-    // Avoid using stroke.
-    line: graphic.Rect as unknown as SymbolCtor,
+    line: graphic.Line as unknown as SymbolCtor,
 
     rect: graphic.Rect as unknown as SymbolCtor,
 
@@ -196,16 +194,13 @@ const symbolCtors: Dictionary<SymbolCtor> = {
 };
 
 
-// NOTICE Only use fill. No line!
 const symbolShapeMakers: Dictionary<SymbolShapeMaker> = {
 
-    line: function (x, y, w, h, shape: graphic.Rect['shape']) {
-        const thickness = 2;
-        // A thin line
-        shape.x = x;
-        shape.y = y + h / 2 - thickness / 2;
-        shape.width = w;
-        shape.height = thickness;
+    line: function (x, y, w, h, shape: graphic.Line['shape']) {
+        shape.x1 = x;
+        shape.y1 = y + h / 2;
+        shape.x2 = x + w;
+        shape.y2 = y + h / 2;
     },
 
     rect: function (x, y, w, h, shape: graphic.Rect['shape']) {
@@ -317,8 +312,6 @@ function symbolPathSetColor(this: ECSymbol, color: ZRColor, innerColor?: string)
         if (this.__isEmptyBrush) {
             symbolStyle.stroke = color;
             symbolStyle.fill = innerColor || '#fff';
-            // TODO Same width with lineStyle in LineView.
-            symbolStyle.lineWidth = 2;
         }
         else {
             symbolStyle.fill = color;
@@ -344,7 +337,9 @@ export function createSymbol(
 
     const isEmpty = symbolType.indexOf('empty') === 0;
     if (isEmpty) {
-        symbolType = symbolType.substr(5, 1).toLowerCase() + symbolType.substr(6);
+        const realSymbolType = symbolType.substr(5, 1).toLowerCase() + symbolType.substr(6);
+        console.warn(`[DEPRECATED] Shape "${symbolType}" is deprecated. Please use "${realSymbolType}" with "fill" as "white" instead.`);
+        symbolType = realSymbolType;
     }
     let symbolPath: ECSymbol | graphic.Image;
 

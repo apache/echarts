@@ -35,7 +35,8 @@ import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
     ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput,
-    ModelOption, SeriesDataType, OptionSourceData, SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL, DecalObject
+    ModelOption, SeriesDataType, OptionSourceData, SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL,
+    DecalObject, ItemStyleOption
 } from '../util/types';
 import {isDataItemOption, convertOptionIdName} from '../util/model';
 import { getECData } from '../util/innerStore';
@@ -139,6 +140,7 @@ export interface DefaultDataVisual {
     liftZ?: number
     // For legend.
     legendSymbol?: string
+    legendSymbolStyle?: ItemStyleOption
 
     // visualMap will inject visualMeta data
     visualMeta?: VisualMeta[]
