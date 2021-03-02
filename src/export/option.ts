@@ -41,14 +41,14 @@ import type {TitleOption as TitleComponentOption} from '../component/title/insta
 import type {TimelineOption as TimelineComponentOption} from '../component/timeline/TimelineModel';
 import type {SliderTimelineOption as TimelineSliderComponentOption} from '../component/timeline/SliderTimelineModel';
 
-import type {LegendOption} from '../component/legend/LegendModel';
-import type {ScrollableLegendOption} from '../component/legend/ScrollableLegendModel';
+import type {LegendOption as PlainLegendComponentOption} from '../component/legend/LegendModel';
+import type {ScrollableLegendOption as ScrollableLegendComponentOption} from '../component/legend/ScrollableLegendModel';
 
-import type {SliderDataZoomOption} from '../component/dataZoom/SliderZoomModel';
-import type {InsideDataZoomOption} from '../component/dataZoom/InsideZoomModel';
+import type {SliderDataZoomOption as SliderDataZoomComponentOption} from '../component/dataZoom/SliderZoomModel';
+import type {InsideDataZoomOption as InsideDataZoomComponentOption} from '../component/dataZoom/InsideZoomModel';
 
-import type {ContinousVisualMapOption} from '../component/visualMap/ContinuousModel';
-import type {PiecewiseVisualMapOption} from '../component/visualMap/PiecewiseModel';
+import type {ContinousVisualMapOption as ContinousVisualMapComponentOption} from '../component/visualMap/ContinuousModel';
+import type {PiecewiseVisualMapOption as PiecewiseVisualMapComponentOption} from '../component/visualMap/PiecewiseModel';
 
 import type {MarkLineOption as MarkLineComponentOption} from '../component/marker/MarkLineModel';
 import type {MarkPointOption as MarkPointComponentOption} from '../component/marker/MarkPointModel';
@@ -108,9 +108,12 @@ interface ToolboxComponentOption extends ToolboxOption {
     }
 }
 
-export type DataZoomComponentOption = SliderDataZoomOption | InsideDataZoomOption;
-export type VisualMapComponentOption = ContinousVisualMapOption | PiecewiseVisualMapOption;
-export type LegendComponentOption = LegendOption | ScrollableLegendOption;
+export { SliderDataZoomComponentOption, InsideDataZoomComponentOption };
+export type DataZoomComponentOption = SliderDataZoomComponentOption | InsideDataZoomComponentOption;
+export { ContinousVisualMapComponentOption, PiecewiseVisualMapComponentOption };
+export type VisualMapComponentOption = ContinousVisualMapComponentOption | PiecewiseVisualMapComponentOption;
+export { PlainLegendComponentOption, ScrollableLegendComponentOption };
+export type LegendComponentOption = PlainLegendComponentOption | ScrollableLegendComponentOption;
 export {
     GridComponentOption,
     PolarComponentOption,

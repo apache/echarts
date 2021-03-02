@@ -32,9 +32,9 @@ import { shiftLayoutOnY } from '../../label/labelLayoutHelper';
 const RADIAN = Math.PI / 180;
 
 interface LabelLayout {
-    label: ZRText,
-    labelLine: Polyline,
-    position: PieSeriesOption['label']['position'],
+    label: ZRText
+    labelLine: Polyline
+    position: PieSeriesOption['label']['position']
     len: number
     len2: number
     minTurnAngle: number
@@ -42,10 +42,10 @@ interface LabelLayout {
     surfaceNormal: Point
     linePoints: VectorArray[]
     textAlign: HorizontalAlign
-    labelDistance: number,
-    labelAlignTo: PieSeriesOption['label']['alignTo'],
-    edgeDistance: number,
-    bleedMargin: PieSeriesOption['label']['bleedMargin'],
+    labelDistance: number
+    labelAlignTo: PieSeriesOption['label']['alignTo']
+    edgeDistance: number
+    bleedMargin: PieSeriesOption['label']['bleedMargin']
     rect: BoundingRect
 }
 
@@ -104,7 +104,7 @@ function adjustSingleSide(
                 // horizontal r is always same with original r because x is not changed.
                 const rA = r + item.len;
                 // Canculate rB based on the topest / bottemest label.
-                const rB = dx < rA
+                const rB = Math.abs(dx) < rA
                     ? Math.sqrt(dy * dy / (1 - dx * dx / rA / rA))
                     : rA;
                 semi.rB = rB;

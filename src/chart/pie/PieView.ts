@@ -136,7 +136,7 @@ class PiePiece extends graphic.Sector {
         const labelLine = sector.getTextGuideLine();
         const labelText = sector.getTextContent();
 
-        extend(labelLine.ensureState('select'), {
+        labelLine && extend(labelLine.ensureState('select'), {
             x: dx,
             y: dy
         });
@@ -185,6 +185,11 @@ class PiePiece extends graphic.Sector {
             z2: 10
         });
 
+        const labelPosition = seriesModel.get(['label', 'position']);
+        if (labelPosition !== 'outside' && labelPosition !== 'outer') {
+            sector.getTextGuideLine()?.hide();
+            return;
+        }
         // Default use item visual color
         setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
             stroke: visualColor,

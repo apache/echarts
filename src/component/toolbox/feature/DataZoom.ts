@@ -73,9 +73,9 @@ type ToolboxDataZoomFeatureModel = ToolboxFeatureModel<ToolboxDataZoomFeatureOpt
 
 class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
 
-    brushController: BrushController;
+    _brushController: BrushController;
 
-    isZoomActive: boolean;
+    _isZoomActive: boolean;
 
     render(
         featureModel: ToolboxDataZoomFeatureModel,
@@ -83,9 +83,9 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
         api: ExtensionAPI,
         payload: Payload
     ) {
-        if (!this.brushController) {
-            this.brushController = new BrushController(api.getZr());
-            this.brushController.on('brush', zrUtil.bind(this._onBrush, this))
+        if (!this._brushController) {
+            this._brushController = new BrushController(api.getZr());
+            this._brushController.on('brush', zrUtil.bind(this._onBrush, this))
                 .mount();
         }
         updateZoomBtnStatus(featureModel, ecModel, this, payload, api);
@@ -104,14 +104,14 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        this.brushController.unmount();
+        this._brushController && this._brushController.unmount();
     }
 
     dispose(
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        this.brushController.dispose();
+        this._brushController && this._brushController.dispose();
     }
 
     private _onBrush(eventParam: BrushControllerEvents['brush']): void {
@@ -122,7 +122,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
         const snapshot: history.DataZoomStoreSnapshot = {};
         const ecModel = this.ecModel;
 
-        this.brushController.updateCovers([]); // remove cover
+        this._brushController.updateCovers([]); // remove cover
 
         const brushTargetManager = new BrushTargetManager(
             makeAxisFinder(this.model),
@@ -185,9 +185,6 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
         }
     };
 
-    /**
-     * @internal
-     */
     _dispatchZoomAction(snapshot: history.DataZoomStoreSnapshot): void {
         const batch: DataZoomPayloadBatchItem[] = [];
 
@@ -226,7 +223,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
 
 const handlers: { [key in IconType]: (this: DataZoomFeature) => void } = {
     zoom: function () {
-        const nextActive = !this.isZoomActive;
+        const nextActive = !this._isZoomActive;
 
         this.api.dispatchAction({
             type: 'takeGlobalCursor',
@@ -280,14 +277,14 @@ function updateZoomBtnStatus(
     payload: Payload,
     api: ExtensionAPI
 ) {
-    let zoomActive = view.isZoomActive;
+    let zoomActive = view._isZoomActive;
 
     if (payload && payload.type === 'takeGlobalCursor') {
         zoomActive = payload.key === 'dataZoomSelect'
             ? payload.dataZoomSelectActive : false;
     }
 
-    view.isZoomActive = zoomActive;
+    view._isZoomActive = zoomActive;
 
     featureModel.setIconStatus('zoom', zoomActive ? 'emphasis' : 'normal');
 
@@ -305,7 +302,7 @@ function updateZoomBtnStatus(
             : 'rect';
     });
 
-    view.brushController
+    view._brushController
         .setPanels(panels)
         .enableBrush(
             (zoomActive && panels.length)

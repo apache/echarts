@@ -547,7 +547,11 @@ class SliderZoomView extends DataZoomView {
         // Left and right handle to resize
         each([0, 1] as const, function (handleIndex) {
             let iconStr = dataZoomModel.get('handleIcon');
-            if (!symbolBuildProxies[iconStr] && iconStr.indexOf('path://') < 0) {
+            if (
+                !symbolBuildProxies[iconStr]
+                && iconStr.indexOf('path://') < 0
+                && iconStr.indexOf('image://') < 0
+            ) {
                 // Compatitable with the old icon parsers. Which can use a path string without path://
                 iconStr = 'path://' + iconStr;
                 if (__DEV__) {
