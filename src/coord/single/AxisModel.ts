@@ -33,6 +33,12 @@ export interface SingleAxisOption extends AxisBaseOption, BoxLayoutOptionMixin {
     mainType?: 'singleAxis'
     position?: SingleAxisPosition
     orient?: LayoutOrient
+    offset?: {
+        left?: number | string
+        right?: number | string
+        top?: number | string
+        bottom?: number | string
+    }
 }
 
 class SingleAxisModel extends ComponentModel<SingleAxisOption>

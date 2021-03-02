@@ -45,9 +45,13 @@ export function layout(axisModel: SingleAxisModel, opt?: {
     const rect = single.getRect();
     const rectBound = [rect.x, rect.x + rect.width, rect.y, rect.y + rect.height];
 
+    const offset = axisModel.get('offset') || {};
     const positionMap = {
         horizontal: {top: rectBound[2], bottom: rectBound[3]},
-        vertical: {left: rectBound[0] + (rect.width / 2), right: rectBound[1] - (rect.width / 2)}
+        vertical: {
+            left: rectBound[0] + (rect.width / 2) - (+offset.left || 0),
+            right: rectBound[1] - (rect.width / 2) + (+offset.right || 0)
+        }
     } as const;
 
     layout.position = [

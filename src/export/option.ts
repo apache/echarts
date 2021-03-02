@@ -42,13 +42,19 @@ import type {TimelineOption as TimelineComponentOption} from '../component/timel
 import type {SliderTimelineOption as TimelineSliderComponentOption} from '../component/timeline/SliderTimelineModel';
 
 import type {LegendOption as PlainLegendComponentOption} from '../component/legend/LegendModel';
-import type {ScrollableLegendOption as ScrollableLegendComponentOption} from '../component/legend/ScrollableLegendModel';
+import type {
+    ScrollableLegendOption as ScrollableLegendComponentOption
+} from '../component/legend/ScrollableLegendModel';
 
 import type {SliderDataZoomOption as SliderDataZoomComponentOption} from '../component/dataZoom/SliderZoomModel';
 import type {InsideDataZoomOption as InsideDataZoomComponentOption} from '../component/dataZoom/InsideZoomModel';
 
-import type {ContinousVisualMapOption as ContinousVisualMapComponentOption} from '../component/visualMap/ContinuousModel';
-import type {PiecewiseVisualMapOption as PiecewiseVisualMapComponentOption} from '../component/visualMap/PiecewiseModel';
+import type {
+    ContinousVisualMapOption as ContinousVisualMapComponentOption
+} from '../component/visualMap/ContinuousModel';
+import type {
+    PiecewiseVisualMapOption as PiecewiseVisualMapComponentOption
+} from '../component/visualMap/PiecewiseModel';
 
 import type {MarkLineOption as MarkLineComponentOption} from '../component/marker/MarkLineModel';
 import type {MarkPointOption as MarkPointComponentOption} from '../component/marker/MarkPointModel';
