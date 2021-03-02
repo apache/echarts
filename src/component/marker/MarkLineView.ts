@@ -35,6 +35,7 @@ import MarkerModel from './MarkerModel';
 import {
     isArray,
     retrieve,
+    retrieve2,
     clone,
     extend,
     logError,
@@ -399,10 +400,11 @@ class MarkLineView extends MarkerView {
 
             data.setItemVisual(idx, {
                 symbolKeepAspect: itemModel.get('symbolKeepAspect'),
-                symbolOffset: itemModel.get('symbolOffset') || (symbolOffset as (string | number)[])[isFrom ? 0 : 1],
-                symbolRotate: itemModel.get('symbolRotate', true) || (symbolRotate as number[])[isFrom ? 0 : 1],
-                symbolSize: itemModel.get('symbolSize') || (symbolSize as number[])[isFrom ? 0 : 1],
-                symbol: itemModel.get('symbol', true) || (symbolType as string[])[isFrom ? 0 : 1],
+                // `0` should be considered as a valid value, so use `retrieve2` instead of `||`
+                symbolOffset: retrieve2(itemModel.get('symbolOffset'), (symbolOffset as (string | number)[])[isFrom ? 0 : 1]),
+                symbolRotate: retrieve2(itemModel.get('symbolRotate', true), (symbolRotate as number[])[isFrom ? 0 : 1]),
+                symbolSize: retrieve2(itemModel.get('symbolSize'), (symbolSize as number[])[isFrom ? 0 : 1]),
+                symbol: retrieve2(itemModel.get('symbol', true), (symbolType as string[])[isFrom ? 0 : 1]),
                 style
             });
         }
