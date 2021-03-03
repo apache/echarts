@@ -35,7 +35,6 @@ import MapView from '../../chart/map/MapView';
 import Region from '../../coord/geo/Region';
 import Geo from '../../coord/geo/Geo';
 import Model from '../../model/Model';
-import Transformable from 'zrender/src/core/Transformable';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
@@ -61,7 +60,6 @@ class MapDraw {
 
     private uid: string;
 
-    // @ts-ignore FIXME:TS
     private _controller: RoamController;
 
     private _controllerHost: {
@@ -82,8 +80,6 @@ class MapDraw {
 
     private _mapName: string;
 
-    private _initialized: string;
-
     private _regionsGroup: RegionsGroup;
 
     private _backgroundGroup: graphic.Group;
@@ -92,7 +88,6 @@ class MapDraw {
     constructor(api: ExtensionAPI) {
         const group = new graphic.Group();
         this.uid = getUID('ec_map_draw');
-        // @ts-ignore FIXME:TS
         this._controller = new RoamController(api.getZr());
         this._controllerHost = { target: group };
         this.group = group;
@@ -128,29 +123,21 @@ class MapDraw {
         const group = this.group;
 
         const transformInfo = geo.getTransformInfo();
+        const transformInfoRaw = transformInfo.raw;
+        const transformInfoRoam = transformInfo.roam;
 
         // No animation when first draw or in action
         const isFirstDraw = !regionsGroup.childAt(0) || payload;
-        let targetScaleX: number;
-        let targetScaleY: number;
+
         if (isFirstDraw) {
-            group.transform = transformInfo.roamTransform;
-            group.decomposeTransform();
+            group.x = transformInfoRoam.x;
+            group.y = transformInfoRoam.y;
+            group.scaleX = transformInfoRoam.scaleX;
+            group.scaleY = transformInfoRoam.scaleY;
             group.dirty();
         }
         else {
-            const target = new Transformable();
-            target.transform = transformInfo.roamTransform;
-            target.decomposeTransform();
-            const props = {
-                scaleX: target.scaleX,
-                scaleY: target.scaleY,
-                x: target.x,
-                y: target.y
-            };
-            targetScaleX = target.scaleX;
-            targetScaleY = target.scaleY;
-            graphic.updateProps(group, props, mapOrGeoModel);
+            graphic.updateProps(group, transformInfoRoam, mapOrGeoModel);
         }
 
         regionsGroup.removeAll();
@@ -216,14 +203,10 @@ class MapDraw {
                 }
             }
 
-            const sx = transformInfo.rawScaleX;
-            const sy = transformInfo.rawScaleY;
-            const offsetX = transformInfo.rawX;
-            const offsetY = transformInfo.rawY;
             const transformPoint = function (point: number[]): number[] {
                 return [
-                    point[0] * sx + offsetX,
-                    point[1] * sy + offsetY
+                    point[0] * transformInfoRaw.scaleX + transformInfoRaw.x,
+                    point[1] * transformInfoRaw.scaleY + transformInfoRaw.y
                 ];
             };
 
@@ -333,8 +316,8 @@ class MapDraw {
                 if (!isFirstDraw) {
                     // Text animation
                     graphic.updateProps(textEl, {
-                        scaleX: 1 / targetScaleX,
-                        scaleY: 1 / targetScaleY
+                        scaleX: 1 / transformInfoRoam.scaleX,
+                        scaleY: 1 / transformInfoRoam.scaleY
                     }, mapOrGeoModel);
                 }
             }

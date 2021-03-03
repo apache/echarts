@@ -105,7 +105,6 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
         // Use left/top/width/height
         const boxLayoutOption = geoModel.getBoxLayoutParams() as Parameters<typeof layout.getLayoutRect>[0];
 
-        // 0.75 rate
         boxLayoutOption.aspect = aspect;
 
         viewRect = layout.getLayoutRect(boxLayoutOption, {

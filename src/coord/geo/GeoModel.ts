@@ -128,8 +128,9 @@ class GeoModel extends ComponentModel<GeoOption> {
 
         top: 'center',
 
-        // If svg used, aspectScale is 1 by default.
-        // aspectScale: 0.75,
+        // Default value:
+        // for SVG source: 1,
+        // for geoJSON source: 0.75.
         aspectScale: null,
 
         ///// Layout with center and size

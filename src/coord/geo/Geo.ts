@@ -66,7 +66,9 @@ class Geo extends View {
         this._regionsMap = source.regionsMap;
         this._invertLongitute = invertLongitute == null ? true : invertLongitute;
         this.regions = source.regions;
-        this._rect = source.boundingRect;
+
+        const boundingRect = source.boundingRect;
+        this.setBoundingRect(boundingRect.x, boundingRect.y, boundingRect.width, boundingRect.height);
     }
 
     /**
@@ -99,14 +101,14 @@ class Geo extends View {
             new BoundingRect(x, y, width, height)
         );
 
-        // Hint: only works before `this._updateTransform` firstly called.
+        const rawParent = rawTransformable.parent;
+        rawTransformable.parent = null;
         rawTransformable.decomposeTransform();
+        rawTransformable.parent = rawParent;
 
         if (invertLongitute) {
             rawTransformable.scaleY = -rawTransformable.scaleY;
         }
-
-        rawTransformable.updateTransform();
 
         this._updateTransform();
     }
@@ -136,10 +138,6 @@ class Geo extends View {
      */
     getGeoCoord(name: string): number[] {
         return this._nameCoordMap.get(name);
-    }
-
-    getBoundingRect(): BoundingRect {
-        return this._rect;
     }
 
     dataToPoint(data: number[], noRoam?: boolean, out?: number[]): number[] {
