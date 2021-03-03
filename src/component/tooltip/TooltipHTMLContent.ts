@@ -50,10 +50,13 @@ function mirrorPos(pos: string): string {
 }
 
 function assembleArrow(
-    backgroundColor: ColorString,
+    tooltipModel: Model<TooltipOption>,
     borderColor: ZRColor,
     arrowPosition: TooltipOption['position']
 ) {
+    const backgroundColor = tooltipModel.get('backgroundColor');
+    const borderWidth = tooltipModel.get('borderWidth');
+
     if (!isString(arrowPosition) || arrowPosition === 'inside') {
         return '';
     }
@@ -67,8 +70,8 @@ function assembleArrow(
         transformStyle = `translateY(-50%) rotate(${arrowPos === 'left' ? -225 : -45}deg)`;
     }
     else {
-        positionStyle = `${arrowPos}:-6px;left:50%;`;
-        transformStyle = `translateX(-50%) rotate(${arrowPos === 'top' ? 225 : 45}deg)`;
+        positionStyle = `${arrowPos}:-10px;left:50%;`;
+        transformStyle = `translateX(-80%) rotate(${arrowPos === 'top' ? 225 : 45}deg)`;
     }
 
     transformStyle = map(vendors, function (vendorPrefix) {
@@ -78,8 +81,8 @@ function assembleArrow(
     const styleCss = [
         'position:absolute;width:10px;height:10px;',
         `${positionStyle}${transformStyle};`,
-        `border-bottom: ${borderColor} solid 1px;`,
-        `border-right: ${borderColor} solid 1px;`,
+        `border-bottom: ${borderColor} solid ${borderWidth}px;`,
+        `border-right: ${borderColor} solid ${borderWidth}px;`,
         `background-color: ${backgroundColor};`,
         'box-shadow: 8px 8px 16px -3px #000;'
     ];
@@ -387,7 +390,7 @@ class TooltipHTMLContent {
 
         if (isString(arrowPosition) && tooltipModel.get('trigger') === 'item'
             && !shouldTooltipConfine(tooltipModel)) {
-            content += assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition);
+            content += assembleArrow(tooltipModel, borderColor, arrowPosition);
         }
         if (isString(content)) {
             el.innerHTML = content;
@@ -424,7 +427,9 @@ class TooltipHTMLContent {
             // If using float on style, the final width of the dom might
             // keep changing slightly while mouse move. So `toFixed(0)` them.
             style.left = styleCoord[0].toFixed(0) + 'px';
-            style.top = styleCoord[1].toFixed(0) + 'px';
+            // To keep the tooltip slightly above
+            const top = styleCoord[1] - 5;
+            style.top = top.toFixed(0) + 'px';
         }
     }
 
