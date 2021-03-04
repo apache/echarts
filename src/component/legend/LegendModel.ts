@@ -59,7 +59,35 @@ export interface LegendSelectorButtonOption {
     title?: string
 }
 
-interface DataItem {
+export interface LegendStyleOption {
+    /**
+     * Icon of the legend items.
+     * @default 'roundRect'
+     */
+    icon?: string
+
+    /**
+     * Color when legend item is not selected
+     */
+    inactiveColor?: ColorString
+    /**
+     * Border color when legend item is not selected
+     */
+    inactiveBorderColor?: ColorString
+
+    /**
+     * Legend label formatter
+     */
+    formatter?: string | ((name: string) => string)
+
+    itemStyle?: ItemStyleOption
+
+    textStyle?: LabelOption
+
+    symbolKeepAspect?: boolean
+}
+
+interface DataItem extends LegendStyleOption {
     name?: string
     icon?: string
     textStyle?: LabelOption
@@ -74,7 +102,10 @@ export interface LegendTooltipFormatterParams {
     name: string
     $vars: ['name']
 }
-export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
+
+export interface LegendOption extends ComponentOption, LegendStyleOption,
+    BoxLayoutOptionMixin, BorderOptionMixin
+{
 
     mainType?: 'legend'
 
@@ -98,11 +129,6 @@ export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, Bor
      */
     padding?: number | number[]
     /**
-     * Icon of the legend items.
-     * @default 'roundRect'
-     */
-    icon?: string
-    /**
      * Gap between each legend item.
      * @default 10
      */
@@ -115,23 +141,6 @@ export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, Bor
      * Height of legend symbol
      */
     itemHeight?: number
-    /**
-     * Color when legend item is not selected
-     */
-    inactiveColor?: ColorString
-    /**
-     * Border color when legend item is not selected
-     */
-    inactiveBorderColor?: ColorString
-
-    itemStyle?: ItemStyleOption
-
-    /**
-     * Legend label formatter
-     */
-    formatter?: string | ((name: string) => string)
-
-    textStyle?: LabelOption
 
     selectedMode?: boolean | 'single' | 'multiple'
     /**
@@ -168,8 +177,6 @@ export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, Bor
     selectorButtonGap?: number
 
     data?: (string | DataItem)[]
-
-    symbolKeepAspect?: boolean
 
     /**
      * Tooltip option

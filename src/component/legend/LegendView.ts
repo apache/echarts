@@ -179,6 +179,7 @@ class LegendView extends ComponentView {
 
         each(legendModel.getData(), function (itemModel, dataIndex) {
             const name = itemModel.get('name');
+            const legendItemStyle = itemModel.getModel('itemStyle').getItemStyle();
 
             // Use empty string or \n as a newline string
             if (!this.newlineDisabled && (name === '' || name === '\n')) {
@@ -201,15 +202,18 @@ class LegendView extends ComponentView {
             // Legend to control series.
             if (seriesModel) {
                 const data = seriesModel.getData();
-                const style = data.getVisual('style');
-                const color = style[data.getVisual('drawType')] || style.fill;
+                const legendSymbolStyle = data.getVisual('legendSymbolStyle') || {};
+                const style = zrUtil.extend(
+                    zrUtil.extend({}, data.getVisual('style')),
+                    legendItemStyle
+                );
+                const color = style.fill;
                 const borderColor = style.stroke;
                 const borderWidth = style.lineWidth;
                 const decal = style.decal;
 
                 // Using rect symbol defaultly
                 const legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
-                const legendSymbolStyle = data.getVisual('legendSymbolStyle') || {};
                 const symbolType = data.getVisual('symbol');
                 const symbolSize = seriesModel.get('symbolSize');
 
@@ -357,12 +361,13 @@ class LegendView extends ComponentView {
 
         const itemWidth = legendModel.get('itemWidth');
         const itemHeight = legendModel.get('itemHeight');
-        const inactiveColor = legendModel.get('inactiveColor');
-        const inactiveBorderColor = legendModel.get('inactiveBorderColor');
-        const symbolKeepAspect = legendModel.get('symbolKeepAspect');
-        const legendModelItemStyle = legendModel.getModel('itemStyle');
-
         const isSelected = legendModel.isSelected(name);
+
+        const inactiveColor = itemModel.get('inactiveColor');
+        const inactiveBorderColor = itemModel.get('inactiveBorderColor');
+        const symbolKeepAspect = itemModel.get('symbolKeepAspect');
+        const legendModelItemStyle = itemModel.getModel('itemStyle');
+
         const itemGroup = new Group();
 
         const textStyleModel = itemModel.getModel('textStyle');
@@ -577,22 +582,15 @@ function setSymbolStyle(
     decal: PatternObject,
     isSelected: boolean
 ) {
-    let itemStyle;
-    if (symbolType.indexOf('empty') < 0) {
-        itemStyle = legendModelItemStyle.getItemStyle();
-        itemStyle.lineWidth = borderWidth;
-        // itemStyle.
-        itemStyle.stroke = borderColor;
-        (symbol as graphic.Path).style.stroke = borderColor;
-        (symbol as graphic.Path).style.decal = decal;
-        if (!isSelected) {
-            itemStyle.stroke = inactiveBorderColor;
-        }
-    }
-    else {
-        itemStyle = legendModelItemStyle.getItemStyle(['borderWidth', 'borderColor']);
-    }
+    const itemStyle = legendModelItemStyle.getItemStyle();
     (symbol as Displayable).setStyle(itemStyle);
+
+    const style = (symbol as graphic.Path).style;
+    if (symbolType.indexOf('empty') < 0) {
+        style.decal = decal;
+    }
+    style.stroke = isSelected ? borderColor: inactiveBorderColor;
+    style.lineWidth = borderWidth;
     return symbol;
 }
 
