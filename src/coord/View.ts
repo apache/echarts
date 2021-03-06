@@ -32,6 +32,8 @@ import { ParsedModelFinder, ParsedModelFinderKnown } from '../util/model';
 
 const v2ApplyTransform = vector.applyTransform;
 
+export type ViewCoordSysTransformInfoPart = Pick<Transformable, 'x' | 'y' | 'scaleX' | 'scaleY'>;
+
 class View extends Transformable implements CoordinateSystemMaster, CoordinateSystem {
 
     readonly type: string = 'view';
@@ -219,8 +221,8 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     }
 
     getTransformInfo(): {
-        roam: Pick<Transformable, 'x' | 'y' | 'scaleX' | 'scaleY'>
-        raw: Pick<Transformable, 'x' | 'y' | 'scaleX' | 'scaleY'>
+        roam: ViewCoordSysTransformInfoPart
+        raw: ViewCoordSysTransformInfoPart
     } {
         const roamTransformable = this._roamTransformable;
         const rawTransformable = this._rawTransformable;

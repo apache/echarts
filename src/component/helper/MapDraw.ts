@@ -38,10 +38,12 @@ import Model from '../../model/Model';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
+import { ViewCoordSysTransformInfoPart } from '../../coord/View';
+import { GeoSVGResource } from '../../coord/geo/GeoSVGResource';
 
 
 interface RegionsGroup extends graphic.Group {
-    __regions: Region[];
+    __regions: Region[]
 }
 
 function getFixedItemStyle(model: Model<GeoItemStyleOption>) {
@@ -82,7 +84,7 @@ class MapDraw {
 
     private _regionsGroup: RegionsGroup;
 
-    private _backgroundGroup: graphic.Group;
+    private _svgGroup: graphic.Group;
 
 
     constructor(api: ExtensionAPI) {
@@ -93,7 +95,7 @@ class MapDraw {
         this.group = group;
 
         group.add(this._regionsGroup = new graphic.Group() as RegionsGroup);
-        group.add(this._backgroundGroup = new graphic.Group());
+        group.add(this._svgGroup = new graphic.Group());
     }
 
     draw(
@@ -117,7 +119,6 @@ class MapDraw {
 
         const geo = mapOrGeoModel.coordinateSystem;
 
-        this._updateBackground(geo);
 
         const regionsGroup = this._regionsGroup;
         const group = this.group;
@@ -125,6 +126,8 @@ class MapDraw {
         const transformInfo = geo.getTransformInfo();
         const transformInfoRaw = transformInfo.raw;
         const transformInfoRoam = transformInfo.roam;
+
+        this._updateSVG(geo, transformInfoRaw);
 
         // No animation when first draw or in action
         const isFirstDraw = !regionsGroup.childAt(0) || payload;
@@ -356,23 +359,48 @@ class MapDraw {
 
     remove(): void {
         this._regionsGroup.removeAll();
-        this._backgroundGroup.removeAll();
+        this._svgGroup.removeAll();
         this._controller.dispose();
-        this._mapName && geoSourceManager.removeGraphic(this._mapName, this.uid);
+        this._freeSVG(this._mapName);
         this._mapName = null;
         this._controllerHost = null;
     }
 
-    private _updateBackground(geo: Geo): void {
+    private _updateSVG(geo: Geo, transformInfoRaw: ViewCoordSysTransformInfoPart): void {
         const mapName = geo.map;
 
-        if (this._mapName !== mapName) {
-            zrUtil.each(geoSourceManager.makeGraphic(mapName, this.uid), function (root) {
-                this._backgroundGroup.add(root);
-            }, this);
-        }
+        this._svgGroup.x = transformInfoRaw.x;
+        this._svgGroup.y = transformInfoRaw.y;
+        this._svgGroup.scaleX = transformInfoRaw.scaleX;
+        this._svgGroup.scaleY = transformInfoRaw.scaleY;
 
-        this._mapName = mapName;
+        if (this._mapName !== mapName) {
+            this._freeSVG(this._mapName);
+            this._useSVG(mapName);
+            this._mapName = mapName;
+        }
+    }
+
+    private _useSVG(mapName: string) {
+        if (mapName == null) {
+            return;
+        }
+        const resource = geoSourceManager.getGeoResource(mapName);
+        if (resource && resource.type === 'svg') {
+            const root = (resource as GeoSVGResource).useGraphic(this.uid);
+            this._svgGroup.add(root);
+        }
+    }
+
+    private _freeSVG(mapName: string) {
+        if (mapName == null) {
+            return;
+        }
+        const resource = geoSourceManager.getGeoResource(mapName);
+        if (resource && resource.type === 'svg') {
+            (resource as GeoSVGResource).freeGraphic(this.uid);
+            this._svgGroup.removeAll();
+        }
     }
 
     private _updateController(

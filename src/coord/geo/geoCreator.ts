@@ -22,7 +22,6 @@ import Geo from './Geo';
 import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
 import geoSourceManager from './geoSourceManager';
-import mapDataStorage from './mapDataStorage';
 import GeoModel, { GeoOption, RegoinOption } from './GeoModel';
 import MapSeries, { MapSeriesOption } from '../../chart/map/MapSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -141,8 +140,9 @@ class GeoCreator implements CoordinateSystemCreator {
 
             let aspectScale = geoModel.get('aspectScale');
             let invertLongitute = true;
-            const mapRecords = mapDataStorage.retrieveMap(name);
-            if (mapRecords && mapRecords[0] && mapRecords[0].type === 'svg') {
+
+            const geoResource = geoSourceManager.getGeoResource(name);
+            if (geoResource.type === 'svg') {
                 aspectScale == null && (aspectScale = 1);
                 invertLongitute = false;
             }

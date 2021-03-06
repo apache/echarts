@@ -17,6 +17,13 @@
 * under the License.
 */
 
+import BoundingRect from 'zrender/src/core/BoundingRect';
+import { HashMap } from 'zrender/src/core/util';
+import Region from './Region';
+
+
+export type GeoSVGSourceInput = 'string' | Document | SVGElement;
+export type GeoJSONSourceInput = 'string' | GeoJSON | GeoJSONCompressed;
 
 export interface NameMap {
     [regionName: string]: string
@@ -114,3 +121,15 @@ interface GeoJSONGeometryMultiPolygonCompressed {
 //      type: 'GeometryCollection';
 //      geometries: GeoJSONGeometry[];
 // };
+
+export interface GeoResource {
+    readonly type: 'geoJSON' | 'svg';
+    load(nameMap: NameMap, nameProperty: string): {
+        boundingRect: BoundingRect;
+        regions?: Region[];
+        // Key: mapName
+        regionsMap?: HashMap<Region>;
+        // Key: mapName
+        nameCoordMap?: HashMap<number[]>;
+    };
+}

@@ -68,7 +68,6 @@ import loadingDefault from '../loading/default';
 import Scheduler from './Scheduler';
 import lightTheme from '../theme/light';
 import darkTheme from '../theme/dark';
-import mapDataStorage from '../coord/geo/mapDataStorage';
 import {CoordinateSystemMaster, CoordinateSystemCreator, CoordinateSystemHostModel} from '../coord/CoordinateSystem';
 import { parseClassType } from '../util/clazz';
 import {ECEventProcessor} from '../util/ECEventProcessor';
@@ -105,6 +104,7 @@ import decal from '../visual/decal';
 import type {MorphDividingMethod} from 'zrender/src/tool/morphPath';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
+import geoSourceManager from '../coord/geo/geoSourceManager';
 
 declare let global: any;
 
@@ -2831,26 +2831,19 @@ export function setCanvasCreator(creator: () => HTMLCanvasElement): void {
 }
 
 /**
- * The parameters and usage: see `mapDataStorage.registerMap`.
+ * The parameters and usage: see `geoSourceManager.registerMap`.
  * Compatible with previous `echarts.registerMap`.
  */
 export function registerMap(
-    mapName: Parameters<typeof mapDataStorage.registerMap>[0],
-    geoJson: Parameters<typeof mapDataStorage.registerMap>[1],
-    specialAreas?: Parameters<typeof mapDataStorage.registerMap>[2]
+    mapName: Parameters<typeof geoSourceManager.registerMap>[0],
+    geoJson: Parameters<typeof geoSourceManager.registerMap>[1],
+    specialAreas?: Parameters<typeof geoSourceManager.registerMap>[2]
 ): void {
-    mapDataStorage.registerMap(mapName, geoJson, specialAreas);
+    geoSourceManager.registerMap(mapName, geoJson, specialAreas);
 }
 
 export function getMap(mapName: string) {
-    // For backward compatibility, only return the first one.
-    const records = mapDataStorage.retrieveMap(mapName);
-    // FIXME support SVG, where return not only records[0].
-    return records && records[0] && {
-        // @ts-ignore
-        geoJson: records[0].geoJSON,
-        specialAreas: records[0].specialAreas
-    };
+    return geoSourceManager.getMapForUser(mapName);
 }
 
 export const registerTransform = registerExternalTransform;

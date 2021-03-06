@@ -22,82 +22,95 @@ import Group from 'zrender/src/graphic/Group';
 import Rect from 'zrender/src/graphic/shape/Rect';
 import {assert, createHashMap, HashMap} from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
-import {makeInner} from '../../util/model';
-import { SVGMapRecord } from './mapDataStorage';
+import { GeoResource, GeoSVGSourceInput } from './geoTypes';
+import { parseXML } from 'zrender/src/tool/parseXML';
 
-type MapRecordInner = {
-    originRoot: Group;
-    boundingRect: BoundingRect;
+
+export class GeoSVGResource implements GeoResource {
+
+    readonly type = 'svg';
+    private _mapName: string;
+    private _parsedXML: SVGElement;
+    private _rootForRect: Group;
+    private _boundingRect: BoundingRect;
     // key: hostKey, value: root
-    rootMap: HashMap<Group>;
-    originRootHostKey: string;
-};
+    private _usedRootMap: HashMap<Group> = createHashMap();
+    private _freedRoots: Group[] = [];
 
-const inner = makeInner<MapRecordInner, SVGMapRecord>();
+    constructor(
+        mapName: string,
+        svg: GeoSVGSourceInput
+    ) {
+        this._mapName = mapName;
 
-export default {
+        // Only perform parse to XML object here, which might be time
+        // consiming for large SVG.
+        // Although convert XML to zrender element is also time consiming,
+        // if we do it here, the clone of zrender elements has to be
+        // required. So we do it once for each geo instance, util real
+        // performance issues call for optimizing it.
+        this._parsedXML = parseXML(svg);
+    }
 
-    load(mapName: string, mapRecord: SVGMapRecord): ReturnType<typeof buildGraphic> {
-        const originRoot = inner(mapRecord).originRoot;
-        if (originRoot) {
-            return {
-                root: originRoot,
-                boundingRect: inner(mapRecord).boundingRect
-            };
+    load(): { boundingRect: BoundingRect } {
+        // In the "load" stage, graphic need to be built to
+        // get boundingRect for geo coordinate system.
+        const rootForRect = this._rootForRect;
+        if (rootForRect) {
+            return { boundingRect: this._boundingRect };
         }
 
-        const graphic = buildGraphic(mapRecord);
+        const graphic = buildGraphic(this._parsedXML);
 
-        inner(mapRecord).originRoot = graphic.root;
-        inner(mapRecord).boundingRect = graphic.boundingRect;
+        this._rootForRect = graphic.root;
+        this._boundingRect = graphic.boundingRect;
 
-        return graphic;
-    },
+        this._freedRoots.push(graphic.root);
 
-    makeGraphic(mapName: string, mapRecord: SVGMapRecord, hostKey: string): Group {
-        // For performance consideration (in large SVG), graphic only maked
-        // when necessary and reuse them according to hostKey.
-        const field = inner(mapRecord);
-        const rootMap = field.rootMap || (field.rootMap = createHashMap());
+        return { boundingRect: graphic.boundingRect };
+    }
 
-        let root = rootMap.get(hostKey);
+    // Consider:
+    // (1) One graphic element can not be shared by different `geoView` running simultaneously.
+    //     Notice, also need to consider multiple echarts instances share a `mapRecord`.
+    // (2) Converting SVG to graphic elements is time consuming.
+    // (3) In the current architecture, `load` should be called frequently to get boundingRect,
+    //     and it is called without view info.
+    // So we maintain graphic elements in this module, and enables `view` to use/return these
+    // graphics from/to the pool with it's uid.
+    useGraphic(hostKey: string): Group {
+        const usedRootMap = this._usedRootMap;
+
+        let root = usedRootMap.get(hostKey);
         if (root) {
             return root;
         }
 
-        const originRoot = field.originRoot;
-        const boundingRect = field.boundingRect;
+        root = this._freedRoots.pop() || buildGraphic(this._parsedXML, this._boundingRect).root;
 
-        // For performance, if originRoot is not used by a view,
-        // assign it to a view, but not reproduce graphic elements.
-        if (!field.originRootHostKey) {
-            field.originRootHostKey = hostKey;
-            root = originRoot;
-        }
-        else {
-            root = buildGraphic(mapRecord, boundingRect).root;
-        }
+        return usedRootMap.set(hostKey, root);
+    }
 
-        return rootMap.set(hostKey, root);
-    },
+    freeGraphic(hostKey: string): void {
+        const usedRootMap = this._usedRootMap;
 
-    removeGraphic(mapName: string, mapRecord: SVGMapRecord, hostKey: string): void {
-        const field = inner(mapRecord);
-        const rootMap = field.rootMap;
-        rootMap && rootMap.removeKey(hostKey);
-        if (hostKey === field.originRootHostKey) {
-            field.originRootHostKey = null;
+        const root = usedRootMap.get(hostKey);
+        if (root) {
+            usedRootMap.removeKey(hostKey);
+            this._freedRoots.push(root);
         }
     }
-};
+
+}
+
 
 function buildGraphic(
-    mapRecord: SVGMapRecord, boundingRect?: BoundingRect
+    svgXML: SVGElement,
+    boundingRect?: BoundingRect
 ): {
     root: Group;
     boundingRect: BoundingRect;
 } {
-    const svgXML = mapRecord.svgXML;
     let result;
     let root;
 
