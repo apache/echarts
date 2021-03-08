@@ -337,10 +337,7 @@ export function createSymbol(
 
     const isEmpty = symbolType.indexOf('empty') === 0;
     if (isEmpty) {
-        const realSymbolType = symbolType.substr(5, 1).toLowerCase() + symbolType.substr(6);
-        console.warn(`[DEPRECATED] Shape "${symbolType}" is deprecated. `
-            + `Please use "${realSymbolType}" with "fill" as "white" instead.`);
-        symbolType = realSymbolType;
+        symbolType = symbolType.substr(5, 1).toLowerCase() + symbolType.substr(6);
     }
     let symbolPath: ECSymbol | graphic.Image;
 

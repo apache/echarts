@@ -29,7 +29,8 @@ import {
     ItemStyleOption,
     LabelOption,
     LayoutOrient,
-    CommonTooltipOption
+    CommonTooltipOption,
+    ZRColor
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
@@ -101,6 +102,11 @@ export interface LegendTooltipFormatterParams {
     legendIndex: number
     name: string
     $vars: ['name']
+}
+
+export interface LegendSymbolStyleOption extends ItemStyleOption {
+    horizontalLineColor?: ZRColor,
+    horizontalLineWidth?: number
 }
 
 export interface LegendOption extends ComponentOption, LegendStyleOption,

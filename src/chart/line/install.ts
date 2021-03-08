@@ -40,11 +40,17 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         reset: function (seriesModel: LineSeriesModel) {
             // Visual coding for legend
             const lineStyle = seriesModel.getModel('lineStyle');
-            console.log(lineStyle.get('color'), lineStyle.get('width'))
+            const itemStyle = seriesModel.getModel('itemStyle');
+            const color = itemStyle ? itemStyle.get('color') : null;
+            const borderColor = itemStyle ? itemStyle.get('borderColor') : null;//TODO
+            const lineColor = lineStyle && lineStyle.get('color') || color;
+
+            console.log(color, borderColor)
             if (lineStyle) {
                 seriesModel.getData().setVisual('legendSymbolStyle', {
-                    color: lineStyle.get('color'),
-                    borderWidth: lineStyle.get('width')
+                    borderColor,
+                    horizontalLineColor: lineColor,
+                    horizontalLineWidth: lineStyle.get('width')
                 });
             }
         }

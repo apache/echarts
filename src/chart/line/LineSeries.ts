@@ -127,8 +127,6 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
     hasSymbolVisual = true;
     legendSymbol = 'line';
 
-    visualDrawType = 'stroke' as const;
-
     getInitialData(option: LineSeriesOption): List {
         if (__DEV__) {
             const coordSys = option.coordinateSystem;
@@ -154,8 +152,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         },
 
         itemStyle: {
-            color: 'white',
-            borderColor: 'auto',
+            color: 'auto',
             borderWidth: 1
         },
 
@@ -189,7 +186,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         // Disabled if step is true
         smooth: false,
         smoothMonotone: null,
-        symbol: 'circle',
+        symbol: 'emptyCircle',
         symbolSize: 4,
         symbolRotate: null,
 
