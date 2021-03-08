@@ -575,8 +575,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         if (data.hasItemOption) {
             data.each(function (idx) {
                 const rawItem = data.getRawDataItem(idx);
-                if (typeof rawItem === 'object'
-                    && (rawItem as OptionDataItemObject<unknown>).selected
+                if (zrUtil.isObject(rawItem)
+                    && (rawItem as OptionDataItemObject<unknown>)?.selected
                 ) {
                     dataIndices.push(idx);
                 }
