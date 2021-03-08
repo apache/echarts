@@ -24,18 +24,23 @@ import {assert, createHashMap, HashMap} from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import { GeoResource, GeoSVGSourceInput } from './geoTypes';
 import { parseXML } from 'zrender/src/tool/parseXML';
+import Element from 'zrender/src/Element';
 
+export interface GeoSVGGraphic {
+    root: Group;
+    namedElements: Element[];
+}
 
 export class GeoSVGResource implements GeoResource {
 
     readonly type = 'svg';
     private _mapName: string;
     private _parsedXML: SVGElement;
-    private _rootForRect: Group;
+    private _rootForRect: GeoSVGGraphic;
     private _boundingRect: BoundingRect;
     // key: hostKey, value: root
-    private _usedRootMap: HashMap<Group> = createHashMap();
-    private _freedRoots: Group[] = [];
+    private _usedRootMap: HashMap<GeoSVGGraphic> = createHashMap();
+    private _freedRoots: GeoSVGGraphic[] = [];
 
     constructor(
         mapName: string,
@@ -62,10 +67,10 @@ export class GeoSVGResource implements GeoResource {
 
         const graphic = buildGraphic(this._parsedXML);
 
-        this._rootForRect = graphic.root;
+        this._rootForRect = graphic;
         this._boundingRect = graphic.boundingRect;
 
-        this._freedRoots.push(graphic.root);
+        this._freedRoots.push(graphic);
 
         return { boundingRect: graphic.boundingRect };
     }
@@ -78,26 +83,26 @@ export class GeoSVGResource implements GeoResource {
     //     and it is called without view info.
     // So we maintain graphic elements in this module, and enables `view` to use/return these
     // graphics from/to the pool with it's uid.
-    useGraphic(hostKey: string): Group {
+    useGraphic(hostKey: string): GeoSVGGraphic {
         const usedRootMap = this._usedRootMap;
 
-        let root = usedRootMap.get(hostKey);
-        if (root) {
-            return root;
+        let svgGraphic = usedRootMap.get(hostKey);
+        if (svgGraphic) {
+            return svgGraphic;
         }
 
-        root = this._freedRoots.pop() || buildGraphic(this._parsedXML, this._boundingRect).root;
+        svgGraphic = this._freedRoots.pop() || buildGraphic(this._parsedXML, this._boundingRect);
 
-        return usedRootMap.set(hostKey, root);
+        return usedRootMap.set(hostKey, svgGraphic);
     }
 
     freeGraphic(hostKey: string): void {
         const usedRootMap = this._usedRootMap;
 
-        const root = usedRootMap.get(hostKey);
-        if (root) {
+        const svgGraphic = usedRootMap.get(hostKey);
+        if (svgGraphic) {
             usedRootMap.removeKey(hostKey);
-            this._freedRoots.push(root);
+            this._freedRoots.push(svgGraphic);
         }
     }
 
@@ -110,6 +115,7 @@ function buildGraphic(
 ): {
     root: Group;
     boundingRect: BoundingRect;
+    namedElements: Element[]
 } {
     let result;
     let root;
@@ -161,6 +167,7 @@ function buildGraphic(
 
     return {
         root: root,
-        boundingRect: boundingRect
+        boundingRect: boundingRect,
+        namedElements: result.namedElements
     };
 }

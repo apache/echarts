@@ -32,7 +32,6 @@ import GlobalModel from '../../model/Global';
 import { Payload, ECElement } from '../../util/types';
 import GeoView from '../geo/GeoView';
 import MapView from '../../chart/map/MapView';
-import Region from '../../coord/geo/Region';
 import Geo from '../../coord/geo/Geo';
 import Model from '../../model/Model';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
@@ -43,7 +42,6 @@ import { GeoSVGResource } from '../../coord/geo/GeoSVGResource';
 
 
 interface RegionsGroup extends graphic.Group {
-    __regions: Region[]
 }
 
 function getFixedItemStyle(model: Model<GeoItemStyleOption>) {
@@ -152,7 +150,9 @@ class MapDraw {
             && data.getVisual('visualMeta')
             && data.getVisual('visualMeta').length > 0;
 
+
         zrUtil.each(geo.regions, function (region) {
+
             // Consider in GeoJson properties.name may be duplicated, for example,
             // there is multiple region named "United Kindom" or "France" (so many
             // colonies). And it is not appropriate to merge them in geo, which
@@ -286,15 +286,10 @@ class MapDraw {
                 const textEl = new graphic.Text({
                     x: centerPt[0],
                     y: centerPt[1],
-                    // FIXME
-                    // label rotation is not support yet in geo or regions of series-map
-                    // that has no data. The rotation will be effected by this `scale`.
-                    // So needed to change to RectText?
-                    scaleX: 1 / group.scaleX,
-                    scaleY: 1 / group.scaleY,
                     z2: 10,
                     silent: true
                 });
+                textEl.afterUpdate = labelTextAfterUpdate;
 
                 setLabelStyle<typeof query>(
                     textEl, getLabelStatesModels(regionModel),
@@ -316,13 +311,6 @@ class MapDraw {
 
                 (compoundPath as ECElement).disableLabelAnimation = true;
 
-                if (!isFirstDraw) {
-                    // Text animation
-                    graphic.updateProps(textEl, {
-                        scaleX: 1 / transformInfoRoam.scaleX,
-                        scaleY: 1 / transformInfoRoam.scaleY
-                    }, mapOrGeoModel);
-                }
             }
 
             // setItemGraphicEl, setHoverStyle after all polygons and labels
@@ -341,9 +329,6 @@ class MapDraw {
                     region: (regionModel && regionModel.option) || {}
                 };
             }
-
-            const groupRegions = regionGroup.__regions || (regionGroup.__regions = []);
-            groupRegions.push(region);
 
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
             regionGroup.highDownSilentOnTouch = !!mapOrGeoModel.get('selectedMode');
@@ -387,8 +372,8 @@ class MapDraw {
         }
         const resource = geoSourceManager.getGeoResource(mapName);
         if (resource && resource.type === 'svg') {
-            const root = (resource as GeoSVGResource).useGraphic(this.uid);
-            this._svgGroup.add(root);
+            const svgGraphic = (resource as GeoSVGResource).useGraphic(this.uid);
+            this._svgGroup.add(svgGraphic.root);
         }
     }
 
@@ -450,15 +435,6 @@ class MapDraw {
                 originY: e.originY
             }));
 
-            const group = this.group;
-            this._regionsGroup.traverse(function (el) {
-                const textContent = el.getTextContent();
-                if (textContent) {
-                    textContent.scaleX = 1 / group.scaleX;
-                    textContent.scaleY = 1 / group.scaleY;
-                    textContent.markRedraw();
-                }
-            });
         }, this);
 
         controller.setPointerChecker(function (e, x, y) {
@@ -494,5 +470,18 @@ class MapDraw {
     }
 
 };
+
+function labelTextAfterUpdate(this: graphic.Text) {
+    // Make the label text do not scale but perform translate
+    // based on its host el.
+    const m = this.transform;
+    const scaleX = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+    const scaleY = Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+
+    m[0] /= scaleX;
+    m[1] /= scaleX;
+    m[2] /= scaleY;
+    m[3] /= scaleY;
+}
 
 export default MapDraw;
