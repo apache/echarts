@@ -39,9 +39,22 @@ import { getECData } from '../../util/innerStore';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
 import { ViewCoordSysTransformInfoPart } from '../../coord/View';
 import { GeoSVGResource } from '../../coord/geo/GeoSVGResource';
+import Displayable from 'zrender/src/graphic/Displayable';
+import Element, { ElementTextConfig } from 'zrender/src/Element';
+import List from '../../data/List';
 
 
 interface RegionsGroup extends graphic.Group {
+}
+
+interface ViewBuildContext {
+    api: ExtensionAPI;
+    geo: Geo;
+    mapOrGeoModel: GeoModel | MapSeries;
+    data: List;
+    isVisualEncodedByVisualMap: boolean;
+    isGeo: boolean;
+    transformInfoRaw: ViewCoordSysTransformInfoPart;
 }
 
 function getFixedItemStyle(model: Model<GeoItemStyleOption>) {
@@ -78,11 +91,13 @@ class MapDraw {
      */
     private _mouseDownFlag: boolean;
 
-    private _mapName: string;
+    private _svgMapName: string;
 
     private _regionsGroup: RegionsGroup;
 
     private _svgGroup: graphic.Group;
+
+    private _svgNamedElements: Displayable[];
 
 
     constructor(api: ExtensionAPI) {
@@ -117,15 +132,12 @@ class MapDraw {
 
         const geo = mapOrGeoModel.coordinateSystem;
 
-
         const regionsGroup = this._regionsGroup;
         const group = this.group;
 
         const transformInfo = geo.getTransformInfo();
         const transformInfoRaw = transformInfo.raw;
         const transformInfoRoam = transformInfo.roam;
-
-        this._updateSVG(geo, transformInfoRaw);
 
         // No animation when first draw or in action
         const isFirstDraw = !regionsGroup.childAt(0) || payload;
@@ -141,17 +153,44 @@ class MapDraw {
             graphic.updateProps(group, transformInfoRoam, mapOrGeoModel);
         }
 
-        regionsGroup.removeAll();
-
-        const nameMap = zrUtil.createHashMap<RegionsGroup>();
-
-
         const isVisualEncodedByVisualMap = data
             && data.getVisual('visualMeta')
             && data.getVisual('visualMeta').length > 0;
 
+        const viewBuildCtx = {
+            api,
+            geo,
+            mapOrGeoModel,
+            data,
+            isVisualEncodedByVisualMap,
+            isGeo,
+            transformInfoRaw
+        };
 
-        zrUtil.each(geo.regions, function (region) {
+        this._buildGeoJSON(viewBuildCtx);
+        this._buildSVG(viewBuildCtx);
+
+        this._updateController(mapOrGeoModel, ecModel, api);
+
+        this._updateMapSelectHandler(mapOrGeoModel, regionsGroup, api, fromView);
+    }
+
+    private _buildGeoJSON(viewBuildCtx: ViewBuildContext): void {
+        const nameMap = zrUtil.createHashMap<RegionsGroup>();
+        const regionsGroup = this._regionsGroup;
+        const transformInfoRaw = viewBuildCtx.transformInfoRaw;
+
+        const transformPoint = function (point: number[]): number[] {
+            return [
+                point[0] * transformInfoRaw.scaleX + transformInfoRaw.x,
+                point[1] * transformInfoRaw.scaleY + transformInfoRaw.y
+            ];
+        };
+
+        regionsGroup.removeAll();
+
+        // Only when the resource is GeoJSON, there is `geo.regions`.
+        zrUtil.each(viewBuildCtx.geo.regions, function (region) {
 
             // Consider in GeoJson properties.name may be duplicated, for example,
             // there is multiple region named "United Kindom" or "France" (so many
@@ -168,50 +207,6 @@ class MapDraw {
                 }
             });
             regionGroup.add(compoundPath);
-
-            const regionModel = mapOrGeoModel.getRegionModel(region.name) || mapOrGeoModel;
-
-            // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            const itemStyleModel = regionModel.getModel('itemStyle');
-            // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            const emphasisModel = regionModel.getModel('emphasis');
-            const emphasisItemStyleModel = emphasisModel.getModel('itemStyle');
-            // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            const blurItemStyleModel = regionModel.getModel(['blur', 'itemStyle']);
-            // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            const selectItemStyleModel = regionModel.getModel(['select', 'itemStyle']);
-
-            // NOTE: DONT use 'style' in visual when drawing map.
-            // This component is used for drawing underlying map for both geo component and map series.
-            const itemStyle = getFixedItemStyle(itemStyleModel);
-            const emphasisItemStyle = getFixedItemStyle(emphasisItemStyleModel);
-            const blurItemStyle = getFixedItemStyle(blurItemStyleModel);
-            const selectItemStyle = getFixedItemStyle(selectItemStyleModel);
-
-            let dataIdx;
-            // Use the itemStyle in data if has data
-            if (data) {
-                dataIdx = data.indexOfName(region.name);
-                // Only visual color of each item will be used. It can be encoded by visualMap
-                // But visual color of series is used in symbol drawing
-                //
-                // Visual color for each series is for the symbol draw
-                const style = data.getItemVisual(dataIdx, 'style');
-                const decal = data.getItemVisual(dataIdx, 'decal');
-                if (isVisualEncodedByVisualMap && style.fill) {
-                    itemStyle.fill = style.fill;
-                }
-                if (decal) {
-                    itemStyle.decal = createOrUpdatePatternFromDecal(decal, api);
-                }
-            }
-
-            const transformPoint = function (point: number[]): number[] {
-                return [
-                    point[0] * transformInfoRaw.scaleX + transformInfoRaw.x,
-                    point[1] * transformInfoRaw.scaleY + transformInfoRaw.y
-                ];
-            };
 
             zrUtil.each(region.geometries, function (geometry) {
                 if (geometry.type !== 'polygon') {
@@ -243,149 +238,218 @@ class MapDraw {
                 }
             });
 
-            compoundPath.setStyle(itemStyle);
-            compoundPath.style.strokeNoScale = true;
-            compoundPath.culling = true;
+            const centerPt = transformPoint(region.center);
 
-            compoundPath.ensureState('emphasis').style = emphasisItemStyle;
-            compoundPath.ensureState('blur').style = blurItemStyle;
-            compoundPath.ensureState('select').style = selectItemStyle;
-
-            let showLabel = false;
-            for (let i = 0; i < DISPLAY_STATES.length; i++) {
-                const stateName = DISPLAY_STATES[i];
-                // @ts-ignore FIXME:TS fix the "compatible with each other"?
-                if (regionModel.get(
-                    stateName === 'normal' ? ['label', 'show'] : [stateName, 'label', 'show']
-                )) {
-                    showLabel = true;
-                    break;
-                }
-            }
-
-            const isDataNaN = data && isNaN(data.get(data.mapDimension('value'), dataIdx) as number);
-            const itemLayout = data && data.getItemLayout(dataIdx);
-
-            // In the following cases label will be drawn
-            // 1. In map series and data value is NaN
-            // 2. In geo component
-            // 4. Region has no series legendSymbol, which will be add a showLabel flag in mapSymbolLayout
-            if (
-                (isGeo || isDataNaN && (showLabel))
-                || (itemLayout && itemLayout.showLabel)
-            ) {
-                const query = !isGeo ? dataIdx : region.name;
-                let labelFetcher;
-
-                // Consider dataIdx not found.
-                if (!data || dataIdx >= 0) {
-                    labelFetcher = mapOrGeoModel;
-                }
-
-                const centerPt = transformPoint(region.center);
-                const textEl = new graphic.Text({
-                    x: centerPt[0],
-                    y: centerPt[1],
-                    z2: 10,
-                    silent: true
-                });
-                textEl.afterUpdate = labelTextAfterUpdate;
-
-                setLabelStyle<typeof query>(
-                    textEl, getLabelStatesModels(regionModel),
-                    {
-                        labelFetcher: labelFetcher,
-                        labelDataIndex: query,
-                        defaultText: region.name
-                    },
-                    { normal: {
-                        align: 'center',
-                        verticalAlign: 'middle'
-                    } }
-                );
-
-                compoundPath.setTextContent(textEl);
-                compoundPath.setTextConfig({
-                    local: true
-                });
-
-                (compoundPath as ECElement).disableLabelAnimation = true;
-
-            }
-
-            // setItemGraphicEl, setHoverStyle after all polygons and labels
-            // are added to the rigionGroup
-            if (data) {
-                data.setItemGraphicEl(dataIdx, regionGroup);
-            }
-            else {
-                const regionModel = mapOrGeoModel.getRegionModel(region.name);
-                // Package custom mouse event for geo component
-                getECData(compoundPath).eventData = {
-                    componentType: 'geo',
-                    componentIndex: mapOrGeoModel.componentIndex,
-                    geoIndex: mapOrGeoModel.componentIndex,
-                    name: region.name,
-                    region: (regionModel && regionModel.option) || {}
-                };
-            }
-
-            // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            regionGroup.highDownSilentOnTouch = !!mapOrGeoModel.get('selectedMode');
-            enableHoverEmphasis(regionGroup, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+            this._resetSingleRegionGraphic(
+                viewBuildCtx, compoundPath, regionGroup, region.name, centerPt, null
+            );
 
             regionsGroup.add(regionGroup);
-        });
 
-        this._updateController(mapOrGeoModel, ecModel, api);
-
-        this._updateMapSelectHandler(mapOrGeoModel, regionsGroup, api, fromView);
+        }, this);
     }
 
-    remove(): void {
-        this._regionsGroup.removeAll();
-        this._svgGroup.removeAll();
-        this._controller.dispose();
-        this._freeSVG(this._mapName);
-        this._mapName = null;
-        this._controllerHost = null;
-    }
-
-    private _updateSVG(geo: Geo, transformInfoRaw: ViewCoordSysTransformInfoPart): void {
-        const mapName = geo.map;
+    private _buildSVG(viewBuildCtx: ViewBuildContext): void {
+        const mapName = viewBuildCtx.geo.map;
+        const transformInfoRaw = viewBuildCtx.transformInfoRaw;
 
         this._svgGroup.x = transformInfoRaw.x;
         this._svgGroup.y = transformInfoRaw.y;
         this._svgGroup.scaleX = transformInfoRaw.scaleX;
         this._svgGroup.scaleY = transformInfoRaw.scaleY;
 
-        if (this._mapName !== mapName) {
-            this._freeSVG(this._mapName);
+        if (this._svgResourceChanged(mapName)) {
+            this._freeSVG();
             this._useSVG(mapName);
-            this._mapName = mapName;
         }
+
+        zrUtil.each(this._svgNamedElements, function (namedElement) {
+            this._resetSingleRegionGraphic(
+                viewBuildCtx, namedElement, namedElement, namedElement.name, [0, 0], 'inside'
+            );
+        }, this);
     }
 
-    private _useSVG(mapName: string) {
-        if (mapName == null) {
-            return;
+    private _resetSingleRegionGraphic(
+        viewBuildCtx: ViewBuildContext,
+        displayable: Displayable,
+        elForStateChange: Element,
+        regionName: string,
+        labelXY: number[],
+        labelPosition: ElementTextConfig['position']
+    ): void {
+
+        const mapOrGeoModel = viewBuildCtx.mapOrGeoModel;
+        const data = viewBuildCtx.data;
+        const isVisualEncodedByVisualMap = viewBuildCtx.isVisualEncodedByVisualMap;
+        const isGeo = viewBuildCtx.isGeo;
+
+        const regionModel = mapOrGeoModel.getRegionModel(regionName) || mapOrGeoModel;
+
+        // @ts-ignore FIXME:TS fix the "compatible with each other"?
+        const itemStyleModel = regionModel.getModel('itemStyle');
+        // @ts-ignore FIXME:TS fix the "compatible with each other"?
+        const emphasisModel = regionModel.getModel('emphasis');
+        const emphasisItemStyleModel = emphasisModel.getModel('itemStyle');
+        // @ts-ignore FIXME:TS fix the "compatible with each other"?
+        const blurItemStyleModel = regionModel.getModel(['blur', 'itemStyle']);
+        // @ts-ignore FIXME:TS fix the "compatible with each other"?
+        const selectItemStyleModel = regionModel.getModel(['select', 'itemStyle']);
+
+        // NOTE: DONT use 'style' in visual when drawing map.
+        // This component is used for drawing underlying map for both geo component and map series.
+        const itemStyle = getFixedItemStyle(itemStyleModel);
+        const emphasisItemStyle = getFixedItemStyle(emphasisItemStyleModel);
+        const blurItemStyle = getFixedItemStyle(blurItemStyleModel);
+        const selectItemStyle = getFixedItemStyle(selectItemStyleModel);
+
+        let dataIdx;
+        // Use the itemStyle in data if has data
+        if (data) {
+            dataIdx = data.indexOfName(regionName);
+            // Only visual color of each item will be used. It can be encoded by visualMap
+            // But visual color of series is used in symbol drawing
+            //
+            // Visual color for each series is for the symbol draw
+            const style = data.getItemVisual(dataIdx, 'style');
+            const decal = data.getItemVisual(dataIdx, 'decal');
+            if (isVisualEncodedByVisualMap && style.fill) {
+                itemStyle.fill = style.fill;
+            }
+            if (decal) {
+                itemStyle.decal = createOrUpdatePatternFromDecal(decal, viewBuildCtx.api);
+            }
         }
+
+        displayable.setStyle(itemStyle);
+        displayable.style.strokeNoScale = true;
+        displayable.culling = true;
+
+        displayable.ensureState('emphasis').style = emphasisItemStyle;
+        displayable.ensureState('blur').style = blurItemStyle;
+        displayable.ensureState('select').style = selectItemStyle;
+
+
+        let showLabel = false;
+        for (let i = 0; i < DISPLAY_STATES.length; i++) {
+            const stateName = DISPLAY_STATES[i];
+            // @ts-ignore FIXME:TS fix the "compatible with each other"?
+            if (regionModel.get(
+                stateName === 'normal' ? ['label', 'show'] : [stateName, 'label', 'show']
+            )) {
+                showLabel = true;
+                break;
+            }
+        }
+
+        const isDataNaN = data && isNaN(data.get(data.mapDimension('value'), dataIdx) as number);
+        const itemLayout = data && data.getItemLayout(dataIdx);
+
+        // In the following cases label will be drawn
+        // 1. In map series and data value is NaN
+        // 2. In geo component
+        // 4. Region has no series legendSymbol, which will be add a showLabel flag in mapSymbolLayout
+        if (
+            (isGeo || isDataNaN && (showLabel))
+            || (itemLayout && itemLayout.showLabel)
+        ) {
+            const query = !isGeo ? dataIdx : regionName;
+            let labelFetcher;
+
+            // Consider dataIdx not found.
+            if (!data || dataIdx >= 0) {
+                labelFetcher = mapOrGeoModel;
+            }
+
+            const textEl = new graphic.Text({
+                x: labelXY[0],
+                y: labelXY[1],
+                z2: 10,
+                silent: true
+            });
+            textEl.afterUpdate = labelTextAfterUpdate;
+
+            setLabelStyle<typeof query>(
+                textEl, getLabelStatesModels(regionModel),
+                {
+                    labelFetcher: labelFetcher,
+                    labelDataIndex: query,
+                    defaultText: regionName
+                },
+                { normal: {
+                    align: 'center',
+                    verticalAlign: 'middle'
+                } }
+            );
+
+            displayable.setTextContent(textEl);
+            displayable.setTextConfig({
+                local: true,
+                insideFill: textEl.style.fill,
+                position: labelPosition
+            });
+
+            (displayable as ECElement).disableLabelAnimation = true;
+        }
+
+
+        // setItemGraphicEl, setHoverStyle after all polygons and labels
+        // are added to the rigionGroup
+        if (data) {
+            data.setItemGraphicEl(dataIdx, elForStateChange);
+        }
+        else {
+            const regionModel = mapOrGeoModel.getRegionModel(regionName);
+            // Package custom mouse event for geo component
+            getECData(displayable).eventData = {
+                componentType: 'geo',
+                componentIndex: mapOrGeoModel.componentIndex,
+                geoIndex: mapOrGeoModel.componentIndex,
+                name: regionName,
+                region: (regionModel && regionModel.option) || {}
+            };
+        }
+
+        // @ts-ignore FIXME:TS fix the "compatible with each other"?
+        elForStateChange.highDownSilentOnTouch = !!mapOrGeoModel.get('selectedMode');
+        enableHoverEmphasis(elForStateChange, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+
+    }
+
+    remove(): void {
+        this._regionsGroup.removeAll();
+        this._svgGroup.removeAll();
+        this._controller.dispose();
+        this._freeSVG();
+        this._controllerHost = null;
+    }
+
+    private _svgResourceChanged(mapName: string): boolean {
+        return this._svgMapName !== mapName;
+    }
+
+    private _useSVG(mapName: string): void {
         const resource = geoSourceManager.getGeoResource(mapName);
         if (resource && resource.type === 'svg') {
             const svgGraphic = (resource as GeoSVGResource).useGraphic(this.uid);
             this._svgGroup.add(svgGraphic.root);
+            this._svgNamedElements = svgGraphic.namedElements;
+            this._svgMapName = mapName;
         }
     }
 
-    private _freeSVG(mapName: string) {
+    private _freeSVG(): void {
+        const mapName = this._svgMapName;
         if (mapName == null) {
             return;
         }
         const resource = geoSourceManager.getGeoResource(mapName);
         if (resource && resource.type === 'svg') {
             (resource as GeoSVGResource).freeGraphic(this.uid);
-            this._svgGroup.removeAll();
         }
+        this._svgGroup.removeAll();
+        this._svgNamedElements = null;
+        this._svgMapName = null;
     }
 
     private _updateController(

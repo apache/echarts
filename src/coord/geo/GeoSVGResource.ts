@@ -24,11 +24,11 @@ import {assert, createHashMap, HashMap} from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import { GeoResource, GeoSVGSourceInput } from './geoTypes';
 import { parseXML } from 'zrender/src/tool/parseXML';
-import Element from 'zrender/src/Element';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 export interface GeoSVGGraphic {
     root: Group;
-    namedElements: Element[];
+    namedElements: Displayable[];
 }
 
 export class GeoSVGResource implements GeoResource {
@@ -115,7 +115,7 @@ function buildGraphic(
 ): {
     root: Group;
     boundingRect: BoundingRect;
-    namedElements: Element[]
+    namedElements: Displayable[]
 } {
     let result;
     let root;

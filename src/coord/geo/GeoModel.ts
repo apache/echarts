@@ -163,7 +163,6 @@ class GeoModel extends ComponentModel<GeoOption> {
         },
 
         itemStyle: {
-            // color: 各异,
             borderWidth: 0.5,
             borderColor: '#444',
             color: '#eee'

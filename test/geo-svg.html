@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            const testGeoJson1 = {
+                'type': 'FeatureCollection',
+                'features': [
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Polygon',
+                            'coordinates': [
+                                [[2000, 2000], [5000, 2000], [5000, 5000], [2000, 5000]]
+                            ]
+                        },
+                        'properties': {
+                            'name': 'Afghanistan',
+                            'childNum': 1
+                        }
+                    }
+                ]
+            };
+
+            echarts.registerMap('testGeoJson1', testGeoJson1);
+
+            option = {
+                geo: {
+                    map: 'testGeoJson1',
+                    roam: true,
+                    // height: '100%',
+                    // center
+                    // layoutCenter: ['30%', 40],
+                    // layoutSize: 40,
+                    // boundingCoords
+                    zoom: 1,
+                    aspectScale: 1
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'geoJSON location:',
+                    'Should be a square and 80% of canvas height.',
+                    'At the center of the canvas.'
+                ],
+                option: option,
+                height: 300
+            });
+
+
+        });
+        </script>
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            $.ajax({
+                url: '../../vis-data/map/svg/seats/seatmap-example.svg', // 剧场例子
+                // url: '../../vis-data/map/svg/seats/Ethiopian_Airlines_Flight_961_seating_plan.svg', // 飞机例子
+                // url: '../../vis-data/map/svg/seats/oracle-seating-map-2017-2.svg', // 渲染错误
+                // url: '../../vis-data/map/svg/seats/DC-10-30_seat_configuration_chart.svg', // 渲染错误
+                // url: '../../vis-data/map/svg/seats/Airbus_A300B4-622R_seat_configuration_chart.svg', // 渲染错误
+                dataType: 'text'
+            }).done(function (svg) {
+
+                echarts.registerMap('seatmap', {
+                    svg: svg
+                });
+
+                option = {
+                    geo: {
+                        map: 'seatmap',
+                        roam: true,
+                        // height: 100,
+                        // zoom: 1.5
+                        emphasis: {
+                            // itemStyle: {
+                            //     color: 'red'
+                            // },
+                            label: {
+                                // color: '#fff',
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        },
+                        // itemStyle: {
+                        //     color: 'red'
+                        // },
+                        // label: {
+                        //     color: '#fff'
+                        // }
+                    },
+                    // series: {
+                    //     type: 'scatter',
+                    //     coordinateSystem: 'geo',
+                    //     // ?????????????????????????
+                    //     geoIndex: 0,
+                    //     data: [[11, 22], [33, 44]]
+                    // }
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Test Case Description of main0',
+                        '(Muliple lines and **emphasis** are supported in description)'
+                    ],
+                    option: option,
+                    height: 300
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+
+            });
+
+        });
+        </script>
+
+
+
+
+    </body>
+</html>
+
