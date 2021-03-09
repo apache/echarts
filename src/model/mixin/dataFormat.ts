@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import {retrieveRawValue} from '../../data/helper/dataProvider';
-import {formatTpl} from '../../util/format';
+import {formatTpl, encodeHTML} from '../../util/format';
 import {
     DataHost,
     DisplayState,
@@ -80,7 +80,7 @@ export class DataFormatMixin {
             seriesIndex: (this as any).seriesIndex,
             seriesId: isSeries ? this.id : null,
             seriesName: isSeries ? this.name : null,
-            name: name,
+            name: encodeHTML(name),
             dataIndex: rawDataIndex,
             data: itemOpt,
             dataType: dataType,

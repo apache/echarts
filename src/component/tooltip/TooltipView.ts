@@ -488,11 +488,11 @@ class TooltipView extends ComponentView {
                 if (!axisModel || axisValue == null) {
                     return;
                 }
-                const axisValueLabel = axisPointerViewHelper.getValueLabel(
+                const axisValueLabel = formatUtil.encodeHTML(axisPointerViewHelper.getValueLabel(
                     axisValue, axisModel.axis, ecModel,
                     axisItem.seriesDataIndices,
                     axisItem.valueLabelOpt
-                );
+                ));
                 const axisSectionMarkup = createTooltipMarkup('section', {
                     header: axisValueLabel,
                     noHeader: !zrUtil.trim(axisValueLabel),
@@ -509,9 +509,9 @@ class TooltipView extends ComponentView {
                     cbParams.axisIndex = axisItem.axisIndex;
                     cbParams.axisType = axisItem.axisType;
                     cbParams.axisId = axisItem.axisId;
-                    cbParams.axisValue = axisHelper.getAxisRawValue(
+                    cbParams.axisValue = formatUtil.encodeHTML(axisHelper.getAxisRawValue(
                         axisModel.axis, { value: axisValue as number }
-                    );
+                    ) as string);
                     cbParams.axisValueLabel = axisValueLabel;
                     // Pre-create marker style for makers. Users can assemble richText
                     // text in `formatter` callback and use those markers style.
