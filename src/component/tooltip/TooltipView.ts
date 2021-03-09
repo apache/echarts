@@ -20,7 +20,12 @@ import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import TooltipHTMLContent from './TooltipHTMLContent';
 import TooltipRichContent from './TooltipRichContent';
-import * as formatUtil from '../../util/format';
+import {
+    TooltipMarker,
+    encodeHTML,
+    convertToColorString,
+    formatTpl
+} from '../../util/format';
 import * as numberUtil from '../../util/number';
 import * as graphic from '../../util/graphic';
 import findPointFromSeries from '../axisPointer/findPointFromSeries';
@@ -125,7 +130,7 @@ type TooltipCallbackDataParams = CallbackDataParams & {
     // TODO: TYPE Value type
     axisValue?: string | number
     axisValueLabel?: string
-    marker?: formatUtil.TooltipMarker
+    marker?: TooltipMarker
 };
 
 class TooltipView extends ComponentView {
@@ -488,11 +493,13 @@ class TooltipView extends ComponentView {
                 if (!axisModel || axisValue == null) {
                     return;
                 }
-                const axisValueLabel = formatUtil.encodeHTML(axisPointerViewHelper.getValueLabel(
+                const encode = singleTooltipModel.get('escapeContent');
+                const cbAxisValueLabel = axisPointerViewHelper.getValueLabel(
                     axisValue, axisModel.axis, ecModel,
                     axisItem.seriesDataIndices,
                     axisItem.valueLabelOpt
-                ));
+                );
+                const axisValueLabel = encode ? encodeHTML(cbAxisValueLabel) : cbAxisValueLabel;
                 const axisSectionMarkup = createTooltipMarkup('section', {
                     header: axisValueLabel,
                     noHeader: !zrUtil.trim(axisValueLabel),
@@ -505,18 +512,20 @@ class TooltipView extends ComponentView {
                     const series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
                     const dataIndex = idxItem.dataIndexInside;
                     const cbParams = series.getDataParams(dataIndex) as TooltipCallbackDataParams;
+                    cbParams.name = encode ? encodeHTML(cbParams.name) : cbParams.name;
                     cbParams.axisDim = axisItem.axisDim;
                     cbParams.axisIndex = axisItem.axisIndex;
                     cbParams.axisType = axisItem.axisType;
                     cbParams.axisId = axisItem.axisId;
-                    cbParams.axisValue = formatUtil.encodeHTML(axisHelper.getAxisRawValue(
+                    const cbAxisValue = axisHelper.getAxisRawValue(
                         axisModel.axis, { value: axisValue as number }
-                    ) as string);
+                    ) as string;
+                    cbParams.axisValue = encode ? encodeHTML(cbAxisValue) : cbAxisValue;
                     cbParams.axisValueLabel = axisValueLabel;
                     // Pre-create marker style for makers. Users can assemble richText
                     // text in `formatter` callback and use those markers style.
                     cbParams.marker = markupStyleCreator.makeTooltipMarker(
-                        'item', formatUtil.convertToColorString(cbParams.color), renderMode
+                        'item', convertToColorString(cbParams.color), renderMode
                     );
 
                     const seriesTooltipResult = normalizeTooltipFormatResult(
@@ -605,11 +614,12 @@ class TooltipView extends ComponentView {
         }
 
         const params = dataModel.getDataParams(dataIndex, dataType);
+        params.name = tooltipModel.get('escapeContent') ? encodeHTML(params.name) : params.name;
         const markupStyleCreator = new TooltipMarkupStyleCreator();
         // Pre-create marker style for makers. Users can assemble richText
         // text in `formatter` callback and use those markers style.
         params.marker = markupStyleCreator.makeTooltipMarker(
-            'item', formatUtil.convertToColorString(params.color), renderMode
+            'item', convertToColorString(params.color), renderMode
         );
 
         const seriesTooltipResult = normalizeTooltipFormatResult(
@@ -727,7 +737,7 @@ class TooltipView extends ComponentView {
             if (isTimeAxis) {
                 html = timeFormat(params0.axisValue, html, useUTC);
             }
-            html = formatUtil.formatTpl(html, params, true);
+            html = formatTpl(html, params, true);
         }
         else if (zrUtil.isFunction(formatter)) {
             const callback = bind(function (cbTicket: string, html: string | HTMLElement[]) {

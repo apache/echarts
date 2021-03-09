@@ -140,7 +140,7 @@ under the License.
     <div id="main32" class="chart"></div>
     <h1>tooltip.textStyle.color</h1>
     <div id="main33" class="chart"></div>
-    <h1>tooltip.textStyle.color</h1>
+    <h1>tooltip xss</h1>
     <div id="main34" class="chart"></div>
 
 
@@ -3639,7 +3639,8 @@ under the License.
                     smooth: true
                 }],
                 tooltip: {
-                trigger: 'axis',
+                    trigger: 'axis',
+                    escapeContent: true,
                     formatter(params) {
                         const name = params[0] && params[0].axisValueLabel;
                         const name2 = params[0] && params[0].axisValue;
