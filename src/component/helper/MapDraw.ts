@@ -42,6 +42,7 @@ import { GeoSVGResource } from '../../coord/geo/GeoSVGResource';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
 import List from '../../data/List';
+import { GeoJSONRegion } from '../../coord/geo/Region';
 
 
 interface RegionsGroup extends graphic.Group {
@@ -91,13 +92,13 @@ class MapDraw {
      */
     private _mouseDownFlag: boolean;
 
-    private _svgMapName: string;
-
     private _regionsGroup: RegionsGroup;
+
+    private _svgMapName: string;
 
     private _svgGroup: graphic.Group;
 
-    private _svgNamedElements: Displayable[];
+    private _svgRegionElements: Displayable[];
 
 
     constructor(api: ExtensionAPI) {
@@ -167,8 +168,12 @@ class MapDraw {
             transformInfoRaw
         };
 
-        this._buildGeoJSON(viewBuildCtx);
-        this._buildSVG(viewBuildCtx);
+        if (geo.resourceType === 'geoJSON') {
+            this._buildGeoJSON(viewBuildCtx);
+        }
+        else if (geo.resourceType === 'geoSVG') {
+            this._buildSVG(viewBuildCtx);
+        }
 
         this._updateController(mapOrGeoModel, ecModel, api);
 
@@ -190,7 +195,7 @@ class MapDraw {
         regionsGroup.removeAll();
 
         // Only when the resource is GeoJSON, there is `geo.regions`.
-        zrUtil.each(viewBuildCtx.geo.regions, function (region) {
+        zrUtil.each(viewBuildCtx.geo.regions, function (region: GeoJSONRegion) {
 
             // Consider in GeoJson properties.name may be duplicated, for example,
             // there is multiple region named "United Kindom" or "France" (so many
@@ -238,7 +243,7 @@ class MapDraw {
                 }
             });
 
-            const centerPt = transformPoint(region.center);
+            const centerPt = transformPoint(region.getCenter());
 
             this._resetSingleRegionGraphic(
                 viewBuildCtx, compoundPath, regionGroup, region.name, centerPt, null
@@ -263,9 +268,9 @@ class MapDraw {
             this._useSVG(mapName);
         }
 
-        zrUtil.each(this._svgNamedElements, function (namedElement) {
+        zrUtil.each(this._svgRegionElements, function (el: Displayable) {
             this._resetSingleRegionGraphic(
-                viewBuildCtx, namedElement, namedElement, namedElement.name, [0, 0], 'inside'
+                viewBuildCtx, el, el, el.name, [0, 0], 'inside'
             );
         }, this);
     }
@@ -430,10 +435,10 @@ class MapDraw {
 
     private _useSVG(mapName: string): void {
         const resource = geoSourceManager.getGeoResource(mapName);
-        if (resource && resource.type === 'svg') {
+        if (resource && resource.type === 'geoSVG') {
             const svgGraphic = (resource as GeoSVGResource).useGraphic(this.uid);
             this._svgGroup.add(svgGraphic.root);
-            this._svgNamedElements = svgGraphic.namedElements;
+            this._svgRegionElements = svgGraphic.regionElements;
             this._svgMapName = mapName;
         }
     }
@@ -444,11 +449,11 @@ class MapDraw {
             return;
         }
         const resource = geoSourceManager.getGeoResource(mapName);
-        if (resource && resource.type === 'svg') {
+        if (resource && resource.type === 'geoSVG') {
             (resource as GeoSVGResource).freeGraphic(this.uid);
         }
+        this._svgRegionElements = null;
         this._svgGroup.removeAll();
-        this._svgNamedElements = null;
         this._svgMapName = null;
     }
 
@@ -516,6 +521,7 @@ class MapDraw {
         const mapDraw = this;
 
         regionsGroup.off('mousedown');
+        regionsGroup.off('click');
 
         // @ts-ignore FIXME:TS resolve type conflict
         if (mapOrGeoModel.get('selectedMode')) {

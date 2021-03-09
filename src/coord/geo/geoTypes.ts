@@ -19,7 +19,8 @@
 
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import { HashMap } from 'zrender/src/core/util';
-import Region from './Region';
+import { Group } from '../../util/graphic';
+import { Region } from './Region';
 
 
 export type GeoSVGSourceInput = 'string' | Document | SVGElement;
@@ -123,13 +124,17 @@ interface GeoJSONGeometryMultiPolygonCompressed {
 // };
 
 export interface GeoResource {
-    readonly type: 'geoJSON' | 'svg';
+    readonly type: 'geoJSON' | 'geoSVG';
     load(nameMap: NameMap, nameProperty: string): {
         boundingRect: BoundingRect;
-        regions?: Region[];
-        // Key: mapName
-        regionsMap?: HashMap<Region>;
-        // Key: mapName
-        nameCoordMap?: HashMap<number[]>;
+        regions: Region[];
+        // Key: region.name
+        regionsMap: HashMap<Region>;
+        // Key: region.name
+        nameCoordMap: HashMap<number[]>;
     };
+}
+
+export interface GeoSVGGraphicRoot extends Group {
+    isGeoSVGGraphicRoot: boolean;
 }

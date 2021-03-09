@@ -21,12 +21,28 @@ import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import View from '../View';
 import geoSourceManager from './geoSourceManager';
-import Region from './Region';
-import { NameMap } from './geoTypes';
+import { GeoJSONRegion, Region } from './Region';
+import { GeoResource, NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING } from '../../util/model';
 import GeoModel from './GeoModel';
 import { resizeGeoType } from './geoCreator';
+
+const GEO_DEFAULT_PARAMS: {
+    [type in GeoResource['type']]: {
+        aspectScale: number;
+        invertLongitute: boolean;
+    }
+} = {
+    'geoJSON': {
+        aspectScale: 0.75,
+        invertLongitute: true
+    },
+    'geoSVG': {
+        aspectScale: 1,
+        invertLongitute: false
+    }
+} as const;
 
 
 class Geo extends View {
@@ -37,35 +53,42 @@ class Geo extends View {
 
     // map type
     readonly map: string;
+    readonly resourceType: GeoResource['type'];
 
     private _nameCoordMap: zrUtil.HashMap<number[]>;
     private _regionsMap: zrUtil.HashMap<Region>;
     private _invertLongitute: boolean;
     readonly regions: Region[];
+    readonly aspectScale: number;
 
     // Injected outside
-    aspectScale: number;
     model: GeoModel;
     resize: resizeGeoType;
 
-    /**
-     * For backward compatibility, the orginal interface:
-     * `name, map, geoJson, specialAreas, nameMap` is kept.
-     *
-     * @param map Map type Specify the positioned areas by left, top, width, height.
-     * @param [nameMap] Specify name alias
-     */
-    constructor(name: string, map: string, nameMap?: NameMap, invertLongitute?: boolean) {
+    constructor(
+        name: string,
+        map: string,
+        opt: {
+            // Specify name alias
+            nameMap?: NameMap;
+            aspectScale?: number;
+        }
+    ) {
         super(name);
 
         this.map = map;
 
-        const source = geoSourceManager.load(map, nameMap);
+        const source = geoSourceManager.load(map, opt.nameMap);
+        const resource = geoSourceManager.getGeoResource(map);
+        this.resourceType = resource ? resource.type : null;
+
+        const defaultParmas = GEO_DEFAULT_PARAMS[resource.type];
 
         this._nameCoordMap = source.nameCoordMap;
         this._regionsMap = source.regionsMap;
-        this._invertLongitute = invertLongitute == null ? true : invertLongitute;
+        this._invertLongitute = defaultParmas.invertLongitute;
         this.regions = source.regions;
+        this.aspectScale = zrUtil.retrieve2(opt.aspectScale, defaultParmas.aspectScale);
 
         const boundingRect = source.boundingRect;
         this.setBoundingRect(boundingRect.x, boundingRect.y, boundingRect.width, boundingRect.height);
@@ -77,7 +100,8 @@ class Geo extends View {
     containCoord(coord: number[]) {
         const regions = this.regions;
         for (let i = 0; i < regions.length; i++) {
-            if (regions[i].contain(coord)) {
+            const region = regions[i];
+            if (region.type === 'geoJSON' && (region as GeoJSONRegion).contain(coord)) {
                 return true;
             }
         }
@@ -120,7 +144,8 @@ class Geo extends View {
     getRegionByCoord(coord: number[]): Region {
         const regions = this.regions;
         for (let i = 0; i < regions.length; i++) {
-            if (regions[i].contain(coord)) {
+            const region = regions[i];
+            if (region.type === 'geoJSON' && (region as GeoJSONRegion).contain(coord)) {
                 return regions[i];
             }
         }

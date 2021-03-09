@@ -129,7 +129,7 @@ class GeoModel extends ComponentModel<GeoOption> {
         top: 'center',
 
         // Default value:
-        // for SVG source: 1,
+        // for geoSVG source: 1,
         // for geoJSON source: 0.75.
         aspectScale: null,
 
@@ -287,8 +287,6 @@ class GeoModel extends ComponentModel<GeoOption> {
         return !!(selectedMap && selectedMap[name]);
     }
 
-    private _initSelectedMapFromData() {
-    }
 }
 
 export default GeoModel;

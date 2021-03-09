@@ -26,7 +26,7 @@ import fixTextCoord from './fix/textCoord';
 import fixGeoCoord from './fix/geoCoord';
 import fixDiaoyuIsland from './fix/diaoyuIsland';
 import BoundingRect from 'zrender/src/core/BoundingRect';
-import Region from './Region';
+import { GeoJSONRegion } from './Region';
 import { GeoJSON, GeoJSONCompressed, GeoJSONSourceInput, GeoResource, GeoSpecialAreas, NameMap } from './geoTypes';
 
 
@@ -38,7 +38,7 @@ export class GeoJSONResource implements GeoResource {
     private _mapName: string;
 
     private _parsed: {
-        regions: Region[];
+        regions: GeoJSONRegion[];
         boundingRect: BoundingRect;
     };
 
@@ -65,10 +65,10 @@ export class GeoJSONResource implements GeoResource {
             };
         }
 
-        const regionsMap = createHashMap<Region>();
-        const nameCoordMap = createHashMap<Region['center']>();
+        const regionsMap = createHashMap<GeoJSONRegion>();
+        const nameCoordMap = createHashMap<ReturnType<GeoJSONRegion['getCenter']>>();
 
-        const finalRegions: Region[] = [];
+        const finalRegions: GeoJSONRegion[] = [];
         each(parsed.regions, function (region) {
             let regionName = region.name;
 
@@ -79,7 +79,7 @@ export class GeoJSONResource implements GeoResource {
 
             finalRegions.push(region);
             regionsMap.set(regionName, region);
-            nameCoordMap.set(regionName, region.center);
+            nameCoordMap.set(regionName, region.getCenter());
         });
 
         return {
@@ -90,7 +90,7 @@ export class GeoJSONResource implements GeoResource {
         };
     }
 
-    private _parseToRegions(nameProperty: string): Region[] {
+    private _parseToRegions(nameProperty: string): GeoJSONRegion[] {
         const mapName = this._mapName;
         const geoJSON = this._geoJSON;
         let rawRegions;
@@ -147,7 +147,7 @@ export class GeoJSONResource implements GeoResource {
 
 }
 
-function calculateBoundingRect(regions: Region[]): BoundingRect {
+function calculateBoundingRect(regions: GeoJSONRegion[]): BoundingRect {
     let rect;
     for (let i = 0; i < regions.length; i++) {
         const regionRect = regions[i].getBoundingRect();

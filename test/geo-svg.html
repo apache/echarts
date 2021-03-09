@@ -39,6 +39,7 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
 
 
 
@@ -72,6 +73,7 @@ under the License.
                 geo: {
                     map: 'testGeoJson1',
                     roam: true,
+                    selectedMode: 'single',
                     // height: '100%',
                     // center
                     // layoutCenter: ['30%', 40],
@@ -89,8 +91,21 @@ under the License.
                     'At the center of the canvas.'
                 ],
                 option: option,
+                info: [],
+                infoKey: 'allSelected',
                 height: 300
             });
+
+            if (chart) {
+                if (chart) {
+                    chart.on('geoselectchanged', function (params) {
+                        chart.__testHelper.updateInfo(
+                            params.allSelected,
+                            'allSelected'
+                        );
+                    });
+                }
+            }
 
 
         });
@@ -102,11 +117,7 @@ under the License.
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
             $.ajax({
-                url: '../../vis-data/map/svg/seats/seatmap-example.svg', // 剧场例子
-                // url: '../../vis-data/map/svg/seats/Ethiopian_Airlines_Flight_961_seating_plan.svg', // 飞机例子
-                // url: '../../vis-data/map/svg/seats/oracle-seating-map-2017-2.svg', // 渲染错误
-                // url: '../../vis-data/map/svg/seats/DC-10-30_seat_configuration_chart.svg', // 渲染错误
-                // url: '../../vis-data/map/svg/seats/Airbus_A300B4-622R_seat_configuration_chart.svg', // 渲染错误
+                url: '../../vis-data/map/svg/seats/seatmap-example.svg',
                 dataType: 'text'
             }).done(function (svg) {
 
@@ -118,24 +129,25 @@ under the License.
                     geo: {
                         map: 'seatmap',
                         roam: true,
+                        selectedMode: 'multiple',
                         // height: 100,
                         // zoom: 1.5
                         emphasis: {
-                            // itemStyle: {
-                            //     color: 'red'
-                            // },
                             label: {
-                                // color: '#fff',
                                 textBorderColor: '#fff',
                                 textBorderWidth: 2
                             }
                         },
-                        // itemStyle: {
-                        //     color: 'red'
-                        // },
-                        // label: {
-                        //     color: '#fff'
-                        // }
+                        select: {
+                            itemStyle: {
+                                color: '#b50205'
+                            },
+                            label: {
+                                show: false,
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        }
                     },
                     // series: {
                     //     type: 'scatter',
@@ -148,14 +160,25 @@ under the License.
 
                 var chart = testHelper.create(echarts, 'main1', {
                     title: [
-                        'Test Case Description of main0',
-                        '(Muliple lines and **emphasis** are supported in description)'
+                        'geo component with svg resource',
+                        'click seat: check **allSelected** correct.'
                     ],
                     option: option,
+                    info: [],
+                    infoKey: 'allSelected',
                     height: 300
                     // buttons: [{text: 'btn-txt', onclick: function () {}}],
                     // recordCanvas: true,
                 });
+
+                if (chart) {
+                    chart.on('geoselectchanged', function (params) {
+                        chart.__testHelper.updateInfo(
+                            params.allSelected,
+                            'allSelected'
+                        );
+                    });
+                }
 
             });
 
@@ -163,6 +186,77 @@ under the License.
         </script>
 
 
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            $.ajax({
+                url: '../../vis-data/map/svg/seats/seatmap-example.svg',
+                dataType: 'text'
+            }).done(function (svg) {
+
+                echarts.registerMap('seatmap', {
+                    svg: svg
+                });
+
+                option = {
+                    tooltip: {
+                    },
+                    series: {
+                        type: 'map',
+                        map: 'seatmap',
+                        roam: true,
+                        selectedMode: 'multiple',
+                        // height: 100,
+                        // zoom: 1.5
+                        emphasis: {
+                            label: {
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        },
+                        select: {
+                            itemStyle: {
+                                color: '#b50205'
+                            },
+                            label: {
+                                show: false,
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'map series with svg resource',
+                        'Hover seat: check **tooltip** correct.'
+                    ],
+                    option: option,
+                    info: [],
+                    infoKey: 'allSelected',
+                    height: 300
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+
+                if (chart) {
+                    chart.on('selectchanged', function (params) {
+                        chart.__testHelper.updateInfo(
+                            params.selected,
+                            'selected'
+                        );
+                    });
+                }
+
+            });
+
+        });
+        </script>
 
 
     </body>

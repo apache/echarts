@@ -35,6 +35,7 @@ import ComponentModel from '../../model/Component';
 
 
 export type resizeGeoType = typeof resizeGeo;
+
 /**
  * Resize method bound to the geo
  */
@@ -138,21 +139,11 @@ class GeoCreator implements CoordinateSystemCreator {
         ecModel.eachComponent('geo', function (geoModel: GeoModel, idx) {
             const name = geoModel.get('map');
 
-            let aspectScale = geoModel.get('aspectScale');
-            let invertLongitute = true;
+            const geo = new Geo(name + idx, name, {
+                nameMap: geoModel.get('nameMap'),
+                aspectScale: geoModel.get('aspectScale')
+            });
 
-            const geoResource = geoSourceManager.getGeoResource(name);
-            if (geoResource.type === 'svg') {
-                aspectScale == null && (aspectScale = 1);
-                invertLongitute = false;
-            }
-            else {
-                aspectScale == null && (aspectScale = 0.75);
-            }
-
-            const geo = new Geo(name + idx, name, geoModel.get('nameMap'), invertLongitute);
-
-            geo.aspectScale = aspectScale;
             geo.zoomLimit = geoModel.get('scaleLimit');
             geoList.push(geo);
 
@@ -192,7 +183,11 @@ class GeoCreator implements CoordinateSystemCreator {
             const nameMapList = zrUtil.map(mapSeries, function (singleMapSeries) {
                 return singleMapSeries.get('nameMap');
             });
-            const geo = new Geo(mapType, mapType, zrUtil.mergeAll(nameMapList));
+
+            const geo = new Geo(mapType, mapType, {
+                nameMap: zrUtil.mergeAll(nameMapList),
+                aspectScale: mapSeries[0].get('aspectScale')
+            });
 
             geo.zoomLimit = zrUtil.retrieve.apply(null, zrUtil.map(mapSeries, function (singleMapSeries) {
                 return singleMapSeries.get('scaleLimit');
@@ -201,7 +196,6 @@ class GeoCreator implements CoordinateSystemCreator {
 
             // Inject resize method
             geo.resize = resizeGeo;
-            geo.aspectScale = mapSeries[0].get('aspectScale');
 
             geo.resize(mapSeries[0], api);
 
@@ -238,6 +232,7 @@ class GeoCreator implements CoordinateSystemCreator {
         return regionsArr;
     }
 }
+
 
 const geoCreator = new GeoCreator();
 

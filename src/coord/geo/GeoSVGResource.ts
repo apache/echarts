@@ -22,25 +22,35 @@ import Group from 'zrender/src/graphic/Group';
 import Rect from 'zrender/src/graphic/shape/Rect';
 import {assert, createHashMap, HashMap} from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
-import { GeoResource, GeoSVGSourceInput } from './geoTypes';
+import { GeoResource, GeoSVGGraphicRoot, GeoSVGSourceInput, NameMap } from './geoTypes';
 import { parseXML } from 'zrender/src/tool/parseXML';
 import Displayable from 'zrender/src/graphic/Displayable';
+import { GeoSVGRegion } from './Region';
 
-export interface GeoSVGGraphic {
+interface GeoSVGGraphicRecord {
     root: Group;
-    namedElements: Displayable[];
+    boundingRect: BoundingRect;
+    regionElements: Displayable[];
 }
 
 export class GeoSVGResource implements GeoResource {
 
-    readonly type = 'svg';
+    readonly type = 'geoSVG';
     private _mapName: string;
     private _parsedXML: SVGElement;
-    private _rootForRect: GeoSVGGraphic;
+
+    private _firstGraphic: GeoSVGGraphicRecord;
     private _boundingRect: BoundingRect;
-    // key: hostKey, value: root
-    private _usedRootMap: HashMap<GeoSVGGraphic> = createHashMap();
-    private _freedRoots: GeoSVGGraphic[] = [];
+    private _regions: GeoSVGRegion[] = [];
+    // Key: region.name
+    private _regionsMap: HashMap<GeoSVGRegion> = createHashMap<GeoSVGRegion>();
+    // Key: region.name
+    private _nameCoordMap: HashMap<number[]> = createHashMap<number[]>();
+
+    // All used graphics. key: hostKey, value: root
+    private _usedGraphicMap: HashMap<GeoSVGGraphicRecord> = createHashMap();
+    // All unused graphics.
+    private _freedGraphics: GeoSVGGraphicRecord[] = [];
 
     constructor(
         mapName: string,
@@ -57,22 +67,47 @@ export class GeoSVGResource implements GeoResource {
         this._parsedXML = parseXML(svg);
     }
 
-    load(): { boundingRect: BoundingRect } {
+    load(nameMap: NameMap, nameProperty: string) {
         // In the "load" stage, graphic need to be built to
         // get boundingRect for geo coordinate system.
-        const rootForRect = this._rootForRect;
-        if (rootForRect) {
-            return { boundingRect: this._boundingRect };
+        let firstGraphic = this._firstGraphic;
+
+        // Create the return data structure only when first graphic created.
+        // Because they will be used in geo coordinate system update stage,
+        // and `regions` will be mounted at `geo` coordinate system,
+        // in which there is no "view" info, so that it should better not to
+        // make references to graphic elements.
+        if (!firstGraphic) {
+            firstGraphic = this._firstGraphic = buildGraphic(this._parsedXML);
+
+            this._freedGraphics.push(firstGraphic);
+
+            this._boundingRect = this._firstGraphic.boundingRect.clone();
+
+            // Create resions only for the first graphic, see coments below.
+            const regionElements = firstGraphic.regionElements;
+            for (let i = 0; i < regionElements.length; i++) {
+                const el = regionElements[i];
+
+                // Try use the alias in geoNameMap
+                let regionName = el.name;
+                if (nameMap && nameMap.hasOwnProperty(regionName)) {
+                    regionName = nameMap[regionName];
+                }
+
+                const region = new GeoSVGRegion(regionName, el);
+
+                this._regions.push(region);
+                this._regionsMap.set(regionName, region);
+            }
         }
 
-        const graphic = buildGraphic(this._parsedXML);
-
-        this._rootForRect = graphic;
-        this._boundingRect = graphic.boundingRect;
-
-        this._freedRoots.push(graphic);
-
-        return { boundingRect: graphic.boundingRect };
+        return {
+            boundingRect: this._boundingRect,
+            regions: this._regions,
+            regionsMap: this._regionsMap,
+            nameCoordMap: this._nameCoordMap
+        };
     }
 
     // Consider:
@@ -83,26 +118,28 @@ export class GeoSVGResource implements GeoResource {
     //     and it is called without view info.
     // So we maintain graphic elements in this module, and enables `view` to use/return these
     // graphics from/to the pool with it's uid.
-    useGraphic(hostKey: string): GeoSVGGraphic {
-        const usedRootMap = this._usedRootMap;
+    useGraphic(hostKey: string): GeoSVGGraphicRecord {
+        const usedRootMap = this._usedGraphicMap;
 
         let svgGraphic = usedRootMap.get(hostKey);
         if (svgGraphic) {
             return svgGraphic;
         }
 
-        svgGraphic = this._freedRoots.pop() || buildGraphic(this._parsedXML, this._boundingRect);
+        svgGraphic = this._freedGraphics.pop()
+            // use the first boundingRect to avoid duplicated boundingRect calculation.
+            || buildGraphic(this._parsedXML, this._boundingRect);
 
         return usedRootMap.set(hostKey, svgGraphic);
     }
 
     freeGraphic(hostKey: string): void {
-        const usedRootMap = this._usedRootMap;
+        const usedRootMap = this._usedGraphicMap;
 
         const svgGraphic = usedRootMap.get(hostKey);
         if (svgGraphic) {
             usedRootMap.removeKey(hostKey);
-            this._freedRoots.push(svgGraphic);
+            this._freedGraphics.push(svgGraphic);
         }
     }
 
@@ -111,12 +148,10 @@ export class GeoSVGResource implements GeoResource {
 
 function buildGraphic(
     svgXML: SVGElement,
+    // If input boundingRect, avoid boundingRect calculation,
+    // which might be time-consuming.
     boundingRect?: BoundingRect
-): {
-    root: Group;
-    boundingRect: BoundingRect;
-    namedElements: Displayable[]
-} {
+): GeoSVGGraphicRecord {
     let result;
     let root;
 
@@ -151,6 +186,7 @@ function buildGraphic(
         }
     }
 
+    // Note: we keep the covenant that the root has no transform.
     if (viewBoxRect) {
         const viewBoxTransform = makeViewBoxTransform(viewBoxRect, boundingRect.width, boundingRect.height);
         const elRoot = root;
@@ -165,9 +201,11 @@ function buildGraphic(
         shape: boundingRect.plain()
     }));
 
+    (root as GeoSVGGraphicRoot).isGeoSVGGraphicRoot = true;
+
     return {
         root: root,
         boundingRect: boundingRect,
-        namedElements: result.namedElements
+        regionElements: result.namedElements
     };
 }
