@@ -43,9 +43,8 @@ export function install(registers: EChartsExtensionInstallRegisters) {
             const itemStyle = seriesModel.getModel('itemStyle');
             const color = itemStyle ? itemStyle.get('color') : null;
             const borderColor = itemStyle ? itemStyle.get('borderColor') : null;//TODO
-            const lineColor = lineStyle && lineStyle.get('color') || color;
+            let lineColor = lineStyle && lineStyle.get('color') || color;
 
-            console.log(color, borderColor)
             if (lineStyle) {
                 seriesModel.getData().setVisual('legendSymbolStyle', {
                     borderColor,

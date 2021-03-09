@@ -36,7 +36,7 @@ import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
     ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput,
     ModelOption, SeriesDataType, OptionSourceData, SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL,
-    DecalObject,
+    DecalObject
 } from '../util/types';
 import {isDataItemOption, convertOptionIdName} from '../util/model';
 import { getECData } from '../util/innerStore';

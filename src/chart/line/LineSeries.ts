@@ -153,7 +153,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         itemStyle: {
             color: 'auto',
-            borderWidth: 1
+            borderWidth: 2
         },
 
         endLabel: {
