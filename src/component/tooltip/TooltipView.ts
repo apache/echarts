@@ -493,13 +493,12 @@ class TooltipView extends ComponentView {
                 if (!axisModel || axisValue == null) {
                     return;
                 }
-                const encode = singleTooltipModel.get('escapeContent');
-                const cbAxisValueLabel = axisPointerViewHelper.getValueLabel(
+
+                const axisValueLabel = encodeHTML(axisPointerViewHelper.getValueLabel(
                     axisValue, axisModel.axis, ecModel,
                     axisItem.seriesDataIndices,
                     axisItem.valueLabelOpt
-                );
-                const axisValueLabel = encode ? encodeHTML(cbAxisValueLabel) : cbAxisValueLabel;
+                ));
                 const axisSectionMarkup = createTooltipMarkup('section', {
                     header: axisValueLabel,
                     noHeader: !zrUtil.trim(axisValueLabel),
@@ -512,15 +511,14 @@ class TooltipView extends ComponentView {
                     const series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
                     const dataIndex = idxItem.dataIndexInside;
                     const cbParams = series.getDataParams(dataIndex) as TooltipCallbackDataParams;
-                    cbParams.name = encode ? encodeHTML(cbParams.name) : cbParams.name;
+                    cbParams.name = encodeHTML(cbParams.name);
                     cbParams.axisDim = axisItem.axisDim;
                     cbParams.axisIndex = axisItem.axisIndex;
                     cbParams.axisType = axisItem.axisType;
                     cbParams.axisId = axisItem.axisId;
-                    const cbAxisValue = axisHelper.getAxisRawValue(
+                    cbParams.axisValue = encodeHTML(axisHelper.getAxisRawValue(
                         axisModel.axis, { value: axisValue as number }
-                    ) as string;
-                    cbParams.axisValue = encode ? encodeHTML(cbAxisValue) : cbAxisValue;
+                    ) as string);
                     cbParams.axisValueLabel = axisValueLabel;
                     // Pre-create marker style for makers. Users can assemble richText
                     // text in `formatter` callback and use those markers style.
@@ -614,7 +612,7 @@ class TooltipView extends ComponentView {
         }
 
         const params = dataModel.getDataParams(dataIndex, dataType);
-        params.name = tooltipModel.get('escapeContent') ? encodeHTML(params.name) : params.name;
+        params.name = encodeHTML(params.name);
         const markupStyleCreator = new TooltipMarkupStyleCreator();
         // Pre-create marker style for makers. Users can assemble richText
         // text in `formatter` callback and use those markers style.

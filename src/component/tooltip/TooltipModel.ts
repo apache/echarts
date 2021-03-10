@@ -46,10 +46,7 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      * If show popup content
      */
     showContent?: boolean
-    /**
-     * escape html, prevent xss
-     */
-    escapeContent?: boolean
+
     /**
      * Trigger only works on coordinate system.
      */
@@ -94,7 +91,6 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         // tooltip main content
         showContent: true,
-        escapeContent: true,
 
         // 'trigger' only works on coordinate system.
         // 'item' | 'axis' | 'none'

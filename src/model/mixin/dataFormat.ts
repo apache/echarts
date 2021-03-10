@@ -80,7 +80,7 @@ export class DataFormatMixin {
             seriesIndex: (this as any).seriesIndex,
             seriesId: isSeries ? this.id : null,
             seriesName: isSeries ? this.name : null,
-            name: encodeHTML(name),
+            name: name,
             dataIndex: rawDataIndex,
             data: itemOpt,
             dataType: dataType,
