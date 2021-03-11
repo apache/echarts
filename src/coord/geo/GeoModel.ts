@@ -34,7 +34,8 @@ import {
     RoamOptionMixin,
     AnimationOptionMixin,
     StatesOptionMixin,
-    Dictionary
+    Dictionary,
+    CommonTooltipOption
 } from '../../util/types';
 import { NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
@@ -59,7 +60,15 @@ interface GeoLabelFormatterDataParams {
 export interface RegoinOption extends GeoStateOption, StatesOptionMixin<GeoStateOption> {
     name?: string
     selected?: boolean
-};
+    tooltip?: Partial<Pick<CommonTooltipOption<GeoTooltipFormatterParams>, 'show'>>
+}
+
+export interface GeoTooltipFormatterParams {
+    componentType: 'geo'
+    geoIndex: number
+    name: string
+    $vars: ['name']
+}
 
 export interface GeoCommonOptionMixin extends RoamOptionMixin {
     // Map name
@@ -103,6 +112,8 @@ export interface GeoOption extends
 
     selectedMode?: 'single' | 'multiple' | boolean
     selectedMap?: Dictionary<boolean>
+
+    tooltip?: CommonTooltipOption<GeoTooltipFormatterParams>
 }
 
 class GeoModel extends ComponentModel<GeoOption> {
@@ -188,7 +199,11 @@ class GeoModel extends ComponentModel<GeoOption> {
             }
         },
 
-        regions: []
+        regions: [],
+
+        tooltip: {
+            show: false
+        }
     };
 
     init(option: GeoOption, parentModel: Model, ecModel: GlobalModel): void {

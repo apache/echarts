@@ -403,6 +403,11 @@ class MapDraw {
         if (data) {
             data.setItemGraphicEl(dataIdx, elForStateChange);
         }
+        // series-map will not trigger "geoselectchange" no matter it is
+        // based on a declared geo component. Becuause series-map will
+        // trigger "selectchange". If it trigger both the two events,
+        // If users call `chart.dispatchAction({type: 'toggleSelect'})`,
+        // it not easy to also fire event "geoselectchanged".
         else {
             const regionModel = mapOrGeoModel.getRegionModel(regionName);
             // Package custom mouse event for geo component

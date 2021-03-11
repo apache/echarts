@@ -37,12 +37,34 @@ under the License.
 
 
 
-        <div id="main0"></div>
-        <div id="main1"></div>
-        <div id="main2"></div>
+        <div id="main_pure_geo_json"></div>
+        <div id="main_pure_geo_svg"></div>
+        <div id="main_pure_map_svg"></div>
+        <div id="main_map_geo_svg"></div>
 
 
 
+
+
+        <script>
+            function listenAndPrintSelectChanged(chart) {
+                if (!chart) {
+                    return;
+                }
+                const out = {
+                };
+                chart.on('geoselectchanged', function (params) {
+                    out.allSelected = params.allSelected;
+                    console.log('geoselectechanged');
+                    chart.__testHelper.updateInfo(out, 'event');
+                });
+                chart.on('selectchanged', function (params) {
+                    out.selected = params.selected;
+                    console.log('selectechanged');
+                    chart.__testHelper.updateInfo(out, 'event');
+                });
+            }
+        </script>
 
 
 
@@ -70,6 +92,8 @@ under the License.
             echarts.registerMap('testGeoJson1', testGeoJson1);
 
             option = {
+                tooltip: {
+                },
                 geo: {
                     map: 'testGeoJson1',
                     roam: true,
@@ -84,29 +108,19 @@ under the License.
                 }
             };
 
-            var chart = testHelper.create(echarts, 'main0', {
+            var chart = testHelper.create(echarts, 'main_pure_geo_json', {
                 title: [
-                    'geoJSON location:',
+                    'pure geo geoJSON location:',
                     'Should be a square and 80% of canvas height.',
                     'At the center of the canvas.'
                 ],
                 option: option,
-                info: [],
-                infoKey: 'allSelected',
+                info: {},
+                infoKey: 'event',
                 height: 300
             });
 
-            if (chart) {
-                if (chart) {
-                    chart.on('geoselectchanged', function (params) {
-                        chart.__testHelper.updateInfo(
-                            params.allSelected,
-                            'allSelected'
-                        );
-                    });
-                }
-            }
-
+            listenAndPrintSelectChanged(chart);
 
         });
         </script>
@@ -126,6 +140,8 @@ under the License.
                 });
 
                 option = {
+                    tooltip: {
+                    },
                     geo: {
                         map: 'seatmap',
                         roam: true,
@@ -158,27 +174,20 @@ under the License.
                     // }
                 };
 
-                var chart = testHelper.create(echarts, 'main1', {
+                var chart = testHelper.create(echarts, 'main_pure_geo_svg', {
                     title: [
-                        'geo component with svg resource',
+                        'pure geo component with svg resource',
                         'click seat: check **allSelected** correct.'
                     ],
                     option: option,
-                    info: [],
-                    infoKey: 'allSelected',
+                    info: {},
+                    infoKey: 'event',
                     height: 300
                     // buttons: [{text: 'btn-txt', onclick: function () {}}],
                     // recordCanvas: true,
                 });
 
-                if (chart) {
-                    chart.on('geoselectchanged', function (params) {
-                        chart.__testHelper.updateInfo(
-                            params.allSelected,
-                            'allSelected'
-                        );
-                    });
-                }
+                listenAndPrintSelectChanged(chart);
 
             });
 
@@ -231,27 +240,90 @@ under the License.
                     }
                 };
 
-                var chart = testHelper.create(echarts, 'main2', {
+                var chart = testHelper.create(echarts, 'main_pure_map_svg', {
                     title: [
-                        'map series with svg resource',
+                        'pure map series with svg resource',
                         'Hover seat: check **tooltip** correct.'
                     ],
                     option: option,
-                    info: [],
-                    infoKey: 'allSelected',
+                    info: {},
+                    infoKey: 'event',
                     height: 300
                     // buttons: [{text: 'btn-txt', onclick: function () {}}],
                     // recordCanvas: true,
                 });
 
-                if (chart) {
-                    chart.on('selectchanged', function (params) {
-                        chart.__testHelper.updateInfo(
-                            params.selected,
-                            'selected'
-                        );
-                    });
-                }
+                listenAndPrintSelectChanged(chart);
+
+            });
+
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            $.ajax({
+                url: '../../vis-data/map/svg/seats/seatmap-example.svg',
+                dataType: 'text'
+            }).done(function (svg) {
+
+                echarts.registerMap('seatmap', {
+                    svg: svg
+                });
+
+                option = {
+                    tooltip: {
+                    },
+                    geo: {
+                        map: 'seatmap',
+                        roam: true,
+                        selectedMode: 'multiple',
+                        // height: 100,
+                        // zoom: 1.5
+                        emphasis: {
+                            label: {
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        },
+                        select: {
+                            itemStyle: {
+                                color: '#b50205'
+                            },
+                            label: {
+                                show: false,
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        }
+                    },
+                    series: {
+                        type: 'map',
+                        selectedMode: 'multiple',
+                        coordinateSystem: 'geo',
+                        geoIndex: 0
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_map_geo_svg', {
+                    title: [
+                        'map series on declared geo with svg resource',
+                        'Hover seat: check **tooltip** correct.'
+                    ],
+                    option: option,
+                    info: {},
+                    infoKey: 'event',
+                    height: 300
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+
+                listenAndPrintSelectChanged(chart);
 
             });
 
