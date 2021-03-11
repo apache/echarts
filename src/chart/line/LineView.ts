@@ -1177,12 +1177,16 @@ class LineView extends ChartView {
      */
     _bolderLine(polyline: ECPolyline, seriesModel: LineSeriesModel, ecModel: GlobalModel) {
         if (polyline.style.lineWidth > 0) {
-            // only make line bolder when there is more than one series and blur state
+            // only make line bolder when there is more than one series and `emphasis.focus` is enabled
             // or the user manually specify `lineStyle.width` as `bolder`
             // see https://github.com/apache/echarts/pull/13501
             const emphasisLineWidth = seriesModel.get(['emphasis', 'lineStyle', 'width']);
+            const focus = seriesModel.get(['emphasis', 'focus']);
             if (emphasisLineWidth === 'bolder'
-                || (emphasisLineWidth == null && polyline.getState('blur') && ecModel.getSeriesCount() > 1)
+                || (emphasisLineWidth == null
+                    && (focus && focus !== 'none')
+                    // PENDING: only line series?
+                    && ecModel.getSeriesCount() > 1)
             ) {
                 const emphasisLineStyle = polyline.getState('emphasis').style;
                 emphasisLineStyle.lineWidth = polyline.style.lineWidth + 1;
