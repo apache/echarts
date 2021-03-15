@@ -1108,7 +1108,7 @@ function findComponentReference(
 } {
     const { queryOptionMap } = preParseFinder(payload);
     const componentMainType = queryOptionMap.keys()[0];
-    if (!componentMainType) {
+    if (!componentMainType || componentMainType === 'series') {
         return;
     }
 
