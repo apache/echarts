@@ -723,9 +723,11 @@ class TooltipView extends ComponentView {
         // that requires setting `trigger` nothing on component yet.
 
         this._showOrMove(subTooltipModel, function (this: TooltipView) {
+            // Use formatterParams from element defined in component
+            // Avoid users modify it.
+            const formatterParams = zrUtil.clone(subTooltipModel.get('formatterParams') as any || {});
             this._showTooltipContent(
-                // Use formatterParams from element defined in component
-                subTooltipModel, defaultHtml, subTooltipModel.get('formatterParams') as any || {},
+                subTooltipModel, defaultHtml, formatterParams,
                 asyncTicket, e.offsetX, e.offsetY, e.position, el, markupStyleCreator
             );
         });

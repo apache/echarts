@@ -39,6 +39,7 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="axis-and-toolbox"></div>
+        <div id="graphic-component-tooltip"></div>
 
 
 
@@ -249,6 +250,120 @@ under the License.
 
 
 
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                tooltip: {
+                    textStyle: {
+                        fontSize: 5,
+                        color: 'red'
+                    }
+                },
+                graphic: [{
+                    tooltip: {
+                        formatter: 'asdf',
+                        textStyle: {
+                            fontSize: 20
+                        }
+                    },
+                    type: 'rect',
+                    name: '1st',
+                    shape: {
+                        y: 20,
+                        x: 250,
+                        width: 40,
+                        height: 40
+                    },
+                    textContent: {
+                        style: { text: 'show tooltip asdf\nin fontSize: 20 red' }
+                    },
+                    textConfig: {
+                        position: 'bottom'
+                    },
+                    style: {
+                        fill: 'blue'
+                    }
+                }, {
+                    type: 'rect',
+                    shape: {
+                        y: 20,
+                        x: 350,
+                        width: 40,
+                        height: 40
+                    },
+                    textContent: {
+                        style: {
+                            text: 'show no tooltip'
+                        }
+                    },
+                    textConfig: {
+                        position: 'bottom'
+                    },
+                    style: {
+                        fill: 'blue'
+                    }
+                }, {
+                    type: 'rect',
+                    tooltip: {
+                        formatter: function (param) {
+                            return '<pre>' + JSON.stringify(param, null, 2) + '</pre>';
+                        },
+                        textStyle: {
+                            fontSize: 20
+                        }
+                    },
+                    name: '3rd',
+                    shape: {
+                        y: 20,
+                        x: 450,
+                        width: 40,
+                        height: 40
+                    },
+                    textContent: {
+                        style: { text: 'show tooltip JSON params\nin fontSize: 20 red' }
+                    },
+                    textConfig: {
+                        position: 'bottom'
+                    },
+                    style: {
+                        fill: 'blue'
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'graphic-component-tooltip', {
+                title: [
+                    'Hover the graphic should show tooltip',
+                    'check each tooltip',
+                ],
+                option: option,
+                height: 200,
+                buttons: [{
+                    text: 'trigger 1st graphic tooltip',
+                    onclick: function () {
+                        chart.dispatchAction({
+                            type: 'showTip',
+                            graphicIndex: 0,
+                            name: '1st'
+                        });
+                    }
+                }, {
+                    text: 'trigger 3rd graphic tooltip',
+                    onclick: function () {
+                        chart.dispatchAction({
+                            type: 'showTip',
+                            graphicIndex: 0,
+                            name: '3rd'
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
 
 
 
