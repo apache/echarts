@@ -422,8 +422,6 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             opt.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth
         );
 
-        const tooltipOpt = axisModel.get('tooltip', true);
-
         const mainType = axisModel.mainType;
         const formatterParams: LabelFormatterParams = {
             componentType: mainType,
@@ -452,15 +450,16 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             }),
             z2: 1
         }) as AxisLabelText;
-        textEl.tooltip = (tooltipOpt && tooltipOpt.show)
-            ? extend({
+        getECData(textEl).tooltipConfig = {
+            componentMainType: axisModel.mainType,
+            componentIndex: axisModel.componentIndex,
+            name: name,
+            option: {
                 content: name,
-                formatter() {
-                    return name;
-                },
+                formatter: () => name,
                 formatterParams: formatterParams
-            }, tooltipOpt)
-            : null;
+            }
+        };
         textEl.__fullText = name;
         // Id for animation
         textEl.anid = 'name';

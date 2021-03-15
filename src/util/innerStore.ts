@@ -18,7 +18,10 @@
 */
 
 import Element from 'zrender/src/Element';
-import { DataModel, ECEventData, BlurScope, InnerFocus, SeriesDataType } from './types';
+import {
+    DataModel, ECEventData, BlurScope, InnerFocus, SeriesDataType,
+    ComponentMainType, ComponentItemTooltipOption
+} from './types';
 import { makeInner } from './model';
 /**
  * ECData stored on graphic element
@@ -31,5 +34,16 @@ export interface ECData {
     dataType?: SeriesDataType;
     focus?: InnerFocus;
     blurScope?: BlurScope;
+    tooltipConfig?: {
+        // Used to find component tooltip option, which is used as
+        // the parent of tooltipConfig.option for cascading.
+        // If not provided, do not use component as its parent.
+        // (Set manatary to make developers not to forget them).
+        componentMainType: ComponentMainType;
+        componentIndex: number;
+        // Target item name to locate tooltip.
+        name: string;
+        option: ComponentItemTooltipOption<unknown>;
+    };
 }
 export const getECData = makeInner<ECData, Element>();

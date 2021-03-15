@@ -33,7 +33,6 @@ import {
     ZRColor,
     ItemStyleOption,
     ZRRectLike,
-    ECElement,
     CommonTooltipOption,
     ColorString
 } from '../../util/types';
@@ -42,6 +41,7 @@ import Displayable, { DisplayableState } from 'zrender/src/graphic/Displayable';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { parse, stringify } from 'zrender/src/tool/color';
 import {PatternObject} from 'zrender/src/graphic/Pattern';
+import { getECData } from '../../util/innerStore';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -353,8 +353,6 @@ class LegendView extends ComponentView {
 
         const itemIcon = itemModel.get('icon');
 
-        const tooltipModel = itemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;
-        const legendGlobalTooltipModel = tooltipModel.parentModel;
 
         // Use user given icon first
         legendSymbolType = itemIcon || legendSymbolType;
@@ -432,22 +430,25 @@ class LegendView extends ComponentView {
             shape: itemGroup.getBoundingRect(),
             invisible: true
         });
+
+        const tooltipModel = itemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;
         if (tooltipModel.get('show')) {
+            const componentIndex = legendModel.componentIndex;
             const formatterParams: LegendTooltipFormatterParams = {
                 componentType: 'legend',
-                legendIndex: legendModel.componentIndex,
+                legendIndex: componentIndex,
                 name: name,
                 $vars: ['name']
             };
-            (hitRect as ECElement).tooltip = zrUtil.extend({
-                content: name,
-                // Defaul formatter
-                formatter: legendGlobalTooltipModel.get('formatter', true)
-                    || function (params: LegendTooltipFormatterParams) {
-                        return params.name;
-                    },
-                formatterParams: formatterParams
-            }, tooltipModel.option);
+            getECData(hitRect).tooltipConfig = {
+                componentMainType: legendModel.mainType,
+                componentIndex: componentIndex,
+                name: name,
+                option: zrUtil.defaults({
+                    content: name,
+                    formatterParams: formatterParams
+                }, tooltipModel.option)
+            };
         }
         itemGroup.add(hitRect);
 
