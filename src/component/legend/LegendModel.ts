@@ -123,6 +123,8 @@ export interface LegendStyleOption {
     textStyle?: LabelOption
 
     symbolKeepAspect?: boolean
+
+    symbolSize?: number | 'auto' | 'inherit'
 }
 
 interface DataItem extends LegendStyleOption {
@@ -449,6 +451,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         itemGap: 10,
         itemWidth: 25,
         itemHeight: 14,
+        symbolSize: 'auto',
 
         inactiveColor: '#ccc',
 

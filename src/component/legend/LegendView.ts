@@ -184,9 +184,8 @@ class LegendView extends ComponentView {
             !seriesModel.get('legendHoverLink') && excludeSeriesId.push(seriesModel.id);
         });
 
-        each(legendModel.getData(), function (itemModel, dataIndex) {
-            const name = itemModel.get('name');
-            const legendItemStyle = itemModel.getModel('itemStyle').getItemStyle();
+        each(legendModel.getData(), function (legendItemModel, dataIndex) {
+            const name = legendItemModel.get('name');
 
             // Use empty string or \n as a newline string
             if (!this.newlineDisabled && (name === '' || name === '\n')) {
@@ -221,10 +220,13 @@ class LegendView extends ComponentView {
                 // Using rect symbol defaultly
                 const legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
                 const symbolType = data.getVisual('symbol');
-                const symbolSize = seriesModel.get('symbolSize');
+                const symbolSize = data.getVisual('symbolSize');
+
+                data.getVisual('symbolSize');
+                console.log(symbolSize)
 
                 const itemGroup = this._createItem(
-                    name, dataIndex, itemModel, legendModel,
+                    name, dataIndex, legendItemModel, legendModel,
                     legendSymbolType, symbolType, symbolSize,
                     itemAlign,
                     lineVisualStyle, style, true, selectMode
@@ -257,7 +259,7 @@ class LegendView extends ComponentView {
                         const legendSymbolType = 'roundRect';
 
                         const itemGroup = this._createItem(
-                            name, dataIndex, itemModel, legendModel,
+                            name, dataIndex, legendItemModel, legendModel,
                             legendSymbolType, null, null,
                             itemAlign,
                             {}, style, false, selectMode
@@ -358,8 +360,18 @@ class LegendView extends ComponentView {
         const inactiveBorderColor = itemModel.get('inactiveBorderColor');
         const symbolKeepAspect = itemModel.get('symbolKeepAspect');
 
+        const legendSymbolSize = itemModel.get('symbolSize');
+        if (legendSymbolSize === 'auto') {
+            // auto: 80% itemHeight
+            symbolSize = itemHeight * 0.8;
+        }
+        else if (legendSymbolSize !== 'inherit') {
+            // number: legend.symbolSize
+            symbolSize = Math.min(legendSymbolSize, itemHeight);
+        }
+        // inherit: series.symbolSize, which is passed in by function parameter
+
         const style = getLegendStyle(itemModel, lineVisualStyle, itemVisualStyle, isColorBySeries);
-        console.log(style)
 
         symbolType = symbolType || 'roundRect';
 
