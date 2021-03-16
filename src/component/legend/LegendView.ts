@@ -25,7 +25,7 @@ import {setLabelStyle, createTextStyle} from '../../label/labelStyle';
 import {makeBackground} from '../helper/listComponent';
 import * as layoutUtil from '../../util/layout';
 import ComponentView from '../../view/Component';
-import LegendModel, { LegendOption, LegendSelectorButtonOption, LegendSymbolStyleOption, LegendTooltipFormatterParams } from './LegendModel';
+import LegendModel, { LegendItemStyleOption, LegendLineStyleOption, LegendOption, LegendSelectorButtonOption, LegendStyleOption, LegendSymbolStyleOption, LegendTooltipFormatterParams } from './LegendModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import {
@@ -37,7 +37,9 @@ import {
     CommonTooltipOption,
     ColorString,
     SeriesOption,
-    SymbolOptionMixin
+    SymbolOptionMixin,
+    LineStyleOption,
+    DecalObject
 } from '../../util/types';
 import Model from '../../model/Model';
 import Displayable, { DisplayableState } from 'zrender/src/graphic/Displayable';
@@ -45,6 +47,11 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { parse, stringify } from 'zrender/src/tool/color';
 import {PatternObject} from 'zrender/src/graphic/Pattern';
 import {SeriesModel} from '../../echarts';
+import linesLayout from '../../chart/lines/linesLayout';
+import {LineStyleProps} from '../../model/mixin/lineStyle';
+import {ItemStyleProps} from '../../model/mixin/itemStyle';
+import {number} from '../../export/api';
+import makeStyleMapper from '../../model/mixin/makeStyleMapper';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -202,16 +209,14 @@ class LegendView extends ComponentView {
             // Legend to control series.
             if (seriesModel) {
                 const data = seriesModel.getData();
-                const legendSymbolStyle = data.getVisual('legendSymbolStyle') || {};
+                const lineVisualStyle = (data.getVisual('legendSymbolStyle') || {}).lineStyle;
 
                 /**
                  * `data.getVisual('style')` may be the color from the register
                  * in series. For example, for line series,
                  */
-                const style = zrUtil.extend(
-                    zrUtil.extend({}, data.getVisual('style')),
-                    legendItemStyle
-                );
+                const style = data.getVisual('style');
+                console.log(style, lineVisualStyle);
 
                 // Using rect symbol defaultly
                 const legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
@@ -222,7 +227,7 @@ class LegendView extends ComponentView {
                     name, dataIndex, itemModel, legendModel,
                     legendSymbolType, symbolType, symbolSize,
                     itemAlign,
-                    legendSymbolStyle, style, true, selectMode
+                    lineVisualStyle, style, true, selectMode
                 );
 
                 itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
@@ -335,8 +340,8 @@ class LegendView extends ComponentView {
         symbolType: string,
         symbolSize: number | number[],
         itemAlign: LegendOption['align'],
-        legendSymbolStyle: LegendSymbolStyleOption,
-        dataItemStyle: PathStyleProps,
+        lineVisualStyle: LineStyleProps,
+        itemVisualStyle: PathStyleProps,
         isColorBySeries: boolean,
         selectMode: LegendOption['selectedMode']
     ) {
@@ -352,24 +357,11 @@ class LegendView extends ComponentView {
         const inactiveColor = itemModel.get('inactiveColor');
         const inactiveBorderColor = itemModel.get('inactiveBorderColor');
         const symbolKeepAspect = itemModel.get('symbolKeepAspect');
-        const legendModelItemStyle = itemModel.getModel('itemStyle');
 
-        let color = dataItemStyle.fill;
-        if (!isColorBySeries) {
-            const colorArr = parse(color as ColorString);
-            // Color may be set to transparent in visualMap when data is out of range.
-            // Do not show nothing.
-            if (colorArr && colorArr[3] === 0) {
-                colorArr[3] = 0.2;
-                // TODO color is set to 0, 0, 0, 0. Should show correct RGBA
-                color = stringify(colorArr, 'rgba');
-            }
-        }
+        const style = getLegendStyle(itemModel, lineVisualStyle, itemVisualStyle, isColorBySeries);
+        console.log(style)
 
         symbolType = symbolType || 'roundRect';
-        const borderColor = dataItemStyle[symbolType.indexOf('empty') > -1 ? 'fill' : 'stroke'];
-        const borderWidth = dataItemStyle.lineWidth;
-        const decal = dataItemStyle.decal;
 
         const itemGroup = new Group();
 
@@ -387,55 +379,17 @@ class LegendView extends ComponentView {
             // At least show one symbol, can't be all none
             && ((symbolType !== legendSymbolType) || symbolType === 'none');
 
-        // Draw line if hasHorizontalLine, else draw symbol
-        let legendBorderColor = isSelected
-            ? (hasHorizontalLine
-                ? legendSymbolStyle.horizontalLineColor
-                : borderColor
-            )
-            : inactiveBorderColor;
-        legendBorderColor = legendBorderColor === 'auto'
-            ? color : legendBorderColor;
-        const legendBorderWidth = hasHorizontalLine
-            ? (legendSymbolStyle.horizontalLineWidth == null
-                ? borderWidth
-                : legendSymbolStyle.horizontalLineWidth)
-            : borderWidth;
-        const legendSymbol = createSymbol(
-            legendSymbolType,
-            0,
-            0,
-            itemWidth,
-            itemHeight,
-            legendBorderColor,
-            // symbolKeepAspect default true for legend
-            symbolKeepAspect == null ? true : symbolKeepAspect
-        );
-        itemGroup.add(
-            setSymbolStyle(legendSymbol, legendSymbolType, null, legendBorderWidth, decal)
-        );
-
-        // Draw symbol if hasHorizontalLine
-        if (hasHorizontalLine) {
-            const size = symbolSize == null
-                ? itemHeight * 0.8
-                : Math.min(itemHeight, symbolSize as number);
-            if (symbolType === 'none') {
-                symbolType = 'circle';
-            }
-            const legendSymbolCenter = createSymbol(
-                symbolType,
-                (itemWidth - size) / 2,
-                (itemHeight - size) / 2,
-                size,
-                size,
-                isSelected ? color : inactiveColor,
-                // symbolKeepAspect default true for legend
-                symbolKeepAspect == null ? true : symbolKeepAspect
-            );
-            // Put symbol in the center
+        // Draw line
+        if (legendSymbolType === 'line' || itemIcon === 'line') {
             itemGroup.add(
-                setSymbolStyle(legendSymbolCenter, symbolType, borderColor, borderWidth, decal)
+                createHorizontalLine(itemWidth, itemHeight, style.lineStyle)
+            )
+        }
+
+        // Put symbol in the center
+        if (itemIcon !== 'line') {
+            itemGroup.add(
+                createItem(symbolType, symbolSize, symbolKeepAspect, itemWidth, itemHeight, style.itemStyle)
             );
         }
 
@@ -583,23 +537,129 @@ class LegendView extends ComponentView {
 
 }
 
-function setSymbolStyle(
-    symbol: graphic.Path | graphic.Image,
-    symbolType: string,
-    borderColor: ZRColor,
-    borderWidth: number,
-    decal: PatternObject
+function getLegendStyle(
+    legendModel: LegendModel['_data'][number],
+    lineVisualStyle: LineStyleProps,
+    itemVisualStyle: PathStyleProps,
+    isColorBySeries: boolean
 ) {
-    const style = (symbol as graphic.Path).style;
-    if (symbolType === 'line') {
-        style.stroke = style.fill;
-        style.fill = 'none';
+    let color = itemVisualStyle.fill;
+    if (!isColorBySeries) {
+        const colorArr = parse(color as ColorString);
+        // Color may be set to transparent in visualMap when data is out of range.
+        // Do not show nothing.
+        if (colorArr && colorArr[3] === 0) {
+            colorArr[3] = 0.2;
+            // TODO color is set to 0, 0, 0, 0. Should show correct RGBA
+            color = stringify(colorArr, 'rgba');
+        }
     }
-    else {
-        style.decal = decal;
-        borderColor && (style.stroke = borderColor);
+
+    /**
+     * Use series style if is inherit;
+     * elsewise, use legend style
+     */
+
+    // itemStyle
+    const legendItemModel = legendModel.getModel('itemStyle') as Model<LegendItemStyleOption>;
+    const itemProperties = [
+        ['fill', 'color'],
+        ['lineWidth', 'borderWidth'],
+        ['stroke', 'borderColor'],
+        ['width', 'width'],
+        ['opacity', 'opacity']
+    ];
+    const itemStyle: PathStyleProps = {};
+    for (let i = 0; i < itemProperties.length; ++i) {
+        const propName = itemProperties[i][1] as keyof LegendItemStyleOption;
+        const visualName = itemProperties[i][0] as keyof PathStyleProps;
+        const value = legendItemModel.getShallow(propName) as LegendItemStyleOption[keyof LegendItemStyleOption];
+        if (value === 'inherit') {
+            (itemStyle as any)[visualName] = itemVisualStyle[visualName];
+        }
+        else {
+            (itemStyle as any)[visualName] = value;
+        }
     }
-    style.lineWidth = borderWidth;
+
+    // lineStyle
+    const legendLineModel = legendModel.getModel('lineStyle') as Model<LegendLineStyleOption>;
+    const lineProperties = [
+        ['stroke', 'color'],
+        ['lineWidth', 'width']
+    ];
+    const lineStyle: LineStyleProps = {};
+    for (let i = 0; i < lineProperties.length; ++i) {
+        const propName = lineProperties[i][1] as keyof LegendLineStyleOption;
+        const visualName = lineProperties[i][0] as keyof LineStyleProps;
+        const value = legendLineModel.getShallow(propName) as LegendLineStyleOption[keyof LegendLineStyleOption];
+        if (value === 'inherit') {
+            (lineStyle as any)[visualName] = lineVisualStyle[visualName];
+        }
+        else if (value === 'auto' && visualName === 'lineWidth') {
+            // If lineStyle.width is 'auto', it is set to be 2 if series has border
+            lineStyle.lineWidth = lineVisualStyle.lineWidth > 0 ? 2 : 0;
+        }
+        else {
+            (lineStyle as any)[visualName] = value;
+        }
+    }
+
+    // Fix auto color to real color
+    (itemStyle.fill === 'auto') && (itemStyle.fill = color);
+    (itemStyle.stroke === 'auto') && (itemStyle.stroke = color);
+    (lineStyle.stroke === 'auto') && (lineStyle.stroke = color);
+
+    return { itemStyle, lineStyle };
+}
+
+function createHorizontalLine(
+    itemWidth: number,
+    itemHeight: number,
+    style: LineStyleProps
+) {
+    const symbol = createSymbol(
+        'line',
+        0,
+        0,
+        itemWidth,
+        itemHeight,
+        style.stroke,
+        false
+    );
+    symbol.setStyle(style);
+    return symbol;
+}
+
+function createItem(
+    symbolType: string,
+    symbolSize: number | number[],
+    symbolKeepAspect: boolean,
+    itemWidth: number,
+    itemHeight: number,
+    style: ItemStyleProps
+) {
+    if (symbolType === 'none') {
+        symbolType = 'circle';
+    }
+    const size = symbolSize == null
+        ? itemHeight
+        : Math.min(itemHeight, symbolSize as number);
+    const symbol = createSymbol(
+        symbolType,
+        (itemWidth - size) / 2,
+        (itemHeight - size) / 2,
+        size,
+        size,
+        style.fill,
+        // symbolKeepAspect default true for legend
+        symbolKeepAspect == null ? true : symbolKeepAspect
+    );
+    symbol.setStyle(style);
+    if (symbolType.indexOf('empty') > -1) {
+        symbol.style.stroke = symbol.style.fill;
+        symbol.style.fill = '#fff';
+    }
     return symbol;
 }
 

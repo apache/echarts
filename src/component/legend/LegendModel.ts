@@ -26,14 +26,17 @@ import {
     BoxLayoutOptionMixin,
     BorderOptionMixin,
     ColorString,
-    ItemStyleOption,
     LabelOption,
     LayoutOrient,
     CommonTooltipOption,
-    ZRColor
+    ZRColor,
+    DecalObject,
+    ZRLineType
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
+import { ItemStyleProps } from '../../model/mixin/itemStyle';
+import { LineStyleProps } from './../../model/mixin/lineStyle';
 
 type LegendDefaultSelectorOptionsProps = {
     type: string;
@@ -60,6 +63,38 @@ export interface LegendSelectorButtonOption {
     title?: string
 }
 
+export interface LegendItemStyleOption {
+    color?: ZRColor | 'inherit'
+    opacity?: number | 'inherit'
+    decal?: DecalObject | 'none' | 'inherit'
+    shadowBlur?: number | 'inherit'
+    shadowColor?: ColorString | 'inherit'
+    shadowOffsetX?: number | 'inherit'
+    shadowOffsetY?: number | 'inherit'
+    borderColor?: ZRColor | 'inherit'
+    borderWidth?: number | 'inherit'
+    borderType?: ZRLineType | 'inherit'
+    borderCap?: CanvasLineCap | 'inherit'
+    borderJoin?: CanvasLineJoin | 'inherit'
+    borderDashOffset?: number | 'inherit'
+    borderMiterLimit?: number | 'inherit'
+}
+
+export interface LegendLineStyleOption {
+    width?: number | 'inherit' | 'auto'
+    color?: ZRColor | 'inherit'
+    opacity?: number | 'inherit'
+    type?: ZRLineType | 'inherit'
+    cap?: CanvasLineCap | 'inherit'
+    join?: CanvasLineJoin | 'inherit'
+    dashOffset?: number | 'inherit'
+    miterLimit?: number | 'inherit'
+    shadowBlur?: number | 'inherit'
+    shadowColor?: ColorString | 'inherit'
+    shadowOffsetX?: number | 'inherit'
+    shadowOffsetY?: number | 'inherit'
+}
+
 export interface LegendStyleOption {
     /**
      * Icon of the legend items.
@@ -81,7 +116,9 @@ export interface LegendStyleOption {
      */
     formatter?: string | ((name: string) => string)
 
-    itemStyle?: ItemStyleOption
+    itemStyle?: LegendItemStyleOption
+
+    lineStyle?: LegendLineStyleOption
 
     textStyle?: LabelOption
 
@@ -104,9 +141,9 @@ export interface LegendTooltipFormatterParams {
     $vars: ['name']
 }
 
-export interface LegendSymbolStyleOption extends ItemStyleOption {
-    horizontalLineColor?: ZRColor,
-    horizontalLineWidth?: number
+export interface LegendSymbolStyleOption {
+    itemStyle?: ItemStyleProps,
+    lineStyle?: LineStyleProps
 }
 
 export interface LegendOption extends ComponentOption, LegendStyleOption,
@@ -418,7 +455,34 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         inactiveBorderColor: '#ccc',
 
         itemStyle: {
-            // borderWidth: 0
+            color: 'inherit',
+            opacity: 'inherit',
+            decal: 'inherit',
+            shadowBlur: 0,
+            shadowColor: 'inherit',
+            shadowOffsetX: 'inherit',
+            shadowOffsetY: 'inherit',
+            borderColor: 'inherit',
+            borderWidth: 'inherit',
+            borderCap: 'inherit',
+            borderJoin: 'inherit',
+            borderDashOffset: 'inherit',
+            borderMiterLimit: 'inherit'
+        },
+
+        lineStyle: {
+            width: 'auto',
+            color: 'inherit',
+            opacity: 'inherit',
+            type: 'inherit',
+            cap: 'inherit',
+            join: 'inherit',
+            dashOffset: 'inherit',
+            miterLimit: 'inherit',
+            shadowBlur: 0,
+            shadowColor: 'inherit',
+            shadowOffsetX: 'inherit',
+            shadowOffsetY: 'inherit'
         },
 
         textStyle: {

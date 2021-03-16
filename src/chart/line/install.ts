@@ -39,19 +39,18 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         seriesType: 'line',
         reset: function (seriesModel: LineSeriesModel) {
             // Visual coding for legend
-            const lineStyle = seriesModel.getModel('lineStyle');
-            const itemStyle = seriesModel.getModel('itemStyle');
-            const color = itemStyle ? itemStyle.get('color') : null;
-            const borderColor = itemStyle ? itemStyle.get('borderColor') : null;//TODO
-            let lineColor = lineStyle && lineStyle.get('color') || color;
-
+            const lineStyle = seriesModel.getModel('lineStyle').getLineStyle();
+            const itemStyle = seriesModel.getModel('itemStyle').getItemStyle();
+            const color = itemStyle && itemStyle.fill;
+            console.log(itemStyle, lineStyle);
             if (lineStyle) {
-                seriesModel.getData().setVisual('legendSymbolStyle', {
-                    borderColor,
-                    horizontalLineColor: lineColor,
-                    horizontalLineWidth: lineStyle.get('width')
-                });
+                lineStyle.stroke = lineStyle.stroke || color;
             }
+
+            seriesModel.getData().setVisual('legendSymbolStyle', {
+                itemStyle,
+                lineStyle
+            });
         }
     });
 
