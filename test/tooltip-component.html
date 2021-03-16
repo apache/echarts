@@ -39,6 +39,7 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="axis-and-toolbox"></div>
+        <div id="axis-and-toolbox-formatter"></div>
         <div id="graphic-component-tooltip"></div>
 
 
@@ -82,6 +83,10 @@ under the License.
                             }
                         }
                         // This item inherit legend.tootip.
+                    }, {
+                        name: 'only show "stringstring"',
+                        tooltip: 'stringstring'
+                        // This item inherit legend.tootip.
                     }]
                 },
                 series: {
@@ -95,6 +100,9 @@ under the License.
                         value: 200
                     }, {
                         name: 'tooltip fontSize: 20 red formatter JSON',
+                        value: 200
+                    }, {
+                        name: 'only show "stringstring"',
                         value: 200
                     }]
                 }
@@ -203,7 +211,8 @@ under the License.
             option = {
                 tooltip: {
                     textStyle: {
-                        fontSize: 5
+                        fontSize: 5,
+                        color: 'red'
                     }
                 },
                 toolbox: {
@@ -239,7 +248,8 @@ under the License.
 
             var chart = testHelper.create(echarts, 'axis-and-toolbox', {
                 title: [
-                    'Hover toolbox and axis name should show tooltip, fontSize: 20',
+                    'Hover toolbox and axis name:',
+                    'should show tooltip, fontSize: 20 red',
                     'check each **fontSize** and **color**',
                 ],
                 option: option,
@@ -260,6 +270,70 @@ under the License.
                 tooltip: {
                     textStyle: {
                         fontSize: 5,
+                        color: 'red'
+                    }
+                },
+                toolbox: {
+                    tooltip: {
+                        confine: true,
+                        show: true,
+                        formatter: params => {
+                            return '<pre>' + JSON.stringify(params, null, 4) + '</pre>';
+                        },
+                        textStyle: {
+                            fontSize: 20
+                        }
+                    },
+                    feature: {
+                        dataZoom: {},
+                        magicType: {
+                            type: ['line', 'bar', 'stack', 'tiled']
+                        }
+                    }
+                },
+                xAxis: {
+                    name: 'show tooltip',
+                    tooltip: {
+                        formatter: params => {
+                            return '<pre>' + JSON.stringify(params, null, 4) + '</pre>';
+                        },
+                        show: true,
+                        textStyle: {
+                            fontSize: 20
+                        }
+                    }
+                },
+                yAxis: {},
+                series: {
+                    type: 'scatter',
+                    data: [12, 22, 33]
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'axis-and-toolbox-formatter', {
+                title: [
+                    'Hover toolbox and axis name:',
+                    'should show tooltip, fontSize: 20 red, **params JSON**',
+                    'check each **fontSize** and **color**',
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                tooltip: {
+                    textStyle: {
+                        fontSize: 10,
                         color: 'red'
                     }
                 },
@@ -325,6 +399,25 @@ under the License.
                     },
                     textContent: {
                         style: { text: 'show tooltip JSON params\nin fontSize: 20 red' }
+                    },
+                    textConfig: {
+                        position: 'bottom'
+                    },
+                    style: {
+                        fill: 'blue'
+                    }
+                }, {
+                    tooltip: 'stringstring',
+                    type: 'rect',
+                    name: '4nd',
+                    shape: {
+                        y: 20,
+                        x: 550,
+                        width: 40,
+                        height: 40
+                    },
+                    textContent: {
+                        style: { text: 'show tooltip "stringstring"\nin fontSize: 10 red' }
                     },
                     textConfig: {
                         position: 'bottom'

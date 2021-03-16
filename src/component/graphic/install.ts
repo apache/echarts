@@ -520,24 +520,12 @@ class GraphicComponentView extends ComponentView {
                 elInner.__ecGraphicHeightOption = (elOption as GraphicComponentGroupOption).height;
                 setEventData(el, graphicModel, elOption);
 
-                const tooltipOption = elOption.tooltip;
-                const componentIndex = graphicModel.componentIndex;
-                getECData(el).tooltipConfig = tooltipOption
-                    ? {
-                        componentMainType: graphicModel.mainType,
-                        componentIndex: componentIndex,
-                        name: el.name,
-                        option: zrUtil.defaults({
-                            content: el.name,
-                            formatterParams: {
-                                componentType: 'graphic',
-                                graphicIndex: componentIndex,
-                                name: el.name,
-                                $vars: ['name']
-                            }
-                        }, tooltipOption)
-                    }
-                    : null;
+                graphicUtil.setTooltipConfig({
+                    el: el,
+                    componentModel: graphicModel,
+                    itemName: el.name,
+                    itemTooltipOption: elOption.tooltip
+                });
             }
         });
     }

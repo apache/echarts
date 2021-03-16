@@ -225,20 +225,14 @@ class ToolboxView extends ComponentView {
                 });
                 path.setTextContent(textContent);
 
-                getECData(path).tooltipConfig = {
-                    componentMainType: toolboxModel.mainType,
-                    componentIndex: toolboxModel.componentIndex,
-                    name: iconName,
-                    option: {
-                        content: titlesMap[iconName],
-                        formatterParams: {
-                            componentType: 'toolbox',
-                            name: iconName,
-                            title: titlesMap[iconName],
-                            $vars: ['name', 'title']
-                        }
+                graphic.setTooltipConfig({
+                    el: path,
+                    componentModel: toolboxModel,
+                    itemName: iconName,
+                    formatterParamsExtra: {
+                        title: titlesMap[iconName]
                     }
-                };
+                });
 
                 // graphic.enableHoverEmphasis(path);
 

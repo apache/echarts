@@ -35,6 +35,7 @@ export interface ECData {
     focus?: InnerFocus;
     blurScope?: BlurScope;
     tooltipConfig?: {
+        // To make a tooltipConfig, seach `setTooltipConfig`.
         // Used to find component tooltip option, which is used as
         // the parent of tooltipConfig.option for cascading.
         // If not provided, do not use component as its parent.

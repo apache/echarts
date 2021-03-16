@@ -1348,8 +1348,20 @@ export interface CommonTooltipOption<FormatterParams> {
 export type ComponentItemTooltipOption<T> = CommonTooltipOption<T> & {
     // Default content HTML.
     content?: string;
-    formatterParams?: unknown;
+    formatterParams?: ComponentItemTooltipLabelFormatterParams;
 };
+export type ComponentItemTooltipLabelFormatterParams = {
+    componentType: string
+    name: string
+    // properies key array like ['name']
+    $vars: string[]
+} & {
+    [key in `${ComponentMainType}Index`]: number
+} & {
+    // Other properties
+    [key in string]: unknown
+};
+
 
 /**
  * Tooltip option configured on each series
