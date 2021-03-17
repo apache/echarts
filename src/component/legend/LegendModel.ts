@@ -93,6 +93,8 @@ export interface LegendLineStyleOption {
     shadowColor?: ColorString | 'inherit'
     shadowOffsetX?: number | 'inherit'
     shadowOffsetY?: number | 'inherit'
+    inactiveColor?: ColorString,
+    inactiveWidth?: number
 }
 
 export interface LegendStyleOption {
@@ -476,6 +478,8 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         lineStyle: {
             width: 'auto',
             color: 'inherit',
+            inactiveColor: '#ccc',
+            inactiveWidth: 2,
             opacity: 'inherit',
             type: 'inherit',
             cap: 'inherit',

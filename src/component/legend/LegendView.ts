@@ -25,7 +25,7 @@ import {setLabelStyle, createTextStyle} from '../../label/labelStyle';
 import {makeBackground} from '../helper/listComponent';
 import * as layoutUtil from '../../util/layout';
 import ComponentView from '../../view/Component';
-import LegendModel, { LegendItemStyleOption, LegendLineStyleOption, LegendOption, LegendSelectorButtonOption, LegendStyleOption, LegendSymbolStyleOption, LegendTooltipFormatterParams } from './LegendModel';
+import LegendModel, { LegendItemStyleOption, LegendLineStyleOption, LegendOption, LegendSelectorButtonOption, LegendTooltipFormatterParams } from './LegendModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import {
@@ -208,14 +208,13 @@ class LegendView extends ComponentView {
             // Legend to control series.
             if (seriesModel) {
                 const data = seriesModel.getData();
-                const lineVisualStyle = (data.getVisual('legendSymbolStyle') || {}).lineStyle;
+                const lineVisualStyle = data.getVisual('legendLineStyle') || {};
 
                 /**
                  * `data.getVisual('style')` may be the color from the register
                  * in series. For example, for line series,
                  */
                 const style = data.getVisual('style');
-                console.log(style, lineVisualStyle);
 
                 // Using rect symbol defaultly
                 const legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
@@ -223,7 +222,6 @@ class LegendView extends ComponentView {
                 const symbolSize = data.getVisual('symbolSize');
 
                 data.getVisual('symbolSize');
-                console.log(symbolSize)
 
                 const itemGroup = this._createItem(
                     name, dataIndex, legendItemModel, legendModel,
@@ -356,14 +354,12 @@ class LegendView extends ComponentView {
         const itemHeight = legendModel.get('itemHeight');
         const isSelected = legendModel.isSelected(name);
 
-        const inactiveColor = itemModel.get('inactiveColor');
-        const inactiveBorderColor = itemModel.get('inactiveBorderColor');
         const symbolKeepAspect = itemModel.get('symbolKeepAspect');
 
         const legendSymbolSize = itemModel.get('symbolSize');
         if (legendSymbolSize === 'auto') {
             // auto: 80% itemHeight
-            symbolSize = itemHeight * 0.8;
+            symbolSize =  itemHeight * 0.8;
         }
         else if (legendSymbolSize !== 'inherit') {
             // number: legend.symbolSize
@@ -371,7 +367,8 @@ class LegendView extends ComponentView {
         }
         // inherit: series.symbolSize, which is passed in by function parameter
 
-        const style = getLegendStyle(itemModel, lineVisualStyle, itemVisualStyle, isColorBySeries);
+        const legendLineStyle = legendModel.getModel('lineStyle');
+        const style = getLegendStyle(itemModel, legendLineStyle, lineVisualStyle, itemVisualStyle, isColorBySeries, isSelected);
 
         symbolType = symbolType || 'roundRect';
 
@@ -417,6 +414,7 @@ class LegendView extends ComponentView {
             content = formatter(name);
         }
 
+        const inactiveColor = itemModel.get('inactiveColor');
         itemGroup.add(new graphic.Text({
             style: createTextStyle(textStyleModel, {
                 text: content,
@@ -551,9 +549,11 @@ class LegendView extends ComponentView {
 
 function getLegendStyle(
     legendModel: LegendModel['_data'][number],
+    legendLineStyle: Model<LegendLineStyleOption>,
     lineVisualStyle: LineStyleProps,
     itemVisualStyle: PathStyleProps,
-    isColorBySeries: boolean
+    isColorBySeries: boolean,
+    isSelected: boolean
 ) {
     let color = itemVisualStyle.fill;
     if (!isColorBySeries) {
@@ -621,6 +621,13 @@ function getLegendStyle(
     (itemStyle.fill === 'auto') && (itemStyle.fill = color);
     (itemStyle.stroke === 'auto') && (itemStyle.stroke = color);
     (lineStyle.stroke === 'auto') && (lineStyle.stroke = color);
+
+    if (!isSelected) {
+        itemStyle.fill = legendModel.get('inactiveColor');
+        itemStyle.stroke = legendModel.get('inactiveBorderColor');
+        lineStyle.stroke = legendLineStyle.get('inactiveColor');
+        lineStyle.lineWidth = legendLineStyle.get('inactiveWidth');
+    }
 
     return { itemStyle, lineStyle };
 }

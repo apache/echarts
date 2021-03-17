@@ -42,15 +42,11 @@ export function install(registers: EChartsExtensionInstallRegisters) {
             const lineStyle = seriesModel.getModel('lineStyle').getLineStyle();
             const itemStyle = seriesModel.getModel('itemStyle').getItemStyle();
             const color = itemStyle && itemStyle.fill;
-            console.log(itemStyle, lineStyle);
             if (lineStyle) {
                 lineStyle.stroke = lineStyle.stroke || color;
             }
 
-            seriesModel.getData().setVisual('legendSymbolStyle', {
-                itemStyle,
-                lineStyle
-            });
+            seriesModel.getData().setVisual('legendLineStyle', lineStyle);
         }
     });
 
