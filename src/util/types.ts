@@ -46,6 +46,7 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
+import Model from '../model/Model';
 
 
 
@@ -101,10 +102,6 @@ export interface ComponentTypeInfo {
 }
 
 export interface ECElement extends Element {
-    tooltip?: CommonTooltipOption<unknown> & {
-        content?: string;
-        formatterParams?: unknown;
-    };
     highDownSilentOnTouch?: boolean;
     onHoverStateChange?: (toState: DisplayState) => void;
 
@@ -130,7 +127,7 @@ export interface DataHost {
     getData(dataType?: SeriesDataType): List;
 }
 
-export interface DataModel extends DataHost, DataFormatMixin {}
+export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {}
     // Pick<DataHost, 'getData'>,
     // Pick<DataFormatMixin, 'getDataParams' | 'formatTooltip'> {}
 
@@ -1348,12 +1345,33 @@ export interface CommonTooltipOption<FormatterParams> {
     }
 }
 
+export type ComponentItemTooltipOption<T> = CommonTooltipOption<T> & {
+    // Default content HTML.
+    content?: string;
+    formatterParams?: ComponentItemTooltipLabelFormatterParams;
+};
+export type ComponentItemTooltipLabelFormatterParams = {
+    componentType: string
+    name: string
+    // properies key array like ['name']
+    $vars: string[]
+} & {
+    [key in `${ComponentMainType}Index`]: number
+} & {
+    // Other properties
+    [key in string]: unknown
+};
+
+
 /**
  * Tooltip option configured on each series
  */
 export type SeriesTooltipOption = CommonTooltipOption<CallbackDataParams> & {
     trigger?: 'item' | 'axis' | boolean | 'none'
 };
+
+
+
 
 type LabelFormatterParams = {
     value: ScaleDataValue

@@ -33,7 +33,6 @@ import {
     ZRColor,
     ItemStyleOption,
     ZRRectLike,
-    ECElement,
     CommonTooltipOption,
     ColorString,
     SeriesOption,
@@ -378,8 +377,6 @@ class LegendView extends ComponentView {
 
         const itemIcon = itemModel.get('icon');
 
-        const tooltipModel = itemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;
-        const legendGlobalTooltipModel = tooltipModel.parentModel;
 
         // Use user given icon first
         legendSymbolType = itemIcon || legendSymbolType;
@@ -431,22 +428,15 @@ class LegendView extends ComponentView {
             shape: itemGroup.getBoundingRect(),
             invisible: true
         });
+
+        const tooltipModel = itemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;
         if (tooltipModel.get('show')) {
-            const formatterParams: LegendTooltipFormatterParams = {
-                componentType: 'legend',
-                legendIndex: legendModel.componentIndex,
-                name: name,
-                $vars: ['name']
-            };
-            (hitRect as ECElement).tooltip = zrUtil.extend({
-                content: name,
-                // Defaul formatter
-                formatter: legendGlobalTooltipModel.get('formatter', true)
-                    || function (params: LegendTooltipFormatterParams) {
-                        return params.name;
-                    },
-                formatterParams: formatterParams
-            }, tooltipModel.option);
+            graphic.setTooltipConfig({
+                el: hitRect,
+                componentModel: legendModel,
+                itemName: name,
+                itemTooltipOption: tooltipModel.option
+            });
         }
         itemGroup.add(hitRect);
 
