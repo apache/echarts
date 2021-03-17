@@ -53,6 +53,9 @@ export const TRANSITION_VENDOR = testStyle(
 );
 
 export function toCSSVendorPrefix(styleVendor: string, styleProp: string) {
+    if (!styleVendor) {
+        return styleProp;
+    }
     styleProp = toCamelCase(styleProp, true);
     const idx = styleVendor.indexOf(styleProp);
     styleVendor = idx === -1
