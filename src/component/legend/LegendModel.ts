@@ -72,7 +72,7 @@ export interface LegendItemStyleOption {
     shadowOffsetX?: number | 'inherit'
     shadowOffsetY?: number | 'inherit'
     borderColor?: ZRColor | 'inherit'
-    borderWidth?: number | 'inherit'
+    borderWidth?: number | 'inherit' | 'auto'
     borderType?: ZRLineType | 'inherit'
     borderCap?: CanvasLineCap | 'inherit'
     borderJoin?: CanvasLineJoin | 'inherit'
@@ -468,7 +468,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
             shadowOffsetX: 'inherit',
             shadowOffsetY: 'inherit',
             borderColor: 'inherit',
-            borderWidth: 'inherit',
+            borderWidth: 'auto',
             borderCap: 'inherit',
             borderJoin: 'inherit',
             borderDashOffset: 'inherit',

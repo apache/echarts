@@ -336,66 +336,62 @@ class LegendView extends ComponentView {
         itemModel: LegendModel['_data'][number],
         legendModel: LegendModel,
         legendSymbolType: string,
-        symbolType: string,
-        symbolSize: number | number[],
+        dataSymbolType: string,
+        dataSymbolSize: number | number[],
         itemAlign: LegendOption['align'],
         lineVisualStyle: LineStyleProps,
         itemVisualStyle: PathStyleProps,
         isColorBySeries: boolean,
         selectMode: LegendOption['selectedMode']
     ) {
-        if (symbolSize != null && typeof symbolSize === 'object') {
-            // Use symbol height as symbol size if it's an array
-            symbolSize = symbolSize[1];
-        }
-
         const itemWidth = legendModel.get('itemWidth');
         const itemHeight = legendModel.get('itemHeight');
         const isSelected = legendModel.isSelected(name);
 
         const symbolKeepAspect = itemModel.get('symbolKeepAspect');
+        const itemIcon = itemModel.get('icon');
 
+        let symbolSize;
         const legendSymbolSize = itemModel.get('symbolSize');
         if (legendSymbolSize === 'auto') {
-            // auto: 80% itemHeight
-            symbolSize =  itemHeight * 0.8;
+            // auto: 80% itemHeight if has line, 100% elsewise
+            const hasHorizontalLine = !itemIcon && dataSymbolType
+                && ((dataSymbolType !== legendSymbolType) || dataSymbolType === 'none');
+            symbolSize = hasHorizontalLine
+                ? itemHeight * 0.8
+                : [itemWidth, itemHeight];
         }
-        else if (legendSymbolSize !== 'inherit') {
+        else if (legendSymbolSize !== 'inherit')  {
             // number: legend.symbolSize
-            symbolSize = Math.min(legendSymbolSize, itemHeight);
+            symbolSize = legendSymbolSize;
+        }
+        else {
+            // inherit: series.symbolSize
+            symbolSize = dataSymbolSize;
         }
         // inherit: series.symbolSize, which is passed in by function parameter
 
         const legendLineStyle = legendModel.getModel('lineStyle');
         const style = getLegendStyle(itemModel, legendLineStyle, lineVisualStyle, itemVisualStyle, isColorBySeries, isSelected);
 
-        symbolType = symbolType || 'roundRect';
+        dataSymbolType = dataSymbolType || 'roundRect';
 
         const itemGroup = new Group();
 
         const textStyleModel = itemModel.getModel('textStyle');
 
-        const itemIcon = itemModel.get('icon');
-
-
         // Use user given icon first
         legendSymbolType = itemIcon || legendSymbolType;
-
-        const hasHorizontalLine = !itemIcon && symbolType
-            // At least show one symbol, can't be all none
-            && ((symbolType !== legendSymbolType) || symbolType === 'none');
-
         // Draw line
         if (legendSymbolType === 'line' || itemIcon === 'line') {
             itemGroup.add(
                 createHorizontalLine(itemWidth, itemHeight, style.lineStyle)
             )
         }
-
         // Put symbol in the center
         if (itemIcon !== 'line') {
             itemGroup.add(
-                createItem(symbolType, symbolSize, symbolKeepAspect, itemWidth, itemHeight, style.itemStyle)
+                createItem(dataSymbolType, symbolSize, symbolKeepAspect, itemWidth, itemHeight, style.itemStyle)
             );
         }
 
@@ -579,6 +575,10 @@ function getLegendStyle(
         if (value === 'inherit') {
             (itemStyle as any)[visualName] = itemVisualStyle[visualName];
         }
+        else if (value === 'auto' && visualName === 'lineWidth') {
+            // If lineStyle.width is 'auto', it is set to be 2 if series has border
+            itemStyle.lineWidth = itemVisualStyle.lineWidth > 0 ? 2 : 0;
+        }
         else {
             (itemStyle as any)[visualName] = value;
         }
@@ -652,14 +652,17 @@ function createItem(
         symbolType = 'circle';
     }
     const size = symbolSize == null
-        ? itemHeight
-        : Math.min(itemHeight, symbolSize as number);
+        ? [itemHeight, itemHeight]
+        : (typeof symbolSize === 'object'
+            ? [Math.min(itemWidth, symbolSize[0]), Math.min(itemHeight, symbolSize[1])]
+            : [Math.min(itemHeight, symbolSize as number), Math.min(itemHeight, symbolSize as number)]
+        );
     const symbol = createSymbol(
         symbolType,
-        (itemWidth - size) / 2,
-        (itemHeight - size) / 2,
-        size,
-        size,
+        (itemWidth - size[0]) / 2,
+        (itemHeight - size[1]) / 2,
+        size[0],
+        size[1],
         style.fill,
         // symbolKeepAspect default true for legend
         symbolKeepAspect == null ? true : symbolKeepAspect
