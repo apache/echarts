@@ -37,10 +37,12 @@ under the License.
 
 
 
-        <div id="main_pure_geo_json"></div>
+        <div id="main_simple_geo_json"></div>
+        <div id="main_simple_geo_svg"></div>
         <div id="main_pure_geo_svg"></div>
         <div id="main_pure_map_svg"></div>
         <div id="main_map_geo_svg"></div>
+        <div id="main_geo_svg_regions"></div>
 
 
 
@@ -65,6 +67,8 @@ under the License.
                 });
             }
         </script>
+
+
 
 
 
@@ -108,9 +112,9 @@ under the License.
                 }
             };
 
-            var chart = testHelper.create(echarts, 'main_pure_geo_json', {
+            var chart = testHelper.create(echarts, 'main_simple_geo_json', {
                 title: [
-                    'pure geo geoJSON location:',
+                    'simple geo geoJSON location:',
                     'Should be a square and 80% of canvas height.',
                     'At the center of the canvas.'
                 ],
@@ -124,6 +128,62 @@ under the License.
 
         });
         </script>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            const svg = [
+                '<?xml version="1.0" encoding="utf-8"?>',
+                '<svg xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100" version="1.2" fill-rule="evenodd" xml:space="preserve">',
+                '<path d="M 0,0 L 0,100 100,100 100,0 Z" fill="none" stroke="rgb(56,93,138)" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join('')
+
+            echarts.registerMap('testGeoSVG', { svg: svg });
+
+            option = {
+                tooltip: {
+                },
+                geo: {
+                    map: 'testGeoSVG',
+                    roam: true,
+                    selectedMode: 'single',
+                    // height: '100%',
+                    // center
+                    // layoutCenter: ['30%', 40],
+                    // layoutSize: 40,
+                    // boundingCoords
+                    zoom: 1,
+                    aspectScale: 1
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main_simple_geo_svg', {
+                title: [
+                    'simple geo geoSVG location:',
+                    'Should be a square and 80% of canvas height.',
+                    'At the center of the canvas.'
+                ],
+                option: option,
+                info: {},
+                infoKey: 'event',
+                height: 300
+            });
+
+            listenAndPrintSelectChanged(chart);
+
+        });
+        </script>
+
+
+
+
 
 
 
@@ -324,6 +384,90 @@ under the License.
                 });
 
                 listenAndPrintSelectChanged(chart);
+
+            });
+
+        });
+        </script>
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            $.ajax({
+                url: '../../vis-data/map/svg/geo-topo/Sicily_prehellenic_topographic_map.svg',
+                dataType: 'text'
+            }).done(function (svg) {
+
+                echarts.registerMap('sicily', {
+                    svg: svg
+                });
+
+                option = {
+                    tooltip: {
+                    },
+                    geo: [{
+                        map: 'sicily',
+                        roam: true,
+                        selectedMode: 'multiple',
+                        itemStyle: {
+                            color: null
+                        },
+                        emphasis: {
+                            // itemStyle: {
+                                // borderColor: 'red',
+                                // borderWidth: 5
+                            // },
+                            // areaStyle: {
+                                // borderColor: 'red',
+                                // borderWidth: 5
+                            // },
+                            label: {
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        },
+                        select: {
+                            itemStyle: {
+                                color: '#b50205'
+                            },
+                            label: {
+                                show: false,
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        },
+                        z: 0
+                    }],
+                    series: {
+                        type: 'map',
+                        selectedMode: 'multiple',
+                        coordinateSystem: 'geo',
+                        geoIndex: 0
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_geo_svg_regions', {
+                    title: [
+                        'map series on declared geo with svg resource',
+                        'Hover seat: check **tooltip** correct.'
+                    ],
+                    option: option,
+                    info: {},
+                    infoKey: 'event',
+                    height: 400
+                });
+
+                listenAndPrintSelectChanged(chart);
+
+                if (chart) {
+                    chart.on('georoam', function (params) {
+                        // console.log(params);
+                    });
+                }
 
             });
 

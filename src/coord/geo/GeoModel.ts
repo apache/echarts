@@ -39,6 +39,7 @@ import {
 } from '../../util/types';
 import { NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
+import geoSourceManager from './geoSourceManager';
 
 
 export interface GeoItemStyleOption extends ItemStyleOption {
@@ -175,8 +176,11 @@ class GeoModel extends ComponentModel<GeoOption> {
 
         itemStyle: {
             borderWidth: 0.5,
-            borderColor: '#444',
-            color: '#eee'
+            borderColor: '#444'
+            // Default color:
+            // + geoJSON: #eee
+            // + geoSVG: null (use SVG original `fill`)
+            // color: '#eee'
         },
 
         emphasis: {
@@ -207,7 +211,16 @@ class GeoModel extends ComponentModel<GeoOption> {
     };
 
     init(option: GeoOption, parentModel: Model, ecModel: GlobalModel): void {
-        super.init(option, parentModel, ecModel);
+        const source = geoSourceManager.getGeoResource(option.map);
+        if (source && source.type === 'geoJSON') {
+            const itemStyle = option.itemStyle = option.itemStyle || {};
+            if (!('color' in itemStyle)) {
+                itemStyle.color = '#eee';
+            }
+        }
+
+        this.mergeDefaultAndTheme(option, ecModel);
+
         // Default label emphasis `show`
         modelUtil.defaultEmphasis(option, 'label', ['show']);
     }

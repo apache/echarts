@@ -269,6 +269,10 @@ class MapDraw {
         }
 
         zrUtil.each(this._svgRegionElements, function (el: Displayable) {
+            // Note that we also allow different elements have the same name.
+            // For example, a glyph of a city and the label of the city have
+            // the same name and their tooltip info can be defined in a single
+            // region option.
             this._resetSingleRegionGraphic(
                 viewBuildCtx, el, el, el.name, [0, 0], 'inside'
             );
