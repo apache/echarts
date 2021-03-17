@@ -148,7 +148,8 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
         // feature
 
         tooltip: {
-            show: false
+            show: false,
+            position: 'bottom'
         }
     };
 }

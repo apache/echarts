@@ -34,7 +34,7 @@ import SeriesModel from '../model/Series';
 import { createHashMap, HashMap } from 'zrender/src/core/util';
 import { TaskPlanCallbackReturn, TaskProgressParams } from '../core/task';
 import List, {ListDimensionType} from '../data/List';
-import { Dictionary, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
+import { Dictionary, ElementEventName, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { TooltipMarker } from './format';
 import { AnimationEasing } from 'zrender/src/animation/easing';
@@ -46,6 +46,7 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
+import Model from '../model/Model';
 
 
 
@@ -80,6 +81,8 @@ export type ZRRectLike = RectLike;
 
 export type ZRStyleProps = PathStyleProps | ImageStyleProps | TSpanStyleProps | TextStyleProps;
 
+export type ZRElementEventName = ElementEventName | 'globalout';
+
 // ComponentFullType can be:
 //     'xxx.yyy': means ComponentMainType.ComponentSubType.
 //     'xxx': means ComponentMainType.
@@ -99,10 +102,6 @@ export interface ComponentTypeInfo {
 }
 
 export interface ECElement extends Element {
-    tooltip?: CommonTooltipOption<unknown> & {
-        content?: string;
-        formatterParams?: unknown;
-    };
     highDownSilentOnTouch?: boolean;
     onHoverStateChange?: (toState: DisplayState) => void;
 
@@ -128,13 +127,14 @@ export interface DataHost {
     getData(dataType?: SeriesDataType): List;
 }
 
-export interface DataModel extends DataHost, DataFormatMixin {}
+export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {}
     // Pick<DataHost, 'getData'>,
     // Pick<DataFormatMixin, 'getDataParams' | 'formatTooltip'> {}
 
 interface PayloadItem {
     excludeSeriesId?: OptionId | OptionId[];
     animation?: PayloadAnimationPart
+    // TODO use unknown
     [other: string]: any;
 }
 
@@ -181,25 +181,34 @@ export interface ViewRootGroup extends Group {
     };
 }
 
+export interface ECElementEvent extends
+    ECEventData,
+    CallbackDataParams {
+
+    type: ZRElementEventName;
+    event?: ElementEvent;
+
+}
 /**
  * The echarts event type to user.
  * Also known as packedEvent.
  */
-export interface ECEvent extends ECEventData{
+export interface ECActionEvent extends ECEventData {
     // event type
     type: string;
     componentType?: string;
     componentIndex?: number;
     seriesIndex?: number;
     escapeConnect?: boolean;
-    event?: ElementEvent;
     batch?: ECEventData;
 }
 export interface ECEventData {
+    // TODO use unknown
     [key: string]: any;
 }
 
-export interface EventQueryItem{
+export interface EventQueryItem {
+    // TODO use unknown
     [key: string]: any;
 }
 export interface NormalizedEventQuery {
@@ -1336,12 +1345,33 @@ export interface CommonTooltipOption<FormatterParams> {
     }
 }
 
+export type ComponentItemTooltipOption<T> = CommonTooltipOption<T> & {
+    // Default content HTML.
+    content?: string;
+    formatterParams?: ComponentItemTooltipLabelFormatterParams;
+};
+export type ComponentItemTooltipLabelFormatterParams = {
+    componentType: string
+    name: string
+    // properies key array like ['name']
+    $vars: string[]
+} & {
+    [key in `${ComponentMainType}Index`]: number
+} & {
+    // Other properties
+    [key in string]: unknown
+};
+
+
 /**
  * Tooltip option configured on each series
  */
 export type SeriesTooltipOption = CommonTooltipOption<CallbackDataParams> & {
     trigger?: 'item' | 'axis' | boolean | 'none'
 };
+
+
+
 
 type LabelFormatterParams = {
     value: ScaleDataValue

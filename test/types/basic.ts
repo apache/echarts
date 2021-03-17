@@ -3,7 +3,7 @@ import * as echarts from '../../';
 const dom = document.createElement('div');
 dom.className = 'chart';
 
-const chart = echarts.init(dom);
+const chart: echarts.EChartsType = echarts.init(dom);
 
 const option: echarts.EChartsOption = {
     series: [{

@@ -29,7 +29,7 @@ import Model from '../../model/Model';
 import * as globalListener from '../axisPointer/globalListener';
 import * as axisHelper from '../../coord/axisHelper';
 import * as axisPointerViewHelper from '../axisPointer/viewHelper';
-import { getTooltipRenderMode } from '../../util/model';
+import { getTooltipRenderMode, preParseFinder, queryReferringComponents } from '../../util/model';
 import ComponentView from '../../view/Component';
 import { format as timeFormat } from '../../util/time';
 import {
@@ -41,7 +41,9 @@ import {
     TooltipRenderMode,
     ECElement,
     CommonTooltipOption,
-    ZRColor
+    ZRColor,
+    ComponentMainType,
+    ComponentItemTooltipOption
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -49,12 +51,13 @@ import TooltipModel, {TooltipOption} from './TooltipModel';
 import Element from 'zrender/src/Element';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 // import { isDimensionStacked } from '../../data/helper/dataStackHelper';
-import { getECData } from '../../util/innerStore';
+import { ECData, getECData } from '../../util/innerStore';
 import { shouldTooltipConfine } from './helper';
 import { DataByCoordSys, DataByAxis } from '../axisPointer/axisTrigger';
 import { normalizeTooltipFormatResult } from '../../model/mixin/dataFormat';
 import { createTooltipMarkup, buildTooltipMarkup, TooltipMarkupStyleCreator } from './tooltipMarkup';
 import { findEventDispatcher } from '../../util/event';
+import ComponentModel from '../../model/Component';
 
 const bind = zrUtil.bind;
 const each = zrUtil.each;
@@ -76,7 +79,7 @@ interface ShowTipPayload {
     from?: string
 
     // Type 1
-    tooltip?: ECElement['tooltip']
+    tooltip?: ECData['tooltipConfig']['option']
 
     // Type 2
     dataByCoordSys?: DataByCoordSys[]
@@ -86,6 +89,11 @@ interface ShowTipPayload {
     seriesIndex?: number
     dataIndex?: number
 
+    // Type 4
+    name?: string // target item name that enable tooltip.
+    // legendIndex: 0,
+    // toolboxId: 'some_id',
+    // geoName: 'some_name',
 
     x?: number
     y?: number
@@ -112,7 +120,7 @@ interface TryShowParams {
      */
     dataByCoordSys?: DataByCoordSys[]
 
-    tooltipOption?: CommonTooltipOption<TooltipCallbackDataParams | TooltipCallbackDataParams[]>
+    tooltipOption?: ComponentItemTooltipOption<TooltipCallbackDataParams | TooltipCallbackDataParams[]>
 
     position?: TooltipOption['position']
 }
@@ -287,12 +295,29 @@ class TooltipView extends ComponentView {
         // When triggered from axisPointer.
         const dataByCoordSys = payload.dataByCoordSys;
 
-        if (payload.tooltip && payload.x != null && payload.y != null) {
+        const cmptRef = findComponentReference(payload, ecModel, api);
+
+        if (cmptRef) {
+            const rect = cmptRef.el.getBoundingRect().clone();
+            rect.applyTransform(cmptRef.el.transform);
+            this._tryShow({
+                offsetX: rect.x + rect.width / 2,
+                offsetY: rect.y + rect.height / 2,
+                target: cmptRef.el,
+                position: payload.position || 'bottom'
+            }, dispatchAction);
+        }
+        else if (payload.tooltip && payload.x != null && payload.y != null) {
             const el = proxyRect as unknown as ECElement;
             el.x = payload.x;
             el.y = payload.y;
             el.update();
-            el.tooltip = payload.tooltip;
+            getECData(el).tooltipConfig = {
+                componentMainType: null,
+                componentIndex: null,
+                name: null,
+                option: payload.tooltip
+            };
             // Manually show tooltip while view is not using zrender elements.
             this._tryShow({
                 offsetX: payload.x,
@@ -428,15 +453,33 @@ class TooltipView extends ComponentView {
         if (dataByCoordSys && dataByCoordSys.length) {
             this._showAxisTooltip(dataByCoordSys, e);
         }
-        // Always show item tooltip if mouse is on the element with dataIndex
-        else if (el && findEventDispatcher(el, (target) => getECData(target).dataIndex != null, true)) {
+        else if (el) {
             this._lastDataByCoordSys = null;
-            this._showSeriesItemTooltip(e, el, dispatchAction);
-        }
-        // Tooltip provided directly. Like legend.
-        else if (el && el.tooltip) {
-            this._lastDataByCoordSys = null;
-            this._showComponentItemTooltip(e, el, dispatchAction);
+
+            let seriesDispatcher: Element;
+            let cmptDispatcher: Element;
+            findEventDispatcher(el, (target) => {
+                // Always show item tooltip if mouse is on the element with dataIndex
+                if (getECData(target).dataIndex != null) {
+                    seriesDispatcher = target;
+                    return true;
+                }
+                // Tooltip provided directly. Like legend.
+                if (getECData(target).tooltipConfig != null) {
+                    cmptDispatcher = target;
+                    return true;
+                }
+            }, true);
+
+            if (seriesDispatcher) {
+                this._showSeriesItemTooltip(e, seriesDispatcher, dispatchAction);
+            }
+            else if (cmptDispatcher) {
+                this._showComponentItemTooltip(e, cmptDispatcher, dispatchAction);
+            }
+            else {
+                this._hide(dispatchAction);
+            }
         }
         else {
             this._lastDataByCoordSys = null;
@@ -573,10 +616,9 @@ class TooltipView extends ComponentView {
 
     private _showSeriesItemTooltip(
         e: TryShowParams,
-        el: ECElement,
+        dispatcher: ECElement,
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
-        const dispatcher = findEventDispatcher(el, (target) => getECData(target).dataIndex != null, true);
         const ecModel = this._ecModel;
         const ecData = getECData(dispatcher);
         // Use dataModel in element if possible
@@ -653,7 +695,8 @@ class TooltipView extends ComponentView {
         el: ECElement,
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
-        let tooltipOpt = el.tooltip;
+        const tooltipConfig = getECData(el).tooltipConfig;
+        let tooltipOpt = tooltipConfig.option;
         if (zrUtil.isString(tooltipOpt)) {
             const content = tooltipOpt;
             tooltipOpt = {
@@ -662,7 +705,14 @@ class TooltipView extends ComponentView {
                 formatter: content
             };
         }
-        const subTooltipModel = new Model(tooltipOpt, this._tooltipModel, this._ecModel);
+
+        const tooltipModelCascade = [tooltipOpt] as Parameters<typeof buildTooltipModel>[0];
+        const cmpt = this._ecModel.getComponent(tooltipConfig.componentMainType, tooltipConfig.componentIndex);
+        cmpt && tooltipModelCascade.push(cmpt);
+        tooltipModelCascade.push(this._tooltipModel);
+
+        const subTooltipModel = buildTooltipModel(tooltipModelCascade) as Model<ComponentItemTooltipOption<unknown>>;
+
         const defaultHtml = subTooltipModel.get('content');
         const asyncTicket = Math.random() + '';
         // PENDING: this case do not support richText style yet.
@@ -673,9 +723,11 @@ class TooltipView extends ComponentView {
         // that requires setting `trigger` nothing on component yet.
 
         this._showOrMove(subTooltipModel, function (this: TooltipView) {
+            // Use formatterParams from element defined in component
+            // Avoid users modify it.
+            const formatterParams = zrUtil.clone(subTooltipModel.get('formatterParams') as any || {});
             this._showTooltipContent(
-                // Use formatterParams from element defined in component
-                subTooltipModel, defaultHtml, subTooltipModel.get('formatterParams') as any || {},
+                subTooltipModel, defaultHtml, formatterParams,
                 asyncTicket, e.offsetX, e.offsetY, e.position, el, markupStyleCreator
             );
         });
@@ -908,13 +960,13 @@ class TooltipView extends ComponentView {
 }
 
 type TooltipableOption = {
-    tooltip?: Omit<TooltipOption, 'mainType'> | string
+    tooltip?: CommonTooltipOption<unknown>;
 };
 /**
  * From top to bottom. (the last one should be globalTooltipModel);
  */
 function buildTooltipModel(modelCascade: (
-    TooltipModel | Model<TooltipableOption> | Omit<TooltipOption, 'mainType'> | string
+    TooltipModel | Model<TooltipableOption> | CommonTooltipOption<unknown> | ComponentModel | string
 )[]) {
     // Last is always tooltip model.
     let resultModel = modelCascade.pop() as Model<TooltipOption>;
@@ -1034,6 +1086,62 @@ function calcTooltipPosition(
 
 function isCenterAlign(align: HorizontalAlign | VerticalAlign) {
     return align === 'center' || align === 'middle';
+}
+
+/**
+ * Find target component by payload like:
+ * ```js
+ * { legendId: 'some_id', name: 'xxx' }
+ * { toolboxIndex: 1, name: 'xxx' }
+ * { geoName: 'some_name', name: 'xxx' }
+ * ```
+ * PENDING: at present only
+ *
+ * If not found, return null/undefined.
+ */
+function findComponentReference(
+    payload: ShowTipPayload,
+    ecModel: GlobalModel,
+    api: ExtensionAPI
+): {
+    componentMainType: ComponentMainType;
+    componentIndex: number;
+    el: ECElement;
+} {
+    const { queryOptionMap } = preParseFinder(payload);
+    const componentMainType = queryOptionMap.keys()[0];
+    if (!componentMainType || componentMainType === 'series') {
+        return;
+    }
+
+    const queryResult = queryReferringComponents(
+        ecModel,
+        componentMainType,
+        queryOptionMap.get(componentMainType),
+        { useDefault: false, enableAll: false, enableNone: false }
+    );
+    const model = queryResult.models[0];
+    if (!model) {
+        return;
+    }
+
+    const view = api.getViewOfComponentModel(model);
+    let el: ECElement;
+    view.group.traverse((subEl: ECElement) => {
+        const tooltipConfig = getECData(subEl).tooltipConfig;
+        if (tooltipConfig && tooltipConfig.name === payload.name) {
+            el = subEl;
+            return true; // stop
+        }
+    });
+
+    if (el) {
+        return {
+            componentMainType,
+            componentIndex: model.componentIndex,
+            el
+        };
+    }
 }
 
 export default TooltipView;

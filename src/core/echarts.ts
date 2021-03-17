@@ -29,8 +29,8 @@ import CoordinateSystemManager from './CoordinateSystem';
 import OptionManager from '../model/OptionManager';
 import backwardCompat from '../preprocessor/backwardCompat';
 import dataStack from '../processor/dataStack';
-import ComponentModel, { ComponentModelConstructor } from '../model/Component';
-import SeriesModel, { SeriesModelConstructor } from '../model/Series';
+import ComponentModel from '../model/Component';
+import SeriesModel from '../model/Series';
 import ComponentView, {ComponentViewConstructor} from '../view/Component';
 import ChartView, {ChartViewConstructor} from '../view/Chart';
 import * as graphic from '../util/graphic';
@@ -72,7 +72,7 @@ import {CoordinateSystemMaster, CoordinateSystemCreator, CoordinateSystemHostMod
 import { parseClassType } from '../util/clazz';
 import {ECEventProcessor} from '../util/ECEventProcessor';
 import {
-    Payload, ECElement, RendererType, ECEvent,
+    Payload, ECElement, RendererType, ECActionEvent,
     ActionHandler, ActionInfo, OptionPreprocessor, PostUpdater,
     LoadingEffect, LoadingEffectCreator, StageHandlerInternal,
     StageHandlerOverallReset, StageHandler,
@@ -85,7 +85,9 @@ import {
     ColorString,
     SelectChangedPayload,
     DimensionLoose,
-    ScaleDataValue
+    ScaleDataValue,
+    ZRElementEventName,
+    ECElementEvent
 } from '../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
@@ -118,10 +120,10 @@ const indexOf = zrUtil.indexOf;
 
 const hasWindow = typeof window !== 'undefined';
 
-export const version = '5.0.1';
+export const version = '5.0.2';
 
 export const dependencies = {
-    zrender: '5.0.3'
+    zrender: '5.0.4'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
@@ -191,7 +193,7 @@ type ConnectStatus =
     | typeof CONNECT_STATUS_UPDATING
     | typeof CONNECT_STATUS_UPDATED;
 
-interface SetOptionOpts {
+export interface SetOptionOpts {
     notMerge?: boolean;
     lazyUpdate?: boolean;
     silent?: boolean;
@@ -296,7 +298,17 @@ let setTransitionOpt: (
 
 let markStatusToUpdate: (ecIns: ECharts) => void;
 let applyChangedStates: (ecIns: ECharts) => void;
-class ECharts extends Eventful {
+
+type ECEventDefinition = {
+    [key in ZRElementEventName]: ECElementEvent
+} & {
+    rendered: { elapsedTime: number }
+    finished: undefined
+} & {
+    // TODO: Use ECActionEvent
+    [key: string]: any
+};
+class ECharts extends Eventful<ECEventDefinition> {
 
     /**
      * @readonly
@@ -973,11 +985,11 @@ class ECharts extends Eventful {
             const handler = (e: ElementEvent) => {
                 const ecModel = this.getModel();
                 const el = e.target;
-                let params: ECEvent;
+                let params: ECElementEvent;
                 const isGlobalOut = eveName === 'globalout';
                 // no e.target when 'globalout'.
                 if (isGlobalOut) {
-                    params = {} as ECEvent;
+                    params = {} as ECElementEvent;
                 }
                 else {
                     el && findEventDispatcher(el, (parent) => {
@@ -986,12 +998,12 @@ class ECharts extends Eventful {
                             const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
                             params = (
                                 dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {}
-                            ) as ECEvent;
+                            ) as ECElementEvent;
                             return true;
                         }
                         // If element has custom eventData of components
                         else if (ecData.eventData) {
-                            params = zrUtil.extend({}, ecData.eventData) as ECEvent;
+                            params = zrUtil.extend({}, ecData.eventData) as ECElementEvent;
                             return true;
                         }
                     }, true);
@@ -1058,7 +1070,7 @@ class ECharts extends Eventful {
         });
 
         each(eventActionMap, (actionType, eventType) => {
-            this._messageCenter.on(eventType, function (event) {
+            this._messageCenter.on(eventType, function (event: Payload) {
                 this.trigger(eventType, event);
             }, this);
         });
@@ -1068,7 +1080,7 @@ class ECharts extends Eventful {
         each(
             ['selectchanged'],
             (eventType) => {
-                this._messageCenter.on(eventType, function (event) {
+                this._messageCenter.on(eventType, function (event: Payload) {
                     this.trigger(eventType, event);
                 }, this);
             }
@@ -1209,7 +1221,7 @@ class ECharts extends Eventful {
         this._loadingFX = null;
     }
 
-    makeActionFromEvent(eventObj: ECEvent): Payload {
+    makeActionFromEvent(eventObj: ECActionEvent): Payload {
         const payload = zrUtil.extend({}, eventObj) as Payload;
         payload.type = eventActionMap[eventObj.type];
         return payload;
@@ -1760,16 +1772,16 @@ class ECharts extends Eventful {
             }
 
             const eventObjBatch: ECEventData[] = [];
-            let eventObj: ECEvent;
+            let eventObj: ECActionEvent;
 
             const isSelectChange = isSelectChangePayload(payload);
             const isStatusChange = isHighDownPayload(payload) || isSelectChange;
 
             each(payloads, (batchItem) => {
                 // Action can specify the event by return it.
-                eventObj = actionWrap.action(batchItem, this._model, this._api) as ECEvent;
+                eventObj = actionWrap.action(batchItem, this._model, this._api) as ECActionEvent;
                 // Emit event outside
-                eventObj = eventObj || zrUtil.extend({} as ECEvent, batchItem);
+                eventObj = eventObj || zrUtil.extend({} as ECActionEvent, batchItem);
                 // Convert type to eventType
                 eventObj.type = actionInfo.event || eventObj.type;
                 eventObjBatch.push(eventObj);
@@ -1808,7 +1820,7 @@ class ECharts extends Eventful {
                 };
             }
             else {
-                eventObj = eventObjBatch[0] as ECEvent;
+                eventObj = eventObjBatch[0] as ECActionEvent;
             }
 
             this[IN_MAIN_PROCESS_KEY] = false;
@@ -1856,7 +1868,7 @@ class ECharts extends Eventful {
          * (5) no delayed setOption needs to be processed.
          */
         bindRenderedEvent = function (zr: zrender.ZRenderType, ecIns: ECharts): void {
-            zr.on('rendered', function (params) {
+            zr.on('rendered', function (params: ECEventDefinition['rendered']) {
 
                 ecIns.trigger('rendered', params);
 
@@ -2318,7 +2330,7 @@ class ECharts extends Eventful {
             }
 
             each(eventActionMap, function (actionType, eventType) {
-                chart._messageCenter.on(eventType, function (event: ECEvent) {
+                chart._messageCenter.on(eventType, function (event: ECActionEvent) {
                     if (connectedGroups[chart.group] && chart[CONNECT_STATUS_KEY] !== CONNECT_STATUS_PENDING) {
                         if (event && event.escapeConnect) {
                             return;
@@ -2404,14 +2416,19 @@ class ECharts extends Eventful {
 const echartsProto = ECharts.prototype;
 echartsProto.on = createRegisterEventWithLowercaseECharts('on');
 echartsProto.off = createRegisterEventWithLowercaseECharts('off');
+/**
+ * @deprecated
+ */
 // @ts-ignore
 echartsProto.one = function (eventName: string, cb: Function, ctx?: any) {
     const self = this;
     deprecateLog('ECharts#one is deprecated.');
     function wrapped(this: unknown, ...args2: any) {
         cb && cb.apply && cb.apply(this, args2);
+        // @ts-ignore
         self.off(eventName, wrapped);
     };
+    // @ts-ignore
     this.on.call(this, eventName, wrapped, ctx);
 };
 
@@ -2439,7 +2456,7 @@ echartsProto.one = function (eventName: string, cb: Function, ctx?: any) {
 // }
 
 
-const MOUSE_EVENT_NAMES = [
+const MOUSE_EVENT_NAMES: ZRElementEventName[] = [
     'click', 'dblclick', 'mouseover', 'mouseout', 'mousemove',
     'mousedown', 'mouseup', 'globalout', 'contextmenu'
 ];

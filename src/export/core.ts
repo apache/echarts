@@ -19,6 +19,16 @@
 
 // Core API from echarts/src/echarts
 
+export * from '../core/echarts';
+export * from './api';
+
+// Export necessary types
+export {ZRColor as Color, Payload} from '../util/types';
+export {LinearGradientObject} from 'zrender/src/graphic/LinearGradient';
+export {RadialGradientObject} from 'zrender/src/graphic/RadialGradient';
+export {PatternObject} from 'zrender/src/graphic/Pattern';
+
+// ComposeOption
 import type { ComponentOption, ECBasicOption as EChartsCoreOption } from '../util/types';
 
 import type { AxisPointerOption } from '../component/axisPointer/AxisPointerModel';
@@ -26,8 +36,6 @@ import type { XAXisOption, YAXisOption } from '../coord/cartesian/AxisModel';
 import type { AngleAxisOption, RadiusAxisOption } from '../coord/polar/AxisModel';
 import type { ParallelAxisOption } from '../coord/parallel/AxisModel';
 
-export * from '../core/echarts';
-export * from './api';
 
 export {EChartsType as ECharts} from '../core/echarts';
 

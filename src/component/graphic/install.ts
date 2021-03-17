@@ -30,7 +30,8 @@ import {
     Dictionary,
     ZRStyleProps,
     OptionId,
-    OptionPreprocessor
+    OptionPreprocessor,
+    CommonTooltipOption
 } from '../../util/types';
 import ComponentModel from '../../model/Component';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
@@ -44,6 +45,7 @@ import { getECData } from '../../util/innerStore';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { isEC4CompatibleStyle, convertFromEC4CompatibleStyle } from '../../util/styleCompat';
 import { EChartsExtensionInstallRegisters } from '../../extension';
+import { graphic } from '../../export/api';
 
 const TRANSFORM_PROPS = {
     x: 1,
@@ -129,6 +131,8 @@ interface GraphicComponentBaseElementOption extends
     textConfig?: ElementTextConfig;
 
     $action?: 'merge' | 'replace' | 'remove';
+
+    tooltip?: CommonTooltipOption<unknown>;
 };
 interface GraphicComponentDisplayableOption extends
         GraphicComponentBaseElementOption,
@@ -461,7 +465,8 @@ class GraphicComponentView extends ComponentView {
             if (elOptionStyle
                 && isEC4CompatibleStyle(elOptionStyle, elType, !!textConfig, !!textContentOption)
             ) {
-                const convertResult = convertFromEC4CompatibleStyle(elOptionStyle, elType, true) as GraphicComponentZRPathOption;
+                const convertResult =
+                    convertFromEC4CompatibleStyle(elOptionStyle, elType, true) as GraphicComponentZRPathOption;
                 if (!textConfig && convertResult.textConfig) {
                     textConfig = (elOption as GraphicComponentZRPathOption).textConfig = convertResult.textConfig;
                 }
@@ -514,6 +519,13 @@ class GraphicComponentView extends ComponentView {
                 elInner.__ecGraphicWidthOption = (elOption as GraphicComponentGroupOption).width;
                 elInner.__ecGraphicHeightOption = (elOption as GraphicComponentGroupOption).height;
                 setEventData(el, graphicModel, elOption);
+
+                graphicUtil.setTooltipConfig({
+                    el: el,
+                    componentModel: graphicModel,
+                    itemName: el.name,
+                    itemTooltipOption: elOption.tooltip
+                });
             }
         });
     }

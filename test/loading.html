@@ -50,6 +50,8 @@ under the License.
         <div class="chart" id="main4"></div>
         <h1>fontSzie: 25, fontWeight: 'bolder', fontFamily: 'Microsoft YaHei', fontStyle: 'italic'</h1>
         <div class="chart" id="main5"></div>
+        <h1>the spinner and text of loading show above the chart</h1>
+        <div class="chart" id="main6"></div>
         <script>
 
             require([
@@ -111,12 +113,56 @@ under the License.
                     lineWidth: 8,
                     zlevel: 0
                 });
+
+                var chart6 = echarts.init(document.getElementById('main6'));
+                chart6.setOption({
+                    angleAxis: {
+                    },
+                    radiusAxis: {
+                        type: 'category',
+                        data: ['周一', '周二', '周三', '周四'],
+                        z: 10
+                    },
+                    polar: {
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: [3, 2, 3, 4],
+                        coordinateSystem: 'polar',
+                        showBackground: true,
+                        name: 'A',
+                        stack: 'a',
+                        emphasis: {
+                            focus: 'series'
+                        }
+                    }],
+                    legend: {
+                        show: true,
+                        data: ['A', 'B', 'C']
+                    }
+                });
+                chart6.showLoading({
+                    text: '暂时没有数据',
+                    textColor: '#000',
+                    fontSize: 25,
+                    fontWeight: 'bolder', 
+                    fontFamily: 'Microsoft YaHei', 
+                    fontStyle: 'italic',
+                    maskColor: 'rgba(255, 255, 255, 0.8)',
+                    color: '#c23531',
+                    arcRadius: 20,
+                    lineWidth: 8,
+                    zlevel: 0
+                });
+
                 window.onresize = function () {
                     chart0.resize();
                     chart1.resize();
                     chart2.resize();
                     chart3.resize();
                     chart4.resize();
+                    chart5.resize();
+                    chart6.resize();
                 };
             });
         </script>
