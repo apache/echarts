@@ -19,6 +19,10 @@
 
 import { TooltipOption } from './TooltipModel';
 import Model from '../../model/Model';
+import { toCamelCase } from '../../util/format';
+import env from 'zrender/src/core/env';
+
+/* global document */
 
 export function shouldTooltipConfine(tooltipModel: Model<TooltipOption>): boolean {
     const confineOption = tooltipModel.get('confine');
@@ -26,4 +30,44 @@ export function shouldTooltipConfine(tooltipModel: Model<TooltipOption>): boolea
         ? !!confineOption
         // In richText mode, the outside part can not be visible.
         : tooltipModel.get('renderMode') === 'richText';
+}
+
+function testStyle(styleProps: string[]): string | undefined {
+    if (!env.domSupported) {
+        return;
+    }
+    const style = document.documentElement.style;
+    for (let i = 0, len = styleProps.length; i < len; i++) {
+        if (styleProps[i] in style) {
+            return styleProps[i];
+        }
+    }
+}
+
+export const TRANSFORM_VENDOR = testStyle(
+    ['transform', 'webkitTransform', 'OTransform', 'MozTransform', 'msTransform']
+);
+
+export const TRANSITION_VENDOR = testStyle(
+    ['webkitTransition', 'transition', 'OTransition', 'MozTransition', 'msTransition']
+);
+
+export function toCSSVendorPrefix(styleVendor: string, styleProp: string) {
+    if (!styleVendor) {
+        return styleProp;
+    }
+    styleProp = toCamelCase(styleProp, true);
+    const idx = styleVendor.indexOf(styleProp);
+    styleVendor = idx === -1
+        ? styleProp
+        : `-${styleVendor.slice(0, idx)}-${styleProp}`;
+    return styleVendor.toLowerCase();
+}
+
+export function getComputedStyle(el: HTMLElement, style?: string) {
+    const stl = (el as any).currentStyle
+        || (document.defaultView && document.defaultView.getComputedStyle(el));
+    return stl
+        ? style ? stl[style] : stl
+        : null;
 }
