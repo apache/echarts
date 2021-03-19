@@ -112,6 +112,10 @@ export interface LegendStyleOption {
      * Border color when legend item is not selected
      */
     inactiveBorderColor?: ColorString
+    /**
+     * Border color when legend item is not selected
+     */
+    inactiveBorderWidth?: number | 'auto'
 
     /**
      * Legend label formatter
@@ -456,8 +460,8 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         symbolSize: 'auto',
 
         inactiveColor: '#ccc',
-
         inactiveBorderColor: '#ccc',
+        inactiveBorderWidth: 'auto',
 
         itemStyle: {
             color: 'inherit',

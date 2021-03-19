@@ -226,7 +226,7 @@ class LegendView extends ComponentView {
                     name, dataIndex, legendItemModel, legendModel,
                     legendSymbolType, symbolType, symbolSize,
                     itemAlign,
-                    lineVisualStyle, style, true, selectMode
+                    lineVisualStyle, style, selectMode
                 );
 
                 itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
@@ -253,13 +253,23 @@ class LegendView extends ComponentView {
                         const idx = provider.indexOfName(name);
 
                         const style = provider.getItemVisual(idx, 'style') as PathStyleProps;
+
+                        const colorArr = parse(style.fill as ColorString);
+                        // Color may be set to transparent in visualMap when data is out of range.
+                        // Do not show nothing.
+                        if (colorArr && colorArr[3] === 0) {
+                            colorArr[3] = 0.2;
+                            // TODO color is set to 0, 0, 0, 0. Should show correct RGBA
+                            style.fill = stringify(colorArr, 'rgba');
+                        }
+
                         const legendSymbolType = 'roundRect';
 
                         const itemGroup = this._createItem(
                             name, dataIndex, legendItemModel, legendModel,
                             legendSymbolType, null, null,
                             itemAlign,
-                            {}, style, false, selectMode
+                            {}, style, selectMode
                         );
 
                         // FIXME: consider different series has items with the same name.
@@ -341,7 +351,6 @@ class LegendView extends ComponentView {
         itemAlign: LegendOption['align'],
         lineVisualStyle: LineStyleProps,
         itemVisualStyle: PathStyleProps,
-        isColorBySeries: boolean,
         selectMode: LegendOption['selectedMode']
     ) {
         const itemWidth = legendModel.get('itemWidth');
@@ -369,10 +378,9 @@ class LegendView extends ComponentView {
             // inherit: series.symbolSize
             symbolSize = dataSymbolSize;
         }
-        // inherit: series.symbolSize, which is passed in by function parameter
 
         const legendLineStyle = legendModel.getModel('lineStyle');
-        const style = getLegendStyle(itemModel, legendLineStyle, lineVisualStyle, itemVisualStyle, isColorBySeries, isSelected);
+        const style = getLegendStyle(itemModel, legendLineStyle, lineVisualStyle, itemVisualStyle, isSelected);
 
         dataSymbolType = dataSymbolType || 'roundRect';
 
@@ -538,21 +546,8 @@ function getLegendStyle(
     legendLineStyle: Model<LegendLineStyleOption>,
     lineVisualStyle: LineStyleProps,
     itemVisualStyle: PathStyleProps,
-    isColorBySeries: boolean,
     isSelected: boolean
 ) {
-    let color = itemVisualStyle.fill;
-    if (!isColorBySeries) {
-        const colorArr = parse(color as ColorString);
-        // Color may be set to transparent in visualMap when data is out of range.
-        // Do not show nothing.
-        if (colorArr && colorArr[3] === 0) {
-            colorArr[3] = 0.2;
-            // TODO color is set to 0, 0, 0, 0. Should show correct RGBA
-            color = stringify(colorArr, 'rgba');
-        }
-    }
-
     /**
      * Use series style if is inherit;
      * elsewise, use legend style
@@ -577,7 +572,7 @@ function getLegendStyle(
         }
         else if (value === 'auto' && visualName === 'lineWidth') {
             // If lineStyle.width is 'auto', it is set to be 2 if series has border
-            itemStyle.lineWidth = itemVisualStyle.lineWidth > 0 ? 2 : 0;
+            itemStyle.lineWidth = (itemVisualStyle.lineWidth > 0 && itemVisualStyle.stroke) ? 2 : 0;
         }
         else {
             (itemStyle as any)[visualName] = value;
@@ -608,11 +603,15 @@ function getLegendStyle(
     }
 
     // Fix auto color to real color
-    (itemStyle.fill === 'auto') && (itemStyle.fill = color);
-    (itemStyle.stroke === 'auto') && (itemStyle.stroke = color);
-    (lineStyle.stroke === 'auto') && (lineStyle.stroke = color);
+    (itemStyle.fill === 'auto') && (itemStyle.fill = itemVisualStyle.fill);
+    (itemStyle.stroke === 'auto') && (itemStyle.stroke = itemVisualStyle.fill);
+    (lineStyle.stroke === 'auto') && (lineStyle.stroke = itemVisualStyle.fill);
 
     if (!isSelected) {
+        const borderWidth = legendModel.get('inactiveBorderWidth');
+        itemStyle.lineWidth = borderWidth === 'auto'
+            ? (itemVisualStyle.lineWidth > 0 && itemStyle.stroke ? 2 : 0)
+            : itemStyle.lineWidth;
         itemStyle.fill = legendModel.get('inactiveColor');
         itemStyle.stroke = legendModel.get('inactiveBorderColor');
         lineStyle.stroke = legendLineStyle.get('inactiveColor');

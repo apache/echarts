@@ -61,18 +61,16 @@ under the License.
                     data: [
                         'Line A',
                         'Line B',
-                    {
-                        name: 'Pie A',
-                        itemStyle: {
-                            // borderWidth:
-                        }
-                    },
-                    'Pie B', 'Pie C',
-                    {
-                        name: 'Line C',
-                        symbolSize: 'inherit'
-                    }, 'Line F'
-                ]
+                        {
+                            name: 'Line C',
+                            symbolSize: 'inherit'
+                        },
+                        'Line F',
+                        'Pie A',
+                        'Pie B',
+                        'Pie C',
+                        'Pie D'
+                    ]
                 }, {
                     bottom: 10,
                     data: [{
@@ -144,25 +142,33 @@ under the License.
                         value: 10
                     }, {
                         name: 'Pie B',
-                        value: 8
+                        value: 8,
+                        itemStyle: {
+                            borderWidth: 0
+                        }
                     }, {
                         name: 'Pie C',
                         value: 14,
                         itemStyle: {
-                            color: 'blue'
+                            color: 'blue',
+                            borderColor: 'green'
                         }
+                    }, {
+                        name: 'Pie D',
+                        value: 2
                     }],
                     itemStyle: {
-                        borderWidth: 5,
+                        borderWidth: 10,
                         borderColor: '#fff'
                     },
-                    center: ['80%', '50%']
+                    center: ['80%', '50%'],
+                    radius: '40%'
                 }],
                 grid: {
                     left: 60,
                     width: '55%'
                 },
-                visualMap: {
+                visualMap: [{
                     type: 'continuous',
                     min: 1200,
                     max: 1300,
@@ -171,7 +177,16 @@ under the License.
                     },
                     show: false,
                     seriesIndex: 5
-                },
+                }, {
+                    type: 'continuous',
+                    min: 5,
+                    max: 15,
+                    inRange: {
+                        color: ['green', 'yellow', 'red']
+                    },
+                    show: false,
+                    seriesIndex: 6
+                }],
                 animation: 0
             };
 
