@@ -131,7 +131,7 @@ export default {
             && (resource as GeoJSONResource).getMapForUser();
     },
 
-    load: function (mapName: string, nameMap: NameMap, nameProperty?: string): ReturnType<GeoResource['load']> {
+    load: function (mapName: string, nameMap: NameMap, nameProperty: string): ReturnType<GeoResource['load']> {
         const resource = storage.get(mapName);
 
         if (!resource) {

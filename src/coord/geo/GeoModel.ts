@@ -61,7 +61,7 @@ interface GeoLabelFormatterDataParams {
 export interface RegoinOption extends GeoStateOption, StatesOptionMixin<GeoStateOption> {
     name?: string
     selected?: boolean
-    tooltip?: Partial<Pick<CommonTooltipOption<GeoTooltipFormatterParams>, 'show'>>
+    tooltip?: CommonTooltipOption<GeoTooltipFormatterParams>
 }
 
 export interface GeoTooltipFormatterParams {
@@ -93,6 +93,7 @@ export interface GeoCommonOptionMixin extends RoamOptionMixin {
     boundingCoords?: number[][];
 
     nameMap?: NameMap;
+    nameProperty?: string;
 }
 
 export interface GeoOption extends
@@ -227,15 +228,16 @@ class GeoModel extends ComponentModel<GeoOption> {
 
     optionUpdated(): void {
         const option = this.option;
-        const self = this;
 
-        option.regions = geoCreator.getFilledRegions(option.regions, option.map, option.nameMap);
+        option.regions = geoCreator.getFilledRegions(
+            option.regions, option.map, option.nameMap, option.nameProperty
+        );
 
         const selectedMap: Dictionary<boolean> = {};
-        this._optionModelMap = zrUtil.reduce(option.regions || [], function (optionModelMap, regionOpt) {
+        this._optionModelMap = zrUtil.reduce(option.regions || [], (optionModelMap, regionOpt) => {
             const regionName = regionOpt.name;
             if (regionName) {
-                optionModelMap.set(regionName, new Model(regionOpt, self));
+                optionModelMap.set(regionName, new Model(regionOpt, this, this.ecModel));
                 if (regionOpt.selected) {
                     selectedMap[regionName] = true;
                 }

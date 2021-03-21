@@ -30,6 +30,8 @@ import { GeoJSONRegion } from './Region';
 import { GeoJSON, GeoJSONCompressed, GeoJSONSourceInput, GeoResource, GeoSpecialAreas, NameMap } from './geoTypes';
 
 
+const DEFAULT_NAME_PROPERTY = 'name' as const;
+
 export class GeoJSONResource implements GeoResource {
 
     readonly type = 'geoJSON';
@@ -37,10 +39,10 @@ export class GeoJSONResource implements GeoResource {
     private _specialAreas: GeoSpecialAreas;
     private _mapName: string;
 
-    private _parsed: {
+    private _parsedMap = createHashMap<{
         regions: GeoJSONRegion[];
         boundingRect: BoundingRect;
-    };
+    }, string>();
 
     constructor(
         mapName: string,
@@ -54,19 +56,24 @@ export class GeoJSONResource implements GeoResource {
         this._geoJSON = parseInput(geoJSON);
     }
 
+    /**
+     * @param nameMap can be null/undefined
+     * @param nameProperty can be null/undefined
+     */
     load(nameMap: NameMap, nameProperty: string) {
 
-        let parsed = this._parsed;
+        nameProperty = nameProperty || DEFAULT_NAME_PROPERTY;
+
+        let parsed = this._parsedMap.get(nameProperty);
         if (!parsed) {
             const rawRegions = this._parseToRegions(nameProperty);
-            parsed = this._parsed = {
+            parsed = this._parsedMap.set(nameProperty, {
                 regions: rawRegions,
                 boundingRect: calculateBoundingRect(rawRegions)
-            };
+            });
         }
 
         const regionsMap = createHashMap<GeoJSONRegion>();
-        const nameCoordMap = createHashMap<ReturnType<GeoJSONRegion['getCenter']>>();
 
         const finalRegions: GeoJSONRegion[] = [];
         each(parsed.regions, function (region) {
@@ -79,14 +86,12 @@ export class GeoJSONResource implements GeoResource {
 
             finalRegions.push(region);
             regionsMap.set(regionName, region);
-            nameCoordMap.set(regionName, region.getCenter());
         });
 
         return {
             regions: finalRegions,
             boundingRect: parsed.boundingRect || new BoundingRect(0, 0, 0, 0),
-            regionsMap: regionsMap,
-            nameCoordMap: nameCoordMap
+            regionsMap: regionsMap
         };
     }
 

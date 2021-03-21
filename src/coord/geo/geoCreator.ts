@@ -141,6 +141,7 @@ class GeoCreator implements CoordinateSystemCreator {
 
             const geo = new Geo(name + idx, name, {
                 nameMap: geoModel.get('nameMap'),
+                nameProperty: geoModel.get('nameProperty'),
                 aspectScale: geoModel.get('aspectScale')
             });
 
@@ -186,6 +187,7 @@ class GeoCreator implements CoordinateSystemCreator {
 
             const geo = new Geo(mapType, mapType, {
                 nameMap: zrUtil.mergeAll(nameMapList),
+                nameProperty: mapSeries[0].get('nameProperty'),
                 aspectScale: mapSeries[0].get('aspectScale')
             });
 
@@ -213,7 +215,10 @@ class GeoCreator implements CoordinateSystemCreator {
      * Fill given regions array
      */
     getFilledRegions(
-        originRegionArr: RegoinOption[], mapName: string, nameMap?: NameMap
+        originRegionArr: RegoinOption[],
+        mapName: string,
+        nameMap: NameMap,
+        nameProperty: string
     ): RegoinOption[] {
         // Not use the original
         const regionsArr = (originRegionArr || []).slice();
@@ -223,7 +228,7 @@ class GeoCreator implements CoordinateSystemCreator {
             dataNameMap.set(regionsArr[i].name, regionsArr[i]);
         }
 
-        const source = geoSourceManager.load(mapName, nameMap);
+        const source = geoSourceManager.load(mapName, nameMap, nameProperty);
         zrUtil.each(source.regions, function (region) {
             const name = region.name;
             !dataNameMap.get(name) && regionsArr.push({name: name});

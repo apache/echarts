@@ -50,6 +50,8 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
 
     /**
      * Represents the transform brought by roam/zoom.
+     * If `View['_viewRect']` applies roam transform,
+     * we can get the final displayed rect.
      */
     private _roamTransformable = new Transformable();
     /**

@@ -17,21 +17,40 @@
 * under the License.
 */
 
-import {parseSVG, makeViewBoxTransform} from 'zrender/src/tool/parseSVG';
+import { parseSVG, makeViewBoxTransform, SVGNodeTagLower } from 'zrender/src/tool/parseSVG';
 import Group from 'zrender/src/graphic/Group';
 import Rect from 'zrender/src/graphic/shape/Rect';
-import {assert, createHashMap, HashMap} from 'zrender/src/core/util';
+import {assert, createHashMap, HashMap, hasOwn} from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
-import { GeoResource, GeoSVGGraphicRoot, GeoSVGSourceInput, NameMap } from './geoTypes';
+import { GeoResource, GeoSVGGraphicRoot, GeoSVGSourceInput, RegionGraphic } from './geoTypes';
 import { parseXML } from 'zrender/src/tool/parseXML';
-import Displayable from 'zrender/src/graphic/Displayable';
 import { GeoSVGRegion } from './Region';
 
-interface GeoSVGGraphicRecord {
+export interface GeoSVGGraphicRecord {
     root: Group;
     boundingRect: BoundingRect;
-    regionElements: Displayable[];
+    regionGraphics: RegionGraphic[];
 }
+
+const REGION_AVAILABLE_SVG_TAG_MAP = createHashMap<number, SVGNodeTagLower>([
+    'rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'text', 'tspan', 'path'
+]);
+const STYLE_OPTION_KEY = createHashMap<'itemStyle' | 'lineStyle', SVGNodeTagLower>({
+    'rect': 'itemStyle',
+    'circle': 'itemStyle',
+    'line': 'lineStyle',
+    'ellipse': 'itemStyle',
+    'polygon': 'itemStyle',
+    'polyline': 'lineStyle',
+    // 'image': '?', // TODO
+    // 'text': '?', // TODO
+    // 'tspan': '?', // TODO
+    'path': 'itemStyle'
+});
+const LABEL_HOST_MAP = createHashMap<number, SVGNodeTagLower>([
+    'rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'path'
+]);
+
 
 export class GeoSVGResource implements GeoResource {
 
@@ -44,8 +63,6 @@ export class GeoSVGResource implements GeoResource {
     private _regions: GeoSVGRegion[] = [];
     // Key: region.name
     private _regionsMap: HashMap<GeoSVGRegion> = createHashMap<GeoSVGRegion>();
-    // Key: region.name
-    private _nameCoordMap: HashMap<number[]> = createHashMap<number[]>();
 
     // All used graphics. key: hostKey, value: root
     private _usedGraphicMap: HashMap<GeoSVGGraphicRecord> = createHashMap();
@@ -67,7 +84,7 @@ export class GeoSVGResource implements GeoResource {
         this._parsedXML = parseXML(svg);
     }
 
-    load(nameMap: NameMap, nameProperty: string) {
+    load(/* nameMap: NameMap */) {
         // In the "load" stage, graphic need to be built to
         // get boundingRect for geo coordinate system.
         let firstGraphic = this._firstGraphic;
@@ -84,41 +101,41 @@ export class GeoSVGResource implements GeoResource {
 
             this._boundingRect = this._firstGraphic.boundingRect.clone();
 
-            // Create resions only for the first graphic, see coments below.
-            const regionElements = firstGraphic.regionElements;
-            for (let i = 0; i < regionElements.length; i++) {
-                const el = regionElements[i];
+            const regionGraphics = firstGraphic.regionGraphics;
+            // PENDING: `nameMap` will not be supported until some real requirement come.
+            // if (nameMap) {
+            //     regionGraphics = applyNameMap(regionGraphics, nameMap);
+            // }
 
-                // Try use the alias in geoNameMap
-                let regionName = el.name;
-                if (nameMap && nameMap.hasOwnProperty(regionName)) {
-                    regionName = nameMap[regionName];
-                }
-
-                const region = new GeoSVGRegion(regionName, el);
-
+            // Create resions only for the first graphic.
+            for (let i = 0; i < regionGraphics.length; i++) {
+                const regionGraphic = regionGraphics[i];
+                const region = new GeoSVGRegion(regionGraphic.name, regionGraphic.el);
+                // PENDING: if `nameMap` supported, this region can not be mounted on
+                // `this`, but can only be created each time `load()` called.
                 this._regions.push(region);
-                this._regionsMap.set(regionName, region);
+                this._regionsMap.set(regionGraphic.name, region);
             }
         }
 
         return {
             boundingRect: this._boundingRect,
             regions: this._regions,
-            regionsMap: this._regionsMap,
-            nameCoordMap: this._nameCoordMap
+            regionsMap: this._regionsMap
         };
     }
 
-    // Consider:
-    // (1) One graphic element can not be shared by different `geoView` running simultaneously.
-    //     Notice, also need to consider multiple echarts instances share a `mapRecord`.
-    // (2) Converting SVG to graphic elements is time consuming.
-    // (3) In the current architecture, `load` should be called frequently to get boundingRect,
-    //     and it is called without view info.
-    // So we maintain graphic elements in this module, and enables `view` to use/return these
-    // graphics from/to the pool with it's uid.
-    useGraphic(hostKey: string): GeoSVGGraphicRecord {
+    /**
+     * Consider:
+     * (1) One graphic element can not be shared by different `geoView` running simultaneously.
+     *     Notice, also need to consider multiple echarts instances share a `mapRecord`.
+     * (2) Converting SVG to graphic elements is time consuming.
+     * (3) In the current architecture, `load` should be called frequently to get boundingRect,
+     *     and it is called without view info.
+     * So we maintain graphic elements in this module, and enables `view` to use/return these
+     * graphics from/to the pool with it's uid.
+     */
+    useGraphic(hostKey: string /*, nameMap: NameMap */): GeoSVGGraphicRecord {
         const usedRootMap = this._usedGraphicMap;
 
         let svgGraphic = usedRootMap.get(hostKey);
@@ -130,7 +147,17 @@ export class GeoSVGResource implements GeoResource {
             // use the first boundingRect to avoid duplicated boundingRect calculation.
             || buildGraphic(this._parsedXML, this._boundingRect);
 
-        return usedRootMap.set(hostKey, svgGraphic);
+        usedRootMap.set(hostKey, svgGraphic);
+
+        // PENDING: `nameMap` will not be supported until some real requirement come.
+        // `nameMap` can only be obtained from echarts option.
+        // The original `regionGraphics` must not be modified.
+        // if (nameMap) {
+        //     svgGraphic = extend({}, svgGraphic);
+        //     svgGraphic.regionGraphics = applyNameMap(svgGraphic.regionGraphics, nameMap);
+        // }
+
+        return svgGraphic;
     }
 
     freeGraphic(hostKey: string): void {
@@ -203,9 +230,60 @@ function buildGraphic(
 
     (root as GeoSVGGraphicRoot).isGeoSVGGraphicRoot = true;
 
-    return {
-        root: root,
-        boundingRect: boundingRect,
-        regionElements: result.namedElements
-    };
+    const regionGraphics = [] as GeoSVGGraphicRecord['regionGraphics'];
+    const named = result.named;
+    for (let i = 0; i < named.length; i++) {
+        const namedItem = named[i];
+        const svgNodeTagLower = namedItem.svgNodeTagLower;
+
+        if (REGION_AVAILABLE_SVG_TAG_MAP.get(svgNodeTagLower) != null) {
+            const styleOptionKey = STYLE_OPTION_KEY.get(svgNodeTagLower);
+            const el = namedItem.el;
+
+            regionGraphics.push({
+                name: namedItem.name,
+                el: el,
+                styleOptionKey: styleOptionKey,
+                stateTrigger: styleOptionKey != null ? el : null,
+                // text/tspan/image do not suport style but support event.
+                eventTrigger: el,
+                useLabel: LABEL_HOST_MAP.get(svgNodeTagLower) != null
+            });
+
+            // Only named element has silent: false, other elements should
+            // act as background and has no user interaction.
+            el.silent = false;
+            // text|tspan will be converted to group.
+            if (el.isGroup) {
+                el.traverse(child => {
+                    child.silent = false;
+                });
+            }
+        }
+    }
+
+    return { root, boundingRect, regionGraphics };
 }
+
+
+// PENDING: `nameMap` will not be supported until some real requirement come.
+// /**
+//  * Use the alias in geoNameMap.
+//  * The input `regionGraphics` must not be modified.
+//  */
+// function applyNameMap(
+//     regionGraphics: GeoSVGGraphicRecord['regionGraphics'],
+//     nameMap: NameMap
+// ): GeoSVGGraphicRecord['regionGraphics'] {
+//     const result = [] as GeoSVGGraphicRecord['regionGraphics'];
+//     for (let i = 0; i < regionGraphics.length; i++) {
+//         let regionGraphic = regionGraphics[i];
+//         const name = regionGraphic.name;
+//         if (nameMap && nameMap.hasOwnProperty(name)) {
+//             regionGraphic = extend({}, regionGraphic);
+//             regionGraphic.name = name;
+//         }
+//         result.push(regionGraphic);
+//     }
+//     return result;
+// }

@@ -19,8 +19,9 @@
 
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import { HashMap } from 'zrender/src/core/util';
-import { Group } from '../../util/graphic';
+import { Group, Path } from '../../util/graphic';
 import { Region } from './Region';
+import Element from 'zrender/src/Element';
 
 
 export type GeoSVGSourceInput = 'string' | Document | SVGElement;
@@ -125,16 +126,35 @@ interface GeoJSONGeometryMultiPolygonCompressed {
 
 export interface GeoResource {
     readonly type: 'geoJSON' | 'geoSVG';
-    load(nameMap: NameMap, nameProperty: string): {
+    load(
+        nameMap: NameMap,
+        nameProperty: string
+    ): {
         boundingRect: BoundingRect;
         regions: Region[];
         // Key: region.name
         regionsMap: HashMap<Region>;
-        // Key: region.name
-        nameCoordMap: HashMap<number[]>;
     };
 }
 
 export interface GeoSVGGraphicRoot extends Group {
     isGeoSVGGraphicRoot: boolean;
 }
+
+export type RegionGraphic = {
+    // Region name. Can not be null/undefined.
+    name: string;
+    // Main el.
+    el: Element;
+    // If it specified, use it to trigger state
+    // style change (emphasis/select/blur)
+    // Can be null/undefined.
+    stateTrigger: Element;
+    // If it specified, use it to trigger event to users
+    // Can be null/undefined.
+    eventTrigger: Element;
+    // Whether to set label on `el.textContent`.
+    useLabel: boolean;
+    // Use this key to obtain style config in echarts option.
+    styleOptionKey: 'itemStyle' | 'lineStyle';
+};

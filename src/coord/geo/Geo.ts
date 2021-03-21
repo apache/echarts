@@ -55,6 +55,7 @@ class Geo extends View {
     readonly map: string;
     readonly resourceType: GeoResource['type'];
 
+    // Only store specified name coord via `addGeoCoord`.
     private _nameCoordMap: zrUtil.HashMap<number[]>;
     private _regionsMap: zrUtil.HashMap<Region>;
     private _invertLongitute: boolean;
@@ -71,6 +72,7 @@ class Geo extends View {
         opt: {
             // Specify name alias
             nameMap?: NameMap;
+            nameProperty?: string;
             aspectScale?: number;
         }
     ) {
@@ -78,13 +80,12 @@ class Geo extends View {
 
         this.map = map;
 
-        const source = geoSourceManager.load(map, opt.nameMap);
+        const source = geoSourceManager.load(map, opt.nameMap, opt.nameProperty);
         const resource = geoSourceManager.getGeoResource(map);
         this.resourceType = resource ? resource.type : null;
 
         const defaultParmas = GEO_DEFAULT_PARAMS[resource.type];
 
-        this._nameCoordMap = source.nameCoordMap;
         this._regionsMap = source.regionsMap;
         this._invertLongitute = defaultParmas.invertLongitute;
         this.regions = source.regions;
@@ -97,16 +98,17 @@ class Geo extends View {
     /**
      * Whether contain the given [lng, lat] coord.
      */
-    containCoord(coord: number[]) {
-        const regions = this.regions;
-        for (let i = 0; i < regions.length; i++) {
-            const region = regions[i];
-            if (region.type === 'geoJSON' && (region as GeoJSONRegion).contain(coord)) {
-                return true;
-            }
-        }
-        return false;
-    }
+    // Never used yet.
+    // containCoord(coord: number[]) {
+    //     const regions = this.regions;
+    //     for (let i = 0; i < regions.length; i++) {
+    //         const region = regions[i];
+    //         if (region.type === 'geoJSON' && (region as GeoJSONRegion).contain(coord)) {
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
 
     protected _transformTo(x: number, y: number, width: number, height: number): void {
         let rect = this.getBoundingRect();
@@ -162,7 +164,9 @@ class Geo extends View {
      * Get geoCoord by name
      */
     getGeoCoord(name: string): number[] {
-        return this._nameCoordMap.get(name);
+        const region = this._regionsMap.get(name);
+        // calcualte center only on demand.
+        return this._nameCoordMap.get(name) || (region && region.getCenter());
     }
 
     dataToPoint(data: number[], noRoam?: boolean, out?: number[]): number[] {

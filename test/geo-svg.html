@@ -49,20 +49,34 @@ under the License.
 
 
         <script>
-            function listenAndPrintSelectChanged(chart) {
+            function listenAndPrintEvent(chart) {
                 if (!chart) {
                     return;
                 }
                 const out = {
                 };
                 chart.on('geoselectchanged', function (params) {
-                    out.allSelected = params.allSelected;
-                    console.log('geoselectechanged');
+                    out.geoselectechanged = {
+                        allSelected: params.allSelected
+                    };
+                    console.log('geoselectechanged', params);
                     chart.__testHelper.updateInfo(out, 'event');
                 });
                 chart.on('selectchanged', function (params) {
-                    out.selected = params.selected;
-                    console.log('selectechanged');
+                    out.selectechanged = {
+                        selected: params.selected
+                    };
+                    console.log('selectechanged', params);
+                    chart.__testHelper.updateInfo(out, 'event');
+                });
+                chart.on('click', function (params) {
+                    out.click = {
+                        componentIndex: params.componentIndex,
+                        componentType: params.componentType,
+                        geoIndex: params.geoIndex,
+                        name: params.name
+                    };
+                    console.log('click', params);
                     chart.__testHelper.updateInfo(out, 'event');
                 });
             }
@@ -124,7 +138,7 @@ under the License.
                 height: 300
             });
 
-            listenAndPrintSelectChanged(chart);
+            listenAndPrintEvent(chart);
 
         });
         </script>
@@ -176,7 +190,7 @@ under the License.
                 height: 300
             });
 
-            listenAndPrintSelectChanged(chart);
+            listenAndPrintEvent(chart);
 
         });
         </script>
@@ -247,7 +261,7 @@ under the License.
                     // recordCanvas: true,
                 });
 
-                listenAndPrintSelectChanged(chart);
+                listenAndPrintEvent(chart);
 
             });
 
@@ -313,7 +327,7 @@ under the License.
                     // recordCanvas: true,
                 });
 
-                listenAndPrintSelectChanged(chart);
+                listenAndPrintEvent(chart);
 
             });
 
@@ -383,7 +397,7 @@ under the License.
                     // recordCanvas: true,
                 });
 
-                listenAndPrintSelectChanged(chart);
+                listenAndPrintEvent(chart);
 
             });
 
@@ -416,18 +430,28 @@ under the License.
                         itemStyle: {
                             color: null
                         },
+                        tooltip: {
+                            show: true,
+                            confine: true,
+                            formatter: function (params) {
+                                return [
+                                    'This is the introduction:',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx'
+                                ].join('<br>');
+                            }
+                        },
                         emphasis: {
-                            // itemStyle: {
-                                // borderColor: 'red',
-                                // borderWidth: 5
-                            // },
-                            // areaStyle: {
-                                // borderColor: 'red',
-                                // borderWidth: 5
-                            // },
                             label: {
-                                textBorderColor: '#fff',
-                                textBorderWidth: 2
+                                show: false
                             }
                         },
                         select: {
@@ -435,33 +459,55 @@ under the License.
                                 color: '#b50205'
                             },
                             label: {
-                                show: false,
-                                textBorderColor: '#fff',
-                                textBorderWidth: 2
+                                show: false
                             }
                         },
+                        regions: [{
+                            name: 'Sikeloi',
+                            tooltip: {
+                                formatter: 'Sikeloi',
+                                textStyle: { color: '#555' },
+                                backgroundColor: '#ccc'
+                            }
+                        }, {
+                            name: 'Sikanoi',
+                            tooltip: {
+                                formatter: 'Sikanoi',
+                                textStyle: { color: '#555' },
+                                backgroundColor: '#ccc'
+                            }
+                        }, {
+                            name: 'Elymoi',
+                            tooltip: {
+                                formatter: 'Elymoi',
+                                textStyle: { color: '#555' },
+                                backgroundColor: '#ccc'
+                            }
+                        }],
                         z: 0
                     }],
-                    series: {
-                        type: 'map',
-                        selectedMode: 'multiple',
-                        coordinateSystem: 'geo',
-                        geoIndex: 0
-                    }
+                    // series: {
+                    //     type: 'map',
+                    //     selectedMode: 'multiple',
+                    //     coordinateSystem: 'geo',
+                    //     geoIndex: 0
+                    // }
                 };
 
                 var chart = testHelper.create(echarts, 'main_geo_svg_regions', {
                     title: [
-                        'map series on declared geo with svg resource',
-                        'Hover seat: check **tooltip** correct.'
+                        'symbol and label use the same name in SVG.',
+                        'Hover each symbol and text, tooltip should be displayed.',
+                        'Hover the three area, tooltip should be displayed.',
+                        'Click, check **selected**.'
                     ],
                     option: option,
                     info: {},
                     infoKey: 'event',
-                    height: 400
+                    height: 500
                 });
 
-                listenAndPrintSelectChanged(chart);
+                listenAndPrintEvent(chart);
 
                 if (chart) {
                     chart.on('georoam', function (params) {
