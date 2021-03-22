@@ -220,13 +220,15 @@ class LegendView extends ComponentView {
                 const symbolType = data.getVisual('symbol');
                 const symbolSize = data.getVisual('symbolSize');
 
+                const drawType = seriesModel.visualDrawType;
+
                 data.getVisual('symbolSize');
 
                 const itemGroup = this._createItem(
                     name, dataIndex, legendItemModel, legendModel,
                     legendSymbolType, symbolType, symbolSize,
                     itemAlign,
-                    lineVisualStyle, style, selectMode
+                    lineVisualStyle, style, drawType, selectMode
                 );
 
                 itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
@@ -264,12 +266,13 @@ class LegendView extends ComponentView {
                         }
 
                         const legendSymbolType = 'roundRect';
+                        const drawType = seriesModel.visualDrawType;
 
                         const itemGroup = this._createItem(
                             name, dataIndex, legendItemModel, legendModel,
                             legendSymbolType, null, null,
                             itemAlign,
-                            {}, style, selectMode
+                            {}, style, drawType, selectMode
                         );
 
                         // FIXME: consider different series has items with the same name.
@@ -351,6 +354,7 @@ class LegendView extends ComponentView {
         itemAlign: LegendOption['align'],
         lineVisualStyle: LineStyleProps,
         itemVisualStyle: PathStyleProps,
+        drawType: 'fill' | 'stroke',
         selectMode: LegendOption['selectedMode']
     ) {
         const itemWidth = legendModel.get('itemWidth');
@@ -379,10 +383,10 @@ class LegendView extends ComponentView {
             symbolSize = dataSymbolSize;
         }
 
-        const legendLineStyle = legendModel.getModel('lineStyle');
-        const style = getLegendStyle(itemModel, legendLineStyle, lineVisualStyle, itemVisualStyle, isSelected);
-
         dataSymbolType = dataSymbolType || 'roundRect';
+
+        const legendLineStyle = legendModel.getModel('lineStyle');
+        const style = getLegendStyle(dataSymbolType, itemModel, legendLineStyle, lineVisualStyle, itemVisualStyle, drawType, isSelected);
 
         const itemGroup = new Group();
 
@@ -542,10 +546,12 @@ class LegendView extends ComponentView {
 }
 
 function getLegendStyle(
+    symbolType: string,
     legendModel: LegendModel['_data'][number],
     legendLineStyle: Model<LegendLineStyleOption>,
     lineVisualStyle: LineStyleProps,
     itemVisualStyle: PathStyleProps,
+    drawType: 'fill' | 'stroke',
     isSelected: boolean
 ) {
     /**
@@ -557,22 +563,41 @@ function getLegendStyle(
     const legendItemModel = legendModel.getModel('itemStyle') as Model<LegendItemStyleOption>;
     const itemProperties = [
         ['fill', 'color'],
-        ['lineWidth', 'borderWidth'],
+        ['opacity'],
+        ['decal'],
+        ['shadowBlur'],
+        ['shadowColor'],
+        ['shadowOffsetX'],
+        ['shadowOffsetY'],
         ['stroke', 'borderColor'],
-        ['width', 'width'],
-        ['opacity', 'opacity']
+        ['lineWidth', 'borderWidth'],
+        ['borderCap'],
+        ['borderJoin'],
+        ['borderDashOffset'],
+        ['borderMiterLimit']
     ];
     const itemStyle: PathStyleProps = {};
     for (let i = 0; i < itemProperties.length; ++i) {
-        const propName = itemProperties[i][1] as keyof LegendItemStyleOption;
+        const propName = itemProperties[i][
+            itemProperties[i].length - 1
+        ] as keyof LegendItemStyleOption;
         const visualName = itemProperties[i][0] as keyof PathStyleProps;
         const value = legendItemModel.getShallow(propName) as LegendItemStyleOption[keyof LegendItemStyleOption];
         if (value === 'inherit') {
-            (itemStyle as any)[visualName] = itemVisualStyle[visualName];
+            if (drawType === 'stroke' && visualName === 'fill') {
+                /**
+                 * Series with visualDrawType as 'stroke' should have
+                 * series stroke as legend fill
+                 */
+                itemStyle.fill = itemVisualStyle.stroke;
+            }
+            else {
+                (itemStyle as any)[visualName] = itemVisualStyle[visualName];
+            }
         }
         else if (value === 'auto' && visualName === 'lineWidth') {
             // If lineStyle.width is 'auto', it is set to be 2 if series has border
-            itemStyle.lineWidth = (itemVisualStyle.lineWidth > 0 && itemVisualStyle.stroke) ? 2 : 0;
+            itemStyle.lineWidth = (itemVisualStyle.lineWidth > 0) ? 2 : 0;
         }
         else {
             (itemStyle as any)[visualName] = value;
@@ -582,8 +607,21 @@ function getLegendStyle(
     // lineStyle
     const legendLineModel = legendModel.getModel('lineStyle') as Model<LegendLineStyleOption>;
     const lineProperties = [
+        ['lineWidth', 'width'],
         ['stroke', 'color'],
-        ['lineWidth', 'width']
+        ['inactiveColor'],
+        ['inactiveWidth'],
+        ['opacity'],
+        ['type'],
+        ['cap'],
+        ['join'],
+        ['dashOffset'],
+        ['miterLimit'],
+        ['shadowB'],
+        ['shadowBlur'],
+        ['shadowColor'],
+        ['shadowOffsetX'],
+        ['shadowOffsetY']
     ];
     const lineStyle: LineStyleProps = {};
     for (let i = 0; i < lineProperties.length; ++i) {
@@ -609,8 +647,14 @@ function getLegendStyle(
 
     if (!isSelected) {
         const borderWidth = legendModel.get('inactiveBorderWidth');
+        /**
+         * Since stroke is set to be inactiveBorderColor, it may occur that
+         * there is no border in series but border in legend, so we need to
+         * use border only when series has border if is set to be auto
+         */
+        const visualHasBorder = itemStyle[symbolType.indexOf('empty') > -1 ? 'fill' : 'stroke'];
         itemStyle.lineWidth = borderWidth === 'auto'
-            ? (itemVisualStyle.lineWidth > 0 && itemStyle.stroke ? 2 : 0)
+            ? (itemVisualStyle.lineWidth > 0 && visualHasBorder ? 2 : 0)
             : itemStyle.lineWidth;
         itemStyle.fill = legendModel.get('inactiveColor');
         itemStyle.stroke = legendModel.get('inactiveBorderColor');
