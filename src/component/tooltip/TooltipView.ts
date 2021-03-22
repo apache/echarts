@@ -57,7 +57,6 @@ import { DataByCoordSys, DataByAxis } from '../axisPointer/axisTrigger';
 import { normalizeTooltipFormatResult } from '../../model/mixin/dataFormat';
 import { createTooltipMarkup, buildTooltipMarkup, TooltipMarkupStyleCreator } from './tooltipMarkup';
 import { findEventDispatcher } from '../../util/event';
-import ComponentModel from '../../model/Component';
 
 const bind = zrUtil.bind;
 const each = zrUtil.each;
@@ -123,6 +122,10 @@ interface TryShowParams {
     tooltipOption?: ComponentItemTooltipOption<TooltipCallbackDataParams | TooltipCallbackDataParams[]>
 
     position?: TooltipOption['position']
+    /**
+     * If `position` is not set in payload nor option, use it.
+     */
+    positionDefault?: TooltipOption['position']
 }
 
 type TooltipCallbackDataParams = CallbackDataParams & {
@@ -304,7 +307,10 @@ class TooltipView extends ComponentView {
                 offsetX: rect.x + rect.width / 2,
                 offsetY: rect.y + rect.height / 2,
                 target: cmptRef.el,
-                position: payload.position || 'bottom'
+                position: payload.position,
+                // When manully trigger, the mouse is not on the el, so we'd better to
+                // position tooltip on the bottom of the el and display arrow is possible.
+                positionDefault: 'bottom'
             }, dispatchAction);
         }
         else if (payload.tooltip && payload.x != null && payload.y != null) {
@@ -347,8 +353,11 @@ class TooltipView extends ComponentView {
                 this._tryShow({
                     offsetX: cx,
                     offsetY: cy,
+                    target: pointInfo.el,
                     position: payload.position,
-                    target: pointInfo.el
+                    // When manully trigger, the mouse is not on the el, so we'd better to
+                    // position tooltip on the bottom of the el and display arrow is possible.
+                    positionDefault: 'bottom'
                 }, dispatchAction);
             }
         }
@@ -415,10 +424,9 @@ class TooltipView extends ComponentView {
         const data = seriesModel.getData();
         const tooltipCascadedModel = buildTooltipModel([
             data.getItemModel<TooltipableOption>(dataIndex),
-            seriesModel,
-            (seriesModel.coordinateSystem || {}).model,
-            tooltipModel
-        ]);
+            seriesModel as Model<TooltipableOption>,
+            (seriesModel.coordinateSystem || {}).model as Model<TooltipableOption>
+        ], this._tooltipModel);
 
         if (tooltipCascadedModel.get('trigger') !== 'axis') {
             return;
@@ -510,10 +518,10 @@ class TooltipView extends ComponentView {
         const ecModel = this._ecModel;
         const globalTooltipModel = this._tooltipModel;
         const point = [e.offsetX, e.offsetY];
-        const singleTooltipModel = buildTooltipModel([
-            e.tooltipOption,
+        const singleTooltipModel = buildTooltipModel(
+            [e.tooltipOption],
             globalTooltipModel
-        ]);
+        );
         const renderMode = this._renderMode;
         const cbParamsList: TooltipCallbackDataParams[] = [];
         const articleMarkup = createTooltipMarkup('section', {
@@ -634,12 +642,16 @@ class TooltipView extends ComponentView {
         const data = dataModel.getData(dataType);
         const renderMode = this._renderMode;
 
-        const tooltipModel = buildTooltipModel([
-            data.getItemModel<TooltipableOption>(dataIndex),
-            dataModel,
-            seriesModel && (seriesModel.coordinateSystem || {}).model,
-            this._tooltipModel
-        ]);
+        const positionDefault = e.positionDefault;
+        const tooltipModel = buildTooltipModel(
+            [
+                data.getItemModel<TooltipableOption>(dataIndex),
+                dataModel,
+                seriesModel && (seriesModel.coordinateSystem || {}).model as Model<TooltipableOption>
+            ],
+            this._tooltipModel,
+            positionDefault ? { position: positionDefault } : null
+        );
 
         const tooltipTrigger = tooltipModel.get('trigger');
         if (tooltipTrigger != null && tooltipTrigger !== 'item') {
@@ -706,12 +718,17 @@ class TooltipView extends ComponentView {
             };
         }
 
-        const tooltipModelCascade = [tooltipOpt] as Parameters<typeof buildTooltipModel>[0];
+        const tooltipModelCascade = [tooltipOpt] as TooltipModelOptionCascade[];
         const cmpt = this._ecModel.getComponent(tooltipConfig.componentMainType, tooltipConfig.componentIndex);
-        cmpt && tooltipModelCascade.push(cmpt);
-        tooltipModelCascade.push(this._tooltipModel);
-
-        const subTooltipModel = buildTooltipModel(tooltipModelCascade) as Model<ComponentItemTooltipOption<unknown>>;
+        if (cmpt) {
+            tooltipModelCascade.push(cmpt as Model<TooltipableOption>);
+        }
+        const positionDefault = e.positionDefault;
+        const subTooltipModel = buildTooltipModel(
+            tooltipModelCascade,
+            this._tooltipModel,
+            positionDefault ? { position: positionDefault } : null
+        );
 
         const defaultHtml = subTooltipModel.get('content');
         const asyncTicket = Math.random() + '';
@@ -963,16 +980,30 @@ class TooltipView extends ComponentView {
 type TooltipableOption = {
     tooltip?: CommonTooltipOption<unknown>;
 };
+type TooltipModelOptionCascade =
+    Model<TooltipableOption> | CommonTooltipOption<unknown> | string;
 /**
  * From top to bottom. (the last one should be globalTooltipModel);
  */
-function buildTooltipModel(modelCascade: (
-    TooltipModel | Model<TooltipableOption> | CommonTooltipOption<unknown> | ComponentModel | string
-)[]) {
+function buildTooltipModel(
+    modelCascade: TooltipModelOptionCascade[],
+    globalTooltipModel: TooltipModel,
+    defaultTooltipOption?: CommonTooltipOption<unknown>
+): Model<TooltipOption & ComponentItemTooltipOption<unknown>> {
     // Last is always tooltip model.
-    let resultModel = modelCascade.pop() as Model<TooltipOption>;
-    while (modelCascade.length) {
-        let tooltipOpt = modelCascade.pop();
+    const ecModel = globalTooltipModel.ecModel;
+    let resultModel: Model<TooltipOption & ComponentItemTooltipOption<unknown>>;
+
+    if (defaultTooltipOption) {
+        resultModel = new Model(defaultTooltipOption, ecModel, ecModel);
+        resultModel = new Model(globalTooltipModel.option, resultModel, ecModel);
+    }
+    else {
+        resultModel = globalTooltipModel as Model<TooltipOption & ComponentItemTooltipOption<unknown>>;
+    }
+
+    for (let i = modelCascade.length - 1; i >= 0; i--) {
+        let tooltipOpt = modelCascade[i];
         if (tooltipOpt) {
             if (tooltipOpt instanceof Model) {
                 tooltipOpt = (tooltipOpt as Model<TooltipableOption>).get('tooltip', true);
@@ -987,10 +1018,13 @@ function buildTooltipModel(modelCascade: (
                     formatter: tooltipOpt
                 };
             }
-            resultModel = new Model(tooltipOpt, resultModel, resultModel.ecModel) as Model<TooltipOption>;
+            if (tooltipOpt) {
+                resultModel = new Model(tooltipOpt, resultModel, ecModel);
+            }
         }
     }
-    return resultModel;
+
+    return resultModel as Model<TooltipOption & ComponentItemTooltipOption<unknown>>;
 }
 
 function makeDispatchAction(payload: ShowTipPayload | HideTipPayload, api: ExtensionAPI) {
