@@ -468,9 +468,9 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
             opacity: 'inherit',
             decal: 'inherit',
             shadowBlur: 0,
-            shadowColor: 'inherit',
-            shadowOffsetX: 'inherit',
-            shadowOffsetY: 'inherit',
+            shadowColor: null,
+            shadowOffsetX: 0,
+            shadowOffsetY: 0,
             borderColor: 'inherit',
             borderWidth: 'auto',
             borderCap: 'inherit',
@@ -491,9 +491,9 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
             dashOffset: 'inherit',
             miterLimit: 'inherit',
             shadowBlur: 0,
-            shadowColor: 'inherit',
-            shadowOffsetX: 'inherit',
-            shadowOffsetY: 'inherit'
+            shadowColor: null,
+            shadowOffsetX: 0,
+            shadowOffsetY: 0
         },
 
         textStyle: {

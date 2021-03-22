@@ -47,8 +47,8 @@ import { parse, stringify } from 'zrender/src/tool/color';
 import {PatternObject} from 'zrender/src/graphic/Pattern';
 import {SeriesModel} from '../../echarts';
 import linesLayout from '../../chart/lines/linesLayout';
-import {LineStyleProps} from '../../model/mixin/lineStyle';
-import {ItemStyleProps} from '../../model/mixin/itemStyle';
+import {LineStyleProps, LINE_STYLE_KEY_MAP} from '../../model/mixin/lineStyle';
+import {ItemStyleProps, ITEM_STYLE_KEY_MAP} from '../../model/mixin/itemStyle';
 import {number} from '../../export/api';
 import makeStyleMapper from '../../model/mixin/makeStyleMapper';
 
@@ -561,21 +561,9 @@ function getLegendStyle(
 
     // itemStyle
     const legendItemModel = legendModel.getModel('itemStyle') as Model<LegendItemStyleOption>;
-    const itemProperties = [
-        ['fill', 'color'],
-        ['opacity'],
-        ['decal'],
-        ['shadowBlur'],
-        ['shadowColor'],
-        ['shadowOffsetX'],
-        ['shadowOffsetY'],
-        ['stroke', 'borderColor'],
-        ['lineWidth', 'borderWidth'],
-        ['borderCap'],
-        ['borderJoin'],
-        ['borderDashOffset'],
-        ['borderMiterLimit']
-    ];
+    const itemProperties = ITEM_STYLE_KEY_MAP.concat([
+        ['decal']
+    ]);
     const itemStyle: PathStyleProps = {};
     for (let i = 0; i < itemProperties.length; ++i) {
         const propName = itemProperties[i][
@@ -606,23 +594,10 @@ function getLegendStyle(
 
     // lineStyle
     const legendLineModel = legendModel.getModel('lineStyle') as Model<LegendLineStyleOption>;
-    const lineProperties = [
-        ['lineWidth', 'width'],
-        ['stroke', 'color'],
+    const lineProperties = LINE_STYLE_KEY_MAP.concat([
         ['inactiveColor'],
-        ['inactiveWidth'],
-        ['opacity'],
-        ['type'],
-        ['cap'],
-        ['join'],
-        ['dashOffset'],
-        ['miterLimit'],
-        ['shadowB'],
-        ['shadowBlur'],
-        ['shadowColor'],
-        ['shadowOffsetX'],
-        ['shadowOffsetY']
-    ];
+        ['inactiveWidth']
+    ]);
     const lineStyle: LineStyleProps = {};
     for (let i = 0; i < lineProperties.length; ++i) {
         const propName = lineProperties[i][1] as keyof LegendLineStyleOption;
@@ -661,7 +636,7 @@ function getLegendStyle(
         lineStyle.stroke = legendLineStyle.get('inactiveColor');
         lineStyle.lineWidth = legendLineStyle.get('inactiveWidth');
     }
-
+console.log(itemStyle, lineStyle)
     return { itemStyle, lineStyle };
 }
 
