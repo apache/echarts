@@ -225,7 +225,7 @@ class LegendView extends ComponentView {
                 data.getVisual('symbolSize');
 
                 const itemGroup = this._createItem(
-                    name, dataIndex, legendItemModel, legendModel,
+                    seriesModel, name, dataIndex, legendItemModel, legendModel,
                     legendSymbolType, symbolType, symbolSize,
                     itemAlign,
                     lineVisualStyle, style, drawType, selectMode
@@ -269,7 +269,7 @@ class LegendView extends ComponentView {
                         const drawType = seriesModel.visualDrawType;
 
                         const itemGroup = this._createItem(
-                            name, dataIndex, legendItemModel, legendModel,
+                            seriesModel, name, dataIndex, legendItemModel, legendModel,
                             legendSymbolType, null, null,
                             itemAlign,
                             {}, style, drawType, selectMode
@@ -344,6 +344,7 @@ class LegendView extends ComponentView {
     }
 
     private _createItem(
+        seriesModel: SeriesModel,
         name: string,
         dataIndex: number,
         itemModel: LegendModel['_data'][number],
@@ -392,20 +393,17 @@ class LegendView extends ComponentView {
 
         const textStyleModel = itemModel.getModel('textStyle');
 
-        // Use user given icon first
-        legendSymbolType = itemIcon || legendSymbolType;
-        // Draw line
-        if (legendSymbolType === 'line' || itemIcon === 'line') {
-            itemGroup.add(
-                createHorizontalLine(itemWidth, itemHeight, style.lineStyle)
-            )
-        }
-        // Put symbol in the center
-        if (itemIcon !== 'line') {
-            itemGroup.add(
-                createItem(dataSymbolType, symbolSize, symbolKeepAspect, itemWidth, itemHeight, style.itemStyle)
-            );
-        }
+        itemGroup.add(
+            seriesModel.getLegendIcon({
+                series: seriesModel,
+                itemWidth,
+                itemHeight,
+                symbolType: dataSymbolType || 'roundRect',
+                symbolKeepAspect,
+                itemStyle: style.itemStyle,
+                lineStyle: style.lineStyle
+            })
+        )
 
         const textX = itemAlign === 'left' ? itemWidth + 5 : -5;
         const textAlign = itemAlign as ZRTextAlign;
@@ -636,61 +634,7 @@ function getLegendStyle(
         lineStyle.stroke = legendLineStyle.get('inactiveColor');
         lineStyle.lineWidth = legendLineStyle.get('inactiveWidth');
     }
-console.log(itemStyle, lineStyle)
     return { itemStyle, lineStyle };
-}
-
-function createHorizontalLine(
-    itemWidth: number,
-    itemHeight: number,
-    style: LineStyleProps
-) {
-    const symbol = createSymbol(
-        'line',
-        0,
-        0,
-        itemWidth,
-        itemHeight,
-        style.stroke,
-        false
-    );
-    symbol.setStyle(style);
-    return symbol;
-}
-
-function createItem(
-    symbolType: string,
-    symbolSize: number | number[],
-    symbolKeepAspect: boolean,
-    itemWidth: number,
-    itemHeight: number,
-    style: ItemStyleProps
-) {
-    if (symbolType === 'none') {
-        symbolType = 'circle';
-    }
-    const size = symbolSize == null
-        ? [itemHeight, itemHeight]
-        : (typeof symbolSize === 'object'
-            ? [Math.min(itemWidth, symbolSize[0]), Math.min(itemHeight, symbolSize[1])]
-            : [Math.min(itemHeight, symbolSize as number), Math.min(itemHeight, symbolSize as number)]
-        );
-    const symbol = createSymbol(
-        symbolType,
-        (itemWidth - size[0]) / 2,
-        (itemHeight - size[1]) / 2,
-        size[0],
-        size[1],
-        style.fill,
-        // symbolKeepAspect default true for legend
-        symbolKeepAspect == null ? true : symbolKeepAspect
-    );
-    symbol.setStyle(style);
-    if (symbolType.indexOf('empty') > -1) {
-        symbol.style.stroke = symbol.style.fill;
-        symbol.style.fill = '#fff';
-    }
-    return symbol;
 }
 
 function dispatchSelectAction(

@@ -39,6 +39,10 @@ import {
 import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
+import {PathStyleProps} from 'zrender/src/graphic/Path';
+import {createSymbol, ECSymbol} from '../../util/symbol';
+import {Group} from '../../util/graphic';
+import {LineStyleProps} from '../../model/mixin/lineStyle';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
@@ -209,6 +213,54 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         progressive: 0,
         hoverLayerThreshold: Infinity
     };
+
+    getLegendIcon(opt: {
+        series: SeriesModel,
+        itemWidth: number,
+        itemHeight: number,
+        symbolType: string,
+        symbolKeepAspect: boolean,
+        itemStyle: PathStyleProps,
+        lineStyle: LineStyleProps
+    }): ECSymbol | Group {
+        const group = new Group();
+
+        // Line
+        const line = createSymbol(
+            'line',
+            0,
+            opt.itemHeight / 2,
+            opt.itemWidth,
+            0,
+            opt.lineStyle.stroke,
+            false
+        );
+        group.add(line);
+
+        line.setStyle(opt.lineStyle);
+
+        // Symbol in the center
+        const size = opt.itemHeight * 0.8;
+        const symbol = createSymbol(
+            opt.symbolType,
+            (opt.itemWidth - size) / 2,
+            (opt.itemHeight - size) / 2,
+            size,
+            size,
+            opt.itemStyle.fill,
+            opt.symbolKeepAspect
+        );
+        group.add(symbol);
+
+        symbol.setStyle(opt.itemStyle);
+
+        if (opt.symbolType.indexOf('empty') > -1) {
+            symbol.style.stroke = symbol.style.fill;
+            symbol.style.fill = '#fff';
+        }
+
+        return group;
+    }
 }
 
 export default LineSeriesModel;

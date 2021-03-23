@@ -48,6 +48,11 @@ import makeStyleMapper from './mixin/makeStyleMapper';
 import { SourceManager } from '../data/helper/sourceManager';
 import { Source } from '../data/Source';
 import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatTooltip';
+import {ECSymbol} from '../util/symbol';
+import {Group} from '../util/graphic';
+import {defaultSeriesLegendIcon} from '../component/legend/seriesLegendIcon';
+import {PathStyleProps} from 'zrender/src/graphic/Path';
+import {LineStyleProps} from './mixin/lineStyle';
 
 const inner = modelUtil.makeInner<{
     data: List
@@ -431,6 +436,18 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             dataIndex: dataIndex,
             multipleSeries: multipleSeries
         });
+    }
+
+    getLegendIcon(opt: {
+        series: SeriesModel,
+        itemWidth: number,
+        itemHeight: number,
+        symbolType: string,
+        symbolKeepAspect: boolean,
+        itemStyle: PathStyleProps,
+        lineStyle: LineStyleProps
+    }): ECSymbol | Group {
+        return defaultSeriesLegendIcon(opt);
     }
 
     isAnimationEnabled(): boolean {

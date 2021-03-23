@@ -26,7 +26,7 @@ import {calculateTextPosition} from 'zrender/src/contain/text';
 import { Dictionary } from 'zrender/src/core/types';
 import { ZRColor } from './types';
 
-type ECSymbol = graphic.Path & {
+export type ECSymbol = graphic.Path & {
     __isEmptyBrush?: boolean
     setColor: (color: ZRColor, innerColor?: string) => void
     getColor: () => ZRColor
