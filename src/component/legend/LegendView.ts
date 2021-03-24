@@ -18,7 +18,9 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import {createSymbol} from '../../util/symbol';
+import { DisplayableState } from 'zrender/src/graphic/Displayable';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
+import { parse, stringify } from 'zrender/src/tool/color';
 import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis } from '../../util/states';
 import {setLabelStyle, createTextStyle} from '../../label/labelStyle';
@@ -30,27 +32,17 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import {
     ZRTextAlign,
-    ZRColor,
-    ItemStyleOption,
     ZRRectLike,
     CommonTooltipOption,
     ColorString,
     SeriesOption,
-    SymbolOptionMixin,
-    LineStyleOption,
-    DecalObject
+    SymbolOptionMixin
 } from '../../util/types';
 import Model from '../../model/Model';
-import Displayable, { DisplayableState } from 'zrender/src/graphic/Displayable';
-import { PathStyleProps } from 'zrender/src/graphic/Path';
-import { parse, stringify } from 'zrender/src/tool/color';
-import {PatternObject} from 'zrender/src/graphic/Pattern';
 import {SeriesModel} from '../../echarts';
-import linesLayout from '../../chart/lines/linesLayout';
 import {LineStyleProps, LINE_STYLE_KEY_MAP} from '../../model/mixin/lineStyle';
-import {ItemStyleProps, ITEM_STYLE_KEY_MAP} from '../../model/mixin/itemStyle';
-import {number} from '../../export/api';
-import makeStyleMapper from '../../model/mixin/makeStyleMapper';
+import {ITEM_STYLE_KEY_MAP} from '../../model/mixin/itemStyle';
+import {createSymbol, ECSymbol} from '../../util/symbol';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -393,17 +385,18 @@ class LegendView extends ComponentView {
 
         const textStyleModel = itemModel.getModel('textStyle');
 
-        itemGroup.add(
-            seriesModel.getLegendIcon({
-                series: seriesModel,
-                itemWidth,
-                itemHeight,
-                symbolType: dataSymbolType || 'roundRect',
-                symbolKeepAspect,
-                itemStyle: style.itemStyle,
-                lineStyle: style.lineStyle
-            })
-        )
+        const getLegendIcon = typeof seriesModel.getLegendIcon === 'function'
+            ? seriesModel.getLegendIcon
+            : getDefaultLegendIcon;
+        itemGroup.add(getLegendIcon({
+            series: seriesModel,
+            itemWidth,
+            itemHeight,
+            symbolType: dataSymbolType || 'roundRect',
+            symbolKeepAspect,
+            itemStyle: style.itemStyle,
+            lineStyle: style.lineStyle
+        }));
 
         const textX = itemAlign === 'left' ? itemWidth + 5 : -5;
         const textAlign = itemAlign as ZRTextAlign;
@@ -635,6 +628,35 @@ function getLegendStyle(
         lineStyle.lineWidth = legendLineStyle.get('inactiveWidth');
     }
     return { itemStyle, lineStyle };
+}
+
+function getDefaultLegendIcon(opt: {
+    series: SeriesModel,
+    itemWidth: number,
+    itemHeight: number,
+    symbolType: string,
+    symbolKeepAspect: boolean,
+    itemStyle: PathStyleProps,
+    lineStyle: LineStyleProps
+}): ECSymbol {
+    const symbol = createSymbol(
+        opt.symbolType,
+        0,
+        0,
+        opt.itemWidth,
+        opt.itemHeight,
+        opt.itemStyle.fill,
+        opt.symbolKeepAspect
+    );
+
+    symbol.setStyle(opt.itemStyle);
+
+    if (opt.symbolType.indexOf('empty') > -1) {
+        symbol.style.stroke = symbol.style.fill;
+        symbol.style.fill = '#fff';
+    }
+
+    return symbol;
 }
 
 function dispatchSelectAction(

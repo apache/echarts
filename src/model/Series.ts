@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import type {MorphDividingMethod} from 'zrender/src/tool/morphPath';
+import {PathStyleProps} from 'zrender/src/graphic/Path';
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
@@ -50,8 +51,6 @@ import { Source } from '../data/Source';
 import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatTooltip';
 import {ECSymbol} from '../util/symbol';
 import {Group} from '../util/graphic';
-import {defaultSeriesLegendIcon} from '../component/legend/seriesLegendIcon';
-import {PathStyleProps} from 'zrender/src/graphic/Path';
 import {LineStyleProps} from './mixin/lineStyle';
 
 const inner = modelUtil.makeInner<{
@@ -94,6 +93,19 @@ interface SeriesModel {
      * Get position for marker
      */
     getMarkerPosition(value: ScaleDataValue[]): number[];
+
+    /**
+     * Get legend icon symbol according to each series type
+     */
+    getLegendIcon(opt: {
+        series: SeriesModel,
+        itemWidth: number,
+        itemHeight: number,
+        symbolType: string,
+        symbolKeepAspect: boolean,
+        itemStyle: PathStyleProps,
+        lineStyle: LineStyleProps
+    }): ECSymbol | Group;
 
     /**
      * See `component/brush/selector.js`
@@ -436,18 +448,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             dataIndex: dataIndex,
             multipleSeries: multipleSeries
         });
-    }
-
-    getLegendIcon(opt: {
-        series: SeriesModel,
-        itemWidth: number,
-        itemHeight: number,
-        symbolType: string,
-        symbolKeepAspect: boolean,
-        itemStyle: PathStyleProps,
-        lineStyle: LineStyleProps
-    }): ECSymbol | Group {
-        return defaultSeriesLegendIcon(opt);
     }
 
     isAnimationEnabled(): boolean {
