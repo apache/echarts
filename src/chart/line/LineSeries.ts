@@ -129,7 +129,6 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
     coordinateSystem: Cartesian2D | Polar;
 
     hasSymbolVisual = true;
-    legendSymbol = 'line';
 
     getInitialData(option: LineSeriesOption): List {
         if (__DEV__) {
@@ -240,9 +239,11 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         line.setStyle(opt.lineStyle);
 
         // Symbol in the center
+        const symbolType = opt.symbolType
+            || opt.series.getData().getVisual('symbol');
         const size = opt.itemHeight * 0.8;
         const symbol = createSymbol(
-            opt.symbolType,
+            symbolType,
             (opt.itemWidth - size) / 2,
             (opt.itemHeight - size) / 2,
             size,
@@ -254,7 +255,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         symbol.setStyle(opt.itemStyle);
 
-        if (opt.symbolType.indexOf('empty') > -1) {
+        if (symbolType.indexOf('empty') > -1) {
             symbol.style.stroke = symbol.style.fill;
             symbol.style.fill = '#fff';
         }

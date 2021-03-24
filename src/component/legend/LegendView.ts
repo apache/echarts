@@ -207,20 +207,11 @@ class LegendView extends ComponentView {
                  */
                 const style = data.getVisual('style');
 
-                // Using rect symbol defaultly
-                const legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
-                const symbolType = data.getVisual('symbol');
-                const symbolSize = data.getVisual('symbolSize');
-
-                const drawType = seriesModel.visualDrawType;
-
                 data.getVisual('symbolSize');
 
                 const itemGroup = this._createItem(
-                    seriesModel, name, dataIndex, legendItemModel, legendModel,
-                    legendSymbolType, symbolType, symbolSize,
-                    itemAlign,
-                    lineVisualStyle, style, drawType, selectMode
+                    seriesModel, name, dataIndex, legendItemModel, legendModel, itemAlign,
+                    lineVisualStyle, style, selectMode
                 );
 
                 itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
@@ -257,14 +248,9 @@ class LegendView extends ComponentView {
                             style.fill = stringify(colorArr, 'rgba');
                         }
 
-                        const legendSymbolType = 'roundRect';
-                        const drawType = seriesModel.visualDrawType;
-
                         const itemGroup = this._createItem(
-                            seriesModel, name, dataIndex, legendItemModel, legendModel,
-                            legendSymbolType, null, null,
-                            itemAlign,
-                            {}, style, drawType, selectMode
+                            seriesModel, name, dataIndex, legendItemModel, legendModel, itemAlign,
+                            {}, style, selectMode
                         );
 
                         // FIXME: consider different series has items with the same name.
@@ -336,67 +322,58 @@ class LegendView extends ComponentView {
     }
 
     private _createItem(
-        seriesModel: SeriesModel,
+        seriesModel: SeriesModel<SeriesOption & SymbolOptionMixin>,
         name: string,
         dataIndex: number,
         itemModel: LegendModel['_data'][number],
         legendModel: LegendModel,
-        legendSymbolType: string,
-        dataSymbolType: string,
-        dataSymbolSize: number | number[],
         itemAlign: LegendOption['align'],
         lineVisualStyle: LineStyleProps,
         itemVisualStyle: PathStyleProps,
-        drawType: 'fill' | 'stroke',
         selectMode: LegendOption['selectedMode']
     ) {
+        const drawType = seriesModel.visualDrawType;
         const itemWidth = legendModel.get('itemWidth');
         const itemHeight = legendModel.get('itemHeight');
         const isSelected = legendModel.isSelected(name);
 
         const symbolKeepAspect = itemModel.get('symbolKeepAspect');
-        const itemIcon = itemModel.get('icon');
-
-        let symbolSize;
-        const legendSymbolSize = itemModel.get('symbolSize');
-        if (legendSymbolSize === 'auto') {
-            // auto: 80% itemHeight if has line, 100% elsewise
-            const hasHorizontalLine = !itemIcon && dataSymbolType
-                && ((dataSymbolType !== legendSymbolType) || dataSymbolType === 'none');
-            symbolSize = hasHorizontalLine
-                ? itemHeight * 0.8
-                : [itemWidth, itemHeight];
-        }
-        else if (legendSymbolSize !== 'inherit')  {
-            // number: legend.symbolSize
-            symbolSize = legendSymbolSize;
-        }
-        else {
-            // inherit: series.symbolSize
-            symbolSize = dataSymbolSize;
-        }
-
-        dataSymbolType = dataSymbolType || 'roundRect';
+        const data = seriesModel.getData();
+        const legendSymbolType = itemModel.get('icon')
+            || data.getVisual('legendSymbol');
+        const symbolType = legendSymbolType || 'roundRect';
 
         const legendLineStyle = legendModel.getModel('lineStyle');
-        const style = getLegendStyle(dataSymbolType, itemModel, legendLineStyle, lineVisualStyle, itemVisualStyle, drawType, isSelected);
+        const style = getLegendStyle(symbolType, itemModel, legendLineStyle, lineVisualStyle, itemVisualStyle, drawType, isSelected);
 
         const itemGroup = new Group();
 
         const textStyleModel = itemModel.getModel('textStyle');
 
-        const getLegendIcon = typeof seriesModel.getLegendIcon === 'function'
-            ? seriesModel.getLegendIcon
-            : getDefaultLegendIcon;
-        itemGroup.add(getLegendIcon({
-            series: seriesModel,
-            itemWidth,
-            itemHeight,
-            symbolType: dataSymbolType || 'roundRect',
-            symbolKeepAspect,
-            itemStyle: style.itemStyle,
-            lineStyle: style.lineStyle
-        }));
+        if (typeof seriesModel.getLegendIcon === 'function') {
+            // Series has specific way to define legend icon
+            itemGroup.add(seriesModel.getLegendIcon({
+                series: seriesModel,
+                itemWidth,
+                itemHeight,
+                symbolType: legendSymbolType,
+                symbolKeepAspect,
+                itemStyle: style.itemStyle,
+                lineStyle: style.lineStyle
+            }));
+        }
+        else {
+            // Use default legend icon policy for most series
+            itemGroup.add(getDefaultLegendIcon({
+                series: seriesModel,
+                itemWidth,
+                itemHeight,
+                symbolType: symbolType || 'roundRect',
+                symbolKeepAspect,
+                itemStyle: style.itemStyle,
+                lineStyle: style.lineStyle
+            }));
+        }
 
         const textX = itemAlign === 'left' ? itemWidth + 5 : -5;
         const textAlign = itemAlign as ZRTextAlign;
@@ -639,8 +616,9 @@ function getDefaultLegendIcon(opt: {
     itemStyle: PathStyleProps,
     lineStyle: LineStyleProps
 }): ECSymbol {
+    const symboType = opt.symbolType || 'roundRect';
     const symbol = createSymbol(
-        opt.symbolType,
+        symboType,
         0,
         0,
         opt.itemWidth,
@@ -651,7 +629,7 @@ function getDefaultLegendIcon(opt: {
 
     symbol.setStyle(opt.itemStyle);
 
-    if (opt.symbolType.indexOf('empty') > -1) {
+    if (symboType.indexOf('empty') > -1) {
         symbol.style.stroke = symbol.style.fill;
         symbol.style.fill = '#fff';
     }
