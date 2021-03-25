@@ -42,7 +42,7 @@ import {
     HOVER_STATE_EMPHASIS,
     HOVER_STATE_BLUR,
     blurSeries,
-    toggleSeriesBlurStateFromPayload,
+    blurSeriesFromPayload,
     toggleSelectionFromPayload,
     updateSeriesElementSelection,
     getAllSelectedIndices,
@@ -1473,12 +1473,16 @@ class ECharts extends Eventful<ECEventDefinition> {
                 });
             }
 
+            if (isHighDownPayload(payload)) {
+                allLeaveBlur(ecIns._api);
+            }
+
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
                 if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
                     if (isHighDownPayload(payload) && !payload.notBlur) {
                         if (model instanceof SeriesModel) {
-                            toggleSeriesBlurStateFromPayload(model, payload, ecIns._api);
+                            blurSeriesFromPayload(model, payload, ecIns._api);
                         }
                     }
                     else if (isSelectChangePayload(payload)) {

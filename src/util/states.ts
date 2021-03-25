@@ -482,7 +482,7 @@ export function blurSeries(
     });
 }
 
-export function toggleSeriesBlurStateFromPayload(
+export function blurSeriesFromPayload(
     seriesModel: SeriesModel,
     payload: Payload,
     api: ExtensionAPI
@@ -506,8 +506,6 @@ export function toggleSeriesBlurStateFromPayload(
             el = data.getItemGraphicEl(current++);
         }
     }
-
-    allLeaveBlur(api);
 
     if (isHighlight) {
         if (el) {
