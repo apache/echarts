@@ -41,7 +41,7 @@ import {
     isHighDownDispatcher,
     HOVER_STATE_EMPHASIS,
     HOVER_STATE_BLUR,
-    toggleSeriesBlurState,
+    blurSeries,
     toggleSeriesBlurStateFromPayload,
     toggleSelectionFromPayload,
     updateSeriesElementSelection,
@@ -59,7 +59,8 @@ import {
     leaveBlur,
     enterSelect,
     leaveSelect,
-    enterBlur
+    enterBlur,
+    allLeaveBlur
 } from '../util/states';
 import * as modelUtil from '../util/model';
 import {throttle} from '../util/throttle';
@@ -1898,8 +1899,8 @@ class ECharts extends Eventful<ECEventDefinition> {
                     const ecData = getECData(dispatcher);
                     // Try blur all in the related series. Then emphasis the hoverred.
                     // TODO. progressive mode.
-                    toggleSeriesBlurState(
-                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns._api, true
+                    blurSeries(
+                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns._api
                     );
                     enterEmphasisWhenMouseOver(dispatcher, e);
 
@@ -1909,10 +1910,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 const el = e.target;
                 const dispatcher = findEventDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
-                    const ecData = getECData(dispatcher);
-                    toggleSeriesBlurState(
-                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns._api, false
-                    );
+                    allLeaveBlur(ecIns._api);
 
                     leaveEmphasisWhenMouseOut(dispatcher, e);
 

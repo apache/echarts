@@ -388,7 +388,7 @@ function shouldSilent(el: Element, e: ElementEvent) {
     return (el as ExtendedElement).__highDownSilentOnTouch && e.zrByTouch;
 }
 
-function allLeaveBlur(api: ExtensionAPI) {
+export function allLeaveBlur(api: ExtensionAPI) {
     const model = api.getModel();
     model.eachComponent(function (componentType, componentModel) {
         const view = componentType === 'series'
@@ -401,12 +401,11 @@ function allLeaveBlur(api: ExtensionAPI) {
     });
 }
 
-export function toggleSeriesBlurState(
+export function blurSeries(
     targetSeriesIndex: number,
     focus: InnerFocus,
     blurScope: BlurScope,
-    api: ExtensionAPI,
-    isBlur: boolean
+    api: ExtensionAPI
 ) {
     const ecModel = api.getModel();
     blurScope = blurScope || 'coordinateSystem';
@@ -416,11 +415,6 @@ export function toggleSeriesBlurState(
             const itemEl = data.getItemGraphicEl(dataIndices[i]);
             itemEl && leaveBlur(itemEl);
         }
-    }
-
-    if (!isBlur) {
-        allLeaveBlur(api);
-        return;
     }
 
     if (targetSeriesIndex == null) {
@@ -512,19 +506,24 @@ export function toggleSeriesBlurStateFromPayload(
             el = data.getItemGraphicEl(current++);
         }
     }
-    if (el) {
-        const ecData = getECData(el);
-        toggleSeriesBlurState(
-            seriesIndex, ecData.focus, ecData.blurScope, api, isHighlight
-        );
-    }
-    else {
-        // If there is no element put on the data. Try getting it from raw option
-        // TODO Should put it on seriesModel?
-        const focus = seriesModel.get(['emphasis', 'focus']);
-        const blurScope = seriesModel.get(['emphasis', 'blurScope']);
-        if (focus != null) {
-            toggleSeriesBlurState(seriesIndex, focus, blurScope, api, isHighlight);
+
+    allLeaveBlur(api);
+
+    if (isHighlight) {
+        if (el) {
+            const ecData = getECData(el);
+            blurSeries(
+                seriesIndex, ecData.focus, ecData.blurScope, api
+            );
+        }
+        else {
+            // If there is no element put on the data. Try getting it from raw option
+            // TODO Should put it on seriesModel?
+            const focus = seriesModel.get(['emphasis', 'focus']);
+            const blurScope = seriesModel.get(['emphasis', 'blurScope']);
+            if (focus != null) {
+                blurSeries(seriesIndex, focus, blurScope, api);
+            }
         }
     }
 }
