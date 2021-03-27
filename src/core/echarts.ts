@@ -2157,33 +2157,43 @@ class ECharts extends Eventful<ECEventDefinition> {
             if (model.preventAutoZ) {
                 return;
             }
-            const z = model.get('z');
-            const zlevel = model.get('zlevel');
             // Set z and zlevel
-            view.group.traverse(function (el: Displayable) {
-                if (!el.isGroup) {
-                    z != null && (el.z = z);
-                    zlevel != null && (el.zlevel = zlevel);
-
-                    // TODO if textContent is on group.
-                    const label = el.getTextContent();
-                    const labelLine = el.getTextGuideLine();
-                    if (label) {
-                        label.z = el.z;
-                        label.zlevel = el.zlevel;
-                        // lift z2 of text content
-                        // TODO if el.emphasis.z2 is spcefied, what about textContent.
-                        label.z2 = el.z2 + 2;
-                    }
-                    if (labelLine) {
-                        const showAbove = el.textGuideLineConfig && el.textGuideLineConfig.showAbove;
-                        labelLine.z = el.z;
-                        labelLine.zlevel = el.zlevel;
-                        labelLine.z2 = el.z2 + (showAbove ? 1 : -1);
-                    }
-                }
-            });
+            _updateZ(view.group, model.get('z'), model.get('zlevel'));
         };
+
+        function _updateZ(el: Element, z: number, zlevel: number) {
+            // Group may also have textContent
+            const label = el.getTextContent();
+            const labelLine = el.getTextGuideLine();
+            const isGroup = el.isGroup;
+
+            // always set z and zlevel if label/labelLine exists
+            if (label || labelLine) {
+                if (label) {
+                    label.z = z + 1;
+                    label.zlevel = zlevel;
+                    // lift z2 of text content
+                    // TODO if el.emphasis.z2 is spcefied, what about textContent.
+                    isGroup || (label.z2 = (el as Displayable).z2 + 2);
+                }
+                else {
+                    const showAbove = el.textGuideLineConfig && el.textGuideLineConfig.showAbove;
+                    labelLine.z = z + 1;
+                    labelLine.zlevel = zlevel;
+                    isGroup || (labelLine.z2 = (el as Displayable).z2 + (showAbove ? 1 : -1));
+                }
+            }
+
+            if (isGroup) {
+                // set z & zlevel of children elements of Group
+                el.traverse((childEl: Element) => _updateZ(childEl, z, zlevel));
+            }
+            else {
+                // not Group
+                z != null && ((el as Displayable).z = z);
+                zlevel != null && ((el as Displayable).zlevel = zlevel);
+            }
+        }
 
         // Clear states without animation.
         // TODO States on component.
