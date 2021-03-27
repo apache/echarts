@@ -250,8 +250,7 @@ class SankeyView extends ChartView {
                     width: layout.dx,
                     height: layout.dy
                 },
-                style: itemModel.getModel('itemStyle').getItemStyle(),
-                z2: 10
+                style: itemModel.getModel('itemStyle').getItemStyle()
             });
 
             setLabelStyle(
