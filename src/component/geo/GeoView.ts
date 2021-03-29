@@ -26,6 +26,7 @@ import GeoModel from '../../coord/geo/GeoModel';
 import { Payload, ZRElementEvent, ECEventData } from '../../util/types';
 import { getECData } from '../../util/innerStore';
 import { findEventDispatcher } from '../../util/event';
+import Element from 'zrender/src/Element';
 
 class GeoView extends ComponentView {
 
@@ -37,6 +38,8 @@ class GeoView extends ComponentView {
     private _api: ExtensionAPI;
 
     private _model: GeoModel;
+
+    focusBlurEnabled = true;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         const mapDraw = new MapDraw(api);
@@ -92,6 +95,10 @@ class GeoView extends ComponentView {
                 return true;
             }
         });
+    }
+
+    findHighDownDispatchers(name: string): Element[] {
+        return this._mapDraw && this._mapDraw.findHighDownDispatchers(name, this._model);
     }
 
     dispose(): void {

@@ -1484,7 +1484,7 @@ export type BlurScope = 'coordinateSystem' | 'series' | 'global';
  * can be array of data indices.
  * Or may be an dictionary if have different types of data like in graph.
  */
-export type InnerFocus = string | ArrayLike<number> | Dictionary<ArrayLike<number>>;
+export type InnerFocus = DefaultEmphasisFocus | ArrayLike<number> | Dictionary<ArrayLike<number>>;
 
 export interface DefaultExtraStateOpts {
     emphasis: any

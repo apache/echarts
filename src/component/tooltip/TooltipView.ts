@@ -319,8 +319,6 @@ class TooltipView extends ComponentView {
             el.y = payload.y;
             el.update();
             getECData(el).tooltipConfig = {
-                componentMainType: null,
-                componentIndex: null,
                 name: null,
                 option: payload.tooltip
             };
@@ -707,7 +705,8 @@ class TooltipView extends ComponentView {
         el: ECElement,
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
-        const tooltipConfig = getECData(el).tooltipConfig;
+        const ecData = getECData(el);
+        const tooltipConfig = ecData.tooltipConfig;
         let tooltipOpt = tooltipConfig.option;
         if (zrUtil.isString(tooltipOpt)) {
             const content = tooltipOpt;
@@ -719,7 +718,7 @@ class TooltipView extends ComponentView {
         }
 
         const tooltipModelCascade = [tooltipOpt] as TooltipModelOptionCascade[];
-        const cmpt = this._ecModel.getComponent(tooltipConfig.componentMainType, tooltipConfig.componentIndex);
+        const cmpt = this._ecModel.getComponent(ecData.componentMainType, ecData.componentIndex);
         if (cmpt) {
             tooltipModelCascade.push(cmpt as Model<TooltipableOption>);
         }

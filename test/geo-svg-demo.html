@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main_geo_svg_organ"></div>
+        <!-- <div id="main_geo_svg_organ1"></div> -->
+
+
+
+
+
+        <script>
+            function listenAndPrintEvent(chart) {
+                if (!chart) {
+                    return;
+                }
+                const out = {
+                };
+                chart.on('geoselectchanged', function (params) {
+                    out.geoselectechanged = {
+                        allSelected: params.allSelected
+                    };
+                    console.log('geoselectechanged', params);
+                    chart.__testHelper.updateInfo(out, 'event');
+                });
+                chart.on('selectchanged', function (params) {
+                    out.selectechanged = {
+                        selected: params.selected
+                    };
+                    console.log('selectechanged', params);
+                    chart.__testHelper.updateInfo(out, 'event');
+                });
+                chart.on('click', function (params) {
+                    out.click = {
+                        componentIndex: params.componentIndex,
+                        componentType: params.componentType,
+                        geoIndex: params.geoIndex,
+                        name: params.name
+                    };
+                    console.log('click', params);
+                    chart.__testHelper.updateInfo(out, 'event');
+                });
+            }
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            $.ajax({
+                url: '../../vis-data/map/svg/organ/Veins_Medical_Diagram_clip_art.svg',
+                dataType: 'text'
+            }).done(function (svg) {
+
+                echarts.registerMap('seatmap', {
+                    svg: svg
+                });
+
+                option = {
+                    tooltip: {
+                    },
+                    geo: {
+                        map: 'seatmap',
+                        roam: true,
+                        selectedMode: 'multiple',
+                        // height: 100,
+                        // zoom: 1.5
+                        emphasis: {
+                            focus: 'self',
+                            itemStyle: {
+                                // color: null
+                            },
+                            label: {
+                                show: false,
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        },
+                        blur: {
+                            // itemStyle: {
+                            //     opacity: 0.3
+                            // }
+                        },
+                        select: {
+                            itemStyle: {
+                                color: '#b50205'
+                            },
+                            label: {
+                                show: false,
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_geo_svg_organ', {
+                    title: [
+                        'pure geo component with svg resource',
+                        'click seat: check **allSelected** correct.'
+                    ],
+                    option: option,
+                    info: {},
+                    infoKey: 'event',
+                    height: 500
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+
+                listenAndPrintEvent(chart);
+
+                if (chart) {
+                    chart.on('highlight', function () {
+                        console.log('agsd');
+                    });
+                }
+
+            });
+
+        });
+        </script>
+
+
+
+
+<!--
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            $.ajax({
+                url: '../../vis-data/map/svg/organ/Veins_Medical_Diagram_clip_art.svg',
+                dataType: 'text'
+            }).done(function (svg) {
+
+                echarts.registerMap('seatmap', {
+                    svg: svg
+                });
+
+                option = {
+                    tooltip: {
+                    },
+                    series: {
+                        type: 'map',
+                        map: 'seatmap',
+                        roam: true,
+                        selectedMode: 'multiple',
+                        // height: 100,
+                        // zoom: 1.5
+                        emphasis: {
+                            focus: 'self',
+                            label: {
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        },
+                        select: {
+                            itemStyle: {
+                                color: '#b50205'
+                            },
+                            label: {
+                                show: false,
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_geo_svg_organ1', {
+                    title: [
+                        'pure geo component with svg resource',
+                        'click seat: check **allSelected** correct.'
+                    ],
+                    option: option,
+                    info: {},
+                    infoKey: 'event',
+                    height: 500
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+
+                listenAndPrintEvent(chart);
+
+                if (chart) {
+                    chart.on('highlight', function () {
+                        console.log('agsd');
+                    });
+                }
+
+            });
+
+        });
+        </script> -->
+
+
+
+    </body>
+</html>
+

@@ -41,8 +41,7 @@ import {
     isHighDownDispatcher,
     HOVER_STATE_EMPHASIS,
     HOVER_STATE_BLUR,
-    blurSeries,
-    blurSeriesFromPayload,
+    blurSeriesFromHighlightPayload,
     toggleSelectionFromPayload,
     updateSeriesElementSelection,
     getAllSelectedIndices,
@@ -60,7 +59,11 @@ import {
     enterSelect,
     leaveSelect,
     enterBlur,
-    allLeaveBlur
+    allLeaveBlur,
+    findComponentHighDownDispatchers,
+    blurComponent,
+    handleGlobalMouseOverForHighDown,
+    handleGlboalMouseOutForHighDown
 } from '../util/states';
 import * as modelUtil from '../util/model';
 import {throttle} from '../util/throttle';
@@ -1480,9 +1483,26 @@ class ECharts extends Eventful<ECEventDefinition> {
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
                 if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
-                    if (isHighDownPayload(payload) && !payload.notBlur) {
-                        if (model instanceof SeriesModel) {
-                            blurSeriesFromPayload(model, payload, ecIns._api);
+                    if (isHighDownPayload(payload)) {
+                        if (payload.type === HIGHLIGHT_ACTION_TYPE) {
+                            if (model instanceof SeriesModel) {
+                                !payload.notBlur && blurSeriesFromHighlightPayload(model, payload, ecIns._api);
+                            }
+                            else {
+                                const { focusSelf, dispatchers } = findComponentHighDownDispatchers(
+                                    model.mainType, model.componentIndex, payload.name, ecIns._api
+                                );
+                                if (focusSelf && !payload.notBlur) {
+                                    blurComponent(model.mainType, model.componentIndex, ecIns._api);
+                                }
+                                // PENDING:
+                                // Whether to put this "enter emphasis" code in `ComponentView`,
+                                // which will be the same as `ChartView` but might be not necessary
+                                // and will be far from this logic.
+                                if (dispatchers) {
+                                    each(dispatchers, dispatcher => enterEmphasis(dispatcher));
+                                }
+                            }
                         }
                     }
                     else if (isSelectChangePayload(payload)) {
@@ -1780,7 +1800,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             let eventObj: ECActionEvent;
 
             const isSelectChange = isSelectChangePayload(payload);
-            const isStatusChange = isHighDownPayload(payload) || isSelectChange;
+            const isHighDown = isHighDownPayload(payload);
 
             each(payloads, (batchItem) => {
                 // Action can specify the event by return it.
@@ -1792,11 +1812,16 @@ class ECharts extends Eventful<ECEventDefinition> {
                 eventObjBatch.push(eventObj);
 
                 // light update does not perform data process, layout and visual.
-                if (isStatusChange) {
-                    // method, payload, mainType, subType
+                if (isHighDown) {
+                    const { queryOptionMap, mainTypeSpecified } = modelUtil.preParseFinder(payload as ModelFinder);
+                    const componentMainType = mainTypeSpecified ? queryOptionMap.keys()[0] : 'series';
+                    updateDirectly(this, updateMethod, batchItem as Payload, componentMainType);
+                    markStatusToUpdate(this);
+                }
+                else if (isSelectChange) {
+                    // At present `dispatchAction({ type: 'select', ... })` is not supported on components.
+                    // geo still use 'geoselect'.
                     updateDirectly(this, updateMethod, batchItem as Payload, 'series');
-
-                    // Mark status to update
                     markStatusToUpdate(this);
                 }
                 else if (cptType) {
@@ -1804,7 +1829,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 }
             });
 
-            if (updateMethod !== 'none' && !isStatusChange && !cptType) {
+            if (updateMethod !== 'none' && !isHighDown && !isSelectChange && !cptType) {
                 // Still dirty
                 if (this[OPTION_UPDATED_KEY]) {
                     prepare(this);
@@ -1900,24 +1925,14 @@ class ECharts extends Eventful<ECEventDefinition> {
                 const el = e.target;
                 const dispatcher = findEventDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
-                    const ecData = getECData(dispatcher);
-                    // Try blur all in the related series. Then emphasis the hoverred.
-                    // TODO. progressive mode.
-                    blurSeries(
-                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns._api
-                    );
-                    enterEmphasisWhenMouseOver(dispatcher, e);
-
+                    handleGlobalMouseOverForHighDown(dispatcher, e, ecIns._api);
                     markStatusToUpdate(ecIns);
                 }
             }).on('mouseout', function (e) {
                 const el = e.target;
                 const dispatcher = findEventDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
-                    allLeaveBlur(ecIns._api);
-
-                    leaveEmphasisWhenMouseOut(dispatcher, e);
-
+                    handleGlboalMouseOutForHighDown(dispatcher, e, ecIns._api);
                     markStatusToUpdate(ecIns);
                 }
             }).on('click', function (e) {

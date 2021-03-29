@@ -20,33 +20,30 @@
 import { parseSVG, makeViewBoxTransform, SVGNodeTagLower } from 'zrender/src/tool/parseSVG';
 import Group from 'zrender/src/graphic/Group';
 import Rect from 'zrender/src/graphic/shape/Rect';
-import {assert, createHashMap, HashMap, hasOwn} from 'zrender/src/core/util';
+import {assert, createHashMap, HashMap} from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import { GeoResource, GeoSVGGraphicRoot, GeoSVGSourceInput, RegionGraphic } from './geoTypes';
 import { parseXML } from 'zrender/src/tool/parseXML';
 import { GeoSVGRegion } from './Region';
+import Element from 'zrender/src/Element';
 
+type RegionName = string;
 export interface GeoSVGGraphicRecord {
     root: Group;
     boundingRect: BoundingRect;
     regionGraphics: RegionGraphic[];
+    // A name may correspond to multiple graphics.
+    regionElementMap: HashMap<Element[], RegionName>;
 }
 
 const REGION_AVAILABLE_SVG_TAG_MAP = createHashMap<number, SVGNodeTagLower>([
     'rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'text', 'tspan', 'path'
 ]);
-const STYLE_OPTION_KEY = createHashMap<'itemStyle' | 'lineStyle', SVGNodeTagLower>({
-    'rect': 'itemStyle',
-    'circle': 'itemStyle',
-    'line': 'lineStyle',
-    'ellipse': 'itemStyle',
-    'polygon': 'itemStyle',
-    'polyline': 'lineStyle',
-    // 'image': '?', // TODO
-    // 'text': '?', // TODO
-    // 'tspan': '?', // TODO
-    'path': 'itemStyle'
-});
+
+const OPTION_STYLE_ENABLED_TAG_MAP = createHashMap<number, SVGNodeTagLower>([
+    'rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'path'
+]);
+
 const LABEL_HOST_MAP = createHashMap<number, SVGNodeTagLower>([
     'rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'path'
 ]);
@@ -231,24 +228,29 @@ function buildGraphic(
     (root as GeoSVGGraphicRoot).isGeoSVGGraphicRoot = true;
 
     const regionGraphics = [] as GeoSVGGraphicRecord['regionGraphics'];
+    const regionElementMap = createHashMap<Element[], RegionName>();
     const named = result.named;
     for (let i = 0; i < named.length; i++) {
         const namedItem = named[i];
         const svgNodeTagLower = namedItem.svgNodeTagLower;
 
         if (REGION_AVAILABLE_SVG_TAG_MAP.get(svgNodeTagLower) != null) {
-            const styleOptionKey = STYLE_OPTION_KEY.get(svgNodeTagLower);
+            const optionStyleEnabled = OPTION_STYLE_ENABLED_TAG_MAP.get(svgNodeTagLower);
             const el = namedItem.el;
+            const name = namedItem.name;
 
             regionGraphics.push({
-                name: namedItem.name,
+                name: name,
                 el: el,
-                styleOptionKey: styleOptionKey,
-                stateTrigger: styleOptionKey != null ? el : null,
+                optionStyleEnabled: optionStyleEnabled != null,
+                stateTrigger: optionStyleEnabled != null ? el : null,
                 // text/tspan/image do not suport style but support event.
                 eventTrigger: el,
                 useLabel: LABEL_HOST_MAP.get(svgNodeTagLower) != null
             });
+
+            const els = regionElementMap.get(name) || regionElementMap.set(name, []);
+            els.push(el);
 
             // Only named element has silent: false, other elements should
             // act as background and has no user interaction.
@@ -262,7 +264,7 @@ function buildGraphic(
         }
     }
 
-    return { root, boundingRect, regionGraphics };
+    return { root, boundingRect, regionGraphics, regionElementMap: regionElementMap };
 }
 
 

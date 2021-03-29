@@ -155,6 +155,6 @@ export type RegionGraphic = {
     eventTrigger: Element;
     // Whether to set label on `el.textContent`.
     useLabel: boolean;
-    // Use this key to obtain style config in echarts option.
-    styleOptionKey: 'itemStyle' | 'lineStyle';
+    // Whether to be enabled to set style via in echarts option.
+    optionStyleEnabled: boolean;
 };
