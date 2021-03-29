@@ -2176,9 +2176,9 @@ class ECharts extends Eventful<ECEventDefinition> {
                     // TODO if el.emphasis.z2 is spcefied, what about textContent.
                     isGroup || (label.z2 = (el as Displayable).z2 + 2);
                 }
-                else {
+                if (labelLine) {
                     const showAbove = el.textGuideLineConfig && el.textGuideLineConfig.showAbove;
-                    labelLine.z = z + 1;
+                    labelLine.z = z;
                     labelLine.zlevel = zlevel;
                     isGroup || (labelLine.z2 = (el as Displayable).z2 + (showAbove ? 1 : -1));
                 }
