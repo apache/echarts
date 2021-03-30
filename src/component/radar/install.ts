@@ -21,9 +21,21 @@ import { EChartsExtensionInstallRegisters } from '../../extension';
 import RadarModel from '../../coord/radar/RadarModel';
 import RadarView from './RadarView';
 import Radar from '../../coord/radar/Radar';
+import RadarSeriesModel from '../../chart/radar/RadarSeries';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerCoordinateSystem('radar', Radar);
     registers.registerComponentModel(RadarModel);
     registers.registerComponentView(RadarView);
+
+    registers.registerVisual({
+        seriesType: 'radar',
+        reset: function (seriesModel: RadarSeriesModel) {
+            const data = seriesModel.getData();
+            data.each(function (idx) {
+                console.log('idx', idx);
+                data.setItemVisual(idx, 'legendSymbol', 'roundRect');
+            });
+        }
+    })
 }

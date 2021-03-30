@@ -200,6 +200,7 @@ class LegendView extends ComponentView {
             if (seriesModel) {
                 const data = seriesModel.getData();
                 const lineVisualStyle = data.getVisual('legendLineStyle') || {};
+                const symbolType = data.getVisual('legendSymbol');
 
                 /**
                  * `data.getVisual('style')` may be the color from the register
@@ -210,8 +211,9 @@ class LegendView extends ComponentView {
                 data.getVisual('symbolSize');
 
                 const itemGroup = this._createItem(
-                    seriesModel, name, dataIndex, legendItemModel, legendModel, itemAlign,
-                    lineVisualStyle, style, selectMode
+                    seriesModel, name, dataIndex,
+                    legendItemModel, legendModel, itemAlign,
+                    lineVisualStyle, style, symbolType, selectMode
                 );
 
                 itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
@@ -238,6 +240,7 @@ class LegendView extends ComponentView {
                         const idx = provider.indexOfName(name);
 
                         const style = provider.getItemVisual(idx, 'style') as PathStyleProps;
+                        const symbolType = provider.getItemVisual(idx, 'legendSymbol');
 
                         const colorArr = parse(style.fill as ColorString);
                         // Color may be set to transparent in visualMap when data is out of range.
@@ -249,8 +252,9 @@ class LegendView extends ComponentView {
                         }
 
                         const itemGroup = this._createItem(
-                            seriesModel, name, dataIndex, legendItemModel, legendModel, itemAlign,
-                            {}, style, selectMode
+                            seriesModel, name, dataIndex,
+                            legendItemModel, legendModel, itemAlign,
+                            {}, style, symbolType, selectMode
                         );
 
                         // FIXME: consider different series has items with the same name.
@@ -330,6 +334,7 @@ class LegendView extends ComponentView {
         itemAlign: LegendOption['align'],
         lineVisualStyle: LineStyleProps,
         itemVisualStyle: PathStyleProps,
+        symbolType: string,
         selectMode: LegendOption['selectedMode']
     ) {
         const drawType = seriesModel.visualDrawType;
@@ -338,10 +343,8 @@ class LegendView extends ComponentView {
         const isSelected = legendModel.isSelected(name);
 
         const symbolKeepAspect = itemModel.get('symbolKeepAspect');
-        const data = seriesModel.getData();
-        const legendSymbolType = itemModel.get('icon')
-            || data.getVisual('legendSymbol');
-        const symbolType = legendSymbolType || 'roundRect';
+        const legendSymbolType = itemModel.get('icon') || symbolType;
+        symbolType = legendSymbolType || 'roundRect';
 
         const legendLineStyle = legendModel.getModel('lineStyle');
         const style = getLegendStyle(symbolType, itemModel, legendLineStyle, lineVisualStyle, itemVisualStyle, drawType, isSelected);
@@ -540,12 +543,21 @@ function getLegendStyle(
         const visualName = itemProperties[i][0] as keyof PathStyleProps;
         const value = legendItemModel.getShallow(propName) as LegendItemStyleOption[keyof LegendItemStyleOption];
         if (value === 'inherit') {
-            if (drawType === 'stroke' && visualName === 'fill') {
+            if (visualName === 'fill') {
                 /**
                  * Series with visualDrawType as 'stroke' should have
                  * series stroke as legend fill
                  */
-                itemStyle.fill = itemVisualStyle.stroke;
+                itemStyle.fill = itemVisualStyle[drawType];
+            }
+            else if (visualName === 'stroke') {
+                /**
+                 * symbol type with "emptyXXX" should use fill color
+                 * in visual style
+                 */
+                itemStyle.stroke = itemVisualStyle[
+                    symbolType.startsWith('empty') ? 'fill' : 'stroke'
+                ];
             }
             else {
                 (itemStyle as any)[visualName] = itemVisualStyle[visualName];
@@ -632,6 +644,7 @@ function getDefaultLegendIcon(opt: {
     if (symboType.indexOf('empty') > -1) {
         symbol.style.stroke = symbol.style.fill;
         symbol.style.fill = '#fff';
+        symbol.style.lineWidth = 2;
     }
 
     return symbol;

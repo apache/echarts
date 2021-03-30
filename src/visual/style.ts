@@ -102,8 +102,8 @@ const seriesStyleTask: StageHandler = {
                 globalStyle[colorKey] = colorPalette;
                 data.setVisual('colorFromPalette', true);
             }
-            globalStyle.fill = globalStyle.fill === 'auto' ? colorPalette : globalStyle.fill;
-            globalStyle.stroke = globalStyle.stroke === 'auto' ? colorPalette : globalStyle.stroke;
+            globalStyle.fill = (globalStyle.fill === 'auto' || typeof globalStyle.fill === 'function') ? colorPalette : globalStyle.fill;
+            globalStyle.stroke = (globalStyle.stroke === 'auto' || typeof globalStyle.stroke === 'function') ? colorPalette : globalStyle.stroke;
         }
 
         data.setVisual('style', globalStyle);

@@ -51,7 +51,7 @@ import { Source } from '../data/Source';
 import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatTooltip';
 import {ECSymbol} from '../util/symbol';
 import {Group} from '../util/graphic';
-import {LineStyleProps} from './mixin/lineStyle';
+import {LegendSymbolParams} from '../component/legend/LegendModel';
 
 const inner = modelUtil.makeInner<{
     data: List
@@ -97,15 +97,7 @@ interface SeriesModel {
     /**
      * Get legend icon symbol according to each series type
      */
-    getLegendIcon(opt: {
-        series: SeriesModel,
-        itemWidth: number,
-        itemHeight: number,
-        symbolType: string,
-        symbolKeepAspect: boolean,
-        itemStyle: PathStyleProps,
-        lineStyle: LineStyleProps
-    }): ECSymbol | Group;
+    getLegendIcon(opt: LegendSymbolParams): ECSymbol | Group;
 
     /**
      * See `component/brush/selector.js`

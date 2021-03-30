@@ -43,6 +43,7 @@ import {PathStyleProps} from 'zrender/src/graphic/Path';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import {Group} from '../../util/graphic';
 import {LineStyleProps} from '../../model/mixin/lineStyle';
+import {LegendSymbolParams} from '../../component/legend/LegendModel';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
@@ -213,15 +214,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         hoverLayerThreshold: Infinity
     };
 
-    getLegendIcon(opt: {
-        series: SeriesModel,
-        itemWidth: number,
-        itemHeight: number,
-        symbolType: string,
-        symbolKeepAspect: boolean,
-        itemStyle: PathStyleProps,
-        lineStyle: LineStyleProps
-    }): ECSymbol | Group {
+    getLegendIcon(opt: LegendSymbolParams): ECSymbol | Group {
         const group = new Group();
 
         // Line
@@ -258,6 +251,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         if (symbolType.indexOf('empty') > -1) {
             symbol.style.stroke = symbol.style.fill;
             symbol.style.fill = '#fff';
+            symbol.style.lineWidth = 2;
         }
 
         return group;

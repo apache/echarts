@@ -37,6 +37,8 @@ import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
 import { ItemStyleProps } from '../../model/mixin/itemStyle';
 import { LineStyleProps } from './../../model/mixin/lineStyle';
+import {SeriesModel} from '../../echarts';
+import {PathStyleProps} from 'zrender/src/graphic/Path';
 
 type LegendDefaultSelectorOptionsProps = {
     type: string;
@@ -147,6 +149,16 @@ export interface LegendTooltipFormatterParams {
     legendIndex: number
     name: string
     $vars: ['name']
+}
+
+export interface LegendSymbolParams {
+    series: SeriesModel,
+    itemWidth: number,
+    itemHeight: number,
+    symbolType: string,
+    symbolKeepAspect: boolean,
+    itemStyle: PathStyleProps,
+    lineStyle: LineStyleProps
 }
 
 export interface LegendSymbolStyleOption {

@@ -74,16 +74,18 @@ under the License.
                 }, {
                     bottom: 10,
                     data: [{
-                        name: 'Line D'
+                        name: 'Line D',
+                        icon: 'rect'
                     }, {
                         name: 'Line E',
                         itemStyle: {
-                            color: 'yellow'
+                            color: '#f0f'
                         }
                     }],
                     itemStyle: {
                         color: 'orange'
-                    }
+                    },
+                    icon: 'emptyRect'
                 }],
                 series: [{
                     data: getData(0),
@@ -97,7 +99,8 @@ under the License.
                         color: 'red',
                         borderWidth: 5
                     },
-                    symbolSize: 10
+                    symbolSize: 15,
+                    symbol: 'emptyTriangle'
                 }, {
                     data: getData(2),
                     type: 'line',
@@ -118,7 +121,9 @@ under the License.
                     name: 'Line D',
                     itemStyle: {
                         color: 'blue'
-                    }
+                    },
+                    symbol: 'emptyTriangle',
+                    symbolSize: 15
                 }, {
                     data: getData(4),
                     type: 'line',
