@@ -518,7 +518,7 @@ class CalendarView extends ComponentView {
         ).time;
 
         const cellSize = [coordSys.getCellWidth(), coordSys.getCellHeight()];
-        margin = numberUtil.parsePercent(margin, cellSize[1]);
+        margin = numberUtil.parsePercent(margin, Math.min(cellSize[1], cellSize[0]));
 
         if (pos === 'start') {
             start = coordSys.getNextNDay(
