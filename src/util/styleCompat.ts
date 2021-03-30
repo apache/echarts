@@ -191,7 +191,7 @@ export function convertToEC4StyleForCustomSerise(
     }
     else {
         if (textFillNotSet) {
-            out.textFill = txCfg.outsideFill || hostFill;
+            out.textFill = itemStl.fill || txCfg.outsideFill || '#000';
         }
         !out.textStroke && txCfg.outsideStroke && (out.textStroke = txCfg.outsideStroke);
     }

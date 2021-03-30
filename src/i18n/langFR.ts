@@ -28,8 +28,8 @@ export default {
             'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
         ],
         monthAbbr: [
-            'Janv.', 'Févr', 'Mars', 'Avr', 'Mai', 'Juin',
-            'Juill', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'
+            'Jan', 'Fév', 'Mars', 'Avr', 'Mai', 'Juin',
+            'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'
         ],
         dayOfWeek: [
             'Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'
@@ -47,8 +47,8 @@ export default {
     toolbox: {
         brush: {
             title: {
-                rect: 'Sélection de boîte',
-                polygon: 'Sélection au Lasso',
+                rect: 'Sélection rectangulaire',
+                polygon: 'Sélection au lasso',
                 lineX: 'Sélectionner horizontalement',
                 lineY: 'Sélectionner verticalement',
                 keep: 'Garder la sélection',
@@ -62,13 +62,13 @@ export default {
         dataZoom: {
             title: {
                 zoom: 'Zoom',
-                back: 'Zoom Reset'
+                back: 'Zoom Remise à zéro'
             }
         },
         magicType: {
             title: {
-                line: 'Changer à Ligne',
-                bar: 'Changer à Histogramme',
+                line: 'Changer pour Ligne',
+                bar: 'Changer pour Histogramme',
                 stack: 'Superposition',
                 tiled: 'Tuile'
             }
@@ -77,40 +77,40 @@ export default {
             title: 'Restaurer'
         },
         saveAsImage: {
-            title: 'Sauvegarde l\'image',
-            lang: ['Clic droit pour sauvegarde L\'image']
+            title: 'Sauvegarder l\'image',
+            lang: ['Clic droit pour sauvegarder l\'image']
         }
     },
     series: {
         typeNames: {
-            pie: 'Circulaire',
+            pie: 'Camembert',
             bar: 'Histogramme',
-            line: 'Linéaire',
+            line: 'Ligne',
             scatter: 'Nuage de points',
-            effectScatter: 'Ripple scatter plot',
+            effectScatter: 'Nuage de points stylisé',
             radar: 'Radar',
-            tree: 'Arborescent',
+            tree: 'Arbre',
             treemap: 'Treemap',
             boxplot: 'Boîte à moustaches',
             candlestick: 'Chandelier',
             k: 'Linéaire K',
-            heatmap: 'Carte de chaleur',
+            heatmap: 'Carte de fréquentation',
             map: 'Carte',
-            parallel: 'Carte de coordonnées parallèles',
-            lines: 'Line graph',
-            graph: 'Relations',
+            parallel: 'Données parallèles',
+            lines: 'Lignes',
+            graph: 'Graphe',
             sankey: 'Sankey',
             funnel: 'Entonnoir',
             gauge: 'Jauge',
-            pictorialBar: 'Pictorial bar',
-            themeRiver: 'Theme River Map',
+            pictorialBar: 'Barres à images',
+            themeRiver: 'Stream Graph',
             sunburst: 'Sunburst'
         }
     },
     aria: {
         general: {
-            withTitle: 'Cette carte est pour "{title}"',
-            withoutTitle: 'Elle est une carte'
+            withTitle: 'Cette carte est intitulée "{title}"',
+            withoutTitle: 'C\'est une carte'
         },
         series: {
             single: {
@@ -119,7 +119,7 @@ export default {
                 withoutName: ' Avec le type de {seriesType}.'
             },
             multiple: {
-                prefix: '. Elle comprend {seriesCount} série.',
+                prefix: ' Elle comprend {seriesCount} séries.',
                 withName: ' La série {seriesId} représente {seriesName} de {seriesType}.',
                 withoutName: ' La série {seriesId} est un/une {seriesType}.',
                 separator: {
@@ -130,7 +130,7 @@ export default {
         },
         data: {
             allData: 'Les données sont: ',
-            partialData: 'Le premier {displayCnt} items are: ',
+            partialData: 'Les premiers {displayCnt} éléments sont : ',
             withName: 'Les données pour {name} sont {value}',
             withoutName: '{value}',
             separator: {

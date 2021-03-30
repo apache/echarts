@@ -114,9 +114,6 @@ export interface SymbolDrawSeriesScope {
     focus?: string
     blurScope?: BlurScope
 
-    symbolRotate?: ScatterSeriesOption['symbolRotate']
-    symbolOffset?: (number | string)[]
-
     labelStatesModels: Record<DisplayState, Model<LabelOption>>
 
     itemModel?: Model<SymbolDrawItemModelOption>
@@ -138,8 +135,6 @@ function makeSeriesScope(data: List): SymbolDrawSeriesScope {
         focus: emphasisModel.get('focus'),
         blurScope: emphasisModel.get('blurScope'),
 
-        symbolRotate: seriesModel.get('symbolRotate'),
-        symbolOffset: seriesModel.get('symbolOffset'),
         hoverScale: emphasisModel.get('scale'),
 
         labelStatesModels: getLabelStatesModels(seriesModel),
