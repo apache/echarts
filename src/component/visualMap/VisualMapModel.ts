@@ -514,9 +514,9 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
                         || (isCategory ? itemSize[0] : [itemSize[0], itemSize[0]]);
                 }
 
-                // Filter square and none.
+                // Filter none
                 visuals.symbol = mapVisual(visuals.symbol, function (symbol) {
-                    return (symbol === 'none' || symbol === 'square') ? defaultSymbol : symbol;
+                    return symbol === 'none' ? defaultSymbol : symbol;
                 });
 
                 // Normalize symbolSize
