@@ -550,15 +550,16 @@ class SliderTimelineView extends TimelineView {
                 controlSize
             );
             const rect = [0, -iconSize / 2, iconSize, iconSize];
-            const opt = {
-                position: position,
-                origin: [controlSize / 2, 0],
+            const btn = makeControlIcon(timelineModel, iconName + 'Icon' as ControlIconName, rect, {
+                x: position[0],
+                y: position[1],
+                originX: controlSize / 2,
+                originY: 0,
                 rotation: willRotate ? -rotation : 0,
                 rectHover: true,
                 style: itemStyle,
                 onclick: onclick
-            };
-            const btn = makeControlIcon(timelineModel, iconName + 'Icon' as ControlIconName, rect, opt);
+            });
             btn.ensureState('emphasis').style = hoverStyle;
             group.add(btn);
             enableHoverEmphasis(btn);
