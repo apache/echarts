@@ -312,6 +312,8 @@ function symbolPathSetColor(this: ECSymbol, color: ZRColor, innerColor?: string)
         if (this.__isEmptyBrush) {
             symbolStyle.stroke = color;
             symbolStyle.fill = innerColor || '#fff';
+            // TODO Same width with lineStyle in LineView
+            symbolStyle.lineWidth = 2;
         }
         else {
             symbolStyle.fill = color;
