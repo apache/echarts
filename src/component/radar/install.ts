@@ -32,9 +32,12 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         seriesType: 'radar',
         reset: function (seriesModel: RadarSeriesModel) {
             const data = seriesModel.getData();
+            let symbol = data.getVisual('symbol');
+            // Use roundRect if no symbol type
+            (!symbol || symbol === 'none') && (symbol = 'roundRect');
+
             data.each(function (idx) {
-                console.log('idx', idx);
-                data.setItemVisual(idx, 'legendSymbol', 'roundRect');
+                data.setItemVisual(idx, 'legendSymbol', symbol);
             });
         }
     })

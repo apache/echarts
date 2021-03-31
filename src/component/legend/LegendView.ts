@@ -543,24 +543,34 @@ function getLegendStyle(
         const visualName = itemProperties[i][0] as keyof PathStyleProps;
         const value = legendItemModel.getShallow(propName) as LegendItemStyleOption[keyof LegendItemStyleOption];
         if (value === 'inherit') {
-            if (visualName === 'fill') {
-                /**
-                 * Series with visualDrawType as 'stroke' should have
-                 * series stroke as legend fill
-                 */
-                itemStyle.fill = itemVisualStyle[drawType];
-            }
-            else if (visualName === 'stroke') {
-                /**
-                 * symbol type with "emptyXXX" should use fill color
-                 * in visual style
-                 */
-                itemStyle.stroke = itemVisualStyle[
-                    symbolType.startsWith('empty') ? 'fill' : 'stroke'
-                ];
-            }
-            else {
-                (itemStyle as any)[visualName] = itemVisualStyle[visualName];
+            switch (visualName) {
+                case 'fill':
+                    /**
+                     * Series with visualDrawType as 'stroke' should have
+                     * series stroke as legend fill
+                     */
+                    itemStyle.fill = itemVisualStyle[drawType];
+                    break;
+
+                case 'stroke':
+                    /**
+                     * symbol type with "emptyXXX" should use fill color
+                     * in visual style
+                     */
+                    itemStyle.stroke = itemVisualStyle[
+                        symbolType.startsWith('empty') ? 'fill' : 'stroke'
+                    ];
+                    break;
+
+                case 'opacity':
+                    /**
+                     * Use lineStyle.opacity if drawType is stroke
+                     */
+                    itemStyle.opacity = (drawType === 'fill' ? itemVisualStyle : lineVisualStyle).opacity;
+                    break;
+
+                default:
+                    (itemStyle as any)[visualName] = itemVisualStyle[visualName];
             }
         }
         else if (value === 'auto' && visualName === 'lineWidth') {

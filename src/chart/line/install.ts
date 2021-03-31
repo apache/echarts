@@ -38,15 +38,15 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerVisual({
         seriesType: 'line',
         reset: function (seriesModel: LineSeriesModel) {
+            const data = seriesModel.getData();
             // Visual coding for legend
             const lineStyle = seriesModel.getModel('lineStyle').getLineStyle();
-            const itemStyle = seriesModel.getModel('itemStyle').getItemStyle();
-            const color = itemStyle && itemStyle.fill;
-            if (lineStyle) {
-                lineStyle.stroke = lineStyle.stroke || color;
+            if (lineStyle && !lineStyle.stroke) {
+                // Fill in visual should be palette color if
+                // has color callback
+                lineStyle.stroke = data.getVisual('style').fill;
             }
-
-            seriesModel.getData().setVisual('legendLineStyle', lineStyle);
+            data.setVisual('legendLineStyle', lineStyle);
         }
     });
 
