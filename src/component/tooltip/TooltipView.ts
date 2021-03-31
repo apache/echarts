@@ -770,6 +770,7 @@ class TooltipView extends ComponentView {
             tooltipModel.get('trigger'),
             tooltipModel.get('borderColor')
         );
+        const nearPointColor = nearPoint.color;
 
         if (formatter && zrUtil.isString(formatter)) {
             const useUTC = tooltipModel.ecModel.get('useUTC');
@@ -784,7 +785,7 @@ class TooltipView extends ComponentView {
         else if (zrUtil.isFunction(formatter)) {
             const callback = bind(function (cbTicket: string, html: string | HTMLElement[]) {
                 if (cbTicket === this._ticket) {
-                    tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPoint.color, positionExpr);
+                    tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPointColor, positionExpr);
                     this._updatePosition(
                         tooltipModel, positionExpr, x, y, tooltipContent, params, el
                     );
@@ -794,8 +795,8 @@ class TooltipView extends ComponentView {
             html = formatter(params, asyncTicket, callback);
         }
 
-        tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPoint.color, positionExpr);
-        tooltipContent.show(tooltipModel, nearPoint.color);
+        tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPointColor, positionExpr);
+        tooltipContent.show(tooltipModel, nearPointColor);
         this._updatePosition(
             tooltipModel, positionExpr, x, y, tooltipContent, params, el
         );
