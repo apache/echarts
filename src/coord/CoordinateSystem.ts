@@ -133,7 +133,8 @@ export interface CoordinateSystem {
     pointToData?(
         point: number[],
         reserved?: any,
-        out?: number[]
+        out?: number[],
+        clamp?: boolean
     ): number | number[];
 
     // @param point Point in global pixel coordinate system.
