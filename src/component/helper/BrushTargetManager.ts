@@ -471,7 +471,7 @@ function axisConvert(
     const axis = coordSys.getAxis(['x', 'y'][axisNameIndex]);
     const values = formatMinMax(map([0, 1], function (i) {
         return to
-            ? axis.coordToData(axis.toLocalCoord(rangeOrCoordRange[i]))
+            ? axis.coordToData(axis.toLocalCoord(rangeOrCoordRange[i]), true)
             : axis.toGlobalCoord(axis.dataToCoord(rangeOrCoordRange[i]));
     }));
     const xyMinMax = [];
