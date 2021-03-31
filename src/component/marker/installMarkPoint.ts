@@ -27,8 +27,8 @@ export function install(registers: EChartsExtensionInstallRegisters) {
 
     registers.registerPreprocessor(function (opt) {
         if (checkMarkerInSeries(opt.series, 'markPoint')) {
-            // Make sure markLine component is enabled
-            opt.markLine = opt.markLine || {};
+            // Make sure markPoint component is enabled
+            opt.markPoint = opt.markPoint || {};
         }
     });
 }

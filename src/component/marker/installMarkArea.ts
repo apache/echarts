@@ -28,8 +28,8 @@ export function install(registers: EChartsExtensionInstallRegisters) {
 
     registers.registerPreprocessor(function (opt) {
         if (checkMarkerInSeries(opt.series, 'markArea')) {
-            // Make sure markLine component is enabled
-            opt.markLine = opt.markLine || {};
+            // Make sure markArea component is enabled
+            opt.markArea = opt.markArea || {};
         }
     });
 }
