@@ -99,9 +99,15 @@ const BUITIN_COMPONENTS_MAP = {
     markArea: 'MarkAreaComponent',
     legend: 'LegendComponent',
     dataZoom: 'DataZoomComponent',
-    visualMap: 'VisualMapComponent'
+    visualMap: 'VisualMapComponent',
     // aria: 'AriaComponent',
-    // dataset: 'DatasetComponent'
+    // dataset: 'DatasetComponent',
+
+    // Dependencies
+    xAxis: 'GridComponent',
+    yAxis: 'GridComponent',
+    angleAxis: 'PolarComponent',
+    radiusAxis: 'PolarComponent'
 } as const;
 
 const BUILTIN_CHARTS_MAP = {
@@ -303,12 +309,12 @@ class GlobalModel extends Model<ECUnitOption> {
 
             if (!ComponentModel.hasClass(mainType)) {
                 if (__DEV__) {
-                    const namedComponents = BUITIN_COMPONENTS_MAP[mainType as keyof typeof BUITIN_COMPONENTS_MAP];
-                    if (namedComponents && !componetsMissingLogPrinted[namedComponents]) {
+                    const componentImportName = BUITIN_COMPONENTS_MAP[mainType as keyof typeof BUITIN_COMPONENTS_MAP];
+                    if (componentImportName && !componetsMissingLogPrinted[componentImportName]) {
                         error(`Component ${mainType} is used but not imported.
-import { ${namedComponents} } from 'echarts/components';
-echarts.use([${namedComponents}]);`);
-                        componetsMissingLogPrinted[namedComponents] = true;
+import { ${componentImportName} } from 'echarts/components';
+echarts.use([${componentImportName}]);`);
+                        componetsMissingLogPrinted[componentImportName] = true;
                     }
                 }
 
@@ -393,19 +399,19 @@ echarts.use([${namedComponents}]);`);
                     const isSeriesType = mainType === 'series';
                     const ComponentModelClass = (ComponentModel as ComponentModelConstructor).getClass(
                         mainType, resultItem.keyInfo.subType,
-                        isSeriesType // Give a more detailed warn if series don't exists
+                        !isSeriesType // Give a more detailed warn later if series don't exists
                     );
 
                     if (!ComponentModelClass) {
                         if (__DEV__) {
                             const subType = resultItem.keyInfo.subType;
-                            const namedSeries = BUILTIN_CHARTS_MAP[subType as keyof typeof BUILTIN_CHARTS_MAP];
+                            const seriesImportName = BUILTIN_CHARTS_MAP[subType as keyof typeof BUILTIN_CHARTS_MAP];
                             if (!componetsMissingLogPrinted[subType]) {
                                 componetsMissingLogPrinted[subType] = true;
-                                if (namedSeries) {
+                                if (seriesImportName) {
                                     error(`Series ${subType} is used but not imported.
-import { ${namedSeries} } from 'echarts/charts';
-echarts.use([${namedSeries}]);`);
+import { ${seriesImportName} } from 'echarts/charts';
+echarts.use([${seriesImportName}]);`);
                                 }
                                 else {
                                     error(`Unkown series ${subType}`);
