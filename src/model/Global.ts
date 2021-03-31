@@ -61,6 +61,7 @@ import Scheduler from '../core/Scheduler';
 import { concatInternalOptions } from './internalComponentCreator';
 import { LocaleOption } from '../core/locale';
 import {PaletteMixin} from './mixin/palette';
+import { error } from '../util/log';
 
 export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
@@ -78,6 +79,57 @@ let initBase: (ecModel: GlobalModel, baseOption: ECUnitOption) => void;
 
 const OPTION_INNER_KEY = '\0_ec_inner';
 const OPTION_INNER_VALUE = 1;
+
+const BUITIN_COMPONENTS_MAP = {
+    grid: 'GridComponent',
+    polar: 'PolarComponent',
+    geo: 'GeoComponent',
+    singleAxis: 'SingleAxisComponent',
+    parallel: 'ParallelComponent',
+    calendar: 'CalendarComponent',
+    graphic: 'GraphicComponent',
+    toolbox: 'ToolboxComponent',
+    tooltip: 'TooltipComponent',
+    axisPointer: 'AxisPointerComponent',
+    brush: 'BrushComponent',
+    title: 'TitleComponent',
+    timeline: 'TimelineComponent',
+    markPoint: 'MarkPointComponent',
+    markLine: 'MarkLineComponent',
+    markArea: 'MarkAreaComponent',
+    legend: 'LegendComponent',
+    dataZoom: 'DataZoomComponent',
+    visualMap: 'VisualMapComponent'
+    // aria: 'AriaComponent',
+    // dataset: 'DatasetComponent'
+} as const;
+
+const BUILTIN_CHARTS_MAP = {
+    line: 'LineChart',
+    bar: 'BarChart',
+    pie: 'PieChart',
+    scatter: 'ScatterChart',
+    radar: 'RadarChart',
+    map: 'MapChart',
+    tree: 'TreeChart',
+    treemap: 'TreemapChart',
+    graph: 'GraphChart',
+    gauge: 'GaugeChart',
+    funnel: 'FunnelChart',
+    parallel: 'ParallelChart',
+    sankey: 'SankeyChart',
+    boxplot: 'BoxplotChart',
+    candlestick: 'CandlestickChart',
+    effectScatter: 'EffectScatterChart',
+    lines: 'LinesChart',
+    heatmap: 'HeatmapChart',
+    pictorialBar: 'PictorialBarChart',
+    themeRiver: 'ThemeRiverChart',
+    sunburst: 'SunburstChart',
+    custom: 'CustomChart'
+} as const;
+
+const componetsMissingLogPrinted: Record<string, boolean> = {};
 
 class GlobalModel extends Model<ECUnitOption> {
     // @readonly
@@ -250,6 +302,16 @@ class GlobalModel extends Model<ECUnitOption> {
             }
 
             if (!ComponentModel.hasClass(mainType)) {
+                if (__DEV__) {
+                    const namedComponents = BUITIN_COMPONENTS_MAP[mainType as keyof typeof BUITIN_COMPONENTS_MAP];
+                    if (namedComponents && !componetsMissingLogPrinted[namedComponents]) {
+                        error(`Component ${mainType} is used but not imported.
+import { ${namedComponents} } from 'echarts/components';
+echarts.use([${namedComponents}]);`);
+                        componetsMissingLogPrinted[namedComponents] = true;
+                    }
+                }
+
                 // globalSettingTask.dirty();
                 option[mainType] = option[mainType] == null
                     ? clone(componentOption)
@@ -328,9 +390,30 @@ class GlobalModel extends Model<ECUnitOption> {
                     // or it has been removed in previous `replaceMerge` and left a "hole" in this component index.
                 }
                 else {
+                    const isSeriesType = mainType === 'series';
                     const ComponentModelClass = (ComponentModel as ComponentModelConstructor).getClass(
-                        mainType, resultItem.keyInfo.subType, true
+                        mainType, resultItem.keyInfo.subType,
+                        isSeriesType // Give a more detailed warn if series don't exists
                     );
+
+                    if (!ComponentModelClass) {
+                        if (__DEV__) {
+                            const subType = resultItem.keyInfo.subType;
+                            const namedSeries = BUILTIN_CHARTS_MAP[subType as keyof typeof BUILTIN_CHARTS_MAP];
+                            if (!componetsMissingLogPrinted[subType]) {
+                                componetsMissingLogPrinted[subType] = true;
+                                if (namedSeries) {
+                                    error(`Series ${subType} is used but not imported.
+import { ${namedSeries} } from 'echarts/charts';
+echarts.use([${namedSeries}]);`);
+                                }
+                                else {
+                                    error(`Unkown series ${subType}`);
+                                }
+                            }
+                        }
+                        return;
+                    }
 
                     if (componentModel && componentModel.constructor === ComponentModelClass) {
                         componentModel.name = resultItem.keyInfo.name;
