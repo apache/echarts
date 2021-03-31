@@ -39,7 +39,6 @@ import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import SeriesModel from '../../model/Series';
 import List from '../../data/List';
-import {PiecewiseVisualMapOption} from './PiecewiseModel';
 
 const mapVisual = VisualMapping.mapVisual;
 const eachVisual = VisualMapping.eachVisual;
@@ -235,6 +234,13 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         this.targetVisuals = visualSolution.createVisualMappings(
             this.option.target, stateList, supplementVisualOption
         );
+    }
+
+    /**
+     * @public
+     */
+    getItemSymbol(): string {
+        return null;
     }
 
     /**
@@ -484,9 +490,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
             const symbolSizeExists = (controller.inRange || {}).symbolSize
                 || (controller.outOfRange || {}).symbolSize;
             const inactiveColor = this.get('inactiveColor');
-            const itemSymbol = this.type === 'visualMap.piecewise'
-                ? (this as VisualMapModel<PiecewiseVisualMapOption>).get('itemSymbol')
-                : null;
+            const itemSymbol = this.getItemSymbol();
             const defaultSymbol = itemSymbol || 'roundRect';
 
             each(this.stateList, function (state: VisualState) {

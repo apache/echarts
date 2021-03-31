@@ -27,7 +27,6 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import VisualMapModel from './VisualMapModel';
 import { VisualOptionUnit, ColorString } from '../../util/types';
-import PiecewiseModel from './PiecewiseModel';
 
 type VisualState = VisualMapModel['stateList'][number];
 
@@ -118,7 +117,7 @@ class VisualMapView extends ComponentView {
 
         // Default values.
         if (visualCluster === 'symbol') {
-            visualObj.symbol = (visualMapModel as PiecewiseModel).get('itemSymbol');
+            visualObj.symbol = visualMapModel.getItemSymbol();
         }
         if (visualCluster === 'color') {
             const defaultColor = visualMapModel.get('contentColor');
