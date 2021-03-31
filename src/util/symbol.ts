@@ -315,6 +315,9 @@ function symbolPathSetColor(this: ECSymbol, color: ZRColor, innerColor?: string)
             // TODO Same width with lineStyle in LineView
             symbolStyle.lineWidth = 2;
         }
+        else if (this.shape.symbolType === 'line') {
+            symbolStyle.stroke = color;
+        }
         else {
             symbolStyle.fill = color;
         }
