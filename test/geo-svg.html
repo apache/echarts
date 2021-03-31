@@ -39,10 +39,10 @@ under the License.
 
         <div id="main_simple_geo_json"></div>
         <div id="main_simple_geo_svg"></div>
+        <div id="main_geo_svg_emphasis_select"></div>
         <div id="main_pure_geo_svg"></div>
         <div id="main_pure_map_svg"></div>
         <div id="main_map_geo_svg"></div>
-        <div id="main_geo_svg_regions"></div>
 
 
 
@@ -135,7 +135,7 @@ under the License.
                 option: option,
                 info: {},
                 infoKey: 'event',
-                height: 300
+                height: 200
             });
 
             listenAndPrintEvent(chart);
@@ -187,10 +187,133 @@ under the License.
                 option: option,
                 info: {},
                 infoKey: 'event',
-                height: 300
+                height: 200
             });
 
             listenAndPrintEvent(chart);
+
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            const svg = [
+                '<?xml version="1.0" encoding="utf-8"?>',
+                '<svg xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" fill-rule="evenodd" xml:space="preserve">',
+                '<path name="a" d="M 0,0 L 0,100 100,100 100,0 Z" fill="rgb(16,193,138)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '<path name="a" d="M 110,0 L 110,100 210,100 210,0 Z" fill="rgb(16,193,138)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '<g name="b">',
+                    '<path d="M 0,110 L 0,210 100,110 Z" fill="rgb(16,193,138)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                    '<path d="M 110,110 L 110,210 210,110 Z" fill="rgb(16,193,138)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</g>',
+                '<radialGradient id="XMLID_1_" cx="0" cy="220" r="59.4363" gradientUnits="userSpaceOnUse">',
+                    '<stop  offset="0" style="stop-color:#E6E6E6"/>',
+                    '<stop  offset="1" style="stop-color:#4D4D4D"/>',
+                '</radialGradient>',
+                '<path name="c" d="M 0,220 L 0,320 100,220 Z" fill="url(#XMLID_1_)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '<radialGradient id="XMLID_2_" cx="110" cy="220" r="59.4363" gradientUnits="userSpaceOnUse">',
+                    '<stop  offset="0" style="stop-color:#E6E6E6"/>',
+                    '<stop  offset="1" style="stop-color:#4D4D4D"/>',
+                '</radialGradient>',
+                '<path name="c" d="M 110,220 L 110,320 210,220 Z" fill="url(#XMLID_2_)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join('')
+
+            echarts.registerMap('testGeoSVG_select_hover', { svg: svg });
+
+            option = {
+                // tooltip: {
+                // },
+                geo: {
+                    map: 'testGeoSVG_select_hover',
+                    roam: true,
+                    selectedMode: 'single',
+                    // height: '100%',
+                    // center
+                    // layoutCenter: ['30%', 40],
+                    // layoutSize: 40,
+                    // boundingCoords
+                    zoom: 1,
+                    aspectScale: 1,
+                    label: {
+                        show: true
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: 100
+                        }
+                    },
+                    select: {
+                        itemStyle: {
+                            color: 'red'
+                        }
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main_geo_svg_emphasis_select', {
+                title: [
+                    'click buttons',
+                    'hover check'
+                ],
+                option: option,
+                info: {},
+                infoKey: 'event',
+                height: 200,
+                button: [{
+                    text: 'highlight a',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'highlight', geoIndex: 0, name: 'a' });
+                    }
+                }, {
+                    text: 'downplay a',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'downplay', geoIndex: 0, name: 'a' });
+                    }
+                }, {
+                    text: 'select a',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'geoSelect', geoIndex: 0, name: 'a' });
+                    }
+                }, {
+                    text: 'unselect a',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'geoUnSelect', geoIndex: 0, name: 'a' });
+                    }
+                }, {
+                    text: 'highlight b',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'highlight', geoIndex: 0, name: 'b' });
+                    }
+                }, {
+                    text: 'downplay b',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'downplay', geoIndex: 0, name: 'b' });
+                    }
+                }, {
+                    text: 'select b',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'geoSelect', geoIndex: 0, name: 'b' });
+                    }
+                }, {
+                    text: 'unselect b',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'geoUnSelect', geoIndex: 0, name: 'b' });
+                    }
+                }]
+            });
+
+            listenAndPrintEvent(chart);
+
+            if (chart) {
+                chart.on('highlight', function () {
+                });
+            }
 
         });
         </script>
@@ -220,6 +343,9 @@ under the License.
                         map: 'seatmap',
                         roam: true,
                         selectedMode: 'multiple',
+                        tooltip: {
+                            show: true
+                        },
                         // height: 100,
                         // zoom: 1.5
                         emphasis: {
@@ -251,7 +377,8 @@ under the License.
                 var chart = testHelper.create(echarts, 'main_pure_geo_svg', {
                     title: [
                         'pure geo component with svg resource',
-                        'click seat: check **allSelected** correct.'
+                        'click seat: check **allSelected** correct.',
+                        'hover seat: check **tooltip** and **label** correct.'
                     ],
                     option: option,
                     info: {},
@@ -359,6 +486,9 @@ under the License.
                         selectedMode: 'multiple',
                         // height: 100,
                         // zoom: 1.5
+                        tooltip: {
+                            show: true
+                        },
                         emphasis: {
                             label: {
                                 textBorderColor: '#fff',
@@ -407,118 +537,7 @@ under the License.
 
 
 
-        <script>
-        require(['echarts'/*, 'map/js/china' */], function (echarts) {
-            var option;
 
-            $.ajax({
-                url: '../../vis-data/map/svg/geo-topo/Sicily_prehellenic_topographic_map.svg',
-                dataType: 'text'
-            }).done(function (svg) {
-
-                echarts.registerMap('sicily', {
-                    svg: svg
-                });
-
-                option = {
-                    tooltip: {
-                    },
-                    geo: [{
-                        map: 'sicily',
-                        roam: true,
-                        selectedMode: 'multiple',
-                        itemStyle: {
-                            color: null
-                        },
-                        tooltip: {
-                            show: true,
-                            confine: true,
-                            formatter: function (params) {
-                                return [
-                                    'This is the introduction:',
-                                    'xxxxxxxxxxxxxxxxxxxxx',
-                                    'xxxxxxxxxxxxxxxxxxxxx',
-                                    'xxxxxxxxxxxxxxxxxxxxx',
-                                    'xxxxxxxxxxxxxxxxxxxxx',
-                                    'xxxxxxxxxxxxxxxxxxxxx',
-                                    'xxxxxxxxxxxxxxxxxxxxx',
-                                    'xxxxxxxxxxxxxxxxxxxxx',
-                                    'xxxxxxxxxxxxxxxxxxxxx',
-                                    'xxxxxxxxxxxxxxxxxxxxx',
-                                    'xxxxxxxxxxxxxxxxxxxxx'
-                                ].join('<br>');
-                            }
-                        },
-                        emphasis: {
-                            label: {
-                                show: false
-                            }
-                        },
-                        select: {
-                            itemStyle: {
-                                color: '#b50205'
-                            },
-                            label: {
-                                show: false
-                            }
-                        },
-                        regions: [{
-                            name: 'Sikeloi',
-                            tooltip: {
-                                formatter: 'Sikeloi',
-                                textStyle: { color: '#555' },
-                                backgroundColor: '#ccc'
-                            }
-                        }, {
-                            name: 'Sikanoi',
-                            tooltip: {
-                                formatter: 'Sikanoi',
-                                textStyle: { color: '#555' },
-                                backgroundColor: '#ccc'
-                            }
-                        }, {
-                            name: 'Elymoi',
-                            tooltip: {
-                                formatter: 'Elymoi',
-                                textStyle: { color: '#555' },
-                                backgroundColor: '#ccc'
-                            }
-                        }],
-                        z: 0
-                    }],
-                    // series: {
-                    //     type: 'map',
-                    //     selectedMode: 'multiple',
-                    //     coordinateSystem: 'geo',
-                    //     geoIndex: 0
-                    // }
-                };
-
-                var chart = testHelper.create(echarts, 'main_geo_svg_regions', {
-                    title: [
-                        'symbol and label use the same name in SVG.',
-                        'Hover each symbol and text, tooltip should be displayed.',
-                        'Hover the three area, tooltip should be displayed.',
-                        'Click, check **selected**.'
-                    ],
-                    option: option,
-                    info: {},
-                    infoKey: 'event',
-                    height: 500
-                });
-
-                listenAndPrintEvent(chart);
-
-                if (chart) {
-                    chart.on('georoam', function (params) {
-                        // console.log(params);
-                    });
-                }
-
-            });
-
-        });
-        </script>
 
 
     </body>

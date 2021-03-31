@@ -140,21 +140,3 @@ export interface GeoResource {
 export interface GeoSVGGraphicRoot extends Group {
     isGeoSVGGraphicRoot: boolean;
 }
-
-export type RegionGraphic = {
-    // Region name. Can not be null/undefined.
-    name: string;
-    // Main el.
-    el: Element;
-    // If it specified, use it to trigger state
-    // style change (emphasis/select/blur)
-    // Can be null/undefined.
-    stateTrigger: Element;
-    // If it specified, use it to trigger event to users
-    // Can be null/undefined.
-    eventTrigger: Element;
-    // Whether to set label on `el.textContent`.
-    useLabel: boolean;
-    // Whether to be enabled to set style via in echarts option.
-    optionStyleEnabled: boolean;
-};

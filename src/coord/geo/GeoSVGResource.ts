@@ -17,37 +17,53 @@
 * under the License.
 */
 
-import { parseSVG, makeViewBoxTransform, SVGNodeTagLower } from 'zrender/src/tool/parseSVG';
+import { parseSVG, makeViewBoxTransform, SVGNodeTagLower, SVGParserResultNamedItem } from 'zrender/src/tool/parseSVG';
 import Group from 'zrender/src/graphic/Group';
 import Rect from 'zrender/src/graphic/shape/Rect';
-import {assert, createHashMap, HashMap} from 'zrender/src/core/util';
+import {assert, createHashMap, each, HashMap} from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
-import { GeoResource, GeoSVGGraphicRoot, GeoSVGSourceInput, RegionGraphic } from './geoTypes';
+import { GeoResource, GeoSVGGraphicRoot, GeoSVGSourceInput } from './geoTypes';
 import { parseXML } from 'zrender/src/tool/parseXML';
 import { GeoSVGRegion } from './Region';
 import Element from 'zrender/src/Element';
 
-type RegionName = string;
 export interface GeoSVGGraphicRecord {
     root: Group;
     boundingRect: BoundingRect;
-    regionGraphics: RegionGraphic[];
-    // A name may correspond to multiple graphics.
-    regionElementMap: HashMap<Element[], RegionName>;
+    named: SVGParserResultNamedItem[];
 }
 
+/**
+ * "region available" means that: enable users to set attribute `name="xxx"` on those tags
+ * to make it be a region.
+ * 1. region styles and its label styles can be defined in echarts opton:
+ * ```js
+ * geo: {
+ *     regions: [{
+ *         name: 'xxx',
+ *         itemStyle: { ... },
+ *         label: { ... }
+ *     }, {
+ *         ...
+ *     },
+ *     ...]
+ * };
+ * ```
+ * 2. name can be duplicated in different SVG tag. All of the tags with the same name share
+ * a region option. For exampel if there are two <path> representing two lung lobes. They have
+ * no common parents but both of them need to display label "lung" inside.
+ */
 const REGION_AVAILABLE_SVG_TAG_MAP = createHashMap<number, SVGNodeTagLower>([
-    'rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'text', 'tspan', 'path'
+    'rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'path',
+    // <text> <tspan> are also enabled becuase some SVG might paint text itself,
+    // but still need to trigger events or tooltip.
+    'text', 'tspan',
+    // <g> is also enabled because this case: if multiple tags share one name
+    // and need label displayed, every tags will display the name, which is not
+    // expected. So we can put them into a <g name="xxx">. Thereby only one label
+    // displayed and located based on the bounding rect of the <g>.
+    'g'
 ]);
-
-const OPTION_STYLE_ENABLED_TAG_MAP = createHashMap<number, SVGNodeTagLower>([
-    'rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'path'
-]);
-
-const LABEL_HOST_MAP = createHashMap<number, SVGNodeTagLower>([
-    'rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'path'
-]);
-
 
 export class GeoSVGResource implements GeoResource {
 
@@ -57,9 +73,9 @@ export class GeoSVGResource implements GeoResource {
 
     private _firstGraphic: GeoSVGGraphicRecord;
     private _boundingRect: BoundingRect;
-    private _regions: GeoSVGRegion[] = [];
+    private _regions: GeoSVGRegion[];
     // Key: region.name
-    private _regionsMap: HashMap<GeoSVGRegion> = createHashMap<GeoSVGRegion>();
+    private _regionsMap: HashMap<GeoSVGRegion>;
 
     // All used graphics. key: hostKey, value: root
     private _usedGraphicMap: HashMap<GeoSVGGraphicRecord> = createHashMap();
@@ -98,21 +114,14 @@ export class GeoSVGResource implements GeoResource {
 
             this._boundingRect = this._firstGraphic.boundingRect.clone();
 
-            const regionGraphics = firstGraphic.regionGraphics;
             // PENDING: `nameMap` will not be supported until some real requirement come.
             // if (nameMap) {
-            //     regionGraphics = applyNameMap(regionGraphics, nameMap);
+            //     named = applyNameMap(named, nameMap);
             // }
 
-            // Create resions only for the first graphic.
-            for (let i = 0; i < regionGraphics.length; i++) {
-                const regionGraphic = regionGraphics[i];
-                const region = new GeoSVGRegion(regionGraphic.name, regionGraphic.el);
-                // PENDING: if `nameMap` supported, this region can not be mounted on
-                // `this`, but can only be created each time `load()` called.
-                this._regions.push(region);
-                this._regionsMap.set(regionGraphic.name, region);
-            }
+            const { regions, regionsMap } = createRegions(firstGraphic.named);
+            this._regions = regions;
+            this._regionsMap = regionsMap;
         }
 
         return {
@@ -148,10 +157,10 @@ export class GeoSVGResource implements GeoResource {
 
         // PENDING: `nameMap` will not be supported until some real requirement come.
         // `nameMap` can only be obtained from echarts option.
-        // The original `regionGraphics` must not be modified.
+        // The original `named` must not be modified.
         // if (nameMap) {
         //     svgGraphic = extend({}, svgGraphic);
-        //     svgGraphic.regionGraphics = applyNameMap(svgGraphic.regionGraphics, nameMap);
+        //     svgGraphic.named = applyNameMap(svgGraphic.named, nameMap);
         // }
 
         return svgGraphic;
@@ -227,59 +236,75 @@ function buildGraphic(
 
     (root as GeoSVGGraphicRoot).isGeoSVGGraphicRoot = true;
 
-    const regionGraphics = [] as GeoSVGGraphicRecord['regionGraphics'];
-    const regionElementMap = createHashMap<Element[], RegionName>();
-    const named = result.named;
-    for (let i = 0; i < named.length; i++) {
-        const namedItem = named[i];
-        const svgNodeTagLower = namedItem.svgNodeTagLower;
+    const named = [] as GeoSVGGraphicRecord['named'];
 
-        if (REGION_AVAILABLE_SVG_TAG_MAP.get(svgNodeTagLower) != null) {
-            const optionStyleEnabled = OPTION_STYLE_ENABLED_TAG_MAP.get(svgNodeTagLower);
-            const el = namedItem.el;
-            const name = namedItem.name;
-
-            regionGraphics.push({
-                name: name,
-                el: el,
-                optionStyleEnabled: optionStyleEnabled != null,
-                stateTrigger: optionStyleEnabled != null ? el : null,
-                // text/tspan/image do not suport style but support event.
-                eventTrigger: el,
-                useLabel: LABEL_HOST_MAP.get(svgNodeTagLower) != null
-            });
-
-            const els = regionElementMap.get(name) || regionElementMap.set(name, []);
-            els.push(el);
-
-            // Only named element has silent: false, other elements should
-            // act as background and has no user interaction.
-            el.silent = false;
-            // text|tspan will be converted to group.
-            if (el.isGroup) {
-                el.traverse(child => {
-                    child.silent = false;
-                });
-            }
+    each(result.named, namedItem => {
+        if (REGION_AVAILABLE_SVG_TAG_MAP.get(namedItem.svgNodeTagLower) != null) {
+            named.push(namedItem);
+            setSilent(namedItem.el);
         }
-    }
+    });
 
-    return { root, boundingRect, regionGraphics, regionElementMap: regionElementMap };
+    return { root, boundingRect, named };
+}
+
+function setSilent(el: Element): void {
+    // Only named element has silent: false, other elements should
+    // act as background and has no user interaction.
+    el.silent = false;
+    // text|tspan will be converted to group.
+    if (el.isGroup) {
+        el.traverse(child => {
+            child.silent = false;
+        });
+    }
+}
+
+function createRegions(
+    named: SVGParserResultNamedItem[]
+): {
+    regions: GeoSVGRegion[];
+    regionsMap: HashMap<GeoSVGRegion>;
+} {
+
+    const regions: GeoSVGRegion[] = [];
+    const regionsMap = createHashMap<GeoSVGRegion>();
+
+    // Create resions only for the first graphic.
+    each(named, namedItem => {
+        // Region has feature to calculate center for tooltip or other features.
+        // If there is a <g name="xxx">, the center should be the center of the
+        // bounding rect of the g.
+        if (namedItem.namedFrom != null) {
+            return;
+        }
+
+        const region = new GeoSVGRegion(namedItem.name, namedItem.el);
+        // PENDING: if `nameMap` supported, this region can not be mounted on
+        // `this`, but can only be created each time `load()` called.
+        regions.push(region);
+        // PENDING: if multiple tag named with the same name, only one will be
+        // found by `_regionsMap`. `_regionsMap` is used to find a coordinate
+        // by name. We use `region.getCenter()` as the coordinate.
+        regionsMap.set(namedItem.name, region);
+    });
+
+    return { regions, regionsMap };
 }
 
 
 // PENDING: `nameMap` will not be supported until some real requirement come.
 // /**
 //  * Use the alias in geoNameMap.
-//  * The input `regionGraphics` must not be modified.
+//  * The input `named` must not be modified.
 //  */
 // function applyNameMap(
-//     regionGraphics: GeoSVGGraphicRecord['regionGraphics'],
+//     named: GeoSVGGraphicRecord['named'],
 //     nameMap: NameMap
-// ): GeoSVGGraphicRecord['regionGraphics'] {
-//     const result = [] as GeoSVGGraphicRecord['regionGraphics'];
-//     for (let i = 0; i < regionGraphics.length; i++) {
-//         let regionGraphic = regionGraphics[i];
+// ): GeoSVGGraphicRecord['named'] {
+//     const result = [] as GeoSVGGraphicRecord['named'];
+//     for (let i = 0; i < named.length; i++) {
+//         let regionGraphic = named[i];
 //         const name = regionGraphic.name;
 //         if (nameMap && nameMap.hasOwnProperty(name)) {
 //             regionGraphic = extend({}, regionGraphic);

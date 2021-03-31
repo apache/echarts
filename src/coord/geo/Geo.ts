@@ -169,7 +169,7 @@ class Geo extends View {
         return this._nameCoordMap.get(name) || (region && region.getCenter());
     }
 
-    dataToPoint(data: number[], noRoam?: boolean, out?: number[]): number[] {
+    dataToPoint(data: number[] | string, noRoam?: boolean, out?: number[]): number[] {
         if (typeof data === 'string') {
             // Map area name to geoCoord
             data = this.getGeoCoord(data);

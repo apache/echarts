@@ -36,8 +36,6 @@ import ChartView, {ChartViewConstructor} from '../view/Chart';
 import * as graphic from '../util/graphic';
 import {getECData} from '../util/innerStore';
 import {
-    enterEmphasisWhenMouseOver,
-    leaveEmphasisWhenMouseOut,
     isHighDownDispatcher,
     HOVER_STATE_EMPHASIS,
     HOVER_STATE_BLUR,
@@ -1484,24 +1482,28 @@ class ECharts extends Eventful<ECEventDefinition> {
             ecModel && ecModel.eachComponent(condition, function (model) {
                 if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
                     if (isHighDownPayload(payload)) {
-                        if (payload.type === HIGHLIGHT_ACTION_TYPE) {
-                            if (model instanceof SeriesModel) {
-                                !payload.notBlur && blurSeriesFromHighlightPayload(model, payload, ecIns._api);
+                        if (model instanceof SeriesModel) {
+                            if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
+                                blurSeriesFromHighlightPayload(model, payload, ecIns._api);
                             }
-                            else {
-                                const { focusSelf, dispatchers } = findComponentHighDownDispatchers(
-                                    model.mainType, model.componentIndex, payload.name, ecIns._api
-                                );
-                                if (focusSelf && !payload.notBlur) {
-                                    blurComponent(model.mainType, model.componentIndex, ecIns._api);
-                                }
-                                // PENDING:
-                                // Whether to put this "enter emphasis" code in `ComponentView`,
-                                // which will be the same as `ChartView` but might be not necessary
-                                // and will be far from this logic.
-                                if (dispatchers) {
-                                    each(dispatchers, dispatcher => enterEmphasis(dispatcher));
-                                }
+                        }
+                        else {
+                            const { focusSelf, dispatchers } = findComponentHighDownDispatchers(
+                                model.mainType, model.componentIndex, payload.name, ecIns._api
+                            );
+                            if (payload.type === HIGHLIGHT_ACTION_TYPE && focusSelf && !payload.notBlur) {
+                                blurComponent(model.mainType, model.componentIndex, ecIns._api);
+                            }
+                            // PENDING:
+                            // Whether to put this "enter emphasis" code in `ComponentView`,
+                            // which will be the same as `ChartView` but might be not necessary
+                            // and will be far from this logic.
+                            if (dispatchers) {
+                                each(dispatchers, dispatcher => {
+                                    payload.type === HIGHLIGHT_ACTION_TYPE
+                                        ? enterEmphasis(dispatcher)
+                                        : leaveEmphasis(dispatcher);
+                                });
                             }
                         }
                     }

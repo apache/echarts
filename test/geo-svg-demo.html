@@ -38,8 +38,8 @@ under the License.
 
 
         <div id="main_geo_svg_organ"></div>
-        <!-- <div id="main_geo_svg_organ1"></div> -->
-
+        <div id="main_geo_svg_regions"></div>
+        <div id="main_geo_svg_line_path"></div>
 
 
 
@@ -99,6 +99,8 @@ under the License.
                     tooltip: {
                     },
                     geo: {
+                        left: 10,
+                        right: '50%',
                         map: 'seatmap',
                         roam: true,
                         selectedMode: 'multiple',
@@ -107,18 +109,16 @@ under the License.
                         emphasis: {
                             focus: 'self',
                             itemStyle: {
-                                // color: null
+                                color: null
                             },
                             label: {
-                                show: false,
+                                position: 'bottom',
+                                distance: 20,
                                 textBorderColor: '#fff',
                                 textBorderWidth: 2
                             }
                         },
                         blur: {
-                            // itemStyle: {
-                            //     opacity: 0.3
-                            // }
                         },
                         select: {
                             itemStyle: {
@@ -130,7 +130,25 @@ under the License.
                                 textBorderWidth: 2
                             }
                         }
-                    }
+                    },
+                    grid: {
+                        left: '60%'
+                    },
+                    xAxis: {
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    yAxis: {
+                        data: ['heart', 'large-intestine', 'small-intestine', 'spleen', 'kidney', 'lung', 'liver']
+                    },
+                    series: [{
+                        type: 'bar',
+                        emphasis: {
+                            focus: 'self'
+                        },
+                        data: [121, 321, 141, 52, 198, 289, 139]
+                    }]
                 };
 
                 var chart = testHelper.create(echarts, 'main_geo_svg_organ', {
@@ -149,9 +167,34 @@ under the License.
                 listenAndPrintEvent(chart);
 
                 if (chart) {
-                    chart.on('highlight', function () {
-                        console.log('agsd');
+                    chart.on('mouseover', { seriesIndex: 0 }, function (event) {
+                        chart.dispatchAction({
+                            type: 'highlight',
+                            geoIndex: 0,
+                            name: event.name
+                        });
                     });
+                    chart.on('mouseout', { seriesIndex: 0 }, function (event) {
+                        chart.dispatchAction({
+                            type: 'downplay',
+                            geoIndex: 0,
+                            name: event.name
+                        });
+                    });
+                    // chart.on('mouseover', { geoIndex: 0 }, function (event) {
+                    //     chart.dispatchAction({
+                    //         type: 'highlight',
+                    //         seriesIndex: 0,
+                    //         name: event.name
+                    //     });
+                    // });
+                    // chart.on('mouseout', { geoIndex: 0 }, function (event) {
+                    //     chart.dispatchAction({
+                    //         type: 'downplay',
+                    //         seriesIndex: 0,
+                    //         name: event.name
+                    //     });
+                    // });
                 }
 
             });
@@ -162,36 +205,54 @@ under the License.
 
 
 
-<!--
+
 
 
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
+
             $.ajax({
-                url: '../../vis-data/map/svg/organ/Veins_Medical_Diagram_clip_art.svg',
+                url: '../../vis-data/map/svg/geo-topo/Sicily_prehellenic_topographic_map.svg',
                 dataType: 'text'
             }).done(function (svg) {
 
-                echarts.registerMap('seatmap', {
+                echarts.registerMap('sicily', {
                     svg: svg
                 });
 
                 option = {
                     tooltip: {
                     },
-                    series: {
-                        type: 'map',
-                        map: 'seatmap',
+                    geo: [{
+                        map: 'sicily',
                         roam: true,
                         selectedMode: 'multiple',
-                        // height: 100,
-                        // zoom: 1.5
+                        itemStyle: {
+                            color: null
+                        },
+                        tooltip: {
+                            show: true,
+                            confine: true,
+                            formatter: function (params) {
+                                return [
+                                    'This is the introduction:',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxx'
+                                ].join('<br>');
+                            }
+                        },
                         emphasis: {
-                            focus: 'self',
                             label: {
-                                textBorderColor: '#fff',
-                                textBorderWidth: 2
+                                show: false
                             }
                         },
                         select: {
@@ -199,39 +260,202 @@ under the License.
                                 color: '#b50205'
                             },
                             label: {
-                                show: false,
-                                textBorderColor: '#fff',
-                                textBorderWidth: 2
+                                show: false
                             }
-                        }
-                    }
+                        },
+                        regions: [{
+                            name: 'Sikeloi',
+                            tooltip: {
+                                formatter: 'Sikeloi',
+                                textStyle: { color: '#555' },
+                                backgroundColor: '#ccc'
+                            }
+                        }, {
+                            name: 'Sikanoi',
+                            tooltip: {
+                                formatter: 'Sikanoi',
+                                textStyle: { color: '#555' },
+                                backgroundColor: '#ccc'
+                            }
+                        }, {
+                            name: 'Elymoi',
+                            tooltip: {
+                                formatter: 'Elymoi',
+                                textStyle: { color: '#555' },
+                                backgroundColor: '#ccc'
+                            }
+                        }],
+                        z: 0
+                    }]
                 };
 
-                var chart = testHelper.create(echarts, 'main_geo_svg_organ1', {
+                var chart = testHelper.create(echarts, 'main_geo_svg_regions', {
                     title: [
-                        'pure geo component with svg resource',
-                        'click seat: check **allSelected** correct.'
+                        'symbol and label use the same name in SVG.',
+                        'Hover each symbol and text, tooltip should be displayed.',
+                        'Hover the three area, tooltip should be displayed.',
+                        'Click, check **selected**.'
                     ],
                     option: option,
                     info: {},
                     infoKey: 'event',
                     height: 500
-                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                    // recordCanvas: true,
                 });
 
                 listenAndPrintEvent(chart);
 
-                if (chart) {
-                    chart.on('highlight', function () {
-                        console.log('agsd');
-                    });
-                }
+            });
+
+        });
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            $.ajax({
+                url: '../../vis-data/map/svg/geo-topo/Map_of_Iceland.svg',
+                dataType: 'text'
+            }).done(function (svg) {
+
+                echarts.registerMap('Map_of_Iceland', {
+                    svg: svg
+                });
+
+                option = {
+                    tooltip: {
+                        alwaysShowContent: true,
+                        enterable: true,
+                        extraCssText: 'user-select: text'
+                    },
+                    geo: [{
+                        map: 'Map_of_Iceland',
+                        roam: true,
+                        selectedMode: 'single',
+                        tooltip: {
+                            show: true,
+                            // confine: true
+                        },
+                        label: {
+                            fontSize: 20,
+                            textBorderColor: '#fff',
+                            textBorderWidth: 2
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: null,
+                                borderColor: '#b50805',
+                                borderWidth: 5
+                            }
+                        },
+                        select: {
+                            itemStyle: {
+                                color: null,
+                                borderColor: '#b50205',
+                                borderWidth: 5
+                            }
+                        },
+                        regions: [{
+                            name: 'trip1',
+                            label: {
+                                formatter: 'Western Trip'
+                            },
+                            tooltip: {
+                                position: 'right',
+                                formatter: [
+                                    'Western Trip:',
+                                    'xxxxxxxxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxxxxxxxx',
+                                    'xxxxxxxxxxxxxxxxxxxxxxxxxxx'
+                                ].join('<br>')
+                            }
+                        }, {
+                            name: 'trip2',
+                            label: {
+                                formatter: 'Eastern Trip'
+                            },
+                            tooltip: {
+                                position: 'left',
+                                formatter: [
+                                    'Western Trip:',
+                                    'xxxxxxxxxxxx',
+                                    'xxxxxxxxxxxx',
+                                    'xxxxxxxxxxxx',
+                                    'xxxxxxxxxxxx',
+                                    'xxxxxxxxxxxx',
+                                    'xxxxxxxxxxxx',
+                                    'xxxxxxxxxxxx',
+                                    'xxxxxxxxxxxx',
+                                    'xxxxxxxxxxxx',
+                                    'xxxxxxxxxxxx',
+                                    'xxxxxxxxxxxx'
+                                ].join('<br>')
+                            }
+                        }]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main_geo_svg_line_path', {
+                    title: [
+                        'Select some route in SVG via API.',
+                        'Some route should be highlighted (check selectedMode **single**).',
+                        'label should be displayed.'
+                    ],
+                    option: option,
+                    info: {},
+                    infoKey: 'event',
+                    height: 500,
+                    buttons: [{
+                        text: 'highlight trip1',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'geoSelect',
+                                geoIndex: 0,
+                                name: 'trip1'
+                            });
+                            chart.dispatchAction({
+                                type: 'showTip',
+                                geoIndex: 0,
+                                name: 'trip1'
+                            });
+                        }
+                    }, {
+                        text: 'highlight trip2',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'geoSelect',
+                                geoIndex: 0,
+                                name: 'trip2'
+                            });
+                            chart.dispatchAction({
+                                type: 'showTip',
+                                geoIndex: 0,
+                                name: 'trip2'
+                            });
+                        }
+                    }]
+                });
+
+                listenAndPrintEvent(chart);
 
             });
 
         });
-        </script> -->
+        </script>
+
+
+
 
 
 

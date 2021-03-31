@@ -26,7 +26,8 @@ import {
     enableHoverEmphasis,
     DISPLAY_STATES,
     enableComponentHighDownFeatures,
-    setDefaultStateProxy
+    setDefaultStateProxy,
+    SPECIAL_STATES
 } from '../../util/states';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {getUID} from '../../util/component';
@@ -39,7 +40,7 @@ import GeoView from '../geo/GeoView';
 import MapView from '../../chart/map/MapView';
 import Geo from '../../coord/geo/Geo';
 import Model from '../../model/Model';
-import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels, createTextConfig } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
 import { ViewCoordSysTransformInfoPart } from '../../coord/View';
@@ -48,13 +49,15 @@ import Displayable from 'zrender/src/graphic/Displayable';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
 import List from '../../data/List';
 import { GeoJSONRegion } from '../../coord/geo/Region';
-import { RegionGraphic } from '../../coord/geo/geoTypes';
-import { ItemStyleProps } from '../../model/mixin/itemStyle';
-import { LineStyleProps } from '../../model/mixin/lineStyle';
+import { SVGNodeTagLower } from 'zrender/src/tool/parseSVG';
 
 
 interface RegionsGroup extends graphic.Group {
 }
+
+type RegionModel = ReturnType<GeoModel['getRegionModel']> | ReturnType<MapSeries['getRegionModel']>;
+
+type MapOrGeoModel = GeoModel | MapSeries;
 
 interface ViewBuildContext {
     api: ExtensionAPI;
@@ -70,6 +73,26 @@ interface GeoStyleableOption {
     itemStyle?: GeoItemStyleOption;
     lineStyle?: LineStyleOption;
 }
+type RegionName = string;
+
+/**
+ * Only these tags enable use `itemStyle` if they are named in SVG.
+ * Other tags like <text> <tspan> <image> might not suitable for `itemStyle`.
+ * They will not be considered to be styled until some requirements come.
+ */
+const OPTION_STYLE_ENABLED_TAGS: SVGNodeTagLower[] = [
+    'rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'path'
+];
+const OPTION_STYLE_ENABLED_TAG_MAP = zrUtil.createHashMap<number, SVGNodeTagLower>(
+    OPTION_STYLE_ENABLED_TAGS
+);
+const STATE_TRIGGER_TAG_MAP = zrUtil.createHashMap<number, SVGNodeTagLower>(
+    OPTION_STYLE_ENABLED_TAGS.concat(['g']) as SVGNodeTagLower[]
+);
+const LABEL_HOST_MAP = zrUtil.createHashMap<number, SVGNodeTagLower>(
+    OPTION_STYLE_ENABLED_TAGS.concat(['g']) as SVGNodeTagLower[]
+);
+
 
 function getFixedItemStyle(model: Model<GeoItemStyleOption>) {
     const itemStyle = model.getItemStyle();
@@ -114,6 +137,10 @@ class MapDraw {
     private _svgGroup: graphic.Group;
 
     private _svgGraphicRecord: GeoSVGGraphicRecord;
+
+    // A name may correspond to multiple graphics.
+    // Used as event dispatcher.
+    private _svgDispatcherMap: zrUtil.HashMap<Element[], RegionName>;
 
 
     constructor(api: ExtensionAPI) {
@@ -199,6 +226,8 @@ class MapDraw {
         const nameMap = this._regionsGroupByName = zrUtil.createHashMap<RegionsGroup>();
         const regionsGroup = this._regionsGroup;
         const transformInfoRaw = viewBuildCtx.transformInfoRaw;
+        const mapOrGeoModel = viewBuildCtx.mapOrGeoModel;
+        const data = viewBuildCtx.data;
 
         const transformPoint = function (point: number[]): number[] {
             return [
@@ -211,14 +240,31 @@ class MapDraw {
 
         // Only when the resource is GeoJSON, there is `geo.regions`.
         zrUtil.each(viewBuildCtx.geo.regions, function (region: GeoJSONRegion) {
+            const regionName = region.name;
+            const regionModel = mapOrGeoModel.getRegionModel(regionName);
+            const dataIdx = data ? data.indexOfName(regionName) : null;
 
             // Consider in GeoJson properties.name may be duplicated, for example,
             // there is multiple region named "United Kindom" or "France" (so many
             // colonies). And it is not appropriate to merge them in geo, which
             // will make them share the same label and bring trouble in label
             // location calculation.
-            const regionGroup = nameMap.get(region.name)
-                || nameMap.set(region.name, new graphic.Group() as RegionsGroup);
+            let regionGroup = nameMap.get(regionName);
+
+            if (!regionGroup) {
+                regionGroup = nameMap.set(regionName, new graphic.Group() as RegionsGroup);
+                regionsGroup.add(regionGroup);
+
+                resetEventTriggerForRegion(
+                    viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel, dataIdx
+                );
+                resetTooltipForRegion(
+                    viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel
+                );
+                resetStateTriggerForRegion(
+                    viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel
+                );
+            }
 
             const compoundPath = new graphic.CompoundPath({
                 segmentIgnoreThreshold: 1,
@@ -258,18 +304,18 @@ class MapDraw {
                 }
             });
 
-            const centerPt = transformPoint(region.getCenter());
-            const regionGraphic: RegionGraphic = {
-                name: region.name,
-                el: compoundPath,
-                optionStyleEnabled: true,
-                stateTrigger: regionGroup,
-                eventTrigger: regionGroup,
-                useLabel: true
-            };
-            this._resetSingleRegionGraphic(viewBuildCtx, regionGraphic, centerPt, null, false);
+            applyOptionStyleForRegion(
+                viewBuildCtx, compoundPath, dataIdx, regionModel
+            );
 
-            regionsGroup.add(regionGroup);
+            if (compoundPath instanceof Displayable) {
+                compoundPath.culling = true;
+            }
+
+            const centerPt = transformPoint(region.getCenter());
+            resetLabelForRegion(
+                viewBuildCtx, compoundPath, regionName, regionModel, mapOrGeoModel, dataIdx, centerPt
+            );
 
         }, this);
     }
@@ -288,22 +334,69 @@ class MapDraw {
             this._useSVG(mapName);
         }
 
+        const svgDispatcherMap = this._svgDispatcherMap = zrUtil.createHashMap<Element[], RegionName>();
+
         let focusSelf = false;
-        zrUtil.each(this._svgGraphicRecord.regionGraphics, function (regionGraphic) {
+        zrUtil.each(this._svgGraphicRecord.named, function (namedItem) {
             // Note that we also allow different elements have the same name.
             // For example, a glyph of a city and the label of the city have
             // the same name and their tooltip info can be defined in a single
             // region option.
-            const focus = this._resetSingleRegionGraphic(
-                viewBuildCtx, regionGraphic, [0, 0], 'inside',
-                // We do not know how the SVG like so we'd better not to change z2.
-                // Otherwise it might bring some unexpected result. For example,
-                // an area hovered that make some inner city can not be clicked.
-                true
-            );
-            if (focus === 'self') {
-                focusSelf = true;
+
+            const regionName = namedItem.name;
+            const mapOrGeoModel = viewBuildCtx.mapOrGeoModel;
+            const data = viewBuildCtx.data;
+            const svgNodeTagLower = namedItem.svgNodeTagLower;
+            const el = namedItem.el;
+
+            const dataIdx = data ? data.indexOfName(regionName) : null;
+            const regionModel = mapOrGeoModel.getRegionModel(regionName);
+
+            if (OPTION_STYLE_ENABLED_TAG_MAP.get(svgNodeTagLower) != null
+                && (el instanceof Displayable)
+            ) {
+                applyOptionStyleForRegion(viewBuildCtx, el, dataIdx, regionModel);
             }
+
+            if (el instanceof Displayable) {
+                el.culling = true;
+            }
+
+            // We do not know how the SVG like so we'd better not to change z2.
+            // Otherwise it might bring some unexpected result. For example,
+            // an area hovered that make some inner city can not be clicked.
+            (el as ECElement).z2EmphasisLift = 0;
+
+            // If self named, that is, if tag is inside a named <g> (where `namedFrom` does not exists):
+            if (!namedItem.namedFrom) {
+                // label should batter to be displayed based on the center of <g>
+                // if it is named rather than displayed on each child.
+                if (LABEL_HOST_MAP.get(svgNodeTagLower) != null) {
+                    resetLabelForRegion(
+                        viewBuildCtx, el, regionName, regionModel, mapOrGeoModel, dataIdx, [0, 0]
+                    );
+                }
+
+                resetEventTriggerForRegion(
+                    viewBuildCtx, el, regionName, regionModel, mapOrGeoModel, dataIdx
+                );
+
+                resetTooltipForRegion(
+                    viewBuildCtx, el, regionName, regionModel, mapOrGeoModel
+                );
+
+                if (STATE_TRIGGER_TAG_MAP.get(svgNodeTagLower) != null) {
+                    const focus = resetStateTriggerForRegion(
+                        viewBuildCtx, el, regionName, regionModel, mapOrGeoModel
+                    );
+                    if (focus === 'self') {
+                        focusSelf = true;
+                    }
+                    const els = svgDispatcherMap.get(regionName) || svgDispatcherMap.set(regionName, []);
+                    els.push(el);
+                }
+            }
+
         }, this);
 
         // It's a little complicated to support blurring the entire geoSVG in series-map.
@@ -334,157 +427,6 @@ class MapDraw {
         }
     }
 
-    private _resetSingleRegionGraphic(
-        viewBuildCtx: ViewBuildContext,
-        regionGraphic: RegionGraphic,
-        labelXY: number[],
-        labelPosition: ElementTextConfig['position'],
-        noZ2EmphasisLift: boolean
-    ): InnerFocus {
-
-        const regionName = regionGraphic.name;
-        const mapOrGeoModel = viewBuildCtx.mapOrGeoModel;
-        const data = viewBuildCtx.data;
-        const isGeo = viewBuildCtx.isGeo;
-
-        const dataIdx = data ? data.indexOfName(regionName) : null;
-        const regionModel = mapOrGeoModel.getRegionModel(regionName);
-
-        applyOptionStyleForRegion(viewBuildCtx, regionGraphic, dataIdx, regionModel);
-
-        if (regionGraphic.el instanceof Displayable) {
-            regionGraphic.el.culling = true;
-        }
-        if (noZ2EmphasisLift) {
-            (regionGraphic.el as ECElement).z2EmphasisLift = 0;
-        }
-
-        let showLabel = false;
-        for (let i = 0; i < DISPLAY_STATES.length; i++) {
-            const stateName = DISPLAY_STATES[i];
-            // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            if (regionModel.get(
-                stateName === 'normal' ? ['label', 'show'] : [stateName, 'label', 'show']
-            )) {
-                showLabel = true;
-                break;
-            }
-        }
-
-        const isDataNaN = data && isNaN(data.get(data.mapDimension('value'), dataIdx) as number);
-        const itemLayout = data && data.getItemLayout(dataIdx);
-
-        // In the following cases label will be drawn
-        // 1. In map series and data value is NaN
-        // 2. In geo component
-        // 3. Region has no series legendSymbol, which will be add a showLabel flag in mapSymbolLayout
-        if (
-            regionGraphic.useLabel
-            && (
-                ((isGeo || isDataNaN) && showLabel)
-                || (itemLayout && itemLayout.showLabel)
-            )
-        ) {
-            const query = !isGeo ? dataIdx : regionName;
-            let labelFetcher;
-
-            // Consider dataIdx not found.
-            if (!data || dataIdx >= 0) {
-                labelFetcher = mapOrGeoModel;
-            }
-
-            const textEl = new graphic.Text({
-                x: labelXY[0],
-                y: labelXY[1],
-                z2: 10,
-                silent: true
-            });
-            textEl.afterUpdate = labelTextAfterUpdate;
-
-            setLabelStyle<typeof query>(
-                textEl, getLabelStatesModels(regionModel),
-                {
-                    labelFetcher: labelFetcher,
-                    labelDataIndex: query,
-                    defaultText: regionName
-                },
-                { normal: {
-                    align: 'center',
-                    verticalAlign: 'middle'
-                } }
-            );
-
-            regionGraphic.el.setTextContent(textEl);
-            regionGraphic.el.setTextConfig({
-                local: true,
-                insideFill: textEl.style.fill,
-                position: labelPosition
-            });
-            (regionGraphic.el as ECElement).disableLabelAnimation = true;
-        }
-        else {
-            regionGraphic.el.removeTextContent();
-            regionGraphic.el.removeTextConfig();
-            (regionGraphic.el as ECElement).disableLabelAnimation = null;
-        }
-
-        // setItemGraphicEl, setHoverStyle after all polygons and labels
-        // are added to the rigionGroup
-        if (data) {
-            // FIXME: when series-map use a SVG map, and there are duplicated name specified
-            // on different SVG elements, after `data.setItemGraphicEl(...)`:
-            // (1) all of them will be mounted with `dataIndex`, `seriesIndex`, so that tooltip
-            // can be triggered only mouse hover. That's correct.
-            // (2) only the last element will be kept in `data`, so that if trigger tooltip
-            // by `dispatchAction`, only the last one can be found and triggered. That might be
-            // not correct. We will fix it in future if anyone demanding that.
-            data.setItemGraphicEl(dataIdx, regionGraphic.eventTrigger);
-        }
-        // series-map will not trigger "geoselectchange" no matter it is
-        // based on a declared geo component. Becuause series-map will
-        // trigger "selectchange". If it trigger both the two events,
-        // If users call `chart.dispatchAction({type: 'toggleSelect'})`,
-        // it not easy to also fire event "geoselectchanged".
-        else {
-            // Package custom mouse event for geo component
-            getECData(regionGraphic.eventTrigger).eventData = {
-                componentType: 'geo',
-                componentIndex: mapOrGeoModel.componentIndex,
-                geoIndex: mapOrGeoModel.componentIndex,
-                name: regionName,
-                region: (regionModel && regionModel.option) || {}
-            };
-        }
-
-        if (!data) {
-            graphic.setTooltipConfig({
-                el: regionGraphic.el,
-                componentModel: mapOrGeoModel,
-                itemName: regionName,
-                // @ts-ignore FIXME:TS fix the "compatible with each other"?
-                itemTooltipOption: regionModel.get('tooltip')
-            });
-        }
-
-        let focus;
-        const stateTrigger = regionGraphic.stateTrigger;
-        if (stateTrigger) {
-            // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            stateTrigger.highDownSilentOnTouch = !!mapOrGeoModel.get('selectedMode');
-            // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            const emphasisModel = regionModel.getModel('emphasis');
-            focus = emphasisModel.get('focus');
-            enableHoverEmphasis(
-                stateTrigger, focus, emphasisModel.get('blurScope')
-            );
-            if (isGeo) {
-                enableComponentHighDownFeatures(stateTrigger, mapOrGeoModel as GeoModel, regionName);
-            }
-        }
-
-        return focus;
-    }
-
     remove(): void {
         this._regionsGroup.removeAll();
         this._regionsGroupByName = null;
@@ -509,7 +451,7 @@ class MapDraw {
             }
         }
         else if (geo.resourceType === 'geoSVG') {
-            return this._svgGraphicRecord.regionElementMap.get(name) || [];
+            return this._svgDispatcherMap && this._svgDispatcherMap.get(name) || [];
         }
     }
 
@@ -538,6 +480,7 @@ class MapDraw {
             (resource as GeoSVGResource).freeGraphic(this.uid);
         }
         this._svgGraphicRecord = null;
+        this._svgDispatcherMap = null;
         this._svgGroup.removeAll();
         this._svgMapName = null;
     }
@@ -641,7 +584,7 @@ function labelTextAfterUpdate(this: graphic.Text) {
 
 function applyOptionStyleForRegion(
     viewBuildCtx: ViewBuildContext,
-    regionGraphic: RegionGraphic,
+    el: Displayable,
     dataIndex: number,
     regionModel: Model<
         GeoStyleableOption & {
@@ -651,14 +594,6 @@ function applyOptionStyleForRegion(
         }
     >
 ): void {
-
-    if (
-        !regionGraphic.optionStyleEnabled
-        || !(regionGraphic.el instanceof Displayable)
-    ) {
-        return;
-    }
-
     // All of the path are using `itemStyle`, becuase
     // (1) Some SVG also use fill on polyline (The different between
     // polyline and polygon is "open" or "close" but not fill or not).
@@ -698,11 +633,185 @@ function applyOptionStyleForRegion(
 
     // SVG text, tspan and image can be named but not supporeted
     // to be styled by region option yet.
-    regionGraphic.el.setStyle(normalStyle);
-    regionGraphic.el.style.strokeNoScale = true;
-    regionGraphic.el.ensureState('emphasis').style = emphasisStyle;
-    regionGraphic.el.ensureState('select').style = selectStyle;
-    regionGraphic.el.ensureState('blur').style = blurStyle;
+    el.setStyle(normalStyle);
+    el.style.strokeNoScale = true;
+    el.ensureState('emphasis').style = emphasisStyle;
+    el.ensureState('select').style = selectStyle;
+    el.ensureState('blur').style = blurStyle;
+}
+
+function resetLabelForRegion(
+    viewBuildCtx: ViewBuildContext,
+    el: Element,
+    regionName: string,
+    regionModel: RegionModel,
+    mapOrGeoModel: MapOrGeoModel,
+    // Exist only if `viewBuildCtx.data` exists.
+    dataIdx: number,
+    labelXY: number[]
+): void {
+    const data = viewBuildCtx.data;
+    const isGeo = viewBuildCtx.isGeo;
+
+    let showLabel = false;
+    for (let i = 0; i < DISPLAY_STATES.length; i++) {
+        const stateName = DISPLAY_STATES[i];
+        // @ts-ignore FIXME:TS fix the "compatible with each other"?
+        if (regionModel.get(
+            stateName === 'normal' ? ['label', 'show'] : [stateName, 'label', 'show']
+        )) {
+            showLabel = true;
+            break;
+        }
+    }
+
+    const isDataNaN = data && isNaN(data.get(data.mapDimension('value'), dataIdx) as number);
+    const itemLayout = data && data.getItemLayout(dataIdx);
+
+    // In the following cases label will be drawn
+    // 1. In map series and data value is NaN
+    // 2. In geo component
+    // 3. Region has no series legendSymbol, which will be add a showLabel flag in mapSymbolLayout
+    if (
+        ((isGeo || isDataNaN) && showLabel)
+        || (itemLayout && itemLayout.showLabel)
+    ) {
+        const query = !isGeo ? dataIdx : regionName;
+        let labelFetcher;
+
+        // Consider dataIdx not found.
+        if (!data || dataIdx >= 0) {
+            labelFetcher = mapOrGeoModel;
+        }
+
+        const textEl = new graphic.Text({
+            x: labelXY[0],
+            y: labelXY[1],
+            z2: 10,
+            silent: true
+        });
+        textEl.afterUpdate = labelTextAfterUpdate;
+
+        const labelStateModels = getLabelStatesModels(regionModel);
+        setLabelStyle<typeof query>(
+            textEl,
+            labelStateModels,
+            {
+                labelFetcher: labelFetcher,
+                labelDataIndex: query,
+                defaultText: regionName
+            },
+            { normal: {
+                align: 'center',
+                verticalAlign: 'middle'
+            } }
+        );
+
+        // PENDING: use `setLabelStyle` entirely.
+        el.setTextContent(textEl);
+
+        const textConfig = createTextConfig(labelStateModels.normal, null, false);
+        // Need to apply the `translate`.
+        textConfig.local = true;
+        textConfig.insideFill = textEl.style.fill;
+        el.setTextConfig(textConfig);
+
+        for (let i = 0; i < SPECIAL_STATES.length; i++) {
+            const stateName = SPECIAL_STATES[i];
+            // Hover label only work when `emphasis` state ensured.
+            const state = el.ensureState(stateName);
+
+            const textConfig = state.textConfig = createTextConfig(labelStateModels[stateName], null, true);
+            // Need to apply the `translate`.
+            textConfig.local = true;
+            textConfig.insideFill = textEl.style.fill;
+        }
+
+        (el as ECElement).disableLabelAnimation = true;
+    }
+    else {
+        el.removeTextContent();
+        el.removeTextConfig();
+        (el as ECElement).disableLabelAnimation = null;
+    }
+}
+
+function resetEventTriggerForRegion(
+    viewBuildCtx: ViewBuildContext,
+    eventTrigger: Element,
+    regionName: string,
+    regionModel: RegionModel,
+    mapOrGeoModel: MapOrGeoModel,
+    // Exist only if `viewBuildCtx.data` exists.
+    dataIdx: number
+): void {
+    // setItemGraphicEl, setHoverStyle after all polygons and labels
+    // are added to the rigionGroup
+    if (viewBuildCtx.data) {
+        // FIXME: when series-map use a SVG map, and there are duplicated name specified
+        // on different SVG elements, after `data.setItemGraphicEl(...)`:
+        // (1) all of them will be mounted with `dataIndex`, `seriesIndex`, so that tooltip
+        // can be triggered only mouse hover. That's correct.
+        // (2) only the last element will be kept in `data`, so that if trigger tooltip
+        // by `dispatchAction`, only the last one can be found and triggered. That might be
+        // not correct. We will fix it in future if anyone demanding that.
+        viewBuildCtx.data.setItemGraphicEl(dataIdx, eventTrigger);
+    }
+    // series-map will not trigger "geoselectchange" no matter it is
+    // based on a declared geo component. Becuause series-map will
+    // trigger "selectchange". If it trigger both the two events,
+    // If users call `chart.dispatchAction({type: 'toggleSelect'})`,
+    // it not easy to also fire event "geoselectchanged".
+    else {
+        // Package custom mouse event for geo component
+        getECData(eventTrigger).eventData = {
+            componentType: 'geo',
+            componentIndex: mapOrGeoModel.componentIndex,
+            geoIndex: mapOrGeoModel.componentIndex,
+            name: regionName,
+            region: (regionModel && regionModel.option) || {}
+        };
+    }
+}
+
+function resetTooltipForRegion(
+    viewBuildCtx: ViewBuildContext,
+    el: Element,
+    regionName: string,
+    regionModel: RegionModel,
+    mapOrGeoModel: MapOrGeoModel
+): void {
+    if (!viewBuildCtx.data) {
+        graphic.setTooltipConfig({
+            el: el,
+            componentModel: mapOrGeoModel,
+            itemName: regionName,
+            // @ts-ignore FIXME:TS fix the "compatible with each other"?
+            itemTooltipOption: regionModel.get('tooltip')
+        });
+    }
+}
+
+function resetStateTriggerForRegion(
+    viewBuildCtx: ViewBuildContext,
+    el: Element,
+    regionName: string,
+    regionModel: RegionModel,
+    mapOrGeoModel: MapOrGeoModel
+): InnerFocus {
+    // @ts-ignore FIXME:TS fix the "compatible with each other"?
+    el.highDownSilentOnTouch = !!mapOrGeoModel.get('selectedMode');
+    // @ts-ignore FIXME:TS fix the "compatible with each other"?
+    const emphasisModel = regionModel.getModel('emphasis');
+    const focus = emphasisModel.get('focus');
+    enableHoverEmphasis(
+        el, focus, emphasisModel.get('blurScope')
+    );
+    if (viewBuildCtx.isGeo) {
+        enableComponentHighDownFeatures(el, mapOrGeoModel as GeoModel, regionName);
+    }
+
+    return focus;
 }
 
 export default MapDraw;
