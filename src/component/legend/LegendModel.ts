@@ -31,7 +31,9 @@ import {
     CommonTooltipOption,
     ZRColor,
     DecalObject,
-    ZRLineType
+    ZRLineType,
+    ItemStyleOption,
+    LineStyleOption
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
@@ -65,37 +67,23 @@ export interface LegendSelectorButtonOption {
     title?: string
 }
 
-export interface LegendItemStyleOption {
-    color?: ZRColor | 'inherit'
-    opacity?: number | 'inherit'
-    decal?: DecalObject | 'none' | 'inherit'
-    shadowBlur?: number | 'inherit'
-    shadowColor?: ColorString | 'inherit'
-    shadowOffsetX?: number | 'inherit'
-    shadowOffsetY?: number | 'inherit'
-    borderColor?: ZRColor | 'inherit'
-    borderWidth?: number | 'inherit' | 'auto'
-    borderType?: ZRLineType | 'inherit'
-    borderCap?: CanvasLineCap | 'inherit'
-    borderJoin?: CanvasLineJoin | 'inherit'
-    borderDashOffset?: number | 'inherit'
-    borderMiterLimit?: number | 'inherit'
-}
+/**
+ * T: the type to be extended
+ * ET: extended type for keys of T
+ * ST: special type for T to be extended
+ */
+type ExtendPropertyType<T, ET, ST extends { [key in keyof T]: any }> = {
+    [key in keyof T]: key extends keyof ST ? T[key] | ET | ST[key] : T[key] | ET
+};
 
-export interface LegendLineStyleOption {
-    width?: number | 'inherit' | 'auto'
-    color?: ZRColor | 'inherit'
-    opacity?: number | 'inherit'
-    type?: ZRLineType | 'inherit'
-    cap?: CanvasLineCap | 'inherit'
-    join?: CanvasLineJoin | 'inherit'
-    dashOffset?: number | 'inherit'
-    miterLimit?: number | 'inherit'
-    shadowBlur?: number | 'inherit'
-    shadowColor?: ColorString | 'inherit'
-    shadowOffsetX?: number | 'inherit'
-    shadowOffsetY?: number | 'inherit'
-    inactiveColor?: ColorString,
+export interface LegendItemStyleOption extends ExtendPropertyType<ItemStyleOption, 'inherit', {
+    borderWidth: 'auto'
+}> {}
+
+export interface LegendLineStyleOption extends ExtendPropertyType<LineStyleOption, 'inherit', {
+    width: 'auto'
+}> {
+    inactiveColor?: ColorString
     inactiveWidth?: number
 }
 
