@@ -116,9 +116,6 @@ class VisualMapView extends ComponentView {
         const visualObj: {[key in typeof visualCluster]?: VisualOptionUnit[key]} = {};
 
         // Default values.
-        if (visualCluster === 'symbol') {
-            visualObj.symbol = visualMapModel.getItemSymbol();
-        }
         if (visualCluster === 'color') {
             const defaultColor = visualMapModel.get('contentColor');
             visualObj.color = defaultColor as ColorString;
