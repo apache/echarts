@@ -399,6 +399,13 @@ class MapDraw {
 
         }, this);
 
+        this._enableBlurEntireSVG(focusSelf, viewBuildCtx);
+    }
+
+    private _enableBlurEntireSVG(
+        focusSelf: boolean,
+        viewBuildCtx: ViewBuildContext
+    ): void {
         // It's a little complicated to support blurring the entire geoSVG in series-map.
         // So do not suport it until some requirements come.
         // At present, in series-map, only regions can be blurred.
@@ -417,8 +424,7 @@ class MapDraw {
                     if (style.opacity == null && opacity != null) {
                         style.opacity = opacity;
                     }
-                    // If opacity not set, but `ensureState('blur').style` set, there will
-                    // be default opacity.
+                    // If `ensureState('blur').style = {}`, there will be default opacity.
 
                     // Enable `stateTransition` (animation).
                     (el as Displayable).ensureState('emphasis');
@@ -638,6 +644,8 @@ function applyOptionStyleForRegion(
     el.ensureState('emphasis').style = emphasisStyle;
     el.ensureState('select').style = selectStyle;
     el.ensureState('blur').style = blurStyle;
+    // Enable blur
+    setDefaultStateProxy(el);
 }
 
 function resetLabelForRegion(

@@ -39,6 +39,7 @@ under the License.
 
         <div id="main_simple_geo_json"></div>
         <div id="main_simple_geo_svg"></div>
+        <div id="main_geo_json_focus_blur"></div>
         <div id="main_geo_svg_emphasis_select"></div>
         <div id="main_pure_geo_svg"></div>
         <div id="main_pure_map_svg"></div>
@@ -199,6 +200,86 @@ under the License.
 
 
 
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            const testGeoJson1 = {
+                'type': 'FeatureCollection',
+                'features': [
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Polygon',
+                            'coordinates': [
+                                [[2000, 2000], [5000, 2000], [5000, 5000], [2000, 5000]]
+                            ]
+                        },
+                        'properties': {
+                            'name': 'Afghanistan'
+                        }
+                    },
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Polygon',
+                            'coordinates': [
+                                [[6000, 2300], [9300, 2300], [9000, 5000]]
+                            ]
+                        },
+                        'properties': {
+                            'name': 'BBB'
+                        }
+                    }
+                ]
+            };
+
+            echarts.registerMap('testGeoJson2', testGeoJson1);
+
+            option = {
+                tooltip: {
+                },
+                geo: {
+                    map: 'testGeoJson2',
+                    roam: true,
+                    selectedMode: 'single',
+                    label: {
+                        show: true
+                    },
+                    emphasis: {
+                        focus: 'self'
+                    },
+                    // height: '100%',
+                    // center
+                    // layoutCenter: ['30%', 40],
+                    // layoutSize: 40,
+                    // boundingCoords
+                    zoom: 1,
+                    aspectScale: 1
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main_geo_json_focus_blur', {
+                title: [
+                    'check geoJSON focus-blur',
+                ],
+                option: option,
+                info: {},
+                infoKey: 'event',
+                height: 200
+            });
+
+            listenAndPrintEvent(chart);
+
+        });
+        </script>
+
+
+
+
+
+
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             const svg = [
@@ -243,6 +324,7 @@ under the License.
                         show: true
                     },
                     emphasis: {
+                        focus: 'self',
                         label: {
                             show: true,
                             fontSize: 100
@@ -259,7 +341,8 @@ under the License.
             var chart = testHelper.create(echarts, 'main_geo_svg_emphasis_select', {
                 title: [
                     'click buttons',
-                    'hover check'
+                    'hover check',
+                    'check focus-blur'
                 ],
                 option: option,
                 info: {},
