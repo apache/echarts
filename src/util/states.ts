@@ -38,7 +38,7 @@ import {
     DownplayPayload,
     ComponentMainType
 } from './types';
-import { extend, indexOf, isArrayLike, isObject, keys, isArray, each, assert } from 'zrender/src/core/util';
+import { extend, indexOf, isArrayLike, isObject, keys, isArray, each } from 'zrender/src/core/util';
 import { getECData } from './innerStore';
 import * as colorTool from 'zrender/src/tool/color';
 import List from '../data/List';
@@ -49,6 +49,7 @@ import Path, { PathStyleProps } from 'zrender/src/graphic/Path';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../core/ExtensionAPI';
 import ComponentModel from '../model/Component';
+import { error } from './log';
 
 
 // Reserve 0 as default.
@@ -584,8 +585,8 @@ export function findComponentHighDownDispatchers(
     // So we do not use `blurScope` in component.
     let focusSelf: boolean;
     for (let i = 0; i < dispatchers.length; i++) {
-        if (__DEV__) {
-            assert(isHighDownDispatcher(dispatchers[i]));
+        if (__DEV__ && !isHighDownDispatcher(dispatchers[i])) {
+            error('param should be highDownDispatcher');
         }
         if (getECData(dispatchers[i]).focus === 'self') {
             focusSelf = true;
@@ -601,8 +602,8 @@ export function handleGlobalMouseOverForHighDown(
     e: ElementEvent,
     api: ExtensionAPI
 ): void {
-    if (__DEV__) {
-        assert(isHighDownDispatcher(dispatcher));
+    if (__DEV__ && !isHighDownDispatcher(dispatcher)) {
+        error('param should be highDownDispatcher');
     }
 
     const ecData = getECData(dispatcher);
@@ -637,8 +638,8 @@ export function handleGlboalMouseOutForHighDown(
     e: ElementEvent,
     api: ExtensionAPI
 ): void {
-    if (__DEV__) {
-        assert(isHighDownDispatcher(dispatcher));
+    if (__DEV__ && !isHighDownDispatcher(dispatcher)) {
+        error('param should be highDownDispatcher');
     }
 
     allLeaveBlur(api);
