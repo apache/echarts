@@ -24,10 +24,8 @@ import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
 import {
     enableHoverEmphasis,
-    DISPLAY_STATES,
     enableComponentHighDownFeatures,
-    setDefaultStateProxy,
-    SPECIAL_STATES
+    setDefaultStateProxy
 } from '../../util/states';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {getUID} from '../../util/component';
@@ -35,21 +33,22 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
 import MapSeries from '../../chart/map/MapSeries';
 import GlobalModel from '../../model/Global';
-import { Payload, ECElement, LineStyleOption, InnerFocus } from '../../util/types';
+import { Payload, ECElement, LineStyleOption, InnerFocus, DisplayState } from '../../util/types';
 import GeoView from '../geo/GeoView';
 import MapView from '../../chart/map/MapView';
 import Geo from '../../coord/geo/Geo';
 import Model from '../../model/Model';
-import { setLabelStyle, getLabelStatesModels, createTextConfig } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
 import { ViewCoordSysTransformInfoPart } from '../../coord/View';
 import { GeoSVGGraphicRecord, GeoSVGResource } from '../../coord/geo/GeoSVGResource';
 import Displayable from 'zrender/src/graphic/Displayable';
-import Element, { ElementTextConfig } from 'zrender/src/Element';
+import Element from 'zrender/src/Element';
 import List from '../../data/List';
 import { GeoJSONRegion } from '../../coord/geo/Region';
 import { SVGNodeTagLower } from 'zrender/src/tool/parseSVG';
+import { TextStyleProps } from 'zrender/src/graphic/Text';
 
 
 interface RegionsGroup extends graphic.Group {
@@ -373,7 +372,7 @@ class MapDraw {
                 // if it is named rather than displayed on each child.
                 if (LABEL_HOST_MAP.get(svgNodeTagLower) != null) {
                     resetLabelForRegion(
-                        viewBuildCtx, el, regionName, regionModel, mapOrGeoModel, dataIdx, [0, 0]
+                        viewBuildCtx, el, regionName, regionModel, mapOrGeoModel, dataIdx, null
                     );
                 }
 
@@ -644,6 +643,7 @@ function applyOptionStyleForRegion(
     el.ensureState('emphasis').style = emphasisStyle;
     el.ensureState('select').style = selectStyle;
     el.ensureState('blur').style = blurStyle;
+
     // Enable blur
     setDefaultStateProxy(el);
 }
@@ -656,22 +656,11 @@ function resetLabelForRegion(
     mapOrGeoModel: MapOrGeoModel,
     // Exist only if `viewBuildCtx.data` exists.
     dataIdx: number,
+    // If labelXY not provided, use `textConfig.position: 'inside'`
     labelXY: number[]
 ): void {
     const data = viewBuildCtx.data;
     const isGeo = viewBuildCtx.isGeo;
-
-    let showLabel = false;
-    for (let i = 0; i < DISPLAY_STATES.length; i++) {
-        const stateName = DISPLAY_STATES[i];
-        // @ts-ignore FIXME:TS fix the "compatible with each other"?
-        if (regionModel.get(
-            stateName === 'normal' ? ['label', 'show'] : [stateName, 'label', 'show']
-        )) {
-            showLabel = true;
-            break;
-        }
-    }
 
     const isDataNaN = data && isNaN(data.get(data.mapDimension('value'), dataIdx) as number);
     const itemLayout = data && data.getItemLayout(dataIdx);
@@ -681,9 +670,10 @@ function resetLabelForRegion(
     // 2. In geo component
     // 3. Region has no series legendSymbol, which will be add a showLabel flag in mapSymbolLayout
     if (
-        ((isGeo || isDataNaN) && showLabel)
+        ((isGeo || isDataNaN))
         || (itemLayout && itemLayout.showLabel)
     ) {
+
         const query = !isGeo ? dataIdx : regionName;
         let labelFetcher;
 
@@ -692,47 +682,40 @@ function resetLabelForRegion(
             labelFetcher = mapOrGeoModel;
         }
 
-        const textEl = new graphic.Text({
-            x: labelXY[0],
-            y: labelXY[1],
-            z2: 10,
-            silent: true
-        });
-        textEl.afterUpdate = labelTextAfterUpdate;
+        const specifiedTextOpt: Partial<Record<DisplayState, TextStyleProps>> = labelXY ? {
+            normal: {
+                align: 'center',
+                verticalAlign: 'middle'
+            }
+        } : null;
 
-        const labelStateModels = getLabelStatesModels(regionModel);
+        // Caveat: must be called after `setDefaultStateProxy(el);` called.
+        // because textContent will be assign with `el.stateProxy` inside.
         setLabelStyle<typeof query>(
-            textEl,
-            labelStateModels,
+            el,
+            getLabelStatesModels(regionModel),
             {
                 labelFetcher: labelFetcher,
                 labelDataIndex: query,
                 defaultText: regionName
             },
-            { normal: {
-                align: 'center',
-                verticalAlign: 'middle'
-            } }
+            specifiedTextOpt
         );
 
-        // PENDING: use `setLabelStyle` entirely.
-        el.setTextContent(textEl);
+        const textEl = el.getTextContent();
+        if (textEl) {
+            textEl.x = labelXY ? labelXY[0] : 0;
+            textEl.y = labelXY ? labelXY[1] : 0;
+            textEl.z2 = 10;
+            textEl.afterUpdate = labelTextAfterUpdate;
+        }
 
-        const textConfig = createTextConfig(labelStateModels.normal, null, false);
         // Need to apply the `translate`.
-        textConfig.local = true;
-        textConfig.insideFill = textEl.style.fill;
-        el.setTextConfig(textConfig);
-
-        for (let i = 0; i < SPECIAL_STATES.length; i++) {
-            const stateName = SPECIAL_STATES[i];
-            // Hover label only work when `emphasis` state ensured.
-            const state = el.ensureState(stateName);
-
-            const textConfig = state.textConfig = createTextConfig(labelStateModels[stateName], null, true);
-            // Need to apply the `translate`.
-            textConfig.local = true;
-            textConfig.insideFill = textEl.style.fill;
+        if (el.textConfig) {
+            el.textConfig.local = true;
+            if (labelXY) {
+                el.textConfig.position = null;
+            }
         }
 
         (el as ECElement).disableLabelAnimation = true;
