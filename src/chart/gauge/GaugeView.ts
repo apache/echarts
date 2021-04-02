@@ -493,18 +493,8 @@ class GaugeView extends ChartView {
                         }, symbolStyle));
                     }
                     else {
-                        if (pointer.__isEmptyBrush) {
-                            // fill and stroke will be swapped if it's empty.
-                            // So we cloned a new style to avoid it affecting the original style in visual storage.
-                            // TODO Better implementation. No empty logic!
-                            pointer.useStyle(extend({}, symbolStyle));
-                        }
-                        else {
-                            pointer.useStyle(symbolStyle);
-                        }
+                        pointer.useStyle(symbolStyle);
                         if (pointer.type !== 'pointer') {
-                            // Disable decal because symbol scale will been applied on the decal.
-                            pointer.style.decal = null;
                             pointer.setColor(visualColor);
                             pointer.style.strokeNoScale = true;
                         }
