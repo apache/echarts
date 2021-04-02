@@ -2158,41 +2158,50 @@ class ECharts extends Eventful<ECEventDefinition> {
                 return;
             }
             // Set z and zlevel
-            _updateZ(view.group, model.get('z'), model.get('zlevel'));
+            _updateZ(view.group, model.get('z'), model.get('zlevel'), -Infinity);
         };
 
-        function _updateZ(el: Element, z: number, zlevel: number) {
+        function _updateZ(el: Element, z: number, zlevel: number, maxZ2: number): number {
             // Group may also have textContent
             const label = el.getTextContent();
             const labelLine = el.getTextGuideLine();
             const isGroup = el.isGroup;
 
-            // always set z and zlevel if label/labelLine exists
-            if (label || labelLine) {
-                if (label) {
-                    label.z = z + 1;
-                    label.zlevel = zlevel;
-                    // lift z2 of text content
-                    // TODO if el.emphasis.z2 is spcefied, what about textContent.
-                    isGroup || (label.z2 = (el as Displayable).z2 + 2);
-                }
-                if (labelLine) {
-                    const showAbove = el.textGuideLineConfig && el.textGuideLineConfig.showAbove;
-                    labelLine.z = z;
-                    labelLine.zlevel = zlevel;
-                    isGroup || (labelLine.z2 = (el as Displayable).z2 + (showAbove ? 1 : -1));
-                }
-            }
-
             if (isGroup) {
                 // set z & zlevel of children elements of Group
-                el.traverse((childEl: Element) => _updateZ(childEl, z, zlevel));
+                // el.traverse((childEl: Element) => _updateZ(childEl, z, zlevel));
+                const children = (el as graphic.Group).childrenRef();
+                for (let i = 0; i < children.length; i++) {
+                    maxZ2 = Math.max(_updateZ(children[i], z, zlevel, maxZ2), maxZ2);
+                }
             }
             else {
                 // not Group
                 z != null && ((el as Displayable).z = z);
                 zlevel != null && ((el as Displayable).zlevel = zlevel);
+
+                maxZ2 = Math.max((el as Displayable).z2, maxZ2);
             }
+
+            // always set z and zlevel if label/labelLine exists
+            if (label) {
+                label.z = z;
+                label.zlevel = zlevel;
+                // lift z2 of text content
+                // TODO if el.emphasis.z2 is spcefied, what about textContent.
+                if (isFinite(maxZ2)) {
+                    label.z2 = maxZ2 + 2;
+                }
+            }
+            if (labelLine) {
+                const textGuideLineConfig = el.textGuideLineConfig;
+                labelLine.z = z;
+                labelLine.zlevel = zlevel;
+                if (isFinite(maxZ2)) {
+                    labelLine.z2 = maxZ2 + ((textGuideLineConfig && textGuideLineConfig.showAbove) ? 1 : -1);
+                }
+            }
+            return maxZ2;
         }
 
         // Clear states without animation.
