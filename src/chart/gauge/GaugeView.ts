@@ -30,7 +30,10 @@ import { ColorString, ECElement } from '../../util/types';
 import List from '../../data/List';
 import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
-import type Displayable from 'zrender/src/graphic/Displayable';
+import ZRImage from 'zrender/src/graphic/Image';
+import {extend} from 'zrender/src/core/util';
+
+type ECSymbol = ReturnType<typeof createSymbol>;
 
 interface PosInfo {
     cx: number
@@ -477,9 +480,39 @@ class GaugeView extends ChartView {
                 const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
                 const emphasisModel = itemModel.getModel('emphasis');
                 if (showPointer) {
-                    const pointer = data.getItemGraphicEl(idx) as Displayable;
-                    pointer.type !== 'image' && pointer.useStyle(data.getItemVisual(idx, 'style'));
+                    const pointer = data.getItemGraphicEl(idx) as ECSymbol;
+                    const symbolStyle = data.getItemVisual(idx, 'style');
+                    const visualColor = symbolStyle.fill;
+                    if (pointer instanceof ZRImage) {
+                        const pathStyle = pointer.style;
+                        pointer.useStyle(extend({
+                            // TODO other properties like x, y ?
+                            image: pathStyle.image,
+                            x: pathStyle.x, y: pathStyle.y,
+                            width: pathStyle.width, height: pathStyle.height
+                        }, symbolStyle));
+                    }
+                    else {
+                        if (pointer.__isEmptyBrush) {
+                            // fill and stroke will be swapped if it's empty.
+                            // So we cloned a new style to avoid it affecting the original style in visual storage.
+                            // TODO Better implementation. No empty logic!
+                            pointer.useStyle(extend({}, symbolStyle));
+                        }
+                        else {
+                            pointer.useStyle(symbolStyle);
+                        }
+                        if (pointer.type !== 'pointer') {
+                            // Disable decal because symbol scale will been applied on the decal.
+                            pointer.style.decal = null;
+                            pointer.setColor(visualColor);
+                            pointer.style.strokeNoScale = true;
+                        }
+                    }
+
                     pointer.setStyle(itemModel.getModel(['pointer', 'itemStyle']).getItemStyle());
+
+
                     if (pointer.style.fill === 'auto') {
                         pointer.setStyle('fill', getColor(
                             linearMap(data.get(valueDim, idx) as number, valueExtent, [0, 1], true)

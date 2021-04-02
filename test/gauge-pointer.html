@@ -46,6 +46,7 @@ under the License.
         <div id="main6"></div>
         <div id="main7"></div>
         <div id="main8"></div>
+        <div id="main9"></div>
 
 
 
@@ -588,6 +589,44 @@ under the License.
                 // height: 1200,
                 // buttons: [{text: 'btn-txt', onclick: function () {}}],
                 // recordCanvas: true,
+            });
+
+            var option9 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        pointer: {
+                            icon: 'emptyCircle',
+                            itemStyle: {
+                                borderWidth: 10,
+                                borderColor: '#f00'
+                            },
+                        },
+                        anchor: {
+                            // show: true
+                        },
+                        detail: {formatter: '{value}%'},
+                        data: [{value: 58.46, name: '完成率'}]
+                    }
+                ]
+            };
+
+            var chart9 = testHelper.create(echarts, 'main9', {
+                title: [
+                    'pointer.icon: emptyCircle',
+                    'anchor.show: false'
+                ],
+                option: option9
             });
 
         });
