@@ -575,16 +575,13 @@ class MapDraw {
 };
 
 function labelTextAfterUpdate(this: graphic.Text) {
-    // Make the label text do not scale but perform translate
-    // based on its host el.
-    const m = this.transform;
-    const scaleX = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
-    const scaleY = Math.sqrt(m[2] * m[2] + m[3] * m[3]);
-
-    m[0] /= scaleX;
-    m[1] /= scaleX;
-    m[2] /= scaleY;
-    m[3] /= scaleY;
+    // Make the label text apply only translate of this host el
+    // but no other transform like scale,rotation of this host el.
+    const mt = this.transform;
+    mt[0] = 1;
+    mt[1] = 0;
+    mt[2] = 0;
+    mt[3] = 1;
 }
 
 function applyOptionStyleForRegion(
