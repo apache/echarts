@@ -39,7 +39,13 @@ import Transformable from 'zrender/src/core/Transformable';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
+import { makeInner } from '../../util/model';
+import ZRText from 'zrender/src/graphic/Text';
 
+const mapLabelTransform = makeInner<{
+    x: number
+    y: number
+}, ZRText>();
 
 interface RegionsGroup extends graphic.Group {
     __regions: Region[];
@@ -162,6 +168,17 @@ class MapDraw {
             && data.getVisual('visualMeta')
             && data.getVisual('visualMeta').length > 0;
 
+        const sx = transformInfo.rawScaleX;
+        const sy = transformInfo.rawScaleY;
+        const offsetX = transformInfo.rawX;
+        const offsetY = transformInfo.rawY;
+        const transformPoint = function (point: number[]): number[] {
+            return [
+                point[0] * sx + offsetX,
+                point[1] * sy + offsetY
+            ];
+        };
+
         zrUtil.each(geo.regions, function (region) {
             // Consider in GeoJson properties.name may be duplicated, for example,
             // there is multiple region named "United Kindom" or "France" (so many
@@ -215,17 +232,6 @@ class MapDraw {
                     itemStyle.decal = createOrUpdatePatternFromDecal(decal, api);
                 }
             }
-
-            const sx = transformInfo.rawScaleX;
-            const sy = transformInfo.rawScaleY;
-            const offsetX = transformInfo.rawX;
-            const offsetY = transformInfo.rawY;
-            const transformPoint = function (point: number[]): number[] {
-                return [
-                    point[0] * sx + offsetX,
-                    point[1] * sy + offsetY
-                ];
-            };
 
             zrUtil.each(region.geometries, function (geometry) {
                 if (geometry.type !== 'polygon') {
@@ -309,6 +315,11 @@ class MapDraw {
                     z2: 10,
                     silent: true
                 });
+                // Save transform to restore during roam.
+                // In case LabelManager modified it.
+                // TODO
+                mapLabelTransform(textEl).x = centerPt[0];
+                mapLabelTransform(textEl).y = centerPt[1];
 
                 setLabelStyle<typeof query>(
                     textEl, getLabelStatesModels(regionModel),
@@ -417,10 +428,29 @@ class MapDraw {
             return action;
         }
 
+        const updateLabelTransforms = () => {
+            const group = this.group;
+            this._regionsGroup.traverse(function (el) {
+                const textContent = el.getTextContent();
+                if (textContent) {
+                    el.setTextConfig({
+                        local: true
+                    });
+                    textContent.x = mapLabelTransform(textContent).x || 0;
+                    textContent.y = mapLabelTransform(textContent).y || 0;
+                    textContent.scaleX = 1 / group.scaleX;
+                    textContent.scaleY = 1 / group.scaleY;
+                    textContent.markRedraw();
+                }
+            });
+        };
+
         controller.off('pan').on('pan', function (e) {
             this._mouseDownFlag = false;
 
             roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
+
+            updateLabelTransforms();
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
                 dx: e.dx,
@@ -433,21 +463,14 @@ class MapDraw {
 
             roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
 
+            updateLabelTransforms();
+
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
                 zoom: e.scale,
                 originX: e.originX,
                 originY: e.originY
             }));
 
-            const group = this.group;
-            this._regionsGroup.traverse(function (el) {
-                const textContent = el.getTextContent();
-                if (textContent) {
-                    textContent.scaleX = 1 / group.scaleX;
-                    textContent.scaleY = 1 / group.scaleY;
-                    textContent.markRedraw();
-                }
-            });
         }, this);
 
         controller.setPointerChecker(function (e, x, y) {
