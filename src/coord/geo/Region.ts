@@ -42,7 +42,7 @@ export class Region {
     /**
      * Get center point in data unit. That is,
      * for GeoJSONRegion, the unit is lat/lng,
-     * for GeoSVGRegion, the unit is pixel but based on root.
+     * for GeoSVGRegion, the unit is SVG local coord.
      */
     getCenter(): number[] {
         return;
@@ -239,8 +239,8 @@ export class GeoSVGRegion extends Region {
         const el = this._elOnlyForCalculate;
         const rect = el.getBoundingRect();
         const center = [
-            rect.x + rect.width,
-            rect.y + rect.height
+            rect.x + rect.width / 2,
+            rect.y + rect.height / 2
         ];
 
         const mat = matrix.identity(TMP_TRANSFORM);

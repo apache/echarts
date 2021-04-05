@@ -39,6 +39,7 @@ under the License.
 
         <div id="main_simple_geo_json"></div>
         <div id="main_simple_geo_svg"></div>
+        <div id="main_simple_geo_svg_coord"></div>
         <div id="main_geo_json_focus_blur"></div>
         <div id="main_geo_svg_emphasis_select"></div>
         <div id="main_pure_geo_svg"></div>
@@ -174,14 +175,13 @@ under the License.
                     // layoutCenter: ['30%', 40],
                     // layoutSize: 40,
                     // boundingCoords
-                    zoom: 1,
-                    aspectScale: 1
+                    // zoom: 1,
+                    // aspectScale: 1
                 }
             };
 
             var chart = testHelper.create(echarts, 'main_simple_geo_svg', {
                 title: [
-                    'simple geo geoSVG location:',
                     'Should be a square and 80% of canvas height.',
                     'At the center of the canvas.'
                 ],
@@ -197,6 +197,101 @@ under the License.
         </script>
 
 
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            const svg = [
+                '<?xml version="1.0" encoding="utf-8"?>',
+                '<svg xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" fill-rule="evenodd" xml:space="preserve">',
+                '<path name="left_rect" d="M 0,0 L 0,100 100,100 100,0 Z" fill="#765" stroke="rgb(56,93,138)" stroke-width="0" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '<path name="right_rect" d="M 150,0 L 150,100 250,100 250,0 Z" fill="#567" stroke="rgb(56,93,138)" stroke-width="0" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join('')
+
+            echarts.registerMap('testGeoSVG_coord', { svg: svg });
+
+            option = {
+                animation: false,
+                tooltip: {
+                },
+                geo: {
+                    map: 'testGeoSVG_coord',
+                    roam: true,
+                    top: 0,
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                },
+                series: [{
+                    type: 'scatter',
+                    geoIndex: 0,
+                    coordinateSystem: 'geo',
+                    symbolSize: 30,
+                    data: [{
+                        value: [200, 50],
+                        itemStyle: {
+                            color: 'blue'
+                        }
+                    }]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_simple_geo_svg_coord', {
+                title: [
+                    'A **blue circle** should be in the center of the right rect.',
+                    '**Click** inside the rect or outside the rect.',
+                    'Check SVG coord displayed (via convertFromPixel).',
+                    '(The left rect is 100*100 and left-top corner is (0,0))',
+                    '**Click btn1**, check Pixel.point[1] should be around 100',
+                    '**Click btn2**, check Pixel.point[1] should be around 200'
+                ],
+                option: option,
+                infoKey: 'SVG coord',
+                info: {},
+                height: 200,
+                buttons: [{
+                    text: 'converToPixel({ geoIndex: 0 }, "left_rect")',
+                    onclick: function () {
+                        var point = chart.convertToPixel({ geoIndex: 0 }, 'left_rect');
+                        console.log(point);
+                        chart.__testHelper.updateInfo(
+                            { point: point },
+                            'Pixel'
+                        );
+                    }
+                }, {
+                    text: 'convertToPixel({ geoIndex: 0 }, [100, 100])',
+                    onclick: function () {
+                        var point = chart.convertToPixel({ geoIndex: 0 }, [100, 100]);
+                        console.log(point);
+                        chart.__testHelper.updateInfo(
+                            { point: point },
+                            'Pixel'
+                        );
+                    }
+                }]
+            });
+
+            if (chart) {
+                chart.getZr().on('click', function (event) {
+                    var x = event.offsetX;
+                    var y = event.offsetY;
+                    console.log(x, y);
+                    var svgCoord = chart.convertFromPixel({ geoIndex: 0 }, [x, y]);
+                    console.log(svgCoord);
+                    chart.__testHelper.updateInfo(
+                        { x: svgCoord[0], y: svgCoord[1] },
+                        'SVG coord'
+                    );
+                });
+            }
+
+        });
+        </script>
 
 
 
@@ -263,6 +358,7 @@ under the License.
             var chart = testHelper.create(echarts, 'main_geo_json_focus_blur', {
                 title: [
                     'check geoJSON focus-blur',
+                    '**Click** them, check click info'
                 ],
                 option: option,
                 info: {},
@@ -285,7 +381,7 @@ under the License.
             const svg = [
                 '<?xml version="1.0" encoding="utf-8"?>',
                 '<svg xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" fill-rule="evenodd" xml:space="preserve">',
-                '<path name="a" d="M 0,0 L 0,100 100,100 100,0 Z" fill="rgb(16,193,138)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '<path name="a" d="M 0,0 L 0,100 100,100 100,0 Z" transform="rotate(45)" fill="rgb(16,193,138)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
                 '<path name="a" d="M 110,0 L 110,100 210,100 210,0 Z" fill="rgb(16,193,138)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
                 '<g name="b">',
                     '<path d="M 0,110 L 0,210 100,110 Z" fill="rgb(16,193,138)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
@@ -342,7 +438,8 @@ under the License.
                 title: [
                     'click buttons',
                     'hover check',
-                    'check focus-blur'
+                    'check focus-blur',
+                    'check label no scale/rotate'
                 ],
                 option: option,
                 info: {},

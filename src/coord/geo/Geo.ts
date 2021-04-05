@@ -56,7 +56,7 @@ class Geo extends View {
     readonly resourceType: GeoResource['type'];
 
     // Only store specified name coord via `addGeoCoord`.
-    private _nameCoordMap: zrUtil.HashMap<number[]>;
+    private _nameCoordMap: zrUtil.HashMap<number[]> = zrUtil.createHashMap<number[], string>();
     private _regionsMap: zrUtil.HashMap<Region>;
     private _invertLongitute: boolean;
     readonly regions: Region[];
