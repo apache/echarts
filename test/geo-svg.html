@@ -44,6 +44,8 @@ under the License.
         <div id="main_pure_geo_svg"></div>
         <div id="main_pure_map_svg"></div>
         <div id="main_map_geo_svg"></div>
+        <div id="main_geo_svg_click_finder"></div>
+        <div id="main_geo_svg_multiple_geo"></div>
 
 
 
@@ -728,6 +730,138 @@ under the License.
         });
         </script>
 
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            const svg = [
+                '<?xml version="1.0" encoding="utf-8"?>',
+                '<svg xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" fill-rule="evenodd" xml:space="preserve">',
+                '<path name="a" d="M 0,0 L 0,100 100,100 100,0 Z" fill="green" stroke="rgb(56,93,138)" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '<path name="b" d="M 150,0 L 150,100 250,100 250,0 Z" fill="blue" stroke="rgb(56,93,138)" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join('')
+
+            echarts.registerMap('testGeoSVGclick', { svg: svg });
+
+            var option = {
+                geo: {
+                    map: 'testGeoSVGclick',
+                    selectedMode: 'single',
+                    zoom: 1,
+                    aspectScale: 1,
+                    label: {
+                        show: true
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main_geo_svg_click_finder', {
+                title: [
+                    'Click green rect, should display click event.',
+                    'Click blue rect, should display nothing.'
+                ],
+                option: option,
+                info: {},
+                infoKey: 'click event',
+                height: 200
+            });
+
+            if (chart) {
+                chart.on('click', { geoIndex: 0, name: 'a' }, function (params) {
+                    console.log(params);
+                    chart.__testHelper.updateInfo({
+                        componentIndex: params.componentIndex,
+                        componentType: params.componentType,
+                        geoIndex: params.geoIndex,
+                        name: params.name
+                    }, 'click event');
+                });
+            }
+
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            const svg = [
+                '<?xml version="1.0" encoding="utf-8"?>',
+                '<svg xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" fill-rule="evenodd" xml:space="preserve">',
+                '<path name="a" d="M 0,0 L 0,100 100,100 100,0 Z" fill="green" stroke="rgb(56,93,138)" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join('')
+
+            echarts.registerMap('testGeoSVG_for_multiple_test', { svg: svg });
+
+            var option = {
+                geo: [{
+                    id: 'g1',
+                    map: 'testGeoSVG_for_multiple_test',
+                    selectedMode: 'single',
+                    layoutCenter: ['25%', '50%'],
+                    layoutSize: 20,
+                    select: {
+                        itemStyle: { color: 'red' }
+                    }
+                }, {
+                    id: 'g2',
+                    map: 'testGeoSVG_for_multiple_test',
+                    selectedMode: 'single',
+                    layoutCenter: ['50%', '50%'],
+                    layoutSize: 20,
+                    select: {
+                        itemStyle: { color: 'red' }
+                    },
+                }, {
+                    id: 'g3',
+                    map: 'testGeoSVG_for_multiple_test',
+                    selectedMode: 'single',
+                    layoutCenter: ['75%', '50%'],
+                    layoutSize: 20,
+                    select: {
+                        itemStyle: { color: 'red' }
+                    },
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_geo_svg_multiple_geo', {
+                title: [
+                    'Select the three rect to red.',
+                    'click btn. Check all of the existing rect removed,',
+                    'and only one new green rect generated.'
+                ],
+                option: option,
+                height: 200,
+                buttons: [{
+                    text: 'change geo (replaceMerge)',
+                    onclick: function (params) {
+                        chart.setOption({
+                            geo: {
+                                id: 'g4',
+                                map: 'testGeoSVG_for_multiple_test',
+                                selectedMode: 'single',
+                                layoutCenter: ['40%', '50%'],
+                                layoutSize: 40,
+                                select: {
+                                    itemStyle: { color: 'red' }
+                                }
+                            }
+                        }, { replaceMerge: 'geo' });
+                    }
+                }]
+            });
+
+        });
+        </script>
 
 
 
