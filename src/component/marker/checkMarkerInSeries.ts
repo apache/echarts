@@ -16,19 +16,25 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-import { EChartsExtensionInstallRegisters } from '../../extension';
-import checkMarkerInSeries from './checkMarkerInSeries';
-import MarkLineModel from './MarkLineModel';
-import MarkLineView from './MarkLineView';
 
-export function install(registers: EChartsExtensionInstallRegisters) {
-    registers.registerComponentModel(MarkLineModel);
-    registers.registerComponentView(MarkLineView);
+import { isArray } from 'zrender/src/core/util';
+import { SeriesOption } from '../../util/types';
 
-    registers.registerPreprocessor(function (opt) {
-        if (checkMarkerInSeries(opt.series, 'markLine')) {
-            // Make sure markLine component is enabled
-            opt.markLine = opt.markLine || {};
+type MarkerTypes = 'markPoint' | 'markLine' | 'markArea';
+
+type SeriesWithMarkerOption = SeriesOption & Partial<Record<MarkerTypes, unknown>>;
+
+export default function checkMarkerInSeries(
+    seriesOpts: SeriesOption | SeriesOption[], markerType: MarkerTypes
+): boolean {
+    if (!seriesOpts) {
+        return false;
+    }
+    const seriesOptArr = isArray(seriesOpts) ? seriesOpts : [seriesOpts];
+    for (let idx = 0; idx < seriesOptArr.length; idx++) {
+        if (seriesOptArr[idx] && (seriesOptArr[idx] as SeriesWithMarkerOption)[markerType]) {
+            return true;
         }
-    });
+    }
+    return false;
 }

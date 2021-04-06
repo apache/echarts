@@ -89,7 +89,8 @@ import {
     DimensionLoose,
     ScaleDataValue,
     ZRElementEventName,
-    ECElementEvent
+    ECElementEvent,
+    AnimationOption
 } from '../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
@@ -212,7 +213,15 @@ export interface SetOptionTransitionOptItem {
     from?: SetOptionTransitionOptFinder;
     to: SetOptionTransitionOptFinder;
     dividingMethod: MorphDividingMethod;
-}
+};
+
+export interface ResizeOpts {
+    width?: number | 'auto', // Can be 'auto' (the same as null/undefined)
+    height?: number | 'auto', // Can be 'auto' (the same as null/undefined)
+    animation?: AnimationOption
+    silent?: boolean // by default false.
+};
+
 interface SetOptionTransitionOptFinder extends modelUtil.ModelFinderObject {
     dimension: DimensionLoose;
 }
@@ -1131,11 +1140,7 @@ class ECharts extends Eventful<ECEventDefinition> {
     /**
      * Resize the chart
      */
-    resize(opts?: {
-        width?: number | 'auto', // Can be 'auto' (the same as null/undefined)
-        height?: number | 'auto', // Can be 'auto' (the same as null/undefined)
-        silent?: boolean // by default false.
-    }): void {
+    resize(opts?: ResizeOpts): void {
         if (__DEV__) {
             assert(!this[IN_MAIN_PROCESS_KEY], '`resize` should not be called during main process.');
         }
@@ -1164,10 +1169,10 @@ class ECharts extends Eventful<ECEventDefinition> {
         optionChanged && prepare(this);
         updateMethods.update.call(this, {
             type: 'resize',
-            animation: {
+            animation: zrUtil.extend({
                 // Disable animation
                 duration: 0
-            }
+            }, opts && opts.animation)
         });
 
         this[IN_MAIN_PROCESS_KEY] = false;
@@ -1531,12 +1536,12 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         updateMethods = {
 
-            prepareAndUpdate: function (this: ECharts, payload: Payload): void {
+            prepareAndUpdate(this: ECharts, payload: Payload): void {
                 prepare(this);
                 updateMethods.update.call(this, payload);
             },
 
-            update: function (this: ECharts, payload: Payload): void {
+            update(this: ECharts, payload: Payload): void {
                 // console.profile && console.profile('update');
 
                 const ecModel = this._model;
@@ -1608,7 +1613,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // console.profile && console.profileEnd('update');
             },
 
-            updateTransform: function (this: ECharts, payload: Payload): void {
+            updateTransform(this: ECharts, payload: Payload): void {
                 const ecModel = this._model;
                 const api = this._api;
 
@@ -1665,7 +1670,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 performPostUpdateFuncs(ecModel, this._api);
             },
 
-            updateView: function (this: ECharts, payload: Payload): void {
+            updateView(this: ECharts, payload: Payload): void {
                 const ecModel = this._model;
 
                 // update before setOption
@@ -1687,7 +1692,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 performPostUpdateFuncs(ecModel, this._api);
             },
 
-            updateVisual: function (this: ECharts, payload: Payload): void {
+            updateVisual(this: ECharts, payload: Payload): void {
                 // updateMethods.update.call(this, payload);
 
                 const ecModel = this._model;
@@ -1728,7 +1733,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 performPostUpdateFuncs(ecModel, this._api);
             },
 
-            updateLayout: function (this: ECharts, payload: Payload): void {
+            updateLayout(this: ECharts, payload: Payload): void {
                 updateMethods.update.call(this, payload);
             }
         };

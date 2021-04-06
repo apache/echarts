@@ -117,6 +117,7 @@ under the License.
                             markLine: {
                                 silent: true,
                                 // symbol: 'triangle',
+                                symbolRotate: [20, 45],
                                 data: [
                                 [
                                     {name: 'rotation not specified', coord: ['2014-06-20', 300], symbol: 'arrow'},
@@ -156,10 +157,13 @@ under the License.
                                 [{
                                     symbol: 'rect',
                                     x: '90%',
-                                    yAxis: 'average'
+                                    yAxis: 'average',
+                                    symbolRotate: 0,
+                                    symbolOffset: [50, 0]
                                 }, {
                                     symbol: 'triangle',
-                                    symbolRotate: 180,
+                                    symbolRotate: 130,
+                                   // symbolOffset: [-50, 0],
                                     label: {
                                         position: 'start',
                                         formatter: 'Average',
