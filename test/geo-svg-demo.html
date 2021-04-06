@@ -90,7 +90,7 @@ under the License.
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
             $.ajax({
-                url: '../../vis-data/map/svg/organ/Veins_Medical_Diagram_clip_art.svg',
+                url: 'data/svg/Veins_Medical_Diagram_clip_art.svg',
                 dataType: 'text'
             }).done(function (svg) {
 
@@ -216,7 +216,7 @@ under the License.
             var option;
 
             $.ajax({
-                url: '../../vis-data/map/svg/geo-topo/Sicily_prehellenic_topographic_map.svg',
+                url: 'data/svg/Sicily_prehellenic_topographic_map.svg',
                 dataType: 'text'
             }).done(function (svg) {
 
@@ -348,7 +348,7 @@ under the License.
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
-            fetch('../../vis-data/map/svg/geo-topo/Map_of_Iceland.svg').then(response => response.text()).then((svg) => {
+            fetch('data/svg/Map_of_Iceland.svg').then(response => response.text()).then((svg) => {
 
                 echarts.registerMap('Map_of_Iceland', {
                     svg: svg
@@ -491,7 +491,7 @@ under the License.
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
-            fetch('../../vis-data/map/svg/area/Beef_cuts_France.svg').then(response => response.text()).then((svg) => {
+            fetch('data/svg/Beef_cuts_France.svg').then(response => response.text()).then((svg) => {
 
 
 
@@ -585,7 +585,7 @@ under the License.
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
-            fetch('../../vis-data/map/svg/area/MacOdrum-LV5-floorplan-web.svg').then(response => response.text()).then((svg) => {
+            fetch('data/svg/MacOdrum-LV5-floorplan-web.svg').then(response => response.text()).then((svg) => {
 
                 echarts.registerMap('MacOdrum-LV5-floorplan-web', {
                     svg: svg
@@ -700,7 +700,7 @@ under the License.
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
-            fetch('../../vis-data/map/svg/area/ksia-ext-plan-min.svg').then(response => response.text()).then((svg) => {
+            fetch('data/svg/ksia-ext-plan-min.svg').then(response => response.text()).then((svg) => {
 
                 echarts.registerMap('ksia-ext-plan', {
                     svg: svg
