@@ -486,7 +486,6 @@ class GaugeView extends ChartView {
                     if (pointer instanceof ZRImage) {
                         const pathStyle = pointer.style;
                         pointer.useStyle(extend({
-                            // TODO other properties like x, y ?
                             image: pathStyle.image,
                             x: pathStyle.x, y: pathStyle.y,
                             width: pathStyle.width, height: pathStyle.height
@@ -494,10 +493,7 @@ class GaugeView extends ChartView {
                     }
                     else {
                         pointer.useStyle(symbolStyle);
-                        if (pointer.type !== 'pointer') {
-                            pointer.setColor(visualColor);
-                            pointer.style.strokeNoScale = true;
-                        }
+                        pointer.type !== 'pointer' && pointer.setColor(visualColor);
                     }
 
                     pointer.setStyle(itemModel.getModel(['pointer', 'itemStyle']).getItemStyle());
