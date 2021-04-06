@@ -78,6 +78,8 @@
   "funnel": 2,
   "gauge-simple": 2,
   "geo-map": 3,
+  "geo-svg": 6,
+  "geo-svg-demo": 6,
   "geoScatter": 1,
   "getOption": 1,
   "graph": 2,
