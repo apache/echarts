@@ -2158,7 +2158,12 @@ class ECharts extends Eventful<ECEventDefinition> {
                 return;
             }
             // Set z and zlevel
-            _updateZ(view.group, model.get('z'), model.get('zlevel'), -Infinity);
+            _updateZ(
+                view.group,
+                model.get('z') || 0,
+                model.get('zlevel') || 0,
+                -Infinity
+            );
         };
 
         function _updateZ(el: Element, z: number, zlevel: number, maxZ2: number): number {
@@ -2177,8 +2182,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             }
             else {
                 // not Group
-                z != null && ((el as Displayable).z = z);
-                zlevel != null && ((el as Displayable).zlevel = zlevel);
+                (el as Displayable).z = z;
+                (el as Displayable).zlevel = zlevel;
 
                 maxZ2 = Math.max((el as Displayable).z2, maxZ2);
             }
@@ -2189,17 +2194,14 @@ class ECharts extends Eventful<ECEventDefinition> {
                 label.zlevel = zlevel;
                 // lift z2 of text content
                 // TODO if el.emphasis.z2 is spcefied, what about textContent.
-                if (isFinite(maxZ2)) {
-                    label.z2 = maxZ2 + 2;
-                }
+                isFinite(maxZ2) && (label.z2 = maxZ2 + 2);
             }
             if (labelLine) {
                 const textGuideLineConfig = el.textGuideLineConfig;
                 labelLine.z = z;
                 labelLine.zlevel = zlevel;
-                if (isFinite(maxZ2)) {
-                    labelLine.z2 = maxZ2 + ((textGuideLineConfig && textGuideLineConfig.showAbove) ? 1 : -1);
-                }
+                isFinite(maxZ2)
+                    && (labelLine.z2 = maxZ2 + (textGuideLineConfig && textGuideLineConfig.showAbove ? 1 : -1));
             }
             return maxZ2;
         }

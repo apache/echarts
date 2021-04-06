@@ -843,7 +843,7 @@ class LineView extends ChartView {
 
                 // ensure label text of the temporal symbol is on the top of line and area polygon
                 const symbolLabel = symbol.getSymbolPath().getTextContent();
-                symbolLabel && (symbolLabel.z = this._polyline.z + 1);
+                symbolLabel && (symbolLabel.z2 = this._polyline.z2 + 1);
 
                 (symbol as SymbolExtended).__temp = true;
                 data.setItemGraphicEl(dataIndex, symbol);
