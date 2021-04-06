@@ -108,7 +108,7 @@ export class GeoSVGResource implements GeoResource {
         // in which there is no "view" info, so that it should better not to
         // make references to graphic elements.
         if (!firstGraphic) {
-            firstGraphic = this._firstGraphic = buildGraphic(this._parsedXML);
+            firstGraphic = this._firstGraphic = this._buildGraphic(this._parsedXML);
 
             this._freedGraphics.push(firstGraphic);
 
@@ -131,6 +131,126 @@ export class GeoSVGResource implements GeoResource {
         };
     }
 
+    private _buildGraphic(
+        svgXML: SVGElement
+    ): GeoSVGGraphicRecord {
+        let result;
+        let rootFromParse;
+
+        try {
+            result = svgXML && parseSVG(svgXML, {
+                ignoreViewBox: true,
+                ignoreRootClip: true
+            }) || {};
+            rootFromParse = result.root;
+            assert(rootFromParse != null);
+        }
+        catch (e) {
+            throw new Error('Invalid svg format\n' + e.message);
+        }
+
+        // Note: we keep the covenant that the root has no transform. So always add an extra root.
+        const root = new Group();
+        root.add(rootFromParse);
+        (root as GeoSVGGraphicRoot).isGeoSVGGraphicRoot = true;
+
+        // [THE_RULE_OF_VIEWPORT_AND_VIEWBOX]
+        //
+        // Consider: `<svg width="..." height="..." viewBox="...">`
+        // - the `width/height` we call it `svgWidth/svgHeight` for short.
+        // - `(0, 0, svgWidth, svgHeight)` defines the viewport of the SVG, or say,
+        //   "viewport boundingRect", or `boundingRect` for short.
+        // - `viewBox` defines the transform from the real content ot the viewport.
+        //   `viewBox` has the same unit as the content of SVG.
+        //   If `viewBox` exists, a transform is defined, so the unit of `svgWidth/svgHeight` become
+        //   different from the content of SVG. Otherwise, they are the same.
+        //
+        // If both `svgWidth/svgHeight/viewBox` are specified in a SVG file, the transform rule will be:
+        // 0. `boundingRect` is `(0, 0, svgWidth, svgHeight)`. Set it to Geo['_rect'] (View['_rect']).
+        // 1. Make a transform from `viewBox` to `boundingRect`.
+        //    Note: only suport `preserveAspectRatio 'xMidYMid'` here. That is, this transform will preserve
+        //    the aspect ratio.
+        // 2. Make a transform from boundingRect to Geo['_viewRect'] (View['_viewRect'])
+        //    (`Geo`/`View` will do this job).
+        //    Note: this transform might not preserve aspect radio, which depending on how users specify
+        //    viewRect in echarts option (e.g., `geo.left/top/width/height` will not preserve aspect ratio,
+        //    but `geo.layoutCenter/layoutSize` will preserve aspect ratio).
+        //
+        // If `svgWidth/svgHeight` not specified, we use `viewBox` as the `boundingRect` to make the SVG
+        // layout look good.
+        //
+        // If neither `svgWidth/svgHeight` nor `viewBox` are not specified, we calculate the boundingRect
+        // of the SVG content and use them to make SVG layout look good.
+
+        const svgWidth = result.width;
+        const svgHeight = result.height;
+        const viewBoxRect = result.viewBoxRect;
+
+        let boundingRect = this._boundingRect;
+        if (!boundingRect) {
+            let bRectX;
+            let bRectY;
+            let bRectWidth;
+            let bRectHeight;
+
+            if (svgWidth != null) {
+                bRectX = 0;
+                bRectWidth = svgWidth;
+            }
+            else if (viewBoxRect) {
+                bRectX = viewBoxRect.x;
+                bRectWidth = viewBoxRect.width;
+            }
+
+            if (svgHeight != null) {
+                bRectY = 0;
+                bRectHeight = svgHeight;
+            }
+            else if (viewBoxRect) {
+                bRectY = viewBoxRect.y;
+                bRectHeight = viewBoxRect.height;
+            }
+
+            // If both viewBox and svgWidth/svgHeight not specified,
+            // we have to determine how to layout those element to make them look good.
+            if (bRectX == null || bRectY == null) {
+                const calculatedBoundingRect = rootFromParse.getBoundingRect();
+                if (bRectX == null) {
+                    bRectX = calculatedBoundingRect.x;
+                    bRectWidth = calculatedBoundingRect.width;
+                }
+                if (bRectY == null) {
+                    bRectY = calculatedBoundingRect.y;
+                    bRectHeight = calculatedBoundingRect.height;
+                }
+            }
+
+            boundingRect = this._boundingRect = new BoundingRect(bRectX, bRectY, bRectWidth, bRectHeight);
+        }
+
+        if (viewBoxRect) {
+            const viewBoxTransform = makeViewBoxTransform(viewBoxRect, boundingRect);
+            // Only support `preserveAspectRatio 'xMidYMid'`
+            rootFromParse.scaleX = rootFromParse.scaleY = viewBoxTransform.scale;
+            rootFromParse.x = viewBoxTransform.x;
+            rootFromParse.y = viewBoxTransform.y;
+        }
+
+        root.setClipPath(new Rect({
+            shape: boundingRect.plain()
+        }));
+
+        const named = [] as GeoSVGGraphicRecord['named'];
+        each(result.named, namedItem => {
+            if (REGION_AVAILABLE_SVG_TAG_MAP.get(namedItem.svgNodeTagLower) != null) {
+                named.push(namedItem);
+                setSilent(namedItem.el);
+            }
+        });
+
+        return { root, boundingRect, named };
+    }
+
     /**
      * Consider:
      * (1) One graphic element can not be shared by different `geoView` running simultaneously.
@@ -151,7 +271,7 @@ export class GeoSVGResource implements GeoResource {
 
         svgGraphic = this._freedGraphics.pop()
             // use the first boundingRect to avoid duplicated boundingRect calculation.
-            || buildGraphic(this._parsedXML, this._boundingRect);
+            || this._buildGraphic(this._parsedXML);
 
         usedRootMap.set(hostKey, svgGraphic);
 
@@ -178,75 +298,6 @@ export class GeoSVGResource implements GeoResource {
 
 }
 
-
-function buildGraphic(
-    svgXML: SVGElement,
-    // If input boundingRect, avoid boundingRect calculation,
-    // which might be time-consuming.
-    boundingRect?: BoundingRect
-): GeoSVGGraphicRecord {
-    let result;
-    let root;
-
-    try {
-        result = svgXML && parseSVG(svgXML, {
-            ignoreViewBox: true,
-            ignoreRootClip: true
-        }) || {};
-        root = result.root;
-        assert(root != null);
-    }
-    catch (e) {
-        throw new Error('Invalid svg format\n' + e.message);
-    }
-
-    const svgWidth = result.width;
-    const svgHeight = result.height;
-    const viewBoxRect = result.viewBoxRect;
-
-    if (!boundingRect) {
-        boundingRect = (svgWidth == null || svgHeight == null)
-            // If svg width / height not specified, calculate
-            // bounding rect as the width / height
-            ? root.getBoundingRect()
-            : new BoundingRect(0, 0, 0, 0);
-
-        if (svgWidth != null) {
-            boundingRect.width = svgWidth;
-        }
-        if (svgHeight != null) {
-            boundingRect.height = svgHeight;
-        }
-    }
-
-    // Note: we keep the covenant that the root has no transform.
-    if (viewBoxRect) {
-        const viewBoxTransform = makeViewBoxTransform(viewBoxRect, boundingRect.width, boundingRect.height);
-        const elRoot = root;
-        root = new Group();
-        root.add(elRoot);
-        elRoot.scaleX = elRoot.scaleY = viewBoxTransform.scale;
-        elRoot.x = viewBoxTransform.x;
-        elRoot.y = viewBoxTransform.y;
-    }
-
-    root.setClipPath(new Rect({
-        shape: boundingRect.plain()
-    }));
-
-    (root as GeoSVGGraphicRoot).isGeoSVGGraphicRoot = true;
-
-    const named = [] as GeoSVGGraphicRecord['named'];
-
-    each(result.named, namedItem => {
-        if (REGION_AVAILABLE_SVG_TAG_MAP.get(namedItem.svgNodeTagLower) != null) {
-            named.push(namedItem);
-            setSilent(namedItem.el);
-        }
-    });
-
-    return { root, boundingRect, named };
-}
 
 function setSilent(el: Element): void {
     // Only named element has silent: false, other elements should

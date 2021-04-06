@@ -40,6 +40,7 @@ under the License.
         <div id="main_simple_geo_json"></div>
         <div id="main_simple_geo_svg"></div>
         <div id="main_simple_geo_svg_coord"></div>
+        <div id="main_simple_geo_svg_viewBox_svgWH"></div>
         <div id="main_geo_json_focus_blur"></div>
         <div id="main_geo_svg_emphasis_select"></div>
         <div id="main_pure_geo_svg"></div>
@@ -290,6 +291,138 @@ under the License.
                 });
             }
 
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            const xmlHeader = '<?xml version="1.0" encoding="utf-8"?>';
+            const svgTagCommonAttr = ' xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" fill-rule="evenodd" xml:space="preserve" ';
+
+            // Both svgWdith svgHeight viewBox
+            const svg1 = [
+                xmlHeader,
+                '<svg ' + svgTagCommonAttr,
+                'viewBox="99500 99500 1000 1000"',
+                'width="5px" height="5px"',
+                '>',
+                '<circle cx="100000" cy="100000" r="500" fill="blue" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join(' ');
+            // Both svgWdith svgHeight viewBox and clip
+            const svg2 = [
+                xmlHeader,
+                '<svg ' + svgTagCommonAttr,
+                'viewBox="99500 99500 500 500"',
+                'width="5px" height="5px"',
+                '>',
+                '<circle cx="100000" cy="100000" r="500" fill="blue" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join(' ');
+            // Only svgWdith svgHeight
+            const svg3 = [
+                xmlHeader,
+                '<svg ' + svgTagCommonAttr,
+                'width="100000" height="100000"',
+                '>',
+                '<circle cx="100000" cy="100000" r="100000" fill="blue" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join(' ');
+            // Only viewBox
+            const svg4 = [
+                xmlHeader,
+                '<svg ' + svgTagCommonAttr,
+                'viewBox="99500 99500 500 500"',
+                '>',
+                '<circle cx="100000" cy="100000" r="500" fill="blue" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join(' ');
+            // Neither viewBox and svgWidth svgHeight
+            const svg5 = [
+                xmlHeader,
+                '<svg ' + svgTagCommonAttr,
+                '>',
+                '<circle cx="100000" cy="100000" r="500" fill="blue" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join(' ');
+            // Both viewBox but only svgHeight no svgWidth
+            const svg6 = [
+                xmlHeader,
+                '<svg ' + svgTagCommonAttr,
+                'viewBox="99500 99500 1000 1000"',
+                'height="500"',
+                '>',
+                '<circle cx="100000" cy="100000" r="500" fill="blue" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join(' ');
+
+            echarts.registerMap('testGeoSVG_viewBox_svgWH_1', { svg: svg1 });
+            echarts.registerMap('testGeoSVG_viewBox_svgWH_2', { svg: svg2 });
+            echarts.registerMap('testGeoSVG_viewBox_svgWH_3', { svg: svg3 });
+            echarts.registerMap('testGeoSVG_viewBox_svgWH_4', { svg: svg4 });
+            echarts.registerMap('testGeoSVG_viewBox_svgWH_5', { svg: svg5 });
+            echarts.registerMap('testGeoSVG_viewBox_svgWH_6', { svg: svg6 });
+
+            const RECT_SIZE = 50;
+            const Y_TOP = 10;
+            const X_LEFT = 10;
+            const GAP = 20;
+
+            var _itemIndex = 0;
+            var _graphicOptionArr = [];
+            var _geoOptionArr = [];
+
+            function makeItem(text, mapType) {
+                var x = X_LEFT + (RECT_SIZE + GAP) * _itemIndex++;
+                _graphicOptionArr.push({
+                    type: 'rect',
+                    silent: true,
+                    shape: { x: x, y: Y_TOP, width: RECT_SIZE, height: RECT_SIZE },
+                    style: { stroke: 'red', lineWidth: 1, fill: null }
+                }, {
+                    type: 'text',
+                    silent: true,
+                    style: {
+                        text: text, x: x + RECT_SIZE / 2, y: Y_TOP + RECT_SIZE + GAP,
+                        fill: '#000', textAlign: 'center', textVerticalAlign: 'middle'
+                    }
+                });
+                _geoOptionArr.push({
+                    map: mapType,
+                    left: x, top: Y_TOP, width: RECT_SIZE, height: RECT_SIZE,
+                    itemStyle: { color: 'blue' }
+                });
+            }
+
+            makeItem('circle', 'testGeoSVG_viewBox_svgWH_1');
+            makeItem('1/4 sector', 'testGeoSVG_viewBox_svgWH_2');
+            makeItem('1/4 sector', 'testGeoSVG_viewBox_svgWH_3');
+            makeItem('1/4 sector', 'testGeoSVG_viewBox_svgWH_4');
+            makeItem('circle', 'testGeoSVG_viewBox_svgWH_5');
+            makeItem('thin ellipse', 'testGeoSVG_viewBox_svgWH_6');
+
+            option = {
+                animation: false,
+                tooltip: {
+                },
+                graphic: _graphicOptionArr,
+                geo: _geoOptionArr
+            };
+
+            var chart = testHelper.create(echarts, 'main_simple_geo_svg_viewBox_svgWH', {
+                title: [
+                    'viewBox test:',
+                    'Check each shape should be inside each red rect.',
+                    'Check each shape be correspondence with the text.',
+                ],
+                option: option,
+                height: 100
+            });
         });
         </script>
 
