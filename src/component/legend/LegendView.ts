@@ -27,7 +27,7 @@ import {setLabelStyle, createTextStyle} from '../../label/labelStyle';
 import {makeBackground} from '../helper/listComponent';
 import * as layoutUtil from '../../util/layout';
 import ComponentView from '../../view/Component';
-import LegendModel, { LegendItemStyleOption, LegendLineStyleOption, LegendOption, LegendSelectorButtonOption, LegendTooltipFormatterParams } from './LegendModel';
+import LegendModel, { LegendItemStyleOption, LegendLineStyleOption, LegendOption, LegendSelectorButtonOption, LegendSymbolParams, LegendTooltipFormatterParams } from './LegendModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import {
@@ -343,8 +343,8 @@ class LegendView extends ComponentView {
         const isSelected = legendModel.isSelected(name);
 
         const symbolKeepAspect = itemModel.get('symbolKeepAspect');
-        const legendSymbolType = itemModel.get('icon') || symbolType;
-        symbolType = legendSymbolType || 'roundRect';
+        const legendIconType = itemModel.get('icon');
+        symbolType = legendIconType || symbolType || 'roundRect';
 
         const legendLineStyle = legendModel.getModel('lineStyle');
         const style = getLegendStyle(symbolType, itemModel, legendLineStyle, lineVisualStyle, itemVisualStyle, drawType, isSelected);
@@ -359,7 +359,8 @@ class LegendView extends ComponentView {
                 series: seriesModel,
                 itemWidth,
                 itemHeight,
-                symbolType: legendSymbolType,
+                symbolType,
+                legendIconType: legendIconType,
                 symbolKeepAspect,
                 itemStyle: style.itemStyle,
                 lineStyle: style.lineStyle
@@ -371,7 +372,8 @@ class LegendView extends ComponentView {
                 series: seriesModel,
                 itemWidth,
                 itemHeight,
-                symbolType: symbolType || 'roundRect',
+                symbolType,
+                legendIconType,
                 symbolKeepAspect,
                 itemStyle: style.itemStyle,
                 lineStyle: style.lineStyle
@@ -629,15 +631,7 @@ function getLegendStyle(
     return { itemStyle, lineStyle };
 }
 
-function getDefaultLegendIcon(opt: {
-    series: SeriesModel,
-    itemWidth: number,
-    itemHeight: number,
-    symbolType: string,
-    symbolKeepAspect: boolean,
-    itemStyle: PathStyleProps,
-    lineStyle: LineStyleProps
-}): ECSymbol {
+function getDefaultLegendIcon(opt: LegendSymbolParams): ECSymbol {
     const symboType = opt.symbolType || 'roundRect';
     const symbol = createSymbol(
         symboType,

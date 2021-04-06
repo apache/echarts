@@ -217,24 +217,27 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
     getLegendIcon(opt: LegendSymbolParams): ECSymbol | Group {
         const group = new Group();
 
-        // Line
-        const line = createSymbol(
-            'line',
-            0,
-            opt.itemHeight / 2,
-            opt.itemWidth,
-            0,
-            opt.lineStyle.stroke,
-            false
-        );
-        group.add(line);
+        // Draw line only if legend.icon is not defined
+        if (!opt.legendIconType) {
+            const line = createSymbol(
+                'line',
+                0,
+                opt.itemHeight / 2,
+                opt.itemWidth,
+                0,
+                opt.lineStyle.stroke,
+                false
+            );
+            group.add(line);
+            line.setStyle(opt.lineStyle);
+        }
 
-        line.setStyle(opt.lineStyle);
+        const visualType = opt.series.getData().getVisual('symbol');
+        const symbolType = opt.legendIconType
+            || (visualType === 'none' ? 'circle' : visualType);
 
-        // Symbol in the center
-        const symbolType = opt.symbolType
-            || opt.series.getData().getVisual('symbol');
-        const size = opt.itemHeight * 0.8;
+        // Symbol size is 80% when there is a line
+        const size = opt.itemHeight * (opt.legendIconType ? 1 : 0.8);
         const symbol = createSymbol(
             symbolType,
             (opt.itemWidth - size) / 2,
