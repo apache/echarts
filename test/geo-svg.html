@@ -37,8 +37,6 @@ under the License.
 
 
 
-        <div id="main_simple_geo_json"></div>
-        <div id="main_simple_geo_svg"></div>
         <div id="main_simple_geo_svg_coord"></div>
         <div id="main_simple_geo_svg_viewBox_svgWH"></div>
         <div id="main_geo_json_focus_blur"></div>
@@ -85,117 +83,6 @@ under the License.
             }
         </script>
 
-
-
-
-
-        <script>
-        require(['echarts'/*, 'map/js/china' */], function (echarts) {
-            const testGeoJson1 = {
-                'type': 'FeatureCollection',
-                'features': [
-                    {
-                        'type': 'Feature',
-                        'geometry': {
-                            'type': 'Polygon',
-                            'coordinates': [
-                                [[2000, 2000], [5000, 2000], [5000, 5000], [2000, 5000]]
-                            ]
-                        },
-                        'properties': {
-                            'name': 'Afghanistan',
-                            'childNum': 1
-                        }
-                    }
-                ]
-            };
-
-            echarts.registerMap('testGeoJson1', testGeoJson1);
-
-            option = {
-                tooltip: {
-                },
-                geo: {
-                    map: 'testGeoJson1',
-                    roam: true,
-                    selectedMode: 'single',
-                    // height: '100%',
-                    // center
-                    // layoutCenter: ['30%', 40],
-                    // layoutSize: 40,
-                    // boundingCoords
-                    zoom: 1,
-                    aspectScale: 1
-                }
-            };
-
-            var chart = testHelper.create(echarts, 'main_simple_geo_json', {
-                title: [
-                    'simple geo geoJSON location:',
-                    'Should be a square and 80% of canvas height.',
-                    'At the center of the canvas.'
-                ],
-                option: option,
-                info: {},
-                infoKey: 'event',
-                height: 200
-            });
-
-            listenAndPrintEvent(chart);
-
-        });
-        </script>
-
-
-
-
-
-
-
-
-        <script>
-        require(['echarts'/*, 'map/js/china' */], function (echarts) {
-            const svg = [
-                '<?xml version="1.0" encoding="utf-8"?>',
-                '<svg xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100" version="1.2" fill-rule="evenodd" xml:space="preserve">',
-                '<path d="M 0,0 L 0,100 100,100 100,0 Z" fill="none" stroke="rgb(56,93,138)" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
-                '</svg>'
-            ].join('')
-
-            echarts.registerMap('testGeoSVG', { svg: svg });
-
-            option = {
-                tooltip: {
-                },
-                geo: {
-                    map: 'testGeoSVG',
-                    roam: true,
-                    selectedMode: 'single',
-                    // height: '100%',
-                    // center
-                    // layoutCenter: ['30%', 40],
-                    // layoutSize: 40,
-                    // boundingCoords
-                    // zoom: 1,
-                    // aspectScale: 1
-                }
-            };
-
-            var chart = testHelper.create(echarts, 'main_simple_geo_svg', {
-                title: [
-                    'Should be a square and 80% of canvas height.',
-                    'At the center of the canvas.'
-                ],
-                option: option,
-                info: {},
-                infoKey: 'event',
-                height: 200
-            });
-
-            listenAndPrintEvent(chart);
-
-        });
-        </script>
 
 
 
@@ -641,11 +528,11 @@ under the License.
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
             $.ajax({
-                url: '../../vis-data/map/svg/seats/seatmap-example.svg',
+                url: 'data/svg/flight-seats.svg',
                 dataType: 'text'
             }).done(function (svg) {
 
-                echarts.registerMap('seatmap', {
+                echarts.registerMap('flight-seats', {
                     svg: svg
                 });
 
@@ -653,15 +540,18 @@ under the License.
                     tooltip: {
                     },
                     geo: {
-                        map: 'seatmap',
+                        map: 'flight-seats',
                         roam: true,
                         selectedMode: 'multiple',
                         tooltip: {
                             show: true
                         },
-                        // height: 100,
-                        // zoom: 1.5
                         emphasis: {
+                            itemStyle: {
+                                color: null,
+                                borderColor: '#780705',
+                                borderWidth: 3
+                            },
                             label: {
                                 textBorderColor: '#fff',
                                 textBorderWidth: 2
@@ -677,14 +567,7 @@ under the License.
                                 textBorderWidth: 2
                             }
                         }
-                    },
-                    // series: {
-                    //     type: 'scatter',
-                    //     coordinateSystem: 'geo',
-                    //     // ?????????????????????????
-                    //     geoIndex: 0,
-                    //     data: [[11, 22], [33, 44]]
-                    // }
+                    }
                 };
 
                 var chart = testHelper.create(echarts, 'main_pure_geo_svg', {
@@ -697,8 +580,6 @@ under the License.
                     info: {},
                     infoKey: 'event',
                     height: 300
-                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                    // recordCanvas: true,
                 });
 
                 listenAndPrintEvent(chart);
@@ -717,7 +598,7 @@ under the License.
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
             $.ajax({
-                url: '../../vis-data/map/svg/seats/seatmap-example.svg',
+                url: 'data/svg/seatmap-example.svg',
                 dataType: 'text'
             }).done(function (svg) {
 

@@ -37,11 +37,11 @@ under the License.
 
 
 
-        <div id="main_geo_svg_organ"></div>
+        <!-- <div id="main_geo_svg_organ"></div>
         <div id="main_geo_svg_regions"></div>
         <div id="main_geo_svg_line_path"></div>
         <div id="main_geo_svg_heatmap"></div>
-        <div id="main_geo_svg_building"></div>
+        <div id="main_geo_svg_building"></div> -->
         <div id="main_geo_svg_traffic"></div>
 
 
@@ -618,7 +618,6 @@ under the License.
                     series: [{
                         name: 'Route',
                         type: 'lines',
-                        map: 'MacOdrum-LV5-floorplan-web',
                         coordinateSystem: 'geo',
                         geoIndex: 0,
                         emphasis: {
@@ -629,8 +628,10 @@ under the License.
                         polyline: true,
                         lineStyle: {
                             color: '#c46e54',
-                            width: 2
+                            width: 5,
+                            opacity: 1
                         },
+                        zlevel: 1,
                         effect: {
                             show: true,
                             period: 8,
@@ -732,7 +733,6 @@ under the License.
                     series: [{
                         name: 'Route',
                         type: 'lines',
-                        map: 'MacOdrum-LV5-floorplan-web',
                         coordinateSystem: 'geo',
                         geoIndex: 0,
                         emphasis: {
@@ -758,7 +758,8 @@ under the License.
                         data: [{
                             effect: {
                                 color: '#a10000',
-                                constantSpeed: 100
+                                constantSpeed: 100,
+                                delay: 0,
                             },
                             coords: [
                                 [50.875133928571415, 242.66287667410717],
@@ -804,7 +805,8 @@ under the License.
                         }, {
                             effect: {
                                 color: '#00067d',
-                                constantSpeed: 80
+                                constantSpeed: 80,
+                                delay: 0,
                             },
                             coords: [
                                 [779.4595368303574, 287.98744419642856],
@@ -840,7 +842,8 @@ under the License.
                         }, {
                             effect: {
                                 color: '#997405',
-                                constantSpeed: 60
+                                constantSpeed: 60,
+                                delay: 0,
                             },
                             coords: [
                                 [2.5920703124999704, 450.66908482142856],
