@@ -19,9 +19,8 @@
 
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import { HashMap } from 'zrender/src/core/util';
-import { Group, Path } from '../../util/graphic';
+import { Group } from '../../util/graphic';
 import { Region } from './Region';
-import Element from 'zrender/src/Element';
 
 
 export type GeoSVGSourceInput = 'string' | Document | SVGElement;

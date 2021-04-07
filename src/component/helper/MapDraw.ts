@@ -41,6 +41,8 @@ import Model from '../../model/Model';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
+import { makeInner } from '../../util/model';
+import ZRText, {TextStyleProps} from 'zrender/src/graphic/Text';
 import { ViewCoordSysTransformInfoPart } from '../../coord/View';
 import { GeoSVGGraphicRecord, GeoSVGResource } from '../../coord/geo/GeoSVGResource';
 import Displayable from 'zrender/src/graphic/Displayable';
@@ -48,8 +50,11 @@ import Element from 'zrender/src/Element';
 import List from '../../data/List';
 import { GeoJSONRegion } from '../../coord/geo/Region';
 import { SVGNodeTagLower } from 'zrender/src/tool/parseSVG';
-import { TextStyleProps } from 'zrender/src/graphic/Text';
 
+const mapLabelTransform = makeInner<{
+    x: number
+    y: number
+}, ZRText>();
 
 interface RegionsGroup extends graphic.Group {
 }
@@ -515,10 +520,29 @@ class MapDraw {
             return action;
         }
 
+        const updateLabelTransforms = () => {
+            const group = this.group;
+            this._regionsGroup.traverse(function (el) {
+                const textContent = el.getTextContent();
+                if (textContent) {
+                    el.setTextConfig({
+                        local: true
+                    });
+                    textContent.x = mapLabelTransform(textContent).x || 0;
+                    textContent.y = mapLabelTransform(textContent).y || 0;
+                    textContent.scaleX = 1 / group.scaleX;
+                    textContent.scaleY = 1 / group.scaleY;
+                    textContent.markRedraw();
+                }
+            });
+        };
+
         controller.off('pan').on('pan', function (e) {
             this._mouseDownFlag = false;
 
             roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
+
+            updateLabelTransforms();
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
                 dx: e.dx,
@@ -530,6 +554,8 @@ class MapDraw {
             this._mouseDownFlag = false;
 
             roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
+
+            updateLabelTransforms();
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
                 zoom: e.scale,
@@ -701,8 +727,8 @@ function resetLabelForRegion(
 
         const textEl = el.getTextContent();
         if (textEl) {
-            textEl.x = labelXY ? labelXY[0] : 0;
-            textEl.y = labelXY ? labelXY[1] : 0;
+            mapLabelTransform(textEl).x = textEl.x = labelXY ? labelXY[0] : 0;
+            mapLabelTransform(textEl).y = textEl.y = labelXY ? labelXY[1] : 0;
             textEl.z2 = 10;
             textEl.afterUpdate = labelTextAfterUpdate;
         }
