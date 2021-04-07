@@ -25,17 +25,9 @@ import MapSeries, { MapDataItemOption } from './MapSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, DisplayState, ECElement } from '../../util/types';
-import Model from '../../model/Model';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { Z2_EMPHASIS_LIFT } from '../../util/states';
 
-interface HighDownRecord {
-    recordVersion: number;
-    labelModel: Model;
-    hoverLabelModel: Model;
-    emphasisText: string;
-    normalText: string;
-};
 
 class MapView extends ChartView {
 
