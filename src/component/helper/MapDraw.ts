@@ -586,16 +586,6 @@ class MapDraw {
 
 };
 
-function labelTextAfterUpdate(this: graphic.Text) {
-    // Make the label text apply only translate of this host el
-    // but no other transform like scale,rotation of this host el.
-    const mt = this.transform;
-    mt[0] = 1;
-    mt[1] = 0;
-    mt[2] = 0;
-    mt[3] = 1;
-}
-
 function applyOptionStyleForRegion(
     viewBuildCtx: ViewBuildContext,
     el: Displayable,
@@ -713,8 +703,6 @@ function resetLabelForRegion(
 
         const textEl = el.getTextContent();
         if (textEl) {
-            textEl.afterUpdate = labelTextAfterUpdate;
-
             mapLabelRaw(textEl).ignore = textEl.ignore;
 
             if (el.textConfig) {
