@@ -56,7 +56,8 @@ export function linearMap(
     const subRange = r1 - r0;
 
     // avoid the infinite number
-    isFinite(val) || (val = val > 0 ? r1 : r0);
+    // PENDING: handle NaN?
+    isNaN(val) || isFinite(val) || (val = val > 0 ? r1 : r0);
 
     if (subDomain === 0) {
         return subRange === 0
