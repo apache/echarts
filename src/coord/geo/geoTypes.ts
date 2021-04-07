@@ -17,6 +17,14 @@
 * under the License.
 */
 
+import BoundingRect from 'zrender/src/core/BoundingRect';
+import { HashMap } from 'zrender/src/core/util';
+import { Group } from '../../util/graphic';
+import { Region } from './Region';
+
+
+export type GeoSVGSourceInput = 'string' | Document | SVGElement;
+export type GeoJSONSourceInput = 'string' | GeoJSON | GeoJSONCompressed;
 
 export interface NameMap {
     [regionName: string]: string
@@ -114,3 +122,20 @@ interface GeoJSONGeometryMultiPolygonCompressed {
 //      type: 'GeometryCollection';
 //      geometries: GeoJSONGeometry[];
 // };
+
+export interface GeoResource {
+    readonly type: 'geoJSON' | 'geoSVG';
+    load(
+        nameMap: NameMap,
+        nameProperty: string
+    ): {
+        boundingRect: BoundingRect;
+        regions: Region[];
+        // Key: region.name
+        regionsMap: HashMap<Region>;
+    };
+}
+
+export interface GeoSVGGraphicRoot extends Group {
+    isGeoSVGGraphicRoot: boolean;
+}

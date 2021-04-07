@@ -53,8 +53,6 @@ const candlestickVisual: StageHandler = {
 
         const data = seriesModel.getData();
 
-        data.setVisual('legendSymbol', 'roundRect');
-
         // Only visible series has each data be visual encoded
         if (ecModel.isSeriesFiltered(seriesModel)) {
             return;

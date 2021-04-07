@@ -292,7 +292,7 @@ export function enableClassManagement(
             throw new Error(
                 !subType
                     ? mainType + '.' + 'type should be specified.'
-                    : 'Component ' + mainType + '.' + (subType || '') + ' not exists. Load it first.'
+                    : 'Component ' + mainType + '.' + (subType || '') + ' is used but not imported.'
             );
         }
 
