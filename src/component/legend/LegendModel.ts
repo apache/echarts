@@ -140,17 +140,12 @@ export interface LegendTooltipFormatterParams {
 }
 
 export interface LegendSymbolParams {
-    series: SeriesModel,
     itemWidth: number,
     itemHeight: number,
     /**
      * symbolType is from legend.icon, legend.data.icon, or series visual
      */
     symbolType: string,
-    /**
-     * legendIconType is from legend.icon or legend.data.icon
-     */
-    legendIconType: string,
     symbolKeepAspect: boolean,
     itemStyle: PathStyleProps,
     lineStyle: LineStyleProps

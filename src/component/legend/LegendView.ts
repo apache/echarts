@@ -353,14 +353,14 @@ class LegendView extends ComponentView {
 
         const textStyleModel = itemModel.getModel('textStyle');
 
-        if (typeof seriesModel.getLegendIcon === 'function') {
+        if (typeof seriesModel.getLegendIcon === 'function'
+            && !legendIconType
+        ) {
             // Series has specific way to define legend icon
             itemGroup.add(seriesModel.getLegendIcon({
-                series: seriesModel,
                 itemWidth,
                 itemHeight,
                 symbolType,
-                legendIconType: legendIconType,
                 symbolKeepAspect,
                 itemStyle: style.itemStyle,
                 lineStyle: style.lineStyle
@@ -369,11 +369,9 @@ class LegendView extends ComponentView {
         else {
             // Use default legend icon policy for most series
             itemGroup.add(getDefaultLegendIcon({
-                series: seriesModel,
                 itemWidth,
                 itemHeight,
                 symbolType,
-                legendIconType,
                 symbolKeepAspect,
                 itemStyle: style.itemStyle,
                 lineStyle: style.lineStyle

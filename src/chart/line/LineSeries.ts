@@ -39,10 +39,8 @@ import {
 import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
-import {PathStyleProps} from 'zrender/src/graphic/Path';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import {Group} from '../../util/graphic';
-import {LineStyleProps} from '../../model/mixin/lineStyle';
 import {LegendSymbolParams} from '../../component/legend/LegendModel';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
@@ -217,27 +215,23 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
     getLegendIcon(opt: LegendSymbolParams): ECSymbol | Group {
         const group = new Group();
 
-        // Draw line only if legend.icon is not defined
-        if (!opt.legendIconType) {
-            const line = createSymbol(
-                'line',
-                0,
-                opt.itemHeight / 2,
-                opt.itemWidth,
-                0,
-                opt.lineStyle.stroke,
-                false
-            );
-            group.add(line);
-            line.setStyle(opt.lineStyle);
-        }
+        const line = createSymbol(
+            'line',
+            0,
+            opt.itemHeight / 2,
+            opt.itemWidth,
+            0,
+            opt.lineStyle.stroke,
+            false
+        );
+        group.add(line);
+        line.setStyle(opt.lineStyle);
 
-        const visualType = opt.series.getData().getVisual('symbol');
-        const symbolType = opt.legendIconType
-            || (visualType === 'none' ? 'circle' : visualType);
+        const visualType = this.getData().getVisual('symbol');
+        const symbolType = visualType === 'none' ? 'circle' : visualType;
 
         // Symbol size is 80% when there is a line
-        const size = opt.itemHeight * (opt.legendIconType ? 1 : 0.8);
+        const size = opt.itemHeight * 0.8;
         const symbol = createSymbol(
             symbolType,
             (opt.itemWidth - size) / 2,
