@@ -34,10 +34,12 @@ import {
     RoamOptionMixin,
     AnimationOptionMixin,
     StatesOptionMixin,
-    Dictionary
+    Dictionary,
+    CommonTooltipOption
 } from '../../util/types';
 import { NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
+import geoSourceManager from './geoSourceManager';
 
 
 export interface GeoItemStyleOption extends ItemStyleOption {
@@ -59,7 +61,15 @@ interface GeoLabelFormatterDataParams {
 export interface RegoinOption extends GeoStateOption, StatesOptionMixin<GeoStateOption> {
     name?: string
     selected?: boolean
-};
+    tooltip?: CommonTooltipOption<GeoTooltipFormatterParams>
+}
+
+export interface GeoTooltipFormatterParams {
+    componentType: 'geo'
+    geoIndex: number
+    name: string
+    $vars: ['name']
+}
 
 export interface GeoCommonOptionMixin extends RoamOptionMixin {
     // Map name
@@ -83,6 +93,7 @@ export interface GeoCommonOptionMixin extends RoamOptionMixin {
     boundingCoords?: number[][];
 
     nameMap?: NameMap;
+    nameProperty?: string;
 }
 
 export interface GeoOption extends
@@ -103,6 +114,8 @@ export interface GeoOption extends
 
     selectedMode?: 'single' | 'multiple' | boolean
     selectedMap?: Dictionary<boolean>
+
+    tooltip?: CommonTooltipOption<GeoTooltipFormatterParams>
 }
 
 class GeoModel extends ComponentModel<GeoOption> {
@@ -128,8 +141,9 @@ class GeoModel extends ComponentModel<GeoOption> {
 
         top: 'center',
 
-        // If svg used, aspectScale is 1 by default.
-        // aspectScale: 0.75,
+        // Default value:
+        // for geoSVG source: 1,
+        // for geoJSON source: 0.75.
         aspectScale: null,
 
         ///// Layout with center and size
@@ -162,10 +176,12 @@ class GeoModel extends ComponentModel<GeoOption> {
         },
 
         itemStyle: {
-            // color: 各异,
             borderWidth: 0.5,
-            borderColor: '#444',
-            color: '#eee'
+            borderColor: '#444'
+            // Default color:
+            // + geoJSON: #eee
+            // + geoSVG: null (use SVG original `fill`)
+            // color: '#eee'
         },
 
         emphasis: {
@@ -188,26 +204,40 @@ class GeoModel extends ComponentModel<GeoOption> {
             }
         },
 
-        regions: []
+        regions: [],
+
+        tooltip: {
+            show: false
+        }
     };
 
     init(option: GeoOption, parentModel: Model, ecModel: GlobalModel): void {
-        super.init(option, parentModel, ecModel);
+        const source = geoSourceManager.getGeoResource(option.map);
+        if (source && source.type === 'geoJSON') {
+            const itemStyle = option.itemStyle = option.itemStyle || {};
+            if (!('color' in itemStyle)) {
+                itemStyle.color = '#eee';
+            }
+        }
+
+        this.mergeDefaultAndTheme(option, ecModel);
+
         // Default label emphasis `show`
         modelUtil.defaultEmphasis(option, 'label', ['show']);
     }
 
     optionUpdated(): void {
         const option = this.option;
-        const self = this;
 
-        option.regions = geoCreator.getFilledRegions(option.regions, option.map, option.nameMap);
+        option.regions = geoCreator.getFilledRegions(
+            option.regions, option.map, option.nameMap, option.nameProperty
+        );
 
         const selectedMap: Dictionary<boolean> = {};
-        this._optionModelMap = zrUtil.reduce(option.regions || [], function (optionModelMap, regionOpt) {
+        this._optionModelMap = zrUtil.reduce(option.regions || [], (optionModelMap, regionOpt) => {
             const regionName = regionOpt.name;
             if (regionName) {
-                optionModelMap.set(regionName, new Model(regionOpt, self));
+                optionModelMap.set(regionName, new Model(regionOpt, this, this.ecModel));
                 if (regionOpt.selected) {
                     selectedMap[regionName] = true;
                 }
@@ -287,8 +317,6 @@ class GeoModel extends ComponentModel<GeoOption> {
         return !!(selectedMap && selectedMap[name]);
     }
 
-    private _initSelectedMapFromData() {
-    }
 }
 
 export default GeoModel;

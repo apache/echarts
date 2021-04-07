@@ -18,7 +18,7 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import SymbolDraw from '../helper/SymbolDraw';
+import SymbolDraw, { ListForSymbolDraw } from '../helper/SymbolDraw';
 import LineDraw from '../helper/LineDraw';
 import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
 import * as roamHelper from '../../component/helper/roamHelper';
@@ -105,7 +105,7 @@ class GraphView extends ChartView {
         adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
 
         const data = seriesModel.getData();
-        symbolDraw.updateData(data);
+        symbolDraw.updateData(data as ListForSymbolDraw);
 
         const edgeData = seriesModel.getEdgeData();
         // TODO: TYPE

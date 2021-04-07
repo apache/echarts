@@ -353,7 +353,7 @@ under the License.
                         height: 40
                     },
                     textContent: {
-                        style: { text: 'show tooltip asdf\nin fontSize: 20 red' }
+                        style: { text: 'show tooltip\nasdf\nfontSize: 20 red' }
                     },
                     textConfig: {
                         position: 'bottom'
@@ -398,7 +398,7 @@ under the License.
                         height: 40
                     },
                     textContent: {
-                        style: { text: 'show tooltip JSON params\nin fontSize: 20 red' }
+                        style: { text: 'show tooltip\nJSON params\nfontSize: 20 red' }
                     },
                     textConfig: {
                         position: 'bottom'
@@ -417,7 +417,28 @@ under the License.
                         height: 40
                     },
                     textContent: {
-                        style: { text: 'show tooltip "stringstring"\nin fontSize: 10 red' }
+                        style: { text: 'show tooltip\n"stringstring"\nfontSize: 10 red' }
+                    },
+                    textConfig: {
+                        position: 'bottom'
+                    },
+                    style: {
+                        fill: 'blue'
+                    }
+                }, {
+                    tooltip: {
+                        position: 'left'
+                    },
+                    type: 'rect',
+                    name: '5nd',
+                    shape: {
+                        y: 20,
+                        x: 650,
+                        width: 40,
+                        height: 40
+                    },
+                    textContent: {
+                        style: { text: 'show tooltip\n"5nd"\nfontSize: 10 red\nposition: "left"' }
                     },
                     textConfig: {
                         position: 'bottom'
@@ -451,6 +472,15 @@ under the License.
                             type: 'showTip',
                             graphicIndex: 0,
                             name: '3rd'
+                        });
+                    }
+                }, {
+                    text: 'trigger 5nd graphic tooltip',
+                    onclick: function () {
+                        chart.dispatchAction({
+                            type: 'showTip',
+                            graphicIndex: 0,
+                            name: '5nd'
                         });
                     }
                 }]

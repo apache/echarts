@@ -71,6 +71,7 @@ export interface EffectScatterSeriesOption extends SeriesOption<EffectScatterSta
      * When to show the effect
      */
     showEffectOn?: 'render' | 'emphasis'
+    clip?: boolean
 
     /**
      * Ripple effect config
@@ -107,6 +108,7 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
 
         // When to show the effect, option: 'render'|'emphasis'
         showEffectOn: 'render',
+        clip: true,
 
         // Ripple effect config
         rippleEffect: {
