@@ -832,7 +832,7 @@ export interface ShadowOptionMixin {
 }
 
 export interface BorderOptionMixin {
-    borderColor?: string
+    borderColor?: ZRColor
     borderWidth?: number
     borderType?: ZRLineType
     borderCap?: CanvasLineCap
@@ -922,7 +922,7 @@ export interface RoamOptionMixin {
 export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
 export type SymbolCallback<T> = (rawValue: any, params: T) => string;
 export type SymbolRotateCallback<T> = (rawValue: any, params: T) => number;
-// export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => (string | number)[];
+export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => (string | number)[];
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -941,7 +941,7 @@ export interface SymbolOptionMixin<T = unknown> {
 
     symbolKeepAspect?: boolean
 
-    symbolOffset?: (string | number)[]
+    symbolOffset?: (string | number)[] | (unknown extends T ? never : SymbolOffsetCallback<T>)
 }
 
 /**
@@ -1484,7 +1484,7 @@ export type BlurScope = 'coordinateSystem' | 'series' | 'global';
  * can be array of data indices.
  * Or may be an dictionary if have different types of data like in graph.
  */
-export type InnerFocus = string | ArrayLike<number> | Dictionary<ArrayLike<number>>;
+export type InnerFocus = DefaultEmphasisFocus | ArrayLike<number> | Dictionary<ArrayLike<number>>;
 
 export interface DefaultExtraStateOpts {
     emphasis: any

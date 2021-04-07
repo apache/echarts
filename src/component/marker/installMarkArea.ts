@@ -18,6 +18,7 @@
 */
 
 import { EChartsExtensionInstallRegisters } from '../../extension';
+import checkMarkerInSeries from './checkMarkerInSeries';
 import MarkAreaModel from './MarkAreaModel';
 import MarkAreaView from './MarkAreaView';
 
@@ -26,7 +27,9 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerComponentView(MarkAreaView);
 
     registers.registerPreprocessor(function (opt) {
-        // Make sure markArea component is enabled
-        opt.markArea = opt.markArea || {};
+        if (checkMarkerInSeries(opt.series, 'markArea')) {
+            // Make sure markArea component is enabled
+            opt.markArea = opt.markArea || {};
+        }
     });
 }

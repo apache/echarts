@@ -36,13 +36,10 @@ import ChartView, {ChartViewConstructor} from '../view/Chart';
 import * as graphic from '../util/graphic';
 import {getECData} from '../util/innerStore';
 import {
-    enterEmphasisWhenMouseOver,
-    leaveEmphasisWhenMouseOut,
     isHighDownDispatcher,
     HOVER_STATE_EMPHASIS,
     HOVER_STATE_BLUR,
-    toggleSeriesBlurState,
-    toggleSeriesBlurStateFromPayload,
+    blurSeriesFromHighlightPayload,
     toggleSelectionFromPayload,
     updateSeriesElementSelection,
     getAllSelectedIndices,
@@ -59,7 +56,12 @@ import {
     leaveBlur,
     enterSelect,
     leaveSelect,
-    enterBlur
+    enterBlur,
+    allLeaveBlur,
+    findComponentHighDownDispatchers,
+    blurComponent,
+    handleGlobalMouseOverForHighDown,
+    handleGlboalMouseOutForHighDown
 } from '../util/states';
 import * as modelUtil from '../util/model';
 import {throttle} from '../util/throttle';
@@ -68,7 +70,6 @@ import loadingDefault from '../loading/default';
 import Scheduler from './Scheduler';
 import lightTheme from '../theme/light';
 import darkTheme from '../theme/dark';
-import mapDataStorage from '../coord/geo/mapDataStorage';
 import {CoordinateSystemMaster, CoordinateSystemCreator, CoordinateSystemHostModel} from '../coord/CoordinateSystem';
 import { parseClassType } from '../util/clazz';
 import {ECEventProcessor} from '../util/ECEventProcessor';
@@ -88,7 +89,8 @@ import {
     DimensionLoose,
     ScaleDataValue,
     ZRElementEventName,
-    ECElementEvent
+    ECElementEvent,
+    AnimationOption
 } from '../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
@@ -107,6 +109,7 @@ import decal from '../visual/decal';
 import type {MorphDividingMethod} from 'zrender/src/tool/morphPath';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
+import geoSourceManager from '../coord/geo/geoSourceManager';
 
 declare let global: any;
 
@@ -210,7 +213,15 @@ export interface SetOptionTransitionOptItem {
     from?: SetOptionTransitionOptFinder;
     to: SetOptionTransitionOptFinder;
     dividingMethod: MorphDividingMethod;
-}
+};
+
+export interface ResizeOpts {
+    width?: number | 'auto', // Can be 'auto' (the same as null/undefined)
+    height?: number | 'auto', // Can be 'auto' (the same as null/undefined)
+    animation?: AnimationOption
+    silent?: boolean // by default false.
+};
+
 interface SetOptionTransitionOptFinder extends modelUtil.ModelFinderObject {
     dimension: DimensionLoose;
 }
@@ -1129,11 +1140,7 @@ class ECharts extends Eventful<ECEventDefinition> {
     /**
      * Resize the chart
      */
-    resize(opts?: {
-        width?: number | 'auto', // Can be 'auto' (the same as null/undefined)
-        height?: number | 'auto', // Can be 'auto' (the same as null/undefined)
-        silent?: boolean // by default false.
-    }): void {
+    resize(opts?: ResizeOpts): void {
         if (__DEV__) {
             assert(!this[IN_MAIN_PROCESS_KEY], '`resize` should not be called during main process.');
         }
@@ -1162,10 +1169,10 @@ class ECharts extends Eventful<ECEventDefinition> {
         optionChanged && prepare(this);
         updateMethods.update.call(this, {
             type: 'resize',
-            animation: {
+            animation: zrUtil.extend({
                 // Disable animation
                 duration: 0
-            }
+            }, opts && opts.animation)
         });
 
         this[IN_MAIN_PROCESS_KEY] = false;
@@ -1472,12 +1479,37 @@ class ECharts extends Eventful<ECEventDefinition> {
                 });
             }
 
+            if (isHighDownPayload(payload)) {
+                allLeaveBlur(ecIns._api);
+            }
+
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
                 if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
-                    if (isHighDownPayload(payload) && !payload.notBlur) {
+                    if (isHighDownPayload(payload)) {
                         if (model instanceof SeriesModel) {
-                            toggleSeriesBlurStateFromPayload(model, payload, ecIns._api);
+                            if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
+                                blurSeriesFromHighlightPayload(model, payload, ecIns._api);
+                            }
+                        }
+                        else {
+                            const { focusSelf, dispatchers } = findComponentHighDownDispatchers(
+                                model.mainType, model.componentIndex, payload.name, ecIns._api
+                            );
+                            if (payload.type === HIGHLIGHT_ACTION_TYPE && focusSelf && !payload.notBlur) {
+                                blurComponent(model.mainType, model.componentIndex, ecIns._api);
+                            }
+                            // PENDING:
+                            // Whether to put this "enter emphasis" code in `ComponentView`,
+                            // which will be the same as `ChartView` but might be not necessary
+                            // and will be far from this logic.
+                            if (dispatchers) {
+                                each(dispatchers, dispatcher => {
+                                    payload.type === HIGHLIGHT_ACTION_TYPE
+                                        ? enterEmphasis(dispatcher)
+                                        : leaveEmphasis(dispatcher);
+                                });
+                            }
                         }
                     }
                     else if (isSelectChangePayload(payload)) {
@@ -1504,12 +1536,12 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         updateMethods = {
 
-            prepareAndUpdate: function (this: ECharts, payload: Payload): void {
+            prepareAndUpdate(this: ECharts, payload: Payload): void {
                 prepare(this);
                 updateMethods.update.call(this, payload);
             },
 
-            update: function (this: ECharts, payload: Payload): void {
+            update(this: ECharts, payload: Payload): void {
                 // console.profile && console.profile('update');
 
                 const ecModel = this._model;
@@ -1581,7 +1613,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // console.profile && console.profileEnd('update');
             },
 
-            updateTransform: function (this: ECharts, payload: Payload): void {
+            updateTransform(this: ECharts, payload: Payload): void {
                 const ecModel = this._model;
                 const api = this._api;
 
@@ -1638,7 +1670,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 performPostUpdateFuncs(ecModel, this._api);
             },
 
-            updateView: function (this: ECharts, payload: Payload): void {
+            updateView(this: ECharts, payload: Payload): void {
                 const ecModel = this._model;
 
                 // update before setOption
@@ -1660,7 +1692,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 performPostUpdateFuncs(ecModel, this._api);
             },
 
-            updateVisual: function (this: ECharts, payload: Payload): void {
+            updateVisual(this: ECharts, payload: Payload): void {
                 // updateMethods.update.call(this, payload);
 
                 const ecModel = this._model;
@@ -1701,7 +1733,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 performPostUpdateFuncs(ecModel, this._api);
             },
 
-            updateLayout: function (this: ECharts, payload: Payload): void {
+            updateLayout(this: ECharts, payload: Payload): void {
                 updateMethods.update.call(this, payload);
             }
         };
@@ -1775,7 +1807,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             let eventObj: ECActionEvent;
 
             const isSelectChange = isSelectChangePayload(payload);
-            const isStatusChange = isHighDownPayload(payload) || isSelectChange;
+            const isHighDown = isHighDownPayload(payload);
 
             each(payloads, (batchItem) => {
                 // Action can specify the event by return it.
@@ -1787,11 +1819,16 @@ class ECharts extends Eventful<ECEventDefinition> {
                 eventObjBatch.push(eventObj);
 
                 // light update does not perform data process, layout and visual.
-                if (isStatusChange) {
-                    // method, payload, mainType, subType
+                if (isHighDown) {
+                    const { queryOptionMap, mainTypeSpecified } = modelUtil.preParseFinder(payload as ModelFinder);
+                    const componentMainType = mainTypeSpecified ? queryOptionMap.keys()[0] : 'series';
+                    updateDirectly(this, updateMethod, batchItem as Payload, componentMainType);
+                    markStatusToUpdate(this);
+                }
+                else if (isSelectChange) {
+                    // At present `dispatchAction({ type: 'select', ... })` is not supported on components.
+                    // geo still use 'geoselect'.
                     updateDirectly(this, updateMethod, batchItem as Payload, 'series');
-
-                    // Mark status to update
                     markStatusToUpdate(this);
                 }
                 else if (cptType) {
@@ -1799,7 +1836,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 }
             });
 
-            if (updateMethod !== 'none' && !isStatusChange && !cptType) {
+            if (updateMethod !== 'none' && !isHighDown && !isSelectChange && !cptType) {
                 // Still dirty
                 if (this[OPTION_UPDATED_KEY]) {
                     prepare(this);
@@ -1895,27 +1932,14 @@ class ECharts extends Eventful<ECEventDefinition> {
                 const el = e.target;
                 const dispatcher = findEventDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
-                    const ecData = getECData(dispatcher);
-                    // Try blur all in the related series. Then emphasis the hoverred.
-                    // TODO. progressive mode.
-                    toggleSeriesBlurState(
-                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns._api, true
-                    );
-                    enterEmphasisWhenMouseOver(dispatcher, e);
-
+                    handleGlobalMouseOverForHighDown(dispatcher, e, ecIns._api);
                     markStatusToUpdate(ecIns);
                 }
             }).on('mouseout', function (e) {
                 const el = e.target;
                 const dispatcher = findEventDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
-                    const ecData = getECData(dispatcher);
-                    toggleSeriesBlurState(
-                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns._api, false
-                    );
-
-                    leaveEmphasisWhenMouseOut(dispatcher, e);
-
+                    handleGlboalMouseOutForHighDown(dispatcher, e, ecIns._api);
                     markStatusToUpdate(ecIns);
                 }
             }).on('click', function (e) {
@@ -2869,26 +2893,19 @@ export function setCanvasCreator(creator: () => HTMLCanvasElement): void {
 }
 
 /**
- * The parameters and usage: see `mapDataStorage.registerMap`.
+ * The parameters and usage: see `geoSourceManager.registerMap`.
  * Compatible with previous `echarts.registerMap`.
  */
 export function registerMap(
-    mapName: Parameters<typeof mapDataStorage.registerMap>[0],
-    geoJson: Parameters<typeof mapDataStorage.registerMap>[1],
-    specialAreas?: Parameters<typeof mapDataStorage.registerMap>[2]
+    mapName: Parameters<typeof geoSourceManager.registerMap>[0],
+    geoJson: Parameters<typeof geoSourceManager.registerMap>[1],
+    specialAreas?: Parameters<typeof geoSourceManager.registerMap>[2]
 ): void {
-    mapDataStorage.registerMap(mapName, geoJson, specialAreas);
+    geoSourceManager.registerMap(mapName, geoJson, specialAreas);
 }
 
 export function getMap(mapName: string) {
-    // For backward compatibility, only return the first one.
-    const records = mapDataStorage.retrieveMap(mapName);
-    // FIXME support SVG, where return not only records[0].
-    return records && records[0] && {
-        // @ts-ignore
-        geoJson: records[0].geoJSON,
-        specialAreas: records[0].specialAreas
-    };
+    return geoSourceManager.getMapForUser(mapName);
 }
 
 export const registerTransform = registerExternalTransform;

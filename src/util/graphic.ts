@@ -846,9 +846,10 @@ export function setTooltipConfig(opt: {
         });
     }
 
-    getECData(opt.el).tooltipConfig = {
-        componentMainType: mainType,
-        componentIndex: componentIndex,
+    const ecData = getECData(opt.el);
+    ecData.componentMainType = mainType;
+    ecData.componentIndex = componentIndex;
+    ecData.tooltipConfig = {
         name: itemName,
         option: defaults({
             content: itemName,

@@ -22,7 +22,6 @@
  * Mapping given x, y to transformd view x, y
  */
 
-import * as zrUtil from 'zrender/src/core/util';
 import * as vector from 'zrender/src/core/vector';
 import * as matrix from 'zrender/src/core/matrix';
 import BoundingRect from 'zrender/src/core/BoundingRect';
@@ -32,6 +31,8 @@ import GlobalModel from '../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../util/model';
 
 const v2ApplyTransform = vector.applyTransform;
+
+export type ViewCoordSysTransformInfoPart = Pick<Transformable, 'x' | 'y' | 'scaleX' | 'scaleY'>;
 
 class View extends Transformable implements CoordinateSystemMaster, CoordinateSystem {
 
@@ -47,14 +48,39 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
         min?: number;
     };
 
+    /**
+     * Represents the transform brought by roam/zoom.
+     * If `View['_viewRect']` applies roam transform,
+     * we can get the final displayed rect.
+     */
     private _roamTransformable = new Transformable();
+    /**
+     * Represents the transform from `View['_rect']` to `View['_viewRect']`.
+     */
     protected _rawTransformable = new Transformable();
+    private _rawTransform: matrix.MatrixArray;
 
+    /**
+     * This is a user specified point on the source, which will be
+     * located to the center of the `View['_viewRect']`.
+     * The unit this the same as `View['_rect']`.
+     */
     private _center: number[];
     private _zoom: number;
-    protected _rect: BoundingRect;
+
+    /**
+     * The rect of the source, where the measure is used by "data" and "center".
+     * Has nothing to do with roam/zoom.
+     * The unit is defined by the source. For example,
+     * for geo source the unit is lat/lng,
+     * for SVG source the unit is the same as the width/height defined in SVG.
+     */
+    private _rect: BoundingRect;
+    /**
+     * The visible rect on the canvas. Has nothing to do with roam/zoom.
+     * The unit of `View['_viewRect']` is pixel of the canvas.
+     */
     private _viewRect: BoundingRect;
-    private _rawTransform: matrix.MatrixArray;
 
 
     constructor(name?: string) {
@@ -62,7 +88,6 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
         this.name = name;
     }
 
-    // PENDING to getRect
     setBoundingRect(x: number, y: number, width: number, height: number): BoundingRect {
         this._rect = new BoundingRect(x, y, width, height);
         return this._rect;
@@ -71,20 +96,19 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     /**
      * @return {module:zrender/core/BoundingRect}
      */
-    // PENDING to getRect
     getBoundingRect(): BoundingRect {
         return this._rect;
     }
 
     setViewRect(x: number, y: number, width: number, height: number): void {
-        this.transformTo(x, y, width, height);
+        this._transformTo(x, y, width, height);
         this._viewRect = new BoundingRect(x, y, width, height);
     }
 
     /**
      * Transformed to particular position and size
      */
-    transformTo(x: number, y: number, width: number, height: number): void {
+    protected _transformTo(x: number, y: number, width: number, height: number): void {
         const rect = this.getBoundingRect();
         const rawTransform = this._rawTransformable;
 
@@ -92,7 +116,10 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
             new BoundingRect(x, y, width, height)
         );
 
+        const rawParent = rawTransform.parent;
+        rawTransform.parent = null;
         rawTransform.decomposeTransform();
+        rawTransform.parent = rawParent;
 
         this._updateTransform();
     }
@@ -174,7 +201,8 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     }
 
     /**
-     * Update transform from roam and mapLocation
+     * Update transform props on `this` based on the current
+     * `this._roamTransformable` and `this._rawTransformable`.
      */
     protected _updateTransform(): void {
         const roamTransformable = this._roamTransformable;
@@ -194,15 +222,25 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
         this.decomposeTransform();
     }
 
-    getTransformInfo() {
-        const roamTransform = this._roamTransformable.transform;
+    getTransformInfo(): {
+        roam: ViewCoordSysTransformInfoPart
+        raw: ViewCoordSysTransformInfoPart
+    } {
+        const roamTransformable = this._roamTransformable;
         const rawTransformable = this._rawTransformable;
         return {
-            roamTransform: roamTransform ? zrUtil.slice(roamTransform) : matrix.create(),
-            rawScaleX: rawTransformable.scaleX,
-            rawScaleY: rawTransformable.scaleY,
-            rawX: rawTransformable.x,
-            rawY: rawTransformable.y
+            roam: {
+                x: roamTransformable.x,
+                y: roamTransformable.y,
+                scaleX: roamTransformable.scaleX,
+                scaleY: roamTransformable.scaleY
+            },
+            raw: {
+                x: rawTransformable.x,
+                y: rawTransformable.y,
+                scaleX: rawTransformable.scaleX,
+                scaleY: rawTransformable.scaleY
+            }
         };
     }
 

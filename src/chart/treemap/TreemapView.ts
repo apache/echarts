@@ -805,9 +805,10 @@ function renderNode(
     const focus = nodeModel.get(['emphasis', 'focus']);
     const blurScope = nodeModel.get(['emphasis', 'blurScope']);
 
-    const focusDataIndices: number[] = focus === 'ancestor'
-        ? thisNode.getAncestorsIndices()
-        : focus === 'descendant' ? thisNode.getDescendantIndices() : null;
+    const focusOrIndices =
+        focus === 'ancestor' ? thisNode.getAncestorsIndices()
+        : focus === 'descendant' ? thisNode.getDescendantIndices()
+        : focus;
 
     // No children, render content.
     if (isParent) {
@@ -822,7 +823,7 @@ function renderNode(
             // Only for enabling highlight/downplay.
             data.setItemGraphicEl(thisNode.dataIndex, bg);
 
-            enableHoverFocus(bg, focusDataIndices || focus, blurScope);
+            enableHoverFocus(bg, focusOrIndices, blurScope);
         }
     }
     else {
@@ -836,7 +837,7 @@ function renderNode(
         // Only for enabling highlight/downplay.
         data.setItemGraphicEl(thisNode.dataIndex, group);
 
-        enableHoverFocus(group, focusDataIndices || focus, blurScope);
+        enableHoverFocus(group, focusOrIndices, blurScope);
     }
 
     return group;
