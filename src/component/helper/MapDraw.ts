@@ -727,8 +727,8 @@ function resetLabelForRegion(
 
         const textEl = el.getTextContent();
         if (textEl) {
-            textEl.x = labelXY ? labelXY[0] : 0;
-            textEl.y = labelXY ? labelXY[1] : 0;
+            mapLabelTransform(textEl).x = textEl.x = labelXY ? labelXY[0] : 0;
+            mapLabelTransform(textEl).y = textEl.y = labelXY ? labelXY[1] : 0;
             textEl.z2 = 10;
             textEl.afterUpdate = labelTextAfterUpdate;
         }
