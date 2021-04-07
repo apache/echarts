@@ -2181,33 +2181,54 @@ class ECharts extends Eventful<ECEventDefinition> {
             if (model.preventAutoZ) {
                 return;
             }
-            const z = model.get('z');
-            const zlevel = model.get('zlevel');
             // Set z and zlevel
-            view.group.traverse(function (el: Displayable) {
-                if (!el.isGroup) {
-                    z != null && (el.z = z);
-                    zlevel != null && (el.zlevel = zlevel);
-
-                    // TODO if textContent is on group.
-                    const label = el.getTextContent();
-                    const labelLine = el.getTextGuideLine();
-                    if (label) {
-                        label.z = el.z;
-                        label.zlevel = el.zlevel;
-                        // lift z2 of text content
-                        // TODO if el.emphasis.z2 is spcefied, what about textContent.
-                        label.z2 = el.z2 + 2;
-                    }
-                    if (labelLine) {
-                        const showAbove = el.textGuideLineConfig && el.textGuideLineConfig.showAbove;
-                        labelLine.z = el.z;
-                        labelLine.zlevel = el.zlevel;
-                        labelLine.z2 = el.z2 + (showAbove ? 1 : -1);
-                    }
-                }
-            });
+            _updateZ(
+                view.group,
+                model.get('z') || 0,
+                model.get('zlevel') || 0,
+                -Infinity
+            );
         };
+
+        function _updateZ(el: Element, z: number, zlevel: number, maxZ2: number): number {
+            // Group may also have textContent
+            const label = el.getTextContent();
+            const labelLine = el.getTextGuideLine();
+            const isGroup = el.isGroup;
+
+            if (isGroup) {
+                // set z & zlevel of children elements of Group
+                // el.traverse((childEl: Element) => _updateZ(childEl, z, zlevel));
+                const children = (el as graphic.Group).childrenRef();
+                for (let i = 0; i < children.length; i++) {
+                    maxZ2 = Math.max(_updateZ(children[i], z, zlevel, maxZ2), maxZ2);
+                }
+            }
+            else {
+                // not Group
+                (el as Displayable).z = z;
+                (el as Displayable).zlevel = zlevel;
+
+                maxZ2 = Math.max((el as Displayable).z2, maxZ2);
+            }
+
+            // always set z and zlevel if label/labelLine exists
+            if (label) {
+                label.z = z;
+                label.zlevel = zlevel;
+                // lift z2 of text content
+                // TODO if el.emphasis.z2 is spcefied, what about textContent.
+                isFinite(maxZ2) && (label.z2 = maxZ2 + 2);
+            }
+            if (labelLine) {
+                const textGuideLineConfig = el.textGuideLineConfig;
+                labelLine.z = z;
+                labelLine.zlevel = zlevel;
+                isFinite(maxZ2)
+                    && (labelLine.z2 = maxZ2 + (textGuideLineConfig && textGuideLineConfig.showAbove ? 1 : -1));
+            }
+            return maxZ2;
+        }
 
         // Clear states without animation.
         // TODO States on component.

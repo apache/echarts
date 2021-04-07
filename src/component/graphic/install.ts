@@ -270,6 +270,8 @@ class GraphicComponentModel extends ComponentModel<GraphicComponentOption> {
     static type = 'graphic';
     type = GraphicComponentModel.type;
 
+    preventAutoZ = true;
+
     static defaultOption: GraphicComponentOption = {
         elements: []
         // parentId: null
