@@ -832,7 +832,7 @@ export interface ShadowOptionMixin {
 }
 
 export interface BorderOptionMixin {
-    borderColor?: string
+    borderColor?: ZRColor
     borderWidth?: number
     borderType?: ZRLineType
     borderCap?: CanvasLineCap

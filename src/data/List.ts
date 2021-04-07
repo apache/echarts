@@ -35,7 +35,8 @@ import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
     ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput,
-    ModelOption, SeriesDataType, OptionSourceData, SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL, DecalObject
+    ModelOption, SeriesDataType, OptionSourceData, SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL,
+    DecalObject
 } from '../util/types';
 import {isDataItemOption, convertOptionIdName} from '../util/model';
 import { getECData } from '../util/innerStore';
@@ -45,6 +46,7 @@ import type { VisualMeta } from '../component/visualMap/VisualMapModel';
 import { parseDataValue } from './helper/dataValueHelper';
 import {isSourceInstance, Source} from './Source';
 import OrdinalMeta from './OrdinalMeta';
+import { LineStyleProps } from '../model/mixin/lineStyle';
 
 const mathFloor = Math.floor;
 const isObject = zrUtil.isObject;
@@ -140,6 +142,7 @@ export interface DefaultDataVisual {
     liftZ?: number
     // For legend.
     legendSymbol?: string
+    legendLineStyle?: LineStyleProps
 
     // visualMap will inject visualMeta data
     visualMeta?: VisualMeta[]
