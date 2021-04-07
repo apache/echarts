@@ -45,7 +45,6 @@ import { getECData } from '../../util/innerStore';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { isEC4CompatibleStyle, convertFromEC4CompatibleStyle } from '../../util/styleCompat';
 import { EChartsExtensionInstallRegisters } from '../../extension';
-import { graphic } from '../../export/api';
 
 const TRANSFORM_PROPS = {
     x: 1,
