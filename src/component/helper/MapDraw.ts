@@ -41,7 +41,6 @@ import Model from '../../model/Model';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
-import { makeInner } from '../../util/model';
 import ZRText, {TextStyleProps} from 'zrender/src/graphic/Text';
 import { ViewCoordSysTransformInfoPart } from '../../coord/View';
 import { GeoSVGGraphicRecord, GeoSVGResource } from '../../coord/geo/GeoSVGResource';
@@ -50,11 +49,7 @@ import Element from 'zrender/src/Element';
 import List from '../../data/List';
 import { GeoJSONRegion } from '../../coord/geo/Region';
 import { SVGNodeTagLower } from 'zrender/src/tool/parseSVG';
-
-const mapLabelTransform = makeInner<{
-    x: number
-    y: number
-}, ZRText>();
+import { makeInner } from '../../util/model';
 
 interface RegionsGroup extends graphic.Group {
 }
@@ -96,6 +91,9 @@ const STATE_TRIGGER_TAG_MAP = zrUtil.createHashMap<number, SVGNodeTagLower>(
 const LABEL_HOST_MAP = zrUtil.createHashMap<number, SVGNodeTagLower>(
     OPTION_STYLE_ENABLED_TAGS.concat(['g']) as SVGNodeTagLower[]
 );
+const mapLabelRaw = makeInner<{
+    ignore: boolean
+}, ZRText>();
 
 
 function getFixedItemStyle(model: Model<GeoItemStyleOption>) {
@@ -520,29 +518,10 @@ class MapDraw {
             return action;
         }
 
-        const updateLabelTransforms = () => {
-            const group = this.group;
-            this._regionsGroup.traverse(function (el) {
-                const textContent = el.getTextContent();
-                if (textContent) {
-                    el.setTextConfig({
-                        local: true
-                    });
-                    textContent.x = mapLabelTransform(textContent).x || 0;
-                    textContent.y = mapLabelTransform(textContent).y || 0;
-                    textContent.scaleX = 1 / group.scaleX;
-                    textContent.scaleY = 1 / group.scaleY;
-                    textContent.markRedraw();
-                }
-            });
-        };
-
         controller.off('pan').on('pan', function (e) {
             this._mouseDownFlag = false;
 
             roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
-
-            updateLabelTransforms();
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
                 dx: e.dx,
@@ -555,7 +534,14 @@ class MapDraw {
 
             roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
 
-            updateLabelTransforms();
+            // Reset ignore, avoid ignore is changed in LabelManager and can't restored.
+            // TODO: roam action in map should not run LabelManager#addLabelsOfSeries
+            this.group.traverse(el => {
+                const label = el.getTextContent();
+                if (label) {
+                    label.ignore = mapLabelRaw(label).ignore;
+                }
+            });
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
                 zoom: e.scale,
@@ -727,17 +713,20 @@ function resetLabelForRegion(
 
         const textEl = el.getTextContent();
         if (textEl) {
-            mapLabelTransform(textEl).x = textEl.x = labelXY ? labelXY[0] : 0;
-            mapLabelTransform(textEl).y = textEl.y = labelXY ? labelXY[1] : 0;
-            textEl.z2 = 10;
             textEl.afterUpdate = labelTextAfterUpdate;
-        }
 
-        // Need to apply the `translate`.
-        if (el.textConfig) {
-            el.textConfig.local = true;
-            if (labelXY) {
-                el.textConfig.position = null;
+            mapLabelRaw(textEl).ignore = textEl.ignore;
+
+            if (el.textConfig) {
+                if (labelXY) {
+                    // Compute a relative offset based on the el bounding rect.
+                    const rect = el.getBoundingRect().clone();
+                    rect.applyTransform(el.getComputedTransform());
+                    el.textConfig.position = [
+                        ((labelXY[0] - rect.x) / rect.width * 100) + '%',
+                        ((labelXY[1] - rect.y) / rect.height * 100) + '%'
+                    ];
+                }
             }
         }
 

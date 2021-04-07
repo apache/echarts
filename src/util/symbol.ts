@@ -288,7 +288,7 @@ const SymbolClz = graphic.Path.extend({
         return res;
     },
 
-    buildPath: function (ctx, shape, inBundle) {
+    buildPath(ctx, shape, inBundle) {
         let symbolType = shape.symbolType;
         if (symbolType !== 'none') {
             let proxySymbol = symbolBuildProxies[symbolType];
