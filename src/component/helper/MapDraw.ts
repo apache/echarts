@@ -709,7 +709,6 @@ function resetLabelForRegion(
                 if (labelXY) {
                     // Compute a relative offset based on the el bounding rect.
                     const rect = el.getBoundingRect().clone();
-                    rect.applyTransform(el.getComputedTransform());
                     el.textConfig.position = [
                         ((labelXY[0] - rect.x) / rect.width * 100) + '%',
                         ((labelXY[1] - rect.y) / rect.height * 100) + '%'
