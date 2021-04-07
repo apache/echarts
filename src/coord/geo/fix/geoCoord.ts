@@ -1,6 +1,3 @@
-import Region from '../Region';
-import { Dictionary } from 'zrender/src/core/types';
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -20,19 +17,24 @@ import { Dictionary } from 'zrender/src/core/types';
 * under the License.
 */
 
+import { Dictionary } from 'zrender/src/core/types';
+import { GeoJSONRegion } from '../Region';
+
 const geoCoordMap = {
     'Russia': [100, 60],
     'United States': [-99, 38],
     'United States of America': [-99, 38]
 } as Dictionary<number[]>;
 
-export default function fixGeoCoords(mapType: string, region: Region) {
+export default function fixGeoCoords(mapType: string, region: GeoJSONRegion) {
     if (mapType === 'world') {
         const geoCoord = geoCoordMap[region.name];
         if (geoCoord) {
-            const cp = region.center;
-            cp[0] = geoCoord[0];
-            cp[1] = geoCoord[1];
+            const cp = [
+                geoCoord[0],
+                geoCoord[1]
+            ];
+            region.setCenter(cp);
         }
     }
 }

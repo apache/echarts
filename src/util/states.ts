@@ -35,7 +35,8 @@ import {
     Payload,
     ZRColor,
     HighlightPayload,
-    DownplayPayload
+    DownplayPayload,
+    ComponentMainType
 } from './types';
 import { extend, indexOf, isArrayLike, isObject, keys, isArray, each } from 'zrender/src/core/util';
 import { getECData } from './innerStore';
@@ -47,6 +48,9 @@ import { queryDataIndex, makeInner } from './model';
 import Path, { PathStyleProps } from 'zrender/src/graphic/Path';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../core/ExtensionAPI';
+import ComponentModel from '../model/Component';
+import { error } from './log';
+
 
 // Reserve 0 as default.
 let _highlightNextDigit = 1;
@@ -223,7 +227,7 @@ function createEmphasisDefaultState(
     stateName: 'emphasis',
     targetStates: string[],
     state: Displayable['states'][number]
-) {
+): DisplayableState {
     const hasSelect = targetStates && indexOf(targetStates, 'select') >= 0;
     let cloned = false;
     if (el instanceof Path) {
@@ -270,7 +274,7 @@ function createSelectDefaultState(
     el: Displayable,
     stateName: 'select',
     state: Displayable['states'][number]
-) {
+): DisplayableState {
     // const hasSelect = indexOf(el.currentStates, stateName) >= 0;
     if (state) {
         // TODO Share with textContent?
@@ -287,7 +291,7 @@ function createBlurDefaultState(
     el: Displayable,
     stateName: 'blur',
     state: Displayable['states'][number]
-) {
+): DisplayableState {
     const hasBlur = indexOf(el.currentStates, stateName) >= 0;
     const currentOpacity = el.style.opacity;
 
@@ -388,7 +392,7 @@ function shouldSilent(el: Element, e: ElementEvent) {
     return (el as ExtendedElement).__highDownSilentOnTouch && e.zrByTouch;
 }
 
-function allLeaveBlur(api: ExtensionAPI) {
+export function allLeaveBlur(api: ExtensionAPI) {
     const model = api.getModel();
     model.eachComponent(function (componentType, componentModel) {
         const view = componentType === 'series'
@@ -401,12 +405,11 @@ function allLeaveBlur(api: ExtensionAPI) {
     });
 }
 
-export function toggleSeriesBlurState(
+export function blurSeries(
     targetSeriesIndex: number,
     focus: InnerFocus,
     blurScope: BlurScope,
-    api: ExtensionAPI,
-    isBlur: boolean
+    api: ExtensionAPI
 ) {
     const ecModel = api.getModel();
     blurScope = blurScope || 'coordinateSystem';
@@ -416,11 +419,6 @@ export function toggleSeriesBlurState(
             const itemEl = data.getItemGraphicEl(dataIndices[i]);
             itemEl && leaveBlur(itemEl);
         }
-    }
-
-    if (!isBlur) {
-        allLeaveBlur(api);
-        return;
     }
 
     if (targetSeriesIndex == null) {
@@ -488,16 +486,35 @@ export function toggleSeriesBlurState(
     });
 }
 
-export function toggleSeriesBlurStateFromPayload(
-    seriesModel: SeriesModel,
-    payload: Payload,
+export function blurComponent(
+    componentMainType: ComponentMainType,
+    componentIndex: number,
     api: ExtensionAPI
 ) {
-    if (!isHighDownPayload(payload)) {
+    if (componentMainType == null || componentIndex == null) {
         return;
     }
 
-    const isHighlight = payload.type === HIGHLIGHT_ACTION_TYPE;
+    const componentModel = api.getModel().getComponent(componentMainType, componentIndex);
+    if (!componentModel) {
+        return;
+    }
+
+    const view = api.getViewOfComponentModel(componentModel);
+    if (!view || !view.focusBlurEnabled) {
+        return;
+    }
+
+    view.group.traverse(function (child) {
+        singleEnterBlur(child);
+    });
+}
+
+export function blurSeriesFromHighlightPayload(
+    seriesModel: SeriesModel,
+    payload: HighlightPayload,
+    api: ExtensionAPI
+) {
     const seriesIndex = seriesModel.seriesIndex;
     const data = seriesModel.getData(payload.dataType);
     let dataIndex = queryDataIndex(data, payload);
@@ -512,10 +529,11 @@ export function toggleSeriesBlurStateFromPayload(
             el = data.getItemGraphicEl(current++);
         }
     }
+
     if (el) {
         const ecData = getECData(el);
-        toggleSeriesBlurState(
-            seriesIndex, ecData.focus, ecData.blurScope, api, isHighlight
+        blurSeries(
+            seriesIndex, ecData.focus, ecData.blurScope, api
         );
     }
     else {
@@ -524,10 +542,120 @@ export function toggleSeriesBlurStateFromPayload(
         const focus = seriesModel.get(['emphasis', 'focus']);
         const blurScope = seriesModel.get(['emphasis', 'blurScope']);
         if (focus != null) {
-            toggleSeriesBlurState(seriesIndex, focus, blurScope, api, isHighlight);
+            blurSeries(seriesIndex, focus, blurScope, api);
         }
     }
 }
+
+export function findComponentHighDownDispatchers(
+    componentMainType: ComponentMainType,
+    componentIndex: number,
+    name: string,
+    api: ExtensionAPI
+): {
+    focusSelf: boolean;
+    // If return null/undefined, do not support this feature.
+    dispatchers: Element[];
+} {
+    const ret = {
+        focusSelf: false,
+        dispatchers: null as Element[]
+    };
+    if (componentMainType == null
+        || componentMainType === 'series'
+        || componentIndex == null
+        || name == null
+    ) {
+        return ret;
+    }
+
+    const componentModel = api.getModel().getComponent(componentMainType, componentIndex);
+    if (!componentModel) {
+        return ret;
+    }
+
+    const view = api.getViewOfComponentModel(componentModel);
+    if (!view || !view.findHighDownDispatchers) {
+        return ret;
+    }
+
+    const dispatchers = view.findHighDownDispatchers(name);
+
+    // At presnet, the component (like Geo) only blur inside itself.
+    // So we do not use `blurScope` in component.
+    let focusSelf: boolean;
+    for (let i = 0; i < dispatchers.length; i++) {
+        if (__DEV__ && !isHighDownDispatcher(dispatchers[i])) {
+            error('param should be highDownDispatcher');
+        }
+        if (getECData(dispatchers[i]).focus === 'self') {
+            focusSelf = true;
+            break;
+        }
+    }
+
+    return { focusSelf, dispatchers };
+}
+
+export function handleGlobalMouseOverForHighDown(
+    dispatcher: Element,
+    e: ElementEvent,
+    api: ExtensionAPI
+): void {
+    if (__DEV__ && !isHighDownDispatcher(dispatcher)) {
+        error('param should be highDownDispatcher');
+    }
+
+    const ecData = getECData(dispatcher);
+
+    const { dispatchers, focusSelf } = findComponentHighDownDispatchers(
+        ecData.componentMainType, ecData.componentIndex, ecData.componentHighDownName, api
+    );
+    // If `findHighDownDispatchers` is supported on the component,
+    // highlight/downplay elements with the same name.
+    if (dispatchers) {
+        if (focusSelf) {
+            blurComponent(ecData.componentMainType, ecData.componentIndex, api);
+        }
+        each(dispatchers, dispatcher => enterEmphasisWhenMouseOver(dispatcher, e));
+    }
+    else {
+        // Try blur all in the related series. Then emphasis the hoverred.
+        // TODO. progressive mode.
+        blurSeries(ecData.seriesIndex, ecData.focus, ecData.blurScope, api);
+        if (ecData.focus === 'self') {
+            blurComponent(ecData.componentMainType, ecData.componentIndex, api);
+        }
+        // Other than series, component that not support `findHighDownDispatcher` will
+        // also use it. But in this case, highlight/downplay are only supported in
+        // mouse hover but not in dispatchAction.
+        enterEmphasisWhenMouseOver(dispatcher, e);
+    }
+}
+
+export function handleGlboalMouseOutForHighDown(
+    dispatcher: Element,
+    e: ElementEvent,
+    api: ExtensionAPI
+): void {
+    if (__DEV__ && !isHighDownDispatcher(dispatcher)) {
+        error('param should be highDownDispatcher');
+    }
+
+    allLeaveBlur(api);
+
+    const ecData = getECData(dispatcher);
+    const { dispatchers } = findComponentHighDownDispatchers(
+        ecData.componentMainType, ecData.componentIndex, ecData.componentHighDownName, api
+    );
+    if (dispatchers) {
+        each(dispatchers, dispatcher => leaveEmphasisWhenMouseOut(dispatcher, e));
+    }
+    else {
+        leaveEmphasisWhenMouseOut(dispatcher, e);
+    }
+}
+
 
 export function toggleSelectionFromPayload(
     seriesModel: SeriesModel,
@@ -680,6 +808,22 @@ export function setAsHighDownDispatcher(el: Element, asDispatcher: boolean) {
 
 export function isHighDownDispatcher(el: Element): boolean {
     return !!(el && (el as ExtendedDisplayable).__highDownDispatcher);
+}
+
+/**
+ * Enable component highlight/downplay features:
+ * + hover link (within the same name)
+ * + focus blur in component
+ */
+export function enableComponentHighDownFeatures(
+    el: Element,
+    componentModel: ComponentModel,
+    componentHighDownName: string
+): void {
+    const ecData = getECData(el);
+    ecData.componentMainType = componentModel.mainType;
+    ecData.componentIndex = componentModel.componentIndex;
+    ecData.componentHighDownName = componentHighDownName;
 }
 
 /**

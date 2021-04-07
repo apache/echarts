@@ -39,6 +39,7 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
 
 
 
@@ -324,6 +325,93 @@ under the License.
                 });
             });
             </script>
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            option = {
+                xAxis: {
+                    data: ['a', 'b', 'c']
+                },
+                yAxis: {},
+                series: [{
+                    type: 'bar',
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    data: [1212, 3232, 2525]
+                }, {
+                    type: 'bar',
+                    emphasis: {
+                        // itemStyle: {
+                        //     color: 'red'
+                        // },
+                        focus: 'series'
+                    },
+                    data: [1212, 3232, 2525]
+                }]
+            };
+
+            var buttons = makeToggleChartButtons(function (newOpt) {
+                option.series.forEach(function (seriesOpt) {
+                    seriesOpt.emphasis = Object.assign(seriesOpt.emphasis || {}, newOpt)
+                });
+                chart.setOption(option);
+            });
+
+            buttons.push({
+                text: 'highlight seriesIndex: 0, dataIndex: 1',
+                onclick: function () {
+                    chart.dispatchAction({
+                        type: 'highlight',
+                        seriesIndex: 0,
+                        dataIndex: 1
+                    });
+                }
+            }, {
+                text: 'highlight seriesIndex: 1, dataIndex: 1',
+                onclick: function () {
+                    chart.dispatchAction({
+                        type: 'highlight',
+                        seriesIndex: 1,
+                        dataIndex: 1
+                    });
+                }
+            }, {
+                text: 'downplay seriesIndex: 1, dataIndex: 1',
+                onclick: function () {
+                    chart.dispatchAction({
+                        type: 'downplay',
+                        seriesIndex: 1,
+                        dataIndex: 1
+                    });
+                }
+            }, {
+                text: 'downplay all',
+                onclick: function () {
+                    chart.dispatchAction({
+                        type: 'downplay'
+                    });
+                }
+            });
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'API trigger highlight'
+                ],
+                option: option,
+                // height: 300,
+                buttons: buttons
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
 
     </body>
 </html>

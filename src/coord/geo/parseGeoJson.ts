@@ -22,7 +22,7 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
-import Region from './Region';
+import { GeoJSONRegion } from './Region';
 import { GeoJSONCompressed, GeoJSON } from './geoTypes';
 
 
@@ -100,7 +100,7 @@ function decodePolygon(
     return result;
 }
 
-export default function parseGeoJSON(geoJson: GeoJSON | GeoJSONCompressed, nameProperty: string): Region[] {
+export default function parseGeoJSON(geoJson: GeoJSON | GeoJSONCompressed, nameProperty: string): GeoJSONRegion[] {
 
     geoJson = decode(geoJson);
 
@@ -113,7 +113,7 @@ export default function parseGeoJSON(geoJson: GeoJSON | GeoJSONCompressed, nameP
         const properties = featureObj.properties;
         const geo = featureObj.geometry;
 
-        const geometries = [] as Region['geometries'];
+        const geometries = [] as GeoJSONRegion['geometries'];
         if (geo.type === 'Polygon') {
             const coordinates = geo.coordinates;
             geometries.push({
@@ -137,7 +137,7 @@ export default function parseGeoJSON(geoJson: GeoJSON | GeoJSONCompressed, nameP
             });
         }
 
-        const region = new Region(
+        const region = new GeoJSONRegion(
             properties[nameProperty || 'name'],
             geometries,
             properties.cp

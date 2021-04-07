@@ -212,7 +212,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             const geo = this.coordinateSystem;
             const region = geo.getRegion(name);
 
-            return region && geo.dataToPoint(region.center);
+            return region && geo.dataToPoint(region.getCenter());
         }
     };
 
@@ -251,7 +251,10 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
         // Aspect is width / height. Inited to be geoJson bbox aspect
         // This parameter is used for scale this aspect
-        aspectScale: 0.75,
+        // Default value:
+        // for geoSVG source: 1,
+        // for geoJSON source: 0.75.
+        aspectScale: null,
 
         ///// Layout with center and size
         // If you wan't to put map in a fixed size box with right aspect ratio
