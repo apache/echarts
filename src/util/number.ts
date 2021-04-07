@@ -47,13 +47,21 @@ export function linearMap(
     range: number[],
     clamp?: boolean
 ): number {
-    const subDomain = domain[1] - domain[0];
-    const subRange = range[1] - range[0];
+    const d0 = domain[0];
+    const d1 = domain[1];
+    const r0 = range[0];
+    const r1 = range[1];
+
+    const subDomain = d1 - d0;
+    const subRange = r1 - r0;
+
+    // avoid the infinite number
+    isFinite(val) || (val = val > 0 ? r1 : r0);
 
     if (subDomain === 0) {
         return subRange === 0
-            ? range[0]
-            : (range[0] + range[1]) / 2;
+            ? r0
+            : (r0 + r1) / 2;
     }
 
     // Avoid accuracy problem in edge, such as
@@ -63,32 +71,32 @@ export function linearMap(
     // is a hotspot.
     if (clamp) {
         if (subDomain > 0) {
-            if (val <= domain[0]) {
-                return range[0];
+            if (val <= d0) {
+                return r0;
             }
-            else if (val >= domain[1]) {
-                return range[1];
+            else if (val >= d1) {
+                return r1;
             }
         }
         else {
-            if (val >= domain[0]) {
-                return range[0];
+            if (val >= d0) {
+                return r0;
             }
-            else if (val <= domain[1]) {
-                return range[1];
+            else if (val <= d1) {
+                return r1;
             }
         }
     }
     else {
-        if (val === domain[0]) {
-            return range[0];
+        if (val === d0) {
+            return r0;
         }
-        if (val === domain[1]) {
-            return range[1];
+        if (val === d1) {
+            return r1;
         }
     }
 
-    return (val - domain[0]) / subDomain * subRange + range[0];
+    return (val - d0) / subDomain * subRange + r0;
 }
 
 /**
