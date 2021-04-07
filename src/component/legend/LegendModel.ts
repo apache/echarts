@@ -29,9 +29,6 @@ import {
     LabelOption,
     LayoutOrient,
     CommonTooltipOption,
-    ZRColor,
-    DecalObject,
-    ZRLineType,
     ItemStyleOption,
     LineStyleOption
 } from '../../util/types';
@@ -39,7 +36,6 @@ import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
 import { ItemStyleProps } from '../../model/mixin/itemStyle';
 import { LineStyleProps } from './../../model/mixin/lineStyle';
-import {SeriesModel} from '../../echarts';
 import {PathStyleProps} from 'zrender/src/graphic/Path';
 
 type LegendDefaultSelectorOptionsProps = {

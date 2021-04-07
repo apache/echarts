@@ -27,7 +27,14 @@ import {setLabelStyle, createTextStyle} from '../../label/labelStyle';
 import {makeBackground} from '../helper/listComponent';
 import * as layoutUtil from '../../util/layout';
 import ComponentView from '../../view/Component';
-import LegendModel, { LegendItemStyleOption, LegendLineStyleOption, LegendOption, LegendSelectorButtonOption, LegendSymbolParams, LegendTooltipFormatterParams } from './LegendModel';
+import LegendModel, {
+    LegendItemStyleOption,
+    LegendLineStyleOption,
+    LegendOption,
+    LegendSelectorButtonOption,
+    LegendSymbolParams,
+    LegendTooltipFormatterParams
+} from './LegendModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import {
@@ -39,10 +46,10 @@ import {
     SymbolOptionMixin
 } from '../../util/types';
 import Model from '../../model/Model';
-import {SeriesModel} from '../../echarts';
 import {LineStyleProps, LINE_STYLE_KEY_MAP} from '../../model/mixin/lineStyle';
 import {ITEM_STYLE_KEY_MAP} from '../../model/mixin/itemStyle';
 import {createSymbol, ECSymbol} from '../../util/symbol';
+import SeriesModel from '../../model/Series';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -347,7 +354,15 @@ class LegendView extends ComponentView {
         symbolType = legendIconType || symbolType || 'roundRect';
 
         const legendLineStyle = legendModel.getModel('lineStyle');
-        const style = getLegendStyle(symbolType, itemModel, legendLineStyle, lineVisualStyle, itemVisualStyle, drawType, isSelected);
+        const style = getLegendStyle(
+            symbolType,
+            itemModel,
+            legendLineStyle,
+            lineVisualStyle,
+            itemVisualStyle,
+            drawType,
+            isSelected
+        );
 
         const itemGroup = new Group();
 

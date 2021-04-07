@@ -20,7 +20,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import type {MorphDividingMethod} from 'zrender/src/tool/morphPath';
-import {PathStyleProps} from 'zrender/src/graphic/Path';
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
