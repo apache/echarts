@@ -93,7 +93,7 @@ module.exports.updateTestsList = async function (setPendingTestToUnsettled) {
         _tests = [];
     }
     // Find if there is new html file
-    let files = await util.promisify(glob)('**.html', { cwd: path.resolve(__dirname, '../') });
+    const files = await util.promisify(glob)('**.html', { cwd: path.resolve(__dirname, '../') });
     files.forEach(fileUrl => {
         if (blacklist.includes(fileUrl)) {
             return;
@@ -102,15 +102,15 @@ module.exports.updateTestsList = async function (setPendingTestToUnsettled) {
             return;
         }
 
-        let test = new Test(fileUrl);
+        const test = new Test(fileUrl);
         test.ignoreSVG = SVGBlacklist.includes(fileUrl);
 
         _tests.push(test);
         _testsMap[fileUrl] = test;
     });
 
-    let actionsMetaData = {};
-    let metaPath = path.join(__dirname, 'actions/__meta__.json');
+    const actionsMetaData = {};
+    const metaPath = path.join(__dirname, 'actions/__meta__.json');
     try {
         actionsMetaData = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
     }
@@ -135,7 +135,6 @@ module.exports.mergeTestsResults = function (testsResults) {
 };
 
 module.exports.updateActionsMeta = function (testName, actions) {
-    let metaData;
     let metaPath = path.join(__dirname, 'actions/__meta__.json');
     try {
         metaData = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));

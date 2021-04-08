@@ -27,6 +27,8 @@ const compareScreenshot = require('./compareScreenshot');
 const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, waitTime, getEChartsTestFileName} = require('./util');
 const {origin} = require('./config');
 const Timeline = require('./Timeline');
+const cwebpBin = require('cwebp-bin');
+const { execFile } = require('child_process');
 
 // Handling input arguments.
 program
@@ -76,8 +78,29 @@ function replaceEChartsVersion(interceptedRequest, version) {
     }
 }
 
-async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) {
+async function convertToWebP(filePath, lossless) {
+    const webpPath = filePath.replace(/\.png$/, '.webp');
+    return new Promise((resolve, reject) => {
+        execFile(cwebpBin, [
+            filePath,
+            '-o', webpPath,
+            ...(lossless ? ['-lossless'] : ['-q', 75])
+        ], (err) => {
+            if (err) {
+                reject(err);
+            }
+            else {
+                resolve(webpPath);
+            }
+        });
+    });
+}
+
+async function takeScreenshot(page, fullPage, fileUrl, desc, useSVG, isExpected, minor) {
     let screenshotName = testNameFromFile(fileUrl);
+    if (useSVG) {
+        screenshotName += '-_svg_render_';
+    }
     if (desc) {
         screenshotName += '-' + slugify(desc, { replacement: '-', lower: true });
     }
@@ -92,7 +115,13 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
         fullPage
     });
 
-    return {screenshotName, screenshotPath};
+    const webpScreenshotPath = await convertToWebP(screenshotPath);
+
+    return {
+        screenshotName,
+        screenshotPath: webpScreenshotPath,
+        rawScreenshotPath: screenshotPath
+    };
 }
 
 async function runActions(page, testOpt, isExpected, screenshots) {
@@ -120,8 +149,17 @@ async function runActions(page, testOpt, isExpected, screenshots) {
                 return;
             }
             const desc = action.desc || action.name;
-            const {screenshotName, screenshotPath} = await takeScreenshot(page, false, testOpt.fileUrl, desc, isExpected, count++);
-            screenshots.push({screenshotName, desc, screenshotPath});
+            const {
+                screenshotName,
+                screenshotPath,
+                rawScreenshotPath
+            } = await takeScreenshot(page, false, testOpt.fileUrl, desc, testOpt.useSVG, isExpected, count++);
+            screenshots.push({
+                screenshotName,
+                desc,
+                screenshotPath,
+                rawScreenshotPath
+            });
         }
         await timeline.runAction(action, _innerTakeScreenshot, playbackSpeed);
 
@@ -171,8 +209,17 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
         await page.mouse.move(0, 0);
         if (program.save) {
             let desc = 'Full Shot';
-            const {screenshotName, screenshotPath} = await takeScreenshot(page, true, fileUrl, desc, isExpected);
-            screenshots.push({screenshotName, desc, screenshotPath});
+            const {
+                screenshotName,
+                screenshotPath,
+                rawScreenshotPath
+            } = await takeScreenshot(page, true, fileUrl, desc, testOpt.useSVG, isExpected);
+            screenshots.push({
+                screenshotName,
+                desc,
+                screenshotPath,
+                rawScreenshotPath
+            });
         }
 
         await runActions(page, testOpt, isExpected, screenshots);
@@ -216,31 +263,41 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
         const screenshots = [];
         let idx = 0;
         for (let shot of expectedResult.screenshots) {
-            let expected = shot;
-            let actual = actualResult.screenshots[idx++];
-            let result = {
+            const expected = shot;
+            const actual = actualResult.screenshots[idx++];
+            const result = {
                 actual: getClientRelativePath(actual.screenshotPath),
                 expected: getClientRelativePath(expected.screenshotPath),
                 name: actual.screenshotName,
                 desc: actual.desc
             };
             try {
-                let {diffRatio, diffPNG} = await compareScreenshot(
-                    expected.screenshotPath,
-                    actual.screenshotPath
+                const {diffRatio, diffPNG} = await compareScreenshot(
+                    expected.rawScreenshotPath,
+                    actual.rawScreenshotPath
                 );
 
-                let diffPath = `${path.resolve(__dirname, getScreenshotDir())}/${shot.screenshotName}-diff.png`;
+                const diffPath = `${path.resolve(__dirname, getScreenshotDir())}/${shot.screenshotName}-diff.png`;
                 await writePNG(diffPNG, diffPath);
+                const diffWebpPath = await convertToWebP(diffPath);
 
-                result.diff = getClientRelativePath(diffPath);
+                result.diff = getClientRelativePath(diffWebpPath);
                 result.diffRatio = diffRatio;
+
+                // Remove png files
+                try {
+                    fs.unlinkSync(actual.rawScreenshotPath);
+                    fs.unlinkSync(expected.rawScreenshotPath);
+                    fs.unlinkSync(diffPath);
+                }
+                catch (e) {}
             }
             catch(e) {
                 result.diff = '';
                 result.diffRatio = 1;
                 console.log(e);
             }
+
             screenshots.push(result);
         }
 
