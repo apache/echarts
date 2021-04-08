@@ -534,15 +534,6 @@ class MapDraw {
 
             roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
 
-            // Reset ignore, avoid ignore is changed in LabelManager and can't restored.
-            // TODO: roam action in map should not run LabelManager#addLabelsOfSeries
-            this.group.traverse(el => {
-                const label = el.getTextContent();
-                if (label) {
-                    label.ignore = mapLabelRaw(label).ignore;
-                }
-            });
-
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
                 zoom: e.scale,
                 originX: e.originX,
@@ -554,6 +545,26 @@ class MapDraw {
         controller.setPointerChecker(function (e, x, y) {
             return geo.containPoint([x, y])
                 && !onIrrelevantElement(e, api, mapOrGeoModel);
+        });
+    }
+
+    /**
+     * FIXME: this is a temporarily workaround.
+     * When `geoRoam` the elements need to be reset in `MapView['render']`, because the props like
+     * `ignore` might have been modified by `LabelManager`, and `LabelManager#addLabelsOfSeries`
+     * will subsequently cache `defaultAttr` like `ignore`. If do not do this reset, the modified
+     * props will have no chance to be restored.
+     * Note: this reset should be after `clearStates` in `renderSeries` becuase `useStates` in
+     * `renderSeries` will cache the modified `ignore` to `el._normalState`.
+     * TODO:
+     * Use clone/immutable in `LabelManager`?
+     */
+    resetForLabelLayout() {
+        this.group.traverse(el => {
+            const label = el.getTextContent();
+            if (label) {
+                label.ignore = mapLabelRaw(label).ignore;
+            }
         });
     }
 
