@@ -226,14 +226,22 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
         roam: ViewCoordSysTransformInfoPart
         raw: ViewCoordSysTransformInfoPart
     } {
-        const roamTransformable = this._roamTransformable;
         const rawTransformable = this._rawTransformable;
+
+        const roamTransformable = this._roamTransformable;
+        // Becuase roamTransformabel has `originX/originY` modified,
+        // but the caller of `getTransformInfo` can not handle `originX/originY`,
+        // so need to recalcualte them.
+        const dummyTransformable = new Transformable();
+        dummyTransformable.transform = roamTransformable.transform;
+        dummyTransformable.decomposeTransform();
+
         return {
             roam: {
-                x: roamTransformable.x,
-                y: roamTransformable.y,
-                scaleX: roamTransformable.scaleX,
-                scaleY: roamTransformable.scaleY
+                x: dummyTransformable.x,
+                y: dummyTransformable.y,
+                scaleX: dummyTransformable.scaleX,
+                scaleY: dummyTransformable.scaleY
             },
             raw: {
                 x: rawTransformable.x,

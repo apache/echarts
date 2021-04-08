@@ -52,6 +52,8 @@ under the License.
         <div id="main9"></div>
         <div id="main10"></div>
         <div id="main11"></div>
+        <div id="main12"></div>
+        <div id="main13"></div>
 
 
 
@@ -827,6 +829,96 @@ under the License.
                 });
             });
         </script>
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            const svg = [
+                '<?xml version="1.0" encoding="utf-8"?>',
+                '<svg viewBox="-25 0 300 100" xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" fill-rule="evenodd" xml:space="preserve">',
+                '<path name="left_rect" d="M 0,0 L 0,100 100,100 100,0 Z" fill="#765" stroke="rgb(56,93,138)" stroke-width="0" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '<path name="right_rect" d="M 150,0 L 150,100 250,100 250,0 Z" fill="#567" stroke="rgb(56,93,138)" stroke-width="0" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join('')
+
+            echarts.registerMap('testGeoSVG_coord1', { svg: svg });
+
+            option = {
+                series: [{
+                    type: 'map',
+                    roam: true,
+                    top: 10,
+                    bottom: 10,
+                    left: 10,
+                    right: 10,
+                    selectedMode: 'multiple',
+                    map: 'testGeoSVG_coord1',
+                    select: {
+                        itemStyle: {
+                            color: 'red'
+                        },
+                        label: {
+                            color: '#fff'
+                        }
+                    },
+                    label: {
+                        show: true,
+                        fontSize: 30
+                    },
+                    labelLayout: {
+                        hideOverlap: true
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main12', {
+                title: [
+                    'Click both rect make them selected (become red)',
+                    '(1) zoom to trigger label **hideOverlap**',
+                    'zoom back, check labels should be restored',
+                    '(2) mouseover one the **right rect** and zoom to trigger label **hideOverlap**',
+                    'zoom back, mouseout, check the label should not disappear'
+                ],
+                option: option,
+                height: 200,
+            });
+        });
+        </script>
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            const svg = [
+                '<?xml version="1.0" encoding="utf-8"?>',
+                '<svg xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" fill-rule="evenodd" xml:space="preserve">',
+                '<path name="left_rect" d="M 0,0 L 0,100 100,100 100,0 Z" fill="#765" stroke="rgb(56,93,138)" stroke-width="0" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join('')
+
+            echarts.registerMap('testGeoSVG_coord2', { svg: svg });
+
+            option = {
+                geo: {
+                    map: 'testGeoSVG_coord2',
+                    roam: true
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main13', {
+                title: [
+                    '(geo coordSys) label displayed only on hover',
+                    'zoom: label should keep displayed.'
+                ],
+                option: option,
+                height: 200,
+            });
+        });
+        </script>
+
+
+
+
     </body>
 </html>
 
