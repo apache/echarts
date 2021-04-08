@@ -38,7 +38,7 @@ import GeoView from '../geo/GeoView';
 import MapView from '../../chart/map/MapView';
 import Geo from '../../coord/geo/Geo';
 import Model from '../../model/Model';
-import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels, enableLayoutLayoutFeatures } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
 import ZRText, {TextStyleProps} from 'zrender/src/graphic/Text';
@@ -727,6 +727,8 @@ function resetLabelForRegion(
                 }
             }
         }
+
+        enableLayoutLayoutFeatures(el, dataIdx, null);
 
         (el as ECElement).disableLabelAnimation = true;
     }
