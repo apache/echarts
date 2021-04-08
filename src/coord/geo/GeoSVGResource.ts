@@ -236,6 +236,12 @@ export class GeoSVGResource implements GeoResource {
             rootFromParse.y = viewBoxTransform.y;
         }
 
+        // SVG needs to clip based on `viewBox`. And some SVG files really rely on this feature.
+        // They do not strictly confine all of the content inside a display rect, but deliberately
+        // use a `viewBox` to define a displayable rect.
+        // PENDING:
+        // The drawback of the `setClipPath` here is: the region label (genereted by echarts) near the
+        // edge might also be clipped, because region labels are put as `textContent` of the SVG path.
         root.setClipPath(new Rect({
             shape: boundingRect.plain()
         }));
