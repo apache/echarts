@@ -30,7 +30,7 @@ import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import {parsePercent} from '../../util/number';
 import ChartView from '../../view/Chart';
 import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeItemOption } from './TreeSeries';
-import Path, { PathProps } from 'zrender/src/graphic/Path';
+import Path, { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
@@ -376,7 +376,7 @@ function updateNode(
     const isInit = !symbolEl;
     const node = data.tree.getNodeByDataIndex(dataIndex);
     const itemModel = node.getModel<TreeSeriesNodeItemOption>();
-    const visualColor = node.getVisual('style').fill;
+    const visualColor = (node.getVisual('style') as PathStyleProps).fill;
     const symbolInnerColor = node.isExpand === false && node.children.length !== 0
             ? visualColor : '#fff';
 
