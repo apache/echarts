@@ -247,6 +247,13 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
     /**
      * @public
      */
+    getItemSymbol(): string {
+        return this.get('itemSymbol');
+    }
+
+    /**
+     * @public
+     */
     getSelectedMapKey(piece: InnerVisualPiece) {
         return this._mode === 'categories'
             ? piece.value + '' : piece.index + '';

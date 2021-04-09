@@ -146,12 +146,12 @@ class SunburstPiece extends graphic.Sector {
 
         const focus = emphasisModel.get('focus');
 
-        const focusDataIndices: number[] = focus === 'ancestor'
-            ? node.getAncestorsIndices()
-            : focus === 'descendant' ? node.getDescendantIndices() : null;
+        const focusOrIndices =
+            focus === 'ancestor' ? node.getAncestorsIndices()
+            : focus === 'descendant' ? node.getDescendantIndices()
+            : focus;
 
-
-        enableHoverEmphasis(this, focusDataIndices || focus, emphasisModel.get('blurScope'));
+        enableHoverEmphasis(this, focusOrIndices, emphasisModel.get('blurScope'));
     }
 
     _updateLabel(

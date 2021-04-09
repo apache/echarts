@@ -17,14 +17,15 @@
 * under the License.
 */
 
-import {bind, each, indexOf, curry, extend, retrieve, normalizeCssArray, isFunction} from 'zrender/src/core/util';
+import {bind, each, indexOf, curry, extend, normalizeCssArray, isFunction} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
 import {
     isHighDownDispatcher,
     setAsHighDownDispatcher,
     setDefaultStateProxy,
-    enableHoverFocus
+    enableHoverFocus,
+    Z2_EMPHASIS_LIFT
 } from '../../util/states';
 import DataDiffer from '../../data/DataDiffer';
 import * as helper from '../helper/treeHelper';
@@ -64,9 +65,10 @@ const Rect = graphic.Rect;
 const DRAG_THRESHOLD = 3;
 const PATH_LABEL_NOAMAL = 'label';
 const PATH_UPPERLABEL_NORMAL = 'upperLabel';
-const Z_BASE = 10; // Should bigger than every z.
-const Z_BG = 1;
-const Z_CONTENT = 2;
+// Should larger than emphasis states lift z
+const Z2_BASE = Z2_EMPHASIS_LIFT * 10; // Should bigger than every z2.
+const Z2_BG = Z2_EMPHASIS_LIFT * 2;
+const Z2_CONTENT = Z2_EMPHASIS_LIFT * 3;
 
 const getStateItemStyle = makeStyleMapper([
     ['fill', 'color'],
@@ -797,15 +799,16 @@ function renderNode(
     }
 
     // Background
-    const bg = giveGraphic('background', Rect, depth, Z_BG);
+    const bg = giveGraphic('background', Rect, depth, Z2_BG);
     bg && renderBackground(group, bg, isParent && thisLayout.upperLabelHeight);
 
     const focus = nodeModel.get(['emphasis', 'focus']);
     const blurScope = nodeModel.get(['emphasis', 'blurScope']);
 
-    const focusDataIndices: number[] = focus === 'ancestor'
-        ? thisNode.getAncestorsIndices()
-        : focus === 'descendant' ? thisNode.getDescendantIndices() : null;
+    const focusOrIndices =
+        focus === 'ancestor' ? thisNode.getAncestorsIndices()
+        : focus === 'descendant' ? thisNode.getDescendantIndices()
+        : focus;
 
     // No children, render content.
     if (isParent) {
@@ -820,11 +823,11 @@ function renderNode(
             // Only for enabling highlight/downplay.
             data.setItemGraphicEl(thisNode.dataIndex, bg);
 
-            enableHoverFocus(bg, focusDataIndices || focus, blurScope);
+            enableHoverFocus(bg, focusOrIndices, blurScope);
         }
     }
     else {
-        const content = giveGraphic('content', Rect, depth, Z_CONTENT);
+        const content = giveGraphic('content', Rect, depth, Z2_CONTENT);
         content && renderContent(group, content);
 
         if (bg && isHighDownDispatcher(bg)) {
@@ -834,7 +837,7 @@ function renderNode(
         // Only for enabling highlight/downplay.
         data.setItemGraphicEl(thisNode.dataIndex, group);
 
-        enableHoverFocus(group, focusDataIndices || focus, blurScope);
+        enableHoverFocus(group, focusOrIndices, blurScope);
     }
 
     return group;
@@ -1034,7 +1037,7 @@ function renderNode(
         else if (!thisInvisible) {
             element = new Ctor();
             if (element instanceof Displayable) {
-                element.z = calculateZ(depth, z);
+                element.z2 = calculateZ2(depth, z);
             }
             prepareAnimationWhenNoOld(lasts, element);
         }
@@ -1096,9 +1099,8 @@ function renderNode(
 // upper ones. So we calculate z based on depth.
 // Moreover, we try to shrink down z interval to [0, 1] to avoid that
 // treemap with large z overlaps other components.
-function calculateZ(depth: number, zInLevel: number) {
-    const zb = depth * Z_BASE + zInLevel;
-    return (zb - 1) / zb;
+function calculateZ2(depth: number, z2InLevel: number) {
+    return depth * Z2_BASE + z2InLevel;
 }
 
 export default TreemapView;

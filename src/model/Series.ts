@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import type {MorphDividingMethod} from 'zrender/src/tool/morphPath';
+import {PathStyleProps} from 'zrender/src/graphic/Path';
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
@@ -48,6 +49,9 @@ import makeStyleMapper from './mixin/makeStyleMapper';
 import { SourceManager } from '../data/helper/sourceManager';
 import { Source } from '../data/Source';
 import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatTooltip';
+import {ECSymbol} from '../util/symbol';
+import {Group} from '../util/graphic';
+import {LegendSymbolParams} from '../component/legend/LegendModel';
 
 const inner = modelUtil.makeInner<{
     data: List
@@ -89,6 +93,11 @@ interface SeriesModel {
      * Get position for marker
      */
     getMarkerPosition(value: ScaleDataValue[]): number[];
+
+    /**
+     * Get legend icon symbol according to each series type
+     */
+    getLegendIcon(opt: LegendSymbolParams): ECSymbol | Group;
 
     /**
      * See `component/brush/selector.js`

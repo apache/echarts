@@ -36,13 +36,10 @@ import ChartView, {ChartViewConstructor} from '../view/Chart';
 import * as graphic from '../util/graphic';
 import {getECData} from '../util/innerStore';
 import {
-    enterEmphasisWhenMouseOver,
-    leaveEmphasisWhenMouseOut,
     isHighDownDispatcher,
     HOVER_STATE_EMPHASIS,
     HOVER_STATE_BLUR,
-    toggleSeriesBlurState,
-    toggleSeriesBlurStateFromPayload,
+    blurSeriesFromHighlightPayload,
     toggleSelectionFromPayload,
     updateSeriesElementSelection,
     getAllSelectedIndices,
@@ -59,7 +56,12 @@ import {
     leaveBlur,
     enterSelect,
     leaveSelect,
-    enterBlur
+    enterBlur,
+    allLeaveBlur,
+    findComponentHighDownDispatchers,
+    blurComponent,
+    handleGlobalMouseOverForHighDown,
+    handleGlboalMouseOutForHighDown
 } from '../util/states';
 import * as modelUtil from '../util/model';
 import {throttle} from '../util/throttle';
@@ -68,7 +70,6 @@ import loadingDefault from '../loading/default';
 import Scheduler from './Scheduler';
 import lightTheme from '../theme/light';
 import darkTheme from '../theme/dark';
-import mapDataStorage from '../coord/geo/mapDataStorage';
 import {CoordinateSystemMaster, CoordinateSystemCreator, CoordinateSystemHostModel} from '../coord/CoordinateSystem';
 import { parseClassType } from '../util/clazz';
 import {ECEventProcessor} from '../util/ECEventProcessor';
@@ -108,6 +109,7 @@ import decal from '../visual/decal';
 import type {MorphDividingMethod} from 'zrender/src/tool/morphPath';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
+import geoSourceManager from '../coord/geo/geoSourceManager';
 
 declare let global: any;
 
@@ -1477,12 +1479,37 @@ class ECharts extends Eventful<ECEventDefinition> {
                 });
             }
 
+            if (isHighDownPayload(payload)) {
+                allLeaveBlur(ecIns._api);
+            }
+
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
                 if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
-                    if (isHighDownPayload(payload) && !payload.notBlur) {
+                    if (isHighDownPayload(payload)) {
                         if (model instanceof SeriesModel) {
-                            toggleSeriesBlurStateFromPayload(model, payload, ecIns._api);
+                            if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
+                                blurSeriesFromHighlightPayload(model, payload, ecIns._api);
+                            }
+                        }
+                        else {
+                            const { focusSelf, dispatchers } = findComponentHighDownDispatchers(
+                                model.mainType, model.componentIndex, payload.name, ecIns._api
+                            );
+                            if (payload.type === HIGHLIGHT_ACTION_TYPE && focusSelf && !payload.notBlur) {
+                                blurComponent(model.mainType, model.componentIndex, ecIns._api);
+                            }
+                            // PENDING:
+                            // Whether to put this "enter emphasis" code in `ComponentView`,
+                            // which will be the same as `ChartView` but might be not necessary
+                            // and will be far from this logic.
+                            if (dispatchers) {
+                                each(dispatchers, dispatcher => {
+                                    payload.type === HIGHLIGHT_ACTION_TYPE
+                                        ? enterEmphasis(dispatcher)
+                                        : leaveEmphasis(dispatcher);
+                                });
+                            }
                         }
                     }
                     else if (isSelectChangePayload(payload)) {
@@ -1780,7 +1807,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             let eventObj: ECActionEvent;
 
             const isSelectChange = isSelectChangePayload(payload);
-            const isStatusChange = isHighDownPayload(payload) || isSelectChange;
+            const isHighDown = isHighDownPayload(payload);
 
             each(payloads, (batchItem) => {
                 // Action can specify the event by return it.
@@ -1792,11 +1819,16 @@ class ECharts extends Eventful<ECEventDefinition> {
                 eventObjBatch.push(eventObj);
 
                 // light update does not perform data process, layout and visual.
-                if (isStatusChange) {
-                    // method, payload, mainType, subType
+                if (isHighDown) {
+                    const { queryOptionMap, mainTypeSpecified } = modelUtil.preParseFinder(payload as ModelFinder);
+                    const componentMainType = mainTypeSpecified ? queryOptionMap.keys()[0] : 'series';
+                    updateDirectly(this, updateMethod, batchItem as Payload, componentMainType);
+                    markStatusToUpdate(this);
+                }
+                else if (isSelectChange) {
+                    // At present `dispatchAction({ type: 'select', ... })` is not supported on components.
+                    // geo still use 'geoselect'.
                     updateDirectly(this, updateMethod, batchItem as Payload, 'series');
-
-                    // Mark status to update
                     markStatusToUpdate(this);
                 }
                 else if (cptType) {
@@ -1804,7 +1836,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 }
             });
 
-            if (updateMethod !== 'none' && !isStatusChange && !cptType) {
+            if (updateMethod !== 'none' && !isHighDown && !isSelectChange && !cptType) {
                 // Still dirty
                 if (this[OPTION_UPDATED_KEY]) {
                     prepare(this);
@@ -1900,27 +1932,14 @@ class ECharts extends Eventful<ECEventDefinition> {
                 const el = e.target;
                 const dispatcher = findEventDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
-                    const ecData = getECData(dispatcher);
-                    // Try blur all in the related series. Then emphasis the hoverred.
-                    // TODO. progressive mode.
-                    toggleSeriesBlurState(
-                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns._api, true
-                    );
-                    enterEmphasisWhenMouseOver(dispatcher, e);
-
+                    handleGlobalMouseOverForHighDown(dispatcher, e, ecIns._api);
                     markStatusToUpdate(ecIns);
                 }
             }).on('mouseout', function (e) {
                 const el = e.target;
                 const dispatcher = findEventDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
-                    const ecData = getECData(dispatcher);
-                    toggleSeriesBlurState(
-                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns._api, false
-                    );
-
-                    leaveEmphasisWhenMouseOut(dispatcher, e);
-
+                    handleGlboalMouseOutForHighDown(dispatcher, e, ecIns._api);
                     markStatusToUpdate(ecIns);
                 }
             }).on('click', function (e) {
@@ -2162,33 +2181,54 @@ class ECharts extends Eventful<ECEventDefinition> {
             if (model.preventAutoZ) {
                 return;
             }
-            const z = model.get('z');
-            const zlevel = model.get('zlevel');
             // Set z and zlevel
-            view.group.traverse(function (el: Displayable) {
-                if (!el.isGroup) {
-                    z != null && (el.z = z);
-                    zlevel != null && (el.zlevel = zlevel);
-
-                    // TODO if textContent is on group.
-                    const label = el.getTextContent();
-                    const labelLine = el.getTextGuideLine();
-                    if (label) {
-                        label.z = el.z;
-                        label.zlevel = el.zlevel;
-                        // lift z2 of text content
-                        // TODO if el.emphasis.z2 is spcefied, what about textContent.
-                        label.z2 = el.z2 + 2;
-                    }
-                    if (labelLine) {
-                        const showAbove = el.textGuideLineConfig && el.textGuideLineConfig.showAbove;
-                        labelLine.z = el.z;
-                        labelLine.zlevel = el.zlevel;
-                        labelLine.z2 = el.z2 + (showAbove ? 1 : -1);
-                    }
-                }
-            });
+            _updateZ(
+                view.group,
+                model.get('z') || 0,
+                model.get('zlevel') || 0,
+                -Infinity
+            );
         };
+
+        function _updateZ(el: Element, z: number, zlevel: number, maxZ2: number): number {
+            // Group may also have textContent
+            const label = el.getTextContent();
+            const labelLine = el.getTextGuideLine();
+            const isGroup = el.isGroup;
+
+            if (isGroup) {
+                // set z & zlevel of children elements of Group
+                // el.traverse((childEl: Element) => _updateZ(childEl, z, zlevel));
+                const children = (el as graphic.Group).childrenRef();
+                for (let i = 0; i < children.length; i++) {
+                    maxZ2 = Math.max(_updateZ(children[i], z, zlevel, maxZ2), maxZ2);
+                }
+            }
+            else {
+                // not Group
+                (el as Displayable).z = z;
+                (el as Displayable).zlevel = zlevel;
+
+                maxZ2 = Math.max((el as Displayable).z2, maxZ2);
+            }
+
+            // always set z and zlevel if label/labelLine exists
+            if (label) {
+                label.z = z;
+                label.zlevel = zlevel;
+                // lift z2 of text content
+                // TODO if el.emphasis.z2 is spcefied, what about textContent.
+                isFinite(maxZ2) && (label.z2 = maxZ2 + 2);
+            }
+            if (labelLine) {
+                const textGuideLineConfig = el.textGuideLineConfig;
+                labelLine.z = z;
+                labelLine.zlevel = zlevel;
+                isFinite(maxZ2)
+                    && (labelLine.z2 = maxZ2 + (textGuideLineConfig && textGuideLineConfig.showAbove ? 1 : -1));
+            }
+            return maxZ2;
+        }
 
         // Clear states without animation.
         // TODO States on component.
@@ -2853,26 +2893,19 @@ export function setCanvasCreator(creator: () => HTMLCanvasElement): void {
 }
 
 /**
- * The parameters and usage: see `mapDataStorage.registerMap`.
+ * The parameters and usage: see `geoSourceManager.registerMap`.
  * Compatible with previous `echarts.registerMap`.
  */
 export function registerMap(
-    mapName: Parameters<typeof mapDataStorage.registerMap>[0],
-    geoJson: Parameters<typeof mapDataStorage.registerMap>[1],
-    specialAreas?: Parameters<typeof mapDataStorage.registerMap>[2]
+    mapName: Parameters<typeof geoSourceManager.registerMap>[0],
+    geoJson: Parameters<typeof geoSourceManager.registerMap>[1],
+    specialAreas?: Parameters<typeof geoSourceManager.registerMap>[2]
 ): void {
-    mapDataStorage.registerMap(mapName, geoJson, specialAreas);
+    geoSourceManager.registerMap(mapName, geoJson, specialAreas);
 }
 
 export function getMap(mapName: string) {
-    // For backward compatibility, only return the first one.
-    const records = mapDataStorage.retrieveMap(mapName);
-    // FIXME support SVG, where return not only records[0].
-    return records && records[0] && {
-        // @ts-ignore
-        geoJson: records[0].geoJSON,
-        specialAreas: records[0].specialAreas
-    };
+    return geoSourceManager.getMapForUser(mapName);
 }
 
 export const registerTransform = registerExternalTransform;

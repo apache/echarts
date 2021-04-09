@@ -51,6 +51,7 @@ under the License.
         <div id="main8"></div>
         <div id="main9"></div>
         <div id="main10"></div>
+        <div id="main11"></div>
 
 
 
@@ -802,6 +803,30 @@ under the License.
         </script>
 
 
+        <script>
+            require(['echarts', 'map/js/china'], function (echarts) {
+                const option = {
+                    series: [{
+                        type: 'map',
+                        map: 'china',
+                        roam: true,
+                        label: {
+                            show: true
+                        },
+                        labelLayout: {
+                            hideOverlap: true
+                        }
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main11', {
+                    title: [
+                        'Map label should update it\'s position when labelLayout is used.'
+                    ],
+                    option: option
+                });
+            });
+        </script>
     </body>
 </html>
 

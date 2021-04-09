@@ -34,14 +34,18 @@ export interface ECData {
     dataType?: SeriesDataType;
     focus?: InnerFocus;
     blurScope?: BlurScope;
+
+    // Required by `tooltipConfig` and `focus`.
+    componentMainType?: ComponentMainType;
+    componentIndex?: number;
+    componentHighDownName?: string;
+
+    // To make a tooltipConfig, seach `setTooltipConfig`.
+    // Used to find component tooltip option, which is used as
+    // the parent of tooltipConfig.option for cascading.
+    // If not provided, do not use component as its parent.
+    // (Set manatary to make developers not to forget them).
     tooltipConfig?: {
-        // To make a tooltipConfig, seach `setTooltipConfig`.
-        // Used to find component tooltip option, which is used as
-        // the parent of tooltipConfig.option for cascading.
-        // If not provided, do not use component as its parent.
-        // (Set manatary to make developers not to forget them).
-        componentMainType: ComponentMainType;
-        componentIndex: number;
         // Target item name to locate tooltip.
         name: string;
         option: ComponentItemTooltipOption<unknown>;
