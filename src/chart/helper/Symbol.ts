@@ -24,7 +24,7 @@ import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/st
 import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
 import List from '../../data/List';
-import { ColorString, BlurScope, AnimationOption } from '../../util/types';
+import { ColorString, BlurScope, AnimationOption, ZRColor } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
@@ -38,7 +38,7 @@ interface SymbolOpts {
     disableAnimation?: boolean
 
     useNameLabel?: boolean
-    symbolInnerColor?: string
+    symbolInnerColor?: ZRColor
 }
 
 class Symbol extends graphic.Group {
