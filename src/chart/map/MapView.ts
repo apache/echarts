@@ -56,6 +56,10 @@ class MapView extends ChartView {
             return;
         }
 
+        if (this._mapDraw && payload && payload.type === 'geoRoam') {
+            this._mapDraw.resetForLabelLayout();
+        }
+
         // Not update map if it is an roam action from self
         if (!(payload && payload.type === 'geoRoam'
                 && payload.componentType === 'series'

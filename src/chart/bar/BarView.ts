@@ -61,8 +61,6 @@ import {LayoutRect} from '../../util/layout';
 import {EventCallback} from 'zrender/src/core/Eventful';
 import { warn } from '../../util/log';
 
-const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
-const BAR_BORDER_RADIUS_QUERY = ['itemStyle', 'borderRadius'] as const;
 const _eventPos = [0, 0];
 
 const mathMax = Math.max;
@@ -314,7 +312,7 @@ class BarView extends ChartView {
                     }
                     const bgLayout = getLayout[coord.type](data, newIndex);
                     const shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
-                    updateProps(bgEl, { shape: shape }, animationModel, newIndex);
+                    updateProps(bgEl, { shape }, animationModel, newIndex);
                 }
 
                 let el = oldData.getItemGraphicEl(oldIndex) as BarPossiblePath;
@@ -905,7 +903,7 @@ function updateStyle(
     const style = data.getItemVisual(dataIndex, 'style');
 
     if (!isPolar) {
-        (el as Rect).setShape('r', itemModel.get(BAR_BORDER_RADIUS_QUERY) || 0);
+        (el as Rect).setShape('r', itemModel.get(['itemStyle', 'borderRadius']) || 0);
     }
 
     el.useStyle(style);
@@ -961,7 +959,12 @@ function getLineWidth(
     itemModel: Model<BarDataItemOption>,
     rawLayout: RectLayout
 ) {
-    const lineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0;
+    // Has no border.
+    const borderColor = itemModel.get(['itemStyle', 'borderColor']);
+    if (!borderColor || borderColor === 'none') {
+        return 0;
+    }
+    const lineWidth = itemModel.get(['itemStyle', 'borderWidth']) || 0;
     // width or height may be NaN for empty data
     const width = isNaN(rawLayout.width) ? Number.MAX_VALUE : Math.abs(rawLayout.width);
     const height = isNaN(rawLayout.height) ? Number.MAX_VALUE : Math.abs(rawLayout.height);

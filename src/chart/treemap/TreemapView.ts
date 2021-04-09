@@ -862,7 +862,7 @@ function renderNode(
         }
         else {
             bg.invisible = false;
-            const style = thisNode.getVisual('style');
+            const style = thisNode.getVisual('style') as PathStyleProps;
             const visualBorderColor = style.stroke;
             const normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualBorderColor;
@@ -877,7 +877,8 @@ function renderNode(
                 const upperLabelWidth = thisWidth - 2 * borderWidth;
 
                 prepareText(
-                    bg, visualBorderColor, upperLabelWidth, upperHeight, style.opacity,
+                    // PENDING: convert ZRColor to ColorString for text.
+                    bg, visualBorderColor as ColorString, style.opacity,
                     {x: borderWidth, y: 0, width: upperLabelWidth, height: upperHeight}
                 );
             }
@@ -923,7 +924,7 @@ function renderNode(
         }
         else {
             content.invisible = false;
-            const nodeStyle = thisNode.getVisual('style');
+            const nodeStyle = thisNode.getVisual('style') as PathStyleProps;
             const visualColor = nodeStyle.fill;
             const normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualColor;
@@ -932,7 +933,8 @@ function renderNode(
             const blurStyle = getStateItemStyle(itemStyleBlurModel);
             const selectStyle = getStateItemStyle(itemStyleSelectModel);
 
-            prepareText(content, visualColor, contentWidth, nodeStyle.opacity, contentHeight);
+            // PENDING: convert ZRColor to ColorString for text.
+            prepareText(content, visualColor as ColorString, nodeStyle.opacity, null);
 
             content.setStyle(normalStyle);
             content.ensureState('emphasis').style = emphasisStyle;
@@ -954,9 +956,8 @@ function renderNode(
         rectEl: graphic.Rect,
         visualColor: ColorString,
         visualOpacity: number,
-        width: number,
-        height: number,
-        upperLabelRect?: RectLike
+        // Can be null/undefined
+        upperLabelRect: RectLike
     ) {
         const normalLabelModel = nodeModel.getModel(
             upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL

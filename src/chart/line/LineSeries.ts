@@ -153,10 +153,8 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
             position: 'top'
         },
 
-        itemStyle: {
-            color: 'auto',
-            borderWidth: 2
-        },
+        // itemStyle: {
+        // },
 
         endLabel: {
             show: false,
