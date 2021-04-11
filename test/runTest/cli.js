@@ -96,9 +96,9 @@ async function convertToWebP(filePath, lossless) {
     });
 }
 
-async function takeScreenshot(page, fullPage, fileUrl, desc, useSVG, isExpected, minor) {
+async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) {
     let screenshotName = testNameFromFile(fileUrl);
-    if (useSVG) {
+    if (program.renderer === 'svg') {
         screenshotName += '-_svg_render_';
     }
     if (desc) {
@@ -153,7 +153,7 @@ async function runActions(page, testOpt, isExpected, screenshots) {
                 screenshotName,
                 screenshotPath,
                 rawScreenshotPath
-            } = await takeScreenshot(page, false, testOpt.fileUrl, desc, testOpt.useSVG, isExpected, count++);
+            } = await takeScreenshot(page, false, testOpt.fileUrl, desc, isExpected, count++);
             screenshots.push({
                 screenshotName,
                 desc,
@@ -213,7 +213,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
                 screenshotName,
                 screenshotPath,
                 rawScreenshotPath
-            } = await takeScreenshot(page, true, fileUrl, desc, testOpt.useSVG, isExpected);
+            } = await takeScreenshot(page, true, fileUrl, desc, isExpected);
             screenshots.push({
                 screenshotName,
                 desc,

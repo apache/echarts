@@ -23,7 +23,7 @@ const path = require('path');
 const util = require('util');
 
 // const jimp = require('jimp');
-// const marked = require('marked');
+const marked = require('marked');
 
 const tests = JSON.parse(fs.readFileSync(
     path.join(__dirname, 'tmp/__cache__.json'), 'utf-8'
@@ -51,7 +51,7 @@ async function inlineImage(imageUrl) {
         // img.quality(70);
         // return img.getBase64Async('image/jpeg');
         let imgBuffer = await readFileAsync(fullPath);
-        return 'data:image/png;base64,' + imgBuffer.toString('base64');
+        return 'data:image/webp;base64,' + imgBuffer.toString('base64');
     }
     catch (e) {
         console.error(e);
@@ -77,9 +77,12 @@ async function genDetail(test) {
         }
 
         let [expectedUrl, actualUrl, diffUrl] = await Promise.all([
-            resolveImagePath(shot.expected),
-            resolveImagePath(shot.actual),
-            resolveImagePath(shot.diff)
+            inlineImage(shot.expected),
+            inlineImage(shot.actual),
+            inlineImage(shot.diff)
+            // resolveImagePath(shot.expected),
+            // resolveImagePath(shot.actual),
+            // resolveImagePath(shot.diff)
         ]);
         shotDetail += `
 <div style="margin-top:10px">
@@ -155,9 +158,9 @@ ${detail.content}
 
     fs.writeFileSync(__dirname + '/tmp-report.md', mdText, 'utf-8');
 
-    // marked(mdText, { smartLists: true }, (err, res) => {
-    //     fs.writeFileSync(__dirname + '/tmp-report.html', res, 'utf-8');
-    // });
+    marked(mdText, { smartLists: true }, (err, res) => {
+        fs.writeFileSync(__dirname + '/tmp-report.html', res, 'utf-8');
+    });
 }
 
 run();

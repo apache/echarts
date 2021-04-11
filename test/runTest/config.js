@@ -19,6 +19,7 @@
 
 module.exports = {
     testVersion: 'test-v0.1',
+    cacheVersion: '0.1',
     port: 8866,
     origin: 'http://localhost:8866'
 };
