@@ -61,7 +61,7 @@ export interface MarkLine1DDataItemOption extends MarkLineDataItemOptionBase {
     symbol?: string[] | string
     symbolSize?: number[] | number
     symbolRotate?: number[] | number
-    symbolOffset: number | string | (number | string)[]
+    symbolOffset?: number | string | (number | string)[]
 }
 
 // 2D markLine on any direction
