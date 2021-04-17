@@ -28,7 +28,7 @@ import { ZRColor } from './types';
 
 export type ECSymbol = graphic.Path & {
     __isEmptyBrush?: boolean
-    setColor: (color: ZRColor, innerColor?: string) => void
+    setColor: (color: ZRColor, innerColor?: ZRColor) => void
     getColor: () => ZRColor
 };
 type SymbolCtor = { new(): ECSymbol };
@@ -288,7 +288,7 @@ const SymbolClz = graphic.Path.extend({
         return res;
     },
 
-    buildPath: function (ctx, shape, inBundle) {
+    buildPath(ctx, shape, inBundle) {
         let symbolType = shape.symbolType;
         if (symbolType !== 'none') {
             let proxySymbol = symbolBuildProxies[symbolType];
@@ -306,7 +306,7 @@ const SymbolClz = graphic.Path.extend({
 });
 
 // Provide setColor helper method to avoid determine if set the fill or stroke outside
-function symbolPathSetColor(this: ECSymbol, color: ZRColor, innerColor?: string) {
+function symbolPathSetColor(this: ECSymbol, color: ZRColor, innerColor?: ZRColor) {
     if (this.type !== 'image') {
         const symbolStyle = this.style;
         if (this.__isEmptyBrush) {

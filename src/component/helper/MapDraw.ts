@@ -38,10 +38,9 @@ import GeoView from '../geo/GeoView';
 import MapView from '../../chart/map/MapView';
 import Geo from '../../coord/geo/Geo';
 import Model from '../../model/Model';
-import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels, enableLayoutLayoutFeatures } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
-import { makeInner } from '../../util/model';
 import ZRText, {TextStyleProps} from 'zrender/src/graphic/Text';
 import { ViewCoordSysTransformInfoPart } from '../../coord/View';
 import { GeoSVGGraphicRecord, GeoSVGResource } from '../../coord/geo/GeoSVGResource';
@@ -50,11 +49,7 @@ import Element from 'zrender/src/Element';
 import List from '../../data/List';
 import { GeoJSONRegion } from '../../coord/geo/Region';
 import { SVGNodeTagLower } from 'zrender/src/tool/parseSVG';
-
-const mapLabelTransform = makeInner<{
-    x: number
-    y: number
-}, ZRText>();
+import { makeInner } from '../../util/model';
 
 interface RegionsGroup extends graphic.Group {
 }
@@ -96,6 +91,9 @@ const STATE_TRIGGER_TAG_MAP = zrUtil.createHashMap<number, SVGNodeTagLower>(
 const LABEL_HOST_MAP = zrUtil.createHashMap<number, SVGNodeTagLower>(
     OPTION_STYLE_ENABLED_TAGS.concat(['g']) as SVGNodeTagLower[]
 );
+const mapLabelRaw = makeInner<{
+    ignore: boolean
+}, ZRText>();
 
 
 function getFixedItemStyle(model: Model<GeoItemStyleOption>) {
@@ -520,29 +518,10 @@ class MapDraw {
             return action;
         }
 
-        const updateLabelTransforms = () => {
-            const group = this.group;
-            this._regionsGroup.traverse(function (el) {
-                const textContent = el.getTextContent();
-                if (textContent) {
-                    el.setTextConfig({
-                        local: true
-                    });
-                    textContent.x = mapLabelTransform(textContent).x || 0;
-                    textContent.y = mapLabelTransform(textContent).y || 0;
-                    textContent.scaleX = 1 / group.scaleX;
-                    textContent.scaleY = 1 / group.scaleY;
-                    textContent.markRedraw();
-                }
-            });
-        };
-
         controller.off('pan').on('pan', function (e) {
             this._mouseDownFlag = false;
 
             roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
-
-            updateLabelTransforms();
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
                 dx: e.dx,
@@ -555,8 +534,6 @@ class MapDraw {
 
             roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
 
-            updateLabelTransforms();
-
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
                 zoom: e.scale,
                 originX: e.originX,
@@ -568,6 +545,26 @@ class MapDraw {
         controller.setPointerChecker(function (e, x, y) {
             return geo.containPoint([x, y])
                 && !onIrrelevantElement(e, api, mapOrGeoModel);
+        });
+    }
+
+    /**
+     * FIXME: this is a temporarily workaround.
+     * When `geoRoam` the elements need to be reset in `MapView['render']`, because the props like
+     * `ignore` might have been modified by `LabelManager`, and `LabelManager#addLabelsOfSeries`
+     * will subsequently cache `defaultAttr` like `ignore`. If do not do this reset, the modified
+     * props will have no chance to be restored.
+     * Note: this reset should be after `clearStates` in `renderSeries` becuase `useStates` in
+     * `renderSeries` will cache the modified `ignore` to `el._normalState`.
+     * TODO:
+     * Use clone/immutable in `LabelManager`?
+     */
+    resetForLabelLayout() {
+        this.group.traverse(el => {
+            const label = el.getTextContent();
+            if (label) {
+                label.ignore = mapLabelRaw(label).ignore;
+            }
         });
     }
 
@@ -599,16 +596,6 @@ class MapDraw {
     }
 
 };
-
-function labelTextAfterUpdate(this: graphic.Text) {
-    // Make the label text apply only translate of this host el
-    // but no other transform like scale,rotation of this host el.
-    const mt = this.transform;
-    mt[0] = 1;
-    mt[1] = 0;
-    mt[2] = 0;
-    mt[3] = 1;
-}
 
 function applyOptionStyleForRegion(
     viewBuildCtx: ViewBuildContext,
@@ -727,19 +714,21 @@ function resetLabelForRegion(
 
         const textEl = el.getTextContent();
         if (textEl) {
-            mapLabelTransform(textEl).x = textEl.x = labelXY ? labelXY[0] : 0;
-            mapLabelTransform(textEl).y = textEl.y = labelXY ? labelXY[1] : 0;
-            textEl.z2 = 10;
-            textEl.afterUpdate = labelTextAfterUpdate;
-        }
+            mapLabelRaw(textEl).ignore = textEl.ignore;
 
-        // Need to apply the `translate`.
-        if (el.textConfig) {
-            el.textConfig.local = true;
-            if (labelXY) {
-                el.textConfig.position = null;
+            if (el.textConfig) {
+                if (labelXY) {
+                    // Compute a relative offset based on the el bounding rect.
+                    const rect = el.getBoundingRect().clone();
+                    el.textConfig.position = [
+                        ((labelXY[0] - rect.x) / rect.width * 100) + '%',
+                        ((labelXY[1] - rect.y) / rect.height * 100) + '%'
+                    ];
+                }
             }
         }
+
+        enableLayoutLayoutFeatures(el, dataIdx, null);
 
         (el as ECElement).disableLabelAnimation = true;
     }

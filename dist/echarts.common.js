@@ -93,6 +93,8 @@
             this.touchEventsSupported = false;
             this.pointerEventsSupported = false;
             this.domSupported = false;
+            this.transformSupported = false;
+            this.transform3dSupported = false;
         }
         return Env;
     }());
@@ -143,6 +145,14 @@
         env.pointerEventsSupported = 'onpointerdown' in window
             && (browser.edge || (browser.ie && +browser.version >= 11));
         env.domSupported = typeof document !== 'undefined';
+        var style = document.documentElement.style;
+        env.transform3dSupported = ((browser.ie && 'transition' in style)
+            || browser.edge
+            || (('WebKitCSSMatrix' in window) && ('m11' in new WebKitCSSMatrix()))
+            || 'MozPerspective' in style)
+            && !('OTransition' in style);
+        env.transformSupported = env.transform3dSupported
+            || (browser.ie && +browser.version >= 9);
     }
 
     var BUILTIN_OBJECT = {
@@ -2976,7 +2986,7 @@
                             this.interpolable = false;
                         }
                     }
-                    else if (typeof value !== 'number') {
+                    else if (typeof value !== 'number' || isNaN(value)) {
                         this.interpolable = false;
                         return;
                     }
@@ -4593,6 +4603,10 @@
                 this.textConfig = {};
             }
             extend(this.textConfig, cfg);
+            this.markRedraw();
+        };
+        Element.prototype.removeTextConfig = function () {
+            this.textConfig = null;
             this.markRedraw();
         };
         Element.prototype.removeTextContent = function () {
@@ -6553,7 +6567,7 @@
     function registerPainter(name, Ctor) {
         painterCtors[name] = Ctor;
     }
-    var version = '5.0.4';
+    var version = '5.1.0';
 
     var zrender = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -7675,38 +7689,12 @@
      */
 
     function parseFinder(ecModel, finderInput, opt) {
-      var finder;
+      var _a = preParseFinder(finderInput, opt),
+          mainTypeSpecified = _a.mainTypeSpecified,
+          queryOptionMap = _a.queryOptionMap,
+          others = _a.others;
 
-      if (isString(finderInput)) {
-        var obj = {};
-        obj[finderInput + 'Index'] = 0;
-        finder = obj;
-      } else {
-        finder = finderInput;
-      }
-
-      var queryOptionMap = createHashMap();
-      var result = {};
-      var mainTypeSpecified = false;
-      each(finder, function (value, key) {
-        // Exclude 'dataIndex' and other illgal keys.
-        if (key === 'dataIndex' || key === 'dataIndexInside') {
-          result[key] = value;
-          return;
-        }
-
-        var parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
-        var mainType = parsedKey[1];
-        var queryType = (parsedKey[2] || '').toLowerCase();
-
-        if (!mainType || !queryType || opt && opt.includeMainTypes && indexOf(opt.includeMainTypes, mainType) < 0) {
-          return;
-        }
-
-        mainTypeSpecified = mainTypeSpecified || !!mainType;
-        var queryOption = queryOptionMap.get(mainType) || queryOptionMap.set(mainType, {});
-        queryOption[queryType] = value;
-      });
+      var result = others;
       var defaultMainType = opt ? opt.defaultMainType : null;
 
       if (!mainTypeSpecified && defaultMainType) {
@@ -7723,6 +7711,45 @@
         result[mainType + 'Model'] = queryResult.models[0];
       });
       return result;
+    }
+    function preParseFinder(finderInput, opt) {
+      var finder;
+
+      if (isString(finderInput)) {
+        var obj = {};
+        obj[finderInput + 'Index'] = 0;
+        finder = obj;
+      } else {
+        finder = finderInput;
+      }
+
+      var queryOptionMap = createHashMap();
+      var others = {};
+      var mainTypeSpecified = false;
+      each(finder, function (value, key) {
+        // Exclude 'dataIndex' and other illgal keys.
+        if (key === 'dataIndex' || key === 'dataIndexInside') {
+          others[key] = value;
+          return;
+        }
+
+        var parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
+        var mainType = parsedKey[1];
+        var queryType = (parsedKey[2] || '').toLowerCase();
+
+        if (!mainType || !queryType || opt && opt.includeMainTypes && indexOf(opt.includeMainTypes, mainType) < 0) {
+          return;
+        }
+
+        mainTypeSpecified = mainTypeSpecified || !!mainType;
+        var queryOption = queryOptionMap.get(mainType) || queryOptionMap.set(mainType, {});
+        queryOption[queryType] = value;
+      });
+      return {
+        mainTypeSpecified: mainTypeSpecified,
+        queryOptionMap: queryOptionMap,
+        others: others
+      };
     }
     var SINGLE_REFERRING = {
       useDefault: true,
@@ -8063,7 +8090,7 @@
         }
 
         if (throwWhenNotFound && !clz) {
-          throw new Error(!subType ? mainType + '.' + 'type should be specified.' : 'Component ' + mainType + '.' + (subType || '') + ' not exists. Load it first.');
+          throw new Error(!subType ? mainType + '.' + 'type should be specified.' : 'Component ' + mainType + '.' + (subType || '') + ' is used but not imported.');
         }
 
         return clz;
@@ -8537,7 +8564,7 @@
             var tokenPadding = tokenStyle.padding;
             var tokenPaddingH = tokenPadding ? tokenPadding[1] + tokenPadding[3] : 0;
             if (tokenStyle.width != null && tokenStyle.width !== 'auto') {
-                var outerWidth_1 = parsePercent$2(tokenStyle.width, wrapInfo.width) + tokenPaddingH;
+                var outerWidth_1 = parsePercent(tokenStyle.width, wrapInfo.width) + tokenPaddingH;
                 if (lines.length > 0) {
                     if (outerWidth_1 + wrapInfo.accumWidth > wrapInfo.width) {
                         strLines = str.split('\n');
@@ -8702,15 +8729,6 @@
             lines: lines,
             linesWidths: linesWidths
         };
-    }
-    function parsePercent$2(value, maxValue) {
-        if (typeof value === 'string') {
-            if (value.lastIndexOf('%') >= 0) {
-                return parseFloat(value) / 100 * maxValue;
-            }
-            return parseFloat(value);
-        }
-        return value;
     }
 
     var STYLE_MAGIC_KEY = '__zr_style_' + Math.round((Math.random() * 10));
@@ -12197,8 +12215,7 @@
         });
       });
     }
-
-    function toggleSeriesBlurState(targetSeriesIndex, focus, blurScope, api, isBlur) {
+    function blurSeries(targetSeriesIndex, focus, blurScope, api) {
       var ecModel = api.getModel();
       blurScope = blurScope || 'coordinateSystem';
 
@@ -12207,11 +12224,6 @@
           var itemEl = data.getItemGraphicEl(dataIndices[i]);
           itemEl && leaveBlur(itemEl);
         }
-      }
-
-      if (!isBlur) {
-        allLeaveBlur(api);
-        return;
       }
 
       if (targetSeriesIndex == null) {
@@ -12275,12 +12287,28 @@
         }
       });
     }
-    function toggleSeriesBlurStateFromPayload(seriesModel, payload, api) {
-      if (!isHighDownPayload(payload)) {
+    function blurComponent(componentMainType, componentIndex, api) {
+      if (componentMainType == null || componentIndex == null) {
         return;
       }
 
-      var isHighlight = payload.type === HIGHLIGHT_ACTION_TYPE;
+      var componentModel = api.getModel().getComponent(componentMainType, componentIndex);
+
+      if (!componentModel) {
+        return;
+      }
+
+      var view = api.getViewOfComponentModel(componentModel);
+
+      if (!view || !view.focusBlurEnabled) {
+        return;
+      }
+
+      view.group.traverse(function (child) {
+        singleEnterBlur(child);
+      });
+    }
+    function blurSeriesFromHighlightPayload(seriesModel, payload, api) {
       var seriesIndex = seriesModel.seriesIndex;
       var data = seriesModel.getData(payload.dataType);
       var dataIndex = queryDataIndex(data, payload); // Pick the first one if there is multiple/none exists.
@@ -12299,7 +12327,7 @@
 
       if (el) {
         var ecData = getECData(el);
-        toggleSeriesBlurState(seriesIndex, ecData.focus, ecData.blurScope, api, isHighlight);
+        blurSeries(seriesIndex, ecData.focus, ecData.blurScope, api);
       } else {
         // If there is no element put on the data. Try getting it from raw option
         // TODO Should put it on seriesModel?
@@ -12307,8 +12335,104 @@
         var blurScope = seriesModel.get(['emphasis', 'blurScope']);
 
         if (focus_1 != null) {
-          toggleSeriesBlurState(seriesIndex, focus_1, blurScope, api, isHighlight);
+          blurSeries(seriesIndex, focus_1, blurScope, api);
         }
+      }
+    }
+    function findComponentHighDownDispatchers(componentMainType, componentIndex, name, api) {
+      var ret = {
+        focusSelf: false,
+        dispatchers: null
+      };
+
+      if (componentMainType == null || componentMainType === 'series' || componentIndex == null || name == null) {
+        return ret;
+      }
+
+      var componentModel = api.getModel().getComponent(componentMainType, componentIndex);
+
+      if (!componentModel) {
+        return ret;
+      }
+
+      var view = api.getViewOfComponentModel(componentModel);
+
+      if (!view || !view.findHighDownDispatchers) {
+        return ret;
+      }
+
+      var dispatchers = view.findHighDownDispatchers(name); // At presnet, the component (like Geo) only blur inside itself.
+      // So we do not use `blurScope` in component.
+
+      var focusSelf;
+
+      for (var i = 0; i < dispatchers.length; i++) {
+        if ("development" !== 'production' && !isHighDownDispatcher(dispatchers[i])) {
+          error('param should be highDownDispatcher');
+        }
+
+        if (getECData(dispatchers[i]).focus === 'self') {
+          focusSelf = true;
+          break;
+        }
+      }
+
+      return {
+        focusSelf: focusSelf,
+        dispatchers: dispatchers
+      };
+    }
+    function handleGlobalMouseOverForHighDown(dispatcher, e, api) {
+      if ("development" !== 'production' && !isHighDownDispatcher(dispatcher)) {
+        error('param should be highDownDispatcher');
+      }
+
+      var ecData = getECData(dispatcher);
+
+      var _a = findComponentHighDownDispatchers(ecData.componentMainType, ecData.componentIndex, ecData.componentHighDownName, api),
+          dispatchers = _a.dispatchers,
+          focusSelf = _a.focusSelf; // If `findHighDownDispatchers` is supported on the component,
+      // highlight/downplay elements with the same name.
+
+
+      if (dispatchers) {
+        if (focusSelf) {
+          blurComponent(ecData.componentMainType, ecData.componentIndex, api);
+        }
+
+        each(dispatchers, function (dispatcher) {
+          return enterEmphasisWhenMouseOver(dispatcher, e);
+        });
+      } else {
+        // Try blur all in the related series. Then emphasis the hoverred.
+        // TODO. progressive mode.
+        blurSeries(ecData.seriesIndex, ecData.focus, ecData.blurScope, api);
+
+        if (ecData.focus === 'self') {
+          blurComponent(ecData.componentMainType, ecData.componentIndex, api);
+        } // Other than series, component that not support `findHighDownDispatcher` will
+        // also use it. But in this case, highlight/downplay are only supported in
+        // mouse hover but not in dispatchAction.
+
+
+        enterEmphasisWhenMouseOver(dispatcher, e);
+      }
+    }
+    function handleGlboalMouseOutForHighDown(dispatcher, e, api) {
+      if ("development" !== 'production' && !isHighDownDispatcher(dispatcher)) {
+        error('param should be highDownDispatcher');
+      }
+
+      allLeaveBlur(api);
+      var ecData = getECData(dispatcher);
+      var dispatchers = findComponentHighDownDispatchers(ecData.componentMainType, ecData.componentIndex, ecData.componentHighDownName, api).dispatchers;
+
+      if (dispatchers) {
+        each(dispatchers, function (dispatcher) {
+          return leaveEmphasisWhenMouseOut(dispatcher, e);
+        });
+      } else {
+        leaveEmphasisWhenMouseOut(dispatcher, e);
       }
     }
     function toggleSelectionFromPayload(seriesModel, payload, api) {
@@ -14530,9 +14654,46 @@
 
     function nearZero(val) {
       return val <= 1e-6 && val >= -1e-6;
+    }
+
+    function setTooltipConfig(opt) {
+      var itemTooltipOption = opt.itemTooltipOption;
+      var componentModel = opt.componentModel;
+      var itemName = opt.itemName;
+      var itemTooltipOptionObj = isString(itemTooltipOption) ? {
+        formatter: itemTooltipOption
+      } : itemTooltipOption;
+      var mainType = componentModel.mainType;
+      var componentIndex = componentModel.componentIndex;
+      var formatterParams = {
+        componentType: mainType,
+        name: itemName,
+        $vars: ['name']
+      };
+      formatterParams[mainType + 'Index'] = componentIndex;
+      var formatterParamsExtra = opt.formatterParamsExtra;
+
+      if (formatterParamsExtra) {
+        each(keys(formatterParamsExtra), function (key) {
+          if (!hasOwn(formatterParams, key)) {
+            formatterParams[key] = formatterParamsExtra[key];
+            formatterParams.$vars.push(key);
+          }
+        });
+      }
+
+      var ecData = getECData(opt.el);
+      ecData.componentMainType = mainType;
+      ecData.componentIndex = componentIndex;
+      ecData.tooltipConfig = {
+        name: itemName,
+        option: defaults({
+          content: itemName,
+          formatterParams: formatterParams
+        }, itemTooltipOptionObj)
+      };
     } // Register built-in shapes. These shapes might be overwirtten
     // by users, although we do not recommend that.
-
 
     registerShape('circle', Circle);
     registerShape('ellipse', Ellipse);
@@ -14572,6 +14733,7 @@
         createIcon: createIcon,
         linePolygonIntersect: linePolygonIntersect,
         lineLineIntersect: lineLineIntersect,
+        setTooltipConfig: setTooltipConfig,
         Group: Group,
         Image: ZRImage,
         Text: ZRText,
@@ -15433,7 +15595,7 @@
      * Topological travel on Activity Network (Activity On Vertices).
      * Dependencies is defined in Model.prototype.dependencies, like ['xAxis', 'yAxis'].
      * If 'xAxis' or 'yAxis' is absent in componentTypeList, just ignore it in topology.
-     * If there is circle dependencey, Error will be thrown.
+     * If there is circular dependencey, Error will be thrown.
      */
 
     function enableTopologicalTravel(entity, dependencyGetter) {
@@ -15474,7 +15636,7 @@
           var errMsg = '';
 
           if ("development" !== 'production') {
-            errMsg = makePrintable('Circle dependency may exists: ', targetNameSet, targetNameList, fullNameList);
+            errMsg = makePrintable('Circular dependency may exists: ', targetNameSet, targetNameList, fullNameList);
           }
 
           throw new Error(errMsg);
@@ -16216,7 +16378,7 @@
      */
 
     function makeValueReadable(value, valueType, useUTC) {
-      var USER_READABLE_DEFUALT_TIME_PATTERN = 'yyyy-MM-dd hh:mm:ss';
+      var USER_READABLE_DEFUALT_TIME_PATTERN = '{yyyy}-{MM}-{dd} {hh}:{mm}:{ss}';
 
       function stringToUserReadable(str) {
         return str && trim(str) ? str : '-';
@@ -17620,6 +17782,59 @@
     var initBase;
     var OPTION_INNER_KEY = '\0_ec_inner';
     var OPTION_INNER_VALUE = 1;
+    var BUITIN_COMPONENTS_MAP = {
+      grid: 'GridComponent',
+      polar: 'PolarComponent',
+      geo: 'GeoComponent',
+      singleAxis: 'SingleAxisComponent',
+      parallel: 'ParallelComponent',
+      calendar: 'CalendarComponent',
+      graphic: 'GraphicComponent',
+      toolbox: 'ToolboxComponent',
+      tooltip: 'TooltipComponent',
+      axisPointer: 'AxisPointerComponent',
+      brush: 'BrushComponent',
+      title: 'TitleComponent',
+      timeline: 'TimelineComponent',
+      markPoint: 'MarkPointComponent',
+      markLine: 'MarkLineComponent',
+      markArea: 'MarkAreaComponent',
+      legend: 'LegendComponent',
+      dataZoom: 'DataZoomComponent',
+      visualMap: 'VisualMapComponent',
+      // aria: 'AriaComponent',
+      // dataset: 'DatasetComponent',
+      // Dependencies
+      xAxis: 'GridComponent',
+      yAxis: 'GridComponent',
+      angleAxis: 'PolarComponent',
+      radiusAxis: 'PolarComponent'
+    };
+    var BUILTIN_CHARTS_MAP = {
+      line: 'LineChart',
+      bar: 'BarChart',
+      pie: 'PieChart',
+      scatter: 'ScatterChart',
+      radar: 'RadarChart',
+      map: 'MapChart',
+      tree: 'TreeChart',
+      treemap: 'TreemapChart',
+      graph: 'GraphChart',
+      gauge: 'GaugeChart',
+      funnel: 'FunnelChart',
+      parallel: 'ParallelChart',
+      sankey: 'SankeyChart',
+      boxplot: 'BoxplotChart',
+      candlestick: 'CandlestickChart',
+      effectScatter: 'EffectScatterChart',
+      lines: 'LinesChart',
+      heatmap: 'HeatmapChart',
+      pictorialBar: 'PictorialBarChart',
+      themeRiver: 'ThemeRiverChart',
+      sunburst: 'SunburstChart',
+      custom: 'CustomChart'
+    };
+    var componetsMissingLogPrinted = {};
 
     var GlobalModel =
     /** @class */
@@ -17739,7 +17954,16 @@
           }
 
           if (!ComponentModel.hasClass(mainType)) {
-            // globalSettingTask.dirty();
+            if ("development" !== 'production') {
+              var componentImportName = BUITIN_COMPONENTS_MAP[mainType];
+
+              if (componentImportName && !componetsMissingLogPrinted[componentImportName]) {
+                error("Component " + mainType + " is used but not imported.\nimport { " + componentImportName + " } from 'echarts/components';\necharts.use([" + componentImportName + "]);");
+                componetsMissingLogPrinted[componentImportName] = true;
+              }
+            } // globalSettingTask.dirty();
+
+
             option[mainType] = option[mainType] == null ? clone(componentOption) : merge(option[mainType], componentOption, true);
           } else if (mainType) {
             newCmptTypes.push(mainType);
@@ -17795,7 +18019,28 @@
               // or it has been removed in previous `replaceMerge` and left a "hole" in this component index.
 
             } else {
-              var ComponentModelClass = ComponentModel.getClass(mainType, resultItem.keyInfo.subType, true);
+              var isSeriesType = mainType === 'series';
+              var ComponentModelClass = ComponentModel.getClass(mainType, resultItem.keyInfo.subType, !isSeriesType // Give a more detailed warn later if series don't exists
+              );
+
+              if (!ComponentModelClass) {
+                if ("development" !== 'production') {
+                  var subType = resultItem.keyInfo.subType;
+                  var seriesImportName = BUILTIN_CHARTS_MAP[subType];
+
+                  if (!componetsMissingLogPrinted[subType]) {
+                    componetsMissingLogPrinted[subType] = true;
+
+                    if (seriesImportName) {
+                      error("Series " + subType + " is used but not imported.\nimport { " + seriesImportName + " } from 'echarts/charts';\necharts.use([" + seriesImportName + "]);");
+                    } else {
+                      error("Unkown series " + subType);
+                    }
+                  }
+                }
+
+                return;
+              }
 
               if (componentModel && componentModel.constructor === ComponentModelClass) {
                 componentModel.name = resultItem.keyInfo.name; // componentModel.settingTask && componentModel.settingTask.dirty();
@@ -22290,7 +22535,7 @@
           data.each(function (idx) {
             var rawItem = data.getRawDataItem(idx);
 
-            if (typeof rawItem === 'object' && rawItem.selected) {
+            if (rawItem && rawItem.selected) {
               dataIndices.push(idx);
             }
           });
@@ -22856,15 +23101,23 @@
         var colorKey = getDefaultColorKey(seriesModel, stylePath);
         var color = globalStyle[colorKey]; // TODO style callback
 
-        var colorCallback = isFunction(color) ? color : null; // Get from color palette by default.
+        var colorCallback = isFunction(color) ? color : null;
+        var hasAutoColor = globalStyle.fill === 'auto' || globalStyle.stroke === 'auto'; // Get from color palette by default.
 
-        if (!globalStyle[colorKey] || colorCallback) {
+        if (!globalStyle[colorKey] || colorCallback || hasAutoColor) {
           // Note: if some series has color specified (e.g., by itemStyle.color), we DO NOT
           // make it effect palette. Bacause some scenarios users need to make some series
           // transparent or as background, which should better not effect the palette.
-          globalStyle[colorKey] = seriesModel.getColorFromPalette( // TODO series count changed.
+          var colorPalette = seriesModel.getColorFromPalette( // TODO series count changed.
           seriesModel.name, null, ecModel.getSeriesCount());
-          data.setVisual('colorFromPalette', true);
+
+          if (!globalStyle[colorKey]) {
+            globalStyle[colorKey] = colorPalette;
+            data.setVisual('colorFromPalette', true);
+          }
+
+          globalStyle.fill = globalStyle.fill === 'auto' || typeof globalStyle.fill === 'function' ? colorPalette : globalStyle.fill;
+          globalStyle.stroke = globalStyle.stroke === 'auto' || typeof globalStyle.stroke === 'function' ? colorPalette : globalStyle.stroke;
         }
 
         data.setVisual('style', globalStyle);
@@ -23021,7 +23274,9 @@
           fontWeight: opts.fontWeight,
           fontStyle: opts.fontStyle,
           fontFamily: opts.fontFamily
-        }
+        },
+        zlevel: opts.zlevel,
+        z: 10001
       });
       var labelRect = new Rect({
         style: {
@@ -23868,108 +24123,6 @@
     };
     theme.categoryAxis.splitLine.show = false;
 
-    function parseXML(svg) {
-        if (isString(svg)) {
-            var parser = new DOMParser();
-            svg = parser.parseFromString(svg, 'text/xml');
-        }
-        var svgNode = svg;
-        if (svgNode.nodeType === 9) {
-            svgNode = svgNode.firstChild;
-        }
-        while (svgNode.nodeName.toLowerCase() !== 'svg' || svgNode.nodeType !== 1) {
-            svgNode = svgNode.nextSibling;
-        }
-        return svgNode;
-    }
-
-    var storage = createHashMap();
-    var mapDataStorage = {
-      /**
-       * Compatible with previous `echarts.registerMap`.
-       * @usage
-       * ```js
-       * $.get('USA.json', function (geoJson) {
-       *     echarts.registerMap('USA', geoJson);
-       *     // Or
-       *     echarts.registerMap('USA', {
-       *         geoJson: geoJson,
-       *         specialAreas: {}
-       *     })
-       * });
-       *
-       * $.get('airport.svg', function (svg) {
-       *     echarts.registerMap('airport', {
-       *         svg: svg
-       *     }
-       * });
-       *
-       * echarts.registerMap('eu', [
-       *     {svg: eu-topographic.svg},
-       *     {geoJSON: eu.json}
-       * ])
-       * ```
-       */
-      registerMap: function (mapName, rawDef, rawSpecialAreas) {
-        var records;
-
-        if (isArray(rawDef)) {
-          records = rawDef;
-        } else if (rawDef.svg) {
-          records = [{
-            type: 'svg',
-            source: rawDef.svg,
-            specialAreas: rawDef.specialAreas
-          }];
-        } else {
-          // Backward compatibility.
-          var geoSource = rawDef.geoJson || rawDef.geoJSON;
-
-          if (geoSource && !rawDef.features) {
-            rawSpecialAreas = rawDef.specialAreas;
-            rawDef = geoSource;
-          }
-
-          records = [{
-            type: 'geoJSON',
-            source: rawDef,
-            specialAreas: rawSpecialAreas
-          }];
-        }
-
-        each(records, function (record) {
-          var type = record.type;
-          type === 'geoJson' && (type = record.type = 'geoJSON');
-          var parse = parsers[type];
-
-          if ("development" !== 'production') {
-            assert(parse, 'Illegal map type: ' + type);
-          }
-
-          parse(record);
-        });
-        return storage.set(mapName, records);
-      },
-      retrieveMap: function (mapName) {
-        return storage.get(mapName);
-      }
-    };
-    var parsers = {
-      geoJSON: function (record) {
-        var source = record.source;
-        record.geoJSON = !isString(source) ? source : typeof JSON !== 'undefined' && JSON.parse ? JSON.parse(source) : new Function('return (' + source + ');')();
-      },
-      // Only perform parse to XML object here, which might be time
-      // consiming for large SVG.
-      // Although convert XML to zrender element is also time consiming,
-      // if we do it here, the clone of zrender elements has to be
-      // required. So we do it once for each geo instance, util real
-      // performance issues call for optimizing it.
-      svg: function (record) {
-        record.svgXML = parseXML(record.source);
-      }
-    };
-
     /**
      * Usage of query:
      * `chart.on('click', query, handler);`
@@ -24102,13 +24255,16 @@
         var symbolSize = seriesModel.get('symbolSize');
         var keepAspect = seriesModel.get('symbolKeepAspect');
         var symbolRotate = seriesModel.get('symbolRotate');
+        var symbolOffset = seriesModel.get('symbolOffset');
         var hasSymbolTypeCallback = isFunction(symbolType);
         var hasSymbolSizeCallback = isFunction(symbolSize);
         var hasSymbolRotateCallback = isFunction(symbolRotate);
-        var hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback || hasSymbolRotateCallback;
+        var hasSymbolOffsetCallback = isFunction(symbolOffset);
+        var hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback || hasSymbolRotateCallback || hasSymbolOffsetCallback;
         var seriesSymbol = !hasSymbolTypeCallback && symbolType ? symbolType : seriesModel.defaultSymbol;
         var seriesSymbolSize = !hasSymbolSizeCallback ? symbolSize : null;
         var seriesSymbolRotate = !hasSymbolRotateCallback ? symbolRotate : null;
+        var seriesSymbolOffset = !hasSymbolOffsetCallback ? symbolOffset : null;
         data.setVisual({
           legendSymbol: seriesModel.legendSymbol || seriesSymbol,
           // If seting callback functions on `symbol` or `symbolSize`, for simplicity and avoiding
@@ -24118,7 +24274,8 @@
           symbol: seriesSymbol,
           symbolSize: seriesSymbolSize,
           symbolKeepAspect: keepAspect,
-          symbolRotate: seriesSymbolRotate
+          symbolRotate: seriesSymbolRotate,
+          symbolOffset: seriesSymbolOffset
         }); // Only visible series has each data be visual encoded
 
         if (ecModel.isSeriesFiltered(seriesModel)) {
@@ -24131,6 +24288,7 @@
           hasSymbolTypeCallback && data.setItemVisual(idx, 'symbol', symbolType(rawValue, params));
           hasSymbolSizeCallback && data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
           hasSymbolRotateCallback && data.setItemVisual(idx, 'symbolRotate', symbolRotate(rawValue, params));
+          hasSymbolOffsetCallback && data.setItemVisual(idx, 'symbolOffset', symbolOffset(rawValue, params));
         }
 
         return {
@@ -24159,6 +24317,7 @@
           var itemSymbolType = itemModel.getShallow('symbol', true);
           var itemSymbolSize = itemModel.getShallow('symbolSize', true);
           var itemSymbolRotate = itemModel.getShallow('symbolRotate', true);
+          var itemSymbolOffset = itemModel.getShallow('symbolOffset', true);
           var itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect', true); // If has item symbol
 
           if (itemSymbolType != null) {
@@ -24172,6 +24331,10 @@
 
           if (itemSymbolRotate != null) {
             data.setItemVisual(idx, 'symbolRotate', itemSymbolRotate);
+          }
+
+          if (itemSymbolOffset != null) {
+            data.setItemVisual(idx, 'symbolOffset', itemSymbolOffset);
           }
 
           if (itemSymbolKeepAspect != null) {
@@ -25257,6 +25420,8 @@
             labelGuideIgnore: labelGuide && labelGuide.ignore,
             x: dummyTransformable.x,
             y: dummyTransformable.y,
+            scaleX: dummyTransformable.scaleX,
+            scaleY: dummyTransformable.scaleY,
             rotation: dummyTransformable.rotation,
             style: {
               x: labelStyle.x,
@@ -25329,7 +25494,8 @@
 
           layoutOption = layoutOption || {};
           labelItem.computedLayoutOption = layoutOption;
-          var degreeToRadian = Math.PI / 180;
+          var degreeToRadian = Math.PI / 180; // TODO hostEl should always exists.
+          // Or label should not have parent because the x, y is all in global space.
 
           if (hostEl) {
             hostEl.setTextConfig({
@@ -25382,6 +25548,8 @@
           var labelLayoutStore = labelLayoutInnerStore(label);
           labelLayoutStore.needsUpdateLabelLine = needsUpdateLabelLine;
           label.rotation = layoutOption.rotate != null ? layoutOption.rotate * degreeToRadian : defaultLabelAttr.rotation;
+          label.scaleX = defaultLabelAttr.scaleX;
+          label.scaleY = defaultLabelAttr.scaleY;
 
           for (var k = 0; k < LABEL_OPTION_TO_STYLE_KEYS.length; k++) {
             var key = LABEL_OPTION_TO_STYLE_KEYS[k];
@@ -25878,9 +26046,7 @@
     // TODO Use function to build symbol path.
 
     var symbolCtors = {
-      // Use small height rect to simulate line.
-      // Avoid using stroke.
-      line: Rect,
+      line: Line,
       rect: Rect,
       roundRect: Rect,
       square: Rect,
@@ -25889,16 +26055,13 @@
       pin: Pin,
       arrow: Arrow,
       triangle: Triangle
-    }; // NOTICE Only use fill. No line!
-
+    };
     var symbolShapeMakers = {
       line: function (x, y, w, h, shape) {
-        var thickness = 2; // A thin line
-
-        shape.x = x;
-        shape.y = y + h / 2 - thickness / 2;
-        shape.width = w;
-        shape.height = thickness;
+        shape.x1 = x;
+        shape.y1 = y + h / 2;
+        shape.x2 = x + w;
+        shape.y2 = y + h / 2;
       },
       rect: function (x, y, w, h, shape) {
         shape.x = x;
@@ -25998,9 +26161,11 @@
 
         if (this.__isEmptyBrush) {
           symbolStyle.stroke = color;
-          symbolStyle.fill = innerColor || '#fff'; // TODO Same width with lineStyle in LineView.
+          symbolStyle.fill = innerColor || '#fff'; // TODO Same width with lineStyle in LineView
 
           symbolStyle.lineWidth = 2;
+        } else if (this.shape.symbolType === 'line') {
+          symbolStyle.stroke = color;
         } else {
           symbolStyle.fill = color;
         }
@@ -26157,7 +26322,8 @@
         var image = createOrUpdateImage(pattern.image, pattern.__image, el);
         if (isImageReady(image)) {
             var canvasPattern = ctx.createPattern(image, pattern.repeat || 'repeat');
-            if (typeof DOMMatrix === 'function') {
+            if (typeof DOMMatrix === 'function'
+                && canvasPattern.setTransform) {
                 var matrix = new DOMMatrix();
                 matrix.rotateSelf(0, 0, (pattern.rotation || 0) / Math.PI * 180);
                 matrix.scaleSelf((pattern.scaleX || 1), (pattern.scaleY || 1));
@@ -26400,7 +26566,8 @@
                 flushPathDrawn(ctx, scope);
                 styleChanged = true;
             }
-            ctx.globalAlpha = style.opacity == null ? DEFAULT_COMMON_STYLE.opacity : style.opacity;
+            var opacity = Math.max(Math.min(style.opacity, 1), 0);
+            ctx.globalAlpha = isNaN(opacity) ? DEFAULT_COMMON_STYLE.opacity : opacity;
         }
         if (forceSetAll || style.blend !== prevStyle.blend) {
             if (!styleChanged) {
@@ -27124,15 +27291,1704 @@
       });
     }
 
+    function parseXML(svg) {
+        if (isString(svg)) {
+            var parser = new DOMParser();
+            svg = parser.parseFromString(svg, 'text/xml');
+        }
+        var svgNode = svg;
+        if (svgNode.nodeType === 9) {
+            svgNode = svgNode.firstChild;
+        }
+        while (svgNode.nodeName.toLowerCase() !== 'svg' || svgNode.nodeType !== 1) {
+            svgNode = svgNode.nextSibling;
+        }
+        return svgNode;
+    }
+
+    var nodeParsers;
+    var INHERITABLE_STYLE_ATTRIBUTES_MAP = {
+        'fill': 'fill',
+        'stroke': 'stroke',
+        'stroke-width': 'lineWidth',
+        'opacity': 'opacity',
+        'fill-opacity': 'fillOpacity',
+        'stroke-opacity': 'strokeOpacity',
+        'stroke-dasharray': 'lineDash',
+        'stroke-dashoffset': 'lineDashOffset',
+        'stroke-linecap': 'lineCap',
+        'stroke-linejoin': 'lineJoin',
+        'stroke-miterlimit': 'miterLimit',
+        'font-family': 'fontFamily',
+        'font-size': 'fontSize',
+        'font-style': 'fontStyle',
+        'font-weight': 'fontWeight',
+        'text-anchor': 'textAlign',
+        'visibility': 'visibility',
+        'display': 'display'
+    };
+    var INHERITABLE_STYLE_ATTRIBUTES_MAP_KEYS = keys(INHERITABLE_STYLE_ATTRIBUTES_MAP);
+    var SELF_STYLE_ATTRIBUTES_MAP = {
+        'alignment-baseline': 'textBaseline',
+        'stop-color': 'stopColor'
+    };
+    var SELF_STYLE_ATTRIBUTES_MAP_KEYS = keys(SELF_STYLE_ATTRIBUTES_MAP);
+    var SVGParser = (function () {
+        function SVGParser() {
+            this._defs = {};
+            this._root = null;
+        }
+        SVGParser.prototype.parse = function (xml, opt) {
+            opt = opt || {};
+            var svg = parseXML(xml);
+            if (!svg) {
+                throw new Error('Illegal svg');
+            }
+            this._defsUsePending = [];
+            var root = new Group();
+            this._root = root;
+            var named = [];
+            var viewBox = svg.getAttribute('viewBox') || '';
+            var width = parseFloat((svg.getAttribute('width') || opt.width));
+            var height = parseFloat((svg.getAttribute('height') || opt.height));
+            isNaN(width) && (width = null);
+            isNaN(height) && (height = null);
+            parseAttributes(svg, root, null, true, false);
+            var child = svg.firstChild;
+            while (child) {
+                this._parseNode(child, root, named, null, false, false);
+                child = child.nextSibling;
+            }
+            applyDefs(this._defs, this._defsUsePending);
+            this._defsUsePending = [];
+            var viewBoxRect;
+            var viewBoxTransform;
+            if (viewBox) {
+                var viewBoxArr = splitNumberSequence(viewBox);
+                if (viewBoxArr.length >= 4) {
+                    viewBoxRect = {
+                        x: parseFloat((viewBoxArr[0] || 0)),
+                        y: parseFloat((viewBoxArr[1] || 0)),
+                        width: parseFloat(viewBoxArr[2]),
+                        height: parseFloat(viewBoxArr[3])
+                    };
+                }
+            }
+            if (viewBoxRect && width != null && height != null) {
+                viewBoxTransform = makeViewBoxTransform(viewBoxRect, { x: 0, y: 0, width: width, height: height });
+                if (!opt.ignoreViewBox) {
+                    var elRoot = root;
+                    root = new Group();
+                    root.add(elRoot);
+                    elRoot.scaleX = elRoot.scaleY = viewBoxTransform.scale;
+                    elRoot.x = viewBoxTransform.x;
+                    elRoot.y = viewBoxTransform.y;
+                }
+            }
+            if (!opt.ignoreRootClip && width != null && height != null) {
+                root.setClipPath(new Rect({
+                    shape: { x: 0, y: 0, width: width, height: height }
+                }));
+            }
+            return {
+                root: root,
+                width: width,
+                height: height,
+                viewBoxRect: viewBoxRect,
+                viewBoxTransform: viewBoxTransform,
+                named: named
+            };
+        };
+        SVGParser.prototype._parseNode = function (xmlNode, parentGroup, named, namedFrom, isInDefs, isInText) {
+            var nodeName = xmlNode.nodeName.toLowerCase();
+            var el;
+            var namedFromForSub = namedFrom;
+            if (nodeName === 'defs') {
+                isInDefs = true;
+            }
+            if (nodeName === 'text') {
+                isInText = true;
+            }
+            if (nodeName === 'defs' || nodeName === 'switch') {
+                el = parentGroup;
+            }
+            else {
+                if (!isInDefs) {
+                    var parser_1 = nodeParsers[nodeName];
+                    if (parser_1 && hasOwn(nodeParsers, nodeName)) {
+                        el = parser_1.call(this, xmlNode, parentGroup);
+                        var nameAttr = xmlNode.getAttribute('name');
+                        if (nameAttr) {
+                            var newNamed = {
+                                name: nameAttr,
+                                namedFrom: null,
+                                svgNodeTagLower: nodeName,
+                                el: el
+                            };
+                            named.push(newNamed);
+                            if (nodeName === 'g') {
+                                namedFromForSub = newNamed;
+                            }
+                        }
+                        else if (namedFrom) {
+                            named.push({
+                                name: namedFrom.name,
+                                namedFrom: namedFrom,
+                                svgNodeTagLower: nodeName,
+                                el: el
+                            });
+                        }
+                        parentGroup.add(el);
+                    }
+                }
+                var parser = paintServerParsers[nodeName];
+                if (parser && hasOwn(paintServerParsers, nodeName)) {
+                    var def = parser.call(this, xmlNode);
+                    var id = xmlNode.getAttribute('id');
+                    if (id) {
+                        this._defs[id] = def;
+                    }
+                }
+            }
+            if (el && el.isGroup) {
+                var child = xmlNode.firstChild;
+                while (child) {
+                    if (child.nodeType === 1) {
+                        this._parseNode(child, el, named, namedFromForSub, isInDefs, isInText);
+                    }
+                    else if (child.nodeType === 3 && isInText) {
+                        this._parseText(child, el);
+                    }
+                    child = child.nextSibling;
+                }
+            }
+        };
+        SVGParser.prototype._parseText = function (xmlNode, parentGroup) {
+            var text = new TSpan({
+                style: {
+                    text: xmlNode.textContent
+                },
+                silent: true,
+                x: this._textX || 0,
+                y: this._textY || 0
+            });
+            inheritStyle(parentGroup, text);
+            parseAttributes(xmlNode, text, this._defsUsePending, false, false);
+            applyTextAlignment(text, parentGroup);
+            var textStyle = text.style;
+            var fontSize = textStyle.fontSize;
+            if (fontSize && fontSize < 9) {
+                textStyle.fontSize = 9;
+                text.scaleX *= fontSize / 9;
+                text.scaleY *= fontSize / 9;
+            }
+            var font = (textStyle.fontSize || textStyle.fontFamily) && [
+                textStyle.fontStyle,
+                textStyle.fontWeight,
+                (textStyle.fontSize || 12) + 'px',
+                textStyle.fontFamily || 'sans-serif'
+            ].join(' ');
+            textStyle.font = font;
+            var rect = text.getBoundingRect();
+            this._textX += rect.width;
+            parentGroup.add(text);
+            return text;
+        };
+        SVGParser.internalField = (function () {
+            nodeParsers = {
+                'g': function (xmlNode, parentGroup) {
+                    var g = new Group();
+                    inheritStyle(parentGroup, g);
+                    parseAttributes(xmlNode, g, this._defsUsePending, false, false);
+                    return g;
+                },
+                'rect': function (xmlNode, parentGroup) {
+                    var rect = new Rect();
+                    inheritStyle(parentGroup, rect);
+                    parseAttributes(xmlNode, rect, this._defsUsePending, false, false);
+                    rect.setShape({
+                        x: parseFloat(xmlNode.getAttribute('x') || '0'),
+                        y: parseFloat(xmlNode.getAttribute('y') || '0'),
+                        width: parseFloat(xmlNode.getAttribute('width') || '0'),
+                        height: parseFloat(xmlNode.getAttribute('height') || '0')
+                    });
+                    rect.silent = true;
+                    return rect;
+                },
+                'circle': function (xmlNode, parentGroup) {
+                    var circle = new Circle();
+                    inheritStyle(parentGroup, circle);
+                    parseAttributes(xmlNode, circle, this._defsUsePending, false, false);
+                    circle.setShape({
+                        cx: parseFloat(xmlNode.getAttribute('cx') || '0'),
+                        cy: parseFloat(xmlNode.getAttribute('cy') || '0'),
+                        r: parseFloat(xmlNode.getAttribute('r') || '0')
+                    });
+                    circle.silent = true;
+                    return circle;
+                },
+                'line': function (xmlNode, parentGroup) {
+                    var line = new Line();
+                    inheritStyle(parentGroup, line);
+                    parseAttributes(xmlNode, line, this._defsUsePending, false, false);
+                    line.setShape({
+                        x1: parseFloat(xmlNode.getAttribute('x1') || '0'),
+                        y1: parseFloat(xmlNode.getAttribute('y1') || '0'),
+                        x2: parseFloat(xmlNode.getAttribute('x2') || '0'),
+                        y2: parseFloat(xmlNode.getAttribute('y2') || '0')
+                    });
+                    line.silent = true;
+                    return line;
+                },
+                'ellipse': function (xmlNode, parentGroup) {
+                    var ellipse = new Ellipse();
+                    inheritStyle(parentGroup, ellipse);
+                    parseAttributes(xmlNode, ellipse, this._defsUsePending, false, false);
+                    ellipse.setShape({
+                        cx: parseFloat(xmlNode.getAttribute('cx') || '0'),
+                        cy: parseFloat(xmlNode.getAttribute('cy') || '0'),
+                        rx: parseFloat(xmlNode.getAttribute('rx') || '0'),
+                        ry: parseFloat(xmlNode.getAttribute('ry') || '0')
+                    });
+                    ellipse.silent = true;
+                    return ellipse;
+                },
+                'polygon': function (xmlNode, parentGroup) {
+                    var pointsStr = xmlNode.getAttribute('points');
+                    var pointsArr;
+                    if (pointsStr) {
+                        pointsArr = parsePoints(pointsStr);
+                    }
+                    var polygon = new Polygon({
+                        shape: {
+                            points: pointsArr || []
+                        },
+                        silent: true
+                    });
+                    inheritStyle(parentGroup, polygon);
+                    parseAttributes(xmlNode, polygon, this._defsUsePending, false, false);
+                    return polygon;
+                },
+                'polyline': function (xmlNode, parentGroup) {
+                    var pointsStr = xmlNode.getAttribute('points');
+                    var pointsArr;
+                    if (pointsStr) {
+                        pointsArr = parsePoints(pointsStr);
+                    }
+                    var polyline = new Polyline({
+                        shape: {
+                            points: pointsArr || []
+                        },
+                        silent: true
+                    });
+                    inheritStyle(parentGroup, polyline);
+                    parseAttributes(xmlNode, polyline, this._defsUsePending, false, false);
+                    return polyline;
+                },
+                'image': function (xmlNode, parentGroup) {
+                    var img = new ZRImage();
+                    inheritStyle(parentGroup, img);
+                    parseAttributes(xmlNode, img, this._defsUsePending, false, false);
+                    img.setStyle({
+                        image: xmlNode.getAttribute('xlink:href'),
+                        x: +xmlNode.getAttribute('x'),
+                        y: +xmlNode.getAttribute('y'),
+                        width: +xmlNode.getAttribute('width'),
+                        height: +xmlNode.getAttribute('height')
+                    });
+                    img.silent = true;
+                    return img;
+                },
+                'text': function (xmlNode, parentGroup) {
+                    var x = xmlNode.getAttribute('x') || '0';
+                    var y = xmlNode.getAttribute('y') || '0';
+                    var dx = xmlNode.getAttribute('dx') || '0';
+                    var dy = xmlNode.getAttribute('dy') || '0';
+                    this._textX = parseFloat(x) + parseFloat(dx);
+                    this._textY = parseFloat(y) + parseFloat(dy);
+                    var g = new Group();
+                    inheritStyle(parentGroup, g);
+                    parseAttributes(xmlNode, g, this._defsUsePending, false, true);
+                    return g;
+                },
+                'tspan': function (xmlNode, parentGroup) {
+                    var x = xmlNode.getAttribute('x');
+                    var y = xmlNode.getAttribute('y');
+                    if (x != null) {
+                        this._textX = parseFloat(x);
+                    }
+                    if (y != null) {
+                        this._textY = parseFloat(y);
+                    }
+                    var dx = xmlNode.getAttribute('dx') || '0';
+                    var dy = xmlNode.getAttribute('dy') || '0';
+                    var g = new Group();
+                    inheritStyle(parentGroup, g);
+                    parseAttributes(xmlNode, g, this._defsUsePending, false, true);
+                    this._textX += parseFloat(dx);
+                    this._textY += parseFloat(dy);
+                    return g;
+                },
+                'path': function (xmlNode, parentGroup) {
+                    var d = xmlNode.getAttribute('d') || '';
+                    var path = createFromString(d);
+                    inheritStyle(parentGroup, path);
+                    parseAttributes(xmlNode, path, this._defsUsePending, false, false);
+                    path.silent = true;
+                    return path;
+                }
+            };
+        })();
+        return SVGParser;
+    }());
+    var paintServerParsers = {
+        'lineargradient': function (xmlNode) {
+            var x1 = parseInt(xmlNode.getAttribute('x1') || '0', 10);
+            var y1 = parseInt(xmlNode.getAttribute('y1') || '0', 10);
+            var x2 = parseInt(xmlNode.getAttribute('x2') || '10', 10);
+            var y2 = parseInt(xmlNode.getAttribute('y2') || '0', 10);
+            var gradient = new LinearGradient(x1, y1, x2, y2);
+            parsePaintServerUnit(xmlNode, gradient);
+            parseGradientColorStops(xmlNode, gradient);
+            return gradient;
+        },
+        'radialgradient': function (xmlNode) {
+            var cx = parseInt(xmlNode.getAttribute('cx') || '0', 10);
+            var cy = parseInt(xmlNode.getAttribute('cy') || '0', 10);
+            var r = parseInt(xmlNode.getAttribute('r') || '0', 10);
+            var gradient = new RadialGradient(cx, cy, r);
+            parsePaintServerUnit(xmlNode, gradient);
+            parseGradientColorStops(xmlNode, gradient);
+            return gradient;
+        }
+    };
+    function parsePaintServerUnit(xmlNode, gradient) {
+        var gradientUnits = xmlNode.getAttribute('gradientUnits');
+        if (gradientUnits === 'userSpaceOnUse') {
+            gradient.global = true;
+        }
+    }
+    function parseGradientColorStops(xmlNode, gradient) {
+        var stop = xmlNode.firstChild;
+        while (stop) {
+            if (stop.nodeType === 1
+                && stop.nodeName.toLocaleLowerCase() === 'stop') {
+                var offsetStr = stop.getAttribute('offset');
+                var offset = void 0;
+                if (offsetStr && offsetStr.indexOf('%') > 0) {
+                    offset = parseInt(offsetStr, 10) / 100;
+                }
+                else if (offsetStr) {
+                    offset = parseFloat(offsetStr);
+                }
+                else {
+                    offset = 0;
+                }
+                var styleVals = {};
+                parseInlineStyle(stop, styleVals, styleVals);
+                var stopColor = styleVals.stopColor
+                    || stop.getAttribute('stop-color')
+                    || '#000000';
+                gradient.colorStops.push({
+                    offset: offset,
+                    color: stopColor
+                });
+            }
+            stop = stop.nextSibling;
+        }
+    }
+    function inheritStyle(parent, child) {
+        if (parent && parent.__inheritedStyle) {
+            if (!child.__inheritedStyle) {
+                child.__inheritedStyle = {};
+            }
+            defaults(child.__inheritedStyle, parent.__inheritedStyle);
+        }
+    }
+    function parsePoints(pointsString) {
+        var list = splitNumberSequence(pointsString);
+        var points = [];
+        for (var i = 0; i < list.length; i += 2) {
+            var x = parseFloat(list[i]);
+            var y = parseFloat(list[i + 1]);
+            points.push([x, y]);
+        }
+        return points;
+    }
+    function parseAttributes(xmlNode, el, defsUsePending, onlyInlineStyle, isTextGroup) {
+        var disp = el;
+        var inheritedStyle = disp.__inheritedStyle = disp.__inheritedStyle || {};
+        var selfStyle = {};
+        if (xmlNode.nodeType === 1) {
+            parseTransformAttribute(xmlNode, el);
+            parseInlineStyle(xmlNode, inheritedStyle, selfStyle);
+            if (!onlyInlineStyle) {
+                parseAttributeStyle(xmlNode, inheritedStyle, selfStyle);
+            }
+        }
+        disp.style = disp.style || {};
+        if (inheritedStyle.fill != null) {
+            disp.style.fill = getFillStrokeStyle(disp, 'fill', inheritedStyle.fill, defsUsePending);
+        }
+        if (inheritedStyle.stroke != null) {
+            disp.style.stroke = getFillStrokeStyle(disp, 'stroke', inheritedStyle.stroke, defsUsePending);
+        }
+        each([
+            'lineWidth', 'opacity', 'fillOpacity', 'strokeOpacity', 'miterLimit', 'fontSize'
+        ], function (propName) {
+            if (inheritedStyle[propName] != null) {
+                disp.style[propName] = parseFloat(inheritedStyle[propName]);
+            }
+        });
+        each([
+            'lineDashOffset', 'lineCap', 'lineJoin', 'fontWeight', 'fontFamily', 'fontStyle', 'textAlign'
+        ], function (propName) {
+            if (inheritedStyle[propName] != null) {
+                disp.style[propName] = inheritedStyle[propName];
+            }
+        });
+        if (isTextGroup) {
+            disp.__selfStyle = selfStyle;
+        }
+        if (inheritedStyle.lineDash) {
+            disp.style.lineDash = map(splitNumberSequence(inheritedStyle.lineDash), function (str) {
+                return parseFloat(str);
+            });
+        }
+        if (inheritedStyle.visibility === 'hidden' || inheritedStyle.visibility === 'collapse') {
+            disp.invisible = true;
+        }
+        if (inheritedStyle.display === 'none') {
+            disp.ignore = true;
+        }
+        disp.z = -10000;
+        disp.z2 = -1000;
+    }
+    function applyTextAlignment(text, parentGroup) {
+        var parentSelfStyle = parentGroup.__selfStyle;
+        if (parentSelfStyle) {
+            var textBaseline = parentSelfStyle.textBaseline;
+            var zrTextBaseline = textBaseline;
+            if (!textBaseline || textBaseline === 'auto') {
+                zrTextBaseline = 'alphabetic';
+            }
+            else if (textBaseline === 'baseline') {
+                zrTextBaseline = 'alphabetic';
+            }
+            else if (textBaseline === 'before-edge' || textBaseline === 'text-before-edge') {
+                zrTextBaseline = 'top';
+            }
+            else if (textBaseline === 'after-edge' || textBaseline === 'text-after-edge') {
+                zrTextBaseline = 'bottom';
+            }
+            else if (textBaseline === 'central' || textBaseline === 'mathematical') {
+                zrTextBaseline = 'middle';
+            }
+            text.style.textBaseline = zrTextBaseline;
+        }
+        var parentInheritedStyle = parentGroup.__inheritedStyle;
+        if (parentInheritedStyle) {
+            var textAlign = parentInheritedStyle.textAlign;
+            var zrTextAlign = textAlign;
+            if (textAlign) {
+                if (textAlign === 'middle') {
+                    zrTextAlign = 'center';
+                }
+                text.style.textAlign = zrTextAlign;
+            }
+        }
+    }
+    var urlRegex = /^url\(\s*#(.*?)\)/;
+    function getFillStrokeStyle(el, method, str, defsUsePending) {
+        var urlMatch = str && str.match(urlRegex);
+        if (urlMatch) {
+            var url = trim(urlMatch[1]);
+            defsUsePending.push([el, method, url]);
+            return;
+        }
+        if (str === 'none') {
+            str = null;
+        }
+        return str;
+    }
+    function applyDefs(defs, defsUsePending) {
+        for (var i = 0; i < defsUsePending.length; i++) {
+            var item = defsUsePending[i];
+            item[0].style[item[1]] = defs[item[2]];
+        }
+    }
+    var numberReg$1 = /-?([0-9]*\.)?[0-9]+([eE]-?[0-9]+)?/g;
+    function splitNumberSequence(rawStr) {
+        return rawStr.match(numberReg$1) || [];
+    }
+    var transformRegex = /(translate|scale|rotate|skewX|skewY|matrix)\(([\-\s0-9\.eE,]*)\)/g;
+    function parseTransformAttribute(xmlNode, node) {
+        var transform = xmlNode.getAttribute('transform');
+        if (transform) {
+            transform = transform.replace(/,/g, ' ');
+            var transformOps_1 = [];
+            var mt = null;
+            transform.replace(transformRegex, function (str, type, value) {
+                transformOps_1.push(type, value);
+                return '';
+            });
+            for (var i = transformOps_1.length - 1; i > 0; i -= 2) {
+                var value = transformOps_1[i];
+                var type = transformOps_1[i - 1];
+                var valueArr = void 0;
+                mt = mt || create$1();
+                switch (type) {
+                    case 'translate':
+                        valueArr = splitNumberSequence(value);
+                        translate(mt, mt, [parseFloat(valueArr[0]), parseFloat(valueArr[1] || '0')]);
+                        break;
+                    case 'scale':
+                        valueArr = splitNumberSequence(value);
+                        scale$1(mt, mt, [parseFloat(valueArr[0]), parseFloat(valueArr[1] || valueArr[0])]);
+                        break;
+                    case 'rotate':
+                        valueArr = splitNumberSequence(value);
+                        rotate(mt, mt, -parseFloat(valueArr[0]) / 180 * Math.PI);
+                        break;
+                    case 'skew':
+                        valueArr = splitNumberSequence(value);
+                        console.warn('Skew transform is not supported yet');
+                        break;
+                    case 'matrix':
+                        valueArr = splitNumberSequence(value);
+                        mt[0] = parseFloat(valueArr[0]);
+                        mt[1] = parseFloat(valueArr[1]);
+                        mt[2] = parseFloat(valueArr[2]);
+                        mt[3] = parseFloat(valueArr[3]);
+                        mt[4] = parseFloat(valueArr[4]);
+                        mt[5] = parseFloat(valueArr[5]);
+                        break;
+                }
+            }
+            node.setLocalTransform(mt);
+        }
+    }
+    var styleRegex = /([^\s:;]+)\s*:\s*([^:;]+)/g;
+    function parseInlineStyle(xmlNode, inheritableStyleResult, selfStyleResult) {
+        var style = xmlNode.getAttribute('style');
+        if (!style) {
+            return;
+        }
+        styleRegex.lastIndex = 0;
+        var styleRegResult;
+        while ((styleRegResult = styleRegex.exec(style)) != null) {
+            var svgStlAttr = styleRegResult[1];
+            var zrInheritableStlAttr = hasOwn(INHERITABLE_STYLE_ATTRIBUTES_MAP, svgStlAttr)
+                ? INHERITABLE_STYLE_ATTRIBUTES_MAP[svgStlAttr]
+                : null;
+            if (zrInheritableStlAttr) {
+                inheritableStyleResult[zrInheritableStlAttr] = styleRegResult[2];
+            }
+            var zrSelfStlAttr = hasOwn(SELF_STYLE_ATTRIBUTES_MAP, svgStlAttr)
+                ? SELF_STYLE_ATTRIBUTES_MAP[svgStlAttr]
+                : null;
+            if (zrSelfStlAttr) {
+                selfStyleResult[zrSelfStlAttr] = styleRegResult[2];
+            }
+        }
+    }
+    function parseAttributeStyle(xmlNode, inheritableStyleResult, selfStyleResult) {
+        for (var i = 0; i < INHERITABLE_STYLE_ATTRIBUTES_MAP_KEYS.length; i++) {
+            var svgAttrName = INHERITABLE_STYLE_ATTRIBUTES_MAP_KEYS[i];
+            var attrValue = xmlNode.getAttribute(svgAttrName);
+            if (attrValue != null) {
+                inheritableStyleResult[INHERITABLE_STYLE_ATTRIBUTES_MAP[svgAttrName]] = attrValue;
+            }
+        }
+        for (var i = 0; i < SELF_STYLE_ATTRIBUTES_MAP_KEYS.length; i++) {
+            var svgAttrName = SELF_STYLE_ATTRIBUTES_MAP_KEYS[i];
+            var attrValue = xmlNode.getAttribute(svgAttrName);
+            if (attrValue != null) {
+                selfStyleResult[SELF_STYLE_ATTRIBUTES_MAP[svgAttrName]] = attrValue;
+            }
+        }
+    }
+    function makeViewBoxTransform(viewBoxRect, boundingRect) {
+        var scaleX = boundingRect.width / viewBoxRect.width;
+        var scaleY = boundingRect.height / viewBoxRect.height;
+        var scale = Math.min(scaleX, scaleY);
+        return {
+            scale: scale,
+            x: -(viewBoxRect.x + viewBoxRect.width / 2) * scale + (boundingRect.x + boundingRect.width / 2),
+            y: -(viewBoxRect.y + viewBoxRect.height / 2) * scale + (boundingRect.y + boundingRect.height / 2)
+        };
+    }
+    function parseSVG(xml, opt) {
+        var parser = new SVGParser();
+        return parser.parse(xml, opt);
+    }
+
+    var EPSILON$3 = 1e-8;
+    function isAroundEqual$1(a, b) {
+        return Math.abs(a - b) < EPSILON$3;
+    }
+    function contain$1(points, x, y) {
+        var w = 0;
+        var p = points[0];
+        if (!p) {
+            return false;
+        }
+        for (var i = 1; i < points.length; i++) {
+            var p2 = points[i];
+            w += windingLine(p[0], p[1], p2[0], p2[1], x, y);
+            p = p2;
+        }
+        var p0 = points[0];
+        if (!isAroundEqual$1(p[0], p0[0]) || !isAroundEqual$1(p[1], p0[1])) {
+            w += windingLine(p[0], p[1], p0[0], p0[1], x, y);
+        }
+        return w !== 0;
+    }
+
+    var TMP_TRANSFORM = [];
+
+    var Region =
+    /** @class */
+    function () {
+      function Region(name) {
+        this.name = name;
+      }
+      /**
+       * Get center point in data unit. That is,
+       * for GeoJSONRegion, the unit is lat/lng,
+       * for GeoSVGRegion, the unit is SVG local coord.
+       */
+
+
+      Region.prototype.getCenter = function () {
+        return;
+      };
+
+      return Region;
+    }();
+
+    var GeoJSONRegion =
+    /** @class */
+    function (_super) {
+      __extends(GeoJSONRegion, _super);
+
+      function GeoJSONRegion(name, geometries, cp) {
+        var _this = _super.call(this, name) || this;
+
+        _this.type = 'geoJSON';
+        _this.geometries = geometries;
+
+        if (!cp) {
+          var rect = _this.getBoundingRect();
+
+          cp = [rect.x + rect.width / 2, rect.y + rect.height / 2];
+        } else {
+          cp = [cp[0], cp[1]];
+        }
+
+        _this._center = cp;
+        return _this;
+      }
+
+      GeoJSONRegion.prototype.getBoundingRect = function () {
+        var rect = this._rect;
+
+        if (rect) {
+          return rect;
+        }
+
+        var MAX_NUMBER = Number.MAX_VALUE;
+        var min$1 = [MAX_NUMBER, MAX_NUMBER];
+        var max$1 = [-MAX_NUMBER, -MAX_NUMBER];
+        var min2 = [];
+        var max2 = [];
+        var geometries = this.geometries;
+        var i = 0;
+
+        for (; i < geometries.length; i++) {
+          // Only support polygon
+          if (geometries[i].type !== 'polygon') {
+            continue;
+          } // Doesn't consider hole
+
+
+          var exterior = geometries[i].exterior;
+          fromPoints(exterior, min2, max2);
+          min(min$1, min$1, min2);
+          max(max$1, max$1, max2);
+        } // No data
+
+
+        if (i === 0) {
+          min$1[0] = min$1[1] = max$1[0] = max$1[1] = 0;
+        }
+
+        return this._rect = new BoundingRect(min$1[0], min$1[1], max$1[0] - min$1[0], max$1[1] - min$1[1]);
+      };
+
+      GeoJSONRegion.prototype.contain = function (coord) {
+        var rect = this.getBoundingRect();
+        var geometries = this.geometries;
+
+        if (!rect.contain(coord[0], coord[1])) {
+          return false;
+        }
+
+        loopGeo: for (var i = 0, len = geometries.length; i < len; i++) {
+          // Only support polygon.
+          if (geometries[i].type !== 'polygon') {
+            continue;
+          }
+
+          var exterior = geometries[i].exterior;
+          var interiors = geometries[i].interiors;
+
+          if (contain$1(exterior, coord[0], coord[1])) {
+            // Not in the region if point is in the hole.
+            for (var k = 0; k < (interiors ? interiors.length : 0); k++) {
+              if (contain$1(interiors[k], coord[0], coord[1])) {
+                continue loopGeo;
+              }
+            }
+
+            return true;
+          }
+        }
+
+        return false;
+      };
+
+      GeoJSONRegion.prototype.transformTo = function (x, y, width, height) {
+        var rect = this.getBoundingRect();
+        var aspect = rect.width / rect.height;
+
+        if (!width) {
+          width = aspect * height;
+        } else if (!height) {
+          height = width / aspect;
+        }
+
+        var target = new BoundingRect(x, y, width, height);
+        var transform = rect.calculateTransform(target);
+        var geometries = this.geometries;
+
+        for (var i = 0; i < geometries.length; i++) {
+          // Only support polygon.
+          if (geometries[i].type !== 'polygon') {
+            continue;
+          }
+
+          var exterior = geometries[i].exterior;
+          var interiors = geometries[i].interiors;
+
+          for (var p = 0; p < exterior.length; p++) {
+            applyTransform(exterior[p], exterior[p], transform);
+          }
+
+          for (var h = 0; h < (interiors ? interiors.length : 0); h++) {
+            for (var p = 0; p < interiors[h].length; p++) {
+              applyTransform(interiors[h][p], interiors[h][p], transform);
+            }
+          }
+        }
+
+        rect = this._rect;
+        rect.copy(target); // Update center
+
+        this._center = [rect.x + rect.width / 2, rect.y + rect.height / 2];
+      };
+
+      GeoJSONRegion.prototype.cloneShallow = function (name) {
+        name == null && (name = this.name);
+        var newRegion = new GeoJSONRegion(name, this.geometries, this._center);
+        newRegion._rect = this._rect;
+        newRegion.transformTo = null; // Simply avoid to be called.
+
+        return newRegion;
+      };
+
+      GeoJSONRegion.prototype.getCenter = function () {
+        return this._center;
+      };
+
+      GeoJSONRegion.prototype.setCenter = function (center) {
+        this._center = center;
+      };
+
+      return GeoJSONRegion;
+    }(Region);
+
+    var GeoSVGRegion =
+    /** @class */
+    function (_super) {
+      __extends(GeoSVGRegion, _super);
+
+      function GeoSVGRegion(name, elOnlyForCalculate) {
+        var _this = _super.call(this, name) || this;
+
+        _this.type = 'geoSVG';
+        _this._elOnlyForCalculate = elOnlyForCalculate;
+        return _this;
+      }
+
+      GeoSVGRegion.prototype.getCenter = function () {
+        var center = this._center;
+
+        if (!center) {
+          // In most cases there are no need to calculate this center.
+          // So calculate only when called.
+          center = this._center = this._calculateCenter();
+        }
+
+        return center;
+      };
+
+      GeoSVGRegion.prototype._calculateCenter = function () {
+        var el = this._elOnlyForCalculate;
+        var rect = el.getBoundingRect();
+        var center = [rect.x + rect.width / 2, rect.y + rect.height / 2];
+        var mat = identity(TMP_TRANSFORM);
+        var target = el;
+
+        while (target && !target.isGeoSVGGraphicRoot) {
+          mul$1(mat, target.getLocalTransform(), mat);
+          target = target.parent;
+        }
+
+        invert(mat, mat);
+        applyTransform(center, center, mat);
+        return center;
+      };
+
+      return GeoSVGRegion;
+    }(Region);
+
+    /**
+     * "region available" means that: enable users to set attribute `name="xxx"` on those tags
+     * to make it be a region.
+     * 1. region styles and its label styles can be defined in echarts opton:
+     * ```js
+     * geo: {
+     *     regions: [{
+     *         name: 'xxx',
+     *         itemStyle: { ... },
+     *         label: { ... }
+     *     }, {
+     *         ...
+     *     },
+     *     ...]
+     * };
+     * ```
+     * 2. name can be duplicated in different SVG tag. All of the tags with the same name share
+     * a region option. For exampel if there are two <path> representing two lung lobes. They have
+     * no common parents but both of them need to display label "lung" inside.
+     */
+
+    var REGION_AVAILABLE_SVG_TAG_MAP = createHashMap(['rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'path', // <text> <tspan> are also enabled becuase some SVG might paint text itself,
+    // but still need to trigger events or tooltip.
+    'text', 'tspan', // <g> is also enabled because this case: if multiple tags share one name
+    // and need label displayed, every tags will display the name, which is not
+    // expected. So we can put them into a <g name="xxx">. Thereby only one label
+    // displayed and located based on the bounding rect of the <g>.
+    'g']);
+
+    var GeoSVGResource =
+    /** @class */
+    function () {
+      function GeoSVGResource(mapName, svg) {
+        this.type = 'geoSVG'; // All used graphics. key: hostKey, value: root
+
+        this._usedGraphicMap = createHashMap(); // All unused graphics.
+
+        this._freedGraphics = [];
+        this._mapName = mapName; // Only perform parse to XML object here, which might be time
+        // consiming for large SVG.
+        // Although convert XML to zrender element is also time consiming,
+        // if we do it here, the clone of zrender elements has to be
+        // required. So we do it once for each geo instance, util real
+        // performance issues call for optimizing it.
+
+        this._parsedXML = parseXML(svg);
+      }
+
+      GeoSVGResource.prototype.load = function ()
+      /* nameMap: NameMap */
+      {
+        // In the "load" stage, graphic need to be built to
+        // get boundingRect for geo coordinate system.
+        var firstGraphic = this._firstGraphic; // Create the return data structure only when first graphic created.
+        // Because they will be used in geo coordinate system update stage,
+        // and `regions` will be mounted at `geo` coordinate system,
+        // in which there is no "view" info, so that it should better not to
+        // make references to graphic elements.
+
+        if (!firstGraphic) {
+          firstGraphic = this._firstGraphic = this._buildGraphic(this._parsedXML);
+
+          this._freedGraphics.push(firstGraphic);
+
+          this._boundingRect = this._firstGraphic.boundingRect.clone(); // PENDING: `nameMap` will not be supported until some real requirement come.
+          // if (nameMap) {
+          //     named = applyNameMap(named, nameMap);
+          // }
+
+          var _a = createRegions(firstGraphic.named),
+              regions = _a.regions,
+              regionsMap = _a.regionsMap;
+
+          this._regions = regions;
+          this._regionsMap = regionsMap;
+        }
+
+        return {
+          boundingRect: this._boundingRect,
+          regions: this._regions,
+          regionsMap: this._regionsMap
+        };
+      };
+
+      GeoSVGResource.prototype._buildGraphic = function (svgXML) {
+        var result;
+        var rootFromParse;
+
+        try {
+          result = svgXML && parseSVG(svgXML, {
+            ignoreViewBox: true,
+            ignoreRootClip: true
+          }) || {};
+          rootFromParse = result.root;
+          assert(rootFromParse != null);
+        } catch (e) {
+          throw new Error('Invalid svg format\n' + e.message);
+        } // Note: we keep the covenant that the root has no transform. So always add an extra root.
+
+
+        var root = new Group();
+        root.add(rootFromParse);
+        root.isGeoSVGGraphicRoot = true; // [THE_RULE_OF_VIEWPORT_AND_VIEWBOX]
+        //
+        // Consider: `<svg width="..." height="..." viewBox="...">`
+        // - the `width/height` we call it `svgWidth/svgHeight` for short.
+        // - `(0, 0, svgWidth, svgHeight)` defines the viewport of the SVG, or say,
+        //   "viewport boundingRect", or `boundingRect` for short.
+        // - `viewBox` defines the transform from the real content ot the viewport.
+        //   `viewBox` has the same unit as the content of SVG.
+        //   If `viewBox` exists, a transform is defined, so the unit of `svgWidth/svgHeight` become
+        //   different from the content of SVG. Otherwise, they are the same.
+        //
+        // If both `svgWidth/svgHeight/viewBox` are specified in a SVG file, the transform rule will be:
+        // 0. `boundingRect` is `(0, 0, svgWidth, svgHeight)`. Set it to Geo['_rect'] (View['_rect']).
+        // 1. Make a transform from `viewBox` to `boundingRect`.
+        //    Note: only suport `preserveAspectRatio 'xMidYMid'` here. That is, this transform will preserve
+        //    the aspect ratio.
+        // 2. Make a transform from boundingRect to Geo['_viewRect'] (View['_viewRect'])
+        //    (`Geo`/`View` will do this job).
+        //    Note: this transform might not preserve aspect radio, which depending on how users specify
+        //    viewRect in echarts option (e.g., `geo.left/top/width/height` will not preserve aspect ratio,
+        //    but `geo.layoutCenter/layoutSize` will preserve aspect ratio).
+        //
+        // If `svgWidth/svgHeight` not specified, we use `viewBox` as the `boundingRect` to make the SVG
+        // layout look good.
+        //
+        // If neither `svgWidth/svgHeight` nor `viewBox` are not specified, we calculate the boundingRect
+        // of the SVG content and use them to make SVG layout look good.
+
+        var svgWidth = result.width;
+        var svgHeight = result.height;
+        var viewBoxRect = result.viewBoxRect;
+        var boundingRect = this._boundingRect;
+
+        if (!boundingRect) {
+          var bRectX = void 0;
+          var bRectY = void 0;
+          var bRectWidth = void 0;
+          var bRectHeight = void 0;
+
+          if (svgWidth != null) {
+            bRectX = 0;
+            bRectWidth = svgWidth;
+          } else if (viewBoxRect) {
+            bRectX = viewBoxRect.x;
+            bRectWidth = viewBoxRect.width;
+          }
+
+          if (svgHeight != null) {
+            bRectY = 0;
+            bRectHeight = svgHeight;
+          } else if (viewBoxRect) {
+            bRectY = viewBoxRect.y;
+            bRectHeight = viewBoxRect.height;
+          } // If both viewBox and svgWidth/svgHeight not specified,
+          // we have to determine how to layout those element to make them look good.
+
+
+          if (bRectX == null || bRectY == null) {
+            var calculatedBoundingRect = rootFromParse.getBoundingRect();
+
+            if (bRectX == null) {
+              bRectX = calculatedBoundingRect.x;
+              bRectWidth = calculatedBoundingRect.width;
+            }
+
+            if (bRectY == null) {
+              bRectY = calculatedBoundingRect.y;
+              bRectHeight = calculatedBoundingRect.height;
+            }
+          }
+
+          boundingRect = this._boundingRect = new BoundingRect(bRectX, bRectY, bRectWidth, bRectHeight);
+        }
+
+        if (viewBoxRect) {
+          var viewBoxTransform = makeViewBoxTransform(viewBoxRect, boundingRect); // Only support `preserveAspectRatio 'xMidYMid'`
+
+          rootFromParse.scaleX = rootFromParse.scaleY = viewBoxTransform.scale;
+          rootFromParse.x = viewBoxTransform.x;
+          rootFromParse.y = viewBoxTransform.y;
+        } // SVG needs to clip based on `viewBox`. And some SVG files really rely on this feature.
+        // They do not strictly confine all of the content inside a display rect, but deliberately
+        // use a `viewBox` to define a displayable rect.
+        // PENDING:
+        // The drawback of the `setClipPath` here is: the region label (genereted by echarts) near the
+        // edge might also be clipped, because region labels are put as `textContent` of the SVG path.
+
+
+        root.setClipPath(new Rect({
+          shape: boundingRect.plain()
+        }));
+        var named = [];
+        each(result.named, function (namedItem) {
+          if (REGION_AVAILABLE_SVG_TAG_MAP.get(namedItem.svgNodeTagLower) != null) {
+            named.push(namedItem);
+            setSilent(namedItem.el);
+          }
+        });
+        return {
+          root: root,
+          boundingRect: boundingRect,
+          named: named
+        };
+      };
+      /**
+       * Consider:
+       * (1) One graphic element can not be shared by different `geoView` running simultaneously.
+       *     Notice, also need to consider multiple echarts instances share a `mapRecord`.
+       * (2) Converting SVG to graphic elements is time consuming.
+       * (3) In the current architecture, `load` should be called frequently to get boundingRect,
+       *     and it is called without view info.
+       * So we maintain graphic elements in this module, and enables `view` to use/return these
+       * graphics from/to the pool with it's uid.
+       */
+
+
+      GeoSVGResource.prototype.useGraphic = function (hostKey
+      /*, nameMap: NameMap */
+      ) {
+        var usedRootMap = this._usedGraphicMap;
+        var svgGraphic = usedRootMap.get(hostKey);
+
+        if (svgGraphic) {
+          return svgGraphic;
+        }
+
+        svgGraphic = this._freedGraphics.pop() // use the first boundingRect to avoid duplicated boundingRect calculation.
+        || this._buildGraphic(this._parsedXML);
+        usedRootMap.set(hostKey, svgGraphic); // PENDING: `nameMap` will not be supported until some real requirement come.
+        // `nameMap` can only be obtained from echarts option.
+        // The original `named` must not be modified.
+        // if (nameMap) {
+        //     svgGraphic = extend({}, svgGraphic);
+        //     svgGraphic.named = applyNameMap(svgGraphic.named, nameMap);
+        // }
+
+        return svgGraphic;
+      };
+
+      GeoSVGResource.prototype.freeGraphic = function (hostKey) {
+        var usedRootMap = this._usedGraphicMap;
+        var svgGraphic = usedRootMap.get(hostKey);
+
+        if (svgGraphic) {
+          usedRootMap.removeKey(hostKey);
+
+          this._freedGraphics.push(svgGraphic);
+        }
+      };
+
+      return GeoSVGResource;
+    }();
+
+    function setSilent(el) {
+      // Only named element has silent: false, other elements should
+      // act as background and has no user interaction.
+      el.silent = false; // text|tspan will be converted to group.
+
+      if (el.isGroup) {
+        el.traverse(function (child) {
+          child.silent = false;
+        });
+      }
+    }
+
+    function createRegions(named) {
+      var regions = [];
+      var regionsMap = createHashMap(); // Create resions only for the first graphic.
+
+      each(named, function (namedItem) {
+        // Region has feature to calculate center for tooltip or other features.
+        // If there is a <g name="xxx">, the center should be the center of the
+        // bounding rect of the g.
+        if (namedItem.namedFrom != null) {
+          return;
+        }
+
+        var region = new GeoSVGRegion(namedItem.name, namedItem.el); // PENDING: if `nameMap` supported, this region can not be mounted on
+        // `this`, but can only be created each time `load()` called.
+
+        regions.push(region); // PENDING: if multiple tag named with the same name, only one will be
+        // found by `_regionsMap`. `_regionsMap` is used to find a coordinate
+        // by name. We use `region.getCenter()` as the coordinate.
+
+        regionsMap.set(namedItem.name, region);
+      });
+      return {
+        regions: regions,
+        regionsMap: regionsMap
+      };
+    } // PENDING: `nameMap` will not be supported until some real requirement come.
+    // /**
+    //  * Use the alias in geoNameMap.
+    //  * The input `named` must not be modified.
+    //  */
+    // function applyNameMap(
+    //     named: GeoSVGGraphicRecord['named'],
+    //     nameMap: NameMap
+    // ): GeoSVGGraphicRecord['named'] {
+    //     const result = [] as GeoSVGGraphicRecord['named'];
+    //     for (let i = 0; i < named.length; i++) {
+    //         let regionGraphic = named[i];
+    //         const name = regionGraphic.name;
+    //         if (nameMap && nameMap.hasOwnProperty(name)) {
+    //             regionGraphic = extend({}, regionGraphic);
+    //             regionGraphic.name = name;
+    //         }
+    //         result.push(regionGraphic);
+    //     }
+    //     return result;
+    // }
+
+    function decode(json) {
+      if (!json.UTF8Encoding) {
+        return json;
+      }
+
+      var jsonCompressed = json;
+      var encodeScale = jsonCompressed.UTF8Scale;
+
+      if (encodeScale == null) {
+        encodeScale = 1024;
+      }
+
+      var features = jsonCompressed.features;
+
+      for (var f = 0; f < features.length; f++) {
+        var feature = features[f];
+        var geometry = feature.geometry;
+
+        if (geometry.type === 'Polygon') {
+          var coordinates = geometry.coordinates;
+
+          for (var c = 0; c < coordinates.length; c++) {
+            coordinates[c] = decodePolygon(coordinates[c], geometry.encodeOffsets[c], encodeScale);
+          }
+        } else if (geometry.type === 'MultiPolygon') {
+          var coordinates = geometry.coordinates;
+
+          for (var c = 0; c < coordinates.length; c++) {
+            var coordinate = coordinates[c];
+
+            for (var c2 = 0; c2 < coordinate.length; c2++) {
+              coordinate[c2] = decodePolygon(coordinate[c2], geometry.encodeOffsets[c][c2], encodeScale);
+            }
+          }
+        }
+      } // Has been decoded
+
+
+      jsonCompressed.UTF8Encoding = false;
+      return jsonCompressed;
+    }
+
+    function decodePolygon(coordinate, encodeOffsets, encodeScale) {
+      var result = [];
+      var prevX = encodeOffsets[0];
+      var prevY = encodeOffsets[1];
+
+      for (var i = 0; i < coordinate.length; i += 2) {
+        var x = coordinate.charCodeAt(i) - 64;
+        var y = coordinate.charCodeAt(i + 1) - 64; // ZigZag decoding
+
+        x = x >> 1 ^ -(x & 1);
+        y = y >> 1 ^ -(y & 1); // Delta deocding
+
+        x += prevX;
+        y += prevY;
+        prevX = x;
+        prevY = y; // Dequantize
+
+        result.push([x / encodeScale, y / encodeScale]);
+      }
+
+      return result;
+    }
+
+    function parseGeoJSON(geoJson, nameProperty) {
+      geoJson = decode(geoJson);
+      return map(filter(geoJson.features, function (featureObj) {
+        // Output of mapshaper may have geometry null
+        return featureObj.geometry && featureObj.properties && featureObj.geometry.coordinates.length > 0;
+      }), function (featureObj) {
+        var properties = featureObj.properties;
+        var geo = featureObj.geometry;
+        var geometries = [];
+
+        if (geo.type === 'Polygon') {
+          var coordinates = geo.coordinates;
+          geometries.push({
+            type: 'polygon',
+            // According to the GeoJSON specification.
+            // First must be exterior, and the rest are all interior(holes).
+            exterior: coordinates[0],
+            interiors: coordinates.slice(1)
+          });
+        }
+
+        if (geo.type === 'MultiPolygon') {
+          var coordinates = geo.coordinates;
+          each(coordinates, function (item) {
+            if (item[0]) {
+              geometries.push({
+                type: 'polygon',
+                exterior: item[0],
+                interiors: item.slice(1)
+              });
+            }
+          });
+        }
+
+        var region = new GeoJSONRegion(properties[nameProperty || 'name'], geometries, properties.cp);
+        region.properties = properties;
+        return region;
+      });
+    }
+
+    var geoCoord = [126, 25];
+    var points$1 = [[[0, 3.5], [7, 11.2], [15, 11.9], [30, 7], [42, 0.7], [52, 0.7], [56, 7.7], [59, 0.7], [64, 0.7], [64, 0], [5, 0], [0, 3.5]], [[13, 16.1], [19, 14.7], [16, 21.7], [11, 23.1], [13, 16.1]], [[12, 32.2], [14, 38.5], [15, 38.5], [13, 32.2], [12, 32.2]], [[16, 47.6], [12, 53.2], [13, 53.2], [18, 47.6], [16, 47.6]], [[6, 64.4], [8, 70], [9, 70], [8, 64.4], [6, 64.4]], [[23, 82.6], [29, 79.8], [30, 79.8], [25, 82.6], [23, 82.6]], [[37, 70.7], [43, 62.3], [44, 62.3], [39, 70.7], [37, 70.7]], [[48, 51.1], [51, 45.5], [53, 45.5], [50, 51.1], [48, 51.1]], [[51, 35], [51, 28.7], [53, 28.7], [53, 35], [51, 35]], [[52, 22.4], [55, 17.5], [56, 17.5], [53, 22.4], [52, 22.4]], [[58, 12.6], [62, 7], [63, 7], [60, 12.6], [58, 12.6]], [[0, 3.5], [0, 93.1], [64, 93.1], [64, 0], [63, 0], [63, 92.4], [1, 92.4], [1, 3.5], [0, 3.5]]];
+
+    for (var i = 0; i < points$1.length; i++) {
+      for (var k = 0; k < points$1[i].length; k++) {
+        points$1[i][k][0] /= 10.5;
+        points$1[i][k][1] /= -10.5 / 0.75;
+        points$1[i][k][0] += geoCoord[0];
+        points$1[i][k][1] += geoCoord[1];
+      }
+    }
+
+    function fixNanhai(mapType, regions) {
+      if (mapType === 'china') {
+        regions.push(new GeoJSONRegion('南海诸岛', map(points$1, function (exterior) {
+          return {
+            type: 'polygon',
+            exterior: exterior
+          };
+        }), geoCoord));
+      }
+    }
+
+    /*
+    * Licensed to the Apache Software Foundation (ASF) under one
+    * or more contributor license agreements.  See the NOTICE file
+    * distributed with this work for additional information
+    * regarding copyright ownership.  The ASF licenses this file
+    * to you under the Apache License, Version 2.0 (the
+    * "License"); you may not use this file except in compliance
+    * with the License.  You may obtain a copy of the License at
+    *
+    *   http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing,
+    * software distributed under the License is distributed on an
+    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    * KIND, either express or implied.  See the License for the
+    * specific language governing permissions and limitations
+    * under the License.
+    */
+
+
+    /**
+     * AUTO-GENERATED FILE. DO NOT MODIFY.
+     */
+
+    /*
+    * Licensed to the Apache Software Foundation (ASF) under one
+    * or more contributor license agreements.  See the NOTICE file
+    * distributed with this work for additional information
+    * regarding copyright ownership.  The ASF licenses this file
+    * to you under the Apache License, Version 2.0 (the
+    * "License"); you may not use this file except in compliance
+    * with the License.  You may obtain a copy of the License at
+    *
+    *   http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing,
+    * software distributed under the License is distributed on an
+    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    * KIND, either express or implied.  See the License for the
+    * specific language governing permissions and limitations
+    * under the License.
+    */
+    var coordsOffsetMap = {
+      '南海诸岛': [32, 80],
+      // 全国
+      '广东': [0, -10],
+      '香港': [10, 5],
+      '澳门': [-10, 10],
+      //'北京': [-10, 0],
+      '天津': [5, 5]
+    };
+    function fixTextCoords(mapType, region) {
+      if (mapType === 'china') {
+        var coordFix = coordsOffsetMap[region.name];
+
+        if (coordFix) {
+          var cp = region.getCenter();
+          cp[0] += coordFix[0] / 10.5;
+          cp[1] += -coordFix[1] / (10.5 / 0.75);
+          region.setCenter(cp);
+        }
+      }
+    }
+
+    /*
+    * Licensed to the Apache Software Foundation (ASF) under one
+    * or more contributor license agreements.  See the NOTICE file
+    * distributed with this work for additional information
+    * regarding copyright ownership.  The ASF licenses this file
+    * to you under the Apache License, Version 2.0 (the
+    * "License"); you may not use this file except in compliance
+    * with the License.  You may obtain a copy of the License at
+    *
+    *   http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing,
+    * software distributed under the License is distributed on an
+    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    * KIND, either express or implied.  See the License for the
+    * specific language governing permissions and limitations
+    * under the License.
+    */
+
+
+    /**
+     * AUTO-GENERATED FILE. DO NOT MODIFY.
+     */
+
+    /*
+    * Licensed to the Apache Software Foundation (ASF) under one
+    * or more contributor license agreements.  See the NOTICE file
+    * distributed with this work for additional information
+    * regarding copyright ownership.  The ASF licenses this file
+    * to you under the Apache License, Version 2.0 (the
+    * "License"); you may not use this file except in compliance
+    * with the License.  You may obtain a copy of the License at
+    *
+    *   http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing,
+    * software distributed under the License is distributed on an
+    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    * KIND, either express or implied.  See the License for the
+    * specific language governing permissions and limitations
+    * under the License.
+    */
+    var geoCoordMap = {
+      'Russia': [100, 60],
+      'United States': [-99, 38],
+      'United States of America': [-99, 38]
+    };
+    function fixGeoCoords(mapType, region) {
+      if (mapType === 'world') {
+        var geoCoord = geoCoordMap[region.name];
+
+        if (geoCoord) {
+          var cp = [geoCoord[0], geoCoord[1]];
+          region.setCenter(cp);
+        }
+      }
+    }
+
+    /*
+    * Licensed to the Apache Software Foundation (ASF) under one
+    * or more contributor license agreements.  See the NOTICE file
+    * distributed with this work for additional information
+    * regarding copyright ownership.  The ASF licenses this file
+    * to you under the Apache License, Version 2.0 (the
+    * "License"); you may not use this file except in compliance
+    * with the License.  You may obtain a copy of the License at
+    *
+    *   http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing,
+    * software distributed under the License is distributed on an
+    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    * KIND, either express or implied.  See the License for the
+    * specific language governing permissions and limitations
+    * under the License.
+    */
+
+
+    /**
+     * AUTO-GENERATED FILE. DO NOT MODIFY.
+     */
+
+    /*
+    * Licensed to the Apache Software Foundation (ASF) under one
+    * or more contributor license agreements.  See the NOTICE file
+    * distributed with this work for additional information
+    * regarding copyright ownership.  The ASF licenses this file
+    * to you under the Apache License, Version 2.0 (the
+    * "License"); you may not use this file except in compliance
+    * with the License.  You may obtain a copy of the License at
+    *
+    *   http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing,
+    * software distributed under the License is distributed on an
+    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    * KIND, either express or implied.  See the License for the
+    * specific language governing permissions and limitations
+    * under the License.
+    */
+    // Fix for 钓鱼岛
+    // let Region = require('../Region');
+    // let zrUtil = require('zrender/lib/core/util');
+    // let geoCoord = [126, 25];
+    var points$2 = [[[123.45165252685547, 25.73527164402261], [123.49731445312499, 25.73527164402261], [123.49731445312499, 25.750734064600884], [123.45165252685547, 25.750734064600884], [123.45165252685547, 25.73527164402261]]];
+    function fixDiaoyuIsland(mapType, region) {
+      if (mapType === 'china' && region.name === '台湾') {
+        region.geometries.push({
+          type: 'polygon',
+          exterior: points$2[0]
+        });
+      }
+    }
+
+    var DEFAULT_NAME_PROPERTY = 'name';
+
+    var GeoJSONResource =
+    /** @class */
+    function () {
+      function GeoJSONResource(mapName, geoJSON, specialAreas) {
+        this.type = 'geoJSON';
+        this._parsedMap = createHashMap();
+        this._mapName = mapName;
+        this._specialAreas = specialAreas; // PENDING: delay the parse to the first usage to rapid up the FMP?
+
+        this._geoJSON = parseInput(geoJSON);
+      }
+      /**
+       * @param nameMap can be null/undefined
+       * @param nameProperty can be null/undefined
+       */
+
+
+      GeoJSONResource.prototype.load = function (nameMap, nameProperty) {
+        nameProperty = nameProperty || DEFAULT_NAME_PROPERTY;
+
+        var parsed = this._parsedMap.get(nameProperty);
+
+        if (!parsed) {
+          var rawRegions = this._parseToRegions(nameProperty);
+
+          parsed = this._parsedMap.set(nameProperty, {
+            regions: rawRegions,
+            boundingRect: calculateBoundingRect(rawRegions)
+          });
+        }
+
+        var regionsMap = createHashMap();
+        var finalRegions = [];
+        each(parsed.regions, function (region) {
+          var regionName = region.name; // Try use the alias in geoNameMap
+
+          if (nameMap && nameMap.hasOwnProperty(regionName)) {
+            region = region.cloneShallow(regionName = nameMap[regionName]);
+          }
+
+          finalRegions.push(region);
+          regionsMap.set(regionName, region);
+        });
+        return {
+          regions: finalRegions,
+          boundingRect: parsed.boundingRect || new BoundingRect(0, 0, 0, 0),
+          regionsMap: regionsMap
+        };
+      };
+
+      GeoJSONResource.prototype._parseToRegions = function (nameProperty) {
+        var mapName = this._mapName;
+        var geoJSON = this._geoJSON;
+        var rawRegions; // https://jsperf.com/try-catch-performance-overhead
+
+        try {
+          rawRegions = geoJSON ? parseGeoJSON(geoJSON, nameProperty) : [];
+        } catch (e) {
+          throw new Error('Invalid geoJson format\n' + e.message);
+        }
+
+        fixNanhai(mapName, rawRegions);
+        each(rawRegions, function (region) {
+          var regionName = region.name;
+          fixTextCoords(mapName, region);
+          fixGeoCoords(mapName, region);
+          fixDiaoyuIsland(mapName, region); // Some area like Alaska in USA map needs to be tansformed
+          // to look better
+
+          var specialArea = this._specialAreas && this._specialAreas[regionName];
+
+          if (specialArea) {
+            region.transformTo(specialArea.left, specialArea.top, specialArea.width, specialArea.height);
+          }
+        }, this);
+        return rawRegions;
+      };
+      /**
+       * Only for exporting to users.
+       * **MUST NOT** used internally.
+       */
+
+
+      GeoJSONResource.prototype.getMapForUser = function () {
+        return {
+          // For backward compatibility, use geoJson
+          // PENDING: it has been returning them without clone.
+          // do we need to avoid outsite modification?
+          geoJson: this._geoJSON,
+          geoJSON: this._geoJSON,
+          specialAreas: this._specialAreas
+        };
+      };
+
+      return GeoJSONResource;
+    }();
+
+    function calculateBoundingRect(regions) {
+      var rect;
+
+      for (var i = 0; i < regions.length; i++) {
+        var regionRect = regions[i].getBoundingRect();
+        rect = rect || regionRect.clone();
+        rect.union(regionRect);
+      }
+
+      return rect;
+    }
+
+    function parseInput(source) {
+      return !isString(source) ? source : typeof JSON !== 'undefined' && JSON.parse ? JSON.parse(source) : new Function('return (' + source + ');')();
+    }
+
+    var storage = createHashMap();
+    var geoSourceManager = {
+      /**
+       * Compatible with previous `echarts.registerMap`.
+       *
+       * @usage
+       * ```js
+       *
+       * echarts.registerMap('USA', geoJson, specialAreas);
+       *
+       * echarts.registerMap('USA', {
+       *     geoJson: geoJson,
+       *     specialAreas: {...}
+       * });
+       * echarts.registerMap('USA', {
+       *     geoJSON: geoJson,
+       *     specialAreas: {...}
+       * });
+       *
+       * echarts.registerMap('airport', {
+       *     svg: svg
+       * }
+       * ```
+       *
+       * Note:
+       * Do not support that register multiple geoJSON or SVG
+       * one map name. Because different geoJSON and SVG have
+       * different unit. It's not easy to make sure how those
+       * units are mapping/normalize.
+       * If intending to use multiple geoJSON or SVG, we can
+       * use multiple geo coordinate system.
+       */
+      registerMap: function (mapName, rawDef, rawSpecialAreas) {
+        if (rawDef.svg) {
+          var resource = new GeoSVGResource(mapName, rawDef.svg);
+          storage.set(mapName, resource);
+        } else {
+          // Recommend:
+          //     echarts.registerMap('eu', { geoJSON: xxx, specialAreas: xxx });
+          // Backward compatibility:
+          //     echarts.registerMap('eu', geoJSON, specialAreas);
+          //     echarts.registerMap('eu', { geoJson: xxx, specialAreas: xxx });
+          var geoJSON = rawDef.geoJson || rawDef.geoJSON;
+
+          if (geoJSON && !rawDef.features) {
+            rawSpecialAreas = rawDef.specialAreas;
+          } else {
+            geoJSON = rawDef;
+          }
+
+          var resource = new GeoJSONResource(mapName, geoJSON, rawSpecialAreas);
+          storage.set(mapName, resource);
+        }
+      },
+      getGeoResource: function (mapName) {
+        return storage.get(mapName);
+      },
+
+      /**
+       * Only for exporting to users.
+       * **MUST NOT** used internally.
+       */
+      getMapForUser: function (mapName) {
+        var resource = storage.get(mapName); // Do not support return SVG until some real requirement come.
+
+        return resource && resource.type === 'geoJSON' && resource.getMapForUser();
+      },
+      load: function (mapName, nameMap, nameProperty) {
+        var resource = storage.get(mapName);
+
+        if (!resource) {
+          if ("development" !== 'production') {
+            console.error('Map ' + mapName + ' not exists. The GeoJSON of the map must be provided.');
+          }
+
+          return;
+        }
+
+        return resource.load(nameMap, nameProperty);
+      }
+    };
+
     var assert$1 = assert;
     var each$3 = each;
     var isFunction$1 = isFunction;
     var isObject$2 = isObject;
     var indexOf$1 = indexOf;
     var hasWindow = typeof window !== 'undefined';
-    var version$1 = '5.0.2';
+    var version$1 = '5.1.0';
     var dependencies = {
-      zrender: '5.0.4'
+      zrender: '5.1.0'
     };
     var TEST_FRAME_REMAIN_TIME = 1;
     var PRIORITY_PROCESSOR_SERIES_FILTER = 800; // Some data processors depends on the stack result dimension (to calculate data extent).
@@ -27939,10 +29795,10 @@
         optionChanged && prepare(this);
         updateMethods.update.call(this, {
           type: 'resize',
-          animation: {
+          animation: extend({
             // Disable animation
             duration: 0
-          }
+          }, opts && opts.animation)
         });
         this[IN_MAIN_PROCESS_KEY] = false;
         flushPendingActions.call(this, silent);
@@ -28217,14 +30073,38 @@
                 excludeSeriesIdMap.set(modelId, true);
               }
             });
+          }
+
+          if (isHighDownPayload(payload)) {
+            allLeaveBlur(ecIns._api);
           } // If dispatchAction before setOption, do nothing.
 
 
           ecModel && ecModel.eachComponent(condition, function (model) {
             if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
-              if (isHighDownPayload(payload) && !payload.notBlur) {
+              if (isHighDownPayload(payload)) {
                 if (model instanceof SeriesModel) {
-                  toggleSeriesBlurStateFromPayload(model, payload, ecIns._api);
+                  if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
+                    blurSeriesFromHighlightPayload(model, payload, ecIns._api);
+                  }
+                } else {
+                  var _a = findComponentHighDownDispatchers(model.mainType, model.componentIndex, payload.name, ecIns._api),
+                      focusSelf = _a.focusSelf,
+                      dispatchers = _a.dispatchers;
+
+                  if (payload.type === HIGHLIGHT_ACTION_TYPE && focusSelf && !payload.notBlur) {
+                    blurComponent(model.mainType, model.componentIndex, ecIns._api);
+                  } // PENDING:
+                  // Whether to put this "enter emphasis" code in `ComponentView`,
+                  // which will be the same as `ChartView` but might be not necessary
+                  // and will be far from this logic.
+
+
+                  if (dispatchers) {
+                    each$3(dispatchers, function (dispatcher) {
+                      payload.type === HIGHLIGHT_ACTION_TYPE ? enterEmphasis(dispatcher) : leaveEmphasis(dispatcher);
+                    });
+                  }
                 }
               } else if (isSelectChangePayload(payload)) {
                 // TODO geo
@@ -28478,7 +30358,7 @@
           var eventObjBatch = [];
           var eventObj;
           var isSelectChange = isSelectChangePayload(payload);
-          var isStatusChange = isHighDownPayload(payload) || isSelectChange;
+          var isHighDown = isHighDownPayload(payload);
           each$3(payloads, function (batchItem) {
             // Action can specify the event by return it.
             eventObj = actionWrap.action(batchItem, _this._model, _this._api); // Emit event outside
@@ -28488,17 +30368,25 @@
             eventObj.type = actionInfo.event || eventObj.type;
             eventObjBatch.push(eventObj); // light update does not perform data process, layout and visual.
 
-            if (isStatusChange) {
-              // method, payload, mainType, subType
-              updateDirectly(_this, updateMethod, batchItem, 'series'); // Mark status to update
+            if (isHighDown) {
+              var _a = preParseFinder(payload),
+                  queryOptionMap = _a.queryOptionMap,
+                  mainTypeSpecified = _a.mainTypeSpecified;
 
+              var componentMainType = mainTypeSpecified ? queryOptionMap.keys()[0] : 'series';
+              updateDirectly(_this, updateMethod, batchItem, componentMainType);
+              markStatusToUpdate(_this);
+            } else if (isSelectChange) {
+              // At present `dispatchAction({ type: 'select', ... })` is not supported on components.
+              // geo still use 'geoselect'.
+              updateDirectly(_this, updateMethod, batchItem, 'series');
               markStatusToUpdate(_this);
             } else if (cptType) {
               updateDirectly(_this, updateMethod, batchItem, cptType.main, cptType.sub);
             }
           });
 
-          if (updateMethod !== 'none' && !isStatusChange && !cptType) {
+          if (updateMethod !== 'none' && !isHighDown && !isSelectChange && !cptType) {
             // Still dirty
             if (this[OPTION_UPDATED_KEY]) {
               prepare(this);
@@ -28588,11 +30476,7 @@
             var dispatcher = findEventDispatcher(el, isHighDownDispatcher);
 
             if (dispatcher) {
-              var ecData = getECData(dispatcher); // Try blur all in the related series. Then emphasis the hoverred.
-              // TODO. progressive mode.
-
-              toggleSeriesBlurState(ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns._api, true);
-              enterEmphasisWhenMouseOver(dispatcher, e);
+              handleGlobalMouseOverForHighDown(dispatcher, e, ecIns._api);
               markStatusToUpdate(ecIns);
             }
           }).on('mouseout', function (e) {
@@ -28600,9 +30484,7 @@
             var dispatcher = findEventDispatcher(el, isHighDownDispatcher);
 
             if (dispatcher) {
-              var ecData = getECData(dispatcher);
-              toggleSeriesBlurState(ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns._api, false);
-              leaveEmphasisWhenMouseOut(dispatcher, e);
+              handleGlboalMouseOutForHighDown(dispatcher, e, ecIns._api);
               markStatusToUpdate(ecIns);
             }
           }).on('click', function (e) {
@@ -28822,37 +30704,53 @@
         function updateZ(model, view) {
           if (model.preventAutoZ) {
             return;
+          } // Set z and zlevel
+
+
+          _updateZ(view.group, model.get('z') || 0, model.get('zlevel') || 0, -Infinity);
+        }
+
+        function _updateZ(el, z, zlevel, maxZ2) {
+          // Group may also have textContent
+          var label = el.getTextContent();
+          var labelLine = el.getTextGuideLine();
+          var isGroup = el.isGroup;
+
+          if (isGroup) {
+            // set z & zlevel of children elements of Group
+            // el.traverse((childEl: Element) => _updateZ(childEl, z, zlevel));
+            var children = el.childrenRef();
+
+            for (var i = 0; i < children.length; i++) {
+              maxZ2 = Math.max(_updateZ(children[i], z, zlevel, maxZ2), maxZ2);
+            }
+          } else {
+            // not Group
+            el.z = z;
+            el.zlevel = zlevel;
+            maxZ2 = Math.max(el.z2, maxZ2);
+          } // always set z and zlevel if label/labelLine exists
+
+
+          if (label) {
+            label.z = z;
+            label.zlevel = zlevel; // lift z2 of text content
+            // TODO if el.emphasis.z2 is spcefied, what about textContent.
+
+            isFinite(maxZ2) && (label.z2 = maxZ2 + 2);
           }
 
-          var z = model.get('z');
-          var zlevel = model.get('zlevel'); // Set z and zlevel
+          if (labelLine) {
+            var textGuideLineConfig = el.textGuideLineConfig;
+            labelLine.z = z;
+            labelLine.zlevel = zlevel;
+            isFinite(maxZ2) && (labelLine.z2 = maxZ2 + (textGuideLineConfig && textGuideLineConfig.showAbove ? 1 : -1));
+          }
 
-          view.group.traverse(function (el) {
-            if (!el.isGroup) {
-              z != null && (el.z = z);
-              zlevel != null && (el.zlevel = zlevel); // TODO if textContent is on group.
-
-              var label = el.getTextContent();
-              var labelLine = el.getTextGuideLine();
-
-              if (label) {
-                label.z = el.z;
-                label.zlevel = el.zlevel; // lift z2 of text content
-                // TODO if el.emphasis.z2 is spcefied, what about textContent.
-
-                label.z2 = el.z2 + 2;
-              }
-
-              if (labelLine) {
-                var showAbove = el.textGuideLineConfig && el.textGuideLineConfig.showAbove;
-                labelLine.z = el.z;
-                labelLine.zlevel = el.zlevel;
-                labelLine.z2 = el.z2 + (showAbove ? 1 : -1);
-              }
-            }
-          });
-        }
+          return maxZ2;
+        } // Clear states without animation.
         // TODO States on component.
+
 
         function clearStates(model, view) {
           view.group.traverse(function (el) {
@@ -29439,22 +31337,15 @@
       $override('createCanvas', creator);
     }
     /**
-     * The parameters and usage: see `mapDataStorage.registerMap`.
+     * The parameters and usage: see `geoSourceManager.registerMap`.
      * Compatible with previous `echarts.registerMap`.
      */
 
     function registerMap(mapName, geoJson, specialAreas) {
-      mapDataStorage.registerMap(mapName, geoJson, specialAreas);
+      geoSourceManager.registerMap(mapName, geoJson, specialAreas);
     }
     function getMap(mapName) {
-      // For backward compatibility, only return the first one.
-      var records = mapDataStorage.retrieveMap(mapName); // FIXME support SVG, where return not only records[0].
-
-      return records && records[0] && {
-        // @ts-ignore
-        geoJson: records[0].geoJSON,
-        specialAreas: records[0].specialAreas
-      };
+      return geoSourceManager.getMapForUser(mapName);
     }
     var registerTransform = registerExternalTransform;
     /**
@@ -32765,7 +34656,7 @@
         niceTickExtent[0] = niceTickExtent[1];
       }
     }
-    function contain$1(val, extent) {
+    function contain$2(val, extent) {
       return val >= extent[0] && val <= extent[1];
     }
     function normalize$1(val, extent) {
@@ -32817,7 +34708,7 @@
 
       OrdinalScale.prototype.contain = function (rank) {
         rank = this.parse(rank);
-        return contain$1(rank, this._extent) && this._ordinalMeta.categories[rank] != null;
+        return contain$2(rank, this._extent) && this._ordinalMeta.categories[rank] != null;
       };
       /**
        * Normalize given rank or name to linear [0, 1]
@@ -32994,7 +34885,7 @@
       };
 
       IntervalScale.prototype.contain = function (val) {
-        return contain$1(val, this._extent);
+        return contain$2(val, this._extent);
       };
 
       IntervalScale.prototype.normalize = function (val) {
@@ -33819,7 +35710,7 @@
       };
 
       TimeScale.prototype.contain = function (val) {
-        return contain$1(this.parse(val), this._extent);
+        return contain$2(this.parse(val), this._extent);
       };
 
       TimeScale.prototype.normalize = function (val) {
@@ -34366,7 +36257,7 @@
 
       LogScale.prototype.contain = function (val) {
         val = mathLog(val) / mathLog(this.base);
-        return contain$1(val, this._extent);
+        return contain$2(val, this._extent);
       };
 
       LogScale.prototype.normalize = function (val) {
@@ -35076,270 +36967,6 @@
         createSymbol: createSymbol,
         enableHoverEmphasis: enableHoverEmphasis
     });
-
-    var EPSILON$3 = 1e-8;
-    function isAroundEqual$1(a, b) {
-        return Math.abs(a - b) < EPSILON$3;
-    }
-    function contain$2(points, x, y) {
-        var w = 0;
-        var p = points[0];
-        if (!p) {
-            return false;
-        }
-        for (var i = 1; i < points.length; i++) {
-            var p2 = points[i];
-            w += windingLine(p[0], p[1], p2[0], p2[1], x, y);
-            p = p2;
-        }
-        var p0 = points[0];
-        if (!isAroundEqual$1(p[0], p0[0]) || !isAroundEqual$1(p[1], p0[1])) {
-            w += windingLine(p[0], p[1], p0[0], p0[1], x, y);
-        }
-        return w !== 0;
-    }
-
-    var Region =
-    /** @class */
-    function () {
-      function Region(name, geometries, cp) {
-        this.name = name;
-        this.geometries = geometries;
-
-        if (!cp) {
-          var rect = this.getBoundingRect();
-          cp = [rect.x + rect.width / 2, rect.y + rect.height / 2];
-        } else {
-          cp = [cp[0], cp[1]];
-        }
-
-        this.center = cp;
-      }
-
-      Region.prototype.getBoundingRect = function () {
-        var rect = this._rect;
-
-        if (rect) {
-          return rect;
-        }
-
-        var MAX_NUMBER = Number.MAX_VALUE;
-        var min$1 = [MAX_NUMBER, MAX_NUMBER];
-        var max$1 = [-MAX_NUMBER, -MAX_NUMBER];
-        var min2 = [];
-        var max2 = [];
-        var geometries = this.geometries;
-        var i = 0;
-
-        for (; i < geometries.length; i++) {
-          // Only support polygon
-          if (geometries[i].type !== 'polygon') {
-            continue;
-          } // Doesn't consider hole
-
-
-          var exterior = geometries[i].exterior;
-          fromPoints(exterior, min2, max2);
-          min(min$1, min$1, min2);
-          max(max$1, max$1, max2);
-        } // No data
-
-
-        if (i === 0) {
-          min$1[0] = min$1[1] = max$1[0] = max$1[1] = 0;
-        }
-
-        return this._rect = new BoundingRect(min$1[0], min$1[1], max$1[0] - min$1[0], max$1[1] - min$1[1]);
-      };
-
-      Region.prototype.contain = function (coord) {
-        var rect = this.getBoundingRect();
-        var geometries = this.geometries;
-
-        if (!rect.contain(coord[0], coord[1])) {
-          return false;
-        }
-
-        loopGeo: for (var i = 0, len = geometries.length; i < len; i++) {
-          // Only support polygon.
-          if (geometries[i].type !== 'polygon') {
-            continue;
-          }
-
-          var exterior = geometries[i].exterior;
-          var interiors = geometries[i].interiors;
-
-          if (contain$2(exterior, coord[0], coord[1])) {
-            // Not in the region if point is in the hole.
-            for (var k = 0; k < (interiors ? interiors.length : 0); k++) {
-              if (contain$2(interiors[k], coord[0], coord[1])) {
-                continue loopGeo;
-              }
-            }
-
-            return true;
-          }
-        }
-
-        return false;
-      };
-
-      Region.prototype.transformTo = function (x, y, width, height) {
-        var rect = this.getBoundingRect();
-        var aspect = rect.width / rect.height;
-
-        if (!width) {
-          width = aspect * height;
-        } else if (!height) {
-          height = width / aspect;
-        }
-
-        var target = new BoundingRect(x, y, width, height);
-        var transform = rect.calculateTransform(target);
-        var geometries = this.geometries;
-
-        for (var i = 0; i < geometries.length; i++) {
-          // Only support polygon.
-          if (geometries[i].type !== 'polygon') {
-            continue;
-          }
-
-          var exterior = geometries[i].exterior;
-          var interiors = geometries[i].interiors;
-
-          for (var p = 0; p < exterior.length; p++) {
-            applyTransform(exterior[p], exterior[p], transform);
-          }
-
-          for (var h = 0; h < (interiors ? interiors.length : 0); h++) {
-            for (var p = 0; p < interiors[h].length; p++) {
-              applyTransform(interiors[h][p], interiors[h][p], transform);
-            }
-          }
-        }
-
-        rect = this._rect;
-        rect.copy(target); // Update center
-
-        this.center = [rect.x + rect.width / 2, rect.y + rect.height / 2];
-      };
-
-      Region.prototype.cloneShallow = function (name) {
-        name == null && (name = this.name);
-        var newRegion = new Region(name, this.geometries, this.center);
-        newRegion._rect = this._rect;
-        newRegion.transformTo = null; // Simply avoid to be called.
-
-        return newRegion;
-      };
-
-      return Region;
-    }();
-
-    function decode(json) {
-      if (!json.UTF8Encoding) {
-        return json;
-      }
-
-      var jsonCompressed = json;
-      var encodeScale = jsonCompressed.UTF8Scale;
-
-      if (encodeScale == null) {
-        encodeScale = 1024;
-      }
-
-      var features = jsonCompressed.features;
-
-      for (var f = 0; f < features.length; f++) {
-        var feature = features[f];
-        var geometry = feature.geometry;
-
-        if (geometry.type === 'Polygon') {
-          var coordinates = geometry.coordinates;
-
-          for (var c = 0; c < coordinates.length; c++) {
-            coordinates[c] = decodePolygon(coordinates[c], geometry.encodeOffsets[c], encodeScale);
-          }
-        } else if (geometry.type === 'MultiPolygon') {
-          var coordinates = geometry.coordinates;
-
-          for (var c = 0; c < coordinates.length; c++) {
-            var coordinate = coordinates[c];
-
-            for (var c2 = 0; c2 < coordinate.length; c2++) {
-              coordinate[c2] = decodePolygon(coordinate[c2], geometry.encodeOffsets[c][c2], encodeScale);
-            }
-          }
-        }
-      } // Has been decoded
-
-
-      jsonCompressed.UTF8Encoding = false;
-      return jsonCompressed;
-    }
-
-    function decodePolygon(coordinate, encodeOffsets, encodeScale) {
-      var result = [];
-      var prevX = encodeOffsets[0];
-      var prevY = encodeOffsets[1];
-
-      for (var i = 0; i < coordinate.length; i += 2) {
-        var x = coordinate.charCodeAt(i) - 64;
-        var y = coordinate.charCodeAt(i + 1) - 64; // ZigZag decoding
-
-        x = x >> 1 ^ -(x & 1);
-        y = y >> 1 ^ -(y & 1); // Delta deocding
-
-        x += prevX;
-        y += prevY;
-        prevX = x;
-        prevY = y; // Dequantize
-
-        result.push([x / encodeScale, y / encodeScale]);
-      }
-
-      return result;
-    }
-
-    function parseGeoJSON(geoJson, nameProperty) {
-      geoJson = decode(geoJson);
-      return map(filter(geoJson.features, function (featureObj) {
-        // Output of mapshaper may have geometry null
-        return featureObj.geometry && featureObj.properties && featureObj.geometry.coordinates.length > 0;
-      }), function (featureObj) {
-        var properties = featureObj.properties;
-        var geo = featureObj.geometry;
-        var geometries = [];
-
-        if (geo.type === 'Polygon') {
-          var coordinates = geo.coordinates;
-          geometries.push({
-            type: 'polygon',
-            // According to the GeoJSON specification.
-            // First must be exterior, and the rest are all interior(holes).
-            exterior: coordinates[0],
-            interiors: coordinates.slice(1)
-          });
-        }
-
-        if (geo.type === 'MultiPolygon') {
-          var coordinates = geo.coordinates;
-          each(coordinates, function (item) {
-            if (item[0]) {
-              geometries.push({
-                type: 'polygon',
-                exterior: item[0],
-                interiors: item.slice(1)
-              });
-            }
-          });
-        }
-
-        var region = new Region(properties[nameProperty || 'name'], geometries, properties.cp);
-        region.properties = properties;
-        return region;
-      });
-    }
 
     var number = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -37352,36 +38979,6 @@
             shadowManager.removeUnused();
             this._visibleList = newVisibleList;
         };
-        SVGPainter.prototype._getDefs = function (isForceCreating) {
-            var svgRoot = this._svgDom;
-            var defs = svgRoot.getElementsByTagName('defs');
-            if (defs.length === 0) {
-                if (isForceCreating) {
-                    var defs_1 = svgRoot.insertBefore(createElement('defs'), svgRoot.firstChild);
-                    if (!defs_1.contains) {
-                        defs_1.contains = function (el) {
-                            var children = defs_1.children;
-                            if (!children) {
-                                return false;
-                            }
-                            for (var i = children.length - 1; i >= 0; --i) {
-                                if (children[i] === el) {
-                                    return true;
-                                }
-                            }
-                            return false;
-                        };
-                    }
-                    return defs_1;
-                }
-                else {
-                    return null;
-                }
-            }
-            else {
-                return defs[0];
-            }
-        };
         SVGPainter.prototype.resize = function (width, height) {
             var viewport = this._viewport;
             viewport.style.display = 'none';
@@ -38467,7 +40064,6 @@
 
         _this.type = LineSeriesModel.type;
         _this.hasSymbolVisual = true;
-        _this.legendSymbol = 'line';
         return _this;
       }
 
@@ -38485,6 +40081,28 @@
         });
       };
 
+      LineSeriesModel.prototype.getLegendIcon = function (opt) {
+        var group = new Group();
+        var line = createSymbol('line', 0, opt.itemHeight / 2, opt.itemWidth, 0, opt.lineStyle.stroke, false);
+        group.add(line);
+        line.setStyle(opt.lineStyle);
+        var visualType = this.getData().getVisual('symbol');
+        var symbolType = visualType === 'none' ? 'circle' : visualType; // Symbol size is 80% when there is a line
+
+        var size = opt.itemHeight * 0.8;
+        var symbol = createSymbol(symbolType, (opt.itemWidth - size) / 2, (opt.itemHeight - size) / 2, size, size, opt.itemStyle.fill, opt.symbolKeepAspect);
+        group.add(symbol);
+        symbol.setStyle(opt.itemStyle);
+
+        if (symbolType.indexOf('empty') > -1) {
+          symbol.style.stroke = symbol.style.fill;
+          symbol.style.fill = '#fff';
+          symbol.style.lineWidth = 2;
+        }
+
+        return group;
+      };
+
       LineSeriesModel.type = 'series.line';
       LineSeriesModel.dependencies = ['grid', 'polar'];
       LineSeriesModel.defaultOption = {
@@ -38496,6 +40114,8 @@
         label: {
           position: 'top'
         },
+        // itemStyle: {
+        // },
         endLabel: {
           show: false,
           valueAnimation: true,
@@ -38738,7 +40358,6 @@
         var selectItemStyle;
         var focus;
         var blurScope;
-        var symbolOffset;
         var labelStatesModels;
         var hoverScale;
         var cursorStyle;
@@ -38749,7 +40368,6 @@
           selectItemStyle = seriesScope.selectItemStyle;
           focus = seriesScope.focus;
           blurScope = seriesScope.blurScope;
-          symbolOffset = seriesScope.symbolOffset;
           labelStatesModels = seriesScope.labelStatesModels;
           hoverScale = seriesScope.hoverScale;
           cursorStyle = seriesScope.cursorStyle;
@@ -38763,7 +40381,6 @@
           blurItemStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
           focus = emphasisModel.get('focus');
           blurScope = emphasisModel.get('blurScope');
-          symbolOffset = itemModel.getShallow('symbolOffset');
           labelStatesModels = getLabelStatesModels(itemModel);
           hoverScale = emphasisModel.getShallow('scale');
           cursorStyle = itemModel.getShallow('cursor');
@@ -38771,10 +40388,15 @@
 
         var symbolRotate = data.getItemVisual(idx, 'symbolRotate');
         symbolPath.attr('rotation', (symbolRotate || 0) * Math.PI / 180 || 0);
+        var symbolOffset = data.getItemVisual(idx, 'symbolOffset') || 0;
 
         if (symbolOffset) {
+          if (!isArray(symbolOffset)) {
+            symbolOffset = [symbolOffset, symbolOffset];
+          }
+
           symbolPath.x = parsePercent$1(symbolOffset[0], symbolSize[0]);
-          symbolPath.y = parsePercent$1(symbolOffset[1], symbolSize[1]);
+          symbolPath.y = parsePercent$1(retrieve2(symbolOffset[1], symbolOffset[0]) || 0, symbolSize[1]);
         }
 
         cursorStyle && symbolPath.attr('cursor', cursorStyle);
@@ -38897,7 +40519,7 @@
 
       Symbol.getSymbolSize = function (data, idx) {
         var symbolSize = data.getItemVisual(idx, 'symbolSize');
-        return symbolSize instanceof Array ? symbolSize.slice() : [+symbolSize, +symbolSize];
+        return isArray(symbolSize) ? symbolSize.slice() : [+symbolSize, +symbolSize];
       };
 
       return Symbol;
@@ -38933,8 +40555,6 @@
         selectItemStyle: seriesModel.getModel(['select', 'itemStyle']).getItemStyle(),
         focus: emphasisModel.get('focus'),
         blurScope: emphasisModel.get('blurScope'),
-        symbolRotate: seriesModel.get('symbolRotate'),
-        symbolOffset: seriesModel.get('symbolOffset'),
         hoverScale: emphasisModel.get('scale'),
         labelStatesModels: getLabelStatesModels(seriesModel),
         cursorStyle: seriesModel.get('cursor')
@@ -39270,24 +40890,7 @@
             break;
 
           case '-':
-            var oldIdx = diffItem.idx;
-            var rawIndex = oldData.getRawIndex(oldIdx);
-            var oldDataDimsForPoint = oldDataNewCoordInfo.dataDimsForPoint;
-            oldIdx2 = oldIdx * 2; // Data is replaced. In the case of dynamic data queue
-            // FIXME FIXME FIXME
-
-            if (rawIndex !== oldIdx) {
-              var newPt = newCoordSys.dataToPoint([oldData.get(oldDataDimsForPoint[0], oldIdx), oldData.get(oldDataDimsForPoint[1], oldIdx)]);
-              var newStackedOnPt = getStackedOnPoint(oldDataNewCoordInfo, newCoordSys, oldData, oldIdx);
-              currPoints.push(oldPoints[oldIdx2], oldPoints[oldIdx2 + 1]);
-              nextPoints.push(newPt[0], newPt[1]);
-              currStackedPoints.push(oldStackedOnPoints[oldIdx2], oldStackedOnPoints[oldIdx2 + 1]);
-              nextStackedPoints.push(newStackedOnPt[0], newStackedOnPt[1]);
-              rawIndices.push(rawIndex);
-            } else {
-              pointAdded = false;
-            }
-
+            pointAdded = false;
         } // Original indices
 
 
@@ -40401,7 +42004,7 @@
 
         if (polyline.style.lineWidth > 0 && seriesModel.get(['emphasis', 'lineStyle', 'width']) === 'bolder') {
           var emphasisLineStyle = polyline.getState('emphasis').style;
-          emphasisLineStyle.lineWidth = polyline.style.lineWidth + 1;
+          emphasisLineStyle.lineWidth = +polyline.style.lineWidth + 1;
         } // Needs seriesIndex for focus
 
 
@@ -40490,7 +42093,10 @@
             symbol = new Symbol(data, dataIndex);
             symbol.x = x;
             symbol.y = y;
-            symbol.setZ(seriesModel.get('zlevel'), seriesModel.get('z'));
+            symbol.setZ(seriesModel.get('zlevel'), seriesModel.get('z')); // ensure label text of the temporal symbol is on the top of line and area polygon
+
+            var symbolLabel = symbol.getSymbolPath().getTextContent();
+            symbolLabel && (symbolLabel.z2 = this._polyline.z2 + 1);
             symbol.__temp = true;
             data.setItemGraphicEl(dataIndex, symbol); // Stop scale animation
 
@@ -41132,7 +42738,23 @@
     function install$2(registers) {
       registers.registerChartView(LineView);
       registers.registerSeriesModel(LineSeriesModel);
-      registers.registerLayout(pointsLayout('line', true)); // Down sample after filter
+      registers.registerLayout(pointsLayout('line', true));
+      registers.registerVisual({
+        seriesType: 'line',
+        reset: function (seriesModel) {
+          var data = seriesModel.getData(); // Visual coding for legend
+
+          var lineStyle = seriesModel.getModel('lineStyle').getLineStyle();
+
+          if (lineStyle && !lineStyle.stroke) {
+            // Fill in visual should be palette color if
+            // has color callback
+            lineStyle.stroke = data.getVisual('style').fill;
+          }
+
+          data.setVisual('legendLineStyle', lineStyle);
+        }
+      }); // Down sample after filter
 
       registers.registerProcessor(registers.PRIORITY.PROCESSOR.STATISTIC, dataSample('line'));
     }
@@ -41345,8 +42967,6 @@
       return SausagePath;
     }(Path);
 
-    var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'];
-    var BAR_BORDER_RADIUS_QUERY = ['itemStyle', 'borderRadius'];
     var _eventPos = [0, 0];
     var mathMax$6 = Math.max;
     var mathMin$6 = Math.min;
@@ -42026,7 +43646,7 @@
       var style = data.getItemVisual(dataIndex, 'style');
 
       if (!isPolar) {
-        el.setShape('r', itemModel.get(BAR_BORDER_RADIUS_QUERY) || 0);
+        el.setShape('r', itemModel.get(['itemStyle', 'borderRadius']) || 0);
       }
 
       el.useStyle(style);
@@ -42067,7 +43687,14 @@
 
 
     function getLineWidth(itemModel, rawLayout) {
-      var lineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0; // width or height may be NaN for empty data
+      // Has no border.
+      var borderColor = itemModel.get(['itemStyle', 'borderColor']);
+
+      if (!borderColor || borderColor === 'none') {
+        return 0;
+      }
+
+      var lineWidth = itemModel.get(['itemStyle', 'borderWidth']) || 0; // width or height may be NaN for empty data
 
       var width = isNaN(rawLayout.width) ? Number.MAX_VALUE : Math.abs(rawLayout.width);
       var height = isNaN(rawLayout.height) ? Number.MAX_VALUE : Math.abs(rawLayout.height);
@@ -42258,14 +43885,7 @@
       registers.registerLayout(registers.PRIORITY.VISUAL.LAYOUT, curry(layout, 'bar')); // Use higher prority to avoid to be blocked by other overall layout, which do not
       // only exist in this module, but probably also exist in other modules, like `barPolar`.
 
-      registers.registerLayout(registers.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, largeLayout);
-      registers.registerVisual({
-        seriesType: 'bar',
-        reset: function (seriesModel) {
-          // Visual coding for legend
-          seriesModel.getData().setVisual('legendSymbol', 'roundRect');
-        }
-      }); // Down sample after filter
+      registers.registerLayout(registers.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, largeLayout); // Down sample after filter
 
       registers.registerProcessor(registers.PRIORITY.PROCESSOR.STATISTIC, dataSample('bar'));
       /**
@@ -42925,7 +44545,13 @@
         var itemModel = data.getItemModel(idx);
         var emphasisModel = itemModel.getModel('emphasis');
         var layout = data.getItemLayout(idx);
-        var sectorShape = extend(getSectorCornerRadius(itemModel.getModel('itemStyle'), layout) || {}, layout);
+        var sectorShape = extend(getSectorCornerRadius(itemModel.getModel('itemStyle'), layout) || {}, layout); // Ignore NaN data.
+
+        if (isNaN(sectorShape.startAngle)) {
+          // Use NaN shape to avoid drawing shape.
+          sector.setShape(sectorShape);
+          return;
+        }
 
         if (firstCreate) {
           sector.setShape(sectorShape);
@@ -45240,14 +46866,6 @@
         var truncateOpt = axisModel.get('nameTruncate', true) || {};
         var ellipsis = truncateOpt.ellipsis;
         var maxWidth = retrieve(opt.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth);
-        var tooltipOpt = axisModel.get('tooltip', true);
-        var mainType = axisModel.mainType;
-        var formatterParams = {
-          componentType: mainType,
-          name: name,
-          $vars: ['name']
-        };
-        formatterParams[mainType + 'Index'] = axisModel.componentIndex;
         var textEl = new ZRText({
           x: pos[0],
           y: pos[1],
@@ -45265,13 +46883,11 @@
           }),
           z2: 1
         });
-        textEl.tooltip = tooltipOpt && tooltipOpt.show ? extend({
-          content: name,
-          formatter: function () {
-            return name;
-          },
-          formatterParams: formatterParams
-        }, tooltipOpt) : null;
+        setTooltipConfig({
+          el: textEl,
+          componentModel: axisModel,
+          itemName: name
+        });
         textEl.__fullText = name; // Id for animation
 
         textEl.anid = 'name';
@@ -47814,6 +49430,7 @@
         var _this = _super !== null && _super.apply(this, arguments) || this;
 
         _this.type = GraphicComponentModel.type;
+        _this.preventAutoZ = true;
         return _this;
       }
 
@@ -48039,6 +49656,12 @@
             elInner.__ecGraphicWidthOption = elOption.width;
             elInner.__ecGraphicHeightOption = elOption.height;
             setEventData(el, graphicModel, elOption);
+            setTooltipConfig({
+              el: el,
+              componentModel: graphicModel,
+              itemName: el.name,
+              itemTooltipOption: elOption.tooltip
+            });
           }
         });
       };
@@ -49599,7 +51222,8 @@
         // textStyle: {},
         // feature
         tooltip: {
-          show: false
+          show: false,
+          position: 'bottom'
         }
       };
       return ToolboxModel;
@@ -49806,24 +51430,14 @@
               ignore: true
             });
             path.setTextContent(textContent);
-            var tooltipModel = toolboxModel.getModel('tooltip');
-
-            if (tooltipModel && tooltipModel.get('show')) {
-              path.tooltip = extend({
-                content: titlesMap[iconName],
-                formatter: tooltipModel.get('formatter', true) || function () {
-                  return titlesMap[iconName];
-                },
-                formatterParams: {
-                  componentType: 'toolbox',
-                  name: iconName,
-                  title: titlesMap[iconName],
-                  $vars: ['name', 'title']
-                },
-                position: tooltipModel.get('position', true) || 'bottom'
-              }, tooltipModel.option);
-            } // graphic.enableHoverEmphasis(path);
-
+            setTooltipConfig({
+              el: path,
+              componentModel: toolboxModel,
+              itemName: iconName,
+              formatterParamsExtra: {
+                title: titlesMap[iconName]
+              }
+            }); // graphic.enableHoverEmphasis(path);
 
             path.__title = titlesMap[iconName];
             path.on('mouseover', function () {
@@ -52345,56 +53959,51 @@
       return TooltipModel;
     }(ComponentModel);
 
-    /*
-    * Licensed to the Apache Software Foundation (ASF) under one
-    * or more contributor license agreements.  See the NOTICE file
-    * distributed with this work for additional information
-    * regarding copyright ownership.  The ASF licenses this file
-    * to you under the Apache License, Version 2.0 (the
-    * "License"); you may not use this file except in compliance
-    * with the License.  You may obtain a copy of the License at
-    *
-    *   http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing,
-    * software distributed under the License is distributed on an
-    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    * KIND, either express or implied.  See the License for the
-    * specific language governing permissions and limitations
-    * under the License.
-    */
+    /* global document */
 
-
-    /**
-     * AUTO-GENERATED FILE. DO NOT MODIFY.
-     */
-
-    /*
-    * Licensed to the Apache Software Foundation (ASF) under one
-    * or more contributor license agreements.  See the NOTICE file
-    * distributed with this work for additional information
-    * regarding copyright ownership.  The ASF licenses this file
-    * to you under the Apache License, Version 2.0 (the
-    * "License"); you may not use this file except in compliance
-    * with the License.  You may obtain a copy of the License at
-    *
-    *   http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing,
-    * software distributed under the License is distributed on an
-    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    * KIND, either express or implied.  See the License for the
-    * specific language governing permissions and limitations
-    * under the License.
-    */
     function shouldTooltipConfine(tooltipModel) {
       var confineOption = tooltipModel.get('confine');
       return confineOption != null ? !!confineOption // In richText mode, the outside part can not be visible.
       : tooltipModel.get('renderMode') === 'richText';
     }
 
-    var vendors = ['-ms-', '-moz-', '-o-', '-webkit-', ''];
-    var gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;';
+    function testStyle(styleProps) {
+      if (!env.domSupported) {
+        return;
+      }
+
+      var style = document.documentElement.style;
+
+      for (var i = 0, len = styleProps.length; i < len; i++) {
+        if (styleProps[i] in style) {
+          return styleProps[i];
+        }
+      }
+    }
+
+    var TRANSFORM_VENDOR = testStyle(['transform', 'webkitTransform', 'OTransform', 'MozTransform', 'msTransform']);
+    var TRANSITION_VENDOR = testStyle(['webkitTransition', 'transition', 'OTransition', 'MozTransition', 'msTransition']);
+    function toCSSVendorPrefix(styleVendor, styleProp) {
+      if (!styleVendor) {
+        return styleProp;
+      }
+
+      styleProp = toCamelCase(styleProp, true);
+      var idx = styleVendor.indexOf(styleProp);
+      styleVendor = idx === -1 ? styleProp : "-" + styleVendor.slice(0, idx) + "-" + styleProp;
+      return styleVendor.toLowerCase();
+    }
+    function getComputedStyle(el, style) {
+      var stl = el.currentStyle || document.defaultView && document.defaultView.getComputedStyle(el);
+      return stl ? style ? stl[style] : stl : null;
+    }
+
+    /* global document, window */
+
+    var CSS_TRANSITION_VENDOR = toCSSVendorPrefix(TRANSITION_VENDOR, 'transition');
+    var CSS_TRANSFORM_VENDOR = toCSSVendorPrefix(TRANSFORM_VENDOR, 'transform'); // eslint-disable-next-line
+
+    var gCssText = "position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;" + (env.transform3dSupported ? 'will-change:transform;' : '');
 
     function mirrorPos(pos) {
       pos = pos === 'left' ? 'right' : pos === 'right' ? 'left' : pos === 'top' ? 'bottom' : 'top';
@@ -52408,35 +54017,55 @@
 
       borderColor = convertToColorString(borderColor);
       var arrowPos = mirrorPos(arrowPosition);
-      var positionStyle = '';
-      var transformStyle = '';
+      var positionStyle = arrowPos + ":-6px;";
+      var transformStyle = CSS_TRANSFORM_VENDOR + ':';
 
       if (indexOf(['left', 'right'], arrowPos) > -1) {
-        positionStyle = arrowPos + ":-6px;top:50%;";
-        transformStyle = "translateY(-50%) rotate(" + (arrowPos === 'left' ? -225 : -45) + "deg)";
+        positionStyle += 'top:50%';
+        transformStyle += "translateY(-50%) rotate(" + (arrowPos === 'left' ? -225 : -45) + "deg)";
       } else {
-        positionStyle = arrowPos + ":-6px;left:50%;";
-        transformStyle = "translateX(-50%) rotate(" + (arrowPos === 'top' ? 225 : 45) + "deg)";
+        positionStyle += 'left:50%';
+        transformStyle += "translateX(-50%) rotate(" + (arrowPos === 'top' ? 225 : 45) + "deg)";
       }
 
-      transformStyle = map(vendors, function (vendorPrefix) {
-        return vendorPrefix + 'transform:' + transformStyle;
-      }).join(';');
-      var styleCss = ['position:absolute;width:10px;height:10px;', "" + positionStyle + transformStyle + ";", "border-bottom: " + borderColor + " solid 1px;", "border-right: " + borderColor + " solid 1px;", "background-color: " + backgroundColor + ";", 'box-shadow: 8px 8px 16px -3px #000;'];
+      var borderStyle = borderColor + " solid 1px;";
+      var styleCss = ['position:absolute;width:10px;height:10px;', positionStyle + ";" + transformStyle + ";", "border-bottom:" + borderStyle, "border-right:" + borderStyle, "background-color:" + backgroundColor + ";", 'box-shadow:8px 8px 16px -3px #000;'];
       return "<div style=\"" + styleCss.join('') + "\"></div>";
     }
 
     function assembleTransition(duration, onlyFade) {
-      var transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
-      var transitionText = 'opacity ' + duration / 2 + 's ' + transitionCurve + ',' + 'visibility ' + duration / 2 + 's ' + transitionCurve;
+      var transitionCurve = 'cubic-bezier(0.23,1,0.32,1)';
+      var transitionOption = " " + duration / 2 + "s " + transitionCurve;
+      var transitionText = "opacity" + transitionOption + ",visibility" + transitionOption;
 
       if (!onlyFade) {
-        transitionText += ',left ' + duration + 's ' + transitionCurve + ',top ' + duration + 's ' + transitionCurve;
+        transitionOption = " " + duration + "s " + transitionCurve;
+        transitionText += env.transformSupported ? "," + TRANSFORM_VENDOR + transitionOption : ",left" + transitionOption + ",top" + transitionOption;
       }
 
-      return map(vendors, function (vendorPrefix) {
-        return vendorPrefix + 'transition:' + transitionText;
-      }).join(';');
+      return CSS_TRANSITION_VENDOR + ':' + transitionText;
+    }
+
+    function assembleTransform(el, x, y, toString) {
+      // If using float on style, the final width of the dom might
+      // keep changing slightly while mouse move. So `toFixed(0)` them.
+      var x0;
+      var y0; // not support transform, use `left` and `top` instead.
+
+      if (!env.transformSupported) {
+        x0 = x.toFixed(0);
+        y0 = y.toFixed(0);
+        return toString ? "top:" + y0 + "px;left:" + x0 + "px;" : [['top', y0 + "px"], ['left', x0 + "px"]];
+      } // support transform
+      // FIXME: the padding of parent element will affect the position of tooltip
+
+
+      var stl = getComputedStyle(el.parentElement);
+      x0 = (x - parseInt(stl.paddingLeft, 10)).toFixed(0);
+      y0 = (y - parseInt(stl.paddingTop, 10)).toFixed(0);
+      var is3d = env.transform3dSupported;
+      var translate = "translate" + (is3d ? '3d' : '') + "(" + x0 + "px," + y0 + "px" + (is3d ? ',0' : '') + ")";
+      return toString ? CSS_TRANSFORM_VENDOR + ':' + translate + ';' : [[TRANSFORM_VENDOR, translate]];
     }
     /**
      * @param {Object} textStyle
@@ -52482,10 +54111,10 @@
 
       if (backgroundColor) {
         if (env.canvasSupported) {
-          cssText.push('background-Color:' + backgroundColor);
+          cssText.push('background-color:' + backgroundColor);
         } else {
           // for ie
-          cssText.push('background-Color:#' + toHex(backgroundColor));
+          cssText.push('background-color:#' + toHex(backgroundColor));
           cssText.push('filter:alpha(opacity=70)');
         }
       } // Border style
@@ -52561,7 +54190,8 @@
         if (appendToBody) {
           document.body.appendChild(el);
         } else {
-          container.appendChild(el);
+          // PENDING
+          container.prepend(el);
         }
 
         this._container = container; // FIXME
@@ -52617,10 +54247,10 @@
         // FIXME
         // Move this logic to ec main?
         var container = this._container;
-        var stl = container.currentStyle || document.defaultView.getComputedStyle(container);
+        var position = getComputedStyle(container, 'position');
         var domStyle = container.style;
 
-        if (domStyle.position !== 'absolute' && stl.position !== 'absolute') {
+        if (domStyle.position !== 'absolute' && position !== 'absolute') {
           domStyle.position = 'relative';
         } // move tooltip if chart resized
 
@@ -52637,20 +54267,21 @@
         clearTimeout(this._hideTimeout);
         clearTimeout(this._longHideTimeout);
         var el = this.el;
+        var style = el.style;
         var styleCoord = this._styleCoord;
-        var offset = el.offsetHeight / 2;
-        nearPointColor = convertToColorString(nearPointColor);
-        el.style.cssText = gCssText + assembleCssText(tooltipModel, !this._firstShow, this._longHide) // Because of the reason described in:
-        // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
-        // we should set initial value to `left` and `top`.
-        + ';left:' + styleCoord[0] + 'px;top:' + (styleCoord[1] - offset) + 'px;' + ("border-color: " + nearPointColor + ";") + (tooltipModel.get('extraCssText') || '');
-        el.style.display = el.innerHTML ? 'block' : 'none'; // If mouse occasionally move over the tooltip, a mouseout event will be
-        // triggered by canvas, and cause some unexpectable result like dragging
-        // stop, "unfocusAdjacency". Here `pointer-events: none` is used to solve
-        // it. Although it is not supported by IE8~IE10, fortunately it is a rare
-        // scenario.
 
-        el.style.pointerEvents = this._enterable ? 'auto' : 'none';
+        if (!el.innerHTML) {
+          style.display = 'none';
+        } else {
+          style.cssText = gCssText + assembleCssText(tooltipModel, !this._firstShow, this._longHide) // initial transform
+          + assembleTransform(el, styleCoord[0], styleCoord[1], true) + ("border-color:" + convertToColorString(nearPointColor) + ";") + (tooltipModel.get('extraCssText') || '') // If mouse occasionally move over the tooltip, a mouseout event will be
+          // triggered by canvas, and cause some unexpectable result like dragging
+          // stop, "unfocusAdjacency". Here `pointer-events: none` is used to solve
+          // it. Although it is not supported by IE8~IE10, fortunately it is a rare
+          // scenario.
+          + (";pointer-event:" + (this._enterable ? 'auto' : 'none'));
+        }
+
         this._show = true;
         this._firstShow = false;
         this._longHide = false;
@@ -52699,11 +54330,11 @@
         makeStyleCoord(styleCoord, this._zr, this._appendToBody, zrX, zrY);
 
         if (styleCoord[0] != null && styleCoord[1] != null) {
-          var style = this.el.style; // If using float on style, the final width of the dom might
-          // keep changing slightly while mouse move. So `toFixed(0)` them.
-
-          style.left = styleCoord[0].toFixed(0) + 'px';
-          style.top = styleCoord[1].toFixed(0) + 'px';
+          var style_1 = this.el.style;
+          var transforms = assembleTransform(this.el, styleCoord[0], styleCoord[1]);
+          each(transforms, function (transform) {
+            style_1[transform[0]] = transform[1];
+          });
         }
       };
       /**
@@ -52723,8 +54354,10 @@
       TooltipHTMLContent.prototype.hide = function () {
         var _this = this;
 
-        this.el.style.visibility = 'hidden';
-        this.el.style.opacity = '0';
+        var style = this.el.style;
+        style.visibility = 'hidden';
+        style.opacity = '0';
+        env.transform3dSupported && (style.willChange = '');
         this._show = false;
         this._longHideTimeout = setTimeout(function () {
           return _this._longHide = true;
@@ -52757,13 +54390,11 @@
         var height = this.el.clientHeight; // Consider browser compatibility.
         // IE8 does not support getComputedStyle.
 
-        if (document.defaultView && document.defaultView.getComputedStyle) {
-          var stl = document.defaultView.getComputedStyle(this.el);
+        var stl = getComputedStyle(this.el);
 
-          if (stl) {
-            width += parseInt(stl.borderLeftWidth, 10) + parseInt(stl.borderRightWidth, 10);
-            height += parseInt(stl.borderTopWidth, 10) + parseInt(stl.borderBottomWidth, 10);
-          }
+        if (stl) {
+          width += parseInt(stl.borderLeftWidth, 10) + parseInt(stl.borderRightWidth, 10);
+          height += parseInt(stl.borderTopWidth, 10) + parseInt(stl.borderBottomWidth, 10);
         }
 
         return {
@@ -52975,7 +54606,7 @@
 
     var bind$2 = bind;
     var each$8 = each;
-    var parsePercent$3 = parsePercent$1;
+    var parsePercent$2 = parsePercent$1;
     var proxyRect = new Rect({
       shape: {
         x: -1,
@@ -53101,13 +54732,30 @@
         this._ticket = ''; // When triggered from axisPointer.
 
         var dataByCoordSys = payload.dataByCoordSys;
+        var cmptRef = findComponentReference(payload, ecModel, api);
 
-        if (payload.tooltip && payload.x != null && payload.y != null) {
+        if (cmptRef) {
+          var rect = cmptRef.el.getBoundingRect().clone();
+          rect.applyTransform(cmptRef.el.transform);
+
+          this._tryShow({
+            offsetX: rect.x + rect.width / 2,
+            offsetY: rect.y + rect.height / 2,
+            target: cmptRef.el,
+            position: payload.position,
+            // When manully trigger, the mouse is not on the el, so we'd better to
+            // position tooltip on the bottom of the el and display arrow is possible.
+            positionDefault: 'bottom'
+          }, dispatchAction);
+        } else if (payload.tooltip && payload.x != null && payload.y != null) {
           var el = proxyRect;
           el.x = payload.x;
           el.y = payload.y;
           el.update();
-          el.tooltip = payload.tooltip; // Manually show tooltip while view is not using zrender elements.
+          getECData(el).tooltipConfig = {
+            name: null,
+            option: payload.tooltip
+          }; // Manually show tooltip while view is not using zrender elements.
 
           this._tryShow({
             offsetX: payload.x,
@@ -53135,8 +54783,11 @@
             this._tryShow({
               offsetX: cx,
               offsetY: cy,
+              target: pointInfo.el,
               position: payload.position,
-              target: pointInfo.el
+              // When manully trigger, the mouse is not on the el, so we'd better to
+              // position tooltip on the bottom of the el and display arrow is possible.
+              positionDefault: 'bottom'
             }, dispatchAction);
           }
         } else if (payload.x != null && payload.y != null) {
@@ -53191,7 +54842,7 @@
         }
 
         var data = seriesModel.getData();
-        var tooltipCascadedModel = buildTooltipModel([data.getItemModel(dataIndex), seriesModel, (seriesModel.coordinateSystem || {}).model, tooltipModel]);
+        var tooltipCascadedModel = buildTooltipModel([data.getItemModel(dataIndex), seriesModel, (seriesModel.coordinateSystem || {}).model], this._tooltipModel);
 
         if (tooltipCascadedModel.get('trigger') !== 'axis') {
           return;
@@ -53221,23 +54872,36 @@
 
         if (dataByCoordSys && dataByCoordSys.length) {
           this._showAxisTooltip(dataByCoordSys, e);
-        } // Always show item tooltip if mouse is on the element with dataIndex
-        else if (el && findEventDispatcher(el, function (target) {
-            return getECData(target).dataIndex != null;
-          }, true)) {
-            this._lastDataByCoordSys = null;
+        } else if (el) {
+          this._lastDataByCoordSys = null;
+          var seriesDispatcher_1;
+          var cmptDispatcher_1;
+          findEventDispatcher(el, function (target) {
+            // Always show item tooltip if mouse is on the element with dataIndex
+            if (getECData(target).dataIndex != null) {
+              seriesDispatcher_1 = target;
+              return true;
+            } // Tooltip provided directly. Like legend.
 
-            this._showSeriesItemTooltip(e, el, dispatchAction);
-          } // Tooltip provided directly. Like legend.
-          else if (el && el.tooltip) {
-              this._lastDataByCoordSys = null;
 
-              this._showComponentItemTooltip(e, el, dispatchAction);
-            } else {
-              this._lastDataByCoordSys = null;
-
-              this._hide(dispatchAction);
+            if (getECData(target).tooltipConfig != null) {
+              cmptDispatcher_1 = target;
+              return true;
             }
+          }, true);
+
+          if (seriesDispatcher_1) {
+            this._showSeriesItemTooltip(e, seriesDispatcher_1, dispatchAction);
+          } else if (cmptDispatcher_1) {
+            this._showComponentItemTooltip(e, cmptDispatcher_1, dispatchAction);
+          } else {
+            this._hide(dispatchAction);
+          }
+        } else {
+          this._lastDataByCoordSys = null;
+
+          this._hide(dispatchAction);
+        }
       };
 
       TooltipView.prototype._showOrMove = function (tooltipModel, cb) {
@@ -53255,7 +54919,7 @@
         var ecModel = this._ecModel;
         var globalTooltipModel = this._tooltipModel;
         var point = [e.offsetX, e.offsetY];
-        var singleTooltipModel = buildTooltipModel([e.tooltipOption, globalTooltipModel]);
+        var singleTooltipModel = buildTooltipModel([e.tooltipOption], globalTooltipModel);
         var renderMode = this._renderMode;
         var cbParamsList = [];
         var articleMarkup = createTooltipMarkup('section', {
@@ -53333,10 +54997,7 @@
 
       };
 
-      TooltipView.prototype._showSeriesItemTooltip = function (e, el, dispatchAction) {
-        var dispatcher = findEventDispatcher(el, function (target) {
-          return getECData(target).dataIndex != null;
-        }, true);
+      TooltipView.prototype._showSeriesItemTooltip = function (e, dispatcher, dispatchAction) {
         var ecModel = this._ecModel;
         var ecData = getECData(dispatcher); // Use dataModel in element if possible
         // Used when mouseover on a element like markPoint or edge
@@ -53350,7 +55011,10 @@
         var dataType = ecData.dataType;
         var data = dataModel.getData(dataType);
         var renderMode = this._renderMode;
-        var tooltipModel = buildTooltipModel([data.getItemModel(dataIndex), dataModel, seriesModel && (seriesModel.coordinateSystem || {}).model, this._tooltipModel]);
+        var positionDefault = e.positionDefault;
+        var tooltipModel = buildTooltipModel([data.getItemModel(dataIndex), dataModel, seriesModel && (seriesModel.coordinateSystem || {}).model], this._tooltipModel, positionDefault ? {
+          position: positionDefault
+        } : null);
         var tooltipTrigger = tooltipModel.get('trigger');
 
         if (tooltipTrigger != null && tooltipTrigger !== 'item') {
@@ -53383,7 +55047,9 @@
       };
 
       TooltipView.prototype._showComponentItemTooltip = function (e, el, dispatchAction) {
-        var tooltipOpt = el.tooltip;
+        var ecData = getECData(el);
+        var tooltipConfig = ecData.tooltipConfig;
+        var tooltipOpt = tooltipConfig.option;
 
         if (isString(tooltipOpt)) {
           var content = tooltipOpt;
@@ -53394,7 +55060,18 @@
           };
         }
 
-        var subTooltipModel = new Model(tooltipOpt, this._tooltipModel, this._ecModel);
+        var tooltipModelCascade = [tooltipOpt];
+
+        var cmpt = this._ecModel.getComponent(ecData.componentMainType, ecData.componentIndex);
+
+        if (cmpt) {
+          tooltipModelCascade.push(cmpt);
+        }
+
+        var positionDefault = e.positionDefault;
+        var subTooltipModel = buildTooltipModel(tooltipModelCascade, this._tooltipModel, positionDefault ? {
+          position: positionDefault
+        } : null);
         var defaultHtml = subTooltipModel.get('content');
         var asyncTicket = Math.random() + ''; // PENDING: this case do not support richText style yet.
 
@@ -53403,8 +55080,11 @@
         // that requires setting `trigger` nothing on component yet.
 
         this._showOrMove(subTooltipModel, function () {
-          this._showTooltipContent( // Use formatterParams from element defined in component
-          subTooltipModel, defaultHtml, subTooltipModel.get('formatterParams') || {}, asyncTicket, e.offsetX, e.offsetY, e.position, el, markupStyleCreator);
+          // Use formatterParams from element defined in component
+          // Avoid users modify it.
+          var formatterParams = clone(subTooltipModel.get('formatterParams') || {});
+
+          this._showTooltipContent(subTooltipModel, defaultHtml, formatterParams, asyncTicket, e.offsetX, e.offsetY, e.position, el, markupStyleCreator);
         }); // If not dispatch showTip, tip may be hide triggered by axis.
 
 
@@ -53431,6 +55111,8 @@
 
         var nearPoint = this._getNearestPoint([x, y], params, tooltipModel.get('trigger'), tooltipModel.get('borderColor'));
 
+        var nearPointColor = nearPoint.color;
+
         if (formatter && isString(formatter)) {
           var useUTC = tooltipModel.ecModel.get('useUTC');
           var params0 = isArray(params) ? params[0] : params;
@@ -53445,7 +55127,7 @@
         } else if (isFunction(formatter)) {
           var callback = bind$2(function (cbTicket, html) {
             if (cbTicket === this._ticket) {
-              tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPoint.color, positionExpr);
+              tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPointColor, positionExpr);
 
               this._updatePosition(tooltipModel, positionExpr, x, y, tooltipContent, params, el);
             }
@@ -53454,8 +55136,8 @@
           html = formatter(params, asyncTicket, callback);
         }
 
-        tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPoint.color, positionExpr);
-        tooltipContent.show(tooltipModel, nearPoint.color);
+        tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPointColor, positionExpr);
+        tooltipContent.show(tooltipModel, nearPointColor);
 
         this._updatePosition(tooltipModel, positionExpr, x, y, tooltipContent, params, el);
       };
@@ -53497,8 +55179,8 @@
         }
 
         if (isArray(positionExpr)) {
-          x = parsePercent$3(positionExpr[0], viewWidth);
-          y = parsePercent$3(positionExpr[1], viewHeight);
+          x = parsePercent$2(positionExpr[0], viewWidth);
+          y = parsePercent$2(positionExpr[1], viewHeight);
         } else if (isObject(positionExpr)) {
           var boxLayoutPosition = positionExpr;
           boxLayoutPosition.width = contentSize[0];
@@ -53591,12 +55273,20 @@
      */
 
 
-    function buildTooltipModel(modelCascade) {
+    function buildTooltipModel(modelCascade, globalTooltipModel, defaultTooltipOption) {
       // Last is always tooltip model.
-      var resultModel = modelCascade.pop();
+      var ecModel = globalTooltipModel.ecModel;
+      var resultModel;
 
-      while (modelCascade.length) {
-        var tooltipOpt = modelCascade.pop();
+      if (defaultTooltipOption) {
+        resultModel = new Model(defaultTooltipOption, ecModel, ecModel);
+        resultModel = new Model(globalTooltipModel.option, resultModel, ecModel);
+      } else {
+        resultModel = globalTooltipModel;
+      }
+
+      for (var i = modelCascade.length - 1; i >= 0; i--) {
+        var tooltipOpt = modelCascade[i];
 
         if (tooltipOpt) {
           if (tooltipOpt instanceof Model) {
@@ -53614,7 +55304,9 @@
             };
           }
 
-          resultModel = new Model(tooltipOpt, resultModel, resultModel.ecModel);
+          if (tooltipOpt) {
+            resultModel = new Model(tooltipOpt, resultModel, ecModel);
+          }
         }
       }
 
@@ -53705,6 +55397,57 @@
 
     function isCenterAlign(align) {
       return align === 'center' || align === 'middle';
+    }
+    /**
+     * Find target component by payload like:
+     * ```js
+     * { legendId: 'some_id', name: 'xxx' }
+     * { toolboxIndex: 1, name: 'xxx' }
+     * { geoName: 'some_name', name: 'xxx' }
+     * ```
+     * PENDING: at present only
+     *
+     * If not found, return null/undefined.
+     */
+
+
+    function findComponentReference(payload, ecModel, api) {
+      var queryOptionMap = preParseFinder(payload).queryOptionMap;
+      var componentMainType = queryOptionMap.keys()[0];
+
+      if (!componentMainType || componentMainType === 'series') {
+        return;
+      }
+
+      var queryResult = queryReferringComponents(ecModel, componentMainType, queryOptionMap.get(componentMainType), {
+        useDefault: false,
+        enableAll: false,
+        enableNone: false
+      });
+      var model = queryResult.models[0];
+
+      if (!model) {
+        return;
+      }
+
+      var view = api.getViewOfComponentModel(model);
+      var el;
+      view.group.traverse(function (subEl) {
+        var tooltipConfig = getECData(subEl).tooltipConfig;
+
+        if (tooltipConfig && tooltipConfig.name === payload.name) {
+          el = subEl;
+          return true; // stop
+        }
+      });
+
+      if (el) {
+        return {
+          componentMainType: componentMainType,
+          componentIndex: model.componentIndex,
+          el: el
+        };
+      }
     }
 
     function install$c(registers) {
@@ -53929,6 +55672,22 @@
     function install$d(registers) {
       registers.registerComponentModel(TitleModel);
       registers.registerComponentView(TitleView);
+    }
+
+    function checkMarkerInSeries(seriesOpts, markerType) {
+      if (!seriesOpts) {
+        return false;
+      }
+
+      var seriesOptArr = isArray(seriesOpts) ? seriesOpts : [seriesOpts];
+
+      for (var idx = 0; idx < seriesOptArr.length; idx++) {
+        if (seriesOptArr[idx] && seriesOptArr[idx][markerType]) {
+          return true;
+        }
+      }
+
+      return false;
     }
 
     function fillLabel(opt) {
@@ -54508,8 +56267,10 @@
       registers.registerComponentModel(MarkPointModel);
       registers.registerComponentView(MarkPointView);
       registers.registerPreprocessor(function (opt) {
-        // Make sure markPoint component is enabled
-        opt.markPoint = opt.markPoint || {};
+        if (checkMarkerInSeries(opt.series, 'markPoint')) {
+          // Make sure markPoint component is enabled
+          opt.markPoint = opt.markPoint || {};
+        }
       });
     }
 
@@ -54536,6 +56297,7 @@
         symbol: ['circle', 'arrow'],
         symbolSize: [8, 16],
         //symbolRotate: 0,
+        symbolOffset: 0,
         precision: 2,
         tooltip: {
           trigger: 'item'
@@ -54663,8 +56425,13 @@
 
       var symbolSize = lineData.getItemVisual(idx, name + 'Size');
       var symbolRotate = lineData.getItemVisual(idx, name + 'Rotate');
+      var symbolOffset = lineData.getItemVisual(idx, name + 'Offset') || 0;
+      var symbolKeepAspect = lineData.getItemVisual(idx, name + 'KeepAspect');
       var symbolSizeArr = isArray(symbolSize) ? symbolSize : [symbolSize, symbolSize];
-      var symbolPath = createSymbol(symbolType, -symbolSizeArr[0] / 2, -symbolSizeArr[1] / 2, symbolSizeArr[0], symbolSizeArr[1]);
+      var symbolOffsetArr = isArray(symbolOffset) ? symbolOffset : [symbolOffset, symbolOffset];
+      symbolOffsetArr[0] = parsePercent$1(symbolOffsetArr[0], symbolSizeArr[0]);
+      symbolOffsetArr[1] = parsePercent$1(retrieve2(symbolOffsetArr[1], symbolOffsetArr[0]), symbolSizeArr[1]);
+      var symbolPath = createSymbol(symbolType, -symbolSizeArr[0] / 2 + symbolOffsetArr[0], -symbolSizeArr[1] / 2 + symbolOffsetArr[1], symbolSizeArr[0], symbolSizeArr[1], null, symbolKeepAspect);
       symbolPath.__specifiedRotation = symbolRotate == null || isNaN(symbolRotate) ? void 0 : +symbolRotate * Math.PI / 180 || 0;
       symbolPath.name = name;
       return symbolPath;
@@ -55390,6 +57157,8 @@
         mlModel.setData(lineData);
         var symbolType = mlModel.get('symbol');
         var symbolSize = mlModel.get('symbolSize');
+        var symbolRotate = mlModel.get('symbolRotate');
+        var symbolOffset = mlModel.get('symbolOffset');
 
         if (!isArray(symbolType)) {
           symbolType = [symbolType, symbolType];
@@ -55397,6 +57166,14 @@
 
         if (!isArray(symbolSize)) {
           symbolSize = [symbolSize, symbolSize];
+        }
+
+        if (!isArray(symbolRotate)) {
+          symbolRotate = [symbolRotate, symbolRotate];
+        }
+
+        if (!isArray(symbolOffset)) {
+          symbolOffset = [symbolOffset, symbolOffset];
         } // Update visual and layout of from symbol and to symbol
 
 
@@ -55417,9 +57194,13 @@
           }
 
           lineData.setItemVisual(idx, {
+            fromSymbolKeepAspect: fromData.getItemVisual(idx, 'symbolKeepAspect'),
+            fromSymbolOffset: fromData.getItemVisual(idx, 'symbolOffset'),
             fromSymbolRotate: fromData.getItemVisual(idx, 'symbolRotate'),
             fromSymbolSize: fromData.getItemVisual(idx, 'symbolSize'),
             fromSymbol: fromData.getItemVisual(idx, 'symbol'),
+            toSymbolKeepAspect: toData.getItemVisual(idx, 'symbolKeepAspect'),
+            toSymbolOffset: toData.getItemVisual(idx, 'symbolOffset'),
             toSymbolRotate: toData.getItemVisual(idx, 'symbolRotate'),
             toSymbolSize: toData.getItemVisual(idx, 'symbolSize'),
             toSymbol: toData.getItemVisual(idx, 'symbol'),
@@ -55445,9 +57226,12 @@
           }
 
           data.setItemVisual(idx, {
-            symbolRotate: itemModel.get('symbolRotate'),
-            symbolSize: itemModel.get('symbolSize') || symbolSize[isFrom ? 0 : 1],
-            symbol: itemModel.get('symbol', true) || symbolType[isFrom ? 0 : 1],
+            symbolKeepAspect: itemModel.get('symbolKeepAspect'),
+            // `0` should be considered as a valid value, so use `retrieve2` instead of `||`
+            symbolOffset: retrieve2(itemModel.get('symbolOffset'), symbolOffset[isFrom ? 0 : 1]),
+            symbolRotate: retrieve2(itemModel.get('symbolRotate', true), symbolRotate[isFrom ? 0 : 1]),
+            symbolSize: retrieve2(itemModel.get('symbolSize'), symbolSize[isFrom ? 0 : 1]),
+            symbol: retrieve2(itemModel.get('symbol', true), symbolType[isFrom ? 0 : 1]),
             style: style
           });
         }
@@ -55512,8 +57296,10 @@
       registers.registerComponentModel(MarkLineModel);
       registers.registerComponentView(MarkLineView);
       registers.registerPreprocessor(function (opt) {
-        // Make sure markLine component is enabled
-        opt.markLine = opt.markLine || {};
+        if (checkMarkerInSeries(opt.series, 'markLine')) {
+          // Make sure markLine component is enabled
+          opt.markLine = opt.markLine || {};
+        }
       });
     }
 
@@ -55723,22 +57509,19 @@
           // Layout
           var points = map(dimPermutations, function (dim) {
             return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
-          }); // If none of the area is inside coordSys, allClipped is set to be true
+          });
+          var xAxisScale = coordSys.getAxis('x').scale;
+          var yAxisScale = coordSys.getAxis('y').scale;
+          var xAxisExtent = xAxisScale.getExtent();
+          var yAxisExtent = yAxisScale.getExtent();
+          var xPointExtent = [xAxisScale.parse(areaData.get('x0', idx)), xAxisScale.parse(areaData.get('x1', idx))];
+          var yPointExtent = [yAxisScale.parse(areaData.get('y0', idx)), yAxisScale.parse(areaData.get('y1', idx))];
+          asc(xPointExtent);
+          asc(yPointExtent);
+          var overlapped = !(xAxisExtent[0] > xPointExtent[1] || xAxisExtent[1] < xPointExtent[0] || yAxisExtent[0] > yPointExtent[1] || yAxisExtent[1] < yPointExtent[0]); // If none of the area is inside coordSys, allClipped is set to be true
           // in layout so that label will not be displayed. See #12591
 
-          var allClipped = true;
-          each(dimPermutations, function (dim) {
-            if (!allClipped) {
-              return;
-            }
-
-            var xValue = areaData.get(dim[0], idx);
-            var yValue = areaData.get(dim[1], idx); // If is infinity, the axis should be considered not clipped
-
-            if ((isInifinity$1(xValue) || coordSys.getAxis('x').containData(xValue)) && (isInifinity$1(yValue) || coordSys.getAxis('y').containData(yValue))) {
-              allClipped = false;
-            }
-          });
+          var allClipped = !overlapped;
           areaData.setItemLayout(idx, {
             points: points,
             allClipped: allClipped
@@ -55872,8 +57655,10 @@
       registers.registerComponentModel(MarkAreaModel);
       registers.registerComponentView(MarkAreaView);
       registers.registerPreprocessor(function (opt) {
-        // Make sure markArea component is enabled
-        opt.markArea = opt.markArea || {};
+        if (checkMarkerInSeries(opt.series, 'markArea')) {
+          // Make sure markArea component is enabled
+          opt.markArea = opt.markArea || {};
+        }
       });
     }
 
@@ -56116,10 +57901,40 @@
         itemGap: 10,
         itemWidth: 25,
         itemHeight: 14,
+        symbolSize: 'auto',
         inactiveColor: '#ccc',
         inactiveBorderColor: '#ccc',
+        inactiveBorderWidth: 'auto',
         itemStyle: {
-          borderWidth: 0
+          color: 'inherit',
+          opacity: 'inherit',
+          decal: 'inherit',
+          shadowBlur: 0,
+          shadowColor: null,
+          shadowOffsetX: 0,
+          shadowOffsetY: 0,
+          borderColor: 'inherit',
+          borderWidth: 'auto',
+          borderCap: 'inherit',
+          borderJoin: 'inherit',
+          borderDashOffset: 'inherit',
+          borderMiterLimit: 'inherit'
+        },
+        lineStyle: {
+          width: 'auto',
+          color: 'inherit',
+          inactiveColor: '#ccc',
+          inactiveWidth: 2,
+          opacity: 'inherit',
+          type: 'inherit',
+          cap: 'inherit',
+          join: 'inherit',
+          dashOffset: 'inherit',
+          miterLimit: 'inherit',
+          shadowBlur: 0,
+          shadowColor: null,
+          shadowOffsetX: 0,
+          shadowOffsetY: 0
         },
         textStyle: {
           color: '#333'
@@ -56256,8 +58071,8 @@
         ecModel.eachRawSeries(function (seriesModel) {
           !seriesModel.get('legendHoverLink') && excludeSeriesId.push(seriesModel.id);
         });
-        each$9(legendModel.getData(), function (itemModel, dataIndex) {
-          var name = itemModel.get('name'); // Use empty string or \n as a newline string
+        each$9(legendModel.getData(), function (legendItemModel, dataIndex) {
+          var name = legendItemModel.get('name'); // Use empty string or \n as a newline string
 
           if (!this.newlineDisabled && (name === '' || name === '\n')) {
             var g = new Group$1(); // @ts-ignore
@@ -56278,15 +58093,17 @@
 
           if (seriesModel) {
             var data = seriesModel.getData();
+            var lineVisualStyle = data.getVisual('legendLineStyle') || {};
+            var symbolType = data.getVisual('legendSymbol');
+            /**
+             * `data.getVisual('style')` may be the color from the register
+             * in series. For example, for line series,
+             */
+
             var style = data.getVisual('style');
-            var color = style[data.getVisual('drawType')] || style.fill;
-            var borderColor = style.stroke;
-            var decal = style.decal; // Using rect symbol defaultly
+            data.getVisual('symbolSize');
 
-            var legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
-            var symbolType = data.getVisual('symbol');
-
-            var itemGroup = this._createItem(name, dataIndex, itemModel, legendModel, legendSymbolType, symbolType, itemAlign, color, borderColor, decal, selectMode);
+            var itemGroup = this._createItem(seriesModel, name, dataIndex, legendItemModel, legendModel, itemAlign, lineVisualStyle, style, symbolType, selectMode);
 
             itemGroup.on('click', curry$1(dispatchSelectAction, name, null, api, excludeSeriesId)).on('mouseover', curry$1(dispatchHighlightAction, seriesModel.name, null, api, excludeSeriesId)).on('mouseout', curry$1(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
             legendDrawnMap.set(name, true);
@@ -56307,21 +58124,17 @@
 
                 var idx = provider.indexOfName(name);
                 var style = provider.getItemVisual(idx, 'style');
-                var borderColor = style.stroke;
-                var decal = style.decal;
-                var color = style.fill;
+                var symbolType = provider.getItemVisual(idx, 'legendSymbol');
                 var colorArr = parse(style.fill); // Color may be set to transparent in visualMap when data is out of range.
                 // Do not show nothing.
 
                 if (colorArr && colorArr[3] === 0) {
                   colorArr[3] = 0.2; // TODO color is set to 0, 0, 0, 0. Should show correct RGBA
 
-                  color = stringify(colorArr, 'rgba');
+                  style.fill = stringify(colorArr, 'rgba');
                 }
 
-                var legendSymbolType = 'roundRect';
-
-                var itemGroup = this._createItem(name, dataIndex, itemModel, legendModel, legendSymbolType, null, itemAlign, color, borderColor, decal, selectMode); // FIXME: consider different series has items with the same name.
+                var itemGroup = this._createItem(seriesModel, name, dataIndex, legendItemModel, legendModel, itemAlign, {}, style, symbolType, selectMode); // FIXME: consider different series has items with the same name.
 
 
                 itemGroup.on('click', curry$1(dispatchSelectAction, null, name, api, excludeSeriesId)) // Should not specify the series name, consider legend controls
@@ -56374,38 +58187,39 @@
         });
       };
 
-      LegendView.prototype._createItem = function (name, dataIndex, itemModel, legendModel, legendSymbolType, symbolType, itemAlign, color, borderColor, decal, selectMode) {
+      LegendView.prototype._createItem = function (seriesModel, name, dataIndex, itemModel, legendModel, itemAlign, lineVisualStyle, itemVisualStyle, symbolType, selectMode) {
+        var drawType = seriesModel.visualDrawType;
         var itemWidth = legendModel.get('itemWidth');
         var itemHeight = legendModel.get('itemHeight');
-        var inactiveColor = legendModel.get('inactiveColor');
-        var inactiveBorderColor = legendModel.get('inactiveBorderColor');
-        var symbolKeepAspect = legendModel.get('symbolKeepAspect');
-        var legendModelItemStyle = legendModel.getModel('itemStyle');
         var isSelected = legendModel.isSelected(name);
+        var symbolKeepAspect = itemModel.get('symbolKeepAspect');
+        var legendIconType = itemModel.get('icon');
+        symbolType = legendIconType || symbolType || 'roundRect';
+        var legendLineStyle = legendModel.getModel('lineStyle');
+        var style = getLegendStyle(symbolType, itemModel, legendLineStyle, lineVisualStyle, itemVisualStyle, drawType, isSelected);
         var itemGroup = new Group$1();
         var textStyleModel = itemModel.getModel('textStyle');
-        var itemIcon = itemModel.get('icon');
-        var tooltipModel = itemModel.getModel('tooltip');
-        var legendGlobalTooltipModel = tooltipModel.parentModel; // Use user given icon first
 
-        legendSymbolType = itemIcon || legendSymbolType;
-        var legendSymbol = createSymbol(legendSymbolType, 0, 0, itemWidth, itemHeight, isSelected ? color : inactiveColor, // symbolKeepAspect default true for legend
-        symbolKeepAspect == null ? true : symbolKeepAspect);
-        itemGroup.add(setSymbolStyle(legendSymbol, legendSymbolType, legendModelItemStyle, borderColor, inactiveBorderColor, decal, isSelected)); // Compose symbols
-        // PENDING
-
-        if (!itemIcon && symbolType // At least show one symbol, can't be all none
-        && (symbolType !== legendSymbolType || symbolType === 'none')) {
-          var size = itemHeight * 0.8;
-
-          if (symbolType === 'none') {
-            symbolType = 'circle';
-          }
-
-          var legendSymbolCenter = createSymbol(symbolType, (itemWidth - size) / 2, (itemHeight - size) / 2, size, size, isSelected ? color : inactiveColor, // symbolKeepAspect default true for legend
-          symbolKeepAspect == null ? true : symbolKeepAspect); // Put symbol in the center
-
-          itemGroup.add(setSymbolStyle(legendSymbolCenter, symbolType, legendModelItemStyle, borderColor, inactiveBorderColor, decal, isSelected));
+        if (typeof seriesModel.getLegendIcon === 'function' && !legendIconType) {
+          // Series has specific way to define legend icon
+          itemGroup.add(seriesModel.getLegendIcon({
+            itemWidth: itemWidth,
+            itemHeight: itemHeight,
+            symbolType: symbolType,
+            symbolKeepAspect: symbolKeepAspect,
+            itemStyle: style.itemStyle,
+            lineStyle: style.lineStyle
+          }));
+        } else {
+          // Use default legend icon policy for most series
+          itemGroup.add(getDefaultLegendIcon({
+            itemWidth: itemWidth,
+            itemHeight: itemHeight,
+            symbolType: symbolType,
+            symbolKeepAspect: symbolKeepAspect,
+            itemStyle: style.itemStyle,
+            lineStyle: style.lineStyle
+          }));
         }
 
         var textX = itemAlign === 'left' ? itemWidth + 5 : -5;
@@ -56419,6 +58233,7 @@
           content = formatter(name);
         }
 
+        var inactiveColor = itemModel.get('inactiveColor');
         itemGroup.add(new ZRText({
           style: createTextStyle(textStyleModel, {
             text: content,
@@ -56434,22 +58249,15 @@
           shape: itemGroup.getBoundingRect(),
           invisible: true
         });
+        var tooltipModel = itemModel.getModel('tooltip');
 
         if (tooltipModel.get('show')) {
-          var formatterParams = {
-            componentType: 'legend',
-            legendIndex: legendModel.componentIndex,
-            name: name,
-            $vars: ['name']
-          };
-          hitRect.tooltip = extend({
-            content: name,
-            // Defaul formatter
-            formatter: legendGlobalTooltipModel.get('formatter', true) || function (params) {
-              return params.name;
-            },
-            formatterParams: formatterParams
-          }, tooltipModel.option);
+          setTooltipConfig({
+            el: hitRect,
+            componentModel: legendModel,
+            itemName: name,
+            itemTooltipOption: tooltipModel.option
+          });
         }
 
         itemGroup.add(hitRect);
@@ -56526,22 +58334,115 @@
       return LegendView;
     }(ComponentView);
 
-    function setSymbolStyle(symbol, symbolType, legendModelItemStyle, borderColor, inactiveBorderColor, decal, isSelected) {
-      var itemStyle;
+    function getLegendStyle(symbolType, legendModel, legendLineStyle, lineVisualStyle, itemVisualStyle, drawType, isSelected) {
+      /**
+       * Use series style if is inherit;
+       * elsewise, use legend style
+       */
+      // itemStyle
+      var legendItemModel = legendModel.getModel('itemStyle');
+      var itemProperties = ITEM_STYLE_KEY_MAP.concat([['decal']]);
+      var itemStyle = {};
 
-      if (symbolType !== 'line' && symbolType.indexOf('empty') < 0) {
-        itemStyle = legendModelItemStyle.getItemStyle();
-        symbol.style.stroke = borderColor;
-        symbol.style.decal = decal;
+      for (var i = 0; i < itemProperties.length; ++i) {
+        var propName = itemProperties[i][itemProperties[i].length - 1];
+        var visualName = itemProperties[i][0];
+        var value = legendItemModel.getShallow(propName);
 
-        if (!isSelected) {
-          itemStyle.stroke = inactiveBorderColor;
+        if (value === 'inherit') {
+          switch (visualName) {
+            case 'fill':
+              /**
+               * Series with visualDrawType as 'stroke' should have
+               * series stroke as legend fill
+               */
+              itemStyle.fill = itemVisualStyle[drawType];
+              break;
+
+            case 'stroke':
+              /**
+               * symbol type with "emptyXXX" should use fill color
+               * in visual style
+               */
+              itemStyle.stroke = itemVisualStyle[symbolType.startsWith('empty') ? 'fill' : 'stroke'];
+              break;
+
+            case 'opacity':
+              /**
+               * Use lineStyle.opacity if drawType is stroke
+               */
+              itemStyle.opacity = (drawType === 'fill' ? itemVisualStyle : lineVisualStyle).opacity;
+              break;
+
+            default:
+              itemStyle[visualName] = itemVisualStyle[visualName];
+          }
+        } else if (value === 'auto' && visualName === 'lineWidth') {
+          // If lineStyle.width is 'auto', it is set to be 2 if series has border
+          itemStyle.lineWidth = itemVisualStyle.lineWidth > 0 ? 2 : 0;
+        } else {
+          itemStyle[visualName] = value;
         }
-      } else {
-        itemStyle = legendModelItemStyle.getItemStyle(['borderWidth', 'borderColor']);
+      } // lineStyle
+
+
+      var legendLineModel = legendModel.getModel('lineStyle');
+      var lineProperties = LINE_STYLE_KEY_MAP.concat([['inactiveColor'], ['inactiveWidth']]);
+      var lineStyle = {};
+
+      for (var i = 0; i < lineProperties.length; ++i) {
+        var propName = lineProperties[i][1];
+        var visualName = lineProperties[i][0];
+        var value = legendLineModel.getShallow(propName);
+
+        if (value === 'inherit') {
+          lineStyle[visualName] = lineVisualStyle[visualName];
+        } else if (value === 'auto' && visualName === 'lineWidth') {
+          // If lineStyle.width is 'auto', it is set to be 2 if series has border
+          lineStyle.lineWidth = lineVisualStyle.lineWidth > 0 ? 2 : 0;
+        } else {
+          lineStyle[visualName] = value;
+        }
+      } // Fix auto color to real color
+
+
+      itemStyle.fill === 'auto' && (itemStyle.fill = itemVisualStyle.fill);
+      itemStyle.stroke === 'auto' && (itemStyle.stroke = itemVisualStyle.fill);
+      lineStyle.stroke === 'auto' && (lineStyle.stroke = itemVisualStyle.fill);
+
+      if (!isSelected) {
+        var borderWidth = legendModel.get('inactiveBorderWidth');
+        /**
+         * Since stroke is set to be inactiveBorderColor, it may occur that
+         * there is no border in series but border in legend, so we need to
+         * use border only when series has border if is set to be auto
+         */
+
+        var visualHasBorder = itemStyle[symbolType.indexOf('empty') > -1 ? 'fill' : 'stroke'];
+        itemStyle.lineWidth = borderWidth === 'auto' ? itemVisualStyle.lineWidth > 0 && visualHasBorder ? 2 : 0 : itemStyle.lineWidth;
+        itemStyle.fill = legendModel.get('inactiveColor');
+        itemStyle.stroke = legendModel.get('inactiveBorderColor');
+        lineStyle.stroke = legendLineStyle.get('inactiveColor');
+        lineStyle.lineWidth = legendLineStyle.get('inactiveWidth');
       }
 
-      symbol.setStyle(itemStyle);
+      return {
+        itemStyle: itemStyle,
+        lineStyle: lineStyle
+      };
+    }
+
+    function getDefaultLegendIcon(opt) {
+      var symboType = opt.symbolType || 'roundRect';
+      var symbol = createSymbol(symboType, 0, 0, opt.itemWidth, opt.itemHeight, opt.itemStyle.fill, opt.symbolKeepAspect);
+      symbol.setStyle(opt.itemStyle);
+
+      if (symboType.indexOf('empty') > -1) {
+        symbol.style.stroke = symbol.style.fill;
+        symbol.style.fill = '#fff';
+        symbol.style.lineWidth = 2;
+      }
+
       return symbol;
     }
 
@@ -58437,7 +60338,7 @@
           thisGroup.add(handleLabels[handleIndex] = new ZRText({
             silent: true,
             invisible: true,
-            style: {
+            style: createTextStyle(textStyleModel, {
               x: 0,
               y: 0,
               text: '',
@@ -58445,7 +60346,7 @@
               align: 'center',
               fill: textStyleModel.getTextColor(),
               font: textStyleModel.getFont()
-            },
+            }),
             z2: 10
           }));
         }, this); // Handle to move. Only visible when brushSelect is set true.
