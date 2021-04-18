@@ -193,7 +193,7 @@ class PiePiece extends graphic.Sector {
 
         const labelPosition = seriesModel.get(['label', 'position']);
         if (labelPosition !== 'outside' && labelPosition !== 'outer') {
-            sector.getTextGuideLine()?.hide();
+            sector.removeTextGuideLine();
             return;
         }
         // Default use item visual color
