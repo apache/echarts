@@ -43,10 +43,7 @@ class PiePiece extends graphic.Sector {
 
         this.z2 = 2;
 
-        const polyline = new graphic.Polyline();
         const text = new graphic.Text();
-
-        this.setTextGuideLine(polyline);
 
         this.setTextContent(text);
 
@@ -195,12 +192,19 @@ class PiePiece extends graphic.Sector {
         if (labelPosition !== 'outside' && labelPosition !== 'outer') {
             sector.removeTextGuideLine();
             return;
-        }
-        // Default use item visual color
-        setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
+        } else {
+          let polyline = this.getTextGuideLine();
+          if (!polyline) {
+            polyline = new graphic.Polyline();
+            this.setTextGuideLine(polyline);
+          }
+
+          // Default use item visual color
+          setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
             stroke: visualColor,
             opacity: retrieve3(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity, 1)
-        });
+          });
+        }
     }
 }
 
