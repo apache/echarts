@@ -107,29 +107,23 @@ function assembleTransition(duration: number, onlyFade?: boolean): string {
     return CSS_TRANSITION_VENDOR + ':' + transitionText;
 }
 
-function assembleTransform(el: HTMLElement, x: number, y: number, toString?: boolean) {
+function assembleTransform(x: number, y: number, toString?: boolean) {
     // If using float on style, the final width of the dom might
     // keep changing slightly while mouse move. So `toFixed(0)` them.
-    let x0;
-    let y0;
+    const x0 = x.toFixed(0) + 'px';
+    const y0 = y.toFixed(0) + 'px';
     // not support transform, use `left` and `top` instead.
     if (!env.transformSupported) {
-        x0 = x.toFixed(0);
-        y0 = y.toFixed(0);
         return toString
-            ? `top:${y0}px;left:${x0}px;`
-            : [['top', `${y0}px`], ['left', `${x0}px`]];
+            ? `top:${y0};left:${x0};`
+            : [['top', y0], ['left', x0]];
     }
     // support transform
-    // FIXME: the padding of parent element will affect the position of tooltip
-    const stl = getComputedStyle(el.parentElement);
-    x0 = (x - parseInt(stl.paddingLeft, 10)).toFixed(0);
-    y0 = (y - parseInt(stl.paddingTop, 10)).toFixed(0);
     const is3d = env.transform3dSupported;
-    const translate = `translate${is3d ? '3d' : ''}(${x0}px,${y0}px${is3d ? ',0' : ''})`;
+    const translate = `translate${is3d ? '3d' : ''}(${x0},${y0}${is3d ? ',0' : ''})`;
     return toString
-        ? CSS_TRANSFORM_VENDOR + ':' + translate + ';'
-        : [[TRANSFORM_VENDOR, translate]];
+        ? 'top:0;left:0;' + CSS_TRANSFORM_VENDOR + ':' + translate + ';'
+        : [['top', 0], ['left', 0], [TRANSFORM_VENDOR, translate]];
 }
 
 /**
@@ -281,7 +275,6 @@ class TooltipHTMLContent {
      */
     private _longHideTimeout: number;
 
-
     constructor(
         container: HTMLElement,
         api: ExtensionAPI,
@@ -304,8 +297,7 @@ class TooltipHTMLContent {
             document.body.appendChild(el);
         }
         else {
-            // PENDING
-            container.prepend(el);
+            container.appendChild(el);
         }
 
         this._container = container;
@@ -388,7 +380,7 @@ class TooltipHTMLContent {
             style.cssText = gCssText
                 + assembleCssText(tooltipModel, !this._firstShow, this._longHide)
                 // initial transform
-                + assembleTransform(el, styleCoord[0], styleCoord[1], true)
+                + assembleTransform(styleCoord[0], styleCoord[1], true)
                 + `border-color:${convertToColorString(nearPointColor)};`
                 + (tooltipModel.get('extraCssText') || '')
                 // If mouse occasionally move over the tooltip, a mouseout event will be
@@ -453,10 +445,7 @@ class TooltipHTMLContent {
 
         if (styleCoord[0] != null && styleCoord[1] != null) {
             const style = this.el.style;
-            const transforms = assembleTransform(
-                this.el,
-                styleCoord[0], styleCoord[1]
-            ) as string[][];
+            const transforms = assembleTransform(styleCoord[0], styleCoord[1]) as string[][];
             each(transforms, (transform) => {
               style[transform[0] as any] = transform[1];
             });
