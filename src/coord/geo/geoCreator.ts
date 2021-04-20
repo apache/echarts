@@ -22,7 +22,6 @@ import Geo from './Geo';
 import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
 import geoSourceManager from './geoSourceManager';
-import mapDataStorage from './mapDataStorage';
 import GeoModel, { GeoOption, RegoinOption } from './GeoModel';
 import MapSeries, { MapSeriesOption } from '../../chart/map/MapSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -36,6 +35,7 @@ import ComponentModel from '../../model/Component';
 
 
 export type resizeGeoType = typeof resizeGeo;
+
 /**
  * Resize method bound to the geo
  */
@@ -105,7 +105,6 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
         // Use left/top/width/height
         const boxLayoutOption = geoModel.getBoxLayoutParams() as Parameters<typeof layout.getLayoutRect>[0];
 
-        // 0.75 rate
         boxLayoutOption.aspect = aspect;
 
         viewRect = layout.getLayoutRect(boxLayoutOption, {
@@ -140,20 +139,12 @@ class GeoCreator implements CoordinateSystemCreator {
         ecModel.eachComponent('geo', function (geoModel: GeoModel, idx) {
             const name = geoModel.get('map');
 
-            let aspectScale = geoModel.get('aspectScale');
-            let invertLongitute = true;
-            const mapRecords = mapDataStorage.retrieveMap(name);
-            if (mapRecords && mapRecords[0] && mapRecords[0].type === 'svg') {
-                aspectScale == null && (aspectScale = 1);
-                invertLongitute = false;
-            }
-            else {
-                aspectScale == null && (aspectScale = 0.75);
-            }
+            const geo = new Geo(name + idx, name, {
+                nameMap: geoModel.get('nameMap'),
+                nameProperty: geoModel.get('nameProperty'),
+                aspectScale: geoModel.get('aspectScale')
+            });
 
-            const geo = new Geo(name + idx, name, geoModel.get('nameMap'), invertLongitute);
-
-            geo.aspectScale = aspectScale;
             geo.zoomLimit = geoModel.get('scaleLimit');
             geoList.push(geo);
 
@@ -193,7 +184,12 @@ class GeoCreator implements CoordinateSystemCreator {
             const nameMapList = zrUtil.map(mapSeries, function (singleMapSeries) {
                 return singleMapSeries.get('nameMap');
             });
-            const geo = new Geo(mapType, mapType, zrUtil.mergeAll(nameMapList));
+
+            const geo = new Geo(mapType, mapType, {
+                nameMap: zrUtil.mergeAll(nameMapList),
+                nameProperty: mapSeries[0].get('nameProperty'),
+                aspectScale: mapSeries[0].get('aspectScale')
+            });
 
             geo.zoomLimit = zrUtil.retrieve.apply(null, zrUtil.map(mapSeries, function (singleMapSeries) {
                 return singleMapSeries.get('scaleLimit');
@@ -202,7 +198,6 @@ class GeoCreator implements CoordinateSystemCreator {
 
             // Inject resize method
             geo.resize = resizeGeo;
-            geo.aspectScale = mapSeries[0].get('aspectScale');
 
             geo.resize(mapSeries[0], api);
 
@@ -220,7 +215,10 @@ class GeoCreator implements CoordinateSystemCreator {
      * Fill given regions array
      */
     getFilledRegions(
-        originRegionArr: RegoinOption[], mapName: string, nameMap?: NameMap
+        originRegionArr: RegoinOption[],
+        mapName: string,
+        nameMap: NameMap,
+        nameProperty: string
     ): RegoinOption[] {
         // Not use the original
         const regionsArr = (originRegionArr || []).slice();
@@ -230,7 +228,7 @@ class GeoCreator implements CoordinateSystemCreator {
             dataNameMap.set(regionsArr[i].name, regionsArr[i]);
         }
 
-        const source = geoSourceManager.load(mapName, nameMap);
+        const source = geoSourceManager.load(mapName, nameMap, nameProperty);
         zrUtil.each(source.regions, function (region) {
             const name = region.name;
             !dataNameMap.get(name) && regionsArr.push({name: name});
@@ -239,6 +237,7 @@ class GeoCreator implements CoordinateSystemCreator {
         return regionsArr;
     }
 }
+
 
 const geoCreator = new GeoCreator();
 

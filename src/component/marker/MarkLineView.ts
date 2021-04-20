@@ -35,6 +35,7 @@ import MarkerModel from './MarkerModel';
 import {
     isArray,
     retrieve,
+    retrieve2,
     clone,
     extend,
     logError,
@@ -319,11 +320,19 @@ class MarkLineView extends MarkerView {
 
         let symbolType = mlModel.get('symbol');
         let symbolSize = mlModel.get('symbolSize');
+        let symbolRotate = mlModel.get('symbolRotate');
+        let symbolOffset = mlModel.get('symbolOffset');
         if (!isArray(symbolType)) {
             symbolType = [symbolType, symbolType];
         }
         if (!isArray(symbolSize)) {
             symbolSize = [symbolSize, symbolSize];
+        }
+        if (!isArray(symbolRotate)) {
+            symbolRotate = [symbolRotate, symbolRotate];
+        }
+        if (!isArray(symbolOffset)) {
+            symbolOffset = [symbolOffset, symbolOffset];
         }
 
         // Update visual and layout of from symbol and to symbol
@@ -349,9 +358,13 @@ class MarkLineView extends MarkerView {
             }
 
             lineData.setItemVisual(idx, {
+                fromSymbolKeepAspect: fromData.getItemVisual(idx, 'symbolKeepAspect'),
+                fromSymbolOffset: fromData.getItemVisual(idx, 'symbolOffset'),
                 fromSymbolRotate: fromData.getItemVisual(idx, 'symbolRotate'),
                 fromSymbolSize: fromData.getItemVisual(idx, 'symbolSize') as number,
                 fromSymbol: fromData.getItemVisual(idx, 'symbol'),
+                toSymbolKeepAspect: toData.getItemVisual(idx, 'symbolKeepAspect'),
+                toSymbolOffset: toData.getItemVisual(idx, 'symbolOffset'),
                 toSymbolRotate: toData.getItemVisual(idx, 'symbolRotate'),
                 toSymbolSize: toData.getItemVisual(idx, 'symbolSize') as number,
                 toSymbol: toData.getItemVisual(idx, 'symbol'),
@@ -386,9 +399,12 @@ class MarkLineView extends MarkerView {
             }
 
             data.setItemVisual(idx, {
-                symbolRotate: itemModel.get('symbolRotate'),
-                symbolSize: itemModel.get('symbolSize') || (symbolSize as number[])[isFrom ? 0 : 1],
-                symbol: itemModel.get('symbol', true) || (symbolType as string[])[isFrom ? 0 : 1],
+                symbolKeepAspect: itemModel.get('symbolKeepAspect'),
+                // `0` should be considered as a valid value, so use `retrieve2` instead of `||`
+                symbolOffset: retrieve2(itemModel.get('symbolOffset'), (symbolOffset as (string | number)[])[isFrom ? 0 : 1]),
+                symbolRotate: retrieve2(itemModel.get('symbolRotate', true), (symbolRotate as number[])[isFrom ? 0 : 1]),
+                symbolSize: retrieve2(itemModel.get('symbolSize'), (symbolSize as number[])[isFrom ? 0 : 1]),
+                symbol: retrieve2(itemModel.get('symbol', true), (symbolType as string[])[isFrom ? 0 : 1]),
                 style
             });
         }

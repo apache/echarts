@@ -26,13 +26,17 @@ import {
     BoxLayoutOptionMixin,
     BorderOptionMixin,
     ColorString,
-    ItemStyleOption,
     LabelOption,
     LayoutOrient,
-    CommonTooltipOption
+    CommonTooltipOption,
+    ItemStyleOption,
+    LineStyleOption
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
+import { ItemStyleProps } from '../../model/mixin/itemStyle';
+import { LineStyleProps } from './../../model/mixin/lineStyle';
+import {PathStyleProps} from 'zrender/src/graphic/Path';
 
 type LegendDefaultSelectorOptionsProps = {
     type: string;
@@ -59,7 +63,63 @@ export interface LegendSelectorButtonOption {
     title?: string
 }
 
-interface DataItem {
+/**
+ * T: the type to be extended
+ * ET: extended type for keys of T
+ * ST: special type for T to be extended
+ */
+type ExtendPropertyType<T, ET, ST extends { [key in keyof T]: any }> = {
+    [key in keyof T]: key extends keyof ST ? T[key] | ET | ST[key] : T[key] | ET
+};
+
+export interface LegendItemStyleOption extends ExtendPropertyType<ItemStyleOption, 'inherit', {
+    borderWidth: 'auto'
+}> {}
+
+export interface LegendLineStyleOption extends ExtendPropertyType<LineStyleOption, 'inherit', {
+    width: 'auto'
+}> {
+    inactiveColor?: ColorString
+    inactiveWidth?: number
+}
+
+export interface LegendStyleOption {
+    /**
+     * Icon of the legend items.
+     * @default 'roundRect'
+     */
+    icon?: string
+
+    /**
+     * Color when legend item is not selected
+     */
+    inactiveColor?: ColorString
+    /**
+     * Border color when legend item is not selected
+     */
+    inactiveBorderColor?: ColorString
+    /**
+     * Border color when legend item is not selected
+     */
+    inactiveBorderWidth?: number | 'auto'
+
+    /**
+     * Legend label formatter
+     */
+    formatter?: string | ((name: string) => string)
+
+    itemStyle?: LegendItemStyleOption
+
+    lineStyle?: LegendLineStyleOption
+
+    textStyle?: LabelOption
+
+    symbolKeepAspect?: boolean
+
+    symbolSize?: number | 'auto' | 'inherit'
+}
+
+interface DataItem extends LegendStyleOption {
     name?: string
     icon?: string
     textStyle?: LabelOption
@@ -74,7 +134,27 @@ export interface LegendTooltipFormatterParams {
     name: string
     $vars: ['name']
 }
-export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
+
+export interface LegendSymbolParams {
+    itemWidth: number,
+    itemHeight: number,
+    /**
+     * symbolType is from legend.icon, legend.data.icon, or series visual
+     */
+    symbolType: string,
+    symbolKeepAspect: boolean,
+    itemStyle: PathStyleProps,
+    lineStyle: LineStyleProps
+}
+
+export interface LegendSymbolStyleOption {
+    itemStyle?: ItemStyleProps,
+    lineStyle?: LineStyleProps
+}
+
+export interface LegendOption extends ComponentOption, LegendStyleOption,
+    BoxLayoutOptionMixin, BorderOptionMixin
+{
 
     mainType?: 'legend'
 
@@ -110,23 +190,6 @@ export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, Bor
      * Height of legend symbol
      */
     itemHeight?: number
-    /**
-     * Color when legend item is not selected
-     */
-    inactiveColor?: ColorString
-    /**
-     * Border color when legend item is not selected
-     */
-    inactiveBorderColor?: ColorString
-
-    itemStyle?: ItemStyleOption
-
-    /**
-     * Legend label formatter
-     */
-    formatter?: string | ((name: string) => string)
-
-    textStyle?: LabelOption
 
     selectedMode?: boolean | 'single' | 'multiple'
     /**
@@ -163,8 +226,6 @@ export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, Bor
     selectorButtonGap?: number
 
     data?: (string | DataItem)[]
-
-    symbolKeepAspect?: boolean
 
     /**
      * Tooltip option
@@ -394,13 +455,43 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         itemGap: 10,
         itemWidth: 25,
         itemHeight: 14,
+        symbolSize: 'auto',
 
         inactiveColor: '#ccc',
-
         inactiveBorderColor: '#ccc',
+        inactiveBorderWidth: 'auto',
 
         itemStyle: {
-            borderWidth: 0
+            color: 'inherit',
+            opacity: 'inherit',
+            decal: 'inherit',
+            shadowBlur: 0,
+            shadowColor: null,
+            shadowOffsetX: 0,
+            shadowOffsetY: 0,
+            borderColor: 'inherit',
+            borderWidth: 'auto',
+            borderCap: 'inherit',
+            borderJoin: 'inherit',
+            borderDashOffset: 'inherit',
+            borderMiterLimit: 'inherit'
+        },
+
+        lineStyle: {
+            width: 'auto',
+            color: 'inherit',
+            inactiveColor: '#ccc',
+            inactiveWidth: 2,
+            opacity: 'inherit',
+            type: 'inherit',
+            cap: 'inherit',
+            join: 'inherit',
+            dashOffset: 'inherit',
+            miterLimit: 'inherit',
+            shadowBlur: 0,
+            shadowColor: null,
+            shadowOffsetX: 0,
+            shadowOffsetY: 0
         },
 
         textStyle: {

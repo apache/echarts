@@ -102,7 +102,7 @@ type DepGraph = {[cmptMainType: string]: DepGraphItem};
  * Topological travel on Activity Network (Activity On Vertices).
  * Dependencies is defined in Model.prototype.dependencies, like ['xAxis', 'yAxis'].
  * If 'xAxis' or 'yAxis' is absent in componentTypeList, just ignore it in topology.
- * If there is circle dependencey, Error will be thrown.
+ * If there is circular dependencey, Error will be thrown.
  */
 export function enableTopologicalTravel<T>(
     entity: TopologicalTravelable<T>,
@@ -152,7 +152,7 @@ export function enableTopologicalTravel<T>(
         zrUtil.each(targetNameSet, function () {
             let errMsg = '';
             if (__DEV__) {
-                errMsg = makePrintable('Circle dependency may exists: ', targetNameSet, targetNameList, fullNameList);
+                errMsg = makePrintable('Circular dependency may exists: ', targetNameSet, targetNameList, fullNameList);
             }
             throw new Error(errMsg);
         });

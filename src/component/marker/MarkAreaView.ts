@@ -26,7 +26,7 @@ import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
-import { retrieve, mergeAll, map, defaults, curry, filter, HashMap, each } from 'zrender/src/core/util';
+import { retrieve, mergeAll, map, defaults, curry, filter, HashMap } from 'zrender/src/core/util';
 import { ScaleDataValue, ParsedValue, ZRColor } from '../../util/types';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import MarkAreaModel, { MarkArea2DDataItemOption } from './MarkAreaModel';
@@ -248,22 +248,19 @@ class MarkAreaView extends MarkerView {
             const points = map(dimPermutations, function (dim) {
                 return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
             });
+            const xAxisScale = coordSys.getAxis('x').scale;
+            const yAxisScale = coordSys.getAxis('y').scale;
+            const xAxisExtent = xAxisScale.getExtent();
+            const yAxisExtent = yAxisScale.getExtent();
+            const xPointExtent = [xAxisScale.parse(areaData.get('x0', idx)), xAxisScale.parse(areaData.get('x1', idx))];
+            const yPointExtent = [yAxisScale.parse(areaData.get('y0', idx)), yAxisScale.parse(areaData.get('y1', idx))];
+            numberUtil.asc(xPointExtent);
+            numberUtil.asc(yPointExtent);
+            const overlapped = !(xAxisExtent[0] > xPointExtent[1] || xAxisExtent[1] < xPointExtent[0]
+                                || yAxisExtent[0] > yPointExtent[1] || yAxisExtent[1] < yPointExtent[0]);
             // If none of the area is inside coordSys, allClipped is set to be true
             // in layout so that label will not be displayed. See #12591
-            let allClipped = true;
-            each(dimPermutations, function (dim) {
-                if (!allClipped) {
-                    return;
-                }
-                const xValue = areaData.get(dim[0], idx);
-                const yValue = areaData.get(dim[1], idx);
-                // If is infinity, the axis should be considered not clipped
-                if ((isInifinity(xValue) || coordSys.getAxis('x').containData(xValue))
-                    && (isInifinity(yValue) || coordSys.getAxis('y').containData(yValue))
-                ) {
-                    allClipped = false;
-                }
-            });
+            const allClipped = !overlapped;
             areaData.setItemLayout(idx, {
                 points: points,
                 allClipped: allClipped

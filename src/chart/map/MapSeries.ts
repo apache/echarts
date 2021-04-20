@@ -40,6 +40,9 @@ import List from '../../data/List';
 import Model from '../../model/Model';
 import Geo from '../../coord/geo/Geo';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import {createSymbol, ECSymbol} from '../../util/symbol';
+import {LegendSymbolParams} from '../../component/legend/LegendModel';
+import {Group} from '../../util/graphic';
 
 export interface MapStateOption {
     itemStyle?: GeoItemStyleOption
@@ -212,7 +215,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             const geo = this.coordinateSystem;
             const region = geo.getRegion(name);
 
-            return region && geo.dataToPoint(region.center);
+            return region && geo.dataToPoint(region.getCenter());
         }
     };
 
@@ -222,6 +225,30 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
     setCenter(center: number[]): void {
         this.option.center = center;
+    }
+
+    getLegendIcon(opt: LegendSymbolParams): ECSymbol | Group {
+        const symbolType = opt.symbolType || 'roundRect';
+        const symbol = createSymbol(
+            symbolType,
+            0,
+            0,
+            opt.itemWidth,
+            opt.itemHeight,
+            opt.itemStyle.fill,
+            opt.symbolKeepAspect
+        );
+
+        symbol.setStyle(opt.itemStyle);
+        // Map do not use itemStyle.borderWidth as border width
+        symbol.style.stroke = 'none';
+
+        if (symbolType.indexOf('empty') > -1) {
+            symbol.style.stroke = symbol.style.fill;
+            symbol.style.fill = '#fff';
+            symbol.style.lineWidth = 2;
+        }
+        return symbol;
     }
 
     static defaultOption: MapSeriesOption = {
@@ -251,7 +278,10 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
         // Aspect is width / height. Inited to be geoJson bbox aspect
         // This parameter is used for scale this aspect
-        aspectScale: 0.75,
+        // Default value:
+        // for geoSVG source: 1,
+        // for geoJSON source: 0.75.
+        aspectScale: null,
 
         ///// Layout with center and size
         // If you wan't to put map in a fixed size box with right aspect ratio
