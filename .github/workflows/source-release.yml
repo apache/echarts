@@ -32,19 +32,19 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${EC_ARTEFACT_NAME}
-        path: |
-          index.d.ts
-          src/
-          extension-src/
-          licenses/
-          theme/
-          build/
-          package.json
-          package-lock.json
-          LICENSE
-          NOTICE
-          README.md
-          tsconfig.json
+          path: |
+            index.d.ts
+            src/
+            extension-src/
+            licenses/
+            theme/
+            build/
+            package.json
+            package-lock.json
+            LICENSE
+            NOTICE
+            README.md
+            tsconfig.json
 
       - name: Download source release
         uses: actions/download-artifact@v2
