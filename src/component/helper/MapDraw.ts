@@ -252,11 +252,23 @@ class MapDraw {
             // will make them share the same label and bring trouble in label
             // location calculation.
             let regionGroup = nameMap.get(regionName);
+            const hasRegionGroup = !!regionGroup;
 
-            if (!regionGroup) {
+            if (!hasRegionGroup) {
                 regionGroup = nameMap.set(regionName, new graphic.Group() as RegionsGroup);
                 regionsGroup.add(regionGroup);
+            }
 
+            const compoundPath = new graphic.CompoundPath({
+                segmentIgnoreThreshold: 1,
+                shape: {
+                    paths: []
+                }
+            });
+            regionGroup.add(compoundPath);
+
+            if (!hasRegionGroup) {
+                // ensure children have been added to group before calling resetEventTriggerForRegion
                 resetEventTriggerForRegion(
                     viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel, dataIdx
                 );
@@ -267,14 +279,6 @@ class MapDraw {
                     viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel
                 );
             }
-
-            const compoundPath = new graphic.CompoundPath({
-                segmentIgnoreThreshold: 1,
-                shape: {
-                    paths: []
-                }
-            });
-            regionGroup.add(compoundPath);
 
             zrUtil.each(region.geometries, function (geometry) {
                 if (geometry.type !== 'polygon') {
