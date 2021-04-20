@@ -28,6 +28,9 @@ jobs:
       - name: build release
         run: |
           npm run release
+      - name: test generated DTS
+        run: |
+          npm run test:dts
 
   # test:
   #   runs-on: ubuntu-latest
