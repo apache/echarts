@@ -38,7 +38,7 @@ jobs:
       - name: build release
         run: |
           npm run release
-      - name: test generated DTS
+      - name: Test generated DTS
         run: |
           npm run test:dts
 
