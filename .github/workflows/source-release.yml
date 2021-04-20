@@ -1,61 +1,60 @@
 name: Source Release
 
 on:
-  create:
-    branches:
-      - "!*"
-    tags:
-      - "*-rc*"
+  release:
+    types: [prereleased]
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
 
-  runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x]
 
-  strategy:
-    matrix:
-      node-version: [12.x]
+    steps:
+      - uses: actions/checkout@v1
 
-  steps:
-    - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
+      - name: Prepare env
+        run: |
+          export RELEASE_VERSION=${GITHUB_REF#refs/*/}
+          export EC_ARTEFACT_NAME=apache-echarts-${RELEASE_VERSION}-src.zip
 
-    - name: Prepare env
-      run: |
-        export RELEASE_VERSION=${GITHUB_REF#refs/*/}
-        export EC_ARTEFACT_NAME=apache-echarts-${RELEASE_VERSION}-src.zip
+      # TODO Check release version is RC
+      # TODO Release Note
 
-    # TODO Check release version is RC
-    - name: Archive source release
-      uses: actions/upload-artifact@v2
-      with:
-        name: ${EC_ARTEFACT_NAME}
-      path: |
-        index.d.ts
-        src/
-        extension-src/
-        licenses/
-        theme/
-        build/
-        package.json
-        package-lock.json
-        LICENSE
-        NOTICE
-        README.md
-        tsconfig.json
+      - name: Archive source release
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${EC_ARTEFACT_NAME}
+        path: |
+          index.d.ts
+          src/
+          extension-src/
+          licenses/
+          theme/
+          build/
+          package.json
+          package-lock.json
+          LICENSE
+          NOTICE
+          README.md
+          tsconfig.json
 
-    - name: Download source release
-      uses: actions/download-artifact@v2
-      with:
-        name: ${EC_ARTEFACT_NAME}
-        path: ~/download/echarts
+      - name: Download source release
+        uses: actions/download-artifact@v2
+        with:
+          name: ${EC_ARTEFACT_NAME}
+          path: ~/download/echarts
 
-    - name: Build source release
-      run: |
-        cd ~/download/echarts
-        npm ci
-        npm run release
+      - name: Build source release
+        run: |
+          cd ~/download/echarts
+          npm ci
+          npm run release
 
