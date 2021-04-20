@@ -250,6 +250,5 @@ class EffectSymbol extends Group {
     };
 
 }
-zrUtil.inherits(EffectSymbol, Group);
 
 export default EffectSymbol;

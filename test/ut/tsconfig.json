@@ -1,22 +1,14 @@
 {
     "compilerOptions": {
-        "target": "ES3",
+        "target": "ES6",
 
         "noImplicitAny": true,
         "noImplicitThis": true,
         "strictBindCallApply": true,
-        "removeComments": true,
-        "sourceMap": true,
 
-        // https://github.com/ezolenko/rollup-plugin-typescript2/issues/12#issuecomment-536173372
-        "moduleResolution": "node",
-
-        "importHelpers": true,
-
-        "pretty": true
+        "esModuleInterop": true
     },
     "include": [
-        "../../src/global.d.ts",
         "**/*.ts"
     ],
     "exclude": [
