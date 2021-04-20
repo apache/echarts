@@ -1356,8 +1356,6 @@ export type ComponentItemTooltipLabelFormatterParams = {
     // properies key array like ['name']
     $vars: string[]
 } & {
-    [key in `${ComponentMainType}Index`]: number
-} & {
     // Other properties
     [key in string]: unknown
 };
