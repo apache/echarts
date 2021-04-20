@@ -206,7 +206,9 @@ async function runTsCompile(localTs, compilerOptions, srcPathList) {
             console.log(chalk.red(localTs.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
         }
     });
-    assert(!emitResult.emitSkipped, 'ts compile failed.');
+    if (allDiagnostics.length > 0) {
+        throw new Error('TypeScript Compile Failed')
+    }
 }
 module.exports.runTsCompile = runTsCompile;
 
@@ -268,26 +270,6 @@ async function transformDistributionFiles(rooltFolder, replacement) {
         // }
         fs.writeFileSync(fileName, code, 'utf-8');
     }
-}
-
-/**
- * Remove __esModule mark.
- *
- * In the 4.x version. The exported CJS don't have __esModule mark.
- * Developers can use `import echarts from 'echarts/lib/echarts' instead of
- * `import * as echarts from 'echarts/lib/echarts'` to import all the exported methods.
- * It's not recommand but developers may still have the chance to do it.
- * But in the tsc export with __esModule mark. This will get an undefined export.
- * To avoid breaking this kind of code. We remove __esModule mark manually here.
- */
-function removeESmoduleMark() {
-    const filePath = nodePath.resolve(ecDir, 'lib/echarts.js');
-    const code = fs.readFileSync(filePath, 'utf-8')
-        .replace('\nexports.__esModule = true;\n', '');
-    if (code.indexOf('__esModule') >= 0) {
-        throw new Error('Seems still has __esModule mark');
-    }
-    fs.writeFileSync(filePath, code, 'utf-8');
 }
 
 function singleTransformZRRootFolder(code, replacement) {
