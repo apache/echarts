@@ -31,7 +31,7 @@ jobs:
       - name: Archive source release
         uses: actions/upload-artifact@v2
         with:
-          name: ${EC_ARTEFACT_NAME}
+          name: ${{EC_ARTEFACT_NAME}}
           path: |
             index.d.ts
             src/
@@ -49,12 +49,12 @@ jobs:
       - name: Download source release
         uses: actions/download-artifact@v2
         with:
-          name: ${EC_ARTEFACT_NAME}
+          name: ${{EC_ARTEFACT_NAME}}
           path: ~/download/echarts
 
       - name: Build source release
+        working-directory: ~/download/echarts
         run: |
-          cd ~/download/echarts
           npm ci
           npm run release
 
