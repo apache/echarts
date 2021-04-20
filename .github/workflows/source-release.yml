@@ -30,7 +30,7 @@ jobs:
       - name: Archive source release
         uses: actions/upload-artifact@v2
         with:
-          name: apache-echarts-${{env.RELEASE_VERSION}}-src.zip
+          name: apache-echarts-${{env.RELEASE_VERSION}}-src
           path: |
             index.d.ts
             src/
@@ -48,7 +48,7 @@ jobs:
       - name: Download source release
         uses: actions/download-artifact@v2
         with:
-          name: apache-echarts-${{env.RELEASE_VERSION}}-src.zip
+          name: apache-echarts-${{env.RELEASE_VERSION}}-src
           path: download/echarts
 
       - name: Build source release
