@@ -21,14 +21,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: npm install
         run: |
-          npm install
-          npm install git+https://github.com/ecomfe/zrender.git
-      - name: build zrender
-        run: |
-          cd node_modules/zrender
-          npm install
-          npm run prepublish
-          cd ../..
+          npm ci
       - name: check type
         run: |
           npm run checktype
