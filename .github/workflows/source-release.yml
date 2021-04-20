@@ -23,7 +23,7 @@ jobs:
       - name: Prepare env
         run: |
           echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-          echo "EC_ARTEFACT_NAME=apache-echarts-$RELEASE_VERSION-src.zip" >> $GITHUB_ENV
+          echo "EC_ARTEFACT_NAME=apache-echarts-${env.RELEASE_VERSION}-src.zip" >> $GITHUB_ENV
 
       # TODO Check release version is RC
       # TODO Release Note
@@ -50,11 +50,11 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: ${{env.EC_ARTEFACT_NAME}}
-          path: ~/download/echarts
+          path: download/echarts
 
       - name: Build source release
         run: |
-          npm install
+          npm ci
           npm run release
-        working-directory: ~/download/echarts
+        working-directory: download/echarts
 
