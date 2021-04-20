@@ -23,7 +23,6 @@ jobs:
       - name: Prepare env
         run: |
           echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-          echo "EC_ARTEFACT_NAME=apache-echarts-${{env.RELEASE_VERSION}}-src.zip" >> $GITHUB_ENV
 
       # TODO Check release version is RC
       # TODO Release Note
@@ -31,7 +30,7 @@ jobs:
       - name: Archive source release
         uses: actions/upload-artifact@v2
         with:
-          name: ${{env.EC_ARTEFACT_NAME}}
+          name: apache-echarts-${{env.RELEASE_VERSION}}-src.zip
           path: |
             index.d.ts
             src/
@@ -49,7 +48,7 @@ jobs:
       - name: Download source release
         uses: actions/download-artifact@v2
         with:
-          name: ${{env.EC_ARTEFACT_NAME}}
+          name: apache-echarts-${{env.RELEASE_VERSION}}-src.zip
           path: download/echarts
 
       - name: Build source release
