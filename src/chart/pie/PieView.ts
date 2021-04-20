@@ -191,19 +191,19 @@ class PiePiece extends graphic.Sector {
         const labelPosition = seriesModel.get(['label', 'position']);
         if (labelPosition !== 'outside' && labelPosition !== 'outer') {
             sector.removeTextGuideLine();
-            return;
-        } else {
-          let polyline = this.getTextGuideLine();
-          if (!polyline) {
-            polyline = new graphic.Polyline();
-            this.setTextGuideLine(polyline);
-          }
+        }
+        else {
+            let polyline = this.getTextGuideLine();
+            if (!polyline) {
+                polyline = new graphic.Polyline();
+                this.setTextGuideLine(polyline);
+            }
 
-          // Default use item visual color
-          setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
-            stroke: visualColor,
-            opacity: retrieve3(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity, 1)
-          });
+            // Default use item visual color
+            setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
+                stroke: visualColor,
+                opacity: retrieve3(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity, 1)
+            });
         }
     }
 }
