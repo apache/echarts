@@ -65,13 +65,12 @@ export const setCommonECData = (seriesIndex: number, dataType: SeriesDataType, d
 
         // TODO: not store dataIndex on children.
         if (el.type === 'group') {
-            el.traverse(function (this: Element, child: Element): void {
+            el.traverse(function (child: Element): void {
                 const childECData = getECData(child);
-                const thisECData = getECData(this);
-                childECData.seriesIndex = thisECData.seriesIndex;
-                childECData.dataIndex = thisECData.dataIndex;
-                childECData.dataType = thisECData.dataType;
-            }, el);
+                childECData.seriesIndex = seriesIndex;
+                childECData.dataIndex = dataIdx;
+                childECData.dataType = dataType;
+            });
         }
     }
 };
