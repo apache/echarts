@@ -90,5 +90,4 @@ jobs:
         with:
           name: apache-echarts-${{env.RELEASE_VERSION}}-release-mail
           path: |
-            *.txt
-        working-directory: tmp/mails
+            tmp/mails/*.txt
