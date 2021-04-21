@@ -50,7 +50,7 @@ jobs:
             test/types
 
 
-  mail:
+  materials:
     runs-on: ubuntu-latest
 
     strategy:
@@ -78,17 +78,21 @@ jobs:
           path: ~/.npm
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Prepare releaes mails
+      - name: Prepare releaes materials
         run: |
           npm i
-          node build/source-release/prepareReleaseMail.js --rcversion ${{env.RELEASE_VERSION}} --commit ${{github.sha}} --out tmp/mails
+          node build/source-release/prepareReleaseMaterials.js \
+            --rcversion ${{env.RELEASE_VERSION}} \
+            --commit ${{github.sha}} \
+            --repo ${{github.repository}} \
+            --out tmp/materials
 
-      - name: Archive mails
+      - name: Archive materials
         uses: actions/upload-artifact@v2
         with:
-          name: apache-echarts-${{env.RELEASE_VERSION}}-release-mail
+          name: apache-echarts-${{env.RELEASE_VERSION}}-release-materials
           path: |
-            tmp/mails/*.txt
+            tmp/materials/*
 
   validate-source:
     runs-on: ubuntu-latest

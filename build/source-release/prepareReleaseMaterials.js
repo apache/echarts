@@ -16,9 +16,14 @@
 * specific language governing permissions and limitations
 * under the License.
 */
+
+
+// Prepare release materials like mail, release note
+
 const commander = require('commander');
 const fse = require('fs-extra');
 const pathTool = require('path');
+const https = require('https');
 
 commander
     .usage('[options]')
@@ -34,10 +39,21 @@ commander
         'Hash of commit'
     )
     .option(
+        '--repo <repo>',
+        'Repo'
+    )
+    .option(
         '--out <out>',
         'Out directory. Default to be tmp/release-mail'
     )
     .parse(process.argv);
+
+const outDir = pathTool.resolve(process.cwd(), commander.out || 'tmp/release-materials');
+const releaseCommit = commander.commit;
+if (!releaseCommit) {
+    throw new Error('Release commit is required');
+}
+const repo = commander.repo || 'apache/echarts';
 
 let rcVersion = commander.rcversion + '';
 if (rcVersion.startsWith('v')) {   // tag may have v prefix, v5.1.0
@@ -46,12 +62,6 @@ if (rcVersion.startsWith('v')) {   // tag may have v prefix, v5.1.0
 if (rcVersion.indexOf('-rc.') < 0) {
     throw new Error('Only rc version is accepeted.');
 }
-const releaseCommit = commander.commit;
-if (!releaseCommit) {
-    throw new Error('Release commit is required');
-}
-
-const outDir = pathTool.resolve(process.cwd(), commander.out || 'tmp/release-mails');
 
 const parts = /(\d+)\.(\d+)\.(\d+)\-rc\.(\d+)/.exec(rcVersion);
 if (!parts) {
@@ -63,7 +73,8 @@ const minor = +parts[2];
 const patch = +parts[3];
 const rc = +parts[4];
 
-const releaseFullName = `Apache ECharts ${major}.${minor}.${patch} (release candidate ${rc})`
+const stableVersion = `${major}.${minor}.${patch}`;
+const releaseFullName = `Apache ECharts ${stableVersion} (release candidate ${rc})`;
 
 console.log('[Release Verion] ' + rcVersion);
 console.log('[Release Commit] ' + releaseCommit);
@@ -85,7 +96,53 @@ fse.writeFileSync(
 
 fse.writeFileSync(
     pathTool.resolve(outDir, 'announce.txt'),
-    announceTpl.replace(/{{ECHARTS_RELEASE_VERSION}}/g, `${major}.${minor}.${patch}`)
+    announceTpl.replace(/{{ECHARTS_RELEASE_VERSION}}/g, stableVersion)
         .replace(/{{ECHARTS_RELEASE_COMMIT}}/g, releaseCommit),
     'utf-8'
 );
+
+
+// Fetch RELEASE_NOTE
+https.get(`https://api.github.com/repos/${repo}/releases`, function (res) {
+    if (res.statusCode !== 200) {
+        console.error(`Failed to fetch releases ${resstatusCode}`);
+        res.resume();
+        return;
+    }
+
+    res.setEncoding('utf8');
+    let rawData = '';
+    res.on('data', (chunk) => {
+        rawData += chunk;
+    });
+    res.on('end', () => {
+        let releaseNote = '';
+        try {
+            const releases = JSON.parse(rawData);
+            const found = releases.find(release => release.name === rcVersion);
+            if (!found) {
+                console.error('Can\'t found release');
+            }
+            else {
+                releaseNote = found.body.trim();
+            }
+        }
+        catch (e) {
+            console.error(e.message);
+        }
+
+        const firstLine = releaseNote.split('\n')[0];
+        if (firstLine.indexOf(stableVersion) < 0) {
+            // Add version if release note is not start with version.
+        }
+        releaseNote = `## ${stableVersion}\n\n${releaseNote}`;
+
+        fse.writeFileSync(
+            pathTool.resolve(outDir, 'RELEASE_NOTE.txt'),
+            releaseNote,
+            'utf-8'
+        );
+    });
+  }).on('error', (e) => {
+      console.error('Error', e);
+  });
