@@ -30,25 +30,16 @@ jobs:
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
 
       - name: npm install
-        run: |
-          npm ci
-      - name: check type
-        run: |
-          npm run checktype
+        run: npm ci
+
+      # - name: check type
+      #   run: npm run checktype
+
       - name: build release
-        run: |
-          npm run release
-      - name: test generated DTS
-        run: |
-          npm run test:dts
+        run: npm run release
 
-  # test:
-  #   runs-on: ubuntu-latest
-  #   needs: build
+      - name: Test generated DTS
+        run: npm run test:dts
 
-  #   # if: ${{ github.base_ref == 'refs/heads/master' || github.base_ref == 'refs/heads/release' }}
-
-  #   steps:
-  #     - name: unit test
-  #       run: |
-  #         npm run test
+      - name: Unit Test
+        run: npm run test
