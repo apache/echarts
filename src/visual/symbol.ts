@@ -83,7 +83,7 @@ const seriesSymbolTask: StageHandler = {
             symbolSize: seriesSymbolSize as number | number[],
             symbolKeepAspect: keepAspect,
             symbolRotate: seriesSymbolRotate as number,
-            symbolOffset: seriesSymbolOffset as (string | number)[]
+            symbolOffset: seriesSymbolOffset as string | number | (string | number)[]
         });
 
         // Only visible series has each data be visual encoded
