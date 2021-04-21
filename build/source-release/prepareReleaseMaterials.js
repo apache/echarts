@@ -76,6 +76,7 @@ const rc = +parts[4];
 const stableVersion = `${major}.${minor}.${patch}`;
 const releaseFullName = `Apache ECharts ${stableVersion} (release candidate ${rc})`;
 
+console.log('[Release Repo] ' + repo);
 console.log('[Release Verion] ' + rcVersion);
 console.log('[Release Commit] ' + releaseCommit);
 console.log('[Release Name] ' + releaseFullName);
@@ -103,9 +104,16 @@ fse.writeFileSync(
 
 
 // Fetch RELEASE_NOTE
-https.get(`https://api.github.com/repos/${repo}/releases`, function (res) {
+https.get({
+    hostname: 'api.github.com',
+    path: `/repos/${repo}/releases`,
+    headers: {
+        'User-Agent': 'NodeJS'
+    }
+}, function (res) {
+    console.log(`https://api.github.com/repos/${repo}/releases`);
     if (res.statusCode !== 200) {
-        console.error(`Failed to fetch releases ${resstatusCode}`);
+        console.error(`Failed to fetch releases ${res.statusCode}`);
         res.resume();
         return;
     }
@@ -125,6 +133,9 @@ https.get(`https://api.github.com/repos/${repo}/releases`, function (res) {
             }
             else {
                 releaseNote = found.body.trim();
+                if (!releaseNote) {
+                    console.error('Release description is empty');
+                }
             }
         }
         catch (e) {
