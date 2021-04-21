@@ -31,11 +31,15 @@ jobs:
 
       - name: npm install
         run: npm ci
+
       # - name: check type
       #   run: npm run checktype
+
       - name: build release
         run: npm run release
+
       - name: Test generated DTS
         run: npm run test:dts
+
       - name: Unit Test
         run: npm run test
