@@ -5,7 +5,7 @@ on:
     types: [prereleased]
 
 jobs:
-  build:
+  source:
     runs-on: ubuntu-latest
 
     strategy:
@@ -27,6 +27,7 @@ jobs:
       # TODO Check release version is RC
       # TODO Release Note
 
+      # Archive before run others to avoid packing unkown files.
       - name: Archive source release
         uses: actions/upload-artifact@v2
         with:
@@ -38,22 +39,56 @@ jobs:
             licenses/
             theme/
             build/
+            !build/source-release
             package.json
             package-lock.json
             LICENSE
             NOTICE
             README.md
             tsconfig.json
+            test/ut
+            test/types
 
       - name: Download source release
         uses: actions/download-artifact@v2
         with:
           name: apache-echarts-${{env.RELEASE_VERSION}}-src
-          path: download/echarts
+          path: tmp/echarts
 
       - name: Build source release
         run: |
           npm ci
           npm run release
-        working-directory: download/echarts
+          npm run test
+          npm run check:dts
+        working-directory: tmp/echarts
 
+
+  mail:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare env
+        run: |
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Prepare releaes mails
+        run: |
+          npm i
+          node build/source-release/prepareReleaseMail.js --rcversion ${{env.RELEASE_VERSION}} --commit ${{github.sha}} --out tmp/mails
+
+      - name: Archive mails
+        uses: actions/upload-artifact@v2
+        with:
+          name: apache-echarts-${{env.RELEASE_VERSION}}-release-mail
+          path: |
+            *.txt
+        working-directory: tmp/mails
