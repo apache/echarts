@@ -125,21 +125,17 @@ https.get({
     });
     res.on('end', () => {
         let releaseNote = '';
-        try {
-            const releases = JSON.parse(rawData);
-            const found = releases.find(release => release.name === rcVersion);
-            if (!found) {
-                console.error('Can\'t found release');
-            }
-            else {
-                releaseNote = found.body.trim();
-                if (!releaseNote) {
-                    console.error('Release description is empty');
-                }
-            }
+
+        const releases = JSON.parse(rawData);
+        const found = releases.find(release => release.name === rcVersion);
+        if (!found) {
+            throw 'Can\'t found release';
         }
-        catch (e) {
-            console.error(e.message);
+        else {
+            releaseNote = found.body.trim();
+            if (!releaseNote) {
+                throw 'Release description is empty';
+            }
         }
 
         const firstLine = releaseNote.split('\n')[0];
@@ -155,5 +151,5 @@ https.get({
         );
     });
   }).on('error', (e) => {
-      console.error('Error', e);
+      throw e;
   });

@@ -5,51 +5,6 @@ on:
     types: [prereleased]
 
 jobs:
-  source:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [12.x]
-
-    steps:
-      - uses: actions/checkout@v1
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Prepare env
-        run: |
-          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-
-      # TODO Check release version is RC
-      # TODO Release Note
-
-      # Archive before run others to avoid packing unkown files.
-      - name: Archive source release
-        uses: actions/upload-artifact@v2
-        with:
-          name: apache-echarts-${{env.RELEASE_VERSION}}-src
-          path: |
-            index.d.ts
-            src/
-            extension-src/
-            licenses/
-            theme/
-            build/
-            !build/source-release
-            package.json
-            package-lock.json
-            LICENSE
-            NOTICE
-            README.md
-            tsconfig.json
-            test/ut
-            test/types
-
-
   materials:
     runs-on: ubuntu-latest
 
@@ -93,6 +48,58 @@ jobs:
           name: apache-echarts-${{env.RELEASE_VERSION}}-release-materials
           path: |
             tmp/materials/*
+
+  source:
+    runs-on: ubuntu-latest
+    needs: materials
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Prepare env
+        run: |
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      # Get RELEASE_NOTE.txt and pack it into zip.
+      - name: Download materials
+        uses: actions/download-artifact@v2
+        with:
+          name: apache-echarts-${{env.RELEASE_VERSION}}-release-materials
+
+      # TODO Check release version is RC
+
+      # Archive before run others to avoid packing unkown files.
+      - name: Archive source release
+        uses: actions/upload-artifact@v2
+        with:
+          name: apache-echarts-${{env.RELEASE_VERSION}}-src
+          path: |
+            index.d.ts
+            src/
+            extension-src/
+            licenses/
+            theme/
+            build/
+            !build/source-release
+            package.json
+            package-lock.json
+            LICENSE
+            NOTICE
+            README.md
+            tsconfig.json
+            test/ut
+            test/types
+            RELEASE_NOTE.txt
+
 
   validate-source:
     runs-on: ubuntu-latest
