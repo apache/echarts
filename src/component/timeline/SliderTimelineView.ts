@@ -24,11 +24,11 @@ import { createTextStyle } from '../../label/labelStyle';
 import * as layout from '../../util/layout';
 import TimelineView from './TimelineView';
 import TimelineAxis from './TimelineAxis';
-import {createSymbol} from '../../util/symbol';
+import {createSymbol, normalizeSymbolOffset, normalizeSymbolSize} from '../../util/symbol';
 import * as numberUtil from '../../util/number';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { merge, each, extend, isString, bind, defaults, retrieve2, isArray } from 'zrender/src/core/util';
+import { merge, each, extend, isString, bind, defaults, retrieve2 } from 'zrender/src/core/util';
 import SliderTimelineModel from './SliderTimelineModel';
 import { LayoutOrient, ZRTextAlign, ZRTextVerticalAlign, ZRElementEvent, ScaleTick } from '../../util/types';
 import TimelineModel, { TimelineDataItemOption, TimelineCheckpointStyle } from './TimelineModel';
@@ -823,23 +823,15 @@ function giveSymbol(
         z2: 100
     }, opt, true);
 
-    let symbolSize = hostModel.get('symbolSize');
-    if (!isArray(symbolSize)) {
-        symbolSize = [+symbolSize, +symbolSize];
-    }
+    const symbolSize = normalizeSymbolSize(hostModel.get('symbolSize'));
 
     opt.scaleX = symbolSize[0] / 2;
     opt.scaleY = symbolSize[1] / 2;
 
-    let symbolOffset = hostModel.get('symbolOffset');
+    const symbolOffset = normalizeSymbolOffset(hostModel.get('symbolOffset'), symbolSize);
     if (symbolOffset) {
-        if (!isArray(symbolOffset)) {
-            symbolOffset = [symbolOffset, symbolOffset];
-        }
-        opt.x = opt.x || 0;
-        opt.y = opt.y || 0;
-        opt.x += numberUtil.parsePercent(symbolOffset[0], symbolSize[0]) || 0;
-        opt.y += numberUtil.parsePercent(retrieve2(symbolOffset[1], symbolOffset[0]), symbolSize[1]) || 0;
+        opt.x = (opt.x || 0) + symbolOffset[0];
+        opt.y = (opt.y || 0) + symbolOffset[1];
     }
 
     const symbolRotate = hostModel.get('symbolRotate');

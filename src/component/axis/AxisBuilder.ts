@@ -23,7 +23,7 @@ import {getECData} from '../../util/innerStore';
 import {createTextStyle} from '../../label/labelStyle';
 import Model from '../../model/Model';
 import {isRadianAroundZero, remRadian} from '../../util/number';
-import {createSymbol} from '../../util/symbol';
+import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
 import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
 import {shouldShowAllLabels} from '../../coord/axisHelper';
@@ -33,7 +33,6 @@ import { AxisBaseOption } from '../../coord/axisCommonTypes';
 import Element from 'zrender/src/Element';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import OrdinalScale from '../../scale/Ordinal';
-
 
 const PI = Math.PI;
 
@@ -283,14 +282,10 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         group.add(line);
 
         let arrows = axisModel.get(['axisLine', 'symbol']);
-        let arrowSize = axisModel.get(['axisLine', 'symbolSize']);
-
-        let arrowOffset = axisModel.get(['axisLine', 'symbolOffset']) || 0;
-        if (typeof arrowOffset === 'number') {
-            arrowOffset = [arrowOffset, arrowOffset];
-        }
 
         if (arrows != null) {
+            let arrowSize = axisModel.get(['axisLine', 'symbolSize']);
+
             if (typeof arrows === 'string') {
                 // Use the same arrow for start and end point
                 arrows = [arrows, arrows];
@@ -301,6 +296,8 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
                 // Use the same size for width and height
                 arrowSize = [arrowSize, arrowSize];
             }
+
+            const arrowOffset = normalizeSymbolOffset(axisModel.get(['axisLine', 'symbolOffset']) || 0, arrowSize);
 
             const symbolWidth = arrowSize[0];
             const symbolHeight = arrowSize[1];
