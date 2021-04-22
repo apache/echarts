@@ -1,0 +1,135 @@
+name: Source Release
+
+on:
+  release:
+    types: [prereleased]
+
+jobs:
+  materials:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Prepare env
+        run: |
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Prepare releaes materials
+        run: |
+          npm i
+          node build/source-release/prepareReleaseMaterials.js \
+            --rcversion ${{env.RELEASE_VERSION}} \
+            --commit ${{github.sha}} \
+            --repo ${{github.repository}} \
+            --out tmp/materials
+
+      - name: Archive materials
+        uses: actions/upload-artifact@v2
+        with:
+          name: apache-echarts-${{env.RELEASE_VERSION}}-release-materials
+          path: |
+            tmp/materials/*
+
+  source:
+    runs-on: ubuntu-latest
+    needs: materials
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Prepare env
+        run: |
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      # Get RELEASE_NOTE.txt and pack it into zip.
+      - name: Download materials
+        uses: actions/download-artifact@v2
+        with:
+          name: apache-echarts-${{env.RELEASE_VERSION}}-release-materials
+
+      # TODO Check release version is RC
+
+      # Archive before run others to avoid packing unkown files.
+      - name: Archive source release
+        uses: actions/upload-artifact@v2
+        with:
+          name: apache-echarts-${{env.RELEASE_VERSION}}-src
+          path: |
+            index.d.ts
+            src/
+            extension-src/
+            licenses/
+            theme/
+            build/
+            !build/source-release
+            package.json
+            package-lock.json
+            LICENSE
+            NOTICE
+            README.md
+            tsconfig.json
+            test/ut
+            test/types
+            test/check-build.html
+            RELEASE_NOTE.txt
+
+
+  validate-source:
+    runs-on: ubuntu-latest
+    needs: source
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Prepare env
+        run: |
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: Download source release
+        uses: actions/download-artifact@v2
+        with:
+          name: apache-echarts-${{env.RELEASE_VERSION}}-src
+          path: tmp/echarts
+
+      - name: Build source release
+        run: |
+          npm ci
+          npm run release
+          npm run test
+          npm run test:dts
+        working-directory: tmp/echarts

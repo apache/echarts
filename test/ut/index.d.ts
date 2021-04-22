@@ -20,6 +20,9 @@
 
 export {};
 declare global {
+
+  const __DEV__: boolean;
+
   namespace jest {
     interface Matchers<R> {
         toBeFinite(): R
