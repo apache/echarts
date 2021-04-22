@@ -98,6 +98,7 @@ jobs:
             tsconfig.json
             test/ut
             test/types
+            test/check-build.html
             RELEASE_NOTE.txt
 
 
