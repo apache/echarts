@@ -414,8 +414,9 @@ class MarkLineView extends MarkerView {
                     itemModel.get('symbolRotate', true),
                     (symbolRotate as number[])[isFrom ? 0 : 1]
                 ),
+                // TODO: when 2d array is supported, it should ignore parent
                 symbolSize: retrieve2(
-                    itemModel.get('symbolSize', true),
+                    itemModel.get('symbolSize'),
                     (symbolSize as number[])[isFrom ? 0 : 1]
                 ),
                 symbol: retrieve2(
