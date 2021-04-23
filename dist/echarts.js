@@ -29266,7 +29266,7 @@
     var isObject$2 = isObject;
     var indexOf$1 = indexOf;
     var hasWindow = typeof window !== 'undefined';
-    var version$1 = '5.1.0';
+    var version$1 = '5.1.1';
     var dependencies = {
       zrender: '5.1.0'
     };
@@ -44842,10 +44842,7 @@
         var _this = _super.call(this) || this;
 
         _this.z2 = 2;
-        var polyline = new Polyline();
         var text = new ZRText();
-
-        _this.setTextGuideLine(polyline);
 
         _this.setTextContent(text);
 
@@ -44945,8 +44942,6 @@
       };
 
       PiePiece.prototype._updateLabel = function (seriesModel, data, idx) {
-        var _a;
-
         var sector = this;
         var itemModel = data.getItemModel(idx);
         var labelLineModel = itemModel.getModel('labelLine');
@@ -44975,15 +44970,21 @@
         var labelPosition = seriesModel.get(['label', 'position']);
 
         if (labelPosition !== 'outside' && labelPosition !== 'outer') {
-          (_a = sector.getTextGuideLine()) === null || _a === void 0 ? void 0 : _a.hide();
-          return;
-        } // Default use item visual color
+          sector.removeTextGuideLine();
+        } else {
+          var polyline = this.getTextGuideLine();
+
+          if (!polyline) {
+            polyline = new Polyline();
+            this.setTextGuideLine(polyline);
+          } // Default use item visual color
 
 
-        setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
-          stroke: visualColor,
-          opacity: retrieve3(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity, 1)
-        });
+          setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
+            stroke: visualColor,
+            opacity: retrieve3(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity, 1)
+          });
+        }
       };
 
       return PiePiece;
@@ -49673,13 +49674,11 @@
           // location calculation.
 
           var regionGroup = nameMap.get(regionName);
+          var hasRegionGroup = !!regionGroup;
 
-          if (!regionGroup) {
+          if (!hasRegionGroup) {
             regionGroup = nameMap.set(regionName, new Group());
             regionsGroup.add(regionGroup);
-            resetEventTriggerForRegion(viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel, dataIdx);
-            resetTooltipForRegion(viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel);
-            resetStateTriggerForRegion(viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel);
           }
 
           var compoundPath = new CompoundPath({
@@ -49689,6 +49688,14 @@
             }
           });
           regionGroup.add(compoundPath);
+
+          if (!hasRegionGroup) {
+            // ensure children have been added to group before calling resetEventTriggerForRegion
+            resetEventTriggerForRegion(viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel, dataIdx);
+            resetTooltipForRegion(viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel);
+            resetStateTriggerForRegion(viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel);
+          }
+
           each(region.geometries, function (geometry) {
             if (geometry.type !== 'polygon') {
               return;
@@ -50285,7 +50292,7 @@
             }
 
             regionGroup.onHoverStateChange = function (toState) {
-              circle.useState(toState);
+              setStatesFlag(circle, toState);
             };
           }
 
@@ -51384,10 +51391,10 @@
             color: 'rgba(255,215,0,0.8)'
           }
         },
-        regions: [],
-        tooltip: {
-          show: false
-        }
+        regions: [] // tooltip: {
+        //     show: false
+        // }
+
       };
       return GeoModel;
     }(ComponentModel);
@@ -65165,8 +65172,6 @@
       };
       return EffectSymbol;
     }(Group);
-
-    inherits(EffectSymbol, Group);
 
     var EffectScatterView =
     /** @class */
@@ -80156,26 +80161,20 @@
       return CSS_TRANSITION_VENDOR + ':' + transitionText;
     }
 
-    function assembleTransform(el, x, y, toString) {
+    function assembleTransform(x, y, toString) {
       // If using float on style, the final width of the dom might
       // keep changing slightly while mouse move. So `toFixed(0)` them.
-      var x0;
-      var y0; // not support transform, use `left` and `top` instead.
+      var x0 = x.toFixed(0) + 'px';
+      var y0 = y.toFixed(0) + 'px'; // not support transform, use `left` and `top` instead.
 
       if (!env.transformSupported) {
-        x0 = x.toFixed(0);
-        y0 = y.toFixed(0);
-        return toString ? "top:" + y0 + "px;left:" + x0 + "px;" : [['top', y0 + "px"], ['left', x0 + "px"]];
+        return toString ? "top:" + y0 + ";left:" + x0 + ";" : [['top', y0], ['left', x0]];
       } // support transform
-      // FIXME: the padding of parent element will affect the position of tooltip
 
 
-      var stl = getComputedStyle(el.parentElement);
-      x0 = (x - parseInt(stl.paddingLeft, 10)).toFixed(0);
-      y0 = (y - parseInt(stl.paddingTop, 10)).toFixed(0);
       var is3d = env.transform3dSupported;
-      var translate = "translate" + (is3d ? '3d' : '') + "(" + x0 + "px," + y0 + "px" + (is3d ? ',0' : '') + ")";
-      return toString ? CSS_TRANSFORM_VENDOR + ':' + translate + ';' : [[TRANSFORM_VENDOR, translate]];
+      var translate = "translate" + (is3d ? '3d' : '') + "(" + x0 + "," + y0 + (is3d ? ',0' : '') + ")";
+      return toString ? 'top:0;left:0;' + CSS_TRANSFORM_VENDOR + ':' + translate + ';' : [['top', 0], ['left', 0], [TRANSFORM_VENDOR, translate]];
     }
     /**
      * @param {Object} textStyle
@@ -80300,8 +80299,7 @@
         if (appendToBody) {
           document.body.appendChild(el);
         } else {
-          // PENDING
-          container.prepend(el);
+          container.appendChild(el);
         }
 
         this._container = container; // FIXME
@@ -80384,7 +80382,7 @@
           style.display = 'none';
         } else {
           style.cssText = gCssText + assembleCssText(tooltipModel, !this._firstShow, this._longHide) // initial transform
-          + assembleTransform(el, styleCoord[0], styleCoord[1], true) + ("border-color:" + convertToColorString(nearPointColor) + ";") + (tooltipModel.get('extraCssText') || '') // If mouse occasionally move over the tooltip, a mouseout event will be
+          + assembleTransform(styleCoord[0], styleCoord[1], true) + ("border-color:" + convertToColorString(nearPointColor) + ";") + (tooltipModel.get('extraCssText') || '') // If mouse occasionally move over the tooltip, a mouseout event will be
           // triggered by canvas, and cause some unexpectable result like dragging
           // stop, "unfocusAdjacency". Here `pointer-events: none` is used to solve
           // it. Although it is not supported by IE8~IE10, fortunately it is a rare
@@ -80441,7 +80439,7 @@
 
         if (styleCoord[0] != null && styleCoord[1] != null) {
           var style_1 = this.el.style;
-          var transforms = assembleTransform(this.el, styleCoord[0], styleCoord[1]);
+          var transforms = assembleTransform(styleCoord[0], styleCoord[1]);
           each(transforms, function (transform) {
             style_1[transform[0]] = transform[1];
           });
@@ -91476,7 +91474,7 @@
     //     dataZoom: {type: 'slider'}
     // });
 
-    use(install$L); // `dataZoom` component including both `visualMapContinuous` and `visualMapPiecewise`.
+    use(install$L); // `visualMap` component including both `visualMapContinuous` and `visualMapPiecewise`.
 
     use(install$P); // `visualMap` component providing continuous bar, for example:
     // chart.setOption({
