@@ -239,11 +239,11 @@ function getVisualGradient(
         coord?: number
         color: ColorString
     }
-    // dataToCoor mapping may not be linear, but must be monotonic.
+    // dataToCoord mapping may not be linear, but must be monotonic.
     const colorStops: ColorStop[] = zrUtil.map(visualMeta.stops, function (stop) {
         return {
             offset: 0,
-            coord: axis.toGlobalCoord(axis.dataToCoord(stop.value)),
+            coord: axis.toGlobalCoord(axis.dataToCoord(stop.value, true)),
             color: stop.color
         };
     });
