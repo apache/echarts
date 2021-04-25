@@ -36,13 +36,11 @@ import { BrushAreaParam, BrushAreaParamInternal } from '../brush/BrushModel';
 import SeriesModel from '../../model/Series';
 import { Dictionary } from '../../util/types';
 import {
-    ModelFinderObject, ParsedModelFinder, ModelFinder,
+    ModelFinderObject, ModelFinder,
     parseFinder as modelUtilParseFinder,
     ParsedModelFinderKnown
 } from '../../util/model';
 
-
-const COORD_CONVERTS = ['dataToPoint', 'pointToData'] as const;
 type COORD_CONVERTS_INDEX = 0 | 1;
 
 // FIXME
@@ -160,7 +158,7 @@ class BrushTargetManager {
                 each(
                     targetInfo.coordSyses,
                     function (coordSys) {
-                        const result = coordConvert[area.brushType](1, coordSys, area.range);
+                        const result = coordConvert[area.brushType](1, coordSys, area.range, true);
                         cb(area, result.values, coordSys, ecModel);
                     }
                 );
@@ -411,7 +409,8 @@ const panelRectBuilders: Record<BrushTargetBuilderKey, PanelRectBuilder> = {
 type ConvertCoord = (
     to: COORD_CONVERTS_INDEX,
     coordSys: BrushableCoordinateSystem,
-    rangeOrCoordRange: BrushAreaRange
+    rangeOrCoordRange: BrushAreaRange,
+    clamp?: boolean
 ) => {
     values: BrushAreaRange,
     xyMinMax: BrushDimensionMinMax[]
@@ -422,12 +421,16 @@ const coordConvert: Record<BrushType, ConvertCoord> = {
 
     lineY: curry(axisConvert, 1),
 
-    rect: function (to, coordSys, rangeOrCoordRange: BrushDimensionMinMax[]): {
+    rect: function (to, coordSys, rangeOrCoordRange: BrushDimensionMinMax[], clamp): {
         values: BrushDimensionMinMax[],
         xyMinMax: BrushDimensionMinMax[]
     } {
-        const xminymin = coordSys[COORD_CONVERTS[to]]([rangeOrCoordRange[0][0], rangeOrCoordRange[1][0]]);
-        const xmaxymax = coordSys[COORD_CONVERTS[to]]([rangeOrCoordRange[0][1], rangeOrCoordRange[1][1]]);
+        const xminymin = to
+            ? coordSys.pointToData([rangeOrCoordRange[0][0], rangeOrCoordRange[1][0]], clamp)
+            : coordSys.dataToPoint([rangeOrCoordRange[0][0], rangeOrCoordRange[1][0]], clamp);
+        const xmaxymax = to
+            ? coordSys.pointToData([rangeOrCoordRange[0][1], rangeOrCoordRange[1][1]], clamp)
+            : coordSys.dataToPoint([rangeOrCoordRange[0][1], rangeOrCoordRange[1][1]], clamp);
         const values = [
             formatMinMax([xminymin[0], xmaxymax[0]]),
             formatMinMax([xminymin[1], xmaxymax[1]])
@@ -435,13 +438,13 @@ const coordConvert: Record<BrushType, ConvertCoord> = {
         return {values: values, xyMinMax: values};
     },
 
-    polygon: function (to, coordSys, rangeOrCoordRange: BrushDimensionMinMax[]): {
+    polygon: function (to, coordSys, rangeOrCoordRange: BrushDimensionMinMax[], clamp): {
         values: BrushDimensionMinMax[],
         xyMinMax: BrushDimensionMinMax[]
     } {
         const xyMinMax = [[Infinity, -Infinity], [Infinity, -Infinity]];
         const values = map(rangeOrCoordRange, function (item) {
-            const p = coordSys[COORD_CONVERTS[to]](item);
+            const p = to ? coordSys.pointToData(item, clamp) : coordSys.dataToPoint(item, clamp);
             xyMinMax[0][0] = Math.min(xyMinMax[0][0], p[0]);
             xyMinMax[1][0] = Math.min(xyMinMax[1][0], p[1]);
             xyMinMax[0][1] = Math.max(xyMinMax[0][1], p[0]);
@@ -471,7 +474,7 @@ function axisConvert(
     const axis = coordSys.getAxis(['x', 'y'][axisNameIndex]);
     const values = formatMinMax(map([0, 1], function (i) {
         return to
-            ? axis.coordToData(axis.toLocalCoord(rangeOrCoordRange[i]))
+            ? axis.coordToData(axis.toLocalCoord(rangeOrCoordRange[i]), true)
             : axis.toGlobalCoord(axis.dataToCoord(rangeOrCoordRange[i]));
     }));
     const xyMinMax = [];
