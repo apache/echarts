@@ -207,9 +207,24 @@ async function start() {
     io.of('/client').on('connect', async socket => {
         await updateTestsList();
 
-        socket.emit('update', {
-            tests: getTestsList(),
-            running: runningThreads.length > 0
+        function abortTests() {
+            stopRunningTests();
+            io.of('/client').emit('abort');
+            aborted = true;
+        }
+
+        function emitUpdatedList() {
+            socket.emit('update', {
+                tests: getTestsList(),
+                running: runningThreads.length > 0
+            });
+        }
+
+        emitUpdatedList();
+
+        socket.on('fetch', () => {
+            abortTests();
+            emitUpdatedList();
         });
 
         socket.on('run', async data => {
@@ -256,11 +271,8 @@ async function start() {
                 console.log('Aborted!');
             }
         });
-        socket.on('stop', () => {
-            stopRunningTests();
-            io.of('/client').emit('abort');
-            aborted = true;
-        });
+
+        socket.on('stop', abortTests);
 
         socket.emit('versions', versions);
     });

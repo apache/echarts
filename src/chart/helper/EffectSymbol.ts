@@ -110,7 +110,8 @@ class EffectSymbol extends Group {
             // TODO Configurable effectCfg.period
             ripplePath.animate('', true)
                 .when(effectCfg.period, {
-                    scale: [effectCfg.rippleScale / 2, effectCfg.rippleScale / 2]
+                    scaleX: effectCfg.rippleScale / 2,
+                    scaleY: effectCfg.rippleScale / 2
                 })
                 .delay(delay)
                 .start();
@@ -184,11 +185,15 @@ class EffectSymbol extends Group {
             ripplePath.setStyle('fill', color);
         });
 
-        const symbolOffset = itemModel.getShallow('symbolOffset');
+        let symbolOffset = data.getItemVisual(idx, 'symbolOffset');
         if (symbolOffset) {
+            if (!zrUtil.isArray(symbolOffset)) {
+                symbolOffset = [symbolOffset, symbolOffset];
+            }
             rippleGroup.x = parsePercent(symbolOffset[0], symbolSize[0]);
-            rippleGroup.y = parsePercent(symbolOffset[1], symbolSize[1]);
+            rippleGroup.y = parsePercent(zrUtil.retrieve2(symbolOffset[1], symbolOffset[0]) || 0, symbolSize[1]);
         }
+
         const symbolRotate = data.getItemVisual(idx, 'symbolRotate');
         rippleGroup.rotation = (symbolRotate || 0) * Math.PI / 180 || 0;
 
@@ -245,6 +250,5 @@ class EffectSymbol extends Group {
     };
 
 }
-zrUtil.inherits(EffectSymbol, Group);
 
 export default EffectSymbol;

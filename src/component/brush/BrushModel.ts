@@ -63,6 +63,11 @@ export interface BrushAreaParam extends ModelFinderObject {
     // coord ranges, used in multiple cartesian in one grid.
     // Only for output to users.
     coordRanges?: BrushAreaRange[];
+
+    __rangeOffset?: {
+        offset: BrushDimensionMinMax[] | BrushDimensionMinMax,
+        xyMinMax: BrushDimensionMinMax[]
+    }
 }
 
 /**

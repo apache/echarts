@@ -132,6 +132,9 @@ under the License.
 
             chart.setOption(option, true);
 
+            chart.on('magictypechanged', function (e) {
+                console.log('currentType is', e.currentType);
+            });
         });
     </script>
     <script>

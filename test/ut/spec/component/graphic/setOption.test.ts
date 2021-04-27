@@ -21,10 +21,10 @@ import { createChart, getGraphicElements, getECModel } from '../../../core/utHel
 // import { imageURI } from './setOptionImageURI';
 import { EChartsType } from '../../../../../src/echarts';
 import Element from 'zrender/src/Element';
-import { EChartsFullOption } from '../../../../../src/option';
+import { EChartsOption } from '../../../../../src/export/option';
 import {
     GraphicComponentOption, GraphicComponentImageOption
-} from '../../../../../src/component/graphic';
+} from '../../../../../src/component/graphic/install';
 import Group from 'zrender/src/graphic/Group';
 import { Dictionary } from 'zrender/src/core/types';
 
@@ -1049,7 +1049,7 @@ describe('graphic_setOption', function () {
 
     describe('boundingAndRotation', function () {
 
-        function getOption(): EChartsFullOption {
+        function getOption(): EChartsOption {
             return {
                 legend: {
                     data: ['高度(km)与气温(°C)变化关系']

@@ -24,7 +24,7 @@ under the License.
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="shortcut icon" href="https://www.echartsjs.com/zh/images/favicon.png">
+    <link rel="shortcut icon" href="https://echarts.apache.org/zh/images/favicon.png">
     <title>Visual Regression Testing Tool</title>
 </head>
 <body>
@@ -177,7 +177,7 @@ under the License.
                                         <span>Expected - {{currentTest.expectedVersion || ''}}</span>
                                         <i title="Preview" class="el-icon-view preview" @click="preview(currentTest, 'expected')"></i>
                                     </div>
-                                    <el-image :src="result.expected" :preview-src-list="[result.expected]"></el-image>
+                                    <el-image fit="cover" :src="result.expected" :preview-src-list="[result.expected]"></el-image>
                                 </el-card>
                             </el-col>
 
@@ -187,7 +187,7 @@ under the License.
                                         <span>Actual - {{currentTest.actualVersion || ''}}</span>
                                         <i title="Preview" class="el-icon-view preview" @click="preview(currentTest, 'actual')"></i>
                                     </div>
-                                    <el-image :src="result.actual" :preview-src-list="[result.actual]"></el-image>
+                                    <el-image fit="cover" :src="result.actual" :preview-src-list="[result.actual]"></el-image>
                                 </el-card>
                             </el-col>
 
@@ -196,7 +196,7 @@ under the License.
                                     <div slot="header" class="clearfix">
                                         <span>Diff - {{result.diffRatio.toFixed(4)}}</span>
                                     </div>
-                                    <el-image :src="result.diff" :preview-src-list="[result.diff]"></el-image>
+                                    <el-image fit="cover" :src="result.diff" :preview-src-list="[result.diff]"></el-image>
                                 </el-card>
                             </el-col>
                         </el-row>
@@ -253,8 +253,8 @@ under the License.
 <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
 
 <!-- Element UI -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.11.1/lib/theme-chalk/index.css">
-<script src="https://cdn.jsdelivr.net/npm/element-ui@2.11.1/lib/index.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.15.1/lib/theme-chalk/index.css">
+<script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.1/lib/index.js"></script>
 
 <script src="client.js"></script>
 

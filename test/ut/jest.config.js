@@ -32,6 +32,10 @@ module.exports = {
     globals: {
         '__DEV__': true
     },
+    // Not exclude node_modules because zrender also needs to be transformed.
+    transformIgnorePatterns: [
+        "node_modules/(?!zrender/)"
+    ],
     testMatch: [
         '**/spec/api/*.test.ts',
         '**/spec/component/**/*.test.ts',

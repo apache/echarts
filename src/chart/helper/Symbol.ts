@@ -24,11 +24,11 @@ import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/st
 import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
 import List from '../../data/List';
-import { ColorString, BlurScope, AnimationOption } from '../../util/types';
+import { ColorString, BlurScope, AnimationOption, ZRColor } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
-import { extend } from 'zrender/src/core/util';
+import { extend, isArray, retrieve2 } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 
@@ -38,7 +38,7 @@ interface SymbolOpts {
     disableAnimation?: boolean
 
     useNameLabel?: boolean
-    symbolInnerColor?: string
+    symbolInnerColor?: ZRColor
 }
 
 class Symbol extends graphic.Group {
@@ -216,8 +216,6 @@ class Symbol extends graphic.Group {
         let focus;
         let blurScope: BlurScope;
 
-        let symbolOffset;
-
         let labelStatesModels;
 
         let hoverScale;
@@ -229,8 +227,6 @@ class Symbol extends graphic.Group {
             selectItemStyle = seriesScope.selectItemStyle;
             focus = seriesScope.focus;
             blurScope = seriesScope.blurScope;
-
-            symbolOffset = seriesScope.symbolOffset;
 
             labelStatesModels = seriesScope.labelStatesModels;
 
@@ -250,8 +246,6 @@ class Symbol extends graphic.Group {
             focus = emphasisModel.get('focus');
             blurScope = emphasisModel.get('blurScope');
 
-            symbolOffset = itemModel.getShallow('symbolOffset');
-
             labelStatesModels = getLabelStatesModels(itemModel);
 
             hoverScale = emphasisModel.getShallow('scale');
@@ -259,12 +253,15 @@ class Symbol extends graphic.Group {
         }
 
         const symbolRotate = data.getItemVisual(idx, 'symbolRotate');
-
         symbolPath.attr('rotation', (symbolRotate || 0) * Math.PI / 180 || 0);
 
+        let symbolOffset = data.getItemVisual(idx, 'symbolOffset') || 0;
         if (symbolOffset) {
+            if (!isArray(symbolOffset)) {
+                symbolOffset = [symbolOffset, symbolOffset];
+            }
             symbolPath.x = parsePercent(symbolOffset[0], symbolSize[0]);
-            symbolPath.y = parsePercent(symbolOffset[1], symbolSize[1]);
+            symbolPath.y = parsePercent(retrieve2(symbolOffset[1], symbolOffset[0]) || 0, symbolSize[1]);
         }
 
         cursorStyle && symbolPath.attr('cursor', cursorStyle);
@@ -398,7 +395,7 @@ class Symbol extends graphic.Group {
 
     static getSymbolSize(data: List, idx: number) {
         const symbolSize = data.getItemVisual(idx, 'symbolSize');
-        return symbolSize instanceof Array
+        return isArray(symbolSize)
             ? symbolSize.slice()
             : [+symbolSize, +symbolSize];
     }

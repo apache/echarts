@@ -29,6 +29,7 @@ import { ZRElementEvent, BoxLayoutOptionMixin, ECElement } from '../../util/type
 import Element from 'zrender/src/Element';
 import Model from '../../model/Model';
 import { convertOptionIdName } from '../../util/model';
+import { Z2_EMPHASIS_LIFT } from '../../util/states';
 
 const TEXT_PADDING = 8;
 const ITEM_GAP = 8;
@@ -180,7 +181,7 @@ class Breadcrumb {
                 textConfig: {
                     position: 'inside'
                 },
-                z: 10,
+                z2: Z2_EMPHASIS_LIFT * 1e4,    // A very large z2
                 onclick: curry(onSelect, itemNode)
             });
             (el as ECElement).disableLabelAnimation = true;

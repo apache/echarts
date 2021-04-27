@@ -46,6 +46,16 @@ export function createChart(params?: {
         'bottom:0',
         'right:0'
     ].join(';');
+    Object.defineProperty(el, 'clientWidth', {
+        get() {
+            return params.width || 500;
+        }
+    });
+    Object.defineProperty(el, 'clientHeight', {
+        get() {
+            return params.height || 400;
+        }
+    });
     const chart = init(el, params.theme, params.opts);
     return chart;
 };
@@ -79,10 +89,6 @@ export function getHeadEl(): HTMLElement {
 export const curry = zrUtilCurry;
 
 export const bind = zrUtilBind;
-
-export function isValueFinite(val: unknown): boolean {
-    return val != null && val !== '' && isFinite(val as number);
-}
 
 // /**
 //  * @public

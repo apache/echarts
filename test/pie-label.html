@@ -751,7 +751,17 @@ under the License.
                     option.series[1].label.position = 'inside';
                     chart.setOption(option);
                 }, 2000);
-            
+                setTimeout(() => {
+                    option.series[0].label.position = 'inside';
+                    option.series[1].label.position = 'outside';
+                    chart.setOption(option);
+                }, 4000);
+                setTimeout(() => {
+                    option.series[0].label.position = 'outside';
+                    option.series[1].label.position = 'inside';
+                    chart.setOption(option);
+                }, 6000);
+
                 var chart = testHelper.create(echarts, 'main8', {
                     title: 'labelLine should be hidden when position is not \'outside\'',
                     height: 300,

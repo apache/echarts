@@ -46,6 +46,7 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
+import Model from '../model/Model';
 
 
 
@@ -101,10 +102,6 @@ export interface ComponentTypeInfo {
 }
 
 export interface ECElement extends Element {
-    tooltip?: CommonTooltipOption<unknown> & {
-        content?: string;
-        formatterParams?: unknown;
-    };
     highDownSilentOnTouch?: boolean;
     onHoverStateChange?: (toState: DisplayState) => void;
 
@@ -130,7 +127,7 @@ export interface DataHost {
     getData(dataType?: SeriesDataType): List;
 }
 
-export interface DataModel extends DataHost, DataFormatMixin {}
+export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {}
     // Pick<DataHost, 'getData'>,
     // Pick<DataFormatMixin, 'getDataParams' | 'formatTooltip'> {}
 
@@ -835,7 +832,7 @@ export interface ShadowOptionMixin {
 }
 
 export interface BorderOptionMixin {
-    borderColor?: string
+    borderColor?: ZRColor
     borderWidth?: number
     borderType?: ZRLineType
     borderCap?: CanvasLineCap
@@ -925,7 +922,7 @@ export interface RoamOptionMixin {
 export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
 export type SymbolCallback<T> = (rawValue: any, params: T) => string;
 export type SymbolRotateCallback<T> = (rawValue: any, params: T) => number;
-// export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => (string | number)[];
+export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => (string | number)[];
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -944,7 +941,7 @@ export interface SymbolOptionMixin<T = unknown> {
 
     symbolKeepAspect?: boolean
 
-    symbolOffset?: (string | number)[]
+    symbolOffset?: (string | number)[] | (unknown extends T ? never : SymbolOffsetCallback<T>)
 }
 
 /**
@@ -1348,12 +1345,31 @@ export interface CommonTooltipOption<FormatterParams> {
     }
 }
 
+export type ComponentItemTooltipOption<T> = CommonTooltipOption<T> & {
+    // Default content HTML.
+    content?: string;
+    formatterParams?: ComponentItemTooltipLabelFormatterParams;
+};
+export type ComponentItemTooltipLabelFormatterParams = {
+    componentType: string
+    name: string
+    // properies key array like ['name']
+    $vars: string[]
+} & {
+    // Other properties
+    [key in string]: unknown
+};
+
+
 /**
  * Tooltip option configured on each series
  */
 export type SeriesTooltipOption = CommonTooltipOption<CallbackDataParams> & {
     trigger?: 'item' | 'axis' | boolean | 'none'
 };
+
+
+
 
 type LabelFormatterParams = {
     value: ScaleDataValue
@@ -1466,7 +1482,7 @@ export type BlurScope = 'coordinateSystem' | 'series' | 'global';
  * can be array of data indices.
  * Or may be an dictionary if have different types of data like in graph.
  */
-export type InnerFocus = string | ArrayLike<number> | Dictionary<ArrayLike<number>>;
+export type InnerFocus = DefaultEmphasisFocus | ArrayLike<number> | Dictionary<ArrayLike<number>>;
 
 export interface DefaultExtraStateOpts {
     emphasis: any
