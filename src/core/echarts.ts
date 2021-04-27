@@ -123,7 +123,7 @@ const indexOf = zrUtil.indexOf;
 
 const hasWindow = typeof window !== 'undefined';
 
-export const version = '5.1.0';
+export const version = '5.1.1';
 
 export const dependencies = {
     zrender: '5.1.0'
