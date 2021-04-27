@@ -980,31 +980,33 @@ class LineView extends ChartView {
                 let start;
                 let end;
                 let current;
-                if (isCoordSysPolar) {
-                    const polarClip = clipShape as PolarArea;
-                    const coord = (coordSys as Polar).pointToCoord(point);
-                    if (isHorizontalOrRadial) {
-                        start = polarClip.startAngle;
-                        end = polarClip.endAngle;
-                        current = -coord[1] / 180 * Math.PI;
+                if (clipShape) {
+                    if (isCoordSysPolar) {
+                        const polarClip = clipShape as PolarArea;
+                        const coord = (coordSys as Polar).pointToCoord(point);
+                        if (isHorizontalOrRadial) {
+                            start = polarClip.startAngle;
+                            end = polarClip.endAngle;
+                            current = -coord[1] / 180 * Math.PI;
+                        }
+                        else {
+                            start = polarClip.r0;
+                            end = polarClip.r;
+                            current = coord[0];
+                        }
                     }
                     else {
-                        start = polarClip.r0;
-                        end = polarClip.r;
-                        current = coord[0];
-                    }
-                }
-                else {
-                    const gridClip = clipShape as Cartesian2DArea;
-                    if (isHorizontalOrRadial) {
-                        start = gridClip.x;
-                        end = gridClip.x + gridClip.width;
-                        current = symbol.x;
-                    }
-                    else {
-                        start = gridClip.y + gridClip.height;
-                        end = gridClip.y;
-                        current = symbol.y;
+                        const gridClip = clipShape as Cartesian2DArea;
+                        if (isHorizontalOrRadial) {
+                            start = gridClip.x;
+                            end = gridClip.x + gridClip.width;
+                            current = symbol.x;
+                        }
+                        else {
+                            start = gridClip.y + gridClip.height;
+                            end = gridClip.y;
+                            current = symbol.y;
+                        }
                     }
                 }
                 let ratio = end === start ? 0 : (current - start) / (end - start);
