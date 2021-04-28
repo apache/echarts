@@ -39,71 +39,17 @@ under the License.
         <el-container style="min-height: 0"> <!-- https://juejin.im/post/5c642f2ff265da2de660ecfc -->
             <el-aside width="350px">
                 <div class="nav-toolbar">
-                    <el-input v-model="searchString" size="mini" placeholder="Filter Tests"></el-input>
-                    <div class="controls">
-                        <el-checkbox :indeterminate="isSelectAllIndeterminate" v-model="allSelected" @change="handleSelectAllChange"></el-checkbox>
-                        <el-button title="Sort By Failue Percentage" @click="toggleSort" size="mini" type="primary" icon="el-icon-sort">Sort</el-button>
-
-                        <el-dropdown v-if="!running" split-button type="primary" size="mini" title="Run"
-                            @click="run('selected')"
-                            @command="run"
-                        >
-                            <i class="el-icon-caret-right"></i> Run selected ({{selectedTests.length}})
-                            <el-dropdown-menu slot="dropdown" >
-                                <el-dropdown-item command="unfinished">Run unfinished ({{unfinishedTests.length}})</el-dropdown-item>
-                                <el-dropdown-item command="failed">Run failed ({{failedTests.length}})</el-dropdown-item>
-                                <el-dropdown-item command="all">Run all ({{fullTests.length}})</el-dropdown-item>
-                            </el-dropdown-menu>
-                        </el-dropdown>
-
-                        <el-button-group v-else>
-                            <el-button type="primary" size="mini" :loading="true">Stop</el-button>
-                            <el-button title="Run Selected" @click="stopTests" size="mini" type="primary" icon="el-icon-close" style="padding-left: 3px;padding-right:3px;"></el-button>
-                        </el-button-group>
-
-
-                        <el-popover title="Configuration" class="run-configuration">
-                            <div class="run-config-item">
-                                <el-checkbox v-model="runConfig.noHeadless">Replay</el-checkbox>
-                                <el-slider
-                                    style="width: 130px;"
-                                    v-model="runConfig.replaySpeed"
-                                    :step="1" :min="1" :max="10"
-                                    show-stops
-                                    :format-tooltip="function(val) { return val + 'x'; }"
-                                    :disabled="!runConfig.noHeadless"
-                                ></el-slider>
-                            </div>
-                            <div class="run-config-item">
-                                <span>Threads</span>
-                                <el-slider style="width: 140px;" v-model="runConfig.threads" :step="1" :min="1" :max="8" show-stops></el-slider>
-                            </div>
-                            <div class="run-config-item">
-                                <span>Version</span>
-                                <span style="font-size: 12px; color:#afafaf">Expected</span>
-                                <el-select size="mini" v-model="runConfig.expectedVersion" placeholder="Select Version"
-                                    style="width: 80px;"
-                                >
-                                    <el-option v-for="version in versions" :key="version" :label="version" :value="version"></el-option>
-                                </el-select>
-                                <span style="font-size: 12px; color: #afafaf">Actual</span>
-                                <el-select size="mini" v-model="runConfig.actualVersion" placeholder="Select Version"
-                                    style="width: 80px;"
-                                >
-                                    <el-option v-for="version in versions" :key="version" :label="version" :value="version"></el-option>
-                                </el-select>
-                            </div>
-                            <div class="run-config-item">
-                                <span>Renderer</span>
-                                <el-select size="mini" v-model="runConfig.renderer" placeholder="Select Renderer">
-                                    <el-option key="canvas" label="canvas" value="canvas"></el-option>
-                                    <el-option key="svg" label="svg" value="svg"></el-option>
-                                </el-select>
-                            </div>
-                            <i slot="reference" class="el-icon-setting"></i>
-                        </el-popover>
-
-                    </div>
+                    <el-row class="filters" :gutter="10" :align="'middle'">
+                        <el-col :span="2">
+                            <el-checkbox :indeterminate="isSelectAllIndeterminate" v-model="allSelected" @change="handleSelectAllChange"></el-checkbox>
+                        </el-col>
+                        <el-col :span="17">
+                            <el-input v-model="searchString" size="mini" placeholder="Filter Tests"></el-input>
+                        </el-col>
+                        <el-col :span="2">
+                            <el-button title="Sort By Failue Percentage" @click="toggleSort" size="mini" type="primary" icon="el-icon-sort">Sort</el-button>
+                        </el-col>
+                    </el-row>
                 </div>
                 <ul class="test-list">
                     <li v-for="(test, index) in tests"
@@ -129,11 +75,19 @@ under the License.
                             ></el-progress>
                         </el-tooltip>
                         <el-tooltip
-                            v-if="test.status==='finished' && test.actualErrors && test.actualErrors.length > 0"
+                            v-else-if="test.status==='finished' && test.actualErrors && test.actualErrors.length > 0"
                         >
                             <div slot="content">{{test.actualErrors.length}} Errors</div>
                             <i class="el-icon-message-solid"
                                 style="color: #F56C6C"
+                            ></i>
+                        </el-tooltip>
+                        <el-tooltip
+                            content="Not yet run"
+                            v-else
+                        >
+                            <i class="el-icon-question"
+                                style="color: #ccc;font-size: 20px;"
                             ></i>
                         </el-tooltip>
                         <a :href="'#' + test.name" class="menu-link">
@@ -145,6 +99,64 @@ under the License.
                 </ul>
             </el-aside>
             <el-main>
+                <div class="test-run-controls">
+                    <el-dropdown v-if="!running" split-button type="primary" size="mini" title="Run"
+                        @click="run('selected')"
+                        @command="run"
+                    >
+                        <i class="el-icon-caret-right"></i> Run selected ({{selectedTests.length}})
+                        <el-dropdown-menu slot="dropdown" >
+                            <el-dropdown-item command="unfinished">Run unfinished ({{unfinishedTests.length}})</el-dropdown-item>
+                            <el-dropdown-item command="failed">Run failed ({{failedTests.length}})</el-dropdown-item>
+                            <el-dropdown-item command="all">Run all ({{fullTests.length}})</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </el-dropdown>
+
+                    <el-button-group v-else>
+                        <el-button type="primary" size="mini" :loading="true">Stop</el-button>
+                        <el-button title="Run Selected" @click="stopTests" size="mini" type="primary" icon="el-icon-close" style="padding-left: 3px;padding-right:3px;"></el-button>
+                    </el-button-group>
+
+
+                    <!-- <div class="run-config-item">
+                        <el-checkbox v-model="runConfig.noHeadless">Replay</el-checkbox>
+                        <el-slider
+                            style="width: 80px;"
+                            v-model="runConfig.replaySpeed"
+                            :step="1" :min="1" :max="10"
+                            show-stops
+                            :format-tooltip="function(val) { return val + 'x'; }"
+                            :disabled="!runConfig.noHeadless"
+                        ></el-slider>
+                    </div> -->
+                    <div class="run-config-item">
+                        <span class="label">Expected</span>
+                        <el-select size="mini" v-model="runConfig.expectedVersion" placeholder="Select Version"
+                            style="width: 80px;"
+                        >
+                            <el-option v-for="version in versions" :key="version" :label="version" :value="version"></el-option>
+                        </el-select>
+                        <span class="label">Actual</span>
+                        <el-select size="mini" v-model="runConfig.actualVersion" placeholder="Select Version"
+                            style="width: 80px;"
+                        >
+                            <el-option v-for="version in versions" :key="version" :label="version" :value="version"></el-option>
+                        </el-select>
+                    </div>
+                    <div class="run-config-item">
+                        <span class="label">Renderer</span>
+                        <el-select size="mini" style="width: 100px;" v-model="runConfig.renderer" placeholder="Select Renderer">
+                            <el-option key="canvas" label="canvas" value="canvas"></el-option>
+                            <el-option key="svg" label="svg" value="svg"></el-option>
+                        </el-select>
+                    </div>
+                    <div class="run-config-item">
+                        <span class="label">Threads</span>
+                        <el-slider style="width: 100px;" v-model="runConfig.threads" :step="1" :min="1" :max="8" show-stops></el-slider>
+                    </div>
+                </div>
+
+
                 <div v-if="currentTest" class="test-result">
                     <div class="title">
                         <el-progress
