@@ -423,7 +423,19 @@ function updateUrl(notRefresh) {
         history.pushState({}, '', location.pathname + '?' + searchUrl);
     }
     else {
-        window.location.search = '?' + searchUrl;
+        if (app.running) {
+            app.$confirm('Change versions will stop the running tests. <br />Do you still want to continue?', 'Warn', {
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No',
+                dangerouslyUseHTMLString: true,
+                center: true
+            }).then(value => {
+                window.location.search = '?' + searchUrl;
+            }).catch(() => {});
+        }
+        else {
+            window.location.search = '?' + searchUrl;
+        }
     }
 }
 

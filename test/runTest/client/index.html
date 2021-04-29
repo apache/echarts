@@ -84,7 +84,7 @@ under the License.
                         </el-tooltip>
                         <el-tooltip
                             content="Not yet run"
-                            v-else
+                            v-else-if="!(test.status === 'pending' && running)"
                         >
                             <i class="el-icon-question"
                                 style="color: #ccc;font-size: 20px;"

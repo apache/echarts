@@ -137,6 +137,10 @@ module.exports.updateTestsList = async function (
     _tests.forEach(testOpt => {
         testOpt.actions = actionsMetaData[testOpt.name] || 0;
     });
+
+    // Save once.
+    module.exports.saveTestsList();
+
     return _tests;
 };
 

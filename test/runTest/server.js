@@ -54,7 +54,7 @@ function serve() {
 
 let runningThreads = [];
 let pendingTests;
-let aborted = true;
+let running = false;
 
 function stopRunningTests() {
     if (runningThreads) {
@@ -67,6 +67,7 @@ function stopRunningTests() {
                 testOpt.status = 'unsettled';
             }
         });
+        saveTestsList();
         pendingTests = null;
     }
 }
@@ -133,13 +134,14 @@ function startTests(testsNameList, socket, {
                 testOpt.results = [];
             });
 
-            if (!aborted) {
+            if (running) {
                 socket.emit('update', {
                     tests: getTestsList(),
                     running: true
                 });
             }
         }
+
         let runningCount = 0;
         function onExit() {
             runningCount--;
@@ -150,7 +152,7 @@ function startTests(testsNameList, socket, {
         }
         function onUpdate() {
             // Merge tests.
-            if (!aborted && !noSave) {
+            if (running && !noSave) {
                 socket.emit('update', {
                     tests: getTestsList(),
                     running: true
@@ -210,7 +212,8 @@ async function start() {
         return;
     }
 
-    updateTestsList(true);
+
+    let _currentTestHash;
 
     // let runtimeCode = await buildRuntimeCode();
     // fse.outputFileSync(path.join(__dirname, 'tmp/testRuntime.js'), runtimeCode, 'utf-8');
@@ -220,20 +223,22 @@ async function start() {
 
     io.of('/client').on('connect', async socket => {
         function abortTests() {
-            if (aborted) {
+            if (!running) {
                 return;
             }
             stopRunningTests();
             io.of('/client').emit('abort');
-            aborted = true;
+            running = false;
         }
 
         socket.on('setTestVersions', async (params) => {
-            abortTests();
+            if (_currentTestHash !== getTestHash(params)) {
+                abortTests();
+            }
 
             await updateTestsList(
-                getTestHash(params),
-                true
+                _currentTestHash = getTestHash(params),
+                !running // Set to unsettled if not running
             );
 
             socket.emit('update', {
@@ -245,12 +250,12 @@ async function start() {
         socket.on('run', async data => {
 
             let startTime = Date.now();
-            aborted = false;
+            running = true;
 
             await prepareEChartsLib(data.expectedVersion); // Expected version.
             await prepareEChartsLib(data.actualVersion); // Version to test
 
-            if (aborted) {  // If it is aborted when downloading echarts lib.
+            if (!running) {  // If it is aborted when downloading echarts lib.
                 return;
             }
 
@@ -274,13 +279,14 @@ async function start() {
                 console.error(e);
             }
 
-            if (!aborted) {
+            if (running) {
                 console.log('Finished');
                 io.of('/client').emit('finish', {
                     time: Date.now() - startTime,
                     count: data.tests.length,
                     threads: data.threads
                 });
+                running = false;
             }
             else {
                 console.log('Aborted!');
