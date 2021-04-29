@@ -133,6 +133,8 @@ function startTests(testsNameList, socket, {
                 testOpt.status = 'pending';
                 testOpt.results = [];
             });
+            // Save status immediately
+            saveTestsList();
 
             if (running) {
                 socket.emit('update', {
