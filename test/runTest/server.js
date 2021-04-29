@@ -25,7 +25,7 @@ const {fork} = require('child_process');
 const semver = require('semver');
 const {port, origin} = require('./config');
 const {getTestsList, updateTestsList, saveTestsList, mergeTestsResults, updateActionsMeta} = require('./store');
-const {prepareEChartsLib, getActionsFullPath, fetchVersions} = require('./util');
+const {prepareEChartsLib, getActionsFullPath} = require('./util');
 const fse = require('fs-extra');
 const fs = require('fs');
 const open = require('open');
@@ -193,10 +193,7 @@ async function start() {
         return;
     }
 
-    let [versions] = await Promise.all([
-        fetchVersions(),
-        updateTestsList(true)
-    ]);
+    updateTestsList(true);
 
     // let runtimeCode = await buildRuntimeCode();
     // fse.outputFileSync(path.join(__dirname, 'tmp/testRuntime.js'), runtimeCode, 'utf-8');
@@ -273,8 +270,6 @@ async function start() {
         });
 
         socket.on('stop', abortTests);
-
-        socket.emit('versions', versions);
     });
 
     io.of('/recorder').on('connect', async socket => {

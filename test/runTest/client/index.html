@@ -100,22 +100,24 @@ under the License.
             </el-aside>
             <el-main>
                 <div class="test-run-controls">
-                    <el-dropdown v-if="!running" split-button type="primary" size="mini" title="Run"
-                        @click="run('selected')"
-                        @command="run"
-                    >
-                        <i class="el-icon-caret-right"></i> Run selected ({{selectedTests.length}})
-                        <el-dropdown-menu slot="dropdown" >
-                            <el-dropdown-item command="unfinished">Run unfinished ({{unfinishedTests.length}})</el-dropdown-item>
-                            <el-dropdown-item command="failed">Run failed ({{failedTests.length}})</el-dropdown-item>
-                            <el-dropdown-item command="all">Run all ({{fullTests.length}})</el-dropdown-item>
-                        </el-dropdown-menu>
-                    </el-dropdown>
+                    <div class="run-config-item">
+                        <el-dropdown v-if="!running" split-button size="mini" title="Run"
+                            @click="run('selected')"
+                            @command="run"
+                        >
+                            <i class="el-icon-caret-right"></i> Run ({{selectedTests.length}})
+                            <el-dropdown-menu slot="dropdown" >
+                                <el-dropdown-item command="unfinished">Run unfinished ({{unfinishedTests.length}})</el-dropdown-item>
+                                <el-dropdown-item command="failed">Run failed ({{failedTests.length}})</el-dropdown-item>
+                                <el-dropdown-item command="all">Run all ({{fullTests.length}})</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </el-dropdown>
 
-                    <el-button-group v-else>
-                        <el-button type="primary" size="mini" :loading="true">Stop</el-button>
-                        <el-button title="Run Selected" @click="stopTests" size="mini" type="primary" icon="el-icon-close" style="padding-left: 3px;padding-right:3px;"></el-button>
-                    </el-button-group>
+                        <el-button-group v-else>
+                            <el-button size="mini" :loading="true">Stop</el-button>
+                            <el-button title="Run" @click="stopTests" size="mini" icon="el-icon-close" style="padding-left: 3px;padding-right:3px;"></el-button>
+                        </el-button-group>
+                    </div>
 
 
                     <!-- <div class="run-config-item">
@@ -169,12 +171,14 @@ under the License.
                             style="margin-top: 5px;"
                         ></el-progress>
                         <h3>{{currentTest.name}}</h3>
-                        <el-button-group style="margin-left: 10px">
-                            <el-button title="Run Selected" @click="runSingleTest(currentTest.name)" :loading="running" circle type="primary" icon="el-icon-caret-right"></el-button>
-                            <el-button v-if="running" title="Run Selected" @click="stopTests" circle type="primary" icon="el-icon-close"></el-button>
+                        <el-button-group style="margin-left: 10px" v-if="running">
+                            <el-button :loading="running" circle type="primary"></el-button>
+                            <el-button title="Run Selected" @click="stopTests" circle type="primary" icon="el-icon-close"></el-button>
                         </el-button-group>
-                        <a target="_blank" :href="currentTestUrl"><i class="el-icon-link"></i>Open Demo</a>
-                        <a target="_blank" :href="currentTestRecordUrl"><i class="el-icon-video-camera"></i>Record Interaction</a>
+                        <el-button v-else style="margin-left: 10px"  title="Run Selected" @click="runSingleTest(currentTest.name)" circle type="primary" icon="el-icon-caret-right"></el-button>
+                        </el-button>
+                        <a target="_blank" :href="currentTestUrl"><i class="el-icon-link"></i>&nbsp;Open Demo</a>
+                        <a target="_blank" :href="currentTestRecordUrl"><i class="el-icon-video-camera"></i>&nbsp;Record Interaction</a>
                     </div>
 
                     <div class="test-screenshots" v-for="(result, idx) in currentTest.results">

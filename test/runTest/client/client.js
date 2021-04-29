@@ -75,14 +75,20 @@ const app = new Vue({
         previewTitle: '',
 
         runConfig: {
+            isNightly: false,
             noHeadless: false,
             replaySpeed: 5,
             actualVersion: 'local',
             expectedVersion: null,
             renderer: 'canvas',
-            threads: 1
+            threads: 4
         }
     },
+
+    mounted() {
+        this.fetchVersions();
+    },
+
     computed: {
         tests() {
             let sortFunc = this.sortBy === 'name'
@@ -230,6 +236,26 @@ const app = new Vue({
             this.previewIframeSrc = `../../${src}`;
             this.previewTitle = src;
             this.showIframeDialog = true;
+        },
+
+        fetchVersions() {
+            const url = this.runConfig.isNightly
+                ? 'https://data.jsdelivr.com/v1/package/npm/echarts-nightly'
+                : 'https://data.jsdelivr.com/v1/package/npm/echarts'
+            fetch(url, {
+                mode: 'cors'
+            }).then(res => res.json()).then(json => {
+                this.versions = json.versions;
+
+                // if (!this.runConfig.expectedVersion) {
+                // PENDING
+                // Always override the expected version with latest version
+                // Avoid forget to change the version to latest in the next release.
+                this.runConfig.expectedVersion = json.tags.latest;
+                // }
+
+                this.versions.unshift('local');
+            });
         }
     }
 });
@@ -239,6 +265,7 @@ try {
     Object.assign(app.runConfig, JSON.parse(localStorage.getItem(LOCAL_SAVE_KEY)));
 }
 catch (e) {}
+
 app.$watch('runConfig', () => {
     localStorage.setItem(LOCAL_SAVE_KEY, JSON.stringify(app.runConfig));
 }, {deep: true});
@@ -316,15 +343,6 @@ socket.on('abort', res => {
         duration: 4000
     });
     app.running = false;
-});
-socket.on('versions', versions => {
-    app.versions = versions.filter(version => {
-        return !version.startsWith('2.');
-    }).reverse();
-    if (!app.runConfig.expectedVersion) {
-        app.runConfig.expectedVersion = app.versions[0];
-    }
-    app.versions.unshift('local');
 });
 
 function updateTestHash() {

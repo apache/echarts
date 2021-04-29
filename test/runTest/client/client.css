@@ -79,20 +79,17 @@
     z-index: 1;
     width: 100%;
     padding: 5px 20px;
+
+    background: #896bda;
+    box-shadow: 0 0 20px rgb(0 0 0 / 20%);
+    border-bottom: none;
 }
 
 .test-run-controls>* {
     display: inline-block;
     vertical-align: middle;
 }
-.test-run-controls .el-checkbox {
-    margin-right: 2px;
-}
-.nav-toolbar .el-icon-setting {
-    font-size: 20px;
-    margin-left: 5px;
-    cursor: pointer;
-}
+
 .nav-toolbar .el-button {
     padding-left: 8px;
     padding-right: 8px;
@@ -105,7 +102,15 @@
     display: inline-block;
     vertical-align: middle;
     font-size: 12px;
-    color: #afafaf;
+    color: #fff;
+}
+
+.run-config-item .el-input__inner,
+.run-config-item .el-button-group {
+    border: none;
+}
+.run-config-item .el-button {
+    border-color: #fff;
 }
 
 .run-config-item .label {
@@ -119,13 +124,22 @@
     background: #fff;
     margin: 0;
     padding: 0;
-    margin-top: 48px;
+
+    position: absolute;
+    top: 48px;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    overflow-y: scroll;
 }
 .test-list li {
     list-style: none;
     padding-left: 10px;
     cursor: pointer;
     color: #222;
+}
+.test-list li .el-checkbox {
+    margin-right: 5px;
 }
 .test-list li a.menu-link {
     display: inline-block;
@@ -184,6 +198,9 @@
     margin: 0;
 }
 
+.test-result .title {
+    margin-left: 20px;
+}
 .test-result .title>* {
     display: inline-block;
     vertical-align: middle;
@@ -222,13 +239,12 @@
 .test-screenshots h4 {
     font-size: 30px;
     font-weight: 200;
-    margin-left: -20px;
     color: #162436;
 }
 
 .test-errors, .test-logs {
     margin-top: 20px;
-    padding: 0 50px;
+    padding: 0 20px;
 }
 
 .test-logs .log-item {
