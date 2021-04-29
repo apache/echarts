@@ -55,7 +55,7 @@ under the License.
                     <li v-for="(test, index) in tests"
                         :title="test.name"
                         :class="{active: currentTest && currentTest.name === test.name}"
-                        @click.self="goto(test.name)"
+                        @click="changeTest($event.target, test.name)"
                     >
                         <span @mouseup="handleSelect(index)" @mouseup.shift="handleShiftSelect(index)">
                             <el-checkbox v-model="test.selected"></el-checkbox>
@@ -105,7 +105,7 @@ under the License.
                             @click="run('selected')"
                             @command="run"
                         >
-                            <i class="el-icon-caret-right"></i> Run ({{selectedTests.length}})
+                            <i class="el-icon-caret-right"></i> RUN ({{selectedTests.length}})
                             <el-dropdown-menu slot="dropdown" >
                                 <el-dropdown-item command="unfinished">Run unfinished ({{unfinishedTests.length}})</el-dropdown-item>
                                 <el-dropdown-item command="failed">Run failed ({{failedTests.length}})</el-dropdown-item>
@@ -132,17 +132,28 @@ under the License.
                         ></el-slider>
                     </div> -->
                     <div class="run-config-item">
-                        <span class="label">Expected</span>
+                        <span class="label">
+                            Expected
+                            <el-tooltip content="Use Nightly Build">
+                                <el-checkbox v-model="runConfig.isExpectedNightly" size="mini"></el-checkbox>
+                            </el-tooltip>
+                        </span>
                         <el-select size="mini" v-model="runConfig.expectedVersion" placeholder="Select Version"
-                            style="width: 80px;"
+                            :style="`width: ${runConfig.isExpectedNightly ? 160 : 80}px;`"
                         >
-                            <el-option v-for="version in versions" :key="version" :label="version" :value="version"></el-option>
+                            <el-option v-for="version in expectedVersionsList" :key="version" :label="version" :value="version"></el-option>
                         </el-select>
-                        <span class="label">Actual</span>
+                        <!-- <i class="el-icon-link"></i> -->
+                        <span class="label">
+                            Actual
+                            <el-tooltip content="Use Nightly Build">
+                                <el-checkbox v-model="runConfig.isActualNightly" size="mini"></el-checkbox>
+                            </el-tooltip>
+                        </span>
                         <el-select size="mini" v-model="runConfig.actualVersion" placeholder="Select Version"
-                            style="width: 80px;"
+                            :style="`width: ${runConfig.isActualNightly ? 160 : 80}px;`"
                         >
-                            <el-option v-for="version in versions" :key="version" :label="version" :value="version"></el-option>
+                            <el-option v-for="version in actualVersionsList" :key="version" :label="version" :value="version"></el-option>
                         </el-select>
                     </div>
                     <div class="run-config-item">

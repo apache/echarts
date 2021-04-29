@@ -67,9 +67,11 @@ module.exports.prepareEChartsLib = function (version) {
         let testLibPath = `${versionFolder}/${module.exports.getEChartsTestFileName()}`;
         if (!fs.existsSync(testLibPath)) {
             const file = fs.createWriteStream(`${versionFolder}/echarts.js`);
+            const isNightly = version.includes('-dev');
+            const packageName = isNightly ? 'echarts-nightly' : 'echarts'
 
-            console.log(`Downloading echarts@${version} from `, `https://cdn.jsdelivr.net/npm/echarts@${version}/dist/echarts.js`);
-            https.get(`https://cdn.jsdelivr.net/npm/echarts@${version}/dist/echarts.js`, response => {
+            console.log(`Downloading ${packageName}@${version} from `, `https://cdn.jsdelivr.net/npm/${packageName}@${version}/dist/echarts.js`);
+            https.get(`https://cdn.jsdelivr.net/npm/${packageName}@${version}/dist/echarts.js`, response => {
                 response.pipe(file);
 
                 file.on('finish', () => {

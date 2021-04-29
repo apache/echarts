@@ -18,7 +18,30 @@
 */
 
 const socket = io('/client');
-const LOCAL_SAVE_KEY = 'visual-regression-testing-config';
+
+// const LOCAL_SAVE_KEY = 'visual-regression-testing-config';
+
+function parseParams(str) {
+    if (!str) {
+        return {};
+    }
+    const parts = str.split('&');
+    const params = {};
+    parts.forEach((part) => {
+        const kv = part.split('=');
+        params[kv[0]] = decodeURIComponent(kv[1]);
+    });
+    return params;
+}
+
+function assembleParams(paramsObj) {
+    const paramsArr = [];
+    Object.keys(paramsObj).forEach((key) => {
+        let val = paramsObj[key];
+        paramsArr.push(key + '=' + encodeURIComponent(val));
+    });
+    return paramsArr.join('&');
+}
 
 function processTestsData(tests, oldTestsData) {
     tests.forEach((test, idx) => {
@@ -56,42 +79,64 @@ function processTestsData(tests, oldTestsData) {
     return tests;
 }
 
+const storedConfig = {};
+const urlParams = parseParams(window.location.search.substr(1))
+
+// Save and restore
+try {
+    const runConfig = JSON.parse(urlParams.runConfig);
+    Object.assign(storedConfig, runConfig);
+}
+catch (e) {}
+
 const app = new Vue({
     el: '#app',
     data: {
         fullTests: [],
-        currentTestName: '',
-        sortBy: 'name',
+        currentTestName: urlParams.test || '',
         searchString: '',
         running: false,
 
         allSelected: false,
         lastSelectedIndex: -1,
 
-        versions: [],
+        actualVersionsList: [],
+        expectedVersionsList: [],
+
+        loadingVersion: false,
 
         showIframeDialog: false,
         previewIframeSrc: '',
         previewTitle: '',
 
-        runConfig: {
-            isNightly: false,
+        runConfig: Object.assign({
+            sortBy: 'name',
+
             noHeadless: false,
             replaySpeed: 5,
+
+            isActualNightly: false,
+            isExpectedNightly: false,
             actualVersion: 'local',
             expectedVersion: null,
+
             renderer: 'canvas',
             threads: 4
-        }
+        }, storedConfig)
     },
 
     mounted() {
-        this.fetchVersions();
+        this.fetchVersions(false);
+        this.fetchVersions(true);
+
+        setTimeout(() => {
+            this.scrollToCurrent();
+        }, 500);
     },
 
     computed: {
         tests() {
-            let sortFunc = this.sortBy === 'name'
+            let sortFunc = this.runConfig.sortBy === 'name'
                 ? (a, b) => a.name.localeCompare(b.name)
                 : (a, b) => {
                     if (a.percentage === b.percentage) {
@@ -165,12 +210,40 @@ const app = new Vue({
             set() {}
         }
     },
+
+    watch: {
+        'runConfig.isActualNightly'() {
+            this.fetchVersions(true);
+        },
+        'runConfig.isExpectedNightly'() {
+            this.fetchVersions(false);
+        },
+        'runConfig.sortBy'() {
+            setTimeout(() => {
+                this.scrollToCurrent();
+            }, 100);
+        }
+    },
+
     methods: {
-        goto(url) {
-            window.location.hash = '#' + url;
+        scrollToCurrent() {
+            const el = document.querySelector(`.test-list>li[title="${this.currentTestName}"]`);
+            if (el) {
+                el.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        },
+
+        changeTest(target, testName) {
+            if (!target.matches('input[type="checkbox"]') && !target.matches('.el-checkbox__inner')) {
+                app.currentTestName = testName;
+                updateUrl(true);
+            }
         },
         toggleSort() {
-            this.sortBy = this.sortBy === 'name' ? 'percentage' : 'name';
+            this.runConfig.sortBy = this.runConfig.sortBy === 'name' ? 'percentage' : 'name';
         },
         handleSelectAllChange(val) {
             // Only select filtered tests.
@@ -238,37 +311,28 @@ const app = new Vue({
             this.showIframeDialog = true;
         },
 
-        fetchVersions() {
-            const url = this.runConfig.isNightly
+        fetchVersions(isActual) {
+            const prop = isActual ? 'actualVersionsList' : 'expectedVersionsList';
+            this[prop] = [];
+
+            const url = this.runConfig[isActual ? 'isActualNightly' : 'isExpectedNightly']
                 ? 'https://data.jsdelivr.com/v1/package/npm/echarts-nightly'
                 : 'https://data.jsdelivr.com/v1/package/npm/echarts'
             fetch(url, {
                 mode: 'cors'
             }).then(res => res.json()).then(json => {
-                this.versions = json.versions;
+                this[prop] = json.versions;
+                this[prop].unshift('local');
 
-                // if (!this.runConfig.expectedVersion) {
-                // PENDING
-                // Always override the expected version with latest version
-                // Avoid forget to change the version to latest in the next release.
-                this.runConfig.expectedVersion = json.tags.latest;
-                // }
-
-                this.versions.unshift('local');
+                if (!isActual) {
+                    if (!this[prop].includes(this.runConfig.expectedVersion)) {
+                        this.runConfig.expectedVersion = json.tags.latest;
+                    }
+                }
             });
         }
     }
 });
-
-// Save and restore
-try {
-    Object.assign(app.runConfig, JSON.parse(localStorage.getItem(LOCAL_SAVE_KEY)));
-}
-catch (e) {}
-
-app.$watch('runConfig', () => {
-    localStorage.setItem(LOCAL_SAVE_KEY, JSON.stringify(app.runConfig));
-}, {deep: true});
 
 function runTests(tests) {
     if (!tests.length) {
@@ -345,8 +409,30 @@ socket.on('abort', res => {
     app.running = false;
 });
 
-function updateTestHash() {
-    app.currentTestName = window.location.hash.slice(1);
+// function handleUrlChanged() {
+//     const params = parseParams(window.location.search.substr(1));
+//     app.currentTestName = params.test;
+//     try {
+//         Object.assign(app.runConfig, JSON.parse(params.runConfig));
+//     }
+//     catch (e) {}
+// }
+
+
+function updateUrl(notRefresh) {
+    const searchUrl = assembleParams({
+        test: app.currentTestName,
+        runConfig: JSON.stringify(app.runConfig)
+    });
+    if (notRefresh) {
+        history.pushState({}, '', location.pathname + '?' + searchUrl);
+    }
+    else {
+        window.location.search = '?' + searchUrl;
+    }
 }
-updateTestHash();
-window.addEventListener('hashchange', updateTestHash);
+
+// Only update url when version is changed.
+app.$watch('runConfig.actualVersion', () => updateUrl());
+app.$watch('runConfig.expectedVersion', () => updateUrl());
+app.$watch('runConfig.renderer', () => updateUrl());
