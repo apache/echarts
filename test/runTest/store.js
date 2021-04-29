@@ -27,6 +27,7 @@ const {blacklist, SVGBlacklist} = require('./blacklist');
 
 let _tests = [];
 let _testsMap = {};
+let _testHash = '';
 
 class Test {
     constructor(fileUrl) {
@@ -58,8 +59,14 @@ class Test {
     }
 }
 
-function getCacheFilePath() {
-    return path.join(__dirname, 'tmp/__cache__.json');;
+function getResultBaseDir() {
+    return path.join(__dirname, 'tmp', 'result', _testHash);
+}
+
+module.exports.getResultBaseDir = getResultBaseDir;
+
+function getCacheFilePath(baseDir) {
+    return path.join(getResultBaseDir(), '__result__.json');;
 }
 
 module.exports.getTestsList = function () {
@@ -70,15 +77,21 @@ module.exports.getTestByFileUrl = function (url) {
     return _testsMap[url];
 };
 
-module.exports.updateTestsList = async function (setPendingTestToUnsettled) {
-    let tmpFolder = path.join(__dirname, 'tmp');
-    fse.ensureDirSync(tmpFolder);
+module.exports.updateTestsList = async function (
+    testHash,
+    setPendingTestToUnsettled
+) {
+    _testHash = testHash;
     _tests = [];
     _testsMap = {};
+    _testsExists = {};
+
+    fse.ensureDirSync(getResultBaseDir());
+
     try {
         let cachedStr = fs.readFileSync(getCacheFilePath(), 'utf-8');
-        _tests = JSON.parse(cachedStr);
-        _tests.forEach(test => {
+        const tests = JSON.parse(cachedStr);
+        tests.forEach(test => {
             // In somehow tests are stopped and leave the status pending.
             // Set the status to unsettled again.
             if (setPendingTestToUnsettled) {
@@ -90,7 +103,6 @@ module.exports.updateTestsList = async function (setPendingTestToUnsettled) {
         });
     }
     catch(e) {
-        _tests = [];
     }
     // Find if there is new html file
     const files = await util.promisify(glob)('**.html', { cwd: path.resolve(__dirname, '../') });
@@ -98,6 +110,8 @@ module.exports.updateTestsList = async function (setPendingTestToUnsettled) {
         if (blacklist.includes(fileUrl)) {
             return;
         }
+        _testsExists[fileUrl] = true;
+
         if (_testsMap[fileUrl]) {
             return;
         }
@@ -105,8 +119,12 @@ module.exports.updateTestsList = async function (setPendingTestToUnsettled) {
         const test = new Test(fileUrl);
         test.ignoreSVG = SVGBlacklist.includes(fileUrl);
 
-        _tests.push(test);
         _testsMap[fileUrl] = test;
+    });
+
+    // Exclude tests that there is no HTML files.
+    Object.keys(_testsExists).forEach(key => {
+        _tests.push(_testsMap[key]);
     });
 
     const actionsMetaData = {};

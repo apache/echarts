@@ -24,11 +24,13 @@ const path = require('path');
 const {fork} = require('child_process');
 const semver = require('semver');
 const {port, origin} = require('./config');
-const {getTestsList, updateTestsList, saveTestsList, mergeTestsResults, updateActionsMeta} = require('./store');
+const {getTestsList, updateTestsList, saveTestsList, mergeTestsResults, updateActionsMeta, getResultBaseDir} = require('./store');
 const {prepareEChartsLib, getActionsFullPath} = require('./util');
 const fse = require('fs-extra');
 const fs = require('fs');
 const open = require('open');
+
+const TEST_HASH_SPLITTER = '__';
 
 function serve() {
     const server = http.createServer((request, response) => {
@@ -52,7 +54,7 @@ function serve() {
 
 let runningThreads = [];
 let pendingTests;
-let aborted = false;
+let aborted = true;
 
 function stopRunningTests() {
     if (runningThreads) {
@@ -132,7 +134,10 @@ function startTests(testsNameList, socket, {
             });
 
             if (!aborted) {
-                socket.emit('update', {tests: getTestsList(), running: true});
+                socket.emit('update', {
+                    tests: getTestsList(),
+                    running: true
+                });
             }
         }
         let runningCount = 0;
@@ -146,7 +151,10 @@ function startTests(testsNameList, socket, {
         function onUpdate() {
             // Merge tests.
             if (!aborted && !noSave) {
-                socket.emit('update', {tests: getTestsList(), running: true});
+                socket.emit('update', {
+                    tests: getTestsList(),
+                    running: true
+                });
             }
         }
         threadsCount = Math.min(threadsCount, pendingTests.length);
@@ -163,6 +171,7 @@ function startTests(testsNameList, socket, {
                 '--actual', actualVersion,
                 '--expected', expectedVersion,
                 '--renderer', renderer || '',
+                '--dir', getResultBaseDir(),
                 ...(noHeadless ? ['--no-headless'] : []),
                 ...(noSave ? ['--no-save'] : [])
             ]);
@@ -186,6 +195,14 @@ function checkPuppeteer() {
     }
 }
 
+function getTestHash(params) {
+    return [
+        params.expectedVersion,
+        params.actualVersion,
+        params.renderer
+    ].join(TEST_HASH_SPLITTER);
+}
+
 async function start() {
     if (!checkPuppeteer()) {
         // TODO Check version.
@@ -202,26 +219,27 @@ async function start() {
     let {io} = serve();
 
     io.of('/client').on('connect', async socket => {
-        await updateTestsList();
-
         function abortTests() {
+            if (aborted) {
+                return;
+            }
             stopRunningTests();
             io.of('/client').emit('abort');
             aborted = true;
         }
 
-        function emitUpdatedList() {
+        socket.on('setTestVersions', async (params) => {
+            abortTests();
+
+            await updateTestsList(
+                getTestHash(params),
+                true
+            );
+
             socket.emit('update', {
                 tests: getTestsList(),
                 running: runningThreads.length > 0
             });
-        }
-
-        emitUpdatedList();
-
-        socket.on('fetch', () => {
-            abortTests();
-            emitUpdatedList();
         });
 
         socket.on('run', async data => {

@@ -127,11 +127,16 @@ const app = new Vue({
 
     mounted() {
         this.fetchVersions(false);
-        this.fetchVersions(true);
-
-        setTimeout(() => {
-            this.scrollToCurrent();
-        }, 500);
+        this.fetchVersions(true).then(() => {
+            socket.emit('setTestVersions', {
+                expectedVersion: app.runConfig.expectedVersion,
+                actualVersion: app.runConfig.actualVersion,
+                renderer: app.runConfig.renderer,
+            });
+            setTimeout(() => {
+                this.scrollToCurrent();
+            }, 500);
+        })
     },
 
     computed: {
@@ -318,7 +323,7 @@ const app = new Vue({
             const url = this.runConfig[isActual ? 'isActualNightly' : 'isExpectedNightly']
                 ? 'https://data.jsdelivr.com/v1/package/npm/echarts-nightly'
                 : 'https://data.jsdelivr.com/v1/package/npm/echarts'
-            fetch(url, {
+            return fetch(url, {
                 mode: 'cors'
             }).then(res => res.json()).then(json => {
                 this[prop] = json.versions;
@@ -366,15 +371,15 @@ function runTests(tests) {
 
 socket.on('connect', () => {
     console.log('Connected');
-
-    app.$el.style.display = 'block';
 });
 
 let firstUpdate = true;
 socket.on('update', msg => {
+    app.$el.style.display = 'block';
+
     let hasFinishedTest = !!msg.tests.find(test => test.status === 'finished');
     if (!hasFinishedTest && firstUpdate) {
-        app.$confirm('It seems you haven\'t run any test yet!<br />Do you want to start now?', 'Tip', {
+        app.$confirm('You haven\'t run any test on these two versions yet!<br />Do you want to start now?', 'Tip', {
             confirmButtonText: 'Yes',
             cancelButtonText: 'No',
             dangerouslyUseHTMLString: true,
@@ -408,16 +413,6 @@ socket.on('abort', res => {
     });
     app.running = false;
 });
-
-// function handleUrlChanged() {
-//     const params = parseParams(window.location.search.substr(1));
-//     app.currentTestName = params.test;
-//     try {
-//         Object.assign(app.runConfig, JSON.parse(params.runConfig));
-//     }
-//     catch (e) {}
-// }
-
 
 function updateUrl(notRefresh) {
     const searchUrl = assembleParams({
