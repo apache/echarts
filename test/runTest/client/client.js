@@ -348,7 +348,12 @@ const app = new Vue({
         },
 
         switchTestsRun(runResult) {
-
+            this.runConfig.expectedVersion = runResult.expectedVersion;
+            this.runConfig.actualVersion = runResult.actualVersion;
+            // TODO
+            this.runConfig.isExpectedNightly = runResult.expectedVersion.includes('-dev.');
+            this.runConfig.isActualNightly = runResult.actualVersion.includes('-dev.');
+            this.runConfig.renderer = runResult.renderer;
         },
         genTestsRunReport(runResult) {
 

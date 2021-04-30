@@ -23,6 +23,7 @@ const fs = require('fs');
 const globby = require('globby');
 const {testNameFromFile} = require('./util');
 const {blacklist, SVGBlacklist} = require('./blacklist');
+const { promisify } = require('util');
 
 let _tests = [];
 let _testsMap = {};
@@ -33,6 +34,14 @@ const RESULTS_ROOT_DIR = path.join(__dirname, 'tmp', 'result');
 
 const TEST_HASH_SPLITTER = '__';
 
+function convertBytes(bytes) {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+    if (bytes == 0) {
+        return 'N/A';
+    }
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return (bytes / Math.pow(1024, i)).toFixed(Math.min(1, i)) + ' ' + sizes[i]
+}
 class Test {
     constructor(fileUrl) {
         this.fileUrl = fileUrl;
@@ -201,13 +210,31 @@ module.exports.updateActionsMeta = function (testName, actions) {
     ), 'utf-8');
 };
 
+
+async function getFolderSize(dir) {
+    const files = await globby(dir);
+    let size = 0;
+    for (let file of files) {
+        size += fs.statSync(file).size;
+    }
+    return size;
+    // const statAsync = promisify(fs.stat);
+    // return Promise.all(
+    //     files.map(file => statAsync(file))
+    // ).then(sizes => {
+    //     return sizes.reduce((total, current) => {
+    //         return total + current.size;
+    //     }, 0)
+    // });
+}
 /**
  * Get results of all runs
- * @return [ { id, expectedVersion, actualVersion, renderer, lastRunTime, total, finished, passed  } ]
+ * @return [ { id, expectedVersion, actualVersion, renderer, lastRunTime, total, finished, passed, diskSize  } ]
  */
 module.exports.getAllTestsRuns = async function () {
     const dirs = await globby('*', { cwd: RESULTS_ROOT_DIR, onlyDirectories: true });
-    return dirs.map((dir) => {
+    const results = [];
+    for (let dir of dirs) {
         const params = parseRunHash(dir);
         const resultJson = JSON.parse(fs.readFileSync(path.join(
             RESULTS_ROOT_DIR,
@@ -243,9 +270,11 @@ module.exports.getAllTestsRuns = async function () {
         params.passed = passedCount;
         params.finished = finishedCount;
         params.id = dir;
+        params.diskSize = convertBytes(await getFolderSize(path.join(RESULTS_ROOT_DIR, dir)));
 
-        return params;
-    });
+        results.push(params);
+    };
+    return results;
 }
 
 module.exports.delTestsRun = async function (hash) {
