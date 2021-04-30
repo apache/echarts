@@ -234,6 +234,14 @@ async function getFolderSize(dir) {
 module.exports.getAllTestsRuns = async function () {
     const dirs = await globby('*', { cwd: RESULTS_ROOT_DIR, onlyDirectories: true });
     const results = [];
+
+    function f(number) {
+        return number < 10 ? '0' + number : number;
+    }
+    function formatDate(lastRunTime) {
+        const date = new Date(lastRunTime);
+        return `${date.getFullYear()}-${f(date.getMonth() + 1)}-${f(date.getDate())} ${f(date.getHours())}:${f(date.getMinutes())}:${f(date.getSeconds())}`;
+    }
     for (let dir of dirs) {
         const params = parseRunHash(dir);
         const resultJson = JSON.parse(fs.readFileSync(path.join(
@@ -265,7 +273,7 @@ module.exports.getAllTestsRuns = async function () {
             }
         });
 
-        params.lastRunTime = lastRunTime > 0 ? new Date(lastRunTime).toISOString() : 'N/A';
+        params.lastRunTime = lastRunTime > 0 ? formatDate(lastRunTime) : 'N/A';
         params.total = total;
         params.passed = passedCount;
         params.finished = finishedCount;
