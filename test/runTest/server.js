@@ -34,7 +34,8 @@ const {
     getRunHash,
     getAllTestsRuns,
     delTestsRun,
-    RESULTS_ROOT_DIR
+    RESULTS_ROOT_DIR,
+    checkStoreVersion
 } = require('./store');
 const {prepareEChartsLib, getActionsFullPath} = require('./util');
 const fse = require('fs-extra');
@@ -287,6 +288,10 @@ async function start() {
 
             // TODO Should broadcast to all sockets.
             try {
+                if (!checkStoreVersion(data)) {
+                    throw new Error('Unmatched store version and run version.');
+                }
+
                 await startTests(
                     data.tests,
                     io.of('/client'),

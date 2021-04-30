@@ -106,6 +106,17 @@ function getResultBaseDir() {
 module.exports.getResultBaseDir = getResultBaseDir;
 module.exports.getRunHash = getRunHash;
 
+/**
+ * Check run version is same with store version.
+ */
+module.exports.checkStoreVersion = function (runParams) {
+    const storeParams = parseRunHash(_runHash);
+    console.log('Store ', _runHash);
+    return storeParams.expectedVersion === runParams.expectedVersion
+        && storeParams.actualVersion === runParams.actualVersion
+        && storeParams.renderer === runParams.renderer;
+}
+
 function getResultFilePath() {
     return path.join(getResultBaseDir(), RESULT_FILE_NAME);
 }
