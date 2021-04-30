@@ -23,7 +23,6 @@ const fs = require('fs');
 const globby = require('globby');
 const {testNameFromFile} = require('./util');
 const {blacklist, SVGBlacklist} = require('./blacklist');
-const { promisify } = require('util');
 
 let _tests = [];
 let _testsMap = {};
@@ -31,6 +30,9 @@ let _runHash = '';
 
 const RESULT_FILE_NAME = '__result__.json';
 const RESULTS_ROOT_DIR = path.join(__dirname, 'tmp', 'result');
+
+module.exports.RESULT_FILE_NAME = RESULT_FILE_NAME;
+module.exports.RESULTS_ROOT_DIR = RESULTS_ROOT_DIR;
 
 const TEST_HASH_SPLITTER = '__';
 
@@ -104,9 +106,11 @@ function getResultBaseDir() {
 module.exports.getResultBaseDir = getResultBaseDir;
 module.exports.getRunHash = getRunHash;
 
-function getCacheFilePath() {
+function getResultFilePath() {
     return path.join(getResultBaseDir(), RESULT_FILE_NAME);
 }
+
+module.exports.getResultFilePath = getResultFilePath;
 
 module.exports.getTestsList = function () {
     return _tests;
@@ -128,7 +132,7 @@ module.exports.updateTestsList = async function (
     fse.ensureDirSync(getResultBaseDir());
 
     try {
-        let cachedStr = fs.readFileSync(getCacheFilePath(), 'utf-8');
+        let cachedStr = fs.readFileSync(getResultFilePath(), 'utf-8');
         const tests = JSON.parse(cachedStr);
         tests.forEach(test => {
             // In somehow tests are stopped and leave the status pending.
@@ -184,7 +188,7 @@ module.exports.updateTestsList = async function (
 };
 
 module.exports.saveTestsList = function () {
-    fse.outputFileSync(getCacheFilePath(), JSON.stringify(_tests, null, 2), 'utf-8');
+    fse.outputFileSync(getResultFilePath(), JSON.stringify(_tests, null, 2), 'utf-8');
 };
 
 module.exports.mergeTestsResults = function (testsResults) {

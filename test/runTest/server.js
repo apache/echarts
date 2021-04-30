@@ -33,12 +33,14 @@ const {
     getResultBaseDir,
     getRunHash,
     getAllTestsRuns,
-    delTestsRun
+    delTestsRun,
+    RESULTS_ROOT_DIR
 } = require('./store');
 const {prepareEChartsLib, getActionsFullPath} = require('./util');
 const fse = require('fs-extra');
 const fs = require('fs');
 const open = require('open');
+const genReport = require('./genReport');
 
 function serve() {
     const server = http.createServer((request, response) => {
@@ -253,6 +255,16 @@ async function start() {
         socket.on('getAllTestsRuns', async () => {
             socket.emit('getAllTestsRuns_return', {
                 runs: await getAllTestsRuns()
+            });
+        });
+
+        socket.on('genTestsRunReport', async (params) => {
+            const absPath = await genReport(
+                path.join(RESULTS_ROOT_DIR, getRunHash(params))
+            );
+            const relativeUrl = path.join('../', path.relative(__dirname, absPath));
+            socket.emit('genTestsRunReport_return', {
+                reportUrl: relativeUrl
             });
         });
 

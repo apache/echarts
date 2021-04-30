@@ -21,16 +21,9 @@
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
-
-// const jimp = require('jimp');
-const marked = require('marked');
-
-const tests = JSON.parse(fs.readFileSync(
-    path.join(__dirname, 'tmp/__cache__.json'), 'utf-8'
-));
+const { RESULT_FILE_NAME } = require('./store');
 
 const readFileAsync = util.promisify(fs.readFile);
-
 
 function resolveImagePath(imageUrl) {
     if (!imageUrl) {
@@ -108,10 +101,15 @@ async function genDetail(test) {
     };
 }
 
-async function run() {
+module.exports = async function(testDir) {
     let sections = [];
 
     let failedTest = 0;
+
+    const tests = JSON.parse(fs.readFileSync(
+        path.join(testDir, RESULT_FILE_NAME), 'utf-8'
+    ));
+
     for (let test of tests) {
         let detail = await genDetail(test);
 
@@ -119,20 +117,12 @@ async function run() {
             failedTest++;
             let title = `${failedTest}. ${test.name} (Failed ${detail.failed} / ${detail.total})`;
             console.log(title);
-    //         let sectionText = `
-    // ## ${title}
-
-    // <details>
-    //   <summary>Click to expand!</summary>
-    // ${detail.content}
-    // </details>
-    //         `;
 
             let sectionText = `
 <div style="margin-top: 100px;height: 20px;border-top: 1px solid #aaa"></div>
 <a id="${test.name}"></a>
 
-## ${title}
+<h2>${title}</h2>
 
 ${detail.content}
     `;
@@ -145,22 +135,18 @@ ${detail.content}
         }
     }
 
-    let mdText = '# Visual Regression Test Report\n\n';
-    mdText += `
+    let htmlText = '<h1> Visual Regression Test Report</h1>\n';
+    htmlText += `
 <p>Total: ${tests.length}</p>
 <p>Failed: ${failedTest}</p>
-
 `;
-    mdText += sections.map(section => {
-        return `+ [${section.title}](#${section.id}) `;
-    }).join('\n');
-    mdText += sections.map(section => section.content).join('\n\n');
+    htmlText += '<ul>\n' + sections.map(section => {
+        return `<li><a href="${section.id}">${section.title}</a></li>`;
+    }).join('\n') + '</ul>';
+    htmlText += sections.map(section => section.content).join('\n\n');
 
-    fs.writeFileSync(__dirname + '/tmp-report.md', mdText, 'utf-8');
-
-    marked(mdText, { smartLists: true }, (err, res) => {
-        fs.writeFileSync(__dirname + '/tmp-report.html', res, 'utf-8');
-    });
+    const file = path.join(testDir, 'report.html');
+    fs.writeFileSync(file, htmlText, 'utf-8');
+    return file;
 }
 
-run();

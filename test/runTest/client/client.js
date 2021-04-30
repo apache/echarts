@@ -354,9 +354,12 @@ const app = new Vue({
             this.runConfig.isExpectedNightly = runResult.expectedVersion.includes('-dev.');
             this.runConfig.isActualNightly = runResult.actualVersion.includes('-dev.');
             this.runConfig.renderer = runResult.renderer;
-        },
-        genTestsRunReport(runResult) {
 
+            this.showRunsDialog = false;
+        },
+
+        genTestsRunReport(runResult) {
+            socket.emit('genTestsRunReport', runResult);
         },
 
         delTestsRun(runResult) {
@@ -455,8 +458,12 @@ socket.on('abort', res => {
 socket.on('getAllTestsRuns_return', res => {
     app.testsRuns = res.runs;
 });
+socket.on('genTestsRunReport_return', res => {
+    window.open(res.reportUrl, '_blank');
+});
 
-function updateUrl(notRefresh) {
+let isFallbacking = false;
+function updateUrl(notRefresh, fallbackParams) {
     const searchUrl = assembleParams({
         test: app.currentTestName,
         runConfig: JSON.stringify(app.runConfig)
@@ -473,7 +480,10 @@ function updateUrl(notRefresh) {
                 center: true
             }).then(value => {
                 window.location.search = '?' + searchUrl;
-            }).catch(() => {});
+            }).catch(() => {
+                isFallbacking = true;
+                Object.assign(app.runConfig, fallbackParams);
+            });
         }
         else {
             window.location.search = '?' + searchUrl;
@@ -482,6 +492,17 @@ function updateUrl(notRefresh) {
 }
 
 // Only update url when version is changed.
-app.$watch('runConfig.actualVersion', () => updateUrl());
-app.$watch('runConfig.expectedVersion', () => updateUrl());
-app.$watch('runConfig.renderer', () => updateUrl());
+app.$watch(() => {
+    return {
+        actualVersion: app.runConfig.actualVersion,
+        expectedVersion: app.runConfig.expectedVersion,
+        renderer: app.runConfig.renderer
+    };
+}, (newVal, oldVal) => {
+    if (!isFallbacking) {
+        updateUrl(false, oldVal)
+    }
+    isFallbacking = false;
+});
+// app.$watch('runConfig.expectedVersion', () => updateUrl());
+// app.$watch('runConfig.renderer', () => updateUrl());
