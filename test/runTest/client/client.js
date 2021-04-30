@@ -172,7 +172,8 @@ const app = new Vue({
         },
 
         selectedTests() {
-            return this.fullTests.filter(test => {
+            // Only run visible tests.
+            return this.tests.filter(test => {
                 return test.selected;
             });
         },
