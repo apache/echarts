@@ -24,13 +24,21 @@ const path = require('path');
 const {fork} = require('child_process');
 const semver = require('semver');
 const {port, origin} = require('./config');
-const {getTestsList, updateTestsList, saveTestsList, mergeTestsResults, updateActionsMeta, getResultBaseDir} = require('./store');
+const {
+    getTestsList,
+    updateTestsList,
+    saveTestsList,
+    mergeTestsResults,
+    updateActionsMeta,
+    getResultBaseDir,
+    getRunHash,
+    getAllTestsRuns,
+    delTestsRun
+} = require('./store');
 const {prepareEChartsLib, getActionsFullPath} = require('./util');
 const fse = require('fs-extra');
 const fs = require('fs');
 const open = require('open');
-
-const TEST_HASH_SPLITTER = '__';
 
 function serve() {
     const server = http.createServer((request, response) => {
@@ -199,13 +207,6 @@ function checkPuppeteer() {
     }
 }
 
-function getTestHash(params) {
-    return [
-        params.expectedVersion,
-        params.actualVersion,
-        params.renderer
-    ].join(TEST_HASH_SPLITTER);
-}
 
 async function start() {
     if (!checkPuppeteer()) {
@@ -234,12 +235,12 @@ async function start() {
         }
 
         socket.on('setTestVersions', async (params) => {
-            if (_currentTestHash !== getTestHash(params)) {
+            if (_currentTestHash !== getRunHash(params)) {
                 abortTests();
             }
 
             await updateTestsList(
-                _currentTestHash = getTestHash(params),
+                _currentTestHash = getRunHash(params),
                 !running // Set to unsettled if not running
             );
 
@@ -247,6 +248,17 @@ async function start() {
                 tests: getTestsList(),
                 running: runningThreads.length > 0
             });
+        });
+
+        socket.on('getAllTestsRuns', async () => {
+            socket.emit('getAllTestsRuns_return', {
+                runs: await getAllTestsRuns()
+            });
+        });
+
+        socket.on('delTestsRun', async (params) => {
+            delTestsRun(params.id);
+            console.log('Deleted', params.id);
         });
 
         socket.on('run', async data => {

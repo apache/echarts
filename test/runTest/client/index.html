@@ -37,6 +37,7 @@ under the License.
             </div>
         </el-header>
         <el-container style="min-height: 0"> <!-- https://juejin.im/post/5c642f2ff265da2de660ecfc -->
+            <!-------- Tests List ----------->
             <el-aside width="350px">
                 <div class="nav-toolbar">
                     <el-row class="filters" :gutter="10" :align="'middle'">
@@ -119,6 +120,16 @@ under the License.
                         </el-button-group>
                     </div>
 
+                    <div class="run-config-item">
+                        <el-tooltip content="Show All Tests Runs">
+                            <i
+                                style="font-size: 20px; cursor: pointer;"
+                                class="el-icon-files"
+                                @click="showAllTestsRuns"
+                            ></i>
+                        </el-tooltip>
+                    </div>
+
 
                     <!-- <div class="run-config-item">
                         <el-checkbox v-model="runConfig.noHeadless">Replay</el-checkbox>
@@ -169,7 +180,7 @@ under the License.
                     </div>
                 </div>
 
-
+                <!-------- Single Test Reusult ----------->
                 <div v-if="currentTest" class="test-result">
                     <div class="title">
                         <el-progress
@@ -267,6 +278,33 @@ under the License.
                         <a target="_blank" :href="'../../' + previewTitle"><i class="el-icon-link"></i>Open in New Window</a>
                     </div>
                     <iframe :src="previewIframeSrc" width="800" height="600"></iframe>
+                </el-dialog>
+
+                <!-------- All Tests Runs ----------->
+                <el-dialog
+                    id="tests-runs-dialog"
+                    :visible.sync="showRunsDialog"
+                    title="All Tests Runs"
+                >
+                    <el-table :data="testsRuns">
+                        <el-table-column property="expectedVersion" label="Expected"></el-table-column>
+                        <el-table-column property="actualVersion" label="Actual"></el-table-column>
+                        <el-table-column property="renderer" label="Renderer" width="100"></el-table-column>
+                        <el-table-column property="lastRunTime" label="lastRunTime"></el-table-column>
+                        <el-table-column property="total" label="Total Tests" width="100"></el-table-column>
+                        <el-table-column property="finished" label="Finished" width="100"></el-table-column>
+                        <el-table-column property="passed" label="Passed" width="100"></el-table-column>
+                        <el-table-column
+                            fixed="right"
+                            label=""
+                            width="160">
+                            <template slot-scope="scope">
+                                <el-button type="text" @click="switchTestsRun(scope.row)" size="small">View</el-button>
+                                <el-button type="text" @click="genTestsRunReport(scope.row)" size="small">Report</el-button>
+                                <el-button type="text" @click="delTestsRun(scope.row)" size="small">Delete</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
                 </el-dialog>
             </el-main>
         </el-container>

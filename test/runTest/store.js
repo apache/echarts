@@ -20,14 +20,18 @@
 const path = require('path');
 const fse = require('fs-extra');
 const fs = require('fs');
-const glob = require('glob');
+const globby = require('globby');
 const {testNameFromFile} = require('./util');
-const util = require('util');
 const {blacklist, SVGBlacklist} = require('./blacklist');
 
 let _tests = [];
 let _testsMap = {};
-let _testHash = '';
+let _runHash = '';
+
+const RESULT_FILE_NAME = '__result__.json';
+const RESULTS_ROOT_DIR = path.join(__dirname, 'tmp', 'result');
+
+const TEST_HASH_SPLITTER = '__';
 
 class Test {
     constructor(fileUrl) {
@@ -59,14 +63,40 @@ class Test {
     }
 }
 
+
+/**
+ * hash of each run is mainly for storing the results.
+ * It depends on two versions and rendering mode.
+ */
+function getRunHash(params) {
+    return [
+        params.expectedVersion,
+        params.actualVersion,
+        params.renderer
+    ].join(TEST_HASH_SPLITTER);
+}
+
+/**
+ * Parse versions and rendering mode from run hash.
+ */
+function parseRunHash(str) {
+    const parts = str.split(TEST_HASH_SPLITTER);
+    return {
+        expectedVersion: parts[0],
+        actualVersion: parts[1],
+        renderer: parts[2]
+    };
+}
+
 function getResultBaseDir() {
-    return path.join(__dirname, 'tmp', 'result', _testHash);
+    return path.join(RESULTS_ROOT_DIR, _runHash);
 }
 
 module.exports.getResultBaseDir = getResultBaseDir;
+module.exports.getRunHash = getRunHash;
 
-function getCacheFilePath(baseDir) {
-    return path.join(getResultBaseDir(), '__result__.json');;
+function getCacheFilePath() {
+    return path.join(getResultBaseDir(), RESULT_FILE_NAME);
 }
 
 module.exports.getTestsList = function () {
@@ -78,10 +108,10 @@ module.exports.getTestByFileUrl = function (url) {
 };
 
 module.exports.updateTestsList = async function (
-    testHash,
+    runHash,
     setPendingTestToUnsettled
 ) {
-    _testHash = testHash;
+    _runHash = runHash;
     _tests = [];
     _testsMap = {};
     _testsExists = {};
@@ -105,7 +135,7 @@ module.exports.updateTestsList = async function (
     catch(e) {
     }
     // Find if there is new html file
-    const files = await util.promisify(glob)('**.html', { cwd: path.resolve(__dirname, '../') });
+    const files = await globby('**.html', { cwd: path.resolve(__dirname, '../') });
     files.forEach(fileUrl => {
         if (blacklist.includes(fileUrl)) {
             return;
@@ -170,3 +200,54 @@ module.exports.updateActionsMeta = function (testName, actions) {
         metaData, Object.keys(metaData).sort((a, b) => a.localeCompare(b)), 2
     ), 'utf-8');
 };
+
+/**
+ * Get results of all runs
+ * @return [ { id, expectedVersion, actualVersion, renderer, lastRunTime, total, finished, passed  } ]
+ */
+module.exports.getAllTestsRuns = async function () {
+    const dirs = await globby('*', { cwd: RESULTS_ROOT_DIR, onlyDirectories: true });
+    return dirs.map((dir) => {
+        const params = parseRunHash(dir);
+        const resultJson = JSON.parse(fs.readFileSync(path.join(
+            RESULTS_ROOT_DIR,
+            dir,
+            RESULT_FILE_NAME
+        ), 'utf-8'));
+
+        const total = resultJson.length;
+        let lastRunTime = 0;
+        let finishedCount = 0;
+        let passedCount = 0;
+
+        resultJson.forEach(test => {
+            lastRunTime = Math.max(test.lastRun, lastRunTime);
+            if (test.status === 'finished') {
+                finishedCount++;
+
+                let passed = true;
+                test.results.forEach(result => {
+                    // Threshold?
+                    if (result.diffRatio > 0.0001) {
+                        passed = false;
+                    }
+                });
+                if (passed) {
+                    passedCount++;
+                }
+            }
+        });
+
+        params.lastRunTime = lastRunTime > 0 ? new Date(lastRunTime).toISOString() : 'N/A';
+        params.total = total;
+        params.passed = passedCount;
+        params.finished = finishedCount;
+        params.id = dir;
+
+        return params;
+    });
+}
+
+module.exports.delTestsRun = async function (hash) {
+    fse.removeSync(path.join(RESULTS_ROOT_DIR, hash));
+}

@@ -109,6 +109,10 @@ const app = new Vue({
         previewIframeSrc: '',
         previewTitle: '',
 
+        // List of all runs.
+        showRunsDialog: false,
+        testsRuns: [],
+
         runConfig: Object.assign({
             sortBy: 'name',
 
@@ -336,6 +340,34 @@ const app = new Vue({
                     }
                 }
             });
+        },
+
+        showAllTestsRuns() {
+            this.showRunsDialog = true;
+            socket.emit('getAllTestsRuns');
+        },
+
+        switchTestsRun(runResult) {
+
+        },
+        genTestsRunReport(runResult) {
+
+        },
+
+        delTestsRun(runResult) {
+            app.$confirm('Are you sure to delete this run?', 'Warn', {
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No',
+                center: true
+            }).then(value => {
+                const idx = this.testsRuns.indexOf(runResult);
+                if (idx >= 0) {
+                    this.testsRuns.splice(idx, 1);
+                }
+                socket.emit('delTestsRun', {
+                    id: runResult.id
+                });
+            }).catch(() => {});
         }
     }
 });
@@ -413,6 +445,10 @@ socket.on('abort', res => {
         duration: 4000
     });
     app.running = false;
+});
+
+socket.on('getAllTestsRuns_return', res => {
+    app.testsRuns = res.runs;
 });
 
 function updateUrl(notRefresh) {

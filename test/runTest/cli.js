@@ -327,6 +327,10 @@ async function runTests(pendingTests) {
     let runtimeCode = await buildRuntimeCode();
     runtimeCode = `window.__TEST_PLAYBACK_SPEED__ = ${program.speed || 1};\n${runtimeCode}`;
 
+    process.on('exit', () => {
+        browser.close();
+    });
+
     try {
         for (let testOpt of pendingTests) {
             console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}`);

@@ -267,6 +267,11 @@ iframe {
     overflow: overlay;
 }
 
+#tests-runs-dialog .el-dialog {
+    width: 90%;
+    max-width: 1400px;
+}
+
 
 ::-webkit-scrollbar {
     height: 8px;
