@@ -73,7 +73,8 @@ function assembleArrow(
 
     borderColor = convertToColorString(borderColor);
     const arrowPos = mirrorPos(arrowPosition);
-    let positionStyle = `${arrowPos}:-10px;`;
+    const arrowSize = borderWidth >= 5 ? borderWidth : 5;
+    let positionStyle = `${arrowPos}:-${Math.sqrt(2 * arrowSize * arrowSize) / 2 + borderWidth}px;`;
     let transformStyle = CSS_TRANSFORM_VENDOR + ':';
     if (indexOf(['left', 'right'], arrowPos) > -1) {
         positionStyle += 'top:50%';
@@ -81,18 +82,26 @@ function assembleArrow(
     }
     else {
         positionStyle += 'left:50%';
-        transformStyle += `translateX(-80%) rotate(${arrowPos === 'top' ? 225 : 45}deg)`;
+        transformStyle += `translateX(-50%) rotate(${arrowPos === 'top' ? 225 : 45}deg)`;
     }
 
     const borderStyle = `${borderColor} solid ${borderWidth}px;`;
     const styleCss = [
-        'position:absolute;width:10px;height:10px;',
+        `position:absolute;width:${arrowSize}px;height:${arrowSize}px;`,
         `${positionStyle};${transformStyle};`,
         `border-bottom:${borderStyle}`,
         `border-right:${borderStyle}`,
-        `background-color:${backgroundColor};`,
-        'box-shadow:8px 8px 16px -3px #000;'
+        `background-color:${backgroundColor};`
     ];
+
+    const shadowBlur = tooltipModel.get('shadowBlur');
+    const shadowColor = tooltipModel.get('shadowColor');
+    const shadowOffsetX = tooltipModel.get('shadowOffsetX');
+    const shadowOffsetY = tooltipModel.get('shadowOffsetY');
+    const boxShadow = `${shadowOffsetX}px ${shadowOffsetY}px ${shadowBlur}px ${shadowColor}`;
+
+    styleCss.push('box-shadow:' + boxShadow);
+
     return `<div style="${styleCss.join('')}"></div>`;
 }
 
@@ -114,8 +123,6 @@ function assembleTransform(x: number, y: number, toString?: boolean) {
     // If using float on style, the final width of the dom might
     // keep changing slightly while mouse move. So `toFixed(0)` them.
     const x0 = x.toFixed(0) + 'px';
-    // To keep the tooltip slightly above
-    y -= 5;
     const y0 = y.toFixed(0) + 'px';
     // not support transform, use `left` and `top` instead.
     if (!env.transformSupported) {
