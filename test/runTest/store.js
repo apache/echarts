@@ -159,7 +159,7 @@ module.exports.updateTestsList = async function (
     catch(e) {
     }
     // Find if there is new html file
-    const files = await globby('**.html', { cwd: path.resolve(__dirname, '../') });
+    const files = await globby('*.html', { cwd: path.resolve(__dirname, '../') });
     files.forEach(fileUrl => {
         if (blacklist.includes(fileUrl)) {
             return;
