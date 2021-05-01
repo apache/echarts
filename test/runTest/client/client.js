@@ -144,6 +144,16 @@ const app = new Vue({
     },
 
     computed: {
+        finishedPercentage() {
+            let finishedCount = 0;
+            this.fullTests.forEach(test => {
+                if (test.status === 'finished') {
+                    finishedCount++;
+                }
+            });
+            return +(finishedCount / this.fullTests.length * 100).toFixed(0) || 0;
+        },
+
         tests() {
             let sortFunc = this.runConfig.sortBy === 'name'
                 ? (a, b) => a.name.localeCompare(b.name)

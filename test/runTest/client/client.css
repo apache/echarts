@@ -107,6 +107,13 @@
     color: #fff;
 }
 
+.run-config-item .el-progress-circle__track {
+    stroke: rgba(255, 255, 255, 0.3)!important;
+}
+.run-config-item .el-progress-circle__path {
+    stroke: rgba(255, 255, 255, 1)!important;
+}
+
 .run-config-item .el-input__inner,
 .run-config-item .el-button-group {
     border: none;

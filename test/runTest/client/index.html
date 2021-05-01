@@ -118,6 +118,16 @@ under the License.
                             <el-button size="mini" :loading="true">Stop</el-button>
                             <el-button title="Run" @click="stopTests" size="mini" icon="el-icon-close" style="padding-left: 3px;padding-right:3px;"></el-button>
                         </el-button-group>
+
+                        <el-tooltip :content="'Finished ' + finishedPercentage + '%'">
+                            <el-progress
+                                type="circle"
+                                :percentage="finishedPercentage"
+                                :width="25"
+                                :stroke-width="4"
+                                :show-text="false"
+                            ></el-progress>
+                        </el-tooltip>
                     </div>
 
                     <div class="run-config-item">
