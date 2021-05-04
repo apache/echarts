@@ -288,6 +288,12 @@ module.exports.getAllTestsRuns = async function () {
             }
         });
 
+        if (finishedCount === 0) {
+            // Cleanup empty runs
+            await module.exports.delTestsRun(dir);
+            continue;
+        }
+
         params.lastRunTime = lastRunTime > 0 ? formatDate(lastRunTime) : 'N/A';
         params.total = total;
         params.passed = passedCount;
