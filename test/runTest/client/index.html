@@ -217,44 +217,49 @@ under the License.
                         <a target="_blank" :href="currentTestRecordUrl"><i class="el-icon-video-camera"></i>&nbsp;Record Interaction</a>
                     </div>
 
-                    <div class="test-screenshots" v-for="(result, idx) in currentTest.results">
-                        <!-- Not display title if it's same with previous -->
-                        <h4 v-if="result.desc !== (currentTest.results[idx - 1] && currentTest.results[idx - 1].desc)">
-                            <i class="el-icon-s-operation"></i>{{result.desc || result.name}}
-                        </h4>
-                        <el-row :gutter="40" class="screenshots">
-                            <el-col :span="8">
-                                <el-card shadow="hover">
-                                    <div slot="header" class="clearfix">
-                                        <span>Expected - {{currentTest.expectedVersion || ''}}</span>
-                                        <i title="Preview" class="el-icon-view preview" @click="preview(currentTest, 'expected')"></i>
-                                    </div>
-                                    <el-image fit="cover" :src="result.expected" :preview-src-list="[result.expected]"></el-image>
-                                </el-card>
-                            </el-col>
+                    <div v-if="currentTest.results.length > 0">
+                        <div class="test-screenshots"  v-for="(result, idx) in currentTest.results">
+                            <!-- Not display title if it's same with previous -->
+                            <h4 v-if="result.desc !== (currentTest.results[idx - 1] && currentTest.results[idx - 1].desc)">
+                                <i class="el-icon-s-operation"></i>{{result.desc || result.name}}
+                            </h4>
+                            <el-row :gutter="40" class="screenshots">
+                                <el-col :span="8">
+                                    <el-card shadow="hover">
+                                        <div slot="header" class="clearfix">
+                                            <span>Expected - {{currentTest.expectedVersion || ''}}</span>
+                                            <i title="Preview" class="el-icon-view preview" @click="preview(currentTest, 'expected')"></i>
+                                        </div>
+                                        <el-image fit="cover" :src="result.expected" :preview-src-list="[result.expected]"></el-image>
+                                    </el-card>
+                                </el-col>
 
-                            <el-col :span="8">
-                                <el-card shadow="hover">
-                                    <div slot="header" class="clearfix">
-                                        <span>Actual - {{currentTest.actualVersion || ''}}</span>
-                                        <i title="Preview" class="el-icon-view preview" @click="preview(currentTest, 'actual')"></i>
-                                    </div>
-                                    <el-image fit="cover" :src="result.actual" :preview-src-list="[result.actual]"></el-image>
-                                </el-card>
-                            </el-col>
+                                <el-col :span="8">
+                                    <el-card shadow="hover">
+                                        <div slot="header" class="clearfix">
+                                            <span>Actual - {{currentTest.actualVersion || ''}}</span>
+                                            <i title="Preview" class="el-icon-view preview" @click="preview(currentTest, 'actual')"></i>
+                                        </div>
+                                        <el-image fit="cover" :src="result.actual" :preview-src-list="[result.actual]"></el-image>
+                                    </el-card>
+                                </el-col>
 
-                            <el-col :span="8">
-                                <el-card shadow="hover">
-                                    <div slot="header" class="clearfix">
-                                        <span>Diff - {{result.diffRatio.toFixed(4)}}</span>
-                                    </div>
-                                    <el-image fit="cover" :src="result.diff" :preview-src-list="[result.diff]"></el-image>
-                                </el-card>
-                            </el-col>
-                        </el-row>
+                                <el-col :span="8">
+                                    <el-card shadow="hover">
+                                        <div slot="header" class="clearfix">
+                                            <span>Diff - {{result.diffRatio.toFixed(4)}}</span>
+                                        </div>
+                                        <el-image fit="cover" :src="result.diff" :preview-src-list="[result.diff]"></el-image>
+                                    </el-card>
+                                </el-col>
+                            </el-row>
+                        </div>
+                    </div>
+                    <div v-else class="no-result">
+                        No Result
                     </div>
 
-                    <div class="test-errors">
+                    <div class="test-errors" v-if="currentTest.expectedErrors.length > 0 || currentTest.actualErrors.length > 0">
                         <el-row :gutter="40">
                             <el-col :span="12">
                                 <el-alert title="Expected Errors" type="error" show-icon></el-alert>
@@ -267,7 +272,7 @@ under the License.
                         </el-row>
                     </div>
 
-                    <div class="test-logs">
+                    <div class="test-logs" v-if="currentTest.expectedLogs.length > 0 || currentTest.actualLogs.length > 0">
                         <el-row :gutter="40">
                             <el-col :span="12">
                                 <el-alert title="Expected Logs" type="info" show-icon> </el-alert>

@@ -192,6 +192,13 @@
     -webkit-text-stroke: 1px #F56C6C;
 }
 
+.no-result {
+    text-align: center;
+    font-size: 30px;
+    padding: 100px 0;
+    color: #ccc;
+}
+
 .test-result {
     padding: 20px;
     margin-top: 20px;
