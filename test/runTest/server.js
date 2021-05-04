@@ -37,7 +37,7 @@ const {
     RESULTS_ROOT_DIR,
     checkStoreVersion
 } = require('./store');
-const {prepareEChartsLib, getActionsFullPath} = require('./util');
+const {prepareEChartsLib, getActionsFullPath, fetchVersions} = require('./util');
 const fse = require('fs-extra');
 const fs = require('fs');
 const open = require('open');
@@ -220,12 +220,18 @@ async function start() {
 
 
     let _currentTestHash;
+    let _currentRunConfig;
 
     // let runtimeCode = await buildRuntimeCode();
     // fse.outputFileSync(path.join(__dirname, 'tmp/testRuntime.js'), runtimeCode, 'utf-8');
 
     // Start a static server for puppeteer open the html test cases.
     let {io} = serve();
+
+    const stableVersions = await fetchVersions(false);
+    const nightlyVersions = await fetchVersions(true);
+    stableVersions.unshift('local');
+    nightlyVersions.unshift('local');
 
     io.of('/client').on('connect', async socket => {
         function abortTests() {
@@ -237,13 +243,40 @@ async function start() {
             running = false;
         }
 
-        socket.on('setTestVersions', async (params) => {
-            if (_currentTestHash !== getRunHash(params)) {
-                abortTests();
+        socket.on('syncRunConfig', async ({
+            runConfig,
+            forceSet
+        }) => {
+            // First time open.
+            if ((!_currentRunConfig || forceSet) && runConfig) {
+                _currentRunConfig = runConfig;
             }
 
+            if (!_currentRunConfig) {
+                return;
+            }
+
+            const expectedVersionsList = _currentRunConfig.isExpectedNightly ? nightlyVersions : stableVersions;
+            const actualVersionsList = _currentRunConfig.isActualNightly ? nightlyVersions : stableVersions;
+            if (!expectedVersionsList.includes(_currentRunConfig.expectedVersion)) {
+                // Pick first version not local
+                _currentRunConfig.expectedVersion = expectedVersionsList[1];
+            }
+            if (!actualVersionsList.includes(_currentRunConfig.actualVersion)) {
+                _currentRunConfig.actualVersion = 'local';
+            }
+
+            socket.emit('syncRunConfig_return', {
+                runConfig: _currentRunConfig,
+                expectedVersionsList,
+                actualVersionsList
+            });
+
+            if (_currentTestHash !== getRunHash(_currentRunConfig)) {
+                abortTests();
+            }
             await updateTestsList(
-                _currentTestHash = getRunHash(params),
+                _currentTestHash = getRunHash(_currentRunConfig),
                 !running // Set to unsettled if not running
             );
 

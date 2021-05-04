@@ -123,7 +123,7 @@ under the License.
                             <el-progress
                                 type="circle"
                                 :percentage="finishedPercentage"
-                                :width="25"
+                                :width="20"
                                 :stroke-width="4"
                                 :show-text="false"
                             ></el-progress>
@@ -156,10 +156,10 @@ under the License.
                         <span class="label">
                             Expected
                             <el-tooltip content="Use Nightly Build">
-                                <el-checkbox v-model="runConfig.isExpectedNightly" size="mini"></el-checkbox>
+                                <el-checkbox :disabled="running" v-model="runConfig.isExpectedNightly" size="mini"></el-checkbox>
                             </el-tooltip>
                         </span>
-                        <el-select size="mini" v-model="runConfig.expectedVersion" placeholder="Select Version"
+                        <el-select :disabled="running" size="mini" v-model="runConfig.expectedVersion" placeholder="Select Version"
                             :style="`width: ${runConfig.isExpectedNightly ? 160 : 80}px;`"
                         >
                             <el-option v-for="version in expectedVersionsList" :key="version" :label="version" :value="version"></el-option>
@@ -168,10 +168,10 @@ under the License.
                         <span class="label">
                             Actual
                             <el-tooltip content="Use Nightly Build">
-                                <el-checkbox v-model="runConfig.isActualNightly" size="mini"></el-checkbox>
+                                <el-checkbox :disabled="running" v-model="runConfig.isActualNightly" size="mini"></el-checkbox>
                             </el-tooltip>
                         </span>
-                        <el-select size="mini" v-model="runConfig.actualVersion" placeholder="Select Version"
+                        <el-select :disabled="running" size="mini" v-model="runConfig.actualVersion" placeholder="Select Version"
                             :style="`width: ${runConfig.isActualNightly ? 160 : 80}px;`"
                         >
                             <el-option v-for="version in actualVersionsList" :key="version" :label="version" :value="version"></el-option>
@@ -179,14 +179,18 @@ under the License.
                     </div>
                     <div class="run-config-item">
                         <span class="label">Renderer</span>
-                        <el-select size="mini" style="width: 100px;" v-model="runConfig.renderer" placeholder="Select Renderer">
+                        <el-select :disabled="running" size="mini" style="width: 100px;" v-model="runConfig.renderer" placeholder="Select Renderer">
                             <el-option key="canvas" label="canvas" value="canvas"></el-option>
                             <el-option key="svg" label="svg" value="svg"></el-option>
                         </el-select>
                     </div>
                     <div class="run-config-item">
                         <span class="label">Threads</span>
-                        <el-slider style="width: 100px;" v-model="runConfig.threads" :step="1" :min="1" :max="8" show-stops></el-slider>
+
+                        <el-select :disabled="running" size="mini" v-model="runConfig.threads" style="width: 58px">
+                            <el-option v-for="t in [1, 2, 4, 8]" :key="t" :label="t" :value="t"></el-option>
+                        </el-select>
+                        <!-- <el-slider style="width: 100px;" v-model="runConfig.threads" :step="1" :min="1" :max="8" show-stops></el-slider> -->
                     </div>
                 </div>
 

@@ -21,6 +21,16 @@ const socket = io('/client');
 
 // const LOCAL_SAVE_KEY = 'visual-regression-testing-config';
 
+function getChangedObject(target, source) {
+    let changedObject = {};
+    Object.keys(source).forEach(key => {
+        if (target[key] !== source[key]) {
+            changedObject[key] = source[key];
+        }
+    });
+    return changedObject;
+}
+
 function parseParams(str) {
     if (!str) {
         return {};
@@ -79,13 +89,13 @@ function processTestsData(tests, oldTestsData) {
     return tests;
 }
 
-const storedConfig = {};
+const urlRunConfig = {};
 const urlParams = parseParams(window.location.search.substr(1))
 
 // Save and restore
 try {
     const runConfig = JSON.parse(urlParams.runConfig);
-    Object.assign(storedConfig, runConfig);
+    Object.assign(urlRunConfig, runConfig);
 }
 catch (e) {}
 
@@ -100,8 +110,8 @@ const app = new Vue({
         allSelected: false,
         lastSelectedIndex: -1,
 
-        actualVersionsList: [],
         expectedVersionsList: [],
+        actualVersionsList: [],
 
         loadingVersion: false,
 
@@ -112,6 +122,8 @@ const app = new Vue({
         // List of all runs.
         showRunsDialog: false,
         testsRuns: [],
+
+        pageInvisible: false,
 
         runConfig: Object.assign({
             sortBy: 'name',
@@ -126,21 +138,39 @@ const app = new Vue({
 
             renderer: 'canvas',
             threads: 4
-        }, storedConfig)
+        }, urlRunConfig)
     },
 
     mounted() {
-        this.fetchVersions(false);
-        this.fetchVersions(true).then(() => {
-            socket.emit('setTestVersions', {
-                expectedVersion: app.runConfig.expectedVersion,
-                actualVersion: app.runConfig.actualVersion,
-                renderer: app.runConfig.renderer,
-            });
-            setTimeout(() => {
-                this.scrollToCurrent();
-            }, 500);
-        })
+        // Sync config from server when first time open
+        // or switching back
+        socket.emit('syncRunConfig', {
+            runConfig: this.runConfig,
+            // Override server config from URL.
+            forceSet: Object.keys(urlRunConfig).length > 0
+        });
+        socket.on('syncRunConfig_return', res => {
+            this.expectedVersionsList = res.expectedVersionsList;
+            this.actualVersionsList = res.actualVersionsList;
+            // Only assign on changed object to avoid unnecessary vue change.
+            Object.assign(this.runConfig, getChangedObject(this.runConfig, res.runConfig));
+
+            updateUrl();
+        });
+
+        setTimeout(() => {
+            this.scrollToCurrent();
+        }, 500);
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === 'visible') {
+                this.pageInvisible = false;
+                socket.emit('syncRunConfig', {});
+            }
+            else {
+                this.pageInvisible = true;
+            }
+        });
     },
 
     computed: {
@@ -232,12 +262,6 @@ const app = new Vue({
     },
 
     watch: {
-        'runConfig.isActualNightly'() {
-            this.fetchVersions(true);
-        },
-        'runConfig.isExpectedNightly'() {
-            this.fetchVersions(false);
-        },
         'runConfig.sortBy'() {
             setTimeout(() => {
                 this.scrollToCurrent();
@@ -259,7 +283,7 @@ const app = new Vue({
         changeTest(target, testName) {
             if (!target.matches('input[type="checkbox"]') && !target.matches('.el-checkbox__inner')) {
                 app.currentTestName = testName;
-                updateUrl(true);
+                updateUrl();
             }
         },
         toggleSort() {
@@ -329,27 +353,6 @@ const app = new Vue({
             this.previewIframeSrc = `../../${src}`;
             this.previewTitle = src;
             this.showIframeDialog = true;
-        },
-
-        fetchVersions(isActual) {
-            const prop = isActual ? 'actualVersionsList' : 'expectedVersionsList';
-            this[prop] = [];
-
-            const url = this.runConfig[isActual ? 'isActualNightly' : 'isExpectedNightly']
-                ? 'https://data.jsdelivr.com/v1/package/npm/echarts-nightly'
-                : 'https://data.jsdelivr.com/v1/package/npm/echarts'
-            return fetch(url, {
-                mode: 'cors'
-            }).then(res => res.json()).then(json => {
-                this[prop] = json.versions;
-                this[prop].unshift('local');
-
-                if (!isActual) {
-                    if (!this[prop].includes(this.runConfig.expectedVersion)) {
-                        this.runConfig.expectedVersion = json.tags.latest;
-                    }
-                }
-            });
         },
 
         showAllTestsRuns() {
@@ -428,17 +431,18 @@ let firstUpdate = true;
 socket.on('update', msg => {
     app.$el.style.display = 'block';
 
-    let hasFinishedTest = !!msg.tests.find(test => test.status === 'finished');
-    if (!hasFinishedTest && firstUpdate) {
-        app.$confirm('You haven\'t run any test on these two versions yet!<br />Do you want to start now?', 'Tip', {
-            confirmButtonText: 'Yes',
-            cancelButtonText: 'No',
-            dangerouslyUseHTMLString: true,
-            center: true
-        }).then(value => {
-            runTests(msg.tests.map(test => test.name));
-        }).catch(() => {});
-    }
+    // let hasFinishedTest = !!msg.tests.find(test => test.status === 'finished');
+    // if (!hasFinishedTest && firstUpdate) {
+    //     app.$confirm('You haven\'t run any test on these two versions yet!<br />Do you want to start now?', 'Tip', {
+    //         confirmButtonText: 'Yes',
+    //         cancelButtonText: 'No',
+    //         dangerouslyUseHTMLString: true,
+    //         center: true
+    //     }).then(value => {
+    //         runTests(msg.tests.map(test => test.name));
+    //     }).catch(() => {});
+    // }
+
     // TODO
     app.running = !!msg.running;
     app.fullTests = processTestsData(msg.tests, app.fullTests);
@@ -472,47 +476,21 @@ socket.on('genTestsRunReport_return', res => {
     window.open(res.reportUrl, '_blank');
 });
 
-let isFallbacking = false;
-function updateUrl(notRefresh, fallbackParams) {
+function updateUrl() {
     const searchUrl = assembleParams({
         test: app.currentTestName,
         runConfig: JSON.stringify(app.runConfig)
     });
-    if (notRefresh) {
-        history.pushState({}, '', location.pathname + '?' + searchUrl);
-    }
-    else {
-        if (app.running) {
-            app.$confirm('Change versions will stop the running tests. <br />Do you still want to continue?', 'Warn', {
-                confirmButtonText: 'Yes',
-                cancelButtonText: 'No',
-                dangerouslyUseHTMLString: true,
-                center: true
-            }).then(value => {
-                window.location.search = '?' + searchUrl;
-            }).catch(() => {
-                isFallbacking = true;
-                Object.assign(app.runConfig, fallbackParams);
-            });
-        }
-        else {
-            window.location.search = '?' + searchUrl;
-        }
-    }
+    history.pushState({}, '', location.pathname + '?' + searchUrl);
 }
 
 // Only update url when version is changed.
-app.$watch(() => {
-    return {
-        actualVersion: app.runConfig.actualVersion,
-        expectedVersion: app.runConfig.expectedVersion,
-        renderer: app.runConfig.renderer
-    };
-}, (newVal, oldVal) => {
-    if (!isFallbacking) {
-        updateUrl(false, oldVal)
+app.$watch('runConfig', (newVal, oldVal) => {
+    if (!app.pageInvisible) {
+        socket.emit('syncRunConfig', {
+            runConfig: app.runConfig,
+            // Override server config from URL.
+            forceSet: true
+        });
     }
-    isFallbacking = false;
-});
-// app.$watch('runConfig.expectedVersion', () => updateUrl());
-// app.$watch('runConfig.renderer', () => updateUrl());
+}, { deep: true });
