@@ -140,18 +140,6 @@ under the License.
                         </el-tooltip>
                     </div>
 
-
-                    <!-- <div class="run-config-item">
-                        <el-checkbox v-model="runConfig.noHeadless">Replay</el-checkbox>
-                        <el-slider
-                            style="width: 80px;"
-                            v-model="runConfig.replaySpeed"
-                            :step="1" :min="1" :max="10"
-                            show-stops
-                            :format-tooltip="function(val) { return val + 'x'; }"
-                            :disabled="!runConfig.noHeadless"
-                        ></el-slider>
-                    </div> -->
                     <div class="run-config-item">
                         <span class="label">
                             Expected
@@ -207,14 +195,14 @@ under the License.
                             style="margin-top: 5px;"
                         ></el-progress>
                         <h3>{{currentTest.name}}</h3>
-                        <el-button-group style="margin-left: 10px" v-if="running">
-                            <el-button :loading="running" circle type="primary"></el-button>
-                            <el-button title="Run Selected" @click="stopTests" circle type="primary" icon="el-icon-close"></el-button>
+                    </div>
+                    <div class="single-test-ops">
+                        <el-button-group>
+                            <el-button :loading="running" size="mini" @click="runSingleTest(currentTest.name)" type="primary" icon="el-icon-caret-right">Run Single</el-button>
+                            <el-button :loading="running" size="mini" @click="runSingleTest(currentTest.name, true)">Replay</el-button>
                         </el-button-group>
-                        <el-button v-else style="margin-left: 10px"  title="Run Selected" @click="runSingleTest(currentTest.name)" circle type="primary" icon="el-icon-caret-right"></el-button>
-                        </el-button>
-                        <a target="_blank" :href="currentTestUrl"><i class="el-icon-link"></i>&nbsp;Open Demo</a>
-                        <a target="_blank" :href="currentTestRecordUrl"><i class="el-icon-video-camera"></i>&nbsp;Record Interaction</a>
+                        <el-button size="mini" @click="open(currentTestUrl, '_blank')" icon="el-icon-link">Open Demo</el-button>
+                        <el-button size="mini" @click="open(currentTestRecordUrl, '_blank')" icon="el-icon-video-camera">Record Interaction</el-button>
                     </div>
 
                     <div v-if="currentTest.results.length > 0">

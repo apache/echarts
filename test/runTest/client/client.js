@@ -128,8 +128,7 @@ const app = new Vue({
         runConfig: Object.assign({
             sortBy: 'name',
 
-            noHeadless: false,
-            replaySpeed: 5,
+            // replaySpeed: 5,
 
             isActualNightly: false,
             isExpectedNightly: false,
@@ -312,8 +311,8 @@ const app = new Vue({
                 this.tests[i].selected = selected;
             }
         },
-        runSingleTest(testName) {
-            runTests([testName]);
+        runSingleTest(testName, noHeadless) {
+            runTests([testName], noHeadless);
         },
         run(runTarget) {
             let tests;
@@ -329,7 +328,7 @@ const app = new Vue({
             else {
                 tests = this.fullTests;
             }
-            runTests(tests.map(test => test.name));
+            runTests(tests.map(test => test.name), false);
         },
         stopTests() {
             this.running = false;
@@ -389,11 +388,15 @@ const app = new Vue({
                     id: runResult.id
                 });
             }).catch(() => {});
+        },
+
+        open(url, target) {
+            window.open(url, target);
         }
     }
 });
 
-function runTests(tests) {
+function runTests(tests, noHeadless) {
     if (!tests.length) {
         app.$notify({
             title: 'No test selected.',
@@ -415,9 +418,9 @@ function runTests(tests) {
         actualVersion: app.runConfig.actualVersion,
         threads: app.runConfig.threads,
         renderer: app.runConfig.renderer,
-        noHeadless: app.runConfig.noHeadless,
+        noHeadless,
         replaySpeed: app.runConfig.noHeadless
-            ? app.runConfig.replaySpeed
+            ? 1
             : 5 // Force run at 5x speed
     });
 }

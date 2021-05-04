@@ -232,6 +232,13 @@
     text-decoration: underline;
 }
 
+.single-test-ops {
+    padding: 20px 20px 0 10px;
+}
+.single-test-ops .el-button {
+    margin-left: 10px;
+}
+
 .test-screenshots {
     margin-top: 20px;
     padding: 0 20px;
