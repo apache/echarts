@@ -262,6 +262,10 @@ const app = new Vue({
             setTimeout(() => {
                 this.scrollToCurrent();
             }, 100);
+        },
+
+        'currentTestName'(newVal, oldVal) {
+            updateUrl();
         }
     },
 
@@ -279,7 +283,6 @@ const app = new Vue({
         changeTest(target, testName) {
             if (!target.matches('input[type="checkbox"]') && !target.matches('.el-checkbox__inner')) {
                 app.currentTestName = testName;
-                updateUrl();
             }
         },
         toggleSort() {
@@ -444,6 +447,10 @@ socket.on('update', msg => {
     // TODO
     app.running = !!msg.running;
     app.fullTests = processTestsData(msg.tests, app.fullTests);
+
+    if (!app.currentTestName) {
+        app.currentTestName = app.fullTests[0].name;
+    }
 
     firstUpdate = false;
 });
