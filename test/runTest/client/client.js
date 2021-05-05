@@ -78,6 +78,8 @@ function processTestsData(tests, oldTestsData) {
             test.summary = 'warning';
         }
 
+        // To simplify the condition in sort
+        test.actualErrors = test.actualErrors || [];
         // Keep select status not change.
         if (oldTestsData && oldTestsData[idx]) {
             test.selected = oldTestsData[idx].selected;
@@ -187,20 +189,15 @@ const app = new Vue({
             let sortFunc = this.runConfig.sortBy === 'name'
                 ? (a, b) => a.name.localeCompare(b.name)
                 : (a, b) => {
-                    if (a.percentage === b.percentage) {
-                        if (a.actualErrors && b.actualErrors) {
-                            if (a.actualErrors.length === b.actualErrors.length) {
-                                return a.name.localeCompare(b.name);
-                            }
-                            else {
-                                return b.actualErrors.length - a.actualErrors.length;
-                            }
-                        }
-                        else {
+                    if (a.actualErrors.length === b.actualErrors.length) {
+                        if (a.percentage === b.percentage) {
                             return a.name.localeCompare(b.name);
                         }
+                        else {
+                            return a.percentage - b.percentage;
+                        }
                     }
-                    return a.percentage - b.percentage;
+                    return b.actualErrors.length - a.actualErrors.length;
                 };
 
             if (!this.searchString) {

@@ -63,26 +63,26 @@ under the License.
                         </span>
                         <i class="el-icon-loading" v-if="test.status === 'pending' && running"></i>
 
-                        <el-tooltip
-                            v-if="test.status === 'finished'"
-                        >
-                            <div slot="content">{{test.percentage}}% Passed</div>
-                            <el-progress
-                                type="circle"
-                                :width="20"
-                                :stroke-width="2"
-                                :percentage="test.percentage"
-                                :status="test.summary"
-                            ></el-progress>
-                        </el-tooltip>
-                        <el-tooltip
-                            v-else-if="test.status==='finished' && test.actualErrors && test.actualErrors.length > 0"
-                        >
-                            <div slot="content">{{test.actualErrors.length}} Errors</div>
-                            <i class="el-icon-message-solid"
-                                style="color: #F56C6C"
-                            ></i>
-                        </el-tooltip>
+                        <template v-if="test.status === 'finished'">
+                            <el-tooltip
+                                v-if="test.actualErrors && test.actualErrors.length > 0"
+                            >
+                                <div slot="content">{{test.actualErrors.length}} Errors</div>
+                                <i class="el-icon-message-solid"
+                                    style="color: #F56C6C"
+                                ></i>
+                            </el-tooltip>
+                            <el-tooltip v-else>
+                                <div slot="content">{{test.percentage}}% Passed</div>
+                                <el-progress
+                                    type="circle"
+                                    :width="20"
+                                    :stroke-width="2"
+                                    :percentage="test.percentage"
+                                    :status="test.summary"
+                                ></el-progress>
+                            </el-tooltip>
+                        </template>
                         <el-tooltip
                             content="Not yet run"
                             v-else-if="!(test.status === 'pending' && running)"
@@ -101,6 +101,15 @@ under the License.
             </el-aside>
             <el-main>
                 <div class="test-run-controls">
+                    <div class="run-config-item">
+                        <el-tooltip content="Show All Tests Runs">
+                            <div style="cursor: pointer;"  @click="showAllTestsRuns">
+                                <i style="font-size:20px;vertical-align:middle;display:inline-block;" class="el-icon-files"></i>
+                                <span style="vertical-align:middle;display:inline-block;">ALL RUNS</span>
+                            </div>
+                        </el-tooltip>
+                    </div>
+
                     <div class="run-config-item">
                         <el-dropdown v-if="!running" split-button size="mini" title="Run"
                             @click="run('selected')"
@@ -127,16 +136,6 @@ under the License.
                                 :stroke-width="4"
                                 :show-text="false"
                             ></el-progress>
-                        </el-tooltip>
-                    </div>
-
-                    <div class="run-config-item">
-                        <el-tooltip content="Show All Tests Runs">
-                            <i
-                                style="font-size: 20px; cursor: pointer;"
-                                class="el-icon-files"
-                                @click="showAllTestsRuns"
-                            ></i>
                         </el-tooltip>
                     </div>
 

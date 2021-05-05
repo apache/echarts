@@ -37,6 +37,11 @@
     height: 55px;
 }
 
+.header>* {
+    display: inline-block;
+    vertical-align: middle;
+}
+
 .header h1 {
     color: #222;
     line-height: 50px;
@@ -79,7 +84,7 @@
     z-index: 1;
     position: sticky;
     width: 100%;
-    padding: 5px 20px;
+    padding: 5px 40px;
     top: 0px;
 
     background: #896bda;
@@ -99,6 +104,8 @@
 
 .run-config-item {
     margin: 0 5px;
+    color: #fff;
+    font-size: 12px;
 }
 .run-config-item>* {
     display: inline-block;
