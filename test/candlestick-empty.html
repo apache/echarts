@@ -44,18 +44,7 @@ under the License.
             var chart;
             var data;
 
-            require([
-                'echarts'
-                // 'echarts/chart/candlestick',
-                // 'echarts/chart/line',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/dataZoom',
-                // 'echarts/component/markPoint',
-                // 'echarts/component/markLine'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 chart = echarts.init(document.getElementById('main'), null, {
 

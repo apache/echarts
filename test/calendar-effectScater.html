@@ -64,17 +64,7 @@ under the License.
             }
 
             var data = getVirtulData(2016);
-            require([
-                'echarts'
-                // 'echarts/chart/heatmap',
-                // 'echarts/chart/scatter',
-                // 'echarts/chart/effectScatter',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/calendar',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
 

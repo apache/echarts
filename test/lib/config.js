@@ -48,7 +48,7 @@
             'webpackold-req-ec': '../echarts-boilerplate/echarts-webpackold/dist/webpackold-req-ec',
             'webpackold-req-eclibec': '../echarts-boilerplate/echarts-webpackold/dist/webpackold-req-eclibec'
         })[params.__ECDIST__];
-        if (!ecDistPath && params.__ECDIST__.match(/[0-9.]/)) {
+        if (!ecDistPath) {
             // Version number
             ecDistPath = 'test/runTest/tmp/__version__/' + params.__ECDIST__ + '/echarts';
         }
@@ -90,77 +90,4 @@
         });
         observer.observe(document.documentElement, {childList: true});
     };
-
-    // It is not a good solution.
-    // Do not need it any more:
-
-    // Mount bundle version print.
-    // if (typeof require !== 'undefined') {
-    //     var originalRequire = require;
-    //     window.require = function (deps, cb) {
-    //         var newCb = function () {
-    //             if (deps && deps instanceof Array) {
-    //                 printBundleVersion(deps, [].slice.call(arguments));
-    //             }
-    //             cb && cb.apply(this, arguments);
-    //         };
-    //         return originalRequire.call(this, deps, newCb);
-    //     };
-    // }
-
-    // function printBundleVersion(bundleIds, bundles) {
-    //     var content = [];
-    //     for (var i = 0; i < bundleIds.length; i++) {
-    //         var bundle = bundles[i];
-    //         var bundleVersion = bundle && bundle.bundleVersion;
-    //         if (bundleVersion) {
-    //             var date = new Date(+bundleVersion);
-    //             // Check whether timestamp.
-    //             if (!isNaN(+date)) {
-    //                 bundleVersion = '<span style="color:yellow">'
-    //                     + pad(date.getHours(), 2) + ':'
-    //                     + pad(date.getMinutes(), 2) + ':'
-    //                     + pad(date.getSeconds(), 2) + '.' + pad(date.getMilliseconds(), 3)
-    //                     + '</span>';
-    //             }
-    //             else {
-    //                 bundleVersion = encodeHTML(bundleVersion);
-    //             }
-    //             content.push(encodeHTML(bundleIds[i]) + '.js: ' + bundleVersion);
-    //         }
-    //     }
-
-    //     var domId = 'ec-test-bundle-version';
-    //     var dom = document.getElementById(domId);
-    //     if (!dom) {
-    //         dom = document.createElement('div');
-    //         dom.setAttribute('id', domId);
-    //         dom.style.cssText = [
-    //             'background: rgb(52,56,64)',
-    //             'color: rgb(215,215,215)',
-    //             'position: fixed',
-    //             'right: 0',
-    //             'top: 0',
-    //             'font-size: 10px',
-    //             'padding: 1px 3px 1px 3px',
-    //             'border-bottom-left-radius: 3px'
-    //         ].join(';');
-    //         document.body.appendChild(dom);
-    //     }
-    //     dom.innerHTML += content.join('');
-    // }
-
-    // function pad(num, len) {
-    //     return ('000000' + num).substr(-len, len);
-    // }
-
-    // function encodeHTML(source) {
-    //     return String(source)
-    //         .replace(/&/g, '&amp;')
-    //         .replace(/</g, '&lt;')
-    //         .replace(/>/g, '&gt;')
-    //         .replace(/"/g, '&quot;')
-    //         .replace(/'/g, '&#39;');
-    // }
-
 })();

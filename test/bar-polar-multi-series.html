@@ -39,14 +39,7 @@ under the License.
         <div id="main"></div>
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/polar',
-                // 'echarts/component/grid',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
 

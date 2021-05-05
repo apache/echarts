@@ -48,28 +48,7 @@ under the License.
         <script>
 
         require(
-            (testHelper.hasURLParam('en')
-                ? [
-                    'echarts',
-                    // 'echarts/lang/en',
-                ]
-                : [
-                    'echarts'
-                ]
-            ).concat(
-                [
-                    // 'echarts/chart/bar',
-                    // 'echarts/chart/line',
-                    // 'echarts/component/legend',
-                    // 'echarts/component/graphic',
-                    // 'echarts/component/grid',
-                    // 'echarts/component/tooltip',
-                    // 'echarts/component/brush',
-                    // 'echarts/component/toolbox',
-                    // 'echarts/component/title',
-                    // 'zrender/vml/vml'
-                ]
-            ),
+            ['echarts'],
             function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));

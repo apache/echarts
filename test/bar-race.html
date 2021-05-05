@@ -59,29 +59,7 @@ under the License.
 
         <script>
 
-        require(
-            (testHelper.hasURLParam('en')
-                ? [
-                    'echarts',
-                    // 'echarts/lang/en',
-                ]
-                : [
-                    'echarts'
-                ]
-            ).concat(
-                [
-                    // 'echarts/chart/bar',
-                    // 'echarts/chart/line',
-                    // 'echarts/component/legend',
-                    // 'echarts/component/graphic',
-                    // 'echarts/component/grid',
-                    // 'echarts/component/tooltip',
-                    // 'echarts/component/brush',
-                    // 'echarts/component/toolbox',
-                    // 'echarts/component/title',
-                    // 'zrender/vml/vml'
-                ]
-            ),
+        require(['echarts'],
             function (echarts) {
 
                 function loadLifeData(cb) {
@@ -199,29 +177,7 @@ under the License.
 
         <script>
 
-        require(
-            (testHelper.hasURLParam('en')
-                ? [
-                    'echarts',
-                    // 'echarts/lang/en',
-                ]
-                : [
-                    'echarts'
-                ]
-            ).concat(
-                [
-                    // 'echarts/chart/bar',
-                    // 'echarts/chart/line',
-                    // 'echarts/component/legend',
-                    // 'echarts/component/graphic',
-                    // 'echarts/component/grid',
-                    // 'echarts/component/tooltip',
-                    // 'echarts/component/brush',
-                    // 'echarts/component/toolbox',
-                    // 'echarts/component/title',
-                    // 'zrender/vml/vml'
-                ]
-            ),
+        require(['echarts'],
             function (echarts) {
                 var chart = echarts.init(document.getElementById('main2'), null, {
                 });
@@ -307,7 +263,6 @@ under the License.
                     })(x);
                 }
             }
-
         );
         </script>
 
@@ -315,29 +270,7 @@ under the License.
 
         <script>
 
-        require(
-            (testHelper.hasURLParam('en')
-                ? [
-                    'echarts',
-                    // 'echarts/lang/en',
-                ]
-                : [
-                    'echarts'
-                ]
-            ).concat(
-                [
-                    // 'echarts/chart/bar',
-                    // 'echarts/chart/line',
-                    // 'echarts/component/legend',
-                    // 'echarts/component/graphic',
-                    // 'echarts/component/grid',
-                    // 'echarts/component/tooltip',
-                    // 'echarts/component/brush',
-                    // 'echarts/component/toolbox',
-                    // 'echarts/component/title',
-                    // 'zrender/vml/vml'
-                ]
-            ),
+        require(['echarts'],
             function (echarts) {
                 var chart = echarts.init(document.getElementById('main3'), null, {
                 });

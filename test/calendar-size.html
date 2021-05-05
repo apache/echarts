@@ -62,16 +62,7 @@ under the License.
                 }
                 return datas;
             }
-            require([
-                'echarts'
-                // 'echarts/chart/heatmap',
-                // 'echarts/chart/scatter',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/calendar',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
 

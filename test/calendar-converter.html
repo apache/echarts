@@ -38,18 +38,7 @@ under the License.
         <div id="main"></div>
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/heatmap',
-                // 'echarts/chart/pie',
-                // 'echarts/chart/scatter',
-                // 'echarts/chart/effectScatter',
-                // 'echarts/chart/graph',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/calendar',
-                // 'echarts/component/tooltip'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
                 var cellSize = [120, 120];

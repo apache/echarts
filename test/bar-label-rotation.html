@@ -40,13 +40,7 @@ under the License.
         <div id="main"></div>
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
 

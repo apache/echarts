@@ -64,14 +64,7 @@ under the License.
             var groupCategories = [];
             var groupColors = [];
 
-            require([
-                'echarts'
-                // 'zrender/tool/color',
-                // 'echarts/chart/pie',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox'
-            ], function (ec) {
+            require(['echarts'], function (ec) {
                 echarts = ec;
                 chart = myChart = echarts.init(document.getElementById('main1'));
 
@@ -180,10 +173,6 @@ under the License.
 
             require([
                 'echarts'
-                // 'echarts/chart/pie',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox'
             ], function (ec) {
                 echarts = ec;
                 chart = myChart = echarts.init(document.getElementById('main2'));
@@ -234,10 +223,6 @@ under the License.
 
             require([
                 'echarts'
-                // 'echarts/chart/pie',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox'
             ], function (ec) {
                 echarts = ec;
                 chart = myChart = echarts.init(document.getElementById('main3'));

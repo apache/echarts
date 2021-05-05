@@ -57,9 +57,6 @@ under the License.
         <script type="text/javascript">
             require([
                 'echarts'
-                // 'echarts/chart/bar',
-                // 'echarts/component/grid',
-                // 'echarts/component/visualMapContinuous'
             ], function (echarts) {
 
                 var main = document.getElementById('main1');
@@ -161,10 +158,6 @@ under the License.
         <script type="text/javascript">
             require([
                 'echarts'
-                // 'echarts/chart/scatter',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/visualMapContinuous'
             ], function (echarts) {
 
                 var main = document.getElementById('main2');
@@ -292,9 +285,6 @@ under the License.
             require([
                 'echarts',
                 'map/js/world'
-                // 'echarts/chart/map',
-                // 'echarts/component/legend',
-                // 'echarts/component/visualMapContinuous',
             ], function (echarts) {
                 renderWorldMap(echarts);
             });
@@ -552,16 +542,7 @@ under the License.
 
         <script type="text/javascript">
 
-            require([
-                'echarts'
-                // 'echarts/chart/bar',
-                // 'echarts/chart/line',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var main = document.getElementById('main4');
                 if (!main) {

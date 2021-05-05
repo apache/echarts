@@ -37,15 +37,7 @@ under the License.
         <div id="main"></div>
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/title',
-                // 'echarts/component/dataZoom'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
 

@@ -52,12 +52,7 @@ under the License.
     <div id="nodata"></div>
     <script>
 
-        require([
-            'echarts'
-            // 'echarts/chart/bar',
-            // 'echarts/component/polar',
-            // 'zrender/vml/vml'
-        ], function (echarts) {
+        require(['echarts'], function (echarts) {
 
             var chart = echarts.init(document.getElementById('main'), null, {
                 // renderer: 'svg'
@@ -127,12 +122,7 @@ under the License.
     </script>
     <script>
 
-        require([
-            'echarts'
-            // 'echarts/chart/bar',
-            // 'echarts/component/polar',
-            // 'zrender/vml/vml'
-        ], function (echarts) {
+        require(['echarts'], function (echarts) {
 
             var chart = echarts.init(document.getElementById('nodata'), null, {
                 // renderer: 'svg'

@@ -47,15 +47,7 @@ under the License.
 
             require([
                 'echarts'
-                // 'zrender/tool/color',
-                // 'echarts/chart/lines',
-                // 'echarts/chart/line',
-                // 'echarts/component/grid',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox',
-                // 'echarts/component/visualMap'
-            ], function (ec, ct) {
+            ], function (ec) {
                 echarts = ec;
                 colorTool = echarts.color;
                 chart = myChart = echarts.init(document.getElementById('main'));
