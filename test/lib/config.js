@@ -78,23 +78,6 @@
         });
     }
 
-    if (typeof requireES !== 'undefined') {
-        requireES.config({
-            baseUrl: baseUrl,
-            paths: {
-                'echarts': './',
-                'zrender': 'node_modules/zrender',
-                'geoJson': 'geoData/geoJson',
-                'theme': 'theme',
-                'data': 'test/data',
-                'map': 'test/data/map',
-                'extension': 'extension'
-            },
-            // urlArgs: '_v_=' + (+new Date()),
-            sourceMap: sourceMap
-        });
-    }
-
     // Not let scrollbar affect page size.
     // It will AFFECT interaction in the automatic testing.
     if (typeof MutationObserver !== 'undefined') {

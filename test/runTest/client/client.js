@@ -416,9 +416,7 @@ function runTests(tests, noHeadless) {
         threads: app.runConfig.threads,
         renderer: app.runConfig.renderer,
         noHeadless,
-        replaySpeed: app.runConfig.noHeadless
-            ? 1
-            : 5 // Force run at 5x speed
+        replaySpeed: noHeadless ? 2 : 5
     });
 }
 
