@@ -65,7 +65,7 @@
                 'theme': 'theme',
                 'data': 'data',
                 'map': 'data/map',
-                'extension': 'dist/extension',
+                'extension': '../dist/extension',
             }
         });
     }

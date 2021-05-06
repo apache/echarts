@@ -26,82 +26,53 @@
 // Limitations:
 //  1. Not support ancient browsers.
 //  2. Only `paths` can be configured
+//  3. Not support defined id.
 
 (function (global) {
 
     var requireCfg = { paths: {} }
 
-    var currentDefinedExports;
+    var currentDefinedFactory;
+    var currentDefinedDeps;
     var exportsPlaceholder = {};
 
-    // { loaded, content, callbacks: [] }
-    var loadingCache = {};
-    // { exports }
+    // Promise to get modules exports.
     var mods = {};
 
-    function checkLoadingCache(url, cb, onMiss) {
-        var cache = loadingCache[url];
-        if (cache) {
-            if (cache.loaded) {
-                setTimeout(function () {
-                    cb(cache.exports);
-                });
-            }
-            else {
-                cache.callbacks.push(cb);
-            }
-        }
-        else {
-            cache = loadingCache[url] = {
-                content: null,
-                loaded: null,
-                callbacks: [cb]
-            }
-            onMiss(function (content) {
-                cache.content = content;
-                cache.callbacks.forEach(function (cb) {
-                    cb(content);
-                });
-                cache.callbacks = [];
-            });
-        }
-    }
-
-    function loadText(url, cb) {
-        checkLoadingCache(url, cb, function (loaded) {
+    function loadText(url) {
+        new Promise(function (resolve, reject) {
             var xhr = new XMLHttpRequest();
             xhr.onload = function (e) {
                 if (xhr.status === 200) {
-                    loaded(xhr.responseText);
+                    resolve(xhr.responseText);
                 }
                 else {
-                    throw new Error('Error loading ' + url);
+                    reject('Error loading ' + url);
                 }
             }
             xhr.onerror = function (e) {
-                throw new Error('Error loading ' + url);
+                reject('Error loading ' + url);
             }
             xhr.open('GET', url);
             xhr.send();
         });
     }
 
-    function loadJSON(url, cb) {
-        loadText(url, function (text) {
-            cb(JSON.parse(text));
+    function loadJSON(url) {
+        return loadJSON(url).then(function (text) {
+            return JSON.parse(text);
         });
     }
 
-    function loadScript(url, cb) {
-        checkLoadingCache(url, cb, function (loaded) {
+    function loadScript(url) {
+        return new Promise(function (resolve, reject) {
             var script = document.createElement('script');
             script.async = true;
             script.onload = function () {
-                loaded();
+                resolve();
             }
             script.onerror = function () {
-                currentDefinedExports = null;
-                throw new Error('Error loading ' + url);
+                reject('Error loading ' + url);
             }
             script.src = url;
             document.head.appendChild(script);
@@ -133,9 +104,6 @@
         return str.split('.').pop();
     }
 
-    // var cachedResources = {};
-    // var pendingRequires = [];
-
     // Simplify the logic. don't support id.
     function define(modId, depsIds, factory) {
         if (factory == null) {
@@ -155,91 +123,67 @@
                 }
             }
         }
+        currentDefinedFactory = factory;
+        currentDefinedDeps = loadDeps(depsIds || []);
+    }
 
-        loadDeps(depsIds || [], function (deps) {
-            if (typeof factory === 'function') {
-                var modExports;
-                if (!modId) {
-                    modExports = currentDefinedExports = {};
+    function loadMod(modId) {
+        if (!mods[modId]) {
+            mods[modId] = {};
+
+            function loaded(exports) {
+                var ret;
+                if (currentDefinedDeps) {
+                    var factory = currentDefinedFactory;
+                    ret = currentDefinedDeps.then(function (deps) {
+                        var modExports = {};
+                        factory.apply(null, deps.map(function (dep) {
+                            return dep === exportsPlaceholder ? modExports : dep;
+                        }));
+                        return modExports;
+                    });
                 }
                 else {
-                    mods[modId] = { exports: {} };
-                    modExports = mods[modId].exports;
+                    ret = exports;
                 }
-                factory.apply(null, deps.map(function (dep) {
-                    return dep === exportsPlaceholder ? modExports : dep;
-                }));
+                // Clear.
+                currentDefinedFactory = null;
+                currentDefinedDeps = null;
+                return ret;
+            }
+
+            var url = resolvePath(modId);
+            var ext = getExt(url);
+            if (ext === 'js') {
+                mods[modId].exports = loadScript(url).then(loaded);
+            }
+            else if (ext === 'json' || ext === 'geojson') {
+                mods[modId].exports = loadJSON(url).then(loaded);
             }
             else {
-                // define(JSONObject)
-                currentDefinedExports = factory;
+                mods[modId].exports = loadText(url).then(loaded);
             }
-        });
+        }
+        return mods[modId].exports;
     }
 
-    function loadDep(modId, cb) {
-        if (mods[modId]) {
-            // pending async?
-            cb(mods[modId].exports);
-            return;
-        }
-
-        function loaded(exports) {
-            // Needs to use currentDefinedExports if loading scripts.
-            mods[modId] = {
-                exports: currentDefinedExports || exports
-            };
-            // Clear.
-            currentDefinedExports = null;
-            cb(mods[modId].exports);
-        }
-
-        var url = resolvePath(modId);
-        var ext = getExt(url);
-        if (ext === 'js') {
-            loadScript(url, loaded);
-        }
-        else if (ext === 'json' || ext === 'geojson') {
-            loadJSON(url, loaded);
-        }
-        else {
-            loadText(url, loaded);
-        }
-    }
-
-    function loadDeps(depsIds, cb) {
-        var deps = [];
-        var count = depsIds.length;
-        depsIds.forEach(function (depId, idx) {
+    function loadDeps(depsIds) {
+        return Promise.all(depsIds.map(function (depId) {
             if (depId === 'exports') {
-                deps[idx] = exportsPlaceholder;
-                count--;
-                if (!count) {
-                    cb(deps);
-                }
+                return Promise.resolve(exportsPlaceholder);
             }
             else {
-                loadDep(depId, function (dep) {
-                    deps[idx] = dep;
-                    count--;
-                    if (!count) {
-                        cb(deps);
-                    }
-                });
+                return loadMod(depId);
             }
-        });
-        if (!count) {
-            cb(deps);
-        }
+        }));
     }
     function require(depsIds, cb) {
         if (typeof depsIds === 'string') {
             depsIds = [depsIds];
         }
-
-        // Batch multiple requires in one frame and callback theme in one frame.
+        // Batch multiple requires callback theme in one frame.
         // Ensure all instances are started at one time and avoid time difference in visual regression test
-        loadDeps(depsIds, function (deps) {
+        loadDeps(depsIds).then(function (deps) {
             cb && cb.apply(null, deps);
         });
     }
