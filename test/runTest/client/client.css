@@ -30,17 +30,22 @@
 }
 
 .header {
-    background-color: #293c55;
-    box-shadow: 0 0  20px rgba(0, 0, 0, 0.2);
+    background-color: #fff;
+    box-shadow: 0 0  20px rgba(0, 0, 0, 0.05);
     position: relative;
-    z-index: 10;
+    z-index: 20;
+    height: 55px;
+}
+
+.header>* {
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .header h1 {
-    color: #fff;
+    color: #222;
     line-height: 50px;
     margin: 0;
-    font-weight: 200;
     font-size: 20px;
 }
 
@@ -54,65 +59,111 @@
     margin-right: 20px;
 }
 
-.nav-toolbar {
+.el-aside {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 10;
+}
+
+.el-main {
+    background: #f3f4fa;
+    padding: 0;
+}
+
+.nav-toolbar, .test-run-controls {
     padding: 10px 10px;
-    background: #162436;
-    box-shadow: inset 0 0 5px black;
+    background: #fff;
     position: fixed;
-    top: 50px;
     width: 330px;
     z-index: 2;
+    /* box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); */
+    border-bottom: 1px solid #eee;
 }
-.nav-toolbar .controls {
-    margin-top: 10px;
+
+.test-run-controls {
+    z-index: 1;
+    position: sticky;
+    width: 100%;
+    padding: 5px 40px;
+    top: 0px;
+
+    background: #896bda;
+    box-shadow: 0 0 20px rgb(0 0 0 / 20%);
+    border-bottom: none;
 }
-.nav-toolbar .controls>* {
+
+.test-run-controls>* {
     display: inline-block;
     vertical-align: middle;
 }
-.nav-toolbar .controls .el-checkbox {
-    margin-right: 2px;
-}
-.nav-toolbar .el-icon-setting {
-    color: #f3f3f3;
-    font-size: 20px;
-    margin-left: 5px;
-    cursor: pointer;
-}
+
 .nav-toolbar .el-button {
     padding-left: 8px;
     padding-right: 8px;
 }
 
 .run-config-item {
-    margin: 5px 0;
+    margin: 0 5px;
+    color: #fff;
+    font-size: 12px;
 }
 .run-config-item>* {
     display: inline-block;
     vertical-align: middle;
-    margin-right: 10px;
+    font-size: 12px;
+    color: #fff;
+}
+
+.run-config-item .el-progress-circle__track {
+    stroke: rgba(255, 255, 255, 0.3)!important;
+}
+.run-config-item .el-progress-circle__path {
+    stroke: rgba(255, 255, 255, 1)!important;
+}
+
+.run-config-item .el-input__inner,
+.run-config-item .el-button-group {
+    border: none;
+}
+.run-config-item .el-button {
+    border-color: #fff;
+}
+
+.run-config-item .label {
+    margin-right: 2px;
+    margin-left: 5px;
+    text-transform: uppercase;
 }
 
 
 .test-list {
     overflow-x: hidden;
-    background: #293c55;
+    background: #fff;
     margin: 0;
     padding: 0;
-    margin-top: 80px;
+
+    position: absolute;
+    top: 48px;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    overflow-y: scroll;
 }
 .test-list li {
     list-style: none;
     padding-left: 10px;
     cursor: pointer;
-    color: #f3f3f3;
+    color: #222;
+}
+.test-list li .el-checkbox {
+    margin-right: 5px;
 }
 .test-list li a.menu-link {
     display: inline-block;
     text-decoration: none;
     font-size: 14px;
     line-height: 40px;
-    color: #f3f3f3;
+    color: #222;
     margin-left: 3px;
     cursor: pointer;
 }
@@ -122,10 +173,13 @@
 }
 
 .test-list li.active {
-    background: #e43c59;
+    background: #5470C6;
+}
+.test-list li.active a {
+    color: #fff;
 }
 .test-list li:hover {
-    background: #162436;
+    border-right: 4px solid #5470C6
 }
 .test-list li>* {
     vertical-align: middle;
@@ -134,6 +188,27 @@
 
 .test-list .el-progress__text {
     font-size: 12px!important;
+}
+
+.el-progress.is-success .el-progress__text {
+    color: #67C23A;
+    -webkit-text-stroke: 1px #67C23A;
+}
+.el-progress.is-exception .el-progress__text {
+    color: #F56C6C;
+    -webkit-text-stroke: 1px #F56C6C;
+}
+
+.no-result {
+    text-align: center;
+    font-size: 30px;
+    padding: 100px 0;
+    color: #ccc;
+}
+
+.test-result {
+    padding: 20px;
+    margin-top: 20px;
 }
 
 .test-result .el-progress__text {
@@ -147,6 +222,9 @@
     margin: 0;
 }
 
+.test-result .title {
+    margin-left: 20px;
+}
 .test-result .title>* {
     display: inline-block;
     vertical-align: middle;
@@ -161,6 +239,13 @@
     text-decoration: underline;
 }
 
+.single-test-ops {
+    padding: 20px 20px 0 10px;
+}
+.single-test-ops .el-button {
+    margin-left: 10px;
+}
+
 .test-screenshots {
     margin-top: 20px;
     padding: 0 20px;
@@ -173,6 +258,8 @@
 .test-screenshots .preview {
     cursor: pointer;
     color: #409eff;
+    float: right;
+    font-size: 20px;
 }
 .test-screenshots .preview:hover {
     text-decoration: underline;
@@ -185,13 +272,12 @@
 .test-screenshots h4 {
     font-size: 30px;
     font-weight: 200;
-    margin-left: -20px;
     color: #162436;
 }
 
 .test-errors, .test-logs {
     margin-top: 20px;
-    padding: 0 50px;
+    padding: 0 20px;
 }
 
 .test-logs .log-item {
@@ -207,6 +293,11 @@
 iframe {
     border: none;
     overflow: overlay;
+}
+
+#tests-runs-dialog .el-dialog {
+    width: 90%;
+    max-width: 1200px;
 }
 
 

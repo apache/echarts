@@ -65,7 +65,7 @@ export interface LineDataItemOption extends SymbolOptionMixin,
 }
 
 export interface LineEndLabelOption extends SeriesLabelOption {
-    valueAnimation: boolean
+    valueAnimation?: boolean
 }
 
 

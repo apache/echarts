@@ -105,7 +105,7 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
             && this.getAxis('y').containData(data[1]);
     }
 
-    dataToPoint(data: ScaleDataValue[], reserved?: unknown, out?: number[]): number[] {
+    dataToPoint(data: ScaleDataValue[], clamp?: boolean, out?: number[]): number[] {
         out = out || [];
         const xVal = data[0];
         const yVal = data[1];
@@ -121,8 +121,8 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
         }
         const xAxis = this.getAxis('x');
         const yAxis = this.getAxis('y');
-        out[0] = xAxis.toGlobalCoord(xAxis.dataToCoord(xVal));
-        out[1] = yAxis.toGlobalCoord(yAxis.dataToCoord(yVal));
+        out[0] = xAxis.toGlobalCoord(xAxis.dataToCoord(xVal, clamp));
+        out[1] = yAxis.toGlobalCoord(yAxis.dataToCoord(yVal, clamp));
         return out;
     }
 
@@ -146,15 +146,15 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
         return out;
     }
 
-    pointToData(point: number[], out?: number[]): number[] {
-        out = out || [];
+    pointToData(point: number[], clamp?: boolean): number[] {
+        const out: number[] = [];
         if (this._invTransform) {
             return applyTransform(out, point, this._invTransform);
         }
         const xAxis = this.getAxis('x');
         const yAxis = this.getAxis('y');
-        out[0] = xAxis.coordToData(xAxis.toLocalCoord(point[0]));
-        out[1] = yAxis.coordToData(yAxis.toLocalCoord(point[1]));
+        out[0] = xAxis.coordToData(xAxis.toLocalCoord(point[0]), clamp);
+        out[1] = yAxis.coordToData(yAxis.toLocalCoord(point[1]), clamp);
         return out;
     }
 

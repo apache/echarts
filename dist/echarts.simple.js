@@ -28098,7 +28098,7 @@
     var isObject$2 = isObject;
     var indexOf$1 = indexOf;
     var hasWindow = typeof window !== 'undefined';
-    var version$1 = '5.1.0';
+    var version$1 = '5.1.1';
     var dependencies = {
       zrender: '5.1.0'
     };
@@ -42250,10 +42250,7 @@
         var _this = _super.call(this) || this;
 
         _this.z2 = 2;
-        var polyline = new Polyline();
         var text = new ZRText();
-
-        _this.setTextGuideLine(polyline);
 
         _this.setTextContent(text);
 
@@ -42353,8 +42350,6 @@
       };
 
       PiePiece.prototype._updateLabel = function (seriesModel, data, idx) {
-        var _a;
-
         var sector = this;
         var itemModel = data.getItemModel(idx);
         var labelLineModel = itemModel.getModel('labelLine');
@@ -42383,15 +42378,21 @@
         var labelPosition = seriesModel.get(['label', 'position']);
 
         if (labelPosition !== 'outside' && labelPosition !== 'outer') {
-          (_a = sector.getTextGuideLine()) === null || _a === void 0 ? void 0 : _a.hide();
-          return;
-        } // Default use item visual color
+          sector.removeTextGuideLine();
+        } else {
+          var polyline = this.getTextGuideLine();
+
+          if (!polyline) {
+            polyline = new Polyline();
+            this.setTextGuideLine(polyline);
+          } // Default use item visual color
 
 
-        setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
-          stroke: visualColor,
-          opacity: retrieve3(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity, 1)
-        });
+          setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
+            stroke: visualColor,
+            opacity: retrieve3(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity, 1)
+          });
+        }
       };
 
       return PiePiece;

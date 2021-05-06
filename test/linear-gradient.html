@@ -1,0 +1,229 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+        <meta name="viewport" content="user-scalable=no,width=device-width,height=device-height">
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['pm0.5', 'pm2.5']
+                    },
+                    grid: {
+                        top: '18%',
+                        left: '3%',
+                        right: '8%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['4-1', '4-2', '4-3', '4-4', '4-5', '4-6']
+                    },
+                    yAxis: {
+                        type: 'log',
+                        axisLabel: {
+                            formatter: function(value) {
+                                return value === 0.1 ? 0 : value
+                            }
+                        }
+                    },
+                    series: [{
+                            name: 'pm0.5',
+                            type: 'line',
+                            areaStyle: {
+                                //color: 'cyan'
+                            },
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            lineStyle: {
+                                color: '#FEC171'
+                            },
+                            data: [15, 200, 3000, 50000, 1200000],
+                            markLine: {
+                                data: [{
+                                    name: `Y 轴值为 150 的水平线`,
+                                    yAxis: 150
+                                }],
+                                lineStyle: {
+                                    color: '#30B08F'
+                                }
+                            }
+                        },
+                        {
+                            name: 'pm2.5',
+                            type: 'line',
+                            areaStyle: {
+                                // color: 'blue'
+                            },
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            lineStyle: {
+                                color: '#409EFF'
+                            },
+                            data: [1200000, 50000, 3000, 200, 15],
+                            markLine: {
+                                data: [{
+                                    name: `Y 轴值为 150 的水平线`,
+                                    yAxis: 150
+                                }],
+                                lineStyle: {
+                                    color: '#30B08F'
+                                }
+                            }
+                        }
+                    ],
+                    visualMap: {
+                        show: false,
+                        pieces: [{
+                            gt: 0,
+                            lte: 150,
+                            color: '#30B08F'
+                        }, {
+                            gt: 150,
+                            color: '#C03639'
+                        }],
+                        left: '55%',
+                        top: -2,
+                        orient: 'horizontal'
+                    }
+                };
+
+                testHelper.create(echarts, 'main0', {
+                    title: [
+                        'The series with log axis should be rendered without errors in console',
+                        'https://github.com/apache/echarts/issues/14601'
+                    ],
+                    option: option,
+                    height: 600
+                });
+
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    xAxis: {
+                        data: [0, 1]
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            name: '会员数-周同比',
+                            type: 'line',
+                            data: [
+                                {
+                                    value: null
+                                },
+                                {
+                                    value: null
+                                }
+                            ],
+                            areaStyle: {
+                                color: {
+                                    type: 'linear',
+                                    x: 0,
+                                    y: 0,
+                                    x2: 0,
+                                    y2: 1,
+                                    index: 6,
+                                    colorStops: [
+                                        {
+                                            offset: 0,
+                                            color: 'rgba(235, 83, 46, 0.30)'
+                                        },
+                                        {
+                                            offset: 1,
+                                            color: 'rgba(235, 83, 6, 0.05)'
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Nothing should be rendered without errors in console',
+                        'https://github.com/apache/echarts/issues/14534'
+                    ],
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+    </body>
+</html>

@@ -115,20 +115,7 @@ under the License.
                         padding: 10,
                         backgroundColor: '#222',
                         borderColor: '#777',
-                        borderWidth: 1,
-                        formatter: function (obj) {
-                            var value = obj[0].value;
-                            return '<div style="border-bottom: 1px solid rgba(255,255,255,.3); font-size: 18px;padding-bottom: 7px;margin-bottom: 7px">'
-                                + obj[0].seriesName + ' ' + value[0] + '日期：'
-                                + value[7]
-                                + '</div>'
-                                + schema[1].text + '：' + value[1] + '<br>'
-                                + schema[2].text + '：' + value[2] + '<br>'
-                                + schema[3].text + '：' + value[3] + '<br>'
-                                + schema[4].text + '：' + value[4] + '<br>'
-                                + schema[5].text + '：' + value[5] + '<br>'
-                                + schema[6].text + '：' + value[6] + '<br>';
-                        }
+                        borderWidth: 1
                     },
                     visualMap: {
                         show: true,

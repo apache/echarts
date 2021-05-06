@@ -31,6 +31,10 @@ module.exports.blacklist = [
     'scatter-gps.html',
     'webkit-dep.html',
 
+    // Mobile
+    'mobileBench.html',
+    'touch-test.html',
+
     // Image size not match
     'symbol2.html',
 

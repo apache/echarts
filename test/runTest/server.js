@@ -24,11 +24,24 @@ const path = require('path');
 const {fork} = require('child_process');
 const semver = require('semver');
 const {port, origin} = require('./config');
-const {getTestsList, updateTestsList, saveTestsList, mergeTestsResults, updateActionsMeta} = require('./store');
+const {
+    getTestsList,
+    updateTestsList,
+    saveTestsList,
+    mergeTestsResults,
+    updateActionsMeta,
+    getResultBaseDir,
+    getRunHash,
+    getAllTestsRuns,
+    delTestsRun,
+    RESULTS_ROOT_DIR,
+    checkStoreVersion
+} = require('./store');
 const {prepareEChartsLib, getActionsFullPath, fetchVersions} = require('./util');
 const fse = require('fs-extra');
 const fs = require('fs');
 const open = require('open');
+const genReport = require('./genReport');
 
 function serve() {
     const server = http.createServer((request, response) => {
@@ -52,7 +65,7 @@ function serve() {
 
 let runningThreads = [];
 let pendingTests;
-let aborted = false;
+let running = false;
 
 function stopRunningTests() {
     if (runningThreads) {
@@ -65,6 +78,7 @@ function stopRunningTests() {
                 testOpt.status = 'unsettled';
             }
         });
+        saveTestsList();
         pendingTests = null;
     }
 }
@@ -130,11 +144,17 @@ function startTests(testsNameList, socket, {
                 testOpt.status = 'pending';
                 testOpt.results = [];
             });
+            // Save status immediately
+            saveTestsList();
 
-            if (!aborted) {
-                socket.emit('update', {tests: getTestsList(), running: true});
+            if (running) {
+                socket.emit('update', {
+                    tests: getTestsList(),
+                    running: true
+                });
             }
         }
+
         let runningCount = 0;
         function onExit() {
             runningCount--;
@@ -145,8 +165,11 @@ function startTests(testsNameList, socket, {
         }
         function onUpdate() {
             // Merge tests.
-            if (!aborted && !noSave) {
-                socket.emit('update', {tests: getTestsList(), running: true});
+            if (running && !noSave) {
+                socket.emit('update', {
+                    tests: getTestsList(),
+                    running: true
+                });
             }
         }
         threadsCount = Math.min(threadsCount, pendingTests.length);
@@ -163,6 +186,7 @@ function startTests(testsNameList, socket, {
                 '--actual', actualVersion,
                 '--expected', expectedVersion,
                 '--renderer', renderer || '',
+                '--dir', getResultBaseDir(),
                 ...(noHeadless ? ['--no-headless'] : []),
                 ...(noSave ? ['--no-save'] : [])
             ]);
@@ -186,6 +210,7 @@ function checkPuppeteer() {
     }
 }
 
+
 async function start() {
     if (!checkPuppeteer()) {
         // TODO Check version.
@@ -193,10 +218,9 @@ async function start() {
         return;
     }
 
-    let [versions] = await Promise.all([
-        fetchVersions(),
-        updateTestsList(true)
-    ]);
+
+    let _currentTestHash;
+    let _currentRunConfig;
 
     // let runtimeCode = await buildRuntimeCode();
     // fse.outputFileSync(path.join(__dirname, 'tmp/testRuntime.js'), runtimeCode, 'utf-8');
@@ -204,28 +228,103 @@ async function start() {
     // Start a static server for puppeteer open the html test cases.
     let {io} = serve();
 
-    io.of('/client').on('connect', async socket => {
-        await updateTestsList();
+    const stableVersions = await fetchVersions(false);
+    const nightlyVersions = await fetchVersions(true);
+    stableVersions.unshift('local');
+    nightlyVersions.unshift('local');
 
-        socket.emit('update', {
-            tests: getTestsList(),
-            running: runningThreads.length > 0
+    io.of('/client').on('connect', async socket => {
+        function abortTests() {
+            if (!running) {
+                return;
+            }
+            stopRunningTests();
+            io.of('/client').emit('abort');
+            running = false;
+        }
+
+        socket.on('syncRunConfig', async ({
+            runConfig,
+            forceSet
+        }) => {
+            // First time open.
+            if ((!_currentRunConfig || forceSet) && runConfig) {
+                _currentRunConfig = runConfig;
+            }
+
+            if (!_currentRunConfig) {
+                return;
+            }
+
+            const expectedVersionsList = _currentRunConfig.isExpectedNightly ? nightlyVersions : stableVersions;
+            const actualVersionsList = _currentRunConfig.isActualNightly ? nightlyVersions : stableVersions;
+            if (!expectedVersionsList.includes(_currentRunConfig.expectedVersion)) {
+                // Pick first version not local
+                _currentRunConfig.expectedVersion = expectedVersionsList[1];
+            }
+            if (!actualVersionsList.includes(_currentRunConfig.actualVersion)) {
+                _currentRunConfig.actualVersion = 'local';
+            }
+
+            socket.emit('syncRunConfig_return', {
+                runConfig: _currentRunConfig,
+                expectedVersionsList,
+                actualVersionsList
+            });
+
+            if (_currentTestHash !== getRunHash(_currentRunConfig)) {
+                abortTests();
+            }
+            await updateTestsList(
+                _currentTestHash = getRunHash(_currentRunConfig),
+                !running // Set to unsettled if not running
+            );
+
+            socket.emit('update', {
+                tests: getTestsList(),
+                running: runningThreads.length > 0
+            });
+        });
+
+        socket.on('getAllTestsRuns', async () => {
+            socket.emit('getAllTestsRuns_return', {
+                runs: await getAllTestsRuns()
+            });
+        });
+
+        socket.on('genTestsRunReport', async (params) => {
+            const absPath = await genReport(
+                path.join(RESULTS_ROOT_DIR, getRunHash(params))
+            );
+            const relativeUrl = path.join('../', path.relative(__dirname, absPath));
+            socket.emit('genTestsRunReport_return', {
+                reportUrl: relativeUrl
+            });
+        });
+
+        socket.on('delTestsRun', async (params) => {
+            delTestsRun(params.id);
+            console.log('Deleted', params.id);
         });
 
         socket.on('run', async data => {
 
             let startTime = Date.now();
-            aborted = false;
+            running = true;
 
             await prepareEChartsLib(data.expectedVersion); // Expected version.
             await prepareEChartsLib(data.actualVersion); // Version to test
 
-            if (aborted) {  // If it is aborted when downloading echarts lib.
+            if (!running) {  // If it is aborted when downloading echarts lib.
                 return;
             }
 
             // TODO Should broadcast to all sockets.
             try {
+                if (!checkStoreVersion(data)) {
+                    throw new Error('Unmatched store version and run version.');
+                }
+
                 await startTests(
                     data.tests,
                     io.of('/client'),
@@ -244,25 +343,21 @@ async function start() {
                 console.error(e);
             }
 
-            if (!aborted) {
+            if (running) {
                 console.log('Finished');
                 io.of('/client').emit('finish', {
                     time: Date.now() - startTime,
                     count: data.tests.length,
                     threads: data.threads
                 });
+                running = false;
             }
             else {
                 console.log('Aborted!');
             }
         });
-        socket.on('stop', () => {
-            stopRunningTests();
-            io.of('/client').emit('abort');
-            aborted = true;
-        });
 
-        socket.emit('versions', versions);
+        socket.on('stop', abortTests);
     });
 
     io.of('/recorder').on('connect', async socket => {

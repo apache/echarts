@@ -60,15 +60,6 @@ under the License.
                 var option = {
                     color: ['#4ea397', '#d0648a', '#f5b841'],
                     animation: false,
-                    title: {
-                        text: '光滑曲线新老算法对比',
-                        left: '50%',
-                        textAlign: 'center'
-                    },
-                    legend: {
-                        top: 30,
-                        data: ['非单调光滑（老算法）','单调光滑（新算法）', '不光滑']
-                    },
                     xAxis: {
                         type: 'value'
                     },
@@ -80,7 +71,6 @@ under the License.
                         right: 30
                     },
                     series: [{
-                        name: '非单调光滑（老算法）',
                         type: 'line',
                         smoothMonotone: 'none',
                         smooth: true,
@@ -94,20 +84,6 @@ under the License.
                             opacity: 0.4
                         }
                     }, {
-                        name: '单调光滑（新算法）',
-                        type: 'line',
-                        smooth: true,
-                        showSymbol: false,
-                        connectNulls: true,
-                        data: data,
-                        lineStyle: {
-                            width: 1
-                        },
-                        areaStyle: {
-                            opacity: 0.4
-                        }
-                    }, {
-                        name: '不光滑',
                         type: 'line',
                         smooth: false,
                         symbol: 'circle',
