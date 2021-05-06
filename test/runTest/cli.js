@@ -38,7 +38,8 @@ program
     .option('--expected <expected>', 'Expected version')
     .option('--actual <actual>', 'Actual version')
     .option('--renderer <renderer>', 'svg/canvas renderer')
-    .option('--no-save', 'Don\'t save result');
+    .option('--no-save', 'Don\'t save result')
+    .option('--dir <dir>', 'Out dir');
 
 program.parse(process.argv);
 
@@ -46,13 +47,14 @@ program.speed = +program.speed || 1;
 program.actual = program.actual || 'local';
 program.expected = program.expected || '4.2.1';
 program.renderer = (program.renderer || 'canvas').toLowerCase();
+program.dir = program.dir || (__dirname + '/tmp');
 
 if (!program.tests) {
     throw new Error('Tests are required');
 }
 
 function getScreenshotDir() {
-    return 'tmp/__screenshot__';
+    return `${program.dir}/__screenshot__`;
 }
 
 function sortScreenshots(list) {
@@ -98,9 +100,6 @@ async function convertToWebP(filePath, lossless) {
 
 async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) {
     let screenshotName = testNameFromFile(fileUrl);
-    if (program.renderer === 'svg') {
-        screenshotName += '-_svg_render_';
-    }
     if (desc) {
         screenshotName += '-' + slugify(desc, { replacement: '-', lower: true });
     }
@@ -108,8 +107,8 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
         screenshotName += '-' + minor;
     }
     let screenshotPrefix = isExpected ? 'expected' : 'actual';
-    fse.ensureDirSync(path.join(__dirname, getScreenshotDir()));
-    let screenshotPath = path.join(__dirname, `${getScreenshotDir()}/${screenshotName}-${screenshotPrefix}.png`);
+    fse.ensureDirSync(getScreenshotDir());
+    let screenshotPath = path.join(getScreenshotDir(), `${screenshotName}-${screenshotPrefix}.png`);
     await page.screenshot({
         path: screenshotPath,
         fullPage
@@ -277,7 +276,7 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
                     actual.rawScreenshotPath
                 );
 
-                const diffPath = `${path.resolve(__dirname, getScreenshotDir())}/${shot.screenshotName}-diff.png`;
+                const diffPath = `${getScreenshotDir()}/${shot.screenshotName}-diff.png`;
                 await writePNG(diffPNG, diffPath);
                 const diffWebpPath = await convertToWebP(diffPath);
 
@@ -327,6 +326,10 @@ async function runTests(pendingTests) {
     // let runtimeCode = fs.readFileSync(path.join(__dirname, 'tmp/testRuntime.js'), 'utf-8');
     let runtimeCode = await buildRuntimeCode();
     runtimeCode = `window.__TEST_PLAYBACK_SPEED__ = ${program.speed || 1};\n${runtimeCode}`;
+
+    process.on('exit', () => {
+        browser.close();
+    });
 
     try {
         for (let testOpt of pendingTests) {

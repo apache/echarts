@@ -57,10 +57,10 @@
     "test:dts": "node build/testDts.js",
     "mktest": "node test/build/mktest.js",
     "mktest:help": "node test/build/mktest.js -h",
-    "checktype": "./node_modules/.bin/tsc --noEmit",
-    "lint": "./node_modules/.bin/eslint src/**/*.ts extension-src/**/*.ts",
-    "lint:fix": "./node_modules/.bin/eslint --fix src/**/*.ts extension-src/**/*.ts",
-    "lint:dist": "echo 'It might take a while. Please wait ...' && ./node_modules/.bin/jshint --config .jshintrc-dist dist/echarts.js"
+    "checktype": "tsc --noEmit",
+    "lint": "npx eslint src/**/*.ts extension-src/**/*.ts",
+    "lint:fix": "npx eslint --fix src/**/*.ts extension-src/**/*.ts",
+    "lint:dist": "echo 'It might take a while. Please wait ...' && npx jshint --config .jshintrc-dist dist/echarts.js"
   },
   "dependencies": {
     "tslib": "2.0.3",

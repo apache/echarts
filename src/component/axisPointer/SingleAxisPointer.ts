@@ -20,7 +20,6 @@
 import BaseAxisPointer, { AxisPointerElementOptions } from './BaseAxisPointer';
 import * as viewHelper from './viewHelper';
 import * as singleAxisHelper from '../../coord/single/singleAxisHelper';
-import AxisView from '../axis/AxisView';
 import SingleAxis from '../../coord/single/SingleAxis';
 import Single from '../../coord/single/Single';
 import { PathProps } from 'zrender/src/graphic/Path';

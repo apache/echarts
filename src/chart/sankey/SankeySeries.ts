@@ -260,9 +260,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         }
     }
 
-    optionUpdated() {
-        const option = this.option;
-    }
+    optionUpdated() {}
 
     // Override Series.getDataParams()
     getDataParams(dataIndex: number, dataType: 'node' | 'edge') {

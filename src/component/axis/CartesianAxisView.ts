@@ -27,7 +27,6 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
-import ComponentView from '../../view/Component';
 import { Payload } from '../../util/types';
 
 const axisBuilderAttrs = [
