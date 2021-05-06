@@ -64,12 +64,12 @@ function assembleArrow(
     borderColor: ZRColor,
     arrowPosition: TooltipOption['position']
 ) {
-    const backgroundColor = tooltipModel.get('backgroundColor');
-    const borderWidth = tooltipModel.get('borderWidth');
-
     if (!isString(arrowPosition) || arrowPosition === 'inside') {
         return '';
     }
+
+    const backgroundColor = tooltipModel.get('backgroundColor');
+    const borderWidth = tooltipModel.get('borderWidth');
 
     borderColor = convertToColorString(borderColor);
     const arrowPos = mirrorPos(arrowPosition);
