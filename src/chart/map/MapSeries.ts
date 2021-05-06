@@ -235,13 +235,18 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             0,
             opt.itemWidth,
             opt.itemHeight,
-            opt.itemStyle.fill,
-            opt.symbolKeepAspect
+            opt.itemStyle.fill
         );
 
         symbol.setStyle(opt.itemStyle);
         // Map do not use itemStyle.borderWidth as border width
         symbol.style.stroke = 'none';
+
+        const symbolRotate = opt.symbolRotate === 'inherit'
+            ? 0
+            : (opt.symbolRotate || 0);
+        symbol.rotation = symbolRotate * Math.PI / 180;
+        symbol.setOrigin([opt.itemWidth / 2, opt.itemHeight / 2]);
 
         if (symbolType.indexOf('empty') > -1) {
             symbol.style.stroke = symbol.style.fill;

@@ -114,9 +114,7 @@ export interface LegendStyleOption {
 
     textStyle?: LabelOption
 
-    symbolKeepAspect?: boolean
-
-    symbolSize?: number | 'auto' | 'inherit'
+    symbolRotate?: number | 'inherit'
 }
 
 interface DataItem extends LegendStyleOption {
@@ -142,7 +140,7 @@ export interface LegendSymbolParams {
      * symbolType is from legend.icon, legend.data.icon, or series visual
      */
     symbolType: string,
-    symbolKeepAspect: boolean,
+    symbolRotate: number | 'inherit',
     itemStyle: PathStyleProps,
     lineStyle: LineStyleProps
 }
@@ -455,7 +453,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         itemGap: 10,
         itemWidth: 25,
         itemHeight: 14,
-        symbolSize: 'auto',
+        symbolRotate: 'inherit',
 
         inactiveColor: '#ccc',
         inactiveBorderColor: '#ccc',

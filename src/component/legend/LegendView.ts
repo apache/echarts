@@ -215,8 +215,6 @@ class LegendView extends ComponentView {
                  */
                 const style = data.getVisual('style');
 
-                data.getVisual('symbolSize');
-
                 const itemGroup = this._createItem(
                     seriesModel, name, dataIndex,
                     legendItemModel, legendModel, itemAlign,
@@ -349,7 +347,8 @@ class LegendView extends ComponentView {
         const itemHeight = legendModel.get('itemHeight');
         const isSelected = legendModel.isSelected(name);
 
-        const symbolKeepAspect = itemModel.get('symbolKeepAspect');
+        let symbolRotate = itemModel.get('symbolRotate');
+
         const legendIconType = itemModel.get('icon');
         symbolType = legendIconType || symbolType || 'roundRect';
 
@@ -369,25 +368,28 @@ class LegendView extends ComponentView {
         const textStyleModel = itemModel.getModel('textStyle');
 
         if (typeof seriesModel.getLegendIcon === 'function'
-            && !legendIconType
+            && (!legendIconType || legendIconType === 'inherit')
         ) {
             // Series has specific way to define legend icon
             itemGroup.add(seriesModel.getLegendIcon({
                 itemWidth,
                 itemHeight,
                 symbolType,
-                symbolKeepAspect,
+                symbolRotate,
                 itemStyle: style.itemStyle,
                 lineStyle: style.lineStyle
             }));
         }
         else {
             // Use default legend icon policy for most series
+            const rotate = symbolRotate === 'inherit'
+                ? seriesModel.get('symbolRotate')
+                : symbolRotate;
             itemGroup.add(getDefaultLegendIcon({
                 itemWidth,
                 itemHeight,
                 symbolType,
-                symbolKeepAspect,
+                symbolRotate: rotate,
                 itemStyle: style.itemStyle,
                 lineStyle: style.lineStyle
             }));
@@ -652,11 +654,13 @@ function getDefaultLegendIcon(opt: LegendSymbolParams): ECSymbol {
         0,
         opt.itemWidth,
         opt.itemHeight,
-        opt.itemStyle.fill,
-        opt.symbolKeepAspect
+        opt.itemStyle.fill
     );
 
     symbol.setStyle(opt.itemStyle);
+
+    symbol.rotation = (opt.symbolRotate as number || 0) * Math.PI / 180;
+    symbol.setOrigin([opt.itemWidth / 2, opt.itemHeight / 2]);
 
     if (symboType.indexOf('empty') > -1) {
         symbol.style.stroke = symbol.style.fill;
