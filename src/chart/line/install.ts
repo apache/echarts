@@ -19,7 +19,6 @@
 
 import LineSeries from './LineSeries';
 import LineView from './LineView';
-import LineSeriesModel from './LineSeries';
 
 // In case developer forget to include grid component
 
@@ -37,7 +36,7 @@ export function install(registers: EChartsExtensionInstallRegisters) {
 
     registers.registerVisual({
         seriesType: 'line',
-        reset: function (seriesModel: LineSeriesModel) {
+        reset: function (seriesModel: LineSeries) {
             const data = seriesModel.getData();
             // Visual coding for legend
             const lineStyle = seriesModel.getModel('lineStyle').getLineStyle();

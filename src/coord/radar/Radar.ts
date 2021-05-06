@@ -26,7 +26,6 @@ import {
     getScaleExtent,
     niceScaleExtent
 } from '../axisHelper';
-import CoordinateSystemManager from '../../core/CoordinateSystem';
 import { CoordinateSystemMaster, CoordinateSystem } from '../CoordinateSystem';
 import RadarModel from './RadarModel';
 import GlobalModel from '../../model/Global';
