@@ -58,9 +58,9 @@
     "mktest": "node test/build/mktest.js",
     "mktest:help": "node test/build/mktest.js -h",
     "checktype": "tsc --noEmit",
-    "lint": "eslint src/**/*.ts extension-src/**/*.ts",
-    "lint:fix": "eslint --fix src/**/*.ts extension-src/**/*.ts",
-    "lint:dist": "echo 'It might take a while. Please wait ...' && jshint --config .jshintrc-dist dist/echarts.js"
+    "lint": "npx eslint src/**/*.ts extension-src/**/*.ts",
+    "lint:fix": "npx eslint --fix src/**/*.ts extension-src/**/*.ts",
+    "lint:dist": "echo 'It might take a while. Please wait ...' && npx jshint --config .jshintrc-dist dist/echarts.js"
   },
   "dependencies": {
     "tslib": "2.0.3",
