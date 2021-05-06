@@ -76,7 +76,7 @@ export default function lineAnimationDiff(
     const rawIndices: number[] = [];
 
     const newDataOldCoordInfo = prepareDataCoordInfo(oldCoordSys, newData, oldValueOrigin);
-    const oldDataNewCoordInfo = prepareDataCoordInfo(newCoordSys, oldData, newValueOrigin);
+    // const oldDataNewCoordInfo = prepareDataCoordInfo(newCoordSys, oldData, newValueOrigin);
 
     const oldPoints = oldData.getLayout('points') as number[] || [];
     const newPoints = newData.getLayout('points') as number[] || [];
