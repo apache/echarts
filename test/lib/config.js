@@ -62,9 +62,10 @@
                 'ecSimpleOptionPlayer': 'lib/ecSimpleOptionPlayer',
                 // 'ecStat': 'http://localhost:8001/echarts/echarts-stat/dist/ecStat',
                 'geoJson': '../geoData/geoJson',
-                'theme': 'theme',
+                'theme': '../theme',
                 'data': 'data',
                 'map': 'data/map',
+                'i18n': '../i18n',
                 'extension': '../dist/extension',
             }
         });

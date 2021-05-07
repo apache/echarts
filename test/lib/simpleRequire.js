@@ -26,7 +26,6 @@
 // Limitations:
 //  1. Not support ancient browsers.
 //  2. Only `paths` can be configured
-//  3. Not support defined id.
 
 (function (global) {
 
@@ -36,22 +35,27 @@
     var currentDefinedDeps;
     var exportsPlaceholder = {};
 
+    var ALLOWED_EXTS = [
+        'gexf', 'txt', 'csv',    // text
+        'js', 'json'
+    ];
+
     // Promise to get modules exports.
     var mods = {};
 
     function loadText(url) {
-        new Promise(function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
             var xhr = new XMLHttpRequest();
             xhr.onload = function (e) {
                 if (xhr.status === 200) {
                     resolve(xhr.responseText);
                 }
                 else {
-                    reject('Error loading ' + url);
+                    reject('require: failed to load ' + url);
                 }
             }
             xhr.onerror = function (e) {
-                reject('Error loading ' + url);
+                reject('require: failed to load ' + url);
             }
             xhr.open('GET', url);
             xhr.send();
@@ -59,7 +63,7 @@
     }
 
     function loadJSON(url) {
-        return loadJSON(url).then(function (text) {
+        return loadText(url).then(function (text) {
             return JSON.parse(text);
         });
     }
@@ -72,7 +76,7 @@
                 resolve();
             }
             script.onerror = function () {
-                reject('Error loading ' + url);
+                reject('require: failed to load ' + url);
             }
             script.src = url;
             document.head.appendChild(script);
@@ -91,9 +95,9 @@
             }
         }
 
-        var filename = p.split('/').pop();
+        var ext = getExt(p);
         // Add .js ext automatically
-        if (filename.indexOf('.') < 0) {
+        if (ALLOWED_EXTS.indexOf(ext) < 0) {
             p = p + '.js';
         }
 
@@ -102,6 +106,22 @@
 
     function getExt(str) {
         return str.split('.').pop();
+    }
+
+    function invokeFactory(factory, depsPromise) {
+        if (typeof factory === 'function') {
+            return depsPromise.then(function (deps) {
+                var modExports = {};
+                var factoryRet = factory.apply(null, deps.map(function (dep) {
+                    return dep === exportsPlaceholder ? modExports : dep;
+                }));
+                return factoryRet || modExports;
+            });
+        }
+        else {
+            // define(JSONObject)
+            return factory;
+        }
     }
 
     // Simplify the logic. don't support id.
@@ -123,8 +143,14 @@
                 }
             }
         }
-        currentDefinedFactory = factory;
-        currentDefinedDeps = loadDeps(depsIds || []);
+
+        if (modId) {
+            mods[modId] = invokeFactory(factory, loadDeps(depsIds));
+        }
+        else {
+            currentDefinedFactory = factory;
+            currentDefinedDeps = loadDeps(depsIds || []);
+        }
     }
 
     function loadMod(modId) {
@@ -134,14 +160,7 @@
             function loaded(exports) {
                 var ret;
                 if (currentDefinedDeps) {
-                    var factory = currentDefinedFactory;
-                    ret = currentDefinedDeps.then(function (deps) {
-                        var modExports = {};
-                        factory.apply(null, deps.map(function (dep) {
-                            return dep === exportsPlaceholder ? modExports : dep;
-                        }));
-                        return modExports;
-                    });
+                    ret = invokeFactory(currentDefinedFactory, currentDefinedDeps);
                 }
                 else {
                     ret = exports;
@@ -177,14 +196,34 @@
             }
         }));
     }
+
+    var pendingRequireCallbacks = [];
+    var pendingRequireCallbackParams = [];
+    var requireCount = 0;
     function require(depsIds, cb) {
         if (typeof depsIds === 'string') {
             depsIds = [depsIds];
         }
         // Batch multiple requires callback theme in one frame.
         // Ensure all instances are started at one time and avoid time difference in visual regression test
+        var cbIdx = requireCount;
+        pendingRequireCallbacks.push(cb);
+        requireCount++;
+
         loadDeps(depsIds).then(function (deps) {
-            cb && cb.apply(null, deps);
+            pendingRequireCallbackParams[cbIdx] = deps;
+            requireCount--;
+
+            if (requireCount === 0) {   // Flush
+                var requireCallbackToFlush = pendingRequireCallbacks;
+                var requireCallbackParamsToFlush = pendingRequireCallbackParams;
+                // Clear before flush. Avoid more require in the callback.
+                pendingRequireCallbacks = [];
+                pendingRequireCallbackParams = [];
+                for (var i = 0; i < requireCallbackToFlush.length; i++) {
+                    requireCallbackToFlush[i] && requireCallbackToFlush[i].apply(null, requireCallbackParamsToFlush[i]);
+                }
+            }
         });
     }
 
