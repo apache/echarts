@@ -57,7 +57,7 @@ window.__VST_RUN_ACTIONS__ = async function (actions) {
     timeline.resume();
     const actionPlayback = new ActionPlayback();
     for (let action of actions) {
-        await actionPlayback.runAction(action);
+        await actionPlayback.runAction(action, __VST_PLAYBACK_SPEED__);
     }
     actionPlayback.stop();
 }

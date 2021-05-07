@@ -361,7 +361,6 @@ async function start() {
     });
 
     io.of('/recorder').on('connect', async socket => {
-        await updateTestsList();
         socket.on('saveActions', data => {
             if (data.testName) {
                 fse.outputFile(
@@ -403,6 +402,7 @@ async function start() {
         });
 
         socket.emit('getTests', {
+            // TODO updateTestsList.
             tests: getTestsList().map(test => {
                 return {
                     name: test.name,

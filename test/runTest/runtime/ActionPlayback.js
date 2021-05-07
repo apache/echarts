@@ -68,22 +68,22 @@ export class ActionPlayback {
 
         let self = this;
 
+        async function takeScreenshot() {
+            // Pause timeline when doing screenshot to avoid screenshot needs taking a while.
+            timeline.pause();
+            await __VST_ACTION_SCREENSHOT__(action);
+            timeline.resume();
+        }
+
         return new Promise(resolve => {
             async function tick() {
+                // Date has multiplied playbackSpeed
                 let current = Date.now();
                 let dTime = current - self._current;
-                self._elapsedTime += dTime * playbackSpeed;
+                self._elapsedTime += dTime;
                 self._current = current;
 
-                await self._update(
-                    async () => {
-                        // Pause timeline when doing screenshot to avoid screenshot needs taking a while.
-                        timeline.pause();
-                        await __VST_ACTION_SCREENSHOT__(action);
-                        timeline.resume();
-                    },
-                    playbackSpeed
-                );
+                await self._update(takeScreenshot, playbackSpeed);
                 if (self._currentOpIndex >= self._ops.length) {
                     // Finished
                     resolve();
@@ -104,7 +104,7 @@ export class ActionPlayback {
         }
     }
 
-    async _update(playbackSpeed) {
+    async _update(takeScreenshot, playbackSpeed) {
         let op = this._ops[this._currentOpIndex];
 
         if (op.time > this._elapsedTime) {
@@ -112,8 +112,7 @@ export class ActionPlayback {
             return;
         }
 
-        let page = this._page;
-        let takenScreenshot = false;
+        let screenshotTaken = false;
         switch (op.type) {
             case 'mousedown':
                 await __VST_MOUSE_MOVE__(op.x, op.y);
@@ -121,7 +120,7 @@ export class ActionPlayback {
                 break;
             case 'mouseup':
                 await __VST_MOUSE_MOVE__(op.x, op.y);
-                await page.mouse.up();
+                await __VST_MOUSE_UP__();
                 break;
             case 'mousemove':
                 await __VST_MOUSE_MOVE__(op.x, op.y);
@@ -143,7 +142,7 @@ export class ActionPlayback {
                 break;
             case 'screenshot':
                 await takeScreenshot();
-                takenScreenshot = true;
+                screenshotTaken = true;
                 break;
             case 'valuechange':
                 document.querySelector(op.selector).value = op.value;
@@ -159,14 +158,14 @@ export class ActionPlayback {
             // TODO Configuration time
             await waitTime(delay / playbackSpeed);
             await takeScreenshot();
-            takenScreenshot = true;
+            screenshotTaken = true;
             this._currentOpIndex++;
         }
 
         if (this._isLastOpMousewheel && op.type !== 'mousewheel') {
             // Only take screenshot after mousewheel finished
-            if (!takenScreenshot) {
-                takeScreenshot();
+            if (!screenshotTaken) {
+                await takeScreenshot();
             }
             this._isLastOpMousewheel = false;
         }

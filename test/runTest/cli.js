@@ -122,7 +122,7 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
     };
 }
 
-async function runActions(page, testOpt, isExpected, screenshots) {
+async function runActions(page, testOpt) {
     let actions;
     try {
         let actContent = fs.readFileSync(path.join(__dirname, 'actions', testOpt.name + '.json'));
@@ -132,10 +132,11 @@ async function runActions(page, testOpt, isExpected, screenshots) {
         // Can't find actions
         return;
     }
-
-    await page.evaluate(async (actions) => {
-        await __VST_RUN_ACTIONS__(actions);
-    }, actions);
+    if (actions.length > 0) {
+        await page.evaluate(async (actions) => {
+            await __VST_RUN_ACTIONS__(actions);
+        }, actions);
+    }
 }
 
 async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
@@ -147,7 +148,6 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     const page = await browser.newPage();
     page.setRequestInterception(true);
     page.on('request', request => replaceEChartsVersion(request, version));
-
 
     async function pageScreenshot() {
         if (!program.save) {
@@ -226,18 +226,18 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
             timeout: 10000
         });
 
-        let autoscreenshotTimeout;
-
+        let autoScreenshotTimeout;
+        // TODO Use waitForFunction?
         await Promise.race([
             waitClientScreenshot,
             new Promise(resolve => {
-                autoscreenshotTimeout = setTimeout(() => {
+                autoScreenshotTimeout = setTimeout(() => {
                     console.log(`Automatically screenshot in ${testNameFromFile(fileUrl)}`);
                     pageScreenshot().then(resolve)
                 }, 1000)
             })
         ]);
-        clearTimeout(autoscreenshotTimeout);
+        clearTimeout(autoScreenshotTimeout);
 
         await runActions(page, testOpt, isExpected, screenshots);
     }
