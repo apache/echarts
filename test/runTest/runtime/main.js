@@ -18,13 +18,8 @@
 */
 
 import seedrandom from 'seedrandom';
-import MockDate from './MockDate';
-
-window.Date = MockDate;
-
-if (typeof __TEST_PLAYBACK_SPEED__ === 'undefined') {
-    window.__TEST_PLAYBACK_SPEED__ = 1;
-}
+import { ActionPlayback } from './ActionPlayback';
+import * as timeline from './timeline';
 
 let myRandom = new seedrandom('echarts-random');
 // Random for echarts code.
@@ -41,6 +36,31 @@ window.__random__inner__ = function () {
     const val = myRandom2();
     return val;
 };
+
+let vstStarted = false;
+
+window.__VST_START__ = function () {
+    if (vstStarted) {
+        return;
+    }
+    vstStarted = true;
+    timeline.start();
+    // Screenshot after 500ms
+    setTimeout(function () {
+        // Pause timeline until run actions.
+        timeline.pause();
+        __VST_FULL_SCREENSHOT__();
+    }, 500);
+}
+
+window.__VST_RUN_ACTIONS__ = async function (actions) {
+    timeline.resume();
+    const actionPlayback = new ActionPlayback();
+    for (let action of actions) {
+        await actionPlayback.runAction(action);
+    }
+    actionPlayback.stop();
+}
 
 window.addEventListener('DOMContentLoaded', () => {
     let style = document.createElement('style');

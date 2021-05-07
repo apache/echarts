@@ -17,20 +17,24 @@
 * under the License.
 */
 
-const {waitTime} = require('./util');
+import * as timeline from './timeline';
 
-module.exports = class Timeline {
+function waitTime(time) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve();
+        }, time);
+    });
+};
 
-    constructor(page) {
-        this._page = page;
+export class ActionPlayback {
 
+    constructor() {
         this._timer = 0;
         this._current = 0;
 
         this._ops = [];
         this._currentOpIndex = 0;
-
-        this._client;
 
         this._isLastOpMousewheel = false;
     }
@@ -43,11 +47,7 @@ module.exports = class Timeline {
     }
 
 
-    async runAction(action, takeScreenshot, playbackSpeed) {
-        if (!this._client) {
-            this._client = await this._page.target().createCDPSession();
-        }
-
+    async runAction(action, playbackSpeed) {
         this.stop();
 
         playbackSpeed = playbackSpeed || 1;
@@ -75,13 +75,21 @@ module.exports = class Timeline {
                 self._elapsedTime += dTime * playbackSpeed;
                 self._current = current;
 
-                await self._update(takeScreenshot, playbackSpeed);
+                await self._update(
+                    async () => {
+                        // Pause timeline when doing screenshot to avoid screenshot needs taking a while.
+                        timeline.pause();
+                        await __VST_ACTION_SCREENSHOT__(action);
+                        timeline.resume();
+                    },
+                    playbackSpeed
+                );
                 if (self._currentOpIndex >= self._ops.length) {
                     // Finished
                     resolve();
                 }
                 else {
-                    self._timer = setTimeout(tick, 16);
+                    self._timer = setTimeout(tick, 0);
                 }
             }
             tick();
@@ -96,7 +104,7 @@ module.exports = class Timeline {
         }
     }
 
-    async _update(takeScreenshot, playbackSpeed) {
+    async _update(playbackSpeed) {
         let op = this._ops[this._currentOpIndex];
 
         if (op.time > this._elapsedTime) {
@@ -108,50 +116,37 @@ module.exports = class Timeline {
         let takenScreenshot = false;
         switch (op.type) {
             case 'mousedown':
-                await page.mouse.move(op.x, op.y);
-                await page.mouse.down();
+                await __VST_MOUSE_MOVE__(op.x, op.y);
+                await __VST_MOUSE_DOWN__();
                 break;
             case 'mouseup':
-                await page.mouse.move(op.x, op.y);
+                await __VST_MOUSE_MOVE__(op.x, op.y);
                 await page.mouse.up();
                 break;
             case 'mousemove':
-                await page.mouse.move(op.x, op.y);
+                await __VST_MOUSE_MOVE__(op.x, op.y);
                 break;
             case 'mousewheel':
-                await page.evaluate((x, y, deltaX, deltaY) => {
-                    let element = document.elementFromPoint(x, y);
-                    // Here dispatch mousewheel event because echarts used it.
-                    // TODO Consider upgrade?
-                    let event = new WheelEvent('mousewheel', {
-                        // PENDING
-                        // Needs inverse delta?
-                        deltaY,
-                        clientX: x, clientY: y,
-                        // Needs bubble to parent container
-                        bubbles: true
-                    });
-
-                    element.dispatchEvent(event);
-                }, op.x, op.y, op.deltaX || 0, op.deltaY);
+                let element = document.elementFromPoint(op.x, op.y);
+                // Here dispatch mousewheel event because echarts used it.
+                // TODO Consider upgrade?
+                let event = new WheelEvent('mousewheel', {
+                    // PENDING
+                    // Needs inverse delta?
+                    deltaY,
+                    clientX: x, clientY: y,
+                    // Needs bubble to parent container
+                    bubbles: true
+                });
+                element.dispatchEvent(event);
                 this._isLastOpMousewheel = true;
-                // console.log('mousewheel', op.x, op.y, op.deltaX, op.deltaY);
-                // await this._client.send('Input.dispatchMouseEvent', {
-                //     type: 'mouseWheel',
-                //     x: op.x,
-                //     y: op.y,
-                //     deltaX: op.deltaX,
-                //     deltaY: op.deltaY
-                // });
                 break;
             case 'screenshot':
                 await takeScreenshot();
                 takenScreenshot = true;
                 break;
             case 'valuechange':
-                if (op.target === 'select') {
-                    await page.select(op.selector, op.value);
-                }
+                document.querySelector(op.selector).value = op.value;
                 break;
         }
 

@@ -182,7 +182,7 @@ const app = new Vue({
                     finishedCount++;
                 }
             });
-            return +(finishedCount / this.fullTests.length * 100).toFixed(0) || 0;
+            return +(finishedCount / this.fullTests.length * 100).toFixed(1) || 0;
         },
 
         tests() {

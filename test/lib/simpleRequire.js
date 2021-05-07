@@ -26,7 +26,6 @@
 // Limitations:
 //  1. Not support ancient browsers.
 //  2. Only `paths` can be configured
-
 (function (global) {
 
     var requireCfg = { paths: {} }
@@ -220,6 +219,12 @@
                 // Clear before flush. Avoid more require in the callback.
                 pendingRequireCallbacks = [];
                 pendingRequireCallbackParams = [];
+
+                // Start visual regression test before callback
+                if (typeof __VST_START__ !== 'undefined') {
+                    __VST_START__();
+                }
+
                 for (var i = 0; i < requireCallbackToFlush.length; i++) {
                     requireCallbackToFlush[i] && requireCallbackToFlush[i].apply(null, requireCallbackParamsToFlush[i]);
                 }
