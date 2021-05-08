@@ -176,6 +176,10 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
         });
     });
 
+    page.exposeFunction('__VST_LOG_ERRORS__', (err) =>  {
+        errors.push(err);
+    });
+
     let actionScreenshotCount = {};
 
     await page.exposeFunction('__VST_ACTION_SCREENSHOT__', async (action) =>  {

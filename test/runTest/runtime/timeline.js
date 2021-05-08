@@ -33,19 +33,29 @@ let realFrameStartTime = 0;
 let rafCbs = [];
 let frameIdx = 0;
 let timelineTime = 0;
+
+function runFrame() {
+    realFrameStartTime = NativeDate.now();
+    frameIdx++;
+    timelineTime += FIXED_FRAME_TIME;
+    const currentRafCbs = rafCbs;
+    // Clear before calling the callbacks. raf may be registered in the callback
+    rafCbs = [];
+    currentRafCbs.forEach((cb) => {
+        try {
+            cb();
+        }
+        catch (e) {
+            // Catch error to avoid following tasks.
+            __VST_LOG_ERRORS__(e.toString());
+        }
+    });
+    flushTimeoutHandlers();
+    flushIntervalHandlers();
+}
 function timelineLoop() {
     if (!__VST_TIMELINE_PAUSED__) {
-        realFrameStartTime = NativeDate.now();
-        frameIdx++;
-        timelineTime += FIXED_FRAME_TIME;
-        const currentRafCbs = rafCbs;
-        // Clear before calling the callbacks. raf may be registered in the callback
-        rafCbs = [];
-        currentRafCbs.forEach((cb) => {
-            cb();
-        });
-        flushTimeoutHandlers();
-        flushIntervalHandlers();
+        runFrame();
     }
     nativeRaf(timelineLoop);
 }
@@ -86,7 +96,13 @@ function flushTimeoutHandlers() {
     for (let i = 0; i < timeoutHandlers.length; i++) {
         const handler = timeoutHandlers[i];
         if (handler.frame === frameIdx) {
-            handler.callback();
+            try {
+                handler.callback();
+            }
+            catch (e) {
+                // Catch error to avoid following tasks.
+                __VST_LOG_ERRORS__(e.toString());
+            }
         }
         else {
             newTimeoutHandlers.push(handler);
@@ -120,7 +136,13 @@ function flushIntervalHandlers() {
     for (let i = 0; i < intervalHandlers.length; i++) {
         const handler = intervalHandlers[i];
         if (handler.frame === frameIdx) {
-            handler.callback();
+            try {
+                handler.callback();
+            }
+            catch (e) {
+                // Catch error to avoid following tasks.
+                __VST_LOG_ERRORS__(e.toString());
+            }
             handler.frame += handler.intervalFrame;
         }
     }
