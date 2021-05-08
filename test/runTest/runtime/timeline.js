@@ -131,7 +131,7 @@ function flushIntervalHandlers() {
 const NativeDate = window.Date;
 
 const mockNow = function () {
-    // speed up
+    // Use same time in one frame.
     return TIMELINE_START + timelineTime * window.__VST_PLAYBACK_SPEED__;
 };
 function MockDate(...args) {

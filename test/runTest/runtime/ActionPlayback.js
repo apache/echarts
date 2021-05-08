@@ -75,7 +75,7 @@ export class ActionPlayback {
             timeline.resume();
         }
 
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             async function tick() {
                 // Date has multiplied playbackSpeed
                 let current = Date.now();
@@ -83,7 +83,15 @@ export class ActionPlayback {
                 self._elapsedTime += dTime;
                 self._current = current;
 
-                await self._update(takeScreenshot, playbackSpeed);
+                try {
+                    await self._update(takeScreenshot, playbackSpeed);
+                }
+                catch (e) {
+                    // Stop running and throw error.
+                    reject(e);
+                    return;
+                }
+
                 if (self._currentOpIndex >= self._ops.length) {
                     // Finished
                     resolve();
@@ -115,15 +123,22 @@ export class ActionPlayback {
         let screenshotTaken = false;
         switch (op.type) {
             case 'mousedown':
+                // Pause timeline to avoid frame not sync.
+                timeline.pause();
                 await __VST_MOUSE_MOVE__(op.x, op.y);
                 await __VST_MOUSE_DOWN__();
+                timeline.resume();
                 break;
             case 'mouseup':
+                timeline.pause();
                 await __VST_MOUSE_MOVE__(op.x, op.y);
                 await __VST_MOUSE_UP__();
+                timeline.resume();
                 break;
             case 'mousemove':
+                timeline.pause();
                 await __VST_MOUSE_MOVE__(op.x, op.y);
+                timeline.resume();
                 break;
             case 'mousewheel':
                 let element = document.elementFromPoint(op.x, op.y);
@@ -132,8 +147,8 @@ export class ActionPlayback {
                 let event = new WheelEvent('mousewheel', {
                     // PENDING
                     // Needs inverse delta?
-                    deltaY,
-                    clientX: x, clientY: y,
+                    deltaY: op.deltaY,
+                    clientX: op.x, clientY: op.y,
                     // Needs bubble to parent container
                     bubbles: true
                 });

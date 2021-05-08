@@ -122,22 +122,6 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
     };
 }
 
-async function runActions(page, testOpt) {
-    let actions;
-    try {
-        let actContent = fs.readFileSync(path.join(__dirname, 'actions', testOpt.name + '.json'));
-        actions = JSON.parse(actContent);
-    }
-    catch (e) {
-        // Can't find actions
-        return;
-    }
-    if (actions.length > 0) {
-        await page.evaluate(async (actions) => {
-            await __VST_RUN_ACTIONS__(actions);
-        }, actions);
-    }
-}
 
 async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     const fileUrl = testOpt.fileUrl;
@@ -239,7 +223,23 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
         ]);
         clearTimeout(autoScreenshotTimeout);
 
-        await runActions(page, testOpt, isExpected, screenshots);
+        // Run actions
+        let actions = [];
+        try {
+            let actContent = fs.readFileSync(path.join(__dirname, 'actions', testOpt.name + '.json'));
+            actions = JSON.parse(actContent);
+        }
+        catch (e) {}
+        if (actions.length > 0) {
+            try {
+                await page.evaluate(async (actions) => {
+                    await __VST_RUN_ACTIONS__(actions);
+                }, actions);
+            }
+            catch (e) {
+                errors.push(e.toString());
+            }
+        }
     }
     catch(e) {
         console.error(e);

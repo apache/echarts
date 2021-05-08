@@ -203,7 +203,7 @@ function checkPuppeteer() {
     try {
         const packageConfig = require('puppeteer/package.json');
         console.log(`puppeteer version: ${packageConfig.version}`);
-        return semver.satisfies(packageConfig.version, '>=1.19.0');
+        return semver.satisfies(packageConfig.version, '>=5.5.0');
     }
     catch (e) {
         return false;
@@ -214,7 +214,7 @@ function checkPuppeteer() {
 async function start() {
     if (!checkPuppeteer()) {
         // TODO Check version.
-        console.error(`Can't find puppeteer >= 1.19.0, use 'npm install puppeteer --no-save' to install or update`);
+        console.error(`Can't find puppeteer >= 5.5.0, use 'npm install puppeteer --no-save' to install or update`);
         return;
     }
 

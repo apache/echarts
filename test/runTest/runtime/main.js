@@ -57,6 +57,7 @@ window.__VST_RUN_ACTIONS__ = async function (actions) {
     timeline.resume();
     const actionPlayback = new ActionPlayback();
     for (let action of actions) {
+        window.scrollTo(action.scrollX, action.scrollY);
         await actionPlayback.runAction(action, __VST_PLAYBACK_SPEED__);
     }
     actionPlayback.stop();

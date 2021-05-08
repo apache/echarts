@@ -38,8 +38,9 @@ under the License.
         <script src='lib/config.js'></script>
 		<script>
             require([
-                'echarts'
-            ], function (echarts) {
+                'echarts',
+				'data/large-data.json'
+            ], function (echarts, packedData) {
 					function round2(val) {
 						return Math.round(val * 100) / 100;
 					}
@@ -164,36 +165,29 @@ under the License.
 								}
 							}]
 						};
-						const startTime = performance.now();
+						const startTime = Date.now();
 						myChart.setOption(opts, {
 							notMerge: true
 						});
-						const endTime = performance.now();
+						const endTime = Date.now();
 						titleDom.innerHTML = `${title}(${data.length / 4 * 3}) ${(endTime - startTime).toFixed(0)} ms`;
 					}
 					let status = document.getElementById('status');
-					status.textContent = 'Fetching data.json (2.07MB)....';
 
-					fetch('data/large-data.json')
-						.then(r => r.json())
-						.then(packed => {
-							status.textContent = 'Warming up';
-							let data = prepData(packed);
+					status.textContent = 'Warming up';
+					let data = prepData(packedData);
 
-							setTimeout(function () {
-								for (let i = 0; i < 5; i++) {
-									makeChart(data, 'warmup');
-									makeChart(data, 'warmup', 'lttb');
-									makeChart(data, 'warmup', 'average');
-									makeChart(data, 'warmup', 'max');
-								}
-								status.textContent = 'Running';
-								setTimeout(() => makeChart(data, 'No Sampling', null), 500);
-								setTimeout(() => makeChart(data, 'LTTB Sampling', 'lttb'), 1000);
-								setTimeout(() => makeChart(data, 'Max Sampling', 'max'), 1500);
-								setTimeout(() => makeChart(data, 'Average Sampling', 'average'), 1500);
-							});
-						});
+					for (let i = 0; i < 5; i++) {
+						makeChart(data, 'warmup');
+						makeChart(data, 'warmup', 'lttb');
+						makeChart(data, 'warmup', 'average');
+						makeChart(data, 'warmup', 'max');
+					}
+					status.textContent = 'Running';
+					makeChart(data, 'No Sampling', null);
+					setTimeout(() => makeChart(data, 'LTTB Sampling', 'lttb'), 200);
+					setTimeout(() => makeChart(data, 'Max Sampling', 'max'), 400);
+					setTimeout(() => makeChart(data, 'Average Sampling', 'average'), 600);
       });
 		</script>
 	</body>
