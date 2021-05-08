@@ -39,67 +39,65 @@ under the License.
 
             require([
                 'echarts',
-
-                'extension/dataTool'
-            ], function (echarts, dataTool) {
+                'extension/dataTool',
+                './data/les-miserables.gexf'
+            ], function (echarts, dataTool, xml) {
 
                 var gexf = dataTool.gexf;
 
                 var chart = echarts.init(document.getElementById('main'));
 
-                $.get('./data/les-miserables.gexf', function (xml) {
-                    var graph = gexf.parse(xml);
-                    var categories = [];
-                    for (var i = 0; i < 9; i++) {
-                        categories[i] = {
-                            name: '类目' + i
-                        };
-                    }
-                    graph.nodes.forEach(function (node) {
-                        node.itemStyle = null;
-                        node.symbolSize = 10;
-                        node.value = node.symbolSize;
-                        node.label = {
-                            normal: {
-                                show: node.symbolSize > 30
-                            }
-                        };
-                        node.category = node.attributes['modularity_class'];
-                        node.x = node.y = null;
-                    });
-                    chart.setOption({
-                        legend: [{
-                            // selectedMode: 'single',
-                            data: categories.map(function (a) {
-                                return a.name;
-                            })
-                        }],
-                        animationDurationUpdate: 1500,
-                        animationEasingUpdate: 'quinticInOut',
-                        series : [
-                            {
-                                name: 'Les Miserables',
-                                type: 'graph',
-                                layout: 'force',
-                                data: graph.nodes,
-                                links: graph.links,
-                                categories: categories,
-                                animation: false,
-                                roam: true,
-                                draggable: true,
-                                edgeSymbol: ['none', 'arrow'],
-                                edgeSymbolSize: 5,
-                                force: {
-                                    repulsion: [0, 100]
-                                },
-                                label: {
-                                    normal: {
-                                        position: 'right'
-                                    }
+                var graph = gexf.parse(xml);
+                var categories = [];
+                for (var i = 0; i < 9; i++) {
+                    categories[i] = {
+                        name: '类目' + i
+                    };
+                }
+                graph.nodes.forEach(function (node) {
+                    node.itemStyle = null;
+                    node.symbolSize = 10;
+                    node.value = node.symbolSize;
+                    node.label = {
+                        normal: {
+                            show: node.symbolSize > 30
+                        }
+                    };
+                    node.category = node.attributes['modularity_class'];
+                    node.x = node.y = null;
+                });
+                chart.setOption({
+                    legend: [{
+                        // selectedMode: 'single',
+                        data: categories.map(function (a) {
+                            return a.name;
+                        })
+                    }],
+                    animationDurationUpdate: 1500,
+                    animationEasingUpdate: 'quinticInOut',
+                    series : [
+                        {
+                            name: 'Les Miserables',
+                            type: 'graph',
+                            layout: 'force',
+                            data: graph.nodes,
+                            links: graph.links,
+                            categories: categories,
+                            animation: false,
+                            roam: true,
+                            draggable: true,
+                            edgeSymbol: ['none', 'arrow'],
+                            edgeSymbolSize: 5,
+                            force: {
+                                repulsion: [0, 100]
+                            },
+                            label: {
+                                normal: {
+                                    position: 'right'
                                 }
                             }
-                        ]
-                    });
+                        }
+                    ]
                 });
             });
         </script>

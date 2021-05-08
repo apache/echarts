@@ -40,9 +40,8 @@ under the License.
 
             require([
                 'echarts',
-                'extension/bmap'
-            ], function (echarts) {
-                $.get('./data/map/json/china.json', function (json) {
+                './data/map/json/china.json'
+            ], function (echarts, json) {
                     echarts.registerMap('china', json);
 
                     var myChart = echarts.init(document.getElementById('main'));
@@ -343,7 +342,6 @@ under the License.
                         },
                         series: series
                     });
-                });
             });
 
         </script>
