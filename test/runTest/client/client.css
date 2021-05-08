@@ -170,6 +170,7 @@
 .test-list li a.menu-link i {
     font-size: 16px;
     margin-left: 10px;
+    color: #ccc;
 }
 
 .test-list li.active {
