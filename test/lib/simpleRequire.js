@@ -29,8 +29,20 @@
 (function (global) {
 
     if (typeof __VST_INIT__ !== 'undefined') {
+        // In the visual regression test environment.
         __VST_INIT__();
+
+        var vstRunContextStr = localStorage.getItem('vstRunContext');
+        if (vstRunContextStr) {
+            window.__VST_RUN_CONTEXT__ = JSON.parse(vstRunContextStr);
+            localStorage.removeItem('vstRunContext');
+        }
+        else {
+            // Clear localStorage to make sure clean run.
+            localStorage.clear();
+        }
     }
+
 
     var requireCfg = { paths: {} }
 

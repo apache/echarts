@@ -39,6 +39,14 @@ export class ActionPlayback {
         this._isLastOpMousewheel = false;
     }
 
+    getContext() {
+        return {
+            elapsedTime: this._elapsedTime,
+            currentOpIndex: this._currentOpIndex,
+            isLastOpMouseWheel: this._isLastOpMousewheel
+        }
+    }
+
     _reset() {
         this._currentOpIndex = 0;
         this._current = Date.now();
@@ -46,8 +54,13 @@ export class ActionPlayback {
         this._isLastOpMousewheel = false;
     }
 
+    _restoreContext(ctx) {
+        this._elapsedTime = ctx.elapsedTime;
+        this._currentOpIndex = ctx.currentOpIndex;
+        this._isLastOpMousewheel = ctx.isLastOpMouseWheel;
+    }
 
-    async runAction(action, playbackSpeed) {
+    async runAction(action, playbackSpeed, ctxToRestore) {
         this.stop();
 
         playbackSpeed = playbackSpeed || 1;
@@ -65,6 +78,13 @@ export class ActionPlayback {
         });
 
         this._reset();
+
+        if (ctxToRestore) {
+            this._restoreContext(ctxToRestore);
+            // Usually restore context happens when page is reloaded after mouseup.
+            // In this case the _currentOpIndex is not increased yet.
+            this._currentOpIndex++;
+        }
 
         let self = this;
 

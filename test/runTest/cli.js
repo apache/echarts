@@ -179,6 +179,12 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
         });
     });
 
+    const waitForActionFinishManually = new Promise((resolve) => {
+        page.exposeFunction('__VST_FINISH_ACTIONS__', async () =>  {
+            resolve();
+        });
+    });
+
     page.exposeFunction('__VST_LOG_ERRORS__', (err) =>  {
         errors.push(err);
     });
@@ -210,6 +216,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
         logs.push(msg.text());
     });
     page.on('pageerror', error => {
+        console.error('Page Error: ', error.toString());
         errors.push(error.toString());
     });
     page.on('dialog', async dialog => {
@@ -235,7 +242,6 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
         // Wait do screenshot after inited
         await waitForScreenshot;
 
-        // Run actions
         let actions = [];
         try {
             let actContent = fs.readFileSync(path.join(__dirname, 'actions', testOpt.name + '.json'));
@@ -244,14 +250,17 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
         catch (e) {}
         if (actions.length > 0) {
             try {
-                await page.evaluate(async (actions) => {
-                    await __VST_RUN_ACTIONS__(actions);
+                page.evaluate((actions) => {
+                    __VST_RUN_ACTIONS__(actions);
                 }, actions);
             }
             catch (e) {
                 errors.push(e.toString());
             }
         }
+        // We need to use the actions finish signal if there is reload happens in the page.
+        // Because the original __VST_RUN_ACTIONS__ not exists anymore.
+        await waitForActionFinishManually;
     }
     catch(e) {
         console.error(e);

@@ -21,6 +21,8 @@ if (typeof __VST_PLAYBACK_SPEED__ === 'undefined') {
     window.__VST_PLAYBACK_SPEED__ = 1;
 }
 const nativeRaf = window.requestAnimationFrame;
+const nativeSetTimeout = window.setTimeout;
+const nativeSetInterval = window.setInterval;
 const FIXED_FRAME_TIME = 16;
 const MAX_FRAME_TIME = 80;
 const TIMELINE_START = 1566458693300;
@@ -190,3 +192,5 @@ export function pause() {
 export function resume() {
     window.__VST_TIMELINE_PAUSED__ = false;
 }
+
+export { nativeRaf, nativeSetInterval, nativeSetTimeout };

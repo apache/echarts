@@ -183,7 +183,7 @@ under the License.
                             ? target.checked ? 1 : 0
                             : target.value
                     );
-                    location.reload();
+                    typeof __VST_RELOAD__ !== 'undefined' && __VST_RELOAD__();
                 }
             };
         }

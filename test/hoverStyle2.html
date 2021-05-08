@@ -91,13 +91,13 @@ under the License.
                     text: 'NOT use hoverLayer',
                     onclick: function () {
                         setUseHoverLayer(false);
-                        location.reload();
+                        typeof __VST_RELOAD__ !==  'undefined' && __VST_RELOAD__();
                     }
                 }, {
                     text: 'Use hoverLayer',
                     onclick: function () {
                         setUseHoverLayer(true);
-                        location.reload();
+                        typeof __VST_RELOAD__ !==  'undefined' && __VST_RELOAD__();
                     }
                 }]
             }

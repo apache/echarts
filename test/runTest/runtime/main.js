@@ -45,23 +45,72 @@ window.__VST_START__ = function () {
     }
     vstStarted = true;
     timeline.start();
-    // Screenshot after 500ms
-    setTimeout(async () => {
-        // Pause timeline until run actions.
-        timeline.pause();
-        await __VST_FULL_SCREENSHOT__();
-    }, 500);
+
+    // TODO not support reload without simpleRequire
+    if (window.__VST_RUN_CONTEXT__) {
+        // Restore from previous run
+        setTimeout(async () => {
+            await __VST_RUN_ACTIONS__(
+                window.__VST_RUN_CONTEXT__.actions,
+                window.__VST_RUN_CONTEXT__.currentActionIndex,
+                window.__VST_RUN_CONTEXT__.currentActionContext
+            )
+        }, 500);
+    }
+    else {
+        // Screenshot after 2000ms (400ms if 5x speed), wait the animation to be finished
+        setTimeout(async () => {
+            // Pause timeline until run actions.
+            timeline.pause();
+            await __VST_FULL_SCREENSHOT__();
+        }, 2000);
+    }
 }
 
-window.__VST_RUN_ACTIONS__ = async function (actions) {
+function saveRunningContext(actions, actionIndex, playback) {
+    localStorage.setItem('vstRunContext', JSON.stringify({
+        actions: actions,
+        currentActionIndex: actionIndex,
+        currentActionContext: playback.getContext()
+    }));
+}
+
+window.__VST_RUN_ACTIONS__ = async function (actions, restoredActionIndex, restoredActionContext) {
+    // Actions can only bu runned once.
     timeline.resume();
+
     const actionPlayback = new ActionPlayback();
-    for (let action of actions) {
+
+    const nativeLocation = window.location;
+    let currentActionIndex = 0;
+
+    // Some test cases change the params through reload().
+    // We need to save the running info and keep running after reload.
+    // window.location seems can't be redefined anymore. So we can only provide helper functions.
+    window.__VST_RELOAD__ = function () {
+        saveRunningContext(actions, currentActionIndex, actionPlayback);
+        timeline.pause();   // Pause timeline to avoid send more messages.
+        timeline.nativeSetTimeout(() => {
+            // CDPSession pay be disconnected if reload immediately.
+            nativeLocation.reload();
+        }, 100);
+    }
+
+    for (const [index, action] of actions.entries()) {
+        currentActionIndex = index;
+        if (index < restoredActionIndex) {
+            continue;
+        }
         window.scrollTo(action.scrollX, action.scrollY);
-        await actionPlayback.runAction(action, __VST_PLAYBACK_SPEED__);
+        await actionPlayback.runAction(action, __VST_PLAYBACK_SPEED__, index === restoredActionIndex ? restoredActionContext : null);
+
     }
     actionPlayback.stop();
+
+    __VST_FINISH_ACTIONS__();
 }
+
+
 
 window.addEventListener('DOMContentLoaded', () => {
     let style = document.createElement('style');
