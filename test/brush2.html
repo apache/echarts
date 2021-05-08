@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
@@ -150,7 +150,7 @@ under the License.
 
             require([
                 'echarts',
-                'data/stock-DJI.json'
+                'data/stock-DJI.json.js'
             ], function (echarts, rawData) {
 
                 chart = echarts.init(document.getElementById('main1'), null, {
@@ -442,12 +442,6 @@ under the License.
             require([
                 'echarts',
                 'extension/dataTool',
-                // 'echarts/chart/graph',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/geo',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap',
                 'theme/vintage'
             ], function (echarts, dataTool) {
                 var gexf = dataTool.gexf;
@@ -510,11 +504,6 @@ under the License.
                                     }
                                 },
                                 focusNodeAdjacency: true,
-                                // edgeSymbol: ['none', 'arrow'],
-                                // scaleLimit: {
-                                //     min: 1.5,
-                                //     max: 2
-                                // },
                                 label: {
                                     normal: {
                                         position: 'right',

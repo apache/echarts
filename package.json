@@ -51,7 +51,6 @@
     "release": "npm run build:lib && npm run build:i18n && npm run build && npm run build:esm && npm run build:extension",
     "help": "node build/build.js --help",
     "test:visual": "node test/runTest/server.js",
-    "test:visual:report": "node test/runTest/genReport.js",
     "test": "npx jest --config test/ut/jest.config.js",
     "test:single": "npx jest --config test/ut/jest.config.js --coverage=false -t",
     "test:dts": "node build/testDts.js",

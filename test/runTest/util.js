@@ -27,7 +27,11 @@ const commonjs = require('@rollup/plugin-commonjs');
 const config = require('./config');
 
 function modifyEChartsCode(code) {
-    return code.replace(/Math.random/g, '__random__inner__');
+    return code.replace(/Math\.random/g, '__random__inner__')
+        // https://github.com/apache/echarts/blob/737e23c0054e6b501ecc6f562920cffae953b5c6/src/core/echarts.ts#L537
+        // This code will cause infinite loop if we reduce the precision of Date in the visual regression test.
+        // TODO: This is a very dirty HACK.
+        .replace('remainTime > 0', 'false');
 }
 
 module.exports.testNameFromFile = function(fileName) {
@@ -53,20 +57,22 @@ module.exports.getEChartsTestFileName = function () {
 };
 
 module.exports.prepareEChartsLib = function (version) {
-    let versionFolder = path.join(__dirname, getVersionDir(version));
+
+    const versionFolder = path.join(__dirname, getVersionDir(version));
+    const ecDownloadPath = `${versionFolder}/echarts.js`;
     fse.ensureDirSync(versionFolder);
     if (!version || version === 'local') {
         // Developing version, make sure it's new build
         fse.copySync(path.join(__dirname, '../../dist/echarts.js'), `${versionFolder}/echarts.js`);
-        let code = modifyEChartsCode(fs.readFileSync(`${versionFolder}/echarts.js`, 'utf-8'));
+        let code = modifyEChartsCode(fs.readFileSync(ecDownloadPath, 'utf-8'));
         fs.writeFileSync(`${versionFolder}/${module.exports.getEChartsTestFileName()}`, code, 'utf-8');
-        return Promise.resolve();
 
+        return Promise.resolve();
     }
     return new Promise(resolve => {
-        let testLibPath = `${versionFolder}/${module.exports.getEChartsTestFileName()}`;
-        if (!fs.existsSync(testLibPath)) {
-            const file = fs.createWriteStream(`${versionFolder}/echarts.js`);
+        const testLibPath = `${versionFolder}/${module.exports.getEChartsTestFileName()}`;
+        if (!fs.existsSync(ecDownloadPath)) {
+            const file = fs.createWriteStream();
             const isNightly = version.includes('-dev');
             const packageName = isNightly ? 'echarts-nightly' : 'echarts'
 
@@ -75,13 +81,17 @@ module.exports.prepareEChartsLib = function (version) {
                 response.pipe(file);
 
                 file.on('finish', () => {
-                    let code = modifyEChartsCode(fs.readFileSync(`${versionFolder}/echarts.js`, 'utf-8'));
+                    let code = modifyEChartsCode(fs.readFileSync(ecDownloadPath, 'utf-8'));
                     fs.writeFileSync(testLibPath, code, 'utf-8');
                     resolve();
                 });
             });
         }
         else {
+            // Always do code modifaction.
+            // In case we need to do replacement on old downloads.
+            let code = modifyEChartsCode(fs.readFileSync(ecDownloadPath, 'utf-8'));
+            fs.writeFileSync(testLibPath, code, 'utf-8');
             resolve();
         }
     });

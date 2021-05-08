@@ -203,7 +203,7 @@ function checkPuppeteer() {
     try {
         const packageConfig = require('puppeteer/package.json');
         console.log(`puppeteer version: ${packageConfig.version}`);
-        return semver.satisfies(packageConfig.version, '>=1.19.0');
+        return semver.satisfies(packageConfig.version, '>=9.0.0');
     }
     catch (e) {
         return false;
@@ -214,7 +214,7 @@ function checkPuppeteer() {
 async function start() {
     if (!checkPuppeteer()) {
         // TODO Check version.
-        console.error(`Can't find puppeteer >= 1.19.0, use 'npm install puppeteer --no-save' to install or update`);
+        console.error(`Can't find puppeteer >= 9.0.0, run 'npm install' to update in the 'test/runTest' folder`);
         return;
     }
 
@@ -361,7 +361,6 @@ async function start() {
     });
 
     io.of('/recorder').on('connect', async socket => {
-        await updateTestsList();
         socket.on('saveActions', data => {
             if (data.testName) {
                 fse.outputFile(
@@ -403,6 +402,7 @@ async function start() {
         });
 
         socket.emit('getTests', {
+            // TODO updateTestsList.
             tests: getTestsList().map(test => {
                 return {
                     name: test.name,

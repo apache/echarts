@@ -35,14 +35,7 @@ under the License.
         <div id="main"></div>
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/component/legend',
-                // 'echarts/component/gridSimple',
-                // 'echarts/component/tooltip',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'svg'

@@ -22,7 +22,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/facePrint.js"></script>
     </head>
@@ -109,7 +109,7 @@ under the License.
                     btn.onclick = (function (cfg) {
                         return function () {
                             setLocalStorage(cfg.text);
-                            location.reload();
+                            typeof __VRT_RELOAD__ !== 'undefined' ? __VRT_RELOAD__() : location.reload();
                         };
                     })(config);
                     fmtBtnBox.appendChild(btn);
@@ -131,14 +131,7 @@ under the License.
         <script>
 
             require([
-                'echarts',
-                // 'echarts/chart/line',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/dataZoomInside',
-                // 'zrender/svg/svg'
+                'echarts'
             ], function (echarts) {
 
                 var xData = [];

@@ -24,7 +24,7 @@ under the License.
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="shortcut icon" href="https://echarts.apache.org/zh/images/favicon.png">
+    <link rel="shortcut icon" href="asset/echarts-logo.png">
     <title>Visual Regression Testing Tool</title>
 </head>
 <body>
@@ -94,7 +94,7 @@ under the License.
                         <a :href="'#' + test.name" class="menu-link">
                             {{test.name}}
                             <i v-if="test.actions" class="el-icon-video-camera-solid"></i>
-                            <span v-if="test.actions" style="font-size: 12px;">({{test.actions}})</span>
+                            <span v-if="test.actions" style="font-size: 12px;color: #ccc;">({{test.actions}})</span>
                         </a>
                     </li>
                 </ul>

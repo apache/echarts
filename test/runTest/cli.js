@@ -24,9 +24,8 @@ const fs = require('fs');
 const path = require('path');
 const program = require('commander');
 const compareScreenshot = require('./compareScreenshot');
-const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, waitTime, getEChartsTestFileName} = require('./util');
+const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, getEChartsTestFileName, waitTime} = require('./util');
 const {origin} = require('./config');
-const Timeline = require('./Timeline');
 const cwebpBin = require('cwebp-bin');
 const { execFile } = require('child_process');
 
@@ -111,6 +110,9 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
     let screenshotPath = path.join(getScreenshotDir(), `${screenshotName}-${screenshotPrefix}.png`);
     await page.screenshot({
         path: screenshotPath,
+        // https://github.com/puppeteer/puppeteer/issues/7043
+        // https://github.com/puppeteer/puppeteer/issues/6921#issuecomment-829586680
+        captureBeyondViewport: false,
         fullPage
     });
 
@@ -123,56 +125,6 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
     };
 }
 
-async function runActions(page, testOpt, isExpected, screenshots) {
-    let timeline = new Timeline(page);
-    let actions;
-    try {
-        let actContent = fs.readFileSync(path.join(__dirname, 'actions', testOpt.name + '.json'));
-        actions = JSON.parse(actContent);
-    }
-    catch (e) {
-        // Can't find actions
-        return;
-    }
-
-    let playbackSpeed = +program.speed;
-
-    for (let action of actions) {
-        await page.evaluate((x, y) => {
-            window.scrollTo(x, y);
-        }, action.scrollX, action.scrollY);
-
-        let count = 0;
-        async function _innerTakeScreenshot() {
-            if (!program.save) {
-                return;
-            }
-            const desc = action.desc || action.name;
-            const {
-                screenshotName,
-                screenshotPath,
-                rawScreenshotPath
-            } = await takeScreenshot(page, false, testOpt.fileUrl, desc, isExpected, count++);
-            screenshots.push({
-                screenshotName,
-                desc,
-                screenshotPath,
-                rawScreenshotPath
-            });
-        }
-        await timeline.runAction(action, _innerTakeScreenshot, playbackSpeed);
-
-        if (count === 0) {
-            await waitTime(200);
-            await _innerTakeScreenshot();
-        }
-
-        // const desc = action.desc || action.name;
-        // const {screenshotName, screenshotPath} = await takeScreenshot(page, false, testOpt.fileUrl, desc, version);
-        // screenshots.push({screenshotName, desc, screenshotPath});
-    }
-    timeline.stop();
-}
 
 async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     const fileUrl = testOpt.fileUrl;
@@ -184,12 +136,87 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     page.setRequestInterception(true);
     page.on('request', request => replaceEChartsVersion(request, version));
 
+    async function pageScreenshot() {
+        if (!program.save) {
+            return;
+        }
+        // Final shot.
+        await page.mouse.move(0, 0);
+        const desc = 'Full Shot';
+        const {
+            screenshotName,
+            screenshotPath,
+            rawScreenshotPath
+        } = await takeScreenshot(page, true, fileUrl, desc, isExpected);
+        screenshots.push({
+            screenshotName,
+            desc,
+            screenshotPath,
+            rawScreenshotPath
+        });
+    }
+
+    let vstInited = false;
+
+    await page.exposeFunction('__VRT_INIT__', () => {
+        vstInited = true;
+    });
+    await page.exposeFunction('__VRT_MOUSE_MOVE__', async (x, y) =>  {
+        await page.mouse.move(x, y);
+    });
+    await page.exposeFunction('__VRT_MOUSE_DOWN__', async () =>  {
+        await page.mouse.down();
+    });
+    await page.exposeFunction('__VRT_MOUSE_UP__', async () =>  {
+        await page.mouse.up();
+    });
+
+    // TODO should await exposeFunction here
+    const waitForScreenshot = new Promise((resolve) => {
+        page.exposeFunction('__VRT_FULL_SCREENSHOT__', async () =>  {
+            await pageScreenshot();
+            resolve();
+        });
+    });
+
+    const waitForActionFinishManually = new Promise((resolve) => {
+        page.exposeFunction('__VRT_FINISH_ACTIONS__', async () =>  {
+            resolve();
+        });
+    });
+
+    page.exposeFunction('__VRT_LOG_ERRORS__', (err) =>  {
+        errors.push(err);
+    });
+
+    let actionScreenshotCount = {};
+
+    await page.exposeFunction('__VRT_ACTION_SCREENSHOT__', async (action) =>  {
+        if (!program.save) {
+            return;
+        }
+        const desc = action.desc || action.name;
+        actionScreenshotCount[action.name] = actionScreenshotCount[action.name] || 0;
+        const {
+            screenshotName,
+            screenshotPath,
+            rawScreenshotPath
+        } = await takeScreenshot(page, false, testOpt.fileUrl, desc, isExpected, actionScreenshotCount[action.name]++);
+        screenshots.push({
+            screenshotName,
+            desc,
+            screenshotPath,
+            rawScreenshotPath
+        });
+    });
+
     await page.evaluateOnNewDocument(runtimeCode);
 
     page.on('console', msg => {
         logs.push(msg.text());
     });
     page.on('pageerror', error => {
+        console.error('Page Error: ', error.toString());
         errors.push(error.toString());
     });
     page.on('dialog', async dialog => {
@@ -197,31 +224,43 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     });
 
     try {
-        await page.setViewport({width: 800, height: 600});
+        await page.setViewport({
+            width: 800,
+            height: 600
+        });
         await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}`, {
             waitUntil: 'networkidle2',
             timeout: 10000
         });
 
-        await waitTime(500);  // Wait for animation or something else. Pending
-        // Final shot.
-        await page.mouse.move(0, 0);
-        if (program.save) {
-            let desc = 'Full Shot';
-            const {
-                screenshotName,
-                screenshotPath,
-                rawScreenshotPath
-            } = await takeScreenshot(page, true, fileUrl, desc, isExpected);
-            screenshots.push({
-                screenshotName,
-                desc,
-                screenshotPath,
-                rawScreenshotPath
+        if (!vstInited) {    // Not using simpleRequire in the test
+            console.log(`Automatically started in ${testNameFromFile(fileUrl)}`);
+            await page.evaluate(() => {
+                __VRT_START__();
             });
         }
+        // Wait do screenshot after inited
+        await waitForScreenshot;
 
-        await runActions(page, testOpt, isExpected, screenshots);
+        let actions = [];
+        try {
+            let actContent = fs.readFileSync(path.join(__dirname, 'actions', testOpt.name + '.json'));
+            actions = JSON.parse(actContent);
+        }
+        catch (e) {}
+        if (actions.length > 0) {
+            try {
+                page.evaluate((actions) => {
+                    __VRT_RUN_ACTIONS__(actions);
+                }, actions);
+            }
+            catch (e) {
+                errors.push(e.toString());
+            }
+            // We need to use the actions finish signal if there is reload happens in the page.
+            // Because the original __VRT_RUN_ACTIONS__ not exists anymore.
+            await waitForActionFinishManually;
+        }
     }
     catch(e) {
         console.error(e);
@@ -325,7 +364,7 @@ async function runTests(pendingTests) {
     // TODO Not hardcoded.
     // let runtimeCode = fs.readFileSync(path.join(__dirname, 'tmp/testRuntime.js'), 'utf-8');
     let runtimeCode = await buildRuntimeCode();
-    runtimeCode = `window.__TEST_PLAYBACK_SPEED__ = ${program.speed || 1};\n${runtimeCode}`;
+    runtimeCode = `window.__VRT_PLAYBACK_SPEED__ = ${program.speed || 1};\n${runtimeCode}`;
 
     process.on('exit', () => {
         browser.close();

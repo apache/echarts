@@ -17,22 +17,34 @@
 * under the License.
 */
 
-const {waitTime} = require('./util');
+import * as timeline from './timeline';
 
-module.exports = class Timeline {
+function waitTime(time) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve();
+        }, time);
+    });
+};
 
-    constructor(page) {
-        this._page = page;
+export class ActionPlayback {
 
+    constructor() {
         this._timer = 0;
         this._current = 0;
 
         this._ops = [];
         this._currentOpIndex = 0;
 
-        this._client;
-
         this._isLastOpMousewheel = false;
+    }
+
+    getContext() {
+        return {
+            elapsedTime: this._elapsedTime,
+            currentOpIndex: this._currentOpIndex,
+            isLastOpMouseWheel: this._isLastOpMousewheel
+        }
     }
 
     _reset() {
@@ -42,12 +54,13 @@ module.exports = class Timeline {
         this._isLastOpMousewheel = false;
     }
 
+    _restoreContext(ctx) {
+        this._elapsedTime = ctx.elapsedTime;
+        this._currentOpIndex = ctx.currentOpIndex;
+        this._isLastOpMousewheel = ctx.isLastOpMouseWheel;
+    }
 
-    async runAction(action, takeScreenshot, playbackSpeed) {
-        if (!this._client) {
-            this._client = await this._page.target().createCDPSession();
-        }
-
+    async runAction(action, playbackSpeed, ctxToRestore) {
         this.stop();
 
         playbackSpeed = playbackSpeed || 1;
@@ -66,22 +79,45 @@ module.exports = class Timeline {
 
         this._reset();
 
+        if (ctxToRestore) {
+            this._restoreContext(ctxToRestore);
+            // Usually restore context happens when page is reloaded after mouseup.
+            // In this case the _currentOpIndex is not increased yet.
+            this._currentOpIndex++;
+        }
+
         let self = this;
 
-        return new Promise(resolve => {
+        async function takeScreenshot() {
+            // Pause timeline when doing screenshot to avoid screenshot needs taking a while.
+            timeline.pause();
+            await __VRT_ACTION_SCREENSHOT__(action);
+            timeline.resume();
+        }
+
+        return new Promise((resolve, reject) => {
             async function tick() {
+                // Date has multiplied playbackSpeed
                 let current = Date.now();
                 let dTime = current - self._current;
-                self._elapsedTime += dTime * playbackSpeed;
+                self._elapsedTime += dTime;
                 self._current = current;
 
-                await self._update(takeScreenshot, playbackSpeed);
+                try {
+                    await self._update(takeScreenshot, playbackSpeed);
+                }
+                catch (e) {
+                    // Stop running and throw error.
+                    reject(e);
+                    return;
+                }
+
                 if (self._currentOpIndex >= self._ops.length) {
                     // Finished
                     resolve();
                 }
                 else {
-                    self._timer = setTimeout(tick, 16);
+                    self._timer = setTimeout(tick, 0);
                 }
             }
             tick();
@@ -104,54 +140,50 @@ module.exports = class Timeline {
             return;
         }
 
-        let page = this._page;
-        let takenScreenshot = false;
+        let screenshotTaken = false;
         switch (op.type) {
             case 'mousedown':
-                await page.mouse.move(op.x, op.y);
-                await page.mouse.down();
+                // Pause timeline to avoid frame not sync.
+                timeline.pause();
+                await __VRT_MOUSE_MOVE__(op.x, op.y);
+                await __VRT_MOUSE_DOWN__();
+                timeline.resume();
                 break;
             case 'mouseup':
-                await page.mouse.move(op.x, op.y);
-                await page.mouse.up();
+                timeline.pause();
+                await __VRT_MOUSE_MOVE__(op.x, op.y);
+                await __VRT_MOUSE_UP__();
+                if (window.__VRT_RELOAD_TRIGGERED__) {
+                    return;
+                }
+                timeline.resume();
                 break;
             case 'mousemove':
-                await page.mouse.move(op.x, op.y);
+                timeline.pause();
+                await __VRT_MOUSE_MOVE__(op.x, op.y);
+                timeline.resume();
                 break;
             case 'mousewheel':
-                await page.evaluate((x, y, deltaX, deltaY) => {
-                    let element = document.elementFromPoint(x, y);
-                    // Here dispatch mousewheel event because echarts used it.
-                    // TODO Consider upgrade?
-                    let event = new WheelEvent('mousewheel', {
-                        // PENDING
-                        // Needs inverse delta?
-                        deltaY,
-                        clientX: x, clientY: y,
-                        // Needs bubble to parent container
-                        bubbles: true
-                    });
-
-                    element.dispatchEvent(event);
-                }, op.x, op.y, op.deltaX || 0, op.deltaY);
+                let element = document.elementFromPoint(op.x, op.y);
+                // Here dispatch mousewheel event because echarts used it.
+                // TODO Consider upgrade?
+                let event = new WheelEvent('mousewheel', {
+                    // PENDING
+                    // Needs inverse delta?
+                    deltaY: op.deltaY,
+                    clientX: op.x, clientY: op.y,
+                    // Needs bubble to parent container
+                    bubbles: true
+                });
+                element.dispatchEvent(event);
                 this._isLastOpMousewheel = true;
-                // console.log('mousewheel', op.x, op.y, op.deltaX, op.deltaY);
-                // await this._client.send('Input.dispatchMouseEvent', {
-                //     type: 'mouseWheel',
-                //     x: op.x,
-                //     y: op.y,
-                //     deltaX: op.deltaX,
-                //     deltaY: op.deltaY
-                // });
                 break;
             case 'screenshot':
                 await takeScreenshot();
-                takenScreenshot = true;
+                screenshotTaken = true;
                 break;
             case 'valuechange':
-                if (op.target === 'select') {
-                    await page.select(op.selector, op.value);
-                }
+                document.querySelector(op.selector).value = op.value;
                 break;
         }
 
@@ -164,14 +196,14 @@ module.exports = class Timeline {
             // TODO Configuration time
             await waitTime(delay / playbackSpeed);
             await takeScreenshot();
-            takenScreenshot = true;
+            screenshotTaken = true;
             this._currentOpIndex++;
         }
 
         if (this._isLastOpMousewheel && op.type !== 'mousewheel') {
             // Only take screenshot after mousewheel finished
-            if (!takenScreenshot) {
-                takeScreenshot();
+            if (!screenshotTaken) {
+                await takeScreenshot();
             }
             this._isLastOpMousewheel = false;
         }
