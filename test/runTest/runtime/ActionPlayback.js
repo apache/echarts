@@ -153,6 +153,9 @@ export class ActionPlayback {
                 timeline.pause();
                 await __VST_MOUSE_MOVE__(op.x, op.y);
                 await __VST_MOUSE_UP__();
+                if (window.__VST_RELOAD_TRIGGERED__) {
+                    return;
+                }
                 timeline.resume();
                 break;
             case 'mousemove':

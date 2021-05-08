@@ -55,7 +55,7 @@ window.__VST_START__ = function () {
                 window.__VST_RUN_CONTEXT__.currentActionIndex,
                 window.__VST_RUN_CONTEXT__.currentActionContext
             )
-        }, 500);
+        }, 1000);
     }
     else {
         // Screenshot after 1000ms (200ms if 5x speed), wait the animation to be finished
@@ -88,8 +88,9 @@ window.__VST_RUN_ACTIONS__ = async function (actions, restoredActionIndex, resto
     // We need to save the running info and keep running after reload.
     // window.location seems can't be redefined anymore. So we can only provide helper functions.
     window.__VST_RELOAD__ = function () {
+        // Mark reload triggered and let ActionPlayback stop.
+        window.__VST_RELOAD_TRIGGERED__ = true;
         saveRunningContext(actions, currentActionIndex, actionPlayback);
-        timeline.pause();   // Pause timeline to avoid send more messages.
         timeline.nativeSetTimeout(() => {
             // CDPSession pay be disconnected if reload immediately.
             nativeLocation.reload();
