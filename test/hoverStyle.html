@@ -105,13 +105,13 @@ under the License.
                     text: 'NOT use hoverLayer',
                     onclick: function () {
                         setUseHoverLayer(false);
-                        typeof __VST_RELOAD__ !== 'undefined' && __VST_RELOAD__();
+                        typeof __VRT_RELOAD__ !== 'undefined' ? __VRT_RELOAD__() : location.reload();
                     }
                 }, {
                     text: 'Use hoverLayer',
                     onclick: function () {
                         setUseHoverLayer(true);
-                        typeof __VST_RELOAD__ !== 'undefined' && __VST_RELOAD__();
+                        typeof __VRT_RELOAD__ !== 'undefined' ? __VRT_RELOAD__() : location.reload();
                     }
                 }]
             }

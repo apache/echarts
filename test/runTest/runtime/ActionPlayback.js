@@ -91,7 +91,7 @@ export class ActionPlayback {
         async function takeScreenshot() {
             // Pause timeline when doing screenshot to avoid screenshot needs taking a while.
             timeline.pause();
-            await __VST_ACTION_SCREENSHOT__(action);
+            await __VRT_ACTION_SCREENSHOT__(action);
             timeline.resume();
         }
 
@@ -145,22 +145,22 @@ export class ActionPlayback {
             case 'mousedown':
                 // Pause timeline to avoid frame not sync.
                 timeline.pause();
-                await __VST_MOUSE_MOVE__(op.x, op.y);
-                await __VST_MOUSE_DOWN__();
+                await __VRT_MOUSE_MOVE__(op.x, op.y);
+                await __VRT_MOUSE_DOWN__();
                 timeline.resume();
                 break;
             case 'mouseup':
                 timeline.pause();
-                await __VST_MOUSE_MOVE__(op.x, op.y);
-                await __VST_MOUSE_UP__();
-                if (window.__VST_RELOAD_TRIGGERED__) {
+                await __VRT_MOUSE_MOVE__(op.x, op.y);
+                await __VRT_MOUSE_UP__();
+                if (window.__VRT_RELOAD_TRIGGERED__) {
                     return;
                 }
                 timeline.resume();
                 break;
             case 'mousemove':
                 timeline.pause();
-                await __VST_MOUSE_MOVE__(op.x, op.y);
+                await __VRT_MOUSE_MOVE__(op.x, op.y);
                 timeline.resume();
                 break;
             case 'mousewheel':

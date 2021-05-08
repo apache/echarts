@@ -17,8 +17,8 @@
 * under the License.
 */
 
-if (typeof __VST_PLAYBACK_SPEED__ === 'undefined') {
-    window.__VST_PLAYBACK_SPEED__ = 1;
+if (typeof __VRT_PLAYBACK_SPEED__ === 'undefined') {
+    window.__VRT_PLAYBACK_SPEED__ = 1;
 }
 const nativeRaf = window.requestAnimationFrame;
 const nativeSetTimeout = window.setTimeout;
@@ -27,7 +27,7 @@ const FIXED_FRAME_TIME = 16;
 const MAX_FRAME_TIME = 80;
 const TIMELINE_START = 1566458693300;
 
-window.__VST_TIMELINE_PAUSED__ = true;
+window.__VRT_TIMELINE_PAUSED__ = true;
 
 let realFrameStartTime = 0;
 
@@ -49,14 +49,14 @@ function runFrame() {
         }
         catch (e) {
             // Catch error to avoid following tasks.
-            __VST_LOG_ERRORS__(e.toString());
+            __VRT_LOG_ERRORS__(e.toString());
         }
     });
     flushTimeoutHandlers();
     flushIntervalHandlers();
 }
 function timelineLoop() {
-    if (!__VST_TIMELINE_PAUSED__) {
+    if (!__VRT_TIMELINE_PAUSED__) {
         runFrame();
     }
     nativeRaf(timelineLoop);
@@ -103,7 +103,7 @@ function flushTimeoutHandlers() {
             }
             catch (e) {
                 // Catch error to avoid following tasks.
-                __VST_LOG_ERRORS__(e.toString());
+                __VRT_LOG_ERRORS__(e.toString());
             }
         }
         else {
@@ -143,7 +143,7 @@ function flushIntervalHandlers() {
             }
             catch (e) {
                 // Catch error to avoid following tasks.
-                __VST_LOG_ERRORS__(e.toString());
+                __VRT_LOG_ERRORS__(e.toString());
             }
             handler.frame += handler.intervalFrame;
         }
@@ -163,7 +163,7 @@ const mockNow = function () {
     // var frameDeltaTime = realFrameTime - realFrameStartTime;
     var frameDeltaTime = 0;
     // Use same time in one frame.
-    return TIMELINE_START + (timelineTime + frameDeltaTime) * window.__VST_PLAYBACK_SPEED__;
+    return TIMELINE_START + (timelineTime + frameDeltaTime) * window.__VRT_PLAYBACK_SPEED__;
 };
 function MockDate(...args) {
     if (!args.length) {
@@ -182,15 +182,15 @@ window.Date = MockDate;
 
 
 export function start() {
-    window.__VST_TIMELINE_PAUSED__ = false;
+    window.__VRT_TIMELINE_PAUSED__ = false;
 }
 
 export function pause() {
-    window.__VST_TIMELINE_PAUSED__ = true;
+    window.__VRT_TIMELINE_PAUSED__ = true;
 }
 
 export function resume() {
-    window.__VST_TIMELINE_PAUSED__ = false;
+    window.__VRT_TIMELINE_PAUSED__ = false;
 }
 
 export { nativeRaf, nativeSetInterval, nativeSetTimeout };

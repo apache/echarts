@@ -39,7 +39,7 @@ window.__random__inner__ = function () {
 
 let vstStarted = false;
 
-window.__VST_START__ = function () {
+window.__VRT_START__ = function () {
     if (vstStarted) {
         return;
     }
@@ -47,13 +47,13 @@ window.__VST_START__ = function () {
     timeline.start();
 
     // TODO not support reload without simpleRequire
-    if (window.__VST_RUN_CONTEXT__) {
+    if (window.__VRT_RUN_CONTEXT__) {
         // Restore from previous run
         setTimeout(async () => {
-            await __VST_RUN_ACTIONS__(
-                window.__VST_RUN_CONTEXT__.actions,
-                window.__VST_RUN_CONTEXT__.currentActionIndex,
-                window.__VST_RUN_CONTEXT__.currentActionContext
+            await __VRT_RUN_ACTIONS__(
+                window.__VRT_RUN_CONTEXT__.actions,
+                window.__VRT_RUN_CONTEXT__.currentActionIndex,
+                window.__VRT_RUN_CONTEXT__.currentActionContext
             )
         }, 1000);
     }
@@ -62,7 +62,7 @@ window.__VST_START__ = function () {
         setTimeout(async () => {
             // Pause timeline until run actions.
             timeline.pause();
-            await __VST_FULL_SCREENSHOT__();
+            await __VRT_FULL_SCREENSHOT__();
         }, 1000);
     }
 }
@@ -75,7 +75,7 @@ function saveRunningContext(actions, actionIndex, playback) {
     }));
 }
 
-window.__VST_RUN_ACTIONS__ = async function (actions, restoredActionIndex, restoredActionContext) {
+window.__VRT_RUN_ACTIONS__ = async function (actions, restoredActionIndex, restoredActionContext) {
     // Actions can only bu runned once.
     timeline.resume();
 
@@ -87,9 +87,9 @@ window.__VST_RUN_ACTIONS__ = async function (actions, restoredActionIndex, resto
     // Some test cases change the params through reload().
     // We need to save the running info and keep running after reload.
     // window.location seems can't be redefined anymore. So we can only provide helper functions.
-    window.__VST_RELOAD__ = function () {
+    window.__VRT_RELOAD__ = function () {
         // Mark reload triggered and let ActionPlayback stop.
-        window.__VST_RELOAD_TRIGGERED__ = true;
+        window.__VRT_RELOAD_TRIGGERED__ = true;
         saveRunningContext(actions, currentActionIndex, actionPlayback);
         timeline.nativeSetTimeout(() => {
             // CDPSession pay be disconnected if reload immediately.
@@ -103,12 +103,12 @@ window.__VST_RUN_ACTIONS__ = async function (actions, restoredActionIndex, resto
             continue;
         }
         window.scrollTo(action.scrollX, action.scrollY);
-        await actionPlayback.runAction(action, __VST_PLAYBACK_SPEED__, index === restoredActionIndex ? restoredActionContext : null);
+        await actionPlayback.runAction(action, __VRT_PLAYBACK_SPEED__, index === restoredActionIndex ? restoredActionContext : null);
 
     }
     actionPlayback.stop();
 
-    __VST_FINISH_ACTIONS__();
+    __VRT_FINISH_ACTIONS__();
 }
 
 

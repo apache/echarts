@@ -109,7 +109,7 @@ under the License.
                     btn.onclick = (function (cfg) {
                         return function () {
                             setLocalStorage(cfg.text);
-                            typeof __VST_RELOAD__ !== 'undefined' && __VST_RELOAD__();
+                            typeof __VRT_RELOAD__ !== 'undefined' ? __VRT_RELOAD__() : location.reload();
                         };
                     })(config);
                     fmtBtnBox.appendChild(btn);

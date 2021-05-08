@@ -28,13 +28,13 @@
 //  2. Only `paths` can be configured
 (function (global) {
 
-    if (typeof __VST_INIT__ !== 'undefined') {
+    if (typeof __VRT_INIT__ !== 'undefined') {
         // In the visual regression test environment.
-        __VST_INIT__();
+        __VRT_INIT__();
 
         var vstRunContextStr = localStorage.getItem('vstRunContext');
         if (vstRunContextStr) {
-            window.__VST_RUN_CONTEXT__ = JSON.parse(vstRunContextStr);
+            window.__VRT_RUN_CONTEXT__ = JSON.parse(vstRunContextStr);
             localStorage.removeItem('vstRunContext');
         }
         else {
@@ -237,8 +237,8 @@
                 pendingRequireCallbackParams = [];
 
                 // Start visual regression test before callback
-                if (typeof __VST_START__ !== 'undefined') {
-                    __VST_START__();
+                if (typeof __VRT_START__ !== 'undefined') {
+                    __VRT_START__();
                 }
 
                 for (var i = 0; i < requireCallbackToFlush.length; i++) {

@@ -158,40 +158,40 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
 
     let vstInited = false;
 
-    await page.exposeFunction('__VST_INIT__', () => {
+    await page.exposeFunction('__VRT_INIT__', () => {
         vstInited = true;
     });
-    await page.exposeFunction('__VST_MOUSE_MOVE__', async (x, y) =>  {
+    await page.exposeFunction('__VRT_MOUSE_MOVE__', async (x, y) =>  {
         await page.mouse.move(x, y);
     });
-    await page.exposeFunction('__VST_MOUSE_DOWN__', async () =>  {
+    await page.exposeFunction('__VRT_MOUSE_DOWN__', async () =>  {
         await page.mouse.down();
     });
-    await page.exposeFunction('__VST_MOUSE_UP__', async () =>  {
+    await page.exposeFunction('__VRT_MOUSE_UP__', async () =>  {
         await page.mouse.up();
     });
 
     // TODO should await exposeFunction here
     const waitForScreenshot = new Promise((resolve) => {
-        page.exposeFunction('__VST_FULL_SCREENSHOT__', async () =>  {
+        page.exposeFunction('__VRT_FULL_SCREENSHOT__', async () =>  {
             await pageScreenshot();
             resolve();
         });
     });
 
     const waitForActionFinishManually = new Promise((resolve) => {
-        page.exposeFunction('__VST_FINISH_ACTIONS__', async () =>  {
+        page.exposeFunction('__VRT_FINISH_ACTIONS__', async () =>  {
             resolve();
         });
     });
 
-    page.exposeFunction('__VST_LOG_ERRORS__', (err) =>  {
+    page.exposeFunction('__VRT_LOG_ERRORS__', (err) =>  {
         errors.push(err);
     });
 
     let actionScreenshotCount = {};
 
-    await page.exposeFunction('__VST_ACTION_SCREENSHOT__', async (action) =>  {
+    await page.exposeFunction('__VRT_ACTION_SCREENSHOT__', async (action) =>  {
         if (!program.save) {
             return;
         }
@@ -236,7 +236,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
         if (!vstInited) {    // Not using simpleRequire in the test
             console.log(`Automatically started in ${testNameFromFile(fileUrl)}`);
             await page.evaluate(() => {
-                __VST_START__();
+                __VRT_START__();
             });
         }
         // Wait do screenshot after inited
@@ -251,14 +251,14 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
         if (actions.length > 0) {
             try {
                 page.evaluate((actions) => {
-                    __VST_RUN_ACTIONS__(actions);
+                    __VRT_RUN_ACTIONS__(actions);
                 }, actions);
             }
             catch (e) {
                 errors.push(e.toString());
             }
             // We need to use the actions finish signal if there is reload happens in the page.
-            // Because the original __VST_RUN_ACTIONS__ not exists anymore.
+            // Because the original __VRT_RUN_ACTIONS__ not exists anymore.
             await waitForActionFinishManually;
         }
     }
@@ -364,7 +364,7 @@ async function runTests(pendingTests) {
     // TODO Not hardcoded.
     // let runtimeCode = fs.readFileSync(path.join(__dirname, 'tmp/testRuntime.js'), 'utf-8');
     let runtimeCode = await buildRuntimeCode();
-    runtimeCode = `window.__VST_PLAYBACK_SPEED__ = ${program.speed || 1};\n${runtimeCode}`;
+    runtimeCode = `window.__VRT_PLAYBACK_SPEED__ = ${program.speed || 1};\n${runtimeCode}`;
 
     process.on('exit', () => {
         browser.close();
