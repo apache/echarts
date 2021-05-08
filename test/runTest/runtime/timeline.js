@@ -131,8 +131,15 @@ function flushIntervalHandlers() {
 const NativeDate = window.Date;
 
 const mockNow = function () {
+    // // Use same time in one frame.
+    // var realFrameTime = NativeDate.now();
+    // // Split frame. Add 8ms offset on the second half
+    // // Avoid infinite loop when some logic determine whether to break the loop based on the execution time.
+    // // For example https://github.com/apache/echarts/blob/737e23c0054e6b501ecc6f562920cffae953b5c6/src/core/echarts.ts#L537
+    // var frameDeltaTime = realFrameTime - realFrameStartTime;
+    var frameDeltaTime = 0;
     // Use same time in one frame.
-    return TIMELINE_START + timelineTime * window.__VST_PLAYBACK_SPEED__;
+    return TIMELINE_START + (timelineTime + frameDeltaTime) * window.__VST_PLAYBACK_SPEED__;
 };
 function MockDate(...args) {
     if (!args.length) {
@@ -145,8 +152,9 @@ function MockDate(...args) {
 MockDate.prototype = Object.create(NativeDate.prototype);
 Object.setPrototypeOf(MockDate, NativeDate);
 MockDate.now = mockNow;
-
 window.Date = MockDate;
+
+// TODO Do we need to mock performance? Or leave some API that can keep real.
 
 
 export function start() {
