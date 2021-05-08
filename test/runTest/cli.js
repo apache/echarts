@@ -24,7 +24,7 @@ const fs = require('fs');
 const path = require('path');
 const program = require('commander');
 const compareScreenshot = require('./compareScreenshot');
-const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, getEChartsTestFileName} = require('./util');
+const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, getEChartsTestFileName, waitTime} = require('./util');
 const {origin} = require('./config');
 const cwebpBin = require('cwebp-bin');
 const { execFile } = require('child_process');
@@ -153,6 +153,11 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
         });
     }
 
+    let vstInited = false;
+
+    await page.exposeFunction('__VST_INIT__', () => {
+        vstInited = true;
+    });
     await page.exposeFunction('__VST_MOUSE_MOVE__', async (x, y) =>  {
         await page.mouse.move(x, y);
     });
@@ -163,10 +168,11 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
         await page.mouse.up();
     });
 
-    let waitClientScreenshot = new Promise((resolve) => {
-        // TODO wait for this function exposed?
-        page.exposeFunction('__VST_FULL_SCREENSHOT__', () =>  {
-            pageScreenshot().then(resolve);
+    // TODO should await exposeFunction here
+    const waitForScreenshot = new Promise((resolve) => {
+        page.exposeFunction('__VST_FULL_SCREENSHOT__', async () =>  {
+            await pageScreenshot();
+            resolve();
         });
     });
 
@@ -210,18 +216,14 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
             timeout: 10000
         });
 
-        let autoScreenshotTimeout;
-        // TODO Use waitForFunction?
-        await Promise.race([
-            waitClientScreenshot,
-            new Promise(resolve => {
-                autoScreenshotTimeout = setTimeout(() => {
-                    console.log(`Automatically screenshot in ${testNameFromFile(fileUrl)}`);
-                    pageScreenshot().then(resolve)
-                }, 1000)
-            })
-        ]);
-        clearTimeout(autoScreenshotTimeout);
+        if (!vstInited) {    // Not using simpleRequire in the test
+            console.log(`Automatically started in ${testNameFromFile(fileUrl)}`);
+            await page.evaluate(() => {
+                __VST_START__();
+            });
+        }
+        // Wait do screenshot after inited
+        await waitForScreenshot;
 
         // Run actions
         let actions = [];

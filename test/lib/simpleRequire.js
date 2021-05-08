@@ -28,6 +28,10 @@
 //  2. Only `paths` can be configured
 (function (global) {
 
+    if (typeof __VST_INIT__ !== 'undefined') {
+        __VST_INIT__();
+    }
+
     var requireCfg = { paths: {} }
 
     var currentDefinedFactory;

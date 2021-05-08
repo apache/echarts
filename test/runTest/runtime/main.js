@@ -46,10 +46,10 @@ window.__VST_START__ = function () {
     vstStarted = true;
     timeline.start();
     // Screenshot after 500ms
-    setTimeout(function () {
+    setTimeout(async () => {
         // Pause timeline until run actions.
         timeline.pause();
-        __VST_FULL_SCREENSHOT__();
+        await __VST_FULL_SCREENSHOT__();
     }, 500);
 }
 
