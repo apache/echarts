@@ -87,13 +87,11 @@ under the License.
 
 
         <script>
-        require(['echarts'/*, 'map/js/china' */], function (echarts) {
-            var option;
-            $.ajax({
-                url: 'data/svg/Veins_Medical_Diagram_clip_art.svg',
-                dataType: 'text'
-            }).done(function (svg) {
-
+            require([
+                'echarts',
+                'data/svg/Veins_Medical_Diagram_clip_art.svg'
+            ], function (echarts, svg) {
+                var option;
                 echarts.registerMap('seatmap', {
                     svg: svg
                 });
@@ -201,8 +199,6 @@ under the License.
                 }
 
             });
-
-        });
         </script>
 
 
@@ -212,14 +208,11 @@ under the License.
 
 
         <script>
-        require(['echarts'/*, 'map/js/china' */], function (echarts) {
-            var option;
-
-            $.ajax({
-                url: 'data/svg/Sicily_prehellenic_topographic_map.svg',
-                dataType: 'text'
-            }).done(function (svg) {
-
+            require([
+                'echarts',
+                'data/svg/Sicily_prehellenic_topographic_map.svg'
+            ], function (echarts, svg) {
+                var option;
                 echarts.registerMap('sicily', {
                     svg: svg
                 });
@@ -332,8 +325,6 @@ under the License.
                 listenAndPrintEvent(chart);
 
             });
-
-        });
         </script>
 
 
@@ -346,10 +337,11 @@ under the License.
 
 
         <script>
-        require(['echarts'/*, 'map/js/china' */], function (echarts) {
-            var option;
-            fetch('data/svg/Map_of_Iceland.svg').then(response => response.text()).then((svg) => {
-
+        require([
+                'echarts',
+                'data/svg/Map_of_Iceland.svg'
+            ], function (echarts, svg) {
+                var option;
                 echarts.registerMap('Map_of_Iceland', {
                     svg: svg
                 });
@@ -474,7 +466,6 @@ under the License.
 
             });
 
-        });
         </script>
 
 
@@ -489,11 +480,11 @@ under the License.
 
 
         <script>
-        require(['echarts'/*, 'map/js/china' */], function (echarts) {
-            var option;
-            fetch('data/svg/Beef_cuts_France.svg').then(response => response.text()).then((svg) => {
-
-
+            require([
+                'echarts',
+                'data/svg/Beef_cuts_France.svg'
+            ], function (echarts, svg) {
+                var option;
 
                 echarts.registerMap('Beef_cuts_France', {
                     svg: svg
@@ -570,7 +561,6 @@ under the License.
 
             });
 
-        });
         </script>
 
 
@@ -583,10 +573,11 @@ under the License.
 
 
         <script>
-        require(['echarts'/*, 'map/js/china' */], function (echarts) {
-            var option;
-            fetch('data/svg/MacOdrum-LV5-floorplan-web.svg').then(response => response.text()).then((svg) => {
-
+            require([
+                'echarts',
+                'data/svg/MacOdrum-LV5-floorplan-web.svg'
+            ], function (echarts, svg) {
+                var option;
                 echarts.registerMap('MacOdrum-LV5-floorplan-web', {
                     svg: svg
                 });
@@ -691,7 +682,6 @@ under the License.
                 }
             });
 
-        });
         </script>
 
 
@@ -699,9 +689,11 @@ under the License.
 
 
         <script>
-        require(['echarts'/*, 'map/js/china' */], function (echarts) {
-            var option;
-            fetch('data/svg/ksia-ext-plan-min.svg').then(response => response.text()).then((svg) => {
+            require([
+                'echarts',
+                'data/svg/ksia-ext-plan-min.svg'
+            ], function (echarts, svg) {
+                var option;
 
                 echarts.registerMap('ksia-ext-plan', {
                     svg: svg
@@ -894,14 +886,7 @@ under the License.
                 }
             });
 
-        });
         </script>
-
-
-
-
-
-
 
 
     </body>

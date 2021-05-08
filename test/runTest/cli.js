@@ -110,6 +110,9 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
     let screenshotPath = path.join(getScreenshotDir(), `${screenshotName}-${screenshotPrefix}.png`);
     await page.screenshot({
         path: screenshotPath,
+        // https://github.com/puppeteer/puppeteer/issues/7043
+        // https://github.com/puppeteer/puppeteer/issues/6921#issuecomment-829586680
+        captureBeyondViewport: false,
         fullPage
     });
 
@@ -214,7 +217,10 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     });
 
     try {
-        await page.setViewport({width: 800, height: 600});
+        await page.setViewport({
+            width: 800,
+            height: 600
+        });
         await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}`, {
             waitUntil: 'networkidle2',
             timeout: 10000

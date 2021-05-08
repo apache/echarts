@@ -39,7 +39,7 @@
     var exportsPlaceholder = {};
 
     var ALLOWED_EXTS = [
-        'gexf', 'txt', 'csv',    // text
+        'gexf', 'txt', 'csv', 'svg',    // text
         'js', 'json'
     ];
 
