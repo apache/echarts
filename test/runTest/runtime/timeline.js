@@ -86,7 +86,7 @@ window.setTimeout = function (cb, timeout) {
 
 window.clearTimeout = function (id) {
     const idx = timeoutHandlers.findIndex(handler => {
-        handler.id === id
+        return handler.id === id
     });
     if (idx >= 0) {
         timeoutHandlers.splice(idx, 1);
@@ -120,14 +120,14 @@ window.setInterval = function (cb, interval) {
         id: intervalId,
         intervalFrame,
         frame: frameIdx + intervalFrame
-    })
+    });
 
     return intervalId++;
 }
 
-window.clearInterval = function () {
+window.clearInterval = function (id) {
     const idx = intervalHandlers.findIndex(handler => {
-        handler.id === id
+        return handler.id === id;
     });
     if (idx >= 0) {
         intervalHandlers.splice(idx, 1);
