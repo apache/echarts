@@ -257,10 +257,10 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
             catch (e) {
                 errors.push(e.toString());
             }
+            // We need to use the actions finish signal if there is reload happens in the page.
+            // Because the original __VST_RUN_ACTIONS__ not exists anymore.
+            await waitForActionFinishManually;
         }
-        // We need to use the actions finish signal if there is reload happens in the page.
-        // Because the original __VST_RUN_ACTIONS__ not exists anymore.
-        await waitForActionFinishManually;
     }
     catch(e) {
         console.error(e);

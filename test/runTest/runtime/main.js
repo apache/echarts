@@ -58,12 +58,12 @@ window.__VST_START__ = function () {
         }, 500);
     }
     else {
-        // Screenshot after 2000ms (400ms if 5x speed), wait the animation to be finished
+        // Screenshot after 1000ms (200ms if 5x speed), wait the animation to be finished
         setTimeout(async () => {
             // Pause timeline until run actions.
             timeline.pause();
             await __VST_FULL_SCREENSHOT__();
-        }, 2000);
+        }, 1000);
     }
 }
 
