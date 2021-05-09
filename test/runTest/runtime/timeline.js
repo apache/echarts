@@ -73,6 +73,7 @@ let intervalHandlers = [];
 
 let timeoutId = 1;
 let intervalId = 1;
+
 window.setTimeout = function (cb, timeout) {
     const elapsedFrame = Math.ceil(Math.max(timeout || 0, 1) / FIXED_FRAME_TIME);
     timeoutHandlers.push({
@@ -94,10 +95,14 @@ window.clearTimeout = function (id) {
 }
 
 function flushTimeoutHandlers() {
-    let newTimeoutHandlers = [];
-    for (let i = 0; i < timeoutHandlers.length; i++) {
-        const handler = timeoutHandlers[i];
+    // Copy the array. In case setTimeout/clearTimeout is invoked in the callback.
+    const savedTimeoutHandlers = timeoutHandlers.slice();
+    for (let i = 0; i < savedTimeoutHandlers.length; i++) {
+        const handler = savedTimeoutHandlers[i];
         if (handler.frame === frameIdx) {
+            // Need find index again. In case setTimeout/clearTimeout is invoked in the callback.
+            const idx = timeoutHandlers.indexOf(handler);
+            timeoutHandlers.splice(idx, 1);
             try {
                 handler.callback();
             }
@@ -106,11 +111,7 @@ function flushTimeoutHandlers() {
                 __VRT_LOG_ERRORS__(e.toString());
             }
         }
-        else {
-            newTimeoutHandlers.push(handler);
-        }
     }
-    timeoutHandlers = newTimeoutHandlers;
 }
 
 window.setInterval = function (cb, interval) {
@@ -135,8 +136,10 @@ window.clearInterval = function (id) {
 }
 
 function flushIntervalHandlers() {
-    for (let i = 0; i < intervalHandlers.length; i++) {
-        const handler = intervalHandlers[i];
+    // Copy the array. In case setInterval/clearInterval is invoked in the callback.
+    const savedIntervalHandlers = intervalHandlers.slice();
+    for (let i = 0; i < savedIntervalHandlers.length; i++) {
+        const handler = savedIntervalHandlers[i];
         if (handler.frame === frameIdx) {
             try {
                 handler.callback();
