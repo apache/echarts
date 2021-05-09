@@ -51,5 +51,9 @@ module.exports.blacklist = [
 module.exports.SVGBlacklist = [
     'bar-stream-large.html',
     'bar-stream-large1.html',
+    'stream-basic1.html',
+    'stream-basic2.html',
+    'heatmap-large.html',
+    'visualMap-large.html',
     'candlestick-large2.html'
 ];

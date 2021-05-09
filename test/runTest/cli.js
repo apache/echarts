@@ -213,6 +213,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     await page.evaluateOnNewDocument(runtimeCode);
 
     page.on('console', msg => {
+        // console.log('Page Log: ', msg.text());
         logs.push(msg.text());
     });
     page.on('pageerror', error => {
@@ -284,11 +285,6 @@ async function writePNG(diffPNG, diffPath) {
 };
 
 async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVersion) {
-    if (program.renderer === 'svg' && testOpt.ignoreSVG) {
-        console.log(testOpt.name + ' don\'t support svg testing.');
-        return;
-    }
-
     if (program.save) {
         testOpt.status === 'running';
 
