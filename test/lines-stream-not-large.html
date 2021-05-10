@@ -52,106 +52,93 @@ under the License.
         var xs = [440000, 450000];
         var ys = [4368000, 4537000];
 
-        var dataURL = './data/flight.json';
-
         require([
-            'echarts'
-        ], function (echarts) {
+            'echarts',
+            './data/map/json/world.json',
+            './data/flight.json'
+        ], function (echarts, worldJson, data) {
 
-            $.get('./data/map/json/world.json', function (worldJson) {
-                echarts.registerMap('world', worldJson);
+            echarts.registerMap('world', worldJson);
 
-                $.get(dataURL, function (data) {
-                    var config = {
-                        dataLoading: 'whole',
-                        streamThreshold: 0,
-                        streamRender: true,
-                        largeModel: true
-                    };
+            var config = {
+                dataLoading: 'whole',
+                streamThreshold: 0,
+                streamRender: true,
+                largeModel: true
+            };
 
-                    var chart;
-                    var infoEl = document.getElementById('info');
+            var infoEl = document.getElementById('info');
+            if (chart) {
+                chart.dispose();
+            }
 
-                    init();
+            var chart = echarts.init(document.getElementById('main'));
 
-                    function init() {
-                        if (chart) {
-                            chart.dispose();
-                        }
-
-                        chart = echarts.init(document.getElementById('main'));
-
-                        function getAirportCoord(idx) {
-                            return [data.airports[idx][3], data.airports[idx][4]];
-                        }
-                        var routes = data.routes.map(function (airline) {
-                            return [
-                                getAirportCoord(airline[1]),
-                                getAirportCoord(airline[2])
-                            ];
-                        });
-
-                        var option = {
-                            streamStep: 4000,
-                            title: {
-                                text: 'World Flights',
-                                left: 'center',
-                                textStyle: {
-                                    color: '#eee'
-                                }
-                            },
-                            backgroundColor: '#003',
-                            tooltip: {
-                                formatter: function (param) {
-                                    var route = data.routes[param.dataIndex];
-                                    return data.airports[route[1]][1] + ' > ' + data.airports[route[2]][1];
-                                }
-                            },
-                            geo: {
-                                map: 'world',
-                                left: 0,
-                                right: 0,
-                                roam: true,
-                                silent: true,
-                                itemStyle: {
-                                    normal: {
-                                        borderColor: '#003',
-                                        color: '#005'
-                                    }
-                                }
-                            },
-                            series: [{
-                                type: 'lines',
-                                coordinateSystem: 'geo',
-                                blendModel: 'lighter',
-                                data: routes,
-                                // Test not large mode.
-                                large: false,
-                                largeThreshold: 100,
-                                lineStyle: {
-                                    normal: {
-                                        opacity: 0.05,
-                                        width: 0.5,
-                                        curveness: 0.3
-                                    }
-                                },
-                                // 设置混合模式为叠加
-                                blendMode: 'lighter'
-                            }]
-                        };
-
-                        chart.on('finished', function () {
-                            infoEl.innerHTML = 'Finished (large: false). Please test roam (in not large mode, should no error thrown';
-                        });
-
-                        chart.setOption(option);
-                    }
-
-                });
-
+            function getAirportCoord(idx) {
+                return [data.airports[idx][3], data.airports[idx][4]];
+            }
+            var routes = data.routes.map(function (airline) {
+                return [
+                    getAirportCoord(airline[1]),
+                    getAirportCoord(airline[2])
+                ];
             });
-        });
 
+            var option = {
+                streamStep: 4000,
+                title: {
+                    text: 'World Flights',
+                    left: 'center',
+                    textStyle: {
+                        color: '#eee'
+                    }
+                },
+                backgroundColor: '#003',
+                tooltip: {
+                    formatter: function (param) {
+                        var route = data.routes[param.dataIndex];
+                        return data.airports[route[1]][1] + ' > ' + data.airports[route[2]][1];
+                    }
+                },
+                geo: {
+                    map: 'world',
+                    left: 0,
+                    right: 0,
+                    roam: true,
+                    silent: true,
+                    itemStyle: {
+                        normal: {
+                            borderColor: '#003',
+                            color: '#005'
+                        }
+                    }
+                },
+                series: [{
+                    type: 'lines',
+                    coordinateSystem: 'geo',
+                    blendModel: 'lighter',
+                    data: routes,
+                    // Test not large mode.
+                    large: false,
+                    largeThreshold: 100,
+                    lineStyle: {
+                        normal: {
+                            opacity: 0.05,
+                            width: 0.5,
+                            curveness: 0.3
+                        }
+                    },
+                    // 设置混合模式为叠加
+                    blendMode: 'lighter'
+                }]
+            };
+
+            chart.on('finished', function () {
+                infoEl.innerHTML = 'Finished (large: false). Please test roam (in not large mode, should no error thrown)';
+            });
+
+            chart.setOption(option);
+        });
         </script>
     </body>
 </html>

@@ -43,119 +43,117 @@ under the License.
         var ys = [4368000, 4537000];
 
         require([
-            'echarts'
-        ], function (echarts) {
+            'echarts',
+            './data/map/json/world.json'
+        ], function (echarts, worldJson) {
+            echarts.registerMap('world', worldJson);
 
-            $.get('./data/map/json/world.json', function (worldJson) {
-                echarts.registerMap('world', worldJson);
+            var linesCount = 35663;
+            var chart;
 
-                var linesCount = 35663;
-                var chart;
+            var routes = [];
 
-                var routes = [];
+            var lngStep = 0.01;
+            var lng0 = -160;
+            var lng1 = lng0 + linesCount * lngStep;
 
-                var lngStep = 0.01;
-                var lng0 = -160;
-                var lng1 = lng0 + linesCount * lngStep;
+            for (var i = 0; i < linesCount; i++) {
+                var lng = lng0 + i * lngStep;
+                var lat0 = 0;
+                var lat1 = 90;
 
-                for (var i = 0; i < linesCount; i++) {
-                    var lng = lng0 + i * lngStep;
-                    var lat0 = 0;
-                    var lat1 = 90;
+                // if (i % 1000 < 500) {
+                //     lat0 = 30;
+                //     lat1 = 120;
+                // }
+                routes.push([[lng, lat0], [lng, lat1]]);
+            }
 
-                    // if (i % 1000 < 500) {
-                    //     lat0 = 30;
-                    //     lat1 = 120;
-                    // }
-                    routes.push([[lng, lat0], [lng, lat1]]);
-                }
-
-                var option = {
-                    title: {
-                        text: 'World Flights',
-                        left: 'center',
-                        textStyle: {
-                            color: '#eee'
+            var option = {
+                title: {
+                    text: 'World Flights',
+                    left: 'center',
+                    textStyle: {
+                        color: '#eee'
+                    }
+                },
+                backgroundColor: '#003',
+                tooltip: {
+                    formatter: function (param) {
+                        return 'Line: ' + param.dataIndex;
+                    }
+                },
+                geo: {
+                    map: 'world',
+                    left: 0,
+                    right: 0,
+                    zoom: 0.3,
+                    roam: true,
+                    silent: true,
+                    itemStyle: {
+                        normal: {
+                            borderColor: '#003',
+                            color: '#005'
+                        }
+                    }
+                },
+                series: [{
+                    type: 'lines',
+                    coordinateSystem: 'geo',
+                    blendModel: 'lighter',
+                    data: routes,
+                    large: true,
+                    // large: false,
+                    largeThreshold: 0,
+                    // progressive: 5e3,
+                    progressiveThreshold: 101,
+                    lineStyle: {
+                        normal: {
+                            opacity: 1,
+                            width: 1,
+                            // curveness: 0.3
                         }
                     },
-                    backgroundColor: '#003',
-                    tooltip: {
-                        formatter: function (param) {
-                            return 'Line: ' + param.dataIndex;
-                        }
-                    },
-                    geo: {
-                        map: 'world',
-                        left: 0,
-                        right: 0,
-                        zoom: 0.3,
-                        roam: true,
-                        silent: true,
-                        itemStyle: {
-                            normal: {
-                                borderColor: '#003',
-                                color: '#005'
+                    // blendMode: 'lighter'
+                }, {
+                    type: 'scatter',
+                    coordinateSystem: 'geo',
+                    symbolSize: 5,
+                    color: ['green'],
+                    data: [
+                        {
+                            value: [lng0, 30],
+                            label: {
+                                show: true,
+                                position: 'top',
+                                formatter: 'longitude start'
+                            }
+                        }, {
+                            value: [lng1, 30],
+                            label: {
+                                show: true,
+                                position: 'top',
+                                formatter: 'longitude end'
                             }
                         }
-                    },
-                    series: [{
-                        type: 'lines',
-                        coordinateSystem: 'geo',
-                        blendModel: 'lighter',
-                        data: routes,
-                        large: true,
-                        // large: false,
-                        largeThreshold: 0,
-                        // progressive: 5e3,
-                        progressiveThreshold: 101,
-                        lineStyle: {
-                            normal: {
-                                opacity: 1,
-                                width: 1,
-                                // curveness: 0.3
-                            }
-                        },
-                        // blendMode: 'lighter'
-                    }, {
-                        type: 'scatter',
-                        coordinateSystem: 'geo',
-                        symbolSize: 5,
-                        color: ['green'],
-                        data: [
-                            {
-                                value: [lng0, 30],
-                                label: {
-                                    show: true,
-                                    position: 'top',
-                                    formatter: 'longitude start'
-                                }
-                            }, {
-                                value: [lng1, 30],
-                                label: {
-                                    show: true,
-                                    position: 'top',
-                                    formatter: 'longitude end'
-                                }
-                            }
-                        ]
-                    }]
-                };
+                    ]
+                }]
+            };
 
-                var chart = testHelper.create(echarts, 'main0', {
-                    title: [
-                        linesCount + ' lines should be rendered vertically side by side ',
-                        'from the left green point to the right green point, NO GAP.',
-                        '( large:true and el.incremetal = true) ',
-                        'And check roam.'
-                    ],
-                    option: option,
-                    height: 550
-                });
-                chart.on('finished', function () {
-                    console.log('finished');
-                });
-
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    linesCount + ' lines should be rendered vertically side by side ',
+                    'from the left green point to the right green point, NO GAP.',
+                    '( large:true and el.incremetal = true) ',
+                    'And check roam.'
+                ],
+                option: option,
+                height: 550
             });
+            chart.on('finished', function () {
+                console.log('finished');
+            });
+
         });
 
         </script>

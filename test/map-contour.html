@@ -39,72 +39,71 @@ under the License.
         <script>
 
             require([
-                'echarts'
-            ], function (echarts) {
+                'echarts',
+                'map/js/china-contour',
+                'map/js/china'
+            ], function (echarts, contour) {
+                var chart = echarts.init(document.getElementById('main'));
 
-                require(['map/js/china-contour', 'map/js/china'], function (contour) {
-                    var chart = echarts.init(document.getElementById('main'));
-
-                    var itemStyle = {
-                        normal:{
-                            borderColor: 'rgba(0, 0, 0, 0.2)'
-                        },
-                        emphasis:{
-                            shadowOffsetX: 0,
-                            shadowOffsetY: 0,
-                            shadowBlur: 20,
-                            borderWidth: 0,
-                            shadowColor: 'rgba(0, 0, 0, 0.5)'
-                        }
+                var itemStyle = {
+                    normal:{
+                        borderColor: 'rgba(0, 0, 0, 0.2)'
+                    },
+                    emphasis:{
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        shadowBlur: 20,
+                        borderWidth: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
                     }
+                }
 
-                    chart.setOption({
-                        title : {
-                            text: 'iphone销量',
-                            subtext: '纯属虚构',
-                            left: 'center'
+                chart.setOption({
+                    title : {
+                        text: 'iphone销量',
+                        subtext: '纯属虚构',
+                        left: 'center'
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        data:['iphone3','iphone4','iphone5']
+                    },
+                    visualMap: {
+                        min: 0,
+                        max: 1500,
+                        left: 'left',
+                        top: 'bottom',
+                        text:['高','低'],           // 文本，默认为数值文本
+                        calculable : true
+                    },
+                    selectedMode: 'single',
+                    geo: [
+                        {
+                            name: 'detail',
+                            type: 'map',
+                            map: 'china',
+                            data: [],
+                            roam: true
                         },
-                        legend: {
-                            orient: 'vertical',
-                            left: 'left',
-                            data:['iphone3','iphone4','iphone5']
-                        },
-                        visualMap: {
-                            min: 0,
-                            max: 1500,
-                            left: 'left',
-                            top: 'bottom',
-                            text:['高','低'],           // 文本，默认为数值文本
-                            calculable : true
-                        },
-                        selectedMode: 'single',
-                        geo: [
-                            {
-                                name: 'detail',
-                                type: 'map',
-                                map: 'china',
-                                data: [],
-                                roam: true
-                            },
-                            {
-                                name: 'contour',
-                                type: 'map',
-                                roam: true,
-                                map: 'china-contour',
-                                itemStyle: {
-                                    normal: {
-                                        borderWidth: 3,
-                                        borderColor: '#000',
-                                        areaColor: 'transparent',
-                                    },
-                                    emphasis: {
-                                        areaColor: 'transparent'
-                                    }
+                        {
+                            name: 'contour',
+                            type: 'map',
+                            roam: true,
+                            map: 'china-contour',
+                            itemStyle: {
+                                normal: {
+                                    borderWidth: 3,
+                                    borderColor: '#000',
+                                    areaColor: 'transparent',
+                                },
+                                emphasis: {
+                                    areaColor: 'transparent'
                                 }
                             }
-                        ],
-                        series : []
-                    });
+                        }
+                    ],
+                    series : []
                 });
             });
 

@@ -22,11 +22,12 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
         <script src="../dist/echarts.js"></script>
         <script src="lib/testHelper.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/jquery.min.js"></script>
-        <script src="lib/config.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
@@ -161,7 +162,7 @@ under the License.
         <script>
 
 
-        $.getJSON('./data/ec-star.json', function (data) {
+        require(['./data/ec-star.json'], function (data) {
 
             var minStartValue = '2013-06-06';
             var maxEndValue = '2017-10-17';

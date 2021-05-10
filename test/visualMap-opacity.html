@@ -477,8 +477,9 @@ under the License.
             require([
                 'echarts',
                 'extension/dataTool',
+                './data/les-miserables.gexf',
                 'theme/vintage'
-            ], function (echarts, dataTool) {
+            ], function (echarts, dataTool, xml) {
                 var gexf = dataTool.gexf;
                 var main = document.getElementById('main4');
                 if (!main) {
@@ -486,81 +487,79 @@ under the License.
                 }
                 var chart = echarts.init(main);
 
-                $.get('./data/les-miserables.gexf', function (xml) {
-                    var graph = gexf.parse(xml);
-                    var categories = [];
-                    for (var i = 0; i < 9; i++) {
-                        categories[i] = {
-                            name: '类目' + i
-                        };
-                    }
-                    graph.nodes.forEach(function (node) {
-                        delete node.itemStyle;
-                        node.value = node.symbolSize;
-                        node.label = {
-                            normal: {
-                                show: node.symbolSize > 30
-                            }
-                        };
-                        node.category = node.attributes['modularity_class'];
-                    });
-                    graph.links.forEach(function (link) {
-                        delete link.lineStyle;
-                    });
-                    var option = {
-                        tooltip: {},
-                        legend: [{
-                            // selectedMode: 'single',
-                            data: categories.map(function (a) {
-                                return a.name;
-                            })
-                        }],
-                        visualMap: {
-                            min: 0,
-                            max: 100,
-                            dimension: 0,
-                            calculable: true,
-                            inRange: {
-                                opacity: 1,
-                                symbolSize: [10, 100]
-                            },
-                            outOfRange: {
-                                opacity: 0.2,
-                                symbolSize: [10, 100]
-                            }
+                var graph = gexf.parse(xml);
+                var categories = [];
+                for (var i = 0; i < 9; i++) {
+                    categories[i] = {
+                        name: '类目' + i
+                    };
+                }
+                graph.nodes.forEach(function (node) {
+                    delete node.itemStyle;
+                    node.value = node.symbolSize;
+                    node.label = {
+                        normal: {
+                            show: node.symbolSize > 30
+                        }
+                    };
+                    node.category = node.attributes['modularity_class'];
+                });
+                graph.links.forEach(function (link) {
+                    delete link.lineStyle;
+                });
+                var option = {
+                    tooltip: {},
+                    legend: [{
+                        // selectedMode: 'single',
+                        data: categories.map(function (a) {
+                            return a.name;
+                        })
+                    }],
+                    visualMap: {
+                        min: 0,
+                        max: 100,
+                        dimension: 0,
+                        calculable: true,
+                        inRange: {
+                            opacity: 1,
+                            symbolSize: [10, 100]
                         },
-                        animationDurationUpdate: 1500,
-                        animationEasingUpdate: 'quinticInOut',
-                        series : [
-                            {
-                                name: 'Les Miserables',
-                                type: 'graph',
-                                layout: 'none',
-                                data: graph.nodes,
-                                links: graph.links,
-                                categories: categories,
-                                roam: true,
-                                label: {
-                                    normal: {
-                                        textStyle: {
-                                            color: '#333'
-                                        },
-                                        position: 'right',
-                                        formatter: '{b}'
-                                    }
-                                },
-                                lineStyle: {
-                                    normal: {
-                                        curveness: 0.3
-                                    }
+                        outOfRange: {
+                            opacity: 0.2,
+                            symbolSize: [10, 100]
+                        }
+                    },
+                    animationDurationUpdate: 1500,
+                    animationEasingUpdate: 'quinticInOut',
+                    series : [
+                        {
+                            name: 'Les Miserables',
+                            type: 'graph',
+                            layout: 'none',
+                            data: graph.nodes,
+                            links: graph.links,
+                            categories: categories,
+                            roam: true,
+                            label: {
+                                normal: {
+                                    textStyle: {
+                                        color: '#333'
+                                    },
+                                    position: 'right',
+                                    formatter: '{b}'
+                                }
+                            },
+                            lineStyle: {
+                                normal: {
+                                    curveness: 0.3
                                 }
                             }
-                        ]
-                    };
+                        }
+                    ]
+                };
 
-                    chart.setOption(option);
+                chart.setOption(option);
 
-                });
             });
         </script>
 
