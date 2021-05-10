@@ -149,7 +149,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         function beforeLink(nodeData: List) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 const node = tree.getNodeByDataIndex(idx);
-                if (!node.children.length || !node.isExpand) {
+                if (!node?.children.length || !node.isExpand) {
                     model.parentModel = leavesModel;
                 }
                 return model;
