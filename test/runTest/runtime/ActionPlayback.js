@@ -101,7 +101,13 @@ export class ActionPlayback {
                 self._current = current;
 
                 try {
-                    await self._update(takeScreenshot);
+                    // Execute all if there are multiple ops in one frame.
+                    do {
+                        const executed = await self._update(takeScreenshot);
+                        if (!executed) {
+                            break;
+                        }
+                    } while (true);
                 }
                 catch (e) {
                     // Stop running and throw error.
@@ -132,7 +138,7 @@ export class ActionPlayback {
     async _update(takeScreenshot) {
         let op = this._ops[this._currentOpIndex];
 
-        if (op.time > this._elapsedTime) {
+        if (!op || (op.time > this._elapsedTime)) {
             // Not yet.
             return;
         }
@@ -204,5 +210,7 @@ export class ActionPlayback {
             }
             this._isLastOpMousewheel = false;
         }
+
+        return true;
     }
 };

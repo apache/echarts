@@ -60,6 +60,8 @@ if (!program.expected) {
     throw new Error('Expected version is required');
 }
 
+console.log('Playback Ratio: ', program.speed);
+
 function getScreenshotDir() {
     return `${program.dir}/__screenshot__`;
 }

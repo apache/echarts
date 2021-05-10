@@ -130,8 +130,6 @@ const app = new Vue({
         runConfig: Object.assign({
             sortBy: 'name',
 
-            // replaySpeed: 5,
-
             isActualNightly: false,
             isExpectedNightly: false,
             actualVersion: 'local',

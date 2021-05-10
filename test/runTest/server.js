@@ -348,9 +348,10 @@ async function start() {
             }
 
             if (!isAborted) {
-                console.log('Finished');
+                const deltaTime = Date.now() - startTime;
+                console.log('Finished in ', Math.round(deltaTime / 1000) + ' second');
                 io.of('/client').emit('finish', {
-                    time: Date.now() - startTime,
+                    time: deltaTime,
                     count: data.tests.length,
                     threads: data.threads
                 });
