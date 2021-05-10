@@ -18,13 +18,8 @@
 */
 
 import seedrandom from 'seedrandom';
-import MockDate from './MockDate';
-
-window.Date = MockDate;
-
-if (typeof __TEST_PLAYBACK_SPEED__ === 'undefined') {
-    window.__TEST_PLAYBACK_SPEED__ = 1;
-}
+import { ActionPlayback } from './ActionPlayback';
+import * as timeline from './timeline';
 
 let myRandom = new seedrandom('echarts-random');
 // Random for echarts code.
@@ -41,6 +36,82 @@ window.__random__inner__ = function () {
     const val = myRandom2();
     return val;
 };
+
+let vstStarted = false;
+
+window.__VRT_START__ = function () {
+    if (vstStarted) {
+        return;
+    }
+    vstStarted = true;
+    timeline.start();
+
+    // TODO not support reload without simpleRequire
+    if (window.__VRT_RUN_CONTEXT__) {
+        // Restore from previous run
+        setTimeout(async () => {
+            await __VRT_RUN_ACTIONS__(
+                window.__VRT_RUN_CONTEXT__.actions,
+                window.__VRT_RUN_CONTEXT__.currentActionIndex,
+                window.__VRT_RUN_CONTEXT__.currentActionContext
+            )
+        }, 1000);
+    }
+    else {
+        // Screenshot after 1000ms (200ms if 5x speed), wait the animation to be finished
+        setTimeout(async () => {
+            // Pause timeline until run actions.
+            timeline.pause();
+            await __VRT_FULL_SCREENSHOT__();
+        }, 1000);
+    }
+}
+
+function saveRunningContext(actions, actionIndex, playback) {
+    localStorage.setItem('vstRunContext', JSON.stringify({
+        actions: actions,
+        currentActionIndex: actionIndex,
+        currentActionContext: playback.getContext()
+    }));
+}
+
+window.__VRT_RUN_ACTIONS__ = async function (actions, restoredActionIndex, restoredActionContext) {
+    // Actions can only bu runned once.
+    timeline.resume();
+
+    const actionPlayback = new ActionPlayback();
+
+    const nativeLocation = window.location;
+    let currentActionIndex = 0;
+
+    // Some test cases change the params through reload().
+    // We need to save the running info and keep running after reload.
+    // window.location seems can't be redefined anymore. So we can only provide helper functions.
+    window.__VRT_RELOAD__ = function () {
+        // Mark reload triggered and let ActionPlayback stop.
+        window.__VRT_RELOAD_TRIGGERED__ = true;
+        saveRunningContext(actions, currentActionIndex, actionPlayback);
+        timeline.nativeSetTimeout(() => {
+            // CDPSession pay be disconnected if reload immediately.
+            nativeLocation.reload();
+        }, 100);
+    }
+
+    for (const [index, action] of actions.entries()) {
+        currentActionIndex = index;
+        if (index < restoredActionIndex) {
+            continue;
+        }
+        window.scrollTo(action.scrollX, action.scrollY);
+        await actionPlayback.runAction(action, __VRT_PLAYBACK_SPEED__, index === restoredActionIndex ? restoredActionContext : null);
+
+    }
+    actionPlayback.stop();
+
+    __VRT_FINISH_ACTIONS__();
+}
+
+
 
 window.addEventListener('DOMContentLoaded', () => {
     let style = document.createElement('style');

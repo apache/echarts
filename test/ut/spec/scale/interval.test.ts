@@ -18,7 +18,7 @@
 * under the License.
 */
 
-import { createChart, isValueFinite, getECModel } from '../../core/utHelper';
+import { createChart, getECModel } from '../../core/utHelper';
 import { EChartsType } from '../../../../src/echarts';
 import CartesianAxisModel from '../../../../src/coord/cartesian/AxisModel';
 import IntervalScale from '../../../../src/scale/Interval';
@@ -124,10 +124,10 @@ describe('scale_interval', function () {
             const resultInterval = result.interval;
             const niceTickExtent = result.niceTickExtent;
 
-            expect(isValueFinite(resultInterval)).toEqual(true);
-            expect(isValueFinite(intervalPrecision)).toEqual(true);
-            expect(isValueFinite(niceTickExtent[0])).toEqual(true);
-            expect(isValueFinite(niceTickExtent[1])).toEqual(true);
+            expect(resultInterval).toBeFinite();
+            expect(intervalPrecision).toBeFinite();
+            expect(niceTickExtent[0]).toBeFinite();
+            expect(niceTickExtent[1]).toBeFinite();
 
             expect(niceTickExtent[0]).toBeGreaterThanOrEqual(extent[0]);
             expect(niceTickExtent[1]).not.toBeGreaterThan(extent[1]);

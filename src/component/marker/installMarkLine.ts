@@ -17,6 +17,7 @@
 * under the License.
 */
 import { EChartsExtensionInstallRegisters } from '../../extension';
+import checkMarkerInSeries from './checkMarkerInSeries';
 import MarkLineModel from './MarkLineModel';
 import MarkLineView from './MarkLineView';
 
@@ -25,7 +26,9 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerComponentView(MarkLineView);
 
     registers.registerPreprocessor(function (opt) {
-        // Make sure markLine component is enabled
-        opt.markLine = opt.markLine || {};
+        if (checkMarkerInSeries(opt.series, 'markLine')) {
+            // Make sure markLine component is enabled
+            opt.markLine = opt.markLine || {};
+        }
     });
 }

@@ -25,11 +25,18 @@ module.exports.blacklist = [
     'lines-ny-appendData.html',
     'linesGL-ny-appendData.html',
     'richText.html',
-    'tmp-base.html',
 
     'finished-gl.html',
     'scatter-gps.html',
     'webkit-dep.html',
+
+    // For test
+    'canvas-replay.html',
+    'tmp-base.html',
+
+    // Mobile
+    'mobileBench.html',
+    'touch-test.html',
 
     // Image size not match
     'symbol2.html',

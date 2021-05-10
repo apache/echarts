@@ -18,7 +18,40 @@
 */
 
 const socket = io('/client');
-const LOCAL_SAVE_KEY = 'visual-regression-testing-config';
+
+// const LOCAL_SAVE_KEY = 'visual-regression-testing-config';
+
+function getChangedObject(target, source) {
+    let changedObject = {};
+    Object.keys(source).forEach(key => {
+        if (target[key] !== source[key]) {
+            changedObject[key] = source[key];
+        }
+    });
+    return changedObject;
+}
+
+function parseParams(str) {
+    if (!str) {
+        return {};
+    }
+    const parts = str.split('&');
+    const params = {};
+    parts.forEach((part) => {
+        const kv = part.split('=');
+        params[kv[0]] = decodeURIComponent(kv[1]);
+    });
+    return params;
+}
+
+function assembleParams(paramsObj) {
+    const paramsArr = [];
+    Object.keys(paramsObj).forEach((key) => {
+        let val = paramsObj[key];
+        paramsArr.push(key + '=' + encodeURIComponent(val));
+    });
+    return paramsArr.join('&');
+}
 
 function processTestsData(tests, oldTestsData) {
     tests.forEach((test, idx) => {
@@ -45,6 +78,8 @@ function processTestsData(tests, oldTestsData) {
             test.summary = 'warning';
         }
 
+        // To simplify the condition in sort
+        test.actualErrors = test.actualErrors || [];
         // Keep select status not change.
         if (oldTestsData && oldTestsData[idx]) {
             test.selected = oldTestsData[idx].selected;
@@ -56,52 +91,113 @@ function processTestsData(tests, oldTestsData) {
     return tests;
 }
 
+const urlRunConfig = {};
+const urlParams = parseParams(window.location.search.substr(1))
+
+// Save and restore
+try {
+    const runConfig = JSON.parse(urlParams.runConfig);
+    Object.assign(urlRunConfig, runConfig);
+}
+catch (e) {}
+
 const app = new Vue({
     el: '#app',
     data: {
         fullTests: [],
-        currentTestName: '',
-        sortBy: 'name',
+        currentTestName: urlParams.test || '',
         searchString: '',
         running: false,
 
         allSelected: false,
         lastSelectedIndex: -1,
 
-        versions: [],
+        expectedVersionsList: [],
+        actualVersionsList: [],
+
+        loadingVersion: false,
 
         showIframeDialog: false,
         previewIframeSrc: '',
         previewTitle: '',
 
-        runConfig: {
-            noHeadless: false,
-            replaySpeed: 5,
+        // List of all runs.
+        showRunsDialog: false,
+        testsRuns: [],
+
+        pageInvisible: false,
+
+        runConfig: Object.assign({
+            sortBy: 'name',
+
+            // replaySpeed: 5,
+
+            isActualNightly: false,
+            isExpectedNightly: false,
             actualVersion: 'local',
             expectedVersion: null,
+
             renderer: 'canvas',
-            threads: 1
-        }
+            threads: 4
+        }, urlRunConfig)
     },
+
+    mounted() {
+        // Sync config from server when first time open
+        // or switching back
+        socket.emit('syncRunConfig', {
+            runConfig: this.runConfig,
+            // Override server config from URL.
+            forceSet: Object.keys(urlRunConfig).length > 0
+        });
+        socket.on('syncRunConfig_return', res => {
+            this.expectedVersionsList = res.expectedVersionsList;
+            this.actualVersionsList = res.actualVersionsList;
+            // Only assign on changed object to avoid unnecessary vue change.
+            Object.assign(this.runConfig, getChangedObject(this.runConfig, res.runConfig));
+
+            updateUrl();
+        });
+
+        setTimeout(() => {
+            this.scrollToCurrent();
+        }, 500);
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === 'visible') {
+                this.pageInvisible = false;
+                socket.emit('syncRunConfig', {});
+            }
+            else {
+                this.pageInvisible = true;
+            }
+        });
+    },
+
     computed: {
+        finishedPercentage() {
+            let finishedCount = 0;
+            this.fullTests.forEach(test => {
+                if (test.status === 'finished') {
+                    finishedCount++;
+                }
+            });
+            return +(finishedCount / this.fullTests.length * 100).toFixed(1) || 0;
+        },
+
         tests() {
-            let sortFunc = this.sortBy === 'name'
+            let sortFunc = this.runConfig.sortBy === 'name'
                 ? (a, b) => a.name.localeCompare(b.name)
                 : (a, b) => {
-                    if (a.percentage === b.percentage) {
-                        if (a.actualErrors && b.actualErrors) {
-                            if (a.actualErrors.length === b.actualErrors.length) {
-                                return a.name.localeCompare(b.name);
-                            }
-                            else {
-                                return b.actualErrors.length - a.actualErrors.length;
-                            }
-                        }
-                        else {
+                    if (a.actualErrors.length === b.actualErrors.length) {
+                        if (a.percentage === b.percentage) {
                             return a.name.localeCompare(b.name);
                         }
+                        else {
+                            return a.percentage - b.percentage;
+                        }
                     }
-                    return a.percentage - b.percentage;
+                    return b.actualErrors.length - a.actualErrors.length;
                 };
 
             if (!this.searchString) {
@@ -116,7 +212,8 @@ const app = new Vue({
         },
 
         selectedTests() {
-            return this.fullTests.filter(test => {
+            // Only run visible tests.
+            return this.tests.filter(test => {
                 return test.selected;
             });
         },
@@ -159,12 +256,37 @@ const app = new Vue({
             set() {}
         }
     },
+
+    watch: {
+        'runConfig.sortBy'() {
+            setTimeout(() => {
+                this.scrollToCurrent();
+            }, 100);
+        },
+
+        'currentTestName'(newVal, oldVal) {
+            updateUrl();
+        }
+    },
+
     methods: {
-        goto(url) {
-            window.location.hash = '#' + url;
+        scrollToCurrent() {
+            const el = document.querySelector(`.test-list>li[title="${this.currentTestName}"]`);
+            if (el) {
+                el.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        },
+
+        changeTest(target, testName) {
+            if (!target.matches('input[type="checkbox"]') && !target.matches('.el-checkbox__inner')) {
+                app.currentTestName = testName;
+            }
         },
         toggleSort() {
-            this.sortBy = this.sortBy === 'name' ? 'percentage' : 'name';
+            this.runConfig.sortBy = this.runConfig.sortBy === 'name' ? 'percentage' : 'name';
         },
         handleSelectAllChange(val) {
             // Only select filtered tests.
@@ -189,8 +311,8 @@ const app = new Vue({
                 this.tests[i].selected = selected;
             }
         },
-        runSingleTest(testName) {
-            runTests([testName]);
+        runSingleTest(testName, noHeadless) {
+            runTests([testName], noHeadless);
         },
         run(runTarget) {
             let tests;
@@ -206,7 +328,7 @@ const app = new Vue({
             else {
                 tests = this.fullTests;
             }
-            runTests(tests.map(test => test.name));
+            runTests(tests.map(test => test.name), false);
         },
         stopTests() {
             this.running = false;
@@ -230,20 +352,51 @@ const app = new Vue({
             this.previewIframeSrc = `../../${src}`;
             this.previewTitle = src;
             this.showIframeDialog = true;
+        },
+
+        showAllTestsRuns() {
+            this.showRunsDialog = true;
+            socket.emit('getAllTestsRuns');
+        },
+
+        switchTestsRun(runResult) {
+            this.runConfig.expectedVersion = runResult.expectedVersion;
+            this.runConfig.actualVersion = runResult.actualVersion;
+            // TODO
+            this.runConfig.isExpectedNightly = runResult.expectedVersion.includes('-dev.');
+            this.runConfig.isActualNightly = runResult.actualVersion.includes('-dev.');
+            this.runConfig.renderer = runResult.renderer;
+
+            this.showRunsDialog = false;
+        },
+
+        genTestsRunReport(runResult) {
+            socket.emit('genTestsRunReport', runResult);
+        },
+
+        delTestsRun(runResult) {
+            app.$confirm('Are you sure to delete this run?', 'Warn', {
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No',
+                center: true
+            }).then(value => {
+                const idx = this.testsRuns.indexOf(runResult);
+                if (idx >= 0) {
+                    this.testsRuns.splice(idx, 1);
+                }
+                socket.emit('delTestsRun', {
+                    id: runResult.id
+                });
+            }).catch(() => {});
+        },
+
+        open(url, target) {
+            window.open(url, target);
         }
     }
 });
 
-// Save and restore
-try {
-    Object.assign(app.runConfig, JSON.parse(localStorage.getItem(LOCAL_SAVE_KEY)));
-}
-catch (e) {}
-app.$watch('runConfig', () => {
-    localStorage.setItem(LOCAL_SAVE_KEY, JSON.stringify(app.runConfig));
-}, {deep: true});
-
-function runTests(tests) {
+function runTests(tests, noHeadless) {
     if (!tests.length) {
         app.$notify({
             title: 'No test selected.',
@@ -265,36 +418,39 @@ function runTests(tests) {
         actualVersion: app.runConfig.actualVersion,
         threads: app.runConfig.threads,
         renderer: app.runConfig.renderer,
-        noHeadless: app.runConfig.noHeadless,
-        replaySpeed: app.runConfig.noHeadless
-            ? app.runConfig.replaySpeed
-            : 5 // Force run at 5x speed
+        noHeadless,
+        replaySpeed: noHeadless ? 5 : 5
     });
 }
 
 
 socket.on('connect', () => {
     console.log('Connected');
-
-    app.$el.style.display = 'block';
 });
 
 let firstUpdate = true;
 socket.on('update', msg => {
-    let hasFinishedTest = !!msg.tests.find(test => test.status === 'finished');
-    if (!hasFinishedTest && firstUpdate) {
-        app.$confirm('It seems you haven\'t run any test yet!<br />Do you want to start now?', 'Tip', {
-            confirmButtonText: 'Yes',
-            cancelButtonText: 'No',
-            dangerouslyUseHTMLString: true,
-            center: true
-        }).then(value => {
-            runTests(msg.tests.map(test => test.name));
-        }).catch(() => {});
-    }
+    app.$el.style.display = 'block';
+
+    // let hasFinishedTest = !!msg.tests.find(test => test.status === 'finished');
+    // if (!hasFinishedTest && firstUpdate) {
+    //     app.$confirm('You haven\'t run any test on these two versions yet!<br />Do you want to start now?', 'Tip', {
+    //         confirmButtonText: 'Yes',
+    //         cancelButtonText: 'No',
+    //         dangerouslyUseHTMLString: true,
+    //         center: true
+    //     }).then(value => {
+    //         runTests(msg.tests.map(test => test.name));
+    //     }).catch(() => {});
+    // }
+
     // TODO
     app.running = !!msg.running;
     app.fullTests = processTestsData(msg.tests, app.fullTests);
+
+    if (!app.currentTestName) {
+        app.currentTestName = app.fullTests[0].name;
+    }
 
     firstUpdate = false;
 });
@@ -317,18 +473,29 @@ socket.on('abort', res => {
     });
     app.running = false;
 });
-socket.on('versions', versions => {
-    app.versions = versions.filter(version => {
-        return !version.startsWith('2.');
-    }).reverse();
-    if (!app.runConfig.expectedVersion) {
-        app.runConfig.expectedVersion = app.versions[0];
-    }
-    app.versions.unshift('local');
+
+socket.on('getAllTestsRuns_return', res => {
+    app.testsRuns = res.runs;
+});
+socket.on('genTestsRunReport_return', res => {
+    window.open(res.reportUrl, '_blank');
 });
 
-function updateTestHash() {
-    app.currentTestName = window.location.hash.slice(1);
+function updateUrl() {
+    const searchUrl = assembleParams({
+        test: app.currentTestName,
+        runConfig: JSON.stringify(app.runConfig)
+    });
+    history.pushState({}, '', location.pathname + '?' + searchUrl);
 }
-updateTestHash();
-window.addEventListener('hashchange', updateTestHash);
+
+// Only update url when version is changed.
+app.$watch('runConfig', (newVal, oldVal) => {
+    if (!app.pageInvisible) {
+        socket.emit('syncRunConfig', {
+            runConfig: app.runConfig,
+            // Override server config from URL.
+            forceSet: true
+        });
+    }
+}, { deep: true });

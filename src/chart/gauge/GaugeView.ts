@@ -30,6 +30,10 @@ import { ColorString, ECElement } from '../../util/types';
 import List from '../../data/List';
 import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
+import ZRImage from 'zrender/src/graphic/Image';
+import {extend} from 'zrender/src/core/util';
+
+type ECSymbol = ReturnType<typeof createSymbol>;
 
 interface PosInfo {
     cx: number
@@ -476,9 +480,25 @@ class GaugeView extends ChartView {
                 const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
                 const emphasisModel = itemModel.getModel('emphasis');
                 if (showPointer) {
-                    const pointer = data.getItemGraphicEl(idx) as PointerPath;
-                    pointer.useStyle(data.getItemVisual(idx, 'style'));
+                    const pointer = data.getItemGraphicEl(idx) as ECSymbol;
+                    const symbolStyle = data.getItemVisual(idx, 'style');
+                    const visualColor = symbolStyle.fill;
+                    if (pointer instanceof ZRImage) {
+                        const pathStyle = pointer.style;
+                        pointer.useStyle(extend({
+                            image: pathStyle.image,
+                            x: pathStyle.x, y: pathStyle.y,
+                            width: pathStyle.width, height: pathStyle.height
+                        }, symbolStyle));
+                    }
+                    else {
+                        pointer.useStyle(symbolStyle);
+                        pointer.type !== 'pointer' && pointer.setColor(visualColor);
+                    }
+
                     pointer.setStyle(itemModel.getModel(['pointer', 'itemStyle']).getItemStyle());
+
+
                     if (pointer.style.fill === 'auto') {
                         pointer.setStyle('fill', getColor(
                             linearMap(data.get(valueDim, idx) as number, valueExtent, [0, 1], true)

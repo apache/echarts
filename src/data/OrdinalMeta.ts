@@ -113,7 +113,7 @@ class OrdinalMeta {
     // Consider big data, do not create map until needed.
     private _getOrCreateMap(): HashMap<OrdinalNumber> {
         return this._map || (
-            this._map = createHashMap(this.categories)
+            this._map = createHashMap<OrdinalNumber>(this.categories)
         );
     }
 }

@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="./lib/esl.js"></script>
+        <script src="./lib/simpleRequire.js"></script>
         <script src="./lib/config.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
@@ -40,16 +40,8 @@ under the License.
         <script>
 
             require([
-                'data/rainfall.json',
+                'data/rainfall.json.js',
                 'echarts'
-                // 'echarts/chart/bar',
-                // 'echarts/chart/line',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/grid',
-                // 'echarts/component/axis',
-                // 'echarts/component/dataZoom',
-                // 'echarts/component/markArea'
             ], function (data, echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));

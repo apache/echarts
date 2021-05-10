@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
     </head>
     <body>
@@ -36,9 +36,6 @@ under the License.
 
             require([
                 'echarts'
-                // 'echarts/chart/radar',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
@@ -49,7 +46,10 @@ under the License.
                     },
                     tooltip: {},
                     legend: {
-                        data: ['预算分配（Allocated Budget）', '实际开销（Actual Spending）含有 "-" 数据', '第一个元素是 null']
+                        data: [{
+                            icon: 'circle',
+                            name: 'Legend 应为 Circle'
+                        }, '实际开销（Actual Spending）含有 "-" 数据', '第一个元素是 null', 'symbol 为 none 的需要用 roundRect']
                     },
                     radar: {
                         radius: [50, '70%'],
@@ -80,7 +80,7 @@ under the License.
                         data : [
                             {
                                 value : [0, 10000, 28000, 35000, 50000, 19000],
-                                name : '预算分配（Allocated Budget）'
+                                name : 'Legend 应为 Circle'
                             },
                              {
                                 value : [50, 14000, 28000, 31000, '-', 21000],
@@ -96,6 +96,21 @@ under the License.
                         symbolRotate: function(value, params) {
                             return ~~(360 * Math.random());
                         }
+                    }, {
+                        name: '2',
+                        type: 'radar',
+                        label: {
+                            normal: {
+                                show: true
+                            }
+                        },
+                        data : [
+                            {
+                                value : [100, 2800, 3500, 5000, 1900, 1000],
+                                name : 'symbol 为 none 的需要用 roundRect'
+                            }
+                        ],
+                        symbol: 'none'
                     }]
                 });
                 var theIndex = 2;

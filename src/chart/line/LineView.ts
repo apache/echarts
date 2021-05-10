@@ -239,11 +239,11 @@ function getVisualGradient(
         coord?: number
         color: ColorString
     }
-    // dataToCoor mapping may not be linear, but must be monotonic.
+    // dataToCoord mapping may not be linear, but must be monotonic.
     const colorStops: ColorStop[] = zrUtil.map(visualMeta.stops, function (stop) {
         return {
             offset: 0,
-            coord: axis.toGlobalCoord(axis.dataToCoord(stop.value)),
+            coord: axis.toGlobalCoord(axis.dataToCoord(stop.value, true)),
             color: stop.color
         };
     });
@@ -738,7 +738,7 @@ class LineView extends ChartView {
 
         if (polyline.style.lineWidth > 0 && seriesModel.get(['emphasis', 'lineStyle', 'width']) === 'bolder') {
             const emphasisLineStyle = polyline.getState('emphasis').style;
-            emphasisLineStyle.lineWidth = polyline.style.lineWidth + 1;
+            emphasisLineStyle.lineWidth = +polyline.style.lineWidth + 1;
         }
 
         // Needs seriesIndex for focus
@@ -840,6 +840,11 @@ class LineView extends ChartView {
                     seriesModel.get('zlevel'),
                     seriesModel.get('z')
                 );
+
+                // ensure label text of the temporal symbol is on the top of line and area polygon
+                const symbolLabel = symbol.getSymbolPath().getTextContent();
+                symbolLabel && (symbolLabel.z2 = this._polyline.z2 + 1);
+
                 (symbol as SymbolExtended).__temp = true;
                 data.setItemGraphicEl(dataIndex, symbol);
 

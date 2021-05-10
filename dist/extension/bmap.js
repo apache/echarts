@@ -51,7 +51,15 @@
   };
 
   BMapCoordSys.prototype.dataToPoint = function (data) {
-    var point = new BMap.Point(data[0], data[1]);
+    var point = new BMap.Point(data[0], data[1]); // TODO mercator projection is toooooooo slow
+    // let mercatorPoint = this._projection.lngLatToPoint(point);
+    // let width = this._api.getZr().getWidth();
+    // let height = this._api.getZr().getHeight();
+    // let divider = Math.pow(2, 18 - 10);
+    // return [
+    //     Math.round((mercatorPoint.x - this._center.x) / divider + width / 2),
+    //     Math.round((this._center.y - mercatorPoint.y) / divider + height / 2)
+    // ];
 
     var px = this._bmap.pointToOverlayPixel(point);
 
@@ -81,6 +89,7 @@
     var rect = this.getViewRect();
     return {
       coordSys: {
+        // The name exposed to user is always 'cartesian2d' but not 'grid'.
         type: 'bmap',
         x: rect.x,
         y: rect.y,
@@ -108,7 +117,8 @@
     }, this);
   }
 
-  var Overlay;
+  var Overlay; // For deciding which dimensions to use when creating list data
+
   BMapCoordSys.dimensions = BMapCoordSys.prototype.dimensions;
 
   function createOverlayCtor() {
@@ -117,11 +127,21 @@
     }
 
     Overlay.prototype = new BMap.Overlay();
+    /**
+     * 初始化
+     *
+     * @param {BMap.Map} map
+     * @override
+     */
 
     Overlay.prototype.initialize = function (map) {
       map.getPanes().labelPane.appendChild(this._root);
       return this._root;
     };
+    /**
+     * @override
+     */
+
 
     Overlay.prototype.draw = function () {};
 
@@ -130,7 +150,8 @@
 
   BMapCoordSys.create = function (ecModel, api) {
     var bmapCoordSys;
-    var root = api.getDom();
+    var root = api.getDom(); // TODO Dispose
+
     ecModel.eachComponent('bmap', function (bmapModel) {
       var painter = api.getZr().painter;
       var viewportRoot = painter.getViewportRoot();
@@ -148,28 +169,34 @@
       var bmap;
 
       if (!bmapModel.__bmap) {
+        // Not support IE8
         var bmapRoot = root.querySelector('.ec-extension-bmap');
 
         if (bmapRoot) {
+          // Reset viewport left and top, which will be changed
+          // in moving handler in BMapView
           viewportRoot.style.left = '0px';
           viewportRoot.style.top = '0px';
           root.removeChild(bmapRoot);
         }
 
         bmapRoot = document.createElement('div');
-        bmapRoot.className = 'ec-extension-bmap';
+        bmapRoot.className = 'ec-extension-bmap'; // fix #13424
+
         bmapRoot.style.cssText = 'position:absolute;width:100%;height:100%';
-        root.appendChild(bmapRoot);
+        root.appendChild(bmapRoot); // initializes bmap
+
         var mapOptions = bmapModel.get('mapOptions');
 
         if (mapOptions) {
-          mapOptions = echarts.util.clone(mapOptions);
+          mapOptions = echarts.util.clone(mapOptions); // Not support `mapType`, use `bmap.setMapType(MapType)` instead.
+
           delete mapOptions.mapType;
         }
 
         bmap = bmapModel.__bmap = new BMap.Map(bmapRoot, mapOptions);
         var overlay = new Overlay(viewportRoot);
-        bmap.addOverlay(overlay);
+        bmap.addOverlay(overlay); // Override
 
         painter.getViewportRootOffset = function () {
           return {
@@ -179,7 +206,9 @@
         };
       }
 
-      bmap = bmapModel.__bmap;
+      bmap = bmapModel.__bmap; // Set bmap options
+      // centerAndZoom before layout and render
+
       var center = bmapModel.get('center');
       var zoom = bmapModel.get('zoom');
 
@@ -214,6 +243,7 @@
   echarts.extendComponentModel({
     type: 'bmap',
     getBMap: function () {
+      // __bmap is injected when creating BMapCoordSys
       return this.__bmap;
     },
     setCenterAndZoom: function (center, zoom) {
@@ -227,8 +257,11 @@
     defaultOption: {
       center: [104.114129, 37.550339],
       zoom: 5,
+      // 2.0 http://lbsyun.baidu.com/custom/index.htm
       mapStyle: {},
+      // 3.0 http://lbsyun.baidu.com/index.php?title=open/custom
       mapStyleV2: {},
+      // See https://lbsyun.baidu.com/cms/jsapi/reference/jsapi_reference.html#a0b1
       mapOptions: {},
       roam: false
     }
@@ -258,7 +291,8 @@
         }
 
         var offsetEl = viewportRoot.parentNode.parentNode.parentNode;
-        var mapOffset = [-parseInt(offsetEl.style.left, 10) || 0, -parseInt(offsetEl.style.top, 10) || 0];
+        var mapOffset = [-parseInt(offsetEl.style.left, 10) || 0, -parseInt(offsetEl.style.top, 10) || 0]; // only update style when map offset changed
+
         var viewportRootStyle = viewportRoot.style;
         var offsetLeft = mapOffset[0] + 'px';
         var offsetTop = mapOffset[1] + 'px';
@@ -319,24 +353,32 @@
         bmap.disableDoubleClickZoom();
         bmap.disablePinchToZoom();
       }
+      /* map 2.0 */
+
 
       var originalStyle = bMapModel.__mapStyle;
-      var newMapStyle = bMapModel.get('mapStyle') || {};
+      var newMapStyle = bMapModel.get('mapStyle') || {}; // FIXME, Not use JSON methods
+
       var mapStyleStr = JSON.stringify(newMapStyle);
 
       if (JSON.stringify(originalStyle) !== mapStyleStr) {
+        // FIXME May have blank tile when dragging if setMapStyle
         if (!isEmptyObject(newMapStyle)) {
           bmap.setMapStyle(echarts.util.clone(newMapStyle));
         }
 
         bMapModel.__mapStyle = JSON.parse(mapStyleStr);
       }
+      /* map 3.0 */
+
 
       var originalStyle2 = bMapModel.__mapStyle2;
-      var newMapStyle2 = bMapModel.get('mapStyleV2') || {};
+      var newMapStyle2 = bMapModel.get('mapStyleV2') || {}; // FIXME, Not use JSON methods
+
       var mapStyleStr2 = JSON.stringify(newMapStyle2);
 
       if (JSON.stringify(originalStyle2) !== mapStyleStr2) {
+        // FIXME May have blank tile when dragging if setMapStyle
         if (!isEmptyObject(newMapStyle2)) {
           bmap.setMapStyleV2(echarts.util.clone(newMapStyle2));
         }
@@ -348,7 +390,8 @@
     }
   });
 
-  echarts.registerCoordinateSystem('bmap', BMapCoordSys);
+  echarts.registerCoordinateSystem('bmap', BMapCoordSys); // Action
+
   echarts.registerAction({
     type: 'bmapRoam',
     event: 'bmapRoam',

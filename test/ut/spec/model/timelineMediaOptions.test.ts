@@ -24,7 +24,7 @@ import { ParsedValue } from '../../../../src/util/types';
 import { LegendOption } from '../../../../src/component/legend/LegendModel';
 import TimelineModel from '../../../../src/component/timeline/TimelineModel';
 import { createChart, getECModel } from '../../core/utHelper';
-import { EChartsFullOption } from '../../../../src/option';
+import { EChartsOption } from '../../../../src/export/option';
 
 
 describe('timelineMediaOptions', function () {
@@ -36,7 +36,7 @@ describe('timelineMediaOptions', function () {
         return getECModel(chart).getComponent('series', seriesIndex) as SeriesModel;
     }
     function getLegendOption(chart: EChartsType): LegendOption {
-        return getECModel(chart).getComponent('legend', 0).option;
+        return getECModel(chart).getComponent('legend', 0).option as LegendOption;
     }
     function getTimelineComponent(chart: EChartsType): TimelineModel {
         return getECModel(chart).getComponent('timeline', 0) as TimelineModel;
@@ -60,7 +60,7 @@ describe('timelineMediaOptions', function () {
     describe('parse_timeline_media_option', function () {
 
         it('parse_media_has_baseOption_has_default', function () {
-            const option: EChartsFullOption = {
+            const option: EChartsOption = {
                 baseOption: {
                     xAxis: { data: ['a'] },
                     yAxis: {},
@@ -88,7 +88,7 @@ describe('timelineMediaOptions', function () {
         });
 
         it('parse_media_no_baseOption_has_default', function () {
-            const option: EChartsFullOption = {
+            const option: EChartsOption = {
                 xAxis: { data: ['a'] },
                 yAxis: {},
                 legend: { left: 10 },
@@ -112,7 +112,7 @@ describe('timelineMediaOptions', function () {
         });
 
         it('parse_media_no_baseOption_no_default', function () {
-            const option: EChartsFullOption = {
+            const option: EChartsOption = {
                 xAxis: { data: ['a'] },
                 yAxis: {},
                 legend: { left: 10 },
@@ -132,7 +132,7 @@ describe('timelineMediaOptions', function () {
         });
 
         it('parse_timeline_media_has_baseOption', function () {
-            const option: EChartsFullOption = {
+            const option: EChartsOption = {
                 baseOption: {
                     timeline: { axisType: 'category' },
                     xAxis: { data: ['a'] },
@@ -166,13 +166,13 @@ describe('timelineMediaOptions', function () {
             expect(getData0(chart, 0)).toEqual(88);
             expect(getLegendOption(chart).left).toEqual(50);
 
-            chart.setOption({ timeline: { currentIndex: 1 } });
+            chart.setOption<EChartsOption>({ timeline: { currentIndex: 1 } });
             expect(getData0(chart, 0)).toEqual(99);
             expect(getLegendOption(chart).left).toEqual(50);
         });
 
         it('parse_timeline_media_no_baseOption', function () {
-            const option: EChartsFullOption = {
+            const option: EChartsOption = {
                 timeline: { axisType: 'category' },
                 xAxis: { data: ['a'] },
                 yAxis: {},
@@ -202,13 +202,13 @@ describe('timelineMediaOptions', function () {
             expect(getData0(chart, 0)).toEqual(88);
             expect(getLegendOption(chart).left).toEqual(50);
 
-            chart.setOption({ timeline: { currentIndex: 1 } });
+            chart.setOption<EChartsOption>({ timeline: { currentIndex: 1 } });
             expect(getData0(chart, 0)).toEqual(99);
             expect(getLegendOption(chart).left).toEqual(50);
         });
 
         it('parse_timeline_has_baseOption', function () {
-            const option: EChartsFullOption = {
+            const option: EChartsOption = {
                 baseOption: {
                     timeline: { axisType: 'category' },
                     xAxis: { data: ['a'] },
@@ -227,12 +227,12 @@ describe('timelineMediaOptions', function () {
             expect(getLegendOption(chart).right).not.toEqual(123);
             expect(getTimelineComponent(chart) != null).toEqual(true);
 
-            chart.setOption({ timeline: { currentIndex: 1 } });
+            chart.setOption<EChartsOption>({ timeline: { currentIndex: 1 } });
             expect(getData0(chart, 0)).toEqual(99);
         });
 
         it('parse_timeline_has_baseOption_compat', function () {
-            const option: EChartsFullOption = {
+            const option: EChartsOption = {
                 timeline: { axisType: 'category' },
                 baseOption: {
                     xAxis: { data: ['a'] },
@@ -251,12 +251,12 @@ describe('timelineMediaOptions', function () {
             expect(getLegendOption(chart).right).not.toEqual(123);
             expect(getTimelineComponent(chart) != null).toEqual(true);
 
-            chart.setOption({ timeline: { currentIndex: 1 } });
+            chart.setOption<EChartsOption>({ timeline: { currentIndex: 1 } });
             expect(getData0(chart, 0)).toEqual(99);
         });
 
         it('parse_timeline_has_baseOption_compat', function () {
-            const option: EChartsFullOption = {
+            const option: EChartsOption = {
                 timeline: { axisType: 'category' },
                 baseOption: {
                     xAxis: { data: ['a'] },
@@ -275,12 +275,12 @@ describe('timelineMediaOptions', function () {
             expect(getLegendOption(chart).right).not.toEqual(123);
             expect(getTimelineComponent(chart) != null).toEqual(true);
 
-            chart.setOption({ timeline: { currentIndex: 1 } });
+            chart.setOption<EChartsOption>({ timeline: { currentIndex: 1 } });
             expect(getData0(chart, 0)).toEqual(99);
         });
 
         it('parse_timeline_no_baseOption', function () {
-            const option: EChartsFullOption = {
+            const option: EChartsOption = {
                 timeline: { axisType: 'category' },
                 xAxis: { data: ['a'] },
                 yAxis: {},
@@ -296,7 +296,7 @@ describe('timelineMediaOptions', function () {
             expect(getLegendOption(chart).right).not.toEqual(123);
             expect(getTimelineComponent(chart) != null).toEqual(true);
 
-            chart.setOption({ timeline: { currentIndex: 1 } });
+            chart.setOption<EChartsOption>({ timeline: { currentIndex: 1 } });
             expect(getData0(chart, 0)).toEqual(99);
         });
 
@@ -310,7 +310,7 @@ describe('timelineMediaOptions', function () {
     describe('timeline_onceMore', function () {
 
         it('timeline_setOptionOnceMore_baseOption', function () {
-            const option: EChartsFullOption = {
+            const option: EChartsOption = {
                 baseOption: {
                     timeline: {
                         axisType: 'category',
@@ -344,7 +344,7 @@ describe('timelineMediaOptions', function () {
             expect(getData0(chart, 0)).toEqual(11);
             expect(getData0(chart, 1)).toEqual(22);
 
-            chart.setOption({
+            chart.setOption<EChartsOption>({
                 xAxis: {data: ['c']},
                 timeline: {
                     currentIndex: 1
@@ -358,7 +358,7 @@ describe('timelineMediaOptions', function () {
 
 
         it('timeline_setOptionOnceMore_substitudeTimelineOptions', function () {
-            const option: EChartsFullOption = {
+            const option: EChartsOption = {
                 baseOption: {
                     timeline: {
                         axisType: 'category',
@@ -416,7 +416,7 @@ describe('timelineMediaOptions', function () {
             expect(getData0(chart, 0)).toEqual(1111);
             expect(getData0(chart, 1)).toEqual(2222);
 
-            chart.setOption({
+            chart.setOption<EChartsOption>({
                 timeline: {
                     currentIndex: 0
                 }
@@ -425,7 +425,7 @@ describe('timelineMediaOptions', function () {
             expect(getData0(chart, 0)).toEqual(55);
             expect(getData0(chart, 1)).toEqual(66);
 
-            chart.setOption({
+            chart.setOption<EChartsOption>({
                 timeline: {
                     currentIndex: 2
                 }

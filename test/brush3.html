@@ -23,7 +23,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
@@ -42,6 +42,7 @@ under the License.
         <div id="main1"></div>
         <div id="main0"></div>
         <div id="main2"></div>
+        <div id="main3"></div>
 
 
 
@@ -234,6 +235,41 @@ under the License.
                     'Test updateTransform: ',
                     'click "保持选择", then brush, then roam the scatter',
                     'the "cover" of the brush should be roamed together with the scatter'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: [120, 200, 150, 80, 70, 110, 130],
+                    type: 'bar'
+                }],
+                toolbox: {
+                    feature: {
+                        dataZoom: {
+                            yAxisIndex: false,
+                            filterMode: 'weakFilter'
+                        }
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main3', {
+                title: [
+                    'Test brush to end: ',
+                    'click "区域缩放", brush from the fourth bar to end of chart',
+                    'The number of selected bar should be 4'
                 ],
                 option: option
             });

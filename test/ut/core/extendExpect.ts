@@ -18,7 +18,9 @@
 * under the License.
 */
 
-import { isValueFinite } from './utHelper';
+function isValueFinite(val: unknown): boolean {
+    return val != null && val !== '' && isFinite(val as number);
+}
 
 
 // Setup expectes

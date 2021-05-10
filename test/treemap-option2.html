@@ -23,7 +23,7 @@ under the License.
 <head>
     <meta charset="utf-8">
     <title>Option View</title>
-    <script src="lib/esl.js"></script>
+    <script src="lib/simpleRequire.js"></script>
     <script src="lib/config.js"></script>
     <style type="text/css">
         body {
@@ -47,10 +47,6 @@ under the License.
 
         require([
             'echarts'
-            // 'echarts/util/format',
-            // 'echarts/component/tooltip',
-            // 'echarts/component/legend',
-            // 'echarts/chart/treemap'
         ], function (ec) {
             echarts = ec;
             formatUtil = echarts.format;

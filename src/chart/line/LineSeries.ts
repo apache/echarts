@@ -40,6 +40,9 @@ import {
 import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
+import {createSymbol, ECSymbol} from '../../util/symbol';
+import {Group} from '../../util/graphic';
+import {LegendSymbolParams} from '../../component/legend/LegendModel';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
@@ -63,7 +66,7 @@ export interface LineDataItemOption extends SymbolOptionMixin,
 }
 
 export interface LineEndLabelOption extends SeriesLabelOption {
-    valueAnimation: boolean
+    valueAnimation?: boolean
 }
 
 
@@ -127,7 +130,6 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
     coordinateSystem: Cartesian2D | Polar;
 
     hasSymbolVisual = true;
-    legendSymbol = 'line';
 
     getInitialData(option: LineSeriesOption): List {
         if (__DEV__) {
@@ -154,6 +156,9 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         label: {
             position: 'top'
         },
+
+        // itemStyle: {
+        // },
 
         endLabel: {
             show: false,
@@ -208,6 +213,48 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         progressive: 0,
         hoverLayerThreshold: Infinity
     };
+
+    getLegendIcon(opt: LegendSymbolParams): ECSymbol | Group {
+        const group = new Group();
+
+        const line = createSymbol(
+            'line',
+            0,
+            opt.itemHeight / 2,
+            opt.itemWidth,
+            0,
+            opt.lineStyle.stroke,
+            false
+        );
+        group.add(line);
+        line.setStyle(opt.lineStyle);
+
+        const visualType = this.getData().getVisual('symbol');
+        const symbolType = visualType === 'none' ? 'circle' : visualType;
+
+        // Symbol size is 80% when there is a line
+        const size = opt.itemHeight * 0.8;
+        const symbol = createSymbol(
+            symbolType,
+            (opt.itemWidth - size) / 2,
+            (opt.itemHeight - size) / 2,
+            size,
+            size,
+            opt.itemStyle.fill,
+            opt.symbolKeepAspect
+        );
+        group.add(symbol);
+
+        symbol.setStyle(opt.itemStyle);
+
+        if (symbolType.indexOf('empty') > -1) {
+            symbol.style.stroke = symbol.style.fill;
+            symbol.style.fill = '#fff';
+            symbol.style.lineWidth = 2;
+        }
+
+        return group;
+    }
 }
 
 export default LineSeriesModel;

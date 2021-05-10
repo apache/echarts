@@ -20,7 +20,7 @@
 // Fix for 南海诸岛
 
 import * as zrUtil from 'zrender/src/core/util';
-import Region from '../Region';
+import { GeoJSONRegion } from '../Region';
 
 const geoCoord = [126, 25];
 
@@ -51,9 +51,9 @@ for (let i = 0; i < points.length; i++) {
     }
 }
 
-export default function fixNanhai(mapType: string, regions: Region[]) {
+export default function fixNanhai(mapType: string, regions: GeoJSONRegion[]) {
     if (mapType === 'china') {
-        regions.push(new Region(
+        regions.push(new GeoJSONRegion(
             '南海诸岛',
             zrUtil.map(points, function (exterior) {
                 return {

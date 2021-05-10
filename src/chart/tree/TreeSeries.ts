@@ -276,7 +276,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 
         itemStyle: {
             color: 'lightsteelblue',
-            borderColor: '#c23531',
+            // borderColor: '#c23531',
             borderWidth: 1.5
         },
 

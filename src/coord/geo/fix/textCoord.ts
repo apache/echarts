@@ -1,6 +1,3 @@
-import Region from '../Region';
-import { Dictionary } from 'zrender/src/core/types';
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -20,6 +17,8 @@ import { Dictionary } from 'zrender/src/core/types';
 * under the License.
 */
 
+import { GeoJSONRegion } from '../Region';
+import { Dictionary } from 'zrender/src/core/types';
 
 const coordsOffsetMap = {
     '南海诸岛': [32, 80],
@@ -31,13 +30,14 @@ const coordsOffsetMap = {
     '天津': [5, 5]
 } as Dictionary<number[]>;
 
-export default function fixTextCoords(mapType: string, region: Region) {
+export default function fixTextCoords(mapType: string, region: GeoJSONRegion) {
     if (mapType === 'china') {
         const coordFix = coordsOffsetMap[region.name];
         if (coordFix) {
-            const cp = region.center;
+            const cp = region.getCenter();
             cp[0] += coordFix[0] / 10.5;
             cp[1] += -coordFix[1] / (10.5 / 0.75);
+            region.setCenter(cp);
         }
     }
 }

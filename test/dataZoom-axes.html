@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
     </head>
     <body>
@@ -84,17 +84,7 @@ under the License.
             var charts = [];
             var els = [];
 
-            require([
-                'echarts'
-                // 'zrender/core/util',
-                // 'echarts/chart/line',
-                // 'echarts/chart/scatter',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox',
-                // 'echarts/component/dataZoom'
-            ], function (ec) {
+            require(['echarts'], function (ec) {
                 echarts = ec;
                 zrUtil = echarts.util;
 
@@ -295,7 +285,7 @@ under the License.
                             id: 'xSlider',
                             name: 'xSlider',
                             show: true,
-                            handleIcon: 'image://https://echarts.apache.org/zh/images/favicon.png',
+                            handleIcon: 'image://asset/echarts-logo.png',
                             filterMode: args.xFilterMode,
                             xAxisIndex: [0],
                             start: args.xStart,
@@ -304,7 +294,7 @@ under the License.
                         {
                             name: 'ySlider',
                             show: true,
-                            handleIcon: 'image://https://echarts.apache.org/zh/images/favicon.png',
+                            handleIcon: 'image://asset/echarts-logo.png',
                             filterMode: args.yFitlerMode,
                             yAxisIndex: [0],
                             start: args.yStart,

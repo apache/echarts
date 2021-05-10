@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
     </head>
@@ -39,10 +39,6 @@ under the License.
 
             require([
                 'echarts'
-
-                // 'echarts/chart/scatter',
-                // 'echarts/component/legend',
-                // 'echarts/component/geo'
             ], function (echarts) {
 
                 $.get('./data/map/json/china.json', function (chinaJson) {

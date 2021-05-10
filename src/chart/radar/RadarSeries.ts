@@ -161,8 +161,7 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
         // areaStyle: {
         // },
         // itemStyle: {}
-        symbol: 'emptyCircle',
-        symbolSize: 4
+        symbolSize: 8
         // symbolRotate: null
     };
 }

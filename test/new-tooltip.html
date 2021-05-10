@@ -22,7 +22,7 @@ under the License.
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="lib/esl.js"></script>
+    <script src="lib/simpleRequire.js"></script>
     <script src="lib/config.js"></script>
 </head>
 
@@ -145,10 +145,13 @@ under the License.
     <script>
 
         var CURRENT_RENDER_MODE;
+        var appendToBody;
         function initStateConsole() {
             var TOOLTIP_RENDER_MODE_KEY = '__EC_TEST_TOOLTIP_RENDER_MODE__';
+            var TOOLTIP_APPEND_TO_BODY_KEY = '__EC_TEST_TOOLTIP_APPEND_TO_BODY__';
             var RENDER_MODE_LIST = ['html', 'richText'];
 
+            appendToBody = window.localStorage.getItem(TOOLTIP_APPEND_TO_BODY_KEY) == 1;
             CURRENT_RENDER_MODE = window.localStorage.getItem(TOOLTIP_RENDER_MODE_KEY);
             if (!CURRENT_RENDER_MODE) {
                 CURRENT_RENDER_MODE = RENDER_MODE_LIST[0];
@@ -165,13 +168,22 @@ under the License.
                     '<label ' + checkedStyle + 'for="' + modeVal + '">' + modeVal + '</label>'
                 );
             }
+            html.push('<label for="appendToBody"><input type="checkbox" id="appendToBody"'
+                + (appendToBody ? 'checked' : '') + '>appendToBody</label>');
             containerDom.innerHTML = html.join('');
             containerDom.onclick = function (e) {
                 var target = e.target;
                 if (target.tagName === 'INPUT') {
-                    var newRenderMode = target.value;
-                    window.localStorage.setItem(TOOLTIP_RENDER_MODE_KEY, newRenderMode);
-                    location.reload();
+                    const isCheckBox = target.type === 'checkbox';
+                    window.localStorage.setItem(
+                        isCheckBox
+                            ? TOOLTIP_APPEND_TO_BODY_KEY
+                            : TOOLTIP_RENDER_MODE_KEY,
+                        isCheckBox
+                            ? target.checked ? 1 : 0
+                            : target.value
+                    );
+                    typeof __VRT_RELOAD__ !== 'undefined' ? __VRT_RELOAD__() : location.reload();
                 }
             };
         }
@@ -223,6 +235,7 @@ under the License.
             option1 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'item',
                     position: 'bottom',
                     axisPointer: {
@@ -265,6 +278,7 @@ under the License.
             option2 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     // attachToPoint: true
                 },
                 radar: {
@@ -323,6 +337,7 @@ under the License.
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
                     trigger: 'item',
+                    appendToBody: appendToBody,
                     // formatter: '{a} <br/>{b}: {c} ({d}%)'
                 },
                 series: [{
@@ -371,6 +386,7 @@ under the License.
             option4 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody
                 },
                 series: {
                     type: 'sankey',
@@ -420,6 +436,7 @@ under the License.
             option5 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody
                 },
                 animationDurationUpdate: 1500,
                 animationEasingUpdate: 'quinticInOut',
@@ -508,6 +525,7 @@ under the License.
                 },
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'axis'
                 },
                 series: [{
@@ -560,6 +578,7 @@ under the License.
             option7 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody
                 },
                 series: [{
                     type: "tree",
@@ -1328,6 +1347,7 @@ under the License.
             option8 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'axis',
                     axisPointer: {
                         animation: false
@@ -1879,6 +1899,7 @@ under the License.
             option9 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
@@ -1920,6 +1941,7 @@ under the License.
             option10 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody
                 },
                 series: [{
                     type: 'treemap',
@@ -1952,6 +1974,7 @@ under the License.
             option11 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     position: 'top'
                 },
                 dataset: {
@@ -1984,6 +2007,7 @@ under the License.
             option12 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
@@ -2153,6 +2177,7 @@ under the License.
                 ],
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     formatter: 'Group {a}: ({c})'
                 },
                 xAxis: [{
@@ -2236,6 +2261,7 @@ under the License.
                 tooltip: {
                     trigger: 'axis',
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody
                 },
                 xAxis: {
                     data: ['2017-10-24', '2017-10-25', '2017-10-26', '2017-10-27']
@@ -2260,6 +2286,7 @@ under the License.
             option15 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody
                 },
                 legend: {},
                 series: [{
@@ -2292,6 +2319,7 @@ under the License.
             option16 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody
                 },
                 xAxis: {
                     type: "category",
@@ -2457,6 +2485,7 @@ under the License.
             option17 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody
                 },
                 xAxis: {
                     type: "category",
@@ -2710,6 +2739,7 @@ under the License.
                 }],
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'axis'
                 },
                 xAxis: [{
@@ -2753,6 +2783,7 @@ under the License.
 
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross'
@@ -2849,6 +2880,7 @@ under the License.
             option20 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody
                 },
                 xAxis: {
                     data: dataAxis,
@@ -2941,6 +2973,7 @@ under the License.
                 legend: {},
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody
                 },
                 dataset: {
                     source: [
@@ -3023,6 +3056,7 @@ under the License.
             option22 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody
                 },
                 legend: {
                     data: ['直接访问', '邮件营销', '联盟广告', '视频广告', '搜索引擎']
@@ -3091,6 +3125,7 @@ under the License.
             option23 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
@@ -3140,6 +3175,7 @@ under the License.
             option24 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
@@ -3189,6 +3225,7 @@ under the License.
             option25 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
@@ -3242,6 +3279,7 @@ under the License.
             option26 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
@@ -3297,6 +3335,7 @@ under the License.
             option27 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'axis',
                     axisPointer: {
                         type: 'cross',
@@ -3357,6 +3396,7 @@ under the License.
             option28 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     order: 'valueAsc',
                     // position: 'top',
                 },
@@ -3415,6 +3455,7 @@ under the License.
             option29 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'axis',
                     position: 'top',
                     axisPointer: {
@@ -3466,6 +3507,7 @@ under the License.
             option30 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'axis',
                     position: 'top',
                     axisPointer: {
@@ -3507,6 +3549,7 @@ under the License.
             option31 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'axis',
                     position: 'top',
                     axisPointer: {
@@ -3566,6 +3609,7 @@ under the License.
             option32 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'item',
                     borderColor: 'red',
                 },
@@ -3601,6 +3645,7 @@ under the License.
             option33 = {
                 tooltip: {
                     renderMode: CURRENT_RENDER_MODE,
+                    appendToBody: appendToBody,
                     trigger: 'item',
                     textStyle: {
                         color: 'red'

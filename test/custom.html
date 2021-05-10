@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/testHelper.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -73,16 +73,7 @@ under the License.
 
 
         <script>
-            require([
-                'echarts'
-                // 'echarts/chart/custom',
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var data = [];
                 var dataCount = 10;
@@ -237,16 +228,7 @@ under the License.
 
 
         <script>
-            require([
-                'echarts'
-                // 'echarts/chart/custom',
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 // See https://github.com/ecomfe/echarts-stat
                 // var bins = {"bins":[{"sample":[8.3,8.6,8.8],"x0":8,"x1":10},{"sample":[10.5,10.7,10.8,11,11,11.1,11.2,11.3,11.4,11.4,11.7],"x0":10,"x1":12},{"sample":[12,12.9,12.9,13.3,13.7,13.8],"x0":12,"x1":14},{"sample":[14,14.2,14.5],"x0":14,"x1":16},{"sample":[16,16.3,17.3,17.5,17.9],"x0":16,"x1":18},{"sample":[18,18],"x0":18,"x1":20},{"sample":[20.6],"x0":20,"x1":22}],"data":[[9,3],[11,11],[13,6],[15,3],[17,5],[19,2],[21,1]]};
@@ -325,16 +307,7 @@ under the License.
 
 
         <script>
-            require([
-                'echarts'
-                // 'echarts/chart/custom',
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 // var data = [[10, 16, 3], [16, 18, 15], [18, 26, 12], [26, 32, 22], [32, 56, 7], [56, 62, 17]];
                 var data = [[10, 16, 3, 'A'], [16, 18, 15, 'B'], [18, 26, 12, 'C'], [26, 32, 22, 'D'], [32, 56, 7, 'E'], [56, 62, 17, 'F']];
@@ -412,16 +385,7 @@ under the License.
 
 
         <script>
-            require([
-                'echarts'
-                // 'echarts/chart/custom',
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var categoryData = [];
                 var errorData = [];
@@ -537,15 +501,7 @@ under the License.
 
 
         <script>
-            require([
-                'echarts'
-                // 'echarts/chart/custom',
-                // 'echarts/chart/scatter',
-                // 'echarts/component/legend',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
                 // Prime Costs and Prices for ACME Fashion\nCollection "Spring-Summer, 2016"
                 // Data from https://playground.anychart.com/gallery/7.12.0/Error_Charts/Marker_Chart
                 var dimensions = [
@@ -692,16 +648,7 @@ under the License.
 
 
         <script>
-            require([
-                'echarts'
-                // 'echarts/chart/custom',
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var yearCount = 7;
                 var categoryCount = 30;
@@ -829,16 +776,7 @@ under the License.
 
 
         <script>
-            require([
-                'echarts'
-                // 'echarts/chart/custom',
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var data = [];
                 var dataCount = 7;
@@ -916,17 +854,7 @@ under the License.
 
 
         <script>
-            require([
-                'echarts'
-                // 'echarts/chart/heatmap',
-                // 'echarts/chart/custom',
-                // 'echarts/component/legend',
-                // 'echarts/component/calendar',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var layouts = [
                     [[0, 0]],
@@ -1071,16 +999,7 @@ under the License.
 
 
         <script>
-            require([
-                'echarts'
-                // 'echarts/chart/custom',
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var textData = [];
                 var imageData = [];
@@ -1199,16 +1118,7 @@ under the License.
 
 
         <script>
-            require([
-                'echarts'
-                // 'echarts/chart/custom',
-                // 'echarts/component/polar',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 function renderItem(params, api) {
                     var values = [api.value(0), api.value(1)];
@@ -1310,16 +1220,7 @@ under the License.
 
 
         <script>
-            require([
-                'echarts'
-                // 'echarts/chart/custom',
-                // 'echarts/component/polar',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var data = [
                     {name:'广州', value: 50},
