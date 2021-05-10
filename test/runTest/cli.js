@@ -30,6 +30,7 @@ const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, getE
 const {origin} = require('./config');
 const cwebpBin = require('cwebp-bin');
 const { execFile } = require('child_process');
+const {runTasks} = require('./task');
 
 // Handling input arguments.
 program
@@ -39,6 +40,7 @@ program
     .option('--expected <expected>', 'Expected version')
     .option('--actual <actual>', 'Actual version')
     .option('--renderer <renderer>', 'svg/canvas renderer')
+    .option('--threads', 'How many threads to run concurrently')
     .option('--no-save', 'Don\'t save result')
     .option('--dir <dir>', 'Out dir');
 
@@ -46,6 +48,7 @@ program.parse(process.argv);
 
 program.speed = +program.speed || 1;
 program.actual = program.actual || 'local';
+program.threads = +program.threads || 1;
 program.renderer = (program.renderer || 'canvas').toLowerCase();
 program.dir = program.dir || (__dirname + '/tmp');
 
@@ -194,6 +197,9 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     await page.exposeFunction('__VRT_MOUSE_UP__', async () =>  {
         await page.mouse.up();
     });
+    await page.exposeFunction('__VRT_LOAD_ERROR__', async (err) =>  {
+        errors.push(err);
+    });
     // await page.exposeFunction('__VRT_WAIT_FOR_NETWORK_IDLE__', async () =>  {
     //     await waitForNetworkIdle();
     // });
@@ -272,7 +278,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
 
         let actions = [];
         try {
-            let actContent = fs.readFileSync(path.join(__dirname, 'actions', testOpt.name + '.json'));
+            let actContent = await fse.readFile(path.join(__dirname, 'actions', testOpt.name + '.json'));
             actions = JSON.parse(actContent);
         }
         catch (e) {}
@@ -347,9 +353,11 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
 
                 // Remove png files
                 try {
-                    fs.unlinkSync(actual.rawScreenshotPath);
-                    fs.unlinkSync(expected.rawScreenshotPath);
-                    fs.unlinkSync(diffPath);
+                    await Promise.all([
+                        fse.unlink(actual.rawScreenshotPath),
+                        fse.unlink(expected.rawScreenshotPath),
+                        fse.unlink(diffPath)
+                    ]);
                 }
                 catch (e) {}
             }
@@ -393,26 +401,23 @@ async function runTests(pendingTests) {
         browser.close();
     });
 
-    try {
-        for (let testOpt of pendingTests) {
-            console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}`);
-            try {
-                await runTest(browser, testOpt, runtimeCode, program.expected, program.actual);
-            }
-            catch (e) {
-                // Restore status
-                testOpt.status = 'unsettled';
-                console.log(e);
-            }
+    console.log('Running threads: ', program.threads);
 
-            if (program.save) {
-                process.send(testOpt);
-            }
+    await runTasks(pendingTests, async (testOpt) => {
+        console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}`);
+        try {
+            await runTest(browser, testOpt, runtimeCode, program.expected, program.actual);
         }
-    }
-    catch(e) {
-        console.log(e);
-    }
+        catch (e) {
+            // Restore status
+            testOpt.status = 'unsettled';
+            console.log(e);
+        }
+
+        if (program.save) {
+            process.send(testOpt);
+        }
+    }, program.threads);
 
     await browser.close();
 }
