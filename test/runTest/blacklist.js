@@ -20,7 +20,6 @@
 module.exports.blacklist = [
     '-cases.html',
     'geo-random-stream.html',
-    'chord.html',
     'lines-ny.html',
     'lines-ny-appendData.html',
     'linesGL-ny-appendData.html',
@@ -38,12 +37,8 @@ module.exports.blacklist = [
     'mobileBench.html',
     'touch-test.html',
 
-    // Image size not match
-    'symbol2.html',
-
     // This case will have timeout
     'visualMap-performance1.html',
-    'lines-bus.html',
     'lines-stream-not-large.html'
 ];
 
@@ -55,5 +50,7 @@ module.exports.SVGBlacklist = [
     'stream-basic2.html',
     'heatmap-large.html',
     'visualMap-large.html',
-    'candlestick-large2.html'
+    'candlestick-large2.html',
+
+    'lines-bus.html',
 ];
