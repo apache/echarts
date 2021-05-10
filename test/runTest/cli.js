@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// TODO: Cases that needs lots of network loading still may fail. Like bmap-xxx
+
 const puppeteer = require('puppeteer');
 const slugify = require('slugify');
 const fse = require('fs-extra');
@@ -44,12 +46,14 @@ program.parse(process.argv);
 
 program.speed = +program.speed || 1;
 program.actual = program.actual || 'local';
-program.expected = program.expected || '4.2.1';
 program.renderer = (program.renderer || 'canvas').toLowerCase();
 program.dir = program.dir || (__dirname + '/tmp');
 
 if (!program.tests) {
     throw new Error('Tests are required');
+}
+if (!program.expected) {
+    throw new Error('Expected version is required');
 }
 
 function getScreenshotDir() {
@@ -125,6 +129,26 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
     };
 }
 
+async function waitForNetworkIdle(page) {
+    let count = 0;
+    const started = () => (count = count + 1);
+    const ended = () => (count = count - 1);
+    page.on('request', started);
+    page.on('requestfailed', ended);
+    page.on('requestfinished', ended);
+    return async (timeout = 5000) => {
+        while (count > 0) {
+            await waitTime(100);
+            if ((timeout = timeout - 100) < 0) {
+                console.error('Timeout');
+            }
+        }
+        page.off('request', started);
+        page.off('requestfailed', ended);
+        page.off('requestfinished', ended);
+    };
+  }
+
 
 async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     const fileUrl = testOpt.fileUrl;
@@ -170,6 +194,9 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     await page.exposeFunction('__VRT_MOUSE_UP__', async () =>  {
         await page.mouse.up();
     });
+    // await page.exposeFunction('__VRT_WAIT_FOR_NETWORK_IDLE__', async () =>  {
+    //     await waitForNetworkIdle();
+    // });
 
     // TODO should await exposeFunction here
     const waitForScreenshot = new Promise((resolve) => {
