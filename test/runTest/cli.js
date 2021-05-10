@@ -40,7 +40,7 @@ program
     .option('--expected <expected>', 'Expected version')
     .option('--actual <actual>', 'Actual version')
     .option('--renderer <renderer>', 'svg/canvas renderer')
-    .option('--threads', 'How many threads to run concurrently')
+    .option('--threads <threads>', 'How many threads to run concurrently')
     .option('--no-save', 'Don\'t save result')
     .option('--dir <dir>', 'Out dir');
 

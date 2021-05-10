@@ -63,15 +63,15 @@ function serve() {
     };
 };
 
-let runningThreads = [];
+let runningThread;
 let pendingTests;
-let running = false;
 
 function stopRunningTests() {
-    if (runningThreads) {
-        runningThreads.forEach(thread => thread.kill());
-        runningThreads = [];
+    if (runningThread) {
+        runningThread.kill();
+        runningThread = null;
     }
+
     if (pendingTests) {
         pendingTests.forEach(testOpt => {
             if (testOpt.status === 'pending') {
@@ -93,8 +93,7 @@ class Thread {
 
     fork(extraArgs) {
         let p = fork(path.join(__dirname, 'cli.js'), [
-            '--tests',
-            this.tests.map(testOpt => testOpt.name).join(','),
+            '--tests', this.tests.map(testOpt => testOpt.name).join(','),
             ...extraArgs
         ]);
         this.p = p;
@@ -131,9 +130,12 @@ function startTests(testsNameList, socket, {
     console.log('Received: ', testsNameList.join(','));
 
     threadsCount = threadsCount || 1;
-    stopRunningTests();
 
     return new Promise(resolve => {
+        if (!runningThread) {
+            resolve();
+        }
+
         pendingTests = getTestsList().filter(testOpt => {
             return testsNameList.includes(testOpt.name);
         });
@@ -147,7 +149,7 @@ function startTests(testsNameList, socket, {
             // Save status immediately
             saveTestsList();
 
-            if (running) {
+            if (runningThread) {
                 socket.emit('update', {
                     tests: getTestsList(),
                     running: true
@@ -155,47 +157,32 @@ function startTests(testsNameList, socket, {
             }
         }
 
-        let runningCount = 0;
         function onExit() {
-            runningCount--;
-            if (runningCount === 0) {
-                runningThreads = [];
-                resolve();
-            }
+            runningThread = null;
+            resolve();
         }
         function onUpdate() {
             // Merge tests.
-            if (running && !noSave) {
+            if (runningThread && !noSave) {
                 socket.emit('update', {
                     tests: getTestsList(),
                     running: true
                 });
             }
         }
-        threadsCount = Math.min(threadsCount, pendingTests.length);
-        // Assigning tests to threads
-        runningThreads = new Array(threadsCount).fill(0).map(() => new Thread() );
-        for (let i = 0; i < pendingTests.length; i++) {
-            runningThreads[i % threadsCount].tests.push(pendingTests[i]);
-        }
-        for (let i = 0; i < threadsCount; i++) {
-            runningThreads[i].onExit = onExit;
-            runningThreads[i].onUpdate = onUpdate;
-            runningThreads[i].fork([
-                '--speed', replaySpeed || 5,
-                '--actual', actualVersion,
-                '--expected', expectedVersion,
-                '--renderer', renderer || '',
-                '--dir', getResultBaseDir(),
-                ...(noHeadless ? ['--no-headless'] : []),
-                ...(noSave ? ['--no-save'] : [])
-            ]);
-            runningCount++;
-        }
-        // If something bad happens and no proccess are started successfully
-        if (runningCount === 0) {
-            resolve();
-        }
+        runningThread.tests = pendingTests.slice();
+        runningThread.onExit = onExit;
+        runningThread.onUpdate = onUpdate;
+        runningThread.fork([
+            '--speed', replaySpeed || 5,
+            '--actual', actualVersion,
+            '--expected', expectedVersion,
+            '--renderer', renderer || '',
+            '--threads', threadsCount,
+            '--dir', getResultBaseDir(),
+            ...(noHeadless ? ['--no-headless'] : []),
+            ...(noSave ? ['--no-save'] : [])
+        ]);
     });
 }
 
@@ -234,13 +221,15 @@ async function start() {
     nightlyVersions.unshift('local');
 
     io.of('/client').on('connect', async socket => {
+
+        let isAborted = false;
         function abortTests() {
-            if (!running) {
+            if (!runningThread) {
                 return;
             }
+            isAborted = true;
             stopRunningTests();
             io.of('/client').emit('abort');
-            running = false;
         }
 
         socket.on('syncRunConfig', async ({
@@ -277,12 +266,12 @@ async function start() {
             }
             await updateTestsList(
                 _currentTestHash = getRunHash(_currentRunConfig),
-                !running // Set to unsettled if not running
+                !runningThread // Set to unsettled if not running
             );
 
             socket.emit('update', {
                 tests: getTestsList(),
-                running: runningThreads.length > 0
+                running: !!runningThread
             });
         });
 
@@ -308,16 +297,15 @@ async function start() {
         });
 
         socket.on('run', async data => {
+            stopRunningTests();
+            isAborted = false;
+            // Create runningThread immediately. In case abort happens.
+            runningThread = new Thread();
 
             let startTime = Date.now();
-            running = true;
 
             await prepareEChartsLib(data.expectedVersion); // Expected version.
             await prepareEChartsLib(data.actualVersion); // Version to test
-
-            if (!running) {  // If it is aborted when downloading echarts lib.
-                return;
-            }
 
             // TODO Should broadcast to all sockets.
             try {
@@ -343,14 +331,13 @@ async function start() {
                 console.error(e);
             }
 
-            if (running) {
+            if (!isAborted) {
                 console.log('Finished');
                 io.of('/client').emit('finish', {
                     time: Date.now() - startTime,
                     count: data.tests.length,
                     threads: data.threads
                 });
-                running = false;
             }
             else {
                 console.log('Aborted!');
@@ -385,6 +372,9 @@ async function start() {
             }
         });
         socket.on('runSingle', async data => {
+            stopRunningTests();
+            runningThread = new Thread();
+
             try {
                 await startTests([data.testName], socket, {
                     noHeadless: true,
