@@ -31,6 +31,7 @@ const {origin} = require('./config');
 const cwebpBin = require('cwebp-bin');
 const { execFile } = require('child_process');
 const {runTasks} = require('./task');
+const chalk = require('chalk');
 
 // Handling input arguments.
 program
@@ -403,9 +404,7 @@ async function runTests(pendingTests) {
         browser.close();
     });
 
-    console.log('Running threads: ', program.threads);
-
-    await runTasks(pendingTests, async (testOpt) => {
+    async function eachTask(testOpt) {
         console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}`);
         try {
             await runTest(browser, testOpt, runtimeCode, program.expected, program.actual);
@@ -413,13 +412,29 @@ async function runTests(pendingTests) {
         catch (e) {
             // Restore status
             testOpt.status = 'unsettled';
-            console.log(e);
+            console.error(e);
         }
 
         if (program.save) {
             process.send(testOpt);
         }
-    }, program.threads);
+    }
+
+    // console.log('Running threads: ', program.threads);
+    // await runTasks(pendingTests, async (testOpt) => {
+    //     await eachTask(testOpt);
+    // }, program.threads);
+
+
+    try {
+        for (let testOpt of pendingTests) {
+            await eachTask(testOpt);
+        }
+    }
+    catch(e) {
+        console.log(e);
+    }
+
 
     await browser.close();
 }
