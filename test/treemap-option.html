@@ -46,15 +46,16 @@ under the License.
         var chart;
 
         require([
-            'echarts'
-        ], function (ec) {
+            'echarts',
+            './data/option-view.json'
+        ], function (ec, rawData) {
             echarts = ec;
             formatUtil = echarts.format;
 
             chart = echarts.init($('#option-view-chart')[0]);
             chart.showLoading();
 
-            $.getJSON('./data/option-view.json', initEcharts);
+            initEcharts(rawData);
         });
 
         function convert(source, target, basePath) {

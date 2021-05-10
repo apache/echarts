@@ -61,59 +61,57 @@ under the License.
             var groupColors = [];
 
             require([
-                'echarts'
-            ], function (ec) {
+                'echarts',
+                './data/czech_geo.json'
+            ], function (ec, geoJSON) {
                 echarts = ec;
 
-                $.getJSON('./data/czech_geo.json', function (geoJSON) {
+                echarts.registerMap('nestedMap', geoJSON);
 
-                    echarts.registerMap('nestedMap', geoJSON);
-
-                    var option = {
-                        tooltip: {},
-                        // visualMap: {
-                        //     min: 0,
-                        //     max: 1500,
-                        //     left: 'left',
-                        //     top: 'bottom',
-                        //     text: ['High','Low'],
-                        //     seriesIndex: [1, 2, 3],
-                        //     inRange: {
-                        //         color: ['#006edd', '#e0ffff']
-                        //     },
-                        //     calculable : true
-                        // },
-                        tooltip: {},
-                        series: [
-                            {
-                                name: 'categoryA',
-                                type: 'map',
-                                map: 'nestedMap',
-                                geoIndex: 0,
-                                itemStyle: {
-                                    normal: {
-                                        // areaColor: 'red'
-                                        borderColor: 'red',
-                                        borderWidth: 2
-                                    },
-                                    emphasis: {
-                                        borderColor: 'blue',
-                                        borderWidth: 2
-                                    }
+                var option = {
+                    tooltip: {},
+                    // visualMap: {
+                    //     min: 0,
+                    //     max: 1500,
+                    //     left: 'left',
+                    //     top: 'bottom',
+                    //     text: ['High','Low'],
+                    //     seriesIndex: [1, 2, 3],
+                    //     inRange: {
+                    //         color: ['#006edd', '#e0ffff']
+                    //     },
+                    //     calculable : true
+                    // },
+                    tooltip: {},
+                    series: [
+                        {
+                            name: 'categoryA',
+                            type: 'map',
+                            map: 'nestedMap',
+                            geoIndex: 0,
+                            itemStyle: {
+                                normal: {
+                                    // areaColor: 'red'
+                                    borderColor: 'red',
+                                    borderWidth: 2
                                 },
-                                data:[
-                                    {name: 'Praha', value: 123},
-                                    {name: 'Plzeňský kraj', value: 321},
-                                    {name: 'Středočeský kraj', value: 521}
-                                ]
-                            }
-                        ]
-                    };
+                                emphasis: {
+                                    borderColor: 'blue',
+                                    borderWidth: 2
+                                }
+                            },
+                            data:[
+                                {name: 'Praha', value: 123},
+                                {name: 'Plzeňský kraj', value: 321},
+                                {name: 'Středočeský kraj', value: 521}
+                            ]
+                        }
+                    ]
+                };
 
-                    testHelper.createChart(echarts, 'main', option);
-                });
-
+                testHelper.createChart(echarts, 'main', option);
             });
+
 
         </script>
     </body>

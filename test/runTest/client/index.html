@@ -175,7 +175,7 @@ under the License.
                         <span class="label">Threads</span>
 
                         <el-select :disabled="running" size="mini" v-model="runConfig.threads" style="width: 58px">
-                            <el-option v-for="t in [1, 2, 4, 8]" :key="t" :label="t" :value="t"></el-option>
+                            <el-option v-for="t in [1, 2, 4, 6, 8]" :key="t" :label="t" :value="t"></el-option>
                         </el-select>
                         <!-- <el-slider style="width: 100px;" v-model="runConfig.threads" :step="1" :min="1" :max="8" show-stops></el-slider> -->
                     </div>

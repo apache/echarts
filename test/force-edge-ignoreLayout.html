@@ -40,80 +40,74 @@ under the License.
     require([
         'echarts',
         'extension/dataTool',
+        './data/les-miserables.gexf',
         'theme/vintage'
-    ], function (echarts, dataTool) {
+    ], function (echarts, dataTool, xml) {
         var gexf = dataTool.gexf;
-        var myChart = echarts.init(document.getElementById('main'), 'vintage', {
+        var myChart = echarts.init(document.getElementById('main'), 'vintage');
 
-        });
-
-        $.get('./data/les-miserables.gexf', function (xml) {
-            myChart.hideLoading();
-
-            var graph = gexf.parse(xml);
-            var categories = [];
-            for (var i = 0; i < 9; i++) {
-                categories[i] = {
-                    name: '类目' + i
-                };
-            }
-            graph.nodes.forEach(function (node) {
-                node.itemStyle = null;
-                node.symbolSize = 10;
-                node.value = node.symbolSize;
-                node.category = node.attributes.modularity_class;
-                // Use random x, y
-                node.x = node.y = null;
-                node.draggable = true;
-            });
-            graph.links.push({
-                source:0,
-                target:20,
-                lineStyle:{
-                    color:'#aa090a'
-                },
-                ignoreForceLayout:true
-            })
-            var option = {
-                title: {
-                    text: 'Les Miserables',
-                    subtext: 'Default layout',
-                    top: 'bottom',
-                    left: 'right'
-                },
-                tooltip: {},
-                legend: [{
-                    // selectedMode: 'single',
-                    data: categories.map(function (a) {
-                        return a.name;
-                    })
-                }],
-                animation: false,
-                series : [
-                    {
-                        name: 'Les Miserables',
-                        type: 'graph',
-                        layout: 'force',
-                        data: graph.nodes,
-                        links: graph.links,
-                        categories: categories,
-                        roam: true,
-                        focusNodeAdjacency:true,
-                        label: {
-                            normal: {
-                                position: 'right'
-                            }
-                        },
-                        force: {
-                            repulsion: 100,
-                        }
-                    }
-                ]
+        var graph = gexf.parse(xml);
+        var categories = [];
+        for (var i = 0; i < 9; i++) {
+            categories[i] = {
+                name: '类目' + i
             };
+        }
+        graph.nodes.forEach(function (node) {
+            node.itemStyle = null;
+            node.symbolSize = 10;
+            node.value = node.symbolSize;
+            node.category = node.attributes.modularity_class;
+            // Use random x, y
+            node.x = node.y = null;
+            node.draggable = true;
+        });
+        graph.links.push({
+            source:0,
+            target:20,
+            lineStyle:{
+                color:'#aa090a'
+            },
+            ignoreForceLayout:true
+        })
+        var option = {
+            title: {
+                text: 'Les Miserables',
+                subtext: 'Default layout',
+                top: 'bottom',
+                left: 'right'
+            },
+            tooltip: {},
+            legend: [{
+                // selectedMode: 'single',
+                data: categories.map(function (a) {
+                    return a.name;
+                })
+            }],
+            animation: false,
+            series : [
+                {
+                    name: 'Les Miserables',
+                    type: 'graph',
+                    layout: 'force',
+                    data: graph.nodes,
+                    links: graph.links,
+                    categories: categories,
+                    roam: true,
+                    focusNodeAdjacency:true,
+                    label: {
+                        normal: {
+                            position: 'right'
+                        }
+                    },
+                    force: {
+                        repulsion: 100,
+                    }
+                }
+            ]
+        };
 
-            myChart.setOption(option);
-
-        }, 'xml');
+        myChart.setOption(option);
     });
 </script>
 </body>

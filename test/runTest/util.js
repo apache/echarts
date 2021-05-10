@@ -72,7 +72,7 @@ module.exports.prepareEChartsLib = function (version) {
     return new Promise(resolve => {
         const testLibPath = `${versionFolder}/${module.exports.getEChartsTestFileName()}`;
         if (!fs.existsSync(ecDownloadPath)) {
-            const file = fs.createWriteStream();
+            const file = fs.createWriteStream(ecDownloadPath);
             const isNightly = version.includes('-dev');
             const packageName = isNightly ? 'echarts-nightly' : 'echarts'
 

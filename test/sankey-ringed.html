@@ -40,9 +40,9 @@ under the License.
 
                 var chart = echarts.init(document.getElementById('main'), null, {});
 
-                window.onresize = function () {
-                    chart.resize();
-                };
+                // window.onresize = function () {
+                //     chart.resize();
+                // };
 
                 var testData =  {
                     nodes: [
@@ -104,32 +104,37 @@ under the License.
                     ]
                 };
 
-                chart.setOption({
-                    color: ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#fddbc7', '#d1e5f0', '#92c5de', '#4393c3', '#2166ac', '#053061'],
-                    tooltip: {
-                        trigger: 'item',
-                        triggerOn: 'mousemove'
-                    },
-                    animation: false,
-                    series: [
-                        {
-                            type: 'sankey',
-                            bottom: '10%',
-                            focusNodeAdjacency: true,
-                            data: testData.nodes,
-                            links: testData.links,
-                            label: {
-                                position: 'left'
-                            },
-                            lineStyle: {
-                                normal: {
-                                    color: 'source',
-                                    curveness: 0.5
+                try {
+                    chart.setOption({
+                        color: ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#fddbc7', '#d1e5f0', '#92c5de', '#4393c3', '#2166ac', '#053061'],
+                        tooltip: {
+                            trigger: 'item',
+                            triggerOn: 'mousemove'
+                        },
+                        animation: false,
+                        series: [
+                            {
+                                type: 'sankey',
+                                bottom: '10%',
+                                focusNodeAdjacency: true,
+                                data: testData.nodes,
+                                links: testData.links,
+                                label: {
+                                    position: 'left'
+                                },
+                                lineStyle: {
+                                    normal: {
+                                        color: 'source',
+                                        curveness: 0.5
+                                    }
                                 }
                             }
-                        }
-                    ]
-                });
+                        ]
+                    });
+                }
+                catch (e) {
+                    console.error(e);
+                }
             });
         </script>
     </body>

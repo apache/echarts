@@ -63,69 +63,70 @@ under the License.
             var groupCategories = [];
             var groupColors = [];
 
-            require(['echarts'], function (ec) {
+            require([
+                'echarts',
+                'map/js/china'
+            ], function (ec) {
                 echarts = ec;
                 colorTool = echarts.color;
-                require(['map/js/china'], function () {
 
-                    var chart = echarts.init(document.getElementById('main'));
+                var chart = echarts.init(document.getElementById('main'));
 
-                    option = {
-                        "tooltip": {
-                            "trigger": "item",
-                            "formatter":function(params,ticket,cb){ //自定义显示框
-                                params.value=params.value||0;
-                                var contentHTML=params.name+" - "+params.value;
-                                return contentHTML;
+                option = {
+                    "tooltip": {
+                        "trigger": "item",
+                        "formatter":function(params,ticket,cb){ //自定义显示框
+                            params.value=params.value||0;
+                            var contentHTML=params.name+" - "+params.value;
+                            return contentHTML;
+                        }
+                    },
+                    "visualMap": {
+                        "min": 0,
+                        "max": 96.89,
+                        "left": 20,
+                        "align": "bottom",
+                        "type": "piecewise",
+                        "bottom": 25,
+                        "text": ["覆盖率(高-低)"],
+                        "calculable": true,
+                        "inverse": true,
+                        "orient": "horizontal",
+                        "inRange": {
+                            "color": ["#d1eaff", "#1a96f0"]
+                        },
+                        formatter: function (value) {
+                            return  parseInt(value)||0; // 范围标签显示内容。
+                        }
+                    },
+                    "series": [{
+                        "name": "中国",
+                        "type": "map",
+                        "mapType": "china",
+                        "selectedMode": "multiple",
+                        "itemStyle": {
+                            "normal": {
+                                "areaColor": "#d1eaff",
+                                "borderColor": "#fff"
+                            },
+                            "emphasis": {
+                                "areaColor": "#f1f5f8"
                             }
                         },
-                        "visualMap": {
-                            "min": 0,
-                            "max": 96.89,
-                            "left": 20,
-                            "align": "bottom",
-                            "type": "piecewise",
-                            "bottom": 25,
-                            "text": ["覆盖率(高-低)"],
-                            "calculable": true,
-                            "inverse": true,
-                            "orient": "horizontal",
-                            "inRange": {
-                                "color": ["#d1eaff", "#1a96f0"]
-                            },
-                            formatter: function (value) {
-                                return  parseInt(value)||0; // 范围标签显示内容。
-                            }
-                        },
-                        "series": [{
-                            "name": "中国",
-                            "type": "map",
-                            "mapType": "china",
-                            "selectedMode": "multiple",
-                            "itemStyle": {
-                                "normal": {
-                                    "areaColor": "#d1eaff",
-                                    "borderColor": "#fff"
-                                },
-                                "emphasis": {
-                                    "areaColor": "#f1f5f8"
-                                }
-                            },
-                            "data": [{
-                                "name": "浙江",
-                                "value": "96.89"
-                            }, {
-                                "name": "unknown",
-                                "value": "2.67"
-                            }, {
-                                "name": "其它",
-                                "value": "0.44"
-                            }]
+                        "data": [{
+                            "name": "浙江",
+                            "value": "96.89"
+                        }, {
+                            "name": "unknown",
+                            "value": "2.67"
+                        }, {
+                            "name": "其它",
+                            "value": "0.44"
                         }]
-                    }
+                    }]
+                }
 
-                    chart.setOption(option);
-                });
+                chart.setOption(option);
             });
 
         </script>

@@ -60,7 +60,6 @@ under the License.
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
-            // $.getJSON('./data/nutrients.json', function (data) {});
             option = {
                 legend: {
                     data: ['直接访问', '邮件营销','联盟广告','视频广告','搜索引擎']
@@ -732,74 +731,76 @@ under the License.
         </script>
 
         <script>
-            require(['echarts',  'extension/dataTool'], function (echarts, dataTool) {
-                $.get('./data/les-miserables.gexf', function (xml) {
-                    var graph = dataTool.gexf.parse(xml);
-                    var categories = [];
-                    for (var i = 0; i < 9; i++) {
-                        categories[i] = {
-                            name: '类目' + i
-                        };
-                    }
-                    graph.nodes.forEach(function (node) {
-                        delete node.itemStyle;
-                        node.value = node.symbolSize;
-                        node.category = node.attributes['modularity_class'];
-                    });
-                    graph.links.forEach(function (link) {
-                        delete link.lineStyle;
-                    });
-                    var option = {
-                        legend: [{}],
-                        animationDurationUpdate: 1500,
-                        animationEasingUpdate: 'quinticInOut',
+            require([
+                'echarts',
+                'extension/dataTool',
+                './data/les-miserables.gexf'
+            ], function (echarts, dataTool, xml) {
+                var graph = dataTool.gexf.parse(xml);
+                var categories = [];
+                for (var i = 0; i < 9; i++) {
+                    categories[i] = {
+                        name: '类目' + i
+                    };
+                }
+                graph.nodes.forEach(function (node) {
+                    delete node.itemStyle;
+                    node.value = node.symbolSize;
+                    node.category = node.attributes['modularity_class'];
+                });
+                graph.links.forEach(function (link) {
+                    delete link.lineStyle;
+                });
+                var option = {
+                    legend: [{}],
+                    animationDurationUpdate: 1500,
+                    animationEasingUpdate: 'quinticInOut',
 
-                        series : [
-                            {
-                                name: 'Les Miserables',
-                                type: 'graph',
-                                layout: 'none',
-                                data: graph.nodes,
-                                links: graph.links,
-                                categories: categories,
-                                roam: true,
-                                draggable: true,
+                    series : [
+                        {
+                            name: 'Les Miserables',
+                            type: 'graph',
+                            layout: 'none',
+                            data: graph.nodes,
+                            links: graph.links,
+                            categories: categories,
+                            roam: true,
+                            draggable: true,
 
+                            label: {
+                                show: true,
+                                formatter: '{b}',
+                                position: 'right'
+                            },
+
+                            labelLayout: {
+                                hideOverlap: true
+                            },
+
+                            emphasis: {
                                 label: {
-                                    show: true,
-                                    formatter: '{b}',
-                                    position: 'right'
-                                },
-
-                                labelLayout: {
-                                    hideOverlap: true
-                                },
-
-                                emphasis: {
-                                    label: {
-                                        show: true
-                                    }
-                                },
+                                    show: true
+                                }
+                            },
+                            lineStyle: {
+                                color: 'source',
+                                curveness: 0.3
+                            },
+                            emphasis: {
                                 lineStyle: {
-                                    color: 'source',
-                                    curveness: 0.3
-                                },
-                                emphasis: {
-                                    lineStyle: {
-                                        width: 10
-                                    }
+                                    width: 10
                                 }
                             }
-                        ]
-                    };
+                        }
+                    ]
+                };
 
-                    var chart = testHelper.create(echarts, 'main10', {
-                        title: [
-                            'Hide overlap in graph zooming.'
-                        ],
-                        height: 800,
-                        option: option
-                    });
+                var chart = testHelper.create(echarts, 'main10', {
+                    title: [
+                        'Hide overlap in graph zooming.'
+                    ],
+                    height: 800,
+                    option: option
                 });
             });
         </script>

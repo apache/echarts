@@ -38,50 +38,46 @@ under the License.
         <div id="main"></div>
         <script>
             require([
-                'echarts'
-                ], function (echarts) {
-                    var chart = echarts.init(document.getElementById('main'), null, {
+                'echarts',
+                './data/flare.json'
+            ], function (echarts, data) {
+                var chart = echarts.init(document.getElementById('main'));
 
-                    });
+                window.onresize = function () {
+                    chart.resize();
+                };
 
-                    window.onresize = function () {
-                        chart.resize();
-                    };
+                chart.setOption({
 
-                    $.getJSON('./data/flare.json')
-                    .done(function (data) {
-                        chart.setOption({
+                    tooltip: {
+                        trigger: 'item',
+                        triggerOn: 'mousemove'
+                    },
 
-                            tooltip: {
-                                trigger: 'item',
-                                triggerOn: 'mousemove'
-                            },
+                    series:[
+                        {
+                            type: 'tree',
 
-                            series:[
-                                {
-                                    type: 'tree',
+                            data: [data],
 
-                                    data: [data],
+                            top: '18%',
+                            bottom: '14%',
+                            roam: true,
 
-                                    top: '18%',
-                                    bottom: '14%',
-                                    roam: true,
+                            layout: 'radial',
 
-                                    layout: 'radial',
+                            symbol: 'emptyCircle',
 
-                                    symbol: 'emptyCircle',
+                            symbolSize: 7,
 
-                                    symbolSize: 7,
+                            initialTreeDepth: 3,
 
-                                    initialTreeDepth: 3,
+                            animationDurationUpdate: 750
 
-                                    animationDurationUpdate: 750
-
-                                }
-                            ]
-                        });
-                    });
+                        }
+                    ]
                 });
+            });
         </script>
     </body>
 </html>
