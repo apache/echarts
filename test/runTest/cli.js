@@ -281,7 +281,9 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
             let actContent = await fse.readFile(path.join(__dirname, 'actions', testOpt.name + '.json'));
             actions = JSON.parse(actContent);
         }
-        catch (e) {}
+        catch (e) {
+            // console.log(e);
+        }
         if (actions.length > 0) {
             try {
                 page.evaluate((actions) => {
