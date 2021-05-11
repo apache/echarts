@@ -1046,7 +1046,7 @@ export interface TextCommonOption extends ShadowOptionMixin {
     padding?: number | number[]
 
     width?: number | string// Percent
-    height?: number
+    height?: number | string// Percent
     textBorderColor?: string
     textBorderWidth?: number
     textBorderType?: ZRLineType
