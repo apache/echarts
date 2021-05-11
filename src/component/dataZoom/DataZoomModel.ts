@@ -506,12 +506,9 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
     setCalculatedRange(opt: RangeOption): void {
         const option = this.option;
-        each(['start', 'end'] as const, function (name) {
-            option[name] = opt[name];
+        each(['start', 'startValue', 'end', 'endValue'] as const, function (name) {
+            (option as any)[name] = opt[name];
         });
-        each(['startValue', 'endValue'] as const, function (name) {
-          option[name] = opt[name];
-      });
     }
 
     getPercentRange(): number[] {
@@ -591,15 +588,9 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 function retrieveRawOption<T extends DataZoomOption>(option: T) {
     const ret = {} as T;
     each(
-        ['start', 'end', 'throttle'] as const,
+        ['start', 'end', 'startValue', 'endValue', 'throttle'] as const,
         function (name) {
-            option.hasOwnProperty(name) && (ret[name] = option[name]);
-        }
-    );
-    each(
-        ['startValue', 'endValue'] as const,
-        function (name) {
-            option.hasOwnProperty(name) && (ret[name] = option[name]);
+            option.hasOwnProperty(name) && ((ret as any)[name] = option[name]);
         }
     );
     return ret;
