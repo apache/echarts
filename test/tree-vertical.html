@@ -22,7 +22,7 @@ under the License.
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
     </head>
@@ -38,68 +38,62 @@ under the License.
         <div id="main"></div>
         <script>
             require([
-                'echarts'
-                // 'echarts/chart/tree',
-                // 'echarts/component/tooltip'
-                ], function (echarts) {
-                    var chart = echarts.init(document.getElementById('main'), null, {
+                'echarts',
+                './data/flare.json'
+            ], function (echarts, data) {
+                var chart = echarts.init(document.getElementById('main'));
 
-                    });
+                window.onresize = function () {
+                    chart.resize();
+                };
 
-                    window.onresize = function () {
-                        chart.resize();
-                    };
+                chart.setOption({
 
-                    $.getJSON('./data/flare.json')
-                    .done(function (data) {
-                        chart.setOption({
+                    tooltip: {
+                        trigger: 'item',
+                        triggerOn: 'mousemove'
+                    },
 
-                            tooltip: {
-                                trigger: 'item',
-                                triggerOn: 'mousemove'
+                    series:[
+                        {
+                            type: 'tree',
+
+                            data: [data],
+
+                            left: '2%',
+                            right: '2%',
+                            top: '8%',
+                            bottom: '20%',
+
+                            roam: true,
+
+                            symbol: 'emptyCircle',
+
+                            orient: 'vertical',
+
+                            expandAndCollapse: true,
+
+                            label: {
+                                    position: 'top',
+                                    rotate: -90,
+                                    verticalAlign: 'middle',
+                                    align: 'right'
                             },
 
-                            series:[
-                                {
-                                    type: 'tree',
-
-                                    data: [data],
-
-                                    left: '2%',
-                                    right: '2%',
-                                    top: '8%',
-                                    bottom: '20%',
-
-                                    roam: true,
-
-                                    symbol: 'emptyCircle',
-
-                                    orient: 'vertical',
-
-                                    expandAndCollapse: true,
-
-                                    label: {
-                                            position: 'top',
-                                            rotate: -90,
-                                            verticalAlign: 'middle',
-                                            align: 'right'
-                                    },
-
-                                    leaves: {
-                                        label: {
-                                                position: 'bottom',
-                                                rotate: -90,
-                                                verticalAlign: 'middle',
-                                                align: 'left'
-                                        }
-                                    },
-
-                                    animationDurationUpdate: 750
+                            leaves: {
+                                label: {
+                                        position: 'bottom',
+                                        rotate: -90,
+                                        verticalAlign: 'middle',
+                                        align: 'left'
                                 }
-                            ]
-                        });
-                    });
+                            },
+
+                            animationDurationUpdate: 750
+                        }
+                    ]
                 });
+            });
         </script>
     </body>
 </html>

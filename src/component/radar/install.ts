@@ -39,5 +39,5 @@ export function install(registers: EChartsExtensionInstallRegisters) {
             // visual is for unselected data
             data.setVisual('legendSymbol', 'roundRect');
         }
-    })
+    });
 }

@@ -101,11 +101,11 @@ export interface DataZoomOption extends ComponentOption {
     /**
      * Start value. If startValue specified, start is ignored
      */
-    startValue?: number
+    startValue?: number | string | Date
     /**
      * End value. If endValue specified, end is ignored.
      */
-    endValue?: number
+    endValue?: number | string | Date
     /**
      * Min span percent, 0 - 100
      * The range of dataZoom can not be smaller than that.
@@ -507,7 +507,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
     setCalculatedRange(opt: RangeOption): void {
         const option = this.option;
         each(['start', 'startValue', 'end', 'endValue'] as const, function (name) {
-            option[name] = opt[name];
+            (option as any)[name] = opt[name];
         });
     }
 
@@ -590,7 +590,7 @@ function retrieveRawOption<T extends DataZoomOption>(option: T) {
     each(
         ['start', 'end', 'startValue', 'endValue', 'throttle'] as const,
         function (name) {
-            option.hasOwnProperty(name) && (ret[name] = option[name]);
+            option.hasOwnProperty(name) && ((ret as any)[name] = option[name]);
         }
     );
     return ret;
