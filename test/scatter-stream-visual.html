@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -60,22 +60,10 @@ under the License.
 
         <script>
 
-            var echarts;
-            var data;
-
             require([
-                'echarts'
-            ], function (ec) {
-                echarts = ec;
-                echarts && data && init();
-            });
-
-            $.getJSON('./data/house-price-area2.json', function (d) {
-                data = d;
-                echarts && data && init();
-            });
-
-            function init() {
+                'echarts',
+                './data/house-price-area2.json'
+            ], function (echarts, data) {
                 var el = document.getElementById('main0');
                 var chart = echarts.init(el);
 
@@ -125,7 +113,7 @@ under the License.
                 };
 
                 chart.setOption(option);
-            }
+            });
 
         </script>
 

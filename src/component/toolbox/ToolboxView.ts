@@ -127,17 +127,21 @@ class ToolboxView extends ComponentView {
             feature.ecModel = ecModel;
             feature.api = api;
 
-            if (feature instanceof ToolboxFeature) {
-                if (!featureName && oldName) {
-                    feature.dispose && feature.dispose(ecModel, api);
-                    return;
-                }
-
-                if (!featureModel.get('show') || feature.unusable) {
-                    feature.remove && feature.remove(ecModel, api);
-                    return;
-                }
+            const isToolboxFeature = feature instanceof ToolboxFeature;
+            if (!featureName && oldName) {
+                isToolboxFeature
+                    && (feature as ToolboxFeature).dispose
+                    && (feature as ToolboxFeature).dispose(ecModel, api);
+                return;
             }
+
+            if (!featureModel.get('show') || (isToolboxFeature && (feature as ToolboxFeature).unusable)) {
+                isToolboxFeature
+                    && (feature as ToolboxFeature).remove
+                    && (feature as ToolboxFeature).remove(ecModel, api);
+                return;
+            }
+
             createIconPaths(featureModel, feature, featureName);
 
             featureModel.setIconStatus = function (this: ToolboxFeatureModel, iconName: string, status: DisplayState) {

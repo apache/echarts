@@ -487,6 +487,12 @@ class CustomSeriesView extends ChartView {
         const group = this.group;
         const renderItem = makeRenderItem(customSeries, data, ecModel, api);
 
+        if (!oldData) {
+            // Previous render is incremental render or first render.
+            // Needs remove the incremental rendered elements.
+            group.removeAll();
+        }
+
         // By default, merge mode is applied. In most cases, custom series is
         // used in the scenario that data amount is not large but graphic elements
         // is complicated, where merge mode is probably necessary for optimization.

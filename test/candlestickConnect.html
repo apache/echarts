@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="./lib/esl.js"></script>
+        <script src="./lib/simpleRequire.js"></script>
         <script src="./lib/config.js"></script>
     </head>
     <body>
@@ -55,17 +55,8 @@ under the License.
         <script>
 
             require([
-                'data/rainfall.json',
+                'data/rainfall.json.js',
                 'echarts'
-                // 'echarts/chart/bar',
-                // 'echarts/chart/line',
-                // 'echarts/chart/candlestick',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/grid',
-                // 'echarts/component/axis',
-                // 'echarts/component/toolbox',
-                // 'echarts/component/dataZoom'
             ], function (data, echarts) {
                 var axisData = [
                     "2013/1/24", "2013/1/25", "2013/1/28", "2013/1/29", "2013/1/30",

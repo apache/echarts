@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
@@ -59,169 +59,117 @@ under the License.
 
         <script>
 
-        require(
-            (testHelper.hasURLParam('en')
-                ? [
-                    'echarts',
-                    // 'echarts/lang/en',
-                ]
-                : [
-                    'echarts'
-                ]
-            ).concat(
-                [
-                    // 'echarts/chart/bar',
-                    // 'echarts/chart/line',
-                    // 'echarts/component/legend',
-                    // 'echarts/component/graphic',
-                    // 'echarts/component/grid',
-                    // 'echarts/component/tooltip',
-                    // 'echarts/component/brush',
-                    // 'echarts/component/toolbox',
-                    // 'echarts/component/title',
-                    // 'zrender/vml/vml'
-                ]
-            ),
-            function (echarts) {
+        require([
+            'echarts',
+            'data/life-expectancy-table.json'
+        ], function (echarts, data) {
+            var chart = echarts.init(document.getElementById('main1'), null, {
+                // renderer: 'svg'
+            });
 
-                function loadLifeData(cb) {
-                    $.getJSON('data/life-expectancy-table.json', function (data) {
-                        cb(data);
-                    })
+            var updateFrequency = 5000;
+            var dimension = 1;
+
+            var years = [];
+            for (var i = 0; i < data.length; ++i) {
+                if (years.length === 0 || years[years.length - 1] !== data[i][4]) {
+                    years.push(data[i][4]);
                 }
-
-                var chart = echarts.init(document.getElementById('main1'), null, {
-                    // renderer: 'svg'
-                });
-
-                var updateFrequency = 5000;
-                var dimension = 1;
-
-                loadLifeData(function (data) {
-                    var years = [];
-                    for (var i = 0; i < data.length; ++i) {
-                        if (years.length === 0 || years[years.length - 1] !== data[i][4]) {
-                            years.push(data[i][4]);
-                        }
-                    }
-
-                    var option = {
-                        grid: {
-                            left: 150,
-                            right: 150
-                        },
-                        xAxis: {
-                            max: 'dataMax',
-                            label: {
-                                formatter: function (n) {
-                                    return Math.round(n);
-                                }
-                            }
-                        },
-                        dataset: {
-                            source: data.slice(1).filter(d => {
-                                return d[4] === 1800;
-                            })
-                        },
-                        yAxis: {
-                            type: 'category',
-                            inverse: true,
-                            max: 10,
-                            axisLabel: {
-                                show: true
-                            },
-                            animationDuration: 300,
-                            animationDurationUpdate: 300
-                        },
-                        series: [{
-                            realtimeSort: true,
-                            seriesLayoutBy: 'column',
-                            type: 'bar',
-                            encode: {
-                                x: dimension,
-                                y: 3
-                            },
-                            label: {
-                                show: true,
-                                position: 'right',
-                                formatter: function (param) {
-                                    return param.value[dimension];
-                                },
-                                valueAnimation: true,
-                                fontFamily: 'monospace'
-                            }
-                        }],
-                        animationDurationUpdate: updateFrequency,
-                        animationEasing: 'linear',
-                        animationEasingUpdate: 'linear',
-                        graphic: {
-                            elements: [{
-                                type: 'text',
-                                right: 160,
-                                bottom: 60,
-                                style: {
-                                    text: '1960',
-                                    font: 'bolder 80px monospace',
-                                    fill: 'rgba(100, 100, 100, 0.25)'
-                                },
-                                z: 100
-                            }]
-                        }
-                    };
-
-                    // console.log(option);
-                    chart.setOption(option);
-
-                    for (var i = 1; i < years.length; ++i) {
-                        (function (i) {
-                            setTimeout(function () {
-                                updateYear(years[i + 1]);
-                            }, (i - 1) * updateFrequency);
-                        })(i);
-                    }
-
-                    function updateYear(year) {
-                        var source = data.slice(1).filter(d => {
-                            return d[4] === year;
-                        });
-                        option.series[0].data = source;
-                        option.graphic.elements[0].style.text = year;
-                        chart.setOption(option);
-                    }
-                });
-
             }
 
-        );
+            var option = {
+                grid: {
+                    left: 150,
+                    right: 150
+                },
+                xAxis: {
+                    max: 'dataMax',
+                    label: {
+                        formatter: function (n) {
+                            return Math.round(n);
+                        }
+                    }
+                },
+                dataset: {
+                    source: data.slice(1).filter(d => {
+                        return d[4] === 1800;
+                    })
+                },
+                yAxis: {
+                    type: 'category',
+                    inverse: true,
+                    max: 10,
+                    axisLabel: {
+                        show: true
+                    },
+                    animationDuration: 300,
+                    animationDurationUpdate: 300
+                },
+                series: [{
+                    realtimeSort: true,
+                    seriesLayoutBy: 'column',
+                    type: 'bar',
+                    encode: {
+                        x: dimension,
+                        y: 3
+                    },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: function (param) {
+                            return param.value[dimension];
+                        },
+                        valueAnimation: true,
+                        fontFamily: 'monospace'
+                    }
+                }],
+                animationDurationUpdate: updateFrequency,
+                animationEasing: 'linear',
+                animationEasingUpdate: 'linear',
+                graphic: {
+                    elements: [{
+                        type: 'text',
+                        right: 160,
+                        bottom: 60,
+                        style: {
+                            text: '1960',
+                            font: 'bolder 80px monospace',
+                            fill: 'rgba(100, 100, 100, 0.25)'
+                        },
+                        z: 100
+                    }]
+                }
+            };
+
+            // console.log(option);
+            chart.setOption(option);
+
+            for (var i = 1; i < years.length; ++i) {
+                (function (i) {
+                    setTimeout(function () {
+                        updateYear(years[i + 1]);
+                    }, (i - 1) * updateFrequency);
+                })(i);
+            }
+
+            function updateYear(year) {
+                var source = data.slice(1).filter(d => {
+                    return d[4] === year;
+                });
+                option.series[0].data = source;
+                option.graphic.elements[0].style.text = year;
+                chart.setOption(option);
+            }
+        });
         </script>
 
 
 
         <script>
 
-        require(
-            (testHelper.hasURLParam('en')
-                ? [
-                    'echarts',
-                    // 'echarts/lang/en',
-                ]
-                : [
-                    'echarts'
-                ]
-            ).concat(
-                [
-                    // 'echarts/chart/bar',
-                    // 'echarts/chart/line',
-                    // 'echarts/component/legend',
-                    // 'echarts/component/graphic',
-                    // 'echarts/component/grid',
-                    // 'echarts/component/tooltip',
-                    // 'echarts/component/brush',
-                    // 'echarts/component/toolbox',
-                    // 'echarts/component/title',
-                    // 'zrender/vml/vml'
-                ]
-            ),
+        require([
+            'echarts'
+        ],
             function (echarts) {
                 var chart = echarts.init(document.getElementById('main2'), null, {
                 });
@@ -307,7 +255,6 @@ under the License.
                     })(x);
                 }
             }
-
         );
         </script>
 
@@ -315,29 +262,7 @@ under the License.
 
         <script>
 
-        require(
-            (testHelper.hasURLParam('en')
-                ? [
-                    'echarts',
-                    // 'echarts/lang/en',
-                ]
-                : [
-                    'echarts'
-                ]
-            ).concat(
-                [
-                    // 'echarts/chart/bar',
-                    // 'echarts/chart/line',
-                    // 'echarts/component/legend',
-                    // 'echarts/component/graphic',
-                    // 'echarts/component/grid',
-                    // 'echarts/component/tooltip',
-                    // 'echarts/component/brush',
-                    // 'echarts/component/toolbox',
-                    // 'echarts/component/title',
-                    // 'zrender/vml/vml'
-                ]
-            ),
+        require(['echarts'],
             function (echarts) {
                 var chart = echarts.init(document.getElementById('main3'), null, {
                 });

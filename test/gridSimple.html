@@ -22,7 +22,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/facePrint.js"></script>
     </head>
@@ -39,13 +39,6 @@ under the License.
 
             require([
                 'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/chart/bar',
-                // 'echarts/chart/pie',
-                // 'echarts/component/legend',
-                // 'echarts/component/gridSimple',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/dataZoomInside'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
