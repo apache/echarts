@@ -155,7 +155,7 @@
   "tooltip": 10,
   "tooltip-appendToBody": 4,
   "tooltip-axisPointer": 20,
-  "tooltip-axisPointer2": 1,
+  "tooltip-axisPointer2": 2,
   "tooltip-cascade": 4,
   "tooltip-component": 5,
   "tooltip-event": 1,
