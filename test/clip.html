@@ -1391,5 +1391,37 @@ under the License.
             })
         </script>
 
+
+        <div class="chart" id="line-clip"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [{
+                        data: [820, 932, 901, 934, 1290, 1330, 1320],
+                        type: 'line',
+                        areaStyle: {},
+                        clip: false
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'line-clip', {
+                    title: [
+                        'The line chart should be rendered without any error in console when `**clip**` is set as `**false**`'
+                    ],
+                    option: option,
+                    height: 400
+                });
+            });
+        </script>
     </body>
 </html>
