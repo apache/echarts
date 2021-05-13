@@ -370,7 +370,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         function beforeLink(nodeData: List) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 const node = tree.getNodeByDataIndex(idx);
-                const levelModel = levelModels[node.depth];
+                const levelModel = levelModels[node ? node.depth : undefined];
                 // If no levelModel, we also need `designatedVisualModel`.
                 model.parentModel = levelModel || designatedVisualModel;
                 return model;
