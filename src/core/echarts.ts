@@ -1168,7 +1168,9 @@ class ECharts extends Eventful<ECEventDefinition> {
         // chart.setOption(option, { lazyUpdate: true });
         // chart.resize();
         if (this[OPTION_UPDATED_KEY]) {
-            silent = silent || (this[OPTION_UPDATED_KEY] as any).silent;
+            if (silent == null) {
+                silent = (this[OPTION_UPDATED_KEY] as any).silent;
+            }
             needPrepare = true;
             this[OPTION_UPDATED_KEY] = false;
         }
