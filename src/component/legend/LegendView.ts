@@ -207,7 +207,7 @@ class LegendView extends ComponentView {
             if (seriesModel) {
                 const data = seriesModel.getData();
                 const lineVisualStyle = data.getVisual('legendLineStyle') || {};
-                const symbolType = data.getVisual('legendSymbol');
+                const legendIcon = data.getVisual('legendIcon');
 
                 /**
                  * `data.getVisual('style')` may be the color from the register
@@ -218,7 +218,7 @@ class LegendView extends ComponentView {
                 const itemGroup = this._createItem(
                     seriesModel, name, dataIndex,
                     legendItemModel, legendModel, itemAlign,
-                    lineVisualStyle, style, symbolType, selectMode
+                    lineVisualStyle, style, legendIcon, selectMode
                 );
 
                 itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
@@ -245,7 +245,7 @@ class LegendView extends ComponentView {
                         const idx = provider.indexOfName(name);
 
                         const style = provider.getItemVisual(idx, 'style') as PathStyleProps;
-                        const symbolType = provider.getItemVisual(idx, 'legendSymbol');
+                        const legendIcon = provider.getItemVisual(idx, 'legendIcon');
 
                         const colorArr = parse(style.fill as ColorString);
                         // Color may be set to transparent in visualMap when data is out of range.
@@ -259,7 +259,7 @@ class LegendView extends ComponentView {
                         const itemGroup = this._createItem(
                             seriesModel, name, dataIndex,
                             legendItemModel, legendModel, itemAlign,
-                            {}, style, symbolType, selectMode
+                            {}, style, legendIcon, selectMode
                         );
 
                         // FIXME: consider different series has items with the same name.
@@ -339,7 +339,7 @@ class LegendView extends ComponentView {
         itemAlign: LegendOption['align'],
         lineVisualStyle: LineStyleProps,
         itemVisualStyle: PathStyleProps,
-        symbolType: string,
+        legendIcon: string,
         selectMode: LegendOption['selectedMode']
     ) {
         const drawType = seriesModel.visualDrawType;
@@ -350,11 +350,11 @@ class LegendView extends ComponentView {
         let symbolRotate = itemModel.get('symbolRotate');
 
         const legendIconType = itemModel.get('icon');
-        symbolType = legendIconType || symbolType || 'roundRect';
+        legendIcon = legendIconType || legendIcon || 'roundRect';
 
         const legendLineStyle = legendModel.getModel('lineStyle');
         const style = getLegendStyle(
-            symbolType,
+            legendIcon,
             itemModel,
             legendLineStyle,
             lineVisualStyle,
@@ -374,7 +374,7 @@ class LegendView extends ComponentView {
             itemGroup.add(seriesModel.getLegendIcon({
                 itemWidth,
                 itemHeight,
-                symbolType,
+                symbolType: legendIcon,
                 symbolRotate,
                 itemStyle: style.itemStyle,
                 lineStyle: style.lineStyle
@@ -382,13 +382,15 @@ class LegendView extends ComponentView {
         }
         else {
             // Use default legend icon policy for most series
-            const rotate = symbolRotate === 'inherit'
-                ? seriesModel.get('symbolRotate')
-                : symbolRotate;
+            const rotate = legendIconType === 'inherit' && legendIcon
+                ? (symbolRotate === 'inherit'
+                    ? seriesModel.get('symbolRotate')
+                    : symbolRotate)
+                : 0; // No rotation for no icon
             itemGroup.add(getDefaultLegendIcon({
                 itemWidth,
                 itemHeight,
-                symbolType,
+                symbolType: legendIcon,
                 symbolRotate: rotate,
                 itemStyle: style.itemStyle,
                 lineStyle: style.lineStyle

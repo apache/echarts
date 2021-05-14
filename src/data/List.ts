@@ -141,7 +141,7 @@ export interface DefaultDataVisual {
 
     liftZ?: number
     // For legend.
-    legendSymbol?: string
+    legendIcon?: string
     legendLineStyle?: LineStyleProps
 
     // visualMap will inject visualMeta data

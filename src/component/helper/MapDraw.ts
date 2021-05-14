@@ -682,7 +682,7 @@ function resetLabelForRegion(
     // In the following cases label will be drawn
     // 1. In map series and data value is NaN
     // 2. In geo component
-    // 3. Region has no series legendSymbol, which will be add a showLabel flag in mapSymbolLayout
+    // 3. Region has no series legendIcon, which will be add a showLabel flag in mapSymbolLayout
     if (
         ((isGeo || isDataNaN))
         || (itemLayout && itemLayout.showLabel)

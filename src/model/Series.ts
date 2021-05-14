@@ -175,7 +175,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // Default symbol type.
     defaultSymbol: string;
     // Symbol provide to legend.
-    legendSymbol: string;
+    legendIcon: string;
 
     // ---------------------------------------
     // Props about data selection

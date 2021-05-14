@@ -230,7 +230,8 @@ under the License.
                             name: 'Line C',
                             symbolRotate: -30,
                             icon: 'emptyTriangle'
-                        }
+                        },
+                        'Bar D'
                     ],
                     symbolRotate: 30,
                     itemWidth: 100
@@ -254,6 +255,10 @@ under the License.
                     name: 'Line C',
                     symbol: 'emptyTriangle',
                     symbolKeepAspect: true
+                }, {
+                    data: getData(0),
+                    type: 'bar',
+                    name: 'Bar D'
                 }],
                 animation: 0
             };
@@ -263,7 +268,8 @@ under the License.
                     '**Legend options should work**',
                     'Line A: the rect in the legend should be placed at the center with rotation of 30 degrees',
                     'Line B: the triangle in the legend should be placed at the center with rotation of 30 degrees',
-                    'Line C: the triangle in the legend should be placed at the center with rotation of -30 degrees'
+                    'Line C: should not have rotate in legend',
+                    'Bar D: should not have rotate in legend'
                 ],
                 option: option
             });
