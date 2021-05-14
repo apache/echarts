@@ -22,7 +22,7 @@ under the License.
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
     </head>
@@ -38,84 +38,77 @@ under the License.
         <div id="main"></div>
         <script>
             require([
-                'echarts'
-                // 'echarts/chart/tree',
-                // 'echarts/component/tooltip'
-                ], function (echarts) {
-                    var chart = echarts.init(document.getElementById('main'), null, {
+                'echarts',
+                './data/flare.json'
+            ], function (echarts, data) {
+                var chart = echarts.init(document.getElementById('main'));
 
-                    });
+                window.onresize = function () {
+                    chart.resize();
+                };
 
-                    window.onresize = function () {
-                        chart.resize();
-                    };
+                echarts.util.each(data.children, function (datum, index) {
+                    index % 2 === 0 && (datum.collapsed = true);
+                });
 
-                    $.getJSON('./data/flare.json')
-                    .done(function (data) {
+                chart.setOption({
 
-                        echarts.util.each(data.children, function (datum, index) {
-                            index % 2 === 0 && (datum.collapsed = true);
-                        });
+                    tooltip: {
+                        trigger: 'item',
+                        triggerOn: 'mousemove'
+                    },
 
-                        chart.setOption({
+                    series:[
+                        {
+                            type: 'tree',
+                            id: '3',
 
-                            tooltip: {
-                                trigger: 'item',
-                                triggerOn: 'mousemove'
+                            data: [data],
+
+                            top: '1%',
+                            left: '7%',
+                            bottom: '1%',
+                            right: '20%',
+                            roam: true,
+
+                            symbolSize: 7,
+
+                            // initialTreeDepth: -1,
+
+                            label: {
+                                    position: 'left',
+                                    verticalAlign: 'middle',
+                                    align: 'right'
                             },
 
-                            series:[
-                                {
-                                    type: 'tree',
-                                    id: '3',
-
-                                    data: [data],
-
-                                    top: '1%',
-                                    left: '7%',
-                                    bottom: '1%',
-                                    right: '20%',
-                                    roam: true,
-
-                                    symbolSize: 7,
-
-                                    // initialTreeDepth: -1,
-
-                                    label: {
-                                            position: 'left',
-                                            verticalAlign: 'middle',
-                                            align: 'right'
-                                    },
-
-                                    leaves: {
-                                        label: {
-                                                position: 'right',
-                                                verticalAlign: 'middle',
-                                                align: 'left'
-                                        }
-                                    },
-
-                                    // expandAndCollapse: false,
-                                    animationDuration: 550,
-                                    animationDurationUpdate: 750
+                            leaves: {
+                                label: {
+                                        position: 'right',
+                                        verticalAlign: 'middle',
+                                        align: 'left'
                                 }
-                            ]
-                        });
+                            },
 
-                        setTimeout(function() {
-                            var newData = echarts.util.clone(data);
-                            newData.children.splice(0, 1);
-                            chart.setOption({
-                                series: [{
-                                    type: 'tree',
-                                    id: '3',
-                                    data: [newData]
-                                }]
-                            }, false);
-                        }, 1000);
-
-                    });
+                            // expandAndCollapse: false,
+                            animationDuration: 550,
+                            animationDurationUpdate: 750
+                        }
+                    ]
                 });
+
+                setTimeout(function() {
+                    var newData = echarts.util.clone(data);
+                    newData.children.splice(0, 1);
+                    chart.setOption({
+                        series: [{
+                            type: 'tree',
+                            id: '3',
+                            data: [newData]
+                        }]
+                    }, false);
+                }, 1000);
+
+            });
         </script>
     </body>
 </html>

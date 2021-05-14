@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/testHelper.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -60,13 +60,7 @@ under the License.
 
             require([
                 'echarts',
-                'data/security-sh-2013.json'
-                // 'echarts/chart/line',
-                // 'echarts/chart/candlestick',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'zrender/vml/vml'
+                'data/security-sh-2013.json.js'
             ], function (echarts, rawData) {
 
                 var dom = document.getElementById('dim');
@@ -177,14 +171,7 @@ under the License.
             var data;
 
             require([
-                'echarts',
-                // 'echarts/chart/boxplot',
-                // 'echarts/chart/scatter',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/dataZoom'
+                'echarts'
             ], function (echarts) {
 
                 data = [];
@@ -308,11 +295,6 @@ under the License.
         <script>
             require([
                 'echarts'
-                // 'echarts/chart/scatter',
-                // 'echarts/component/legend',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom',
-                // 'zrender/vml/vml'
             ], function (echarts) {
                 data = [
                     ['Blouse "Blue Viola"', 101.88, 99.75, 23, 17, 32, 18],

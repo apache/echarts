@@ -49,9 +49,6 @@ class Test {
         this.fileUrl = fileUrl;
         this.name = testNameFromFile(fileUrl);
 
-        // If this test case ignore svg testing.
-        this.ignoreSVG = false;
-
         this.status = 'unsettled';
 
         // Run results
@@ -140,6 +137,8 @@ module.exports.updateTestsList = async function (
     _testsMap = {};
     _testsExists = {};
 
+    const isSVGRenderer = parseRunHash(runHash).renderer === 'svg';
+
     fse.ensureDirSync(getResultBaseDir());
 
     try {
@@ -164,6 +163,10 @@ module.exports.updateTestsList = async function (
         if (blacklist.includes(fileUrl)) {
             return;
         }
+        if (isSVGRenderer && SVGBlacklist.includes(fileUrl)) {
+            return;
+        }
+
         _testsExists[fileUrl] = true;
 
         if (_testsMap[fileUrl]) {
@@ -171,7 +174,6 @@ module.exports.updateTestsList = async function (
         }
 
         const test = new Test(fileUrl);
-        test.ignoreSVG = SVGBlacklist.includes(fileUrl);
 
         _testsMap[fileUrl] = test;
     });
@@ -181,12 +183,14 @@ module.exports.updateTestsList = async function (
         _tests.push(_testsMap[key]);
     });
 
-    const actionsMetaData = {};
+    let actionsMetaData = {};
     const metaPath = path.join(__dirname, 'actions/__meta__.json');
     try {
         actionsMetaData = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
     }
-    catch(e) {}
+    catch(e) {
+        console.log(e);
+    }
 
     _tests.forEach(testOpt => {
         testOpt.actions = actionsMetaData[testOpt.name] || 0;
@@ -233,14 +237,6 @@ async function getFolderSize(dir) {
         size += fs.statSync(file).size;
     }
     return size;
-    // const statAsync = promisify(fs.stat);
-    // return Promise.all(
-    //     files.map(file => statAsync(file))
-    // ).then(sizes => {
-    //     return sizes.reduce((total, current) => {
-    //         return total + current.size;
-    //     }, 0)
-    // });
 }
 /**
  * Get results of all runs

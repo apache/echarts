@@ -27,6 +27,7 @@ under the License.
         <script src="lib/facePrint.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/config.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
@@ -161,7 +162,7 @@ under the License.
         <script>
 
 
-        $.getJSON('./data/ec-star.json', function (data) {
+        require(['./data/ec-star.json'], function (data) {
 
             var minStartValue = '2013-06-06';
             var maxEndValue = '2017-10-17';

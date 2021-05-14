@@ -27,7 +27,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -53,39 +53,23 @@ under the License.
             var groupColors = [];
 
             require([
-                'echarts'
-                // 'zrender/tool/color',
-                // 'echarts/chart/parallel',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox',
-                // 'echarts/component/visualMap'
-            ], function (ec) {
+                'echarts',
+                './data/nutrients.json'
+            ], function (ec, data) {
 
-                $.getJSON('./data/nutrients.json', function (data) {
-                    echarts = ec;
-                    colorTool = echarts.color;
-
-                    normalizeData(data);
-
-                    chart = myChart = echarts.init(document.getElementById('main'));
-
-                    console.time('render');
-                    chart.setOption(getOption(data));
-                    console.timeEnd('render');
-
-                    chart.on('axisAreaSelected', function (event) {
-                        // var indices = chart.getModel().getSeries()[0].getRawIndicesByActiveState('active');
-                        // console.log('北京: ', indices);
-                    });
-
-                });
+                echarts = ec;
+                colorTool = echarts.color;
 
                 var indices = {
                     name: 0,
                     group: 1,
                     id: 16
                 };
+
+                normalizeData(data);
+
+                chart = myChart = echarts.init(document.getElementById('main'));
+
                 var schema = [
                     {name: 'name', index: 0},
                     {name: 'group', index: 1},
@@ -255,6 +239,15 @@ under the License.
                         ]
                     };
                 }
+
+                console.time('render');
+                chart.setOption(getOption(data));
+                console.timeEnd('render');
+
+                chart.on('axisAreaSelected', function (event) {
+                    // var indices = chart.getModel().getSeries()[0].getRawIndicesByActiveState('active');
+                    // console.log('北京: ', indices);
+                });
 
             });
 

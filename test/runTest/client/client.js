@@ -130,8 +130,6 @@ const app = new Vue({
         runConfig: Object.assign({
             sortBy: 'name',
 
-            // replaySpeed: 5,
-
             isActualNightly: false,
             isExpectedNightly: false,
             actualVersion: 'local',
@@ -182,7 +180,7 @@ const app = new Vue({
                     finishedCount++;
                 }
             });
-            return +(finishedCount / this.fullTests.length * 100).toFixed(0) || 0;
+            return +(finishedCount / this.fullTests.length * 100).toFixed(1) || 0;
         },
 
         tests() {
@@ -262,6 +260,10 @@ const app = new Vue({
             setTimeout(() => {
                 this.scrollToCurrent();
             }, 100);
+        },
+
+        'currentTestName'(newVal, oldVal) {
+            updateUrl();
         }
     },
 
@@ -279,7 +281,6 @@ const app = new Vue({
         changeTest(target, testName) {
             if (!target.matches('input[type="checkbox"]') && !target.matches('.el-checkbox__inner')) {
                 app.currentTestName = testName;
-                updateUrl();
             }
         },
         toggleSort() {
@@ -416,9 +417,7 @@ function runTests(tests, noHeadless) {
         threads: app.runConfig.threads,
         renderer: app.runConfig.renderer,
         noHeadless,
-        replaySpeed: app.runConfig.noHeadless
-            ? 1
-            : 5 // Force run at 5x speed
+        replaySpeed: noHeadless ? 5 : 5
     });
 }
 
@@ -446,6 +445,10 @@ socket.on('update', msg => {
     // TODO
     app.running = !!msg.running;
     app.fullTests = processTestsData(msg.tests, app.fullTests);
+
+    if (!app.currentTestName) {
+        app.currentTestName = app.fullTests[0].name;
+    }
 
     firstUpdate = false;
 });

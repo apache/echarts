@@ -575,7 +575,7 @@ function getLegendStyle(
                      * in visual style
                      */
                     itemStyle.stroke = itemVisualStyle[
-                        symbolType.startsWith('empty') ? 'fill' : 'stroke'
+                        symbolType.lastIndexOf('empty', 0) === 0 ? 'fill' : 'stroke'
                     ];
                     break;
 
