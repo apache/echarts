@@ -133,14 +133,14 @@ export interface LegendTooltipFormatterParams {
     $vars: ['name']
 }
 
-export interface LegendSymbolParams {
+export interface LegendIconParams {
     itemWidth: number,
     itemHeight: number,
     /**
      * symbolType is from legend.icon, legend.data.icon, or series visual
      */
-    symbolType: string,
-    symbolRotate: number | 'inherit',
+    icon: string,
+    iconRotate: number | 'inherit',
     itemStyle: PathStyleProps,
     lineStyle: LineStyleProps
 }

@@ -32,7 +32,7 @@ import LegendModel, {
     LegendLineStyleOption,
     LegendOption,
     LegendSelectorButtonOption,
-    LegendSymbolParams,
+    LegendIconParams,
     LegendTooltipFormatterParams
 } from './LegendModel';
 import GlobalModel from '../../model/Global';
@@ -334,7 +334,7 @@ class LegendView extends ComponentView {
         seriesModel: SeriesModel<SeriesOption & SymbolOptionMixin>,
         name: string,
         dataIndex: number,
-        itemModel: LegendModel['_data'][number],
+        legendItemModel: LegendModel['_data'][number],
         legendModel: LegendModel,
         itemAlign: LegendOption['align'],
         lineVisualStyle: LineStyleProps,
@@ -347,15 +347,15 @@ class LegendView extends ComponentView {
         const itemHeight = legendModel.get('itemHeight');
         const isSelected = legendModel.isSelected(name);
 
-        let symbolRotate = itemModel.get('symbolRotate');
+        let iconRotate = legendItemModel.get('symbolRotate');
 
-        const legendIconType = itemModel.get('icon');
+        const legendIconType = legendItemModel.get('icon');
         legendIcon = legendIconType || legendIcon || 'roundRect';
 
         const legendLineStyle = legendModel.getModel('lineStyle');
         const style = getLegendStyle(
             legendIcon,
-            itemModel,
+            legendItemModel,
             legendLineStyle,
             lineVisualStyle,
             itemVisualStyle,
@@ -365,7 +365,7 @@ class LegendView extends ComponentView {
 
         const itemGroup = new Group();
 
-        const textStyleModel = itemModel.getModel('textStyle');
+        const textStyleModel = legendItemModel.getModel('textStyle');
 
         if (typeof seriesModel.getLegendIcon === 'function'
             && (!legendIconType || legendIconType === 'inherit')
@@ -374,24 +374,25 @@ class LegendView extends ComponentView {
             itemGroup.add(seriesModel.getLegendIcon({
                 itemWidth,
                 itemHeight,
-                symbolType: legendIcon,
-                symbolRotate,
+                icon: legendIcon,
+                iconRotate: iconRotate,
                 itemStyle: style.itemStyle,
                 lineStyle: style.lineStyle
             }));
         }
         else {
             // Use default legend icon policy for most series
-            const rotate = legendIconType === 'inherit' && legendIcon
-                ? (symbolRotate === 'inherit'
-                    ? seriesModel.get('symbolRotate')
-                    : symbolRotate)
+            const rotate = legendIconType === 'inherit' && seriesModel.getData().getVisual('symbol')
+                ? (iconRotate === 'inherit'
+                    ? seriesModel.getData().getVisual('symbolRotate')
+                    : iconRotate
+                )
                 : 0; // No rotation for no icon
             itemGroup.add(getDefaultLegendIcon({
                 itemWidth,
                 itemHeight,
-                symbolType: legendIcon,
-                symbolRotate: rotate,
+                icon: legendIcon,
+                iconRotate: rotate,
                 itemStyle: style.itemStyle,
                 lineStyle: style.lineStyle
             }));
@@ -409,7 +410,7 @@ class LegendView extends ComponentView {
             content = formatter(name);
         }
 
-        const inactiveColor = itemModel.get('inactiveColor');
+        const inactiveColor = legendItemModel.get('inactiveColor');
         itemGroup.add(new graphic.Text({
             style: createTextStyle(textStyleModel, {
                 text: content,
@@ -427,7 +428,7 @@ class LegendView extends ComponentView {
             invisible: true
         });
 
-        const tooltipModel = itemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;
+        const tooltipModel = legendItemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;
         if (tooltipModel.get('show')) {
             graphic.setTooltipConfig({
                 el: hitRect,
@@ -536,7 +537,7 @@ class LegendView extends ComponentView {
 }
 
 function getLegendStyle(
-    symbolType: string,
+    iconType: string,
     legendModel: LegendModel['_data'][number],
     legendLineStyle: Model<LegendLineStyleOption>,
     lineVisualStyle: LineStyleProps,
@@ -573,11 +574,11 @@ function getLegendStyle(
 
                 case 'stroke':
                     /**
-                     * symbol type with "emptyXXX" should use fill color
+                     * icon type with "emptyXXX" should use fill color
                      * in visual style
                      */
                     itemStyle.stroke = itemVisualStyle[
-                        symbolType.lastIndexOf('empty', 0) === 0 ? 'fill' : 'stroke'
+                        iconType.lastIndexOf('empty', 0) === 0 ? 'fill' : 'stroke'
                     ];
                     break;
 
@@ -636,7 +637,7 @@ function getLegendStyle(
          * there is no border in series but border in legend, so we need to
          * use border only when series has border if is set to be auto
          */
-        const visualHasBorder = itemStyle[symbolType.indexOf('empty') > -1 ? 'fill' : 'stroke'];
+        const visualHasBorder = itemStyle[iconType.indexOf('empty') > -1 ? 'fill' : 'stroke'];
         itemStyle.lineWidth = borderWidth === 'auto'
             ? (itemVisualStyle.lineWidth > 0 && visualHasBorder ? 2 : 0)
             : itemStyle.lineWidth;
@@ -648,9 +649,9 @@ function getLegendStyle(
     return { itemStyle, lineStyle };
 }
 
-function getDefaultLegendIcon(opt: LegendSymbolParams): ECSymbol {
-    const symboType = opt.symbolType || 'roundRect';
-    const symbol = createSymbol(
+function getDefaultLegendIcon(opt: LegendIconParams): ECSymbol {
+    const symboType = opt.icon || 'roundRect';
+    const icon = createSymbol(
         symboType,
         0,
         0,
@@ -659,18 +660,18 @@ function getDefaultLegendIcon(opt: LegendSymbolParams): ECSymbol {
         opt.itemStyle.fill
     );
 
-    symbol.setStyle(opt.itemStyle);
+    icon.setStyle(opt.itemStyle);
 
-    symbol.rotation = (opt.symbolRotate as number || 0) * Math.PI / 180;
-    symbol.setOrigin([opt.itemWidth / 2, opt.itemHeight / 2]);
+    icon.rotation = (opt.iconRotate as number || 0) * Math.PI / 180;
+    icon.setOrigin([opt.itemWidth / 2, opt.itemHeight / 2]);
 
     if (symboType.indexOf('empty') > -1) {
-        symbol.style.stroke = symbol.style.fill;
-        symbol.style.fill = '#fff';
-        symbol.style.lineWidth = 2;
+        icon.style.stroke = icon.style.fill;
+        icon.style.fill = '#fff';
+        icon.style.lineWidth = 2;
     }
 
-    return symbol;
+    return icon;
 }
 
 function dispatchSelectAction(

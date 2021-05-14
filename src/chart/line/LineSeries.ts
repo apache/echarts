@@ -41,7 +41,7 @@ import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import {Group} from '../../util/graphic';
-import {LegendSymbolParams} from '../../component/legend/LegendModel';
+import {LegendIconParams} from '../../component/legend/LegendModel';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
@@ -210,7 +210,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         hoverLayerThreshold: Infinity
     };
 
-    getLegendIcon(opt: LegendSymbolParams): ECSymbol | Group {
+    getLegendIcon(opt: LegendIconParams): ECSymbol | Group {
         const group = new Group();
 
         const line = createSymbol(
@@ -243,9 +243,9 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         symbol.setStyle(opt.itemStyle);
 
-        const symbolRotate = opt.symbolRotate === 'inherit'
+        const symbolRotate = opt.iconRotate === 'inherit'
             ? visualRotate
-            : (opt.symbolRotate || 0);
+            : (opt.iconRotate || 0);
         symbol.rotation = symbolRotate * Math.PI / 180;
         symbol.setOrigin([opt.itemWidth / 2, opt.itemHeight / 2]);
 
