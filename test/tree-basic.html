@@ -37,10 +37,13 @@ under the License.
         </style>
         <div id="main"></div>
         <script>
+            var formatUtil;
+
             require([
                 'echarts',
                 './data/flare.json'
             ], function (echarts, data) {
+                formatUtil = echarts.format;
                 var chart = echarts.init(document.getElementById('main'));
 
                 window.onresize = function () {
@@ -55,7 +58,21 @@ under the License.
 
                     tooltip: {
                         trigger: 'item',
-                        triggerOn: 'mousemove'
+                        triggerOn: 'mousemove',
+                        formatter: function (info) {
+                            var value = info.value;
+                            var treePathInfo = info.treePathInfo;
+                            var treePath = [];
+
+                            for (var i = 1; i < treePathInfo.length; i++) {
+                                treePath.push(treePathInfo[i].name);
+                            }
+
+                            return [
+                                '<div>' + formatUtil.encodeHTML(treePath.join('/')) + '</div>',
+                                value ? 'value: ' + formatUtil.addCommas(value) : '',
+                            ].join('');
+                        }
                     },
 
                     series:[
