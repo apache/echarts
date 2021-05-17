@@ -137,6 +137,20 @@ const BUILTIN_CHARTS_MAP = {
 
 const componetsMissingLogPrinted: Record<string, boolean> = {};
 
+function checkMissingComponents(option: ECUnitOption) {
+    each(option, function (componentOption, mainType: ComponentMainType) {
+        if (!ComponentModel.hasClass(mainType)) {
+            const componentImportName = BUITIN_COMPONENTS_MAP[mainType as keyof typeof BUITIN_COMPONENTS_MAP];
+            if (componentImportName && !componetsMissingLogPrinted[componentImportName]) {
+                error(`Component ${mainType} is used but not imported.
+import { ${componentImportName} } from 'echarts/components';
+echarts.use([${componentImportName}]);`);
+                componetsMissingLogPrinted[componentImportName] = true;
+            }
+        }
+    });
+}
+
 class GlobalModel extends Model<ECUnitOption> {
     // @readonly
     option: ECUnitOption;
@@ -238,6 +252,9 @@ class GlobalModel extends Model<ECUnitOption> {
 
         if (!type || type === 'recreate') {
             const baseOption = optionManager.mountOption(type === 'recreate');
+            if (__DEV__) {
+                checkMissingComponents(baseOption);
+            }
 
             if (!this.option || type === 'recreate') {
                 initBase(this, baseOption);
@@ -308,16 +325,6 @@ class GlobalModel extends Model<ECUnitOption> {
             }
 
             if (!ComponentModel.hasClass(mainType)) {
-                if (__DEV__) {
-                    const componentImportName = BUITIN_COMPONENTS_MAP[mainType as keyof typeof BUITIN_COMPONENTS_MAP];
-                    if (componentImportName && !componetsMissingLogPrinted[componentImportName]) {
-                        error(`Component ${mainType} is used but not imported.
-import { ${componentImportName} } from 'echarts/components';
-echarts.use([${componentImportName}]);`);
-                        componetsMissingLogPrinted[componentImportName] = true;
-                    }
-                }
-
                 // globalSettingTask.dirty();
                 option[mainType] = option[mainType] == null
                     ? clone(componentOption)
@@ -990,6 +997,7 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
         if (name === 'colorLayer' && notMergeColorLayer) {
             return;
         }
+
         // If it is component model mainType, the model handles that merge later.
         // otherwise, merge them here.
         if (!ComponentModel.hasClass(name)) {
