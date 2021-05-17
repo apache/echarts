@@ -292,7 +292,7 @@ under the License.
                     :visible.sync="showRunsDialog"
                     title="All Tests Runs"
                 >
-                    <el-table :data="testsRuns">
+                    <el-table :data="testsRuns" v-loading="loadingTestsRuns">
                         <el-table-column property="expectedVersion" label="Expected" width="160"></el-table-column>
                         <el-table-column property="actualVersion" label="Actual" width="160"></el-table-column>
                         <el-table-column property="renderer" label="Renderer" width="100"></el-table-column>
