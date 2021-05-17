@@ -56,7 +56,7 @@ class RadarView extends ChartView {
         const oldData = this._data;
 
         function createSymbol(data: List<RadarSeriesModel>, idx: number) {
-            const symbolType = data.getItemVisual(idx, 'symbol') as string || 'circle';
+            const symbolType = data.getItemVisual(idx, 'symbol') as string;
             if (symbolType === 'none') {
                 return;
             }
