@@ -203,7 +203,8 @@ module.exports.updateTestsList = async function (
 };
 
 module.exports.saveTestsList = function () {
-    fse.outputFileSync(getResultFilePath(), JSON.stringify(_tests, null, 2), 'utf-8');
+    fse.ensureDirSync(getResultBaseDir());
+    fs.writeFileSync(getResultFilePath(), JSON.stringify(_tests, null, 2), 'utf-8');
 };
 
 module.exports.mergeTestsResults = function (testsResults) {
@@ -255,11 +256,18 @@ module.exports.getAllTestsRuns = async function () {
     }
     for (let dir of dirs) {
         const params = parseRunHash(dir);
-        const resultJson = JSON.parse(fs.readFileSync(path.join(
-            RESULTS_ROOT_DIR,
-            dir,
-            RESULT_FILE_NAME
-        ), 'utf-8'));
+        let resultJson = [];
+        try {
+            resultJson = JSON.parse(fs.readFileSync(path.join(
+                RESULTS_ROOT_DIR,
+                dir,
+                RESULT_FILE_NAME
+            ), 'utf-8'));
+        }
+        catch (e) {
+            console.error('Invalid result ' + dir)
+            continue;
+        }
 
         const total = resultJson.length;
         let lastRunTime = 0;
