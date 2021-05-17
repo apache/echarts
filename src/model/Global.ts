@@ -140,14 +140,12 @@ const componetsMissingLogPrinted: Record<string, boolean> = {};
 function checkMissingComponents(option: ECUnitOption) {
     each(option, function (componentOption, mainType: ComponentMainType) {
         if (!ComponentModel.hasClass(mainType)) {
-            if (__DEV__) {
-                const componentImportName = BUITIN_COMPONENTS_MAP[mainType as keyof typeof BUITIN_COMPONENTS_MAP];
-                if (componentImportName && !componetsMissingLogPrinted[componentImportName]) {
-                    error(`Component ${mainType} is used but not imported.
+            const componentImportName = BUITIN_COMPONENTS_MAP[mainType as keyof typeof BUITIN_COMPONENTS_MAP];
+            if (componentImportName && !componetsMissingLogPrinted[componentImportName]) {
+                error(`Component ${mainType} is used but not imported.
 import { ${componentImportName} } from 'echarts/components';
 echarts.use([${componentImportName}]);`);
-                    componetsMissingLogPrinted[componentImportName] = true;
-                }
+                componetsMissingLogPrinted[componentImportName] = true;
             }
         }
     });
