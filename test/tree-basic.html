@@ -61,11 +61,11 @@ under the License.
                         triggerOn: 'mousemove',
                         formatter: function (info) {
                             var value = info.value;
-                            var treePathInfo = info.treePathInfo;
+                            var treeAncestors = info.treeAncestors;
                             var treePath = [];
 
-                            for (var i = 1; i < treePathInfo.length; i++) {
-                                treePath.push(treePathInfo[i].name);
+                            for (var i = 1; i < treeAncestors.length; i++) {
+                                treePath.push(treeAncestors[i].name);
                             }
 
                             return [

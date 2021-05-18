@@ -113,14 +113,14 @@ export interface TreeSeriesOption extends
     data?: TreeSeriesNodeItemOption[]
 }
 
-interface TreePathInfo {
+export interface TreeAncestors {
     name: string
     dataIndex: number
     value: number
 }
 
-interface TreeSeriesCallbackDataParams extends CallbackDataParams {
-    treePathInfo?: TreePathInfo[]
+export interface TreeSeriesCallbackDataParams extends CallbackDataParams {
+    treeAncestors?: TreeAncestors[]
 }
 
 class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
@@ -240,7 +240,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         const params = super.getDataParams.apply(this, arguments as any) as TreeSeriesCallbackDataParams;
 
         const node = this.getData().tree.getNodeByDataIndex(dataIndex);
-        params.treePathInfo = wrapTreePathInfo(node, this);
+        params.treeAncestors = wrapTreePathInfo(node, this);
 
         return params;
     }
