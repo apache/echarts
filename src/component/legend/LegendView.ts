@@ -428,7 +428,8 @@ class LegendView extends ComponentView {
             invisible: true
         });
 
-        const tooltipModel = legendItemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;
+        const tooltipModel =
+            legendItemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;
         if (tooltipModel.get('show')) {
             graphic.setTooltipConfig({
                 el: hitRect,
