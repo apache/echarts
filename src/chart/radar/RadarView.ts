@@ -242,7 +242,7 @@ class RadarView extends ChartView {
                     symbolPath.useStyle(itemStyle);
                     symbolPath.setColor(color);
                     // fix display of empty symbol is not normal
-                    symbolPath.__isEmptyBrush && (symbolPath.style.lineWidth = 0.5);
+                    symbolPath.__isEmptyBrush && (delete symbolPath.style.lineWidth);
                 }
 
                 const pathEmphasisState = symbolPath.ensureState('emphasis');
