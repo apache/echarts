@@ -26,7 +26,7 @@ export * from './api';
 export {ZRColor as Color, Payload} from '../util/types';
 export {LinearGradientObject} from 'zrender/src/graphic/LinearGradient';
 export {RadialGradientObject} from 'zrender/src/graphic/RadialGradient';
-export {PatternObject} from 'zrender/src/graphic/Pattern';
+export {PatternObject, ImagePatternObject, SVGPatternObject} from 'zrender/src/graphic/Pattern';
 
 // ComposeOption
 import type { ComponentOption, ECBasicOption as EChartsCoreOption } from '../util/types';
