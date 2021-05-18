@@ -675,18 +675,11 @@ class ECharts extends Eventful<ECEventDefinition> {
         if (!env.canvasSupported) {
             return;
         }
-        opts = zrUtil.extend({}, opts || {});
-        opts.pixelRatio = opts.pixelRatio || this.getDevicePixelRatio();
-        opts.backgroundColor = opts.backgroundColor
-            || this._model.get('backgroundColor');
-        const zr = this._zr;
-        // let list = zr.storage.getDisplayList();
-        // Stop animations
-        // Never works before in init animation, so remove it.
-        // zrUtil.each(list, function (el) {
-        //     el.stopAnimation(true);
-        // });
-        return (zr.painter as CanvasPainter).getRenderedCanvas(opts);
+        opts = opts || {};
+        return (this._zr.painter as CanvasPainter).getRenderedCanvas({
+            backgroundColor: (opts.backgroundColor || this._model.get('backgroundColor')) as ColorString,
+            pixelRatio: opts.pixelRatio || this.getDevicePixelRatio()
+        });
     }
 
     /**
