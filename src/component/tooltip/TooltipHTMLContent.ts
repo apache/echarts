@@ -94,14 +94,6 @@ function assembleArrow(
         `background-color:${backgroundColor};`
     ];
 
-    const shadowBlur = tooltipModel.get('shadowBlur');
-    const shadowColor = tooltipModel.get('shadowColor');
-    const shadowOffsetX = tooltipModel.get('shadowOffsetX');
-    const shadowOffsetY = tooltipModel.get('shadowOffsetY');
-    const boxShadow = `${shadowOffsetX}px ${shadowOffsetY}px ${shadowBlur}px ${shadowColor}`;
-
-    styleCss.push('box-shadow:' + boxShadow);
-
     return `<div style="${styleCss.join('')}"></div>`;
 }
 
