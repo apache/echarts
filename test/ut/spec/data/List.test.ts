@@ -199,10 +199,10 @@ describe('List', function () {
 
             expect(list.indicesOfNearest('value', 24.5)).toEqual([1]);
             expect(list.indicesOfNearest('value', 25)).toEqual([1]);
-            expect(list.indicesOfNearest('value', 25.5)).toEqual([2]);
-            expect(list.indicesOfNearest('value', 25.5)).toEqual([2]);
+            expect(list.indicesOfNearest('value', 25.5)).toEqual([1]);
+            expect(list.indicesOfNearest('value', 25.5)).toEqual([1]);
             expect(list.indicesOfNearest('value', 41)).toEqual([4, 5]);
-            expect(list.indicesOfNearest('value', 39)).toEqual([4, 5]);
+            expect(list.indicesOfNearest('value', 39)).toEqual([3, 6]);
             expect(list.indicesOfNearest('value', 41)).toEqual([4, 5]);
             expect(list.indicesOfNearest('value', 36)).toEqual([3, 6]);
 

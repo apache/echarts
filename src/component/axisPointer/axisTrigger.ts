@@ -265,6 +265,7 @@ function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
     each(axisInfo.seriesModels, function (series, idx) {
         const dataDim = series.getData().mapDimensionsAll(dim);
         let seriesNestestValue;
+        let seriesNestestSecondValue;
         let dataIndices;
 
         if (series.getAxisTooltipData) {
@@ -285,6 +286,7 @@ function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
                 return;
             }
             seriesNestestValue = series.getData().get(dataDim[0], dataIndices[0]);
+            seriesNestestSecondValue = series.getData().get(dataDim[1], dataIndices[0]);
         }
 
         if (seriesNestestValue == null || !isFinite(seriesNestestValue)) {
@@ -298,9 +300,10 @@ function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
             if (dist < minDist || (diff >= 0 && minDiff < 0)) {
                 minDist = dist;
                 minDiff = diff;
-                snapToValue = seriesNestestValue;
+                snapToValue = axisInfo.snap ? seriesNestestValue : value;
                 payloadBatch.length = 0;
             }
+        if (value > seriesNestestValue && value < seriesNestestSecondValue) {
             each(dataIndices, function (dataIndex) {
                 payloadBatch.push({
                     seriesIndex: series.seriesIndex,
@@ -308,6 +311,7 @@ function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
                     dataIndex: series.getData().getRawIndex(dataIndex)
                 });
             });
+        }
         }
     });
 
