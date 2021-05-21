@@ -30,15 +30,15 @@ import {
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {getUID} from '../../util/component';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
-import MapSeries from '../../chart/map/MapSeries';
+import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption, RegoinOption } from '../../coord/geo/GeoModel';
+import MapSeries, { MapDataItemOption } from '../../chart/map/MapSeries';
 import GlobalModel from '../../model/Global';
 import { Payload, ECElement, LineStyleOption, InnerFocus, DisplayState } from '../../util/types';
 import GeoView from '../geo/GeoView';
 import MapView from '../../chart/map/MapView';
 import Geo from '../../coord/geo/Geo';
 import Model from '../../model/Model';
-import { setLabelStyle, getLabelStatesModels, enableLayoutLayoutFeatures } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
 import ZRText, {TextStyleProps} from 'zrender/src/graphic/Text';
@@ -225,7 +225,11 @@ class MapDraw {
     }
 
     private _buildGeoJSON(viewBuildCtx: ViewBuildContext): void {
-        const nameMap = this._regionsGroupByName = zrUtil.createHashMap<RegionsGroup>();
+        const regionsGroupByName = this._regionsGroupByName = zrUtil.createHashMap<RegionsGroup, string>();
+        const regionsInfoByName = zrUtil.createHashMap<{
+            dataIdx: number;
+            regionModel: Model<RegoinOption> | Model<MapDataItemOption>;
+        }, string>();
         const regionsGroup = this._regionsGroup;
         const transformInfoRaw = viewBuildCtx.transformInfoRaw;
         const mapOrGeoModel = viewBuildCtx.mapOrGeoModel;
@@ -243,20 +247,25 @@ class MapDraw {
         // Only when the resource is GeoJSON, there is `geo.regions`.
         zrUtil.each(viewBuildCtx.geo.regions, function (region: GeoJSONRegion) {
             const regionName = region.name;
-            const regionModel = mapOrGeoModel.getRegionModel(regionName);
-            const dataIdx = data ? data.indexOfName(regionName) : null;
 
             // Consider in GeoJson properties.name may be duplicated, for example,
             // there is multiple region named "United Kindom" or "France" (so many
             // colonies). And it is not appropriate to merge them in geo, which
             // will make them share the same label and bring trouble in label
             // location calculation.
-            let regionGroup = nameMap.get(regionName);
-            const hasRegionGroup = !!regionGroup;
+            let regionGroup = regionsGroupByName.get(regionName);
+            let { dataIdx, regionModel } = regionsInfoByName.get(regionName) || {};
 
-            if (!hasRegionGroup) {
-                regionGroup = nameMap.set(regionName, new graphic.Group() as RegionsGroup);
+            if (!regionGroup) {
+                regionGroup = regionsGroupByName.set(regionName, new graphic.Group() as RegionsGroup);
                 regionsGroup.add(regionGroup);
+
+                dataIdx = data ? data.indexOfName(regionName) : null;
+                regionModel = viewBuildCtx.isGeo
+                    ? mapOrGeoModel.getRegionModel(regionName)
+                    : (data ? data.getItemModel(dataIdx) as Model<MapDataItemOption> : null);
+
+                regionsInfoByName.set(regionName, { dataIdx, regionModel });
             }
 
             const compoundPath = new graphic.CompoundPath({
@@ -266,19 +275,6 @@ class MapDraw {
                 }
             });
             regionGroup.add(compoundPath);
-
-            if (!hasRegionGroup) {
-                // ensure children have been added to group before calling resetEventTriggerForRegion
-                resetEventTriggerForRegion(
-                    viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel, dataIdx
-                );
-                resetTooltipForRegion(
-                    viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel
-                );
-                resetStateTriggerForRegion(
-                    viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel
-                );
-            }
 
             zrUtil.each(region.geometries, function (geometry) {
                 if (geometry.type !== 'polygon') {
@@ -321,6 +317,21 @@ class MapDraw {
             const centerPt = transformPoint(region.getCenter());
             resetLabelForRegion(
                 viewBuildCtx, compoundPath, regionName, regionModel, mapOrGeoModel, dataIdx, centerPt
+            );
+        });
+
+        // Ensure children have been added to `regionGroup` before calling them.
+        regionsGroupByName.each(function (regionGroup, regionName) {
+            const { dataIdx, regionModel } = regionsInfoByName.get(regionName);
+
+            resetEventTriggerForRegion(
+                viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel, dataIdx
+            );
+            resetTooltipForRegion(
+                viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel
+            );
+            resetStateTriggerForRegion(
+                viewBuildCtx, regionGroup, regionName, regionModel, mapOrGeoModel
             );
 
         }, this);
@@ -373,7 +384,7 @@ class MapDraw {
             // an area hovered that make some inner city can not be clicked.
             (el as ECElement).z2EmphasisLift = 0;
 
-            // If self named, that is, if tag is inside a named <g> (where `namedFrom` does not exists):
+            // If self named:
             if (!namedItem.namedFrom) {
                 // label should batter to be displayed based on the center of <g>
                 // if it is named rather than displayed on each child.
@@ -720,19 +731,27 @@ function resetLabelForRegion(
         if (textEl) {
             mapLabelRaw(textEl).ignore = textEl.ignore;
 
-            if (el.textConfig) {
-                if (labelXY) {
-                    // Compute a relative offset based on the el bounding rect.
-                    const rect = el.getBoundingRect().clone();
-                    el.textConfig.position = [
-                        ((labelXY[0] - rect.x) / rect.width * 100) + '%',
-                        ((labelXY[1] - rect.y) / rect.height * 100) + '%'
-                    ];
-                }
+            if (el.textConfig && labelXY) {
+                // Compute a relative offset based on the el bounding rect.
+                const rect = el.getBoundingRect().clone();
+                // Need to make sure the percent position base on the same rect in normal and
+                // emphasis state. Otherwise if using boundingRect of el, but the emphasis state
+                // has borderWidth (even 0.5px), the text position will be changed obviously
+                // if the position is very big like ['1234%', '1345%'].
+                el.textConfig.layoutRect = rect;
+                el.textConfig.position = [
+                    ((labelXY[0] - rect.x) / rect.width * 100) + '%',
+                    ((labelXY[1] - rect.y) / rect.height * 100) + '%'
+                ];
             }
         }
 
-        enableLayoutLayoutFeatures(el, dataIdx, null);
+        // PENDING:
+        // If labelLayout is enabled (test/label-layout.html), el.dataIndex should be specified.
+        // But el.dataIndex is also used to determine whether user event should be triggered,
+        // where el.seriesIndex or el.dataModel must be specified. At present for a single el
+        // there is not case that "only label layout enabled but user event disabled", so here
+        // we depends `resetEventTriggerForRegion` to do the job of setting `el.dataIndex`.
 
         (el as ECElement).disableLabelAnimation = true;
     }
