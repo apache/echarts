@@ -39,7 +39,7 @@ under the License.
 
         <div id="map_click_event"></div>
         <div id="geo_click_event"></div>
-        <!-- <div id="main0"></div> -->
+        <div id="label_position"></div>
 
 
 
@@ -248,44 +248,32 @@ under the License.
                 series: [{
                     type: 'map',
                     map: mapType,
-                    roam: true,
                     zoom: 0.03,
                     label: {
-                        show: false,
-                        opacity: 0.5,
-                        formatter: '{c}'
+                        formatter: '{c}',
+                        textStyle: {
+                            color: '#50d5d3',
+                            fontWeight: 'bolder',
+                            fontSize: Math.round(12361 / 500) + 20
+                        },
+                        show: true
                     },
-                    // itemStyle: {
-                    //     borderWidth: 0
-                    // },
                     emphasis: {
+                        show: true,
                         itemStyle: {
                             shadowColor: 'rgba(0, 0, 0, 0.5)',
-                            shadowBlur: 0,
-                            borderWidth: 0
+                            shadowBlur: 20,
+                            borderWidth: 2
                         }
                     },
                     data: [{
                         name: NAME,
-                        value: 12361,
-                        label: {
-                            normal: {
-                                textStyle: {
-                                    color: '#50d5d3',
-                                    fontWeight: 'bolder',
-                                    fontSize: Math.round(12361 / 500) + 20
-                                },
-                                show: true
-                            },
-                            emphasis: {
-                                show: true
-                            }
-                        }
+                        value: 12361
                     }]
                 }]
             };
 
-            var chart = testHelper.create(echarts, 'main0', {
+            var chart = testHelper.create(echarts, 'label_position', {
                 title: [
                     'Hover on the rect, the label should not be moved'
                 ],

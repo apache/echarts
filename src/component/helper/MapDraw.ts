@@ -731,15 +731,18 @@ function resetLabelForRegion(
         if (textEl) {
             mapLabelRaw(textEl).ignore = textEl.ignore;
 
-            if (el.textConfig) {
-                if (labelXY) {
-                    // Compute a relative offset based on the el bounding rect.
-                    const rect = el.getBoundingRect().clone();
-                    el.textConfig.position = [
-                        ((labelXY[0] - rect.x) / rect.width * 100) + '%',
-                        ((labelXY[1] - rect.y) / rect.height * 100) + '%'
-                    ];
-                }
+            if (el.textConfig && labelXY) {
+                // Compute a relative offset based on the el bounding rect.
+                const rect = el.getBoundingRect().clone();
+                // Need to make sure the percent position base on the same rect in normal and
+                // emphasis state. Otherwise if using boundingRect of el, but the emphasis state
+                // has borderWidth (even 0.5px), the text position will be changed obviously
+                // if the position is very big like ['1234%', '1345%'].
+                el.textConfig.layoutRect = rect;
+                el.textConfig.position = [
+                    ((labelXY[0] - rect.x) / rect.width * 100) + '%',
+                    ((labelXY[1] - rect.y) / rect.height * 100) + '%'
+                ];
             }
         }
 
