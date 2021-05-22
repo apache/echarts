@@ -53,6 +53,7 @@
     "test:visual": "node test/runTest/server.js",
     "test": "npx jest --config test/ut/jest.config.js",
     "test:single": "npx jest --config test/ut/jest.config.js --coverage=false -t",
+    "test:single:debug": "npx --node-arg=--inspect-brk jest --runInBand --config test/ut/jest.config.js --coverage=false -t",
     "test:dts": "node build/testDts.js",
     "mktest": "node test/build/mktest.js",
     "mktest:help": "node test/build/mktest.js -h",
