@@ -628,7 +628,7 @@ class CustomSeriesView extends ChartView {
             const el = createOrUpdateItem(
                 null, null, idx, renderItem(idx, payload), customSeries, this.group, data, null
             );
-            el.traverse(setIncrementalAndHoverLayer);
+            el && el.traverse(setIncrementalAndHoverLayer);
         }
     }
 
@@ -1937,7 +1937,7 @@ function createOrUpdateItem(
     el = doCreateOrUpdateEl(api, el, dataIndex, elOption, seriesModel, group, true, morphPreparation);
     el && data.setItemGraphicEl(dataIndex, el);
 
-    enableHoverEmphasis(el, elOption.focus, elOption.blurScope);
+    el && enableHoverEmphasis(el, elOption.focus, elOption.blurScope);
 
     return el;
 }
