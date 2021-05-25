@@ -1264,7 +1264,7 @@ export interface TooltipPositionCallback {
              */
             viewSize: [number, number]
         }
-    ): number[] | string[] | TooltipBuiltinPosition | TooltipBoxLayoutOption
+    ): Array<number | string> | TooltipBuiltinPosition | TooltipBoxLayoutOption
 }
 /**
  * Common tooltip option
