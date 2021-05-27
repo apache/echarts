@@ -1563,7 +1563,7 @@ export interface SeriesOption<
     /**
      * Configurations about progressive rendering
      */
-    progressive?: number | false
+    progressive?: number | false | 'auto'
     progressiveThreshold?: number
     progressiveChunkMode?: 'mod'
     /**

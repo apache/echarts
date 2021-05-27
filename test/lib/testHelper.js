@@ -54,6 +54,7 @@
      * @param {boolean} [opt.lazyUpdate]
      * @param {boolean} [opt.notMerge]
      * @param {boolean} [opt.autoResize=true]
+     * @param {Object} [opt.scheduleOpt]
      * @param {Array.<Object>|Object} [opt.button] {text: ..., onClick: ...}, or an array of them.
      * @param {Array.<Object>|Object} [opt.buttons] {text: ..., onClick: ...}, or an array of them.
      * @param {boolean} [opt.recordCanvas] 'test/lib/canteen.js' is required.
@@ -224,6 +225,7 @@
      * @param {number} opt.width
      * @param {number} opt.height
      * @param {boolean} opt.draggable
+     * @param {boolean} opt.scheduleOpt
      */
     testHelper.createChart = function (echarts, domOrId, option, opt) {
         if (typeof opt === 'number') {
@@ -243,7 +245,9 @@
                 dom.style.height = opt.height + 'px';
             }
 
-            var chart = echarts.init(dom);
+            var chart = echarts.init(dom, null, {
+                schedule: opt.schedule
+            });
 
             if (opt.draggable) {
                 if (!window.draggable) {

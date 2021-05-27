@@ -339,6 +339,10 @@ export class Task<Ctx extends TaskContext> {
         this._outputDueEnd = this._settedOutputEnd = end;
     }
 
+    getDueIndex(): number {
+        return this._dueIndex;
+    }
+
 }
 
 const iterator: TaskDataIterator = (function () {

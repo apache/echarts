@@ -28,7 +28,7 @@ under the License.
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
-        <script src="lib/frameInsight.js"></script>
+        <script src="lib/frameInsight2.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
@@ -265,6 +265,7 @@ under the License.
                         {
                             name: 'Data Amount: ' + echarts.format.addCommas(rawDataCount),
                             type: 'candlestick',
+                            // progressiveChunkMode: 'linear',
                             itemStyle: {
                                 color: upColor,
                                 color0: downColor,
@@ -295,6 +296,9 @@ under the License.
 
                 var panel = document.getElementById('panel0');
                 var chart = testHelper.create(echarts, 'main0', {
+                    schedule: {
+                      ticker: 'messageChannel'
+                    },
                     title: [
                         'Progressive by mod',
                         '(1) Check click legend',

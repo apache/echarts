@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {each, map, isFunction, createHashMap, noop, HashMap, assert} from 'zrender/src/core/util';
+import {each, map, isFunction, createHashMap, noop, HashMap, assert, clone, bind} from 'zrender/src/core/util';
 import {
     createTask, Task, TaskContext,
     TaskProgressCallback, TaskProgressParams, TaskPlanCallbackReturn, PerformArgs
@@ -34,6 +34,8 @@ import { EChartsType } from './echarts';
 import SeriesModel from '../model/Series';
 import ChartView from '../view/Chart';
 import List from '../data/List';
+import { ZRenderType } from 'zrender/src/zrender';
+import { isMessageChannelTickerAvailable, OnTick, RuntimeStatistic, StatisticDataOnFrame, Ticker } from './ticker';
 
 export type GeneralTask = Task<TaskContext>;
 export type SeriesTask = Task<SeriesTaskContext>;
@@ -43,6 +45,13 @@ export type OverallTask = Task<OverallTaskContext> & {
 export type StubTask = Task<StubTaskContext> & {
     agent?: OverallTask;
 };
+export interface ScheduleOption {
+    // Experimental features, will not be exposed to users in this way in the final product.
+    ticker?: 'frame' | 'messageChannel';
+    timeQuota: number;
+};
+export interface ScheduleOptionInternal extends ScheduleOption {
+}
 
 export type Pipeline = {
     id: string
@@ -52,6 +61,7 @@ export type Pipeline = {
     progressiveEnabled: boolean,
     blockIndex: number,
     step: number,
+    useAutoStep: boolean;
     count: number,
     currentTask?: GeneralTask,
     context?: PipelineContext
@@ -99,6 +109,10 @@ interface StubTaskContext extends TaskContext {
     overallProgress: boolean;
 };
 
+const DEFAULT_MESSAGE_CHANNEL_PROGRESSIVE_CHUNK_SIZE = 20;
+const AUTO_STEP_FRAME_UPPER_BOUND = 20;
+const AUTO_STEP_FRAME_LOWER_BOUND = 15;
+
 class Scheduler {
 
     readonly ecInstance: EChartsType;
@@ -117,15 +131,23 @@ class Scheduler {
     // key: pipelineId
     private _pipelineMap: HashMap<Pipeline>;
 
+    private _ticker: Ticker;
+
+    private _scheduleOpt: ScheduleOptionInternal;
+
 
     constructor(
         ecInstance: EChartsType,
         api: ExtensionAPI,
+        zr: ZRenderType,
+        scheduleOpt: ScheduleOption,
+        onTick: OnTick,
         dataProcessorHandlers: StageHandlerInternal[],
         visualHandlers: StageHandlerInternal[]
     ) {
         this.ecInstance = ecInstance;
         this.api = api;
+        const internalScheduleOpt = this._scheduleOpt = normalizeScheduleOption(scheduleOpt);
 
         // Fix current processors in case that in some rear cases that
         // processors might be registered after echarts instance created.
@@ -134,6 +156,12 @@ class Scheduler {
         dataProcessorHandlers = this._dataProcessorHandlers = dataProcessorHandlers.slice();
         visualHandlers = this._visualHandlers = visualHandlers.slice();
         this._allHandlers = dataProcessorHandlers.concat(visualHandlers);
+
+        this._ticker = new Ticker(zr, internalScheduleOpt, onTick, bind(this._collectStatisticOnFrame, this));
+    }
+
+    start() {
+        this._ticker.start();
     }
 
     restoreData(ecModel: GlobalModel, payload: Payload): void {
@@ -235,8 +263,8 @@ class Scheduler {
         const scheduler = this;
         const pipelineMap = scheduler._pipelineMap = createHashMap();
 
-        ecModel.eachSeries(function (seriesModel) {
-            const progressive = seriesModel.getProgressive();
+        ecModel.eachSeries(seriesModel => {
+            const { step, useAutoStep } = this._getSeriesProgressiveChunkSize(seriesModel);
             const pipelineId = seriesModel.uid;
 
             pipelineMap.set(pipelineId, {
@@ -244,15 +272,55 @@ class Scheduler {
                 head: null,
                 tail: null,
                 threshold: seriesModel.getProgressiveThreshold(),
-                progressiveEnabled: progressive
+                progressiveEnabled: step
                     && !(seriesModel.preventIncremental && seriesModel.preventIncremental()),
                 blockIndex: -1,
-                step: Math.round(progressive || 700),
+                step: step,
+                useAutoStep: useAutoStep,
                 count: 0
             });
 
             scheduler._pipe(seriesModel, seriesModel.dataTask);
         });
+    }
+
+    private _getSeriesProgressiveChunkSize(seriesModel: SeriesModel): {
+        step: number,
+        useAutoStep: boolean
+    } {
+        const progressive = seriesModel.getProgressive();
+        let step;
+        let useAutoStep;
+
+        if (progressive === 'auto') {
+            useAutoStep = true;
+            step = 5000;
+        }
+        else if (progressive) {
+            step = Math.round(progressive || 700);
+        }
+
+        if (progressive && this._scheduleOpt.ticker === 'messageChannel') {
+            // PENDING: measure real time cost for chunk size.
+            step = DEFAULT_MESSAGE_CHANNEL_PROGRESSIVE_CHUNK_SIZE;
+        }
+
+        return { step: step, useAutoStep: useAutoStep };
+    }
+
+    private _collectStatisticOnFrame(): StatisticDataOnFrame {
+        const pipelineMap = this._pipelineMap;
+        let samplePipeline: Pipeline;
+
+        pipelineMap.each(pipeline => {
+            if (!samplePipeline) {
+                samplePipeline = pipeline;
+            }
+        });
+        return {
+            sampleProcessedDataCount: samplePipeline.tail.getDueIndex(),
+            samplePipelineStep: samplePipeline.step
+        };
     }
 
     prepareStageTasks(): void {
@@ -288,6 +356,24 @@ class Scheduler {
         this._pipe(model, renderTask);
     }
 
+    updateStep(): void {
+        const scheduler = this;
+        const pipelineMap = scheduler._pipelineMap;
+
+        pipelineMap.each(pipeline => {
+            const recentFrameTime = this._ticker.getRecentFrameCost() - this._ticker.getRecentIdleCost();
+            if (pipeline.useAutoStep && recentFrameTime) {
+                const lastStep = pipeline.step;
+                if (recentFrameTime > AUTO_STEP_FRAME_UPPER_BOUND) {
+                    pipeline.step = 50 + Math.round(lastStep * AUTO_STEP_FRAME_UPPER_BOUND / recentFrameTime);
+                }
+                else if (recentFrameTime < AUTO_STEP_FRAME_LOWER_BOUND) {
+                    pipeline.step = 50 + Math.round(lastStep * AUTO_STEP_FRAME_LOWER_BOUND / recentFrameTime);
+                }
+            }
+        });
+    }
+
     performDataProcessorTasks(ecModel: GlobalModel, payload?: Payload): void {
         // If we do not use `block` here, it should be considered when to update modes.
         this._performStageTasks(this._dataProcessorHandlers, ecModel, payload, {block: true});
@@ -299,6 +385,10 @@ class Scheduler {
         opt?: PerformStageTaskOpt
     ): void {
         this._performStageTasks(this._visualHandlers, ecModel, payload, opt);
+    }
+
+    getRuntimeStatistic(): RuntimeStatistic {
+        return this._ticker.getRuntimeStatistic();
     }
 
     private _performStageTasks(
@@ -684,6 +774,25 @@ function mockMethods(target: any, Clz: any): void {
         target[name] = noop;
     }
     /* eslint-enable */
+}
+
+function normalizeScheduleOption(scheduleOpt: ScheduleOption): ScheduleOptionInternal {
+    const internalOpt = clone(scheduleOpt || {} as ScheduleOption);
+
+    let tickerType = internalOpt.ticker;
+    tickerType = internalOpt.ticker = (tickerType === 'messageChannel' && isMessageChannelTickerAvailable())
+        ? tickerType : 'frame';
+
+    if (tickerType === 'messageChannel') {
+        // By defualt use the empirical value used by react fiber for long time: 5ms
+        internalOpt.timeQuota = internalOpt.timeQuota || 5;
+    }
+    else {
+        // In the previous version we use 1ms for long time.
+        internalOpt.timeQuota = internalOpt.timeQuota || 1;
+    }
+
+    return internalOpt;
 }
 
 export default Scheduler;

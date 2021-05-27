@@ -1,0 +1,268 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/frameInsight2.js"></script>
+        <script src="lib/facePrint.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 600;
+                margin: 0;
+            }
+
+            #snapshot {
+                position: fixed;
+                right: 10;
+                top: 10;
+                width: 50;
+                height: 50;
+                background: #fff;
+                border: 2px solid rgba(0,0,0,0.5);
+            }
+
+        </style>
+
+
+        <div id="main"></div>
+        <div id="perf"></div>
+        <div id="lag"></div>
+        <div id="statistic"></div>
+        <img id="snapshot"/>
+
+        <script>
+
+            var dataCount = 5e6;
+            // var dataCount = 1e6;
+            var chunkMax = 4;
+            var chunkCount = 0;
+            // var progressive = 2;
+            // var progressive = 5000;
+            // var progressive = 10000;
+            var progressive = 'auto';
+            // var progressive = 100;
+            // var largeThreshold = 500;
+            var largeThreshold = 500;
+            // var largeThreshold = Infinity;
+            var ticker = 'frame';
+            // var ticker = 'messageChannel';
+
+            function genData1(len, offset) {
+                var lngRange = [-10.781327, 131.48];
+                var latRange = [18.252847, 52.33];
+
+                var arr = new Float32Array(len * 2);
+                var off = 0;
+
+                for (var i = 0; i < len; i++) {
+                    var x = +Math.random() * 10;
+                    var y = +Math.sin(x) - x * (len % 2 ? 0.1 : -0.1) * Math.random() + (offset || 0) / 10;
+                    arr[off++] = x;
+                    arr[off++] = y;
+                }
+                return arr;
+            }
+
+            function genData2(count) {
+                var lngRange = [-10.781327, 31.48];
+                var latRange = [-18.252847, 30.33];
+                return genData(count, lngRange, latRange);
+            }
+
+            function genData(count, lngRange, latRange) {
+                lngRange[1] += 5;
+                lngRange[0] -= 10;
+                latRange[1] += 4;
+                var lngExtent = lngRange[1] - lngRange[0];
+                var latExtent = latRange[1] - latRange[0];
+                var data = [];
+                for (var i = 0; i < count; i++) {
+                    data.push([
+                        Math.random() * lngExtent + lngRange[0],
+                        Math.random() * latExtent + latRange[0],
+                        Math.random() * 1000
+                    ]);
+                }
+                return data;
+            }
+
+            var series0Data = genData1(dataCount);
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+
+                setTimeout(run, 5000);
+
+                function run() {
+
+                    frameInsight.init({
+                        echarts: echarts,
+                        perfDOM: 'perf',
+                        lagDOM: 'lag',
+                        statisticDOM: 'statistic',
+                        dontInstrumentECharts: true,
+                        perfChartCount: 4,
+                        getChart: function () {
+                            return chart;
+                        }
+                    });
+
+                    var chart = echarts.init(document.getElementById('main'), null, {
+                        schedule: {
+                            ticker: ticker
+                        }
+                    });
+
+                    var option = {
+                        tooltip: {
+                            // trigger: 'axis',
+                            // renderMode: 'richText'
+                        },
+                        toolbox: {
+                            left: 'center',
+                            feature: {
+                                dataZoom: {}
+                            }
+                        },
+                        legend: {
+                            orient: 'vertical',
+                            left: 'left',
+                            data: ['series1' /* ,'pm10' */]
+                        },
+                        // ???
+                        // visualMap: {
+                        //     min: 0,
+                        //     max: 1500,
+                        //     left: 'left',
+                        //     top: 'bottom',
+                        //     text: ['High','Low'],
+                        //     seriesIndex: [1, 2, 3],
+                        //     inRange: {
+                        //         color: ['#006edd', '#e0ffff']
+                        //     },
+                        //     calculable : true
+                        // },
+                        xAxis: [{
+                        }],
+                        yAxis: [{
+                        }],
+                        dataZoom: [{
+                            type: 'inside',
+                            // filterMode: 'none',
+                        }, {
+                            type: 'slider',
+                            // filterMode: 'none',
+                            showDataShadow: false
+                        }],
+                        animation: false,
+                        series : [{
+                            name: 'series1',
+                            type: 'scatter',
+                            progressive: progressive,
+                            data: series0Data,
+                            dimensions: ['x', 'y'],
+                            // symbol: 'rect',
+                            symbolSize: 3,
+                            // symbol: 'rect',
+                            itemStyle: {
+                                // color: '#128de3',
+                                color: '#5470c6',
+                                opacity: 0.2
+                            },
+                            z: 100,
+                            large: true,
+                            // large: {
+                            //     symbolSize: 2
+                            // },
+                            // large: function (params) {
+                            //     if (params.dataCount > 30000) {
+                            //         return {symbolSize: 1};
+                            //     }
+                            //     else if (params.dataCount > 3000) {
+                            //         return {symbolSize: 5};
+                            //     }
+                            // },
+                            largeThreshold: largeThreshold
+                        // }, {
+                        //     type: 'pie',
+                        //     center: ['50%', '50%'],
+                        //     data: [{
+                        //         value: 123, name: 'a'
+                        //     }, {
+                        //         value: 123, name: 'b'
+                        //     }, {
+                        //         value: 123, name: 'c'
+                        //     }, {
+                        //         value: 123, name: 'd'
+                        //     }, {
+                        //         value: 123, name: 'e'
+                        //     }, {
+                        //         value: 23, name: 'f'
+                        //     }],
+                        //     z: 121212
+                        }]
+                    };
+
+                    chart.setOption(option);
+
+
+                    chart.on('click', function (param) {
+                        alert('asdf');
+                    });
+
+                    chart.on('finished', function () {
+                        console.log('finished');
+                        var url = chart.getDataURL();
+                        var snapshotEl = document.getElementById('snapshot');
+                        snapshotEl.src = url;
+                    });
+
+                    window.onresize = chart.resize;
+
+                    // next();
+
+                    function next() {
+                        if (chunkCount++ < chunkMax) {
+                            var newData = genData1(100000, chunkCount);
+                            chart.appendData({seriesIndex: 0, data: newData});
+                            // console.log('Data loaded');
+                            setTimeout(next, 3000);
+                        }
+                    }
+
+                }
+
+            });
+
+
+        </script>
+    </body>
+</html>

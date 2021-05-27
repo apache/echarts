@@ -479,7 +479,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     /**
      * Get progressive rendering count each step
      */
-    getProgressive(): number | false {
+    getProgressive(): number | false | 'auto' {
         return this.get('progressive');
     }
 

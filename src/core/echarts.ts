@@ -67,7 +67,7 @@ import * as modelUtil from '../util/model';
 import {throttle} from '../util/throttle';
 import {seriesStyleTask, dataStyleTask, dataColorPaletteTask} from '../visual/style';
 import loadingDefault from '../loading/default';
-import Scheduler from './Scheduler';
+import Scheduler, { ScheduleOption } from './Scheduler';
 import lightTheme from '../theme/light';
 import darkTheme from '../theme/dark';
 import {CoordinateSystemMaster, CoordinateSystemCreator, CoordinateSystemHostModel} from '../coord/CoordinateSystem';
@@ -110,6 +110,7 @@ import type {MorphDividingMethod} from 'zrender/src/tool/morphPath';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
 import geoSourceManager from '../coord/geo/geoSourceManager';
+import { RequireMoreTick, RuntimeStatistic, ShouldYield } from './ticker';
 
 declare let global: any;
 
@@ -128,8 +129,6 @@ export const version = '5.1.1';
 export const dependencies = {
     zrender: '5.1.0'
 };
-
-const TEST_FRAME_REMAIN_TIME = 1;
 
 const PRIORITY_PROCESSOR_SERIES_FILTER = 800;
 // Some data processors depends on the stack result dimension (to calculate data extent).
@@ -297,7 +296,9 @@ let renderSeries: (
     ecModel: GlobalModel,
     api: ExtensionAPI,
     payload: Payload | 'remain',
-    dirtyMap?: {[uid: string]: any}
+    dirtyMap?: {[uid: string]: any},
+    // A tmp prop, will be removed soon.
+    tmpProgressiveMode?: boolean
 ) => void;
 let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI) => void;
 let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
@@ -384,12 +385,13 @@ class ECharts extends Eventful<ECEventDefinition> {
         // Theme name or themeOption.
         theme?: string | ThemeOption,
         opts?: {
-            locale?: string | LocaleOption,
-            renderer?: RendererType,
-            devicePixelRatio?: number,
-            useDirtyRect?: boolean,
-            width?: number,
-            height?: number
+            locale?: string | LocaleOption;
+            renderer?: RendererType;
+            devicePixelRatio?: number;
+            useDirtyRect?: boolean;
+            width?: number;
+            height?: number;
+            schedule?: ScheduleOption;
         }
     ) {
         super(new ECEventProcessor());
@@ -448,7 +450,15 @@ class ECharts extends Eventful<ECEventDefinition> {
         timsort(visualFuncs, prioritySortFunc);
         timsort(dataProcessorFuncs, prioritySortFunc);
 
-        this._scheduler = new Scheduler(this, api, dataProcessorFuncs, visualFuncs);
+        this._scheduler = new Scheduler(
+            this,
+            api,
+            zr,
+            opts.schedule,
+            zrUtil.bind(this._onframe, this),
+            dataProcessorFuncs,
+            visualFuncs
+        );
 
         this._messageCenter = new MessageCenter();
 
@@ -460,17 +470,17 @@ class ECharts extends Eventful<ECEventDefinition> {
         // In case some people write `window.onresize = chart.resize`
         this.resize = zrUtil.bind(this.resize, this);
 
-        zr.animation.on('frame', this._onframe, this);
-
         bindRenderedEvent(zr, this);
 
         bindMouseEvent(zr, this);
 
         // ECharts instance can be used as value.
         zrUtil.setAsPrimitive(this);
+
+        this._scheduler.start();
     }
 
-    private _onframe(): void {
+    private _onframe(shouldYield: ShouldYield, requireMoreTick: RequireMoreTick): void {
         if (this._disposed) {
             return;
         }
@@ -507,13 +517,13 @@ class ECharts extends Eventful<ECEventDefinition> {
         // Avoid do both lazy update and progress in one frame.
         else if (scheduler.unfinished) {
             // Stream progress.
-            let remainTime = TEST_FRAME_REMAIN_TIME;
             const ecModel = this._model;
             const api = this._api;
             scheduler.unfinished = false;
-            do {
-                const startTime = +new Date();
 
+            scheduler.updateStep();
+
+            do {
                 scheduler.performSeriesTasks(ecModel);
 
                 // Currently dataProcessorFuncs do not check threshold.
@@ -530,18 +540,18 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // console.log('--- ec frame visual ---', remainTime);
                 scheduler.performVisualTasks(ecModel);
 
-                renderSeries(this, this._model, api, 'remain');
-
-                remainTime -= (+new Date() - startTime);
+                renderSeries(this, this._model, api, 'remain', null, true);
             }
-            while (remainTime > 0 && scheduler.unfinished);
-
+            while (!shouldYield() && scheduler.unfinished);
             // Call flush explicitly for trigger finished event.
             if (!scheduler.unfinished) {
                 this._zr.flush();
             }
             // Else, zr flushing be ensue within the same frame,
             // because zr flushing is after onframe event.
+            else {
+                requireMoreTick();
+            }
         }
     }
 
@@ -1339,6 +1349,9 @@ class ECharts extends Eventful<ECEventDefinition> {
         this.getZr().wakeUp();
     }
 
+    getRuntimeStatistic(): RuntimeStatistic {
+        return this._scheduler.getRuntimeStatistic();
+    }
 
     // A work around for no `internal` modifier in ts yet but
     // need to strictly hide private methods to JS users.
@@ -2015,13 +2028,14 @@ class ECharts extends Eventful<ECEventDefinition> {
             ecModel: GlobalModel,
             api: ExtensionAPI,
             payload: Payload | 'remain',
-            dirtyMap?: {[uid: string]: any}
+            dirtyMap?: {[uid: string]: any},
+            tmpProgressiveMode?: boolean
         ): void {
             // Render all charts
             const scheduler = ecIns._scheduler;
             const labelManager = ecIns._labelManager;
 
-            labelManager.clearLabels();
+            !tmpProgressiveMode && labelManager.clearLabels();
 
             let unfinished: boolean = false;
             ecModel.eachSeries(function (seriesModel) {
@@ -2032,7 +2046,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 scheduler.updatePayload(renderTask, payload);
 
                 // TODO states on marker.
-                clearStates(seriesModel, chartView);
+                !tmpProgressiveMode && clearStates(seriesModel, chartView);
 
                 if (dirtyMap && dirtyMap.get(seriesModel.uid)) {
                     renderTask.dirty();
@@ -2048,19 +2062,19 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // increamental render (alway render from the __startIndex each frame)
                 // chartView.group.markRedraw();
 
-                updateBlend(seriesModel, chartView);
+                !tmpProgressiveMode && updateBlend(seriesModel, chartView);
 
-                updateSeriesElementSelection(seriesModel);
+                !tmpProgressiveMode && updateSeriesElementSelection(seriesModel);
 
                 // Add labels.
-                labelManager.addLabelsOfSeries(chartView);
+                !tmpProgressiveMode && labelManager.addLabelsOfSeries(chartView);
             });
 
             scheduler.unfinished = unfinished || scheduler.unfinished;
 
-            labelManager.updateLayoutConfig(api);
-            labelManager.layout(api);
-            labelManager.processLabelsOverall();
+            !tmpProgressiveMode && labelManager.updateLayoutConfig(api);
+            !tmpProgressiveMode && labelManager.layout(api);
+            !tmpProgressiveMode && labelManager.processLabelsOverall();
 
             ecModel.eachSeries(function (seriesModel) {
                 const chartView = ecIns._chartsMap[seriesModel.__viewId];
@@ -2069,12 +2083,12 @@ class ECharts extends Eventful<ECEventDefinition> {
 
                 // NOTE: Update states after label is updated.
                 // label should be in normal status when layouting.
-                updateStates(seriesModel, chartView);
+                !tmpProgressiveMode && updateStates(seriesModel, chartView);
             });
 
 
             // If use hover layer
-            updateHoverLayerStatus(ecIns, ecModel);
+            !tmpProgressiveMode && updateHoverLayerStatus(ecIns, ecModel);
         };
 
         performPostUpdateFuncs = function (ecModel: GlobalModel, api: ExtensionAPI): void {
@@ -2564,11 +2578,12 @@ export function init(
     dom: HTMLElement,
     theme?: string | object,
     opts?: {
-        renderer?: RendererType,
-        devicePixelRatio?: number,
-        width?: number,
-        height?: number,
-        locale?: string | LocaleOption
+        renderer?: RendererType;
+        devicePixelRatio?: number;
+        width?: number;
+        height?: number;
+        locale?: string | LocaleOption;
+        schedule?: ScheduleOption;
     }
 ): EChartsType {
     if (__DEV__) {
