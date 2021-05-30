@@ -190,7 +190,6 @@ class TooltipView extends ComponentView {
         if (env.node) {
             return;
         }
-
         // Reset
         this.group.removeAll();
 
@@ -251,6 +250,8 @@ class TooltipView extends ComponentView {
         ) {
             const self = this;
             clearTimeout(this._refreshUpdateTimeout);
+
+            //@ts-ignore
             this._refreshUpdateTimeout = setTimeout(function () {
                 // Show tip next tick after other charts are rendered
                 // In case highlight action has wrong result
@@ -450,7 +451,6 @@ class TooltipView extends ComponentView {
         if (!tooltipModel) {
             return;
         }
-
         // Save mouse x, mouse y. So we can try to keep showing the tip if chart is refreshed
         this._lastX = e.offsetX;
         this._lastY = e.offsetY;
@@ -529,7 +529,6 @@ class TooltipView extends ComponentView {
         // Only for legacy: `Serise['formatTooltip']` returns a string.
         const markupTextArrLegacy: string[] = [];
         const markupStyleCreator = new TooltipMarkupStyleCreator();
-
         each(dataByCoordSys, function (itemCoordSys) {
             each(itemCoordSys.dataByAxis, function (axisItem) {
                 const axisModel = ecModel.getComponent(axisItem.axisDim + 'Axis', axisItem.axisIndex) as AxisBaseModel;
@@ -579,6 +578,7 @@ class TooltipView extends ComponentView {
                     }
                     cbParamsList.push(cbParams);
                 });
+
             });
         });
 
@@ -791,6 +791,7 @@ class TooltipView extends ComponentView {
             tooltipModel.get('trigger'),
             tooltipModel.get('borderColor')
         );
+
         const nearPointColor = nearPoint.color;
 
         if (formatter && zrUtil.isString(formatter)) {
