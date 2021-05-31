@@ -198,7 +198,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         let precision = opt && opt.precision;
 
         if (precision == null) {
-            precision = numberUtil.getPrecisionSafe(data.value) || 0;
+            precision = numberUtil.getPrecision(data.value) || 0;
         }
         else if (precision === 'auto') {
             // Should be more precise then tick.

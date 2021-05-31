@@ -159,24 +159,33 @@ export function asc<T extends number[]>(arr: T): T {
 }
 
 /**
- * Get precision
+ * Get precision.
  */
 export function getPrecision(val: string | number): number {
     val = +val;
     if (isNaN(val)) {
         return 0;
     }
+
     // It is much faster than methods converting number to string as follows
     //      let tmp = val.toString();
     //      return tmp.length - 1 - tmp.indexOf('.');
     // especially when precision is low
-    let e = 1;
-    let count = 0;
-    while (Math.round(val * e) / e !== val) {
-        e *= 10;
-        count++;
+    // Notice:
+    // (1) If the loop count is over about 20, it is slower than `getPrecisionSafe`.
+    //     (see https://jsbench.me/2vkpcekkvw/1)
+    // (2) If the val is less than for example 1e-15, the result may be incorrect.
+    //     (see test/ut/spec/util/number.test.ts `getPrecision_equal_random`)
+    if (val > 1e-14) {
+        let e = 1;
+        for (let i = 0; i < 15; i++, e *= 10) {
+            if (Math.round(val * e) / e === val) {
+                return i;
+            }
+        }
     }
-    return count;
+
+    return getPrecisionSafe(val);
 }
 
 /**
@@ -275,7 +284,7 @@ export function getPercentWithPrecision(valueList: number[], idx: number, precis
  * See <http://0.30000000000000004.com/>
  */
 export function addSafe(val0: number, val1: number): number {
-    const maxPrecision = Math.max(getPrecisionSafe(val0), getPrecisionSafe(val1));
+    const maxPrecision = Math.max(getPrecision(val0), getPrecision(val1));
     // const multiplier = Math.pow(10, maxPrecision);
     // return (Math.round(val0 * multiplier) + Math.round(val1 * multiplier)) / multiplier;
     const sum = val0 + val1;
