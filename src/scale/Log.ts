@@ -31,7 +31,6 @@ const scaleProto = Scale.prototype;
 // FIXME:TS refactor: not good to call it directly with `this`?
 const intervalScaleProto = IntervalScale.prototype;
 
-const getPrecisionSafe = numberUtil.getPrecisionSafe;
 const roundingErrorFix = numberUtil.round;
 
 const mathFloor = Math.floor;
@@ -201,7 +200,7 @@ proto.getLabel = intervalScaleProto.getLabel;
 
 
 function fixRoundingError(val: number, originalVal: number): number {
-    return roundingErrorFix(val, getPrecisionSafe(originalVal));
+    return roundingErrorFix(val, numberUtil.getPrecision(originalVal));
 }
 
 
