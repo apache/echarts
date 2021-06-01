@@ -66,7 +66,7 @@ export function intervalScaleNiceTicks(
  */
 export function getIntervalPrecision(interval: number): number {
     // Tow more digital for tick.
-    return numberUtil.getPrecisionSafe(interval) + 2;
+    return numberUtil.getPrecision(interval) + 2;
 }
 
 function clamp(

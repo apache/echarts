@@ -1,0 +1,8 @@
+{
+  "name": "apache-echarts-visual-regression-test",
+  "version": "1.0.0",
+  "description": "Apache ECharts Visual Regression Test",
+  "devDependencies": {
+    "puppeteer": "^9.1.1"
+  }
+}

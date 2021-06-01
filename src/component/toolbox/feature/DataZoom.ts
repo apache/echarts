@@ -316,10 +316,11 @@ function updateZoomBtnStatus(
 
 registerInternalOptionCreator('dataZoom', function (ecModel: GlobalModel): ComponentOption[] {
     const toolboxModel = ecModel.getComponent('toolbox', 0) as ToolboxModel;
-    if (!toolboxModel) {
+    const featureDataZoomPath = ['feature', 'dataZoom'] as const;
+    if (!toolboxModel || toolboxModel.get(featureDataZoomPath) == null) {
         return;
     }
-    const dzFeatureModel = toolboxModel.getModel(['feature', 'dataZoom'] as any) as ToolboxDataZoomFeatureModel;
+    const dzFeatureModel = toolboxModel.getModel(featureDataZoomPath as any) as ToolboxDataZoomFeatureModel;
     const dzOptions = [] as ComponentOption[];
 
     const finder = makeAxisFinder(dzFeatureModel);

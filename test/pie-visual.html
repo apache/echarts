@@ -23,7 +23,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
@@ -45,9 +45,8 @@ under the License.
 
 
         <script>
-        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+        require(['echarts'], function (echarts) {
             var option;
-            // $.getJSON('./data/nutrients.json', function (data) {});
             option = {
                 series: [
                     {
@@ -73,9 +72,9 @@ under the License.
         </script>
 
         <script>
-            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            require(['echarts'], function (echarts) {
                 var option;
-                // $.getJSON('./data/nutrients.json', function (data) {});
+
                 option = {
                     series: [
                         {
@@ -106,9 +105,9 @@ under the License.
         </script>
 
         <script>
-            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            require(['echarts'], function (echarts) {
                 var option;
-                // $.getJSON('./data/nutrients.json', function (data) {});
+
                 option = {
                     series: [
                         {
@@ -145,9 +144,9 @@ under the License.
         </script>
 
         <script>
-            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            require(['echarts'], function (echarts) {
                 var option;
-                // $.getJSON('./data/nutrients.json', function (data) {});
+
                 option = {
                     series: [
                         {
@@ -188,9 +187,9 @@ under the License.
         </script>
 
         <script>
-            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            require(['echarts'], function (echarts) {
                 var option;
-                // $.getJSON('./data/nutrients.json', function (data) {});
+
                 option = {
                     backgroundColor: '#2c343c',
                     visualMap: {

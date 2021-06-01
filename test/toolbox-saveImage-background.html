@@ -21,7 +21,7 @@ under the License.
 
 <head>
     <meta charset="utf-8">
-    <script src="lib/esl.js"></script>
+    <script src="lib/simpleRequire.js"></script>
     <script src="lib/config.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
@@ -49,12 +49,7 @@ under the License.
     <div id="chart2"></div>
     <script>
 
-        require([
-            'echarts'
-            // 'echarts/chart/bar',
-            // 'echarts/component/polar',
-            // 'zrender/vml/vml'
-        ], function (echarts) {
+        require(['echarts'], function (echarts) {
             var chart1 = echarts.init(document.getElementById('chart1'));
             var chart2 = echarts.init(document.getElementById('chart2'));
 

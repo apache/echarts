@@ -675,18 +675,11 @@ class ECharts extends Eventful<ECEventDefinition> {
         if (!env.canvasSupported) {
             return;
         }
-        opts = zrUtil.extend({}, opts || {});
-        opts.pixelRatio = opts.pixelRatio || this.getDevicePixelRatio();
-        opts.backgroundColor = opts.backgroundColor
-            || this._model.get('backgroundColor');
-        const zr = this._zr;
-        // let list = zr.storage.getDisplayList();
-        // Stop animations
-        // Never works before in init animation, so remove it.
-        // zrUtil.each(list, function (el) {
-        //     el.stopAnimation(true);
-        // });
-        return (zr.painter as CanvasPainter).getRenderedCanvas(opts);
+        opts = opts || {};
+        return (this._zr.painter as CanvasPainter).getRenderedCanvas({
+            backgroundColor: (opts.backgroundColor || this._model.get('backgroundColor')) as ColorString,
+            pixelRatio: opts.pixelRatio || this.getDevicePixelRatio()
+        });
     }
 
     /**
@@ -1160,13 +1153,25 @@ class ECharts extends Eventful<ECEventDefinition> {
             return;
         }
 
-        const optionChanged = ecModel.resetOption('media');
+        let needPrepare = ecModel.resetOption('media');
 
-        const silent = opts && opts.silent;
+        let silent = opts && opts.silent;
+
+        // There is some real cases that:
+        // chart.setOption(option, { lazyUpdate: true });
+        // chart.resize();
+        if (this[OPTION_UPDATED_KEY]) {
+            if (silent == null) {
+                silent = (this[OPTION_UPDATED_KEY] as any).silent;
+            }
+            needPrepare = true;
+            this[OPTION_UPDATED_KEY] = false;
+        }
 
         this[IN_MAIN_PROCESS_KEY] = true;
 
-        optionChanged && prepare(this);
+        needPrepare && prepare(this);
+
         updateMethods.update.call(this, {
             type: 'resize',
             animation: zrUtil.extend({

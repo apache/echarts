@@ -239,11 +239,11 @@ function getVisualGradient(
         coord?: number
         color: ColorString
     }
-    // dataToCoor mapping may not be linear, but must be monotonic.
+    // dataToCoord mapping may not be linear, but must be monotonic.
     const colorStops: ColorStop[] = zrUtil.map(visualMeta.stops, function (stop) {
         return {
             offset: 0,
-            coord: axis.toGlobalCoord(axis.dataToCoord(stop.value)),
+            coord: axis.toGlobalCoord(axis.dataToCoord(stop.value, true)),
             color: stop.color
         };
     });
@@ -833,17 +833,20 @@ class LineView extends ChartView {
                 if (this._clipShapeForSymbol && !this._clipShapeForSymbol.contain(x, y)) {
                     return;
                 }
+                const zlevel = seriesModel.get('zlevel');
+                const z = seriesModel.get('z');
                 symbol = new SymbolClz(data, dataIndex);
                 symbol.x = x;
                 symbol.y = y;
-                symbol.setZ(
-                    seriesModel.get('zlevel'),
-                    seriesModel.get('z')
-                );
+                symbol.setZ(zlevel, z);
 
-                // ensure label text of the temporal symbol is on the top of line and area polygon
+                // ensure label text of the temporary symbol is in front of line and area polygon
                 const symbolLabel = symbol.getSymbolPath().getTextContent();
-                symbolLabel && (symbolLabel.z2 = this._polyline.z2 + 1);
+                if (symbolLabel) {
+                    symbolLabel.zlevel = zlevel;
+                    symbolLabel.z = z;
+                    symbolLabel.z2 = this._polyline.z2 + 1;
+                }
 
                 (symbol as SymbolExtended).__temp = true;
                 data.setItemGraphicEl(dataIndex, symbol);
@@ -980,31 +983,33 @@ class LineView extends ChartView {
                 let start;
                 let end;
                 let current;
-                if (isCoordSysPolar) {
-                    const polarClip = clipShape as PolarArea;
-                    const coord = (coordSys as Polar).pointToCoord(point);
-                    if (isHorizontalOrRadial) {
-                        start = polarClip.startAngle;
-                        end = polarClip.endAngle;
-                        current = -coord[1] / 180 * Math.PI;
+                if (clipShape) {
+                    if (isCoordSysPolar) {
+                        const polarClip = clipShape as PolarArea;
+                        const coord = (coordSys as Polar).pointToCoord(point);
+                        if (isHorizontalOrRadial) {
+                            start = polarClip.startAngle;
+                            end = polarClip.endAngle;
+                            current = -coord[1] / 180 * Math.PI;
+                        }
+                        else {
+                            start = polarClip.r0;
+                            end = polarClip.r;
+                            current = coord[0];
+                        }
                     }
                     else {
-                        start = polarClip.r0;
-                        end = polarClip.r;
-                        current = coord[0];
-                    }
-                }
-                else {
-                    const gridClip = clipShape as Cartesian2DArea;
-                    if (isHorizontalOrRadial) {
-                        start = gridClip.x;
-                        end = gridClip.x + gridClip.width;
-                        current = symbol.x;
-                    }
-                    else {
-                        start = gridClip.y + gridClip.height;
-                        end = gridClip.y;
-                        current = symbol.y;
+                        const gridClip = clipShape as Cartesian2DArea;
+                        if (isHorizontalOrRadial) {
+                            start = gridClip.x;
+                            end = gridClip.x + gridClip.width;
+                            current = symbol.x;
+                        }
+                        else {
+                            start = gridClip.y + gridClip.height;
+                            end = gridClip.y;
+                            current = symbol.y;
+                        }
                     }
                 }
                 let ratio = end === start ? 0 : (current - start) / (end - start);

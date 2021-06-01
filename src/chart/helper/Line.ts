@@ -81,7 +81,7 @@ function createSymbol(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: 
         ? symbolOffset : [symbolOffset, symbolOffset];
 
     symbolOffsetArr[0] = parsePercent(symbolOffsetArr[0], symbolSizeArr[0]);
-    symbolOffsetArr[1] = parsePercent(retrieve2(symbolOffsetArr[1], symbolOffsetArr[0]),symbolSizeArr[1]);
+    symbolOffsetArr[1] = parsePercent(retrieve2(symbolOffsetArr[1], symbolOffsetArr[0]), symbolSizeArr[1]);
 
     const symbolPath = symbolUtil.createSymbol(
         symbolType,

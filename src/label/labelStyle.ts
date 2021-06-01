@@ -729,12 +729,3 @@ export function animateLabelValue(
         : updateProps
     )(textEl, {}, animatableModel, dataIndex, null, during);
 }
-
-export function enableLayoutLayoutFeatures(
-    el: Element,
-    dataIndex: number,
-    dataType: SeriesDataType
-): void {
-    getECData(el).dataIndex = dataIndex;
-    getECData(el).dataType = dataType;
-}

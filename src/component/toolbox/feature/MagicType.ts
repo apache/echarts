@@ -155,6 +155,7 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
         );
 
         let newTitle;
+        let currentType = type as TitleType;
         // Change title of stack
         if (type === 'stack') {
             // use titles in model instead of ecModel
@@ -163,12 +164,16 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
             newTitle = zrUtil.merge({
                 stack: model.option.title.tiled,
                 tiled: model.option.title.stack
-            }, model.option.title)
+            }, model.option.title);
+
+            if (model.get(['iconStatus', type]) !== 'emphasis') {
+                currentType = 'tiled';
+            }
         }
 
         api.dispatchAction({
             type: 'changeMagicType',
-            currentType: type,
+            currentType: currentType,
             newOption: newOption,
             newTitle: newTitle,
             featureName: 'magicType'
