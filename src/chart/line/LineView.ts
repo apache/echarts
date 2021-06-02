@@ -29,7 +29,7 @@ import {ECPolyline, ECPolygon} from './poly';
 import ChartView from '../../view/Chart';
 import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
 import {createGridClipPath, createPolarClipPath} from '../helper/createClipPathFromCoordSys';
-import LineSeriesModel, { LineSeriesOption } from './LineSeries';
+import LineSeriesModel, { LineEndLabelOption, LineSeriesOption } from './LineSeries';
 import type GlobalModel from '../../model/Global';
 import type ExtensionAPI from '../../core/ExtensionAPI';
 // TODO
@@ -412,6 +412,15 @@ function getIndexRange(points: ArrayLike<number>, xOrY: number, dim: 'x' | 'y') 
     };
 }
 
+function anyStateShowEndLabel(
+    endLabelModel: Model<LineEndLabelOption>, seriesModel: LineSeriesModel
+) {
+    return endLabelModel.get('show')
+        || seriesModel.get(['emphasis', 'endLabel', 'show'])
+        || seriesModel.get(['blur', 'endLabel', 'show'])
+        || seriesModel.get(['select', 'endLabel', 'show']);
+}
+
 
 interface EndLabelAnimationRecord {
     lastFrameIndex: number
@@ -427,13 +436,12 @@ function createLineClipPath(
 ) {
     if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
         const endLabelModel = seriesModel.getModel('endLabel');
-        const showEndLabel = endLabelModel.get('show');
         const valueAnimation = endLabelModel.get('valueAnimation');
         const data = seriesModel.getData();
 
         const labelAnimationRecord: EndLabelAnimationRecord = { lastFrameIndex: 0 };
 
-        const during = showEndLabel
+        const during = anyStateShowEndLabel(endLabelModel, seriesModel)
             ? (percent: number, clipRect: graphic.Rect) => {
                 lineView._endLabelOnDuring(
                     percent,
@@ -1055,7 +1063,7 @@ class LineView extends ChartView {
     ) {
         const endLabelModel = seriesModel.getModel('endLabel');
 
-        if (endLabelModel.get('show')) {
+        if (anyStateShowEndLabel(endLabelModel, seriesModel)) {
             const data = seriesModel.getData();
             const polyline = this._polyline;
             let endLabel = this._endLabel;

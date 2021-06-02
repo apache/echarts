@@ -55,6 +55,7 @@ interface ExtraStateOption {
 export interface LineStateOption {
     itemStyle?: ItemStyleOption
     label?: SeriesLabelOption
+    endLabel?: LineEndLabelOption
 }
 
 export interface LineDataItemOption extends SymbolOptionMixin,
