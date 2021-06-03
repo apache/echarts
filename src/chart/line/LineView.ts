@@ -29,7 +29,7 @@ import {ECPolyline, ECPolygon} from './poly';
 import ChartView from '../../view/Chart';
 import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
 import {createGridClipPath, createPolarClipPath} from '../helper/createClipPathFromCoordSys';
-import LineSeriesModel, { LineSeriesOption } from './LineSeries';
+import LineSeriesModel, { LineEndLabelOption, LineSeriesOption } from './LineSeries';
 import type GlobalModel from '../../model/Global';
 import type ExtensionAPI from '../../core/ExtensionAPI';
 // TODO
@@ -48,7 +48,7 @@ import type {
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea, isCoordinateSystemType } from '../../coord/CoordinateSystem';
-import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
+import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis, DISPLAY_STATES, SPECIAL_STATES } from '../../util/states';
 import Model from '../../model/Model';
 import {setLabelStyle, getLabelStatesModels, labelInner} from '../../label/labelStyle';
 import {getDefaultLabel, getDefaultInterpolatedLabel} from '../helper/labelHelper';
@@ -412,6 +412,20 @@ function getIndexRange(points: ArrayLike<number>, xOrY: number, dim: 'x' | 'y') 
     };
 }
 
+function anyStateShowEndLabel(
+    seriesModel: LineSeriesModel
+) {
+    if (seriesModel.get(['endLabel', 'show'])) {
+        return true;
+    }
+    for (let i = 0; i < SPECIAL_STATES.length; i++) {
+        if (seriesModel.get([SPECIAL_STATES[i], 'endLabel', 'show'])) {
+            return true;
+        }
+    }
+    return false;
+}
+
 
 interface EndLabelAnimationRecord {
     lastFrameIndex: number
@@ -427,13 +441,12 @@ function createLineClipPath(
 ) {
     if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
         const endLabelModel = seriesModel.getModel('endLabel');
-        const showEndLabel = endLabelModel.get('show');
         const valueAnimation = endLabelModel.get('valueAnimation');
         const data = seriesModel.getData();
 
         const labelAnimationRecord: EndLabelAnimationRecord = { lastFrameIndex: 0 };
 
-        const during = showEndLabel
+        const during = anyStateShowEndLabel(seriesModel)
             ? (percent: number, clipRect: graphic.Rect) => {
                 lineView._endLabelOnDuring(
                     percent,
@@ -1055,7 +1068,7 @@ class LineView extends ChartView {
     ) {
         const endLabelModel = seriesModel.getModel('endLabel');
 
-        if (endLabelModel.get('show')) {
+        if (anyStateShowEndLabel(seriesModel)) {
             const data = seriesModel.getData();
             const polyline = this._polyline;
             let endLabel = this._endLabel;
