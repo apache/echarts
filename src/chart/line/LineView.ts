@@ -413,12 +413,12 @@ function getIndexRange(points: ArrayLike<number>, xOrY: number, dim: 'x' | 'y') 
 }
 
 function anyStateShowEndLabel(
-    endLabelModel: Model<LineEndLabelOption>, seriesModel: LineSeriesModel
+    seriesModel: LineSeriesModel
 ) {
-    if (endLabelModel.get('show')) {
+    if (seriesModel.get(['endLabel', 'show'])) {
         return true;
     }
-    for (let i = 0; i < DISPLAY_STATES.length; i++) {
+    for (let i = 0; i < SPECIAL_STATES.length; i++) {
         if (seriesModel.get([SPECIAL_STATES[i], 'endLabel', 'show'])) {
             return true;
         }
@@ -446,7 +446,7 @@ function createLineClipPath(
 
         const labelAnimationRecord: EndLabelAnimationRecord = { lastFrameIndex: 0 };
 
-        const during = anyStateShowEndLabel(endLabelModel, seriesModel)
+        const during = anyStateShowEndLabel(seriesModel)
             ? (percent: number, clipRect: graphic.Rect) => {
                 lineView._endLabelOnDuring(
                     percent,
@@ -1068,7 +1068,7 @@ class LineView extends ChartView {
     ) {
         const endLabelModel = seriesModel.getModel('endLabel');
 
-        if (anyStateShowEndLabel(endLabelModel, seriesModel)) {
+        if (anyStateShowEndLabel(seriesModel)) {
             const data = seriesModel.getData();
             const polyline = this._polyline;
             let endLabel = this._endLabel;
