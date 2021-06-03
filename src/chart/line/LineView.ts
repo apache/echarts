@@ -48,7 +48,7 @@ import type {
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea, isCoordinateSystemType } from '../../coord/CoordinateSystem';
-import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
+import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis, DISPLAY_STATES, SPECIAL_STATES } from '../../util/states';
 import Model from '../../model/Model';
 import {setLabelStyle, getLabelStatesModels, labelInner} from '../../label/labelStyle';
 import {getDefaultLabel, getDefaultInterpolatedLabel} from '../helper/labelHelper';
@@ -415,10 +415,15 @@ function getIndexRange(points: ArrayLike<number>, xOrY: number, dim: 'x' | 'y') 
 function anyStateShowEndLabel(
     endLabelModel: Model<LineEndLabelOption>, seriesModel: LineSeriesModel
 ) {
-    return endLabelModel.get('show')
-        || seriesModel.get(['emphasis', 'endLabel', 'show'])
-        || seriesModel.get(['blur', 'endLabel', 'show'])
-        || seriesModel.get(['select', 'endLabel', 'show']);
+    if (endLabelModel.get('show')) {
+        return true;
+    }
+    for (let i = 0; i < DISPLAY_STATES.length; i++) {
+        if (seriesModel.get([SPECIAL_STATES[i], 'endLabel', 'show'])) {
+            return true;
+        }
+    }
+    return false;
 }
 
 
