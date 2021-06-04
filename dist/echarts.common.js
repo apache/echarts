@@ -504,7 +504,7 @@
     function isGradientObject(value) {
         return value.colorStops != null;
     }
-    function isPatternObject(value) {
+    function isImagePatternObject(value) {
         return value.image != null;
     }
     function isRegExp(value) {
@@ -680,7 +680,7 @@
         isTypedArray: isTypedArray,
         isDom: isDom,
         isGradientObject: isGradientObject,
-        isPatternObject: isPatternObject,
+        isImagePatternObject: isImagePatternObject,
         isRegExp: isRegExp,
         eqNaN: eqNaN,
         retrieve: retrieve,
@@ -699,35 +699,6 @@
         hasOwn: hasOwn,
         noop: noop
     });
-
-    /*! *****************************************************************************
-    Copyright (c) Microsoft Corporation.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose with or without fee is hereby granted.
-
-    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-    AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-    PERFORMANCE OF THIS SOFTWARE.
-    ***************************************************************************** */
-    /* global Reflect, Promise */
-
-    var extendStatics$1 = function(d, b) {
-        extendStatics$1 = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics$1(d, b);
-    };
-
-    function __extends$1(d, b) {
-        extendStatics$1(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    }
 
     function create(x, y) {
         if (x == null) {
@@ -1457,7 +1428,7 @@
         stop(this.event);
     }
     var EmptyProxy = (function (_super) {
-        __extends$1(EmptyProxy, _super);
+        __extends(EmptyProxy, _super);
         function EmptyProxy() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this.handler = null;
@@ -1479,7 +1450,7 @@
         'mouseup', 'mousedown', 'mousemove', 'contextmenu'
     ];
     var Handler = (function (_super) {
-        __extends$1(Handler, _super);
+        __extends(Handler, _super);
         function Handler(storage, painter, proxy, painterRoot) {
             var _this = _super.call(this) || this;
             _this._hovered = new HoveredResult(0, 0);
@@ -3884,7 +3855,7 @@
     }());
 
     var Animation = (function (_super) {
-        __extends$1(Animation, _super);
+        __extends(Animation, _super);
         function Animation(opts) {
             var _this = _super.call(this) || this;
             _this._running = false;
@@ -4277,7 +4248,7 @@
         return DOMHandlerScope;
     }());
     var HandlerDomProxy = (function (_super) {
-        __extends$1(HandlerDomProxy, _super);
+        __extends(HandlerDomProxy, _super);
         function HandlerDomProxy(dom, painterRoot) {
             var _this = _super.call(this) || this;
             _this.__pointerCapturing = false;
@@ -6181,7 +6152,7 @@
     }
 
     var Group = (function (_super) {
-        __extends$1(Group, _super);
+        __extends(Group, _super);
         function Group(opts) {
             var _this = _super.call(this) || this;
             _this.isGroup = true;
@@ -6601,7 +6572,7 @@
     function registerPainter(name, Ctor) {
         painterCtors[name] = Ctor;
     }
-    var version = '5.1.0';
+    var version = '5.1.1';
 
     var zrender = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -6613,7 +6584,10 @@
         version: version
     });
 
-    var RADIAN_EPSILON = 1e-4;
+    var RADIAN_EPSILON = 1e-4; // Although chrome already enlarge this number to 100 for `toFixed`, but
+    // we sill follow the spec for compatibility.
+
+    var ROUND_SUPPORTED_PRECISION_MAX = 20;
 
     function _trim(str) {
       return str.replace(/^\s+|\s+$/g, '');
@@ -6709,7 +6683,8 @@
       } // Avoid range error
 
 
-      precision = Math.min(Math.max(0, precision), 20);
+      precision = Math.min(Math.max(0, precision), ROUND_SUPPORTED_PRECISION_MAX); // PENDING: 1.005.toFixed(2) is '1.00' rather than '1.01'
+
       x = (+x).toFixed(precision);
       return returnStr ? x : +x;
     }
@@ -6725,7 +6700,7 @@
       return arr;
     }
     /**
-     * Get precision
+     * Get precision.
      */
 
     function getPrecision(val) {
@@ -6737,34 +6712,39 @@
       //      let tmp = val.toString();
       //      return tmp.length - 1 - tmp.indexOf('.');
       // especially when precision is low
+      // Notice:
+      // (1) If the loop count is over about 20, it is slower than `getPrecisionSafe`.
+      //     (see https://jsbench.me/2vkpcekkvw/1)
+      // (2) If the val is less than for example 1e-15, the result may be incorrect.
+      //     (see test/ut/spec/util/number.test.ts `getPrecision_equal_random`)
 
 
-      var e = 1;
-      var count = 0;
+      if (val > 1e-14) {
+        var e = 1;
 
-      while (Math.round(val * e) / e !== val) {
-        e *= 10;
-        count++;
+        for (var i = 0; i < 15; i++, e *= 10) {
+          if (Math.round(val * e) / e === val) {
+            return i;
+          }
+        }
       }
 
-      return count;
+      return getPrecisionSafe(val);
     }
     /**
      * Get precision with slow but safe method
      */
 
     function getPrecisionSafe(val) {
-      var str = val.toString(); // Consider scientific notation: '3.4e-12' '3.4e+12'
+      // toLowerCase for: '3.4E-12'
+      var str = val.toString().toLowerCase(); // Consider scientific notation: '3.4e-12' '3.4e+12'
 
       var eIndex = str.indexOf('e');
-
-      if (eIndex > 0) {
-        var precision = +str.slice(eIndex + 1);
-        return precision < 0 ? -precision : 0;
-      } else {
-        var dotIndex = str.indexOf('.');
-        return dotIndex < 0 ? 0 : str.length - 1 - dotIndex;
-      }
+      var exp = eIndex > 0 ? +str.slice(eIndex + 1) : 0;
+      var significandPartLen = eIndex > 0 ? eIndex : str.length;
+      var dotIndex = str.indexOf('.');
+      var decimalPartLen = dotIndex < 0 ? 0 : significandPartLen - 1 - dotIndex;
+      return Math.max(0, decimalPartLen - exp);
     }
     /**
      * Minimal dicernible data precisioin according to a single pixel.
@@ -6839,6 +6819,19 @@
       }
 
       return seats[idx] / digits;
+    }
+    /**
+     * Solve the floating point adding problem like 0.1 + 0.2 === 0.30000000000000004
+     * See <http://0.30000000000000004.com/>
+     */
+
+    function addSafe(val0, val1) {
+      var maxPrecision = Math.max(getPrecision(val0), getPrecision(val1)); // const multiplier = Math.pow(10, maxPrecision);
+      // return (Math.round(val0 * multiplier) + Math.round(val1 * multiplier)) / multiplier;
+
+      var sum = val0 + val1; // // PENDING: support more?
+
+      return maxPrecision > ROUND_SUPPORTED_PRECISION_MAX ? sum : round(sum, maxPrecision);
     } // Number.MAX_SAFE_INTEGER, ie do not support.
 
     var MAX_SAFE_INTEGER = 9007199254740991;
@@ -7875,7 +7868,7 @@
 
       if (typeof targetValue === 'number') {
         var value = interpolateNumber(sourceValue || 0, targetValue, percent);
-        return round(value, isAutoPrecision ? Math.max(getPrecisionSafe(sourceValue || 0), getPrecisionSafe(targetValue)) : precision);
+        return round(value, isAutoPrecision ? Math.max(getPrecision(sourceValue || 0), getPrecision(targetValue)) : precision);
       } else if (typeof targetValue === 'string') {
         return percent < 1 ? sourceValue : targetValue;
       } else {
@@ -7894,7 +7887,7 @@
             var leftVal = leftArr && leftArr[i] ? leftArr[i] : 0;
             var rightVal = rightArr[i];
             var value = interpolateNumber(leftVal, rightVal, percent);
-            interpolated[i] = round(value, isAutoPrecision ? Math.max(getPrecisionSafe(leftVal), getPrecisionSafe(rightVal)) : precision);
+            interpolated[i] = round(value, isAutoPrecision ? Math.max(getPrecision(leftVal), getPrecision(rightVal)) : precision);
           }
         }
 
@@ -8791,7 +8784,7 @@
     var PRIMARY_STATES_KEYS$1 = ['z', 'z2', 'invisible'];
     var PRIMARY_STATES_KEYS_IN_HOVER_LAYER = ['invisible'];
     var Displayable = (function (_super) {
-        __extends$1(Displayable, _super);
+        __extends(Displayable, _super);
         function Displayable(props) {
             return _super.call(this, props) || this;
         }
@@ -9600,12 +9593,10 @@
             newEndAngle = newStartAngle - PI2$1;
         }
         else if (!anticlockwise && newStartAngle > newEndAngle) {
-            newEndAngle = newStartAngle +
-                (PI2$1 - modPI2(newStartAngle - newEndAngle));
+            newEndAngle = newStartAngle + (PI2$1 - modPI2(newStartAngle - newEndAngle));
         }
         else if (anticlockwise && newStartAngle < newEndAngle) {
-            newEndAngle = newStartAngle -
-                (PI2$1 - modPI2(newEndAngle - newStartAngle));
+            newEndAngle = newStartAngle - (PI2$1 - modPI2(newEndAngle - newStartAngle));
         }
         angles[0] = newStartAngle;
         angles[1] = newEndAngle;
@@ -9613,7 +9604,6 @@
     var PathProxy = (function () {
         function PathProxy(notSaveData) {
             this.dpr = 1;
-            this._version = 0;
             this._xi = 0;
             this._yi = 0;
             this._x0 = 0;
@@ -9668,6 +9658,7 @@
             this._version++;
         };
         PathProxy.prototype.moveTo = function (x, y) {
+            this._drawPendingPt();
             this.addData(CMD.M, x, y);
             this._ctx && this._ctx.moveTo(x, y);
             this._x0 = x;
@@ -9677,9 +9668,9 @@
             return this;
         };
         PathProxy.prototype.lineTo = function (x, y) {
-            var exceedUnit = mathAbs(x - this._xi) > this._ux
-                || mathAbs(y - this._yi) > this._uy
-                || this._len < 5;
+            var dx = mathAbs(x - this._xi);
+            var dy = mathAbs(y - this._yi);
+            var exceedUnit = dx > this._ux || dy > this._uy;
             this.addData(CMD.L, x, y);
             if (this._ctx && exceedUnit) {
                 this._needsDash ? this._dashedLineTo(x, y)
@@ -9688,6 +9679,15 @@
             if (exceedUnit) {
                 this._xi = x;
                 this._yi = y;
+                this._pendingPtDist = 0;
+            }
+            else {
+                var d2 = dx * dx + dy * dy;
+                if (d2 > this._pendingPtDist) {
+                    this._pendingPtX = x;
+                    this._pendingPtY = y;
+                    this._pendingPtDist = d2;
+                }
             }
             return this;
         };
@@ -9736,6 +9736,7 @@
             return this;
         };
         PathProxy.prototype.closePath = function () {
+            this._drawPendingPt();
             this.addData(CMD.Z);
             var ctx = this._ctx;
             var x0 = this._x0;
@@ -9822,6 +9823,12 @@
             }
             for (var i = 0; i < arguments.length; i++) {
                 data[this._len++] = arguments[i];
+            }
+        };
+        PathProxy.prototype._drawPendingPt = function () {
+            if (this._pendingPtDist > 0) {
+                this._ctx && this._ctx.lineTo(this._pendingPtX, this._pendingPtY);
+                this._pendingPtDist = 0;
             }
         };
         PathProxy.prototype._expandData = function () {
@@ -9932,6 +9939,7 @@
             if (!this._saveData) {
                 return;
             }
+            this._drawPendingPt();
             var data = this.data;
             if (data instanceof Array) {
                 data.length = this._len;
@@ -10143,6 +10151,9 @@
             var accumLength = 0;
             var segCount = 0;
             var displayedLength;
+            var pendingPtDist = 0;
+            var pendingPtX;
+            var pendingPtY;
             if (drawPart) {
                 if (!this._pathSegLen) {
                     this._calculateLength();
@@ -10165,6 +10176,10 @@
                 }
                 switch (cmd) {
                     case CMD.M:
+                        if (pendingPtDist > 0) {
+                            ctx.lineTo(pendingPtX, pendingPtY);
+                            pendingPtDist = 0;
+                        }
                         x0 = xi = d[i++];
                         y0 = yi = d[i++];
                         ctx.moveTo(xi, yi);
@@ -10172,7 +10187,9 @@
                     case CMD.L: {
                         x = d[i++];
                         y = d[i++];
-                        if (mathAbs(x - xi) > ux || mathAbs(y - yi) > uy || i === len - 1) {
+                        var dx = mathAbs(x - xi);
+                        var dy = mathAbs(y - yi);
+                        if (dx > ux || dy > uy) {
                             if (drawPart) {
                                 var l = pathSegLen[segCount++];
                                 if (accumLength + l > displayedLength) {
@@ -10185,6 +10202,15 @@
                             ctx.lineTo(x, y);
                             xi = x;
                             yi = y;
+                            pendingPtDist = 0;
+                        }
+                        else {
+                            var d2 = dx * dx + dy * dy;
+                            if (d2 > pendingPtDist) {
+                                pendingPtX = x;
+                                pendingPtY = y;
+                                pendingPtDist = d2;
+                            }
                         }
                         break;
                     }
@@ -10301,6 +10327,10 @@
                         ctx.rect(x, y, width, height);
                         break;
                     case CMD.Z:
+                        if (pendingPtDist > 0) {
+                            ctx.lineTo(pendingPtX, pendingPtY);
+                            pendingPtDist = 0;
+                        }
                         if (drawPart) {
                             var l = pathSegLen[segCount++];
                             if (accumLength + l > displayedLength) {
@@ -10326,6 +10356,8 @@
             proto._dashSum = 0;
             proto._ux = 0;
             proto._uy = 0;
+            proto._pendingPtDist = 0;
+            proto._version = 0;
         })();
         return PathProxy;
     }());
@@ -10776,7 +10808,7 @@
         'culling', 'z', 'z2', 'zlevel', 'parent'
     ];
     var Path = (function (_super) {
-        __extends$1(Path, _super);
+        __extends(Path, _super);
         function Path(opts) {
             return _super.call(this, opts) || this;
         }
@@ -11097,7 +11129,7 @@
         };
         Path.extend = function (defaultProps) {
             var Sub = (function (_super) {
-                __extends$1(Sub, _super);
+                __extends(Sub, _super);
                 function Sub(opts) {
                     var _this = _super.call(this, opts) || this;
                     defaultProps.init && defaultProps.init.call(_this, opts);
@@ -11140,7 +11172,7 @@
         miterLimit: 2
     }, DEFAULT_PATH_STYLE);
     var TSpan = (function (_super) {
-        __extends$1(TSpan, _super);
+        __extends(TSpan, _super);
         function TSpan() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
@@ -11209,7 +11241,7 @@
             && source.width && source.height);
     }
     var ZRImage = (function (_super) {
-        __extends$1(ZRImage, _super);
+        __extends(ZRImage, _super);
         function ZRImage() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
@@ -11400,7 +11432,7 @@
     }());
     var subPixelOptimizeOutputShape = {};
     var Rect = (function (_super) {
-        __extends$1(Rect, _super);
+        __extends(Rect, _super);
         function Rect(opts) {
             return _super.call(this, opts) || this;
         }
@@ -11468,7 +11500,7 @@
         }, DEFAULT_COMMON_ANIMATION_PROPS.style)
     };
     var ZRText = (function (_super) {
-        __extends$1(ZRText, _super);
+        __extends(ZRText, _super);
         function ZRText(opts) {
             var _this = _super.call(this) || this;
             _this.type = 'text';
@@ -12996,7 +13028,7 @@
         return path;
     }
     var SVGPath = (function (_super) {
-        __extends$1(SVGPath, _super);
+        __extends(SVGPath, _super);
         function SVGPath() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
@@ -13034,7 +13066,7 @@
     function extendFromString(str, defaultOpts) {
         var innerOpts = createPathOptions(str, defaultOpts);
         var Sub = (function (_super) {
-            __extends$1(Sub, _super);
+            __extends(Sub, _super);
             function Sub(opts) {
                 var _this = _super.call(this, opts) || this;
                 _this.applyTransform = innerOpts.applyTransform;
@@ -13081,7 +13113,7 @@
         return CircleShape;
     }());
     var Circle = (function (_super) {
-        __extends$1(Circle, _super);
+        __extends(Circle, _super);
         function Circle(opts) {
             return _super.call(this, opts) || this;
         }
@@ -13108,7 +13140,7 @@
         return EllipseShape;
     }());
     var Ellipse = (function (_super) {
-        __extends$1(Ellipse, _super);
+        __extends(Ellipse, _super);
         function Ellipse(opts) {
             return _super.call(this, opts) || this;
         }
@@ -13332,7 +13364,7 @@
         return SectorShape;
     }());
     var Sector = (function (_super) {
-        __extends$1(Sector, _super);
+        __extends(Sector, _super);
         function Sector(opts) {
             return _super.call(this, opts) || this;
         }
@@ -13360,7 +13392,7 @@
         return RingShape;
     }());
     var Ring = (function (_super) {
-        __extends$1(Ring, _super);
+        __extends(Ring, _super);
         function Ring(opts) {
             return _super.call(this, opts) || this;
         }
@@ -13524,7 +13556,7 @@
         return PolygonShape;
     }());
     var Polygon = (function (_super) {
-        __extends$1(Polygon, _super);
+        __extends(Polygon, _super);
         function Polygon(opts) {
             return _super.call(this, opts) || this;
         }
@@ -13548,7 +13580,7 @@
         return PolylineShape;
     }());
     var Polyline = (function (_super) {
-        __extends$1(Polyline, _super);
+        __extends(Polyline, _super);
         function Polyline(opts) {
             return _super.call(this, opts) || this;
         }
@@ -13580,7 +13612,7 @@
         return LineShape;
     }());
     var Line = (function (_super) {
-        __extends$1(Line, _super);
+        __extends(Line, _super);
         function Line(opts) {
             return _super.call(this, opts) || this;
         }
@@ -13663,7 +13695,7 @@
         }
     }
     var BezierCurve = (function (_super) {
-        __extends$1(BezierCurve, _super);
+        __extends(BezierCurve, _super);
         function BezierCurve(opts) {
             return _super.call(this, opts) || this;
         }
@@ -13738,7 +13770,7 @@
         return ArcShape;
     }());
     var Arc = (function (_super) {
-        __extends$1(Arc, _super);
+        __extends(Arc, _super);
         function Arc(opts) {
             return _super.call(this, opts) || this;
         }
@@ -13768,7 +13800,7 @@
     Arc.prototype.type = 'arc';
 
     var CompoundPath = (function (_super) {
-        __extends$1(CompoundPath, _super);
+        __extends(CompoundPath, _super);
         function CompoundPath() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this.type = 'compound';
@@ -13828,7 +13860,7 @@
     }());
 
     var LinearGradient = (function (_super) {
-        __extends$1(LinearGradient, _super);
+        __extends(LinearGradient, _super);
         function LinearGradient(x, y, x2, y2, colorStops, globalCoord) {
             var _this = _super.call(this, colorStops) || this;
             _this.x = x == null ? 0 : x;
@@ -13843,7 +13875,7 @@
     }(Gradient));
 
     var RadialGradient = (function (_super) {
-        __extends$1(RadialGradient, _super);
+        __extends(RadialGradient, _super);
         function RadialGradient(x, y, r, colorStops, globalCoord) {
             var _this = _super.call(this, colorStops) || this;
             _this.x = x == null ? 0.5 : x;
@@ -13977,7 +14009,7 @@
 
     var m = [];
     var IncrementalDisplayable = (function (_super) {
-        __extends$1(IncrementalDisplayable, _super);
+        __extends(IncrementalDisplayable, _super);
         function IncrementalDisplayable() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this.notClear = true;
@@ -19659,7 +19691,10 @@
               if (sum >= 0 && val > 0 || // Positive stack
               sum <= 0 && val < 0 // Negative stack
               ) {
-                  sum += val;
+                  // The sum should be as less as possible to be effected
+                  // by floating arithmetic problem. A wrong result probably
+                  // filtered incorrectly by axis min/max.
+                  sum = addSafe(sum, val);
                   stackedOver = val;
                   break;
                 }
@@ -27809,8 +27844,6 @@
         if (inheritedStyle.display === 'none') {
             disp.ignore = true;
         }
-        disp.z = -10000;
-        disp.z2 = -1000;
     }
     function applyTextAlignment(text, parentGroup) {
         var parentSelfStyle = parentGroup.__selfStyle;
@@ -28632,6 +28665,7 @@
     }
 
     var geoCoord = [126, 25];
+    var nanhaiName = '南海诸岛';
     var points$1 = [[[0, 3.5], [7, 11.2], [15, 11.9], [30, 7], [42, 0.7], [52, 0.7], [56, 7.7], [59, 0.7], [64, 0.7], [64, 0], [5, 0], [0, 3.5]], [[13, 16.1], [19, 14.7], [16, 21.7], [11, 23.1], [13, 16.1]], [[12, 32.2], [14, 38.5], [15, 38.5], [13, 32.2], [12, 32.2]], [[16, 47.6], [12, 53.2], [13, 53.2], [18, 47.6], [16, 47.6]], [[6, 64.4], [8, 70], [9, 70], [8, 64.4], [6, 64.4]], [[23, 82.6], [29, 79.8], [30, 79.8], [25, 82.6], [23, 82.6]], [[37, 70.7], [43, 62.3], [44, 62.3], [39, 70.7], [37, 70.7]], [[48, 51.1], [51, 45.5], [53, 45.5], [50, 51.1], [48, 51.1]], [[51, 35], [51, 28.7], [53, 28.7], [53, 35], [51, 35]], [[52, 22.4], [55, 17.5], [56, 17.5], [53, 22.4], [52, 22.4]], [[58, 12.6], [62, 7], [63, 7], [60, 12.6], [58, 12.6]], [[0, 3.5], [0, 93.1], [64, 93.1], [64, 0], [63, 0], [63, 92.4], [1, 92.4], [1, 3.5], [0, 3.5]]];
 
     for (var i = 0; i < points$1.length; i++) {
@@ -28645,7 +28679,14 @@
 
     function fixNanhai(mapType, regions) {
       if (mapType === 'china') {
-        regions.push(new GeoJSONRegion('南海诸岛', map(points$1, function (exterior) {
+        for (var i = 0; i < regions.length; i++) {
+          // Already exists.
+          if (regions[i].name === nanhaiName) {
+            return;
+          }
+        }
+
+        regions.push(new GeoJSONRegion(nanhaiName, map(points$1, function (exterior) {
           return {
             type: 'polygon',
             exterior: exterior
@@ -29035,9 +29076,9 @@
     var isObject$2 = isObject;
     var indexOf$1 = indexOf;
     var hasWindow = typeof window !== 'undefined';
-    var version$1 = '5.1.1';
+    var version$1 = '5.1.2';
     var dependencies = {
-      zrender: '5.1.0'
+      zrender: '5.1.1'
     };
     var TEST_FRAME_REMAIN_TIME = 1;
     var PRIORITY_PROCESSOR_SERIES_FILTER = 800; // Some data processors depends on the stack result dimension (to calculate data extent).
@@ -29417,17 +29458,11 @@
           return;
         }
 
-        opts = extend({}, opts || {});
-        opts.pixelRatio = opts.pixelRatio || this.getDevicePixelRatio();
-        opts.backgroundColor = opts.backgroundColor || this._model.get('backgroundColor');
-        var zr = this._zr; // let list = zr.storage.getDisplayList();
-        // Stop animations
-        // Never works before in init animation, so remove it.
-        // zrUtil.each(list, function (el) {
-        //     el.stopAnimation(true);
-        // });
-
-        return zr.painter.getRenderedCanvas(opts);
+        opts = opts || {};
+        return this._zr.painter.getRenderedCanvas({
+          backgroundColor: opts.backgroundColor || this._model.get('backgroundColor'),
+          pixelRatio: opts.pixelRatio || this.getDevicePixelRatio()
+        });
       };
       /**
        * Get svg data url
@@ -34699,7 +34734,7 @@
 
     function getIntervalPrecision(interval) {
       // Tow more digital for tick.
-      return getPrecisionSafe(interval) + 2;
+      return getPrecision(interval) + 2;
     }
 
     function clamp(niceTickExtent, idx, extent) {
@@ -35100,7 +35135,7 @@
         var precision = opt && opt.precision;
 
         if (precision == null) {
-          precision = getPrecisionSafe(data.value) || 0;
+          precision = getPrecision(data.value) || 0;
         } else if (precision === 'auto') {
           // Should be more precise then tick.
           precision = this._intervalPrecision;
@@ -36192,7 +36227,6 @@
     var scaleProto = Scale.prototype; // FIXME:TS refactor: not good to call it directly with `this`?
 
     var intervalScaleProto = IntervalScale.prototype;
-    var getPrecisionSafe$1 = getPrecisionSafe;
     var roundingErrorFix = round;
     var mathFloor$1 = Math.floor;
     var mathCeil = Math.ceil;
@@ -36340,7 +36374,7 @@
     proto.getLabel = intervalScaleProto.getLabel;
 
     function fixRoundingError(val, originalVal) {
-      return roundingErrorFix(val, getPrecisionSafe$1(originalVal));
+      return roundingErrorFix(val, getPrecision(originalVal));
     }
 
     Scale.registerClass(LogScale);
@@ -38346,7 +38380,7 @@
             || value.type === 'radial');
     }
     var GradientManager = (function (_super) {
-        __extends$1(GradientManager, _super);
+        __extends(GradientManager, _super);
         function GradientManager(zrId, svgRoot) {
             return _super.call(this, zrId, svgRoot, ['linearGradient', 'radialGradient'], '__gradient_in_use__') || this;
         }
@@ -38477,7 +38511,7 @@
     }
     var patternDomMap = new WeakMap();
     var PatternManager = (function (_super) {
-        __extends$1(PatternManager, _super);
+        __extends(PatternManager, _super);
         function PatternManager(zrId, svgRoot) {
             return _super.call(this, zrId, svgRoot, ['pattern'], '__pattern_in_use__') || this;
         }
@@ -38556,14 +38590,15 @@
                 }
                 if (img) {
                     var imageSrc = void 0;
-                    if (typeof pattern.image === 'string') {
-                        imageSrc = pattern.image;
+                    var patternImage = pattern.image;
+                    if (typeof patternImage === 'string') {
+                        imageSrc = patternImage;
                     }
-                    else if (pattern.image instanceof HTMLImageElement) {
-                        imageSrc = pattern.image.src;
+                    else if (patternImage instanceof HTMLImageElement) {
+                        imageSrc = patternImage.src;
                     }
-                    else if (pattern.image instanceof HTMLCanvasElement) {
-                        imageSrc = pattern.image.toDataURL();
+                    else if (patternImage instanceof HTMLCanvasElement) {
+                        imageSrc = patternImage.toDataURL();
                     }
                     if (imageSrc) {
                         img.setAttribute('href', imageSrc);
@@ -38621,7 +38656,7 @@
         return clipPaths && clipPaths.length > 0;
     }
     var ClippathManager = (function (_super) {
-        __extends$1(ClippathManager, _super);
+        __extends(ClippathManager, _super);
         function ClippathManager(zrId, svgRoot) {
             var _this = _super.call(this, zrId, svgRoot, 'clipPath', '__clippath_in_use__') || this;
             _this._refGroups = {};
@@ -38723,7 +38758,7 @@
     }(Definable));
 
     var ShadowManager = (function (_super) {
-        __extends$1(ShadowManager, _super);
+        __extends(ShadowManager, _super);
         function ShadowManager(zrId, svgRoot) {
             var _this = _super.call(this, zrId, svgRoot, ['filter'], '__filter_in_use__', '_shadowDom') || this;
             _this._shadowDomMap = {};
@@ -39142,7 +39177,7 @@
         return newDom;
     }
     var Layer = (function (_super) {
-        __extends$1(Layer, _super);
+        __extends(Layer, _super);
         function Layer(id, painter, dpr) {
             var _this = _super.call(this) || this;
             _this.motionBlur = false;
@@ -39377,7 +39412,7 @@
                             });
                         clearColor.__canvasGradient = clearColorGradientOrPattern;
                     }
-                    else if (isPatternObject(clearColor)) {
+                    else if (isImagePatternObject(clearColor)) {
                         clearColorGradientOrPattern = createCanvasPattern(ctx, clearColor, {
                             dirty: function () {
                                 self.setUnpainted();
@@ -39630,7 +39665,6 @@
                 var ctx = layer.ctx;
                 var repaintRects = useDirtyRect
                     && layer.createRepaintRects(list, prevList, this_1._width, this_1._height);
-                ctx.save();
                 var start = paintAll ? layer.__startIndex : layer.__drawIndex;
                 var useTimer = !paintAll && layer.incremental && Date.now;
                 var startTime = useTimer && Date.now();
@@ -42155,13 +42189,21 @@
               return;
             }
 
+            var zlevel = seriesModel.get('zlevel');
+            var z = seriesModel.get('z');
             symbol = new Symbol(data, dataIndex);
             symbol.x = x;
             symbol.y = y;
-            symbol.setZ(seriesModel.get('zlevel'), seriesModel.get('z')); // ensure label text of the temporal symbol is on the top of line and area polygon
+            symbol.setZ(zlevel, z); // ensure label text of the temporary symbol is in front of line and area polygon
 
             var symbolLabel = symbol.getSymbolPath().getTextContent();
-            symbolLabel && (symbolLabel.z2 = this._polyline.z2 + 1);
+
+            if (symbolLabel) {
+              symbolLabel.zlevel = zlevel;
+              symbolLabel.z = z;
+              symbolLabel.z2 = this._polyline.z2 + 1;
+            }
+
             symbol.__temp = true;
             data.setItemGraphicEl(dataIndex, symbol); // Stop scale animation
 
@@ -53906,12 +53948,13 @@
 
     registerInternalOptionCreator('dataZoom', function (ecModel) {
       var toolboxModel = ecModel.getComponent('toolbox', 0);
+      var featureDataZoomPath = ['feature', 'dataZoom'];
 
-      if (!toolboxModel) {
+      if (!toolboxModel || toolboxModel.get(featureDataZoomPath) == null) {
         return;
       }
 
-      var dzFeatureModel = toolboxModel.getModel(['feature', 'dataZoom']);
+      var dzFeatureModel = toolboxModel.getModel(featureDataZoomPath);
       var dzOptions = [];
       var finder = makeAxisFinder(dzFeatureModel);
       var finderResult = parseFinder(ecModel, finder);
