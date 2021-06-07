@@ -302,7 +302,7 @@ use(DataZoomInsideComponent);
 // });
 use(DataZoomSliderComponent);
 
-// `dataZoom` component including both `visualMapContinuous` and `visualMapPiecewise`.
+// `visualMap` component including both `visualMapContinuous` and `visualMapPiecewise`.
 use(VisualMapComponent);
 
 // `visualMap` component providing continuous bar, for example:

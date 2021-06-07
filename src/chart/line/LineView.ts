@@ -29,7 +29,7 @@ import {ECPolyline, ECPolygon} from './poly';
 import ChartView from '../../view/Chart';
 import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
 import {createGridClipPath, createPolarClipPath} from '../helper/createClipPathFromCoordSys';
-import LineSeriesModel, { LineSeriesOption } from './LineSeries';
+import LineSeriesModel, { LineEndLabelOption, LineSeriesOption } from './LineSeries';
 import type GlobalModel from '../../model/Global';
 import type ExtensionAPI from '../../core/ExtensionAPI';
 // TODO
@@ -48,13 +48,14 @@ import type {
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea, isCoordinateSystemType } from '../../coord/CoordinateSystem';
-import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
+import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis, DISPLAY_STATES, SPECIAL_STATES } from '../../util/states';
 import Model from '../../model/Model';
 import {setLabelStyle, getLabelStatesModels, labelInner} from '../../label/labelStyle';
 import {getDefaultLabel, getDefaultInterpolatedLabel} from '../helper/labelHelper';
 
 import { getECData } from '../../util/innerStore';
 import { createFloat32Array } from '../../util/vendor';
+import { convertToColorString } from '../../util/format';
 
 type PolarArea = ReturnType<Polar['getArea']>;
 type Cartesian2DArea = ReturnType<Cartesian2D['getArea']>;
@@ -238,11 +239,11 @@ function getVisualGradient(
         coord?: number
         color: ColorString
     }
-    // dataToCoor mapping may not be linear, but must be monotonic.
+    // dataToCoord mapping may not be linear, but must be monotonic.
     const colorStops: ColorStop[] = zrUtil.map(visualMeta.stops, function (stop) {
         return {
             offset: 0,
-            coord: axis.toGlobalCoord(axis.dataToCoord(stop.value)),
+            coord: axis.toGlobalCoord(axis.dataToCoord(stop.value, true)),
             color: stop.color
         };
     });
@@ -411,6 +412,20 @@ function getIndexRange(points: ArrayLike<number>, xOrY: number, dim: 'x' | 'y') 
     };
 }
 
+function anyStateShowEndLabel(
+    seriesModel: LineSeriesModel
+) {
+    if (seriesModel.get(['endLabel', 'show'])) {
+        return true;
+    }
+    for (let i = 0; i < SPECIAL_STATES.length; i++) {
+        if (seriesModel.get([SPECIAL_STATES[i], 'endLabel', 'show'])) {
+            return true;
+        }
+    }
+    return false;
+}
+
 
 interface EndLabelAnimationRecord {
     lastFrameIndex: number
@@ -426,13 +441,12 @@ function createLineClipPath(
 ) {
     if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
         const endLabelModel = seriesModel.getModel('endLabel');
-        const showEndLabel = endLabelModel.get('show');
         const valueAnimation = endLabelModel.get('valueAnimation');
         const data = seriesModel.getData();
 
         const labelAnimationRecord: EndLabelAnimationRecord = { lastFrameIndex: 0 };
 
-        const during = showEndLabel
+        const during = anyStateShowEndLabel(seriesModel)
             ? (percent: number, clipRect: graphic.Rect) => {
                 lineView._endLabelOnDuring(
                     percent,
@@ -609,6 +623,8 @@ class LineView extends ChartView {
             }
         }
         this._clipShapeForSymbol = clipShapeForSymbol;
+        const visualColor = getVisualGradient(data, coordSys)
+            || data.getVisual('style')[data.getVisual('drawType')];
         // Initialization animation or coordinate system changed
         if (
             !(polyline && prevCoordSys.type === coordSys.type && step === this._step)
@@ -646,7 +662,7 @@ class LineView extends ChartView {
 
             // NOTE: Must update _endLabel before setClipPath.
             if (!isCoordSysPolar) {
-                this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D);
+                this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D, convertToColorString(visualColor));
             }
 
             lineGroup.setClipPath(
@@ -668,7 +684,7 @@ class LineView extends ChartView {
 
             // NOTE: Must update _endLabel before setClipPath.
             if (!isCoordSysPolar) {
-                this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D);
+                this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D, convertToColorString(visualColor));
             }
 
             // Update clipPath
@@ -718,8 +734,6 @@ class LineView extends ChartView {
             }
         }
 
-        const visualColor = getVisualGradient(data, coordSys)
-            || data.getVisual('style')[data.getVisual('drawType')];
         const focus = seriesModel.get(['emphasis', 'focus']);
         const blurScope = seriesModel.get(['emphasis', 'blurScope']);
 
@@ -737,7 +751,7 @@ class LineView extends ChartView {
 
         if (polyline.style.lineWidth > 0 && seriesModel.get(['emphasis', 'lineStyle', 'width']) === 'bolder') {
             const emphasisLineStyle = polyline.getState('emphasis').style;
-            emphasisLineStyle.lineWidth = polyline.style.lineWidth + 1;
+            emphasisLineStyle.lineWidth = +polyline.style.lineWidth + 1;
         }
 
         // Needs seriesIndex for focus
@@ -832,13 +846,21 @@ class LineView extends ChartView {
                 if (this._clipShapeForSymbol && !this._clipShapeForSymbol.contain(x, y)) {
                     return;
                 }
+                const zlevel = seriesModel.get('zlevel');
+                const z = seriesModel.get('z');
                 symbol = new SymbolClz(data, dataIndex);
                 symbol.x = x;
                 symbol.y = y;
-                symbol.setZ(
-                    seriesModel.get('zlevel'),
-                    seriesModel.get('z')
-                );
+                symbol.setZ(zlevel, z);
+
+                // ensure label text of the temporary symbol is in front of line and area polygon
+                const symbolLabel = symbol.getSymbolPath().getTextContent();
+                if (symbolLabel) {
+                    symbolLabel.zlevel = zlevel;
+                    symbolLabel.z = z;
+                    symbolLabel.z2 = this._polyline.z2 + 1;
+                }
+
                 (symbol as SymbolExtended).__temp = true;
                 data.setItemGraphicEl(dataIndex, symbol);
 
@@ -974,31 +996,33 @@ class LineView extends ChartView {
                 let start;
                 let end;
                 let current;
-                if (isCoordSysPolar) {
-                    const polarClip = clipShape as PolarArea;
-                    const coord = (coordSys as Polar).pointToCoord(point);
-                    if (isHorizontalOrRadial) {
-                        start = polarClip.startAngle;
-                        end = polarClip.endAngle;
-                        current = -coord[1] / 180 * Math.PI;
+                if (clipShape) {
+                    if (isCoordSysPolar) {
+                        const polarClip = clipShape as PolarArea;
+                        const coord = (coordSys as Polar).pointToCoord(point);
+                        if (isHorizontalOrRadial) {
+                            start = polarClip.startAngle;
+                            end = polarClip.endAngle;
+                            current = -coord[1] / 180 * Math.PI;
+                        }
+                        else {
+                            start = polarClip.r0;
+                            end = polarClip.r;
+                            current = coord[0];
+                        }
                     }
                     else {
-                        start = polarClip.r0;
-                        end = polarClip.r;
-                        current = coord[0];
-                    }
-                }
-                else {
-                    const gridClip = clipShape as Cartesian2DArea;
-                    if (isHorizontalOrRadial) {
-                        start = gridClip.x;
-                        end = gridClip.x + gridClip.width;
-                        current = symbol.x;
-                    }
-                    else {
-                        start = gridClip.y + gridClip.height;
-                        end = gridClip.y;
-                        current = symbol.y;
+                        const gridClip = clipShape as Cartesian2DArea;
+                        if (isHorizontalOrRadial) {
+                            start = gridClip.x;
+                            end = gridClip.x + gridClip.width;
+                            current = symbol.x;
+                        }
+                        else {
+                            start = gridClip.y + gridClip.height;
+                            end = gridClip.y;
+                            current = symbol.y;
+                        }
                     }
                 }
                 let ratio = end === start ? 0 : (current - start) / (end - start);
@@ -1039,11 +1063,12 @@ class LineView extends ChartView {
 
     _initOrUpdateEndLabel(
         seriesModel: LineSeriesModel,
-        coordSys: Cartesian2D
+        coordSys: Cartesian2D,
+        inheritColor: string
     ) {
         const endLabelModel = seriesModel.getModel('endLabel');
 
-        if (endLabelModel.get('show')) {
+        if (anyStateShowEndLabel(seriesModel)) {
             const data = seriesModel.getData();
             const polyline = this._polyline;
             let endLabel = this._endLabel;
@@ -1063,6 +1088,7 @@ class LineView extends ChartView {
                     polyline,
                     getLabelStatesModels(seriesModel, 'endLabel'),
                     {
+                        inheritColor,
                         labelFetcher: seriesModel,
                         labelDataIndex: dataIndex,
                         defaultText(dataIndex, opt, interpolatedValue) {

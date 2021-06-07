@@ -22,7 +22,7 @@ under the License.
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="lib/esl.js"></script>
+    <script src="lib/simpleRequire.js"></script>
     <script src="lib/config.js"></script>
     <script src="lib/facePrint.js"></script>
     <script src="lib/testHelper.js"></script>
@@ -61,12 +61,7 @@ under the License.
 
 
     <script>
-        require([
-            'echarts'
-            // 'echarts/chart/bar',
-            // 'echarts/component/polar',
-            // 'zrender/vml/vml'
-        ], function (echarts) {
+        require(['echarts'], function (echarts) {
             var base = +new Date(2016, 9, 3);
             var oneDay = 24 * 3600 * 1000;
             var valueBase = Math.random() * 300;
@@ -248,12 +243,7 @@ under the License.
     </script>
 
     <script>
-        require([
-            'echarts'
-            // 'echarts/chart/bar',
-            // 'echarts/component/polar',
-            // 'zrender/vml/vml'
-        ], function (echarts) {
+        require(['echarts'], function (echarts) {
             var base = +new Date(2016, 9, 3);
             var oneDay = 24 * 3600 * 1000;
             var valueBase = Math.random() * 300;

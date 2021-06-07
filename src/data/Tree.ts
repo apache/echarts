@@ -259,8 +259,9 @@ export class TreeNode {
 
     /**
      * Get item visual
+     * FIXME: make return type better
      */
-    getVisual(key: string): any {
+    getVisual(key: string): unknown {
         return this.hostTree.data.getItemVisual(this.dataIndex, key as any);
     }
 

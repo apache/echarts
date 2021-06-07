@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <link rel="stylesheet" href="lib/reset.css">
         <style>
@@ -64,13 +64,7 @@ under the License.
         <script>
 
 
-            require([
-                'echarts'
-                // 'zrender/core/util',
-                // 'echarts/chart/scatter',
-                // 'echarts/component/grid',
-                // 'echarts/component/visualMap'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
                 var zrUtil = echarts.util;
                 makeChart({
                     show: true,

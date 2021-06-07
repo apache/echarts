@@ -22,7 +22,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/facePrint.js"></script>
     </head>
@@ -36,7 +36,7 @@ under the License.
                 height: 1000px;
                 margin-bottom: 30px;
             }
-            #main2 {
+            #main2, #main3 {
                 width: 100%;
                 height: 300px;
                 margin-bottom: 30px;
@@ -109,7 +109,7 @@ under the License.
                     btn.onclick = (function (cfg) {
                         return function () {
                             setLocalStorage(cfg.text);
-                            location.reload();
+                            typeof __VRT_RELOAD__ !== 'undefined' ? __VRT_RELOAD__() : location.reload();
                         };
                     })(config);
                     fmtBtnBox.appendChild(btn);
@@ -128,17 +128,12 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
+        <div id="main3"></div>
+
         <script>
 
             require([
-                'echarts',
-                // 'echarts/chart/line',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/dataZoomInside',
-                // 'zrender/svg/svg'
+                'echarts'
             ], function (echarts) {
 
                 var xData = [];
@@ -290,7 +285,8 @@ under the License.
                                             show: true,
                                             formatter: _endLabelFormatter,
                                             fontSize: 20,
-                                            distance: 10
+                                            distance: 10,
+                                            color: 'inherit'
                                         },
                                         emphasis: {
                                             endLabel: {
@@ -376,7 +372,8 @@ under the License.
                             fontSize: 14,
                             distance: 50,
                             offset: [0, 20],
-                            rotate: 5
+                            rotate: 5,
+                            color: 'auto'
                         },
                         emphasis: {
                             endLabel: {
@@ -388,6 +385,48 @@ under the License.
                     }],
                     animationDuration: 10000,
                     animationDurationUpdate: 500
+                };
+                chart.setOption(option);
+
+            })
+
+        </script>
+
+        <script>
+
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main3'));
+                var option = {
+                    title: [{
+                        text: 'Emphasis on the data at "b" and endLabel should be displayed',
+                        textAlign: 'center',
+                        left: '50%',
+                        top: 0
+                    }],
+                    xAxis: [{
+                        data: ['a', 'b']
+                    }],
+                    yAxis: [{
+                    }],
+                    series: [{
+                        type: 'line',
+                        data: [1, 2],
+                        endLabel: {
+                            // show: true,
+                            formatter: '{a}: {c}'
+                        },
+                        emphasis: {
+                            endLabel: {
+                                show: true,
+                                color: 'red'
+                            }
+                        }
+                    }],
+                    animationDuration: 0
                 };
                 chart.setOption(option);
 

@@ -237,6 +237,13 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     }
 
     /**
+     * @public
+     */
+    getItemSymbol(): string {
+        return null;
+    }
+
+    /**
      * @protected
      * @return {Array.<number>} An array of series indices.
      */
@@ -483,6 +490,8 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
             const symbolSizeExists = (controller.inRange || {}).symbolSize
                 || (controller.outOfRange || {}).symbolSize;
             const inactiveColor = this.get('inactiveColor');
+            const itemSymbol = this.getItemSymbol();
+            const defaultSymbol = itemSymbol || 'roundRect';
 
             each(this.stateList, function (state: VisualState) {
 
@@ -501,7 +510,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
                 if (visuals.symbol == null) {
                     visuals.symbol = symbolExists
                         && zrUtil.clone(symbolExists)
-                        || (isCategory ? 'roundRect' : ['roundRect']);
+                        || (isCategory ? defaultSymbol : [defaultSymbol]);
                 }
                 if (visuals.symbolSize == null) {
                     visuals.symbolSize = symbolSizeExists
@@ -509,9 +518,9 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
                         || (isCategory ? itemSize[0] : [itemSize[0], itemSize[0]]);
                 }
 
-                // Filter square and none.
+                // Filter none
                 visuals.symbol = mapVisual(visuals.symbol, function (symbol) {
-                    return (symbol === 'none' || symbol === 'square') ? 'roundRect' : symbol;
+                    return symbol === 'none' ? defaultSymbol : symbol;
                 });
 
                 // Normalize symbolSize

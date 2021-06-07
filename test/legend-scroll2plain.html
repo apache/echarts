@@ -24,7 +24,7 @@ under the License.
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="lib/esl.js"></script>
+    <script src="lib/simpleRequire.js"></script>
     <script src="lib/config.js"></script>
     <script src="lib/jquery.min.js"></script>
     <script src="lib/facePrint.js"></script>
@@ -53,7 +53,6 @@ under the License.
     <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
-            // $.getJSON('./data/nutrients.json', function (data) {});
 
             option = {
                 title: {
@@ -135,7 +134,7 @@ under the License.
                 // buttons: [{text: 'btn-txt', onclick: function () {}}],
                 // recordCanvas: true,
             });
-            
+
             setTimeout(function () {
                 option.legend.type = 'plain';
                 chart.setOption(option);
@@ -208,7 +207,7 @@ under the License.
                         data: [null, null, null, null, null, null, null]
                     }
                 ]
-                
+
             };
             var chart1 = testHelper.create(echarts, 'main1', {
                 title: [

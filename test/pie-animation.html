@@ -21,7 +21,7 @@ under the License.
 
 <head>
     <meta charset="utf-8">
-    <script src="lib/esl.js"></script>
+    <script src="lib/simpleRequire.js"></script>
     <script src="lib/config.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
@@ -32,7 +32,8 @@ under the License.
         body,
         #main1,
         #main2,
-        #main3 {
+        #main3,
+        #main4 {
             width: 100%;
             height: 250px;
             margin: 0;
@@ -61,6 +62,11 @@ under the License.
     <div class="test-title">Should display labels on emphasis if no animation</div>
     <div id="main3"></div>
 
+
+    <div class="test-title">Should animate correctly when switching between NaN value</div>
+    <button id="btn3">Go</button>
+    <div id="main4"></div>
+
     <script>
 
         require([
@@ -68,13 +74,7 @@ under the License.
         ], function (echarts) {
 
 
-            var chart = echarts.init(
-                document.getElementById('main1'),
-                null,
-                {
-                    renderer: 'svg'
-                }
-            );
+            var chart = echarts.init(document.getElementById('main1'));
             var data = [
                 {"name": "a1", "value": 92386},
                 {"name": "b1", "value": 90611},
@@ -123,13 +123,7 @@ under the License.
         ], function (echarts) {
 
 
-            var chart = echarts.init(
-                document.getElementById('main2'),
-                null,
-                {
-                    renderer: 'svg'
-                }
-            );
+            var chart = echarts.init(document.getElementById('main2'));
             var data = [
                 {"name": "a1", "value": 92386},
                 {"name": "b1", "value": 90611},
@@ -176,13 +170,7 @@ under the License.
         require([
             'echarts'
         ], function (echarts) {
-            var chart = echarts.init(
-                document.getElementById('main3'),
-                null,
-                {
-                    renderer: 'svg'
-                }
-            );
+            var chart = echarts.init(document.getElementById('main3'));
 
             var option = {
                 "series": [
@@ -206,6 +194,50 @@ under the License.
                 ]
             };
             chart.setOption(option);
+        });
+
+    </script>
+
+    <script>
+
+        require([
+            'echarts'
+        ], function (echarts) {
+            var chart = echarts.init(
+                document.getElementById('main4'),
+                null
+            );
+
+            var option = {
+                "series": [
+                    {
+                        name: '访问来源',
+                        type: 'pie',
+                        selectedMode: 'single',
+                        data:[
+                            {value:335, name:'直接访问'},
+                            {value:310, name:'邮件营销'},
+                            {value:234, name:'联盟广告'},
+                            {value:1548, name:'搜索引擎'}
+                        ],
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                ]
+            };
+            chart.setOption(option);
+
+            document.getElementById('btn3').addEventListener('click', function () {
+                option.series[0].data[0].value =
+                    option.series[0].data[0].value === '-'
+                    ? 335 : '-';
+                chart.setOption(option);
+            });
         });
 
     </script>

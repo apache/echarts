@@ -19,7 +19,7 @@
 
 import { EChartsType } from '../../../../src/echarts';
 import { createChart, removeChart, getECModel } from '../../core/utHelper';
-import { EChartsFullOption } from '../../../../src/option';
+import { EChartsOption } from '../../../../src/export/option';
 import { retrieveRawValue } from '../../../../src/data/helper/dataProvider';
 
 
@@ -59,7 +59,7 @@ describe('dataTransform', function () {
     }
 
     it('forbid_seriesLayoutBy_row', function () {
-        const option: EChartsFullOption = {
+        const option: EChartsOption = {
             dataset: [{
                 source: makeDatasetSourceDetection(),
                 // This config should cause error thrown.
@@ -78,7 +78,7 @@ describe('dataTransform', function () {
     });
 
     it('seriesLayoutBy_changed_no_transform', function () {
-        const option: EChartsFullOption = {
+        const option: EChartsOption = {
             dataset: {
                 source: makeDatasetSourceDetection()
             },
@@ -104,7 +104,7 @@ describe('dataTransform', function () {
         ]
     }].forEach((dataset1, itIdx) => {
         it(`seriesLayoutBy_changed_transform_detection_${itIdx}`, function () {
-            const option: EChartsFullOption = {
+            const option: EChartsOption = {
                 dataset: [{
                     source: makeDatasetSourceDetection()
                 }, dataset1],
@@ -136,7 +136,7 @@ describe('dataTransform', function () {
     }].forEach((dataset1, itIdx) => {
         it(`seriesLayoutBy_changed_transform_non_detection_${itIdx}`, function () {
             const sourceWrap = makeDatasetSourceNonDetectionByRow();
-            const option: EChartsFullOption = {
+            const option: EChartsOption = {
                 dataset: [{
                     dimensions: sourceWrap.dimensions,
                     source: sourceWrap.source
@@ -163,7 +163,7 @@ describe('dataTransform', function () {
         ]
     }].forEach((dataset1, itIdx) => {
         it(`inherit_detected_dimensions_${itIdx}`, function () {
-            const option: EChartsFullOption = {
+            const option: EChartsOption = {
                 dataset: [{
                     source: makeDatasetSourceDetection()
                 }, dataset1],

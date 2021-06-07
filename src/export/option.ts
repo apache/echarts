@@ -34,21 +34,30 @@ import type {ParallelAxisOption as ParallelAxisComponentOption} from '../coord/p
 import type {ParallelCoordinateSystemOption as ParallelComponentOption} from '../coord/parallel/ParallelModel';
 import type {CalendarOption as CalendarComponentOption} from '../coord/calendar/CalendarModel';
 import type {ToolboxOption} from '../component/toolbox/ToolboxModel';
-import type {TooltipOption as TooltipComponentOption} from '../component/tooltip/TooltipModel';
+import type {
+    TooltipOption as TooltipComponentOption,
+    TopLevelFormatterParams
+} from '../component/tooltip/TooltipModel';
 import type {AxisPointerOption as AxisPointerComponentOption} from '../component/axisPointer/AxisPointerModel';
 import type {BrushOption as BrushComponentOption} from '../component/brush/BrushModel';
 import type {TitleOption as TitleComponentOption} from '../component/title/install';
 import type {TimelineOption as TimelineComponentOption} from '../component/timeline/TimelineModel';
 import type {SliderTimelineOption as TimelineSliderComponentOption} from '../component/timeline/SliderTimelineModel';
 
-import type {LegendOption} from '../component/legend/LegendModel';
-import type {ScrollableLegendOption} from '../component/legend/ScrollableLegendModel';
+import type {LegendOption as PlainLegendComponentOption} from '../component/legend/LegendModel';
+import type {
+    ScrollableLegendOption as ScrollableLegendComponentOption
+} from '../component/legend/ScrollableLegendModel';
 
-import type {SliderDataZoomOption} from '../component/dataZoom/SliderZoomModel';
-import type {InsideDataZoomOption} from '../component/dataZoom/InsideZoomModel';
+import type {SliderDataZoomOption as SliderDataZoomComponentOption} from '../component/dataZoom/SliderZoomModel';
+import type {InsideDataZoomOption as InsideDataZoomComponentOption} from '../component/dataZoom/InsideZoomModel';
 
-import type {ContinousVisualMapOption} from '../component/visualMap/ContinuousModel';
-import type {PiecewiseVisualMapOption} from '../component/visualMap/PiecewiseModel';
+import type {
+    ContinousVisualMapOption as ContinousVisualMapComponentOption
+} from '../component/visualMap/ContinuousModel';
+import type {
+    PiecewiseVisualMapOption as PiecewiseVisualMapComponentOption
+} from '../component/visualMap/PiecewiseModel';
 
 import type {MarkLineOption as MarkLineComponentOption} from '../component/marker/MarkLineModel';
 import type {MarkPointOption as MarkPointComponentOption} from '../component/marker/MarkPointModel';
@@ -91,7 +100,21 @@ import type {ToolboxSaveAsImageFeatureOption} from '../component/toolbox/feature
 import type {ToolboxFeatureOption} from '../component/toolbox/featureManager';
 
 
-import type { ECBasicOption, SeriesTooltipOption, AriaOption as AriaComponentOption } from '../util/types';
+import type {
+    ECBasicOption,
+    SeriesTooltipOption,
+    AriaOption as AriaComponentOption,
+    TooltipFormatterCallback,
+    LabelFormatterCallback,
+    CallbackDataParams,
+    AnimationDurationCallback,
+    AnimationDelayCallback,
+    AnimationDelayCallbackParam,
+    LabelLayoutOptionCallbackParams,
+    LabelLayoutOptionCallback,
+    TooltipPositionCallback,
+    TooltipPositionCallbackParams
+} from '../util/types';
 
 interface ToolboxComponentOption extends ToolboxOption {
     feature?: {
@@ -108,9 +131,12 @@ interface ToolboxComponentOption extends ToolboxOption {
     }
 }
 
-export type DataZoomComponentOption = SliderDataZoomOption | InsideDataZoomOption;
-export type VisualMapComponentOption = ContinousVisualMapOption | PiecewiseVisualMapOption;
-export type LegendComponentOption = LegendOption | ScrollableLegendOption;
+export { SliderDataZoomComponentOption, InsideDataZoomComponentOption };
+export type DataZoomComponentOption = SliderDataZoomComponentOption | InsideDataZoomComponentOption;
+export { ContinousVisualMapComponentOption, PiecewiseVisualMapComponentOption };
+export type VisualMapComponentOption = ContinousVisualMapComponentOption | PiecewiseVisualMapComponentOption;
+export { PlainLegendComponentOption, ScrollableLegendComponentOption };
+export type LegendComponentOption = PlainLegendComponentOption | ScrollableLegendComponentOption;
 export {
     GridComponentOption,
     PolarComponentOption,
@@ -226,3 +252,17 @@ export interface EChartsOption extends ECBasicOption {
     options?: EChartsOption[];
     baseOption?: EChartsOption;
 }
+
+export {
+    AnimationDurationCallback,
+    AnimationDelayCallback,
+    AnimationDelayCallbackParam as AnimationDelayCallbackParams,
+    LabelFormatterCallback,
+    CallbackDataParams as DefaultLabelFormatterCallbackParams,
+    LabelLayoutOptionCallbackParams,
+    LabelLayoutOptionCallback,
+    TooltipFormatterCallback as TooltipComponentFormatterCallback,
+    TopLevelFormatterParams as TooltipComponentFormatterCallbackParams,
+    TooltipPositionCallback as TooltipComponentPositionCallback,
+    TooltipPositionCallbackParams as TooltipComponentPositionCallbackParams
+};

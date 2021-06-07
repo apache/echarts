@@ -34,7 +34,7 @@ import SeriesModel from '../model/Series';
 import { createHashMap, HashMap } from 'zrender/src/core/util';
 import { TaskPlanCallbackReturn, TaskProgressParams } from '../core/task';
 import List, {ListDimensionType} from '../data/List';
-import { Dictionary, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
+import { Dictionary, ElementEventName, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { TooltipMarker } from './format';
 import { AnimationEasing } from 'zrender/src/animation/easing';
@@ -46,6 +46,7 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
+import Model from '../model/Model';
 
 
 
@@ -80,6 +81,8 @@ export type ZRRectLike = RectLike;
 
 export type ZRStyleProps = PathStyleProps | ImageStyleProps | TSpanStyleProps | TextStyleProps;
 
+export type ZRElementEventName = ElementEventName | 'globalout';
+
 // ComponentFullType can be:
 //     'xxx.yyy': means ComponentMainType.ComponentSubType.
 //     'xxx': means ComponentMainType.
@@ -99,10 +102,6 @@ export interface ComponentTypeInfo {
 }
 
 export interface ECElement extends Element {
-    tooltip?: CommonTooltipOption<unknown> & {
-        content?: string;
-        formatterParams?: unknown;
-    };
     highDownSilentOnTouch?: boolean;
     onHoverStateChange?: (toState: DisplayState) => void;
 
@@ -128,13 +127,14 @@ export interface DataHost {
     getData(dataType?: SeriesDataType): List;
 }
 
-export interface DataModel extends DataHost, DataFormatMixin {}
+export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {}
     // Pick<DataHost, 'getData'>,
     // Pick<DataFormatMixin, 'getDataParams' | 'formatTooltip'> {}
 
 interface PayloadItem {
     excludeSeriesId?: OptionId | OptionId[];
     animation?: PayloadAnimationPart
+    // TODO use unknown
     [other: string]: any;
 }
 
@@ -181,25 +181,34 @@ export interface ViewRootGroup extends Group {
     };
 }
 
+export interface ECElementEvent extends
+    ECEventData,
+    CallbackDataParams {
+
+    type: ZRElementEventName;
+    event?: ElementEvent;
+
+}
 /**
  * The echarts event type to user.
  * Also known as packedEvent.
  */
-export interface ECEvent extends ECEventData {
+export interface ECActionEvent extends ECEventData {
     // event type
     type: string;
     componentType?: string;
     componentIndex?: number;
     seriesIndex?: number;
     escapeConnect?: boolean;
-    event?: ElementEvent;
     batch?: ECEventData;
 }
 export interface ECEventData {
+    // TODO use unknown
     [key: string]: any;
 }
 
-export interface EventQueryItem{
+export interface EventQueryItem {
+    // TODO use unknown
     [key: string]: any;
 }
 export interface NormalizedEventQuery {
@@ -823,7 +832,7 @@ export interface ShadowOptionMixin {
 }
 
 export interface BorderOptionMixin {
-    borderColor?: string
+    borderColor?: ZRColor
     borderWidth?: number
     borderType?: ZRLineType
     borderCap?: CanvasLineCap
@@ -913,7 +922,7 @@ export interface RoamOptionMixin {
 export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
 export type SymbolCallback<T> = (rawValue: any, params: T) => string;
 export type SymbolRotateCallback<T> = (rawValue: any, params: T) => number;
-// export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => (string | number)[];
+export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => (string | number)[];
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -932,7 +941,7 @@ export interface SymbolOptionMixin<T = unknown> {
 
     symbolKeepAspect?: boolean
 
-    symbolOffset?: (string | number)[]
+    symbolOffset?: (string | number)[] | (unknown extends T ? never : SymbolOffsetCallback<T>)
 }
 
 /**
@@ -1205,7 +1214,7 @@ export interface LabelLayoutOption {
 export type LabelLayoutOptionCallback = (params: LabelLayoutOptionCallbackParams) => LabelLayoutOption;
 
 
-interface TooltipFormatterCallback<T> {
+export interface TooltipFormatterCallback<T> {
     /**
      * For sync callback
      * params will be an array on axis trigger.
@@ -1223,16 +1232,19 @@ type TooltipBuiltinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom';
 type TooltipBoxLayoutOption = Pick<
     BoxLayoutOptionMixin, 'top' | 'left' | 'right' | 'bottom'
 >;
+
+export type TooltipPositionCallbackParams = CallbackDataParams | CallbackDataParams[];
+
 /**
  * Position relative to the hoverred element. Only available when trigger is item.
  */
-interface PositionCallback {
+export interface TooltipPositionCallback {
     (
         point: [number, number],
         /**
          * params will be an array on axis trigger.
          */
-        params: CallbackDataParams | CallbackDataParams[],
+        params: TooltipPositionCallbackParams,
         /**
          * Will be HTMLDivElement when renderMode is html
          * Otherwise it's graphic.Text
@@ -1252,7 +1264,7 @@ interface PositionCallback {
              */
             viewSize: [number, number]
         }
-    ): number[] | string[] | TooltipBuiltinPosition | TooltipBoxLayoutOption
+    ): Array<number | string> | TooltipBuiltinPosition | TooltipBoxLayoutOption
 }
 /**
  * Common tooltip option
@@ -1279,7 +1291,7 @@ export interface CommonTooltipOption<FormatterParams> {
      *
      * Support to be a callback
      */
-    position?: (number | string)[] | TooltipBuiltinPosition | PositionCallback | TooltipBoxLayoutOption
+    position?: (number | string)[] | TooltipBuiltinPosition | TooltipPositionCallback | TooltipBoxLayoutOption
 
     confine?: boolean
 
@@ -1336,12 +1348,31 @@ export interface CommonTooltipOption<FormatterParams> {
     }
 }
 
+export type ComponentItemTooltipOption<T> = CommonTooltipOption<T> & {
+    // Default content HTML.
+    content?: string;
+    formatterParams?: ComponentItemTooltipLabelFormatterParams;
+};
+export type ComponentItemTooltipLabelFormatterParams = {
+    componentType: string
+    name: string
+    // properies key array like ['name']
+    $vars: string[]
+} & {
+    // Other properties
+    [key in string]: unknown
+};
+
+
 /**
  * Tooltip option configured on each series
  */
 export type SeriesTooltipOption = CommonTooltipOption<CallbackDataParams> & {
     trigger?: 'item' | 'axis' | boolean | 'none'
 };
+
+
+
 
 type LabelFormatterParams = {
     value: ScaleDataValue
@@ -1454,7 +1485,7 @@ export type BlurScope = 'coordinateSystem' | 'series' | 'global';
  * can be array of data indices.
  * Or may be an dictionary if have different types of data like in graph.
  */
-export type InnerFocus = string | ArrayLike<number> | Dictionary<ArrayLike<number>>;
+export type InnerFocus = DefaultEmphasisFocus | ArrayLike<number> | Dictionary<ArrayLike<number>>;
 
 export interface DefaultExtraStateOpts {
     emphasis: any

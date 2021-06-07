@@ -22,6 +22,7 @@ import GlobalModel from '../model/Global';
 import SeriesModel from '../model/Series';
 import { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../util/types';
 import List from '../data/List';
+import { addSafe } from '../util/number';
 
 interface StackInfo {
     stackedDimension: DimensionName
@@ -125,7 +126,10 @@ function calculateStack(stackInfoList: StackInfo[]) {
                     if ((sum >= 0 && val > 0) // Positive stack
                         || (sum <= 0 && val < 0) // Negative stack
                     ) {
-                        sum += val;
+                        // The sum should be as less as possible to be effected
+                        // by floating arithmetic problem. A wrong result probably
+                        // filtered incorrectly by axis min/max.
+                        sum = addSafe(sum, val);
                         stackedOver = val;
                         break;
                     }

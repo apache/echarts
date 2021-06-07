@@ -591,7 +591,7 @@ export const largeLayout: StageHandler = {
                     valuePair[valueDimIdx] = data.get(valueDim, dataIndex);
                     valuePair[1 - valueDimIdx] = data.get(baseDim, dataIndex);
 
-                    coord = cartesian.dataToPoint(valuePair, null, coord);
+                    coord = cartesian.dataToPoint(valuePair, null);
                     // Data index might not be in order, depends on `progressiveChunkMode`.
                     largeBackgroundPoints[pointsOffset] =
                         valueAxisHorizontal ? coordLayout.x + coordLayout.width : coord[0];

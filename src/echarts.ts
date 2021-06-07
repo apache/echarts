@@ -38,4 +38,4 @@ export default {
         // @ts-ignore
         return init.apply(null, arguments);
     }
-}
+};

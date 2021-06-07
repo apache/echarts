@@ -82,7 +82,7 @@ export function makeValueReadable(
     valueType: DimensionType,
     useUTC: boolean
 ): string {
-    const USER_READABLE_DEFUALT_TIME_PATTERN = 'yyyy-MM-dd hh:mm:ss';
+    const USER_READABLE_DEFUALT_TIME_PATTERN = '{yyyy}-{MM}-{dd} {hh}:{mm}:{ss}';
 
     function stringToUserReadable(str: string): string {
         return (str && zrUtil.trim(str)) ? str : '-';

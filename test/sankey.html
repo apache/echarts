@@ -22,7 +22,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
     </head>
@@ -37,51 +37,43 @@ under the License.
         <div id="main"><div>
         <script>
             require([
-                'echarts'
-                // 'echarts/chart/sankey',
-                // 'echarts/component/tooltip'
-                ], function (echarts) {
+                'echarts',
+                './data/energy.json'
+            ], function (echarts, data) {
 
-                    var chart = echarts.init(document.getElementById('main'), null, {
+                var chart = echarts.init(document.getElementById('main'));
 
-                    });
+                window.onresize = function () {
+                    chart.resize();
+                };
 
-                    window.onresize = function () {
-                        chart.resize();
-                    };
-
-                    chart.on('click', function (params) {
-                        console.log(params, params.data);
-                    });
-
-                    $.getJSON('./data/energy.json')
-                    .done(function(data) {
-
-                        data.nodes[0].itemStyle = {
-                            normal: {
-                                color: 'red'
-                            }
-                        };
-                        chart.setOption({
-                            tooltip: {
-                                trigger: 'item',
-                                triggerOn: 'mousemove'
-                            },
-                            series: [
-                                {
-                                    type: 'sankey',
-                                    focusNodeAdjacency: true,
-                                    data: data.nodes,
-                                    links: data.links,
-                                    lineStyle: {
-                                        color: 'gradient',
-                                        curveness: 0.5
-                                    }
-                                }
-                            ]
-                        });
-                    });
+                chart.on('click', function (params) {
+                    console.log(params, params.data);
                 });
+                data.nodes[0].itemStyle = {
+                    normal: {
+                        color: 'red'
+                    }
+                };
+                chart.setOption({
+                    tooltip: {
+                        trigger: 'item',
+                        triggerOn: 'mousemove'
+                    },
+                    series: [
+                        {
+                            type: 'sankey',
+                            focusNodeAdjacency: true,
+                            data: data.nodes,
+                            links: data.links,
+                            lineStyle: {
+                                color: 'gradient',
+                                curveness: 0.5
+                            }
+                        }
+                    ]
+                });
+            });
         </script>
     </body>
 </html>

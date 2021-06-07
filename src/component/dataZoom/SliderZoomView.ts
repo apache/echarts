@@ -31,7 +31,6 @@ import {
     LayoutOrient, Payload, ZRTextVerticalAlign, ZRTextAlign, ZRElementEvent, ParsedValue
 } from '../../util/types';
 import SliderZoomModel from './SliderZoomModel';
-import ComponentView from '../../view/Component';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import Axis from '../../coord/Axis';
 import SeriesModel from '../../model/Series';
@@ -42,6 +41,7 @@ import { createSymbol, symbolBuildProxies } from '../../util/symbol';
 import { deprecateLog } from '../../util/log';
 import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
+import {createTextStyle} from '../../label/labelStyle';
 
 const Rect = graphic.Rect;
 
@@ -547,7 +547,11 @@ class SliderZoomView extends DataZoomView {
         // Left and right handle to resize
         each([0, 1] as const, function (handleIndex) {
             let iconStr = dataZoomModel.get('handleIcon');
-            if (!symbolBuildProxies[iconStr] && iconStr.indexOf('path://') < 0) {
+            if (
+                !symbolBuildProxies[iconStr]
+                && iconStr.indexOf('path://') < 0
+                && iconStr.indexOf('image://') < 0
+            ) {
                 // Compatitable with the old icon parsers. Which can use a path string without path://
                 iconStr = 'path://' + iconStr;
                 if (__DEV__) {
@@ -595,13 +599,13 @@ class SliderZoomView extends DataZoomView {
                 handleLabels[handleIndex] = new graphic.Text({
                 silent: true,
                 invisible: true,
-                style: {
+                style: createTextStyle(textStyleModel, {
                     x: 0, y: 0, text: '',
                     verticalAlign: 'middle',
                     align: 'center',
                     fill: textStyleModel.getTextColor(),
                     font: textStyleModel.getFont()
-                },
+                }),
                 z2: 10
             }));
 

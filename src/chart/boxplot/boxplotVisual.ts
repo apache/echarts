@@ -22,8 +22,5 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import BoxplotSeriesModel from './BoxplotSeries';
 
 export default function boxplotVisual(ecModel: GlobalModel, api: ExtensionAPI) {
-    ecModel.eachRawSeriesByType('boxplot', function (seriesModel: BoxplotSeriesModel) {
-        seriesModel.getData().setVisual('legendSymbol', 'roundRect');
-    });
 
 }

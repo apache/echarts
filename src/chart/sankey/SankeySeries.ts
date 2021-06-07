@@ -119,6 +119,7 @@ export interface SankeySeriesOption
     draggable?: boolean
     /**
      * Will be allEdges if true.
+     * @deprecated
      */
     focusNodeAdjacency?: FocusNodeAdjacency
     /**
@@ -259,12 +260,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         }
     }
 
-    optionUpdated() {
-        const option = this.option;
-        if (option.focusNodeAdjacency === true) {
-            option.focusNodeAdjacency = 'allEdges';
-        }
-    }
+    optionUpdated() {}
 
     // Override Series.getDataParams()
     getDataParams(dataIndex: number, dataType: 'node' | 'edge') {
@@ -294,8 +290,6 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
         nodeGap: 8,
         draggable: true,
-
-        focusNodeAdjacency: false,
 
         layoutIterations: 32,
 

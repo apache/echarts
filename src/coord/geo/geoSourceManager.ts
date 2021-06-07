@@ -17,122 +17,133 @@
 * under the License.
 */
 
-import {each, createHashMap, HashMap} from 'zrender/src/core/util';
-import mapDataStorage, { MapRecord } from './mapDataStorage';
-import geoJSONLoader from './geoJSONLoader';
-import geoSVGLoader from './geoSVGLoader';
-import BoundingRect from 'zrender/src/core/BoundingRect';
-import { NameMap } from './geoTypes';
-import Region from './Region';
-import { Dictionary } from 'zrender/src/core/types';
-import Group from 'zrender/src/graphic/Group';
+import { createHashMap } from 'zrender/src/core/util';
+import { GeoSVGResource } from './GeoSVGResource';
+import {
+    GeoJSON,
+    GeoJSONSourceInput,
+    GeoResource,
+    GeoSpecialAreas,
+    NameMap,
+    GeoSVGSourceInput
+} from './geoTypes';
+import { GeoJSONResource } from './GeoJSONResource';
 
 
-interface Loader {
-    load: (mapName: string, mapRecord: MapRecord, nameProperty?: string) => {
-        regions?: Region[];
-        boundingRect?: BoundingRect;
-    };
-    makeGraphic?: (mapName: string, mapRecord: MapRecord, hostKey: string) => Group;
-    removeGraphic?: (mapName: string, mapRecord: MapRecord, hostKey: string) => void;
+type MapInput = GeoJSONMapInput | SVGMapInput;
+interface GeoJSONMapInput {
+    geoJSON: GeoJSONSourceInput;
+    specialAreas: GeoSpecialAreas;
 }
-const loaders = {
-    geoJSON: geoJSONLoader,
-    svg: geoSVGLoader
-} as Dictionary<Loader>;
+interface GeoJSONMapInputCompat extends GeoJSONMapInput {
+    geoJson: GeoJSONSourceInput;
+}
+interface SVGMapInput {
+    svg: GeoSVGSourceInput;
+}
+
+
+const storage = createHashMap<GeoResource>();
+
 
 export default {
 
-    load: function (mapName: string, nameMap: NameMap, nameProperty?: string): {
-        regions: Region[];
-        // Key: mapName
-        regionsMap: HashMap<Region>;
-        // Key: mapName
-        nameCoordMap: HashMap<number[]>;
-        boundingRect: BoundingRect
-    } {
-        const regions = [] as Region[];
-        const regionsMap = createHashMap<Region>();
-        const nameCoordMap = createHashMap<Region['center']>();
-        let boundingRect: BoundingRect;
-        const mapRecords = retrieveMap(mapName);
-
-        each(mapRecords, function (record) {
-            const singleSource = loaders[record.type].load(mapName, record, nameProperty);
-
-            each(singleSource.regions, function (region) {
-                let regionName = region.name;
-
-                // Try use the alias in geoNameMap
-                if (nameMap && nameMap.hasOwnProperty(regionName)) {
-                    region = region.cloneShallow(regionName = nameMap[regionName]);
-                }
-
-                regions.push(region);
-                regionsMap.set(regionName, region);
-                nameCoordMap.set(regionName, region.center);
-            });
-
-            const rect = singleSource.boundingRect;
-            if (rect) {
-                boundingRect
-                    ? boundingRect.union(rect)
-                    : (boundingRect = rect.clone());
-            }
-        });
-
-        return {
-            regions: regions,
-            regionsMap: regionsMap,
-            nameCoordMap: nameCoordMap,
-            // FIXME Always return new ?
-            boundingRect: boundingRect || new BoundingRect(0, 0, 0, 0)
-        };
-    },
-
     /**
-     * @param hostKey For cache.
-     * @return Roots.
+     * Compatible with previous `echarts.registerMap`.
+     *
+     * @usage
+     * ```js
+     *
+     * echarts.registerMap('USA', geoJson, specialAreas);
+     *
+     * echarts.registerMap('USA', {
+     *     geoJson: geoJson,
+     *     specialAreas: {...}
+     * });
+     * echarts.registerMap('USA', {
+     *     geoJSON: geoJson,
+     *     specialAreas: {...}
+     * });
+     *
+     * echarts.registerMap('airport', {
+     *     svg: svg
+     * }
+     * ```
+     *
+     * Note:
+     * Do not support that register multiple geoJSON or SVG
+     * one map name. Because different geoJSON and SVG have
+     * different unit. It's not easy to make sure how those
+     * units are mapping/normalize.
+     * If intending to use multiple geoJSON or SVG, we can
+     * use multiple geo coordinate system.
      */
-    makeGraphic: function (mapName: string, hostKey: string): Group[] {
-        const mapRecords = retrieveMap(mapName);
-        const results = [] as Group[];
-        each(mapRecords, function (record) {
-            const method = loaders[record.type].makeGraphic;
-            method && results.push(method(mapName, record, hostKey));
-        });
-        return results;
-    },
+    registerMap: function (
+        mapName: string,
+        rawDef: MapInput | GeoJSONSourceInput,
+        rawSpecialAreas?: GeoSpecialAreas
+    ): void {
 
-    /**
-     * @param hostKey For cache.
-     */
-    removeGraphic: function (mapName: string, hostKey: string): void {
-        const mapRecords = retrieveMap(mapName);
-        each(mapRecords, function (record) {
-            const method = loaders[record.type].makeGraphic;
-            method && method(mapName, record, hostKey);
-        });
-    }
-};
+        if ((rawDef as SVGMapInput).svg) {
+            const resource = new GeoSVGResource(
+                mapName,
+                (rawDef as SVGMapInput).svg
+            );
 
-function mapNotExistsError(mapName: string): void {
-    if (__DEV__) {
-        console.error(
-            'Map ' + mapName + ' not exists. The GeoJSON of the map must be provided.'
-        );
-    }
-}
-
-function retrieveMap(mapName: string): MapRecord[] {
-    const mapRecords = mapDataStorage.retrieveMap(mapName) || [];
-
-    if (__DEV__) {
-        if (!mapRecords.length) {
-            mapNotExistsError(mapName);
+            storage.set(mapName, resource);
         }
+        else {
+            // Recommend:
+            //     echarts.registerMap('eu', { geoJSON: xxx, specialAreas: xxx });
+            // Backward compatibility:
+            //     echarts.registerMap('eu', geoJSON, specialAreas);
+            //     echarts.registerMap('eu', { geoJson: xxx, specialAreas: xxx });
+            let geoJSON = (rawDef as GeoJSONMapInputCompat).geoJson
+                || (rawDef as GeoJSONMapInput).geoJSON;
+            if (geoJSON && !(rawDef as GeoJSON).features) {
+                rawSpecialAreas = (rawDef as GeoJSONMapInput).specialAreas;
+            }
+            else {
+                geoJSON = rawDef as GeoJSONSourceInput;
+            }
+            const resource = new GeoJSONResource(
+                mapName,
+                geoJSON,
+                rawSpecialAreas
+            );
+
+            storage.set(mapName, resource);
+        }
+    },
+
+    getGeoResource(mapName: string): GeoResource {
+        return storage.get(mapName);
+    },
+
+    /**
+     * Only for exporting to users.
+     * **MUST NOT** used internally.
+     */
+    getMapForUser: function (mapName: string): ReturnType<GeoJSONResource['getMapForUser']> {
+        const resource = storage.get(mapName);
+        // Do not support return SVG until some real requirement come.
+        return resource && resource.type === 'geoJSON'
+            && (resource as GeoJSONResource).getMapForUser();
+    },
+
+    load: function (mapName: string, nameMap: NameMap, nameProperty: string): ReturnType<GeoResource['load']> {
+        const resource = storage.get(mapName);
+
+        if (!resource) {
+            if (__DEV__) {
+                console.error(
+                    'Map ' + mapName + ' not exists. The GeoJSON of the map must be provided.'
+                );
+            }
+            return;
+        }
+
+        return resource.load(nameMap, nameProperty);
     }
 
-    return mapRecords;
-}
-
+};

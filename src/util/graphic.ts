@@ -53,7 +53,9 @@ import {
     ZRRectLike,
     ZRStyleProps,
     PayloadAnimationPart,
-    AnimationOption
+    AnimationOption,
+    CommonTooltipOption,
+    ComponentItemTooltipLabelFormatterParams
 } from './types';
 import {
     extend,
@@ -61,10 +63,15 @@ import {
     map,
     defaults,
     isObject,
-    retrieve2
+    retrieve2,
+    isString,
+    keys,
+    each,
+    hasOwn
 } from 'zrender/src/core/util';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import { getECData } from './innerStore';
+import ComponentModel from '../model/Component';
 
 
 const mathMax = Math.max;
@@ -805,6 +812,52 @@ function nearZero(val: number) {
     return val <= (1e-6) && val >= -(1e-6);
 }
 
+
+export function setTooltipConfig(opt: {
+    el: Element,
+    componentModel: ComponentModel,
+    itemName: string,
+    itemTooltipOption?: string | CommonTooltipOption<unknown>
+    formatterParamsExtra?: Dictionary<unknown>
+}): void {
+    const itemTooltipOption = opt.itemTooltipOption;
+    const componentModel = opt.componentModel;
+    const itemName = opt.itemName;
+
+    const itemTooltipOptionObj = isString(itemTooltipOption)
+        ? { formatter: itemTooltipOption }
+        : itemTooltipOption;
+    const mainType = componentModel.mainType;
+    const componentIndex = componentModel.componentIndex;
+
+    const formatterParams = {
+        componentType: mainType,
+        name: itemName,
+        $vars: ['name']
+    } as ComponentItemTooltipLabelFormatterParams;
+    (formatterParams as any)[mainType + 'Index'] = componentIndex;
+
+    const formatterParamsExtra = opt.formatterParamsExtra;
+    if (formatterParamsExtra) {
+        each(keys(formatterParamsExtra), key => {
+            if (!hasOwn(formatterParams, key)) {
+                formatterParams[key] = formatterParamsExtra[key];
+                formatterParams.$vars.push(key);
+            }
+        });
+    }
+
+    const ecData = getECData(opt.el);
+    ecData.componentMainType = mainType;
+    ecData.componentIndex = componentIndex;
+    ecData.tooltipConfig = {
+        name: itemName,
+        option: defaults({
+            content: itemName,
+            formatterParams: formatterParams
+        }, itemTooltipOptionObj)
+    };
+}
 
 // Register built-in shapes. These shapes might be overwirtten
 // by users, although we do not recommend that.

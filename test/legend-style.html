@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+   http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+        <div id="main1"></div>
+        <div id="main2"></div>
+
+        <script>
+            function getData(seriesId) {
+                var data = [];
+                for (var i = 0; i < 7; ++i) {
+                    data.push(Math.random() * 100 + (seriesId + 1) * 200);
+                }
+                return data;
+            }
+        </script>
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                legend: [{
+                    data: [
+                        'Line A',
+                        'Line B',
+                        {
+                            name: 'Line C',
+                            symbolSize: 'inherit'
+                        },
+                        'Line F',
+                        'Pie A',
+                        'Pie B',
+                        'Pie C',
+                        'Pie D'
+                    ]
+                }, {
+                    bottom: 10,
+                    data: [{
+                        name: 'Line D',
+                        icon: 'arrow'
+                    }, {
+                        name: 'Line E',
+                        itemStyle: {
+                            color: '#f0f'
+                        }
+                    }],
+                    itemStyle: {
+                        color: 'orange'
+                    },
+                    icon: 'emptyRect'
+                }],
+                series: [{
+                    data: getData(0),
+                    type: 'line',
+                    name: 'Line A'
+                }, {
+                    data: getData(1),
+                    type: 'line',
+                    name: 'Line B',
+                    itemStyle: {
+                        color: 'red',
+                        borderWidth: 5
+                    },
+                    symbolSize: 15,
+                    symbol: 'emptyTriangle',
+                    symbolRotate: 15
+                }, {
+                    data: getData(2),
+                    type: 'line',
+                    name: 'Line C',
+                    lineStyle: {
+                        color: 'green',
+                        width: 5,
+                        shadowBlur: 10,
+                        shadowColor: 'orange'
+                    },
+                    itemStyle: {
+                        color: 'red'
+                    },
+                    symbolSize: 30
+                }, {
+                    data: getData(3),
+                    type: 'line',
+                    name: 'Line D',
+                    itemStyle: {
+                        color: 'blue'
+                    },
+                    symbol: 'emptyTriangle',
+                    symbolSize: 15
+                }, {
+                    data: getData(4),
+                    type: 'line',
+                    name: 'Line E',
+                    itemStyle: {
+                        color: 'green'
+                    },
+                    symbolSize: 10
+                }, {
+                    data: getData(5),
+                    type: 'line',
+                    name: 'Line F',
+                    symbolSize: 10,
+                    itemStyle: {
+                        color: 'blue'
+                    }
+                }, {
+                    type: 'pie',
+                    data: [{
+                        name: 'Pie A',
+                        value: 10
+                    }, {
+                        name: 'Pie B',
+                        value: 8,
+                        itemStyle: {
+                            borderWidth: 0
+                        }
+                    }, {
+                        name: 'Pie C',
+                        value: 14,
+                        itemStyle: {
+                            color: 'blue',
+                            borderColor: 'green'
+                        }
+                    }, {
+                        name: 'Pie D',
+                        value: 2
+                    }],
+                    itemStyle: {
+                        borderWidth: 10,
+                        borderColor: '#fff'
+                    },
+                    center: ['80%', '50%'],
+                    radius: '40%'
+                }],
+                grid: {
+                    left: 60,
+                    width: '55%'
+                },
+                visualMap: [{
+                    type: 'continuous',
+                    min: 1200,
+                    max: 1300,
+                    inRange: {
+                        color: ['green', 'yellow', 'red']
+                    },
+                    show: false,
+                    seriesIndex: 5
+                }, {
+                    type: 'continuous',
+                    min: 5,
+                    max: 15,
+                    inRange: {
+                        color: ['green', 'yellow', 'red']
+                    },
+                    show: false,
+                    seriesIndex: 6
+                }],
+                animation: 0
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    '**Legend icon being more intuitive**',
+                    'Line A: the style of the line and items should be the same in those in legend; all colored in the first theme color',
+                    'Line B: the style of the line and items should be the same in those in legend; all colored in red',
+                    'Line C: the style of the line and items should be the same in those in legend; items colored in red and line colored in green',
+                    'Line D: orange arrow in legend and blue empty triangle in series',
+                    'Line E: pink empty rectangale in legend and green empty circle in series',
+                    'Line F: the colors in the legend should be blue'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                legend: [{
+                    data: [
+                        'Line A',
+                        'Line B',
+                        {
+                            name: 'Line C',
+                            symbolRotate: -30,
+                            icon: 'emptyTriangle'
+                        },
+                        'Bar D'
+                    ],
+                    symbolRotate: 30,
+                    itemWidth: 100
+                }],
+                series: [{
+                    data: getData(0),
+                    type: 'line',
+                    name: 'Line A',
+                    symbol: 'emptyRect'
+                }, {
+                    data: getData(1),
+                    type: 'line',
+                    name: 'Line B',
+                    symbol: 'emptyTriangle',
+                    symbolRotate: 15,
+                    symbolSize: 10,
+                    symbolKeepAspect: true
+                }, {
+                    data: getData(2),
+                    type: 'line',
+                    name: 'Line C',
+                    symbol: 'emptyTriangle',
+                    symbolKeepAspect: true
+                }, {
+                    data: getData(0),
+                    type: 'bar',
+                    name: 'Bar D'
+                }],
+                animation: 0
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    '**Legend options should work**',
+                    'Line A: the rect in the legend should be placed at the center with rotation of 30 degrees',
+                    'Line B: the triangle in the legend should be placed at the center with rotation of 30 degrees',
+                    'Line C: should not have rotate in legend',
+                    'Bar D: should not have rotate in legend'
+                ],
+                option: option
+            });
+        });
+        </script>
+    </body>
+</html>

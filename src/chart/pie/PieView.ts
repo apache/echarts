@@ -43,10 +43,7 @@ class PiePiece extends graphic.Sector {
 
         this.z2 = 2;
 
-        const polyline = new graphic.Polyline();
         const text = new graphic.Text();
-
-        this.setTextGuideLine(polyline);
 
         this.setTextContent(text);
 
@@ -59,11 +56,18 @@ class PiePiece extends graphic.Sector {
         const seriesModel = data.hostModel as PieSeriesModel;
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const emphasisModel = itemModel.getModel('emphasis');
-        const layout = data.getItemLayout(idx);
+        const layout = data.getItemLayout(idx) as graphic.Sector['shape'];
         const sectorShape = extend(
             getSectorCornerRadius(itemModel.getModel('itemStyle'), layout) || {},
             layout
         );
+
+        // Ignore NaN data.
+        if (isNaN(sectorShape.startAngle)) {
+            // Use NaN shape to avoid drawing shape.
+            sector.setShape(sectorShape);
+            return;
+        }
 
         if (firstCreate) {
             sector.setShape(sectorShape);
@@ -97,7 +101,6 @@ class PiePiece extends graphic.Sector {
                     }, seriesModel, idx);
                 }
             }
-
         }
         else {
             // Transition animation from the old shape
@@ -136,7 +139,7 @@ class PiePiece extends graphic.Sector {
         const labelLine = sector.getTextGuideLine();
         const labelText = sector.getTextContent();
 
-        extend(labelLine.ensureState('select'), {
+        labelLine && extend(labelLine.ensureState('select'), {
             x: dx,
             y: dy
         });
@@ -185,11 +188,23 @@ class PiePiece extends graphic.Sector {
             z2: 10
         });
 
-        // Default use item visual color
-        setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
-            stroke: visualColor,
-            opacity: retrieve3(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity, 1)
-        });
+        const labelPosition = seriesModel.get(['label', 'position']);
+        if (labelPosition !== 'outside' && labelPosition !== 'outer') {
+            sector.removeTextGuideLine();
+        }
+        else {
+            let polyline = this.getTextGuideLine();
+            if (!polyline) {
+                polyline = new graphic.Polyline();
+                this.setTextGuideLine(polyline);
+            }
+
+            // Default use item visual color
+            setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
+                stroke: visualColor,
+                opacity: retrieve3(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity, 1)
+            });
+        }
     }
 }
 

@@ -30,7 +30,8 @@ import {
     ColorString,
     ZRStyleProps,
     AnimationOptionMixin,
-    InterpolatableValue
+    InterpolatableValue,
+    SeriesDataType
 } from '../util/types';
 import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
@@ -39,6 +40,7 @@ import { deprecateReplaceLog } from '../util/log';
 import { makeInner, interpolateRawValues } from '../util/model';
 import List from '../data/List';
 import { initProps, updateProps } from '../util/graphic';
+import { getECData } from '../util/innerStore';
 
 type TextCommonParams = {
     /**

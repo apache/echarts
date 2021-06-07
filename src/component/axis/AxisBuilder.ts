@@ -50,14 +50,6 @@ type AxisEventData = {
     [key in AxisIndexKey]?: number
 };
 
-type LabelFormatterParams = {
-    componentType: string
-    name: string
-    $vars: ['name']
-} & {
-    [key in AxisIndexKey]?: number
-};
-
 type AxisLabelText = graphic.Text & {
     __fullText: string
     __truncatedText: string
@@ -422,16 +414,6 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             opt.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth
         );
 
-        const tooltipOpt = axisModel.get('tooltip', true);
-
-        const mainType = axisModel.mainType;
-        const formatterParams: LabelFormatterParams = {
-            componentType: mainType,
-            name: name,
-            $vars: ['name']
-        };
-        formatterParams[mainType + 'Index' as AxisIndexKey] = axisModel.componentIndex;
-
         const textEl = new graphic.Text({
             x: pos[0],
             y: pos[1],
@@ -452,15 +434,13 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             }),
             z2: 1
         }) as AxisLabelText;
-        textEl.tooltip = (tooltipOpt && tooltipOpt.show)
-            ? extend({
-                content: name,
-                formatter() {
-                    return name;
-                },
-                formatterParams: formatterParams
-            }, tooltipOpt)
-            : null;
+
+        graphic.setTooltipConfig({
+            el: textEl,
+            componentModel: axisModel,
+            itemName: name
+        });
+
         textEl.__fullText = name;
         // Id for animation
         textEl.anid = 'name';
