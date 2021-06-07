@@ -31,7 +31,7 @@ import Model from '../../model/Model';
 import ChartView from '../../view/Chart';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import {
-    EventQueryItem, ECEvent,
+    EventQueryItem, ECActionEvent,
     DimensionLoose,
     ParsedValue,
     Dictionary,
@@ -101,8 +101,6 @@ import {
     prepareTransformAllPropsFinal,
     prepareTransformTransitionFrom
 } from './prepare';
-import { SeriesModel } from '../../export/api';
-import { seriesStyleTask } from '../../visual/style';
 
 const transformPropNamesStr = keys(TRANSFORM_PROPS).join(', ');
 
@@ -191,6 +189,12 @@ export default class CustomChartView extends ChartView {
         const data = customSeries.getData();
         const group = this.group;
         const renderItem = makeRenderItem(customSeries, data, ecModel, api);
+
+        if (!oldData) {
+            // Previous render is incremental render or first render.
+            // Needs remove the incremental rendered elements.
+            group.removeAll();
+        }
 
         // By default, merge mode is applied. In most cases, custom series is
         // used in the scenario that data amount is not large but graphic elements
@@ -360,12 +364,12 @@ export default class CustomChartView extends ChartView {
             const el = createOrUpdateItem(
                 null, null, false, idx, renderItem(idx, payload), customSeries, this.group, data
             );
-            el.traverse(setIncrementalAndHoverLayer);
+            el && el.traverse(setIncrementalAndHoverLayer);
         }
     }
 
     filterForExposedEvent(
-        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
+        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECActionEvent
     ): boolean {
         const elementName = query.element;
         if (elementName == null || targetEl.name === elementName) {
@@ -1294,7 +1298,7 @@ function createOrUpdateItem(
     const el = doCreateOrUpdateEl(api, existsEl, hasMorphFrom, dataIndex, elOption, seriesModel, group, true);
     el && data.setItemGraphicEl(dataIndex, el);
 
-    enableHoverEmphasis(el, elOption.focus, elOption.blurScope);
+    el && enableHoverEmphasis(el, elOption.focus, elOption.blurScope);
 
     return el;
 }

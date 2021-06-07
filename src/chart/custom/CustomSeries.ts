@@ -83,7 +83,7 @@ export const NON_STYLE_VISUAL_PROPS = {
     symbol: 1,
     symbolSize: 1,
     symbolKeepAspect: 1,
-    legendSymbol: 1,
+    legendIcon: 1,
     visualMeta: 1,
     liftZ: 1,
     decal: 1
