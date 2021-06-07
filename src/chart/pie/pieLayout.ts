@@ -69,11 +69,9 @@ export default function pieLayout(
         const minAngle = seriesModel.get('minAngle') * RADIAN;
 
         let validDataCount = 0;
-        data.each(valueDim, function (value: number) {
-            !isNaN(value) && validDataCount++;
-        });
         let sum = 0;
         data.each(valueDim, function (value: number) {
+            !isNaN(value) && validDataCount++;
             if (!isNaN(value) && value > 0) {
                 sum += value;
             }

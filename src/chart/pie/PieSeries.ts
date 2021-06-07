@@ -171,12 +171,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         const valueList: number[] = [];
         data.each(data.mapDimension('value'), function (value: number) {
             // handle minue value condition: teat minus value as 0 when calculation percent
-            if (!isNaN(value) && value < 0) {
-                valueList.push(0);
-            }
-            else {
-                valueList.push(value);
-            }
+            valueList.push(isNaN(value) ? value : Math.max(value, 0));
         });
 
         params.percent = getPercentWithPrecision(
