@@ -72,8 +72,13 @@ export default function pieLayout(
         data.each(valueDim, function (value: number) {
             !isNaN(value) && validDataCount++;
         });
+        let sum = 0;
+        data.each(valueDim, function (value: number) {
+            if (!isNaN(value) && value > 0) {
+                sum += value;
+            }
+        });
 
-        const sum = data.getSum(valueDim);
         // Sum may be 0
         let unitRadian = Math.PI / (sum || validDataCount) * 2;
 
@@ -108,6 +113,23 @@ export default function pieLayout(
                     r0: r0,
                     r: roseType
                         ? NaN
+                        : r
+                });
+                return;
+            }
+
+            if (value < 0) {
+                const endAngle = currentAngle;
+                data.setItemLayout(idx, {
+                    angle: angle,
+                    startAngle: currentAngle,
+                    endAngle: endAngle,
+                    clockwise: clockwise,
+                    cx: cx,
+                    cy: cy,
+                    r0: r0,
+                    r: roseType
+                        ? linearMap(0, extent, [r0, r])
                         : r
                 });
                 return;
