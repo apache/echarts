@@ -30,9 +30,9 @@ const RADIAN = Math.PI / 180;
 function getViewRect(seriesModel: PieSeriesModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
-        width: api.getWidth(),
-        height: api.getHeight()
-    }
+            width: api.getWidth(),
+            height: api.getHeight()
+        }
     );
 }
 

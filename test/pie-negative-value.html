@@ -40,18 +40,19 @@ under the License.
             }
         </style>
 
-        <div id="main" class="chart"></div>
+        <div id="chart-with-single-negative" class="chart"></div>
+        <div id="chart-with-full-negative" class="chart"></div>
         <script>
             require(["echarts"], function (echarts) {
-                var chart = echarts.init(document.getElementById("main"));
-
-                chart.setOption({
+                var chartWithSingleNegative = echarts.init(
+                    document.getElementById("chart-with-single-negative")
+                );
+                chartWithSingleNegative.setOption({
                     aria: {
                         enabled: true,
                     },
                     title: {
-                        text: `The minus value slice should render like 0 value,
-                        while the tooltip should show the origin minus value`,
+                        text: `The minus value slice should be filtered`,
                         x: "center",
                     },
                     tooltip: {
@@ -81,7 +82,10 @@ under the License.
                                 { value: 310, name: "邮件营销" },
                                 { value: 234, name: "联盟广告" },
                                 { value: 0, name: "视频广告(value is 0)" },
-                                { value: -1548, name: "搜索引擎(value is minus)" },
+                                {
+                                    value: -1548,
+                                    name: "搜索引擎(value is minus)",
+                                },
                             ],
                             emphasis: {
                                 itemStyle: {
@@ -94,11 +98,57 @@ under the License.
                     ],
                 });
 
-                chart.on("pieselectchanged", function (e) {
-                    console.log(e);
+                var chartWithFullNegative = echarts.init(
+                    document.getElementById("chart-with-full-negative")
+                );
+                chartWithFullNegative.setOption({
+                    aria: {
+                        enabled: true,
+                    },
+                    title: {
+                        text: `The pie chart should be empty when all values are negative`,
+                        x: "center",
+                    },
+                    tooltip: {
+                        trigger: "item",
+                        formatter: "{a} <br/>{b} : {c} ({d}%)",
+                    },
+                    legend: {
+                        orient: "vertical",
+                        left: "left",
+                        data: [
+                            "直接访问",
+                            "邮件营销",
+                            "联盟广告",
+                        ],
+                    },
+                    series: [
+                        {
+                            name: "访问来源",
+                            type: "pie",
+                            radius: "55%",
+                            center: ["50%", "60%"],
+                            selectedMode: "single",
+                            data: [
+                                { value: -335, name: "直接访问" },
+                                { value: -310, name: "邮件营销" },
+                                { value: -234, name: "联盟广告" },
+                            ],
+                            emphasis: {
+                                itemStyle: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: "rgba(0, 0, 0, 0.5)",
+                                },
+                            },
+                        },
+                    ],
                 });
 
-                window.onresize = chart.resize;
+                window.onresize = () => {
+                    chartWithSingleNegative.resize();
+                    chartWithFullNegative.resize();
+                };
             });
         </script>
     </body>
