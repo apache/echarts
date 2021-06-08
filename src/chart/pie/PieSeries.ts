@@ -20,8 +20,8 @@
 import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
-import {getPercentWithPrecision} from '../../util/number';
-import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
+import { getPercentWithPrecision } from '../../util/number';
+import { makeSeriesEncodeForNameBased } from '../../data/helper/sourceHelper';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import SeriesModel from '../../model/Series';
 import {
@@ -170,8 +170,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
         const valueList: number[] = [];
         data.each(data.mapDimension('value'), function (value: number) {
-            // handle minue value condition: teat minus value as 0 when calculation percent
-            valueList.push(isNaN(value) ? value : Math.max(value, 0));
+            valueList.push(value);
         });
 
         params.percent = getPercentWithPrecision(

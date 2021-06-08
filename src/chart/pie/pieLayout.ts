@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {parsePercent, linearMap} from '../../util/number';
+import { parsePercent, linearMap } from '../../util/number';
 import * as layout from '../../util/layout';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
@@ -30,9 +30,9 @@ const RADIAN = Math.PI / 180;
 function getViewRect(seriesModel: PieSeriesModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
-            width: api.getWidth(),
-            height: api.getHeight()
-        }
+        width: api.getWidth(),
+        height: api.getHeight()
+    }
     );
 }
 
@@ -69,14 +69,11 @@ export default function pieLayout(
         const minAngle = seriesModel.get('minAngle') * RADIAN;
 
         let validDataCount = 0;
-        let sum = 0;
         data.each(valueDim, function (value: number) {
             !isNaN(value) && validDataCount++;
-            if (!isNaN(value) && value > 0) {
-                sum += value;
-            }
         });
 
+        const sum = data.getSum(valueDim);
         // Sum may be 0
         let unitRadian = Math.PI / (sum || validDataCount) * 2;
 
@@ -111,23 +108,6 @@ export default function pieLayout(
                     r0: r0,
                     r: roseType
                         ? NaN
-                        : r
-                });
-                return;
-            }
-
-            if (value < 0) {
-                const endAngle = currentAngle;
-                data.setItemLayout(idx, {
-                    angle: angle,
-                    startAngle: currentAngle,
-                    endAngle: endAngle,
-                    clockwise: clockwise,
-                    cx: cx,
-                    cy: cy,
-                    r0: r0,
-                    r: roseType
-                        ? linearMap(0, extent, [r0, r])
                         : r
                 });
                 return;
