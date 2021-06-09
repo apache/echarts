@@ -17,19 +17,18 @@
 * under the License.
 */
 
-import { customInnerStore } from './CustomSeries';
+import { customInnerStore } from '../chart/custom/CustomSeries';
 import {
     separateMorph,
     combineMorph,
     morphPath,
-    isCombineMorphing,
-    DividePathParams
+    isCombineMorphing
 } from 'zrender/src/tool/morphPath';
-import { Path } from '../../util/graphic';
-import { SeriesModel } from '../../export/api';
+import { Path } from '../util/graphic';
+import { SeriesModel } from '../export/api';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { AnimationEasing } from 'zrender/src/animation/easing';
-import { PayloadAnimationPart } from '../../util/types';
+import { PayloadAnimationPart } from '../util/types';
 import { defaults, isArray, isFunction } from 'zrender/src/core/util';
 import Displayable from 'zrender/src/graphic/Displayable';
 

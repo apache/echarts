@@ -93,7 +93,13 @@ import CustomSeriesModel, {
     LooseElementProps,
     PrepareCustomInfo
 } from './CustomSeries';
-import {getPathList, applyMorphAnimation, isPath, isDisplayable, copyElement } from './transitionHelper';
+import {
+    getPathList,
+    applyMorphAnimation,
+    isPath,
+    isDisplayable,
+    copyElement
+} from '../../animation/morphTransitionHelper';
 import {
     prepareShapeOrExtraAllPropsFinal,
     prepareShapeOrExtraTransitionFrom,
