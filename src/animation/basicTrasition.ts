@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// Basic transitions in the same series when shapes are the same.
+
 import {
     AnimationOptionMixin,
     AnimationDelayCallbackParam,
@@ -24,7 +26,7 @@ import {
     AnimationOption
 } from '../util/types';
 import { AnimationEasing } from 'zrender/src/animation/easing';
-import Element from 'zrender/src/Element';
+import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import Model from '../model/Model';
 import {
     isObject,
@@ -40,6 +42,77 @@ type AnimateOrSetPropsOption = {
     removeOpt?: AnimationOption
     isFrom?: boolean;
 };
+
+/**
+ * Return null if animation is disabled.
+ */
+export function getAnimationConfig(
+    animationType: 'init' | 'update' | 'remove',
+    animatableModel: Model<AnimationOptionMixin>,
+    dataIndex: number,
+    // Extra opts can override the option in animatable model.
+    extraOpts?: Pick<ElementAnimateConfig, 'easing' | 'duration' | 'delay'>,
+    // TODO It's only for pictorial bar now.
+    extraDelayParams?: unknown
+): Pick<ElementAnimateConfig, 'easing' | 'duration' | 'delay'> | null {
+    let animationPayload: PayloadAnimationPart;
+    // Check if there is global animation configuration from dataZoom/resize can override the config in option.
+    // If animation is enabled. Will use this animation config in payload.
+    // If animation is disabled. Just ignore it.
+    if (animatableModel && animatableModel.ecModel) {
+        const updatePayload = animatableModel.ecModel.getUpdatePayload();
+        animationPayload = (updatePayload && updatePayload.animation) as PayloadAnimationPart;
+    }
+    const animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
+
+    const isUpdate = animationType === 'update';
+
+    if (animationEnabled) {
+        let duration: number | Function;
+        let easing: AnimationEasing;
+        let delay: number | Function;
+        if (animationPayload) {
+            duration = animationPayload.duration || 0;
+            easing = animationPayload.easing || 'cubicOut';
+            delay = animationPayload.delay || 0;
+        }
+        else if (extraOpts) {
+            duration = retrieve2(extraOpts.duration, 200);
+            easing = retrieve2(extraOpts.easing, 'cubicOut');
+            delay = 0;
+        }
+        else {
+            duration = animatableModel.getShallow(
+                isUpdate ? 'animationDurationUpdate' : 'animationDuration'
+            );
+            easing = animatableModel.getShallow(
+                isUpdate ? 'animationEasingUpdate' : 'animationEasing'
+            );
+            delay = animatableModel.getShallow(
+                isUpdate ? 'animationDelayUpdate' : 'animationDelay'
+            );
+        }
+        if (typeof delay === 'function') {
+            delay = delay(
+                dataIndex as number,
+                extraDelayParams
+            );
+        }
+        if (typeof duration === 'function') {
+            duration = duration(dataIndex as number);
+        }
+        const config = {
+            duration: duration as number || 0,
+            delay: delay as number,
+            easing
+        };
+
+        return config;
+    }
+    else {
+        return null;
+    }
+}
 
 function animateOrSetProps<Props>(
     animationType: 'init' | 'update' | 'remove',
@@ -66,102 +139,54 @@ function animateOrSetProps<Props>(
         removeOpt = dataIndex.removeOpt;
         dataIndex = dataIndex.dataIndex;
     }
-    const isUpdate = animationType === 'update';
-    const isRemove = animationType === 'remove';
 
-    let animationPayload: PayloadAnimationPart;
-    // Check if there is global animation configuration from dataZoom/resize can override the config in option.
-    // If animation is enabled. Will use this animation config in payload.
-    // If animation is disabled. Just ignore it.
-    if (animatableModel && animatableModel.ecModel) {
-        const updatePayload = animatableModel.ecModel.getUpdatePayload();
-        animationPayload = (updatePayload && updatePayload.animation) as PayloadAnimationPart;
-    }
-    const animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
+    const isRemove = (animationType === 'remove');
 
     if (!isRemove) {
         // Must stop the remove animation.
         el.stopAnimation('remove');
     }
 
-    if (animationEnabled) {
-        let duration: number | Function;
-        let animationEasing: AnimationEasing;
-        let animationDelay: number | Function;
-        if (animationPayload) {
-            duration = animationPayload.duration || 0;
-            animationEasing = animationPayload.easing || 'cubicOut';
-            animationDelay = animationPayload.delay || 0;
-        }
-        else if (isRemove) {
-            removeOpt = removeOpt || {};
-            duration = retrieve2(removeOpt.duration, 200);
-            animationEasing = retrieve2(removeOpt.easing, 'cubicOut');
-            animationDelay = 0;
-        }
-        else {
-            duration = animatableModel.getShallow(
-                isUpdate ? 'animationDurationUpdate' : 'animationDuration'
-            );
-            animationEasing = animatableModel.getShallow(
-                isUpdate ? 'animationEasingUpdate' : 'animationEasing'
-            );
-            animationDelay = animatableModel.getShallow(
-                isUpdate ? 'animationDelayUpdate' : 'animationDelay'
-            );
-        }
-        if (typeof animationDelay === 'function') {
-            animationDelay = animationDelay(
-                dataIndex as number,
-                animatableModel.getAnimationDelayParams
-                    ? animatableModel.getAnimationDelayParams(el, dataIndex as number)
-                    : null
-            );
-        }
-        if (typeof duration === 'function') {
-            duration = duration(dataIndex as number);
-        }
-
-        duration > 0
-            ? (
-                isFrom
-                    ? el.animateFrom(props, {
-                        duration: duration as number,
-                        delay: animationDelay as number || 0,
-                        easing: animationEasing,
-                        done: cb,
-                        force: !!cb || !!during,
-                        setToFinal: true,
-                        scope: animationType,
-                        during: during
-                    })
-                    : el.animateTo(props, {
-                        duration: duration as number,
-                        delay: animationDelay as number || 0,
-                        easing: animationEasing,
-                        done: cb,
-                        force: !!cb || !!during,
-                        setToFinal: true,
-                        scope: animationType,
-                        during: during
-                    })
-            )
-            // FIXME:
-            // If `duration` is 0, only the animation on props
-            // can be stoped, other animation should be continued?
-            // But at present using duration 0 in `animateTo`, `animateFrom`
-            // might cause unexpected behavior.
-            : (
-                el.stopAnimation(),
-                // If `isFrom`, the props is the "from" props.
-                !isFrom && el.attr(props),
-                cb && (cb as AnimateOrSetPropsOption['cb'])()
-            );
+    const animationConfig = getAnimationConfig(
+        animationType,
+        animatableModel,
+        dataIndex as number,
+        isRemove ? (removeOpt || {}) : null,
+        animatableModel.getAnimationDelayParams
+            ? animatableModel.getAnimationDelayParams(el, dataIndex as number)
+            : null
+    );
+    if (animationConfig && animationConfig.duration > 0) {
+        const duration = animationConfig.duration;
+        const animationDelay = animationConfig.delay;
+        const animationEasing = animationConfig.easing;
+        isFrom
+            ? el.animateFrom(props, {
+                duration: animationConfig.duration as number,
+                delay: animationDelay as number || 0,
+                easing: animationEasing,
+                done: cb,
+                force: !!cb || !!during,
+                setToFinal: true,
+                scope: animationType,
+                during: during
+            })
+            : el.animateTo(props, {
+                duration: duration as number,
+                delay: animationDelay as number || 0,
+                easing: animationEasing,
+                done: cb,
+                force: !!cb || !!during,
+                setToFinal: true,
+                scope: animationType,
+                during: during
+            });
     }
     else {
         el.stopAnimation();
+        // If `isFrom`, the props is the "from" props.
         !isFrom && el.attr(props);
-        // Call during once.
+        // Call during at least once.
         during && during(1);
         cb && (cb as AnimateOrSetPropsOption['cb'])();
     }

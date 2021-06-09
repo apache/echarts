@@ -26,11 +26,10 @@ import {
 } from 'zrender/src/tool/morphPath';
 import { Path } from '../util/graphic';
 import { SeriesModel } from '../export/api';
-import Element, { ElementAnimateConfig } from 'zrender/src/Element';
-import { AnimationEasing } from 'zrender/src/animation/easing';
-import { PayloadAnimationPart } from '../util/types';
-import { defaults, isArray, isFunction } from 'zrender/src/core/util';
+import Element from 'zrender/src/Element';
+import { defaults, isArray} from 'zrender/src/core/util';
 import Displayable from 'zrender/src/graphic/Displayable';
+import { getAnimationConfig } from './basicTrasition';
 
 
 type DescendentElements = Element[];
@@ -38,41 +37,6 @@ type DescendentPaths = Path[];
 
 function isMultiple(elements: DescendentElements | DescendentElements[]): elements is DescendentElements[] {
     return isArray(elements[0]);
-}
-
-export function getMorphAnimationConfig(seriesModel: SeriesModel, dataIndex: number): ElementAnimateConfig {
-    let duration: number;
-    let easing: AnimationEasing;
-    let delay: number;
-
-    if (seriesModel.isAnimationEnabled()) {
-        // PENDING: refactor? this is the same logic as `src/util/graphic.ts#animateOrSetProps`.
-        let animationPayload: PayloadAnimationPart;
-        if (seriesModel && seriesModel.ecModel) {
-            const updatePayload = seriesModel.ecModel.getUpdatePayload();
-            animationPayload = (updatePayload && updatePayload.animation) as PayloadAnimationPart;
-        }
-        if (animationPayload) {
-            duration = animationPayload.duration || 0;
-            easing = animationPayload.easing || 'cubicOut';
-            delay = animationPayload.delay || 0;
-        }
-        else {
-            easing = seriesModel.get('animationEasingUpdate');
-            const delayOption = seriesModel.get('animationDelayUpdate');
-            delay = isFunction(delayOption) ? delayOption(dataIndex) : delayOption;
-            const durationOption = seriesModel.get('animationDurationUpdate');
-            duration = isFunction(durationOption) ? durationOption(dataIndex) : durationOption;
-        }
-    }
-
-    const config = {
-        duration: duration || 0,
-        delay: delay,
-        easing: easing
-    };
-
-    return config;
 }
 
 interface MorphingBatch {
@@ -135,7 +99,7 @@ export function applyMorphAnimation(
         return;
     }
 
-    const animationCfg = getMorphAnimationConfig(seriesModel, dataIndex);
+    const animationCfg = getAnimationConfig('update', seriesModel, dataIndex);
 
     let many: DescendentPaths[];
     let one: DescendentPaths;
