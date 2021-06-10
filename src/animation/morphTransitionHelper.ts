@@ -93,7 +93,7 @@ export function applyMorphAnimation(
     to: DescendentPaths | DescendentPaths[],
     seriesModel: SeriesModel,
     dataIndex: number,
-    updateOtherProps: (fromIndividual: Path, toIndividual: Path, rawFrom: Path, rawTo: Path) => void
+    animateOtherProps: (fromIndividual: Path, toIndividual: Path, rawFrom: Path, rawTo: Path) => void
 ) {
     if (!from.length || !to.length) {
         return;
@@ -136,7 +136,7 @@ export function applyMorphAnimation(
             }
             else {
                 morphPath(batchFrom, batchTo, animationCfg);
-                updateOtherProps(batchFrom, batchTo, batchFrom, batchTo);
+                animateOtherProps(batchFrom, batchTo, batchFrom, batchTo);
             }
         }
         else {
@@ -148,7 +148,7 @@ export function applyMorphAnimation(
                 : separateMorph(batchOne, batchMany, animationCfgWithSplitPath);
 
             for (let k = 0; k < fromIndividuals.length; k++) {
-                updateOtherProps(
+                animateOtherProps(
                     fromIndividuals[k],
                     toIndividuals[k],
                     fromIsMany ? batchMany[k] : batch.one,

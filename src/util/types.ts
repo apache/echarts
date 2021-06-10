@@ -233,8 +233,12 @@ export interface OptionPreprocessor {
     (option: ECUnitOption, isTheme: boolean): void
 }
 
+export interface PostUpdateParams {
+    oldSeries?: SeriesModel[]
+    newSeries?: SeriesModel[]
+}
 export interface PostUpdater {
-    (ecModel: GlobalModel, api: ExtensionAPI): void;
+    (ecModel: GlobalModel, api: ExtensionAPI, params: PostUpdateParams): void;
 }
 
 export interface StageHandlerReset {
@@ -1592,6 +1596,13 @@ export interface SeriesOption<
      * Animation config for state transition.
      */
     stateAnimation?: AnimationOption
+
+    /**
+     * If enabled universal animation cross series.
+     */
+    universalAnimation?: {
+        enabled: boolean
+    }
 
     /**
      * Map of selected data

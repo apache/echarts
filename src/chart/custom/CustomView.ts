@@ -212,7 +212,8 @@ export default class CustomChartView extends ChartView {
 
         function updateMorphingPathProps(
             dataIndex: number,
-            from: graphicUtil.Path, to: graphicUtil.Path, rawFrom: graphicUtil.Path, rawTo: graphicUtil.Path
+            from: graphicUtil.Path, to: graphicUtil.Path,
+            rawFrom: graphicUtil.Path, rawTo: graphicUtil.Path
         ) {
             // element has been updated if rawTo is same with to.
             const elOption = customInnerStore(rawTo).option;

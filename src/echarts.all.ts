@@ -87,6 +87,10 @@ import {
     TransformComponent
 } from './export/components';
 
+import {
+    UniversalTransition
+} from './export/features';
+
 
 // -----------------
 // Render engines
@@ -333,3 +337,11 @@ use(AriaComponent);
 use(TransformComponent);
 
 use(DatasetComponent);
+
+// universal transition
+// chart.setOption({
+//     series: {
+//         universalAnimation: { enabled: true }
+//     }
+// })
+use(UniversalTransition);
