@@ -20,7 +20,7 @@
 import ExtensionAPI from '../core/ExtensionAPI';
 import SeriesModel from '../model/Series';
 import {createHashMap, each, filter} from 'zrender/src/core/util';
-import Element from 'zrender/src/Element';
+import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { applyMorphAnimation, getPathList } from './morphTransitionHelper';
 import { getECData } from '../util/innerStore';
 import Path from 'zrender/src/graphic/Path';
@@ -65,9 +65,12 @@ export function transitionBetweenSeries(
 
     function updateMorphingPathProps(
         from: Path, to: Path,
-        rawFrom: Path, rawTo: Path
+        rawFrom: Path, rawTo: Path,
+        animationCfg: ElementAnimateConfig
     ) {
-        // TODO
+        to.animateFrom({
+            style: rawFrom.style
+        }, animationCfg);
     }
 
     for (let i = 0; i < sourceElements.length; i++) {

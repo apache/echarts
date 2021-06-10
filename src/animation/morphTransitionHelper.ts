@@ -26,7 +26,7 @@ import {
 } from 'zrender/src/tool/morphPath';
 import { Path } from '../util/graphic';
 import { SeriesModel } from '../export/api';
-import Element from 'zrender/src/Element';
+import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { defaults, isArray} from 'zrender/src/core/util';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { getAnimationConfig } from './basicTrasition';
@@ -93,7 +93,13 @@ export function applyMorphAnimation(
     to: DescendentPaths | DescendentPaths[],
     seriesModel: SeriesModel,
     dataIndex: number,
-    animateOtherProps: (fromIndividual: Path, toIndividual: Path, rawFrom: Path, rawTo: Path) => void
+    animateOtherProps: (
+        fromIndividual: Path,
+        toIndividual: Path,
+        rawFrom: Path,
+        rawTo: Path,
+        animationCfg: ElementAnimateConfig
+    ) => void
 ) {
     if (!from.length || !to.length) {
         return;
@@ -136,7 +142,7 @@ export function applyMorphAnimation(
             }
             else {
                 morphPath(batchFrom, batchTo, animationCfg);
-                animateOtherProps(batchFrom, batchTo, batchFrom, batchTo);
+                animateOtherProps(batchFrom, batchTo, batchFrom, batchTo, animationCfg);
             }
         }
         else {
@@ -152,7 +158,7 @@ export function applyMorphAnimation(
                     fromIndividuals[k],
                     toIndividuals[k],
                     fromIsMany ? batchMany[k] : batch.one,
-                    fromIsMany ? batch.one : batchMany[k]
+                    fromIsMany ? batch.one : batchMany[k], animationCfg
                 );
             }
         }
