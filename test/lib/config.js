@@ -36,7 +36,7 @@
 
     // Set echarts source code.
     var ecDistPath;
-    if (params.__ECDIST__) {
+    if (params.__ECDIST__ && !params.__CASE_FRAME__) {
         ecDistPath = ({
             'webpack-req-ec': '../../echarts-boilerplate/echarts-webpack/dist/webpack-req-ec',
             'webpack-req-eclibec': '../../echarts-boilerplate/echarts-webpack/dist/webpack-req-eclibec',
