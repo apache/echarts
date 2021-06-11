@@ -205,7 +205,7 @@ export function getPathList(
     const pathList: DescendentPaths = [];
 
     elements.traverse(el => {
-        if ((el instanceof Path) && !(el as ECElement).disableMorphing) {
+        if ((el instanceof Path) && !(el as ECElement).disableMorphing && !el.invisible && !el.ignore) {
             pathList.push(el);
         }
     });

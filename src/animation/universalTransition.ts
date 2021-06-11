@@ -46,7 +46,9 @@ export function transitionBetweenSeries(
         // Force finish the leave animation.
         el.stopAnimation();
         if (el.isGroup) {
-            el.traverse(child => child.stopAnimation());
+            el.traverse(child => {
+                child.stopAnimation();
+            });
         }
     }
 
