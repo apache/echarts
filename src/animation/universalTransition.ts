@@ -19,12 +19,12 @@
 
 import ExtensionAPI from '../core/ExtensionAPI';
 import SeriesModel from '../model/Series';
-import {createHashMap, each, filter} from 'zrender/src/core/util';
+import {createHashMap, each} from 'zrender/src/core/util';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { applyMorphAnimation, getPathList } from './morphTransitionHelper';
-import { getECData } from '../util/innerStore';
 import Path from 'zrender/src/graphic/Path';
 import { EChartsExtensionInstallRegisters } from '../extension';
+import { initProps } from '../util/graphic';
 // Universal transitions that can animate between any shapes(series) and any properties in any amounts.
 
 
@@ -41,27 +41,14 @@ export function transitionBetweenSeries(
         return;
     }
 
-    let sourceElements = oldData.mapArray(idx => {
-        return oldData.getItemGraphicEl(idx);
-    });
-
-    let targetElements = newData.mapArray(idx => {
-        return newData.getItemGraphicEl(idx);
-    });
-
-    // Align the two arrays.
-    function alignNullElements(arr1: unknown[], arr2: unknown[]) {
-        for (let i = 0; i < arr1.length; i++) {
-            if (!arr2[i]) {
-                arr1[i] = null;
-            }
+    function stopAnimation(el: Element) {
+        // TODO Group itself should also invoke the callback.
+        // Force finish the leave animation.
+        el.stopAnimation();
+        if (el.isGroup) {
+            el.traverse(child => child.stopAnimation());
         }
     }
-    alignNullElements(sourceElements, targetElements);
-    alignNullElements(targetElements, sourceElements);
-
-    sourceElements = filter(sourceElements, el => !!el);
-    targetElements = filter(targetElements, el => !!el);
 
     function updateMorphingPathProps(
         from: Path, to: Path,
@@ -73,18 +60,48 @@ export function transitionBetweenSeries(
         }, animationCfg);
     }
 
-    for (let i = 0; i < sourceElements.length; i++) {
-        const dataIndex = getECData(targetElements[i]).dataIndex;
-        sourceElements[i].traverse(el => el.stopAnimation());
-        targetElements[i].traverse(el => el.stopAnimation());
-        applyMorphAnimation(
-            getPathList(sourceElements[i]),
-            getPathList(targetElements[i]),
-            newSeriesModel,
-            dataIndex,
-            updateMorphingPathProps
-        );
+    function fadeInElement(newEl: Element, newIndex: number) {
+        newEl.traverse(el => {
+            if (el instanceof Path) {
+                // TODO use fade in animation for target element.
+                initProps(el, {
+                    style: {
+                        opacity: 0
+                    }
+                }, newSeriesModel, {
+                    dataIndex: newIndex,
+                    isFrom: true
+                });
+            }
+        });
     }
+
+    newData.diff(oldData)
+        .update(function (newIndex, oldIndex) {
+            const oldEl = oldData.getItemGraphicEl(oldIndex);
+            const newEl = newData.getItemGraphicEl(newIndex);
+            if (oldEl) {
+                stopAnimation(oldEl);
+            }
+            if (newEl) {
+                stopAnimation(newEl);
+                if (!oldEl) {
+                    fadeInElement(newEl, newIndex);
+                }
+                else {
+                    if (oldEl && newEl) {
+                        applyMorphAnimation(
+                            getPathList(oldEl),
+                            getPathList(newEl),
+                            newSeriesModel,
+                            newIndex,
+                            updateMorphingPathProps
+                        );
+                    }
+                }
+            }
+        })
+        .execute();
 }
 
 export function installUniversalTransition(registers: EChartsExtensionInstallRegisters) {

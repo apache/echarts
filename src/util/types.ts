@@ -121,6 +121,10 @@ export interface ECElement extends Element {
      * Force disable overall layout
      */
     disableLabelLayout?: boolean
+    /**
+     * Force disable morphing
+     */
+    disableMorphing?: boolean
 }
 
 export interface DataHost {

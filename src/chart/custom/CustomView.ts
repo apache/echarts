@@ -19,7 +19,7 @@
 
 import {
     hasOwn, assert, isString, retrieve2, retrieve3, defaults, each,
-    keys, bind, eqNaN, indexOf, curry
+    keys, bind, eqNaN, indexOf, curry, filter, map
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../../util/graphic';
 import { setDefaultStateProxy, enableHoverEmphasis } from '../../util/states';
@@ -275,7 +275,7 @@ export default class CustomChartView extends ChartView {
                     data
                 );
 
-                const newPathList = getPathList(newEl, true);
+                const newPathList = filter(getPathList(newEl), el => customInnerStore(el).morph);
                 applyMorphAnimation(
                     oldPathList, newPathList, customSeries, newIdx, curry(updateMorphingPathProps, newIdx)
                 );
@@ -297,7 +297,7 @@ export default class CustomChartView extends ChartView {
                     data
                 );
 
-                const newPathList = getPathList(newEl, true);
+                const newPathList = filter(getPathList(newEl), el => customInnerStore(el).morph);
                 applyMorphAnimation(
                     oldPathList, newPathList, customSeries, newIdx, updateMorphingPathPropsWithIdx
                 );
@@ -318,7 +318,10 @@ export default class CustomChartView extends ChartView {
                     ));
                 }
 
-                const newPathList = getPathList(newElList, true);
+                const newPathList = map(
+                    getPathList(newElList),
+                    els => filter(els, el => customInnerStore(el).morph)
+                );
 
                 // TODO Different animation config in different indices?
                 const updateMorphingPathPropsWithIdx = curry(updateMorphingPathProps, newIndices[0]);

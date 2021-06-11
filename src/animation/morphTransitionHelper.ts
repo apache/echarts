@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import { customInnerStore } from '../chart/custom/CustomSeries';
 import {
     separateMorph,
     combineMorph,
@@ -30,6 +29,7 @@ import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { defaults, isArray} from 'zrender/src/core/util';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { getAnimationConfig } from './basicTrasition';
+import { ECElement } from '../util/types';
 
 
 type DescendentElements = Element[];
@@ -182,13 +182,13 @@ export function applyMorphAnimation(
 }
 
 export function getPathList(
-    elements: Element, needsMorph?: boolean
+    elements: Element
 ): DescendentPaths;
 export function getPathList(
-    elements: Element[], needsMorph?: boolean
+    elements: Element[]
 ): DescendentPaths[];
 export function getPathList(
-    elements: Element | Element[], needsMorph?: boolean
+    elements: Element | Element[]
 ): DescendentPaths | DescendentPaths[] {
     if (!elements) {
         return [];
@@ -205,7 +205,7 @@ export function getPathList(
     const pathList: DescendentPaths = [];
 
     elements.traverse(el => {
-        if ((el instanceof Path) && (!needsMorph || customInnerStore(el).morph)) {
+        if ((el instanceof Path) && !(el as ECElement).disableMorphing) {
             pathList.push(el);
         }
     });

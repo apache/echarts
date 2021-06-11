@@ -281,7 +281,7 @@ let updateDirectly: (
 type UpdateMethod = (this: ECharts, payload?: Payload, postUpdateParams?: PostUpdateParams) => void;
 let updateMethods: {
     prepareAndUpdate: UpdateMethod,
-    update: (this: ECharts, payload: Payload, postUpdateParams: PostUpdateParams) => void,
+    update: UpdateMethod,
     updateTransform: UpdateMethod,
     updateView: UpdateMethod,
     updateVisual: UpdateMethod,
@@ -1207,7 +1207,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // Disable animation
                 duration: 0
             }, opts && opts.animation)
-        }, {});
+        });
 
         this[IN_MAIN_PROCESS_KEY] = false;
 
@@ -1572,7 +1572,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             prepareAndUpdate(this: ECharts, payload: Payload): void {
                 prepare(this);
-                updateMethods.update.call(this, payload, {});
+                updateMethods.update.call(this, payload);
             },
 
             update(this: ECharts, payload: Payload, postUpdateParams: PostUpdateParams): void {
@@ -1640,7 +1640,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                     }
                 }
 
-                performPostUpdateFuncs(ecModel, api, postUpdateParams);
+                performPostUpdateFuncs(ecModel, api, postUpdateParams || {});
             },
 
             updateTransform(this: ECharts, payload: Payload): void {
@@ -1764,7 +1764,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             },
 
             updateLayout(this: ECharts, payload: Payload): void {
-                updateMethods.update.call(this, payload, {});
+                updateMethods.update.call(this, payload);
             }
         };
 
@@ -1870,7 +1870,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // Still dirty
                 if (this[PENDING_UPDATE]) {
                     prepare(this);
-                    updateMethods.update.call(this, payload, {});
+                    updateMethods.update.call(this, payload);
                     this[PENDING_UPDATE] = null;
                 }
                 else {
