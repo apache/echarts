@@ -341,7 +341,7 @@ use(DatasetComponent);
 // universal transition
 // chart.setOption({
 //     series: {
-//         universalAnimation: { enabled: true }
+//         universalTransition: { enabled: true }
 //     }
 // })
 use(UniversalTransition);

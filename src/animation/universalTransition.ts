@@ -114,7 +114,7 @@ export function installUniversalTransition(registers: EChartsExtensionInstallReg
                 oldSeriesMap.set(series.id, series);
             });
             each(params.newSeries, series => {
-                if (series.get(['universalAnimation', 'enabled'])) {
+                if (series.get(['universalTransition', 'enabled'])) {
                     // Only transition between series with same id.
                     const oldSeries = oldSeriesMap.get(series.id);
                     if (oldSeries) {

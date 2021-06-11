@@ -1602,9 +1602,9 @@ export interface SeriesOption<
     stateAnimation?: AnimationOption
 
     /**
-     * If enabled universal animation cross series.
+     * If enabled universal transition cross series.
      */
-    universalAnimation?: {
+    universalTransition?: {
         enabled: boolean
     }
 

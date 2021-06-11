@@ -89,7 +89,7 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'Convert between pie, bar, scatter, line， funnel'
+                    'Convert between pie, bar, scatter, line, funnel'
                 ],
                 // height: 300,
                 buttons: [{
@@ -106,7 +106,7 @@ under the License.
                                 type: 'pie',
                                 encode: { x: 'name', y: 'score', itemName: 'name' },
                                 datasetIndex: 1,
-                                universalAnimation: {
+                                universalTransition: {
                                     enabled: true
                                 }
                             }
@@ -125,7 +125,7 @@ under the License.
                                 symbolSize: 30,
                                 encode: { x: 'name', y: 'score', itemName: 'name' },
                                 datasetIndex: 1,
-                                universalAnimation: {
+                                universalTransition: {
                                     enabled: true
                                 }
                             }
@@ -143,7 +143,7 @@ under the License.
                                 id: 'main',
                                 encode: { x: 'name', y: 'score', itemName: 'name' },
                                 datasetIndex: 1,
-                                universalAnimation: {
+                                universalTransition: {
                                     enabled: true
                                 }
                             }
@@ -161,7 +161,7 @@ under the License.
                                 type: 'funnel',
                                 encode: { x: 'name', y: 'score', itemName: 'name' },
                                 datasetIndex: 1,
-                                universalAnimation: {
+                                universalTransition: {
                                     enabled: true
                                 }
                             }
@@ -339,7 +339,7 @@ under the License.
                             breadcrumb: {
                                 show: false
                             },
-                            universalAnimation: {
+                            universalTransition: {
                                 enabled: true
                             },
                             itemStyle: {
@@ -358,7 +358,7 @@ under the License.
                             id: 'main',
                             data,
                             animationDurationUpdate: 1000,
-                            universalAnimation: {
+                            universalTransition: {
                                 enabled: true
                             },
                             clockwise: true,
@@ -461,7 +461,7 @@ under the License.
                             symbolRepeat: true,
                             symbolSize: ['80%', '60%'],
                             barCategoryGap: '40%',
-                            universalAnimation: {
+                            universalTransition: {
                                 enabled: true
                             },
                             data: [{
@@ -488,7 +488,7 @@ under the License.
                             label: labelSetting,
                             symbolRepeat: true,
                             symbolSize: ['80%', '60%'],
-                            universalAnimation: {
+                            universalTransition: {
                                 enabled: true
                             },
                             data: [{
@@ -627,7 +627,7 @@ under the License.
                             id: 'main',
                             map: 'USA',
                             data,
-                            universalAnimation: {
+                            universalTransition: {
                                 enabled: true
                             }
                         }
@@ -650,7 +650,7 @@ under the License.
                             type: 'bar',
                             id: 'main',
                             data: data.map(item => item.value),
-                            universalAnimation: {
+                            universalTransition: {
                                 enabled: true
                             }
                         }
