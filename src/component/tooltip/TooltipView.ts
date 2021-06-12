@@ -1089,8 +1089,7 @@ function calcTooltipPosition(
 ): [number, number] {
     const domWidth = contentSize[0];
     const domHeight = contentSize[1];
-    const gap = 10;
-    const offset = 5;
+    const offset = Math.max(Math.ceil(Math.sqrt(2 * borderWidth * borderWidth)), 5);
     let x = 0;
     let y = 0;
     const rectWidth = rect.width;
@@ -1101,20 +1100,20 @@ function calcTooltipPosition(
             y = rect.y + rectHeight / 2 - domHeight / 2;
             break;
         case 'top':
-            x = rect.x + rectWidth / 2 - domWidth / 2 - borderWidth / 2;
-            y = rect.y - domHeight - gap;
+            x = rect.x + rectWidth / 2 - domWidth / 2;
+            y = rect.y - domHeight - offset;
             break;
         case 'bottom':
-            x = rect.x + rectWidth / 2 - domWidth / 2 - borderWidth / 2;
-            y = rect.y + rectHeight + gap;
+            x = rect.x + rectWidth / 2 - domWidth / 2;
+            y = rect.y + rectHeight + offset;
             break;
         case 'left':
-            x = rect.x - domWidth - gap - offset;
-            y = rect.y + rectHeight / 2 - domHeight / 2 - borderWidth / 2;
+            x = rect.x - domWidth - offset;
+            y = rect.y + rectHeight / 2 - domHeight / 2;
             break;
         case 'right':
-            x = rect.x + rectWidth + gap + offset;
-            y = rect.y + rectHeight / 2 - domHeight / 2 - borderWidth / 2;
+            x = rect.x + rectWidth + offset;
+            y = rect.y + rectHeight / 2 - domHeight / 2;
     }
     return [x, y];
 }

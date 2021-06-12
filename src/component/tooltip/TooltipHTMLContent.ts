@@ -73,8 +73,8 @@ function assembleArrow(
 
     borderColor = convertToColorString(borderColor);
     const arrowPos = mirrorPos(arrowPosition);
-    const arrowSize = borderWidth >= 5 ? borderWidth : 5;
-    let positionStyle = `${arrowPos}:-${Math.sqrt(2 * arrowSize * arrowSize) / 2 + borderWidth}px;`;
+    const arrowOffset = Math.round(Math.sqrt(2 * borderWidth * borderWidth) / 2) + borderWidth;
+    let positionStyle = `${arrowPos}:-${arrowOffset}px;`;
     let transformStyle = CSS_TRANSFORM_VENDOR + ':';
     if (indexOf(['left', 'right'], arrowPos) > -1) {
         positionStyle += 'top:50%';
@@ -87,7 +87,7 @@ function assembleArrow(
 
     const borderStyle = `${borderColor} solid ${borderWidth}px;`;
     const styleCss = [
-        `position:absolute;width:${arrowSize}px;height:${arrowSize}px;`,
+        `position:absolute;width:${borderWidth}px;height:${borderWidth}px;`,
         `${positionStyle};${transformStyle};`,
         `border-bottom:${borderStyle}`,
         `border-right:${borderStyle}`,
@@ -440,7 +440,7 @@ class TooltipHTMLContent {
 
     getSize() {
         const el = this.el;
-        return [el.clientWidth, el.clientHeight];
+        return [el.offsetWidth, el.offsetHeight];
     }
 
     moveTo(zrX: number, zrY: number) {
