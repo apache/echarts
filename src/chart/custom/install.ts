@@ -327,7 +327,7 @@ const NON_STYLE_VISUAL_PROPS = {
     symbol: 1,
     symbolSize: 1,
     symbolKeepAspect: 1,
-    legendSymbol: 1,
+    legendIcon: 1,
     visualMeta: 1,
     liftZ: 1,
     decal: 1
@@ -487,6 +487,12 @@ class CustomSeriesView extends ChartView {
         const group = this.group;
         const renderItem = makeRenderItem(customSeries, data, ecModel, api);
 
+        if (!oldData) {
+            // Previous render is incremental render or first render.
+            // Needs remove the incremental rendered elements.
+            group.removeAll();
+        }
+
         // By default, merge mode is applied. In most cases, custom series is
         // used in the scenario that data amount is not large but graphic elements
         // is complicated, where merge mode is probably necessary for optimization.
@@ -622,7 +628,7 @@ class CustomSeriesView extends ChartView {
             const el = createOrUpdateItem(
                 null, null, idx, renderItem(idx, payload), customSeries, this.group, data, null
             );
-            el.traverse(setIncrementalAndHoverLayer);
+            el && el.traverse(setIncrementalAndHoverLayer);
         }
     }
 
@@ -1931,7 +1937,7 @@ function createOrUpdateItem(
     el = doCreateOrUpdateEl(api, el, dataIndex, elOption, seriesModel, group, true, morphPreparation);
     el && data.setItemGraphicEl(dataIndex, el);
 
-    enableHoverEmphasis(el, elOption.focus, elOption.blurScope);
+    el && enableHoverEmphasis(el, elOption.focus, elOption.blurScope);
 
     return el;
 }

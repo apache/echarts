@@ -50,7 +50,7 @@ import { Source } from '../data/Source';
 import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatTooltip';
 import {ECSymbol} from '../util/symbol';
 import {Group} from '../util/graphic';
-import {LegendSymbolParams} from '../component/legend/LegendModel';
+import {LegendIconParams} from '../component/legend/LegendModel';
 
 const inner = modelUtil.makeInner<{
     data: List
@@ -96,7 +96,7 @@ interface SeriesModel {
     /**
      * Get legend icon symbol according to each series type
      */
-    getLegendIcon(opt: LegendSymbolParams): ECSymbol | Group;
+    getLegendIcon(opt: LegendIconParams): ECSymbol | Group;
 
     /**
      * See `component/brush/selector.js`
@@ -175,7 +175,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // Default symbol type.
     defaultSymbol: string;
     // Symbol provide to legend.
-    legendSymbol: string;
+    legendIcon: string;
 
     // ---------------------------------------
     // Props about data selection

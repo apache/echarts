@@ -24,7 +24,7 @@ under the License.
         <title>calendar</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="lib/reset.css">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
     </head>
@@ -63,16 +63,7 @@ under the License.
                 }
                 return datas;
             }
-            require([
-                'echarts'
-                // 'echarts/chart/heatmap',
-                // 'echarts/chart/scatter',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/calendar',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
 

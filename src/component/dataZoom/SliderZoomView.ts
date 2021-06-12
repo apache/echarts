@@ -31,7 +31,6 @@ import {
     LayoutOrient, Payload, ZRTextVerticalAlign, ZRTextAlign, ZRElementEvent, ParsedValue
 } from '../../util/types';
 import SliderZoomModel from './SliderZoomModel';
-import ComponentView from '../../view/Component';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import Axis from '../../coord/Axis';
 import SeriesModel from '../../model/Series';
@@ -42,7 +41,7 @@ import { createSymbol, symbolBuildProxies } from '../../util/symbol';
 import { deprecateLog } from '../../util/log';
 import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
-import {createTextStyle} from "../../label/labelStyle";
+import {createTextStyle} from '../../label/labelStyle';
 
 const Rect = graphic.Rect;
 

@@ -104,7 +104,7 @@ function assembleTransition(duration: number, onlyFade?: boolean): string {
     if (!onlyFade) {
         transitionOption = ` ${duration}s ${transitionCurve}`;
         transitionText += env.transformSupported
-            ? `,${TRANSFORM_VENDOR}${transitionOption}`
+            ? `,${CSS_TRANSFORM_VENDOR}${transitionOption}`
             : `,left${transitionOption},top${transitionOption}`;
     }
 

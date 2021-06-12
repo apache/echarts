@@ -50,7 +50,7 @@ import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
-import { isNumeric, getRandomIdBase, getPrecisionSafe, round } from './number';
+import { isNumeric, getRandomIdBase, getPrecision, round } from './number';
 import { interpolateNumber } from 'zrender/src/animation/Animator';
 import { warn } from './log';
 
@@ -1053,8 +1053,8 @@ export function interpolateRawValues(
         return round(
             value,
             isAutoPrecision ? Math.max(
-                getPrecisionSafe(sourceValue as number || 0),
-                getPrecisionSafe(targetValue as number)
+                getPrecision(sourceValue as number || 0),
+                getPrecision(targetValue as number)
             )
             : precision as number
         );
@@ -1081,8 +1081,8 @@ export function interpolateRawValues(
                 interpolated[i] = round(
                     value,
                     isAutoPrecision ? Math.max(
-                        getPrecisionSafe(leftVal),
-                        getPrecisionSafe(rightVal)
+                        getPrecision(leftVal),
+                        getPrecision(rightVal)
                     )
                     : precision as number
                 );

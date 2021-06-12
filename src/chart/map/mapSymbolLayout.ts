@@ -66,7 +66,7 @@ export default function mapSymbolLayout(ecModel: GlobalModel) {
             }
         });
 
-        // Show label of those region not has legendSymbol(which is offset 0)
+        // Show label of those region not has legendIcon (which is offset 0)
         const data = mapSeries.getData();
         data.each(function (idx) {
             const name = data.getName(idx);

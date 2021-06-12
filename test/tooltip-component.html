@@ -23,7 +23,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
@@ -41,6 +41,7 @@ under the License.
         <div id="axis-and-toolbox"></div>
         <div id="axis-and-toolbox-formatter"></div>
         <div id="graphic-component-tooltip"></div>
+        <div id="legend-tooltip-default-formatter"></div>
 
 
 
@@ -490,6 +491,49 @@ under the License.
 
 
 
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option = {
+                tooltip: {
+                    // Should not use this formatter even thought
+                    // legend.tooltip.formatter is not spefied.
+                    formatter: 'this is global tooltip formatter'
+                },
+                legend: {
+                    tooltip: {
+                        show: true,
+                        // formatter: 'asdf{a}'
+                    },
+                    formatter: 'legend: {name}'
+                },
+                xAxis: {},
+                yAxis: {},
+                series: [{
+                    name: 'seriesA',
+                    type: 'scatter',
+                    data: [[12, 333]]
+                }, {
+                    name: 'seriesB',
+                    type: 'scatter',
+                    data: [[456, 123]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'legend-tooltip-default-formatter', {
+                title: [
+                    'Hover legend should show tooltip: "seriesA" or "seriesB"'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
 
 
     </body>

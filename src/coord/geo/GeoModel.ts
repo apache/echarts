@@ -204,11 +204,11 @@ class GeoModel extends ComponentModel<GeoOption> {
             }
         },
 
-        regions: [],
+        regions: []
 
-        tooltip: {
-            show: false
-        }
+        // tooltip: {
+        //     show: false
+        // }
     };
 
     init(option: GeoOption, parentModel: Model, ecModel: GlobalModel): void {

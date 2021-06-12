@@ -26,10 +26,9 @@ import {
     isString,
     isObject,
     isTypedArray,
-    HashMap,
-    retrieve2
+    HashMap
 } from 'zrender/src/core/util';
-import { SourceMetaRawOption, Source } from '../Source';
+import { Source } from '../Source';
 
 import {
     SOURCE_FORMAT_ORIGINAL,

@@ -32,7 +32,7 @@ use([PieChart, TitleComponent, CanvasRenderer]);
 import { EChartsOption } from '../../../../src/export/option';
 
 
-function createChart(): EChartsType {
+function createChart(theme?: object): EChartsType {
     const el = document.createElement('div');
     Object.defineProperty(el, 'clientWidth', {
         get() {
@@ -44,7 +44,7 @@ function createChart(): EChartsType {
             return 400;
         }
     });
-    const chart = init(el);
+    const chart = init(el, theme);
     return chart;
 };
 
@@ -61,11 +61,15 @@ echarts.use([${seriesImportName}]);`;
 }
 
 
+// !!!!IMPORTANTE NOTE:
+// DO NOT test on the same component twice.
+// Because error message will be cached. It will not report on the same component twice.
 
 describe('model_componentMissing', function () {
+    const oldConsoleErr = console.error;
+
     it('Should report grid component missing error', function () {
         const chart = createChart();
-        const oldConsoleErr = console.error;
         console.error = jest.fn();
         chart.setOption<EChartsOption>({
             xAxis: {},
@@ -81,7 +85,6 @@ describe('model_componentMissing', function () {
 
     it('Should report dataZoom component missing error', function () {
         const chart = createChart();
-        const oldConsoleErr = console.error;
         console.error = jest.fn();
         chart.setOption<EChartsOption>({
             dataZoom: {}
@@ -95,7 +98,6 @@ describe('model_componentMissing', function () {
 
     it('Should not report title component missing error', function () {
         const chart = createChart();
-        const oldConsoleErr = console.error;
         console.error = jest.fn();
         chart.setOption<EChartsOption>({
             title: {},
@@ -108,7 +110,6 @@ describe('model_componentMissing', function () {
 
     it('Should report funnel series missing error', function () {
         const chart = createChart();
-        const oldConsoleErr = console.error;
         console.error = jest.fn();
         chart.setOption<EChartsOption>({
             series: [{
@@ -124,13 +125,26 @@ describe('model_componentMissing', function () {
 
     it('Should not report pie series missing error', function () {
         const chart = createChart();
-        const oldConsoleErr = console.error;
         console.error = jest.fn();
         chart.setOption<EChartsOption>({
             series: [{
                 type: 'pie'
             }]
         });
+        expect(console.error).not.toBeCalled();
+        console.error = oldConsoleErr;
+    });
+
+
+    it('Should not report visualMap component missing error when using theme', function () {
+        const chart = createChart({
+            visualMap: {
+                borderColor: '#71708A'
+            }
+        });
+
+        console.error = jest.fn();
+        chart.setOption<EChartsOption>({});
         expect(console.error).not.toBeCalled();
 
         console.error = oldConsoleErr;

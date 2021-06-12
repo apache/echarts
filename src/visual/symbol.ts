@@ -46,8 +46,8 @@ const seriesSymbolTask: StageHandler = {
     ) {
         const data = seriesModel.getData();
 
-        if (seriesModel.legendSymbol) {
-            data.setVisual('legendSymbol', seriesModel.legendSymbol);
+        if (seriesModel.legendIcon) {
+            data.setVisual('legendIcon', seriesModel.legendIcon);
         }
 
         if (!seriesModel.hasSymbolVisual) {
@@ -74,7 +74,7 @@ const seriesSymbolTask: StageHandler = {
         const seriesSymbolOffset = !hasSymbolOffsetCallback ? symbolOffset : null;
 
         data.setVisual({
-            legendSymbol: seriesModel.legendSymbol || seriesSymbol as string,
+            legendIcon: seriesModel.legendIcon || seriesSymbol as string,
             // If seting callback functions on `symbol` or `symbolSize`, for simplicity and avoiding
             // to bring trouble, we do not pick a reuslt from one of its calling on data item here,
             // but just use the default value. Callback on `symbol` or `symbolSize` is convenient in

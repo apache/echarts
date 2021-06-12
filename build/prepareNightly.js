@@ -48,10 +48,10 @@ fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2), 'utf-8')
 
 
 const readmePath = __dirname + '/../README.md';
-const readmeAttention = `<div style="color:red;font-weight:bold;">
-<p style="font-size:22px;text-transform:uppercase">⚠️ Attention Please</p>
-<p style="font-size:16px">This is nightly build of Apache ECharts. Please DON't use it in your production environment.</p>
-</div>`;
+const readmeAttention = `<h3>
+<p><em>⚠️ ATTENTION PLEASE</em></p>
+<p><em>This is nightly build of Apache ECharts. Please DON't use it in your production environment.</em></p>
+</h3>`;
 const readmeContent = fs.readFileSync(readmePath, 'utf-8');
 if (!readmeContent.includes(readmeAttention)) {
     fs.writeFileSync(readmePath, `
