@@ -979,6 +979,9 @@ function renderNode(
             }
         );
 
+        if (!isShow) {
+            return;
+        }
         const textEl = rectEl.getTextContent();
         const textStyle = textEl.style;
         const textPadding = normalizeCssArray(textStyle.padding || 0);
