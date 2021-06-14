@@ -25,7 +25,8 @@ import {
     setAsHighDownDispatcher,
     setDefaultStateProxy,
     enableHoverFocus,
-    Z2_EMPHASIS_LIFT
+    Z2_EMPHASIS_LIFT,
+    DISPLAY_STATES
 } from '../../util/states';
 import DataDiffer from '../../data/DataDiffer';
 import * as helper from '../helper/treeHelper';
@@ -967,9 +968,10 @@ function renderNode(
 
         const isShow = normalLabelModel.getShallow('show');
 
+        const labelStatesModels = getLabelStatesModels(nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL);
         setLabelStyle(
             rectEl,
-            getLabelStatesModels(nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL),
+            labelStatesModels,
             {
                 defaultText: isShow ? defaultText : null,
                 inheritColor: visualColor,
@@ -979,9 +981,20 @@ function renderNode(
             }
         );
 
-        if (!isShow) {
+        // need consider all state
+        let needsCreateText = false;
+        for (let i = 0; i < DISPLAY_STATES.length; i++) {
+            const stateModel = labelStatesModels[DISPLAY_STATES[i]];
+            if (stateModel && stateModel.getShallow('show')) {
+                needsCreateText = true;
+                break;
+            }
+        }
+
+        if (!needsCreateText) {
             return;
         }
+        
         const textEl = rectEl.getTextContent();
         const textStyle = textEl.style;
         const textPadding = normalizeCssArray(textStyle.padding || 0);
