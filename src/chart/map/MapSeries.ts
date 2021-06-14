@@ -82,7 +82,7 @@ export interface MapSeriesOption extends
     // @deprecated. Only for echarts2 backward compat.
     geoCoord?: Dictionary<number[]>;
 
-    data?: OptionDataValueNumeric[] | OptionDataValueNumeric[][] | MapDataItemOption[]
+    data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | MapDataItemOption)[]
 
 
     nameProperty?: string;
