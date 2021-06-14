@@ -421,7 +421,7 @@ export type DimensionLoose = DimensionName | DimensionIndexLoose;
 export type DimensionType = ListDimensionType;
 
 export const VISUAL_DIMENSIONS = createHashMap<number, keyof DataVisualDimensions>([
-    'tooltip', 'label', 'itemName', 'itemId', 'seriesName'
+    'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'seriesName'
 ]);
 // The key is VISUAL_DIMENSIONS
 export interface DataVisualDimensions {
@@ -432,6 +432,10 @@ export interface DataVisualDimensions {
     label?: DimensionIndex;
     itemName?: DimensionIndex;
     itemId?: DimensionIndex;
+    // Group id is used for linking the aggregate relationship between two set of data.
+    // Which is useful in prepresenting the transition key of drilldown/up animation.
+    // Or hover linking.
+    itemGroupId?: DimensionIndex;
     seriesName?: DimensionIndex;
 }
 
@@ -605,6 +609,7 @@ export type OptionDataItem =
 export type OptionDataItemObject<T> = {
     id?: OptionId;
     name?: OptionName;
+    groupId?: OptionId;
     value?: T[] | T;
     selected?: boolean;
 };
@@ -1484,7 +1489,6 @@ export interface ComponentOption {
 
     z?: number;
     zlevel?: number;
-    // FIXME:TS more
 }
 
 export type BlurScope = 'coordinateSystem' | 'series' | 'global';
@@ -1563,6 +1567,13 @@ export interface SeriesOption<
      */
     cursor?: string
 
+    /**
+     * groupId of data. can be used for doing drilldown / up animation
+     * It will be ignored if:
+     *  - groupId is specified in each data
+     *  - encode.itemGroupId is given.
+     */
+    dataGroupId?: OptionId
     // Needs to be override
     data?: unknown
 
@@ -1580,7 +1591,6 @@ export interface SeriesOption<
     coordinateSystem?: string
 
     hoverLayerThreshold?: number
-    // FIXME:TS more
 
     /**
      * When dataset is used, seriesLayoutBy specifies whether the column or the row of dataset is mapped to the series
@@ -1605,6 +1615,8 @@ export interface SeriesOption<
      * If enabled universal transition cross series.
      */
     universalTransition?: {
+        // Key to map two series. Use id defaultly
+        key: string
         enabled: boolean
     }
 

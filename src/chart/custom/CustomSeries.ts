@@ -127,7 +127,7 @@ export interface CustomDuringAPI {
 export interface CustomBaseElementOption extends Partial<Pick<
     Element, TransformProp | 'silent' | 'ignore' | 'textConfig'
 >>, TransitionTransformOption {
-    // element type, mandatory.
+    // element type, required.
     type: string;
     id?: string;
     // For animation diff.

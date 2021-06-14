@@ -19,28 +19,23 @@
 
 import ExtensionAPI from '../core/ExtensionAPI';
 import SeriesModel from '../model/Series';
-import {createHashMap, each} from 'zrender/src/core/util';
+import {createHashMap, each, map, filter} from 'zrender/src/core/util';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { applyMorphAnimation, getPathList } from './morphTransitionHelper';
 import Path from 'zrender/src/graphic/Path';
 import { EChartsExtensionInstallRegisters } from '../extension';
 import { initProps } from '../util/graphic';
+import DataDiffer from '../data/DataDiffer';
+import List from '../data/List';
+import { OptionDataItemObject } from '../util/types';
 // Universal transitions that can animate between any shapes(series) and any properties in any amounts.
 
-
-export function transitionBetweenSeries(
-    oldSeriesModel: SeriesModel,
-    newSeriesModel: SeriesModel,
+function transitionBetweenData(
+    oldData: List,
+    newData: List,
+    seriesModel: SeriesModel,
     api: ExtensionAPI
 ) {
-    const oldData = oldSeriesModel.getData();
-    const newData = newSeriesModel.getData();
-
-    // No data or data are in the same series.
-    if (!oldData || !newData || oldData === newData) {
-        return;
-    }
-
     function stopAnimation(el: Element) {
         // TODO Group itself should also invoke the callback.
         // Force finish the leave animation.
@@ -70,7 +65,7 @@ export function transitionBetweenSeries(
                     style: {
                         opacity: 0
                     }
-                }, newSeriesModel, {
+                }, seriesModel, {
                     dataIndex: newIndex,
                     isFrom: true
                 });
@@ -78,45 +73,168 @@ export function transitionBetweenSeries(
         });
     }
 
-    newData.diff(oldData)
-        .update(function (newIndex, oldIndex) {
-            const oldEl = oldData.getItemGraphicEl(oldIndex);
-            const newEl = newData.getItemGraphicEl(newIndex);
+    // TODO share it to other modules. or put it in the List
+    function createGroupIdGetter(data: List) {
+        const dataGroupId = data.hostModel && (data.hostModel as SeriesModel).get('dataGroupId') as string;
+        // TODO Use data.userOutput?
+        let groupIdDimension: string = '';
+        const dimensions = data.dimensions;
+        for (let i = 0; i < dimensions.length; i++) {
+            const dimInfo = data.getDimensionInfo(dimensions[i]);
+            if (dimInfo && dimInfo.otherDims.itemGroupId === 0) {
+                groupIdDimension = dimensions[i];
+            }
+        }
+        // Use group id as transition key by default.
+        // So we can achieve multiple to multiple animation like drilldown / up naturally.
+        // If group id not exits. Use id instead. If so, only one to one transition will be applied.
+        return function (rawIdx: number, dataIndex: number): string {
+            // Get from raw item. { groupId: '' }
+            const itemVal = data.getRawDataItem(dataIndex) as OptionDataItemObject<unknown>;
+            if (itemVal && itemVal.groupId) {
+                return itemVal.groupId + '';
+            }
+
+            return groupIdDimension
+                // Get from encode.itemGroupId.
+                ? (data.get(groupIdDimension, dataIndex) + '')
+                // Use series.dataGroupId, if not use id.
+                : (dataGroupId || data.getId(dataIndex));
+        };
+    }
+
+    function updateOneToOne(newIndex: number, oldIndex: number) {
+        const oldEl = oldData.getItemGraphicEl(oldIndex);
+        const newEl = newData.getItemGraphicEl(newIndex);
+
+        if (newEl) {
+            stopAnimation(newEl);
+
             if (oldEl) {
                 stopAnimation(oldEl);
+                applyMorphAnimation(
+                    getPathList(oldEl),
+                    getPathList(newEl),
+                    seriesModel,
+                    newIndex,
+                    updateMorphingPathProps
+                );
             }
-            if (newEl) {
-                stopAnimation(newEl);
-                if (!oldEl) {
-                    fadeInElement(newEl, newIndex);
-                }
-                else {
-                    if (oldEl && newEl) {
-                        applyMorphAnimation(
-                            getPathList(oldEl),
-                            getPathList(newEl),
-                            newSeriesModel,
-                            newIndex,
-                            updateMorphingPathProps
-                        );
-                    }
-                }
+            else {
+                fadeInElement(newEl, newIndex);
             }
-        })
-        .execute();
+        }
+        // else keep oldEl leaving animation.
+    }
+
+    (new DataDiffer(
+        oldData.getIndices(),
+        newData.getIndices(),
+        createGroupIdGetter(oldData),
+        createGroupIdGetter(newData),
+        null,
+        'multiple'
+    ))
+    .update(updateOneToOne)
+    .updateManyToOne(function (newIndex, oldIndices) {
+        const newEl = newData.getItemGraphicEl(newIndex);
+        const oldElsList = filter(
+            map(oldIndices, idx => oldData.getItemGraphicEl(idx)),
+            el => !!el
+        );
+
+        if (newEl) {
+            each(oldElsList, oldEl => stopAnimation(oldEl));
+            stopAnimation(newEl);
+
+            if (oldElsList.length) {
+                applyMorphAnimation(
+                    getPathList(oldElsList),
+                    getPathList(newEl),
+                    seriesModel,
+                    newIndex,
+                    updateMorphingPathProps
+                );
+            }
+            else {
+                fadeInElement(newEl, newIndex);
+            }
+        }
+        // else keep oldEl leaving animation.
+    })
+    .updateOneToMany(function (newIndices, oldIndex) {
+        const oldEl = oldData.getItemGraphicEl(oldIndex);
+        const newElsList = filter(
+            map(newIndices, idx => newData.getItemGraphicEl(idx)),
+            el => !!el
+        );
+
+        if (newElsList.length) {
+            each(newElsList, newEl => stopAnimation(newEl));
+            stopAnimation(oldEl);
+
+            if (oldEl) {
+                applyMorphAnimation(
+                    getPathList(oldEl),
+                    getPathList(newElsList),
+                    seriesModel,
+                    newIndices[0],
+                    updateMorphingPathProps
+                );
+            }
+            else {
+                each(newElsList, newEl => fadeInElement(newEl, newIndices[0]));
+            }
+        }
+
+        // else keep oldEl leaving animation.
+    })
+    .updateManyToMany(function (newIndices, oldIndices) {
+        // If two data are same and both have groupId.
+        // Normally they should be diff by id.
+        new DataDiffer(
+            oldIndices,
+            newIndices,
+            (rawIdx, dataIdx) => oldData.getId(dataIdx),
+            (rawIdx, dataIdx) => newData.getId(dataIdx)
+        ).update(updateOneToOne).execute();
+    })
+    .execute();
+}
+
+export function transitionBetweenSeries(
+    oldSeriesModel: SeriesModel,
+    newSeriesModel: SeriesModel,
+    api: ExtensionAPI
+) {
+    const oldData = oldSeriesModel.getData();
+    const newData = newSeriesModel.getData();
+
+    // No data or data are in the same series.
+    if (!oldData || !newData || oldData === newData) {
+        return;
+    }
+
+    transitionBetweenData(oldData, newData, newSeriesModel, api);
+}
+
+function getSeriesTransitionKey(series: SeriesModel) {
+    return series.get(['universalTransition', 'key']) || series.id;
 }
 
 export function installUniversalTransition(registers: EChartsExtensionInstallRegisters) {
     registers.registerPostUpdate((ecModel, api, params) => {
+
+        // TODO multiple series to multiple series.
         if (params.oldSeries && params.newSeries) {
             const oldSeriesMap = createHashMap<SeriesModel>();
             each(params.oldSeries, series => {
-                oldSeriesMap.set(series.id, series);
+                oldSeriesMap.set(getSeriesTransitionKey(series), series);
             });
             each(params.newSeries, series => {
                 if (series.get(['universalTransition', 'enabled'])) {
                     // Only transition between series with same id.
-                    const oldSeries = oldSeriesMap.get(series.id);
+                    const oldSeries = oldSeriesMap.get(getSeriesTransitionKey(series));
                     if (oldSeries) {
                         transitionBetweenSeries(oldSeries, series, api);
                     }

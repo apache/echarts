@@ -2066,7 +2066,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                     unfinished = true;
                 }
 
-                seriesModel.__transientTransitionOpt = null;
+                seriesModel.uniTransitionMap = null;
 
                 chartView.group.silent = !!seriesModel.get('silent');
                 // Should not call markRedraw on group, because it will disable zrender
@@ -2436,6 +2436,9 @@ class ECharts extends Eventful<ECEventDefinition> {
             chart: ECharts,
             transitionOpt: SetOptionTransitionOpt
         ): void {
+
+            // TODO Give warn if UniversalTransition module is not registered.
+
             const ecModel = chart._model;
 
             each(modelUtil.normalizeToArray(transitionOpt), transOpt => {
@@ -2476,7 +2479,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 }
 
                 // Just a temp solution: mount them on series.
-                toSeries.__transientTransitionOpt = {
+                toSeries.uniTransitionMap = {
                     from: fromOpt ? fromOpt.dimension : null,
                     to: toOpt.dimension
                 };

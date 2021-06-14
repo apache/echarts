@@ -208,7 +208,7 @@ export default class CustomChartView extends ChartView {
         // For example, reuse graphic elements and only update the transform when
         // roam or data zoom according to `actionType`.
 
-        const transOpt = customSeries.__transientTransitionOpt;
+        const transOpt = customSeries.uniTransitionMap;
 
         function updateMorphingPathProps(
             dataIndex: number,

@@ -53,13 +53,53 @@ under the License.
             var option;
 
             option = {
-                xAxis: {},
+                xAxis: {
+                    data: ['Animals', 'Fruits', 'Cars']
+                },
                 yAxis: {},
                 series: {
-                    type: 'line',
-                    data: [[11, 22], [33, 44]]
+                    type: 'bar',
+                    id: 'main',
+                    data: [{
+                        value: 5,
+                        groupId: 'animals'
+                    }, {
+                        value: 2,
+                        groupId: 'fruits'
+                    }, {
+                        value: 4,
+                        groupId: 'cars'
+                    }],
+                    universalTransition: {
+                        key: 'drilldown',
+                        enabled: true
+                    }
                 }
             };
+
+            const drilldownData = [{
+                dataGroupId: 'animals',
+                data: [
+                    ['Cats', 4],
+                    ['Dogs', 2],
+                    ['Cows', 1],
+                    ['Sheep', 2],
+                    ['Pigs', 1]
+                ]
+            }, {
+                dataGroupId: 'fruits',
+                data: [
+                    ['Apples', 4],
+                    ['Oranges', 2]
+                ]
+            }, {
+                dataGroupId: 'cars',
+                data: [
+                    ['Toyota', 4],
+                    ['Opel', 2],
+                    ['Volkswagen', 2]
+                ]
+            }];
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
@@ -68,7 +108,41 @@ under the License.
                 option: option
                 // height: 300,
                 // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
+            });
+
+            chart.on('click', function (event) {
+                const subData = drilldownData.find(data => {
+                    return data.dataGroupId === event.data.groupId;
+                });
+                chart.setOption({
+                    xAxis: {
+                        data: subData.data.map(item => item[0])
+                    },
+                    yAxis: {},
+                    series: {
+                        type: 'bar',
+                        id: subData.dataGroupId,
+                        animationDurationUpdate: 1000,
+                        dataGroupId: subData.dataGroupId,
+                        data: subData.data.map(item => item[1]),
+                        universalTransition: {
+                            key: 'drilldown',
+                            enabled: true
+                        }
+                    },
+                    graphic: [{
+                        type: 'text',
+                        left: 50,
+                        top: 20,
+                        style: {
+                            text: 'Back',
+                            fontSize: 18
+                        },
+                        onclick() {
+                            chart.setOption(option, true);
+                        }
+                    }]
+                }, true);
             });
         });
         </script>
