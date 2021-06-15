@@ -40,7 +40,7 @@ import {
 import * as colorTool from 'zrender/src/tool/color';
 import env from 'zrender/src/core/env';
 import timsort from 'zrender/src/core/timsort';
-import Eventful from 'zrender/src/core/Eventful';
+import Eventful, { EventCallbackSingleParam } from 'zrender/src/core/Eventful';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import GlobalModel, {QueryConditionKindA, GlobalModelSetOptionOpts} from '../model/Global';
 import ExtensionAPI from './ExtensionAPI';
@@ -117,7 +117,7 @@ import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import { seriesSymbolTask, dataSymbolTask } from '../visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from '../visual/helper';
 import LabelManager from '../label/LabelManager';
-import { deprecateLog, throwError } from '../util/log';
+import { deprecateLog } from '../util/log';
 import { handleLegacySelectEvents } from '../legacy/dataSelectAction';
 
 import { registerExternalTransform } from '../data/helper/transform';
@@ -314,22 +314,19 @@ let renderSeries: (
 let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI, params: PostUpdateParams) => void;
 let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
 let enableConnect: (ecIns: ECharts) => void;
-let setTransitionOpt: (
-    chart: ECharts,
-    transitionOpt: SetOptionTransitionOpt
-) => void;
 
 let markStatusToUpdate: (ecIns: ECharts) => void;
 let applyChangedStates: (ecIns: ECharts) => void;
 
+type RenderedEventParam = { elapsedTime: number };
 type ECEventDefinition = {
-    [key in ZRElementEventName]: ECElementEvent
+    [key in ZRElementEventName]: EventCallbackSingleParam<ECElementEvent>
 } & {
-    rendered: { elapsedTime: number }
-    finished: undefined
+    rendered: EventCallbackSingleParam<RenderedEventParam>
+    finished: () => void | boolean
 } & {
     // TODO: Use ECActionEvent
-    [key: string]: any
+    [key: string]: (...args: unknown[]) => void | boolean
 };
 class ECharts extends Eventful<ECEventDefinition> {
 
@@ -602,12 +599,10 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         let silent;
         let replaceMerge;
-        let transitionOpt: SetOptionTransitionOpt;
         if (isObject(notMerge)) {
             lazyUpdate = notMerge.lazyUpdate;
             silent = notMerge.silent;
             replaceMerge = notMerge.replaceMerge;
-            transitionOpt = notMerge.transition;
             notMerge = notMerge.notMerge;
         }
 
@@ -626,15 +621,16 @@ class ECharts extends Eventful<ECEventDefinition> {
             oldSeriesModels = this._model.getSeries();
         }
 
+        const oldSeriesData = oldSeriesModels && map(oldSeriesModels, series => series.getData());
+
         this._model.setOption(option as ECBasicOption, { replaceMerge }, optionPreprocessorFuncs);
         const newSeriesModels = this._model.getSeries();
 
         const postUpdateParams = {
             oldSeries: oldSeriesModels,
-            newSeries: newSeriesModels
+            newSeries: newSeriesModels,
+            oldSeriesData: oldSeriesData
         };
-
-        setTransitionOpt(this, transitionOpt);
 
         if (lazyUpdate) {
             this[PENDING_UPDATE] = {
@@ -1104,7 +1100,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         each(eventActionMap, (actionType, eventType) => {
             this._messageCenter.on(eventType, function (event: Payload) {
-                this.trigger(eventType, event);
+                (this as any).trigger(eventType, event);
             }, this);
         });
 
@@ -1114,7 +1110,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             ['selectchanged'],
             (eventType) => {
                 this._messageCenter.on(eventType, function (event: Payload) {
-                    this.trigger(eventType, event);
+                    (this as any).trigger(eventType, event);
                 }, this);
             }
         );
@@ -1935,7 +1931,7 @@ class ECharts extends Eventful<ECEventDefinition> {
          * (5) no delayed setOption needs to be processed.
          */
         bindRenderedEvent = function (zr: zrender.ZRenderType, ecIns: ECharts): void {
-            zr.on('rendered', function (params: ECEventDefinition['rendered']) {
+            zr.on('rendered', function (params: RenderedEventParam) {
 
                 ecIns.trigger('rendered', params);
 
@@ -2066,7 +2062,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                     unfinished = true;
                 }
 
-                seriesModel.uniTransitionMap = null;
+                // seriesModel.uniTransitionMap = null;
 
                 chartView.group.silent = !!seriesModel.get('silent');
                 // Should not call markRedraw on group, because it will disable zrender
@@ -2096,7 +2092,6 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // label should be in normal status when layouting.
                 updateStates(seriesModel, chartView);
             });
-
 
             // If use hover layer
             updateHoverLayerStatus(ecIns, ecModel);
@@ -2431,61 +2426,6 @@ class ECharts extends Eventful<ECEventDefinition> {
                 });
             });
         };
-
-        setTransitionOpt = function (
-            chart: ECharts,
-            transitionOpt: SetOptionTransitionOpt
-        ): void {
-
-            // TODO Give warn if UniversalTransition module is not registered.
-
-            const ecModel = chart._model;
-
-            each(modelUtil.normalizeToArray(transitionOpt), transOpt => {
-                let errMsg;
-                const fromOpt = transOpt.from;
-                const toOpt = transOpt.to;
-
-                if (toOpt == null) {
-                    if (__DEV__) {
-                        errMsg = '`transition.to` must be specified.';
-                    }
-                    throwError(errMsg);
-                }
-
-                const finderOpt = {
-                    includeMainTypes: ['series'],
-                    enableAll: false,
-                    enableNone: false
-                };
-                const fromResult = fromOpt ? modelUtil.parseFinder(ecModel, fromOpt, finderOpt) : null;
-                const toResult = modelUtil.parseFinder(ecModel, toOpt, finderOpt) as modelUtil.ParsedModelFinderKnown;
-                const toSeries = toResult.seriesModel;
-
-                if (toSeries == null) {
-                    errMsg = '';
-                    if (__DEV__) {
-                        errMsg = '`transition` is only supported on series.';
-                    }
-                }
-                if (fromResult && fromResult.seriesModel !== toSeries) {
-                    errMsg = '';
-                    if (__DEV__) {
-                        errMsg = '`transition.from` and `transition.to` must be specified to the same series.';
-                    }
-                }
-                if (errMsg != null) {
-                    throwError(errMsg);
-                }
-
-                // Just a temp solution: mount them on series.
-                toSeries.uniTransitionMap = {
-                    from: fromOpt ? fromOpt.dimension : null,
-                    to: toOpt.dimension
-                };
-            });
-        };
-
     })();
 }
 
@@ -2757,6 +2697,10 @@ export function registerPostUpdate(postUpdateFunc: PostUpdater): void {
     if (indexOf(postUpdateFuncs, postUpdateFunc) < 0) {
         postUpdateFunc && postUpdateFuncs.push(postUpdateFunc);
     }
+}
+
+export function registerUpdateLifecycle(): void {
+
 }
 
 /**

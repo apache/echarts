@@ -117,7 +117,7 @@ class BarView extends ChartView {
     private _isLargeDraw: boolean;
 
     private _isFirstFrame: boolean; // First frame after series added
-    private _onRendered: EventCallback<unknown, unknown>;
+    private _onRendered: EventCallback;
 
     private _backgroundGroup: Group;
 

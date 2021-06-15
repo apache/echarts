@@ -17,33 +17,19 @@
 * under the License.
 */
 
-import * as echarts from '../../';
+import Eventful, { EventCallback } from 'zrender/src/core/Eventful';
+import GlobalModel from '../model/Global';
+import { EChartsType } from './echarts';
+import ExtensionAPI from './ExtensionAPI';
 
-const dom = document.createElement('div');
-dom.className = 'chart';
+interface LifecycleEvents {
+    'inited': [EChartsType],
+    'series:beforerender': [GlobalModel, ExtensionAPI]
+}
 
-const chart: echarts.EChartsType = echarts.init(dom);
+const lifecycle = new Eventful<{
+    [key in keyof LifecycleEvents]: EventCallback<LifecycleEvents[key]>
+}>();
 
-const option: echarts.EChartsOption = {
-    series: [{
-        type: 'bar'
-    }]
-};
-chart.setOption(option);
-
-// Mouse event.
-chart.on('click', function (params) {
-    console.log(params.name);
-    this.off('click');
-});
-
-// Rendered event.
-chart.on('rendered', function (params) {
-    console.log(params.elapsedTime);
-    this.off('rendered');
-});
-
-chart.getZr().on('click', function (params) {
-    console.log(params.offsetX);
-    this.off('click');
+lifecycle.on('series:beforerender', function (param) {
 });
