@@ -50,7 +50,7 @@ function transitionBetweenData(
             // TODO Group itself should also invoke the callback.
             // Force finish the leave animation.
             for (let i = 0; i < pathList.length; i++) {
-                (pathList as Path[])[i].stopAnimation('');
+                (pathList as Path[])[i].stopAnimation();
             }
         }
         return pathList;
@@ -80,6 +80,10 @@ function transitionBetweenData(
                 });
             }
         });
+    }
+
+    function removeEl(el: Element) {
+        el.parent && el.parent.remove(el);
     }
 
     // TODO share it to other modules. or put it in the List
@@ -116,8 +120,16 @@ function transitionBetweenData(
         const oldEl = oldData.getItemGraphicEl(oldIndex);
         const newEl = newData.getItemGraphicEl(newIndex);
 
+        // Can't handle same elements.
+        if (oldEl === newEl) {
+            return;
+        }
+
         if (newEl) {
             if (oldEl) {
+                // If old element is doing leaving animation. stop it and remove it immediately.
+                removeEl(oldEl);
+
                 applyMorphAnimation(
                     stopAnimation(getPathList(oldEl)),
                     stopAnimation(getPathList(newEl)),
@@ -146,11 +158,14 @@ function transitionBetweenData(
         const newEl = newData.getItemGraphicEl(newIndex);
         const oldElsList = filter(
             map(oldIndices, idx => oldData.getItemGraphicEl(idx)),
-            el => !!el
+            el => el && el !== newEl    // Can't handle same elements
         );
 
         if (newEl) {
             if (oldElsList.length) {
+                // If old element is doing leaving animation. stop it and remove it immediately.
+                each(oldElsList, oldEl => removeEl(oldEl));
+
                 applyMorphAnimation(
                     stopAnimation(getPathList(oldElsList)),
                     stopAnimation(getPathList(newEl)),
@@ -169,11 +184,14 @@ function transitionBetweenData(
         const oldEl = oldData.getItemGraphicEl(oldIndex);
         const newElsList = filter(
             map(newIndices, idx => newData.getItemGraphicEl(idx)),
-            el => !!el
+            el => el && el !== oldEl    // Can't handle same elements
         );
 
         if (newElsList.length) {
             if (oldEl) {
+                // If old element is doing leaving animation. stop it and remove it immediately.
+                removeEl(oldEl);
+
                 applyMorphAnimation(
                     stopAnimation(getPathList(oldEl)),
                     stopAnimation(getPathList(newElsList)),

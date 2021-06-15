@@ -115,6 +115,9 @@ under the License.
                     const subData = drilldownData.find(data => {
                         return data.dataGroupId === event.data.groupId;
                     });
+                    if (!subData) {
+                        return;
+                    }
                     chart.setOption({
                         xAxis: {
                             data: subData.data.map(item => item[0])

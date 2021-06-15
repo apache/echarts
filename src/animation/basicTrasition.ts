@@ -160,27 +160,23 @@ function animateOrSetProps<Props>(
         const duration = animationConfig.duration;
         const animationDelay = animationConfig.delay;
         const animationEasing = animationConfig.easing;
+
+        const animateConfig: ElementAnimateConfig = {
+            duration: duration as number,
+            delay: animationDelay as number || 0,
+            easing: animationEasing,
+            done: cb,
+            force: !!cb || !!during,
+            // Set to final state in update/init animation.
+            // So the post processing based on the path shape can be done correctly.
+            setToFinal: !isRemove,
+            scope: animationType,
+            during: during
+        };
+
         isFrom
-            ? el.animateFrom(props, {
-                duration: animationConfig.duration as number,
-                delay: animationDelay as number || 0,
-                easing: animationEasing,
-                done: cb,
-                force: !!cb || !!during,
-                setToFinal: true,
-                scope: animationType,
-                during: during
-            })
-            : el.animateTo(props, {
-                duration: duration as number,
-                delay: animationDelay as number || 0,
-                easing: animationEasing,
-                done: cb,
-                force: !!cb || !!during,
-                setToFinal: true,
-                scope: animationType,
-                during: during
-            });
+            ? el.animateFrom(props, animateConfig)
+            : el.animateTo(props, animateConfig);
     }
     else {
         el.stopAnimation();
