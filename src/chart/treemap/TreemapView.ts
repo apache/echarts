@@ -968,10 +968,9 @@ function renderNode(
 
         const isShow = normalLabelModel.getShallow('show');
 
-        const labelStatesModels = getLabelStatesModels(nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL);
         setLabelStyle(
             rectEl,
-            labelStatesModels,
+            getLabelStatesModels(nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL),
             {
                 defaultText: isShow ? defaultText : null,
                 inheritColor: visualColor,
@@ -981,21 +980,11 @@ function renderNode(
             }
         );
 
-        // need consider all state
-        let needsCreateText = false;
-        for (let i = 0; i < DISPLAY_STATES.length; i++) {
-            const stateModel = labelStatesModels[DISPLAY_STATES[i]];
-            if (stateModel && stateModel.getShallow('show')) {
-                needsCreateText = true;
-                break;
-            }
-        }
-
-        if (!needsCreateText) {
-            return;
-        }
         
         const textEl = rectEl.getTextContent();
+        if (!textEl) {
+            return;
+        }
         const textStyle = textEl.style;
         const textPadding = normalizeCssArray(textStyle.padding || 0);
 
