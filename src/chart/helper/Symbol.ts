@@ -102,6 +102,9 @@ class Symbol extends graphic.Group {
         this.childAt(0).stopAnimation(null, toLastFrame);
     }
 
+    getSymbolType() {
+        return this._symbolType;
+    }
     /**
      * FIXME:
      * Caution: This method breaks the encapsulation of this module,

@@ -57,6 +57,7 @@ under the License.
                     data: ['Animals', 'Fruits', 'Cars']
                 },
                 yAxis: {},
+                dataGroupId: '',
                 // animationDurationUpdate: 1000,
                 series: {
                     type: 'bar',
@@ -142,10 +143,10 @@ under the License.
                                 fontSize: 18
                             },
                             onclick() {
-                                chart.setOption(option, true);
+                                chart.setOption(option);
                             }
                         }]
-                    }, true);
+                    });
                 }
             });
         });

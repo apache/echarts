@@ -2040,7 +2040,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             // Render all charts
             const scheduler = ecIns._scheduler;
 
-            updateParams = extend(updateParams, {
+            updateParams = extend(updateParams || {}, {
                 updatedSeries: ecModel.getSeries()
             });
 
