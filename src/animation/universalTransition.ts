@@ -40,6 +40,10 @@ function transitionBetweenData(
         return;
     }
 
+    // const oldSeriesModel = oldData.hostModel;
+    // const isTransitionSameSeries = oldSeriesModel === seriesModel;
+
+
     function stopAnimation(pathList: Path[] | Path[][]) {
         if (isArray(pathList[0])) {
             for (let i = 0; i < pathList.length; i++) {
@@ -83,7 +87,13 @@ function transitionBetweenData(
     }
 
     function removeEl(el: Element) {
-        el.parent && el.parent.remove(el);
+        if (el.parent) {
+            // Bake parent transform to element.
+            // So it can still have proper transform to transition after it's removed.
+            const computedTransform = el.getComputedTransform();
+            el.setLocalTransform(computedTransform);
+            el.parent.remove(el);
+        }
     }
 
     // TODO share it to other modules. or put it in the List
