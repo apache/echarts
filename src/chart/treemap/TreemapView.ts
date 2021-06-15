@@ -25,8 +25,7 @@ import {
     setAsHighDownDispatcher,
     setDefaultStateProxy,
     enableHoverFocus,
-    Z2_EMPHASIS_LIFT,
-    DISPLAY_STATES
+    Z2_EMPHASIS_LIFT
 } from '../../util/states';
 import DataDiffer from '../../data/DataDiffer';
 import * as helper from '../helper/treeHelper';
