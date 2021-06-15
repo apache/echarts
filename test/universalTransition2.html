@@ -72,7 +72,6 @@ under the License.
                         groupId: 'cars'
                     }],
                     universalTransition: {
-                        key: 'drilldown',
                         enabled: true
                     }
                 }
@@ -123,12 +122,11 @@ under the License.
                         yAxis: {},
                         series: {
                             type: 'bar',
-                            id: subData.dataGroupId,
+                            id: 'main',
                             // animationDurationUpdate: 1000,
                             dataGroupId: subData.dataGroupId,
                             data: subData.data.map(item => item[1]),
                             universalTransition: {
-                                key: 'drilldown',
                                 enabled: true
                             }
                         },

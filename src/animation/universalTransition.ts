@@ -17,9 +17,8 @@
 * under the License.
 */
 
-import ExtensionAPI from '../core/ExtensionAPI';
 import SeriesModel from '../model/Series';
-import {createHashMap, each, map, filter} from 'zrender/src/core/util';
+import {createHashMap, each, map, filter, isArray} from 'zrender/src/core/util';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { applyMorphAnimation, getPathList } from './morphTransitionHelper';
 import Path from 'zrender/src/graphic/Path';
@@ -33,18 +32,28 @@ import { OptionDataItemObject } from '../util/types';
 function transitionBetweenData(
     oldData: List,
     newData: List,
-    seriesModel: SeriesModel,
-    api: ExtensionAPI
+    seriesModel: SeriesModel
 ) {
-    function stopAnimation(el: Element) {
-        // TODO Group itself should also invoke the callback.
-        // Force finish the leave animation.
-        el.stopAnimation();
-        if (el.isGroup) {
-            el.traverse(child => {
-                child.stopAnimation();
-            });
+
+    // No data or data are in the same series.
+    if (!oldData || !newData || oldData === newData) {
+        return;
+    }
+
+    function stopAnimation(pathList: Path[] | Path[][]) {
+        if (isArray(pathList[0])) {
+            for (let i = 0; i < pathList.length; i++) {
+                stopAnimation(pathList[i] as Path[]);
+            }
         }
+        else {
+            // TODO Group itself should also invoke the callback.
+            // Force finish the leave animation.
+            for (let i = 0; i < pathList.length; i++) {
+                (pathList as Path[])[i].stopAnimation('');
+            }
+        }
+        return pathList;
     }
 
     function updateMorphingPathProps(
@@ -108,13 +117,10 @@ function transitionBetweenData(
         const newEl = newData.getItemGraphicEl(newIndex);
 
         if (newEl) {
-            stopAnimation(newEl);
-
             if (oldEl) {
-                stopAnimation(oldEl);
                 applyMorphAnimation(
-                    getPathList(oldEl),
-                    getPathList(newEl),
+                    stopAnimation(getPathList(oldEl)),
+                    stopAnimation(getPathList(newEl)),
                     seriesModel,
                     newIndex,
                     updateMorphingPathProps
@@ -144,13 +150,10 @@ function transitionBetweenData(
         );
 
         if (newEl) {
-            each(oldElsList, oldEl => stopAnimation(oldEl));
-            stopAnimation(newEl);
-
             if (oldElsList.length) {
                 applyMorphAnimation(
-                    getPathList(oldElsList),
-                    getPathList(newEl),
+                    stopAnimation(getPathList(oldElsList)),
+                    stopAnimation(getPathList(newEl)),
                     seriesModel,
                     newIndex,
                     updateMorphingPathProps
@@ -170,13 +173,10 @@ function transitionBetweenData(
         );
 
         if (newElsList.length) {
-            each(newElsList, newEl => stopAnimation(newEl));
-            stopAnimation(oldEl);
-
             if (oldEl) {
                 applyMorphAnimation(
-                    getPathList(oldEl),
-                    getPathList(newElsList),
+                    stopAnimation(getPathList(oldEl)),
+                    stopAnimation(getPathList(newElsList)),
                     seriesModel,
                     newIndices[0],
                     updateMorphingPathProps
@@ -202,40 +202,30 @@ function transitionBetweenData(
     .execute();
 }
 
-export function transitionBetweenSeries(
-    oldSeriesModel: SeriesModel,
-    newSeriesModel: SeriesModel,
-    api: ExtensionAPI
-) {
-    const oldData = oldSeriesModel.getData();
-    const newData = newSeriesModel.getData();
-
-    // No data or data are in the same series.
-    if (!oldData || !newData || oldData === newData) {
-        return;
-    }
-
-    transitionBetweenData(oldData, newData, newSeriesModel, api);
-}
-
 function getSeriesTransitionKey(series: SeriesModel) {
-    return series.get(['universalTransition', 'key']) || series.id;
+    return series.id;
 }
 
 export function installUniversalTransition(registers: EChartsExtensionInstallRegisters) {
     registers.registerUpdateLifecycle('series:transition', (ecModel, api, params) => {
-        // TODO multiple series to multiple series.
+        // TODO multiple to multiple series.
         if (params.oldSeries && params.updatedSeries) {
-            const oldSeriesMap = createHashMap<SeriesModel>();
-            each(params.oldSeries, series => {
-                oldSeriesMap.set(getSeriesTransitionKey(series), series);
+            const oldSeriesMap = createHashMap<{ series: SeriesModel, data: List }>();
+            each(params.oldSeries, (series, idx) => {
+                oldSeriesMap.set(getSeriesTransitionKey(series), {
+                    series, data: params.oldData[idx]
+                });
             });
             each(params.updatedSeries, series => {
                 if (series.get(['universalTransition', 'enabled'])) {
                     // Only transition between series with same id.
                     const oldSeries = oldSeriesMap.get(getSeriesTransitionKey(series));
                     if (oldSeries) {
-                        transitionBetweenSeries(oldSeries, series, api);
+                        transitionBetweenData(
+                            oldSeries.data,
+                            series.getData(),
+                            series
+                        );
                     }
                 }
             });

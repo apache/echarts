@@ -1611,8 +1611,6 @@ export interface SeriesOption<
      * If enabled universal transition cross series.
      */
     universalTransition?: {
-        // Key to map two series. Use id defaultly
-        key: string
         enabled: boolean
     }
 
