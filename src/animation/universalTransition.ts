@@ -43,22 +43,30 @@ function transitionBetweenData(
     // const oldSeriesModel = oldData.hostModel;
     // const isTransitionSameSeries = oldSeriesModel === seriesModel;
 
-
-    function stopAnimation(pathList: Path[] | Path[][]) {
-        if (isArray(pathList[0])) {
-            for (let i = 0; i < pathList.length; i++) {
-                stopAnimation(pathList[i] as Path[]);
-            }
+    function stopAnimation(el: Element) {
+        el.stopAnimation();
+        if (el.isGroup) {
+            el.traverse(child => {
+                child.stopAnimation();
+            });
         }
-        else {
-            // TODO Group itself should also invoke the callback.
-            // Force finish the leave animation.
-            for (let i = 0; i < pathList.length; i++) {
-                (pathList as Path[])[i].stopAnimation();
-            }
-        }
-        return pathList;
     }
+
+    // function stopAnimation(pathList: Path[] | Path[][]) {
+    //     if (isArray(pathList[0])) {
+    //         for (let i = 0; i < pathList.length; i++) {
+    //             stopAnimation(pathList[i] as Path[]);
+    //         }
+    //     }
+    //     else {
+    //         // TODO Group itself should also invoke the callback.
+    //         // Force finish the leave animation.
+    //         for (let i = 0; i < pathList.length; i++) {
+    //             (pathList as Path[])[i].stopAnimation();
+    //         }
+    //     }
+    //     return pathList;
+    // }
 
     function updateMorphingPathProps(
         from: Path, to: Path,
@@ -136,13 +144,19 @@ function transitionBetweenData(
         }
 
         if (newEl) {
+            // TODO: If keep animating the group in case
+            // some of the elements don't want to be morphed.
+            stopAnimation(newEl);
+
             if (oldEl) {
+                stopAnimation(oldEl);
+
                 // If old element is doing leaving animation. stop it and remove it immediately.
                 removeEl(oldEl);
 
                 applyMorphAnimation(
-                    stopAnimation(getPathList(oldEl)),
-                    stopAnimation(getPathList(newEl)),
+                    getPathList(oldEl),
+                    getPathList(newEl),
                     seriesModel,
                     newIndex,
                     updateMorphingPathProps
@@ -172,13 +186,17 @@ function transitionBetweenData(
         );
 
         if (newEl) {
+            stopAnimation(newEl);
             if (oldElsList.length) {
                 // If old element is doing leaving animation. stop it and remove it immediately.
-                each(oldElsList, oldEl => removeEl(oldEl));
+                each(oldElsList, oldEl => {
+                    stopAnimation(oldEl);
+                    removeEl(oldEl);
+                });
 
                 applyMorphAnimation(
-                    stopAnimation(getPathList(oldElsList)),
-                    stopAnimation(getPathList(newEl)),
+                    getPathList(oldElsList),
+                    getPathList(newEl),
                     seriesModel,
                     newIndex,
                     updateMorphingPathProps
@@ -198,13 +216,15 @@ function transitionBetweenData(
         );
 
         if (newElsList.length) {
+            each(newElsList, newEl => stopAnimation(newEl));
             if (oldEl) {
+                stopAnimation(oldEl);
                 // If old element is doing leaving animation. stop it and remove it immediately.
                 removeEl(oldEl);
 
                 applyMorphAnimation(
-                    stopAnimation(getPathList(oldEl)),
-                    stopAnimation(getPathList(newElsList)),
+                    getPathList(oldEl),
+                    getPathList(newElsList),
                     seriesModel,
                     newIndices[0],
                     updateMorphingPathProps

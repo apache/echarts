@@ -1042,6 +1042,7 @@ class LineView extends ChartView {
                     scaleY: 1
                 }, {
                     duration: 200,
+                    setToFinal: true,
                     delay: delay
                 });
 
