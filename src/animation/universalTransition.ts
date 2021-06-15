@@ -223,15 +223,14 @@ function getSeriesTransitionKey(series: SeriesModel) {
 }
 
 export function installUniversalTransition(registers: EChartsExtensionInstallRegisters) {
-    registers.registerPostUpdate((ecModel, api, params) => {
-
+    registers.registerUpdateLifecycle('series:transition', (ecModel, api, params) => {
         // TODO multiple series to multiple series.
-        if (params.oldSeries && params.newSeries) {
+        if (params.oldSeries && params.updatedSeries) {
             const oldSeriesMap = createHashMap<SeriesModel>();
             each(params.oldSeries, series => {
                 oldSeriesMap.set(getSeriesTransitionKey(series), series);
             });
-            each(params.newSeries, series => {
+            each(params.updatedSeries, series => {
                 if (series.get(['universalTransition', 'enabled'])) {
                     // Only transition between series with same id.
                     const oldSeries = oldSeriesMap.get(getSeriesTransitionKey(series));

@@ -20,3 +20,4 @@
 // Module that exports complex but fancy features.
 
 export {installUniversalTransition as UniversalTransition} from '../animation/universalTransition';
+export {installLabelLayout as LabelLayout} from '../label/installLabelLayout';

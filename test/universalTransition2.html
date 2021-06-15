@@ -57,6 +57,7 @@ under the License.
                     data: ['Animals', 'Fruits', 'Cars']
                 },
                 yAxis: {},
+                // animationDurationUpdate: 1000,
                 series: {
                     type: 'bar',
                     id: 'main',
@@ -111,38 +112,40 @@ under the License.
             });
 
             chart.on('click', function (event) {
-                const subData = drilldownData.find(data => {
-                    return data.dataGroupId === event.data.groupId;
-                });
-                chart.setOption({
-                    xAxis: {
-                        data: subData.data.map(item => item[0])
-                    },
-                    yAxis: {},
-                    series: {
-                        type: 'bar',
-                        id: subData.dataGroupId,
-                        animationDurationUpdate: 1000,
-                        dataGroupId: subData.dataGroupId,
-                        data: subData.data.map(item => item[1]),
-                        universalTransition: {
-                            key: 'drilldown',
-                            enabled: true
-                        }
-                    },
-                    graphic: [{
-                        type: 'text',
-                        left: 50,
-                        top: 20,
-                        style: {
-                            text: 'Back',
-                            fontSize: 18
+                if (event.data) {
+                    const subData = drilldownData.find(data => {
+                        return data.dataGroupId === event.data.groupId;
+                    });
+                    chart.setOption({
+                        xAxis: {
+                            data: subData.data.map(item => item[0])
                         },
-                        onclick() {
-                            chart.setOption(option, true);
-                        }
-                    }]
-                }, true);
+                        yAxis: {},
+                        series: {
+                            type: 'bar',
+                            id: subData.dataGroupId,
+                            // animationDurationUpdate: 1000,
+                            dataGroupId: subData.dataGroupId,
+                            data: subData.data.map(item => item[1]),
+                            universalTransition: {
+                                key: 'drilldown',
+                                enabled: true
+                            }
+                        },
+                        graphic: [{
+                            type: 'text',
+                            left: 50,
+                            top: 20,
+                            style: {
+                                text: 'Back',
+                                fontSize: 18
+                            },
+                            onclick() {
+                                chart.setOption(option, true);
+                            }
+                        }]
+                    }, true);
+                }
             });
         });
         </script>

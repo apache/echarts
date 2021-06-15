@@ -237,12 +237,8 @@ export interface OptionPreprocessor {
     (option: ECUnitOption, isTheme: boolean): void
 }
 
-export interface PostUpdateParams {
-    oldSeries?: SeriesModel[]
-    newSeries?: SeriesModel[]
-}
 export interface PostUpdater {
-    (ecModel: GlobalModel, api: ExtensionAPI, params: PostUpdateParams): void;
+    (ecModel: GlobalModel, api: ExtensionAPI): void;
 }
 
 export interface StageHandlerReset {

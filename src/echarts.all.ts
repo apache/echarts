@@ -88,7 +88,8 @@ import {
 } from './export/components';
 
 import {
-    UniversalTransition
+    UniversalTransition,
+    LabelLayout
 } from './export/features';
 
 
@@ -345,3 +346,11 @@ use(DatasetComponent);
 //     }
 // })
 use(UniversalTransition);
+
+// label layout
+// chart.setOption({
+//     series: {
+//         labelLayout: { hideOverlap: true }
+//     }
+// })
+use(LabelLayout);

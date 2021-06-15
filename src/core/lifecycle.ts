@@ -18,18 +18,34 @@
 */
 
 import Eventful, { EventCallback } from 'zrender/src/core/Eventful';
+import SeriesModel from '../model/Series';
 import GlobalModel from '../model/Global';
 import { EChartsType } from './echarts';
 import ExtensionAPI from './ExtensionAPI';
+import List from '../data/List';
 
+export interface UpdateLifecycleParams {
+    oldSeries?: SeriesModel[]
+    oldData?: List[]
+
+    updatedSeries?: SeriesModel[]
+}
 interface LifecycleEvents {
-    'inited': [EChartsType],
-    'series:beforerender': [GlobalModel, ExtensionAPI]
+    'afterinit': [EChartsType],
+    'series:beforeupdate': [GlobalModel, ExtensionAPI, UpdateLifecycleParams],
+    'series:layoutlabels': [GlobalModel, ExtensionAPI, UpdateLifecycleParams],
+    'series:transition': [GlobalModel, ExtensionAPI, UpdateLifecycleParams],
+    'series:afterupdate': [GlobalModel, ExtensionAPI, UpdateLifecycleParams]
+    // 'series:beforeeachupdate': [GlobalModel, ExtensionAPI, SeriesModel]
+    // 'series:aftereachupdate': [GlobalModel, ExtensionAPI, SeriesModel]
+    'afterupdate': [GlobalModel, ExtensionAPI]
 }
 
 const lifecycle = new Eventful<{
     [key in keyof LifecycleEvents]: EventCallback<LifecycleEvents[key]>
 }>();
 
-lifecycle.on('series:beforerender', function (param) {
-});
+
+export default lifecycle;
+
+export {LifecycleEvents};

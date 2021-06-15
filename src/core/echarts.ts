@@ -109,14 +109,12 @@ import {
     ScaleDataValue,
     ZRElementEventName,
     ECElementEvent,
-    AnimationOption,
-    PostUpdateParams
+    AnimationOption
 } from '../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import { seriesSymbolTask, dataSymbolTask } from '../visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from '../visual/helper';
-import LabelManager from '../label/LabelManager';
 import { deprecateLog } from '../util/log';
 import { handleLegacySelectEvents } from '../legacy/dataSelectAction';
 
@@ -129,6 +127,7 @@ import decal from '../visual/decal';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
 import geoSourceManager from '../coord/geo/geoSourceManager';
+import lifecycle, { LifecycleEvents, UpdateLifecycleParams } from './lifecycle';
 
 declare let global: any;
 
@@ -278,7 +277,7 @@ let prepareView: (ecIns: ECharts, isComponent: boolean) => void;
 let updateDirectly: (
     ecIns: ECharts, method: string, payload: Payload, mainType: ComponentMainType, subType?: ComponentSubType
 ) => void;
-type UpdateMethod = (this: ECharts, payload?: Payload, postUpdateParams?: PostUpdateParams) => void;
+type UpdateMethod = (this: ECharts, payload?: Payload, renderParams?: UpdateLifecycleParams) => void;
 let updateMethods: {
     prepareAndUpdate: UpdateMethod,
     update: UpdateMethod,
@@ -300,18 +299,18 @@ let triggerUpdatedEvent: (this: ECharts, silent: boolean) => void;
 let bindRenderedEvent: (zr: zrender.ZRenderType, ecIns: ECharts) => void;
 let bindMouseEvent: (zr: zrender.ZRenderType, ecIns: ECharts) => void;
 let clearColorPalette: (ecModel: GlobalModel) => void;
-let render: (ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) => void;
+let render: (
+    ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload, updateParams: UpdateLifecycleParams
+) => void;
 let renderComponents: (
-    ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload, dirtyList?: ComponentView[]
+    ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload,
+    updateParams: UpdateLifecycleParams, dirtyList?: ComponentView[]
 ) => void;
 let renderSeries: (
-    ecIns: ECharts,
-    ecModel: GlobalModel,
-    api: ExtensionAPI,
-    payload: Payload | 'remain',
+    ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload | 'remain',
+    updateParams: UpdateLifecycleParams,
     dirtyMap?: {[uid: string]: any}
 ) => void;
-let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI, params: PostUpdateParams) => void;
 let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
 let enableConnect: (ecIns: ECharts) => void;
 
@@ -380,12 +379,10 @@ class ECharts extends Eventful<ECEventDefinition> {
 
     private _loadingFX: LoadingEffect;
 
-    private _labelManager: LabelManager;
-
 
     private [PENDING_UPDATE]: {
         silent: boolean
-        postUpdateParams: PostUpdateParams
+        updateParams: UpdateLifecycleParams
     };
     private [IN_MAIN_PROCESS_KEY]: boolean;
     private [CONNECT_STATUS_KEY]: ConnectStatus;
@@ -464,8 +461,6 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         this._messageCenter = new MessageCenter();
 
-        this._labelManager = new LabelManager();
-
         // Init mouse events
         this._initEvents();
 
@@ -498,7 +493,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             this[IN_MAIN_PROCESS_KEY] = true;
 
             prepare(this);
-            updateMethods.update.call(this, null, this[PENDING_UPDATE].postUpdateParams);
+            updateMethods.update.call(this, null, this[PENDING_UPDATE].updateParams);
 
             // At present, in each frame, zrender performs:
             //   (1) animation step forward.
@@ -542,7 +537,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // console.log('--- ec frame visual ---', remainTime);
                 scheduler.performVisualTasks(ecModel);
 
-                renderSeries(this, this._model, api, 'remain');
+                renderSeries(this, this._model, api, 'remain', {});
 
                 remainTime -= (+new Date() - startTime);
             }
@@ -624,18 +619,16 @@ class ECharts extends Eventful<ECEventDefinition> {
         const oldSeriesData = oldSeriesModels && map(oldSeriesModels, series => series.getData());
 
         this._model.setOption(option as ECBasicOption, { replaceMerge }, optionPreprocessorFuncs);
-        const newSeriesModels = this._model.getSeries();
 
-        const postUpdateParams = {
+        const updateParams = {
             oldSeries: oldSeriesModels,
-            newSeries: newSeriesModels,
-            oldSeriesData: oldSeriesData
-        };
+            oldData: oldSeriesData
+        } as UpdateLifecycleParams;
 
         if (lazyUpdate) {
             this[PENDING_UPDATE] = {
                 silent: silent,
-                postUpdateParams
+                updateParams: updateParams
             };
             this[IN_MAIN_PROCESS_KEY] = false;
 
@@ -646,7 +639,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         else {
             prepare(this);
 
-            updateMethods.update.call(this, null, postUpdateParams);
+            updateMethods.update.call(this, null, updateParams);
 
             // Ensure zr refresh sychronously, and then pixel in canvas can be
             // fetched after `setOption`.
@@ -1326,10 +1319,11 @@ class ECharts extends Eventful<ECEventDefinition> {
     }
 
     updateLabelLayout() {
-        const labelManager = this._labelManager;
-        labelManager.updateLayoutConfig(this._api);
-        labelManager.layout(this._api);
-        labelManager.processLabelsOverall();
+        lifecycle.trigger('series:layoutlabels', this._model, this._api, {
+            // Not adding series labels.
+            // TODO
+            updatedSeries: []
+        });
     }
 
     appendData(params: {
@@ -1571,7 +1565,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 updateMethods.update.call(this, payload);
             },
 
-            update(this: ECharts, payload: Payload, postUpdateParams: PostUpdateParams): void {
+            update(this: ECharts, payload: Payload, updateParams: UpdateLifecycleParams): void {
                 const ecModel = this._model;
                 const api = this._api;
                 const zr = this._zr;
@@ -1613,7 +1607,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 clearColorPalette(ecModel);
                 scheduler.performVisualTasks(ecModel, payload);
 
-                render(this, ecModel, api, payload);
+                render(this, ecModel, api, payload, updateParams);
 
                 // Set background
                 let backgroundColor = ecModel.get('backgroundColor') || 'transparent';
@@ -1636,7 +1630,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                     }
                 }
 
-                performPostUpdateFuncs(ecModel, api, postUpdateParams || {});
+                lifecycle.trigger('afterupdate', ecModel, api);
             },
 
             updateTransform(this: ECharts, payload: Payload): void {
@@ -1691,9 +1685,9 @@ class ECharts extends Eventful<ECEventDefinition> {
 
                 // Currently, not call render of components. Geo render cost a lot.
                 // renderComponents(ecIns, ecModel, api, payload, componentDirtyList);
-                renderSeries(this, ecModel, api, payload, seriesDirtyMap);
+                renderSeries(this, ecModel, api, payload, {}, seriesDirtyMap);
 
-                performPostUpdateFuncs(ecModel, this._api, {});
+                lifecycle.trigger('afterupdate', ecModel, api);
             },
 
             updateView(this: ECharts, payload: Payload): void {
@@ -1713,9 +1707,9 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
                 this._scheduler.performVisualTasks(ecModel, payload, {setDirty: true});
 
-                render(this, this._model, this._api, payload);
+                render(this, ecModel, this._api, payload, {});
 
-                performPostUpdateFuncs(ecModel, this._api, {});
+                lifecycle.trigger('afterupdate', ecModel, this._api);
             },
 
             updateVisual(this: ECharts, payload: Payload): void {
@@ -1756,7 +1750,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                     chartView.updateVisual(seriesModel, ecModel, this._api, payload);
                 });
 
-                performPostUpdateFuncs(ecModel, this._api, {});
+                lifecycle.trigger('afterupdate', ecModel, this._api);
             },
 
             updateLayout(this: ECharts, payload: Payload): void {
@@ -1994,15 +1988,18 @@ class ECharts extends Eventful<ECEventDefinition> {
             });
         };
 
-        render = function (ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
+        render = (
+            ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload,
+            updateParams: UpdateLifecycleParams
+        ) => {
 
-            renderComponents(ecIns, ecModel, api, payload);
+            renderComponents(ecIns, ecModel, api, payload, updateParams);
 
             each(ecIns._chartsViews, function (chart: ChartView) {
                 chart.__alive = false;
             });
 
-            renderSeries(ecIns, ecModel, api, payload);
+            renderSeries(ecIns, ecModel, api, payload, updateParams);
 
             // Remove groups of unrendered charts
             each(ecIns._chartsViews, function (chart: ChartView) {
@@ -2012,9 +2009,10 @@ class ECharts extends Eventful<ECEventDefinition> {
             });
         };
 
-        renderComponents = function (
-            ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload, dirtyList?: ComponentView[]
-        ): void {
+        renderComponents = (
+            ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload,
+            updateParams: UpdateLifecycleParams, dirtyList?: ComponentView[]
+        ) => {
             each(dirtyList || ecIns._componentsViews, function (componentView: ComponentView) {
                 const componentModel = componentView.__model;
                 clearStates(componentModel, componentView);
@@ -2031,18 +2029,23 @@ class ECharts extends Eventful<ECEventDefinition> {
         /**
          * Render each chart and component
          */
-        renderSeries = function (
+        renderSeries = (
             ecIns: ECharts,
             ecModel: GlobalModel,
             api: ExtensionAPI,
             payload: Payload | 'remain',
+            updateParams: UpdateLifecycleParams,
             dirtyMap?: {[uid: string]: any}
-        ): void {
+        ) => {
             // Render all charts
             const scheduler = ecIns._scheduler;
-            const labelManager = ecIns._labelManager;
 
-            labelManager.clearLabels();
+            updateParams = extend(updateParams, {
+                updatedSeries: ecModel.getSeries()
+            });
+
+            // TODO progressive?
+            lifecycle.trigger('series:beforeupdate', ecModel, api, updateParams);
 
             let unfinished: boolean = false;
             ecModel.eachSeries(function (seriesModel) {
@@ -2072,16 +2075,14 @@ class ECharts extends Eventful<ECEventDefinition> {
                 updateBlend(seriesModel, chartView);
 
                 updateSeriesElementSelection(seriesModel);
-
-                // Add labels.
-                labelManager.addLabelsOfSeries(chartView);
             });
 
             scheduler.unfinished = unfinished || scheduler.unfinished;
 
-            labelManager.updateLayoutConfig(api);
-            labelManager.layout(api);
-            labelManager.processLabelsOverall();
+            lifecycle.trigger('series:layoutlabels', ecModel, api, updateParams);
+
+            // transition after label is layouted.
+            lifecycle.trigger('series:transition', ecModel, api, updateParams);
 
             ecModel.eachSeries(function (seriesModel) {
                 const chartView = ecIns._chartsMap[seriesModel.__viewId];
@@ -2095,12 +2096,8 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             // If use hover layer
             updateHoverLayerStatus(ecIns, ecModel);
-        };
 
-        performPostUpdateFuncs = function (ecModel: GlobalModel, api: ExtensionAPI, params: PostUpdateParams): void {
-            each(postUpdateFuncs, function (func) {
-                func(ecModel, api, params);
-            });
+            lifecycle.trigger('series:afterupdate', ecModel, api, updateParams);
         };
 
         markStatusToUpdate = function (ecIns: ECharts): void {
@@ -2501,10 +2498,6 @@ const dataProcessorFuncs: StageHandlerInternal[] = [];
 
 const optionPreprocessorFuncs: OptionPreprocessor[] = [];
 
-const postInitFuncs: PostIniter[] = [];
-
-const postUpdateFuncs: PostUpdater[] = [];
-
 const visualFuncs: StageHandlerInternal[] = [];
 
 const themeStorage: {[themeName: string]: ThemeOption} = {};
@@ -2575,9 +2568,7 @@ export function init(
 
     enableConnect(chart);
 
-    each(postInitFuncs, (postInitFunc) => {
-        postInitFunc(chart);
-    });
+    lifecycle.trigger('afterinit', chart);
 
     return chart;
 }
@@ -2684,9 +2675,7 @@ export function registerProcessor(
  * @param {Function} postInitFunc
  */
 export function registerPostInit(postInitFunc: PostIniter): void {
-    if (indexOf(postInitFuncs, postInitFunc) < 0) {
-        postInitFunc && postInitFuncs.push(postInitFunc);
-    }
+    registerUpdateLifecycle('afterinit', postInitFunc);
 }
 
 /**
@@ -2694,13 +2683,13 @@ export function registerPostInit(postInitFunc: PostIniter): void {
  * @param {Function} postUpdateFunc
  */
 export function registerPostUpdate(postUpdateFunc: PostUpdater): void {
-    if (indexOf(postUpdateFuncs, postUpdateFunc) < 0) {
-        postUpdateFunc && postUpdateFuncs.push(postUpdateFunc);
-    }
+    registerUpdateLifecycle('afterupdate', postUpdateFunc);
 }
 
-export function registerUpdateLifecycle(): void {
-
+export function registerUpdateLifecycle<T extends keyof LifecycleEvents>(
+    name: T, cb: (...args: LifecycleEvents[T]) => void
+): void {
+    (lifecycle as any).on(name, cb);
 }
 
 /**
