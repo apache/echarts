@@ -133,6 +133,26 @@ under the License.
                         });
                     }
                 }, {
+                    text: 'Line',
+                    onclick: function () {
+                        chart.setOption({
+                            title: { text: 'Line' },
+                            xAxis: { show: true },
+                            yAxis: { show: true },
+                            series: {
+                                id: 'main',
+                                type: 'line',
+                                symbol: 'diamond',
+                                symbolSize: 20,
+                                encode: { x: 'name', y: 'score', itemName: 'name' },
+                                datasetIndex: 1,
+                                universalTransition: {
+                                    enabled: true
+                                }
+                            }
+                        });
+                    }
+                }, {
                     text: 'Bar',
                     onclick: function () {
                         chart.setOption({
@@ -215,6 +235,7 @@ under the License.
                         symbolSize: item => {
                             return Math.sqrt(item[2]) * 10;
                         },
+                        symbolKeepAspect: true,
                         data: data,
                         label: {
                             show: true
@@ -290,6 +311,13 @@ under the License.
                             chart.setOption({
                                 series: makeScatterSeries('circle')
                             });
+                        }
+                    }, {
+                        text: 'Scatter (Custom Symbol)',
+                        onclick: function () {
+                            chart.setOption({
+                                series: makeScatterSeries('path://M432.45,595.444c0,2.177-4.661,6.82-11.305,6.82c-6.475,0-11.306-4.567-11.306-6.82s4.852-6.812,11.306-6.812C427.841,588.632,432.452,593.191,432.45,595.444L432.45,595.444z M421.155,589.876c-3.009,0-5.448,2.495-5.448,5.572s2.439,5.572,5.448,5.572c3.01,0,5.449-2.495,5.449-5.572C426.604,592.371,424.165,589.876,421.155,589.876L421.155,589.876z M421.146,591.891c-1.916,0-3.47,1.589-3.47,3.549c0,1.959,1.554,3.548,3.47,3.548s3.469-1.589,3.469-3.548C424.614,593.479,423.062,591.891,421.146,591.891L421.146,591.891zM421.146,591.891')
+                            })
                         }
                     }],
                     option: option
@@ -534,7 +562,7 @@ under the License.
                     }
                 };
 
-                function makeOption(type) {
+                function makeOption(type, symbol) {
                     return {
                         title: {
                             text: 'Vehicles in X City'
@@ -588,19 +616,19 @@ under the License.
                             },
                             data: [{
                                 value: 157,
-                                symbol: pathSymbols.reindeer
+                                symbol: symbol || pathSymbols.reindeer
                             }, {
                                 value: 21,
-                                symbol: pathSymbols.ship
+                                symbol: symbol || pathSymbols.ship
                             }, {
                                 value: 66,
-                                symbol: pathSymbols.plane
+                                symbol: symbol || pathSymbols.plane
                             }, {
                                 value: 78,
-                                symbol: pathSymbols.train
+                                symbol: symbol || pathSymbols.train
                             }, {
                                 value: 123,
-                                symbol: pathSymbols.car
+                                symbol: symbol || pathSymbols.car
                             }]
                         }, {
                             name: '2016',
@@ -615,19 +643,19 @@ under the License.
                             },
                             data: [{
                                 value: 184,
-                                symbol: pathSymbols.reindeer
+                                symbol: symbol || pathSymbols.reindeer
                             }, {
                                 value: 29,
-                                symbol: pathSymbols.ship
+                                symbol: symbol || pathSymbols.ship
                             }, {
                                 value: 73,
-                                symbol: pathSymbols.plane
+                                symbol: symbol || pathSymbols.plane
                             }, {
                                 value: 91,
-                                symbol: pathSymbols.train
+                                symbol: symbol || pathSymbols.train
                             }, {
                                 value: 95,
-                                symbol: pathSymbols.car
+                                symbol: symbol || pathSymbols.car
                             }]
                         }]
                     };
@@ -647,6 +675,11 @@ under the License.
                         text: 'Pictorial Bar',
                         onclick: function () {
                             chart.setOption(makeOption('pictorialBar'));
+                        }
+                    }, {
+                        text: 'Pictorial Bar (Diamond)',
+                        onclick: function () {
+                            chart.setOption(makeOption('pictorialBar', 'diamond'));
                         }
                     }],
                     option: makeOption('bar')
