@@ -23,6 +23,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import PieSeriesModel from './PieSeries';
+import { SectorShape } from 'zrender/src/graphic/shape/Sector';
 
 const PI2 = Math.PI * 2;
 const RADIAN = Math.PI / 180;
@@ -36,6 +37,34 @@ function getViewRect(seriesModel: PieSeriesModel, api: ExtensionAPI) {
     );
 }
 
+export function getBasicPieLayout(seriesModel: PieSeriesModel, api: ExtensionAPI):
+    Pick<SectorShape, 'cx' | 'cy' | 'r' | 'r0'> {
+    const viewRect = getViewRect(seriesModel, api);
+
+    let center = seriesModel.get('center');
+    let radius = seriesModel.get('radius');
+
+    if (!zrUtil.isArray(radius)) {
+        radius = [0, radius];
+    }
+    if (!zrUtil.isArray(center)) {
+        center = [center, center];
+    }
+    const width = parsePercent(viewRect.width, api.getWidth());
+    const height = parsePercent(viewRect.height, api.getHeight());
+    const size = Math.min(width, height);
+    const cx = parsePercent(center[0], width) + viewRect.x;
+    const cy = parsePercent(center[1], height) + viewRect.y;
+    const r0 = parsePercent(radius[0], size / 2);
+    const r = parsePercent(radius[1], size / 2);
+    return {
+        cx,
+        cy,
+        r0,
+        r
+    };
+}
+
 export default function pieLayout(
     seriesType: 'pie',
     ecModel: GlobalModel,
@@ -46,23 +75,7 @@ export default function pieLayout(
         const valueDim = data.mapDimension('value');
         const viewRect = getViewRect(seriesModel, api);
 
-        let center = seriesModel.get('center');
-        let radius = seriesModel.get('radius');
-
-        if (!zrUtil.isArray(radius)) {
-            radius = [0, radius];
-        }
-        if (!zrUtil.isArray(center)) {
-            center = [center, center];
-        }
-
-        const width = parsePercent(viewRect.width, api.getWidth());
-        const height = parsePercent(viewRect.height, api.getHeight());
-        const size = Math.min(width, height);
-        const cx = parsePercent(center[0], width) + viewRect.x;
-        const cy = parsePercent(center[1], height) + viewRect.y;
-        const r0 = parsePercent(radius[0], size / 2);
-        const r = parsePercent(radius[1], size / 2);
+        const { cx, cy, r, r0 } = getBasicPieLayout(seriesModel, api);
 
         const startAngle = -seriesModel.get('startAngle') * RADIAN;
 
