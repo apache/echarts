@@ -104,18 +104,23 @@ function transitionBetweenData(
         }
     }
 
-    // TODO share it to other modules. or put it in the List
-    function createGroupIdGetter(data: List) {
-        const dataGroupId = data.hostModel && (data.hostModel as SeriesModel).get('dataGroupId') as string;
-        // TODO Use data.userOutput?
-        let groupIdDimension: string = '';
+    // PENDING: If one data has groupId encode dimension. Other data find this same dimension
+    function getGroupIdDimension(data: List) {
         const dimensions = data.dimensions;
         for (let i = 0; i < dimensions.length; i++) {
             const dimInfo = data.getDimensionInfo(dimensions[i]);
             if (dimInfo && dimInfo.otherDims.itemGroupId === 0) {
-                groupIdDimension = dimensions[i];
+                return dimensions[i];
             }
         }
+    }
+
+    // TODO share it to other modules. or put it in the List
+    function createGroupIdGetter(data: List) {
+        const dataGroupId = data.hostModel && (data.hostModel as SeriesModel).get('dataGroupId') as string;
+        const groupIdDimension: string = getGroupIdDimension(data);
+        const dimInfo = groupIdDimension && data.getDimensionInfo(groupIdDimension);
+        const dimOrdinalMeta = dimInfo && dimInfo.ordinalMeta;
         // Use group id as transition key by default.
         // So we can achieve multiple to multiple animation like drilldown / up naturally.
         // If group id not exits. Use id instead. If so, only one to one transition will be applied.
@@ -125,12 +130,15 @@ function transitionBetweenData(
             if (itemVal && itemVal.groupId) {
                 return itemVal.groupId + '';
             }
-
-            return groupIdDimension
+            if (groupIdDimension) {
                 // Get from encode.itemGroupId.
-                ? (data.get(groupIdDimension, dataIndex) + '')
-                // Use series.dataGroupId, if not use id.
-                : (dataGroupId || data.getId(dataIndex));
+                const groupId = data.get(groupIdDimension, dataIndex);
+                if (dimOrdinalMeta) {
+                    return dimOrdinalMeta.categories[groupId as number] as string || (groupId + '');
+                }
+                return groupId + '';
+            }
+            return (dataGroupId || data.getId(dataIndex));
         };
     }
 
@@ -245,7 +253,10 @@ function transitionBetweenData(
             newIndices,
             (rawIdx, dataIdx) => oldData.getId(dataIdx),
             (rawIdx, dataIdx) => newData.getId(dataIdx)
-        ).update(updateOneToOne).execute();
+        ).update((newIndex, oldIndex) => {
+            // Use the original index
+            updateOneToOne(newIndices[newIndex], oldIndices[oldIndex]);
+        }).execute();
     })
     .execute();
 }

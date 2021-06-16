@@ -38,6 +38,7 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main1"></div>
 
 
 
@@ -49,7 +50,7 @@ under the License.
             'echarts',
             // 'map/js/china',
             // './data/nutrients.json'
-        ], function (echarts) {
+    ], function (echarts) {
             var option;
 
             option = {
@@ -153,6 +154,245 @@ under the License.
         </script>
 
 
+
+        <script>
+            require([
+                'echarts', 'ecStat', 'ecSimpleTransform',
+                'data/life-expectancy-table.json'
+            ], function (echarts, ecStat, ecSimpleTransform, rawData) {
+
+                echarts.registerTransform(ecSimpleTransform.aggregate);
+                echarts.registerTransform(ecSimpleTransform.id);
+
+                const optionCreators = {
+                    'CountryAB_Year_Income_Bar'(datasetId, itemGroupId) {
+                        return {
+                            xAxis: {
+                                type: 'category'
+                            },
+                            yAxis: {
+                                name: 'Income'
+                            },
+                            series: {
+                                type: 'bar',
+                                id: 'main',
+                                coordinateSystem: 'cartesian2d',
+                                datasetId,
+                                universalTransition: {
+                                    enabled: true
+                                },
+                                encode: {
+                                    x: 'Year',
+                                    y: 'Income',
+                                    itemName: 'Year',
+                                    itemGroupId,
+                                    tooltip: ['Income'],
+                                }
+                            }
+                        };
+                    },
+
+                    'CountryAB_Year_Population_Bar'(datasetId, itemGroupId) {
+                        return {
+                            xAxis: {
+                                type: 'category'
+                            },
+                            yAxis: {
+                                name: 'Population'
+                            },
+                            series: {
+                                type: 'bar',
+                                id: 'main',
+                                coordinateSystem: 'cartesian2d',
+                                datasetId,
+                                universalTransition: {
+                                    enabled: true
+                                },
+                                encode: {
+                                    x: 'Year',
+                                    y: 'Population',
+                                    itemName: 'Year',
+                                    itemGroupId,
+                                    tooltip: ['Population'],
+                                }
+                            }
+                        };
+                    },
+
+                    'CountryAB_Income_Population_Scatter'(datasetId, itemGroupId) {
+                        return {
+                            xAxis: {
+                                name: 'Income',
+                                scale: true
+                            },
+                            yAxis: {
+                                name: 'Population',
+                                scale: true
+                            },
+                            series: {
+                                type: 'scatter',
+                                id: 'main',
+                                coordinateSystem: 'cartesian2d',
+                                datasetId,
+                                universalTransition: {
+                                    enabled: true
+                                },
+                                encode: {
+                                    x: 'Income',
+                                    y: 'Population',
+                                    itemName: ['Year'],
+                                    itemGroupId,
+                                    tooltip: ['Income', 'Population', 'Country']
+                                }
+                            }
+                        };
+                    },
+
+
+                    'CountryAB_Income_Sum_Bar'(datasetId, itemGroupId) {
+                        return {
+                            xAxis: {
+                                name: 'Income'
+                            },
+                            yAxis: {
+                                type: 'category'
+                            },
+                            series: {
+                                type: 'bar',
+                                id: 'main',
+                                coordinateSystem: 'cartesian2d',
+                                datasetId,
+                                universalTransition: {
+                                    enabled: true
+                                },
+                                encode: {
+                                    x: 'Income',
+                                    y: 'Country',
+                                    itemName: ['Country'],
+                                    itemGroupId,
+                                    tooltip: ['Income']
+                                }
+                            }
+                        };
+                    }
+                };
+
+                let currentStageIdx = 0;
+
+                const stages = [
+                    {
+                        option: optionCreators['CountryAB_Year_Income_Bar']('CountryABData', 'Country')
+                    },
+                    {
+                        option: optionCreators['CountryAB_Year_Population_Bar']('CountryABData', 'Country')
+                    },
+                    {
+                        option: optionCreators['CountryAB_Income_Population_Scatter']('CountryABData', 'Country')
+                    },
+                    {
+                        option: optionCreators['CountryAB_Income_Sum_Bar']('CountryABSumIncome', 'Country')
+                    }
+                    // {
+                    //     option: optionCreators['CountryAB_Year_Income_Bar']('CountryABData', 'Country')
+                    // }
+                ];
+
+                const RAW_DATA_DIMENSIONS = ['Income', 'Life Expectancy', 'Population', 'Country', 'Year'];
+                const ID_RAW_DATA_DIMENSIONS = ['Income', 'Life Expectancy', 'Population', 'Country', 'Year', 'Id'];
+                const SUM_INCOME_DIMENSIONS = ['Income', 'Country'];
+                var COUNTRY_A = 'Germany';
+                var COUNTRY_B = 'France';
+
+                const baseOption = {
+                    animationDurationUpdate: 1000,
+                    dataset: [{
+                        id: 'RawData',
+                        source: rawData
+                    }, {
+                        id: 'IdRawData',
+                        fromDatasetId: 'RawData',
+                        transform: [{
+                            type: 'filter',
+                            config: {
+                                dimension: 'Year', gte: 1950
+                            }
+                        }, {
+                            type: 'ecSimpleTransform:id',
+                            config: {
+                                dimensionIndex: ID_RAW_DATA_DIMENSIONS.indexOf('Id'),
+                                dimensionName: 'Id'
+                            }
+                        }]
+                    }, {
+                        id: 'CountryABData',
+                        fromDatasetId: 'IdRawData',
+                        transform: {
+                            type: 'filter',
+                            config: {
+                                or: [{
+                                    dimension: 'Country', '=': COUNTRY_A
+                                }, {
+                                    dimension: 'Country', '=': COUNTRY_B
+                                }]
+                            }
+                        }
+                    }, {
+                        id: 'CountryABSumIncome',
+                        fromDatasetId: 'CountryABData',
+                        transform: {
+                            type: 'ecSimpleTransform:aggregate',
+                            config: {
+                                resultDimensions: [
+                                    { from: 'Income', method: 'sum' },
+                                    { from: 'Country' }
+                                ],
+                                groupBy: 'Country'
+                            }
+                        }
+                    }],
+                    tooltip: {},
+                    series: []
+                };
+
+                function createOption() {
+                    return Object.assign({}, baseOption, stages[currentStageIdx].option);
+                }
+                function createNextOption() {
+                    currentStageIdx = (currentStageIdx + 1) % stages.length;
+                    const option = createOption();
+                    return option;
+                }
+
+                function createPrevOption() {
+                    currentStageIdx = (currentStageIdx - 1) % stages.length;
+                    const option = createOption();
+                    return option;
+                }
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Transition with dataset transform.'
+                    ],
+                    option: createOption(),
+                    // height: 300,
+                    buttons: [{
+                        text: 'prev',
+                        onclick: function () {
+                            chart.setOption(createPrevOption(), {
+                                replaceMerge: ['xAxis', 'yAxis']
+                            });
+                        }
+                    }, {
+                        text: 'next',
+                        onclick: function () {
+                            chart.setOption(createNextOption(), {
+                                replaceMerge: ['xAxis', 'yAxis']
+                            });
+                        }
+                    }],
+                });
+            });
+        </script>
     </body>
 </html>
 
