@@ -23,12 +23,6 @@ export default function negativeDataFilter(seriesType: string): StageHandler {
     return {
         seriesType: seriesType,
         reset: function (seriesModel, ecModel) {
-            const legendModels = ecModel.findComponents({
-                mainType: 'legend'
-            });
-            if (!legendModels || !legendModels.length) {
-                return;
-            }
             const data = seriesModel.getData();
             data.filterSelf(function (idx) {
                 // handle negative value condition
