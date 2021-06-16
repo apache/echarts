@@ -119,6 +119,9 @@ export interface PieSeriesOption extends
     animationType?: 'expansion' | 'scale'
     animationTypeUpdate?: 'transition' | 'expansion'
 
+    showEmptyCircle?: boolean;
+    emptyCircleStyle?: PieItemStyleOption;
+
     data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | PieDataItemOption)[]
 }
 
@@ -276,6 +279,12 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         itemStyle: {
             borderWidth: 1,
             borderJoin: 'round'
+        },
+
+        showEmptyCircle: true,
+        emptyCircleStyle: {
+            color: 'lightgray',
+            opacity: 1
         },
 
         labelLayout: {

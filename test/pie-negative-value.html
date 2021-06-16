@@ -42,6 +42,7 @@ under the License.
 
         <div id="chart-with-single-negative" class="chart"></div>
         <div id="chart-with-full-negative" class="chart"></div>
+        <div id="chart-with-empty-circle-config" class="chart"></div>
         <script>
             require(["echarts"], function (echarts) {
                 var chartWithSingleNegative = echarts.init(
@@ -141,9 +142,58 @@ under the License.
                     ],
                 });
 
+                var chartWithEmptyCircleConfig = echarts.init(
+                    document.getElementById("chart-with-empty-circle-config")
+                );
+                chartWithEmptyCircleConfig.setOption({
+                    aria: {
+                        enabled: true,
+                    },
+                    title: {
+                        text: `The empty circle can be configured, see: showEmptyCircle、emptyCircleStyle`,
+                        x: "center",
+                    },
+                    tooltip: {
+                        trigger: "item",
+                        formatter: "{a} <br/>{b} : {c} ({d}%)",
+                    },
+                    legend: {
+                        orient: "vertical",
+                        left: "left",
+                        data: ["直接访问", "邮件营销", "联盟广告"],
+                    },
+                    series: [
+                        {
+                            name: "访问来源",
+                            type: "pie",
+                            radius: "55%",
+                            center: ["50%", "60%"],
+                            selectedMode: "single",
+                            data: [
+                                { value: -335, name: "直接访问" },
+                                { value: -310, name: "邮件营销" },
+                                { value: -234, name: "联盟广告" },
+                            ],
+                            emphasis: {
+                                itemStyle: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: "rgba(0, 0, 0, 0.5)",
+                                },
+                            },
+                            showEmptyCircle: true,
+                            emptyCircleStyle: {
+                                color: 'red',
+                                opacity: 0.3
+                            }
+                        },
+                    ],
+                });
+
                 window.onresize = () => {
                     chartWithSingleNegative.resize();
                     chartWithFullNegative.resize();
+                    chartWithEmptyCircleConfig.resize();
                 };
             });
         </script>

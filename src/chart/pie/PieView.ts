@@ -243,8 +243,14 @@ class PieView extends ChartView {
             }
         }
 
+        // remove empty-circle(which is not instance of PiePiece) if it exists
+        group.children().forEach(child => {
+            if (!(child instanceof PiePiece)) {
+                group.remove(child);
+            }
+        });
         // when all data are filtered, show lightgray empty circle
-        if (data.count() === 0) {
+        if (data.count() === 0 && seriesModel.get('showEmptyCircle')) {
             const {cx, cy, r0, r } = getBasicPieLayout(seriesModel, api);
             const sector = new graphic.Sector({
                 shape: {
@@ -256,8 +262,7 @@ class PieView extends ChartView {
                     endAngle: Math.PI * 2
                 }
             });
-            sector.setStyle({ 'fill': 'lightgray' });
-            group.removeAll();
+            sector.useStyle(seriesModel.getModel('emptyCircleStyle').getItemStyle());
             group.add(sector);
         }
 
