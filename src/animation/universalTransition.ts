@@ -17,8 +17,10 @@
 * under the License.
 */
 
+// Universal transitions that can animate between any shapes(series) and any properties in any amounts.
+
 import SeriesModel from '../model/Series';
-import {createHashMap, each, map, filter} from 'zrender/src/core/util';
+import {createHashMap, each, map, filter, isArray} from 'zrender/src/core/util';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { applyMorphAnimation, getPathList } from './morphTransitionHelper';
 import Path from 'zrender/src/graphic/Path';
@@ -27,18 +29,38 @@ import { initProps } from '../util/graphic';
 import DataDiffer from '../data/DataDiffer';
 import List from '../data/List';
 import { OptionDataItemObject } from '../util/types';
-// Universal transitions that can animate between any shapes(series) and any properties in any amounts.
+
+interface DiffItem {
+    data: List
+    dataIndex: number
+}
+function flattenDataDiffItems(dataList: List[]) {
+    const items: DiffItem[] = [];
+
+    each(dataList, data => {
+        const indices = data.getIndices();
+        for (let dataIndex = 0; dataIndex < indices.length; dataIndex++) {
+            items.push({
+                data,
+                dataIndex
+            });
+        }
+    });
+
+    return items;
+}
 
 function transitionBetweenData(
-    oldData: List,
-    newData: List,
-    seriesModel: SeriesModel
+    oldDataList: List[],
+    newDataList: List[]
 ) {
 
-    // No data or data are in the same series.
-    if (!oldData || !newData || oldData === newData) {
-        return;
-    }
+    const oldDiffItems = flattenDataDiffItems(oldDataList);
+    const newDiffItems = flattenDataDiffItems(newDataList);
+    // // No data or data are in the same series.
+    // if (!oldData || !newData || oldData === newData) {
+    //     return;
+    // }
 
     // const oldSeriesModel = oldData.hostModel;
     // const isTransitionSameSeries = oldSeriesModel === seriesModel;
@@ -78,7 +100,7 @@ function transitionBetweenData(
         }, animationCfg);
     }
 
-    function fadeInElement(newEl: Element, newIndex: number) {
+    function fadeInElement(newEl: Element, newSeries: SeriesModel, newIndex: number) {
         newEl.traverse(el => {
             if (el instanceof Path) {
                 // TODO use fade in animation for target element.
@@ -86,7 +108,7 @@ function transitionBetweenData(
                     style: {
                         opacity: 0
                     }
-                }, seriesModel, {
+                }, newSeries, {
                     dataIndex: newIndex,
                     isFrom: true
                 });
@@ -115,25 +137,31 @@ function transitionBetweenData(
     }
 
 
-    const oldDataGroupIdDim = getGroupIdDimension(oldData);
-    const newDataGroupIdDim = getGroupIdDimension(newData);
+    // TODO Query from all data.
+    const oldDataGroupIdDim = getGroupIdDimension(oldDataList[0]);
+    const newDataGroupIdDim = getGroupIdDimension(newDataList[0]);
 
     // TODO share it to other modules. or put it in the List
-    function createGroupIdGetter(data: List) {
-        const dataGroupId = data.hostModel && (data.hostModel as SeriesModel).get('dataGroupId') as string;
-        // If one data has groupId encode dimension. Use this same dimension from other data.
-        // PENDING: If only use groupId dimension of newData.
-        const groupIdDimension: string = data === oldData
-            ? (oldDataGroupIdDim || newDataGroupIdDim)
-            : (newDataGroupIdDim || oldDataGroupIdDim);
+    function createGroupIdGetter(isOld: boolean) {
+        return function (diffItem: DiffItem): string {
+            const data = diffItem.data;
+            const dataIndex = diffItem.dataIndex;
 
-        const dimInfo = groupIdDimension && data.getDimensionInfo(groupIdDimension);
-        const dimOrdinalMeta = dimInfo && dimInfo.ordinalMeta;
-        // Use group id as transition key by default.
-        // So we can achieve multiple to multiple animation like drilldown / up naturally.
-        // If group id not exits. Use id instead. If so, only one to one transition will be applied.
-        return function (rawIdx: number, dataIndex: number): string {
-            if (dimOrdinalMeta) {
+            // Use group id as transition key by default.
+            // So we can achieve multiple to multiple animation like drilldown / up naturally.
+            // If group id not exits. Use id instead. If so, only one to one transition will be applied.
+            const dataGroupId = data.hostModel && (data.hostModel as SeriesModel).get('dataGroupId') as string;
+
+            // If one data has groupId encode dimension. Use this same dimension from other data.
+            // PENDING: If only use groupId dimension of newData.
+            const groupIdDimension: string = isOld
+                ? (oldDataGroupIdDim || newDataGroupIdDim)
+                : (newDataGroupIdDim || oldDataGroupIdDim);
+
+            const dimInfo = groupIdDimension && data.getDimensionInfo(groupIdDimension);
+            const dimOrdinalMeta = dimInfo && dimInfo.ordinalMeta;
+
+            if (groupIdDimension) {
                 // Get from encode.itemGroupId.
                 const groupId = data.get(groupIdDimension, dataIndex);
                 if (dimOrdinalMeta) {
@@ -152,8 +180,14 @@ function transitionBetweenData(
     }
 
     function updateOneToOne(newIndex: number, oldIndex: number) {
-        const oldEl = oldData.getItemGraphicEl(oldIndex);
-        const newEl = newData.getItemGraphicEl(newIndex);
+
+        const oldItem = oldDiffItems[oldIndex];
+        const newItem = newDiffItems[newIndex];
+
+        const newSeries = newItem.data.hostModel as SeriesModel;
+
+        const oldEl = oldItem.data.getItemGraphicEl(oldItem.dataIndex);
+        const newEl = newItem.data.getItemGraphicEl(newItem.dataIndex);
 
         // Can't handle same elements.
         if (oldEl === newEl) {
@@ -174,31 +208,36 @@ function transitionBetweenData(
                 applyMorphAnimation(
                     getPathList(oldEl),
                     getPathList(newEl),
-                    seriesModel,
+                    newSeries,
                     newIndex,
                     updateMorphingPathProps
                 );
             }
             else {
-                fadeInElement(newEl, newIndex);
+                fadeInElement(newEl, newSeries, newIndex);
             }
         }
         // else keep oldEl leaving animation.
     }
 
     (new DataDiffer(
-        oldData.getIndices(),
-        newData.getIndices(),
-        createGroupIdGetter(oldData),
-        createGroupIdGetter(newData),
+        oldDiffItems,
+        newDiffItems,
+        createGroupIdGetter(true),
+        createGroupIdGetter(false),
         null,
         'multiple'
     ))
     .update(updateOneToOne)
     .updateManyToOne(function (newIndex, oldIndices) {
-        const newEl = newData.getItemGraphicEl(newIndex);
+        const newItem = newDiffItems[newIndex];
+        const newData = newItem.data;
+        const newSeries = newData.hostModel as SeriesModel;
+        const newEl = newData.getItemGraphicEl(newItem.dataIndex);
         const oldElsList = filter(
-            map(oldIndices, idx => oldData.getItemGraphicEl(idx)),
+            map(oldIndices, idx =>
+                oldDiffItems[idx].data.getItemGraphicEl(oldDiffItems[idx].dataIndex)
+            ),
             el => el && el !== newEl    // Can't handle same elements
         );
 
@@ -214,23 +253,27 @@ function transitionBetweenData(
                 applyMorphAnimation(
                     getPathList(oldElsList),
                     getPathList(newEl),
-                    seriesModel,
+                    newSeries,
                     newIndex,
                     updateMorphingPathProps
                 );
             }
             else {
-                fadeInElement(newEl, newIndex);
+                fadeInElement(newEl, newSeries, newItem.dataIndex);
             }
         }
         // else keep oldEl leaving animation.
     })
     .updateOneToMany(function (newIndices, oldIndex) {
-        const oldEl = oldData.getItemGraphicEl(oldIndex);
+        const oldItem = oldDiffItems[oldIndex];
+        const oldEl = oldItem.data.getItemGraphicEl(oldItem.dataIndex);
         const newElsList = filter(
-            map(newIndices, idx => newData.getItemGraphicEl(idx)),
+            map(newIndices, idx =>
+                newDiffItems[idx].data.getItemGraphicEl(newDiffItems[idx].dataIndex)
+            ),
             el => el && el !== oldEl    // Can't handle same elements
         );
+        const newSeris = newDiffItems[newIndices[0]].data.hostModel as SeriesModel;
 
         if (newElsList.length) {
             each(newElsList, newEl => stopAnimation(newEl));
@@ -242,13 +285,13 @@ function transitionBetweenData(
                 applyMorphAnimation(
                     getPathList(oldEl),
                     getPathList(newElsList),
-                    seriesModel,
+                    newSeris,
                     newIndices[0],
                     updateMorphingPathProps
                 );
             }
             else {
-                each(newElsList, newEl => fadeInElement(newEl, newIndices[0]));
+                each(newElsList, newEl => fadeInElement(newEl, newSeris, newIndices[0]));
             }
         }
 
@@ -260,8 +303,8 @@ function transitionBetweenData(
         new DataDiffer(
             oldIndices,
             newIndices,
-            (rawIdx, dataIdx) => oldData.getId(dataIdx),
-            (rawIdx, dataIdx) => newData.getId(dataIdx)
+            (rawIdx: number) => oldDiffItems[rawIdx].data.getId(oldDiffItems[rawIdx].dataIndex),
+            (rawIdx: number) => newDiffItems[rawIdx].data.getId(newDiffItems[rawIdx].dataIndex)
         ).update((newIndex, oldIndex) => {
             // Use the original index
             updateOneToOne(newIndices[newIndex], oldIndices[oldIndex]);
@@ -271,31 +314,109 @@ function transitionBetweenData(
 }
 
 function getSeriesTransitionKey(series: SeriesModel) {
-    return series.id;
+    const seriesKey = series.get(['universalTransition', 'seriesKey']);
+    if (!seriesKey) {
+        // Use series id by default.
+        return series.id;
+    }
+    return seriesKey;
+}
+
+function convertArraySeriesKeyToString(seriesKey: string[] | string) {
+    if (isArray(seriesKey)) {
+        // Order independent.
+        return seriesKey.sort().join(',');
+    }
+    return seriesKey;
 }
 
 export function installUniversalTransition(registers: EChartsExtensionInstallRegisters) {
     registers.registerUpdateLifecycle('series:transition', (ecModel, api, params) => {
         // TODO multiple to multiple series.
         if (params.oldSeries && params.updatedSeries) {
-            const oldSeriesMap = createHashMap<{ series: SeriesModel, data: List }>();
+            const updateBatches = createHashMap<{
+                oldDataList: List[]
+                newDataList: List[]
+             }>();
+
+            const oldDataMap = createHashMap<List>();
+            // Map that only store key in array seriesKey.
+            // Which is used to query the old data when transition from one to multiple series.
+            const oldDataMapForSplit = createHashMap<{
+                key: string,
+                data: List
+            }>();
+
             each(params.oldSeries, (series, idx) => {
-                oldSeriesMap.set(getSeriesTransitionKey(series), {
-                    series, data: params.oldData[idx]
-                });
+                const oldData = params.oldData[idx];
+                const transitionKey = getSeriesTransitionKey(series);
+                const transitionKeyStr = convertArraySeriesKeyToString(transitionKey);
+                oldDataMap.set(transitionKeyStr, oldData);
+
+                if (isArray(transitionKey)) {
+                    // Same key can't in different array seriesKey.
+                    each(transitionKey, key => {
+                        oldDataMapForSplit.set(key, {
+                            data: oldData,
+                            key: transitionKeyStr
+                        });
+                    });
+                }
             });
             each(params.updatedSeries, series => {
                 if (series.get(['universalTransition', 'enabled'])) {
+                    const newData = series.getData();
+                    const transitionKey = getSeriesTransitionKey(series);
+                    const transitionKeyStr = convertArraySeriesKeyToString(transitionKey);
                     // Only transition between series with same id.
-                    const oldSeries = oldSeriesMap.get(getSeriesTransitionKey(series));
-                    if (oldSeries) {
-                        transitionBetweenData(
-                            oldSeries.data,
-                            series.getData(),
-                            series
-                        );
+                    const oldData = oldDataMap.get(transitionKeyStr);
+                    // string transition key is the best match.
+                    if (oldData) {
+                        // TODO check if data is same?
+                        updateBatches.set(transitionKeyStr, {
+                            oldDataList: [oldData],
+                            newDataList: [newData]
+                        });
+                    }
+                    if (!oldData) {
+                        // Transition from multiple series.
+                        if (isArray(transitionKey)) {
+                            const oldDataList: List[] = [];
+                            each(transitionKey, key => {
+                                const oldData = oldDataMap.get(key);
+                                if (oldData) {
+                                    oldDataList.push(oldData);
+                                }
+                            });
+                            if (oldDataList.length) {
+                                updateBatches.set(transitionKeyStr, {
+                                    oldDataList,
+                                    newDataList: [newData]
+                                });
+                            }
+                        }
+                        else {
+                            // Try transition to multiple series.
+                            const oldData = oldDataMapForSplit.get(transitionKey);
+                            if (oldData) {
+                                let batch = updateBatches.get(oldData.key);
+                                if (!batch) {
+                                    batch = {
+                                        oldDataList: [oldData.data],
+                                        newDataList: []
+                                    };
+                                    updateBatches.set(oldData.key, batch);
+                                }
+                                batch.newDataList.push(newData);
+                            }
+                        }
                     }
                 }
+            });
+
+            each(updateBatches.keys(), key => {
+                const batch = updateBatches.get(key);
+                transitionBetweenData(batch.oldDataList, batch.newDataList);
             });
         }
     });

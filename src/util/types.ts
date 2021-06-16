@@ -1612,6 +1612,19 @@ export interface SeriesOption<
      */
     universalTransition?: {
         enabled: boolean
+
+        /**
+         * Series will have transition between if they have same seriesKey.
+         * Usually it is a string. It can also be an array,
+         * which means it can be transition from or to multiple series with each key in this array item.
+         *
+         * Note:
+         * If two series have both array seriesKey. They will be compared after concated to a string(which is order independent)
+         * Transition between string key has higher priority.
+         *
+         * Default to use series id.
+         */
+        seriesKey: string | string[]
     }
 
     /**

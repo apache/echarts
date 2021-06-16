@@ -165,71 +165,134 @@ under the License.
                 echarts.registerTransform(ecSimpleTransform.id);
 
                 const RAW_DATA_DIMENSIONS = ['Income', 'Life Expectancy', 'Population', 'Country', 'Year'];
-                const ID_RAW_DATA_DIMENSIONS = ['Income', 'Life Expectancy', 'Population', 'Country', 'Year', 'Id'];
                 const SUM_INCOME_DIMENSIONS = ['Income', 'Country'];
                 var COUNTRY_A = 'Germany';
                 var COUNTRY_B = 'France';
 
-                function createOption(xDim, yDim, seriesType, groupBy) {
-                    return {
-                        animationDurationUpdate: 1000,
-                        dataset: [
-                            {
-                                id: 'RawData',
-                                source: rawData
-                            },
-                            {
-                                id: 'CountryABData',
-                                fromDatasetId: 'RawData',
-                                transform: {
-                                    type: 'filter',
-                                    config: {
-                                        or: [{
-                                            dimension: 'Country', '=': COUNTRY_A
-                                        }, {
-                                            dimension: 'Country', '=': COUNTRY_B
-                                        }]
-                                    }
-                                }
-                            },
-                            ...(groupBy ? [{
-                                id: `groupBy_${groupBy}`,
-                                fromDatasetId: 'CountryABData',
-                                transform: {
-                                    type: 'ecSimpleTransform:aggregate',
-                                    config: {
-                                        resultDimensions: [
-                                            { from: 'Income', method: 'sum' },
-                                            { from: groupBy }
-                                        ],
-                                        groupBy
-                                    }
-                                }
-                            }] : [])
-                        ],
-
-                        tooltip: {},
-
-                        xAxis: {
-                            name: xDim,
-                            type: 'category'
-                        },
-                        yAxis: {
-                            name: yDim
-                        },
-                        series: {
-                            type: seriesType,
-                            id: 'main',
-                            datasetId: groupBy ? `groupBy_${groupBy}` : 'CountryABData',
-                            universalTransition: {
-                                enabled: true
-                            },
-                            encode: {
-                                x: xDim,
-                                y: yDim,
-                                itemGroupId: groupBy
+                const datasetOption = [
+                    {
+                        id: 'RawData',
+                        source: rawData
+                    },
+                    {
+                        id: 'CountryAData',
+                        fromDatasetId: 'RawData',
+                        transform: {
+                            type: 'filter',
+                            config: {
+                                dimension: 'Country', '=': COUNTRY_A
                             }
                         }
+                    },
+                    {
+                        id: 'CountryBData',
+                        fromDatasetId: 'RawData',
+                        transform: {
+                            type: 'filter',
+                            config: {
+                                dimension: 'Country', '=': COUNTRY_B
+                            }
+                        }
+                    },
+                    {
+                        id: 'CountryABData',
+                        fromDatasetId: 'RawData',
+                        transform: {
+                            type: 'filter',
+                            config: {
+                                or: [{
+                                    dimension: 'Country', '=': COUNTRY_B
+                                }, {
+                                    dimension: 'Country', '=': COUNTRY_A
+                                }]
+                            }
+                        }
+                    },
+                    {
+                        id: `GroupByCountry`,
+                        fromDatasetId: 'CountryABData',
+                        transform: {
+                            type: 'ecSimpleTransform:aggregate',
+                            config: {
+                                resultDimensions: [
+                                    { from: 'Income', method: 'sum' },
+                                    { from: 'Country' }
+                                ],
+                                groupBy: 'Country'
+                            }
+                        }
+                    }
+                ];
+
+                function createOption(xDim, yDim, seriesType, groupBy, stack) {
+                    const isGridSeries = seriesType !== 'pie';
+                    return {
+                        animationDurationUpdate: 1000,
+                        dataset: datasetOption,
+
+                        legend: {},
+
+                        tooltip: {
+                            position: 'top'
+                        },
+
+                        xAxis: isGridSeries ? {
+                            name: xDim,
+                            type: 'category'
+                        } : null,
+                        yAxis: isGridSeries ? {
+                            name: yDim
+                        } : null,
+                        series: groupBy ?
+                            [{
+                                type: seriesType,
+                                name: COUNTRY_A,
+                                id: 'CountryAB',
+                                datasetId: 'GroupByCountry',
+                                universalTransition: {
+                                    seriesKey: ['CountryA', 'CountryB'],
+                                    enabled: true
+                                },
+                                encode: {
+                                    ...(isGridSeries ? {
+                                        x: xDim,
+                                        y: yDim
+                                    } : {
+                                        itemName: yDim,
+                                        value: xDim
+                                    }),
+                                    itemGroupId: groupBy
+                                }
+                            }]
+                            : [{
+                                type: seriesType,
+                                name: COUNTRY_A,
+                                id: 'CountryA',
+                                datasetId: 'CountryAData',
+                                stack,
+                                universalTransition: {
+                                    enabled: true
+                                },
+                                encode: {
+                                    x: xDim,
+                                    y: yDim,
+                                    itemGroupId: groupBy
+                                }
+                            }, {
+                                type: seriesType,
+                                name: COUNTRY_B,
+                                id: 'CountryB',
+                                datasetId: 'CountryBData',
+                                stack,
+                                universalTransition: {
+                                    enabled: true
+                                },
+                                encode: {
+                                    x: xDim,
+                                    y: yDim,
+                                    itemGroupId: groupBy
+                                }
+                            }]
                     }
                 }
 
@@ -240,17 +303,23 @@ under the License.
                         option: createOption('Year', 'Income', 'bar')
                     },
                     {
+                        option: createOption('Year', 'Population', 'scatter')
+                    },
+                    {
+                        option: createOption('Year', 'Population', 'line')
+                    },
+                    {
                         option: createOption('Year', 'Population', 'bar')
                     },
                     {
-                        option: createOption('Year', 'Population', 'scatter')
+                        option: createOption('Year', 'Population', 'bar', '', 'main')
+                    },
+                    {
+                        option: createOption('Income', 'Country', 'pie', 'Country')
                     },
                     {
                         option: createOption('Country', 'Income', 'bar', 'Country')
                     }
-                    // {
-                    //     option: optionCreators['CountryAB_Year_Income_Bar']('CountryABData', 'Country')
-                    // }
                 ];
 
                 console.log(options);
@@ -262,7 +331,10 @@ under the License.
                 }
 
                 function createPrevOption() {
-                    currentOptionIdx = (currentOptionIdx - 1) % options.length;
+                    currentOptionIdx = currentOptionIdx - 1;
+                    if (currentOptionIdx < 0) {
+                        currentOptionIdx = option.length - 1;
+                    }
                     const option = options[currentOptionIdx].option;
                     return option;
                 }
@@ -276,16 +348,12 @@ under the License.
                     buttons: [{
                         text: 'prev',
                         onclick: function () {
-                            chart.setOption(createPrevOption(), {
-                                replaceMerge: ['xAxis', 'yAxis']
-                            });
+                            chart.setOption(createPrevOption(), true);
                         }
                     }, {
                         text: 'next',
                         onclick: function () {
-                            chart.setOption(createNextOption(), {
-                                replaceMerge: ['xAxis', 'yAxis']
-                            });
+                            chart.setOption(createNextOption(), true);
                         }
                     }],
                 });
