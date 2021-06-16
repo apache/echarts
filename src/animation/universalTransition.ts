@@ -18,7 +18,7 @@
 */
 
 import SeriesModel from '../model/Series';
-import {createHashMap, each, map, filter, isArray} from 'zrender/src/core/util';
+import {createHashMap, each, map, filter} from 'zrender/src/core/util';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { applyMorphAnimation, getPathList } from './morphTransitionHelper';
 import Path from 'zrender/src/graphic/Path';
@@ -104,7 +104,6 @@ function transitionBetweenData(
         }
     }
 
-    // PENDING: If one data has groupId encode dimension. Other data find this same dimension
     function getGroupIdDimension(data: List) {
         const dimensions = data.dimensions;
         for (let i = 0; i < dimensions.length; i++) {
@@ -115,28 +114,38 @@ function transitionBetweenData(
         }
     }
 
+
+    const oldDataGroupIdDim = getGroupIdDimension(oldData);
+    const newDataGroupIdDim = getGroupIdDimension(newData);
+
     // TODO share it to other modules. or put it in the List
     function createGroupIdGetter(data: List) {
         const dataGroupId = data.hostModel && (data.hostModel as SeriesModel).get('dataGroupId') as string;
-        const groupIdDimension: string = getGroupIdDimension(data);
+        // If one data has groupId encode dimension. Use this same dimension from other data.
+        // PENDING: If only use groupId dimension of newData.
+        const groupIdDimension: string = data === oldData
+            ? (oldDataGroupIdDim || newDataGroupIdDim)
+            : (newDataGroupIdDim || oldDataGroupIdDim);
+
         const dimInfo = groupIdDimension && data.getDimensionInfo(groupIdDimension);
         const dimOrdinalMeta = dimInfo && dimInfo.ordinalMeta;
         // Use group id as transition key by default.
         // So we can achieve multiple to multiple animation like drilldown / up naturally.
         // If group id not exits. Use id instead. If so, only one to one transition will be applied.
         return function (rawIdx: number, dataIndex: number): string {
-            // Get from raw item. { groupId: '' }
-            const itemVal = data.getRawDataItem(dataIndex) as OptionDataItemObject<unknown>;
-            if (itemVal && itemVal.groupId) {
-                return itemVal.groupId + '';
-            }
-            if (groupIdDimension) {
+            if (dimOrdinalMeta) {
                 // Get from encode.itemGroupId.
                 const groupId = data.get(groupIdDimension, dataIndex);
                 if (dimOrdinalMeta) {
                     return dimOrdinalMeta.categories[groupId as number] as string || (groupId + '');
                 }
                 return groupId + '';
+            }
+
+            // Get from raw item. { groupId: '' }
+            const itemVal = data.getRawDataItem(dataIndex) as OptionDataItemObject<unknown>;
+            if (itemVal && itemVal.groupId) {
+                return itemVal.groupId + '';
             }
             return (dataGroupId || data.getId(dataIndex));
         };
