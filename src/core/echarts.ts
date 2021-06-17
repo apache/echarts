@@ -620,8 +620,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         if (transitionOpt) {
             each(modelUtil.normalizeToArray(transitionOpt), transOpt => {
-                const finder = transOpt.to;
-                if (finder) {
+                each(modelUtil.normalizeToArray(transOpt.to), (finder) => {
                     const series = this._model.getSeries();
                     for (let i = 0; i < series.length; i++) {
                         if (finder.seriesIndex != null && finder.seriesIndex === series[i].seriesIndex
@@ -629,7 +628,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                             series[i][SERIES_UNIVERSAL_TRANSITION_PROP] = true;
                         }
                     }
-                }
+                });
             });
         }
 

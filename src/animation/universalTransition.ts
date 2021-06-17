@@ -20,7 +20,7 @@
 // Universal transitions that can animate between any shapes(series) and any properties in any amounts.
 
 import SeriesModel from '../model/Series';
-import {createHashMap, each, map, filter, isArray} from 'zrender/src/core/util';
+import {createHashMap, each, map, filter, isArray, find} from 'zrender/src/core/util';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { applyMorphAnimation, getPathList } from './morphTransitionHelper';
 import Path from 'zrender/src/graphic/Path';
@@ -29,7 +29,12 @@ import { initProps } from '../util/graphic';
 import DataDiffer from '../data/DataDiffer';
 import List from '../data/List';
 import { DimensionLoose, OptionDataItemObject } from '../util/types';
-import { UpdateLifecycleParams, UpdateLifecycleTransitionItem } from '../core/lifecycle';
+import {
+    UpdateLifecycleParams,
+    UpdateLifecycleTransitionItem,
+    UpdateLifecycleTransitionSeriesFinder
+} from '../core/lifecycle';
+import { normalizeToArray } from '../util/model';
 
 interface DiffItem {
     data: List
@@ -418,7 +423,7 @@ function findTransitionSeriesBatches(params: UpdateLifecycleParams) {
     return updateBatches;
 }
 
-function querySeries(series: SeriesModel[], finder: UpdateLifecycleTransitionItem['from']) {
+function querySeries(series: SeriesModel[], finder: UpdateLifecycleTransitionSeriesFinder) {
     for (let i = 0; i < series.length; i++) {
         const found = finder.seriesIndex != null && finder.seriesIndex === series[i].seriesIndex
             || finder.seriesId != null && finder.seriesId === series[i].id;
@@ -429,16 +434,28 @@ function querySeries(series: SeriesModel[], finder: UpdateLifecycleTransitionIte
 }
 
 function transitionSeriesFromOpt(transitionOpt: UpdateLifecycleTransitionItem, params: UpdateLifecycleParams) {
-    const fromSeriesIdx = querySeries(params.oldSeries, transitionOpt.from);
-    const toSeriesIdx = querySeries(params.updatedSeries, transitionOpt.to);
-    if (fromSeriesIdx >= 0 && toSeriesIdx >= 0) {
-        transitionBetween([{
-            data: params.oldData[fromSeriesIdx],
-            dim: transitionOpt.from.dimension
-        }], [{
-            data: params.updatedSeries[toSeriesIdx].getData(),
-            dim: transitionOpt.to.dimension
-        }]);
+    const from: TransitionSeries[] = [];
+    const to: TransitionSeries[] = [];
+    each(normalizeToArray(transitionOpt.from), finder => {
+        const idx = querySeries(params.oldSeries, finder);
+        if (idx >= 0) {
+            from.push({
+                data: params.oldData[idx],
+                dim: finder.dimension
+            });
+        }
+    });
+    each(normalizeToArray(transitionOpt.to), finder => {
+        const idx = querySeries(params.updatedSeries, finder);
+        if (idx >= 0) {
+            to.push({
+                data: params.updatedSeries[idx].getData(),
+                dim: finder.dimension
+            });
+        }
+    });
+    if (from.length > 0 && to.length > 0) {
+        transitionBetween(from, to);
     }
 }
 
@@ -449,12 +466,9 @@ export function installUniversalTransition(registers: EChartsExtensionInstallReg
             // Use give transition config if its' give;
             const transitionOpt = params.seriesTransition;
             if (transitionOpt) {
-                if (!isArray(transitionOpt)) {
-                    transitionSeriesFromOpt(transitionOpt, params);
-                }
-                else {
-                    each(transitionOpt, opt => transitionSeriesFromOpt(opt, params));
-                }
+                each(normalizeToArray(transitionOpt), opt => {
+                    transitionSeriesFromOpt(opt, params);
+                });
             }
             else {  // Else guess from series based on transition series key.
                 const updateBatches = findTransitionSeriesBatches(params);
