@@ -216,7 +216,7 @@ export default class CustomChartView extends ChartView {
             group.removeAll();
         }
 
-        if (customSeries.get(['universalTransition', 'enabled'])) {
+        if (customSeries.isUniversalTransitionEnabled()) {
             // Always create new if universalTransition is enabled.
             // So the old will not be replaced and can be transition later.
             // TODO check if UniversalTransition feature is installed.

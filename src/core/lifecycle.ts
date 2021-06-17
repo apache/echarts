@@ -23,12 +23,33 @@ import GlobalModel from '../model/Global';
 import { EChartsType } from './echarts';
 import ExtensionAPI from './ExtensionAPI';
 import List from '../data/List';
+import { ModelFinderIdQuery, ModelFinderIndexQuery } from '../util/model';
+import { DimensionLoose } from '../util/types';
+
+interface TransitionSeriesFinder {
+    seriesIndex?: ModelFinderIndexQuery,
+    seriesId?: ModelFinderIdQuery
+    dimension: DimensionLoose;
+}
+
+export interface UpdateLifecycleTransitionItem {
+    // If `from` not given, it means that do not make series transition mandatorily.
+    // There might be transition mapping dy default. Sometimes we do not need them,
+    // which might bring about misleading.
+    from?: TransitionSeriesFinder;
+    to: TransitionSeriesFinder;
+};
+
+export type UpdateLifecycleTransitionOpt = UpdateLifecycleTransitionItem | UpdateLifecycleTransitionItem[];
 
 export interface UpdateLifecycleParams {
     oldSeries?: SeriesModel[]
     oldData?: List[]
 
     updatedSeries?: SeriesModel[]
+
+    // Specify series to transition in this setOption.
+    seriesTransition?: UpdateLifecycleTransitionOpt
 }
 interface LifecycleEvents {
     'afterinit': [EChartsType],

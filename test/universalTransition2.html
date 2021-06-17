@@ -166,8 +166,8 @@ under the License.
 
                 const RAW_DATA_DIMENSIONS = ['Income', 'Life Expectancy', 'Population', 'Country', 'Year'];
                 const SUM_INCOME_DIMENSIONS = ['Income', 'Country'];
-                var COUNTRY_A = 'Germany';
-                var COUNTRY_B = 'France';
+                const COUNTRY_A = 'Germany';
+                const COUNTRY_B = 'France';
 
                 const datasetOption = [
                     {
@@ -312,7 +312,7 @@ under the License.
                         option: createOption('Year', 'Population', 'bar')
                     },
                     {
-                        option: createOption('Year', 'Population', 'bar', '', 'main')
+                        option: createOption('Year', 'Population', 'bar', '', 'stack')
                     },
                     {
                         option: createOption('Income', 'Country', 'pie', 'Country')

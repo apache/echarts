@@ -23,7 +23,7 @@ import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
     SeriesOption, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType, DimensionLoose
+    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {PaletteMixin} from './mixin/palette';
@@ -60,6 +60,8 @@ const inner = modelUtil.makeInner<{
 function getSelectionKey(data: List, dataIndex: number): string {
     return data.getName(dataIndex) || data.getId(dataIndex);
 }
+
+export const SERIES_UNIVERSAL_TRANSITION_PROP = '__universalTransitionEnabled';
 
 interface SeriesModel {
     /**
@@ -140,16 +142,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // Injected outside
     pipelineContext: PipelineContext;
 
-    // Id for mapping universalTransition
-    uniTransitionId: string;
-    // Dimension map for universal animation between series.
-    // only avalible in `render()` caused by `setOption`.
-    uniTransitionMap: {
-        // Both from and to can be null/undefined, which means no transform mapping.
-        from: DimensionLoose;
-        to: DimensionLoose;
-    };
-
     // ---------------------------------------
     // Props to tell visual/style.ts about how to do visual encoding.
     // ---------------------------------------
@@ -173,6 +165,10 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     defaultSymbol: string;
     // Symbol provide to legend.
     legendIcon: string;
+
+    // It will be set temporary when cross series transition setting is from setOption.
+    // TODO if deprecate further?
+    [SERIES_UNIVERSAL_TRANSITION_PROP]: boolean;
 
     // ---------------------------------------
     // Props about data selection
@@ -538,6 +534,10 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const data = this.getData(dataType);
         const nameOrId = getSelectionKey(data, dataIndex);
         return selectedMap[nameOrId] || false;
+    }
+
+    isUniversalTransitionEnabled() {
+        return this[SERIES_UNIVERSAL_TRANSITION_PROP] || this.get(['universalTransition', 'enabled']);
     }
 
     private _innerSelect(data: List, innerDataIndices: number[]) {

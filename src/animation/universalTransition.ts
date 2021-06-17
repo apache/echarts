@@ -28,20 +28,40 @@ import { EChartsExtensionInstallRegisters } from '../extension';
 import { initProps } from '../util/graphic';
 import DataDiffer from '../data/DataDiffer';
 import List from '../data/List';
-import { OptionDataItemObject } from '../util/types';
+import { DimensionLoose, OptionDataItemObject } from '../util/types';
+import { UpdateLifecycleParams, UpdateLifecycleTransitionItem } from '../core/lifecycle';
 
 interface DiffItem {
     data: List
+    dim: DimensionLoose
     dataIndex: number
 }
-function flattenDataDiffItems(dataList: List[]) {
+interface TransitionSeries {
+    data: List
+    dim?: DimensionLoose
+}
+
+function getGroupIdDimension(data: List) {
+    const dimensions = data.dimensions;
+    for (let i = 0; i < dimensions.length; i++) {
+        const dimInfo = data.getDimensionInfo(dimensions[i]);
+        if (dimInfo && dimInfo.otherDims.itemGroupId === 0) {
+            return dimensions[i];
+        }
+    }
+}
+
+function flattenDataDiffItems(list: TransitionSeries[]) {
     const items: DiffItem[] = [];
 
-    each(dataList, data => {
+    each(list, seriesInfo => {
+        const data = seriesInfo.data;
         const indices = data.getIndices();
+        const groupDim = getGroupIdDimension(data);
         for (let dataIndex = 0; dataIndex < indices.length; dataIndex++) {
             items.push({
                 data,
+                dim: seriesInfo.dim || groupDim,
                 dataIndex
             });
         }
@@ -50,20 +70,13 @@ function flattenDataDiffItems(dataList: List[]) {
     return items;
 }
 
-function transitionBetweenData(
-    oldDataList: List[],
-    newDataList: List[]
+function transitionBetween(
+    oldList: TransitionSeries[],
+    newList: TransitionSeries[]
 ) {
 
-    const oldDiffItems = flattenDataDiffItems(oldDataList);
-    const newDiffItems = flattenDataDiffItems(newDataList);
-    // // No data or data are in the same series.
-    // if (!oldData || !newData || oldData === newData) {
-    //     return;
-    // }
-
-    // const oldSeriesModel = oldData.hostModel;
-    // const isTransitionSameSeries = oldSeriesModel === seriesModel;
+    const oldDiffItems = flattenDataDiffItems(oldList);
+    const newDiffItems = flattenDataDiffItems(newList);
 
     function stopAnimation(el: Element) {
         el.stopAnimation();
@@ -73,22 +86,6 @@ function transitionBetweenData(
             });
         }
     }
-
-    // function stopAnimation(pathList: Path[] | Path[][]) {
-    //     if (isArray(pathList[0])) {
-    //         for (let i = 0; i < pathList.length; i++) {
-    //             stopAnimation(pathList[i] as Path[]);
-    //         }
-    //     }
-    //     else {
-    //         // TODO Group itself should also invoke the callback.
-    //         // Force finish the leave animation.
-    //         for (let i = 0; i < pathList.length; i++) {
-    //             (pathList as Path[])[i].stopAnimation();
-    //         }
-    //     }
-    //     return pathList;
-    // }
 
     function updateMorphingPathProps(
         from: Path, to: Path,
@@ -126,23 +123,17 @@ function transitionBetweenData(
         }
     }
 
-    function getGroupIdDimension(data: List) {
-        const dimensions = data.dimensions;
-        for (let i = 0; i < dimensions.length; i++) {
-            const dimInfo = data.getDimensionInfo(dimensions[i]);
-            if (dimInfo && dimInfo.otherDims.itemGroupId === 0) {
-                return dimensions[i];
+    function findKeyDim(items: DiffItem[]) {
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].dim) {
+                return items[i].dim;
             }
         }
     }
+    const oldKeyDim = findKeyDim(oldDiffItems);
+    const newKeyDim = findKeyDim(newDiffItems);
 
-
-    // TODO Query from all data.
-    const oldDataGroupIdDim = getGroupIdDimension(oldDataList[0]);
-    const newDataGroupIdDim = getGroupIdDimension(newDataList[0]);
-
-    // TODO share it to other modules. or put it in the List
-    function createGroupIdGetter(isOld: boolean) {
+    function createKeyGetter(isOld: boolean) {
         return function (diffItem: DiffItem): string {
             const data = diffItem.data;
             const dataIndex = diffItem.dataIndex;
@@ -152,25 +143,25 @@ function transitionBetweenData(
             // If group id not exits. Use id instead. If so, only one to one transition will be applied.
             const dataGroupId = data.hostModel && (data.hostModel as SeriesModel).get('dataGroupId') as string;
 
-            // If one data has groupId encode dimension. Use this same dimension from other data.
-            // PENDING: If only use groupId dimension of newData.
-            const groupIdDimension: string = isOld
-                ? (oldDataGroupIdDim || newDataGroupIdDim)
-                : (newDataGroupIdDim || oldDataGroupIdDim);
+            // If specified key dimension(itemGroupId by default). Use this same dimension from other data.
+            // PENDING: If only use key dimension of newData.
+            const keyDim = isOld
+                ? (oldKeyDim || newKeyDim)
+                : (newKeyDim || oldKeyDim);
 
-            const dimInfo = groupIdDimension && data.getDimensionInfo(groupIdDimension);
+            const dimInfo = keyDim && data.getDimensionInfo(keyDim);
             const dimOrdinalMeta = dimInfo && dimInfo.ordinalMeta;
 
-            if (groupIdDimension) {
+            if (keyDim) {
                 // Get from encode.itemGroupId.
-                const groupId = data.get(groupIdDimension, dataIndex);
+                const key = data.get(dimInfo.name, dataIndex);
                 if (dimOrdinalMeta) {
-                    return dimOrdinalMeta.categories[groupId as number] as string || (groupId + '');
+                    return dimOrdinalMeta.categories[key as number] as string || (key + '');
                 }
-                return groupId + '';
+                return key + '';
             }
 
-            // Get from raw item. { groupId: '' }
+            // Get groupId from raw item. { groupId: '' }
             const itemVal = data.getRawDataItem(dataIndex) as OptionDataItemObject<unknown>;
             if (itemVal && itemVal.groupId) {
                 return itemVal.groupId + '';
@@ -193,6 +184,7 @@ function transitionBetweenData(
         if (oldEl === newEl) {
             return;
         }
+
 
         if (newEl) {
             // TODO: If keep animating the group in case
@@ -223,8 +215,8 @@ function transitionBetweenData(
     (new DataDiffer(
         oldDiffItems,
         newDiffItems,
-        createGroupIdGetter(true),
-        createGroupIdGetter(false),
+        createKeyGetter(true),
+        createKeyGetter(false),
         null,
         'multiple'
     ))
@@ -330,94 +322,145 @@ function convertArraySeriesKeyToString(seriesKey: string[] | string) {
     return seriesKey;
 }
 
+interface SeriesTransitionBatch {
+    oldSeries: TransitionSeries[]
+    newSeries: TransitionSeries[]
+}
+
+function findTransitionSeriesBatches(params: UpdateLifecycleParams) {
+    const updateBatches = createHashMap<SeriesTransitionBatch>();
+
+    const oldDataMap = createHashMap<List>();
+    // Map that only store key in array seriesKey.
+    // Which is used to query the old data when transition from one to multiple series.
+    const oldDataMapForSplit = createHashMap<{
+        key: string,
+        data: List
+    }>();
+
+    each(params.oldSeries, (series, idx) => {
+        const oldData = params.oldData[idx];
+        const transitionKey = getSeriesTransitionKey(series);
+        const transitionKeyStr = convertArraySeriesKeyToString(transitionKey);
+        oldDataMap.set(transitionKeyStr, oldData);
+
+        if (isArray(transitionKey)) {
+            // Same key can't in different array seriesKey.
+            each(transitionKey, key => {
+                oldDataMapForSplit.set(key, {
+                    data: oldData,
+                    key: transitionKeyStr
+                });
+            });
+        }
+    });
+    each(params.updatedSeries, series => {
+        if (series.get(['universalTransition', 'enabled'])) {
+            const newData = series.getData();
+            const transitionKey = getSeriesTransitionKey(series);
+            const transitionKeyStr = convertArraySeriesKeyToString(transitionKey);
+            // Only transition between series with same id.
+            const oldData = oldDataMap.get(transitionKeyStr);
+            // string transition key is the best match.
+            if (oldData) {
+                // TODO check if data is same?
+                updateBatches.set(transitionKeyStr, {
+                    oldSeries: [{
+                        data: oldData
+                    }],
+                    newSeries: [{
+                        data: newData
+                    }]
+                });
+            }
+            if (!oldData) {
+                // Transition from multiple series.
+                if (isArray(transitionKey)) {
+                    const oldSeries: TransitionSeries[] = [];
+                    each(transitionKey, key => {
+                        const oldData = oldDataMap.get(key);
+                        if (oldData) {
+                            oldSeries.push({
+                                data: oldData
+                            });
+                        }
+                    });
+                    if (oldSeries.length) {
+                        updateBatches.set(transitionKeyStr, {
+                            oldSeries,
+                            newSeries: [{ data: newData }]
+                        });
+                    }
+                }
+                else {
+                    // Try transition to multiple series.
+                    const oldData = oldDataMapForSplit.get(transitionKey);
+                    if (oldData) {
+                        let batch = updateBatches.get(oldData.key);
+                        if (!batch) {
+                            batch = {
+                                oldSeries: [{ data: oldData.data }],
+                                newSeries: []
+                            };
+                            updateBatches.set(oldData.key, batch);
+                        }
+                        batch.newSeries.push({
+                            data: newData
+                        });
+                    }
+                }
+            }
+        }
+    });
+
+    return updateBatches;
+}
+
+function querySeries(series: SeriesModel[], finder: UpdateLifecycleTransitionItem['from']) {
+    for (let i = 0; i < series.length; i++) {
+        const found = finder.seriesIndex != null && finder.seriesIndex === series[i].seriesIndex
+            || finder.seriesId != null && finder.seriesId === series[i].id;
+        if (found) {
+            return i;
+        }
+    }
+}
+
+function transitionSeriesFromOpt(transitionOpt: UpdateLifecycleTransitionItem, params: UpdateLifecycleParams) {
+    const fromSeriesIdx = querySeries(params.oldSeries, transitionOpt.from);
+    const toSeriesIdx = querySeries(params.updatedSeries, transitionOpt.to);
+    if (fromSeriesIdx >= 0 && toSeriesIdx >= 0) {
+        transitionBetween([{
+            data: params.oldData[fromSeriesIdx],
+            dim: transitionOpt.from.dimension
+        }], [{
+            data: params.updatedSeries[toSeriesIdx].getData(),
+            dim: transitionOpt.to.dimension
+        }]);
+    }
+}
+
 export function installUniversalTransition(registers: EChartsExtensionInstallRegisters) {
     registers.registerUpdateLifecycle('series:transition', (ecModel, api, params) => {
         // TODO multiple to multiple series.
         if (params.oldSeries && params.updatedSeries) {
-            const updateBatches = createHashMap<{
-                oldDataList: List[]
-                newDataList: List[]
-             }>();
-
-            const oldDataMap = createHashMap<List>();
-            // Map that only store key in array seriesKey.
-            // Which is used to query the old data when transition from one to multiple series.
-            const oldDataMapForSplit = createHashMap<{
-                key: string,
-                data: List
-            }>();
-
-            each(params.oldSeries, (series, idx) => {
-                const oldData = params.oldData[idx];
-                const transitionKey = getSeriesTransitionKey(series);
-                const transitionKeyStr = convertArraySeriesKeyToString(transitionKey);
-                oldDataMap.set(transitionKeyStr, oldData);
-
-                if (isArray(transitionKey)) {
-                    // Same key can't in different array seriesKey.
-                    each(transitionKey, key => {
-                        oldDataMapForSplit.set(key, {
-                            data: oldData,
-                            key: transitionKeyStr
-                        });
-                    });
+            // Use give transition config if its' give;
+            const transitionOpt = params.seriesTransition;
+            if (transitionOpt) {
+                if (!isArray(transitionOpt)) {
+                    transitionSeriesFromOpt(transitionOpt, params);
                 }
-            });
-            each(params.updatedSeries, series => {
-                if (series.get(['universalTransition', 'enabled'])) {
-                    const newData = series.getData();
-                    const transitionKey = getSeriesTransitionKey(series);
-                    const transitionKeyStr = convertArraySeriesKeyToString(transitionKey);
-                    // Only transition between series with same id.
-                    const oldData = oldDataMap.get(transitionKeyStr);
-                    // string transition key is the best match.
-                    if (oldData) {
-                        // TODO check if data is same?
-                        updateBatches.set(transitionKeyStr, {
-                            oldDataList: [oldData],
-                            newDataList: [newData]
-                        });
-                    }
-                    if (!oldData) {
-                        // Transition from multiple series.
-                        if (isArray(transitionKey)) {
-                            const oldDataList: List[] = [];
-                            each(transitionKey, key => {
-                                const oldData = oldDataMap.get(key);
-                                if (oldData) {
-                                    oldDataList.push(oldData);
-                                }
-                            });
-                            if (oldDataList.length) {
-                                updateBatches.set(transitionKeyStr, {
-                                    oldDataList,
-                                    newDataList: [newData]
-                                });
-                            }
-                        }
-                        else {
-                            // Try transition to multiple series.
-                            const oldData = oldDataMapForSplit.get(transitionKey);
-                            if (oldData) {
-                                let batch = updateBatches.get(oldData.key);
-                                if (!batch) {
-                                    batch = {
-                                        oldDataList: [oldData.data],
-                                        newDataList: []
-                                    };
-                                    updateBatches.set(oldData.key, batch);
-                                }
-                                batch.newDataList.push(newData);
-                            }
-                        }
-                    }
+                else {
+                    each(transitionOpt, opt => transitionSeriesFromOpt(opt, params));
                 }
-            });
-
-            each(updateBatches.keys(), key => {
-                const batch = updateBatches.get(key);
-                transitionBetweenData(batch.oldDataList, batch.newDataList);
-            });
+            }
+            else {  // Else guess from series based on transition series key.
+                const updateBatches = findTransitionSeriesBatches(params);
+                each(updateBatches.keys(), key => {
+                    const batch = updateBatches.get(key);
+                    transitionBetween(batch.oldSeries, batch.newSeries);
+                });
+            }
         }
     });
 }

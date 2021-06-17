@@ -49,7 +49,7 @@ import OptionManager from '../model/OptionManager';
 import backwardCompat from '../preprocessor/backwardCompat';
 import dataStack from '../processor/dataStack';
 import ComponentModel from '../model/Component';
-import SeriesModel from '../model/Series';
+import SeriesModel, { SERIES_UNIVERSAL_TRANSITION_PROP } from '../model/Series';
 import ComponentView, {ComponentViewConstructor} from '../view/Component';
 import ChartView, {ChartViewConstructor} from '../view/Chart';
 import * as graphic from '../util/graphic';
@@ -127,7 +127,12 @@ import decal from '../visual/decal';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
 import geoSourceManager from '../coord/geo/geoSourceManager';
-import lifecycle, { LifecycleEvents, UpdateLifecycleParams } from './lifecycle';
+import lifecycle, {
+    LifecycleEvents,
+    UpdateLifecycleTransitionItem,
+    UpdateLifecycleParams,
+    UpdateLifecycleTransitionOpt
+} from './lifecycle';
 
 declare let global: any;
 
@@ -208,6 +213,9 @@ type ConnectStatus =
     | typeof CONNECT_STATUS_UPDATING
     | typeof CONNECT_STATUS_UPDATED;
 
+export type SetOptionTransitionOpt = UpdateLifecycleTransitionOpt;
+export type SetOptionTransitionOptItem = UpdateLifecycleTransitionItem;
+
 export interface SetOptionOpts {
     notMerge?: boolean;
     lazyUpdate?: boolean;
@@ -218,13 +226,6 @@ export interface SetOptionOpts {
     transition?: SetOptionTransitionOpt
 };
 
-export interface SetOptionTransitionOptItem {
-    // If `from` not given, it means that do not make series transition mandatorily.
-    // There might be transition mapping dy default. Sometimes we do not need them,
-    // which might bring about misleading.
-    from?: SetOptionTransitionOptFinder;
-    to: SetOptionTransitionOptFinder;
-};
 
 export interface ResizeOpts {
     width?: number | 'auto', // Can be 'auto' (the same as null/undefined)
@@ -232,11 +233,6 @@ export interface ResizeOpts {
     animation?: AnimationOption
     silent?: boolean // by default false.
 };
-
-interface SetOptionTransitionOptFinder extends modelUtil.ModelFinderObject {
-    dimension: DimensionLoose;
-}
-type SetOptionTransitionOpt = SetOptionTransitionOptItem | SetOptionTransitionOptItem[];
 
 interface PostIniter {
     (chart: EChartsType): void
@@ -594,10 +590,12 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         let silent;
         let replaceMerge;
+        let transitionOpt: SetOptionTransitionOpt;
         if (isObject(notMerge)) {
             lazyUpdate = notMerge.lazyUpdate;
             silent = notMerge.silent;
             replaceMerge = notMerge.replaceMerge;
+            transitionOpt = notMerge.transition;
             notMerge = notMerge.notMerge;
         }
 
@@ -620,9 +618,25 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         this._model.setOption(option as ECBasicOption, { replaceMerge }, optionPreprocessorFuncs);
 
+        if (transitionOpt) {
+            each(modelUtil.normalizeToArray(transitionOpt), transOpt => {
+                const finder = transOpt.to;
+                if (finder) {
+                    const series = this._model.getSeries();
+                    for (let i = 0; i < series.length; i++) {
+                        if (finder.seriesIndex != null && finder.seriesIndex === series[i].seriesIndex
+                            || finder.seriesId != null && finder.seriesId === series[i].id) {
+                            series[i][SERIES_UNIVERSAL_TRANSITION_PROP] = true;
+                        }
+                    }
+                }
+            });
+        }
+
         const updateParams = {
             oldSeries: oldSeriesModels,
-            oldData: oldSeriesData
+            oldData: oldSeriesData,
+            seriesTransition: transitionOpt
         } as UpdateLifecycleParams;
 
         if (lazyUpdate) {
@@ -2065,7 +2079,10 @@ class ECharts extends Eventful<ECEventDefinition> {
                     unfinished = true;
                 }
 
-                // seriesModel.uniTransitionMap = null;
+                // Reset;
+                if (seriesModel[SERIES_UNIVERSAL_TRANSITION_PROP]) {
+                    seriesModel[SERIES_UNIVERSAL_TRANSITION_PROP] = false;
+                }
 
                 chartView.group.silent = !!seriesModel.get('silent');
                 // Should not call markRedraw on group, because it will disable zrender
