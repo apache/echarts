@@ -239,7 +239,10 @@ function createEmphasisDefaultState(
             let emphasisStyle = state.style || {};
 
             // inherit case
-            if (emphasisStyle.fill === 'inherit' && hasFillOrStroke(fromFill)) {
+            if (emphasisStyle.fill === 'inherit') {
+                cloned = true;
+                state = extend({}, state);
+                emphasisStyle = extend({}, emphasisStyle);
                 emphasisStyle.fill = fromFill;
             }
             // Apply default color lift
