@@ -478,7 +478,7 @@ function prepareLayoutInfo(
         // Adjust calculate margin, to ensure each symbol is displayed
         // entirely in the given layout area.
         const mDiff = absBoundingLength - repeatTimes * unitLength;
-        symbolMarginNumeric = mDiff / 2 / (hasEndGap ? repeatTimes : repeatTimes - 1);
+        symbolMarginNumeric = mDiff / 2 / (hasEndGap ? repeatTimes : Math.max(repeatTimes - 1, 1));
         uLenWithMargin = unitLength + symbolMarginNumeric * 2;
         endFix = hasEndGap ? 0 : symbolMarginNumeric * 2;
 
@@ -777,7 +777,6 @@ function createBar(data: List, opt: CreateOpts, symbolMeta: SymbolMeta, isUpdate
 
     bar.__pictorialShapeStr = getShapeStr(data, symbolMeta);
     bar.__pictorialSymbolMeta = symbolMeta;
-
     return bar;
 }
 

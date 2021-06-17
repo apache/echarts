@@ -48,7 +48,7 @@ import type {
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea, isCoordinateSystemType } from '../../coord/CoordinateSystem';
-import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis, DISPLAY_STATES, SPECIAL_STATES } from '../../util/states';
+import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis, SPECIAL_STATES } from '../../util/states';
 import Model from '../../model/Model';
 import {setLabelStyle, getLabelStatesModels, labelInner} from '../../label/labelStyle';
 import {getDefaultLabel, getDefaultInterpolatedLabel} from '../helper/labelHelper';

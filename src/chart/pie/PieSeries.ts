@@ -119,7 +119,7 @@ export interface PieSeriesOption extends
     animationType?: 'expansion' | 'scale'
     animationTypeUpdate?: 'transition' | 'expansion'
 
-    data?: OptionDataValueNumeric[] | OptionDataValueNumeric[][] | PieDataItemOption[]
+    data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | PieDataItemOption)[]
 }
 
 class PieSeriesModel extends SeriesModel<PieSeriesOption> {
@@ -274,7 +274,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             }
         },
         itemStyle: {
-            borderWidth: 1
+            borderWidth: 1,
+            borderJoin: 'round'
         },
 
         labelLayout: {
