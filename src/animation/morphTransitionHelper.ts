@@ -105,7 +105,12 @@ export function applyMorphAnimation(
         return;
     }
 
-    const animationCfg = getAnimationConfig('update', seriesModel, dataIndex);
+    const updateAnimationCfg = getAnimationConfig('update', seriesModel, dataIndex);
+    const animationCfg = Object.assign({
+        // Need to setToFinal so the further calculation based on the style can be correct.
+        // Like emphasis color.
+        setToFinal: true
+    }, updateAnimationCfg);
 
     let many: DescendentPaths[];
     let one: DescendentPaths;

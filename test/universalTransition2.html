@@ -246,7 +246,7 @@ under the License.
                         series: groupBy ?
                             [{
                                 type: seriesType,
-                                name: COUNTRY_A,
+                                name: 'Both Country',
                                 id: 'CountryAB',
                                 datasetId: 'GroupByCountry',
                                 universalTransition: {
@@ -333,7 +333,7 @@ under the License.
                 function createPrevOption() {
                     currentOptionIdx = currentOptionIdx - 1;
                     if (currentOptionIdx < 0) {
-                        currentOptionIdx = option.length - 1;
+                        currentOptionIdx = options.length - 1;
                     }
                     const option = options[currentOptionIdx].option;
                     return option;
