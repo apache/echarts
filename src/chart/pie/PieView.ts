@@ -250,16 +250,8 @@ class PieView extends ChartView {
         }
         // when all data are filtered, show lightgray empty circle
         if (data.count() === 0 && seriesModel.get('showEmptyCircle')) {
-            const {cx, cy, r0, r } = getBasicPieLayout(seriesModel, api);
             const sector = new graphic.Sector({
-                shape: {
-                    cx,
-                    cy,
-                    r0,
-                    r,
-                    startAngle: 0,
-                    endAngle: Math.PI * 2
-                }
+                shape: getBasicPieLayout(seriesModel, api)
             });
             sector.useStyle(seriesModel.getModel('emptyCircleStyle').getItemStyle());
             this._emptyCircleSector = sector;
