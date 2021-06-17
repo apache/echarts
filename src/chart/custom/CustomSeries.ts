@@ -299,8 +299,6 @@ export const customInnerStore = makeInner<{
     // customText: string;
     txConZ2Set: number;
     leaveToProps: ElementProps;
-    // Can morph: "morph" specified in option and el is Path.
-    morph: boolean;
     option: CustomElementOption;
     userDuring: CustomBaseElementOption['during'];
 }, Element>();

@@ -19,14 +19,14 @@
 
 import {
     hasOwn, assert, isString, retrieve2, retrieve3, defaults, each,
-    keys, bind, eqNaN, indexOf, curry, filter, map
+    keys, bind, eqNaN, indexOf
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../../util/graphic';
 import { setDefaultStateProxy, enableHoverEmphasis } from '../../util/states';
 import * as labelStyleHelper from '../../label/labelStyle';
 import {getDefaultLabel} from '../helper/labelHelper';
 import {getLayoutOnAxis} from '../../layout/barGrid';
-import DataDiffer, { DataDiffMode } from '../../data/DataDiffer';
+import DataDiffer from '../../data/DataDiffer';
 import Model from '../../model/Model';
 import ChartView from '../../view/Chart';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
@@ -93,13 +93,6 @@ import CustomSeriesModel, {
     LooseElementProps,
     PrepareCustomInfo
 } from './CustomSeries';
-import {
-    getPathList,
-    applyMorphAnimation,
-    isPath,
-    isDisplayable,
-    copyElement
-} from '../../animation/morphTransitionHelper';
 import {
     prepareShapeOrExtraAllPropsFinal,
     prepareShapeOrExtraTransitionFrom,
@@ -178,6 +171,27 @@ const prepareCustoms: Dictionary<PrepareCustomInfo> = {
 };
 
 
+function isPath(el: Element): el is graphicUtil.Path {
+    return el instanceof graphicUtil.Path;
+}
+function isDisplayable(el: Element) : el is Displayable {
+    return el instanceof Displayable;
+}
+function copyElement(sourceEl: Element, targetEl: Element) {
+    targetEl.copyTransform(sourceEl);
+    if (isDisplayable(targetEl) && isDisplayable(sourceEl)) {
+        targetEl.setStyle(sourceEl.style);
+        targetEl.z = sourceEl.z;
+        targetEl.z2 = sourceEl.z2;
+        targetEl.zlevel = sourceEl.zlevel;
+        targetEl.invisible = sourceEl.invisible;
+        targetEl.ignore = sourceEl.ignore;
+
+        if (isPath(targetEl) && isPath(sourceEl)) {
+            targetEl.setShape(sourceEl.shape);
+        }
+    }
+}
 export default class CustomChartView extends ChartView {
 
     static type = 'custom';
@@ -202,134 +216,39 @@ export default class CustomChartView extends ChartView {
             group.removeAll();
         }
 
-        // By default, merge mode is applied. In most cases, custom series is
-        // used in the scenario that data amount is not large but graphic elements
-        // is complicated, where merge mode is probably necessary for optimization.
-        // For example, reuse graphic elements and only update the transform when
-        // roam or data zoom according to `actionType`.
-
-        const transOpt = customSeries.uniTransitionMap;
-
-        function updateMorphingPathProps(
-            dataIndex: number,
-            from: graphicUtil.Path, to: graphicUtil.Path,
-            rawFrom: graphicUtil.Path, rawTo: graphicUtil.Path
-        ) {
-            // element has been updated if rawTo is same with to.
-            const elOption = customInnerStore(rawTo).option;
-            if (elOption) {
-                const transFromProps = {} as ElementProps;
-                const propsToSet = {} as ElementProps;
-                const styleOpt = elOption.style;
-                prepareShapeOrExtraTransitionFrom('extra', from, elOption, transFromProps, false);
-                prepareShapeOrExtraAllPropsFinal('extra', elOption, propsToSet);
-                prepareStyleTransitionFrom(from, elOption, styleOpt, transFromProps, false);
-                (propsToSet as DisplayableProps).style = styleOpt;
-
-                applyPropsDirectly(to, propsToSet);
-                applyPropsTransition(to, dataIndex, customSeries, transFromProps, false);
-                applyMiscProps(to, elOption, false);
-            }
-        }
-
-        // Enable user to disable transition animation by both set
-        // `from` and `to` dimension as `null`/`undefined`.
-        if (transOpt && (transOpt.from == null || transOpt.to == null)) {
+        if (customSeries.get(['universalTransition', 'enabled'])) {
+            // Always create new if universalTransition is enabled.
+            // So the old will not be replaced and can be transition later.
+            // TODO check if UniversalTransition feature is installed.
             oldData && oldData.each(function (oldIdx) {
                 doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
             });
             data.each(function (newIdx) {
                 createOrUpdateItem(
-                    api, null, false, newIdx, renderItem(newIdx, payload), customSeries, group, data
+                    api, null, newIdx, renderItem(newIdx, payload), customSeries, group, data
                 );
             });
         }
         else {
-
-            const diffMode: DataDiffMode = transOpt ? 'multiple' : 'oneToOne';
-
-            (new DataDiffer(
-                oldData ? oldData.getIndices() : [],
-                data.getIndices(),
-                createGetKey(oldData, diffMode, transOpt && transOpt.from),
-                createGetKey(data, diffMode, transOpt && transOpt.to),
-                null,
-                diffMode
-            ))
-            .add(function (newIdx) {
-                createOrUpdateItem(
-                    api, null, false, newIdx, renderItem(newIdx, payload), customSeries, group,
-                    data
-                );
-            })
-            .remove(function (oldIdx) {
-                doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
-            })
-            .update(function (newIdx, oldIdx) {
-                const oldEl = oldData.getItemGraphicEl(oldIdx);
-
-                const oldPathList = getPathList(oldEl);
-
-                const newEl = createOrUpdateItem(
-                    api, oldEl, oldPathList.length > 0, newIdx, renderItem(newIdx, payload), customSeries, group,
-                    data
-                );
-
-                const newPathList = filter(getPathList(newEl), el => customInnerStore(el).morph);
-                applyMorphAnimation(
-                    oldPathList, newPathList, customSeries, newIdx, curry(updateMorphingPathProps, newIdx)
-                );
-            })
-            .updateManyToOne(function (newIdx, oldIndices) {
-                const oldElList = [];
-                for (let i = 0; i < oldIndices.length; i++) {
-                    const oldEl = oldData.getItemGraphicEl(oldIndices[i]);
-                    group.remove(oldEl);
-                    oldElList.push(oldEl);
-                }
-
-                const oldPathList = getPathList(oldElList);
-
-                const updateMorphingPathPropsWithIdx = curry(updateMorphingPathProps, newIdx);
-
-                const newEl = createOrUpdateItem(
-                    api, null, oldElList.length > 0, newIdx, renderItem(newIdx, payload), customSeries, group,
-                    data
-                );
-
-                const newPathList = filter(getPathList(newEl), el => customInnerStore(el).morph);
-                applyMorphAnimation(
-                    oldPathList, newPathList, customSeries, newIdx, updateMorphingPathPropsWithIdx
-                );
-            })
-            .updateOneToMany(function (newIndices, oldIdx) {
-                const newLen = newIndices.length;
-                const oldEl = oldData.getItemGraphicEl(oldIdx);
-                group.remove(oldEl);
-
-                const oldPathList = getPathList(oldEl);
-
-                const newElList = [];
-                for (let i = 0; i < newLen; i++) {
-                    newElList.push(createOrUpdateItem(
-                        api, null, oldPathList.length > 0,
-                        newIndices[i], renderItem(newIndices[i], payload), customSeries, group,
+            data.diff(oldData)
+                .add(function (newIdx) {
+                    createOrUpdateItem(
+                        api, null, newIdx, renderItem(newIdx, payload), customSeries, group,
                         data
-                    ));
-                }
+                    );
+                })
+                .remove(function (oldIdx) {
+                    doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
+                })
+                .update(function (newIdx, oldIdx) {
+                    const oldEl = oldData.getItemGraphicEl(oldIdx);
 
-                const newPathList = map(
-                    getPathList(newElList),
-                    els => filter(els, el => customInnerStore(el).morph)
-                );
-
-                // TODO Different animation config in different indices?
-                const updateMorphingPathPropsWithIdx = curry(updateMorphingPathProps, newIndices[0]);
-                applyMorphAnimation(
-                    oldPathList, newPathList, customSeries, newIndices[0], updateMorphingPathPropsWithIdx
-                );
-            })
-            .execute();
+                    createOrUpdateItem(
+                        api, oldEl, newIdx, renderItem(newIdx, payload), customSeries, group,
+                        data
+                    );
+                })
+                .execute();
         }
 
         // Do clipping
@@ -372,7 +291,7 @@ export default class CustomChartView extends ChartView {
         }
         for (let idx = params.start; idx < params.end; idx++) {
             const el = createOrUpdateItem(
-                null, null, false, idx, renderItem(idx, payload), customSeries, this.group, data
+                null, null, idx, renderItem(idx, payload), customSeries, this.group, data
             );
             el && el.traverse(setIncrementalAndHoverLayer);
         }
@@ -396,44 +315,6 @@ export default class CustomChartView extends ChartView {
 
         return false;
     }
-}
-
-
-function createGetKey(
-    data: List,
-    diffMode: DataDiffMode,
-    dimension: DimensionLoose
-) {
-    if (!data) {
-        return;
-    }
-
-    if (diffMode === 'oneToOne') {
-        return function (rawIdx: number, dataIndex: number) {
-            return data.getId(dataIndex);
-        };
-    }
-
-    const diffByDimName = data.getDimension(dimension);
-    const dimInfo = data.getDimensionInfo(diffByDimName);
-
-    if (!dimInfo) {
-        let errMsg = '';
-        if (__DEV__) {
-            errMsg = `${dimension} is not a valid dimension.`;
-        }
-        throwError(errMsg);
-    }
-    const ordinalMeta = dimInfo.ordinalMeta;
-    return function (rawIdx: number, dataIndex: number) {
-        let key = data.get(diffByDimName, dataIndex);
-        if (ordinalMeta) {
-            key = ordinalMeta.categories[key as number];
-        }
-        return (key == null || eqNaN(key))
-            ? rawIdx + ''
-            : '_ec_' + key;
-    };
 }
 
 
@@ -597,40 +478,20 @@ function updateElNormal(
     const store = customInnerStore(el);
     store.userDuring = elOption.during;
 
-    // TODO el may can't be morphed
-    const willMorph = customInnerStore(el).morph;
     const transFromProps = {} as ElementProps;
     const propsToSet = {} as ElementProps;
 
-    if (!willMorph) {
-        prepareShapeOrExtraTransitionFrom('shape', el, elOption, transFromProps, isInit);
-        prepareShapeOrExtraAllPropsFinal('shape', elOption, propsToSet);
-        prepareTransformTransitionFrom(el, elOption, transFromProps, isInit);
-        prepareTransformAllPropsFinal(el, elOption, propsToSet);
-        prepareShapeOrExtraTransitionFrom('extra', el, elOption, transFromProps, isInit);
-        prepareShapeOrExtraAllPropsFinal('extra', elOption, propsToSet);
-        prepareStyleTransitionFrom(el, elOption, styleOpt, transFromProps, isInit);
-        (propsToSet as DisplayableProps).style = styleOpt;
-        applyPropsDirectly(el, propsToSet);
-        applyPropsTransition(el, dataIndex, seriesModel, transFromProps, isInit);
-        applyMiscProps(el, elOption, isTextContent);
-    }
-    else {
-        // Needs shape and transform info in morphing.
-        // Will set all properties in prepare
-        prepareTransformAllPropsFinal(el, elOption, propsToSet);
-        prepareShapeOrExtraAllPropsFinal('shape', elOption, propsToSet);
-
-        // Other properties also needs to be set.
-        prepareShapeOrExtraAllPropsFinal('extra', elOption, propsToSet);
-        prepareStyleTransitionFrom(el, elOption, styleOpt, transFromProps, isInit);
-        (propsToSet as DisplayableProps).style = styleOpt;
-
-        applyPropsDirectly(el, propsToSet);
-        applyMiscProps(el, elOption, isTextContent);
-
-        store.option = elOption;
-    }
+    prepareShapeOrExtraTransitionFrom('shape', el, elOption, transFromProps, isInit);
+    prepareShapeOrExtraAllPropsFinal('shape', elOption, propsToSet);
+    prepareTransformTransitionFrom(el, elOption, transFromProps, isInit);
+    prepareTransformAllPropsFinal(el, elOption, propsToSet);
+    prepareShapeOrExtraTransitionFrom('extra', el, elOption, transFromProps, isInit);
+    prepareShapeOrExtraAllPropsFinal('extra', elOption, propsToSet);
+    prepareStyleTransitionFrom(el, elOption, styleOpt, transFromProps, isInit);
+    (propsToSet as DisplayableProps).style = styleOpt;
+    applyPropsDirectly(el, propsToSet);
+    applyPropsTransition(el, dataIndex, seriesModel, transFromProps, isInit);
+    applyMiscProps(el, elOption, isTextContent);
 
     styleOpt ? el.dirty() : el.markRedraw();
 }
@@ -1286,7 +1147,6 @@ function wrapEncodeDef(data: List<CustomSeriesModel>): WrapEncodeDefRet {
 function createOrUpdateItem(
     api: ExtensionAPI,
     existsEl: Element,
-    hasMorphFrom: boolean,
     dataIndex: number,
     elOption: CustomElementOption,
     seriesModel: CustomSeriesModel,
@@ -1305,7 +1165,7 @@ function createOrUpdateItem(
         group.remove(existsEl);
         return;
     }
-    const el = doCreateOrUpdateEl(api, existsEl, hasMorphFrom, dataIndex, elOption, seriesModel, group, true);
+    const el = doCreateOrUpdateEl(api, existsEl, dataIndex, elOption, seriesModel, group, true);
     el && data.setItemGraphicEl(dataIndex, el);
 
     el && enableHoverEmphasis(el, elOption.focus, elOption.blurScope);
@@ -1316,7 +1176,6 @@ function createOrUpdateItem(
 function doCreateOrUpdateEl(
     api: ExtensionAPI,
     existsEl: Element,
-    hasMorphFrom: boolean,
     dataIndex: number,
     elOption: CustomElementOption,
     seriesModel: CustomSeriesModel,
@@ -1346,7 +1205,7 @@ function doCreateOrUpdateEl(
         existsEl = null;
     }
 
-    const elIsNewCreated = !existsEl;
+    const isInit = !existsEl;
     let el = existsEl;
 
     if (!el) {
@@ -1361,16 +1220,14 @@ function doCreateOrUpdateEl(
         // do not clearState but update cached normal state directly.
         el.clearStates();
     }
-    const morph = customInnerStore(el).morph =
-        hasMorphFrom && isPath(el)
-        && (elOption as CustomZRPathOption).morph
-        // Don't need morph if element type are same.
-        // shaping transition is enough
-        && elIsNewCreated;
 
-    // Use update animation when morph is enabled.
-    // TODO: can't morph if from element is not valid.
-    const isInit = elIsNewCreated && !morph;
+    // Need to set morph: false explictly to disable automatically morphing.
+    if ((elOption as CustomZRPathOption).morph === false) {
+        (el as ECElement).disableMorphing = true;
+    }
+    else if ((el as ECElement).disableMorphing) {
+        (el as ECElement).disableMorphing = false;
+    }
 
     attachedTxInfoTmp.normal.cfg = attachedTxInfoTmp.normal.conOpt =
         attachedTxInfoTmp.emphasis.cfg = attachedTxInfoTmp.emphasis.conOpt =
@@ -1411,7 +1268,7 @@ function doCreateOrUpdateEl(
 
     if (elOption.type === 'group') {
         mergeChildren(
-            api, el as graphicUtil.Group, hasMorphFrom, dataIndex, elOption as CustomGroupOption, seriesModel
+            api, el as graphicUtil.Group, dataIndex, elOption as CustomGroupOption, seriesModel
         );
     }
 
@@ -1646,7 +1503,6 @@ function retrieveStyleOptionOnState(
 function mergeChildren(
     api: ExtensionAPI,
     el: graphicUtil.Group,
-    hasMorphFrom: boolean,
     dataIndex: number,
     elOption: CustomGroupOption,
     seriesModel: CustomSeriesModel
@@ -1671,7 +1527,6 @@ function mergeChildren(
             newChildren: newChildren || [],
             dataIndex: dataIndex,
             seriesModel: seriesModel,
-            hasMorphFrom,
             group: el
         });
         return;
@@ -1686,7 +1541,6 @@ function mergeChildren(
         newChildren[index] && doCreateOrUpdateEl(
             api,
             el.childAt(index),
-            hasMorphFrom,
             dataIndex,
             newChildren[index],
             seriesModel,
@@ -1708,7 +1562,6 @@ type DiffGroupContext = {
     newChildren: CustomElementOption[];
     dataIndex: number;
     seriesModel: CustomSeriesModel;
-    hasMorphFrom: boolean
     group: graphicUtil.Group;
 };
 function diffGroupChildren(context: DiffGroupContext) {
@@ -1742,7 +1595,6 @@ function processAddUpdate(
     doCreateOrUpdateEl(
         context.api,
         child,
-        context.hasMorphFrom,
         context.dataIndex,
         childOption,
         context.seriesModel,

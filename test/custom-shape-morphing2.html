@@ -249,6 +249,9 @@ under the License.
                                     coordinateSystem: 'cartesian2d',
                                     animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                                     datasetId: datasetId,
+                                    universalTransition: {
+                                        enabled: true
+                                    },
                                     encode: {
                                         itemName: 'ID',
                                         x: 'STE',
@@ -276,7 +279,6 @@ under the License.
                             var symbolPath = getFromPalette(zTagVal, SYMBOL_PATHS);
                             return {
                                 type: 'circle',
-                                morph: true,
                                 shape: {
                                     cx: pos[0],
                                     cy: pos[1],
@@ -301,7 +303,6 @@ under the License.
                             var symbolPath = getFromPalette(zTagVal, SYMBOL_PATHS);
                             return {
                                 type: 'path',
-                                morph: true,
                                 x: pos[0],
                                 y: pos[1],
                                 shape: {
@@ -332,7 +333,6 @@ under the License.
                                 y: pos[1],
                                 children: [{
                                     type: 'polygon',
-                                    morph: true,
                                     shape: {
                                         points: [
                                             [-40, -2],
@@ -348,7 +348,6 @@ under the License.
                                     transition: ['shape', 'style']
                                 }, {
                                     type: 'rect',
-                                    morph: true,
                                     shape: {
                                         x: -20,
                                         y: 0,
@@ -392,9 +391,13 @@ under the License.
                                     coordinateSystem: 'cartesian2d',
                                     animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                                     datasetId: datasetId,
+                                    universalTransition: {
+                                        enabled: true
+                                    },
                                     encode: {
                                         x: 'M_TAG',
                                         y: 'ATA',
+                                        dataGroupId: 'M_TAG',
                                         tooltip: ['M_TAG', 'ATA']
                                     },
                                     renderItem: function (params, api) {
@@ -406,7 +409,6 @@ under the License.
                                         var width = size[0] * 0.4;
                                         return {
                                             type: 'rect',
-                                            morph: true,
                                             shape: {
                                                 x: tarPos[0] - width / 2,
                                                 y: tarPos[1],
@@ -442,6 +444,9 @@ under the License.
                                         value: 'ATA',
                                         tooltip: 'ATA'
                                     },
+                                    universalTransition: {
+                                        enabled: true
+                                    },
                                     renderItem: function (params, api) {
                                         var context = params.context;
                                         if (!context.layout) {
@@ -467,7 +472,6 @@ under the License.
                                         var height = chart.getHeight();
                                         return {
                                             type: 'sector',
-                                            morph: true,
                                             shape: {
                                                 cx: width / 2,
                                                 cy: height / 2,
@@ -519,9 +523,13 @@ under the License.
                                     coordinateSystem: 'cartesian2d',
                                     animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                                     datasetId: datasetId,
+                                    universalTransition: {
+                                        enabled: true
+                                    },
                                     encode: {
                                         x: 'CLUSTER_CENTER_STE',
                                         y: 'CLUSTER_CENTER_ATA',
+                                        itemGroupId: 'CLUSTER_IDX',
                                         tooltip: ['CLUSTER_CENTER_STE', 'CLUSTER_CENTER_ATA']
                                     },
                                     renderItem: function (params, api) {
@@ -542,7 +550,6 @@ under the License.
                                         var radius = count / context.totalCount * 100 + 10;
                                         return {
                                             type: 'circle',
-                                            morph: true,
                                             shape: {
                                                 cx: pos[0],
                                                 cy: pos[1],
@@ -565,52 +572,19 @@ under the License.
 
 
 
-                var optionList = [];
+                var options = {};
                 var buttons = [];
+
                 echarts.util.each(optionCreators, function (creator, key) {
                     var optionWrap = creator();
-                    optionList.push({
-                        key: key,
-                        dataMetaKey: optionWrap.datasetId,
-                        option: optionWrap.option
-                    });
+                    options[key] = Object.assign({}, baseOption, optionWrap.option);
                     buttons.push({
                         text: key,
                         onclick: function () {
-                            player.go(key);
+                            chart.setOption(options[key], true);
                         }
                     });
                 });
-
-
-                var player = ecSimpleOptionPlayer.create({
-                    chart: function () {
-                        return chart;
-                    },
-                    seriesIndex: 0,
-                    replaceMerge: ['xAxis', 'yAxis'],
-                    dataMeta: {
-                        raw: {
-                            dimensions: RAW_DATA_DIMENSIONS,
-                            uniqueDimension: 'ID'
-                        },
-                        mTagSum: {
-                            dimensions: M_TAG_SUM_DIMENSIONS,
-                            uniqueDimension: 'M_TAG'
-                        },
-                        rawClusters: {
-                            dimensions: RAW_CLUSTER_DIMENSIONS,
-                            uniqueDimension: 'ID',
-                            dividingMethod: 'duplicate'
-                        },
-                        rawClusterCenters: {
-                            dimensions: RAW_CLUSTER_CENTERS_DIMENSIONS,
-                            uniqueDimension: 'CLUSTER_IDX'
-                        }
-                    },
-                    optionList: optionList
-                });
-
 
                 var chart = testHelper.create(echarts, 'main0', {
                     title: [
@@ -619,7 +593,7 @@ under the License.
                         'Test: click buttons **twice**, should no blink.',
                         'Test: use dataZoom, the "update animation" should exist'
                     ],
-                    option: baseOption,
+                    option: options['Scatter_singleSVG_ATA_STE'],
                     lazyUpdate: true,
                     height: 600,
                     buttons: buttons.concat([{
@@ -640,8 +614,6 @@ under the License.
                         }
                     }])
                 });
-
-                player.go('Scatter_singleSVG_ATA_STE');
 
             });
 
