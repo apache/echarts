@@ -92,9 +92,11 @@ function transitionBetween(
         rawFrom: Path, rawTo: Path,
         animationCfg: ElementAnimateConfig
     ) {
-        to.animateFrom({
-            style: rawFrom.style
-        }, animationCfg);
+        if (rawFrom || from) {
+            to.animateFrom({
+                style: (rawFrom || from).style
+            }, animationCfg);
+        }
     }
 
     function fadeInElement(newEl: Element, newSeries: SeriesModel, newIndex: number) {
@@ -152,7 +154,7 @@ function transitionBetween(
             const dimInfo = keyDim && data.getDimensionInfo(keyDim);
             const dimOrdinalMeta = dimInfo && dimInfo.ordinalMeta;
 
-            if (keyDim) {
+            if (dimInfo) {
                 // Get from encode.itemGroupId.
                 const key = data.get(dimInfo.name, dataIndex);
                 if (dimOrdinalMeta) {
