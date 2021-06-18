@@ -613,7 +613,9 @@ class ECharts extends Eventful<ECEventDefinition> {
             oldSeriesModels = this._model.getSeries();
         }
 
-        const oldSeriesData = !this[PENDING_UPDATE] // Check if previous option is not rendered yet. Can't getData if so(will throw error.)
+        // Check if previous option is not rendered yet. Can't getData if so(will throw error.)
+        // TODO: This will cause animation failed if setOption with lazyUpdate twice.
+        const oldSeriesData = !this[PENDING_UPDATE]
             && oldSeriesModels
             && map(oldSeriesModels, series => series.getData());
 

@@ -20,7 +20,7 @@
 // Universal transitions that can animate between any shapes(series) and any properties in any amounts.
 
 import SeriesModel, { SERIES_UNIVERSAL_TRANSITION_PROP } from '../model/Series';
-import {createHashMap, each, map, filter, isArray, find, retrieve, retrieve2, extend} from 'zrender/src/core/util';
+import {createHashMap, each, map, filter, isArray} from 'zrender/src/core/util';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { applyMorphAnimation, getPathList } from './morphTransitionHelper';
 import Path from 'zrender/src/graphic/Path';
@@ -64,6 +64,12 @@ function flattenDataDiffItems(list: TransitionSeries[]) {
 
     each(list, seriesInfo => {
         const data = seriesInfo.data;
+        if (data.count() > 1e4) {
+            if (__DEV__) {
+                warn('Universal transition is disabled on large data > 10k.');
+            }
+            return;
+        }
         const indices = data.getIndices();
         const groupDim = getGroupIdDimension(data);
         for (let dataIndex = 0; dataIndex < indices.length; dataIndex++) {
@@ -398,7 +404,7 @@ function findTransitionSeriesBatches(params: UpdateLifecycleParams) {
         }
     }
     each(params.updatedSeries, series => {
-        if (series.get(['universalTransition', 'enabled'])) {
+        if (series.get(['universalTransition', 'enabled']) && series.isAnimationEnabled()) {
             const newData = series.getData();
             const transitionKey = getSeriesTransitionKey(series);
             const transitionKeyStr = convertArraySeriesKeyToString(transitionKey);
