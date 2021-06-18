@@ -19,7 +19,7 @@
 
 // Universal transitions that can animate between any shapes(series) and any properties in any amounts.
 
-import SeriesModel from '../model/Series';
+import SeriesModel, { SERIES_UNIVERSAL_TRANSITION_PROP } from '../model/Series';
 import {createHashMap, each, map, filter, isArray, find} from 'zrender/src/core/util';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { applyMorphAnimation, getPathList } from './morphTransitionHelper';
@@ -35,6 +35,7 @@ import {
     UpdateLifecycleTransitionSeriesFinder
 } from '../core/lifecycle';
 import { normalizeToArray } from '../util/model';
+import { warn } from '../util/log';
 
 interface DiffItem {
     data: List
@@ -361,6 +362,12 @@ function findTransitionSeriesBatches(params: UpdateLifecycleParams) {
             });
         }
     });
+
+    function checkTransitionSeriesKeyDuplicated(transitionKeyStr: string) {
+        if (updateBatches.get(transitionKeyStr)) {
+            warn(`Duplicated seriesKey in universalTransition ${transitionKeyStr}`);
+        }
+    }
     each(params.updatedSeries, series => {
         if (series.get(['universalTransition', 'enabled'])) {
             const newData = series.getData();
@@ -370,6 +377,9 @@ function findTransitionSeriesBatches(params: UpdateLifecycleParams) {
             const oldData = oldDataMap.get(transitionKeyStr);
             // string transition key is the best match.
             if (oldData) {
+                if (__DEV__) {
+                    checkTransitionSeriesKeyDuplicated(transitionKeyStr);
+                }
                 // TODO check if data is same?
                 updateBatches.set(transitionKeyStr, {
                     oldSeries: [{
@@ -383,6 +393,9 @@ function findTransitionSeriesBatches(params: UpdateLifecycleParams) {
             if (!oldData) {
                 // Transition from multiple series.
                 if (isArray(transitionKey)) {
+                    if (__DEV__) {
+                        checkTransitionSeriesKeyDuplicated(transitionKeyStr);
+                    }
                     const oldSeries: TransitionSeries[] = [];
                     each(transitionKey, key => {
                         const oldData = oldDataMap.get(key);
@@ -460,6 +473,20 @@ function transitionSeriesFromOpt(transitionOpt: UpdateLifecycleTransitionItem, p
 }
 
 export function installUniversalTransition(registers: EChartsExtensionInstallRegisters) {
+
+    registers.registerUpdateLifecycle('series:beforeupdate', (ecMOdel, api, params) => {
+        each(normalizeToArray(params.seriesTransition), transOpt => {
+            each(normalizeToArray(transOpt.to), (finder) => {
+                const series = params.updatedSeries;
+                for (let i = 0; i < series.length; i++) {
+                    if (finder.seriesIndex != null && finder.seriesIndex === series[i].seriesIndex
+                        || finder.seriesId != null && finder.seriesId === series[i].id) {
+                        series[i][SERIES_UNIVERSAL_TRANSITION_PROP] = true;
+                    }
+                }
+            });
+        });
+    });
     registers.registerUpdateLifecycle('series:transition', (ecModel, api, params) => {
         // TODO multiple to multiple series.
         if (params.oldSeries && params.updatedSeries) {
@@ -477,6 +504,14 @@ export function installUniversalTransition(registers: EChartsExtensionInstallReg
                     transitionBetween(batch.oldSeries, batch.newSeries);
                 });
             }
+
+            // Reset
+            each(params.updatedSeries, series => {
+                // Reset;
+                if (series[SERIES_UNIVERSAL_TRANSITION_PROP]) {
+                    series[SERIES_UNIVERSAL_TRANSITION_PROP] = false;
+                }
+            });
         }
     });
 }

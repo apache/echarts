@@ -49,7 +49,7 @@ import OptionManager from '../model/OptionManager';
 import backwardCompat from '../preprocessor/backwardCompat';
 import dataStack from '../processor/dataStack';
 import ComponentModel from '../model/Component';
-import SeriesModel, { SERIES_UNIVERSAL_TRANSITION_PROP } from '../model/Series';
+import SeriesModel from '../model/Series';
 import ComponentView, {ComponentViewConstructor} from '../view/Component';
 import ChartView, {ChartViewConstructor} from '../view/Chart';
 import * as graphic from '../util/graphic';
@@ -105,7 +105,6 @@ import {
     ComponentSubType,
     ColorString,
     SelectChangedPayload,
-    DimensionLoose,
     ScaleDataValue,
     ZRElementEventName,
     ECElementEvent,
@@ -617,20 +616,6 @@ class ECharts extends Eventful<ECEventDefinition> {
         const oldSeriesData = oldSeriesModels && map(oldSeriesModels, series => series.getData());
 
         this._model.setOption(option as ECBasicOption, { replaceMerge }, optionPreprocessorFuncs);
-
-        if (transitionOpt) {
-            each(modelUtil.normalizeToArray(transitionOpt), transOpt => {
-                each(modelUtil.normalizeToArray(transOpt.to), (finder) => {
-                    const series = this._model.getSeries();
-                    for (let i = 0; i < series.length; i++) {
-                        if (finder.seriesIndex != null && finder.seriesIndex === series[i].seriesIndex
-                            || finder.seriesId != null && finder.seriesId === series[i].id) {
-                            series[i][SERIES_UNIVERSAL_TRANSITION_PROP] = true;
-                        }
-                    }
-                });
-            });
-        }
 
         const updateParams = {
             oldSeries: oldSeriesModels,
@@ -2076,11 +2061,6 @@ class ECharts extends Eventful<ECEventDefinition> {
                 }
                 if (renderTask.perform(scheduler.getPerformArgs(renderTask))) {
                     unfinished = true;
-                }
-
-                // Reset;
-                if (seriesModel[SERIES_UNIVERSAL_TRANSITION_PROP]) {
-                    seriesModel[SERIES_UNIVERSAL_TRANSITION_PROP] = false;
                 }
 
                 chartView.group.silent = !!seriesModel.get('silent');

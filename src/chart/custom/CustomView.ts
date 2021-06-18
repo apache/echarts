@@ -100,6 +100,7 @@ import {
     prepareTransformAllPropsFinal,
     prepareTransformTransitionFrom
 } from './prepare';
+import { SeriesModel } from '../../export/api';
 
 const transformPropNamesStr = keys(TRANSFORM_PROPS).join(', ');
 
@@ -216,40 +217,25 @@ export default class CustomChartView extends ChartView {
             group.removeAll();
         }
 
-        if (customSeries.isUniversalTransitionEnabled()) {
-            // Always create new if universalTransition is enabled.
-            // So the old will not be replaced and can be transition later.
-            // TODO check if UniversalTransition feature is installed.
-            oldData && oldData.each(function (oldIdx) {
-                doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
-            });
-            data.each(function (newIdx) {
+        data.diff(oldData)
+            .add(function (newIdx) {
                 createOrUpdateItem(
-                    api, null, newIdx, renderItem(newIdx, payload), customSeries, group, data
+                    api, null, newIdx, renderItem(newIdx, payload), customSeries, group,
+                    data
                 );
-            });
-        }
-        else {
-            data.diff(oldData)
-                .add(function (newIdx) {
-                    createOrUpdateItem(
-                        api, null, newIdx, renderItem(newIdx, payload), customSeries, group,
-                        data
-                    );
-                })
-                .remove(function (oldIdx) {
-                    doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
-                })
-                .update(function (newIdx, oldIdx) {
-                    const oldEl = oldData.getItemGraphicEl(oldIdx);
+            })
+            .remove(function (oldIdx) {
+                doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
+            })
+            .update(function (newIdx, oldIdx) {
+                const oldEl = oldData.getItemGraphicEl(oldIdx);
 
-                    createOrUpdateItem(
-                        api, oldEl, newIdx, renderItem(newIdx, payload), customSeries, group,
-                        data
-                    );
-                })
-                .execute();
-        }
+                createOrUpdateItem(
+                    api, oldEl, newIdx, renderItem(newIdx, payload), customSeries, group,
+                    data
+                );
+            })
+            .execute();
 
         // Do clipping
         const clipPath = customSeries.get('clip', true)
@@ -1191,7 +1177,7 @@ function doCreateOrUpdateEl(
     const oldEl = existsEl;
     if (
         existsEl && (
-            doesElNeedRecreate(existsEl, elOption)
+            doesElNeedRecreate(existsEl, elOption, seriesModel)
             // || (
             //     // PENDING: even in one-to-one mapping case, if el is marked as morph,
             //     // do not sure whether the el will be mapped to another el with different
@@ -1283,14 +1269,17 @@ function doCreateOrUpdateEl(
 }
 
 // `el` must not be null/undefined.
-function doesElNeedRecreate(el: Element, elOption: CustomElementOption): boolean {
+function doesElNeedRecreate(el: Element, elOption: CustomElementOption, seriesModel: SeriesModel): boolean {
     const elInner = customInnerStore(el);
     const elOptionType = elOption.type;
     const elOptionShape = (elOption as CustomZRPathOption).shape;
     const elOptionStyle = elOption.style;
     return (
+        // Always create new if universal transition is enabled.
+        // Because we do transition after render. It needs to know what old element is. Replacement will loose it.
+        seriesModel.isUniversalTransitionEnabled()
         // If `elOptionType` is `null`, follow the merge principle.
-        (elOptionType != null
+        || (elOptionType != null
             && elOptionType !== elInner.customGraphicType
         )
         || (elOptionType === 'path'
@@ -1327,7 +1316,7 @@ function doCreateOrUpdateClipPath(
     }
     else if (clipPathOpt) {
         let clipPath = el.getClipPath();
-        if (clipPath && doesElNeedRecreate(clipPath, clipPathOpt)) {
+        if (clipPath && doesElNeedRecreate(clipPath, clipPathOpt, seriesModel)) {
             clipPath = null;
         }
         if (!clipPath) {
