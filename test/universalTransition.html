@@ -813,18 +813,24 @@ under the License.
                 }
                 var chart = testHelper.create(echarts, 'main4', {
                     title: [
-                        'Convert between bar, map'
+                        'Convert between bar, map',
+                        'This case also enables lazyUpdate and setOption multiple times. Check if transition is correct.'
                     ],
                     height: 600,
                     buttons: [{
                         text: 'Map',
                         onclick: function () {
-                            chart.setOption(makeMapOption(), true);
+                            // Set option multiple times. Check if transition is correct.
+                            chart.setOption(makeMapOption(), true, true);
+                            chart.setOption(makeBarOption(), true, true);
+                            chart.setOption(makeMapOption(), true, true);
                         }
                     }, {
                         text: 'Bar',
                         onclick: function () {
-                            chart.setOption(makeBarOption(), true);
+                            chart.setOption(makeBarOption(), true, true);
+                            chart.setOption(makeMapOption(), true, true);
+                            chart.setOption(makeBarOption(), true, true);
                         }
                     }],
                     option: makeBarOption()

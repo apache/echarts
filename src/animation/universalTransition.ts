@@ -38,6 +38,7 @@ import { makeInner, normalizeToArray } from '../util/model';
 import { warn } from '../util/log';
 import ExtensionAPI from '../core/ExtensionAPI';
 import { getAnimationConfig } from './basicTrasition';
+import { SeriesOption } from '../export/all';
 
 const DATA_COUNT_THRESHOLD = 1e4;
 
@@ -47,10 +48,12 @@ const getUniversalTransitionGlobalStore = makeInner<GlobalStore, ExtensionAPI>()
 interface DiffItem {
     data: List
     dim: DimensionLoose
+    divide: SeriesOption['universalTransition']['divideShape']
     dataIndex: number
 }
 interface TransitionSeries {
     data: List
+    divide: SeriesOption['universalTransition']['divideShape']
     dim?: DimensionLoose
 }
 
@@ -81,6 +84,7 @@ function flattenDataDiffItems(list: TransitionSeries[]) {
             items.push({
                 data,
                 dim: seriesInfo.dim || groupDim,
+                divide: seriesInfo.divide,
                 dataIndex
             });
         }
@@ -225,6 +229,7 @@ function transitionBetween(
                 applyMorphAnimation(
                     getPathList(oldEl),
                     getPathList(newEl),
+                    newItem.divide,
                     newSeries,
                     newIndex,
                     updateMorphingPathProps
@@ -271,6 +276,7 @@ function transitionBetween(
                 applyMorphAnimation(
                     getPathList(oldElsList),
                     getPathList(newEl),
+                    newItem.divide,
                     newSeries,
                     newIndex,
                     updateMorphingPathProps
@@ -304,6 +310,7 @@ function transitionBetween(
                 applyMorphAnimation(
                     getPathList(oldEl),
                     getPathList(newElsList),
+                    oldItem.divide, // Use divide on old.
                     newSeris,
                     newIndices[0],
                     updateMorphingPathProps
@@ -375,6 +382,14 @@ interface SeriesTransitionBatch {
     newSeries: TransitionSeries[]
 }
 
+const divideQuery = ['universalTransition', 'divideShape'] as const;
+
+function getDivideShapeFromData(data: List) {
+    if (data.hostModel) {
+        return (data.hostModel as SeriesModel).get(divideQuery);
+    }
+}
+
 function findTransitionSeriesBatches(
     globalStore: GlobalStore,
     params: UpdateLifecycleParams
@@ -426,14 +441,16 @@ function findTransitionSeriesBatches(
                 // TODO check if data is same?
                 updateBatches.set(transitionKeyStr, {
                     oldSeries: [{
+                        divide: getDivideShapeFromData(oldData),
                         data: oldData
                     }],
                     newSeries: [{
+                        divide: series.get(divideQuery),
                         data: newData
                     }]
                 });
             }
-            if (!oldData) {
+           else {
                 // Transition from multiple series.
                 if (isArray(transitionKey)) {
                     if (__DEV__) {
@@ -444,6 +461,7 @@ function findTransitionSeriesBatches(
                         const oldData = oldDataMap.get(key);
                         if (oldData) {
                             oldSeries.push({
+                                divide: getDivideShapeFromData(oldData),
                                 data: oldData
                             });
                         }
@@ -451,7 +469,10 @@ function findTransitionSeriesBatches(
                     if (oldSeries.length) {
                         updateBatches.set(transitionKeyStr, {
                             oldSeries,
-                            newSeries: [{ data: newData }]
+                            newSeries: [{
+                                data: newData,
+                                divide: series.get(divideQuery)
+                            }]
                         });
                     }
                 }
@@ -462,13 +483,17 @@ function findTransitionSeriesBatches(
                         let batch = updateBatches.get(oldData.key);
                         if (!batch) {
                             batch = {
-                                oldSeries: [{ data: oldData.data }],
+                                oldSeries: [{
+                                    data: oldData.data,
+                                    divide: getDivideShapeFromData(oldData.data)
+                                }],
                                 newSeries: []
                             };
                             updateBatches.set(oldData.key, batch);
                         }
                         batch.newSeries.push({
-                            data: newData
+                            data: newData,
+                            divide: series.get(divideQuery)
                         });
                     }
                 }
@@ -502,6 +527,8 @@ function transitionSeriesFromOpt(
         if (idx >= 0) {
             from.push({
                 data: globalStore.oldData[idx],
+                // TODO can specify divideShape in transition.
+                divide: getDivideShapeFromData(globalStore.oldData[idx]),
                 dim: finder.dimension
             });
         }
@@ -511,6 +538,7 @@ function transitionSeriesFromOpt(
         if (idx >= 0) {
             to.push({
                 data: params.updatedSeries[idx].getData(),
+                divide: params.updatedSeries[idx].get(divideQuery),
                 dim: finder.dimension
             });
         }

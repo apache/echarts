@@ -21,15 +21,17 @@ import {
     separateMorph,
     combineMorph,
     morphPath,
+    DividePath,
     isCombineMorphing
 } from 'zrender/src/tool/morphPath';
 import { Path } from '../util/graphic';
 import { SeriesModel } from '../export/api';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { defaults, isArray} from 'zrender/src/core/util';
-import Displayable from 'zrender/src/graphic/Displayable';
 import { getAnimationConfig } from './basicTrasition';
 import { ECElement } from '../util/types';
+import { SeriesOption } from '../export/all';
+import { clonePath } from 'zrender/src/tool/path';
 
 
 type DescendentElements = Element[];
@@ -88,9 +90,24 @@ function prepareMorphBatches(one: DescendentPaths, many: DescendentPaths[]) {
     return batches;
 }
 
+const pathDividers: Record<SeriesOption['universalTransition']['divideShape'], DividePath> = {
+    clone(params) {
+        const ret: Path[] = [];
+        for (let i = 0; i < params.count; i++) {
+            ret.push(clonePath(params.path, {
+                bakeTransform: true
+            }));
+        }
+        return ret;
+    },
+    // Use the default divider
+    split: null
+};
+
 export function applyMorphAnimation(
     from: DescendentPaths | DescendentPaths[],
     to: DescendentPaths | DescendentPaths[],
+    divideShape: SeriesOption['universalTransition']['divideShape'],
     seriesModel: SeriesModel,
     dataIndex: number,
     animateOtherProps: (
@@ -124,6 +141,7 @@ export function applyMorphAnimation(
     }
 
     const animationCfgWithSplitPath = defaults({
+        dividePath: pathDividers[divideShape]
     }, animationCfg);
 
     function morphOneBatch(batch: MorphingBatch, fromIsMany: boolean, forceManyOne?: boolean) {

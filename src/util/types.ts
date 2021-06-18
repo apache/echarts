@@ -1612,7 +1612,10 @@ export interface SeriesOption<
      */
     universalTransition?: {
         enabled: boolean
-
+        /**
+         * How to divide the shape in combine and split animation.
+         */
+        divideShape: 'clone' | 'split'
         /**
          * Series will have transition between if they have same seriesKey.
          * Usually it is a string. It can also be an array,
