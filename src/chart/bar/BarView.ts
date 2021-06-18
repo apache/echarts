@@ -32,7 +32,7 @@ import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states
 import { setLabelStyle, getLabelStatesModels, setLabelValueAnimation } from '../../label/labelStyle';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
-import Sausage from '../../util/shape/sausage';
+import {SausageShape, Sausage} from '../../util/shape/sausage';
 import ChartView from '../../view/Chart';
 import List, {DefaultDataVisual} from '../../data/List';
 import GlobalModel from '../../model/Global';
@@ -60,6 +60,7 @@ import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import {LayoutRect} from '../../util/layout';
 import {EventCallback} from 'zrender/src/core/Eventful';
 import { warn } from '../../util/log';
+import {createSectorCalculateTextPosition} from '../../label/calculateTextPosition';
 
 const _eventPos = [0, 0];
 
@@ -761,6 +762,8 @@ const elementCreator: {
 
         sector.name = 'item';
 
+        sector.calculateTextPosition = createSectorCalculateTextPosition();
+
         // Animation
         if (animationModel) {
             const sectorShape = sector.shape;
@@ -911,7 +914,7 @@ function updateStyle(
     const cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && (el as Path).attr('cursor', cursorStyle);
 
-    if (!isPolar) {
+    // if (!isPolar) {
         const labelPositionOutside = isHorizontal
             ? ((layout as RectLayout).height > 0 ? 'bottom' as const : 'top' as const)
             : ((layout as RectLayout).width > 0 ? 'left' as const : 'right' as const);
@@ -937,7 +940,7 @@ function updateStyle(
             seriesModel.getRawValue(dataIndex) as ParsedValue,
             (value: number) => getDefaultInterpolatedLabel(data, value)
         );
-    }
+    // }
 
     const emphasisModel = itemModel.getModel(['emphasis']);
     enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));

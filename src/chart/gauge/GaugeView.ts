@@ -28,7 +28,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { ColorString, ECElement } from '../../util/types';
 import List from '../../data/List';
-import Sausage from '../../util/shape/sausage';
+import {Sausage} from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
 import {extend} from 'zrender/src/core/util';
