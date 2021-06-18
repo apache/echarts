@@ -20,7 +20,7 @@
 // Universal transitions that can animate between any shapes(series) and any properties in any amounts.
 
 import SeriesModel, { SERIES_UNIVERSAL_TRANSITION_PROP } from '../model/Series';
-import {createHashMap, each, map, filter, isArray, find} from 'zrender/src/core/util';
+import {createHashMap, each, map, filter, isArray, find, retrieve, retrieve2, extend} from 'zrender/src/core/util';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { applyMorphAnimation, getPathList } from './morphTransitionHelper';
 import Path from 'zrender/src/graphic/Path';
@@ -36,6 +36,8 @@ import {
 } from '../core/lifecycle';
 import { normalizeToArray } from '../util/model';
 import { warn } from '../util/log';
+import ExtensionAPI from '../core/ExtensionAPI';
+import { getAnimationConfig } from './basicTrasition';
 
 interface DiffItem {
     data: List
@@ -78,7 +80,8 @@ function flattenDataDiffItems(list: TransitionSeries[]) {
 
 function transitionBetween(
     oldList: TransitionSeries[],
-    newList: TransitionSeries[]
+    newList: TransitionSeries[],
+    api: ExtensionAPI
 ) {
 
     const oldDiffItems = flattenDataDiffItems(oldList);
@@ -140,6 +143,8 @@ function transitionBetween(
     }
     const oldKeyDim = findKeyDim(oldDiffItems);
     const newKeyDim = findKeyDim(newDiffItems);
+
+    let hasMorphAnimation = false;
 
     function createKeyGetter(isOld: boolean) {
         return function (diffItem: DiffItem): string {
@@ -205,6 +210,7 @@ function transitionBetween(
                 // If old element is doing leaving animation. stop it and remove it immediately.
                 removeEl(oldEl);
 
+                hasMorphAnimation = true;
                 applyMorphAnimation(
                     getPathList(oldEl),
                     getPathList(newEl),
@@ -250,6 +256,7 @@ function transitionBetween(
                     removeEl(oldEl);
                 });
 
+                hasMorphAnimation = true;
                 applyMorphAnimation(
                     getPathList(oldElsList),
                     getPathList(newEl),
@@ -282,6 +289,7 @@ function transitionBetween(
                 // If old element is doing leaving animation. stop it and remove it immediately.
                 removeEl(oldEl);
 
+                hasMorphAnimation = true;
                 applyMorphAnimation(
                     getPathList(oldEl),
                     getPathList(newElsList),
@@ -311,6 +319,27 @@ function transitionBetween(
         }).execute();
     })
     .execute();
+
+    if (hasMorphAnimation) {
+        each(newList, ({ data }) => {
+            const seriesModel = data.hostModel as SeriesModel;
+            const view = seriesModel && api.getViewOfSeriesModel(seriesModel as SeriesModel);
+            const animationCfg = getAnimationConfig('update', seriesModel, 0);  // use 0 index.
+            if (view && seriesModel.isAnimationEnabled() && animationCfg.duration > 0) {
+                view.group.traverse(el => {
+                    if (el instanceof Path && !el.animators.length) {
+                        // We can't accept there still exists element that has no animation
+                        // if universalTransition is enabled
+                        el.animateFrom({
+                            style: {
+                                opacity: 0
+                            }
+                        }, animationCfg);
+                    }
+                });
+            }
+        });
+    }
 }
 
 function getSeriesTransitionKey(series: SeriesModel) {
@@ -446,7 +475,10 @@ function querySeries(series: SeriesModel[], finder: UpdateLifecycleTransitionSer
     }
 }
 
-function transitionSeriesFromOpt(transitionOpt: UpdateLifecycleTransitionItem, params: UpdateLifecycleParams) {
+function transitionSeriesFromOpt(
+    transitionOpt: UpdateLifecycleTransitionItem,
+    params: UpdateLifecycleParams, api: ExtensionAPI
+) {
     const from: TransitionSeries[] = [];
     const to: TransitionSeries[] = [];
     each(normalizeToArray(transitionOpt.from), finder => {
@@ -468,7 +500,7 @@ function transitionSeriesFromOpt(transitionOpt: UpdateLifecycleTransitionItem, p
         }
     });
     if (from.length > 0 && to.length > 0) {
-        transitionBetween(from, to);
+        transitionBetween(from, to, api);
     }
 }
 
@@ -494,14 +526,14 @@ export function installUniversalTransition(registers: EChartsExtensionInstallReg
             const transitionOpt = params.seriesTransition;
             if (transitionOpt) {
                 each(normalizeToArray(transitionOpt), opt => {
-                    transitionSeriesFromOpt(opt, params);
+                    transitionSeriesFromOpt(opt, params, api);
                 });
             }
             else {  // Else guess from series based on transition series key.
                 const updateBatches = findTransitionSeriesBatches(params);
                 each(updateBatches.keys(), key => {
                     const batch = updateBatches.get(key);
-                    transitionBetween(batch.oldSeries, batch.newSeries);
+                    transitionBetween(batch.oldSeries, batch.newSeries, api);
                 });
             }
 
