@@ -94,9 +94,7 @@ const pathDividers: Record<SeriesOption['universalTransition']['divideShape'], D
     clone(params) {
         const ret: Path[] = [];
         for (let i = 0; i < params.count; i++) {
-            ret.push(clonePath(params.path, {
-                bakeTransform: true
-            }));
+            ret.push(clonePath(params.path));
         }
         return ret;
     },
