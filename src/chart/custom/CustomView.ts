@@ -100,7 +100,6 @@ import {
     prepareTransformAllPropsFinal,
     prepareTransformTransitionFrom
 } from './prepare';
-import { SeriesModel } from '../../export/api';
 
 const transformPropNamesStr = keys(TRANSFORM_PROPS).join(', ');
 
@@ -1269,7 +1268,7 @@ function doCreateOrUpdateEl(
 }
 
 // `el` must not be null/undefined.
-function doesElNeedRecreate(el: Element, elOption: CustomElementOption, seriesModel: SeriesModel): boolean {
+function doesElNeedRecreate(el: Element, elOption: CustomElementOption, seriesModel: CustomSeriesModel): boolean {
     const elInner = customInnerStore(el);
     const elOptionType = elOption.type;
     const elOptionShape = (elOption as CustomZRPathOption).shape;
