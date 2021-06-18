@@ -613,7 +613,9 @@ class ECharts extends Eventful<ECEventDefinition> {
             oldSeriesModels = this._model.getSeries();
         }
 
-        const oldSeriesData = oldSeriesModels && map(oldSeriesModels, series => series.getData());
+        const oldSeriesData = !this[PENDING_UPDATE] // Check if previous option is not rendered yet. Can't getData if so(will throw error.)
+            && oldSeriesModels
+            && map(oldSeriesModels, series => series.getData());
 
         this._model.setOption(option as ECBasicOption, { replaceMerge }, optionPreprocessorFuncs);
 

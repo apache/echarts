@@ -152,7 +152,7 @@ function animateOrSetProps<Props>(
         animatableModel,
         dataIndex as number,
         isRemove ? (removeOpt || {}) : null,
-        animatableModel.getAnimationDelayParams
+        (animatableModel && animatableModel.getAnimationDelayParams)
             ? animatableModel.getAnimationDelayParams(el, dataIndex as number)
             : null
     );
