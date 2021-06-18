@@ -1611,11 +1611,11 @@ export interface SeriesOption<
      * If enabled universal transition cross series.
      */
     universalTransition?: {
-        enabled: boolean
+        enabled?: boolean
         /**
          * How to divide the shape in combine and split animation.
          */
-        divideShape: 'clone' | 'split'
+        divideShape?: 'clone' | 'split'
         /**
          * Series will have transition between if they have same seriesKey.
          * Usually it is a string. It can also be an array,
@@ -1627,7 +1627,7 @@ export interface SeriesOption<
          *
          * Default to use series id.
          */
-        seriesKey: string | string[]
+        seriesKey?: string | string[]
     }
 
     /**
