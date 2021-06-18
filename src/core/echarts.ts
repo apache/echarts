@@ -600,8 +600,6 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         this[IN_MAIN_PROCESS_KEY] = true;
 
-        // Try getting from old model if notMerge is enabled.
-        let oldSeriesModels = this._model && this._model.getSeries();
         if (!this._model || notMerge) {
             const optionManager = new OptionManager(this._api);
             const theme = this._theme;
@@ -609,21 +607,10 @@ class ECharts extends Eventful<ECEventDefinition> {
             ecModel.scheduler = this._scheduler;
             ecModel.init(null, null, null, theme, this._locale, optionManager);
         }
-        else {
-            oldSeriesModels = this._model.getSeries();
-        }
-
-        // Check if previous option is not rendered yet. Can't getData if so(will throw error.)
-        // TODO: This will cause animation failed if setOption with lazyUpdate twice.
-        const oldSeriesData = !this[PENDING_UPDATE]
-            && oldSeriesModels
-            && map(oldSeriesModels, series => series.getData());
 
         this._model.setOption(option as ECBasicOption, { replaceMerge }, optionPreprocessorFuncs);
 
         const updateParams = {
-            oldSeries: oldSeriesModels,
-            oldData: oldSeriesData,
             seriesTransition: transitionOpt
         } as UpdateLifecycleParams;
 

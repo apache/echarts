@@ -34,10 +34,15 @@ import {
     UpdateLifecycleTransitionItem,
     UpdateLifecycleTransitionSeriesFinder
 } from '../core/lifecycle';
-import { normalizeToArray } from '../util/model';
+import { makeInner, normalizeToArray } from '../util/model';
 import { warn } from '../util/log';
 import ExtensionAPI from '../core/ExtensionAPI';
 import { getAnimationConfig } from './basicTrasition';
+
+const DATA_COUNT_THRESHOLD = 1e4;
+
+interface GlobalStore { oldSeries: SeriesModel[], oldData: List[] };
+const getUniversalTransitionGlobalStore = makeInner<GlobalStore, ExtensionAPI>();
 
 interface DiffItem {
     data: List
@@ -64,7 +69,7 @@ function flattenDataDiffItems(list: TransitionSeries[]) {
 
     each(list, seriesInfo => {
         const data = seriesInfo.data;
-        if (data.count() > 1e4) {
+        if (data.count() > DATA_COUNT_THRESHOLD) {
             if (__DEV__) {
                 warn('Universal transition is disabled on large data > 10k.');
             }
@@ -370,7 +375,10 @@ interface SeriesTransitionBatch {
     newSeries: TransitionSeries[]
 }
 
-function findTransitionSeriesBatches(params: UpdateLifecycleParams) {
+function findTransitionSeriesBatches(
+    globalStore: GlobalStore,
+    params: UpdateLifecycleParams
+) {
     const updateBatches = createHashMap<SeriesTransitionBatch>();
 
     const oldDataMap = createHashMap<List>();
@@ -381,8 +389,8 @@ function findTransitionSeriesBatches(params: UpdateLifecycleParams) {
         data: List
     }>();
 
-    each(params.oldSeries, (series, idx) => {
-        const oldData = params.oldData[idx];
+    each(globalStore.oldSeries, (series, idx) => {
+        const oldData = globalStore.oldData[idx];
         const transitionKey = getSeriesTransitionKey(series);
         const transitionKeyStr = convertArraySeriesKeyToString(transitionKey);
         oldDataMap.set(transitionKeyStr, oldData);
@@ -483,15 +491,17 @@ function querySeries(series: SeriesModel[], finder: UpdateLifecycleTransitionSer
 
 function transitionSeriesFromOpt(
     transitionOpt: UpdateLifecycleTransitionItem,
-    params: UpdateLifecycleParams, api: ExtensionAPI
+    globalStore: GlobalStore,
+    params: UpdateLifecycleParams,
+    api: ExtensionAPI
 ) {
     const from: TransitionSeries[] = [];
     const to: TransitionSeries[] = [];
     each(normalizeToArray(transitionOpt.from), finder => {
-        const idx = querySeries(params.oldSeries, finder);
+        const idx = querySeries(globalStore.oldSeries, finder);
         if (idx >= 0) {
             from.push({
-                data: params.oldData[idx],
+                data: globalStore.oldData[idx],
                 dim: finder.dimension
             });
         }
@@ -526,17 +536,20 @@ export function installUniversalTransition(registers: EChartsExtensionInstallReg
         });
     });
     registers.registerUpdateLifecycle('series:transition', (ecModel, api, params) => {
+        // TODO api provide an namespace that can save stuff per instance
+        const globalStore = getUniversalTransitionGlobalStore(api);
+
         // TODO multiple to multiple series.
-        if (params.oldSeries && params.updatedSeries) {
+        if (globalStore.oldSeries && params.updatedSeries) {
             // Use give transition config if its' give;
             const transitionOpt = params.seriesTransition;
             if (transitionOpt) {
                 each(normalizeToArray(transitionOpt), opt => {
-                    transitionSeriesFromOpt(opt, params, api);
+                    transitionSeriesFromOpt(opt, globalStore, params, api);
                 });
             }
             else {  // Else guess from series based on transition series key.
-                const updateBatches = findTransitionSeriesBatches(params);
+                const updateBatches = findTransitionSeriesBatches(globalStore, params);
                 each(updateBatches.keys(), key => {
                     const batch = updateBatches.get(key);
                     transitionBetween(batch.oldSeries, batch.newSeries, api);
@@ -550,6 +563,20 @@ export function installUniversalTransition(registers: EChartsExtensionInstallReg
                     series[SERIES_UNIVERSAL_TRANSITION_PROP] = false;
                 }
             });
+        }
+
+        // Save all series of current update. Not only the updated one.
+        const allSeries = ecModel.getSeries();
+        const savedSeries: SeriesModel[] = globalStore.oldSeries = [];
+        const savedData: List[] = globalStore.oldData = [];
+        for (let i = 0; i < allSeries.length; i++) {
+            const data = allSeries[i].getData();
+            // Only save the data that can have transition.
+            // Avoid large data costing too much extra memory
+            if (data.count() < DATA_COUNT_THRESHOLD) {
+                savedSeries.push(allSeries[i]);
+                savedData.push(data);
+            }
         }
     });
 }

@@ -22,7 +22,6 @@ import SeriesModel from '../model/Series';
 import GlobalModel from '../model/Global';
 import { EChartsType } from './echarts';
 import ExtensionAPI from './ExtensionAPI';
-import List from '../data/List';
 import { ModelFinderIdQuery, ModelFinderIndexQuery } from '../util/model';
 import { DimensionLoose } from '../util/types';
 
@@ -43,9 +42,6 @@ export interface UpdateLifecycleTransitionItem {
 export type UpdateLifecycleTransitionOpt = UpdateLifecycleTransitionItem | UpdateLifecycleTransitionItem[];
 
 export interface UpdateLifecycleParams {
-    oldSeries?: SeriesModel[]
-    oldData?: List[]
-
     updatedSeries?: SeriesModel[]
 
     // Specify series to transition in this setOption.
