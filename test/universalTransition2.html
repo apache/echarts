@@ -177,7 +177,6 @@ under the License.
                     fromDatasetId: 'raw_dataset',
                     transform: {
                         type: 'ecStat:clustering',
-                        print: true,
                         config: {
                             clusterCount: 4,
                             dimensions: ['COUNT', 'PRICE'],
@@ -199,7 +198,6 @@ under the License.
                     fromDatasetId: 'raw_clustered_dataset',
                     transform: {
                         type: 'ecSimpleTransform:aggregate',
-                        print: true,
                         config: {
                             resultDimensions: [
                                 { from: 'COUNT', method: 'count' },
@@ -225,7 +223,7 @@ under the License.
                         id: 'main',
                         animationDurationUpdate: 1000,
                         datasetId: 'raw_clustered_dataset',
-                        symbolSize: 10,
+                        symbolSize: 20,
                         encode: {
                             itemName: 'ID',
                             x: 'PRICE',
@@ -256,11 +254,12 @@ under the License.
                         encode: {
                             x: 'CLUSTER_CENTER_PRICE',
                             y: 'CLUSTER_CENTER_COUNT',
+                            itemGroupId: 'CLUSTER_IDX',
                             tooltip: ['CLUSTER_CENTER_PRICE', 'CLUSTER_CENTER_COUNT']
                         },
                         universalTransition: {
                             enabled: true,
-                            // divideShape: 'clone'
+                            divideShape: 'clone'
                         }
                     }
                 }
@@ -275,12 +274,12 @@ under the License.
                     buttons: [{
                         text: 'All',
                         onclick: function () {
-                            chart.setOption(rawScatterOption, true);
+                            chart.setOption(rawScatterOption);
                         }
                     }, {
                         text: 'Clustered',
                         onclick: function () {
-                            chart.setOption(clusteredScatterOption, true);
+                            chart.setOption(clusteredScatterOption);
                         }
                     }],
                 });
@@ -402,6 +401,7 @@ under the License.
                                 id: 'CountryA',
                                 datasetId: 'CountryAData',
                                 stack,
+                                symbol: 'circle',
                                 universalTransition: {
                                     enabled: true
                                 },
@@ -416,6 +416,7 @@ under the License.
                                 id: 'CountryB',
                                 datasetId: 'CountryBData',
                                 stack,
+                                symbol: 'circle',
                                 universalTransition: {
                                     enabled: true
                                 },

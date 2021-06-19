@@ -94,7 +94,10 @@ const pathDividers: Record<SeriesOption['universalTransition']['divideShape'], D
     clone(params) {
         const ret: Path[] = [];
         for (let i = 0; i < params.count; i++) {
-            ret.push(clonePath(params.path));
+            const cloned = clonePath(params.path);
+            // const opacity = params.path.style.opacity;
+            // cloned.setStyle('opacity', opacity / params.count);
+            ret.push(cloned);
         }
         return ret;
     },

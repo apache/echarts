@@ -161,10 +161,14 @@ function transitionBetween(
 
     let hasMorphAnimation = false;
 
-    function createKeyGetter(isOld: boolean) {
+    function createKeyGetter(isOld: boolean, onlyGetId: boolean) {
         return function (diffItem: DiffItem): string {
             const data = diffItem.data;
             const dataIndex = diffItem.dataIndex;
+
+            if (onlyGetId) {
+                return data.getId(dataIndex);
+            }
 
             // Use group id as transition key by default.
             // So we can achieve multiple to multiple animation like drilldown / up naturally.
@@ -205,6 +209,8 @@ function transitionBetween(
 
         const newSeries = newItem.data.hostModel as SeriesModel;
 
+        // TODO some elements in new data is shared with the old elements
+        // And already being morphed.
         const oldEl = oldItem.data.getItemGraphicEl(oldItem.dataIndex);
         const newEl = newItem.data.getItemGraphicEl(newItem.dataIndex);
 
@@ -212,7 +218,6 @@ function transitionBetween(
         if (oldEl === newEl) {
             return;
         }
-
 
         if (newEl) {
             // TODO: If keep animating the group in case
@@ -242,11 +247,14 @@ function transitionBetween(
         // else keep oldEl leaving animation.
     }
 
+    // Use id if it's very likely to be an one to one animation
+    // It's more robust than groupId
+    const useId = oldDiffItems.length === newDiffItems.length;
     (new DataDiffer(
         oldDiffItems,
         newDiffItems,
-        createKeyGetter(true),
-        createKeyGetter(false),
+        createKeyGetter(true, useId),
+        createKeyGetter(false, useId),
         null,
         'multiple'
     ))
@@ -281,6 +289,7 @@ function transitionBetween(
                     newIndex,
                     updateMorphingPathProps
                 );
+
             }
             else {
                 fadeInElement(newEl, newSeries, newItem.dataIndex);
