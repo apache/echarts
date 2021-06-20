@@ -509,19 +509,13 @@ function applyPropsDirectly(
 
     if (elDisplayable && styleOpt) {
 
-        const decalPattern = (styleOpt as CustomZRPathOption['style']).__decalPattern;
-        let originalDecalObj;
-        if (decalPattern) {
-            originalDecalObj = (styleOpt as CustomZRPathOption['style']).decal;
-            (styleOpt as any).decal = decalPattern;
-        }
-
         // PENDING: here the input style object is used directly.
         // Good for performance but bad for compatibility control.
         elDisplayable.useStyle(styleOpt);
 
+        const decalPattern = (styleOpt as CustomZRPathOption['style']).__decalPattern;
         if (decalPattern) {
-            (styleOpt as CustomZRPathOption['style']).decal = originalDecalObj;
+            elDisplayable.style.decal = decalPattern;
         }
 
         // When style object changed, how to trade the existing animation?
@@ -548,8 +542,13 @@ function applyPropsDirectly(
         }
     }
 
-    // Set el to the final state firstly.
-    allPropsFinal && el.attr(allPropsFinal);
+    if (allPropsFinal) {
+        // Not set style here.
+        (allPropsFinal as DisplayableProps).style = null;
+        // Set el to the final state firstly.
+        allPropsFinal && el.attr(allPropsFinal);
+        (allPropsFinal as DisplayableProps).style = styleOpt;
+    }
 }
 
 function applyPropsTransition(
