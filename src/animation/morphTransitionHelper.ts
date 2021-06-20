@@ -93,10 +93,11 @@ function prepareMorphBatches(one: DescendentPaths, many: DescendentPaths[]) {
 const pathDividers: Record<SeriesOption['universalTransition']['divideShape'], DividePath> = {
     clone(params) {
         const ret: Path[] = [];
+        // Fitting the alpha
+        const approxOpacity = 1 - Math.pow(1 - params.path.style.opacity, 1 / params.count);
         for (let i = 0; i < params.count; i++) {
             const cloned = clonePath(params.path);
-            // const opacity = params.path.style.opacity;
-            // cloned.setStyle('opacity', opacity / params.count);
+            cloned.setStyle('opacity', approxOpacity);
             ret.push(cloned);
         }
         return ret;

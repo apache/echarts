@@ -204,6 +204,7 @@ function transitionBetween(
 
     // Use id if it's very likely to be an one to one animation
     // It's more robust than groupId
+    // TODO Check if key dimension is specified.
     const useId = oldDiffItems.length === newDiffItems.length;
     const isElementStillInChart: Dictionary<boolean> = {};
 
