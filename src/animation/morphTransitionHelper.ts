@@ -152,10 +152,6 @@ export function applyMorphAnimation(
             // Is one to one
             const batchFrom: Path = fromIsMany ? batchMany[0] : batchOne;
             const batchTo: Path = fromIsMany ? batchOne : batchMany[0];
-            // Path is reused.
-            if (batchFrom === batchTo) {
-                return;
-            }
 
             if (isCombineMorphing(batchFrom as Path)) {
                 // Keep doing combine animation.

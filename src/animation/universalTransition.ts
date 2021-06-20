@@ -28,7 +28,7 @@ import { EChartsExtensionInstallRegisters } from '../extension';
 import { initProps } from '../util/graphic';
 import DataDiffer from '../data/DataDiffer';
 import List from '../data/List';
-import { DimensionLoose, OptionDataItemObject } from '../util/types';
+import { Dictionary, DimensionLoose, OptionDataItemObject } from '../util/types';
 import {
     UpdateLifecycleParams,
     UpdateLifecycleTransitionItem,
@@ -93,6 +93,40 @@ function flattenDataDiffItems(list: TransitionSeries[]) {
     return items;
 }
 
+
+function fadeInElement(newEl: Element, newSeries: SeriesModel, newIndex: number) {
+    newEl.traverse(el => {
+        if (el instanceof Path) {
+            // TODO use fade in animation for target element.
+            initProps(el, {
+                style: {
+                    opacity: 0
+                }
+            }, newSeries, {
+                dataIndex: newIndex,
+                isFrom: true
+            });
+        }
+    });
+}
+function removeEl(el: Element) {
+    if (el.parent) {
+        // Bake parent transform to element.
+        // So it can still have proper transform to transition after it's removed.
+        const computedTransform = el.getComputedTransform();
+        el.setLocalTransform(computedTransform);
+        el.parent.remove(el);
+    }
+}
+function stopAnimation(el: Element) {
+    el.stopAnimation();
+    if (el.isGroup) {
+        el.traverse(child => {
+            child.stopAnimation();
+        });
+    }
+}
+
 function transitionBetween(
     oldList: TransitionSeries[],
     newList: TransitionSeries[],
@@ -101,15 +135,6 @@ function transitionBetween(
 
     const oldDiffItems = flattenDataDiffItems(oldList);
     const newDiffItems = flattenDataDiffItems(newList);
-
-    function stopAnimation(el: Element) {
-        el.stopAnimation();
-        if (el.isGroup) {
-            el.traverse(child => {
-                child.stopAnimation();
-            });
-        }
-    }
 
     function updateMorphingPathProps(
         from: Path, to: Path,
@@ -123,31 +148,6 @@ function transitionBetween(
         }
     }
 
-    function fadeInElement(newEl: Element, newSeries: SeriesModel, newIndex: number) {
-        newEl.traverse(el => {
-            if (el instanceof Path) {
-                // TODO use fade in animation for target element.
-                initProps(el, {
-                    style: {
-                        opacity: 0
-                    }
-                }, newSeries, {
-                    dataIndex: newIndex,
-                    isFrom: true
-                });
-            }
-        });
-    }
-
-    function removeEl(el: Element) {
-        if (el.parent) {
-            // Bake parent transform to element.
-            // So it can still have proper transform to transition after it's removed.
-            const computedTransform = el.getComputedTransform();
-            el.setLocalTransform(computedTransform);
-            el.parent.remove(el);
-        }
-    }
 
     function findKeyDim(items: DiffItem[]) {
         for (let i = 0; i < items.length; i++) {
@@ -165,7 +165,7 @@ function transitionBetween(
         return function (diffItem: DiffItem): string {
             const data = diffItem.data;
             const dataIndex = diffItem.dataIndex;
-
+            // TODO if specified dim
             if (onlyGetId) {
                 return data.getId(dataIndex);
             }
@@ -202,6 +202,24 @@ function transitionBetween(
         };
     }
 
+    // Use id if it's very likely to be an one to one animation
+    // It's more robust than groupId
+    const useId = oldDiffItems.length === newDiffItems.length;
+    const isElementStillInChart: Dictionary<boolean> = {};
+
+    if (!useId) {
+        // We may have different diff strategy with basicTransition if we use other dimension as key.
+        // If so, we can't simply check if oldEl is same with newEl. We need a map to check if oldEl is still being used in the new chart.
+        // We can't use the elements that already being morphed. Let it keep it's original basic transition.
+        for (let i = 0; i < newDiffItems.length; i++) {
+            const newItem = newDiffItems[i];
+            const el = newItem.data.getItemGraphicEl(newItem.dataIndex);
+            if (el) {
+                isElementStillInChart[el.id] = true;
+            }
+        }
+    }
+
     function updateOneToOne(newIndex: number, oldIndex: number) {
 
         const oldItem = oldDiffItems[oldIndex];
@@ -209,13 +227,16 @@ function transitionBetween(
 
         const newSeries = newItem.data.hostModel as SeriesModel;
 
-        // TODO some elements in new data is shared with the old elements
-        // And already being morphed.
+        // TODO Mark this elements is morphed and don't morph them anymore
         const oldEl = oldItem.data.getItemGraphicEl(oldItem.dataIndex);
         const newEl = newItem.data.getItemGraphicEl(newItem.dataIndex);
 
-        // Can't handle same elements.
-        if (oldEl === newEl) {
+        if (
+            // Can't handle same elements.
+            oldEl === newEl
+            // We can't use the elements that already being morphed
+            || (oldEl && isElementStillInChart[oldEl.id])
+        ) {
             return;
         }
 
@@ -247,9 +268,6 @@ function transitionBetween(
         // else keep oldEl leaving animation.
     }
 
-    // Use id if it's very likely to be an one to one animation
-    // It's more robust than groupId
-    const useId = oldDiffItems.length === newDiffItems.length;
     (new DataDiffer(
         oldDiffItems,
         newDiffItems,
@@ -268,7 +286,7 @@ function transitionBetween(
             map(oldIndices, idx =>
                 oldDiffItems[idx].data.getItemGraphicEl(oldDiffItems[idx].dataIndex)
             ),
-            el => el && el !== newEl    // Can't handle same elements
+            oldEl => oldEl && oldEl !== newEl && !isElementStillInChart[oldEl.id]
         );
 
         if (newEl) {
@@ -300,11 +318,17 @@ function transitionBetween(
     .updateOneToMany(function (newIndices, oldIndex) {
         const oldItem = oldDiffItems[oldIndex];
         const oldEl = oldItem.data.getItemGraphicEl(oldItem.dataIndex);
+
+        // We can't use the elements that already being morphed
+        if (oldEl && isElementStillInChart[oldEl.id]) {
+            return;
+        }
+
         const newElsList = filter(
             map(newIndices, idx =>
                 newDiffItems[idx].data.getItemGraphicEl(newDiffItems[idx].dataIndex)
             ),
-            el => el && el !== oldEl    // Can't handle same elements
+            el => el && el !== oldEl
         );
         const newSeris = newDiffItems[newIndices[0]].data.hostModel as SeriesModel;
 
