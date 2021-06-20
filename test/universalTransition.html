@@ -44,6 +44,11 @@ under the License.
         <div id="main4"></div>
 
 
+        <script>
+            window.ANIMATION_DURATION_UPDATE = window.__VRT_RECOMMAND_ANIMATION_DURATION__
+                ? window.__VRT_RECOMMAND_ANIMATION_DURATION__ : 1000;
+        </script>
+
 
 
         <script>
@@ -56,6 +61,7 @@ under the License.
                 title: {
                     text: 'Bar'
                 },
+                animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                 dataset: [{
                     dimensions: ['name', 'age', 'profession', 'score', 'date'],
                     source: [
@@ -98,13 +104,14 @@ under the License.
                     onclick: function () {
                         chart.setOption({
                             title: {
-                                text: 'Bar'
+                                text: 'Pie'
                             },
                             xAxis: { show: false },
                             yAxis: { show: false },
                             series: {
                                 id: 'main',
                                 type: 'pie',
+                                animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                                 encode: { x: 'name', y: 'score', itemName: 'name' },
                                 datasetIndex: 1,
                                 universalTransition: {
@@ -276,6 +283,7 @@ under the License.
                         left: 'center',
                         bottom: '15%'
                     },
+                    animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                     series: heatmapSeries
                 };
 
@@ -484,7 +492,7 @@ under the License.
                             type: 'treemap',
                             id: 'main',
                             data,
-                            animationDurationUpdate: 1000,
+                            animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                             roam: false,
                             breadcrumb: {
                                 show: false
@@ -507,7 +515,7 @@ under the License.
                             type: 'sunburst',
                             id: 'main',
                             data,
-                            animationDurationUpdate: 1000,
+                            animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                             universalTransition: {
                                 enabled: true
                             },
@@ -602,7 +610,7 @@ under the License.
                             axisTick: {show: false},
                             axisLine: {show: false}
                         },
-                        // animationDurationUpdate: 10000,
+                        animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                         series: [{
                             name: '2015',
                             id: 'bar1',
@@ -776,7 +784,7 @@ under the License.
                             text: ['High', 'Low'],           // 文本，默认为数值文本
                             calculable: true
                         },
-                        animationDurationUpdate: 1000,
+                        animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                         series: {
                             type: 'map',
                             id: 'main',
@@ -800,7 +808,7 @@ under the License.
                         },
                         yAxis: {
                         },
-                        animationDurationUpdate: 1000,
+                        animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                         series: {
                             type: 'bar',
                             id: 'main',

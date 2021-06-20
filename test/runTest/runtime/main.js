@@ -111,6 +111,10 @@ window.__VRT_RUN_ACTIONS__ = async function (actions, restoredActionIndex, resto
     __VRT_FINISH_ACTIONS__();
 }
 
+// INJECT SOME GLOBAL VARIABLES
+// Use A LARGER DURATION THAT VRT CAN CATCH intermediate state.
+window.__VRT_RECOMMAND_ANIMATION_DURATION__ = 1500;
+
 
 
 window.addEventListener('DOMContentLoaded', () => {

@@ -42,7 +42,10 @@ under the License.
         <div id="main2"></div>
 
 
-
+        <script>
+            window.ANIMATION_DURATION_UPDATE = window.__VRT_RECOMMAND_ANIMATION_DURATION__
+                ? window.__VRT_RECOMMAND_ANIMATION_DURATION__ : 1000;
+        </script>
 
 
 
@@ -60,7 +63,7 @@ under the License.
                 },
                 yAxis: {},
                 dataGroupId: '',
-                // animationDurationUpdate: 1000,
+                animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                 series: {
                     type: 'bar',
                     id: 'main',
@@ -126,10 +129,10 @@ under the License.
                             data: subData.data.map(item => item[0])
                         },
                         yAxis: {},
+                        animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                         series: {
                             type: 'bar',
                             id: 'main',
-                            // animationDurationUpdate: 1000,
                             dataGroupId: subData.dataGroupId,
                             data: subData.data.map(item => item[1]),
                             universalTransition: {
@@ -218,10 +221,10 @@ under the License.
                     yAxis: {
                         name: 'COUNT'
                     },
+                    animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                     series: {
                         type: 'scatter',
                         id: 'main',
-                        animationDurationUpdate: 1000,
                         datasetId: 'raw_clustered_dataset',
                         symbolSize: 20,
                         encode: {
@@ -245,10 +248,10 @@ under the License.
                     yAxis: {
                         name: 'COUNT'
                     },
+                    animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                     series: {
                         type: 'scatter',
                         id: 'main',
-                        animationDurationUpdate: 1000,
                         datasetId: 'raw_cluster_centers_dataset',
                         symbolSize: 50,
                         encode: {
@@ -358,7 +361,7 @@ under the License.
                 function createOption(xDim, yDim, seriesType, groupBy, stack) {
                     const isGridSeries = seriesType !== 'pie';
                     return {
-                        animationDurationUpdate: 1000,
+                        animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                         dataset: datasetOption,
 
                         legend: {},

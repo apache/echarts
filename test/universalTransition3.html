@@ -40,9 +40,10 @@ under the License.
 
         <div id="main0"></div>
 
-
-
-
+        <script>
+            window.ANIMATION_DURATION_UPDATE = window.__VRT_RECOMMAND_ANIMATION_DURATION__
+                ? window.__VRT_RECOMMAND_ANIMATION_DURATION__ : 1000;
+        </script>
 
 
         <script>
@@ -181,7 +182,7 @@ under the License.
                         id: 'main',
                         renderItem: renderItem,
                         coordinateSystem: null,
-                        animationDurationUpdate: 1000,
+                        animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                         encode: {
                             tooltip: 0,
                             itemName: 2
@@ -198,7 +199,7 @@ under the License.
                         type: 'treemap',
                         id: 'main',
                         data: toPlainTree(root).children,
-                        animationDurationUpdate: 1000,
+                        animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                         roam: false,
                         label: {
                             fontSize: 10
@@ -221,7 +222,7 @@ under the License.
                         type: 'sunburst',
                         id: 'main',
                         data: toPlainTree(root).children,
-                        animationDurationUpdate: 1000,
+                        animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                         roam: false,
                         radius: ['20%', '90%'],
                         label: {
