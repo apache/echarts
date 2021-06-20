@@ -40,7 +40,7 @@ const LEGACY_TRANSFORM_PROPS = {
 } as const;
 type LegacyTransformProp = keyof typeof LEGACY_TRANSFORM_PROPS;
 
-function setLagecyTransformProp(
+function setLegacyTransformProp(
     elOption: CustomElementOption,
     targetProps: Partial<Pick<Transformable, TransformProp>>,
     legacyName: LegacyTransformProp
@@ -54,18 +54,12 @@ function setLagecyTransformProp(
 }
 
 function setTransformProp(
-    el: Element,
     elOption: CustomElementOption,
     allProps: Partial<Pick<Transformable, TransformProp>>,
-    name: TransformProp,
-    defaultVal: number
+    name: TransformProp
 ): void {
     if (elOption[name] != null) {
         allProps[name] = elOption[name];
-    }
-    else if (el[name] !== defaultVal) {
-        // Set to default val.
-        allProps[name] = defaultVal;
     }
 }
 
@@ -231,17 +225,17 @@ export function prepareTransformAllPropsFinal(
     elOption: CustomElementOption,
     allProps: ElementProps
 ): void {
-    setLagecyTransformProp(elOption, allProps, 'position');
-    setLagecyTransformProp(elOption, allProps, 'scale');
-    setLagecyTransformProp(elOption, allProps, 'origin');
+    setLegacyTransformProp(elOption, allProps, 'position');
+    setLegacyTransformProp(elOption, allProps, 'scale');
+    setLegacyTransformProp(elOption, allProps, 'origin');
 
-    setTransformProp(el, elOption, allProps, 'x', 0);
-    setTransformProp(el, elOption, allProps, 'y', 0);
-    setTransformProp(el, elOption, allProps, 'scaleX', 1);
-    setTransformProp(el, elOption, allProps, 'scaleY', 1);
-    setTransformProp(el, elOption, allProps, 'originX', 0);
-    setTransformProp(el, elOption, allProps, 'originY', 0);
-    setTransformProp(el, elOption, allProps, 'rotation', 0);
+    setTransformProp(elOption, allProps, 'x');
+    setTransformProp(elOption, allProps, 'y');
+    setTransformProp(elOption, allProps, 'scaleX');
+    setTransformProp(elOption, allProps, 'scaleY');
+    setTransformProp(elOption, allProps, 'originX');
+    setTransformProp(elOption, allProps, 'originY');
+    setTransformProp(elOption, allProps, 'rotation');
 }
 
 // See [STRATEGY_TRANSITION].
