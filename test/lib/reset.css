@@ -123,6 +123,12 @@ td.test-data-table-key {
     height: 500px;
 }
 
+.record-video {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+}
+
 .control-frame-btn-panel {
     position: fixed;
     top: 10px;
