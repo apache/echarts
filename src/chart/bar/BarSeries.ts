@@ -34,12 +34,12 @@ import type Polar from '../../coord/polar/Polar';
 import { inheritDefaultOption } from '../../util/component';
 import List from '../../data/List';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
-import {BuiltinTextPosition} from 'zrender/src/core/types';
+import {SectorTextPosition} from '../../label/sectorLabel';
 
 
 export interface BarStateOption {
     itemStyle?: BarItemStyleOption
-    label?: SeriesLabelOption & {position: BarSeriesPositionOption}
+    label?: SeriesLabelOption & {position: SectorTextPosition}
 }
 
 export interface BarItemStyleOption extends ItemStyleOption {
@@ -50,12 +50,6 @@ export interface BarDataItemOption extends BarStateOption, StatesOptionMixin<Bar
     OptionDataItemObject<OptionDataValue> {
     cursor?: string
 }
-
-export type BarSeriesPositionOption = BuiltinTextPosition
-    | 'start' | 'end'
-    | 'startTop' | 'insideStartTop' | 'insideStart' | 'insideStartBottom' | 'startBottom'
-    | 'middleTop' | 'insideMiddleTop' | 'middle' | 'insideMiddleBottom' | 'middleBottom'
-    | 'endTop' | 'insideEndTop' | 'insideEnd' | 'insideEndBottom' | 'endBottom';
 
 export interface BarSeriesOption extends BaseBarSeriesOption<BarStateOption>, BarStateOption,
     SeriesStackOptionMixin, SeriesSamplingOptionMixin, SeriesEncodeOptionMixin {

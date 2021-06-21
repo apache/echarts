@@ -85,7 +85,7 @@ export function createSectorCalculateTextPosition(isRadial: boolean): ElementCal
                         + adjustAngleDistanceX(startAngle, -distance, false);
                     y = cy + middleR * Math.sin(startAngle)
                         + adjustAngleDistanceY(startAngle, -distance, false);
-                    textAlign ='left';
+                    textAlign = 'left';
                     textVerticalAlign = 'middle';
                 }
                 break;
