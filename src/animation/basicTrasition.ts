@@ -71,12 +71,7 @@ export function getAnimationConfig(
         let duration: number | Function;
         let easing: AnimationEasing;
         let delay: number | Function;
-        if (animationPayload) {
-            duration = animationPayload.duration || 0;
-            easing = animationPayload.easing || 'cubicOut';
-            delay = animationPayload.delay || 0;
-        }
-        else if (extraOpts) {
+        if (extraOpts) {
             duration = retrieve2(extraOpts.duration, 200);
             easing = retrieve2(extraOpts.easing, 'cubicOut');
             delay = 0;
@@ -91,6 +86,12 @@ export function getAnimationConfig(
             delay = animatableModel.getShallow(
                 isUpdate ? 'animationDelayUpdate' : 'animationDelay'
             );
+        }
+        // animation from payload has highest priority.
+        if (animationPayload) {
+            animationPayload.duration != null && (duration = animationPayload.duration);
+            animationPayload.easing != null && (easing = animationPayload.easing);
+            animationPayload.delay != null && (delay = animationPayload.delay);
         }
         if (typeof delay === 'function') {
             delay = delay(
