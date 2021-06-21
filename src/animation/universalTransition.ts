@@ -244,6 +244,7 @@ function transitionBetween(
         if (newEl) {
             // TODO: If keep animating the group in case
             // some of the elements don't want to be morphed.
+            // TODO Label?
             stopAnimation(newEl);
 
             if (oldEl) {

@@ -211,10 +211,12 @@ class SymbolDraw {
                     && (symbolEl as SymbolClz).getSymbolType
                     && (symbolEl as SymbolClz).getSymbolType();
 
-                // Create a new if symbol type changed.
-                if (oldSymbolType !== newSymbolType) {
-                    symbolEl && group.remove(symbolEl);
-                    symbolEl = new SymbolCtor(data, newIdx);
+                if (!symbolEl
+                    // Create a new if symbol type changed.
+                    || (oldSymbolType && oldSymbolType !== newSymbolType)
+                ) {
+                    group.remove(symbolEl);
+                    symbolEl = new SymbolCtor(data, newIdx, seriesScope, symbolUpdateOpt);
                     symbolEl.setPosition(point);
                 }
                 else {
