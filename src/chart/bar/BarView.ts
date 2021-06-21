@@ -579,12 +579,7 @@ class BarView extends ChartView {
             componentType: baseAxis.dim + 'Axis',
             isInitSort: true,
             axisId: baseAxis.index,
-            sortInfo: sortResult,
-            animation: {
-                // Update the axis label from the natural initial layout to
-                // sorted layout should has no animation.
-                duration: 0
-            }
+            sortInfo: sortResult
         });
     }
 
