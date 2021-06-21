@@ -241,7 +241,7 @@ class BarView extends ChartView {
                 }
 
                 // If dataZoom in filteMode: 'empty', the baseValue can be set as NaN in "axisProxy".
-                if (!data.hasValue(dataIndex)) {
+                if (!data.hasValue(dataIndex) || !isValidLayout[coord.type](layout)) {
                     return;
                 }
 
@@ -316,7 +316,7 @@ class BarView extends ChartView {
                 }
 
                 let el = oldData.getItemGraphicEl(oldIndex) as BarPossiblePath;
-                if (!data.hasValue(newIndex)) {
+                if (!data.hasValue(newIndex) || !isValidLayout[coord.type](layout)) {
                     group.remove(el);
                     el = null;
                     return;
@@ -843,6 +843,28 @@ function updateRealtimeAnimation(
         shape: axisTarget
     }, axisAnimationModel, newIndex);
 }
+
+function checkPropertiesNotValid<T extends Record<string, any>>(obj: T, props: readonly (keyof T)[]) {
+    for (let i = 0; i < props.length; i++) {
+        if (!isFinite(obj[props[i]])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+const rectPropties = ['x', 'y', 'width', 'height'] as const;
+const polarPropties = ['cx', 'cy', 'r', 'startAngle', 'endAngle'] as const;
+const isValidLayout: Record<'cartesian2d' | 'polar', (layout: RectLayout | SectorLayout) => boolean> = {
+    cartesian2d(layout: RectLayout) {
+        return !checkPropertiesNotValid(layout, rectPropties);
+    },
+
+    polar(layout: SectorLayout) {
+        return !checkPropertiesNotValid(layout, polarPropties);
+    }
+} as const;
 
 interface GetLayout {
     (data: List, dataIndex: number, itemModel?: Model<BarDataItemOption>): RectLayout | SectorLayout
