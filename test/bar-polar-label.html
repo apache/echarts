@@ -29,8 +29,8 @@ under the License.
         <style>
             #main0, #main1 {
                 width: 100%;
-                height: 1800px;
-                margin: 0;
+                height: 800px;
+                margin: 20px 0;
             }
         </style>
         <h3>Polar bar series label positions</h3>
@@ -41,15 +41,14 @@ under the License.
             require(['echarts'], function (echarts) {
                 function setChart(chartIndex) {
                     var positions = [
-                        'start', 'end',
-                        'startTop', 'insideStartTop', 'insideStart', 'insideStartBottom', 'startBottom',
-                        'middleTop', 'insideMiddleTop', 'middle', 'inside', 'insideMiddleBottom', 'middleBottom',
-                        'endTop', 'insideEndTop', 'insideEnd', 'insideEndBottom', 'endBottom'
+                        'start', 'insideStart',
+                        'middle', 'inside',
+                        'insideEnd','end'
                     ];
 
                     var chart = echarts.init(document.getElementById('main' + chartIndex));
-                    var rows = 5;
-                    var cols = 4;
+                    var rows = 2;
+                    var cols = 3;
 
                     var angleAxis = [];
                     var radiusAxis = [];
@@ -80,13 +79,17 @@ under the License.
                                     100 / rows * (i + 0.5) + '%'
                                 ],
                                 radius: [
-                                    chartIndex ? 10: 20,
-                                    100 / rows * 0.8 + '%'
+                                    chartIndex ? 10 : 30,
+                                    100 / rows * 0.75 + '%'
                                 ]
                             });
                             series.push({
                                 type: 'bar',
-                                data: [0.5, 1.2, 2.4, 3.6],
+                                data: [
+                                    chartIndex ? 0.5 : 2,
+                                    1.2,
+                                    2.4, 3.6
+                                ],
                                 coordinateSystem: 'polar',
                                 polarIndex: id,
                                 label: {
@@ -94,7 +97,8 @@ under the License.
                                     position: positions[id],
                                     formatter: '{b}: {c}',
                                     borderColor: '#0ff',
-                                    borderWidth: 2
+                                    borderWidth: 2,
+                                    // rotate:
                                 }
                             });
                             title.push({

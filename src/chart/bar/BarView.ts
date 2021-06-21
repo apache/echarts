@@ -32,7 +32,7 @@ import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states
 import { setLabelStyle, getLabelStatesModels, setLabelValueAnimation } from '../../label/labelStyle';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
-import {SausageShape, Sausage} from '../../util/shape/sausage';
+import {Sausage} from '../../util/shape/sausage';
 import ChartView from '../../view/Chart';
 import List, {DefaultDataVisual} from '../../data/List';
 import GlobalModel from '../../model/Global';
@@ -60,7 +60,7 @@ import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import {LayoutRect} from '../../util/layout';
 import {EventCallback} from 'zrender/src/core/Eventful';
 import { warn } from '../../util/log';
-import {createSectorCalculateTextPosition} from '../../label/calculateTextPosition';
+import {createSectorCalculateTextPosition, setSectorTextRotation} from '../../label/sectorLabel';
 
 const _eventPos = [0, 0];
 
@@ -762,7 +762,7 @@ const elementCreator: {
 
         sector.name = 'item';
 
-        sector.calculateTextPosition = createSectorCalculateTextPosition();
+        sector.calculateTextPosition = createSectorCalculateTextPosition(isRadial);
 
         // Animation
         if (animationModel) {
@@ -900,7 +900,7 @@ function updateStyle(
     itemModel: Model<BarDataItemOption>,
     layout: RectLayout | SectorLayout,
     seriesModel: BarSeriesModel,
-    isHorizontal: boolean,
+    isHorizontalOrRadial: boolean,
     isPolar: boolean
 ) {
     const style = data.getItemVisual(dataIndex, 'style');
@@ -914,33 +914,39 @@ function updateStyle(
     const cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && (el as Path).attr('cursor', cursorStyle);
 
-    // if (!isPolar) {
-        const labelPositionOutside = isHorizontal
-            ? ((layout as RectLayout).height > 0 ? 'bottom' as const : 'top' as const)
-            : ((layout as RectLayout).width > 0 ? 'left' as const : 'right' as const);
-        const labelStatesModels = getLabelStatesModels(itemModel);
+    const labelPositionOutside = isHorizontalOrRadial
+        ? ((layout as RectLayout).height > 0 ? 'bottom' as const : 'top' as const)
+        : ((layout as RectLayout).width > 0 ? 'left' as const : 'right' as const);
+    const labelStatesModels = getLabelStatesModels(itemModel);
 
-        setLabelStyle(
-            el, labelStatesModels,
-            {
-                labelFetcher: seriesModel,
-                labelDataIndex: dataIndex,
-                defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
-                inheritColor: style.fill as ColorString,
-                defaultOpacity: style.opacity,
-                defaultOutsidePosition: labelPositionOutside
-            }
+    setLabelStyle(
+        el, labelStatesModels,
+        {
+            labelFetcher: seriesModel,
+            labelDataIndex: dataIndex,
+            defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
+            inheritColor: style.fill as ColorString,
+            defaultOpacity: style.opacity,
+            defaultOutsidePosition: labelPositionOutside
+        }
+    );
+
+    if (isPolar) {
+        setSectorTextRotation(
+            el as Sector,
+            seriesModel.get(['label', 'position']),
+            seriesModel.get(['label', 'rotate']),
+            isHorizontalOrRadial
         );
+    }
 
-        const label = el.getTextContent();
-
-        setLabelValueAnimation(
-            label,
-            labelStatesModels,
-            seriesModel.getRawValue(dataIndex) as ParsedValue,
-            (value: number) => getDefaultInterpolatedLabel(data, value)
-        );
-    // }
+    const label = el.getTextContent();
+    setLabelValueAnimation(
+        label,
+        labelStatesModels,
+        seriesModel.getRawValue(dataIndex) as ParsedValue,
+        (value: number) => getDefaultInterpolatedLabel(data, value)
+    );
 
     const emphasisModel = itemModel.getModel(['emphasis']);
     enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
