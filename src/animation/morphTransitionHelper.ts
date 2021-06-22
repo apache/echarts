@@ -132,15 +132,11 @@ export function applyMorphAnimation(
     const animationDelay = (seriesModel.getModel('universalTransition') as Model<UniversalTransitionOption>)
         .get('delay');
 
-    const individualDelay = animationDelay && function (idx: number, count: number, oldPath: Path, newPath: Path) {
-        return animationDelay(idx, count);
-    };
 
     const animationCfg = Object.assign({
         // Need to setToFinal so the further calculation based on the style can be correct.
         // Like emphasis color.
-        setToFinal: true,
-        individualDelay: individualDelay
+        setToFinal: true
     } as SeparateConfig, updateAnimationCfg);
 
 
@@ -155,11 +151,13 @@ export function applyMorphAnimation(
         one = from as DescendentPaths;
     }
 
-    const animationCfgWithSplitPath = defaults({
-        dividePath: pathDividers[divideShape]
-    }, animationCfg);
-
-    function morphOneBatch(batch: MorphingBatch, fromIsMany: boolean, forceManyOne?: boolean) {
+    function morphOneBatch(
+        batch: MorphingBatch,
+        fromIsMany: boolean,
+        animateIndex: number,
+        animateCount: number,
+        forceManyOne?: boolean
+    ) {
         const batchMany = batch.many;
         const batchOne = batch.one;
         if (batchMany.length === 1 && !forceManyOne) {
@@ -172,25 +170,35 @@ export function applyMorphAnimation(
                 morphOneBatch({
                     many: [batchFrom as Path],
                     one: batchTo as Path
-                }, true, true);
+                }, true, animateIndex, animateCount, true);
             }
             else {
-                morphPath(batchFrom, batchTo, animationCfg);
-                animateOtherProps(batchFrom, batchTo, batchFrom, batchTo, animationCfg);
+                const individualAnimationCfg = animationDelay ? defaults({
+                    delay: animationDelay(animateIndex, animateCount)
+                } as ElementAnimateConfig, animationCfg) : animationCfg;
+                morphPath(batchFrom, batchTo, individualAnimationCfg);
+                animateOtherProps(batchFrom, batchTo, batchFrom, batchTo, individualAnimationCfg);
             }
         }
         else {
+            const separateAnimationCfg = defaults({
+                dividePath: pathDividers[divideShape],
+                individualDelay: animationDelay && function (idx, count, fromPath, toPath) {
+                    return animationDelay(idx + animateIndex, animateCount);
+                }
+            } as SeparateConfig, animationCfg);
+
             const {
                 fromIndividuals,
                 toIndividuals
             } = fromIsMany
-                ? combineMorph(batchMany, batchOne, animationCfgWithSplitPath)
-                : separateMorph(batchOne, batchMany, animationCfgWithSplitPath);
+                ? combineMorph(batchMany, batchOne, separateAnimationCfg)
+                : separateMorph(batchOne, batchMany, separateAnimationCfg);
 
             const count = fromIndividuals.length;
             for (let k = 0; k < count; k++) {
-                const individualAnimationCfg = individualDelay ? defaults({
-                    delay: individualDelay(k, count, fromIndividuals[k], toIndividuals[k])
+                const individualAnimationCfg = animationDelay ? defaults({
+                    delay: animationDelay(k, count)
                 } as ElementAnimateConfig, animationCfg) : animationCfg;
                 animateOtherProps(
                     fromIndividuals[k],
@@ -208,15 +216,20 @@ export function applyMorphAnimation(
         // Is one to one. If the path number not match. also needs do merge and separate morphing.
         : from.length > to.length;
 
-    // TODO mergeByName
     const morphBatches = many
         ? prepareMorphBatches(one, many)
         : prepareMorphBatches(
-                (fromIsMany ? to : from) as DescendentPaths,
-                [(fromIsMany ? from : to) as DescendentPaths]
-            );
+            (fromIsMany ? to : from) as DescendentPaths,
+            [(fromIsMany ? from : to) as DescendentPaths]
+        );
+    let animateCount = 0;
     for (let i = 0; i < morphBatches.length; i++) {
-        morphOneBatch(morphBatches[i], fromIsMany);
+        animateCount += morphBatches[i].many.length;
+    }
+    let animateIndex = 0;
+    for (let i = 0; i < morphBatches.length; i++) {
+        morphOneBatch(morphBatches[i], fromIsMany, animateIndex, animateCount);
+        animateIndex += morphBatches[i].many.length;
     }
 }
 

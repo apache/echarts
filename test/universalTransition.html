@@ -607,7 +607,12 @@ under the License.
                             symbolRepeat: true,
                             symbolSize: ['80%', '60%'],
                             barCategoryGap: '40%',
-                            universalTransition: true,
+                            universalTransition: {
+                                enabled: true,
+                                delay(idx, total) {
+                                    return (idx  / total) * 1000;
+                                }
+                            },
                             data: [{
                                 value: 157,
                                 symbol: symbol || pathSymbols.reindeer
@@ -632,7 +637,12 @@ under the License.
                             label: labelSetting,
                             symbolRepeat: true,
                             symbolSize: ['80%', '60%'],
-                            universalTransition: true,
+                            universalTransition: {
+                                enabled: true,
+                                delay(idx, total) {
+                                    return (idx  / total) * 1000;
+                                }
+                            },
                             data: [{
                                 value: 184,
                                 symbol: symbol || pathSymbols.reindeer
