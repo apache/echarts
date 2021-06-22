@@ -236,9 +236,17 @@ function createEmphasisDefaultState(
         const fromStroke = hasSelect ? (store.selectStroke || store.normalStroke) : store.normalStroke;
         if (hasFillOrStroke(fromFill) || hasFillOrStroke(fromStroke)) {
             state = state || {};
-            // Apply default color lift
             let emphasisStyle = state.style || {};
-            if (!hasFillOrStroke(emphasisStyle.fill) && hasFillOrStroke(fromFill)) {
+
+            // inherit case
+            if (emphasisStyle.fill === 'inherit') {
+                cloned = true;
+                state = extend({}, state);
+                emphasisStyle = extend({}, emphasisStyle);
+                emphasisStyle.fill = fromFill;
+            }
+            // Apply default color lift
+            else if (!hasFillOrStroke(emphasisStyle.fill) && hasFillOrStroke(fromFill)) {
                 cloned = true;
                 // Not modify the original value.
                 state = extend({}, state);
