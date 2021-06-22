@@ -187,12 +187,17 @@ export function applyMorphAnimation(
                 ? combineMorph(batchMany, batchOne, animationCfgWithSplitPath)
                 : separateMorph(batchOne, batchMany, animationCfgWithSplitPath);
 
-            for (let k = 0; k < fromIndividuals.length; k++) {
+            const count = fromIndividuals.length;
+            for (let k = 0; k < count; k++) {
+                const individualAnimationCfg = individualDelay ? defaults({
+                    delay: individualDelay(k, count, fromIndividuals[k], toIndividuals[k])
+                } as ElementAnimateConfig, animationCfg) : animationCfg;
                 animateOtherProps(
                     fromIndividuals[k],
                     toIndividuals[k],
                     fromIsMany ? batchMany[k] : batch.one,
-                    fromIsMany ? batch.one : batchMany[k], animationCfg
+                    fromIsMany ? batch.one : batchMany[k],
+                    individualAnimationCfg
                 );
             }
         }
