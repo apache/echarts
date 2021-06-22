@@ -1545,6 +1545,26 @@ export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStat
     blur?: StateOption & ExtraStateOpts['blur']
 }
 
+export interface UniversalTransitionOption {
+    enabled?: boolean
+    /**
+     * How to divide the shape in combine and split animation.
+     */
+    divideShape?: 'clone' | 'split'
+    /**
+     * Series will have transition between if they have same seriesKey.
+     * Usually it is a string. It can also be an array,
+     * which means it can be transition from or to multiple series with each key in this array item.
+     *
+     * Note:
+     * If two series have both array seriesKey. They will be compared after concated to a string(which is order independent)
+     * Transition between string key has higher priority.
+     *
+     * Default to use series id.
+     */
+    seriesKey?: string | string[]
+}
+
 export interface SeriesOption<
     StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
     ComponentOption,
@@ -1609,26 +1629,11 @@ export interface SeriesOption<
 
     /**
      * If enabled universal transition cross series.
+     * @example
+     *  universalTransition: true
+     *  universalTransition: { enabled: true }
      */
-    universalTransition?: {
-        enabled?: boolean
-        /**
-         * How to divide the shape in combine and split animation.
-         */
-        divideShape?: 'clone' | 'split'
-        /**
-         * Series will have transition between if they have same seriesKey.
-         * Usually it is a string. It can also be an array,
-         * which means it can be transition from or to multiple series with each key in this array item.
-         *
-         * Note:
-         * If two series have both array seriesKey. They will be compared after concated to a string(which is order independent)
-         * Transition between string key has higher priority.
-         *
-         * Default to use series id.
-         */
-        seriesKey?: string | string[]
-    }
+    universalTransition?: boolean | UniversalTransitionOption
 
     /**
      * Map of selected data

@@ -114,9 +114,7 @@ under the License.
                                 animationDurationUpdate: ANIMATION_DURATION_UPDATE,
                                 encode: { x: 'name', y: 'score', itemName: 'name' },
                                 datasetIndex: 1,
-                                universalTransition: {
-                                    enabled: true
-                                }
+                                universalTransition: true
                             }
                         });
                     }
@@ -133,9 +131,7 @@ under the License.
                                 symbolSize: 30,
                                 encode: { x: 'name', y: 'score', itemName: 'name' },
                                 datasetIndex: 1,
-                                universalTransition: {
-                                    enabled: true
-                                }
+                                universalTransition: true
                             }
                         });
                     }
@@ -153,9 +149,7 @@ under the License.
                                 symbolSize: 20,
                                 encode: { x: 'name', y: 'score', itemName: 'name' },
                                 datasetIndex: 1,
-                                universalTransition: {
-                                    enabled: true
-                                }
+                                universalTransition: true
                             }
                         });
                     }
@@ -171,9 +165,7 @@ under the License.
                                 id: 'main',
                                 encode: { x: 'name', y: 'score', itemName: 'name' },
                                 datasetIndex: 1,
-                                universalTransition: {
-                                    enabled: true
-                                }
+                                universalTransition: true
                             }
                         });
                     }
@@ -189,9 +181,7 @@ under the License.
                                 type: 'funnel',
                                 encode: { x: 'name', y: 'score', itemName: 'name' },
                                 datasetIndex: 1,
-                                universalTransition: {
-                                    enabled: true
-                                }
+                                universalTransition: true
                             }
                         });
                     }
@@ -291,6 +281,7 @@ under the License.
                     title: [
                         'Convert between heatmap, scatter (with different symbols)'
                     ],
+                    recordVideo: true,
                     // height: 300,
                     buttons: [{
                         text: 'Heatmap',
@@ -497,9 +488,7 @@ under the License.
                             breadcrumb: {
                                 show: false
                             },
-                            universalTransition: {
-                                enabled: true
-                            },
+                            universalTransition: true,
                             itemStyle: {
                                 color: '#ddd',
                                 borderWidth: 2
@@ -516,9 +505,7 @@ under the License.
                             id: 'main',
                             data,
                             animationDurationUpdate: ANIMATION_DURATION_UPDATE,
-                            universalTransition: {
-                                enabled: true
-                            },
+                            universalTransition: true,
                             clockwise: true,
                             itemStyle: {
                                 color: '#ddd',
@@ -532,6 +519,7 @@ under the License.
                     title: [
                         'Convert between treemap, sunburst'
                     ],
+                    recordVideo: true,
                     // height: 300,
                     buttons: [{
                         text: 'Treemap',
@@ -619,9 +607,7 @@ under the License.
                             symbolRepeat: true,
                             symbolSize: ['80%', '60%'],
                             barCategoryGap: '40%',
-                            universalTransition: {
-                                enabled: true
-                            },
+                            universalTransition: true,
                             data: [{
                                 value: 157,
                                 symbol: symbol || pathSymbols.reindeer
@@ -646,9 +632,7 @@ under the License.
                             label: labelSetting,
                             symbolRepeat: true,
                             symbolSize: ['80%', '60%'],
-                            universalTransition: {
-                                enabled: true
-                            },
+                            universalTransition: true,
                             data: [{
                                 value: 184,
                                 symbol: symbol || pathSymbols.reindeer
@@ -673,6 +657,7 @@ under the License.
                     title: [
                         'Convert between bar, pictorialBar'
                     ],
+                    recordVideo: true,
                     height: 600,
                     buttons: [{
                         text: 'Bar',
@@ -790,9 +775,7 @@ under the License.
                             id: 'main',
                             map: 'USA',
                             data,
-                            universalTransition: {
-                                enabled: true
-                            }
+                            universalTransition: true
                         }
                     }
                 }
@@ -813,9 +796,7 @@ under the License.
                             type: 'bar',
                             id: 'main',
                             data: data.map(item => item.value),
-                            universalTransition: {
-                                enabled: true
-                            }
+                            universalTransition: true
                         }
                     }
                 }
@@ -824,6 +805,7 @@ under the License.
                         'Convert between bar, map',
                         'This case also enables lazyUpdate and setOption multiple times. Check if transition is correct.'
                     ],
+                    recordVideo: true,
                     height: 600,
                     buttons: [{
                         text: 'Map',

@@ -28,7 +28,7 @@ import { EChartsExtensionInstallRegisters } from '../extension';
 import { initProps } from '../util/graphic';
 import DataDiffer from '../data/DataDiffer';
 import List from '../data/List';
-import { Dictionary, DimensionLoose, OptionDataItemObject } from '../util/types';
+import { Dictionary, DimensionLoose, OptionDataItemObject, UniversalTransitionOption } from '../util/types';
 import {
     UpdateLifecycleParams,
     UpdateLifecycleTransitionItem,
@@ -38,7 +38,7 @@ import { makeInner, normalizeToArray } from '../util/model';
 import { warn } from '../util/log';
 import ExtensionAPI from '../core/ExtensionAPI';
 import { getAnimationConfig } from './basicTrasition';
-import { SeriesOption } from '../export/all';
+import Model from '../model/Model';
 
 const DATA_COUNT_THRESHOLD = 1e4;
 
@@ -48,12 +48,12 @@ const getUniversalTransitionGlobalStore = makeInner<GlobalStore, ExtensionAPI>()
 interface DiffItem {
     data: List
     dim: DimensionLoose
-    divide: SeriesOption['universalTransition']['divideShape']
+    divide: UniversalTransitionOption['divideShape']
     dataIndex: number
 }
 interface TransitionSeries {
     data: List
-    divide: SeriesOption['universalTransition']['divideShape']
+    divide: UniversalTransitionOption['divideShape']
     dim?: DimensionLoose
 }
 
@@ -396,7 +396,8 @@ function transitionBetween(
 }
 
 function getSeriesTransitionKey(series: SeriesModel) {
-    const seriesKey = series.get(['universalTransition', 'seriesKey']);
+    const seriesKey = (series.getModel('universalTransition') as Model<UniversalTransitionOption>)
+        .get('seriesKey');
     if (!seriesKey) {
         // Use series id by default.
         return series.id;
@@ -417,11 +418,11 @@ interface SeriesTransitionBatch {
     newSeries: TransitionSeries[]
 }
 
-const divideQuery = ['universalTransition', 'divideShape'] as const;
-
 function getDivideShapeFromData(data: List) {
     if (data.hostModel) {
-        return (data.hostModel as SeriesModel).get(divideQuery);
+        return ((data.hostModel as SeriesModel)
+            .getModel('universalTransition') as Model<UniversalTransitionOption>)
+            .get('divideShape');
     }
 }
 
@@ -462,7 +463,7 @@ function findTransitionSeriesBatches(
         }
     }
     each(params.updatedSeries, series => {
-        if (series.get(['universalTransition', 'enabled']) && series.isAnimationEnabled()) {
+        if (series.isUniversalTransitionEnabled() && series.isAnimationEnabled()) {
             const newData = series.getData();
             const transitionKey = getSeriesTransitionKey(series);
             const transitionKeyStr = convertArraySeriesKeyToString(transitionKey);
@@ -480,7 +481,7 @@ function findTransitionSeriesBatches(
                         data: oldData
                     }],
                     newSeries: [{
-                        divide: series.get(divideQuery),
+                        divide: getDivideShapeFromData(newData),
                         data: newData
                     }]
                 });
@@ -506,7 +507,7 @@ function findTransitionSeriesBatches(
                             oldSeries,
                             newSeries: [{
                                 data: newData,
-                                divide: series.get(divideQuery)
+                                divide: getDivideShapeFromData(newData)
                             }]
                         });
                     }
@@ -528,7 +529,7 @@ function findTransitionSeriesBatches(
                         }
                         batch.newSeries.push({
                             data: newData,
-                            divide: series.get(divideQuery)
+                            divide: getDivideShapeFromData(newData)
                         });
                     }
                 }
@@ -571,9 +572,10 @@ function transitionSeriesFromOpt(
     each(normalizeToArray(transitionOpt.to), finder => {
         const idx = querySeries(params.updatedSeries, finder);
         if (idx >= 0) {
+            const data = params.updatedSeries[idx].getData();
             to.push({
-                data: params.updatedSeries[idx].getData(),
-                divide: params.updatedSeries[idx].get(divideQuery),
+                data,
+                divide: getDivideShapeFromData(data),
                 dim: finder.dimension
             });
         }

@@ -46,12 +46,12 @@ import {
     ZRStyleProps
 } from '../../util/types';
 import Element, { ElementProps } from 'zrender/src/Element';
-import { SeriesModel } from '../../export/api';
 import List, { DefaultDataVisual } from '../../data/List';
 import GlobalModel from '../../model/Global';
 import createListFromArray from '../helper/createListFromArray';
 import { makeInner } from '../../util/model';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
+import SeriesModel from '../../model/Series';
 
 
 export interface LooseElementProps extends ElementProps {

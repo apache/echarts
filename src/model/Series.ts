@@ -23,7 +23,7 @@ import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
     SeriesOption, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType
+    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType, UniversalTransitionOption
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {PaletteMixin} from './mixin/palette';
@@ -536,8 +536,16 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         return selectedMap[nameOrId] || false;
     }
 
-    isUniversalTransitionEnabled() {
-        return this[SERIES_UNIVERSAL_TRANSITION_PROP] || this.get(['universalTransition', 'enabled']);
+    isUniversalTransitionEnabled(): boolean {
+        if (this[SERIES_UNIVERSAL_TRANSITION_PROP]) {
+            return true;
+        }
+        // Can be simply 'universalTransition: true'
+        const universalTransitionModel = this.getModel('universalTransition');
+        if (typeof universalTransitionModel.option === 'boolean') {
+            return universalTransitionModel.option;
+        }
+        return (universalTransitionModel as Model<UniversalTransitionOption>).get('enabled');
     }
 
     private _innerSelect(data: List, innerDataIndices: number[]) {

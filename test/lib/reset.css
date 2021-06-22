@@ -127,6 +127,7 @@ td.test-data-table-key {
     position: absolute;
     right: 10px;
     top: 5px;
+    z-index: 1000;
 }
 
 .control-frame-btn-panel {

@@ -25,12 +25,11 @@ import {
     isCombineMorphing
 } from 'zrender/src/tool/morphPath';
 import { Path } from '../util/graphic';
-import { SeriesModel } from '../export/api';
+import SeriesModel from '../model/Series';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { defaults, isArray} from 'zrender/src/core/util';
 import { getAnimationConfig } from './basicTrasition';
-import { ECElement } from '../util/types';
-import { SeriesOption } from '../export/all';
+import { ECElement, UniversalTransitionOption } from '../util/types';
 import { clonePath } from 'zrender/src/tool/path';
 
 
@@ -90,7 +89,7 @@ function prepareMorphBatches(one: DescendentPaths, many: DescendentPaths[]) {
     return batches;
 }
 
-const pathDividers: Record<SeriesOption['universalTransition']['divideShape'], DividePath> = {
+const pathDividers: Record<UniversalTransitionOption['divideShape'], DividePath> = {
     clone(params) {
         const ret: Path[] = [];
         // Fitting the alpha
@@ -109,7 +108,7 @@ const pathDividers: Record<SeriesOption['universalTransition']['divideShape'], D
 export function applyMorphAnimation(
     from: DescendentPaths | DescendentPaths[],
     to: DescendentPaths | DescendentPaths[],
-    divideShape: SeriesOption['universalTransition']['divideShape'],
+    divideShape: UniversalTransitionOption['divideShape'],
     seriesModel: SeriesModel,
     dataIndex: number,
     animateOtherProps: (
