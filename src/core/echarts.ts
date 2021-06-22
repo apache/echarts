@@ -611,7 +611,8 @@ class ECharts extends Eventful<ECEventDefinition> {
         this._model.setOption(option as ECBasicOption, { replaceMerge }, optionPreprocessorFuncs);
 
         const updateParams = {
-            seriesTransition: transitionOpt
+            seriesTransition: transitionOpt,
+            optionChanged: true
         } as UpdateLifecycleParams;
 
         if (lazyUpdate) {
@@ -1551,7 +1552,12 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             prepareAndUpdate(this: ECharts, payload: Payload): void {
                 prepare(this);
-                updateMethods.update.call(this, payload);
+                updateMethods.update.call(this, payload, {
+                    // Needs to mark option changed if newOption is given.
+                    // It's from MagicType.
+                    // TODO If use a separate flag optionChanged in payload?
+                    optionChanged: payload.newOption != null
+                });
             },
 
             update(this: ECharts, payload: Payload, updateParams: UpdateLifecycleParams): void {

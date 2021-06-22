@@ -44,6 +44,11 @@ export type UpdateLifecycleTransitionOpt = UpdateLifecycleTransitionItem | Updat
 export interface UpdateLifecycleParams {
     updatedSeries?: SeriesModel[]
 
+    /**
+     * If this update is from setOption and option is changed.
+     */
+    optionChanged?: boolean
+
     // Specify series to transition in this setOption.
     seriesTransition?: UpdateLifecycleTransitionOpt
 }

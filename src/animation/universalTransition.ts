@@ -603,7 +603,7 @@ export function installUniversalTransition(registers: EChartsExtensionInstallReg
         const globalStore = getUniversalTransitionGlobalStore(api);
 
         // TODO multiple to multiple series.
-        if (globalStore.oldSeries && params.updatedSeries) {
+        if (globalStore.oldSeries && params.updatedSeries && params.optionChanged) {
             // Use give transition config if its' give;
             const transitionOpt = params.seriesTransition;
             if (transitionOpt) {
