@@ -397,6 +397,14 @@ under the License.
                         type: 'downplay'
                     });
                 }
+            }, {
+                text: 'Highlight all',
+                onclick: function () {
+                    chart.dispatchAction({
+                        type: 'highlight',
+                        seriesIndex: [0, 1],
+                    });
+                }
             });
 
             var chart = testHelper.create(echarts, 'main2', {
