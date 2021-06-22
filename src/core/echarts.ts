@@ -1489,11 +1489,13 @@ class ECharts extends Eventful<ECEventDefinition> {
             }
 
             // If dispatchAction before setOption, do nothing.
-            ecModel && ecModel.eachComponent(condition, function (model) {
+            ecModel && ecModel.eachComponent(condition, function (model, modelIndex) {
                 if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
                     if (isHighDownPayload(payload)) {
                         if (model instanceof SeriesModel) {
-                            if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
+                            // only blur once
+                            const isFirstTimeBlur = modelIndex === 0;
+                            if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur && isFirstTimeBlur) {
                                 blurSeriesFromHighlightPayload(model, payload, ecIns._api);
                             }
                         }
