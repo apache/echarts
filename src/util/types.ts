@@ -1548,6 +1548,10 @@ export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStat
 export interface UniversalTransitionOption {
     enabled?: boolean
     /**
+     * Animation delay of each divided element
+     */
+    delay?: (index?: number, count?: number) => number
+    /**
      * How to divide the shape in combine and split animation.
      */
     divideShape?: 'clone' | 'split'

@@ -22,7 +22,8 @@ import {
     combineMorph,
     morphPath,
     DividePath,
-    isCombineMorphing
+    isCombineMorphing,
+    SeparateConfig
 } from 'zrender/src/tool/morphPath';
 import { Path } from '../util/graphic';
 import SeriesModel from '../model/Series';
@@ -31,6 +32,7 @@ import { defaults, isArray} from 'zrender/src/core/util';
 import { getAnimationConfig } from './basicTrasition';
 import { ECElement, UniversalTransitionOption } from '../util/types';
 import { clonePath } from 'zrender/src/tool/path';
+import Model from '../model/Model';
 
 
 type DescendentElements = Element[];
@@ -127,12 +129,19 @@ export function applyMorphAnimation(
     if (!(updateAnimationCfg.duration > 0)) {
         return;
     }
+    const animationDelay = (seriesModel.getModel('universalTransition') as Model<UniversalTransitionOption>)
+        .get('delay');
+
+    const individualDelay = animationDelay && function (idx: number, count: number, oldPath: Path, newPath: Path) {
+        return animationDelay(idx, count);
+    };
 
     const animationCfg = Object.assign({
         // Need to setToFinal so the further calculation based on the style can be correct.
         // Like emphasis color.
-        setToFinal: true
-    }, updateAnimationCfg);
+        setToFinal: true,
+        individualDelay: individualDelay
+    } as SeparateConfig, updateAnimationCfg);
 
 
     let many: DescendentPaths[];
