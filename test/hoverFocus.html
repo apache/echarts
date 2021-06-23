@@ -122,6 +122,25 @@ under the License.
                 dom.className = 'chart';
                 document.querySelector('#main').appendChild(dom);
 
+                if(chartOption.id?.startsWith('highlightMultipleSeries')){
+                    const chart = testHelper.create(echarts, dom, {
+                        title: chartOption.name,
+                        option: chartOption,
+                        buttons: [
+                        {
+                            text: 'Dispatch highlight action',
+                            onclick: function () {
+                                 chart.dispatchAction({
+                                    type: "highlight",
+                                    seriesIndex: [0, 1, 2],
+                                });
+                            }
+                        }],
+                    });
+                    charts.push(chart);
+                    return;
+                }
+
                 const chart = echarts.init(dom);
 
                 chart.setOption(chartOption);

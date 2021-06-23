@@ -1,5 +1,141 @@
 // Basic options for all charts
 window.allChartsOptions = [
+    ////////////// Hightlight multilple series(blurScope = 'series') //////////////
+    {
+        id: "highlightMultipleSeries(blurScope='series')",
+        name: "Dispatch action to hightlight multiple series (with blurScope == 'series')",
+        legend: {
+            top: 30,
+            data: [
+                "Direct",
+                "Mail Ad",
+                "Affiliate Ad",
+                "Video Ad",
+                "Search Engine",
+            ],
+        },
+        xAxis: {
+            type: "category",
+            data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        },
+        yAxis: {
+            type: "value",
+        },
+        series: [
+            {
+                name: "Direct",
+                type: "line",
+                label: {
+                    show: true,
+                },
+                emphasis: {
+                    blurScope: "series",
+                    lineStyle: {
+                        width: 5,
+                    },
+                },
+                data: [320, 302, 301, 334, 390, 330, 320],
+            },
+            {
+                name: "Mail Ad",
+                type: "line",
+                label: {
+                    show: true,
+                },
+                emphasis: {
+                    blurScope: "series",
+                    lineStyle: {
+                        width: 5,
+                    },
+                },
+                data: [120, 132, 101, 134, 90, 230, 210],
+            },
+            {
+                name: "Affiliate Ad",
+                type: "line",
+                label: {
+                    show: true,
+                },
+                emphasis: {
+                    blurScope: "series",
+                    lineStyle: {
+                        width: 5,
+                    },
+                },
+                data: [220, 182, 191, 234, 290, 330, 310],
+            },
+            {
+                name: "Video Ad",
+                type: "line",
+                label: {
+                    show: true,
+                },
+                emphasis: {
+                    blurScope: "series",
+                    lineStyle: {
+                        width: 5,
+                    },
+                },
+                data: [150, 212, 201, 154, 190, 330, 410],
+            },
+        ],
+    },
+    ////////////// Hightlight multilple series(blurScope != 'series') //////////////
+    {
+        id: "highlightMultipleSeries(blurScope!='series')",
+        name: "Dispatch action to hightlight multiple series (with blurScope != 'series')",
+        legend: {
+            top: 30,
+            data: [
+                "Direct",
+                "Mail Ad",
+                "Affiliate Ad",
+                "Video Ad",
+                "Search Engine",
+            ],
+        },
+        xAxis: {
+            type: "category",
+            data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        },
+        yAxis: {
+            type: "value",
+        },
+        series: [
+            {
+                name: "Direct",
+                type: "line",
+                label: {
+                    show: true,
+                },
+                data: [320, 302, 301, 334, 390, 330, 320],
+            },
+            {
+                name: "Mail Ad",
+                type: "line",
+                label: {
+                    show: true,
+                },
+                data: [120, 132, 101, 134, 90, 230, 210],
+            },
+            {
+                name: "Affiliate Ad",
+                type: "line",
+                label: {
+                    show: true,
+                },
+                data: [220, 182, 191, 234, 290, 330, 310],
+            },
+            {
+                name: "Video Ad",
+                type: "line",
+                label: {
+                    show: true,
+                },
+                data: [150, 212, 201, 154, 190, 330, 410],
+            },
+        ],
+    },
     ////////////////////////// Area stacks //////////////////////////////
     {
         legend: {},

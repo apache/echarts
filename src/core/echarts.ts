@@ -90,7 +90,8 @@ import {
     ScaleDataValue,
     ZRElementEventName,
     ECElementEvent,
-    AnimationOption
+    AnimationOption,
+    BlurScope
 } from '../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
@@ -1489,49 +1490,59 @@ class ECharts extends Eventful<ECEventDefinition> {
             }
 
             // If dispatchAction before setOption, do nothing.
-            ecModel && ecModel.eachComponent(condition, function (model, modelIndex) {
-                if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
-                    if (isHighDownPayload(payload)) {
-                        if (model instanceof SeriesModel) {
-                            // only blur once
-                            const isFirstTimeBlur = modelIndex === 0;
-                            if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur && isFirstTimeBlur) {
+            let isFirstTimeBlur = true;
+            ecModel && ecModel.eachComponent(condition, function (model) {
+                const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
+                if (isExcluded) {
+                    return;
+                };
+                if (isHighDownPayload(payload)) {
+                    if (model instanceof SeriesModel) {
+                        if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
+                            const blurScope = model.get(['emphasis', 'blurScope']) as BlurScope;
+                            const shouldBlurMultipleTimes = blurScope === 'series';
+                            if (shouldBlurMultipleTimes) {
                                 blurSeriesFromHighlightPayload(model, payload, ecIns._api);
                             }
-                        }
-                        else {
-                            const { focusSelf, dispatchers } = findComponentHighDownDispatchers(
-                                model.mainType, model.componentIndex, payload.name, ecIns._api
-                            );
-                            if (payload.type === HIGHLIGHT_ACTION_TYPE && focusSelf && !payload.notBlur) {
-                                blurComponent(model.mainType, model.componentIndex, ecIns._api);
-                            }
-                            // PENDING:
-                            // Whether to put this "enter emphasis" code in `ComponentView`,
-                            // which will be the same as `ChartView` but might be not necessary
-                            // and will be far from this logic.
-                            if (dispatchers) {
-                                each(dispatchers, dispatcher => {
-                                    payload.type === HIGHLIGHT_ACTION_TYPE
-                                        ? enterEmphasis(dispatcher)
-                                        : leaveEmphasis(dispatcher);
-                                });
+                            // only blur once if blurScope is not 'series'
+                            else if (isFirstTimeBlur) {
+                                blurSeriesFromHighlightPayload(model, payload, ecIns._api);
+                                isFirstTimeBlur = false;
                             }
                         }
                     }
-                    else if (isSelectChangePayload(payload)) {
-                        // TODO geo
-                        if (model instanceof SeriesModel) {
-                            toggleSelectionFromPayload(model, payload, ecIns._api);
-                            updateSeriesElementSelection(model);
-                            markStatusToUpdate(ecIns);
+                    else {
+                        const { focusSelf, dispatchers } = findComponentHighDownDispatchers(
+                            model.mainType, model.componentIndex, payload.name, ecIns._api
+                        );
+                        if (payload.type === HIGHLIGHT_ACTION_TYPE && focusSelf && !payload.notBlur) {
+                            blurComponent(model.mainType, model.componentIndex, ecIns._api);
+                        }
+                        // PENDING:
+                        // Whether to put this "enter emphasis" code in `ComponentView`,
+                        // which will be the same as `ChartView` but might be not necessary
+                        // and will be far from this logic.
+                        if (dispatchers) {
+                            each(dispatchers, dispatcher => {
+                                payload.type === HIGHLIGHT_ACTION_TYPE
+                                    ? enterEmphasis(dispatcher)
+                                    : leaveEmphasis(dispatcher);
+                            });
                         }
                     }
-
-                    callView(ecIns[
-                        mainType === 'series' ? '_chartsMap' : '_componentsMap'
-                    ][model.__viewId]);
                 }
+                else if (isSelectChangePayload(payload)) {
+                    // TODO geo
+                    if (model instanceof SeriesModel) {
+                        toggleSelectionFromPayload(model, payload, ecIns._api);
+                        updateSeriesElementSelection(model);
+                        markStatusToUpdate(ecIns);
+                    }
+                }
+
+                callView(ecIns[
+                    mainType === 'series' ? '_chartsMap' : '_componentsMap'
+                ][model.__viewId]);
             }, ecIns);
 
             function callView(view: ComponentView | ChartView) {
