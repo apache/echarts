@@ -172,6 +172,7 @@ export interface CustomGroupOption extends CustomBaseElementOption {
     $mergeChildren: false | 'byName' | 'byIndex';
 }
 export interface CustomZRPathOption extends CustomDisplayableOption, ShapeMorphingOption {
+    autoBatch?: boolean;
     shape?: PathProps['shape'] & TransitionAnyOption;
     style?: CustomDisplayableOption['style'] & {
         decal?: DecalObject;

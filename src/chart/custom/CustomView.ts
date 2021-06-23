@@ -490,6 +490,9 @@ function applyMiscProps(
     if (isDisplayable(el)) {
         hasOwn(elOption, 'invisible') && (el.invisible = elOption.invisible);
     }
+    if (isPath(el)) {
+        hasOwn(elOption, 'autoBatch') && (el.autoBatch = (elOption as CustomZRPathOption).autoBatch);
+    }
 
     if (!isTextContent) {
         // `elOption.info` enables user to mount some info on
