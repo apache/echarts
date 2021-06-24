@@ -30,6 +30,7 @@ import GlobalModel from '../../model/Global';
 import { VectorArray } from 'zrender/src/core/vector';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
+import { saveOldStyle } from '../../animation/basicTrasition';
 
 function normalizeSymbolSize(symbolSize: number | number[]) {
     if (!zrUtil.isArray(symbolSize)) {
@@ -169,6 +170,9 @@ class RadarView extends ChartView {
                     newIdx,
                     false
                 );
+
+                saveOldStyle(polygon);
+                saveOldStyle(polyline);
 
                 graphic.updateProps(polyline, target, seriesModel);
                 graphic.updateProps(polygon, target, seriesModel);

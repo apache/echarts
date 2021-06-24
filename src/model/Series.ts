@@ -544,7 +544,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const universalTransitionOpt = this.option.universalTransition;
         // Quick reject
         if (!universalTransitionOpt) {
-            return;
+            return false;
         }
 
         if (universalTransitionOpt === true) {

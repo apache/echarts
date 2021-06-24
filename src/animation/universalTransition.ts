@@ -37,8 +37,9 @@ import {
 import { makeInner, normalizeToArray } from '../util/model';
 import { warn } from '../util/log';
 import ExtensionAPI from '../core/ExtensionAPI';
-import { getAnimationConfig } from './basicTrasition';
+import { getAnimationConfig, getOldStyle } from './basicTrasition';
 import Model from '../model/Model';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 const DATA_COUNT_THRESHOLD = 1e4;
 
@@ -126,6 +127,20 @@ function stopAnimation(el: Element) {
         });
     }
 }
+function animateElementStyles(el: Element, dataIndex: number, seriesModel: SeriesModel) {
+    const animationConfig = getAnimationConfig('update', seriesModel, dataIndex);
+    el.traverse(child => {
+        if (child instanceof Displayable) {
+            const oldStyle = getOldStyle(child);
+            if (oldStyle) {
+                child.animateFrom({
+                    style: oldStyle
+                }, animationConfig);
+            }
+        }
+    });
+}
+
 
 function transitionBetween(
     oldList: TransitionSeries[],
@@ -232,11 +247,15 @@ function transitionBetween(
         const oldEl = oldItem.data.getItemGraphicEl(oldItem.dataIndex);
         const newEl = newItem.data.getItemGraphicEl(newItem.dataIndex);
 
+        // Can't handle same elements.
+        if (oldEl === newEl) {
+            newEl && animateElementStyles(newEl, newItem.dataIndex, newSeries);
+            return;
+        }
+
         if (
-            // Can't handle same elements.
-            oldEl === newEl
             // We can't use the elements that already being morphed
-            || (oldEl && isElementStillInChart[oldEl.id])
+            (oldEl && isElementStillInChart[oldEl.id])
         ) {
             return;
         }

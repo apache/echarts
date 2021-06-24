@@ -32,6 +32,7 @@ import labelLayout from './labelLayout';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getSectorCornerRadius } from '../helper/pieHelper';
+import {saveOldStyle} from '../../animation/basicTrasition';
 
 /**
  * Piece of pie including Sector, Label, LabelLine
@@ -103,6 +104,7 @@ class PiePiece extends graphic.Sector {
             }
         }
         else {
+            saveOldStyle(sector);
             // Transition animation from the old shape
             graphic.updateProps(sector, {
                 shape: sectorShape
@@ -110,6 +112,7 @@ class PiePiece extends graphic.Sector {
         }
 
         sector.useStyle(data.getItemVisual(idx, 'style'));
+
         setStatesStylesFromModel(sector, itemModel);
 
         const midAngle = (layout.startAngle + layout.endAngle) / 2;

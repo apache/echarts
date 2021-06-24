@@ -60,6 +60,7 @@ import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import {LayoutRect} from '../../util/layout';
 import {EventCallback} from 'zrender/src/core/Eventful';
 import { warn } from '../../util/log';
+import { saveOldStyle } from '../../animation/basicTrasition';
 
 const _eventPos = [0, 0];
 
@@ -318,7 +319,6 @@ class BarView extends ChartView {
                 let el = oldData.getItemGraphicEl(oldIndex) as BarPossiblePath;
                 if (!data.hasValue(newIndex) || !isValidLayout[coord.type](layout)) {
                     group.remove(el);
-                    el = null;
                     return;
                 }
 
@@ -342,6 +342,9 @@ class BarView extends ChartView {
                         !!el,
                         roundCap
                     );
+                }
+                else {
+                    saveOldStyle(el);
                 }
 
                 // Not change anything if only order changed.

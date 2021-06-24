@@ -34,6 +34,14 @@ import {
 } from 'zrender/src/core/util';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Group from 'zrender/src/graphic/Group';
+import { makeInner } from '../util/model';
+
+// Stored properties for further transition.
+
+export const transitionStore = makeInner<{
+    oldStyle: Displayable['style']
+}, Displayable>();
+
 
 type AnimateOrSetPropsOption = {
     dataIndex?: number;
@@ -312,4 +320,18 @@ export function removeElementWithFadeOut(
             }
         });
     }
+}
+
+/**
+ * Save old style for style transition in universalTransition module.
+ * It's used when element will be reused in each render.
+ * For chart like map, heatmap, which will always create new element.
+ * We don't need to save this because universalTransition can get old style from the old element
+ */
+export function saveOldStyle(el: Displayable) {
+    transitionStore(el).oldStyle = el.style;
+}
+
+export function getOldStyle(el: Displayable) {
+    return transitionStore(el).oldStyle;
 }
