@@ -540,12 +540,19 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         if (this[SERIES_UNIVERSAL_TRANSITION_PROP]) {
             return true;
         }
-        // Can be simply 'universalTransition: true'
-        const universalTransitionModel = this.getModel('universalTransition');
-        if (typeof universalTransitionModel.option === 'boolean') {
-            return universalTransitionModel.option;
+
+        const universalTransitionOpt = this.option.universalTransition;
+        // Quick reject
+        if (!universalTransitionOpt) {
+            return;
         }
-        return (universalTransitionModel as Model<UniversalTransitionOption>).get('enabled');
+
+        if (universalTransitionOpt === true) {
+            return true;
+        }
+
+        // Can be simply 'universalTransition: true'
+        return universalTransitionOpt && universalTransitionOpt.enabled;
     }
 
     private _innerSelect(data: List, innerDataIndices: number[]) {
