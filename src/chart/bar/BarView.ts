@@ -32,7 +32,7 @@ import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states
 import { setLabelStyle, getLabelStatesModels, setLabelValueAnimation } from '../../label/labelStyle';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
-import {Sausage} from '../../util/shape/sausage';
+import Sausage from '../../util/shape/sausage';
 import ChartView from '../../view/Chart';
 import List, {DefaultDataVisual} from '../../data/List';
 import GlobalModel from '../../model/Global';

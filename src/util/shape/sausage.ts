@@ -24,7 +24,7 @@ import { PathProps } from 'zrender/src/graphic/Path';
  * Sausage: similar to sector, but have half circle on both sides
  */
 
-export class SausageShape {
+class SausageShape {
     cx = 0;
     cy = 0;
     r0 = 0;
@@ -38,7 +38,7 @@ interface SausagePathProps extends PathProps {
     shape?: SausageShape
 }
 
-export class Sausage extends Path<SausagePathProps> {
+class SausagePath extends Path<SausagePathProps> {
 
     type = 'sausage';
 
@@ -97,3 +97,5 @@ export class Sausage extends Path<SausagePathProps> {
         ctx.closePath();
     }
 }
+
+export default SausagePath;
