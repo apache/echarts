@@ -34,12 +34,15 @@ import type Polar from '../../coord/polar/Polar';
 import { inheritDefaultOption } from '../../util/component';
 import List from '../../data/List';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
-import {SectorTextPosition} from '../../label/sectorLabel';
+import {BuiltinTextPosition} from 'zrender/src/core/types';
 
+export type PolarBarLabelPosition = BuiltinTextPosition
+    | 'start' | 'insideStart' | 'middle' | 'end' | 'insideEnd'
+    | (number | string)[];
 
 export interface BarStateOption {
     itemStyle?: BarItemStyleOption
-    label?: SeriesLabelOption & {position: SectorTextPosition}
+    label?: SeriesLabelOption & {position: PolarBarLabelPosition}
 }
 
 export interface BarItemStyleOption extends ItemStyleOption {

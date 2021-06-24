@@ -5,7 +5,12 @@ import {isArray} from 'zrender/src/core/util';
 import {ElementCalculateTextPosition, ElementTextConfig} from 'zrender/src/Element';
 
 export type SectorTextPosition = BuiltinTextPosition
-    | 'start' | 'insideStart' | 'middle' | 'insideEnd' | 'end';
+    | 'startAngle' | 'insideStartAngle'
+    | 'endAngle' | 'insideEndAngle'
+    | 'middle'
+    | 'startArc' | 'insideStartArc'
+    | 'endArc' | 'insideEndArc'
+    | (number | string)[];
 
 export type SectorLike = {
     cx: number
@@ -17,12 +22,14 @@ export type SectorLike = {
     clockwise: boolean
 };
 
-export function createSectorCalculateTextPosition(isRadial: boolean): ElementCalculateTextPosition {
+export function createSectorCalculateTextPosition<T extends (string | (number | string)[])>(
+    positionMapping: (seriesLabelPosition: T) => SectorTextPosition
+): ElementCalculateTextPosition {
     return function (
         this: Sector,
         out: TextPositionCalculationResult,
         opts: {
-            position?: SectorTextPosition | (number | string)[]
+            position?: SectorTextPosition
             distance?: number   // Default 5
             global?: boolean
         },
@@ -38,6 +45,7 @@ export function createSectorCalculateTextPosition(isRadial: boolean): ElementCal
             );
         }
 
+        const mappedSectorPosition = positionMapping(textPosition as T);
         const distance = opts.distance != null ? opts.distance : 5;
         const sector = this.shape;
         const cx = sector.cx;
@@ -56,77 +64,71 @@ export function createSectorCalculateTextPosition(isRadial: boolean): ElementCal
         let textAlign: TextAlign = 'left';
         let textVerticalAlign: TextVerticalAlign = 'top';
 
-        switch (textPosition) {
-            case 'start':
-                if (isRadial) {
-                    x = cx + (r0 - distance) * Math.cos(middleAngle);
-                    y = cy + (r0 - distance) * Math.sin(middleAngle);
-                    textAlign = 'center';
-                    textVerticalAlign = 'top';
-                }
-                else {
-                    x = cx + middleR * Math.cos(startAngle)
-                        + adjustAngleDistanceX(startAngle, distance, false);
-                    y = cy + middleR * Math.sin(startAngle)
-                        + adjustAngleDistanceY(startAngle, distance, false);
-                    textAlign = 'right';
-                    textVerticalAlign = 'middle';
-                }
+        switch (mappedSectorPosition) {
+            case 'startArc':
+                x = cx + (r0 - distance) * Math.cos(middleAngle);
+                y = cy + (r0 - distance) * Math.sin(middleAngle);
+                textAlign = 'center';
+                textVerticalAlign = 'top';
                 break;
-            case 'insideStart':
-                if (isRadial) {
-                    x = cx + (r0 + distance) * Math.cos(middleAngle);
-                    y = cy + (r0 + distance) * Math.sin(middleAngle);
-                    textAlign = 'center';
-                    textVerticalAlign = 'bottom';
-                }
-                else {
-                    x = cx + middleR * Math.cos(startAngle)
-                        + adjustAngleDistanceX(startAngle, -distance, false);
-                    y = cy + middleR * Math.sin(startAngle)
-                        + adjustAngleDistanceY(startAngle, -distance, false);
-                    textAlign = 'left';
-                    textVerticalAlign = 'middle';
-                }
+
+            case 'insideStartArc':
+                x = cx + (r0 + distance) * Math.cos(middleAngle);
+                y = cy + (r0 + distance) * Math.sin(middleAngle);
+                textAlign = 'center';
+                textVerticalAlign = 'bottom';
                 break;
+
+            case 'startAngle':
+                x = cx + middleR * Math.cos(startAngle)
+                    + adjustAngleDistanceX(startAngle, distance, false);
+                y = cy + middleR * Math.sin(startAngle)
+                    + adjustAngleDistanceY(startAngle, distance, false);
+                textAlign = 'right';
+                textVerticalAlign = 'middle';
+                break;
+
+            case 'insideStartAngle':
+                x = cx + middleR * Math.cos(startAngle)
+                    + adjustAngleDistanceX(startAngle, -distance, false);
+                y = cy + middleR * Math.sin(startAngle)
+                    + adjustAngleDistanceY(startAngle, -distance, false);
+                textAlign = 'left';
+                textVerticalAlign = 'middle';
+                break;
+
             case 'middle':
                 x = cx + middleR * Math.cos(middleAngle);
                 y = cy + middleR * Math.sin(middleAngle);
                 textAlign = 'center';
                 textVerticalAlign = 'middle';
                 break;
-            case 'insideEnd':
-                if (isRadial) {
-                    x = cx + (r - distance) * Math.cos(middleAngle);
-                    y = cy + (r - distance) * Math.sin(middleAngle);
-                    textAlign = 'center';
-                    textVerticalAlign = 'top';
-                }
-                else {
-                    x = cx + middleR * Math.cos(endAngle)
-                        + adjustAngleDistanceX(endAngle, -distance, true);
-                    y = cy + middleR * Math.sin(endAngle)
-                        + adjustAngleDistanceY(endAngle, -distance, true);
-                    textAlign = 'right';
-                    textVerticalAlign = 'middle';
-                }
+
+            case 'insideEndArc':
+                x = cx + (r - distance) * Math.cos(middleAngle);
+                y = cy + (r - distance) * Math.sin(middleAngle);
+                textAlign = 'center';
+                textVerticalAlign = 'top';
                 break;
-            case 'end':
-                if (isRadial) {
-                    x = cx + (r + distance) * Math.cos(middleAngle);
-                    y = cy + (r + distance) * Math.sin(middleAngle);
-                    textAlign = 'center';
-                    textVerticalAlign = 'bottom';
-                }
-                else {
-                    x = cx + middleR * Math.cos(endAngle)
-                        + adjustAngleDistanceX(endAngle, distance, true);
-                    y = cy + middleR * Math.sin(endAngle)
-                        + adjustAngleDistanceY(endAngle, distance, true);
-                    textAlign = 'left';
-                    textVerticalAlign = 'middle';
-                }
+
+            case 'endAngle':
+                x = cx + middleR * Math.cos(endAngle)
+                    + adjustAngleDistanceX(endAngle, distance, true);
+                y = cy + middleR * Math.sin(endAngle)
+                    + adjustAngleDistanceY(endAngle, distance, true);
+                textAlign = 'left';
+                textVerticalAlign = 'middle';
                 break;
+
+            case 'insideEndAngle':
+                x = cx + middleR * Math.cos(endAngle)
+                    + adjustAngleDistanceX(endAngle, -distance, true);
+                y = cy + middleR * Math.sin(endAngle)
+                    + adjustAngleDistanceY(endAngle, -distance, true);
+                textAlign = 'right';
+                textVerticalAlign = 'middle';
+                break;
+
             default:
                 return calculateTextPosition(
                     out,
@@ -145,11 +147,11 @@ export function createSectorCalculateTextPosition(isRadial: boolean): ElementCal
     };
 }
 
-export function setSectorTextRotation(
+export function setSectorTextRotation<T extends (string | (number | string)[])>(
     sector: Sector,
-    textPosition: SectorTextPosition | (number | string)[],
+    textPosition: T,
+    positionMapping: (seriesLabelPosition: T) => SectorTextPosition,
     rotateType: number | 'auto',
-    isRadial: boolean
 ) {
     if (typeof rotateType === 'number') {
         // user-set rotation
@@ -172,18 +174,26 @@ export function setSectorTextRotation(
     const middleAngle = (startAngle + endAngle) / 2;
 
     let anchorAngle;
-    switch (textPosition) {
-        case 'start':
-        case 'insideStart':
-            anchorAngle = isRadial ? middleAngle : startAngle;
-            break;
+    const mappedSectorPosition = positionMapping(textPosition);
+    switch (mappedSectorPosition) {
+        case 'startArc':
+        case 'insideStartArc':
         case 'middle':
+        case 'insideEndArc':
+        case 'endArc':
             anchorAngle = middleAngle;
             break;
-        case 'insideEnd':
-        case 'end':
-            anchorAngle = isRadial ? middleAngle : endAngle;
+
+        case 'startAngle':
+        case 'insideStartAngle':
+            anchorAngle = startAngle;
             break;
+
+        case 'endAngle':
+        case 'insideEndAngle':
+            anchorAngle = endAngle;
+            break;
+
         default:
             sector.setTextConfig({
                 rotation: 0
