@@ -90,8 +90,7 @@ import {
     ScaleDataValue,
     ZRElementEventName,
     ECElementEvent,
-    AnimationOption,
-    BlurScope
+    AnimationOption
 } from '../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
@@ -1490,7 +1489,6 @@ class ECharts extends Eventful<ECEventDefinition> {
             }
 
             // If dispatchAction before setOption, do nothing.
-            let isFirstTimeBlur = true;
             ecModel && ecModel.eachComponent(condition, function (model) {
                 const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
                 if (isExcluded) {
@@ -1499,16 +1497,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 if (isHighDownPayload(payload)) {
                     if (model instanceof SeriesModel) {
                         if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
-                            const blurScope = model.get(['emphasis', 'blurScope']) as BlurScope;
-                            const shouldBlurMultipleTimes = blurScope === 'series';
-                            if (shouldBlurMultipleTimes) {
-                                blurSeriesFromHighlightPayload(model, payload, ecIns._api);
-                            }
-                            // only blur once if blurScope is not 'series'
-                            else if (isFirstTimeBlur) {
-                                blurSeriesFromHighlightPayload(model, payload, ecIns._api);
-                                isFirstTimeBlur = false;
-                            }
+                            blurSeriesFromHighlightPayload(model, payload, ecIns._api);
                         }
                     }
                     else {

@@ -409,7 +409,8 @@ export function blurSeries(
     targetSeriesIndex: number,
     focus: InnerFocus,
     blurScope: BlurScope,
-    api: ExtensionAPI
+    api: ExtensionAPI,
+    excludedSeriesIndexes?: number[]
 ) {
     const ecModel = api.getModel();
     blurScope = blurScope || 'coordinateSystem';
@@ -437,7 +438,10 @@ export function blurSeries(
 
     const blurredSeries: SeriesModel[] = [];
 
-    ecModel.eachSeries(function (seriesModel) {
+    ecModel.eachSeries(function (seriesModel, seriesIndex) {
+        if (excludedSeriesIndexes && excludedSeriesIndexes.includes(seriesIndex)) {
+            return;
+        }
 
         const sameSeries = targetSeriesModel === seriesModel;
         let coordSys: CoordinateSystemMaster | CoordinateSystem = seriesModel.coordinateSystem;
@@ -454,7 +458,6 @@ export function blurSeries(
             || blurScope === 'coordinateSystem' && !sameCoordSys
             // Not blur self series if focus is series.
             || focus === 'series' && sameSeries
-            // TODO blurScope: coordinate system
         )) {
             const view = api.getViewOfSeriesModel(seriesModel);
             view.group.traverse(function (child) {
@@ -529,11 +532,12 @@ export function blurSeriesFromHighlightPayload(
             el = data.getItemGraphicEl(current++);
         }
     }
+    const excludedSeriesIndexes = payload.seriesIndex || [];
 
     if (el) {
         const ecData = getECData(el);
         blurSeries(
-            seriesIndex, ecData.focus, ecData.blurScope, api
+            seriesIndex, ecData.focus, ecData.blurScope, api, excludedSeriesIndexes
         );
     }
     else {
@@ -542,7 +546,7 @@ export function blurSeriesFromHighlightPayload(
         const focus = seriesModel.get(['emphasis', 'focus']);
         const blurScope = seriesModel.get(['emphasis', 'blurScope']);
         if (focus != null) {
-            blurSeries(seriesIndex, focus, blurScope, api);
+            blurSeries(seriesIndex, focus, blurScope, api, excludedSeriesIndexes);
         }
     }
 }

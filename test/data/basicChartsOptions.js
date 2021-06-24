@@ -1,4 +1,26 @@
 // Basic options for all charts
+var polarData = [];
+
+for (var i = 0; i <= 100; i++) {
+    var theta = (i / 100) * 360;
+    var r = 5 * (1 + Math.sin((theta / 180) * Math.PI));
+    polarData.push([r, theta]);
+}
+
+var globalBlurEmphasis = {
+    blurScope: "global",
+};
+var coordinateSystemBlurEmphasis = {
+    blurScope: "coordinateSystem",
+};
+var seriesBlurEmphasis = {
+    blurScope: "series",
+    lineStyle: {
+        width: 5,
+    },
+};
+
+
 window.allChartsOptions = [
     ////////////// Hightlight multilple series(blurScope = 'series') //////////////
     {
@@ -28,12 +50,7 @@ window.allChartsOptions = [
                 label: {
                     show: true,
                 },
-                emphasis: {
-                    blurScope: "series",
-                    lineStyle: {
-                        width: 5,
-                    },
-                },
+                emphasis: seriesBlurEmphasis,
                 data: [320, 302, 301, 334, 390, 330, 320],
             },
             {
@@ -42,12 +59,7 @@ window.allChartsOptions = [
                 label: {
                     show: true,
                 },
-                emphasis: {
-                    blurScope: "series",
-                    lineStyle: {
-                        width: 5,
-                    },
-                },
+                emphasis: seriesBlurEmphasis,
                 data: [120, 132, 101, 134, 90, 230, 210],
             },
             {
@@ -56,12 +68,7 @@ window.allChartsOptions = [
                 label: {
                     show: true,
                 },
-                emphasis: {
-                    blurScope: "series",
-                    lineStyle: {
-                        width: 5,
-                    },
-                },
+                emphasis: seriesBlurEmphasis,
                 data: [220, 182, 191, 234, 290, 330, 310],
             },
             {
@@ -70,20 +77,15 @@ window.allChartsOptions = [
                 label: {
                     show: true,
                 },
-                emphasis: {
-                    blurScope: "series",
-                    lineStyle: {
-                        width: 5,
-                    },
-                },
+                emphasis: seriesBlurEmphasis,
                 data: [150, 212, 201, 154, 190, 330, 410],
             },
         ],
     },
-    ////////////// Hightlight multilple series(blurScope != 'series') //////////////
+    ////////////// Hightlight multilple series(blurScope = 'global') //////////////
     {
-        id: "highlightMultipleSeries(blurScope!='series')",
-        name: "Dispatch action to hightlight multiple series (with blurScope != 'series')",
+        id: "highlightMultipleSeries(blurScope='global')",
+        name: "Dispatch action to hightlight multiple series (with blurScope = 'global')",
         legend: {
             top: 30,
             data: [
@@ -109,6 +111,7 @@ window.allChartsOptions = [
                     show: true,
                 },
                 data: [320, 302, 301, 334, 390, 330, 320],
+                emphasis: globalBlurEmphasis,
             },
             {
                 name: "Mail Ad",
@@ -117,6 +120,7 @@ window.allChartsOptions = [
                     show: true,
                 },
                 data: [120, 132, 101, 134, 90, 230, 210],
+                emphasis: globalBlurEmphasis,
             },
             {
                 name: "Affiliate Ad",
@@ -125,6 +129,7 @@ window.allChartsOptions = [
                     show: true,
                 },
                 data: [220, 182, 191, 234, 290, 330, 310],
+                emphasis: globalBlurEmphasis,
             },
             {
                 name: "Video Ad",
@@ -133,6 +138,83 @@ window.allChartsOptions = [
                     show: true,
                 },
                 data: [150, 212, 201, 154, 190, 330, 410],
+                emphasis: globalBlurEmphasis,
+            },
+        ],
+    },
+    ////////////// Hightlight multilple series(blurScope = 'coordinateSystem') //////////////
+    {
+        id: "highlightMultipleSeries(blurScope='coordinateSystem')",
+        name: "Dispatch action to hightlight multiple series (with blurScope = 'coordinateSystem')",
+        legend: {
+            top: 30,
+            data: [
+                "polar",
+                "Direct",
+                "Mail Ad",
+                "Affiliate Ad",
+                "Video Ad",
+                "Search Engine",
+            ],
+        },
+        xAxis: {
+            type: "category",
+            data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        },
+        yAxis: {
+            type: "value",
+        },
+        polar: {},
+       
+        angleAxis: {
+            type: 'value',
+            startAngle: 0
+        },
+        radiusAxis: {
+        },
+        series: [
+            {
+                coordinateSystem: 'polar',
+                name: 'polar',
+                type: 'line',
+                data: polarData,
+                emphasis: coordinateSystemBlurEmphasis,
+            },
+            {
+                name: "Direct",
+                type: "line",
+                label: {
+                    show: true,
+                },
+                data: [320, 302, 301, 334, 390, 330, 320],
+                emphasis: coordinateSystemBlurEmphasis,
+            },
+            {
+                name: "Mail Ad",
+                type: "line",
+                label: {
+                    show: true,
+                },
+                data: [120, 132, 101, 134, 90, 230, 210],
+                emphasis: coordinateSystemBlurEmphasis,
+            },
+            {
+                name: "Affiliate Ad",
+                type: "line",
+                label: {
+                    show: true,
+                },
+                data: [220, 182, 191, 234, 290, 330, 310],
+                emphasis: coordinateSystemBlurEmphasis,
+            },
+            {
+                name: "Video Ad",
+                type: "line",
+                label: {
+                    show: true,
+                },
+                data: [150, 212, 201, 154, 190, 330, 410],
+                emphasis: coordinateSystemBlurEmphasis,
             },
         ],
     },
