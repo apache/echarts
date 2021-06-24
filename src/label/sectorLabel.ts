@@ -1,5 +1,5 @@
 import {RectLike, Sector} from 'zrender';
-import {calculateTextPosition, parsePercent, TextPositionCalculationResult} from 'zrender/src/contain/text';
+import {calculateTextPosition, TextPositionCalculationResult} from 'zrender/src/contain/text';
 import {BuiltinTextPosition, TextAlign, TextVerticalAlign} from 'zrender/src/core/types';
 import {isArray} from 'zrender/src/core/util';
 import {ElementCalculateTextPosition, ElementTextConfig} from 'zrender/src/Element';
@@ -151,7 +151,7 @@ export function setSectorTextRotation<T extends (string | (number | string)[])>(
     sector: Sector,
     textPosition: T,
     positionMapping: (seriesLabelPosition: T) => SectorTextPosition,
-    rotateType: number | 'auto',
+    rotateType: number | 'auto'
 ) {
     if (typeof rotateType === 'number') {
         // user-set rotation
