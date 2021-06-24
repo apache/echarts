@@ -40,6 +40,8 @@ under the License.
     <div id="main2" class="main"></div>
     <div id="main3" class="main"></div>
     <div id="main4" class="main"></div>
+    <div id="main5" class="main"></div>
+    <div id="main6" class="main"></div>
     <script>
 
         require(['echarts'], function (echarts) {
@@ -237,6 +239,152 @@ under the License.
                     }
                 ]
             };
+            chart.setOption(option)
+
+            chart = echarts.init(document.getElementById('main5'));
+
+            option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                        type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                    }
+                },
+                legend: {
+                    data: ['利润', '支出', '收入']
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: [
+                    {
+                        max: 500,
+                        type: 'value'
+                    }
+                ],
+                yAxis: [
+                    {
+                        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                    }
+                ],
+                series: [
+                    {
+                        name: '支出',
+                        type: 'bar',
+                        stack: '总量',
+                        label: {
+                            show: true,
+                            position: 'left'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: [-120, -132, -101, -134, -190, -230, -210]
+                    },
+                    {
+                        name: '利润',
+                        type: 'bar',
+                        label: {
+                            show: true,
+                            position: 'inside'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: [200, 170, 240, 244, 200, 220, 210]
+                    },
+                    {
+                        name: '收入',
+                        type: 'bar',
+                        stack: '总量',
+                        label: {
+                            show: true
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: [320, 302, 341, 374, 390, 450, 420]
+                    },
+                ]
+            };
+
+            chart.setOption(option)
+
+            chart = echarts.init(document.getElementById('main6'));
+            option = {
+                legend: {
+                    data: ['利润', '支出', '收入', '预算']
+                },
+                yAxis: [
+                    {
+                        max: 800,
+                        type: 'value'
+                    }
+                ],
+                xAxis: [
+                    {
+                        type: 'category',
+                        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                    }
+                ],
+                series: [
+                    {
+                        name: '预算',
+                        type: 'bar',
+                        stack: '总量',
+                        label: {
+                            show: true,
+                            position: 'left'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: [-210, -232, -151, -184, -230, -280, -270]
+                    },
+                    {
+                        name: '支出',
+                        type: 'bar',
+                        stack: '总量',
+                        label: {
+                            show: true,
+                            position: 'left'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: [-20, -132, -101, -134, -190, -230, -210]
+                    },
+                    {
+                        name: '利润',
+                        type: 'bar',
+                        stack: '总量',
+                        label: {
+                            show: true,
+                            position: 'inside'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: [200, 170, 240, 244, 200, 220, 210]
+                    },
+                    {
+                        name: '收入',
+                        type: 'bar',
+                        stack: '总量',
+                        label: {
+                            show: true
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: [320, 302, 341, 374, 390, 450, 420]
+                    },
+                ]
+            };
+
             chart.setOption(option)
 
 
