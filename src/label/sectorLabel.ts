@@ -30,7 +30,7 @@ export function createSectorCalculateTextPosition<T extends (string | (number | 
         out: TextPositionCalculationResult,
         opts: {
             position?: SectorTextPosition
-            distance?: number   // Default 5
+            distance?: number
             global?: boolean
         },
         boundingRect: RectLike
@@ -102,6 +102,13 @@ export function createSectorCalculateTextPosition<T extends (string | (number | 
                 y = cy + middleR * Math.sin(middleAngle);
                 textAlign = 'center';
                 textVerticalAlign = 'middle';
+                break;
+
+            case 'endArc':
+                x = cx + (r + distance) * Math.cos(middleAngle);
+                y = cy + (r + distance) * Math.sin(middleAngle);
+                textAlign = 'center';
+                textVerticalAlign = 'bottom';
                 break;
 
             case 'insideEndArc':
@@ -201,8 +208,20 @@ export function setSectorTextRotation<T extends (string | (number | string)[])>(
             return;
     }
 
+    let rotate = Math.PI * 1.5 - anchorAngle;
+    /**
+     * TODO: labels with rotate > Math.PI / 2 should be rotate another
+     * half round flipped to increase readability. However, only middle
+     * position supports this for now, because in other positions, the
+     * anchor point is not at the center of the text, so the positions
+     * after rotating is not as expected.
+     */
+    if (mappedSectorPosition === 'middle' && rotate > Math.PI / 2 && rotate < Math.PI * 1.5) {
+        rotate -= Math.PI;
+    }
+
     sector.setTextConfig({
-        rotation: Math.PI * 1.5 - anchorAngle
+        rotation: rotate
     });
 }
 
