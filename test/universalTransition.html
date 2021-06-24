@@ -42,6 +42,7 @@ under the License.
         <div id="main2"></div>
         <div id="main3"></div>
         <div id="main4"></div>
+        <div id="main5"></div>
 
 
         <script>
@@ -838,6 +839,68 @@ under the License.
             });
         </script>
 
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    tooltip: {
+                        trigger: 'item'
+                    },
+                    legend: {
+                        top: '5%',
+                        left: 'center'
+                    },
+                    series: [
+                        {
+                            name: '访问来源',
+                            type: 'pie',
+                            radius: ['40%', '70%'],
+                            avoidLabelOverlap: false,
+                            itemStyle: {
+                                borderRadius: 10,
+                                borderColor: '#fff',
+                                borderWidth: 2
+                            },
+                            label: {
+                                show: false,
+                                position: 'center'
+                            },
+                            universalTransition: true,
+                            animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                            data: [
+                                {value: 1048, name: '搜索引擎'},
+                                {value: 735, name: '直接访问'},
+                                {value: 580, name: '邮件营销'},
+                                {value: 484, name: '联盟广告'},
+                                {value: 300, name: '视频广告'}
+                            ]
+                        }
+                    ]
+                };
+                var chart = testHelper.create(echarts, 'main5', {
+                    title: [
+                        'Style should be animated in same series.'
+                    ],
+                    recordVideo: true,
+                    buttons: [{
+                        text: 'random style',
+                        onclick: function () {
+                            chart.setOption({
+                                color: [1, 2, 3, 4, 5].map(item => echarts.color.random()),
+                                series: [{
+                                    itemStyle: {
+                                        borderColor: echarts.color.random(),
+                                        borderWidth: Math.random() * 5 + 1
+                                    }
+                                }]
+                            })
+                        }
+                    }],
+                    option: option
+                });
+            });
+        </script>
     </body>
 </html>
 
