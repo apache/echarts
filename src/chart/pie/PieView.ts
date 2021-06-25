@@ -32,6 +32,7 @@ import labelLayout from './labelLayout';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getSectorCornerRadius } from '../helper/pieHelper';
+import { getBasicPieLayout } from './pieLayout';
 
 /**
  * Piece of pie including Sector, Label, LabelLine
@@ -218,6 +219,7 @@ class PieView extends ChartView {
 
     private _sectorGroup: graphic.Group;
     private _data: List;
+    private _emptyCircleSector: graphic.Sector;
 
     init(): void {
         const sectorGroup = new graphic.Group();
@@ -240,6 +242,20 @@ class PieView extends ChartView {
             if (shape) {
                 startAngle = shape.startAngle;
             }
+        }
+
+        // remove empty-circle if it exists
+        if (this._emptyCircleSector) {
+            group.remove(this._emptyCircleSector);
+        }
+        // when all data are filtered, show lightgray empty circle
+        if (data.count() === 0 && seriesModel.get('showEmptyCircle')) {
+            const sector = new graphic.Sector({
+                shape: getBasicPieLayout(seriesModel, api)
+            });
+            sector.useStyle(seriesModel.getModel('emptyCircleStyle').getItemStyle());
+            this._emptyCircleSector = sector;
+            group.add(sector);
         }
 
         data.diff(oldData)
