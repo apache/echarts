@@ -343,7 +343,7 @@ export function getRawSourceItemGetter(
 ): RawSourceItemGetter {
     const method = rawSourceItemGetterMap[getMethodMapKey(sourceFormat, seriesLayoutBy)];
     if (__DEV__) {
-        assert(method, 'Do not suppport get item on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
+        assert(method, 'Do not support get item on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
     }
     return method;
 }

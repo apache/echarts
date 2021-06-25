@@ -260,7 +260,7 @@ class TooltipView extends ComponentView {
                     y: self._lastY,
                     dataByCoordSys: self._lastDataByCoordSys
                 });
-            });
+            }) as any;
         }
     }
 
