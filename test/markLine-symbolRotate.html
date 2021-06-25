@@ -38,153 +38,152 @@ under the License.
         <script>
 
             require([
-                'echarts'
-            ], function (echarts) {
+                'echarts',
+                './data/aqi/aqi-beijing.json'
+            ], function (echarts, data) {
 
                 var chart = echarts.init(document.getElementById('main'));
 
-                $.getJSON('./data/aqi/aqi-beijing.json', function(data) {
-                    var option = {
-                        title: {
-                            text: 'Beijing AQI',
-                            subtext: 'Fix #12388'
-                        },
-                        tooltip: {
-                            trigger: 'axis'
-                        },
-                        xAxis: {
-                            data: data.map(function (item) {
-                                return item[0];
-                            })
-                        },
-                        yAxis: {
-                            splitLine: {
-                                show: false
-                            }
-                        },
-                        toolbox: {
-                            left: 'center',
-                            feature: {
-                                dataZoom: {
-                                    yAxisIndex: 'none'
-                                },
-                                restore: {},
-                                saveAsImage: {}
-                            }
-                        },
-                        dataZoom: [{
-                            startValue: '2014-06-01'
+                var option = {
+                    title: {
+                        text: 'Beijing AQI',
+                        subtext: 'Fix #12388'
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: {
+                        data: data.map(function (item) {
+                            return item[0];
+                        })
+                    },
+                    yAxis: {
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    toolbox: {
+                        left: 'center',
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: 'none'
+                            },
+                            restore: {},
+                            saveAsImage: {}
+                        }
+                    },
+                    dataZoom: [{
+                        startValue: '2014-06-01'
+                    }, {
+                        type: 'inside'
+                    }],
+                    visualMap: {
+                        top: 10,
+                        right: 10,
+                        pieces: [{
+                            gt: 0,
+                            lte: 50,
+                            color: '#096'
                         }, {
-                            type: 'inside'
+                            gt: 50,
+                            lte: 100,
+                            color: '#ffde33'
+                        }, {
+                            gt: 100,
+                            lte: 150,
+                            color: '#ff9933'
+                        }, {
+                            gt: 150,
+                            lte: 200,
+                            color: '#cc0033'
+                        }, {
+                            gt: 200,
+                            lte: 300,
+                            color: '#660099'
+                        }, {
+                            gt: 300,
+                            color: '#7e0023'
                         }],
-                        visualMap: {
-                            top: 10,
-                            right: 10,
-                            pieces: [{
-                                gt: 0,
-                                lte: 50,
-                                color: '#096'
+                        outOfRange: {
+                            color: '#999'
+                        }
+                    },
+                    series: [{
+                        name: 'Beijing AQI',
+                        type: 'line',
+                        data: data.map(function (item) {
+                            return item[1];
+                        }),
+                        markLine: {
+                            silent: true,
+                            // symbol: 'triangle',
+                            symbolRotate: [20, 45],
+                            data: [
+                            [
+                                {name: 'rotation not specified', coord: ['2014-06-20', 300], symbol: 'arrow'},
+                                {coord: ['2014-07-18', 320], symbol: 'triangle'}
+                            ],
+                            {
+                                yAxis: 50,
+                                // symbolRotate: 0,
+                                // symbolRotate: null,
+                                symbol: 'triangle',
+                                symbolSize: 20
+                            },{
+                                yAxis: 100,
+                                symbolRotate: 80,
+                                symbol: 'rect',
+                                symbolSize: 20
                             }, {
-                                gt: 50,
-                                lte: 100,
-                                color: '#ffde33'
+                                yAxis: 150,
+                                symbol: 'roundRect',
+                                symbolRotate: 40
+                            },
+                            {
+                                yAxis: 200,
+                                symbol: 'diamond',
+                                symbolRotate: 45
+                            },
+                            {
+                                yAxis: 250,
+                                symbol: 'pin',
+                                symbolRotate: 45
+                            },
+                            {
+                                yAxis: 300,
+                                symbol: 'circle',
+                                symbolRotate: 90
+                            },
+                            [{
+                                symbol: 'rect',
+                                x: '90%',
+                                yAxis: 'average',
+                                symbolRotate: 0,
+                                symbolOffset: [50, 0]
                             }, {
-                                gt: 100,
-                                lte: 150,
-                                color: '#ff9933'
-                            }, {
-                                gt: 150,
-                                lte: 200,
-                                color: '#cc0033'
-                            }, {
-                                gt: 200,
-                                lte: 300,
-                                color: '#660099'
-                            }, {
-                                gt: 300,
-                                color: '#7e0023'
-                            }],
-                            outOfRange: {
-                                color: '#999'
-                            }
-                        },
-                        series: [{
-                            name: 'Beijing AQI',
-                            type: 'line',
-                            data: data.map(function (item) {
-                                return item[1];
-                            }),
-                            markLine: {
-                                silent: true,
-                                // symbol: 'triangle',
-                                symbolRotate: [20, 45],
-                                data: [
-                                [
-                                    {name: 'rotation not specified', coord: ['2014-06-20', 300], symbol: 'arrow'},
-                                    {coord: ['2014-07-18', 320], symbol: 'triangle'}
-                                ],
-                                {
-                                    yAxis: 50,
-                                    // symbolRotate: 0,
-                                    // symbolRotate: null,
-                                    symbol: 'triangle',
-                                    symbolSize: 20
-                                },{
-                                    yAxis: 100,
-                                    symbolRotate: 80,
-                                    symbol: 'rect',
-                                    symbolSize: 20
-                                }, {
-                                    yAxis: 150,
-                                    symbol: 'roundRect',
-                                    symbolRotate: 40
+                                symbol: 'triangle',
+                                symbolRotate: 130,
+                                // symbolOffset: [-50, 0],
+                                label: {
+                                    position: 'start',
+                                    formatter: 'Average',
+                                    distance: 10
                                 },
-                                {
-                                    yAxis: 200,
-                                    symbol: 'diamond',
-                                    symbolRotate: 45
-                                },
-                                {
-                                    yAxis: 250,
-                                    symbol: 'pin',
-                                    symbolRotate: 45
-                                },
-                                {
-                                    yAxis: 300,
-                                    symbol: 'circle',
-                                    symbolRotate: 90
-                                },
-                                [{
-                                    symbol: 'rect',
-                                    x: '90%',
-                                    yAxis: 'average',
-                                    symbolRotate: 0,
-                                    symbolOffset: [50, 0]
-                                }, {
-                                    symbol: 'triangle',
-                                    symbolRotate: 130,
-                                   // symbolOffset: [-50, 0],
-                                    label: {
-                                        position: 'start',
-                                        formatter: 'Average',
-                                        distance: 10
-                                    },
-                                    type: 'average',
-                                    lineStyle: {
-                                        color: '#14c4ba'
-                                    }
+                                type: 'average',
+                                lineStyle: {
+                                    color: '#14c4ba'
                                 }
-                                ]
-                                ]
                             }
-                        }]
-                    };
+                            ]
+                            ]
+                        }
+                    }]
+                };
 
-                    chart.setOption(option);
-                })
-
+                chart.setOption(option);
                 window.onresize = chart.resize;
             });
+
 
         </script>
     </body>

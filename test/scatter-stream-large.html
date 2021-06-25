@@ -43,125 +43,121 @@ under the License.
         var ys = [4368000, 4537000];
 
         require([
-            'echarts'
+            'echarts',
+            'map/js/world'
         ], function (echarts) {
+            var count = 35663;
+            var lngCount = 1000;
+            var chart;
 
-            $.get('./data/map/json/world.json', function (worldJson) {
-                echarts.registerMap('world', worldJson);
+            var points = [];
 
-                var count = 35663;
-                var lngCount = 1000;
-                var chart;
+            var lngStep = 0.3;
+            var latStep = 1;
+            var lng0 = -160;
+            var lng1 = lng0 + lngCount * lngStep;
+            var lat0 = 0;
+            var lat1 = lat0 + Math.floor(count / lngCount) * latStep;
 
-                var points = [];
+            for (var i = 0; i < count; i++) {
+                var iLng = i % lngCount;
+                var iLat = Math.floor(i / lngCount);
+                var lng = lng0 + iLng * lngStep;
+                var lat = lat0 + iLat * latStep;
+                points.push([lng, lat]);
+            }
 
-                var lngStep = 0.3;
-                var latStep = 1;
-                var lng0 = -160;
-                var lng1 = lng0 + lngCount * lngStep;
-                var lat0 = 0;
-                var lat1 = lat0 + Math.floor(count / lngCount) * latStep;
-
-                for (var i = 0; i < count; i++) {
-                    var iLng = i % lngCount;
-                    var iLat = Math.floor(i / lngCount);
-                    var lng = lng0 + iLng * lngStep;
-                    var lat = lat0 + iLat * latStep;
-                    points.push([lng, lat]);
-                }
-
-                var option = {
-                    title: {
-                        text: 'World Flights',
-                        left: 'center',
-                        textStyle: {
-                            color: '#eee'
+            var option = {
+                title: {
+                    text: 'World Flights',
+                    left: 'center',
+                    textStyle: {
+                        color: '#eee'
+                    }
+                },
+                backgroundColor: '#003',
+                tooltip: {
+                    formatter: function (param) {
+                        return 'Point: ' + param.value[0] + ', ' + param.value[1];
+                    }
+                },
+                geo: {
+                    map: 'world',
+                    left: 0,
+                    right: 0,
+                    zoom: 0.5,
+                    roam: true,
+                    silent: true,
+                    itemStyle: {
+                        normal: {
+                            borderColor: '#003',
+                            color: '#005'
                         }
-                    },
-                    backgroundColor: '#003',
-                    tooltip: {
-                        formatter: function (param) {
-                            return 'Point: ' + param.value[0] + ', ' + param.value[1];
-                        }
-                    },
-                    geo: {
-                        map: 'world',
-                        left: 0,
-                        right: 0,
-                        zoom: 0.5,
-                        roam: true,
-                        silent: true,
-                        itemStyle: {
-                            normal: {
-                                borderColor: '#003',
-                                color: '#005'
+                    }
+                },
+                series: [{
+                    type: 'scatter',
+                    coordinateSystem: 'geo',
+                    blendModel: 'lighter',
+                    data: points,
+                    symbol: 'rect',
+                    symbolSize: 6,
+                    large: true,
+                    // large: false,
+                    largeThreshold: 100,
+                    progressiveThreshold: 101
+                }, {
+                    type: 'scatter',
+                    coordinateSystem: 'geo',
+                    symbolSize: 5,
+                    color: ['green'],
+                    data: [
+                        {
+                            value: [lng0, lat0],
+                            label: {
+                                show: true,
+                                position: 'top',
+                                formatter: 'bottom-left'
+                            }
+                        }, {
+                            value: [lng1, lat0],
+                            label: {
+                                show: true,
+                                position: 'top',
+                                formatter: 'bottom-right'
+                            }
+                        }, {
+                            value: [lng0, lat1],
+                            label: {
+                                show: true,
+                                position: 'bottom',
+                                formatter: 'top-left'
+                            }
+                        }, {
+                            value: [lng1, lat1],
+                            label: {
+                                show: true,
+                                position: 'bottom',
+                                formatter: 'top-right'
                             }
                         }
-                    },
-                    series: [{
-                        type: 'scatter',
-                        coordinateSystem: 'geo',
-                        blendModel: 'lighter',
-                        data: points,
-                        symbol: 'rect',
-                        symbolSize: 6,
-                        large: true,
-                        // large: false,
-                        largeThreshold: 100,
-                        progressiveThreshold: 101
-                    }, {
-                        type: 'scatter',
-                        coordinateSystem: 'geo',
-                        symbolSize: 5,
-                        color: ['green'],
-                        data: [
-                            {
-                                value: [lng0, lat0],
-                                label: {
-                                    show: true,
-                                    position: 'top',
-                                    formatter: 'bottom-left'
-                                }
-                            }, {
-                                value: [lng1, lat0],
-                                label: {
-                                    show: true,
-                                    position: 'top',
-                                    formatter: 'bottom-right'
-                                }
-                            }, {
-                                value: [lng0, lat1],
-                                label: {
-                                    show: true,
-                                    position: 'bottom',
-                                    formatter: 'top-left'
-                                }
-                            }, {
-                                value: [lng1, lat1],
-                                label: {
-                                    show: true,
-                                    position: 'bottom',
-                                    formatter: 'top-right'
-                                }
-                            }
-                        ]
-                    }]
-                };
+                    ]
+                }]
+            };
 
-                var chart = testHelper.create(echarts, 'main0', {
-                    title: [
-                        count + ' points should be rendered in the area of the 4 green points',
-                        '( large:true and el.incremetal = true) ',
-                        'And check roam.'
-                    ],
-                    option: option,
-                    height: 550
-                });
-                chart.on('finished', function () {
-                    console.log('finished');
-                });
-
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    count + ' points should be rendered in the area of the 4 green points',
+                    '( large:true and el.incremetal = true) ',
+                    'And check roam.'
+                ],
+                option: option,
+                height: 550
             });
+            chart.on('finished', function () {
+                console.log('finished');
+            });
+
         });
 
         </script>

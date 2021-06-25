@@ -38,12 +38,11 @@ under the License.
             var myChart;
 
             require([
-                'echarts'
+                'echarts',
+                'map/js/world'
             ], function (ec) {
 
                 echarts = ec;
-
-require(['map/js/world'], function () {
 
                 chart = myChart = echarts.init(document.getElementById('main'), null, {
 
@@ -490,8 +489,6 @@ option = {
 // -------------------------------------------------------------------
 // -------------------------------------------------------------------
                 chart.setOption(option);
-
-})
 
             });
 

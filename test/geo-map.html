@@ -455,185 +455,182 @@ under the License.
                 'echarts',
                 'map/js/china'
             ], function (echarts) {
+                var chart = echarts.init(document.getElementById('main'));
 
-                require(['map/js/china'], function () {
-                    var chart = echarts.init(document.getElementById('main'));
-
-                    chart.setOption({
-                        aria: {
-                            show: true
+                chart.setOption({
+                    aria: {
+                        show: true
+                    },
+                    tooltip: {},
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        data:['categoryA','categoryB','categoryC']
+                    },
+                    visualMap: {
+                        min: 0,
+                        max: 1500,
+                        left: 'left',
+                        top: 'bottom',
+                        text: ['High','Low'],
+                        seriesIndex: [1, 2, 3],
+                        inRange: {
+                            color: ['#006edd', '#e0ffff']
                         },
-                        tooltip: {},
-                        legend: {
-                            orient: 'vertical',
-                            left: 'left',
-                            data:['categoryA','categoryB','categoryC']
+                        calculable : true
+                    },
+                    geo: {
+                        map: 'china',
+                        roam: true,
+                        label: {
+                            normal: {
+                                show: true,
+                                textStyle: {
+                                    color: 'rgba(0,0,0,0.4)'
+                                }
+                            }
                         },
-                        visualMap: {
-                            min: 0,
-                            max: 1500,
-                            left: 'left',
-                            top: 'bottom',
-                            text: ['High','Low'],
-                            seriesIndex: [1, 2, 3],
-                            inRange: {
-                                color: ['#006edd', '#e0ffff']
+                        itemStyle: {
+                            normal:{
+                                borderColor: 'rgba(0, 0, 0, 0.2)'
                             },
-                            calculable : true
-                        },
-                        geo: {
-                            map: 'china',
-                            roam: true,
+                            emphasis:{
+                                color: null,
+                                areaColor: null,
+                                shadowOffsetX: 0,
+                                shadowOffsetY: 0,
+                                shadowBlur: 20,
+                                borderWidth: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    },
+                    series : [
+                        {
+                            name: 'pm2.5',
+                            type: 'scatter',
+                            coordinateSystem: 'geo',
+                            data: convertData(data),
+                            symbolSize: function (val) {
+                                return val[2] / 10;
+                            },
                             label: {
                                 normal: {
-                                    show: true,
-                                    textStyle: {
-                                        color: 'rgba(0,0,0,0.4)'
-                                    }
+                                    formatter: '{b}',
+                                    position: 'right',
+                                    show: false
+                                },
+                                emphasis: {
+                                    show: true
                                 }
                             },
                             itemStyle: {
-                                normal:{
-                                    borderColor: 'rgba(0, 0, 0, 0.2)'
-                                },
-                                emphasis:{
-                                    color: null,
-                                    areaColor: null,
-                                    shadowOffsetX: 0,
-                                    shadowOffsetY: 0,
-                                    shadowBlur: 20,
-                                    borderWidth: 0,
-                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                normal: {
+                                    color: '#ddb926'
                                 }
                             }
                         },
-                        series : [
-                           {
-                               name: 'pm2.5',
-                               type: 'scatter',
-                               coordinateSystem: 'geo',
-                               data: convertData(data),
-                               symbolSize: function (val) {
-                                   return val[2] / 10;
-                               },
-                               label: {
-                                   normal: {
-                                       formatter: '{b}',
-                                       position: 'right',
-                                       show: false
-                                   },
-                                   emphasis: {
-                                       show: true
-                                   }
-                               },
-                               itemStyle: {
-                                   normal: {
-                                       color: '#ddb926'
-                                   }
-                               }
-                            },
 
-                            {
-                                name: 'categoryA',
-                                type: 'map',
-                                geoIndex: 0,
-                                // tooltip: {show: false},
-                                markPoint: {
-                                    data: [{
-                                        coord: [115.97, 29.71]
-                                    }]
-                                },
-                                data:[
-                                    {name: '北京',value: Math.round(Math.random()*1000)},
-                                    {name: '天津',value: Math.round(Math.random()*1000)},
-                                    {name: '上海',value: Math.round(Math.random()*1000)},
-                                    {name: '重庆',value: Math.round(Math.random()*1000)},
-                                    {name: '河北',value: Math.round(Math.random()*1000)},
-                                    {name: '河南',value: Math.round(Math.random()*1000)},
-                                    {name: '云南',value: Math.round(Math.random()*1000)},
-                                    {name: '辽宁',value: Math.round(Math.random()*1000)},
-                                    {name: '黑龙江',value: Math.round(Math.random()*1000)},
-                                    {name: '湖南',value: Math.round(Math.random()*1000)},
-                                    {name: '安徽',value: Math.round(Math.random()*1000)},
-                                    {name: '山东',value: Math.round(Math.random()*1000)},
-                                    {name: '新疆',value: Math.round(Math.random()*1000)},
-                                    {name: '江苏',value: Math.round(Math.random()*1000)},
-                                    {name: '浙江',value: Math.round(Math.random()*1000)},
-                                    {name: '江西',value: Math.round(Math.random()*1000)},
-                                    {name: '湖北',value: Math.round(Math.random()*1000)},
-                                    {name: '广西',value: Math.round(Math.random()*1000)},
-                                    {name: '甘肃',value: Math.round(Math.random()*1000)},
-                                    {name: '山西',value: Math.round(Math.random()*1000)},
-                                    {name: '内蒙古',value: Math.round(Math.random()*1000)},
-                                    {name: '陕西',value: Math.round(Math.random()*1000)},
-                                    {name: '吉林',value: Math.round(Math.random()*1000)},
-                                    {name: '福建',value: Math.round(Math.random()*1000)},
-                                    {name: '贵州',value: Math.round(Math.random()*1000)},
-                                    {name: '广东',value: Math.round(Math.random()*1000)},
-                                    {name: '青海',value: Math.round(Math.random()*1000)},
-                                    {name: '西藏',value: Math.round(Math.random()*1000)},
-                                    {name: '四川',value: Math.round(Math.random()*1000)},
-                                    {name: '宁夏',value: Math.round(Math.random()*1000)},
-                                    {name: '海南',value: Math.round(Math.random()*1000)},
-                                    {name: '台湾',value: Math.round(Math.random()*1000)},
-                                    {name: '香港',value: Math.round(Math.random()*1000)},
-                                    {name: '澳门',value: Math.round(Math.random()*1000)}
-                                ]
+                        {
+                            name: 'categoryA',
+                            type: 'map',
+                            geoIndex: 0,
+                            // tooltip: {show: false},
+                            markPoint: {
+                                data: [{
+                                    coord: [115.97, 29.71]
+                                }]
                             },
-                            {
-                                name: 'categoryB',
-                                type: 'map',
-                                geoIndex: 0,
-                                data:[
-                                    {name: '北京',value: Math.round(Math.random()*1000)},
-                                    {name: '天津',value: Math.round(Math.random()*1000)},
-                                    {name: '上海',value: Math.round(Math.random()*1000)},
-                                    {name: '重庆',value: Math.round(Math.random()*1000)},
-                                    {name: '河北',value: Math.round(Math.random()*1000)},
-                                    {name: '安徽',value: Math.round(Math.random()*1000)},
-                                    {name: '新疆',value: Math.round(Math.random()*1000)},
-                                    {name: '浙江',value: Math.round(Math.random()*1000)},
-                                    {name: '江西',value: Math.round(Math.random()*1000)},
-                                    {name: '山西',value: Math.round(Math.random()*1000)},
-                                    {name: '内蒙古',value: Math.round(Math.random()*1000)},
-                                    {name: '吉林',value: Math.round(Math.random()*1000)},
-                                    {name: '福建',value: Math.round(Math.random()*1000)},
-                                    {name: '广东',value: Math.round(Math.random()*1000)},
-                                    {name: '西藏',value: Math.round(Math.random()*1000)},
-                                    {name: '四川',value: Math.round(Math.random()*1000)},
-                                    {name: '宁夏',value: Math.round(Math.random()*1000)},
-                                    {name: '香港',value: Math.round(Math.random()*1000)},
-                                    {name: '澳门',value: Math.round(Math.random()*1000)}
-                                ]
-                            },
-                            {
-                                name: 'categoryC',
-                                type: 'map',
-                                geoIndex: 0,
-                                data:[
-                                    {name: '北京',value: Math.round(Math.random()*1000)},
-                                    {name: '天津',value: Math.round(Math.random()*1000)},
-                                    {name: '上海',value: Math.round(Math.random()*1000)},
-                                    {name: '广东',value: Math.round(Math.random()*1000)},
-                                    {name: '台湾',value: Math.round(Math.random()*1000)},
-                                    {name: '香港',value: Math.round(Math.random()*1000)},
-                                    {name: '澳门',value: Math.round(Math.random()*1000)}
-                                ]
-                            }
-                        ]
-                    });
-
-                    chart.on('click', function (param) {
-                        alert('asdf');
-                    });
-                    // setTimeout(function () {
-                    //     chart.setOption({
-                    //         series: [{
-                    //             zoom: 5
-                    //         }]
-                    //     });
-                    // }, 2000);
+                            data:[
+                                {name: '北京',value: Math.round(Math.random()*1000)},
+                                {name: '天津',value: Math.round(Math.random()*1000)},
+                                {name: '上海',value: Math.round(Math.random()*1000)},
+                                {name: '重庆',value: Math.round(Math.random()*1000)},
+                                {name: '河北',value: Math.round(Math.random()*1000)},
+                                {name: '河南',value: Math.round(Math.random()*1000)},
+                                {name: '云南',value: Math.round(Math.random()*1000)},
+                                {name: '辽宁',value: Math.round(Math.random()*1000)},
+                                {name: '黑龙江',value: Math.round(Math.random()*1000)},
+                                {name: '湖南',value: Math.round(Math.random()*1000)},
+                                {name: '安徽',value: Math.round(Math.random()*1000)},
+                                {name: '山东',value: Math.round(Math.random()*1000)},
+                                {name: '新疆',value: Math.round(Math.random()*1000)},
+                                {name: '江苏',value: Math.round(Math.random()*1000)},
+                                {name: '浙江',value: Math.round(Math.random()*1000)},
+                                {name: '江西',value: Math.round(Math.random()*1000)},
+                                {name: '湖北',value: Math.round(Math.random()*1000)},
+                                {name: '广西',value: Math.round(Math.random()*1000)},
+                                {name: '甘肃',value: Math.round(Math.random()*1000)},
+                                {name: '山西',value: Math.round(Math.random()*1000)},
+                                {name: '内蒙古',value: Math.round(Math.random()*1000)},
+                                {name: '陕西',value: Math.round(Math.random()*1000)},
+                                {name: '吉林',value: Math.round(Math.random()*1000)},
+                                {name: '福建',value: Math.round(Math.random()*1000)},
+                                {name: '贵州',value: Math.round(Math.random()*1000)},
+                                {name: '广东',value: Math.round(Math.random()*1000)},
+                                {name: '青海',value: Math.round(Math.random()*1000)},
+                                {name: '西藏',value: Math.round(Math.random()*1000)},
+                                {name: '四川',value: Math.round(Math.random()*1000)},
+                                {name: '宁夏',value: Math.round(Math.random()*1000)},
+                                {name: '海南',value: Math.round(Math.random()*1000)},
+                                {name: '台湾',value: Math.round(Math.random()*1000)},
+                                {name: '香港',value: Math.round(Math.random()*1000)},
+                                {name: '澳门',value: Math.round(Math.random()*1000)}
+                            ]
+                        },
+                        {
+                            name: 'categoryB',
+                            type: 'map',
+                            geoIndex: 0,
+                            data:[
+                                {name: '北京',value: Math.round(Math.random()*1000)},
+                                {name: '天津',value: Math.round(Math.random()*1000)},
+                                {name: '上海',value: Math.round(Math.random()*1000)},
+                                {name: '重庆',value: Math.round(Math.random()*1000)},
+                                {name: '河北',value: Math.round(Math.random()*1000)},
+                                {name: '安徽',value: Math.round(Math.random()*1000)},
+                                {name: '新疆',value: Math.round(Math.random()*1000)},
+                                {name: '浙江',value: Math.round(Math.random()*1000)},
+                                {name: '江西',value: Math.round(Math.random()*1000)},
+                                {name: '山西',value: Math.round(Math.random()*1000)},
+                                {name: '内蒙古',value: Math.round(Math.random()*1000)},
+                                {name: '吉林',value: Math.round(Math.random()*1000)},
+                                {name: '福建',value: Math.round(Math.random()*1000)},
+                                {name: '广东',value: Math.round(Math.random()*1000)},
+                                {name: '西藏',value: Math.round(Math.random()*1000)},
+                                {name: '四川',value: Math.round(Math.random()*1000)},
+                                {name: '宁夏',value: Math.round(Math.random()*1000)},
+                                {name: '香港',value: Math.round(Math.random()*1000)},
+                                {name: '澳门',value: Math.round(Math.random()*1000)}
+                            ]
+                        },
+                        {
+                            name: 'categoryC',
+                            type: 'map',
+                            geoIndex: 0,
+                            data:[
+                                {name: '北京',value: Math.round(Math.random()*1000)},
+                                {name: '天津',value: Math.round(Math.random()*1000)},
+                                {name: '上海',value: Math.round(Math.random()*1000)},
+                                {name: '广东',value: Math.round(Math.random()*1000)},
+                                {name: '台湾',value: Math.round(Math.random()*1000)},
+                                {name: '香港',value: Math.round(Math.random()*1000)},
+                                {name: '澳门',value: Math.round(Math.random()*1000)}
+                            ]
+                        }
+                    ]
                 });
+
+                chart.on('click', function (param) {
+                    alert('asdf');
+                });
+                // setTimeout(function () {
+                //     chart.setOption({
+                //         series: [{
+                //             zoom: 5
+                //         }]
+                //     });
+                // }, 2000);
             });
 
         </script>

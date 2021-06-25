@@ -60,73 +60,70 @@ under the License.
             var chart;
 
             require([
-                'echarts'
+                'echarts',
+                'map/js/china'
             ], function (echarts) {
 
-                require(['map/js/china'], function () {
-
-                    option = {
-                        tooltip: {
-                            trigger: 'item',
-                            formatter: '{b}'
-                        },
-                        legend: {
-                            top: 0,
-                            left: 'center',
-                            data: ['中国A', '中国B']
-                        },
-                        series: [
-                            {
-                                name: '中国A',
-                                type: 'map',
-                                mapType: 'china',
-                                selectedMode : 'multiple',
-                                label: {
-                                    normal: {
-                                        show: true
-                                    },
-                                    emphasis: {
-                                        show: true
-                                    }
+                option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{b}'
+                    },
+                    legend: {
+                        top: 0,
+                        left: 'center',
+                        data: ['中国A', '中国B']
+                    },
+                    series: [
+                        {
+                            name: '中国A',
+                            type: 'map',
+                            mapType: 'china',
+                            selectedMode : 'multiple',
+                            label: {
+                                normal: {
+                                    show: true
                                 },
-                                roam: true,
-                                nameMap: {
-                                    '广东': 'guangdong',
-                                    '广西': 'guangxi'
-                                },
-                                data:[
-                                    {name:'广东', selected:true}
-                                ]
+                                emphasis: {
+                                    show: true
+                                }
                             },
-                            {
-                                name: '中国B',
-                                type: 'map',
-                                mapType: 'china',
-                                selectedMode : 'multiple',
-                                label: {
-                                    normal: {
-                                        show: true
-                                    },
-                                    emphasis: {
-                                        show: true
-                                    }
+                            roam: true,
+                            nameMap: {
+                                '广东': 'guangdong',
+                                '广西': 'guangxi'
+                            },
+                            data:[
+                                {name:'广东', selected:true}
+                            ]
+                        },
+                        {
+                            name: '中国B',
+                            type: 'map',
+                            mapType: 'china',
+                            selectedMode : 'multiple',
+                            label: {
+                                normal: {
+                                    show: true
                                 },
-                                roam: true,
-                                // nameMap: {
-                                //     '广东': 'guangdong',
-                                //     '广西': 'guangxi'
-                                // },
-                                data:[
-                                    {name:'广东', selected: true},
-                                    {name:'山东', selected: true}
-                                ]
-                            }
-                        ]
-                    };
+                                emphasis: {
+                                    show: true
+                                }
+                            },
+                            roam: true,
+                            // nameMap: {
+                            //     '广东': 'guangdong',
+                            //     '广西': 'guangxi'
+                            // },
+                            data:[
+                                {name:'广东', selected: true},
+                                {name:'山东', selected: true}
+                            ]
+                        }
+                    ]
+                };
 
-                    chart = testHelper.createChart(echarts, 'main0', option);
-
-                });
+                chart = testHelper.createChart(echarts, 'main0', option);
 
             });
 

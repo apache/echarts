@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// TODO: Cases that needs lots of network loading still may fail. Like bmap-xxx
+
 const puppeteer = require('puppeteer');
 const slugify = require('slugify');
 const fse = require('fs-extra');
@@ -28,6 +30,8 @@ const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, getE
 const {origin} = require('./config');
 const cwebpBin = require('cwebp-bin');
 const { execFile } = require('child_process');
+const {runTasks} = require('./task');
+const chalk = require('chalk');
 
 // Handling input arguments.
 program
@@ -37,6 +41,7 @@ program
     .option('--expected <expected>', 'Expected version')
     .option('--actual <actual>', 'Actual version')
     .option('--renderer <renderer>', 'svg/canvas renderer')
+    .option('--threads <threads>', 'How many threads to run concurrently')
     .option('--no-save', 'Don\'t save result')
     .option('--dir <dir>', 'Out dir');
 
@@ -44,13 +49,18 @@ program.parse(process.argv);
 
 program.speed = +program.speed || 1;
 program.actual = program.actual || 'local';
-program.expected = program.expected || '4.2.1';
+program.threads = +program.threads || 1;
 program.renderer = (program.renderer || 'canvas').toLowerCase();
 program.dir = program.dir || (__dirname + '/tmp');
 
 if (!program.tests) {
     throw new Error('Tests are required');
 }
+if (!program.expected) {
+    throw new Error('Expected version is required');
+}
+
+console.log('Playback Ratio: ', program.speed);
 
 function getScreenshotDir() {
     return `${program.dir}/__screenshot__`;
@@ -125,6 +135,26 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
     };
 }
 
+async function waitForNetworkIdle(page) {
+    let count = 0;
+    const started = () => (count = count + 1);
+    const ended = () => (count = count - 1);
+    page.on('request', started);
+    page.on('requestfailed', ended);
+    page.on('requestfinished', ended);
+    return async (timeout = 5000) => {
+        while (count > 0) {
+            await waitTime(100);
+            if ((timeout = timeout - 100) < 0) {
+                console.error('Timeout');
+            }
+        }
+        page.off('request', started);
+        page.off('requestfailed', ended);
+        page.off('requestfinished', ended);
+    };
+  }
+
 
 async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     const fileUrl = testOpt.fileUrl;
@@ -170,6 +200,12 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     await page.exposeFunction('__VRT_MOUSE_UP__', async () =>  {
         await page.mouse.up();
     });
+    await page.exposeFunction('__VRT_LOAD_ERROR__', async (err) =>  {
+        errors.push(err);
+    });
+    // await page.exposeFunction('__VRT_WAIT_FOR_NETWORK_IDLE__', async () =>  {
+    //     await waitForNetworkIdle();
+    // });
 
     // TODO should await exposeFunction here
     const waitForScreenshot = new Promise((resolve) => {
@@ -213,6 +249,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     await page.evaluateOnNewDocument(runtimeCode);
 
     page.on('console', msg => {
+        // console.log('Page Log: ', msg.text());
         logs.push(msg.text());
     });
     page.on('pageerror', error => {
@@ -244,10 +281,12 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
 
         let actions = [];
         try {
-            let actContent = fs.readFileSync(path.join(__dirname, 'actions', testOpt.name + '.json'));
+            let actContent = await fse.readFile(path.join(__dirname, 'actions', testOpt.name + '.json'));
             actions = JSON.parse(actContent);
         }
-        catch (e) {}
+        catch (e) {
+            // console.log(e);
+        }
         if (actions.length > 0) {
             try {
                 page.evaluate((actions) => {
@@ -284,11 +323,6 @@ async function writePNG(diffPNG, diffPath) {
 };
 
 async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVersion) {
-    if (program.renderer === 'svg' && testOpt.ignoreSVG) {
-        console.log(testOpt.name + ' don\'t support svg testing.');
-        return;
-    }
-
     if (program.save) {
         testOpt.status === 'running';
 
@@ -324,9 +358,11 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
 
                 // Remove png files
                 try {
-                    fs.unlinkSync(actual.rawScreenshotPath);
-                    fs.unlinkSync(expected.rawScreenshotPath);
-                    fs.unlinkSync(diffPath);
+                    await Promise.all([
+                        fse.unlink(actual.rawScreenshotPath),
+                        fse.unlink(expected.rawScreenshotPath),
+                        fse.unlink(diffPath)
+                    ]);
                 }
                 catch (e) {}
             }
@@ -370,26 +406,37 @@ async function runTests(pendingTests) {
         browser.close();
     });
 
+    async function eachTask(testOpt) {
+        console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}`);
+        try {
+            await runTest(browser, testOpt, runtimeCode, program.expected, program.actual);
+        }
+        catch (e) {
+            // Restore status
+            testOpt.status = 'unsettled';
+            console.error(e);
+        }
+
+        if (program.save) {
+            process.send(testOpt);
+        }
+    }
+
+    // console.log('Running threads: ', program.threads);
+    // await runTasks(pendingTests, async (testOpt) => {
+    //     await eachTask(testOpt);
+    // }, program.threads);
+
+
     try {
         for (let testOpt of pendingTests) {
-            console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}`);
-            try {
-                await runTest(browser, testOpt, runtimeCode, program.expected, program.actual);
-            }
-            catch (e) {
-                // Restore status
-                testOpt.status = 'unsettled';
-                console.log(e);
-            }
-
-            if (program.save) {
-                process.send(testOpt);
-            }
+            await eachTask(testOpt);
         }
     }
     catch(e) {
         console.log(e);
     }
+
 
     await browser.close();
 }

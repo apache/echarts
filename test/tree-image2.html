@@ -41,57 +41,55 @@ under the License.
         <div id="main"></div>
         <script>
             require([
-                'echarts'
-            ], function (echarts) {
-                $.getJSON('./data/tree-simple.json', function (data) {
+                'echarts',
+                './data/tree-simple.json'
+            ], function (echarts, data) {
+                var option = {
+                    tooltip: {
+                        trigger: 'item',
+                        triggerOn: 'mousemove'
+                    },
+                    series:[
+                        {
+                            type: 'tree',
 
-                    var option = {
-                        tooltip: {
-                            trigger: 'item',
-                            triggerOn: 'mousemove'
-                        },
-                        series:[
-                            {
-                                type: 'tree',
+                            data: [data],
+                            roam: true,
+                            top: '2%',
+                            left: '7%',
+                            bottom: '1%',
+                            right: '20%',
 
-                                data: [data],
-                                roam: true,
-                                top: '2%',
-                                left: '7%',
-                                bottom: '1%',
-                                right: '20%',
+                            symbol: 'image://https://github.githubassets.com/images/icons/emoji/electron.png',
 
-                                symbol: 'image://https://github.githubassets.com/images/icons/emoji/electron.png',
+                            symbolSize: 10,
 
-                                symbolSize: 10,
+                            label: {
+                                position: 'left',
+                                verticalAlign: 'middle',
+                                align: 'right'
+                            },
 
+                            leaves: {
                                 label: {
-                                    position: 'left',
+                                    position: 'right',
                                     verticalAlign: 'middle',
-                                    align: 'right'
-                                },
+                                    align: 'left'
+                                }
+                            },
 
-                                leaves: {
-                                    label: {
-                                        position: 'right',
-                                        verticalAlign: 'middle',
-                                        align: 'left'
-                                    }
-                                },
+                            expandAndCollapse: true,
+                            animationDuration: 550,
+                            animationDurationUpdate: 750
+                        }
+                    ]
+                };
 
-                                expandAndCollapse: true,
-                                animationDuration: 550,
-                                animationDurationUpdate: 750
-                            }
-                        ]
-                    };
-
-                    var chart = testHelper.create(echarts, 'main', {
-                        title: 'Fix the issue #12279 that symbols with image do not display at the first rendering',
-                        option: option
-                    });
-
+                var chart = testHelper.create(echarts, 'main', {
+                    title: 'Fix the issue #12279 that symbols with image do not display at the first rendering',
+                    option: option
                 });
+
             });
         </script>
     </body>

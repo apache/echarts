@@ -979,7 +979,11 @@ function renderNode(
             }
         );
 
+        
         const textEl = rectEl.getTextContent();
+        if (!textEl) {
+            return;
+        }
         const textStyle = textEl.style;
         const textPadding = normalizeCssArray(textStyle.padding || 0);
 

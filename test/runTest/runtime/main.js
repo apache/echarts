@@ -103,7 +103,7 @@ window.__VRT_RUN_ACTIONS__ = async function (actions, restoredActionIndex, resto
             continue;
         }
         window.scrollTo(action.scrollX, action.scrollY);
-        await actionPlayback.runAction(action, __VRT_PLAYBACK_SPEED__, index === restoredActionIndex ? restoredActionContext : null);
+        await actionPlayback.runAction(action, index === restoredActionIndex ? restoredActionContext : null);
 
     }
     actionPlayback.stop();

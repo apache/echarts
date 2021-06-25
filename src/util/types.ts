@@ -1232,7 +1232,7 @@ export interface LabelLayoutOption {
 export type LabelLayoutOptionCallback = (params: LabelLayoutOptionCallbackParams) => LabelLayoutOption;
 
 
-interface TooltipFormatterCallback<T> {
+export interface TooltipFormatterCallback<T> {
     /**
      * For sync callback
      * params will be an array on axis trigger.
@@ -1250,16 +1250,19 @@ type TooltipBuiltinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom';
 type TooltipBoxLayoutOption = Pick<
     BoxLayoutOptionMixin, 'top' | 'left' | 'right' | 'bottom'
 >;
+
+export type TooltipPositionCallbackParams = CallbackDataParams | CallbackDataParams[];
+
 /**
  * Position relative to the hoverred element. Only available when trigger is item.
  */
-interface PositionCallback {
+export interface TooltipPositionCallback {
     (
         point: [number, number],
         /**
          * params will be an array on axis trigger.
          */
-        params: CallbackDataParams | CallbackDataParams[],
+        params: TooltipPositionCallbackParams,
         /**
          * Will be HTMLDivElement when renderMode is html
          * Otherwise it's graphic.Text
@@ -1279,7 +1282,7 @@ interface PositionCallback {
              */
             viewSize: [number, number]
         }
-    ): number[] | string[] | TooltipBuiltinPosition | TooltipBoxLayoutOption
+    ): Array<number | string> | TooltipBuiltinPosition | TooltipBoxLayoutOption
 }
 /**
  * Common tooltip option
@@ -1306,7 +1309,7 @@ export interface CommonTooltipOption<FormatterParams> {
      *
      * Support to be a callback
      */
-    position?: (number | string)[] | TooltipBuiltinPosition | PositionCallback | TooltipBoxLayoutOption
+    position?: (number | string)[] | TooltipBuiltinPosition | TooltipPositionCallback | TooltipBoxLayoutOption
 
     confine?: boolean
 

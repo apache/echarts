@@ -124,13 +124,12 @@ const app = new Vue({
         // List of all runs.
         showRunsDialog: false,
         testsRuns: [],
+        loadingTestsRuns: false,
 
         pageInvisible: false,
 
         runConfig: Object.assign({
             sortBy: 'name',
-
-            // replaySpeed: 5,
 
             isActualNightly: false,
             isExpectedNightly: false,
@@ -356,6 +355,7 @@ const app = new Vue({
 
         showAllTestsRuns() {
             this.showRunsDialog = true;
+            this.loadingTestsRuns = true;
             socket.emit('getAllTestsRuns');
         },
 
@@ -476,6 +476,7 @@ socket.on('abort', res => {
 
 socket.on('getAllTestsRuns_return', res => {
     app.testsRuns = res.runs;
+    app.loadingTestsRuns = false;
 });
 socket.on('genTestsRunReport_return', res => {
     window.open(res.reportUrl, '_blank');

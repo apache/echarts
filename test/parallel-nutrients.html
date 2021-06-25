@@ -52,32 +52,24 @@ under the License.
             var groupCategories = [];
             var groupColors = [];
 
-            require(['echarts'], function (ec) {
+            require([
+                'echarts',
+                './data/nutrients.json'
+            ], function (ec, data) {
 
-                $.getJSON('./data/nutrients.json', function (data) {
-                    echarts = ec;
-                    colorTool = echarts.color;
-
-                    normalizeData(data);
-
-                    chart = myChart = echarts.init(document.getElementById('main'));
-
-                    console.time('render');
-                    chart.setOption(getOption(data));
-                    console.timeEnd('render');
-
-                    chart.on('axisAreaSelected', function (event) {
-                        // var indices = chart.getModel().getSeries()[0].getRawIndicesByActiveState('active');
-                        // console.log('北京: ', indices);
-                    });
-
-                });
+                echarts = ec;
+                colorTool = echarts.color;
 
                 var indices = {
                     name: 0,
                     group: 1,
                     id: 16
                 };
+
+                normalizeData(data);
+
+                chart = myChart = echarts.init(document.getElementById('main'));
+
                 var schema = [
                     {name: 'name', index: 0},
                     {name: 'group', index: 1},
@@ -247,6 +239,15 @@ under the License.
                         ]
                     };
                 }
+
+                console.time('render');
+                chart.setOption(getOption(data));
+                console.timeEnd('render');
+
+                chart.on('axisAreaSelected', function (event) {
+                    // var indices = chart.getModel().getSeries()[0].getRawIndicesByActiveState('active');
+                    // console.log('北京: ', indices);
+                });
 
             });
 

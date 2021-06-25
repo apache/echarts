@@ -60,10 +60,8 @@ export class ActionPlayback {
         this._isLastOpMousewheel = ctx.isLastOpMouseWheel;
     }
 
-    async runAction(action, playbackSpeed, ctxToRestore) {
+    async runAction(action, ctxToRestore) {
         this.stop();
-
-        playbackSpeed = playbackSpeed || 1;
 
         if (!action.ops.length) {
             return;
@@ -97,14 +95,19 @@ export class ActionPlayback {
 
         return new Promise((resolve, reject) => {
             async function tick() {
-                // Date has multiplied playbackSpeed
                 let current = Date.now();
                 let dTime = current - self._current;
                 self._elapsedTime += dTime;
                 self._current = current;
 
                 try {
-                    await self._update(takeScreenshot, playbackSpeed);
+                    // Execute all if there are multiple ops in one frame.
+                    do {
+                        const executed = await self._update(takeScreenshot);
+                        if (!executed) {
+                            break;
+                        }
+                    } while (true);
                 }
                 catch (e) {
                     // Stop running and throw error.
@@ -132,10 +135,10 @@ export class ActionPlayback {
         }
     }
 
-    async _update(takeScreenshot, playbackSpeed) {
+    async _update(takeScreenshot) {
         let op = this._ops[this._currentOpIndex];
 
-        if (op.time > this._elapsedTime) {
+        if (!op || (op.time > this._elapsedTime)) {
             // Not yet.
             return;
         }
@@ -194,7 +197,7 @@ export class ActionPlayback {
         if (nextOp && nextOp.type === 'screenshot-auto') {
             let delay = nextOp.delay == null ? 400 : nextOp.delay;
             // TODO Configuration time
-            await waitTime(delay / playbackSpeed);
+            await waitTime(delay);
             await takeScreenshot();
             screenshotTaken = true;
             this._currentOpIndex++;
@@ -207,5 +210,7 @@ export class ActionPlayback {
             }
             this._isLastOpMousewheel = false;
         }
+
+        return true;
     }
 };

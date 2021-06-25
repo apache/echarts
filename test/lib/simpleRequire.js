@@ -58,6 +58,18 @@
     // Promise to get modules exports.
     var mods = {};
 
+    function handleLoadError(url, resolve, reject) {
+        var errMsg = 'require: failed to load ' + url;
+        if (typeof __VRT_LOAD_ERROR__ !== 'undefined') {
+            // Not block the visual regression testing.
+            __VRT_LOAD_ERROR__(errMsg);
+            resolve();
+        }
+        else {
+            reject(errMsg);
+        }
+    }
+
     function loadText(url) {
         return new Promise(function (resolve, reject) {
             var xhr = new XMLHttpRequest();
@@ -66,11 +78,11 @@
                     resolve(xhr.responseText);
                 }
                 else {
-                    reject('require: failed to load ' + url);
+                    handleLoadError(url, resolve, reject);
                 }
             }
             xhr.onerror = function (e) {
-                reject('require: failed to load ' + url);
+                handleLoadError(url, resolve, reject);
             }
             xhr.open('GET', url);
             xhr.send();
@@ -91,7 +103,7 @@
                 resolve();
             }
             script.onerror = function () {
-                reject('require: failed to load ' + url);
+                handleLoadError(url, resolve, reject);
             }
             script.src = url;
             document.head.appendChild(script);

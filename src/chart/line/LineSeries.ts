@@ -42,7 +42,7 @@ import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import {Group} from '../../util/graphic';
-import {LegendSymbolParams} from '../../component/legend/LegendModel';
+import {LegendIconParams} from '../../component/legend/LegendModel';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
@@ -56,6 +56,7 @@ interface ExtraStateOption {
 export interface LineStateOption {
     itemStyle?: ItemStyleOption
     label?: SeriesLabelOption
+    endLabel?: LineEndLabelOption
 }
 
 export interface LineDataItemOption extends SymbolOptionMixin,
@@ -214,7 +215,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         hoverLayerThreshold: Infinity
     };
 
-    getLegendIcon(opt: LegendSymbolParams): ECSymbol | Group {
+    getLegendIcon(opt: LegendIconParams): ECSymbol | Group {
         const group = new Group();
 
         const line = createSymbol(
@@ -230,6 +231,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         line.setStyle(opt.lineStyle);
 
         const visualType = this.getData().getVisual('symbol');
+        const visualRotate = this.getData().getVisual('symbolRotate');
         const symbolType = visualType === 'none' ? 'circle' : visualType;
 
         // Symbol size is 80% when there is a line
@@ -240,12 +242,17 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
             (opt.itemHeight - size) / 2,
             size,
             size,
-            opt.itemStyle.fill,
-            opt.symbolKeepAspect
+            opt.itemStyle.fill
         );
         group.add(symbol);
 
         symbol.setStyle(opt.itemStyle);
+
+        const symbolRotate = opt.iconRotate === 'inherit'
+            ? visualRotate
+            : (opt.iconRotate || 0);
+        symbol.rotation = symbolRotate * Math.PI / 180;
+        symbol.setOrigin([opt.itemWidth / 2, opt.itemHeight / 2]);
 
         if (symbolType.indexOf('empty') > -1) {
             symbol.style.stroke = symbol.style.fill;
