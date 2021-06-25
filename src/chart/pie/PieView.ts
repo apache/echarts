@@ -59,8 +59,10 @@ class PiePiece extends graphic.Sector {
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const emphasisModel = itemModel.getModel('emphasis');
         const layout = data.getItemLayout(idx) as graphic.Sector['shape'];
+        // cornerRadius & innerCornerRadius may not exist in initial layout. Use `0` if null value is specified.
+        // see `setItemLayout` in `pieLayout.ts`.
         const sectorShape = extend(
-            getSectorCornerRadius(itemModel.getModel('itemStyle'), layout) || {},
+            getSectorCornerRadius(itemModel.getModel('itemStyle'), layout, true),
             layout
         );
 
