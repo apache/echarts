@@ -410,11 +410,10 @@ export function blurSeries(
     focus: InnerFocus,
     blurScope: BlurScope,
     api: ExtensionAPI,
-    excludedSeriesIndexes?: number[]
+    excludedSeriesIndices?: number[]
 ) {
     const ecModel = api.getModel();
     blurScope = blurScope || 'coordinateSystem';
-
     function leaveBlurOfIndices(data: List, dataIndices: ArrayLike<number>) {
         for (let i = 0; i < dataIndices.length; i++) {
             const itemEl = data.getItemGraphicEl(dataIndices[i]);
@@ -439,7 +438,7 @@ export function blurSeries(
     const blurredSeries: SeriesModel[] = [];
 
     ecModel.eachSeries(function (seriesModel, seriesIndex) {
-        if (excludedSeriesIndexes && excludedSeriesIndexes.includes(seriesIndex)) {
+        if (excludedSeriesIndices && excludedSeriesIndices.indexOf(seriesIndex) >= 0) {
             return;
         }
 
@@ -458,6 +457,8 @@ export function blurSeries(
             || blurScope === 'coordinateSystem' && !sameCoordSys
             // Not blur self series if focus is series.
             || focus === 'series' && sameSeries
+            // Not blur other series if focus is self
+            || focus === 'self' && !sameSeries
         )) {
             const view = api.getViewOfSeriesModel(seriesModel);
             view.group.traverse(function (child) {
@@ -516,7 +517,8 @@ export function blurComponent(
 export function blurSeriesFromHighlightPayload(
     seriesModel: SeriesModel,
     payload: HighlightPayload,
-    api: ExtensionAPI
+    api: ExtensionAPI,
+    excludedSeriesIndices: number[]
 ) {
     const seriesIndex = seriesModel.seriesIndex;
     const data = seriesModel.getData(payload.dataType);
@@ -532,12 +534,10 @@ export function blurSeriesFromHighlightPayload(
             el = data.getItemGraphicEl(current++);
         }
     }
-    const excludedSeriesIndexes = payload.seriesIndex || [];
-
     if (el) {
         const ecData = getECData(el);
         blurSeries(
-            seriesIndex, ecData.focus, ecData.blurScope, api, excludedSeriesIndexes
+            seriesIndex, ecData.focus, ecData.blurScope, api, excludedSeriesIndices
         );
     }
     else {
@@ -546,7 +546,7 @@ export function blurSeriesFromHighlightPayload(
         const focus = seriesModel.get(['emphasis', 'focus']);
         const blurScope = seriesModel.get(['emphasis', 'blurScope']);
         if (focus != null) {
-            blurSeries(seriesIndex, focus, blurScope, api, excludedSeriesIndexes);
+            blurSeries(seriesIndex, focus, blurScope, api, excludedSeriesIndices);
         }
     }
 }

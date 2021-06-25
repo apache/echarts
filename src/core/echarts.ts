@@ -1488,6 +1488,14 @@ class ECharts extends Eventful<ECEventDefinition> {
                 allLeaveBlur(ecIns._api);
             }
 
+            const excludedSeriesIndices: number[] = [];
+            if (mainType === 'series') {
+                ecModel.findComponents(condition).forEach((seriesModel: SeriesModel) => {
+                    if (seriesModel.get(['emphasis', 'focus']) !== 'self') {
+                        excludedSeriesIndices.push(seriesModel.seriesIndex);
+                    }
+                });
+            }
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
                 const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
@@ -1497,7 +1505,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 if (isHighDownPayload(payload)) {
                     if (model instanceof SeriesModel) {
                         if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
-                            blurSeriesFromHighlightPayload(model, payload, ecIns._api);
+                            blurSeriesFromHighlightPayload(model, payload, ecIns._api, excludedSeriesIndices);
                         }
                     }
                     else {
