@@ -830,6 +830,8 @@ function renderNode(
         const content = giveGraphic('content', Rect, depth, Z2_CONTENT);
         content && renderContent(group, content);
 
+        (bg as ECElement).disableMorphing = true;
+
         if (bg && isHighDownDispatcher(bg)) {
             setAsHighDownDispatcher(bg, false);
         }

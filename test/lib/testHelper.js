@@ -57,6 +57,7 @@
      * @param {Array.<Object>|Object} [opt.button] {text: ..., onClick: ...}, or an array of them.
      * @param {Array.<Object>|Object} [opt.buttons] {text: ..., onClick: ...}, or an array of them.
      * @param {boolean} [opt.recordCanvas] 'test/lib/canteen.js' is required.
+     * @param {boolean} [opt.recordVideo]
      */
     testHelper.create = function (echarts, domOrId, opt) {
         var dom = getDom(domOrId);
@@ -72,6 +73,7 @@
         var dataTableContainer = document.createElement('div');
         var infoContainer = document.createElement('div');
         var recordCanvasContainer = document.createElement('div');
+        var recordVideoContainer = document.createElement('div');
 
         title.setAttribute('title', dom.getAttribute('id'));
 
@@ -83,6 +85,7 @@
         dataTableContainer.className = 'test-data-table';
         infoContainer.className = 'test-info';
         recordCanvasContainer.className = 'record-canvas';
+        recordVideoContainer.className = 'record-video';
 
         if (opt.info) {
             dom.className += ' test-chart-block-has-right';
@@ -90,6 +93,7 @@
         }
 
         left.appendChild(recordCanvasContainer);
+        left.appendChild(recordVideoContainer);
         left.appendChild(buttonsContainer);
         left.appendChild(dataTableContainer);
         left.appendChild(chartContainer);
@@ -153,6 +157,10 @@
 
         initRecordCanvas(opt, chart, recordCanvasContainer);
 
+        if (opt.recordVideo) {
+            initRecordVideo(chart, recordVideoContainer);
+        }
+
         chart.__testHelper = {
             updateInfo: updateInfo
         };
@@ -211,6 +219,23 @@
                     cb(zlevel, ctx);
                 }
             }
+        }
+    }
+
+    function initRecordVideo(chart, recordVideoContainer) {
+        var button = document.createElement('button');
+        button.innerHTML = 'Start Recording';
+        recordVideoContainer.appendChild(button);
+        var recorder = new VideoRecorder(chart);
+
+        var isRecording = false;
+
+
+        button.onclick = function () {
+            isRecording ? recorder.stop() : recorder.start();
+            button.innerHTML = `${isRecording ? 'Start' : 'Stop'} Recording`;
+
+            isRecording = !isRecording;
         }
     }
 
@@ -994,8 +1019,70 @@
     function isObject(value) {
         // Avoid a V8 JIT bug in Chrome 19-20.
         // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-        const type = typeof value;
+        var type = typeof value;
         return type === 'function' || (!!value && type === 'object');
+    }
+
+    function VideoRecorder(chart) {
+        this.start = startRecording;
+        this.stop = stopRecording;
+
+        var recorder = null;
+
+        var oldRefreshImmediately = chart.getZr().refreshImmediately;
+
+        function startRecording() {
+            // Normal resolution or high resolution?
+            var compositeCanvas = document.createElement('canvas');
+            var width = chart.getWidth();
+            var height = chart.getHeight();
+            compositeCanvas.width = width;
+            compositeCanvas.height = height;
+            var compositeCtx = compositeCanvas.getContext('2d');
+
+            chart.getZr().refreshImmediately = function () {
+                var ret = oldRefreshImmediately.apply(this, arguments);
+                var canvasList = chart.getDom().querySelectorAll('canvas');
+                compositeCtx.fillStyle = '#fff';
+                compositeCtx.fillRect(0, 0, width, height);
+                for (var i = 0; i < canvasList.length; i++) {
+                    compositeCtx.drawImage(canvasList[i], 0, 0, width, height);
+                }
+                return ret;
+            }
+
+            var stream = compositeCanvas.captureStream(25);
+            recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+            var videoData = [];
+            recorder.ondataavailable = function (event) {
+                if (event.data && event.data.size) {
+                    videoData.push(event.data);
+                }
+            };
+
+            recorder.onstop = function () {
+                var url = URL.createObjectURL(new Blob(videoData, { type: 'video/webm' }));
+
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'recording.webm';
+                a.click();
+
+                setTimeout(function () {
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+            };
+
+            recorder.start();
+        }
+
+        function stopRecording() {
+            if (recorder) {
+                chart.getZr().refreshImmediately = oldRefreshImmediately;
+                recorder.stop();
+            }
+        }
     }
 
     context.testHelper = testHelper;

@@ -31,6 +31,7 @@ import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
 import { extend, isArray, retrieve2 } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
+import { saveOldStyle } from '../../animation/basicTrasition';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
 
@@ -102,6 +103,9 @@ class Symbol extends graphic.Group {
         this.childAt(0).stopAnimation(null, toLastFrame);
     }
 
+    getSymbolType() {
+        return this._symbolType;
+    }
     /**
      * FIXME:
      * Caution: This method breaks the encapsulation of this module,
@@ -170,6 +174,8 @@ class Symbol extends graphic.Group {
             };
             disableAnimation ? symbolPath.attr(target)
                 : graphic.updateProps(symbolPath, target, seriesModel, idx);
+
+            saveOldStyle(symbolPath);
         }
 
         this._updateCommon(data, idx, symbolSize, seriesScope, opts);

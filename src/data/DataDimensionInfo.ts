@@ -72,10 +72,10 @@ class DataDimensionInfo {
      * The format of `otherDims` is:
      * ```js
      * {
-     *     tooltip: number optional,
-     *     label: number optional,
-     *     itemName: number optional,
-     *     seriesName: number optional,
+     *     tooltip?: number
+     *     label?: number
+     *     itemName?: number
+     *     seriesName?: number
      * }
      * ```
      *
@@ -94,7 +94,7 @@ class DataDimensionInfo {
      * this.otherDims = {
      *     // `3` is at the index `0` of the `encode.tooltip`
      *     tooltip: 0,
-     *     // `3` is at the index `1` of the `encode.tooltip`
+     *     // `3` is at the index `1` of the `encode.label`
      *     label: 1
      * };
      * ```
