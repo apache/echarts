@@ -19,25 +19,17 @@
 
 import { StageHandler } from '../util/types';
 
-export default function dataFilter(seriesType: string): StageHandler {
+export default function negativeDataFilter(seriesType: string): StageHandler {
     return {
         seriesType: seriesType,
         reset: function (seriesModel, ecModel) {
-            const legendModels = ecModel.findComponents({
-                mainType: 'legend'
-            });
-            if (!legendModels || !legendModels.length) {
-                return;
-            }
             const data = seriesModel.getData();
             data.filterSelf(function (idx) {
-                const name = data.getName(idx);
-                // If in any legend component the status is not selected.
-                for (let i = 0; i < legendModels.length; i++) {
-                    // @ts-ignore FIXME: LegendModel
-                    if (!legendModels[i].isSelected(name)) {
-                        return false;
-                    }
+                // handle negative value condition
+                const valueDim = data.mapDimension('value');
+                const curValue = data.get(valueDim, idx);
+                if (typeof curValue === 'number' && !isNaN(curValue) && curValue < 0) {
+                    return false;
                 }
                 return true;
             });
