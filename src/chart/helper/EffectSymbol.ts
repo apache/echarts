@@ -163,6 +163,11 @@ class EffectSymbol extends Group {
         leaveEmphasis(this);
     }
 
+    getSymbolType() {
+        const symbol = this.childAt(0) as SymbolClz;
+        return symbol && symbol.getSymbolType();
+    }
+
     /**
      * Update symbol properties
      */

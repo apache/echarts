@@ -204,7 +204,8 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
     }
 
     setNodePosition(dataIndex: number, localPosition: number[]) {
-        const dataItem = this.option.data[dataIndex];
+        const nodes = this.option.data || this.option.nodes;
+        const dataItem = nodes[dataIndex];
         dataItem.localX = localPosition[0];
         dataItem.localY = localPosition[1];
     }

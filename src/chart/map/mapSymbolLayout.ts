@@ -22,7 +22,6 @@ import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
 import MapSeries from './MapSeries';
 import { Dictionary } from '../../util/types';
-import { GeoJSONRegion } from '../../coord/geo/Region';
 
 export default function mapSymbolLayout(ecModel: GlobalModel) {
 

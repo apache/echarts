@@ -447,15 +447,15 @@ class GaugeView extends ChartView {
                         const previousPointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
                         const previousRotate = previousPointer ? previousPointer.rotation : startAngle;
                         const pointer = createPointer(newIdx, previousRotate);
-                            pointer.rotation = previousRotate;
-                            graphic.updateProps(pointer, {
-                                rotation: -(
-                                    linearMap(data.get(valueDim, newIdx) as number, valueExtent, angleExtent, true)
-                                        + Math.PI / 2
-                                )
-                            }, seriesModel);
-                            group.add(pointer);
-                            data.setItemGraphicEl(newIdx, pointer);
+                        pointer.rotation = previousRotate;
+                        graphic.updateProps(pointer, {
+                            rotation: -(
+                                linearMap(data.get(valueDim, newIdx) as number, valueExtent, angleExtent, true)
+                                    + Math.PI / 2
+                            )
+                        }, seriesModel);
+                        group.add(pointer);
+                        data.setItemGraphicEl(newIdx, pointer);
                     }
 
                     if (showProgress) {

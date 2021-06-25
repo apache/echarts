@@ -20,8 +20,8 @@
 import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
-import {getPercentWithPrecision} from '../../util/number';
-import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
+import { getPercentWithPrecision } from '../../util/number';
+import { makeSeriesEncodeForNameBased } from '../../data/helper/sourceHelper';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import SeriesModel from '../../model/Series';
 import {
@@ -118,6 +118,9 @@ export interface PieSeriesOption extends
 
     animationType?: 'expansion' | 'scale'
     animationTypeUpdate?: 'transition' | 'expansion'
+
+    showEmptyCircle?: boolean;
+    emptyCircleStyle?: PieItemStyleOption;
 
     data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | PieDataItemOption)[]
 }
@@ -276,6 +279,12 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         itemStyle: {
             borderWidth: 1,
             borderJoin: 'round'
+        },
+
+        showEmptyCircle: true,
+        emptyCircleStyle: {
+            color: 'lightgray',
+            opacity: 1
         },
 
         labelLayout: {

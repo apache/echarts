@@ -90,7 +90,14 @@ class CartesianAxisView extends AxisView {
             }
         }, this);
 
-        graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
+        // THIS is a special case for bar racing chart.
+        // Update the axis label from the natural initial layout to
+        // sorted layout should has no animation.
+        const isInitialSortFromBarRacing = payload && payload.type === 'changeAxisOrder' && payload.isInitSort;
+
+        if (!isInitialSortFromBarRacing) {
+            graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
+        }
 
         super.render(axisModel, ecModel, api, payload);
     }

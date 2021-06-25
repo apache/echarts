@@ -27,6 +27,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import List from '../../data/List';
 import { BoxplotItemLayout } from './boxplotLayout';
+import { saveOldStyle } from '../../animation/basicTrasition';
 
 class BoxplotView extends ChartView {
     static type = 'boxplot';
@@ -70,6 +71,7 @@ class BoxplotView extends ChartView {
                     symbolEl = createNormalBox(itemLayout, data, newIdx, constDim);
                 }
                 else {
+                    saveOldStyle(symbolEl);
                     updateNormalBoxData(itemLayout, symbolEl, data, newIdx);
                 }
 

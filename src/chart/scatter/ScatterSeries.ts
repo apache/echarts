@@ -144,6 +144,10 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
             itemStyle: {
                 borderColor: '#212121'
             }
+        },
+
+        universalTransition: {
+            divideShape: 'clone'
         }
         // progressive: null
     };

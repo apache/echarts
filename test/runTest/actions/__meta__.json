@@ -25,6 +25,7 @@
   "bar-polar-multi-series-radial": 1,
   "bar-polar-null-data-radial": 1,
   "bar-polar-stack": 1,
+  "bar-race2": 2,
   "bar-stack": 1,
   "bar-start": 1,
   "bar-width": 3,
@@ -56,6 +57,7 @@
   "custom-children-remove": 1,
   "custom-hexbin": 2,
   "custom-large": 1,
+  "custom-shape-morphing": 1,
   "custom-text-content": 6,
   "dataSelect": 7,
   "dataZoom-action": 4,
@@ -77,6 +79,7 @@
   "drag-out": 3,
   "dynamic-splitNumber": 1,
   "ec-event": 4,
+  "emphasis-inherit": 1,
   "funnel": 2,
   "gauge-simple": 2,
   "geo-map": 3,
@@ -174,5 +177,8 @@
   "treemap-obama": 2,
   "treemap-option": 1,
   "treemap-option2": 2,
+  "universalTransition": 6,
+  "universalTransition2": 3,
+  "universalTransition3": 2,
   "visualMap-categories": 1
 }

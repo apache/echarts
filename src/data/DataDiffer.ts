@@ -28,6 +28,7 @@ type DiffCallbackUpdate = (newIndex: number, oldIndex: number) => void;
 type DiffCallbackRemove = (oldIndex: number) => void;
 type DiffCallbackUpdateManyToOne = (newIndex: number, oldIndex: number[]) => void;
 type DiffCallbackUpdateOneToMany = (newIndex: number[], oldIndex: number) => void;
+type DiffCallbackUpdateManyToMany = (newIndex: number[], oldIndex: number[]) => void;
 
 /**
  * The value of `DataIndexMap` can only be:
@@ -61,6 +62,7 @@ class DataDiffer<CTX = unknown> {
     private _update: DiffCallbackUpdate;
     private _updateManyToOne: DiffCallbackUpdateManyToOne;
     private _updateOneToMany: DiffCallbackUpdateOneToMany;
+    private _updateManyToMany: DiffCallbackUpdateManyToMany;
     private _remove: DiffCallbackRemove;
     private _diffModeMultiple: boolean;
 
@@ -119,6 +121,13 @@ class DataDiffer<CTX = unknown> {
      */
     updateOneToMany(func: DiffCallbackUpdateOneToMany): this {
         this._updateOneToMany = func;
+        return this;
+    }
+    /**
+     * Callback function when update a data and only work in `cbMode: 'byKey'`.
+     */
+     updateManyToMany(func: DiffCallbackUpdateManyToMany): this {
+        this._updateManyToMany = func;
         return this;
     }
 
@@ -224,6 +233,10 @@ class DataDiffer<CTX = unknown> {
             }
             else if (oldIdxMapValLen === 1 && newIdxMapValLen === 1) {
                 this._update && this._update(newIdxMapVal as number, oldIdxMapVal as number);
+                newDataIndexMap[oldKey] = null;
+            }
+            else if (oldIdxMapValLen > 1 && newIdxMapValLen > 1) {
+                this._updateManyToMany && this._updateManyToMany(newIdxMapVal as number[], oldIdxMapVal as number[]);
                 newDataIndexMap[oldKey] = null;
             }
             else if (oldIdxMapValLen > 1) {

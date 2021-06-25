@@ -57,7 +57,8 @@ const SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'candlestick', 'scatter'];
 
 const REALTIME_ANIMATION_CONFIG = {
     easing: 'cubicOut',
-    duration: 100
+    duration: 100,
+    delay: 0
 } as const;
 
 // const NORMAL_ANIMATION_CONFIG = {

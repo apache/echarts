@@ -19,12 +19,11 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import type {MorphDividingMethod} from 'zrender/src/tool/morphPath';
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
     SeriesOption, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType, DimensionLoose
+    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType, UniversalTransitionOption
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {PaletteMixin} from './mixin/palette';
@@ -61,6 +60,8 @@ const inner = modelUtil.makeInner<{
 function getSelectionKey(data: List, dataIndex: number): string {
     return data.getName(dataIndex) || data.getId(dataIndex);
 }
+
+export const SERIES_UNIVERSAL_TRANSITION_PROP = '__universalTransitionEnabled';
 
 interface SeriesModel {
     /**
@@ -141,18 +142,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // Injected outside
     pipelineContext: PipelineContext;
 
-    // only avalible in `render()` caused by `setOption`.
-    __transientTransitionOpt: {
-        // [MEMO] Currently only support single "from". If intending to
-        // support multiple "from", if not hard to implement "merge morph",
-        // but correspondingly not easy to implement "split morph".
-
-        // Both from and to can be null/undefined, which meams no transform mapping.
-        from: DimensionLoose;
-        to: DimensionLoose;
-        dividingMethod: MorphDividingMethod;
-    };
-
     // ---------------------------------------
     // Props to tell visual/style.ts about how to do visual encoding.
     // ---------------------------------------
@@ -176,6 +165,10 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     defaultSymbol: string;
     // Symbol provide to legend.
     legendIcon: string;
+
+    // It will be set temporary when cross series transition setting is from setOption.
+    // TODO if deprecate further?
+    [SERIES_UNIVERSAL_TRANSITION_PROP]: boolean;
 
     // ---------------------------------------
     // Props about data selection
@@ -541,6 +534,25 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const data = this.getData(dataType);
         const nameOrId = getSelectionKey(data, dataIndex);
         return selectedMap[nameOrId] || false;
+    }
+
+    isUniversalTransitionEnabled(): boolean {
+        if (this[SERIES_UNIVERSAL_TRANSITION_PROP]) {
+            return true;
+        }
+
+        const universalTransitionOpt = this.option.universalTransition;
+        // Quick reject
+        if (!universalTransitionOpt) {
+            return false;
+        }
+
+        if (universalTransitionOpt === true) {
+            return true;
+        }
+
+        // Can be simply 'universalTransition: true'
+        return universalTransitionOpt && universalTransitionOpt.enabled;
     }
 
     private _innerSelect(data: List, innerDataIndices: number[]) {

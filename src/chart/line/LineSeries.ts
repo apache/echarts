@@ -208,7 +208,11 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         // Disable progressive
         progressive: 0,
-        hoverLayerThreshold: Infinity
+        hoverLayerThreshold: Infinity,
+
+        universalTransition: {
+            divideShape: 'clone'
+        }
     };
 
     getLegendIcon(opt: LegendIconParams): ECSymbol | Group {

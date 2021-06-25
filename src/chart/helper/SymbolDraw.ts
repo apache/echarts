@@ -206,8 +206,17 @@ class SymbolDraw {
                     group.remove(symbolEl);
                     return;
                 }
-                if (!symbolEl) {
-                    symbolEl = new SymbolCtor(data, newIdx);
+                const newSymbolType = data.getItemVisual(newIdx, 'symbol') || 'circle';
+                const oldSymbolType = symbolEl
+                    && (symbolEl as SymbolClz).getSymbolType
+                    && (symbolEl as SymbolClz).getSymbolType();
+
+                if (!symbolEl
+                    // Create a new if symbol type changed.
+                    || (oldSymbolType && oldSymbolType !== newSymbolType)
+                ) {
+                    group.remove(symbolEl);
+                    symbolEl = new SymbolCtor(data, newIdx, seriesScope, symbolUpdateOpt);
                     symbolEl.setPosition(point);
                 }
                 else {
