@@ -39,6 +39,7 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main1"></div>
 
         <script>
             window.ANIMATION_DURATION_UPDATE = 1000;
@@ -267,6 +268,164 @@ under the License.
         });
         </script>
 
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var pieData = [
+                    { value: 800, name: 'A' },
+                    { value: 635, name: 'B' },
+                    { value: 580, name: 'C' },
+                    { value: 484, name: 'D' },
+                    { value: 300, name: 'E' },
+                    { value: 200, name: 'F' }
+                ];
+                const defaultPalette = [
+                    // '#51689b', '#ce5c5c', '#fbc357', '#8fbf8f', '#659d84', '#fb8e6a', '#c77288', '#786090', '#91c4c5', '#6890ba'
+                    '#5470c6',
+                    '#91cc75',
+                    '#fac858',
+                    '#ee6666',
+                    '#73c0de',
+                    '#3ba272',
+                    '#fc8452',
+                    '#9a60b4',
+                    '#ea7ccc'
+                ];
+
+                const radius = ['30%', '80%'];
+
+                var pieOption = {
+                    series: [{
+                        type: 'pie',
+                        center: ['50%', '50%'],
+                        radius: radius,
+                        label: {
+                            show: false
+                        },
+                        itemStyle: {
+                            borderRadius: 0
+                        },
+                        universalTransition: {
+                            enabled: true,
+                            seriesKey: 'first'
+                        },
+                        animationDurationUpdate: 1000,
+                        data: pieData
+                    }]
+                };
+
+
+                var parliamentOption = (function () {
+                    const sum = pieData.reduce((sum, cur) => {
+                        return sum + cur.value;
+                    }, 0);
+
+                    const angles = [];
+                    const startAngle = -Math.PI / 2;
+                    let curAngle = startAngle;
+                    pieData.forEach(item => {
+                        angles.push(curAngle);
+                        curAngle += (item.value / sum) * Math.PI * 2;
+                    });
+                    angles.push(startAngle + Math.PI * 2);
+                    function parliamentLayout(startAngle, endAngle, totalAngle, r0, r1, size) {
+                        const rowsCount = Math.ceil((r1 - r0) / size);
+                        const points = [];
+
+                        let r = r0;
+                        for (let i = 0; i < rowsCount; i++) {
+                            // Recalculate size
+                            const totalRingSeatsNumber = Math.round((totalAngle * r) / size);
+                            const newSize = (totalAngle * r) / totalRingSeatsNumber;
+                            for (
+                                let k = Math.floor((startAngle * r) / newSize) * newSize;
+                                k < Math.floor((endAngle * r) / newSize) * newSize - 1e-6;
+                                k += newSize
+                            ) {
+                                const angle = k / r;
+                                const x = Math.cos(angle) * r;
+                                const y = Math.sin(angle) * r;
+                                points.push([x, y]);
+                            }
+
+                            r += size;
+                        }
+
+                        return points;
+                    }
+                    return {
+                        series: {
+                            type: 'custom',
+                            data: pieData,
+                            coordinateSystem: undefined,
+                            universalTransition: {
+                                enabled: true,
+                                seriesKey: 'first'
+                            },
+                            animationDurationUpdate: 1000,
+                            renderItem(params, api) {
+                                const idx = params.dataIndex;
+                                const viewSize = Math.min(api.getWidth(), api.getHeight());
+                                const r0 = ((parseFloat(radius[0]) / 100) * viewSize) / 2;
+                                const r1 = ((parseFloat(radius[1]) / 100) * viewSize) / 2;
+                                const cx = api.getWidth() * 0.5;
+                                const cy = api.getHeight() * 0.5;
+                                const size = 15;
+
+                                const points = parliamentLayout(
+                                    angles[idx],
+                                    angles[idx + 1],
+                                    Math.PI * 2,
+                                    r0,
+                                    r1,
+                                    size + 3
+                                );
+
+                                return {
+                                    type: 'group',
+                                    children: points.map(pt => {
+                                        return {
+                                            type: 'circle',
+                                            autoBatch: true,
+                                            shape: {
+                                                cx: cx + pt[0],
+                                                cy: cy + pt[1],
+                                                r: size / 2
+                                            },
+                                            style: {
+                                                fill: defaultPalette[idx % defaultPalette.length]
+                                            }
+                                        };
+                                    })
+                                };
+                            }
+                        }
+                    };
+                })();
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Parliament and pie chart.'
+                    ],
+                    recordVideo: true,
+                    option: pieOption,
+                    height: 500,
+                    buttons: [{
+                        text: 'Parliament chart',
+                        onclick: function () {
+                            chart.setOption(parliamentOption, true);
+                        }
+                    }, {
+                        text: 'Pie chart',
+                        onclick: function () {
+                            chart.setOption(pieOption, true);
+                        }
+                    }],
+                });
+            });
+            </script>
 
     </body>
 </html>
