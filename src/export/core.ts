@@ -21,6 +21,13 @@
 
 export * from '../core/echarts';
 export * from './api';
+import { use } from '../extension';
+
+// Import label layout by default.
+// TODO remove
+import {installLabelLayout} from '../label/installLabelLayout';
+use(installLabelLayout);
+
 
 // Export necessary types
 export {ZRColor as Color, Payload} from '../util/types';

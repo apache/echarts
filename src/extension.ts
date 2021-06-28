@@ -29,6 +29,7 @@ import {
     registerTransform,
     registerLoading,
     registerMap,
+    registerUpdateLifecycle,
     PRIORITY
 } from './core/echarts';
 import ComponentView from './view/Component';
@@ -47,6 +48,7 @@ const extensionRegisters = {
     registerProcessor,
     registerPostInit,
     registerPostUpdate,
+    registerUpdateLifecycle,
     registerAction,
     registerCoordinateSystem,
     registerLayout,

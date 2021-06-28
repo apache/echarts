@@ -31,6 +31,7 @@ import List from '../../data/List';
 import {CandlestickItemLayout} from './candlestickLayout';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
+import { saveOldStyle } from '../../animation/basicTrasition';
 
 const SKIP_PROPS = ['color', 'borderColor'] as const;
 
@@ -137,6 +138,8 @@ class CandlestickView extends ChartView {
                             points: itemLayout.ends
                         }
                     }, seriesModel, newIdx);
+
+                    saveOldStyle(el);
                 }
 
                 setBoxCommon(el, data, newIdx, isSimpleBox);

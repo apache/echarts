@@ -123,6 +123,9 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
             brushType: 'fill'
         },
 
+        universalTransition: {
+            divideShape: 'clone'
+        },
         // Cartesian coordinate system
         // xAxisIndex: 0,
         // yAxisIndex: 0,

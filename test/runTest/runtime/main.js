@@ -112,7 +112,6 @@ window.__VRT_RUN_ACTIONS__ = async function (actions, restoredActionIndex, resto
 }
 
 
-
 window.addEventListener('DOMContentLoaded', () => {
     let style = document.createElement('style');
     // Disable all css animation since it will cause screenshot inconsistent.

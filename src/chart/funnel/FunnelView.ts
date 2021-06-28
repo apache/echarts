@@ -27,6 +27,7 @@ import List from '../../data/List';
 import { ColorString } from '../../util/types';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { saveOldStyle } from '../../animation/basicTrasition';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 
@@ -58,7 +59,9 @@ class FunnelPiece extends graphic.Polygon {
         let opacity = itemModel.get(opacityAccessPath);
         opacity = opacity == null ? 1 : opacity;
 
-
+        if (!firstCreate) {
+            saveOldStyle(polygon);
+        }
         // Update common style
         polygon.useStyle(data.getItemVisual(idx, 'style'));
         polygon.style.lineJoin = 'round';

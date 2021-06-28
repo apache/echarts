@@ -121,6 +121,10 @@ export interface ECElement extends Element {
      * Force disable overall layout
      */
     disableLabelLayout?: boolean
+    /**
+     * Force disable morphing
+     */
+    disableMorphing?: boolean
 }
 
 export interface DataHost {
@@ -413,7 +417,7 @@ export type DimensionLoose = DimensionName | DimensionIndexLoose;
 export type DimensionType = ListDimensionType;
 
 export const VISUAL_DIMENSIONS = createHashMap<number, keyof DataVisualDimensions>([
-    'tooltip', 'label', 'itemName', 'itemId', 'seriesName'
+    'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'seriesName'
 ]);
 // The key is VISUAL_DIMENSIONS
 export interface DataVisualDimensions {
@@ -424,6 +428,10 @@ export interface DataVisualDimensions {
     label?: DimensionIndex;
     itemName?: DimensionIndex;
     itemId?: DimensionIndex;
+    // Group id is used for linking the aggregate relationship between two set of data.
+    // Which is useful in prepresenting the transition key of drilldown/up animation.
+    // Or hover linking.
+    itemGroupId?: DimensionIndex;
     seriesName?: DimensionIndex;
 }
 
@@ -597,6 +605,7 @@ export type OptionDataItem =
 export type OptionDataItemObject<T> = {
     id?: OptionId;
     name?: OptionName;
+    groupId?: OptionId;
     value?: T[] | T;
     selected?: boolean;
 };
@@ -1494,7 +1503,6 @@ export interface ComponentOption {
 
     z?: number;
     zlevel?: number;
-    // FIXME:TS more
 }
 
 export type BlurScope = 'coordinateSystem' | 'series' | 'global';
@@ -1555,6 +1563,30 @@ export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStat
     blur?: StateOption & ExtraStateOpts['blur']
 }
 
+export interface UniversalTransitionOption {
+    enabled?: boolean
+    /**
+     * Animation delay of each divided element
+     */
+    delay?: (index?: number, count?: number) => number
+    /**
+     * How to divide the shape in combine and split animation.
+     */
+    divideShape?: 'clone' | 'split'
+    /**
+     * Series will have transition between if they have same seriesKey.
+     * Usually it is a string. It can also be an array,
+     * which means it can be transition from or to multiple series with each key in this array item.
+     *
+     * Note:
+     * If two series have both array seriesKey. They will be compared after concated to a string(which is order independent)
+     * Transition between string key has higher priority.
+     *
+     * Default to use series id.
+     */
+    seriesKey?: string | string[]
+}
+
 export interface SeriesOption<
     StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
     ComponentOption,
@@ -1573,6 +1605,13 @@ export interface SeriesOption<
      */
     cursor?: string
 
+    /**
+     * groupId of data. can be used for doing drilldown / up animation
+     * It will be ignored if:
+     *  - groupId is specified in each data
+     *  - encode.itemGroupId is given.
+     */
+    dataGroupId?: OptionId
     // Needs to be override
     data?: unknown
 
@@ -1590,7 +1629,6 @@ export interface SeriesOption<
     coordinateSystem?: string
 
     hoverLayerThreshold?: number
-    // FIXME:TS more
 
     /**
      * When dataset is used, seriesLayoutBy specifies whether the column or the row of dataset is mapped to the series
@@ -1610,6 +1648,14 @@ export interface SeriesOption<
      * Animation config for state transition.
      */
     stateAnimation?: AnimationOption
+
+    /**
+     * If enabled universal transition cross series.
+     * @example
+     *  universalTransition: true
+     *  universalTransition: { enabled: true }
+     */
+    universalTransition?: boolean | UniversalTransitionOption
 
     /**
      * Map of selected data

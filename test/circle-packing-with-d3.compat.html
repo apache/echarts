@@ -131,18 +131,6 @@ d3.csv("data/flare.csv", function(error, rawData) {
     }
 
     var option = {
-        xAxis: {
-            axisLine: {show: false},
-            axisTick: {show: false},
-            axisLabel: {show: false},
-            splitLine: {show: false}
-        },
-        yAxis: {
-            axisLine: {show: false},
-            axisTick: {show: false},
-            axisLabel: {show: false},
-            splitLine: {show: false}
-        },
         tooltip: {},
         visualMap: {
             show: false,
@@ -156,6 +144,7 @@ d3.csv("data/flare.csv", function(error, rawData) {
         series: {
             type: 'custom',
             renderItem: renderItem,
+            coordinateSystem: null,
             encode: {
                 tooltip: 0,
                 itemName: 2

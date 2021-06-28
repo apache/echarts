@@ -1,5 +1,3 @@
-import { StageHandler } from '../util/types';
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +16,8 @@ import { StageHandler } from '../util/types';
 * specific language governing permissions and limitations
 * under the License.
 */
+
+import { StageHandler } from '../util/types';
 
 export default function dataFilter(seriesType: string): StageHandler {
     return {

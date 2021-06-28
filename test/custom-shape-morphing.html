@@ -24,7 +24,6 @@ under the License.
         <script src='lib/simpleRequire.js'></script>
         <script src='lib/config.js'></script>
         <script src='lib/jquery.min.js'></script>
-        <script src="http://api.map.baidu.com/api?v=2.0&ak=KOmVjPVUAey1G2E8zNhPiuQ6QiEmAwZu"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
@@ -34,8 +33,14 @@ under the License.
                 height: 100%;
                 margin: 0;
             }
+            #next {
+                position: absolute;
+                left: 10px;
+                top: 10px;
+            }
         </style>
         <div id='main'></div>
+        <button id="next">NEXT</button>
         <script>
 
             require([
@@ -143,6 +148,9 @@ under the License.
                             type: 'custom',
                             data,
                             animationDurationUpdate: 2000,
+                            universalTransition: {
+                                enabled: true
+                            },
                             renderItem(params, api) {
                                 const dataItem = data[params.dataIndex];
                                 const geometries = regionsMap[dataItem.name].geometries.slice();
@@ -159,7 +167,6 @@ under the License.
                                 }
                                 return {
                                     type: 'polygon',
-                                    morph: true,
                                     shape: {
                                         points: newPoints
                                     },
@@ -181,7 +188,6 @@ under the License.
                     const width = 20;
                     return {
                         type: 'rect',
-                        morph: true,
                         shape: {
                             x: start[0] - width / 2,
                             y: start[1],
@@ -202,7 +208,6 @@ under the License.
                     const center = api.coord([params.dataIndex, api.value(1)]);
                     return {
                         type: 'circle',
-                        morph: true,
                         shape: {
                             cx: center[0],
                             cy: center[1],
@@ -227,6 +232,9 @@ under the License.
                             type: 'custom',
                             data,
                             animationDurationUpdate: 2000,
+                            universalTransition: {
+                                enabled: true
+                            },
                             renderItem
                         }]
                     };
@@ -251,12 +259,14 @@ under the License.
                             coordinateSystem: 'none',
                             data: pieData,
                             animationDurationUpdate: 2000,
+                            universalTransition: {
+                                enabled: true
+                            },
                             renderItem(params, api) {
                                 const width = myChart.getWidth();
                                 const height = myChart.getHeight();
                                 return {
                                     type: 'sector',
-                                    morph: true,
                                     shape: {
                                         cx: width / 2,
                                         cy: height / 2,
@@ -293,7 +303,9 @@ under the License.
                     currentIndex = nextIndex;
                 }
 
-                setInterval(transitionToNext, 3000);
+                document.querySelector('#next').onclick = function () {
+                    transitionToNext();
+                }
             });
 
         </script>

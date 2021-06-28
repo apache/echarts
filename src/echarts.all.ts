@@ -87,6 +87,11 @@ import {
     TransformComponent
 } from './export/components';
 
+import {
+    UniversalTransition,
+    LabelLayout
+} from './export/features';
+
 
 // -----------------
 // Render engines
@@ -333,3 +338,19 @@ use(AriaComponent);
 use(TransformComponent);
 
 use(DatasetComponent);
+
+// universal transition
+// chart.setOption({
+//     series: {
+//         universalTransition: { enabled: true }
+//     }
+// })
+use(UniversalTransition);
+
+// label layout
+// chart.setOption({
+//     series: {
+//         labelLayout: { hideOverlap: true }
+//     }
+// })
+use(LabelLayout);

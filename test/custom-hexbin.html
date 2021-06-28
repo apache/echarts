@@ -177,7 +177,6 @@ under the License.
                             type: 'group',
                             children: [{
                                 type,
-                                morph: true,
                                 shape: type === 'polygon' ? {
                                     points: points
                                 } : {
@@ -193,7 +192,6 @@ under the License.
                                 }
                             }, {
                                 type,
-                                morph: true,
                                 shape: type === 'polygon' ? {
                                     points: pointsBG
                                 } : {
@@ -321,6 +319,9 @@ under the License.
                             myChart.setOption({
                                 series: [{
                                     type: 'custom',
+                                    universalTransition: {
+                                        enabled: true
+                                    },
                                     renderItem: createItemRenderer('polygon')
                                 }]
                             });
@@ -331,6 +332,9 @@ under the License.
                             myChart.setOption({
                                 series: [{
                                     type: 'custom',
+                                    universalTransition: {
+                                        enabled: true
+                                    },
                                     renderItem: createItemRenderer('circle')
                                 }]
                             });

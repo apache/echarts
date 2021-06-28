@@ -758,7 +758,7 @@ echarts.use([${seriesImportName}]);`);
      */
     getSeries(): SeriesModel[] {
         return filter(
-            this._componentsMap.get('series').slice() as SeriesModel[],
+            this._componentsMap.get('series') as SeriesModel[],
             oneSeries => !!oneSeries
         );
     }
