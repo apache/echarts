@@ -26,6 +26,7 @@ import { BarGridLayoutOptionForCustomSeries, BarGridLayoutResult } from '../../l
 import {
     BlurScope,
     CallbackDataParams,
+    ColorByMixin,
     DecalObject,
     Dictionary,
     DimensionLoose,
@@ -271,6 +272,7 @@ interface CustomSeriesStateOption {
 }
 
 export interface CustomSeriesOption extends
+    ColorByMixin,
     SeriesOption<never>,    // don't support StateOption in custom series.
     SeriesEncodeOptionMixin,
     SeriesOnCartesianOptionMixin,
@@ -321,6 +323,8 @@ export default class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
         zlevel: 0,
         z: 2,
         legendHoverLink: true,
+
+        colorBy: 'seriesName',
 
         // Custom series will not clip by default.
         // Some case will use custom series to draw label
