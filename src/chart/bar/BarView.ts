@@ -20,6 +20,7 @@
 import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
 import {extend, defaults, each, map} from 'zrender/src/core/util';
+import {BuiltinTextPosition} from 'zrender/src/core/types';
 import {
     Rect,
     Sector,
@@ -955,9 +956,18 @@ function updateStyle(
     const cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && (el as Path).attr('cursor', cursorStyle);
 
-    const labelPositionOutside = isHorizontalOrRadial
-        ? ((layout as RectLayout).height > 0 ? 'bottom' as const : 'top' as const)
-        : ((layout as RectLayout).width > 0 ? 'left' as const : 'right' as const);
+    const labelPositionOutside = isPolar
+        ? (isHorizontalOrRadial
+            ? ((layout as SectorLayout).r >= (layout as SectorLayout).r0 ? 'endArc' as const : 'startArc' as const)
+            : ((layout as SectorLayout).endAngle >= (layout as SectorLayout).startAngle
+                ? 'endAngle' as const
+                : 'startAngle' as const
+            )
+        )
+        : (isHorizontalOrRadial
+            ? ((layout as RectLayout).height >= 0 ? 'bottom' as const : 'top' as const)
+            : ((layout as RectLayout).width >= 0 ? 'right' as const : 'left' as const));
+
     const labelStatesModels = getLabelStatesModels(itemModel);
 
     setLabelStyle(
@@ -968,14 +978,15 @@ function updateStyle(
             defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
             inheritColor: style.fill as ColorString,
             defaultOpacity: style.opacity,
-            defaultOutsidePosition: labelPositionOutside
+            defaultOutsidePosition: labelPositionOutside as BuiltinTextPosition
         }
     );
 
     if (isPolar) {
+        let position = seriesModel.get(['label', 'position']);
         setSectorTextRotation(
             el as Sector,
-            seriesModel.get(['label', 'position']),
+            position === 'outside' ? labelPositionOutside : position,
             createPolarPositionMapping(isHorizontalOrRadial),
             seriesModel.get(['label', 'rotate'])
         );

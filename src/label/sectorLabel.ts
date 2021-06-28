@@ -53,8 +53,8 @@ export function createSectorCalculateTextPosition<T extends (string | (number | 
         const r = sector.r;
         const r0 = sector.r0;
         const middleR = (r + r0) / 2;
-        const startAngle = sector.clockwise ? sector.startAngle : sector.endAngle;
-        const endAngle = sector.clockwise ? sector.endAngle : sector.startAngle;
+        const startAngle = sector.startAngle;
+        const endAngle = sector.endAngle;
         const middleAngle = (startAngle + endAngle) / 2;
 
         // base position: top-left

@@ -38,9 +38,12 @@ import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 export type PolarBarLabelPosition = SeriesLabelOption['position']
     | 'start' | 'insideStart' | 'middle' | 'end' | 'insideEnd';
 
+export type BarSeriesLabelOption = Omit<SeriesLabelOption, 'position'>
+    & {position: PolarBarLabelPosition | 'outside'};
+
 export interface BarStateOption {
     itemStyle?: BarItemStyleOption
-    label?: SeriesLabelOption & {position: PolarBarLabelPosition}
+    label?: BarSeriesLabelOption
 }
 
 export interface BarItemStyleOption extends ItemStyleOption {

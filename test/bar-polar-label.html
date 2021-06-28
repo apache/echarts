@@ -29,7 +29,7 @@ under the License.
         <style>
             #main0, #main1 {
                 width: 100%;
-                height: 800px;
+                height: 1200px;
                 margin: 20px 0;
             }
         </style>
@@ -42,12 +42,13 @@ under the License.
                 function setChart(chartIndex) {
                     var positions = [
                         'start', 'insideStart',
-                        'middle', 'inside',
-                        'insideEnd','end'
+                        'middle',
+                        'insideEnd','end',
+                        'inside', 'outside'
                     ];
 
                     var chart = echarts.init(document.getElementById('main' + chartIndex));
-                    var rows = 2;
+                    var rows = 3;
                     var cols = 3;
 
                     var angleAxis = [];
