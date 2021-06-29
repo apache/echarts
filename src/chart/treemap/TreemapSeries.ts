@@ -37,7 +37,7 @@ import {
     SeriesLabelOption,
     DefaultEmphasisFocus,
     AriaOptionMixin,
-    TreemapColorByMixin
+    ColorBy
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -123,16 +123,14 @@ export interface TreemapSeriesVisualOption {
 }
 
 export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption,
-    TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption>,
-    TreemapColorByMixin {
+    TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
 
     color?: ColorString[] | 'none',
     decal?: DecalObject[] | 'none'
 }
 
 export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
-    TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption>,
-    TreemapColorByMixin {
+    TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
     id?: OptionId
     name?: OptionName
 
@@ -148,7 +146,6 @@ export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
 export interface TreemapSeriesOption
     extends SeriesOption<TreemapStateOption, ExtraStateOption>,
     TreemapStateOption,
-    TreemapColorByMixin,
     BoxLayoutOptionMixin,
     RoamOptionMixin,
     TreemapSeriesVisualOption {
@@ -325,8 +322,8 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
                                     // legend color fetching (see seriesColor.js).
         colorAlpha: null,           // Array. Specify color alpha range of each level, like [0.2, 0.8]
         colorSaturation: null,      // Array. Specify color saturation of each level, like [0.2, 0.5]
-        // colorMappingBy: 'index',    // 'value' or 'index' or 'id'.
-        colorBy: 'inherit',
+        colorMappingBy: 'index',    // 'value' or 'index' or 'id'.
+        // colorBy: 'inherit',      // TODO: colorBy for treemap has not been supported yet
         visibleMin: 10,             // If area less than this threshold (unit: pixel^2), node will not
                                     // be rendered. Only works when sort is 'asc' or 'desc'.
         childrenVisibleMin: null,   // If area of a node less than this threshold (unit: pixel^2),
@@ -334,10 +331,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
                                     // Why grandchildren? If not grandchildren but children,
                                     // some siblings show children and some not,
                                     // the appearance may be mess and not consistent,
-        levels: [{
-            colorBy: 'childIndex'
-        }]
-                                    // Each item: {
+        levels: []                  // Each item: {
                                     //     visibleMin, itemStyle, visualDimension, label
                                     // }
         // data: {
@@ -390,6 +384,10 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         }
 
         return tree.data;
+    }
+
+    getColorBy(): ColorBy {
+        return 'seriesId';
     }
 
     optionUpdated() {

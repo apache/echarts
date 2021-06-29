@@ -854,18 +854,12 @@ export type ColorBy = 'seriesName' | 'seriesIndex' | 'seriesId' | 'name' | 'data
 
 export type SunburstColorBy = ColorBy | 'inherit' | 'childIndex' | 'lighter';
 
-export type TreemapColorBy = ColorBy  | 'inherit' | 'childIndex' | 'value';
-
 export interface ColorByMixin {
     colorBy?: ColorBy
 }
 
 export interface SunburstColorByMixin {
     colorBy?: SunburstColorBy
-}
-
-export interface TreemapColorByMixin {
-    colorBy?: TreemapColorBy
 }
 
 export type AnimationDelayCallbackParam = {
