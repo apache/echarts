@@ -132,7 +132,7 @@ export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, Gauge
         show?: boolean
         roundCap?: boolean
         lineStyle?: Omit<LineStyleOption, 'color'> & {
-            color: GaugeColorStop[]
+            color?: GaugeColorStop[]
         }
     },
 
