@@ -386,10 +386,6 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         return tree.data;
     }
 
-    getColorBy(): ColorBy {
-        return 'seriesId';
-    }
-
     optionUpdated() {
         this.resetViewRoot();
     }

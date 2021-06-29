@@ -78,7 +78,6 @@ export interface SunburstStateOption {
 
 export interface SunburstSeriesNodeItemOption extends
     SunburstStateOption, StatesOptionMixin<SunburstStateOption, ExtraStateOption>,
-    SunburstColorByMixin,
     OptionDataItemObject<OptionDataValue>
 {
     nodeClick?: 'rootToNode' | 'link'
@@ -92,9 +91,7 @@ export interface SunburstSeriesNodeItemOption extends
 
     cursor?: string
 }
-export interface SunburstSeriesLevelOption extends SunburstStateOption, StatesOptionMixin<SunburstStateOption>,
-    SunburstColorByMixin
-{
+export interface SunburstSeriesLevelOption extends SunburstStateOption, StatesOptionMixin<SunburstStateOption> {
     highlight?: {
         itemStyle?: SunburstItemStyleOption
         label?: SunburstLabelOption
@@ -200,8 +197,6 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         zlevel: 0,
         z: 2,
 
-        colorBy: 'lighter',
-
         // 默认全局居中
         center: ['50%', '50%'],
         radius: [0, '75%'],
@@ -261,17 +256,6 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         animationDurationUpdate: 500,
 
         data: [],
-
-        levels: [
-            {
-                itemStyle: {
-                    color: '#ccc'
-                }
-            },
-            {
-                colorBy: 'childIndex'
-            }
-        ],
 
         /**
          * Sort order.
