@@ -852,14 +852,15 @@ export interface BorderOptionMixin {
 
 export type ColorBy = 'seriesName' | 'seriesIndex' | 'seriesId' | 'name' | 'dataIndex' | 'id';
 
-export type SunburstColorBy = ColorBy | 'inherit' | 'childIndex' | 'lighter';
+// Sunburst color mapping on levels and items are yet to be implemented
+// export type SunburstColorBy = ColorBy | 'inherit' | 'childIndex' | 'lighter';
 
 export interface ColorByMixin {
     colorBy?: ColorBy
 }
 
 export interface SunburstColorByMixin {
-    colorBy?: SunburstColorBy
+    colorBy?: ColorBy
 }
 
 export type AnimationDelayCallbackParam = {

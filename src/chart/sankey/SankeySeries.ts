@@ -280,8 +280,6 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         zlevel: 0,
         z: 2,
 
-        colorBy: 'id',
-
         coordinateSystem: 'view',
 
         left: '5%',
