@@ -22,6 +22,7 @@ import TimelineModel from './TimelineModel';
 import { defaults } from 'zrender/src/core/util';
 import { Payload } from '../../util/types';
 import { EChartsExtensionInstallRegisters } from '../../extension';
+import ExtensionAPI from '../../core/ExtensionAPI';
 
 export interface TimelineChangePayload extends Payload {
     type: 'timelineChange'
@@ -38,14 +39,25 @@ export function installTimelineAction(registers: EChartsExtensionInstallRegister
 
         {type: 'timelineChange', event: 'timelineChanged', update: 'prepareAndUpdate'},
 
-        function (payload: TimelineChangePayload, ecModel: GlobalModel) {
+        function (payload: TimelineChangePayload, ecModel: GlobalModel, api: ExtensionAPI) {
 
             const timelineModel = ecModel.getComponent('timeline') as TimelineModel;
             if (timelineModel && payload.currentIndex != null) {
                 timelineModel.setCurrentIndex(payload.currentIndex);
 
-                if (!timelineModel.get('loop', true) && timelineModel.isIndexMax()) {
+                if (
+                    !timelineModel.get('loop', true)
+                    && timelineModel.isIndexMax()
+                    && timelineModel.getPlayState()
+                ) {
                     timelineModel.setPlayState(false);
+
+                    // The timeline has played to the end, trigger event
+                    api.dispatchAction({
+                        type: 'timelinePlayChange',
+                        playState: false,
+                        from: payload.from
+                    });
                 }
             }
 
