@@ -191,7 +191,7 @@ export interface CustomGroupOption extends CustomBaseElementOption {
     // @deprecated
     diffChildrenByName?: boolean;
     children: CustomChildElementOption[];
-    $mergeChildren: false | 'byName' | 'byIndex';
+    $mergeChildren?: false | 'byName' | 'byIndex';
 }
 export interface CustomBaseZRPathOption<T extends PathProps['shape'] = PathProps['shape']>
     extends CustomDisplayableOption, ShapeMorphingOption {
