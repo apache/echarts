@@ -21,6 +21,7 @@ import Transformable from 'zrender/src/core/Transformable';
 import Element, { ElementProps } from 'zrender/src/Element';
 import { Dictionary } from '../../util/types';
 import {
+    CustomDisplayableOption,
     CustomElementOption,
     customInnerStore,
     LooseElementProps,
@@ -242,7 +243,7 @@ export function prepareTransformAllPropsFinal(
 export function prepareStyleTransitionFrom(
     fromEl: Element,
     elOption: CustomElementOption,
-    styleOpt: CustomElementOption['style'],
+    styleOpt: CustomDisplayableOption['style'],
     transFromProps: LooseElementProps,
     isInit: boolean
 ): void {
