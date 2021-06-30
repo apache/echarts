@@ -63,6 +63,7 @@ import {
     Ring,
     Sector
 } from '../../util/graphic';
+import { TextStyleProps } from 'zrender/src/graphic/Text';
 
 
 export interface LooseElementProps extends ElementProps {
@@ -215,20 +216,6 @@ interface BuiltinShapes {
     'compoundPath': CompoundPath['shape']
 }
 
-export interface CustomBuitinPathOption<T extends keyof BuiltinShapes>
-    extends CustomBaseZRPathOption<BuiltinShapes[T]> {
-    type: T
-}
-export interface CustomSVGPathOption extends CustomBaseZRPathOption<CustomSVGPathShapeOption> {
-    type: 'path';
-}
-
-type CreateCustomBuitinPathOption<T extends keyof BuiltinShapes> = T extends any
-    ? CustomBuitinPathOption<T> : never;
-
-export type CustomPathOption = CreateCustomBuitinPathOption<keyof BuiltinShapes>
-    | CustomSVGPathOption;
-
 interface CustomSVGPathShapeOption {
     // SVG Path, like 'M0,0 L0,-20 L70,-1 L70,0 Z'
     pathData?: string;
@@ -240,6 +227,23 @@ interface CustomSVGPathShapeOption {
     width?: number;
     height?: number;
 }
+export interface CustomSVGPathOption extends CustomBaseZRPathOption<CustomSVGPathShapeOption> {
+    type: 'path';
+}
+
+interface CustomBuitinPathOption<T extends keyof BuiltinShapes>
+    extends CustomBaseZRPathOption<BuiltinShapes[T]> {
+    type: T
+}
+type CreateCustomBuitinPathOption<T extends keyof BuiltinShapes> = T extends any
+    ? CustomBuitinPathOption<T> : never;
+
+export type CustomPathOption = CreateCustomBuitinPathOption<keyof BuiltinShapes>
+    | CustomSVGPathOption;
+
+export interface CustomImageOptionOnState extends CustomDisplayableOptionOnState {
+    style?: ImageStyleProps & TransitionAnyOption;
+}
 export interface CustomImageOption extends CustomDisplayableOption {
     type: 'image';
     style?: ImageStyleProps & TransitionAnyOption;
@@ -247,11 +251,16 @@ export interface CustomImageOption extends CustomDisplayableOption {
     blur?: CustomImageOptionOnState;
     select?: CustomImageOptionOnState;
 }
-export interface CustomImageOptionOnState extends CustomDisplayableOptionOnState {
-    style?: ImageStyleProps & TransitionAnyOption;
+
+export interface CustomTextOptionOnState extends CustomDisplayableOptionOnState {
+    style?: TextStyleProps & TransitionAnyOption;
 }
 export interface CustomTextOption extends CustomDisplayableOption {
     type: 'text';
+    style?: TextStyleProps & TransitionAnyOption;
+    emphasis?: CustomTextOptionOnState;
+    blur?: CustomTextOptionOnState;
+    select?: CustomTextOptionOnState;
 }
 
 export type CustomElementOption = CustomPathOption

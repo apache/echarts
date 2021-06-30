@@ -78,7 +78,7 @@ d3.csv("data/flare.csv", function(error, rawData) {
 
     function renderItem(params, api) {
         var context = params.context;
-        if (!context.layout) {
+        if (!context.nodes) {
             d3.pack()
                 .size([api.getWidth() - 2, api.getHeight() - 2])
                 .padding(3)(root);
