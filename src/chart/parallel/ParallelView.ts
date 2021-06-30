@@ -29,6 +29,7 @@ import Parallel from '../../coord/parallel/Parallel';
 import { OptionAxisType } from '../../coord/axisCommonTypes';
 import { numericToNumber } from '../../util/number';
 import { eqNaN } from 'zrender/src/core/util';
+import { saveOldStyle } from '../../animation/basicTrasition';
 
 const DEFAULT_SMOOTH = 0.3;
 
@@ -83,6 +84,8 @@ class ParallelView extends ChartView {
             data.setItemGraphicEl(newDataIndex, line);
 
             graphic.updateProps(line, {shape: {points: points}}, seriesModel, newDataIndex);
+
+            saveOldStyle(line);
 
             updateElCommon(line, data, newDataIndex, seriesScope);
         }

@@ -260,7 +260,7 @@ class TooltipView extends ComponentView {
                     y: self._lastY,
                     dataByCoordSys: self._lastDataByCoordSys
                 });
-            });
+            }) as any;
         }
     }
 
@@ -707,7 +707,7 @@ class TooltipView extends ComponentView {
     ) {
         const ecData = getECData(el);
         const tooltipConfig = ecData.tooltipConfig;
-        let tooltipOpt = tooltipConfig.option;
+        let tooltipOpt = tooltipConfig.option || {};
         if (zrUtil.isString(tooltipOpt)) {
             const content = tooltipOpt;
             tooltipOpt = {
@@ -722,6 +722,11 @@ class TooltipView extends ComponentView {
         if (cmpt) {
             tooltipModelCascade.push(cmpt as Model<TooltipableOption>);
         }
+        // In most cases, component tooltip formatter has different params with series tooltip formatter,
+        // so that they can not share the same formatter. Since the global tooltip formatter is used for series
+        // by convension, we do not use it as the default formatter for component.
+        tooltipModelCascade.push({ formatter: tooltipOpt.content });
+
         const positionDefault = e.positionDefault;
         const subTooltipModel = buildTooltipModel(
             tooltipModelCascade,

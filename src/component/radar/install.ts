@@ -34,10 +34,10 @@ export function install(registers: EChartsExtensionInstallRegisters) {
             const data = seriesModel.getData();
             // itemVisual symbol is for selected data
             data.each(function (idx) {
-                data.setItemVisual(idx, 'legendSymbol', 'roundRect');
+                data.setItemVisual(idx, 'legendIcon', 'roundRect');
             });
             // visual is for unselected data
-            data.setVisual('legendSymbol', 'roundRect');
+            data.setVisual('legendIcon', 'roundRect');
         }
-    })
+    });
 }

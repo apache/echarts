@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            html {
+                perspective: 271px;
+            }
+            body {
+                transform: scale3d(0.7, 0.6, 1) rotateY(-8deg) rotateZ(-3deg);
+                transform-style: preserve-3d;
+            }
+            .test-chart-block {
+                overflow: hidden !important;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option;
+
+            option = {
+                xAxis: {},
+                yAxis: {},
+                tooltip: {
+                    appendToBody: true,
+                    formatter: [
+                        '1_aaaaaaaaaaaaaa',
+                        '2_aaaaaaaaaaaaaa',
+                        '3_aaaaaaaaaaaaaa',
+                        '4_aaaaaaaaaaaaaa',
+                        '5_aaaaaaaaaaaaaa',
+                        '6_aaaaaaaaaaaaaa',
+                        '7_aaaaaaaaaaaaaa',
+                        '8_aaaaaaaaaaaaaa',
+                        '9_aaaaaaaaaaaaaa',
+                        '10_aaaaaaaaaaaaaa',
+                        '11_aaaaaaaaaaaaaa',
+                        '12_aaaaaaaaaaaaaa'
+                    ].join('<br>'),
+                    extraCssText: 'transform: scaleZ(1)'
+                },
+                dataZoom: [{
+                    type: 'slider'
+                }, {
+                    type: 'inside'
+                }],
+                series: [{
+                    type: 'line',
+                    symbolSize: 30,
+                    data: [[11, 22], [33, 44]]
+                }, {
+                    type: 'line',
+                    symbolSize: 30,
+                    data: [[11, 32], [33, 44]]
+                }, {
+                    type: 'line',
+                    symbolSize: 30,
+                    data: [[11, 42], [33, 44]]
+                }, {
+                    type: 'line',
+                    symbolSize: 30,
+                    data: [[11, 52], [33, 44]]
+                }, {
+                    type: 'line',
+                    symbolSize: 30,
+                    data: [[11, 62], [33, 44]]
+                }, {
+                    type: 'line',
+                    symbolSize: 30,
+                    data: [[11, 72], [33, 44]]
+                }, {
+                    type: 'line',
+                    symbolSize: 30,
+                    data: [[11, 82], [33, 44]]
+                }, {
+                    type: 'line',
+                    symbolSize: 30,
+                    data: [[11, 92], [33, 44]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Body is CSS transfromed, tooltip should be correctly positioned',
+                    'and not be overflow clipped.'
+                ],
+                option: option,
+                height: 300
+            });
+        });
+        </script>
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option;
+
+            option = {
+                xAxis: {},
+                yAxis: {},
+                tooltip: {
+                    appendToBody: true,
+                    position: [120, 20],
+                    formatter: [
+                        '1_aa..................................................................a',
+                        '2_aa..................................................................a',
+                        '3_aa..................................................................a',
+                        '4_aa..................................................................a',
+                        '5_aa..................................................................a',
+                        '6_aa..................................................................a',
+                        '7_aa..................................................................a',
+                        '8_aa..................................................................a',
+                        '9_aa..................................................................a',
+                        '10_a..................................................................aa',
+                        '11_a..................................................................aa',
+                        '12_a..................................................................aa',
+                        '13_a..................................................................aa',
+                        '14_a..................................................................aa',
+                        '15_a..................................................................aa',
+                        '16_a..................................................................aa',
+                        '17_a..................................................................aa',
+                        '18_a..................................................................aa',
+                        '19_a..................................................................aa'
+                    ].join('<br>'),
+                    extraCssText: 'transform: scaleZ(1); background: rgba(0, 0, 0, 0.2);'
+                },
+                dataZoom: [{
+                    type: 'slider'
+                }, {
+                    type: 'inside'
+                }],
+                series: [{
+                    type: 'line',
+                    symbolSize: 50,
+                    symbol: 'circle',
+                    itemStyle: {
+                        opacity: 0.3
+                    },
+                    data: [[11, 22], [33, 44]]
+                }, {
+                    type: 'line',
+                    symbolSize: 50,
+                    symbol: 'circle',
+                    itemStyle: {
+                        opacity: 0.3
+                    },
+                    data: [[11, 92], [33, 44]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'When mouseover tooltip the **red** stoke should keep being generated,',
+                    'and the tooltip is able to show and hide.'
+                ],
+                option: option,
+                height: 300
+            });
+            if (chart) {
+                var zr = chart.getZr();
+                zr.on('mousemove', function (event) {
+                    var circle = new echarts.graphic.Circle({
+                        shape: {
+                            cx: event.offsetX,
+                            cy: event.offsetY,
+                            r: 3
+                        },
+                        style: {
+                            fill: 'red'
+                        },
+                        z: -100
+                    });
+                    zr.add(circle);
+                });
+                zr.on('globalout', function (event) {
+                    console.log('globalout');
+                });
+            }
+        });
+        </script>
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option;
+
+            option = {
+                xAxis: {},
+                yAxis: {},
+                tooltip: {
+                    appendToBody: true,
+                    position: 'bottom',
+                    formatter: [
+                        '1_aaaaaaaaaaaaaa',
+                        '2_aaaaaaaaaaaaaa',
+                        '3_aaaaaaaaaaaaaa',
+                        '4_aaaaaaaaaaaaaa',
+                        '5_aaaaaaaaaaaaaa',
+                        '6_aaaaaaaaaaaaaa',
+                        '7_aaaaaaaaaaaaaa',
+                        '8_aaaaaaaaaaaaaa',
+                        '9_aaaaaaaaaaaaaa',
+                        '10_aaaaaaaaaaaaaa',
+                        '11_aaaaaaaaaaaaaa',
+                        '12_aaaaaaaaaaaaaa'
+                    ].join('<br>'),
+                    extraCssText: 'transform: scaleZ(1)'
+                },
+                dataZoom: [{
+                    type: 'slider'
+                }, {
+                    type: 'inside'
+                }],
+                series: [{
+                    type: 'line',
+                    symbolSize: 30,
+                    data: [[11, 22], [33, 44]]
+                }, {
+                    type: 'line',
+                    symbolSize: 30,
+                    data: [[11, 92], [33, 44]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'Body is CSS transfromed, tooltip should be correctly positioned',
+                    'and not be overflow clipped.'
+                ],
+                option: option,
+                height: 300,
+                buttons: [{
+                    text: 'showTip, x: number, y: number',
+                    onclick: function () {
+                        var coord = chart.convertToPixel(
+                            {seriesIndex: 0}, [11, 22]
+                        );
+                        chart.dispatchAction({
+                            type: 'showTip',
+                            x: coord[0],
+                            y: coord[1]
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option;
+
+            option = {
+                title: {
+                    text: 'gloubalout not triggered yet'
+                },
+                xAxis: {},
+                yAxis: {},
+                tooltip: {
+                    appendToBody: true,
+                    enterable: true,
+                    formatter: [
+                        '1_aaaaaaaaaaaaaa',
+                        '2_aaaaaaaaaaaaaa',
+                        '3_aaaaaaaaaaaaaa',
+                        '4_aaaaaaaaaaaaaa',
+                        '5_aaaaaaaaaaaaaa',
+                        '6_aaaaaaaaaaaaaa',
+                        '7_aaaaaaaaaaaaaa',
+                        '8_aaaaaaaaaaaaaa',
+                        '9_aaaaaaaaaaaaaa',
+                        '10_aaaaaaaaaaaaaa',
+                        '11_aaaaaaaaaaaaaa',
+                        '12_aaaaaaaaaaaaaa'
+                    ].join('<br>'),
+                    extraCssText: 'transform: scaleZ(1)'
+                },
+                dataZoom: [{
+                    type: 'slider'
+                }, {
+                    type: 'inside'
+                }],
+                series: [{
+                    type: 'line',
+                    symbolSize: 30,
+                    data: [[11, 22], [33, 44]]
+                }, {
+                    type: 'line',
+                    symbolSize: 30,
+                    data: [[11, 92], [33, 44]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main3', {
+                title: [
+                    'tooltip.enterable: true, enter the tooltip,',
+                    'globalout should not be triggered'
+                ],
+                option: option,
+                height: 200
+            });
+            if (chart) {
+                var zr = chart.getZr();
+                zr.on('globalout', function () {
+                    chart.setOption({
+                        title: {
+                            text: 'gloubalout triggered at\n' + (+new Date())
+                        }
+                    });
+                });
+            }
+        });
+        </script>
+
+
+
+    </body>
+</html>
+

@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <link rel="stylesheet" href="lib/reset.css">
     </head>
@@ -49,8 +49,6 @@ under the License.
                 'data/aqi/GZdata',
                 'data/aqi/SHdata',
                 'echarts'
-                // 'echarts/chart/scatter',
-                // 'echarts/component/tooltip'
             ], function (dataBJ, dataGZ, dataSH, echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
@@ -168,7 +166,7 @@ under the License.
                     console.time('update lazy');
                     update(true);
                     console.timeEnd('update lazy');
-                }, 1000);
+                }, 200);
             });
 
         </script>

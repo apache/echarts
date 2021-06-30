@@ -38,6 +38,7 @@ import View from '../../coord/View';
 import { LayoutRect } from '../../util/layout';
 import Model from '../../model/Model';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import { wrapTreePathInfo } from '../helper/treeHelper';
 
 interface CurveLineStyleOption extends LineStyleOption{
     curveness?: number
@@ -112,6 +113,16 @@ export interface TreeSeriesOption extends
     data?: TreeSeriesNodeItemOption[]
 }
 
+export interface TreeAncestors {
+    name: string
+    dataIndex: number
+    value: number
+}
+
+export interface TreeSeriesCallbackDataParams extends CallbackDataParams {
+    treeAncestors?: TreeAncestors[]
+}
+
 class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
     static readonly type = 'series.tree';
 
@@ -149,7 +160,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         function beforeLink(nodeData: List) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 const node = tree.getNodeByDataIndex(idx);
-                if (!node.children.length || !node.isExpand) {
+                if (!(node && node.children.length && node.isExpand)) {
                     model.parentModel = leavesModel;
                 }
                 return model;
@@ -222,6 +233,16 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
             value: value,
             noValue: isNaN(value as number) || value == null
         });
+    }
+
+    // Add tree path to tooltip param
+    getDataParams(dataIndex: number) {
+        const params = super.getDataParams.apply(this, arguments as any) as TreeSeriesCallbackDataParams;
+
+        const node = this.getData().tree.getNodeByDataIndex(dataIndex);
+        params.treeAncestors = wrapTreePathInfo(node, this);
+
+        return params;
     }
 
     static defaultOption: TreeSeriesOption = {

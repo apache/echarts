@@ -25,6 +25,7 @@ import dataFilter from '../../processor/dataFilter';
 import { curry } from 'zrender/src/core/util';
 import PieView from './PieView';
 import PieSeriesModel from './PieSeries';
+import negativeDataFilter from '../../processor/negativeDataFilter';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerChartView(PieView);
@@ -34,4 +35,5 @@ export function install(registers: EChartsExtensionInstallRegisters) {
 
     registers.registerLayout(curry(pieLayout, 'pie'));
     registers.registerProcessor(dataFilter('pie'));
+    registers.registerProcessor(negativeDataFilter('pie'));
 }

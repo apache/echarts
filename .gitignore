@@ -203,4 +203,6 @@ todo
 /components.d.ts
 /renderers.js
 /renderers.d.ts
+/features.js
+/features.d.ts
 *.tgz

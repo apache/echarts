@@ -22,7 +22,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
@@ -310,12 +310,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/bar',
-                // 'echarts/component/polar',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main3'));
 
@@ -353,12 +348,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/bar',
-                // 'echarts/component/polar',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main4'));
 
@@ -400,13 +390,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts',
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/polar',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main5'));
 
@@ -455,14 +439,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/polar',
-                // 'echarts/component/grid',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main6'));
 
@@ -511,14 +488,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/polar',
-                // 'echarts/component/grid',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main7'));
 

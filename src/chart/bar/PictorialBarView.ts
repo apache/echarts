@@ -30,7 +30,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import List from '../../data/List';
 import GlobalModel from '../../model/Global';
 import Model from '../../model/Model';
-import { ColorString, AnimationOptionMixin } from '../../util/types';
+import { ColorString, AnimationOptionMixin, ECElement } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Displayable from 'zrender/src/graphic/Displayable';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -478,7 +478,7 @@ function prepareLayoutInfo(
         // Adjust calculate margin, to ensure each symbol is displayed
         // entirely in the given layout area.
         const mDiff = absBoundingLength - repeatTimes * unitLength;
-        symbolMarginNumeric = mDiff / 2 / (hasEndGap ? repeatTimes : repeatTimes - 1);
+        symbolMarginNumeric = mDiff / 2 / (hasEndGap ? repeatTimes : Math.max(repeatTimes - 1, 1));
         uLenWithMargin = unitLength + symbolMarginNumeric * 2;
         endFix = hasEndGap ? 0 : symbolMarginNumeric * 2;
 
@@ -689,6 +689,7 @@ function createOrUpdateBarRect(
                 lineWidth: 0
             }
         });
+        (barRect as ECElement).disableMorphing = true;
 
         bar.add(barRect);
     }
@@ -776,7 +777,6 @@ function createBar(data: List, opt: CreateOpts, symbolMeta: SymbolMeta, isUpdate
 
     bar.__pictorialShapeStr = getShapeStr(data, symbolMeta);
     bar.__pictorialSymbolMeta = symbolMeta;
-
     return bar;
 }
 

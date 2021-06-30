@@ -679,7 +679,6 @@ export function setLabelValueAnimation(
     const obj = labelInner(label);
     obj.prevValue = obj.value;
     obj.value = value;
-
     const normalLabelModel = labelStatesModels.normal;
 
     obj.valueAnimation = normalLabelModel.get('valueAnimation');
@@ -716,6 +715,7 @@ export function animateLabelValue(
             targetValue,
             percent
         );
+
         labelInnerStore.interpolatedValue = percent === 1 ? null : interpolated;
 
         const labelText = getLabelText({
@@ -729,17 +729,8 @@ export function animateLabelValue(
         setLabelText(textEl, labelText);
     }
 
-    (currValue == null
+    (labelInnerStore.prevValue == null
         ? initProps
         : updateProps
     )(textEl, {}, animatableModel, dataIndex, null, during);
-}
-
-export function enableLayoutLayoutFeatures(
-    el: Element,
-    dataIndex: number,
-    dataType: SeriesDataType
-): void {
-    getECData(el).dataIndex = dataIndex;
-    getECData(el).dataType = dataType;
 }

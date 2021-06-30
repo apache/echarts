@@ -17,6 +17,8 @@
 * under the License.
 */
 
+/* global document */
+
 import * as echarts from '../../../core/echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../../model/Global';
@@ -27,6 +29,8 @@ import ExtensionAPI from '../../../core/ExtensionAPI';
 import { addEventListener } from 'zrender/src/core/event';
 import Axis from '../../../coord/Axis';
 import Cartesian2D from '../../../coord/cartesian/Cartesian2D';
+
+/* global document */
 
 const BLOCK_SPLITER = new Array(60).join('-');
 const ITEM_SPLITER = '\t';

@@ -17,7 +17,7 @@
 * under the License.
 */
 
-/* global Uint8Array */
+/* global Uint8Array, document */
 
 import env from 'zrender/src/core/env';
 import { ToolboxFeature, ToolboxFeatureOption } from '../featureManager';
@@ -40,6 +40,8 @@ export interface ToolboxSaveAsImageFeatureOption extends ToolboxFeatureOption {
 
     lang?: string[]
 }
+
+/* global window, document */
 
 class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
 
@@ -84,7 +86,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
                 // otherwise, like `svg` data uri exported by zrender,
                 // there will be an error, for it's not encoded with base64.
                 // (just a url-encoded string through `encodeURIComponent`)
-                base64Encoded && (bstr = atob(bstr));
+                base64Encoded && (bstr = window.atob(bstr));
                 const filename = title + '.' + type;
                 if (window.navigator.msSaveOrOpenBlob) {
                     let n = bstr.length;

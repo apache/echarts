@@ -26,7 +26,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, DisplayState, ECElement } from '../../util/types';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
-import { Z2_EMPHASIS_LIFT } from '../../util/states';
+import { setStatesFlag, Z2_EMPHASIS_LIFT } from '../../util/states';
 
 
 class MapView extends ChartView {
@@ -183,7 +183,7 @@ class MapView extends ChartView {
                 }
 
                 (regionGroup as ECElement).onHoverStateChange = function (toState) {
-                    circle.useState(toState);
+                    setStatesFlag(circle, toState);
                 };
             }
 

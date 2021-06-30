@@ -23,6 +23,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import { GeoJSONRegion } from '../Region';
 
 const geoCoord = [126, 25];
+const nanhaiName = '南海诸岛';
 
 const points = [
     [[0, 3.5], [7, 11.2], [15, 11.9], [30, 7], [42, 0.7], [52, 0.7],
@@ -53,8 +54,15 @@ for (let i = 0; i < points.length; i++) {
 
 export default function fixNanhai(mapType: string, regions: GeoJSONRegion[]) {
     if (mapType === 'china') {
+        for (let i = 0; i < regions.length; i++) {
+            // Already exists.
+            if (regions[i].name === nanhaiName) {
+                return;
+            }
+        }
+
         regions.push(new GeoJSONRegion(
-            '南海诸岛',
+            nanhaiName,
             zrUtil.map(points, function (exterior) {
                 return {
                     type: 'polygon',

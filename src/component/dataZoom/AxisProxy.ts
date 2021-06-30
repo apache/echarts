@@ -139,8 +139,8 @@ class AxisProxy {
     calculateDataWindow(opt?: {
         start?: number
         end?: number
-        startValue?: number
-        endValue?: number
+        startValue?: number | string | Date
+        endValue?: number | string | Date
     }) {
         const dataExtent = this._dataExtent;
         const axisModel = this.getAxisModel();

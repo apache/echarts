@@ -21,12 +21,19 @@
 
 export * from '../core/echarts';
 export * from './api';
+import { use } from '../extension';
+
+// Import label layout by default.
+// TODO remove
+import {installLabelLayout} from '../label/installLabelLayout';
+use(installLabelLayout);
+
 
 // Export necessary types
 export {ZRColor as Color, Payload} from '../util/types';
 export {LinearGradientObject} from 'zrender/src/graphic/LinearGradient';
 export {RadialGradientObject} from 'zrender/src/graphic/RadialGradient';
-export {PatternObject} from 'zrender/src/graphic/Pattern';
+export {PatternObject, ImagePatternObject, SVGPatternObject} from 'zrender/src/graphic/Pattern';
 
 // ComposeOption
 import type { ComponentOption, ECBasicOption as EChartsCoreOption } from '../util/types';
