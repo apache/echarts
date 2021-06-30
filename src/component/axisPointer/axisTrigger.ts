@@ -301,13 +301,13 @@ function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
                 snapToValue = axisInfo.snap ? seriesNestestValue : value;
                 payloadBatch.length = 0;
             }
-        each(dataIndices, function (dataIndex) {
-            payloadBatch.push({
-                seriesIndex: series.seriesIndex,
-                dataIndexInside: dataIndex,
-                dataIndex: series.getData().getRawIndex(dataIndex)
+            each(dataIndices, function (dataIndex) {
+                payloadBatch.push({
+                    seriesIndex: series.seriesIndex,
+                    dataIndexInside: dataIndex,
+                    dataIndex: series.getData().getRawIndex(dataIndex)
+                });
             });
-        });
         }
     });
 
