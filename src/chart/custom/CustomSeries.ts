@@ -131,8 +131,8 @@ export interface CustomBaseDuringAPI {
     getExtra(key: string): unknown
 }
 export interface CustomDuringAPI<
-    StyleOpt extends object = object,
-    ShapeOpt extends object = object
+    StyleOpt extends any = any,
+    ShapeOpt extends any = any
 > extends CustomBaseDuringAPI {
     setShape<T extends keyof ShapeOpt>(key: T, val: ShapeOpt[T]): this;
     getShape<T extends keyof ShapeOpt>(key: T): ShapeOpt[T];
