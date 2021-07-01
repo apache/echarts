@@ -210,7 +210,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
                 back: 'M22,1.4L9.9,13.5l12.3,12.3 M10.3,13.5H54.9v44.6 H10.3v-26'
             },
             // `zoom`, `back`
-            title: ecModel.getLocale(['toolbox', 'dataZoom', 'title']),
+            title: ecModel.getLocaleModel().get(['toolbox', 'dataZoom', 'title']),
             brushStyle: {
                 borderWidth: 0,
                 color: 'rgba(210,219,238,0.2)'

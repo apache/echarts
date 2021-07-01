@@ -1550,7 +1550,7 @@ export interface UniversalTransitionOption {
     /**
      * Animation delay of each divided element
      */
-    delay?: (index?: number, count?: number) => number
+    delay?: (index: number, count: number) => number
     /**
      * How to divide the shape in combine and split animation.
      */
