@@ -155,13 +155,14 @@ export interface CustomBaseElementOption extends Partial<Pick<
     // `false` means remove the clipPath
     clipPath?: CustomBaseZRPathOption | false;
     // `extra` can be set in any el option for custom prop for annimation duration.
-    extra?: Dictionary<any> & TransitionAnyOption;
+    extra?: Dictionary<unknown> & TransitionAnyOption;
     // updateDuringAnimation
     during?(params: CustomBaseDuringAPI): void;
 
     focus?: 'none' | 'self' | 'series' | ArrayLike<number>
     blurScope?: BlurScope
 };
+
 export interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<
     Displayable, 'zlevel' | 'z' | 'z2' | 'invisible'
 >> {
