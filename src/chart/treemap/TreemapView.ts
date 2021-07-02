@@ -202,9 +202,11 @@ class TreemapView extends ChartView {
             : null;
 
         const containerGroup = this._giveContainerGroup(layoutInfo);
+        const hasAnimation = seriesModel.get('animation');
 
         const renderResult = this._doRender(containerGroup, seriesModel, reRoot);
         (
+            hasAnimation &&
             !isInit && (
                 !payloadType
                 || payloadType === 'treemapZoomToNode'
@@ -357,11 +359,6 @@ class TreemapView extends ChartView {
         seriesModel: TreemapSeriesModel,
         reRoot: ReRoot
     ) {
-        if (!seriesModel.get('animation')) {
-            renderResult.renderFinally();
-            return;
-        }
-
         const durationOption = seriesModel.get('animationDurationUpdate');
         const easingOption = seriesModel.get('animationEasing');
         // TODO: do not support function until necessary.
