@@ -1661,6 +1661,8 @@ export interface SeriesOnPolarOptionMixin {
 
     radiusAxisId?: string
     angleAxisId?: string
+
+    polarIndex?: number
 }
 
 export interface SeriesOnSingleOptionMixin {
