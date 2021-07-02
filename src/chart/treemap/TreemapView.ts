@@ -981,7 +981,6 @@ function renderNode(
             }
         );
 
-        
         const textEl = rectEl.getTextContent();
         if (!textEl) {
             return;
