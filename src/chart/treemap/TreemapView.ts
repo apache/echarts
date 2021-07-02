@@ -358,6 +358,7 @@ class TreemapView extends ChartView {
         reRoot: ReRoot
     ) {
         if (!seriesModel.get('animation')) {
+            renderResult.renderFinally();
             return;
         }
 
