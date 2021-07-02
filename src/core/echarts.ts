@@ -1499,46 +1499,54 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
-                if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
-                    if (isHighDownPayload(payload)) {
-                        if (model instanceof SeriesModel) {
-                            if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
-                                blurSeriesFromHighlightPayload(model, payload, ecIns._api);
-                            }
-                        }
-                        else {
-                            const { focusSelf, dispatchers } = findComponentHighDownDispatchers(
-                                model.mainType, model.componentIndex, payload.name, ecIns._api
-                            );
-                            if (payload.type === HIGHLIGHT_ACTION_TYPE && focusSelf && !payload.notBlur) {
-                                blurComponent(model.mainType, model.componentIndex, ecIns._api);
-                            }
-                            // PENDING:
-                            // Whether to put this "enter emphasis" code in `ComponentView`,
-                            // which will be the same as `ChartView` but might be not necessary
-                            // and will be far from this logic.
-                            if (dispatchers) {
-                                each(dispatchers, dispatcher => {
-                                    payload.type === HIGHLIGHT_ACTION_TYPE
-                                        ? enterEmphasis(dispatcher)
-                                        : leaveEmphasis(dispatcher);
-                                });
-                            }
+                const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
+                if (isExcluded) {
+                    return;
+                };
+                if (isHighDownPayload(payload)) {
+                    if (model instanceof SeriesModel) {
+                        if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
+                            blurSeriesFromHighlightPayload(model, payload, ecIns._api);
                         }
                     }
-                    else if (isSelectChangePayload(payload)) {
-                        // TODO geo
-                        if (model instanceof SeriesModel) {
-                            toggleSelectionFromPayload(model, payload, ecIns._api);
-                            updateSeriesElementSelection(model);
-                            markStatusToUpdate(ecIns);
+                    else {
+                        const { focusSelf, dispatchers } = findComponentHighDownDispatchers(
+                            model.mainType, model.componentIndex, payload.name, ecIns._api
+                        );
+                        if (payload.type === HIGHLIGHT_ACTION_TYPE && focusSelf && !payload.notBlur) {
+                            blurComponent(model.mainType, model.componentIndex, ecIns._api);
+                        }
+                        // PENDING:
+                        // Whether to put this "enter emphasis" code in `ComponentView`,
+                        // which will be the same as `ChartView` but might be not necessary
+                        // and will be far from this logic.
+                        if (dispatchers) {
+                            each(dispatchers, dispatcher => {
+                                payload.type === HIGHLIGHT_ACTION_TYPE
+                                    ? enterEmphasis(dispatcher)
+                                    : leaveEmphasis(dispatcher);
+                            });
                         }
                     }
-
-                    callView(ecIns[
-                        mainType === 'series' ? '_chartsMap' : '_componentsMap'
-                    ][model.__viewId]);
                 }
+                else if (isSelectChangePayload(payload)) {
+                    // TODO geo
+                    if (model instanceof SeriesModel) {
+                        toggleSelectionFromPayload(model, payload, ecIns._api);
+                        updateSeriesElementSelection(model);
+                        markStatusToUpdate(ecIns);
+                    }
+                }
+            }, ecIns);
+
+            ecModel && ecModel.eachComponent(condition, function (model) {
+                const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
+                if (isExcluded) {
+                    return;
+                };
+                callView(ecIns[
+                    mainType === 'series' ? '_chartsMap' : '_componentsMap'
+                ][model.__viewId]);
             }, ecIns);
 
             function callView(view: ComponentView | ChartView) {
