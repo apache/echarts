@@ -18,7 +18,7 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import Geo from './Geo';
+import Geo, { geo2DDimensions } from './Geo';
 import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
 import geoSourceManager from './geoSourceManager';
@@ -130,7 +130,7 @@ function setGeoCoords(geo: Geo, model: MapSeries) {
 class GeoCreator implements CoordinateSystemCreator {
 
     // For deciding which dimensions to use when creating list data
-    dimensions = Geo.prototype.dimensions;
+    dimensions = geo2DDimensions;
 
     create(ecModel: GlobalModel, api: ExtensionAPI): Geo[] {
         const geoList = [] as Geo[];
