@@ -84,7 +84,7 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
 
     getMarkerPosition(value: ScaleDataValue[]) {
         const coordSys = this.coordinateSystem;
-        if (coordSys) {
+        if (coordSys && coordSys.clampData) {
             // PENDING if clamp ?
             const pt = coordSys.dataToPoint(coordSys.clampData(value));
             const data = this.getData();
