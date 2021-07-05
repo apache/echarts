@@ -73,22 +73,27 @@ function assembleArrow(
 
     borderColor = convertToColorString(borderColor);
     const arrowPos = mirrorPos(arrowPosition);
-    const arrowOffset = Math.round(Math.sqrt(2 * borderWidth * borderWidth) / 2) + borderWidth;
-    let positionStyle = `${arrowPos}:-${arrowOffset}px;`;
+    const arrowSize = Math.max(Math.round(borderWidth) * 1.5, 6);
+    let positionStyle = '';
     let transformStyle = CSS_TRANSFORM_VENDOR + ':';
+    let rotateDeg = 0;
     if (indexOf(['left', 'right'], arrowPos) > -1) {
         positionStyle += 'top:50%';
-        transformStyle += `translateY(-50%) rotate(${arrowPos === 'left' ? -225 : -45}deg)`;
+        transformStyle += `translateY(-50%) rotate(${rotateDeg = arrowPos === 'left' ? -225 : -45}deg)`;
     }
     else {
         positionStyle += 'left:50%';
-        transformStyle += `translateX(-50%) rotate(${arrowPos === 'top' ? 225 : 45}deg)`;
+        transformStyle += `translateX(-50%) rotate(${rotateDeg = arrowPos === 'top' ? 225 : 45}deg)`;
     }
+    const arrowOffset = Math.round((borderWidth * Math.SQRT2 + arrowSize / 2) * 100) / 100;
+    positionStyle += `;${arrowPos}:-${arrowOffset}px`;
+    const margin = Math.round(borderWidth / 2 * Math.abs(Math.cos(rotateDeg)) * 100) / 100;
 
     const borderStyle = `${borderColor} solid ${borderWidth}px;`;
     const styleCss = [
-        `position:absolute;width:${borderWidth}px;height:${borderWidth}px;`,
+        `position:absolute;width:${arrowSize}px;height:${arrowSize}px;`,
         `${positionStyle};${transformStyle};`,
+        `margin-${arrowPos}:${margin}px;`,
         `border-bottom:${borderStyle}`,
         `border-right:${borderStyle}`,
         `background-color:${backgroundColor};`
