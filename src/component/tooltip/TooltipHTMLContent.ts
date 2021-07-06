@@ -96,7 +96,6 @@ function assembleArrow(
     const styleCss = [
         `position:absolute;width:${arrowSize}px;height:${arrowSize}px;`,
         `${positionStyle};${transformStyle};`,
-        `margin-${arrowPos}:${margin}px;`,
         `border-bottom:${borderStyle}`,
         `border-right:${borderStyle}`,
         `background-color:${backgroundColor};`
