@@ -87,7 +87,6 @@ function assembleArrow(
     }
     const arrowOffset = Math.round((borderWidth * Math.SQRT2 + arrowSize / 2) * 100) / 100;
     positionStyle += `;${arrowPos}:-${arrowOffset}px`;
-    const margin = Math.round(borderWidth / 2 * Math.abs(Math.cos(rotateDeg)) * 100) / 100;
 
     const borderStyle = `${borderColor} solid ${borderWidth}px;`;
     const styleCss = [
