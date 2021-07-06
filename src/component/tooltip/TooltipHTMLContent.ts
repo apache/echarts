@@ -76,7 +76,7 @@ function assembleArrow(
     const arrowSize = Math.max(Math.round(borderWidth) * 1.5, 6);
     let positionStyle = '';
     let transformStyle = CSS_TRANSFORM_VENDOR + ':';
-    let rotateDeg = 0;
+    let rotateDeg;
     if (indexOf(['left', 'right'], arrowPos) > -1) {
         positionStyle += 'top:50%';
         transformStyle += `translateY(-50%) rotate(${rotateDeg = arrowPos === 'left' ? -225 : -45}deg)`;
