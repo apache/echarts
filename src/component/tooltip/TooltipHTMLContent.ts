@@ -85,7 +85,11 @@ function assembleArrow(
         positionStyle += 'left:50%';
         transformStyle += `translateX(-50%) rotate(${rotateDeg = arrowPos === 'top' ? 225 : 45}deg)`;
     }
-    const arrowOffset = Math.round((borderWidth * Math.SQRT2 + arrowSize / 2) * 100) / 100;
+    const rotateRadian = rotateDeg * Math.PI / 180;
+    const arrowWH = arrowSize + borderWidth;
+    const rotatedWH = arrowWH * Math.abs(Math.cos(rotateRadian)) + arrowWH * Math.abs(Math.sin(rotateRadian));
+    const arrowOffset = Math.round(((rotatedWH - Math.SQRT2 * borderWidth) / 2
+        + Math.SQRT2 * borderWidth - (rotatedWH - arrowWH) / 2) * 100) / 100;
     positionStyle += `;${arrowPos}:-${arrowOffset}px`;
 
     const borderStyle = `${borderColor} solid ${borderWidth}px;`;
