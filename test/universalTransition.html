@@ -608,6 +608,9 @@ under the License.
                             symbolRepeat: true,
                             symbolSize: ['80%', '60%'],
                             barCategoryGap: '40%',
+                            animationDelayUpdate(idx) {
+                                return idx * 500;
+                            },
                             universalTransition: {
                                 enabled: true,
                                 delay(idx, total) {
@@ -638,6 +641,9 @@ under the License.
                             label: labelSetting,
                             symbolRepeat: true,
                             symbolSize: ['80%', '60%'],
+                            animationDelayUpdate(idx) {
+                                return idx * 500;
+                            },
                             universalTransition: {
                                 enabled: true,
                                 delay(idx, total) {

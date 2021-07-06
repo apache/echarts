@@ -20,7 +20,7 @@
 // TODO Axis scale
 
 import * as zrUtil from 'zrender/src/core/util';
-import Polar from './Polar';
+import Polar, { polarDimensions } from './Polar';
 import {parsePercent} from '../../util/number';
 import {
     createScaleByModel,
@@ -132,7 +132,7 @@ function setAxis(axis: RadiusAxis | AngleAxis, axisModel: PolarAxisModel) {
 
 const polarCreator = {
 
-    dimensions: Polar.prototype.dimensions,
+    dimensions: polarDimensions,
 
     create: function (ecModel: GlobalModel, api: ExtensionAPI) {
         const polarList: Polar[] = [];

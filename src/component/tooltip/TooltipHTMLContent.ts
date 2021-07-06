@@ -388,7 +388,7 @@ class TooltipHTMLContent {
                 // stop, "unfocusAdjacency". Here `pointer-events: none` is used to solve
                 // it. Although it is not supported by IE8~IE10, fortunately it is a rare
                 // scenario.
-                + `;pointer-event:${this._enterable ? 'auto' : 'none'}`;
+                + `;pointer-events:${this._enterable ? 'auto' : 'none'}`;
         }
 
         this._show = true;
