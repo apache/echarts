@@ -22,7 +22,7 @@ import * as graphic from '../../util/graphic';
 import {
     enableHoverEmphasis
 } from '../../util/states';
-import {createSymbol} from '../../util/symbol';
+import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
 import {parsePercent, isNumeric} from '../../util/number';
 import ChartView from '../../view/Chart';
 import PictorialBarSeriesModel, {PictorialBarDataItemOption} from './PictorialBarSeries';
@@ -40,7 +40,6 @@ import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { getECData } from '../../util/innerStore';
-
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 
@@ -280,13 +279,7 @@ function getSymbolMeta(
     prepareLineWidth(itemModel, symbolMeta.symbolScale, rotation, opt, symbolMeta);
 
     const symbolSize = symbolMeta.symbolSize;
-    let symbolOffset = itemModel.get('symbolOffset');
-    if (zrUtil.isArray(symbolOffset)) {
-        symbolOffset = [
-            parsePercent(symbolOffset[0], symbolSize[0]),
-            parsePercent(symbolOffset[1], symbolSize[1])
-        ];
-    }
+    const symbolOffset = normalizeSymbolOffset(itemModel.get('symbolOffset'), symbolSize);
 
     prepareLayoutInfo(
         itemModel, symbolSize, layout, symbolRepeat, symbolClip, symbolOffset as number[],

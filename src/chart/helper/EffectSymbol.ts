@@ -17,11 +17,9 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
-import {createSymbol} from '../../util/symbol';
+import {createSymbol, normalizeSymbolOffset, normalizeSymbolSize} from '../../util/symbol';
 import {Group, Path} from '../../util/graphic';
 import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
-import {parsePercent} from '../../util/number';
 import SymbolClz from './Symbol';
 import List from '../../data/List';
 import type { ZRColor, ECElement } from '../../util/types';
@@ -41,13 +39,6 @@ interface RippleEffectCfg {
     symbolType?: string
     color?: ZRColor
     rippleEffectColor?: ZRColor
-}
-
-function normalizeSymbolSize(symbolSize: number | number[]): number[] {
-    if (!zrUtil.isArray(symbolSize)) {
-        symbolSize = [+symbolSize, +symbolSize];
-    }
-    return symbolSize;
 }
 
 function updateRipplePath(rippleGroup: Group, effectCfg: RippleEffectCfg) {
@@ -190,13 +181,10 @@ class EffectSymbol extends Group {
             ripplePath.setStyle('fill', color);
         });
 
-        let symbolOffset = data.getItemVisual(idx, 'symbolOffset');
+        const symbolOffset = normalizeSymbolOffset(data.getItemVisual(idx, 'symbolOffset'), symbolSize);
         if (symbolOffset) {
-            if (!zrUtil.isArray(symbolOffset)) {
-                symbolOffset = [symbolOffset, symbolOffset];
-            }
-            rippleGroup.x = parsePercent(symbolOffset[0], symbolSize[0]);
-            rippleGroup.y = parsePercent(zrUtil.retrieve2(symbolOffset[1], symbolOffset[0]) || 0, symbolSize[1]);
+            rippleGroup.x = symbolOffset[0];
+            rippleGroup.y = symbolOffset[1];
         }
 
         const symbolRotate = data.getItemVisual(idx, 'symbolRotate');

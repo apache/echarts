@@ -32,13 +32,6 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { saveOldStyle } from '../../animation/basicTrasition';
 
-function normalizeSymbolSize(symbolSize: number | number[]) {
-    if (!zrUtil.isArray(symbolSize)) {
-        symbolSize = [+symbolSize, +symbolSize];
-    }
-    return symbolSize;
-}
-
 type RadarSymbol = ReturnType<typeof symbolUtil.createSymbol> & {
     __dimIdx: number
 };
@@ -61,7 +54,7 @@ class RadarView extends ChartView {
             if (symbolType === 'none') {
                 return;
             }
-            const symbolSize = normalizeSymbolSize(
+            const symbolSize = symbolUtil.normalizeSymbolSize(
                 data.getItemVisual(idx, 'symbolSize')
             );
             const symbolPath = symbolUtil.createSymbol(

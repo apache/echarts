@@ -133,7 +133,7 @@ interface AxisLineOption {
     // The arrow at both ends the the axis.
     symbol?: string | [string, string],
     symbolSize?: number[],
-    symbolOffset?: number[],
+    symbolOffset?: string | number | (string | number)[],
     lineStyle?: LineStyleOption,
 }
 
