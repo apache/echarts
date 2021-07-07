@@ -20,6 +20,7 @@
 import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
 import {extend, defaults, each, map} from 'zrender/src/core/util';
+import {BuiltinTextPosition} from 'zrender/src/core/types';
 import {
     Rect,
     Sector,
@@ -46,7 +47,7 @@ import {
     OrdinalNumber,
     ParsedValue
 } from '../../util/types';
-import BarSeriesModel, {BarSeriesOption, BarDataItemOption} from './BarSeries';
+import BarSeriesModel, {BarSeriesOption, BarDataItemOption, PolarBarLabelPosition} from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
@@ -60,6 +61,7 @@ import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import {LayoutRect} from '../../util/layout';
 import {EventCallback} from 'zrender/src/core/Eventful';
 import { warn } from '../../util/log';
+import {createSectorCalculateTextPosition, SectorTextPosition, setSectorTextRotation} from '../../label/sectorLabel';
 import { saveOldStyle } from '../../animation/basicTrasition';
 
 const _eventPos = [0, 0];
@@ -759,6 +761,10 @@ const elementCreator: {
 
         sector.name = 'item';
 
+        const positionMap = createPolarPositionMapping(isRadial);
+        sector.calculateTextPosition
+            = createSectorCalculateTextPosition<PolarBarLabelPosition>(positionMap);
+
         // Animation
         if (animationModel) {
             const sectorShape = sector.shape;
@@ -911,13 +917,32 @@ function isZeroOnPolar(layout: SectorLayout) {
         && layout.startAngle === layout.endAngle;
 }
 
+function createPolarPositionMapping(isRadial: boolean)
+    : (position: PolarBarLabelPosition) => SectorTextPosition
+{
+    return ((isRadial: boolean) => {
+        const arcOrAngle = isRadial ? 'Arc' : 'Angle';
+        return (position: PolarBarLabelPosition) => {
+            switch (position) {
+                case 'start':
+                case 'insideStart':
+                case 'end':
+                case 'insideEnd':
+                    return position + arcOrAngle as SectorTextPosition;
+                default:
+                    return position;
+            }
+        };
+    })(isRadial);
+}
+
 function updateStyle(
     el: BarPossiblePath,
     data: List, dataIndex: number,
     itemModel: Model<BarDataItemOption>,
     layout: RectLayout | SectorLayout,
     seriesModel: BarSeriesModel,
-    isHorizontal: boolean,
+    isHorizontalOrRadial: boolean,
     isPolar: boolean
 ) {
     const style = data.getItemVisual(dataIndex, 'style');
@@ -931,33 +956,49 @@ function updateStyle(
     const cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && (el as Path).attr('cursor', cursorStyle);
 
-    if (!isPolar) {
-        const labelPositionOutside = isHorizontal
-            ? ((layout as RectLayout).height > 0 ? 'bottom' as const : 'top' as const)
-            : ((layout as RectLayout).width > 0 ? 'left' as const : 'right' as const);
-        const labelStatesModels = getLabelStatesModels(itemModel);
+    const labelPositionOutside = isPolar
+        ? (isHorizontalOrRadial
+            ? ((layout as SectorLayout).r >= (layout as SectorLayout).r0 ? 'endArc' as const : 'startArc' as const)
+            : ((layout as SectorLayout).endAngle >= (layout as SectorLayout).startAngle
+                ? 'endAngle' as const
+                : 'startAngle' as const
+            )
+        )
+        : (isHorizontalOrRadial
+            ? ((layout as RectLayout).height >= 0 ? 'bottom' as const : 'top' as const)
+            : ((layout as RectLayout).width >= 0 ? 'right' as const : 'left' as const));
 
-        setLabelStyle(
-            el, labelStatesModels,
-            {
-                labelFetcher: seriesModel,
-                labelDataIndex: dataIndex,
-                defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
-                inheritColor: style.fill as ColorString,
-                defaultOpacity: style.opacity,
-                defaultOutsidePosition: labelPositionOutside
-            }
-        );
+    const labelStatesModels = getLabelStatesModels(itemModel);
 
-        const label = el.getTextContent();
+    setLabelStyle(
+        el, labelStatesModels,
+        {
+            labelFetcher: seriesModel,
+            labelDataIndex: dataIndex,
+            defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
+            inheritColor: style.fill as ColorString,
+            defaultOpacity: style.opacity,
+            defaultOutsidePosition: labelPositionOutside as BuiltinTextPosition
+        }
+    );
 
-        setLabelValueAnimation(
-            label,
-            labelStatesModels,
-            seriesModel.getRawValue(dataIndex) as ParsedValue,
-            (value: number) => getDefaultInterpolatedLabel(data, value)
+    if (isPolar) {
+        let position = seriesModel.get(['label', 'position']);
+        setSectorTextRotation(
+            el as Sector,
+            position === 'outside' ? labelPositionOutside : position,
+            createPolarPositionMapping(isHorizontalOrRadial),
+            seriesModel.get(['label', 'rotate'])
         );
     }
+
+    const label = el.getTextContent();
+    setLabelValueAnimation(
+        label,
+        labelStatesModels,
+        seriesModel.getRawValue(dataIndex) as ParsedValue,
+        (value: number) => getDefaultInterpolatedLabel(data, value)
+    );
 
     const emphasisModel = itemModel.getModel(['emphasis']);
     enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
