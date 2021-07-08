@@ -980,6 +980,11 @@ function updateStyle(
         }
     );
 
+    const label = el.getTextContent();
+    if (!label) {
+        return;
+    }
+
     if (isPolar) {
         const position = itemModel.get(['label', 'position']);
         el.textConfig.inside = position === 'middle' ? true : null;
@@ -991,7 +996,6 @@ function updateStyle(
         );
     }
 
-    const label = el.getTextContent();
     setLabelValueAnimation(
         label,
         labelStatesModels,
