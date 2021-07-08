@@ -982,6 +982,9 @@ function updateStyle(
 
     if (isPolar) {
         const position = seriesModel.get(['label', 'position']);
+        if (position === 'middle') {
+            el.textConfig.inside = true;
+        }
         setSectorTextRotation(
             el as Sector,
             position === 'outside' ? labelPositionOutside : position,
