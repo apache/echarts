@@ -762,8 +762,7 @@ const elementCreator: {
         sector.name = 'item';
 
         const positionMap = createPolarPositionMapping(isRadial);
-        sector.calculateTextPosition
-            = createSectorCalculateTextPosition<PolarBarLabelPosition>(positionMap);
+        sector.calculateTextPosition = createSectorCalculateTextPosition<PolarBarLabelPosition>(positionMap);
 
         // Animation
         if (animationModel) {
@@ -918,8 +917,7 @@ function isZeroOnPolar(layout: SectorLayout) {
 }
 
 function createPolarPositionMapping(isRadial: boolean)
-    : (position: PolarBarLabelPosition) => SectorTextPosition
-{
+    : (position: PolarBarLabelPosition) => SectorTextPosition {
     return ((isRadial: boolean) => {
         const arcOrAngle = isRadial ? 'Arc' : 'Angle';
         return (position: PolarBarLabelPosition) => {
@@ -983,7 +981,7 @@ function updateStyle(
     );
 
     if (isPolar) {
-        let position = seriesModel.get(['label', 'position']);
+        const position = seriesModel.get(['label', 'position']);
         setSectorTextRotation(
             el as Sector,
             position === 'outside' ? labelPositionOutside : position,

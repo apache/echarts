@@ -1,8 +1,9 @@
-import {RectLike, Sector} from 'zrender';
 import {calculateTextPosition, TextPositionCalculationResult} from 'zrender/src/contain/text';
+import { RectLike } from 'zrender/src/core/BoundingRect';
 import {BuiltinTextPosition, TextAlign, TextVerticalAlign} from 'zrender/src/core/types';
 import {isArray} from 'zrender/src/core/util';
 import {ElementCalculateTextPosition, ElementTextConfig} from 'zrender/src/Element';
+import { Sector } from '../util/graphic';
 
 export type SectorTextPosition = BuiltinTextPosition
     | 'startAngle' | 'insideStartAngle'
