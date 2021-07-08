@@ -34,6 +34,7 @@ import DataDimensionInfo from '../DataDimensionInfo';
 import List from '../List';
 import { CoordDimensionDefinition, CoordDimensionDefinitionLoose } from './createDimensions';
 
+
 /**
  * @see {module:echarts/test/ut/spec/data/completeDimensions}
  *
@@ -226,26 +227,34 @@ function completeDimensions(
     const fromZero = generateCoordCount != null;
     generateCoordCount = generateCoord ? (generateCoordCount || 1) : 0;
     const extra = generateCoord || 'value';
-
+    let coordDimNameAutoIdx = 0;
+    let dataDimNameAutoIdx = 0;
     // Set dim `name` and other `coordDim` and other props.
     for (let resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
         const resultItem = result[resultDimIdx] = result[resultDimIdx] || new DataDimensionInfo();
         const coordDim = resultItem.coordDim;
 
         if (coordDim == null) {
-            resultItem.coordDim = genName(
-                extra, coordDimNameMap, fromZero
+            const res = genName(
+                extra, coordDimNameMap, coordDimNameAutoIdx, fromZero
             );
+            coordDimNameAutoIdx = res.autoIdx;
+            resultItem.coordDim = res.name;
             resultItem.coordDimIndex = 0;
+            // Series specified generateCoord is using out.
             if (!generateCoord || generateCoordCount <= 0) {
                 resultItem.isExtraCoord = true;
             }
             generateCoordCount--;
         }
 
-        resultItem.name == null && (resultItem.name = genName(
-            resultItem.coordDim, dataDimNameMap, false
-        ));
+        if (resultItem.name == null) {
+            const res = genName(
+                resultItem.coordDim, dataDimNameMap, dataDimNameAutoIdx, false
+            );
+            resultItem.name = res.name;
+            dataDimNameAutoIdx = res.autoIdx;
+        }
 
         if (resultItem.type == null
             && (
@@ -312,17 +321,20 @@ function getDimCount(
 function genName(
     name: DimensionName,
     map: HashMap<unknown, DimensionName>,
+    autoIdx: number,
     fromZero: boolean
-): DimensionName {
-    if (fromZero || map.get(name) != null) {
-        let i = 0;
-        while (map.get(name + i) != null) {
+): { name: DimensionName, autoIdx: number } {
+    const mapData = map.data;
+    if (fromZero || mapData.hasOwnProperty(name)) {
+        let i = autoIdx || 0;
+        while (mapData.hasOwnProperty(name + i)) {
             i++;
         }
         name += i;
+        autoIdx = i;
     }
     map.set(name, true);
-    return name;
+    return { name, autoIdx };
 }
 
 export default completeDimensions;
