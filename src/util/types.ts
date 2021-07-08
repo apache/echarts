@@ -1656,13 +1656,8 @@ export interface SeriesOnCartesianOptionMixin {
 }
 
 export interface SeriesOnPolarOptionMixin {
-    radiusAxisIndex?: number
-    angleAxisIndex?: number
-
-    radiusAxisId?: string
-    angleAxisId?: string
-
     polarIndex?: number
+    polarId?: string;
 }
 
 export interface SeriesOnSingleOptionMixin {
