@@ -981,12 +981,13 @@ function updateStyle(
     );
 
     if (isPolar) {
-        const position = seriesModel.get(['label', 'position']);
+        const position = itemModel.get(['label', 'position']);
+        el.textConfig.inside = position === 'middle' ? true : null;
         setSectorTextRotation(
             el as Sector,
             position === 'outside' ? labelPositionOutside : position,
             createPolarPositionMapping(isHorizontalOrRadial),
-            seriesModel.get(['label', 'rotate'])
+            itemModel.get(['label', 'rotate'])
         );
     }
 
