@@ -22,7 +22,7 @@ import * as numberUtil from '../../util/number';
 import * as markerHelper from './markerHelper';
 import LineDraw from '../../chart/helper/LineDraw';
 import MarkerView from './MarkerView';
-import {getStackedDimension} from '../../data/helper/dataStackHelper';
+import { getStackedDimension } from '../../data/helper/dataStackHelper';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import MarkLineModel, { MarkLine2DDataItemOption, MarkLineOption } from './MarkLineModel';
 import { ScaleDataValue, ColorString } from '../../util/types';
@@ -111,7 +111,19 @@ const markLineTransform = function (
             mlFrom.coord[baseIndex] = -Infinity;
             mlTo.coord[baseIndex] = Infinity;
 
-            const precision = mlModel.get('precision');
+            let precision = mlModel.get('precision');
+
+            if (precision === undefined) {
+                data.each(valueAxis.dim, function (val: number, idx: number) {
+                    if (!Number.isInteger(val)) {
+                        const decLength = val.toString().split('.')[1].length;
+                        if (!precision || decLength > precision) {
+                            precision = decLength;
+                        }
+                    }
+                });
+            }
+
             if (precision >= 0 && typeof value === 'number') {
                 value = +value.toFixed(Math.min(precision, 20));
             }
@@ -186,7 +198,7 @@ function markLineFilter(
         if (
             fromCoord && toCoord
             && (ifMarkLineHasOnlyDim(1, fromCoord, toCoord, coordSys)
-            || ifMarkLineHasOnlyDim(0, fromCoord, toCoord, coordSys))
+                || ifMarkLineHasOnlyDim(0, fromCoord, toCoord, coordSys))
         ) {
             return true;
         }
@@ -442,7 +454,7 @@ function createList(coordSys: CoordinateSystem, seriesModel: SeriesModel, mlMode
                 seriesModel.getData().mapDimension(coordDim)
             ) || {};
             // In map series data don't have lng and lat dimension. Fallback to same with coordSys
-            return defaults({name: coordDim}, info);
+            return defaults({ name: coordDim }, info);
         });
     }
     else {
