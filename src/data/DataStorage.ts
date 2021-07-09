@@ -75,10 +75,6 @@ type MapCb = (...args: any) => ParsedValue | ParsedValue[];
 export type DimValueGetter = (
     this: DataStorage,
     dataItem: any,
-    /**
-     * @deprecated
-     * dimName is not used anymore
-     */
     dimName: string,
     dataIndex: number,
     dimIndex: DimensionIndex
@@ -1048,11 +1044,14 @@ class DataStorage {
      private _copyCommonProps(target: DataStorage) {
         target._count = this._count;
         target._rawCount = this._rawCount;
+        target._provider = this._provider;
+        target._dimensions = this._dimensions;
+        target.getDimensionIndex = this.getDimensionIndex;
+
         target._extent = clone(this._extent);
         target._rawExtent = clone(this._rawExtent);
         target._indices = this._cloneIndices();
-        target._provider = this._provider;
-        target.getDimensionIndex = this.getDimensionIndex;
+
         target._updateGetRawIdx();
      }
 
@@ -1104,7 +1103,7 @@ class DataStorage {
             objectRows(
                 this: DataStorage, dataItem: any, dimName: string, dataIndex: number, dimIndex: number
             ): ParsedValue {
-                return parseDataValue(dataItem[dimIndex], this._dimensions[dataIndex]);
+                return parseDataValue(dataItem[dimName], this._dimensions[dataIndex]);
             },
 
             keyedColumns: getDimValueSimply,
