@@ -686,13 +686,9 @@ class DataStorage {
       */
      map(dims: DimensionIndex[], cb: MapCb): DataStorage {
         // TODO only clone picked chunks.
-         const target = this.clone(dims);
+         const target = this.clone(dims, true);
          const targetChunks = target._chunks;
 
-         // Following properties are all immutable.
-         // So we can reference to the same value
-         target._indices = this._indices;
-         target.getRawIndex = this.getRawIndex;
 
          const tmpRetValue = [];
          const dimSize = dims.length;
@@ -1001,7 +997,7 @@ class DataStorage {
       *
       * @param clonedDims Determine which dims to clone. Will share the data if not specified.
       */
-     clone(clonedDims?: number[]): DataStorage {
+     clone(clonedDims?: number[], cloneIndices?: boolean): DataStorage {
         const target = new DataStorage();
         const chunks = this._chunks;
         const clonedDimsMap = clonedDims && reduce(clonedDims, (obj, dimIdx) => {
@@ -1020,6 +1016,11 @@ class DataStorage {
             target._chunks = chunks;
         }
         this._copyCommonProps(target);
+
+        if (cloneIndices) {
+            target._indices = this._cloneIndices();
+        }
+        target._updateGetRawIdx();
         return target;
      }
 
@@ -1051,9 +1052,6 @@ class DataStorage {
 
         target._extent = clone(this._extent);
         target._rawExtent = clone(this._rawExtent);
-        target._indices = this._cloneIndices();
-
-        target._updateGetRawIdx();
      }
 
      private _cloneIndices() {

@@ -82,7 +82,7 @@ type MapCb<Ctx> = (this: CtxOrList<Ctx>, ...args: any) => ParsedValue | ParsedVa
 
 const TRANSFERABLE_PROPERTIES = [
     'hasItemOption', '_nameList', '_idList', '_invertedIndicesMap',
-    '_rawData', '_dimValueGetter', '_store',
+    '_rawData', '_dimValueGetter',
     '_nameDimIdx', '_idDimIdx', '_nameRepeatCount'
 ];
 const CLONE_PROPERTIES = [
@@ -1155,6 +1155,7 @@ class SeriesData<
         }
 
         transferProperties(list, this);
+        list._store = this._store.clone();
 
         return list;
     }
