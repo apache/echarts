@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import SeriesModel from '../../model/Series';
 import {
     SeriesOption,
@@ -31,7 +31,7 @@ import {
     SeriesEncodeOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
 // [percent, color]
 type GaugeColorStop = [number, ColorString];
@@ -180,8 +180,8 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
     visualStyleAccessPath = 'itemStyle';
     useColorPaletteOnData = true;
 
-    getInitialData(option: GaugeSeriesOption, ecModel: GlobalModel): List {
-        return createListSimply(this, ['value']);
+    getInitialData(option: GaugeSeriesOption, ecModel: GlobalModel): SeriesData {
+        return createSeriesDataSimply(this, ['value']);
     }
 
     static defaultOption: GaugeSeriesOption = {

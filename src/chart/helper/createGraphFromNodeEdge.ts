@@ -19,12 +19,12 @@
 
 
 import * as zrUtil from 'zrender/src/core/util';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import Graph from '../../data/Graph';
-import linkList from '../../data/helper/linkList';
+import linkSeriesData from '../../data/helper/linkSeriesData';
 import createDimensions from '../../data/helper/createDimensions';
 import CoordinateSystem from '../../core/CoordinateSystem';
-import createListFromArray from './createListFromArray';
+import createListFromArray from './createSeriesDataFromArray';
 import {
     OptionSourceDataOriginal, GraphEdgeItemObject, OptionDataValue,
     OptionDataItemObject
@@ -37,7 +37,7 @@ export default function createGraphFromNodeEdge(
     edges: OptionSourceDataOriginal<OptionDataValue, GraphEdgeItemObject<OptionDataValue>>,
     seriesModel: SeriesModel,
     directed: boolean,
-    beforeLink: (nodeData: List, edgeData: List) => void
+    beforeLink: (nodeData: SeriesData, edgeData: SeriesData) => void
 ): Graph {
     // ??? TODO
     // support dataset?
@@ -86,16 +86,16 @@ export default function createGraphFromNodeEdge(
         const dimensionNames = createDimensions(nodes, {
             coordDimensions: coordDimensions
         });
-        nodeData = new List(dimensionNames, seriesModel);
+        nodeData = new SeriesData(dimensionNames, seriesModel);
         nodeData.initData(nodes);
     }
 
-    const edgeData = new List(['value'], seriesModel);
+    const edgeData = new SeriesData(['value'], seriesModel);
     edgeData.initData(validEdges, linkNameList);
 
     beforeLink && beforeLink(nodeData, edgeData);
 
-    linkList({
+    linkSeriesData({
         mainData: nodeData,
         struct: graph,
         structAttr: 'graph',

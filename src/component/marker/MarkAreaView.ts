@@ -20,7 +20,7 @@
 // TODO Optimize on polar
 
 import * as colorUtil from 'zrender/src/tool/color';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import * as numberUtil from '../../util/number';
 import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
@@ -47,7 +47,7 @@ interface MarkAreaDrawGroup {
 }
 
 const inner = makeInner<{
-    data: List<MarkAreaModel>
+    data: SeriesData<MarkAreaModel>
 }, MarkAreaDrawGroup>();
 
 // Merge two ends option into one.
@@ -137,7 +137,7 @@ function markAreaFilter(coordSys: CoordinateSystem, item: MarkAreaMergedItemOpti
 
 // dims can be ['x0', 'y0'], ['x1', 'y1'], ['x0', 'y1'], ['x1', 'y0']
 function getSingleMarkerEndPoint(
-    data: List<MarkAreaModel>,
+    data: SeriesData<MarkAreaModel>,
     idx: number,
     dims: typeof dimPermutations[number],
     seriesModel: SeriesModel,
@@ -363,7 +363,7 @@ function createList(
 ) {
 
     let coordDimsInfos: DataDimensionInfo[];
-    let areaData: List<MarkAreaModel>;
+    let areaData: SeriesData<MarkAreaModel>;
     const dims = ['x0', 'y0', 'x1', 'y1'];
     if (coordSys) {
         coordDimsInfos = map(coordSys && coordSys.dimensions, function (coordDim) {
@@ -376,7 +376,7 @@ function createList(
                 name: coordDim
             }, info);
         });
-        areaData = new List(map(dims, function (dim, idx) {
+        areaData = new SeriesData(map(dims, function (dim, idx) {
             return {
                 name: dim,
                 type: coordDimsInfos[idx % 2].type
@@ -388,7 +388,7 @@ function createList(
             name: 'value',
             type: 'float'
         }];
-        areaData = new List(coordDimsInfos, maModel);
+        areaData = new SeriesData(coordDimsInfos, maModel);
     }
 
     let optData = map(maModel.get('data'), curry(

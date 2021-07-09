@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListFromArray from '../helper/createListFromArray';
+import createListFromArray from '../helper/createSeriesDataFromArray';
 import SeriesModel from '../../model/Series';
 import {
     SeriesOnCartesianOptionMixin,
@@ -36,7 +36,7 @@ import {
     CallbackDataParams,
     DefaultEmphasisFocus
 } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 import {createSymbol, ECSymbol} from '../../util/symbol';
@@ -130,7 +130,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
     hasSymbolVisual = true;
 
-    getInitialData(option: LineSeriesOption): List {
+    getInitialData(option: LineSeriesOption): SeriesData {
         if (__DEV__) {
             const coordSys = option.coordinateSystem;
             if (coordSys !== 'polar' && coordSys !== 'cartesian2d') {

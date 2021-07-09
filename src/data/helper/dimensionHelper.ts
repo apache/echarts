@@ -19,10 +19,11 @@
 
 
 import {each, createHashMap, assert} from 'zrender/src/core/util';
-import List, { ListDimensionType } from '../List';
+import SeriesData from '../SeriesData';
 import {
     DimensionName, VISUAL_DIMENSIONS, DimensionType, DimensionUserOuput, DimensionUserOuputEncode, DimensionIndex
 } from '../../util/types';
+import { DataStoreDimensionType } from '../DataStorage';
 
 export type DimensionSummaryEncode = {
     defaultedLabel: DimensionName[],
@@ -40,7 +41,7 @@ export type DimensionSummary = {
     encodeFirstDimNotExtra: {[coordDim: string]: DimensionName},
 };
 
-export function summarizeDimensions(data: List): DimensionSummary {
+export function summarizeDimensions(data: SeriesData): DimensionSummary {
     const summary: DimensionSummary = {} as DimensionSummary;
     const encode = summary.encode = {} as DimensionSummaryEncode;
     const notExtraCoordDimMap = createHashMap<1, DimensionName>();
@@ -140,7 +141,7 @@ function getOrCreateEncodeArr(
 }
 
 // FIXME:TS should be type `AxisType`
-export function getDimensionTypeByAxis(axisType: string): ListDimensionType {
+export function getDimensionTypeByAxis(axisType: string): DataStoreDimensionType {
     return axisType === 'category'
         ? 'ordinal'
         : axisType === 'time'

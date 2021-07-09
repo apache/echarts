@@ -18,7 +18,7 @@
 */
 
 import SeriesModel from '../../model/Series';
-import createListFromArray from '../helper/createListFromArray';
+import createListFromArray from '../helper/createSeriesDataFromArray';
 import {
     SeriesOption,
     SeriesOnCartesianOptionMixin,
@@ -28,7 +28,7 @@ import {
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
 
 export interface BaseBarSeriesOption<StateOption, ExtraStateOption = DefaultExtraStateOpts>
@@ -78,7 +78,7 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
     static type = 'series.__base_bar__';
     type = BaseBarSeriesModel.type;
 
-    getInitialData(option: Opts, ecModel: GlobalModel): List {
+    getInitialData(option: Opts, ecModel: GlobalModel): SeriesData {
         return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
     }
 

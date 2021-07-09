@@ -1,4 +1,4 @@
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -26,14 +26,14 @@ import List from '../data/List';
  */
 class LegendVisualProvider {
 
-    private _getDataWithEncodedVisual: () => List;
-    private _getRawData: () => List;
+    private _getDataWithEncodedVisual: () => SeriesData;
+    private _getRawData: () => SeriesData;
 
     constructor(
         // Function to get data after filtered. It stores all the encoding info
-        getDataWithEncodedVisual: () => List,
+        getDataWithEncodedVisual: () => SeriesData,
         // Function to get raw data before filtered.
-        getRawData: () => List
+        getRawData: () => SeriesData
     ) {
         this._getDataWithEncodedVisual = getDataWithEncodedVisual;
         this._getRawData = getRawData;

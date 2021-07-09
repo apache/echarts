@@ -21,7 +21,7 @@ import {createSymbol, normalizeSymbolOffset, normalizeSymbolSize} from '../../ut
 import {Group, Path} from '../../util/graphic';
 import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
 import SymbolClz from './Symbol';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import type { ZRColor, ECElement } from '../../util/types';
 import type Displayable from 'zrender/src/graphic/Displayable';
 import { SymbolDrawItemModelOption } from './SymbolDraw';
@@ -59,7 +59,7 @@ class EffectSymbol extends Group {
 
     private _effectCfg: RippleEffectCfg;
 
-    constructor(data: List, idx: number) {
+    constructor(data: SeriesData, idx: number) {
         super();
 
         const symbol = new SymbolClz(data, idx);
@@ -162,7 +162,7 @@ class EffectSymbol extends Group {
     /**
      * Update symbol properties
      */
-    updateData(data: List, idx: number) {
+    updateData(data: SeriesData, idx: number) {
         const seriesModel = data.hostModel;
 
         (this.childAt(0) as SymbolClz).updateData(data, idx);

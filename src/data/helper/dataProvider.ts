@@ -36,7 +36,7 @@ import {
     DimensionName, DimensionIndex, OptionSourceData,
     DimensionIndexLoose, OptionDataItem, OptionDataValue, SourceFormat, SeriesLayoutBy, ParsedValue
 } from '../../util/types';
-import List from '../List';
+import SeriesData from '../SeriesData';
 
 export interface DataProvider {
     /**
@@ -469,7 +469,7 @@ function getMethodMapKey(sourceFormat: SourceFormat, seriesLayoutBy: SeriesLayou
 // value may be 0.91000000001, which have brings trouble to display.
 // TODO: consider how to treat null/undefined/NaN when display?
 export function retrieveRawValue(
-    data: List, dataIndex: number, dim?: DimensionName | DimensionIndexLoose
+    data: SeriesData, dataIndex: number, dim?: DimensionName | DimensionIndexLoose
     // If dimIndex is null/undefined, return OptionDataItem.
     // Otherwise, return OptionDataValue.
 ): OptionDataValue | OptionDataItem {
@@ -484,7 +484,7 @@ export function retrieveRawValue(
         return;
     }
 
-    const sourceFormat = data.getProvider().getSource().sourceFormat;
+    const sourceFormat = data.getStore().getProvider().getSource().sourceFormat;
     let dimName;
     let dimIndex;
 
@@ -510,12 +510,12 @@ export function retrieveRawValue(
  * @param dataIndex
  * @param attr like 'selected'
  */
-export function retrieveRawAttr(data: List, dataIndex: number, attr: string): any {
+export function retrieveRawAttr(data: SeriesData, dataIndex: number, attr: string): any {
     if (!data) {
         return;
     }
 
-    const sourceFormat = data.getProvider().getSource().sourceFormat;
+    const sourceFormat = data.getStore().getProvider().getSource().sourceFormat;
 
     if (sourceFormat !== SOURCE_FORMAT_ORIGINAL
         && sourceFormat !== SOURCE_FORMAT_OBJECT_ROWS

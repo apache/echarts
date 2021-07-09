@@ -30,7 +30,7 @@ import {
     DimensionLoose,
     StageHandlerProgressExecutor
 } from '../util/types';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import { getItemVisualFromData, setItemVisualFromData } from './helper';
 
 const each = zrUtil.each;
@@ -135,7 +135,7 @@ export function replaceVisualOption<T extends string>(
 export function applyVisual<VisualState extends string, Scope>(
     stateList: readonly VisualState[],
     visualMappings: VisualMappingCollection<VisualState>,
-    data: List,
+    data: SeriesData,
     getValueState: (this: Scope, valueOrIndex: ParsedValue | number) => VisualState,
     scope?: Scope,
     dimension?: DimensionLoose

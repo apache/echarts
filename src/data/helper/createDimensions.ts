@@ -26,7 +26,7 @@ import {
     DimensionDefinitionLoose, OptionEncode, OptionEncodeValue,
     EncodeDefaulter, OptionSourceData, DimensionName, DimensionDefinition, DataVisualDimensions, DimensionIndex
 } from '../../util/types';
-import List from '../List';
+import SeriesData from '../SeriesData';
 import DataDimensionInfo from '../DataDimensionInfo';
 import { HashMap } from 'zrender/src/core/util';
 import OrdinalMeta from '../OrdinalMeta';
@@ -60,7 +60,7 @@ export type CreateDimensionsParams = {
  */
 export default function createDimensions(
     // TODO: TYPE completeDimensions type
-    source: Source | List | OptionSourceData,
+    source: Source | SeriesData | OptionSourceData,
     opt?: CreateDimensionsParams
 ): DataDimensionInfo[] {
     opt = opt || {};

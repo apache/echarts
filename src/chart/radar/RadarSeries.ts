@@ -18,7 +18,7 @@
 */
 
 import SeriesModel from '../../model/Series';
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
@@ -35,7 +35,7 @@ import {
     CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import Radar from '../../coord/radar/Radar';
 import {
     createTooltipMarkup, retrieveVisualColorForTooltipMarker
@@ -90,8 +90,8 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
 
     }
 
-    getInitialData(option: RadarSeriesOption, ecModel: GlobalModel): List {
-        return createListSimply(this, {
+    getInitialData(option: RadarSeriesOption, ecModel: GlobalModel): SeriesData {
+        return createSeriesDataSimply(this, {
             generateCoord: 'indicator_',
             generateCoordCount: Infinity
         });

@@ -20,7 +20,7 @@
 
 import SymbolDraw from '../../chart/helper/SymbolDraw';
 import * as numberUtil from '../../util/number';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
@@ -35,7 +35,7 @@ import { getVisualFromData } from '../../visual/helper';
 import { ZRColor } from '../../util/types';
 
 function updateMarkerLayout(
-    mpData: List<MarkPointModel>,
+    mpData: SeriesData<MarkPointModel>,
     seriesModel: SeriesModel,
     api: ExtensionAPI
 ) {
@@ -198,7 +198,7 @@ function createList(
         }];
     }
 
-    const mpData = new List(coordDimsInfos, mpModel);
+    const mpData = new SeriesData(coordDimsInfos, mpModel);
     let dataOpt = map(mpModel.get('data'), curry(
             markerHelper.dataTransform, seriesModel
         ));

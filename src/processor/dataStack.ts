@@ -21,7 +21,7 @@ import {createHashMap, each} from 'zrender/src/core/util';
 import GlobalModel from '../model/Global';
 import SeriesModel from '../model/Series';
 import { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../util/types';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import { addSafe } from '../util/number';
 
 interface StackInfo {
@@ -30,7 +30,7 @@ interface StackInfo {
     stackedByDimension: DimensionName
     stackResultDimension: DimensionName
     stackedOverDimension: DimensionName
-    data: List
+    data: SeriesData
     seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>
 }
 // (1) [Caution]: the logic is correct based on the premises:

@@ -29,13 +29,13 @@ import {ECPolyline, ECPolygon} from './poly';
 import ChartView from '../../view/Chart';
 import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
 import {createGridClipPath, createPolarClipPath} from '../helper/createClipPathFromCoordSys';
-import LineSeriesModel, { LineEndLabelOption, LineSeriesOption } from './LineSeries';
+import LineSeriesModel, { LineSeriesOption } from './LineSeries';
 import type GlobalModel from '../../model/Global';
 import type ExtensionAPI from '../../core/ExtensionAPI';
 // TODO
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import Polar from '../../coord/polar/Polar';
-import type List from '../../data/List';
+import type SeriesData from '../../data/SeriesData';
 import type {
     Payload,
     Dictionary,
@@ -121,7 +121,7 @@ function getSmooth(smooth: number | boolean) {
 
 function getStackedOnPoints(
     coordSys: Cartesian2D | Polar,
-    data: List,
+    data: SeriesData,
     dataCoordInfo: ReturnType<typeof prepareDataCoordInfo>
 ) {
     if (!dataCoordInfo.valueDim) {
@@ -187,7 +187,7 @@ function turnPointsIntoStep(
 }
 
 function getVisualGradient(
-    data: List,
+    data: SeriesData,
     coordSys: Cartesian2D | Polar
 ) {
     const visualMetaList = data.getVisual('visualMeta');
@@ -290,7 +290,7 @@ function getVisualGradient(
 
 function getIsIgnoreFunc(
     seriesModel: LineSeriesModel,
-    data: List,
+    data: SeriesData,
     coordSys: Cartesian2D
 ) {
     const showAllSymbol = seriesModel.get('showAllSymbol');
@@ -332,7 +332,7 @@ function getIsIgnoreFunc(
 
 function canShowAllSymbolForCategory(
     categoryAxis: Axis2D,
-    data: List
+    data: SeriesData
 ) {
     // In mose cases, line is monotonous on category axis, and the label size
     // is close with each other. So we check the symbol size and some of the
@@ -544,7 +544,7 @@ class LineView extends ChartView {
 
     _clipShapeForSymbol: CoordinateSystemClipArea;
 
-    _data: List;
+    _data: SeriesData;
 
     init() {
         const lineGroup = new graphic.Group();
@@ -962,7 +962,7 @@ class LineView extends ChartView {
     }
 
     _initSymbolLabelAnimation(
-        data: List,
+        data: SeriesData,
         coordSys: Polar | Cartesian2D,
         clipShape: PolarArea | Cartesian2DArea
     ) {
@@ -1113,7 +1113,7 @@ class LineView extends ChartView {
     _endLabelOnDuring(
         percent: number,
         clipRect: graphic.Rect,
-        data: List,
+        data: SeriesData,
         animationRecord: EndLabelAnimationRecord,
         valueAnimation: boolean,
         endLabelModel: Model<LabelOption>,
@@ -1200,7 +1200,7 @@ class LineView extends ChartView {
      */
     // FIXME Two value axis
     _doUpdateAnimation(
-        data: List,
+        data: SeriesData,
         stackedOnPoints: ArrayLike<number>,
         coordSys: Cartesian2D | Polar,
         api: ExtensionAPI,

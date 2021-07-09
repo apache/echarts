@@ -40,7 +40,7 @@ import { CoordinateSystem } from '../coord/CoordinateSystem';
 import { ExtendableConstructor, mountExtend, Constructor } from '../util/clazz';
 import { PipelineContext, SeriesTaskContext, GeneralTask, OverallTask, SeriesTask } from '../core/Scheduler';
 import LegendVisualProvider from '../visual/LegendVisualProvider';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import Axis from '../coord/Axis';
 import type { BrushCommonSelectorsForSeries, BrushSelectableArea } from '../component/brush/selector';
 import makeStyleMapper from './mixin/makeStyleMapper';
@@ -52,12 +52,12 @@ import {Group} from '../util/graphic';
 import {LegendIconParams} from '../component/legend/LegendModel';
 
 const inner = modelUtil.makeInner<{
-    data: List
-    dataBeforeProcessed: List
+    data: SeriesData
+    dataBeforeProcessed: SeriesData
     sourceManager: SourceManager
 }, SeriesModel>();
 
-function getSelectionKey(data: List, dataIndex: number): string {
+function getSelectionKey(data: SeriesData, dataIndex: number): string {
     return data.getName(dataIndex) || data.getId(dataIndex);
 }
 
@@ -105,7 +105,7 @@ interface SeriesModel {
      */
     brushSelector(
         dataIndex: number,
-        data: List,
+        data: SeriesData,
         selectors: BrushCommonSelectorsForSeries,
         area: BrushSelectableArea
     ): boolean;
@@ -220,7 +220,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         // dataBeforeProcessed by cloneShallow), cloneShallow will
         // cause data.graph.data !== data when using
         // module:echarts/data/Graph or module:echarts/data/Tree.
-        // See module:echarts/data/helper/linkList
+        // See module:echarts/data/helper/linkSeriesData
 
         // Theoretically, it is unreasonable to call `seriesModel.getData()` in the model
         // init or merge stage, because the data can be restored. So we do not `restoreData`
@@ -314,7 +314,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      * Init a data structure from data related option in series
      * Must be overriden.
      */
-    getInitialData(option: Opt, ecModel: GlobalModel): List {
+    getInitialData(option: Opt, ecModel: GlobalModel): SeriesData {
         return;
     }
 
@@ -335,23 +335,23 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      * data in the stream procedure. So we fetch data from upstream
      * each time `task.perform` called.
      */
-    getData(dataType?: SeriesDataType): List<this> {
+    getData(dataType?: SeriesDataType): SeriesData<this> {
         const task = getCurrentTask(this);
         if (task) {
             const data = task.context.data;
-            return (dataType == null ? data : data.getLinkedData(dataType)) as List<this>;
+            return (dataType == null ? data : data.getLinkedData(dataType)) as SeriesData<this>;
         }
         else {
             // When series is not alive (that may happen when click toolbox
             // restore or setOption with not merge mode), series data may
             // be still need to judge animation or something when graphic
             // elements want to know whether fade out.
-            return inner(this).data as List<this>;
+            return inner(this).data as SeriesData<this>;
         }
     }
 
     getAllData(): ({
-        data: List,
+        data: SeriesData,
         type?: SeriesDataType
     })[] {
         const mainData = this.getData();
@@ -360,7 +360,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             : [{ data: mainData }];
     }
 
-    setData(data: List): void {
+    setData(data: SeriesData): void {
         const task = getCurrentTask(this);
         if (task) {
             const context = task.context;
@@ -392,7 +392,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     /**
      * Get data before processed
      */
-    getRawData(): List {
+    getRawData(): SeriesData {
         return inner(this).dataBeforeProcessed;
     }
 
@@ -541,7 +541,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             return true;
         }
 
-        // NOTE: don't support define universalTransition in global option yet.
         const universalTransitionOpt = this.option.universalTransition;
         // Quick reject
         if (!universalTransitionOpt) {
@@ -556,7 +555,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         return universalTransitionOpt && universalTransitionOpt.enabled;
     }
 
-    private _innerSelect(data: List, innerDataIndices: number[]) {
+    private _innerSelect(data: SeriesData, innerDataIndices: number[]) {
         const selectedMode = this.option.selectedMode;
         const len = innerDataIndices.length;
         if (!selectedMode || !len) {
@@ -585,7 +584,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         }
     }
 
-    private _initSelectedMapFromData(data: List) {
+    private _initSelectedMapFromData(data: SeriesData) {
         // Ignore select info in data if selectedMap exists.
         // NOTE It's only for legacy usage. edge data is not supported.
         if (this.option.selectedMap) {
@@ -676,13 +675,13 @@ function dataTaskProgress(param: StageHandlerProgressParams, context: SeriesTask
 }
 
 // TODO refactor
-function wrapData(data: List, seriesModel: SeriesModel): void {
+function wrapData(data: SeriesData, seriesModel: SeriesModel): void {
     zrUtil.each([...data.CHANGABLE_METHODS, ...data.DOWNSAMPLE_METHODS], function (methodName) {
         data.wrapMethod(methodName as any, zrUtil.curry(onDataChange, seriesModel));
     });
 }
 
-function onDataChange(this: List, seriesModel: SeriesModel, newList: List): List {
+function onDataChange(this: SeriesData, seriesModel: SeriesModel, newList: SeriesData): SeriesData {
     const task = getCurrentTask(seriesModel);
     if (task) {
         // Consider case: filter, selectRange

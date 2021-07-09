@@ -23,7 +23,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import ThemeRiverSeriesModel, { ThemeRiverSeriesOption } from './ThemeRiverSeries';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
 export interface ThemeRiverLayoutInfo {
     rect: RectLike
@@ -75,7 +75,7 @@ export default function themeRiverLayout(ecModel: GlobalModel, api: ExtensionAPI
  * @param seriesModel  the model object of themeRiver series
  * @param height  value used to compute every series height
  */
-function doThemeRiverLayout(data: List<ThemeRiverSeriesModel>, seriesModel: ThemeRiverSeriesModel, height: number) {
+function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel: ThemeRiverSeriesModel, height: number) {
     if (!data.count()) {
         return;
     }

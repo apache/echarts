@@ -22,7 +22,7 @@ import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
 import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
 import {getDefaultLabel} from './labelHelper';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { ColorString, BlurScope, AnimationOption, ZRColor } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
@@ -55,14 +55,14 @@ class Symbol extends graphic.Group {
 
     private _z2: number;
 
-    constructor(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
+    constructor(data: SeriesData, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
         super();
         this.updateData(data, idx, seriesScope, opts);
     }
 
     _createSymbol(
         symbolType: string,
-        data: List,
+        data: SeriesData,
         idx: number,
         symbolSize: number[],
         keepAspect: boolean
@@ -151,7 +151,7 @@ class Symbol extends graphic.Group {
     /**
      * Update symbol properties
      */
-    updateData(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
+    updateData(data: SeriesData, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
         this.silent = false;
 
         const symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
@@ -206,7 +206,7 @@ class Symbol extends graphic.Group {
     }
 
     _updateCommon(
-        data: List,
+        data: SeriesData,
         idx: number,
         symbolSize: number[],
         seriesScope?: SymbolDrawSeriesScope,
@@ -395,7 +395,7 @@ class Symbol extends graphic.Group {
         );
     }
 
-    static getSymbolSize(data: List, idx: number) {
+    static getSymbolSize(data: SeriesData, idx: number) {
         return normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
     }
 }

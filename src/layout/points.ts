@@ -69,18 +69,19 @@ export default function pointsLayout(seriesType: string, forceStoreInTypedArray?
 
                     const tmpIn: ParsedValueNumeric[] = [];
                     const tmpOut: number[] = [];
+                    const store = data.getStore();
 
                     for (let i = params.start, offset = 0; i < params.end; i++) {
                         let point;
 
                         if (dimLen === 1) {
-                            const x = data.getByDimIdx(dimIdx0, i) as ParsedValueNumeric;
+                            const x = store.get(dimIdx0, i) as ParsedValueNumeric;
                             // NOTE: Make sure the second parameter is null to use default strategy.
                             point = coordSys.dataToPoint(x, null, tmpOut);
                         }
                         else {
-                            tmpIn[0] = data.getByDimIdx(dimIdx0, i) as ParsedValueNumeric;
-                            tmpIn[1] = data.getByDimIdx(dimIdx1, i) as ParsedValueNumeric;
+                            tmpIn[0] = store.get(dimIdx0, i) as ParsedValueNumeric;
+                            tmpIn[1] = store.get(dimIdx1, i) as ParsedValueNumeric;
                             // Let coordinate system to handle the NaN data.
                             point = coordSys.dataToPoint(tmpIn, null, tmpOut);
                         }

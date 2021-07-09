@@ -20,7 +20,7 @@
 
 /* global Float32Array */
 
-import List from '../../../../src/data/List';
+import SeriesData from '../../../../src/data/SeriesData';
 import Model from '../../../../src/model/Model';
 import { createSourceFromSeriesDataOption, Source, createSource } from '../../../../src/data/Source';
 import { OptionDataItemObject, OptionDataValue, SOURCE_FORMAT_ARRAY_ROWS } from '../../../../src/util/types';
@@ -37,7 +37,7 @@ describe('List', function () {
     describe('Data Manipulation', function () {
 
         it('initData 1d', function () {
-            const list = new List(['x', 'y'], new Model());
+            const list = new SeriesData(['x', 'y'], new Model());
             list.initData([10, 20, 30]);
             expect(list.get('x', 0)).toEqual(10);
             expect(list.get('x', 1)).toEqual(20);
@@ -46,21 +46,21 @@ describe('List', function () {
         });
 
         it('initData 2d', function () {
-            const list = new List(['x', 'y'], new Model());
+            const list = new SeriesData(['x', 'y'], new Model());
             list.initData([[10, 15], [20, 25], [30, 35]]);
             expect(list.get('x', 1)).toEqual(20);
             expect(list.get('y', 1)).toEqual(25);
         });
 
         it('initData 2d yx', function () {
-            const list = new List(['y', 'x'], new Model());
+            const list = new SeriesData(['y', 'x'], new Model());
             list.initData([[10, 15], [20, 25], [30, 35]]);
             expect(list.get('x', 1)).toEqual(25);
             expect(list.get('y', 1)).toEqual(20);
         });
 
         it('Data with option 1d', function () {
-            const list = new List(['x', 'y'], new Model());
+            const list = new SeriesData(['x', 'y'], new Model());
             list.initData([
                 1,
                 {
@@ -73,17 +73,17 @@ describe('List', function () {
         });
 
         it('Empty data', function () {
-            const list = new List(['x', 'y'], new Model());
+            const list = new SeriesData(['x', 'y'], new Model());
             list.initData([1, '-']);
             expect(list.get('y', 1)).toBeNaN();
         });
 
         it('getRawValue', function () {
-            const list1 = new List(['x', 'y'], new Model());
+            const list1 = new SeriesData(['x', 'y'], new Model());
             // here construct a new list2 because if we only use one list
             // to call initData() twice, list._chunkCount will be accumulated
             // to 1 instead of 0.
-            const list2 = new List(['x', 'y'], new Model());
+            const list2 = new SeriesData(['x', 'y'], new Model());
 
             list1.initData([1, 2, 3]);
             expect(list1.getItemModel(1).option).toEqual(2);
@@ -93,22 +93,22 @@ describe('List', function () {
         });
 
         it('indexOfRawIndex', function () {
-            const list = new List(['x'], new Model());
+            const list = new SeriesData(['x'], new Model());
             list.initData([]);
             expect(list.indexOfRawIndex(1)).toEqual(-1);
 
-            const list1 = new List(['x'], new Model());
+            const list1 = new SeriesData(['x'], new Model());
             list1.initData([0]);
             expect(list1.indexOfRawIndex(0)).toEqual(0);
             expect(list1.indexOfRawIndex(1)).toEqual(-1);
 
-            const list2 = new List(['x'], new Model());
+            const list2 = new SeriesData(['x'], new Model());
             list2.initData([0, 1, 2, 3]);
             expect(list2.indexOfRawIndex(1)).toEqual(1);
             expect(list2.indexOfRawIndex(2)).toEqual(2);
             expect(list2.indexOfRawIndex(5)).toEqual(-1);
 
-            const list3 = new List(['x'], new Model());
+            const list3 = new SeriesData(['x'], new Model());
             list3.initData([0, 1, 2, 3, 4]);
             expect(list3.indexOfRawIndex(2)).toEqual(2);
             expect(list3.indexOfRawIndex(3)).toEqual(3);
@@ -121,14 +121,14 @@ describe('List', function () {
         });
 
         it('getDataExtent', function () {
-            const list = new List(['x', 'y'], new Model());
+            const list = new SeriesData(['x', 'y'], new Model());
             list.initData([1, 2, 3]);
             expect(list.getDataExtent('x')).toEqual([1, 3]);
             expect(list.getDataExtent('y')).toEqual([1, 3]);
         });
 
         it('Data types', function () {
-            const list = new List([{
+            const list = new SeriesData([{
                 name: 'x',
                 type: 'int'
             }, {
@@ -141,7 +141,7 @@ describe('List', function () {
         });
 
         it('map', function () {
-            const list = new List(['x', 'y'], new Model());
+            const list = new SeriesData(['x', 'y'], new Model());
             list.initData([[10, 15], [20, 25], [30, 35]]);
             expect(list.map(['x', 'y'], function (x: number, y: number) {
                 return [x + 2, y + 2];
@@ -151,7 +151,7 @@ describe('List', function () {
         });
 
         it('mapArray', function () {
-            const list = new List(['x', 'y'], new Model());
+            const list = new SeriesData(['x', 'y'], new Model());
             list.initData([[10, 15], [20, 25], [30, 35]]);
             expect(list.mapArray(['x', 'y'], function (x, y) {
                 return [x, y];
@@ -159,7 +159,7 @@ describe('List', function () {
         });
 
         it('filterSelf', function () {
-            const list = new List(['x', 'y'], new Model());
+            const list = new SeriesData(['x', 'y'], new Model());
             list.initData([[10, 15], [20, 25], [30, 35]]);
             expect(list.filterSelf(['x', 'y'], function (x, y) {
                 return x < 30 && x > 10;
@@ -169,7 +169,7 @@ describe('List', function () {
         });
 
         it('dataProvider', function () {
-            const list = new List(['x', 'y'], new Model());
+            const list = new SeriesData(['x', 'y'], new Model());
             const typedArray = new Float32Array([10, 10, 20, 20]);
             const source = createSourceFromSeriesDataOption(typedArray);
             list.initData({
@@ -193,7 +193,7 @@ describe('List', function () {
 
     describe('Data read', function () {
         it('indicesOfNearest', function () {
-            const list = new List(['value'], new Model());
+            const list = new SeriesData(['value'], new Model());
             // ---- index: 0   1   2   3   4   5   6   7
             list.initData([10, 20, 30, 35, 40, 40, 35, 50]);
 
@@ -213,7 +213,7 @@ describe('List', function () {
 
     describe('id_and_name', function () {
 
-        function makeOneByOneChecker(list: List) {
+        function makeOneByOneChecker(list: SeriesData) {
             let getIdDataIndex = 0;
             let getNameDataIndex = 0;
 
@@ -237,7 +237,7 @@ describe('List', function () {
 
         describe('only_name_declared', function () {
 
-            function doChecks(list: List) {
+            function doChecks(list: SeriesData) {
                 const oneByOne = makeOneByOneChecker(list);
 
                 oneByOne.idEqualsTo('a');
@@ -260,7 +260,7 @@ describe('List', function () {
             }
 
             it('sourceFormatOriginal', function () {
-                const list = new List(['x', 'y'], new Model());
+                const list = new SeriesData(['x', 'y'], new Model());
                 list.initData([
                     { value: 10, name: 'a' },
                     { value: 20, name: 'b' },
@@ -276,7 +276,7 @@ describe('List', function () {
             });
 
             it('sourceFormatArrayRows', function () {
-                const list = new List(
+                const list = new SeriesData(
                     [
                         'x',
                         { name: 'q', type: 'ordinal', otherDims: { itemName: 0 } }
@@ -314,7 +314,7 @@ describe('List', function () {
         describe('id_name_declared_sourceFormat_original', function () {
 
             it('sourceFormatOriginal', function () {
-                const list = new List(['x'], new Model());
+                const list = new SeriesData(['x'], new Model());
                 const oneByOne = makeOneByOneChecker(list);
 
                 list.initData([
@@ -407,7 +407,7 @@ describe('List', function () {
 
         describe('id_name_declared_sourceFormat_arrayRows', function () {
 
-            function makeChecker(list: List) {
+            function makeChecker(list: SeriesData) {
                 const oneByOne = makeOneByOneChecker(list);
                 return {
                     checkAfterInitData() {
@@ -491,7 +491,7 @@ describe('List', function () {
             });
 
             function testArrayRowsInSource(dimensionsInfo: DataDimensionInfo[]): void {
-                const list = new List(dimensionsInfo, new Model());
+                const list = new SeriesData(dimensionsInfo, new Model());
                 const checker = makeChecker(list);
 
                 const source = createSource(

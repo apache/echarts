@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListFromArray from '../helper/createListFromArray';
+import createListFromArray from '../helper/createSeriesDataFromArray';
 import SeriesModel from '../../model/Series';
 import {
     SeriesOption,
@@ -39,7 +39,7 @@ import {
     DefaultEmphasisFocus
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 interface ScatterStateOption {
@@ -84,7 +84,7 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
 
     hasSymbolVisual = true;
 
-    getInitialData(option: ScatterSeriesOption, ecModel: GlobalModel): List {
+    getInitialData(option: ScatterSeriesOption, ecModel: GlobalModel): SeriesData {
         return createListFromArray(this.getSource(), this, {
             useEncodeDefaulter: true
         });
@@ -109,7 +109,7 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
         return progressiveThreshold;
     }
 
-    brushSelector(dataIndex: number, data: List, selectors: BrushCommonSelectorsForSeries): boolean {
+    brushSelector(dataIndex: number, data: SeriesData, selectors: BrushCommonSelectorsForSeries): boolean {
         return selectors.point(data.getItemLayout(dataIndex));
     }
 

@@ -27,7 +27,7 @@ import {parsePercent, isNumeric} from '../../util/number';
 import ChartView from '../../view/Chart';
 import PictorialBarSeriesModel, {PictorialBarDataItemOption} from './PictorialBarSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 import Model from '../../model/Model';
 import { ColorString, AnimationOptionMixin, ECElement } from '../../util/types';
@@ -131,7 +131,7 @@ class PictorialBarView extends ChartView {
     static type = 'pictorialBar';
     readonly type = PictorialBarView.type;
 
-    private _data: List;
+    private _data: SeriesData;
 
     render(
         seriesModel: PictorialBarSeriesModel,
@@ -239,7 +239,7 @@ class PictorialBarView extends ChartView {
 
 // Set or calculate default value about symbol, and calculate layout info.
 function getSymbolMeta(
-    data: List,
+    data: SeriesData,
     dataIndex: number,
     itemModel: ItemModel,
     opt: CreateOpts
@@ -338,7 +338,7 @@ function convertToCoordOnAxis(axis: Axis2D, value: number) {
 
 // Support ['100%', '100%']
 function prepareSymbolSize(
-    data: List,
+    data: SeriesData,
     dataIndex: number,
     layout: RectLayout,
     symbolRepeat: PictorialBarDataItemOption['symbolRepeat'],
@@ -726,7 +726,7 @@ function createOrUpdateClip(
     }
 }
 
-function getItemModel(data: List, dataIndex: number) {
+function getItemModel(data: SeriesData, dataIndex: number) {
     const itemModel = data.getItemModel(dataIndex) as ItemModel;
     itemModel.getAnimationDelayParams = getAnimationDelayParams;
     itemModel.isAnimationEnabled = isAnimationEnabled;
@@ -746,7 +746,7 @@ function isAnimationEnabled(this: ItemModel) {
     return this.parentModel.isAnimationEnabled() && !!this.getShallow('animation');
 }
 
-function createBar(data: List, opt: CreateOpts, symbolMeta: SymbolMeta, isUpdate?: boolean) {
+function createBar(data: SeriesData, opt: CreateOpts, symbolMeta: SymbolMeta, isUpdate?: boolean) {
     // bar is the main element for each data.
     const bar = new graphic.Group() as PictorialBarElement;
     // bundle is used for location and clip.
@@ -798,7 +798,7 @@ function updateBar(bar: PictorialBarElement, opt: CreateOpts, symbolMeta: Symbol
 }
 
 function removeBar(
-    data: List, dataIndex: number, animationModel: Model<AnimationOptionMixin>, bar: PictorialBarElement
+    data: SeriesData, dataIndex: number, animationModel: Model<AnimationOptionMixin>, bar: PictorialBarElement
 ) {
     // Not show text when animating
     const labelRect = bar.__pictorialBarRect;
@@ -825,7 +825,7 @@ function removeBar(
     data.setItemGraphicEl(dataIndex, null);
 }
 
-function getShapeStr(data: List, symbolMeta: SymbolMeta) {
+function getShapeStr(data: SeriesData, symbolMeta: SymbolMeta) {
     return [
         data.getItemVisual(symbolMeta.dataIndex, 'symbol') || 'none',
         !!symbolMeta.symbolRepeat,

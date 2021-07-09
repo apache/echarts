@@ -25,7 +25,6 @@ class DataDimensionInfo {
 
     /**
      * Dimension type. The enumerable values are the key of
-     * `dataCtors` of `data/List`.
      * Optional.
      */
     type?: DimensionType;
@@ -63,8 +62,8 @@ class DataDimensionInfo {
     coordDimIndex?: number;
 
     /**
-     * This index of this dimension info in `data/List#_dimensionInfos`.
-     * Mandatory after added to `data/List`.
+     * This index of this dimension info in `data/SeriesData#_dimensionInfos`.
+     * Mandatory after added to `data/SeriesData`.
      */
     index?: number;
 

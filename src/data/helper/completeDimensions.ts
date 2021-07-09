@@ -31,7 +31,7 @@ import {
     EncodeDefaulter, OptionEncodeValue, OptionEncode, DimensionName, DimensionIndex, DataVisualDimensions
 } from '../../util/types';
 import DataDimensionInfo from '../DataDimensionInfo';
-import List from '../List';
+import SeriesData from '../SeriesData';
 import { CoordDimensionDefinition, CoordDimensionDefinitionLoose } from './createDimensions';
 
 
@@ -76,7 +76,7 @@ import { CoordDimensionDefinition, CoordDimensionDefinitionLoose } from './creat
  */
 function completeDimensions(
     sysDims: CoordDimensionDefinitionLoose[],
-    source: Source | List | OptionSourceData,
+    source: Source | SeriesData | OptionSourceData,
     opt: {
         dimsDef?: DimensionDefinitionLoose[];
         encodeDef?: HashMap<OptionEncodeValue, DimensionName> | OptionEncode;

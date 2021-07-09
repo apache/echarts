@@ -18,7 +18,7 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import createDimensions from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
@@ -31,13 +31,14 @@ import {
     SOURCE_FORMAT_ORIGINAL, DimensionDefinitionLoose, DimensionDefinition, OptionSourceData, EncodeDefaulter
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
+import DataStorage from '../../data/DataStorage';
 
 function createListFromArray(source: Source | OptionSourceData, seriesModel: SeriesModel, opt?: {
     generateCoord?: string
     useEncodeDefaulter?: boolean | EncodeDefaulter
     // By default: auto. If `true`, create inverted indices for all ordinal dimension on coordSys.
     createInvertedIndices?: boolean
-}): List {
+}): SeriesData {
     opt = opt || {};
 
     if (!isSourceInstance(source)) {
@@ -110,12 +111,12 @@ function createListFromArray(source: Source | OptionSourceData, seriesModel: Ser
 
     const stackCalculationInfo = enableDataStack(seriesModel, dimInfoList);
 
-    const list = new List(dimInfoList, seriesModel);
+    const list = new SeriesData(dimInfoList, seriesModel);
 
     list.setCalculationInfo(stackCalculationInfo);
 
     const dimValueGetter = (firstCategoryDimIndex != null && isNeedCompleteOrdinalData(source))
-        ? function (this: List, itemOpt: any, dimName: string, dataIndex: number, dimIndex: number) {
+        ? function (this: DataStorage, itemOpt: any, dimName: string, dataIndex: number, dimIndex: number) {
             // Use dataIndex as ordinal value in categoryAxis
             return dimIndex === firstCategoryDimIndex
                 ? dataIndex

@@ -53,7 +53,7 @@ export * as util from './api/util';
 export {default as env} from 'zrender/src/core/env';
 
 //////////////// Export for Exension Usage ////////////////
-export {default as List} from '../data/List';
+export {default as SeriesData} from '../data/SeriesData';
 export {default as Model} from '../model/Model';
 export {default as Axis} from '../coord/Axis';
 

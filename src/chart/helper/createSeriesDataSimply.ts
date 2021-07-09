@@ -18,7 +18,7 @@
 */
 
 import createDimensions, {CreateDimensionsParams} from '../../data/helper/createDimensions';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import {extend, isArray} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 
@@ -32,18 +32,18 @@ import SeriesModel from '../../model/Series';
  *     dimensionsCount: 5
  * });
  */
-export default function createListSimply(
+export default function createSeriesDataSimply(
     seriesModel: SeriesModel,
     opt: CreateDimensionsParams | CreateDimensionsParams['coordDimensions'],
     nameList?: string[]
-): List {
+): SeriesData {
     opt = isArray(opt) && {coordDimensions: opt} || extend({}, opt);
 
     const source = seriesModel.getSource();
 
     const dimensionsInfo = createDimensions(source, opt as CreateDimensionsParams);
 
-    const list = new List(dimensionsInfo, seriesModel);
+    const list = new SeriesData(dimensionsInfo, seriesModel);
     list.initData(source, nameList);
 
     return list;

@@ -27,7 +27,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
 import * as vec2 from 'zrender/src/core/vector';
 import * as curveUtil from 'zrender/src/core/curve';
-import type List from '../../data/List';
+import type SeriesData from '../../data/SeriesData';
 import { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
 import Model from '../../model/Model';
 import { ColorString } from '../../util/types';
@@ -49,18 +49,18 @@ class EffectLine extends graphic.Group {
 
     private _symbolScale: number[];
 
-    constructor(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
+    constructor(lineData: SeriesData, idx: number, seriesScope: LineDrawSeriesScope) {
         super();
         this.add(this.createLine(lineData, idx, seriesScope));
 
         this._updateEffectSymbol(lineData, idx);
     }
 
-    createLine(lineData: List, idx: number, seriesScope: LineDrawSeriesScope): graphic.Group {
+    createLine(lineData: SeriesData, idx: number, seriesScope: LineDrawSeriesScope): graphic.Group {
         return new Line(lineData, idx, seriesScope);
     }
 
-    private _updateEffectSymbol(lineData: List, idx: number) {
+    private _updateEffectSymbol(lineData: SeriesData, idx: number) {
         const itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
         const effectModel = itemModel.getModel('effect');
         let size = effectModel.get('symbolSize');
@@ -107,7 +107,7 @@ class EffectLine extends graphic.Group {
     }
 
     private _updateEffectAnimation(
-        lineData: List,
+        lineData: SeriesData,
         effectModel: Model<LineDrawModelOption['effect']>,
         idx: number
     ) {
@@ -189,7 +189,7 @@ class EffectLine extends graphic.Group {
         ];
     }
 
-    updateData(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
+    updateData(lineData: SeriesData, idx: number, seriesScope: LineDrawSeriesScope) {
         (this.childAt(0) as Line).updateData(lineData, idx, seriesScope);
         this._updateEffectSymbol(lineData, idx);
     }
@@ -236,7 +236,7 @@ class EffectLine extends graphic.Group {
     }
 
 
-    updateLayout(lineData: List, idx: number) {
+    updateLayout(lineData: SeriesData, idx: number) {
         (this.childAt(0) as Line).updateLayout(lineData, idx);
 
         const effectModel = lineData.getItemModel<LineDrawModelOption>(idx).getModel('effect');

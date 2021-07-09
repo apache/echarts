@@ -22,7 +22,7 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
-import createListFromArray from '../../chart/helper/createListFromArray';
+import createSeriesDataFromArray from '../../chart/helper/createSeriesDataFromArray';
 // import createGraphFromNodeEdge from './chart/helper/createGraphFromNodeEdge';
 import * as axisHelper from '../../coord/axisHelper';
 import {AxisModelCommonMixin} from '../../coord/axisModelCommonMixin';
@@ -43,7 +43,7 @@ import { DisplayState, TextCommonOption } from '../../util/types';
  * Create a muti dimension List structure from seriesModel.
  */
 export function createList(seriesModel: SeriesModel) {
-    return createListFromArray(seriesModel.getSource(), seriesModel);
+    return createSeriesDataFromArray(seriesModel.getSource(), seriesModel);
 }
 
 // export function createGraph(seriesModel) {

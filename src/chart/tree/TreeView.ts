@@ -34,7 +34,7 @@ import Path, { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { setStatesStylesFromModel, setStatesFlag, setDefaultStateProxy, HOVER_STATE_BLUR } from '../../util/states';
 import { ECElement } from '../../util/types';
 
@@ -134,7 +134,7 @@ class TreeView extends ChartView {
     private _controller: RoamController;
     private _controllerHost: RoamControllerHost;
 
-    private _data: List<TreeSeriesModel>;
+    private _data: SeriesData<TreeSeriesModel>;
 
     private _nodeScaleRatio: number;
     private _min: number[];
@@ -358,7 +358,7 @@ class TreeView extends ChartView {
 
 }
 
-function symbolNeedsDraw(data: List, dataIndex: number) {
+function symbolNeedsDraw(data: SeriesData, dataIndex: number) {
     const layout = data.getItemLayout(dataIndex);
 
     return layout
@@ -367,7 +367,7 @@ function symbolNeedsDraw(data: List, dataIndex: number) {
 
 
 function updateNode(
-    data: List,
+    data: SeriesData,
     dataIndex: number,
     symbolEl: TreeSymbol,
     group: graphic.Group,
@@ -596,7 +596,7 @@ function drawEdge(
 }
 
 function removeNode(
-    data: List,
+    data: SeriesData,
     dataIndex: number,
     symbolEl: TreeSymbol,
     group: graphic.Group,

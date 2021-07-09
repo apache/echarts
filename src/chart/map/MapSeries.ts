@@ -19,7 +19,7 @@
 
 
 import * as zrUtil from 'zrender/src/core/util';
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import SeriesModel from '../../model/Series';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
@@ -36,7 +36,7 @@ import {
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import Model from '../../model/Model';
 import Geo from '../../coord/geo/Geo';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
@@ -101,7 +101,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
     // -----------------
     // Injected outside
-    originalData: List;
+    originalData: SeriesData;
     mainSeries: MapSeries;
     // Only first map series of same mapType will drawMap.
     needsDrawMap: boolean = false;
@@ -109,8 +109,8 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     seriesGroup: MapSeries[] = [];
 
 
-    getInitialData(this: MapSeries, option: MapSeriesOption): List {
-        const data = createListSimply(this, {
+    getInitialData(this: MapSeries, option: MapSeriesOption): SeriesData {
+        const data = createSeriesDataSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
@@ -133,7 +133,10 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         // Complete data with missing regions. The consequent processes (like visual
         // map and render) can not be performed without a "full data". For example,
         // find `dataIndex` by name.
-        data.appendValues([], toAppendNames);
+        data.appendData(zrUtil.map(toAppendNames, name => ({
+            name,
+            value: NaN
+        })));
 
         return data;
     }

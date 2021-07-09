@@ -35,7 +35,7 @@ import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import Sausage from '../../util/shape/sausage';
 import ChartView from '../../view/Chart';
-import List, {DefaultDataVisual} from '../../data/List';
+import SeriesData, {DefaultDataVisual} from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import {
@@ -88,7 +88,7 @@ type RealtimeSortConfig = {
 // Return a number, based on which the ordinal sorted.
 type OrderMapping = (dataIndex: number) => number;
 
-function getClipArea(coord: CoordSysOfBar, data: List) {
+function getClipArea(coord: CoordSysOfBar, data: SeriesData) {
     const coordSysClipArea = coord.getArea && coord.getArea();
     if (isCoordinateSystemType<Cartesian2D>(coord, 'cartesian2d')) {
         const baseAxis = coord.getBaseAxis();
@@ -115,7 +115,7 @@ class BarView extends ChartView {
     static type = 'bar' as const;
     type = BarView.type;
 
-    private _data: List;
+    private _data: SeriesData;
 
     private _isLargeDraw: boolean;
 
@@ -467,7 +467,7 @@ class BarView extends ChartView {
     }
 
     private _dataSort(
-        data: List<BarSeriesModel, DefaultDataVisual>,
+        data: SeriesData<BarSeriesModel, DefaultDataVisual>,
         baseAxis: Axis2D,
         orderMapping: OrderMapping
     ): OrdinalSortInfo {
@@ -498,7 +498,7 @@ class BarView extends ChartView {
     }
 
     private _isOrderChangedWithinSameData(
-        data: List<BarSeriesModel, DefaultDataVisual>,
+        data: SeriesData<BarSeriesModel, DefaultDataVisual>,
         orderMapping: OrderMapping,
         baseAxis: Axis2D
     ): boolean {
@@ -543,7 +543,7 @@ class BarView extends ChartView {
     }
 
     private _updateSortWithinSameData(
-        data: List<BarSeriesModel, DefaultDataVisual>,
+        data: SeriesData<BarSeriesModel, DefaultDataVisual>,
         orderMapping: OrderMapping,
         baseAxis: Axis2D,
         api: ExtensionAPI
@@ -566,7 +566,7 @@ class BarView extends ChartView {
     }
 
     private _dispatchInitSort(
-        data: List<BarSeriesModel, DefaultDataVisual>,
+        data: SeriesData<BarSeriesModel, DefaultDataVisual>,
         realtimeSortCfg: RealtimeSortConfig,
         api: ExtensionAPI
     ) {
@@ -709,7 +709,7 @@ const clip: {
 
 interface ElementCreator {
     (
-        seriesModel: BarSeriesModel, data: List, newIndex: number,
+        seriesModel: BarSeriesModel, data: SeriesData, newIndex: number,
         layout: RectLayout | SectorLayout, isHorizontalOrRadial: boolean,
         animationModel: BarSeriesModel,
         axisModel: CartesianAxisModel | AngleAxisModel | RadiusAxisModel,
@@ -875,7 +875,7 @@ const isValidLayout: Record<'cartesian2d' | 'polar', (layout: RectLayout | Secto
 } as const;
 
 interface GetLayout {
-    (data: List, dataIndex: number, itemModel?: Model<BarDataItemOption>): RectLayout | SectorLayout
+    (data: SeriesData, dataIndex: number, itemModel?: Model<BarDataItemOption>): RectLayout | SectorLayout
 }
 const getLayout: {
     [key in 'cartesian2d' | 'polar']: GetLayout
@@ -936,7 +936,7 @@ function createPolarPositionMapping(isRadial: boolean)
 
 function updateStyle(
     el: BarPossiblePath,
-    data: List, dataIndex: number,
+    data: SeriesData, dataIndex: number,
     itemModel: Model<BarDataItemOption>,
     layout: RectLayout | SectorLayout,
     seriesModel: BarSeriesModel,
@@ -1169,7 +1169,7 @@ function largePathFindDataIndex(largePath: LargePath, x: number, y: number) {
 function setLargeStyle(
     el: LargePath,
     seriesModel: BarSeriesModel,
-    data: List
+    data: SeriesData
 ) {
     const globalStyle = data.getVisual('style');
 
@@ -1183,7 +1183,7 @@ function setLargeStyle(
 function setLargeBackgroundStyle(
     el: LargePath,
     backgroundModel: Model<BarSeriesOption['backgroundStyle']>,
-    data: List
+    data: SeriesData
 ) {
     const borderColor = backgroundModel.get('borderColor') || backgroundModel.get('color');
     const itemStyle = backgroundModel.getItemStyle();
