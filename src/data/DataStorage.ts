@@ -844,7 +844,7 @@ class DataStorage {
         const len = this.count();
         const rawExtentOnDim = target._rawExtent[dimension];
 
-        const newIndices = new (getIndicesCtor(this._rawCount))(len);
+        const newIndices = new (getIndicesCtor(this._rawCount))(Math.ceil(len / frameSize));
 
         let offset = 0;
         for (let i = 0; i < len; i += frameSize) {
@@ -875,8 +875,9 @@ class DataStorage {
         }
 
         target._count = offset;
+        target._indices = newIndices;
 
-        this._updateGetRawIdx();
+        target._updateGetRawIdx();
 
         return target;
     }
