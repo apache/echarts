@@ -113,15 +113,8 @@ const markLineTransform = function (
 
             let precision = mlModel.get('precision');
 
-            if (precision === undefined) {
-                data.each(valueAxis.dim, function (val: number, idx: number) {
-                    if (!Number.isInteger(val)) {
-                        const decLength = val.toString().split('.')[1].length;
-                        if (!precision || decLength > precision) {
-                            precision = decLength;
-                        }
-                    }
-                });
+            if (mlType === 'average' && precision === undefined) {
+                precision = 2;
             }
 
             if (precision >= 0 && typeof value === 'number') {
