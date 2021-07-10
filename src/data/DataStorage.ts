@@ -23,13 +23,12 @@ import {
     DimensionIndex,
     DimensionName,
     OptionDataItem,
-    OrdinalNumber,
     ParsedValue,
     ParsedValueNumeric
 } from '../util/types';
 import { DataProvider } from './helper/dataProvider';
 import { parseDataValue } from './helper/dataValueHelper';
-import OrdinalMeta from './OrdinalMeta';
+import { Source } from './Source';
 
 const UNDEFINED = 'undefined';
 /* global Float64Array, Int32Array, Uint32Array, Uint16Array */
@@ -48,7 +47,7 @@ const UNDEFINED = 'undefined';
     'time': Array
 } as const;
 
-export type DataStoreDimensionType = keyof typeof dataCtors;
+export type DataStorageDimensionType = keyof typeof dataCtors;
 
 type DataTypedArray = Uint32Array | Int32Array | Uint16Array | Float64Array;
 type DataTypedArrayConstructor = typeof Uint32Array | typeof Int32Array | typeof Uint16Array | typeof Float64Array;
@@ -80,10 +79,9 @@ export type DimValueGetter = (
     dimIndex: DimensionIndex
 ) => ParsedValue;
 
-interface StoreDimensionInfo {
-    type?: DataStoreDimensionType;  // Default to be float.
+export interface DataStorageDimensionInfo {
+    type?: DataStorageDimensionType;  // Default to be float.
     name?: string;
-    ordinalMeta?: OrdinalMeta;
 }
 
 let defaultDimValueGetters: {[sourceFormat: string]: DimValueGetter};
@@ -106,7 +104,7 @@ function cloneChunk(originalChunk: DataValueChunk): DataValueChunk {
 function prepareStorage(
     storage: DataValueChunk[],
     dimIdx: number,
-    dimType: DataStoreDimensionType,
+    dimType: DataStorageDimensionType,
     end: number,
     append?: boolean
 ): void {
@@ -147,7 +145,7 @@ class DataStorage {
     private _count: number = 0;
     private _rawCount: number = 0;
 
-    private _dimensions: StoreDimensionInfo[];
+    private _dimensions: DataStorageDimensionInfo[];
     private _dimValueGetter: DimValueGetter;
 
     defaultDimValueGetter: DimValueGetter;
@@ -157,7 +155,7 @@ class DataStorage {
      */
     initData(
         provider: DataProvider,
-        dimensions: StoreDimensionInfo[],
+        dimensions: DataStorageDimensionInfo[],
         dimValueGetter?: DimValueGetter
     ): void {
         if (__DEV__) {
@@ -212,6 +210,10 @@ class DataStorage {
 
     getProvider(): DataProvider {
         return this._provider;
+    }
+
+    getSource(): Source {
+        return this._provider.getSource();
     }
 
     getDimensionIndex: (dim: DimensionName) => number;
@@ -748,7 +750,6 @@ class DataStorage {
          const targetStorage = target._chunks;
          const dimStore = targetStorage[valueDimension];
          const len = this.count();
-         const newIndices = new (getIndicesCtor(this._rawCount))(len);
 
          let sampledIndex = 0;
 
@@ -758,6 +759,8 @@ class DataStorage {
          let maxArea;
          let area;
          let nextRawIndex;
+
+         const newIndices = new (getIndicesCtor(this._rawCount))(Math.ceil(len / frameSize) + 1);
 
          // First frame use the first data.
          newIndices[sampledIndex++] = currentRawIndex;
@@ -1022,25 +1025,6 @@ class DataStorage {
         }
         target._updateGetRawIdx();
         return target;
-     }
-
-    /**
-     * Get category data.
-     */
-    getCategory(dimIdx: number, idx: number) {
-        const rawIdx = this.getRawIndex(idx);
-        const chunk = this._chunks[dimIdx];
-
-        let val;
-        if (chunk) {
-            const dimInfo = this._dimensions[dimIdx];
-            const ordinalMeta = dimInfo.ordinalMeta;
-            val = chunk[rawIdx];
-            if (ordinalMeta) {
-                val = ordinalMeta.categories[val as OrdinalNumber];
-            }
-        }
-        return val;
      }
 
      private _copyCommonProps(target: DataStorage) {

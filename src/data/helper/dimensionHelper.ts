@@ -23,7 +23,7 @@ import SeriesData from '../SeriesData';
 import {
     DimensionName, VISUAL_DIMENSIONS, DimensionType, DimensionUserOuput, DimensionUserOuputEncode, DimensionIndex
 } from '../../util/types';
-import { DataStoreDimensionType } from '../DataStorage';
+import { DataStorageDimensionType } from '../DataStorage';
 
 export type DimensionSummaryEncode = {
     defaultedLabel: DimensionName[],
@@ -141,7 +141,7 @@ function getOrCreateEncodeArr(
 }
 
 // FIXME:TS should be type `AxisType`
-export function getDimensionTypeByAxis(axisType: string): DataStoreDimensionType {
+export function getDimensionTypeByAxis(axisType: string): DataStorageDimensionType {
     return axisType === 'category'
         ? 'ordinal'
         : axisType === 'time'

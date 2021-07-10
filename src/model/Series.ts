@@ -50,6 +50,7 @@ import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatToo
 import {ECSymbol} from '../util/symbol';
 import {Group} from '../util/graphic';
 import {LegendIconParams} from '../component/legend/LegendModel';
+import DataStorage from '../data/DataStorage';
 
 const inner = modelUtil.makeInner<{
     data: SeriesData
@@ -385,8 +386,9 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         inner(this).data = data;
     }
 
-    getSource(): Source {
-        return inner(this).sourceManager.getSource();
+    getSource(): DataStorage | Source {
+        const sourceMgr = inner(this).sourceManager;
+        return sourceMgr.getDataStorage() || sourceMgr.getSource();
     }
 
     /**

@@ -33,6 +33,7 @@ import {
 import DataDimensionInfo from '../DataDimensionInfo';
 import SeriesData from '../SeriesData';
 import { CoordDimensionDefinition, CoordDimensionDefinitionLoose } from './createDimensions';
+import DataStorage from '../DataStorage';
 
 
 /**
@@ -76,7 +77,7 @@ import { CoordDimensionDefinition, CoordDimensionDefinitionLoose } from './creat
  */
 function completeDimensions(
     sysDims: CoordDimensionDefinitionLoose[],
-    source: Source | SeriesData | OptionSourceData,
+    source: Source | SeriesData | OptionSourceData | DataStorage,
     opt: {
         dimsDef?: DimensionDefinitionLoose[];
         encodeDef?: HashMap<OptionEncodeValue, DimensionName> | OptionEncode;
@@ -86,6 +87,13 @@ function completeDimensions(
         generateCoordCount?: number;
     }
 ): DataDimensionInfo[] {
+    if (source instanceof DataStorage) {
+        source = source.getSource();
+    }
+    else if (source instanceof SeriesData) {
+        source = source.getStore().getSource();
+    }
+
     if (!isSourceInstance(source)) {
         source = createSourceFromSeriesDataOption(source as OptionSourceData);
     }

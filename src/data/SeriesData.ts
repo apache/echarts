@@ -567,6 +567,15 @@ class SeriesData<
         return name;
     }
 
+    private _getCategory(dimIdx: number, idx: number) {
+        const ordinal = this._store.get(dimIdx, idx);
+        const dimInfo = this._dimensionInfos[this.dimensions[dimIdx]];
+        const ordinalMeta = dimInfo.ordinalMeta;
+        if (ordinalMeta) {
+            return ordinalMeta.categories[ordinal as OrdinalNumber];
+        }
+    }
+
     /**
      * @return Never null/undefined. `number` will be converted to string. Becuase:
      * In all cases having encountered at present, id is used in making diff comparison, which
@@ -1213,7 +1222,7 @@ class SeriesData<
         getIdNameFromStore = function (
             list: SeriesData, dimIdx: number, idx: number
         ): string {
-            return convertOptionIdName(list.getStore().getCategory(dimIdx, idx), null);
+            return convertOptionIdName(list._getCategory(dimIdx, idx), null);
         };
 
         /**

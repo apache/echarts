@@ -33,7 +33,11 @@ import {
 import SeriesModel from '../../model/Series';
 import DataStorage from '../../data/DataStorage';
 
-function createListFromArray(source: Source | OptionSourceData, seriesModel: SeriesModel, opt?: {
+function isDataStorage(val: unknown): val is DataStorage {
+    return val instanceof DataStorage;
+}
+
+function createListFromArray(sourceOrStore: Source | OptionSourceData | DataStorage, seriesModel: SeriesModel, opt?: {
     generateCoord?: string
     useEncodeDefaulter?: boolean | EncodeDefaulter
     // By default: auto. If `true`, create inverted indices for all ordinal dimension on coordSys.
@@ -41,8 +45,8 @@ function createListFromArray(source: Source | OptionSourceData, seriesModel: Ser
 }): SeriesData {
     opt = opt || {};
 
-    if (!isSourceInstance(source)) {
-        source = createSourceFromSeriesDataOption(source);
+    if (!isSourceInstance(sourceOrStore) && !isDataStorage(sourceOrStore)) {
+        sourceOrStore = createSourceFromSeriesDataOption(sourceOrStore);
     }
 
     const coordSysName = seriesModel.get('coordinateSystem');
@@ -61,7 +65,6 @@ function createListFromArray(source: Source | OptionSourceData, seriesModel: Ser
             if (axisModel) {
                 const axisType = axisModel.get('type');
                 dimInfo.type = getDimensionTypeByAxis(axisType);
-                // dimInfo.stackable = isStackable(axisType);
             }
             return dimInfo;
         });
@@ -77,15 +80,18 @@ function createListFromArray(source: Source | OptionSourceData, seriesModel: Ser
     }
 
     const useEncodeDefaulter = opt.useEncodeDefaulter;
-    const dimInfoList = createDimensions(source, {
-        coordDimensions: coordSysDimDefs,
-        generateCoord: opt.generateCoord,
-        encodeDefaulter: zrUtil.isFunction(useEncodeDefaulter)
-            ? useEncodeDefaulter
-            : useEncodeDefaulter
-            ? zrUtil.curry(makeSeriesEncodeForAxisCoordSys, coordSysDimDefs, seriesModel)
-            : null
-    });
+    const dimInfoList = createDimensions(
+        isDataStorage(sourceOrStore)
+            ? sourceOrStore.getSource() : sourceOrStore,
+        {
+            coordDimensions: coordSysDimDefs,
+            generateCoord: opt.generateCoord,
+            encodeDefaulter: zrUtil.isFunction(useEncodeDefaulter)
+                ? useEncodeDefaulter
+                : useEncodeDefaulter
+                ? zrUtil.curry(makeSeriesEncodeForAxisCoordSys, coordSysDimDefs, seriesModel)
+                : null
+        });
 
     let firstCategoryDimIndex: number;
     let hasNameEncode: boolean;
@@ -111,23 +117,26 @@ function createListFromArray(source: Source | OptionSourceData, seriesModel: Ser
 
     const stackCalculationInfo = enableDataStack(seriesModel, dimInfoList);
 
-    const list = new SeriesData(dimInfoList, seriesModel);
+    const data = new SeriesData(dimInfoList, seriesModel);
 
-    list.setCalculationInfo(stackCalculationInfo);
+    data.setCalculationInfo(stackCalculationInfo);
 
-    const dimValueGetter = (firstCategoryDimIndex != null && isNeedCompleteOrdinalData(source))
-        ? function (this: DataStorage, itemOpt: any, dimName: string, dataIndex: number, dimIndex: number) {
-            // Use dataIndex as ordinal value in categoryAxis
-            return dimIndex === firstCategoryDimIndex
-                ? dataIndex
-                : this.defaultDimValueGetter(itemOpt, dimName, dataIndex, dimIndex);
-        }
-        : null;
+    const dimValueGetter =
+        !isDataStorage(sourceOrStore)
+        && firstCategoryDimIndex != null
+        && isNeedCompleteOrdinalData(sourceOrStore)
+            ? function (this: DataStorage, itemOpt: any, dimName: string, dataIndex: number, dimIndex: number) {
+                // Use dataIndex as ordinal value in categoryAxis
+                return dimIndex === firstCategoryDimIndex
+                    ? dataIndex
+                    : this.defaultDimValueGetter(itemOpt, dimName, dataIndex, dimIndex);
+            }
+            : null;
 
-    list.hasItemOption = false;
-    list.initData(source, null, dimValueGetter);
+    data.hasItemOption = false;
+    data.initData(sourceOrStore, null, dimValueGetter);
 
-    return list;
+    return data;
 }
 
 function isNeedCompleteOrdinalData(source: Source) {

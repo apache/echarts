@@ -30,6 +30,8 @@ import {
     querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels
 } from './sourceHelper';
 import { applyDataTransform } from './transform';
+import DataStorage, { DataStorageDimensionInfo } from '../DataStorage';
+import { DefaultDataProvider } from './dataProvider';
 
 
 /**
@@ -131,6 +133,8 @@ export class SourceManager {
     // Cached source. Do not repeat calculating if not dirty.
     private _sourceList: Source[] = [];
 
+    private _storeList: DataStorage[] = [];
+
     // version sign of each upstream source manager.
     private _upstreamSignList: string[] = [];
 
@@ -145,6 +149,7 @@ export class SourceManager {
      */
     dirty() {
         this._setLocalSource([], []);
+        this._storeList = [];
     }
 
     private _setLocalSource(
@@ -348,6 +353,38 @@ export class SourceManager {
      */
     getSource(sourceIndex?: number) {
         return this._sourceList[sourceIndex || 0];
+    }
+
+    /**
+     * Will return undefined if source is series.data
+     * because dimension not known yet.
+     */
+    getDataStorage(): DataStorage | undefined {
+        // TODO Can use other sourceIndex?
+        const sourceIndex = 0;
+
+        const storeList = this._storeList;
+        let cachedStore = storeList[sourceIndex];
+
+        if (!cachedStore) {
+            const upSourceMgr = this._getUpstreamSourceManagers()[0];
+
+            if (upSourceMgr) {
+                cachedStore = upSourceMgr.getDataStorage();
+            }
+            else {
+                const source = this.getSource(sourceIndex);
+                // Can't create a store if don't know dimension..
+                if (source && source.dimensionsDefine) {
+                    cachedStore = new DataStorage();
+                    cachedStore.initData(new DefaultDataProvider(source), source.dimensionsDefine);
+                }
+            }
+
+            storeList[sourceIndex] = cachedStore;
+        }
+
+        return cachedStore;
     }
 
     /**

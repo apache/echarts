@@ -31,6 +31,7 @@ import DataDimensionInfo from '../DataDimensionInfo';
 import { HashMap } from 'zrender/src/core/util';
 import OrdinalMeta from '../OrdinalMeta';
 import { Source } from '../Source';
+import DataStorage from '../DataStorage';
 
 
 export interface CoordDimensionDefinition extends DimensionDefinition {
@@ -60,7 +61,7 @@ export type CreateDimensionsParams = {
  */
 export default function createDimensions(
     // TODO: TYPE completeDimensions type
-    source: Source | SeriesData | OptionSourceData,
+    source: Source | SeriesData | OptionSourceData | DataStorage,
     opt?: CreateDimensionsParams
 ): DataDimensionInfo[] {
     opt = opt || {};
