@@ -27,7 +27,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import {PathStyleProps} from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
-import {DefaultDataProvider} from './helper/dataProvider';
+import {DataProvider, DefaultDataProvider} from './helper/dataProvider';
 import {summarizeDimensions, DimensionSummary} from './helper/dimensionHelper';
 import DataDimensionInfo from './DataDimensionInfo';
 import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/types';
@@ -389,20 +389,22 @@ class SeriesData<
      *        or provided in nameList from outside.
      */
     initData(
-        data: Source | OptionSourceData | DataStorage,
+        data: Source | OptionSourceData | DataStorage | DataProvider,
         nameList?: string[],
         dimValueGetter?: DimValueGetter
     ): void {
-        const isRaw = isSourceInstance(data) || zrUtil.isArrayLike(data);
         let store: DataStorage;
-        if (isRaw) {
-            const provider = new DefaultDataProvider(data as Source | OptionSourceData, this.dimensions.length);
-            const dimensionInfos = map(this.dimensions, dimName => this._dimensionInfos[dimName]);
-            store = new DataStorage();
-            store.initData(provider, dimensionInfos, dimValueGetter);
+        if (data instanceof DataStorage) {
+            store = data;
         }
         else {
-            store = data as DataStorage;
+            const dimensions = this.dimensions;
+            const provider = (isSourceInstance(data) || zrUtil.isArrayLike(data))
+                ? new DefaultDataProvider(data as Source | OptionSourceData, dimensions.length)
+                : data as DataProvider;
+            const dimensionInfos = map(dimensions, dimName => this._dimensionInfos[dimName]);
+            store = new DataStorage();
+            store.initData(provider, dimensionInfos, dimValueGetter);
         }
 
         this._store = store;

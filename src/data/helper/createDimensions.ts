@@ -30,7 +30,7 @@ import SeriesData from '../SeriesData';
 import DataDimensionInfo from '../DataDimensionInfo';
 import { HashMap } from 'zrender/src/core/util';
 import OrdinalMeta from '../OrdinalMeta';
-import { Source } from '../Source';
+import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../Source';
 import DataStorage from '../DataStorage';
 
 
@@ -55,6 +55,7 @@ export type CreateDimensionsParams = {
 
 /**
  * @param opt.coordDimensions
+ * @param opt.dimensionsCount
  * @param opt.dimensionsDefine By default `source.dimensionsDefine` Overwrite source define.
  * @param opt.encodeDefine By default `source.encodeDefine` Overwrite source define.
  * @param opt.encodeDefaulter Make default encode if user not specified.
@@ -64,11 +65,21 @@ export default function createDimensions(
     source: Source | SeriesData | OptionSourceData | DataStorage,
     opt?: CreateDimensionsParams
 ): DataDimensionInfo[] {
+    if (source instanceof DataStorage) {
+        source = source.getSource();
+    }
+    else if (source instanceof SeriesData) {
+        source = source.getStore().getSource();
+    }
+    else if (!isSourceInstance(source)) {
+        source = createSourceFromSeriesDataOption(source as OptionSourceData);
+    }
+
     opt = opt || {};
     return completeDimensions(opt.coordDimensions || [], source, {
         // FIXME:TS detect whether source then call `.dimensionsDefine` and `.encodeDefine`?
-        dimsDef: opt.dimensionsDefine || (source as Source).dimensionsDefine,
-        encodeDef: opt.encodeDefine || (source as Source).encodeDefine,
+        dimsDef: opt.dimensionsDefine,
+        encodeDef: opt.encodeDefine,
         dimCount: opt.dimensionsCount,
         encodeDefaulter: opt.encodeDefaulter,
         generateCoord: opt.generateCoord,

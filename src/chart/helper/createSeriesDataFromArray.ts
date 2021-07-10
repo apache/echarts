@@ -147,12 +147,12 @@ function isNeedCompleteOrdinalData(source: Source) {
     }
 }
 
-function firstDataNotNull(data: ArrayLike<any>) {
+function firstDataNotNull(arr: ArrayLike<any>) {
     let i = 0;
-    while (i < data.length && data[i] == null) {
+    while (i < arr.length && arr[i] == null) {
         i++;
     }
-    return data[i];
+    return arr[i];
 }
 
 export default createListFromArray;

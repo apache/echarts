@@ -22,18 +22,21 @@
  * Use `echarts/data/helper/createDimensions` instead.
  */
 
-import {createHashMap, each, isString, defaults, extend, isObject, clone, HashMap} from 'zrender/src/core/util';
+import {createHashMap, each, isString, defaults, isObject, clone, HashMap, extend} from 'zrender/src/core/util';
 import {normalizeToArray} from '../../util/model';
-import {guessOrdinal, BE_ORDINAL} from './sourceHelper';
-import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../Source';
+import { Source } from '../Source';
 import {
-    VISUAL_DIMENSIONS, DimensionDefinitionLoose, OptionSourceData,
-    EncodeDefaulter, OptionEncodeValue, OptionEncode, DimensionName, DimensionIndex, DataVisualDimensions
+    VISUAL_DIMENSIONS, DimensionDefinitionLoose,
+    EncodeDefaulter,
+    OptionEncodeValue,
+    OptionEncode,
+    DimensionName,
+    DimensionIndex,
+    DataVisualDimensions
 } from '../../util/types';
 import DataDimensionInfo from '../DataDimensionInfo';
-import SeriesData from '../SeriesData';
 import { CoordDimensionDefinition, CoordDimensionDefinitionLoose } from './createDimensions';
-import DataStorage from '../DataStorage';
+import { BE_ORDINAL, guessOrdinal } from './sourceHelper';
 
 
 /**
@@ -77,7 +80,7 @@ import DataStorage from '../DataStorage';
  */
 function completeDimensions(
     sysDims: CoordDimensionDefinitionLoose[],
-    source: Source | SeriesData | OptionSourceData | DataStorage,
+    source: Source,
     opt: {
         dimsDef?: DimensionDefinitionLoose[];
         encodeDef?: HashMap<OptionEncodeValue, DimensionName> | OptionEncode;
@@ -87,20 +90,10 @@ function completeDimensions(
         generateCoordCount?: number;
     }
 ): DataDimensionInfo[] {
-    if (source instanceof DataStorage) {
-        source = source.getSource();
-    }
-    else if (source instanceof SeriesData) {
-        source = source.getStore().getSource();
-    }
-
-    if (!isSourceInstance(source)) {
-        source = createSourceFromSeriesDataOption(source as OptionSourceData);
-    }
 
     opt = opt || {};
     sysDims = (sysDims || []).slice();
-    const dimsDef = (opt.dimsDef || []).slice();
+    const dimsDef = (opt.dimsDef || source.dimensionsDefine || []).slice();
     const dataDimNameMap = createHashMap<DimensionIndex, DimensionName>();
     const coordDimNameMap = createHashMap<true, DimensionName>();
     // let valueCandidate;
@@ -114,6 +107,7 @@ function completeDimensions(
         const dimDefItem = dimsDef[i] = extend(
             {}, isObject(dimDefItemRaw) ? dimDefItemRaw : { name: dimDefItemRaw }
         );
+
         const userDimName = dimDefItem.name;
         const resultItem = result[i] = new DataDimensionInfo();
         // Name will be applied later for avoiding duplication.
@@ -128,7 +122,7 @@ function completeDimensions(
         dimDefItem.displayName != null && (resultItem.displayName = dimDefItem.displayName);
     }
 
-    let encodeDef = opt.encodeDef;
+    let encodeDef = opt.encodeDef || source.encodeDefine;
     if (!encodeDef && opt.encodeDefaulter) {
         encodeDef = opt.encodeDefaulter(source, dimCount);
     }

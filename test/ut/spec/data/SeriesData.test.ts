@@ -381,16 +381,11 @@ describe('List', function () {
                 oneByOne.nameEqualsTo('b');
                 oneByOne.nameEqualsTo('');
 
-                list.appendValues(
+                list.appendData(
                     [
-                        [300],
-                        [310],
-                        [320]
-                    ],
-                    [
-                        'b',
-                        'c',
-                        null
+                        { name: 'b', value: 300 },
+                        { name: 'c', value: 310 },
+                        { name: null, value: 320}
                     ]
                 );
 
@@ -535,16 +530,11 @@ describe('List', function () {
 
                 checker.checkAfterAppendData();
 
-                list.appendValues(
+                list.appendData(
                     [
-                        [300],
-                        [310],
-                        [320]
-                    ],
-                    [
-                        'b',
-                        'c',
-                        null
+                        { name: 'b', value: 300 },
+                        { name: 'c', value: 310 },
+                        { name: null, value: 320}
                     ]
                 );
 
