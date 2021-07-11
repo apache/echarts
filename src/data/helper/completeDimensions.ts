@@ -122,7 +122,7 @@ function completeDimensions(
         dimDefItem.displayName != null && (resultItem.displayName = dimDefItem.displayName);
     }
 
-    let encodeDef = opt.encodeDef || source.encodeDefine;
+    let encodeDef = opt.encodeDef;
     if (!encodeDef && opt.encodeDefaulter) {
         encodeDef = opt.encodeDefaulter(source, dimCount);
     }

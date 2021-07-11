@@ -37,12 +37,16 @@ function isDataStorage(val: unknown): val is DataStorage {
     return val instanceof DataStorage;
 }
 
-function createListFromArray(sourceOrStore: Source | OptionSourceData | DataStorage, seriesModel: SeriesModel, opt?: {
-    generateCoord?: string
-    useEncodeDefaulter?: boolean | EncodeDefaulter
-    // By default: auto. If `true`, create inverted indices for all ordinal dimension on coordSys.
-    createInvertedIndices?: boolean
-}): SeriesData {
+function createListFromArray(
+    sourceOrStore: Source | OptionSourceData | DataStorage,
+    seriesModel: SeriesModel,
+    opt?: {
+        generateCoord?: string
+        useEncodeDefaulter?: boolean | EncodeDefaulter
+        // By default: auto. If `true`, create inverted indices for all ordinal dimension on coordSys.
+        createInvertedIndices?: boolean
+    }
+): SeriesData {
     opt = opt || {};
 
     if (!isSourceInstance(sourceOrStore) && !isDataStorage(sourceOrStore)) {
@@ -86,6 +90,7 @@ function createListFromArray(sourceOrStore: Source | OptionSourceData | DataStor
         {
             coordDimensions: coordSysDimDefs,
             generateCoord: opt.generateCoord,
+            encodeDefine: seriesModel.getEncode(),
             encodeDefaulter: zrUtil.isFunction(useEncodeDefaulter)
                 ? useEncodeDefaulter
                 : useEncodeDefaulter

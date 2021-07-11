@@ -429,9 +429,6 @@ export interface DataVisualDimensions {
     label?: DimensionIndex;
     itemName?: DimensionIndex;
     itemId?: DimensionIndex;
-    // Group id is used for linking the aggregate relationship between two set of data.
-    // Which is useful in prepresenting the transition key of drilldown/up animation.
-    // Or hover linking.
     itemGroupId?: DimensionIndex;
     seriesName?: DimensionIndex;
 }
@@ -651,6 +648,11 @@ export interface OptionEncodeVisualDimensions {
     itemId?: OptionEncodeValue;
     seriesName?: OptionEncodeValue;
     // Notice: `value` is coordDim, not nonCoordDim.
+
+    // Group id is used for linking the aggregate relationship between two set of data.
+    // Which is useful in prepresenting the transition key of drilldown/up animation.
+    // Or hover linking.
+    itemGroupId?: OptionEncodeValue;
 }
 export interface OptionEncode extends OptionEncodeVisualDimensions {
     [coordDim: string]: OptionEncodeValue | undefined

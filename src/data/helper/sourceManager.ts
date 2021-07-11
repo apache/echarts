@@ -30,7 +30,7 @@ import {
     querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels
 } from './sourceHelper';
 import { applyDataTransform } from './transform';
-import DataStorage, { DataStorageDimensionInfo } from '../DataStorage';
+import DataStorage from '../DataStorage';
 import { DefaultDataProvider } from './dataProvider';
 
 
@@ -237,8 +237,7 @@ export class SourceManager {
             resultSourceList = [createSource(
                 data,
                 { seriesLayoutBy, sourceHeader, dimensions },
-                sourceFormat,
-                seriesModel.get('encode', true)
+                sourceFormat
             )];
         }
         else {
@@ -256,8 +255,6 @@ export class SourceManager {
                 resultSourceList = [createSource(
                     sourceData,
                     this._getSourceMetaRawOption(),
-                    null,
-                    // Note: dataset option does not have `encode`.
                     null
                 )];
                 upstreamSignList = [];
@@ -356,8 +353,7 @@ export class SourceManager {
     }
 
     /**
-     * Will return undefined if source is series.data
-     * because dimension not known yet.
+     * Will return undefined if source don't have dimensions.
      */
     getDataStorage(): DataStorage | undefined {
         // TODO Can use other sourceIndex?
@@ -369,7 +365,7 @@ export class SourceManager {
         if (!cachedStore) {
             const upSourceMgr = this._getUpstreamSourceManagers()[0];
 
-            if (upSourceMgr) {
+            if (isSeries(this._sourceHost) && upSourceMgr) {
                 cachedStore = upSourceMgr.getDataStorage();
             }
             else {

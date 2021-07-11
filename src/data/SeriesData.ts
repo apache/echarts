@@ -320,16 +320,8 @@ class SeriesData<
         return dim as DimensionName;
     }
 
-    getDimensionIndex(dim: DimensionLoose): DimensionIndex {
-        if (typeof dim === 'number') {
-            return dim;
-        }
-        const idx = this._store.getDimensionIndex(dim);
-        if (idx == null) {
-            // If being a number-like string but not being defined a dimension name.
-            return +dim;
-        }
-        return idx;
+    private _getStoreDimIndex(dim: DimensionLoose): DimensionIndex {
+        return this._store.getDimensionIndex(this.getDimension(dim));
     }
 
     /**
@@ -375,7 +367,7 @@ class SeriesData<
         return (dims || []).slice();
     }
 
-    getStore() {
+    getStorage() {
         return this._store;
     }
 
@@ -394,17 +386,33 @@ class SeriesData<
         dimValueGetter?: DimValueGetter
     ): void {
         let store: DataStorage;
+        const dimensions = this.dimensions;
+        const dimensionInfos = map(dimensions, dimName => this._dimensionInfos[dimName]);
         if (data instanceof DataStorage) {
-            store = data;
+            if (data.syncDimensionTypes(dimensionInfos)) {
+                store = data;
+            }
+            // Sync failed
+            else {
+                // Needs to recreate data storage if it's not match the given dimension.
+                data = data.getSource();
+            }
         }
-        else {
-            const dimensions = this.dimensions;
+
+        if (!store) {
             const provider = (isSourceInstance(data) || zrUtil.isArrayLike(data))
                 ? new DefaultDataProvider(data as Source | OptionSourceData, dimensions.length)
                 : data as DataProvider;
-            const dimensionInfos = map(dimensions, dimName => this._dimensionInfos[dimName]);
             store = new DataStorage();
             store.initData(provider, dimensionInfos, dimValueGetter);
+        }
+
+        for (let i = 0; i < dimensions.length; i++) {
+            const dimInfo = this._dimensionInfos[dimensions[i]];
+            if (dimInfo.ordinalMeta) {
+                const dimIdx = store.getDimensionIndex(dimensions[i]);
+                store.setOrdinalMeta(dimIdx, dimInfo.ordinalMeta);
+            }
         }
 
         this._store = store;
@@ -514,7 +522,7 @@ class SeriesData<
      * be erased because of the filtering.
      */
     getApproximateExtent(dim: DimensionLoose): [number, number] {
-        return this._approximateExtent[dim] || this._store.getDataExtent(this.getDimensionIndex(dim));
+        return this._approximateExtent[dim] || this._store.getDataExtent(this._getStoreDimIndex(dim));
     }
 
     /**
@@ -571,11 +579,11 @@ class SeriesData<
 
     private _getCategory(dimIdx: number, idx: number) {
         const ordinal = this._store.get(dimIdx, idx);
-        const dimInfo = this._dimensionInfos[this.dimensions[dimIdx]];
-        const ordinalMeta = dimInfo.ordinalMeta;
+        const ordinalMeta = this._store.getOrdinalMeta(dimIdx);
         if (ordinalMeta) {
             return ordinalMeta.categories[ordinal as OrdinalNumber];
         }
+        return ordinal;
     }
 
     /**
@@ -610,15 +618,15 @@ class SeriesData<
     }
 
     getDataExtent(dim: DimensionLoose): [number, number] {
-        return this._store.getDataExtent(this.getDimensionIndex(dim));
+        return this._store.getDataExtent(this._getStoreDimIndex(dim));
     }
 
     getSum(dim: DimensionLoose): number {
-        return this._store.getSum(this.getDimensionIndex(dim));
+        return this._store.getSum(this._getStoreDimIndex(dim));
     }
 
     getMedian(dim: DimensionLoose): number {
-        return this._store.getMedian(this.getDimensionIndex(dim));
+        return this._store.getMedian(this._getStoreDimIndex(dim));
     }
     /**
      * Get value for multi dimensions.
@@ -709,7 +717,7 @@ class SeriesData<
      */
     indicesOfNearest(dim: DimensionLoose, value: number, maxDistance?: number): number[] {
         return this._store.indicesOfNearest(
-            this.getDimensionIndex(dim),
+            this._getStoreDimIndex(dim),
             value, maxDistance
         );
     }
@@ -742,7 +750,7 @@ class SeriesData<
         // ctxCompat just for compat echarts3
         const fCtx = (ctx || this) as CtxOrList<Ctx>;
 
-        const dimIndices = map(normalizeDimensions(dims), this.getDimensionIndex, this);
+        const dimIndices = map(normalizeDimensions(dims), this._getStoreDimIndex, this);
 
         if (__DEV__) {
             validateDimensions(this, dimIndices);
@@ -777,7 +785,7 @@ class SeriesData<
         // ctxCompat just for compat echarts3
         const fCtx = (ctx || this) as CtxOrList<Ctx>;
 
-        const dimIndices = map(normalizeDimensions(dims), this.getDimensionIndex, this);
+        const dimIndices = map(normalizeDimensions(dims), this._getStoreDimIndex, this);
 
         if (__DEV__) {
             validateDimensions(this, dimIndices);
@@ -802,7 +810,7 @@ class SeriesData<
         const dims = zrUtil.keys(range);
         const dimIndices: number[] = [];
         zrUtil.each(dims, (dim) => {
-            const dimIdx = this.getDimensionIndex(dim);
+            const dimIdx = this._getStoreDimIndex(dim);
             innerRange[dimIdx] = range[dim];
             dimIndices.push(dimIdx);
         });
@@ -867,7 +875,7 @@ class SeriesData<
         const fCtx = (ctx || ctxCompat || this) as CtxOrList<Ctx>;
 
         const dimIndices = map(
-            normalizeDimensions(dims), this.getDimensionIndex, this
+            normalizeDimensions(dims), this._getStoreDimIndex, this
         );
 
         if (__DEV__) {
@@ -894,7 +902,7 @@ class SeriesData<
     ): SeriesData<HostModel> {
         const list = cloneListForMapAndSample(this);
         list._store = this._store.downSample(
-            this.getDimensionIndex(dimension),
+            this._getStoreDimIndex(dimension),
             rate,
             sampleValue,
             sampleIndex
@@ -913,7 +921,7 @@ class SeriesData<
     ) {
         const list = cloneListForMapAndSample(this);
         list._store = this._store.lttbDownSample(
-            this.getDimensionIndex(valueDimension),
+            this._getStoreDimIndex(valueDimension),
             rate
         );
         return list;
@@ -942,8 +950,8 @@ class SeriesData<
         const thisList = this;
 
         return new DataDiffer(
-            otherList ? otherList.getStore().getIndices() : [],
-            this.getStore().getIndices(),
+            otherList ? otherList.getStorage().getIndices() : [],
+            this.getStorage().getIndices(),
             function (idx: number) {
                 return getId(otherList, idx);
             },

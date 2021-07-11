@@ -23,7 +23,12 @@ import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
     SeriesOption, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType
+    ScaleDataValue,
+    Dictionary,
+    OptionDataItemObject,
+    SeriesDataType,
+    SeriesEncodeOptionMixin,
+    OptionEncodeValue
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {PaletteMixin} from './mixin/palette';
@@ -386,9 +391,16 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         inner(this).data = data;
     }
 
+    getEncode() {
+        const encode = (this as Model<SeriesEncodeOptionMixin>).get('encode');
+        if (encode) {
+            return zrUtil.createHashMap<OptionEncodeValue, DimensionName>(encode);
+        }
+    }
+
     getSource(): DataStorage | Source {
         const sourceMgr = inner(this).sourceManager;
-        return sourceMgr.getDataStorage() || sourceMgr.getSource();
+        return sourceMgr.getSource();
     }
 
     /**

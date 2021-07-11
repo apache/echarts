@@ -69,7 +69,7 @@ export default function createDimensions(
         source = source.getSource();
     }
     else if (source instanceof SeriesData) {
-        source = source.getStore().getSource();
+        source = source.getStorage().getSource();
     }
     else if (!isSourceInstance(source)) {
         source = createSourceFromSeriesDataOption(source as OptionSourceData);
@@ -77,7 +77,6 @@ export default function createDimensions(
 
     opt = opt || {};
     return completeDimensions(opt.coordDimensions || [], source, {
-        // FIXME:TS detect whether source then call `.dimensionsDefine` and `.encodeDefine`?
         dimsDef: opt.dimensionsDefine,
         encodeDef: opt.encodeDefine,
         dimCount: opt.dimensionsCount,

@@ -484,7 +484,7 @@ export function retrieveRawValue(
         return;
     }
 
-    const sourceFormat = data.getStore().getSource().sourceFormat;
+    const sourceFormat = data.getStorage().getSource().sourceFormat;
     let dimName;
     let dimIndex;
 
@@ -515,7 +515,7 @@ export function retrieveRawAttr(data: SeriesData, dataIndex: number, attr: strin
         return;
     }
 
-    const sourceFormat = data.getStore().getSource().sourceFormat;
+    const sourceFormat = data.getStorage().getSource().sourceFormat;
 
     if (sourceFormat !== SOURCE_FORMAT_ORIGINAL
         && sourceFormat !== SOURCE_FORMAT_OBJECT_ROWS

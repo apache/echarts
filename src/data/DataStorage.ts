@@ -28,6 +28,7 @@ import {
 } from '../util/types';
 import { DataProvider } from './helper/dataProvider';
 import { parseDataValue } from './helper/dataValueHelper';
+import OrdinalMeta from './OrdinalMeta';
 import { Source } from './Source';
 
 const UNDEFINED = 'undefined';
@@ -82,6 +83,12 @@ export type DimValueGetter = (
 export interface DataStorageDimensionInfo {
     type?: DataStorageDimensionType;  // Default to be float.
     name?: string;
+    /**
+     * When using category axis.
+     * Category strings will be collected and stored in ordinalMeta.categories.
+     * And storage will store the index of categories.
+     */
+    ordinalMeta?: OrdinalMeta
 }
 
 let defaultDimValueGetters: {[sourceFormat: string]: DimValueGetter};
@@ -194,7 +201,8 @@ class DataStorage {
             }
         }
         for (let i = 0; i < dimensions.length; i++) {
-            const name = dimensions[i].name;
+            const dim = dimensions[i];
+            const name = dim.name;
             dimensionsIdxMap[prefix + name] = i;
         }
 
@@ -217,6 +225,47 @@ class DataStorage {
     }
 
     getDimensionIndex: (dim: DimensionName) => number;
+
+    setOrdinalMeta(dimIdx: number, ordinalMeta: OrdinalMeta) {
+        const chunk = this._chunks[dimIdx];
+        const dim = this._dimensions[dimIdx];
+        // Already have value.
+        if (dim.ordinalMeta && dim.ordinalMeta.categories.length > 0) {
+            return;
+        }
+        for (let i = 0; i < chunk.length; i++) {
+            (chunk as any)[i] = ordinalMeta.parseAndCollect(chunk[i]);
+        }
+
+        dim.ordinalMeta = ordinalMeta;
+    }
+
+    getOrdinalMeta(dimIdx: number) {
+        const dimInfo = this._dimensions[dimIdx];
+        const ordinalMeta = dimInfo.ordinalMeta;
+        return ordinalMeta;
+    }
+
+    /**
+     * If we using dataset.
+     * Dimensions types may only know when we initializing series.
+     * So we need to sync the type back to storage when initlializing SeriesData back
+     *
+     * Will return false if dimension type has been known and different from given.
+     * We need to recreate a new data storage in this case.
+     */
+    syncDimensionTypes(targetDims: DataStorageDimensionInfo[]) {
+        for (let i = 0; i < targetDims.length; i++) {
+            const targetDim = targetDims[i];
+            const selfDimIdx = this.getDimensionIndex(targetDim.name);
+            const selfDim = this._dimensions[selfDimIdx];
+            if (!selfDim || (selfDim.type && selfDim.type !== targetDim.type)) {
+                return false;
+            }
+            selfDim.type = targetDim.type;
+        }
+        return true;
+    }
 
     /**
      * Caution: Can be only called on raw data (before `this._indices` created).
@@ -501,333 +550,333 @@ class DataStorage {
     /**
      * Data filter
      */
-     filterSelf(
-         dims: DimensionIndex[],
-         cb: FilterCb
-     ) {
-         if (!this._count) {
-             return;
-         }
+    filterSelf(
+        dims: DimensionIndex[],
+        cb: FilterCb
+    ) {
+        if (!this._count) {
+            return;
+        }
 
-         const count = this.count();
-         const Ctor = getIndicesCtor(this._rawCount);
-         const newIndices = new Ctor(count);
-         const value = [];
-         const dimSize = dims.length;
+        const count = this.count();
+        const Ctor = getIndicesCtor(this._rawCount);
+        const newIndices = new Ctor(count);
+        const value = [];
+        const dimSize = dims.length;
 
-         let offset = 0;
-         const dim0 = dims[0];
-         const chunks = this._chunks;
+        let offset = 0;
+        const dim0 = dims[0];
+        const chunks = this._chunks;
 
-         for (let i = 0; i < count; i++) {
-             let keep;
-             const rawIdx = this.getRawIndex(i);
-             // Simple optimization
-             if (dimSize === 0) {
-                 keep = (cb as FilterCb0)(i);
-             }
-             else if (dimSize === 1) {
-                 const val = chunks[dim0][rawIdx];
-                 keep = (cb as FilterCb1)(val, i);
-             }
-             else {
-                 let k = 0;
-                 for (; k < dimSize; k++) {
-                     value[k] = chunks[dims[k]][rawIdx];
-                 }
-                 value[k] = i;
-                 keep = (cb as FilterCb).apply(null, value);
-             }
-             if (keep) {
-                 newIndices[offset++] = rawIdx;
-             }
-         }
+        for (let i = 0; i < count; i++) {
+            let keep;
+            const rawIdx = this.getRawIndex(i);
+            // Simple optimization
+            if (dimSize === 0) {
+                keep = (cb as FilterCb0)(i);
+            }
+            else if (dimSize === 1) {
+                const val = chunks[dim0][rawIdx];
+                keep = (cb as FilterCb1)(val, i);
+            }
+            else {
+                let k = 0;
+                for (; k < dimSize; k++) {
+                    value[k] = chunks[dims[k]][rawIdx];
+                }
+                value[k] = i;
+                keep = (cb as FilterCb).apply(null, value);
+            }
+            if (keep) {
+                newIndices[offset++] = rawIdx;
+            }
+        }
 
-         // Set indices after filtered.
-         if (offset < count) {
-             this._indices = newIndices;
-         }
-         this._count = offset;
-         // Reset data extent
-         this._extent = [];
+        // Set indices after filtered.
+        if (offset < count) {
+            this._indices = newIndices;
+        }
+        this._count = offset;
+        // Reset data extent
+        this._extent = [];
 
-         this._updateGetRawIdx();
-     }
+        this._updateGetRawIdx();
+    }
 
-     /**
-      * Select data in range. (For optimization of filter)
-      * (Manually inline code, support 5 million data filtering in data zoom.)
-      */
-     selectRange(range: {[dimIdx: number]: [number, number]}) {
+    /**
+     * Select data in range. (For optimization of filter)
+     * (Manually inline code, support 5 million data filtering in data zoom.)
+     */
+    selectRange(range: {[dimIdx: number]: [number, number]}) {
 
-         const len = this._count;
+        const len = this._count;
 
-         if (!len) {
-             return;
-         }
+        if (!len) {
+            return;
+        }
 
-         const dims = keys(range);
-         const dimSize = dims.length;
-         if (!dimSize) {
-             return;
-         }
+        const dims = keys(range);
+        const dimSize = dims.length;
+        if (!dimSize) {
+            return;
+        }
 
-         const originalCount = this.count();
-         const Ctor = getIndicesCtor(this._rawCount);
-         const newIndices = new Ctor(originalCount);
+        const originalCount = this.count();
+        const Ctor = getIndicesCtor(this._rawCount);
+        const newIndices = new Ctor(originalCount);
 
-         let offset = 0;
-         const dim0 = dims[0];
+        let offset = 0;
+        const dim0 = dims[0];
 
-         const min = range[dim0][0];
-         const max = range[dim0][1];
-         const storeArr = this._chunks;
+        const min = range[dim0][0];
+        const max = range[dim0][1];
+        const storeArr = this._chunks;
 
-         let quickFinished = false;
-         if (!this._indices) {
-             // Extreme optimization for common case. About 2x faster in chrome.
-             let idx = 0;
-             if (dimSize === 1) {
-                 const dimStorage = storeArr[dims[0]];
-                 for (let i = 0; i < len; i++) {
-                     const val = dimStorage[i];
-                     // NaN will not be filtered. Consider the case, in line chart, empty
-                     // value indicates the line should be broken. But for the case like
-                     // scatter plot, a data item with empty value will not be rendered,
-                     // but the axis extent may be effected if some other dim of the data
-                     // item has value. Fortunately it is not a significant negative effect.
-                     if (
-                         (val >= min && val <= max) || isNaN(val as any)
-                     ) {
-                         newIndices[offset++] = idx;
-                     }
-                     idx++;
-                 }
-                 quickFinished = true;
-             }
-             else if (dimSize === 2) {
-                 const dimStorage = storeArr[dims[0]];
-                 const dimStorage2 = storeArr[dims[1]];
-                 const min2 = range[dims[1]][0];
-                 const max2 = range[dims[1]][1];
-                 for (let i = 0; i < len; i++) {
-                     const val = dimStorage[i];
-                     const val2 = dimStorage2[i];
-                     // Do not filter NaN, see comment above.
-                     if ((
-                             (val >= min && val <= max) || isNaN(val as any)
-                         )
-                         && (
-                             (val2 >= min2 && val2 <= max2) || isNaN(val2 as any)
-                         )
-                     ) {
-                         newIndices[offset++] = idx;
-                     }
-                     idx++;
-                 }
-                 quickFinished = true;
-             }
-         }
-         if (!quickFinished) {
-             if (dimSize === 1) {
-                 for (let i = 0; i < originalCount; i++) {
-                     const rawIndex = this.getRawIndex(i);
-                     const val = storeArr[dims[0]][rawIndex];
-                     // Do not filter NaN, see comment above.
-                     if (
-                         (val >= min && val <= max) || isNaN(val as any)
-                     ) {
-                         newIndices[offset++] = rawIndex;
-                     }
-                 }
-             }
-             else {
-                 for (let i = 0; i < originalCount; i++) {
-                     let keep = true;
-                     const rawIndex = this.getRawIndex(i);
-                     for (let k = 0; k < dimSize; k++) {
-                         const dimk = dims[k];
-                         const val = storeArr[dimk][rawIndex];
-                         // Do not filter NaN, see comment above.
-                         if (val < range[dimk][0] || val > range[dimk][1]) {
-                             keep = false;
-                         }
-                     }
-                     if (keep) {
-                         newIndices[offset++] = this.getRawIndex(i);
-                     }
-                 }
-             }
-         }
+        let quickFinished = false;
+        if (!this._indices) {
+            // Extreme optimization for common case. About 2x faster in chrome.
+            let idx = 0;
+            if (dimSize === 1) {
+                const dimStorage = storeArr[dims[0]];
+                for (let i = 0; i < len; i++) {
+                    const val = dimStorage[i];
+                    // NaN will not be filtered. Consider the case, in line chart, empty
+                    // value indicates the line should be broken. But for the case like
+                    // scatter plot, a data item with empty value will not be rendered,
+                    // but the axis extent may be effected if some other dim of the data
+                    // item has value. Fortunately it is not a significant negative effect.
+                    if (
+                        (val >= min && val <= max) || isNaN(val as any)
+                    ) {
+                        newIndices[offset++] = idx;
+                    }
+                    idx++;
+                }
+                quickFinished = true;
+            }
+            else if (dimSize === 2) {
+                const dimStorage = storeArr[dims[0]];
+                const dimStorage2 = storeArr[dims[1]];
+                const min2 = range[dims[1]][0];
+                const max2 = range[dims[1]][1];
+                for (let i = 0; i < len; i++) {
+                    const val = dimStorage[i];
+                    const val2 = dimStorage2[i];
+                    // Do not filter NaN, see comment above.
+                    if ((
+                            (val >= min && val <= max) || isNaN(val as any)
+                        )
+                        && (
+                            (val2 >= min2 && val2 <= max2) || isNaN(val2 as any)
+                        )
+                    ) {
+                        newIndices[offset++] = idx;
+                    }
+                    idx++;
+                }
+                quickFinished = true;
+            }
+        }
+        if (!quickFinished) {
+            if (dimSize === 1) {
+                for (let i = 0; i < originalCount; i++) {
+                    const rawIndex = this.getRawIndex(i);
+                    const val = storeArr[dims[0]][rawIndex];
+                    // Do not filter NaN, see comment above.
+                    if (
+                        (val >= min && val <= max) || isNaN(val as any)
+                    ) {
+                        newIndices[offset++] = rawIndex;
+                    }
+                }
+            }
+            else {
+                for (let i = 0; i < originalCount; i++) {
+                    let keep = true;
+                    const rawIndex = this.getRawIndex(i);
+                    for (let k = 0; k < dimSize; k++) {
+                        const dimk = dims[k];
+                        const val = storeArr[dimk][rawIndex];
+                        // Do not filter NaN, see comment above.
+                        if (val < range[dimk][0] || val > range[dimk][1]) {
+                            keep = false;
+                        }
+                    }
+                    if (keep) {
+                        newIndices[offset++] = this.getRawIndex(i);
+                    }
+                }
+            }
+        }
 
-         // Set indices after filtered.
-         if (offset < originalCount) {
-             this._indices = newIndices;
-         }
-         this._count = offset;
-         // Reset data extent
-         this._extent = [];
+        // Set indices after filtered.
+        if (offset < originalCount) {
+            this._indices = newIndices;
+        }
+        this._count = offset;
+        // Reset data extent
+        this._extent = [];
 
-         this._updateGetRawIdx();
-     }
+        this._updateGetRawIdx();
+    }
 
-     /**
-      * Data mapping to a plain array
-      */
-     /* eslint-enable */
-     mapArray(dims: DimensionIndex[], cb: MapArrayCb): any[] {
-         const result: any[] = [];
-         this.each(dims, function () {
-             result.push(cb && (cb as MapArrayCb).apply(null, arguments));
-         });
-         return result;
-     }
+    /**
+     * Data mapping to a plain array
+     */
+    /* eslint-enable */
+    mapArray(dims: DimensionIndex[], cb: MapArrayCb): any[] {
+        const result: any[] = [];
+        this.each(dims, function () {
+            result.push(cb && (cb as MapArrayCb).apply(null, arguments));
+        });
+        return result;
+    }
 
-     /**
-      * Data mapping to a new List with given dimensions
-      */
-     map(dims: DimensionIndex[], cb: MapCb): DataStorage {
+    /**
+     * Data mapping to a new List with given dimensions
+     */
+    map(dims: DimensionIndex[], cb: MapCb): DataStorage {
         // TODO only clone picked chunks.
-         const target = this.clone(dims, true);
-         const targetChunks = target._chunks;
+        const target = this.clone(dims, true);
+        const targetChunks = target._chunks;
 
 
-         const tmpRetValue = [];
-         const dimSize = dims.length;
-         const dataCount = this.count();
-         const values = [];
-         const rawExtent = target._rawExtent;
+        const tmpRetValue = [];
+        const dimSize = dims.length;
+        const dataCount = this.count();
+        const values = [];
+        const rawExtent = target._rawExtent;
 
-         for (let dataIndex = 0; dataIndex < dataCount; dataIndex++) {
-            const rawIndex = this.getRawIndex(dataIndex);
+        for (let dataIndex = 0; dataIndex < dataCount; dataIndex++) {
+        const rawIndex = this.getRawIndex(dataIndex);
 
-             for (let k = 0; k < dimSize; k++) {
-                 values[k] = targetChunks[dims[k]][rawIndex];
-             }
-             values[dimSize] = dataIndex;
+            for (let k = 0; k < dimSize; k++) {
+                values[k] = targetChunks[dims[k]][rawIndex];
+            }
+            values[dimSize] = dataIndex;
 
-             let retValue = cb && cb.apply(null, values);
-             if (retValue != null) {
-                 // a number or string (in oridinal dimension)?
-                 if (typeof retValue !== 'object') {
-                     tmpRetValue[0] = retValue;
-                     retValue = tmpRetValue;
-                 }
+            let retValue = cb && cb.apply(null, values);
+            if (retValue != null) {
+                // a number or string (in oridinal dimension)?
+                if (typeof retValue !== 'object') {
+                    tmpRetValue[0] = retValue;
+                    retValue = tmpRetValue;
+                }
 
-                 for (let i = 0; i < retValue.length; i++) {
-                     const dim = dims[i];
-                     const val = retValue[i];
-                     const rawExtentOnDim = rawExtent[dim];
+                for (let i = 0; i < retValue.length; i++) {
+                    const dim = dims[i];
+                    const val = retValue[i];
+                    const rawExtentOnDim = rawExtent[dim];
 
-                     const dimStore = targetChunks[dim];
-                     if (dimStore) {
-                         (dimStore as ParsedValue[])[rawIndex] = val;
-                     }
+                    const dimStore = targetChunks[dim];
+                    if (dimStore) {
+                        (dimStore as ParsedValue[])[rawIndex] = val;
+                    }
 
-                     if (val < rawExtentOnDim[0]) {
-                         rawExtentOnDim[0] = val as number;
-                     }
-                     if (val > rawExtentOnDim[1]) {
-                         rawExtentOnDim[1] = val as number;
-                     }
-                 }
-             }
-         }
+                    if (val < rawExtentOnDim[0]) {
+                        rawExtentOnDim[0] = val as number;
+                    }
+                    if (val > rawExtentOnDim[1]) {
+                        rawExtentOnDim[1] = val as number;
+                    }
+                }
+            }
+        }
 
-         return target;
-     }
+        return target;
+    }
 
-     /**
-      * Large data down sampling using largest-triangle-three-buckets
-      * @param {string} valueDimension
-      * @param {number} targetCount
-      */
-     lttbDownSample(
-         valueDimension: DimensionIndex,
-         rate: number
-     ) {
-         const target = this.clone([valueDimension]);
-         const targetStorage = target._chunks;
-         const dimStore = targetStorage[valueDimension];
-         const len = this.count();
+    /**
+     * Large data down sampling using largest-triangle-three-buckets
+     * @param {string} valueDimension
+     * @param {number} targetCount
+     */
+    lttbDownSample(
+        valueDimension: DimensionIndex,
+        rate: number
+    ) {
+        const target = this.clone([valueDimension]);
+        const targetStorage = target._chunks;
+        const dimStore = targetStorage[valueDimension];
+        const len = this.count();
 
-         let sampledIndex = 0;
+        let sampledIndex = 0;
 
-         const frameSize = Math.floor(1 / rate);
+        const frameSize = Math.floor(1 / rate);
 
-         let currentRawIndex = this.getRawIndex(0);
-         let maxArea;
-         let area;
-         let nextRawIndex;
+        let currentRawIndex = this.getRawIndex(0);
+        let maxArea;
+        let area;
+        let nextRawIndex;
 
-         const newIndices = new (getIndicesCtor(this._rawCount))(Math.ceil(len / frameSize) + 1);
+        const newIndices = new (getIndicesCtor(this._rawCount))(Math.ceil(len / frameSize) + 1);
 
-         // First frame use the first data.
-         newIndices[sampledIndex++] = currentRawIndex;
-         for (let i = 1; i < len - 1; i += frameSize) {
-             const nextFrameStart = Math.min(i + frameSize, len - 1);
-             const nextFrameEnd = Math.min(i + frameSize * 2, len);
+        // First frame use the first data.
+        newIndices[sampledIndex++] = currentRawIndex;
+        for (let i = 1; i < len - 1; i += frameSize) {
+            const nextFrameStart = Math.min(i + frameSize, len - 1);
+            const nextFrameEnd = Math.min(i + frameSize * 2, len);
 
-             const avgX = (nextFrameEnd + nextFrameStart) / 2;
-             let avgY = 0;
+            const avgX = (nextFrameEnd + nextFrameStart) / 2;
+            let avgY = 0;
 
-             for (let idx = nextFrameStart; idx < nextFrameEnd; idx++) {
-                 const rawIndex = this.getRawIndex(idx);
-                 const y = dimStore[rawIndex] as number;
-                 if (isNaN(y)) {
-                     continue;
-                 }
-                 avgY += y as number;
-             }
-             avgY /= (nextFrameEnd - nextFrameStart);
+            for (let idx = nextFrameStart; idx < nextFrameEnd; idx++) {
+                const rawIndex = this.getRawIndex(idx);
+                const y = dimStore[rawIndex] as number;
+                if (isNaN(y)) {
+                    continue;
+                }
+                avgY += y as number;
+            }
+            avgY /= (nextFrameEnd - nextFrameStart);
 
-             const frameStart = i;
-             const frameEnd = Math.min(i + frameSize, len);
+            const frameStart = i;
+            const frameEnd = Math.min(i + frameSize, len);
 
-             const pointAX = i - 1;
-             const pointAY = dimStore[currentRawIndex] as number;
+            const pointAX = i - 1;
+            const pointAY = dimStore[currentRawIndex] as number;
 
-             maxArea = -1;
+            maxArea = -1;
 
-             nextRawIndex = frameStart;
-             // Find a point from current frame that construct a triangel with largest area with previous selected point
-             // And the average of next frame.
-             for (let idx = frameStart; idx < frameEnd; idx++) {
-                 const rawIndex = this.getRawIndex(idx);
-                 const y = dimStore[rawIndex] as number;
-                 if (isNaN(y)) {
-                     continue;
-                 }
-                 // Calculate triangle area over three buckets
-                 area = Math.abs((pointAX - avgX) * (y - pointAY)
-                     - (pointAX - idx) * (avgY - pointAY)
-                 );
-                 if (area > maxArea) {
-                     maxArea = area;
-                     nextRawIndex = rawIndex; // Next a is this b
-                 }
-             }
+            nextRawIndex = frameStart;
+            // Find a point from current frame that construct a triangel with largest area with previous selected point
+            // And the average of next frame.
+            for (let idx = frameStart; idx < frameEnd; idx++) {
+                const rawIndex = this.getRawIndex(idx);
+                const y = dimStore[rawIndex] as number;
+                if (isNaN(y)) {
+                    continue;
+                }
+                // Calculate triangle area over three buckets
+                area = Math.abs((pointAX - avgX) * (y - pointAY)
+                    - (pointAX - idx) * (avgY - pointAY)
+                );
+                if (area > maxArea) {
+                    maxArea = area;
+                    nextRawIndex = rawIndex; // Next a is this b
+                }
+            }
 
-             newIndices[sampledIndex++] = nextRawIndex;
+            newIndices[sampledIndex++] = nextRawIndex;
 
-             currentRawIndex = nextRawIndex; // This a is the next a (chosen b)
-         }
+            currentRawIndex = nextRawIndex; // This a is the next a (chosen b)
+        }
 
-         // First frame use the last data.
-         newIndices[sampledIndex++] = this.getRawIndex(len - 1);
-         target._count = sampledIndex;
-         target._indices = newIndices;
+        // First frame use the last data.
+        newIndices[sampledIndex++] = this.getRawIndex(len - 1);
+        target._count = sampledIndex;
+        target._indices = newIndices;
 
-         target.getRawIndex = this._getRawIdx;
-         return target;
-     }
+        target.getRawIndex = this._getRawIdx;
+        return target;
+    }
 
 
     /**
      * Large data down sampling on given dimension
      * @param sampleIndex Sample index for name and id
      */
-     downSample(
+    downSample(
         dimension: DimensionIndex,
         rate: number,
         sampleValue: (frameValues: ArrayLike<ParsedValue>) => ParsedValueNumeric,
@@ -889,40 +938,40 @@ class DataStorage {
      *  list.each(['x', 'y'], function (x, y, idx) {});
      *  list.each(function (idx) {})
      */
-     each(dims: DimensionIndex[], cb: EachCb): void {
-         if (!this._count) {
-             return;
-         }
-         const dimSize = dims.length;
-         const chunks = this._chunks;
+    each(dims: DimensionIndex[], cb: EachCb): void {
+        if (!this._count) {
+            return;
+        }
+        const dimSize = dims.length;
+        const chunks = this._chunks;
 
-         for (let i = 0, len = this.count(); i < len; i++) {
-             const rawIdx = this.getRawIndex(i);
-             // Simple optimization
-             switch (dimSize) {
-                 case 0:
-                     (cb as EachCb0)(i);
-                     break;
-                 case 1:
-                     (cb as EachCb1)(chunks[dims[0]][rawIdx], i);
-                     break;
-                 case 2:
-                     (cb as EachCb2)(
-                         chunks[dims[0]][rawIdx], chunks[dims[1]][rawIdx], i
-                     );
-                     break;
-                 default:
-                     let k = 0;
-                     const value = [];
-                     for (; k < dimSize; k++) {
-                         value[k] = chunks[dims[k]][rawIdx];
-                     }
-                     // Index
-                     value[k] = i;
-                     (cb as EachCb).apply(null, value);
-             }
-         }
-     }
+        for (let i = 0, len = this.count(); i < len; i++) {
+            const rawIdx = this.getRawIndex(i);
+            // Simple optimization
+            switch (dimSize) {
+                case 0:
+                    (cb as EachCb0)(i);
+                    break;
+                case 1:
+                    (cb as EachCb1)(chunks[dims[0]][rawIdx], i);
+                    break;
+                case 2:
+                    (cb as EachCb2)(
+                        chunks[dims[0]][rawIdx], chunks[dims[1]][rawIdx], i
+                    );
+                    break;
+                default:
+                    let k = 0;
+                    const value = [];
+                    for (; k < dimSize; k++) {
+                        value[k] = chunks[dims[k]][rawIdx];
+                    }
+                    // Index
+                    value[k] = i;
+                    (cb as EachCb).apply(null, value);
+            }
+        }
+    }
 
     /**
      * Get extent of data in one dimension
@@ -976,31 +1025,31 @@ class DataStorage {
      * Do not initialize.
      * Default `getRawIndex`. And it can be changed.
      */
-     getRawIndex: (idx: number) => number;
+    getRawIndex: (idx: number) => number;
 
-     /**
-      * Get raw data item
-      */
-     getRawDataItem(idx: number): OptionDataItem {
-         const rawIdx = this.getRawIndex(idx);
-         if (!this._provider.persistent) {
-             const val = [];
-             const chunks = this._chunks;
-             for (let i = 0; i < chunks.length; i++) {
-                 val.push(chunks[i][rawIdx]);
-             }
-             return val;
-         }
-         else {
-             return this._provider.getItem(this.getRawIndex(idx));
-         }
-     }
+    /**
+     * Get raw data item
+     */
+    getRawDataItem(idx: number): OptionDataItem {
+        const rawIdx = this.getRawIndex(idx);
+        if (!this._provider.persistent) {
+            const val = [];
+            const chunks = this._chunks;
+            for (let i = 0; i < chunks.length; i++) {
+                val.push(chunks[i][rawIdx]);
+            }
+            return val;
+        }
+        else {
+            return this._provider.getItem(this.getRawIndex(idx));
+        }
+    }
 
-     /**
-      *
-      * @param clonedDims Determine which dims to clone. Will share the data if not specified.
-      */
-     clone(clonedDims?: number[], cloneIndices?: boolean): DataStorage {
+    /**
+     *
+     * @param clonedDims Determine which dims to clone. Will share the data if not specified.
+     */
+    clone(clonedDims?: number[], cloneIndices?: boolean): DataStorage {
         const target = new DataStorage();
         const chunks = this._chunks;
         const clonedDimsMap = clonedDims && reduce(clonedDims, (obj, dimIdx) => {
@@ -1025,9 +1074,9 @@ class DataStorage {
         }
         target._updateGetRawIdx();
         return target;
-     }
+    }
 
-     private _copyCommonProps(target: DataStorage) {
+    private _copyCommonProps(target: DataStorage) {
         target._count = this._count;
         target._rawCount = this._rawCount;
         target._provider = this._provider;
@@ -1036,9 +1085,9 @@ class DataStorage {
 
         target._extent = clone(this._extent);
         target._rawExtent = clone(this._rawExtent);
-     }
+    }
 
-     private _cloneIndices() {
+    private _cloneIndices() {
         if (this._indices) {
             const Ctor = this._indices.constructor as DataArrayLikeConstructor;
             let indices;
@@ -1055,21 +1104,21 @@ class DataStorage {
             return indices;
         }
         return null;
-     }
+    }
 
-     private _getRawIdxIdentity(idx: number) {
-         return idx;
-     }
-     private _getRawIdx(idx: number) {
+    private _getRawIdxIdentity(idx: number) {
+        return idx;
+    }
+    private _getRawIdx(idx: number) {
         if (idx < this._count && idx >= 0) {
             return this._indices[idx];
         }
         return -1;
-     }
+    }
 
-     private _updateGetRawIdx() {
+    private _updateGetRawIdx() {
         this.getRawIndex = this._indices ? this._getRawIdx : this._getRawIdxIdentity;
-     }
+    }
 
     private static internalField = (function () {
 
@@ -1086,7 +1135,7 @@ class DataStorage {
             objectRows(
                 this: DataStorage, dataItem: any, dimName: string, dataIndex: number, dimIndex: number
             ): ParsedValue {
-                return parseDataValue(dataItem[dimName], this._dimensions[dataIndex]);
+                return parseDataValue(dataItem[dimName], this._dimensions[dimIndex]);
             },
 
             keyedColumns: getDimValueSimply,

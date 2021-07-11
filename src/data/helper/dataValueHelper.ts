@@ -40,18 +40,14 @@ export function parseDataValue(
         // will be parsed to NaN if do not set `type` as 'ordinal'. It has been
         // the logic in `List.ts` for long time. Follow the same way if you need
         // to get same result as List did from a raw value.
-        type?: DimensionType,
-        ordinalMeta?: OrdinalMeta
+        type?: DimensionType
     }
 ): ParsedValue {
     // Performance sensitive.
     const dimType = opt && opt.type;
     if (dimType === 'ordinal') {
         // If given value is a category string
-        const ordinalMeta = opt && opt.ordinalMeta;
-        return ordinalMeta
-            ? ordinalMeta.parseAndCollect(value)
-            : value;
+        return value;
     }
 
     if (dimType === 'time'

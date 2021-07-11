@@ -69,7 +69,7 @@ export default function pointsLayout(seriesType: string, forceStoreInTypedArray?
 
                     const tmpIn: ParsedValueNumeric[] = [];
                     const tmpOut: number[] = [];
-                    const store = data.getStore();
+                    const store = data.getStorage();
 
                     for (let i = params.start, offset = 0; i < params.end; i++) {
                         let point;

@@ -37,7 +37,11 @@ export default function createSeriesDataSimply(
     opt: CreateDimensionsParams | CreateDimensionsParams['coordDimensions'],
     nameList?: string[]
 ): SeriesData {
-    opt = isArray(opt) && {coordDimensions: opt} || extend({}, opt);
+    opt = isArray(opt) && {
+        coordDimensions: opt
+    } || extend({
+        encodeDefine: seriesModel.getEncode()
+    }, opt);
 
     const source = seriesModel.getSource();
 

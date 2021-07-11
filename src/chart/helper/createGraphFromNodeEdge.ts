@@ -84,7 +84,8 @@ export default function createGraphFromNodeEdge(
         }
 
         const dimensionNames = createDimensions(nodes, {
-            coordDimensions: coordDimensions
+            coordDimensions: coordDimensions,
+            encodeDefine: seriesModel.getEncode()
         });
         nodeData = new SeriesData(dimensionNames, seriesModel);
         nodeData.initData(nodes);
