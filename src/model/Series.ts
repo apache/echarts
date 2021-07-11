@@ -400,7 +400,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
     getSource(): DataStorage | Source {
         const sourceMgr = inner(this).sourceManager;
-        return sourceMgr.getSource();
+        return sourceMgr.getDataStorage() || sourceMgr.getSource();
     }
 
     /**

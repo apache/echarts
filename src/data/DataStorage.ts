@@ -229,15 +229,17 @@ class DataStorage {
     setOrdinalMeta(dimIdx: number, ordinalMeta: OrdinalMeta) {
         const chunk = this._chunks[dimIdx];
         const dim = this._dimensions[dimIdx];
-        // Already have value.
-        if (dim.ordinalMeta && dim.ordinalMeta.categories.length > 0) {
-            return;
+
+        // Set fail if use a different ordinalMeta
+        if (dim.ordinalMeta && dim.ordinalMeta !== ordinalMeta) {
+            return false;
         }
         for (let i = 0; i < chunk.length; i++) {
             (chunk as any)[i] = ordinalMeta.parseAndCollect(chunk[i]);
         }
 
         dim.ordinalMeta = ordinalMeta;
+        return true;
     }
 
     getOrdinalMeta(dimIdx: number) {
@@ -259,7 +261,12 @@ class DataStorage {
             const targetDim = targetDims[i];
             const selfDimIdx = this.getDimensionIndex(targetDim.name);
             const selfDim = this._dimensions[selfDimIdx];
-            if (!selfDim || (selfDim.type && selfDim.type !== targetDim.type)) {
+            if (!selfDim
+                // Type is different
+                || (selfDim.type && selfDim.type !== targetDim.type)
+                // ordinalMeta is differnt. Usually being on the different axis.
+                || (selfDim.ordinalMeta && selfDim.ordinalMeta !== targetDim.ordinalMeta)
+            ) {
                 return false;
             }
             selfDim.type = targetDim.type;
