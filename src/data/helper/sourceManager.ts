@@ -391,11 +391,15 @@ export class SourceManager {
                 cachedStore = upSourceMgr._innerGetDataStorage(endSource);
             }
             else {
+                const dimensionsDefine = source.dimensionsDefine;
                 // Can't create a store if don't know dimension..
-                if (source && source.dimensionsDefine) {
+                if (source && dimensionsDefine) {
                     cachedStore = new DataStorage();
                     // Always create storage from source of series.
-                    cachedStore.initData(new DefaultDataProvider((sourceToInit)), sourceToInit.dimensionsDefine);
+                    cachedStore.initData(
+                        new DefaultDataProvider(sourceToInit, dimensionsDefine.length),
+                        dimensionsDefine
+                    );
                 }
             }
             cachedStoreMap[sourceReadKey] = cachedStore;

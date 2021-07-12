@@ -238,6 +238,7 @@ class DataStorage {
         if (dim.ordinalMeta) {
             return;
         }
+
         for (let i = 0; i < chunk.length; i++) {
             (chunk as any)[i] = ordinalMeta.parseAndCollect(chunk[i]);
         }
@@ -292,7 +293,10 @@ class DataStorage {
         if (!provider.persistent) {
             end += start;
         }
-        this._initDataFromProvider(start, end, true);
+
+        if (start < end) {
+            this._initDataFromProvider(start, end, true);
+        }
 
         return [start, end];
     }
@@ -302,10 +306,6 @@ class DataStorage {
         end: number,
         append?: boolean
     ): void {
-        if (start >= end) {
-            return;
-        }
-
         const provider = this._provider;
         const chunks = this._chunks;
         const dimensions = this._dimensions;
@@ -320,6 +320,7 @@ class DataStorage {
             }
             prepareStorage(chunks, i, dim.type, end, append);
         }
+
 
         if (provider.fillStorage) {
             provider.fillStorage(start, end, chunks, rawExtent);
