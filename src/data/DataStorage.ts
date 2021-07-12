@@ -230,6 +230,10 @@ class DataStorage {
 
     getDimensionIndex: (dim: DimensionName) => number;
 
+    getDimensionCount() {
+        return this._dimensions.length;
+    }
+
     setOrdinalMeta(dimIdx: number, ordinalMeta: OrdinalMeta) {
         const chunk = this._chunks[dimIdx];
         const dim = this._dimensions[dimIdx];
@@ -265,15 +269,16 @@ class DataStorage {
             const targetDim = targetDims[i];
             const selfDimIdx = this.getDimensionIndex(targetDim.name);
             const selfDim = this._dimensions[selfDimIdx];
+            const targetDimType = targetDim.type || 'float';
             if (!selfDim
                 // Type is different
-                || (selfDim.type && selfDim.type !== targetDim.type)
+                || (selfDim.type && selfDim.type !== targetDimType)
                 // ordinalMeta is differnt. Usually being on the different axis.
                 || (selfDim.ordinalMeta && selfDim.ordinalMeta !== targetDim.ordinalMeta)
             ) {
                 return false;
             }
-            selfDim.type = targetDim.type;
+            selfDim.type = targetDimType;
         }
         return true;
     }

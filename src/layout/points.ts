@@ -56,11 +56,12 @@ export default function pointsLayout(seriesType: string, forceStoreInTypedArray?
                 dims[1] = stackResultDim;
             }
 
-            const dimInfo0 = data.getDimensionInfo(dims[0]);
-            const dimInfo1 = data.getDimensionInfo(dims[1]);
+            const store = data.getStorage();
+            const dim0 = data.getDimension(dims[0]);
+            const dim1 = data.getDimension(dims[1]);
 
-            const dimIdx0 = dimInfo0 && dimInfo0.index;
-            const dimIdx1 = dimInfo1 && dimInfo1.index;
+            const dimIdx0 = store.getDimensionIndex(dim0);
+            const dimIdx1 = store.getDimensionIndex(dim1);
 
             return dimLen && {
                 progress(params, data) {
@@ -69,7 +70,6 @@ export default function pointsLayout(seriesType: string, forceStoreInTypedArray?
 
                     const tmpIn: ParsedValueNumeric[] = [];
                     const tmpOut: number[] = [];
-                    const store = data.getStorage();
 
                     for (let i = params.start, offset = 0; i < params.end; i++) {
                         let point;

@@ -29,7 +29,7 @@ import {
 } from '../../util/types';
 import SeriesData from '../SeriesData';
 import DataDimensionInfo from '../DataDimensionInfo';
-import { clone, createHashMap, defaults, each, extend, HashMap, isObject, isString } from 'zrender/src/core/util';
+import { clone, createHashMap, defaults, each, extend, HashMap, isObject, isString, keys } from 'zrender/src/core/util';
 import OrdinalMeta from '../OrdinalMeta';
 import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../Source';
 import DataStorage from '../DataStorage';
@@ -237,6 +237,8 @@ export default function createDimensions(
     const extra = generateCoord || 'value';
     let coordDimNameAutoIdx = 0;
     let dataDimNameAutoIdx = 0;
+
+    const pickedResult = [];
     // Set dim `name` and other `coordDim` and other props.
     for (let resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
         const resultItem = result[resultDimIdx] = result[resultDimIdx] || new DataDimensionInfo();
@@ -288,9 +290,13 @@ export default function createDimensions(
         ) {
             resultItem.type = 'ordinal';
         }
+
+        if (!resultItem.isExtraCoord || keys(resultItem.otherDims).length > 0) {
+            pickedResult.push(resultItem);
+        }
     }
 
-    return result;
+    return opt.ignoreUnusedDimension ? pickedResult : result;
 }
 
 
