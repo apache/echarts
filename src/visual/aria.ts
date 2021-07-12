@@ -69,7 +69,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
             const paletteScopeGroupByType = zrUtil.createHashMap<object>();
             ecModel.eachSeries((seriesModel: SeriesModel<SeriesOption & ColorByMixin>) => {
                 const colorBy = seriesModel.getColorBy();
-                if (colorBy === 'seriesId' || colorBy === 'seriesIndex' || colorBy === 'seriesName') {
+                if (colorBy === 'series') {
                     return;
                 }
                 let decalScope = paletteScopeGroupByType.get(seriesModel.type);
@@ -93,7 +93,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
                 const data = seriesModel.getData();
 
                 const colorBy = seriesModel.getColorBy();
-                if (colorBy !== 'seriesId' && colorBy !== 'seriesIndex' && colorBy !== 'seriesName') {
+                if (colorBy === 'data') {
                     const dataAll = seriesModel.getRawData();
                     const idxMap: Dictionary<number> = {};
                     const decalScope = inner(seriesModel).scope;

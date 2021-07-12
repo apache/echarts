@@ -324,8 +324,6 @@ export default class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
         z: 2,
         legendHoverLink: true,
 
-        colorBy: 'seriesName',
-
         // Custom series will not clip by default.
         // Some case will use custom series to draw label
         // For example https://echarts.apache.org/examples/en/editor.html?c=custom-gantt-flight

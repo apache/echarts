@@ -850,7 +850,7 @@ export interface BorderOptionMixin {
     borderMiterLimit?: number
 }
 
-export type ColorBy = 'seriesName' | 'seriesIndex' | 'seriesId' | 'name' | 'dataIndex' | 'id';
+export type ColorBy = 'series' | 'data';
 
 // Sunburst color mapping on levels and items are yet to be implemented
 // export type SunburstColorBy = ColorBy | 'inherit' | 'childIndex' | 'lighter';

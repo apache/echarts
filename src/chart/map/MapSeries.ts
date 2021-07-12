@@ -262,8 +262,6 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
         coordinateSystem: 'geo',
 
-        colorBy: 'seriesName',
-
         // map should be explicitly specified since ec3.
         map: '',
 

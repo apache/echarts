@@ -110,8 +110,6 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
         layout: null,
         boxWidth: [7, 50],
 
-        colorBy: 'seriesName',
-
         itemStyle: {
             color: '#fff',
             borderWidth: 1

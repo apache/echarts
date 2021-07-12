@@ -114,8 +114,6 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
 
         clip: true,
 
-        colorBy: 'seriesName',
-
         itemStyle: {
             color: '#eb5454', // positive
             color0: '#47b262', // negative

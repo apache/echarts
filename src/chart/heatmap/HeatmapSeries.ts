@@ -89,8 +89,6 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
 
     static defaultOption: HeatmapSeriesOption = {
 
-        colorBy: 'seriesName',
-
         coordinateSystem: 'cartesian2d',
 
         zlevel: 0,

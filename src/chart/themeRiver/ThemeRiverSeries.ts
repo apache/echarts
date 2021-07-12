@@ -293,8 +293,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
         zlevel: 0,
         z: 2,
 
-        colorBy: 'name',
-
+        colorBy: 'data',
         coordinateSystem: 'singleAxis',
 
         // gap in axis's orthogonal orientation

@@ -412,8 +412,6 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
 
         coordinateSystem: 'view',
 
-        colorBy: 'seriesName',
-
         // Default option for all coordinate systems
         // xAxisIndex: 0,
         // yAxisIndex: 0,

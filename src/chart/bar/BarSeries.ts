@@ -127,8 +127,6 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
 
         roundCap: false,
 
-        colorBy: 'seriesName',
-
         showBackground: false,
         backgroundStyle: {
             color: 'rgba(180, 180, 180, 0.2)',

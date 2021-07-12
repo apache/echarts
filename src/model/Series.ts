@@ -396,7 +396,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
     getColorBy(): ColorBy {
         const colorBy = (this as SeriesModel<SeriesOption & ColorByMixin>).get('colorBy');
-        return colorBy || 'seriesName';
+        return colorBy || 'series';
     }
 
     /**

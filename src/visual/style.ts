@@ -182,13 +182,14 @@ const dataColorPaletteTask: StageHandler = {
         const paletteScopeGroupByType = createHashMap<object>();
         ecModel.eachSeries((seriesModel: SeriesModel<SeriesOption & ColorByMixin>) => {
             const colorBy = seriesModel.getColorBy();
-            if (colorBy === 'seriesId' || colorBy === 'seriesIndex' || colorBy === 'seriesName') {
+            if (colorBy === 'series') {
                 return;
             }
-            let colorScope = paletteScopeGroupByType.get(seriesModel.type);
+            const key = seriesModel.type + '-' + colorBy;
+            let colorScope = paletteScopeGroupByType.get(key);
             if (!colorScope) {
                 colorScope = {};
-                paletteScopeGroupByType.set(seriesModel.type, colorScope);
+                paletteScopeGroupByType.set(key, colorScope);
             }
             inner(seriesModel).scope = colorScope;
         });
@@ -196,7 +197,7 @@ const dataColorPaletteTask: StageHandler = {
 
         ecModel.eachSeries((seriesModel: SeriesModel<SeriesOption & ColorByMixin>) => {
             const colorBy = seriesModel.getColorBy();
-            if (colorBy === 'seriesId' || colorBy === 'seriesIndex' || colorBy === 'seriesName') {
+            if (colorBy === 'series') {
                 return;
             }
 

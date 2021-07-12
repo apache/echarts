@@ -32,7 +32,7 @@ export default {
     darkMode: 'auto',
     // backgroundColor: 'rgba(0,0,0,0)',
 
-    colorBy: 'seriesId',
+    colorBy: 'series',
 
     color: [
         '#5470c6',

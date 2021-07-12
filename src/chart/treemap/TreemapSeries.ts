@@ -323,7 +323,6 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         colorAlpha: null,           // Array. Specify color alpha range of each level, like [0.2, 0.8]
         colorSaturation: null,      // Array. Specify color saturation of each level, like [0.2, 0.5]
         colorMappingBy: 'index',    // 'value' or 'index' or 'id'.
-        // colorBy: 'inherit',      // TODO: colorBy for treemap has not been supported yet
         visibleMin: 10,             // If area less than this threshold (unit: pixel^2), node will not
                                     // be rendered. Only works when sort is 'asc' or 'desc'.
         childrenVisibleMin: null,   // If area of a node less than this threshold (unit: pixel^2),

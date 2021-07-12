@@ -367,8 +367,6 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         z: 2,
         legendHoverLink: true,
 
-        colorBy: 'seriesName',
-
         // Cartesian coordinate system
         xAxisIndex: 0,
         yAxisIndex: 0,

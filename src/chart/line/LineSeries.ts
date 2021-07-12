@@ -152,8 +152,6 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         clip: true,
 
-        colorBy: 'seriesName',
-
         label: {
             position: 'top'
         },

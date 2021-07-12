@@ -188,7 +188,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
     static defaultOption: GaugeSeriesOption = {
         zlevel: 0,
         z: 2,
-        colorBy: 'name',
+        colorBy: 'data',
         // 默认全局居中
         center: ['50%', '50%'],
         legendHoverLink: true,

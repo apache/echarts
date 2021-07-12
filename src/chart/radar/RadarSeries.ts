@@ -147,7 +147,7 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
     static defaultOption: RadarSeriesOption = {
         zlevel: 0,
         z: 2,
-        colorBy: 'name',
+        colorBy: 'data',
         coordinateSystem: 'radar',
         legendHoverLink: true,
         radarIndex: 0,

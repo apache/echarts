@@ -106,8 +106,6 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
 
         effectType: 'ripple',
 
-        colorBy: 'seriesName',
-
         progressive: 0,
 
         // When to show the effect, option: 'render'|'emphasis'

@@ -122,8 +122,6 @@ class ParallelSeriesModel extends SeriesModel<ParallelSeriesOption> {
         zlevel: 0,
         z: 2,
 
-        colorBy: 'seriesName',
-
         coordinateSystem: 'parallel',
         parallelIndex: 0,
 
