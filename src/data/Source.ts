@@ -32,7 +32,6 @@ import {
     DimensionName,
     OptionSourceHeader,
     DimensionDefinitionLoose,
-    OptionEncode,
     SOURCE_FORMAT_ARRAY_ROWS,
     SOURCE_FORMAT_OBJECT_ROWS,
     Dictionary,

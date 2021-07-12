@@ -24,7 +24,7 @@ import { SourceMetaRawOption, Source, createSource, cloneSourceShallow } from '.
 import {
     SeriesEncodableModel, OptionSourceData,
     SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL,
-    SourceFormat, SeriesLayoutBy, OptionSourceHeader, DimensionDefinitionLoose
+    SourceFormat, SeriesLayoutBy, OptionSourceHeader, DimensionDefinitionLoose, Dictionary
 } from '../../util/types';
 import {
     querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels
@@ -32,6 +32,8 @@ import {
 import { applyDataTransform } from './transform';
 import DataStorage from '../DataStorage';
 import { DefaultDataProvider } from './dataProvider';
+
+type DataStorageMap = Dictionary<DataStorage>;
 
 
 /**
@@ -133,7 +135,7 @@ export class SourceManager {
     // Cached source. Do not repeat calculating if not dirty.
     private _sourceList: Source[] = [];
 
-    private _storeList: DataStorage[] = [];
+    private _storeList: DataStorageMap[] = [];
 
     // version sign of each upstream source manager.
     private _upstreamSignList: string[] = [];
@@ -356,31 +358,51 @@ export class SourceManager {
      * Will return undefined if source don't have dimensions.
      */
     getDataStorage(): DataStorage | undefined {
+        return this._innerGetDataStorage(this.getSource(0));
+    }
+
+    private _innerGetDataStorage(endSource?: Source): DataStorage | undefined {
         // TODO Can use other sourceIndex?
         const sourceIndex = 0;
 
-        const storeList = this._storeList;
-        let cachedStore = storeList[sourceIndex];
 
+        const source = this.getSource(sourceIndex);
+        const storeList = this._storeList;
+
+        // Source from endpoint(usually series) will be read differently
+        // when seriesLayoutBy or startIndex(which is affected by sourceHeader) are different.
+        // So we use this two props as key. Another fact `dimensions` will be checked when initializing SeriesData.
+        const sourceToInit = (endSource || source);
+        const seriesLayoutBy = sourceToInit.seriesLayoutBy;
+        const startIndex = sourceToInit.startIndex;
+        const sourceReadKey = seriesLayoutBy + '_' + startIndex;
+
+        let cachedStoreMap = storeList[sourceIndex];
+
+        if (!cachedStoreMap) {
+            cachedStoreMap = storeList[sourceIndex] = {};
+        }
+
+        let cachedStore = cachedStoreMap[sourceReadKey];
         if (!cachedStore) {
             const upSourceMgr = this._getUpstreamSourceManagers()[0];
 
             if (isSeries(this._sourceHost) && upSourceMgr) {
-                cachedStore = upSourceMgr.getDataStorage();
+                cachedStore = upSourceMgr._innerGetDataStorage(endSource);
             }
             else {
-                const source = this.getSource(sourceIndex);
                 // Can't create a store if don't know dimension..
                 if (source && source.dimensionsDefine) {
                     cachedStore = new DataStorage();
-                    cachedStore.initData(new DefaultDataProvider(source), source.dimensionsDefine);
+                    // Always create storage from source of series.
+                    cachedStore.initData(new DefaultDataProvider((sourceToInit)), sourceToInit.dimensionsDefine);
                 }
             }
-
-            storeList[sourceIndex] = cachedStore;
+            cachedStoreMap[sourceReadKey] = cachedStore;
         }
 
         return cachedStore;
+
     }
 
     /**

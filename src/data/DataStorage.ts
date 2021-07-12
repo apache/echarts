@@ -188,7 +188,11 @@ class DataStorage {
 
         // Reset raw extent.
         this._rawExtent = [];
-        this._dimensions = dimensions;
+        this._dimensions = map(dimensions, dim => ({
+            // Only pick these two props. Not leak other properties like orderMeta.
+            type: dim.type,
+            name: dim.name
+        }) as DataStorageDimensionInfo);
 
         const dimensionsIdxMap: Dictionary<number> = {};
         let prefix = '';
@@ -230,16 +234,15 @@ class DataStorage {
         const chunk = this._chunks[dimIdx];
         const dim = this._dimensions[dimIdx];
 
-        // Set fail if use a different ordinalMeta
-        if (dim.ordinalMeta && dim.ordinalMeta !== ordinalMeta) {
-            return false;
+        // ordinalMeta already being set.
+        if (dim.ordinalMeta) {
+            return;
         }
         for (let i = 0; i < chunk.length; i++) {
             (chunk as any)[i] = ordinalMeta.parseAndCollect(chunk[i]);
         }
 
         dim.ordinalMeta = ordinalMeta;
-        return true;
     }
 
     getOrdinalMeta(dimIdx: number) {
