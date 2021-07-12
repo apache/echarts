@@ -20,14 +20,12 @@
 import Displayable from 'zrender/src/graphic/Displayable';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
-import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { ZRenderType } from 'zrender/src/zrender';
 import { BarGridLayoutOptionForCustomSeries, BarGridLayoutResult } from '../../layout/barGrid';
 import {
     BlurScope,
     CallbackDataParams,
     ColorByMixin,
-    DecalObject,
     Dictionary,
     DimensionLoose,
     ItemStyleOption,
@@ -53,6 +51,20 @@ import createListFromArray from '../helper/createListFromArray';
 import { makeInner } from '../../util/model';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import SeriesModel from '../../model/Series';
+import {
+    Arc,
+    BezierCurve,
+    Circle,
+    CompoundPath,
+    Ellipse,
+    Line,
+    Polygon,
+    Polyline,
+    Rect,
+    Ring,
+    Sector
+} from '../../util/graphic';
+import { TextStyleProps } from 'zrender/src/graphic/Text';
 
 
 export interface LooseElementProps extends ElementProps {
@@ -112,16 +124,21 @@ type ShapeMorphingOption = {
     morph?: boolean
 };
 
-export interface CustomDuringAPI {
+export interface CustomBaseDuringAPI {
     // Usually other props do not need to be changed in animation during.
-    setTransform(key: TransformProp, val: unknown): CustomDuringAPI
-    getTransform(key: TransformProp): unknown;
-    setShape(key: string, val: unknown): CustomDuringAPI;
-    getShape(key: string): unknown;
-    setStyle(key: string, val: unknown): CustomDuringAPI
-    getStyle(key: string): unknown;
-    setExtra(key: string, val: unknown): CustomDuringAPI
+    setTransform(key: TransformProp, val: number): this
+    getTransform(key: TransformProp): number;
+    setExtra(key: string, val: unknown): this
     getExtra(key: string): unknown
+}
+export interface CustomDuringAPI<
+    StyleOpt extends any = any,
+    ShapeOpt extends any = any
+> extends CustomBaseDuringAPI {
+    setShape<T extends keyof ShapeOpt>(key: T, val: ShapeOpt[T]): this;
+    getShape<T extends keyof ShapeOpt>(key: T): ShapeOpt[T];
+    setStyle<T extends keyof StyleOpt>(key: T, val: StyleOpt[T]): this
+    getStyle<T extends keyof StyleOpt>(key: T): StyleOpt[T];
 };
 
 
@@ -137,19 +154,24 @@ export interface CustomBaseElementOption extends Partial<Pick<
     // `false` means remove the textContent.
     textContent?: CustomTextOption | false;
     // `false` means remove the clipPath
-    clipPath?: CustomZRPathOption | false;
+    clipPath?: CustomBaseZRPathOption | false;
     // `extra` can be set in any el option for custom prop for annimation duration.
-    extra?: TransitionAnyOption;
+    extra?: Dictionary<unknown> & TransitionAnyOption;
     // updateDuringAnimation
-    during?(params: CustomDuringAPI): void;
+    during?(params: CustomBaseDuringAPI): void;
 
     focus?: 'none' | 'self' | 'series' | ArrayLike<number>
     blurScope?: BlurScope
 };
+
 export interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<
     Displayable, 'zlevel' | 'z' | 'z2' | 'invisible'
 >> {
     style?: ZRStyleProps & TransitionAnyOption;
+    during?(params: CustomDuringAPI): void;
+    /**
+     * @deprecated
+     */
     // `false` means remove emphasis trigger.
     styleEmphasis?: ZRStyleProps | false;
     emphasis?: CustomDisplayableOptionOnState;
@@ -161,6 +183,9 @@ export interface CustomDisplayableOptionOnState extends Partial<Pick<
 >> {
     // `false` means remove emphasis trigger.
     style?: (ZRStyleProps & TransitionAnyOption) | false;
+
+
+    during?(params: CustomDuringAPI): void;
 }
 export interface CustomGroupOption extends CustomBaseElementOption {
     type: 'group';
@@ -168,32 +193,58 @@ export interface CustomGroupOption extends CustomBaseElementOption {
     height?: number;
     // @deprecated
     diffChildrenByName?: boolean;
-    // Can only set focus, blur on the root element.
-    children: Omit<CustomElementOption, 'focus' | 'blurScope'>[];
-    $mergeChildren: false | 'byName' | 'byIndex';
+    children: CustomChildElementOption[];
+    $mergeChildren?: false | 'byName' | 'byIndex';
 }
-export interface CustomZRPathOption extends CustomDisplayableOption, ShapeMorphingOption {
+export interface CustomBaseZRPathOption<T extends PathProps['shape'] = PathProps['shape']>
+    extends CustomDisplayableOption, ShapeMorphingOption {
     autoBatch?: boolean;
-    shape?: PathProps['shape'] & TransitionAnyOption;
-    style?: CustomDisplayableOption['style'] & {
-        decal?: DecalObject;
-        // Only internal usage. Any user specified value will be overwritten.
-        __decalPattern?: PatternObject;
-    };
+    shape?: T & TransitionAnyOption;
+    style?: PathProps['style']
+    during?(params: CustomDuringAPI<PathStyleProps, T>): void;
 }
-export interface CustomSVGPathOption extends CustomDisplayableOption, ShapeMorphingOption {
+
+interface BuiltinShapes {
+    'circle': Circle['shape']
+    'rect': Rect['shape']
+    'sector': Sector['shape']
+    'poygon': Polygon['shape']
+    'polyline': Polyline['shape']
+    'line': Line['shape']
+    'arc': Arc['shape']
+    'bezierCurve': BezierCurve['shape']
+    'ring': Ring['shape']
+    'ellipse': Ellipse['shape'],
+    'compoundPath': CompoundPath['shape']
+}
+
+interface CustomSVGPathShapeOption {
+    // SVG Path, like 'M0,0 L0,-20 L70,-1 L70,0 Z'
+    pathData?: string;
+    // "d" is the alias of `pathData` follows the SVG convention.
+    d?: string;
+    layout?: 'center' | 'cover';
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+}
+export interface CustomSVGPathOption extends CustomBaseZRPathOption<CustomSVGPathShapeOption> {
     type: 'path';
-    shape?: {
-        // SVG Path, like 'M0,0 L0,-20 L70,-1 L70,0 Z'
-        pathData?: string;
-        // "d" is the alias of `pathData` follows the SVG convention.
-        d?: string;
-        layout?: 'center' | 'cover';
-        x?: number;
-        y?: number;
-        width?: number;
-        height?: number;
-    } & TransitionAnyOption;
+}
+
+interface CustomBuitinPathOption<T extends keyof BuiltinShapes>
+    extends CustomBaseZRPathOption<BuiltinShapes[T]> {
+    type: T
+}
+type CreateCustomBuitinPathOption<T extends keyof BuiltinShapes> = T extends any
+    ? CustomBuitinPathOption<T> : never;
+
+export type CustomPathOption = CreateCustomBuitinPathOption<keyof BuiltinShapes>
+    | CustomSVGPathOption;
+
+export interface CustomImageOptionOnState extends CustomDisplayableOptionOnState {
+    style?: ImageStyleProps & TransitionAnyOption;
 }
 export interface CustomImageOption extends CustomDisplayableOption {
     type: 'image';
@@ -202,14 +253,28 @@ export interface CustomImageOption extends CustomDisplayableOption {
     blur?: CustomImageOptionOnState;
     select?: CustomImageOptionOnState;
 }
-export interface CustomImageOptionOnState extends CustomDisplayableOptionOnState {
-    style?: ImageStyleProps & TransitionAnyOption;
+
+export interface CustomTextOptionOnState extends CustomDisplayableOptionOnState {
+    style?: TextStyleProps & TransitionAnyOption;
 }
 export interface CustomTextOption extends CustomDisplayableOption {
     type: 'text';
+    style?: TextStyleProps & TransitionAnyOption;
+    emphasis?: CustomTextOptionOnState;
+    blur?: CustomTextOptionOnState;
+    select?: CustomTextOptionOnState;
 }
-export type CustomElementOption = CustomZRPathOption | CustomSVGPathOption | CustomImageOption | CustomTextOption;
-export type CustomElementOptionOnState = CustomDisplayableOptionOnState | CustomImageOptionOnState;
+
+export type CustomElementOption = CustomPathOption
+    | CustomImageOption
+    | CustomTextOption
+    | CustomGroupOption;
+
+// Can only set focus, blur on the root element.
+export type CustomChildElementOption = Omit<CustomElementOption, 'focus' | 'blurScope'>;
+
+export type CustomElementOptionOnState = CustomDisplayableOptionOnState
+    | CustomImageOptionOnState;
 
 export interface CustomSeriesRenderItemAPI extends
         CustomSeriesRenderItemCoordinateSystemAPI {
@@ -254,12 +319,17 @@ export type WrapEncodeDefRet = Dictionary<number[]>;
 
 export interface CustomSeriesRenderItemParams {
     context: Dictionary<unknown>;
+    dataIndex: number;
     seriesId: string;
     seriesName: string;
     seriesIndex: number;
     coordSys: CustomSeriesRenderItemParamsCoordSys;
-    dataInsideLength: number;
     encode: WrapEncodeDefRet;
+
+    dataIndexInside: number;
+    dataInsideLength: number;
+
+    actionType?: string;
 }
 type CustomSeriesRenderItem = (
     params: CustomSeriesRenderItemParams,

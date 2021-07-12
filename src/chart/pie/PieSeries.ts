@@ -60,7 +60,7 @@ export interface PieStateOption {
     labelLine?: PieLabelLineOption
 }
 interface PieLabelOption extends Omit<SeriesLabelOption, 'rotate' | 'position'> {
-    rotate?: number
+    rotate?: number | boolean | 'radial' | 'tangential'
     alignTo?: 'none' | 'labelLine' | 'edge'
     edgeDistance?: string | number
     /**

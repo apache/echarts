@@ -544,6 +544,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             return true;
         }
 
+        // NOTE: don't support define universalTransition in global option yet.
         const universalTransitionOpt = this.option.universalTransition;
         // Quick reject
         if (!universalTransitionOpt) {

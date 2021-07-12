@@ -149,9 +149,13 @@ under the License.
                                 fontSize: 18
                             },
                             onclick() {
-                                chart.setOption(option);
+                                chart.setOption(option, {
+                                    replaceMerge: ['xAxis', 'yAxis']
+                                });
                             }
                         }]
+                    }, {
+                        replaceMerge: ['xAxis', 'yAxis']
                     });
                 }
             });
@@ -416,21 +420,27 @@ under the License.
                     yAxis: {
                         scale: true
                     },
-                    universalTransition: {
-                        enabled: true,
-                        delay(idx, count) {
-                            return (idx / count) * 1000;
-                        }
-                    },
                     series: [{
                         type: 'scatter',
                         id: 'female',
                         dataGroupId: 'female',
+                        universalTransition: {
+                            enabled: true,
+                            delay(idx, count) {
+                                return (idx / count) * 1000;
+                            }
+                        },
                         data: femaleData
                     }, {
                         type: 'scatter',
                         id: 'male',
                         dataGroupId: 'male',
+                        universalTransition: {
+                            enabled: true,
+                            delay(idx, count) {
+                                return (idx / count) * 1000;
+                            }
+                        },
                         data: maleDeta
                     }]
                 };

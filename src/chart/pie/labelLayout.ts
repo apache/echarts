@@ -355,10 +355,26 @@ export default function pieLabelLayout(
         if (typeof rotate === 'number') {
             labelRotate = rotate * (Math.PI / 180);
         }
+        else if (labelPosition === 'center') {
+            labelRotate = 0;
+        }
         else {
-            labelRotate = rotate
-                ? (nx < 0 ? -midAngle + Math.PI : -midAngle)
-                : 0;
+            const radialAngle = nx < 0 ? -midAngle + Math.PI : -midAngle;
+            if (rotate === 'radial' || rotate === true) {
+                labelRotate = radialAngle;
+            }
+            else if (rotate === 'tangential'
+                && labelPosition !== 'outside'
+                && labelPosition !== 'outer'
+            ) {
+                labelRotate = radialAngle + Math.PI / 2;
+                if (labelRotate > Math.PI / 2) {
+                    labelRotate -= Math.PI;
+                }
+            }
+            else {
+                labelRotate = 0;
+            }
         }
 
         hasLabelRotate = !!labelRotate;

@@ -23,8 +23,8 @@ import { Group } from '../../util/graphic';
 import { Region } from './Region';
 
 
-export type GeoSVGSourceInput = 'string' | Document | SVGElement;
-export type GeoJSONSourceInput = 'string' | GeoJSON | GeoJSONCompressed;
+export type GeoSVGSourceInput = string | Document | SVGElement;
+export type GeoJSONSourceInput = string | GeoJSON | GeoJSONCompressed;
 
 export interface NameMap {
     [regionName: string]: string

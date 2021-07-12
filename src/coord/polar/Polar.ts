@@ -26,6 +26,8 @@ import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
 import ExtensionAPI from '../../core/ExtensionAPI';
 
+export const polarDimensions = ['radius', 'angle'];
+
 interface Polar {
     update(ecModel: GlobalModel, api: ExtensionAPI): void
 }
@@ -33,7 +35,7 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
 
     readonly name: string;
 
-    readonly dimensions = ['radius', 'angle'];
+    readonly dimensions = polarDimensions;
 
     readonly type = 'polar';
 

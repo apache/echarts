@@ -944,7 +944,7 @@ export interface RoamOptionMixin {
 export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
 export type SymbolCallback<T> = (rawValue: any, params: T) => string;
 export type SymbolRotateCallback<T> = (rawValue: any, params: T) => number;
-export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => (string | number)[];
+export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => string | number | (string | number)[];
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -963,7 +963,7 @@ export interface SymbolOptionMixin<T = unknown> {
 
     symbolKeepAspect?: boolean
 
-    symbolOffset?: (string | number)[] | (unknown extends T ? never : SymbolOffsetCallback<T>)
+    symbolOffset?: string | number | (string | number)[] | (unknown extends T ? never : SymbolOffsetCallback<T>)
 }
 
 /**
@@ -1563,7 +1563,7 @@ export interface UniversalTransitionOption {
     /**
      * Animation delay of each divided element
      */
-    delay?: (index?: number, count?: number) => number
+    delay?: (index: number, count: number) => number
     /**
      * How to divide the shape in combine and split animation.
      */
@@ -1669,11 +1669,8 @@ export interface SeriesOnCartesianOptionMixin {
 }
 
 export interface SeriesOnPolarOptionMixin {
-    radiusAxisIndex?: number
-    angleAxisIndex?: number
-
-    radiusAxisId?: string
-    angleAxisId?: string
+    polarIndex?: number
+    polarId?: string;
 }
 
 export interface SeriesOnSingleOptionMixin {

@@ -46,13 +46,13 @@ const getDefaultSelectorOptions = function (ecModel: GlobalModel, type: string):
     if (type === 'all') {
         return {
             type: 'all',
-            title: ecModel.getLocale(['legend', 'selector', 'all'])
+            title: ecModel.getLocaleModel().get(['legend', 'selector', 'all'])
         };
     }
     else if (type === 'inverse') {
         return {
             type: 'inverse',
-            title: ecModel.getLocale(['legend', 'selector', 'inverse'])
+            title: ecModel.getLocaleModel().get(['legend', 'selector', 'inverse'])
         };
     }
 };

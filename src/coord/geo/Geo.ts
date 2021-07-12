@@ -44,10 +44,12 @@ const GEO_DEFAULT_PARAMS: {
     }
 } as const;
 
+export const geo2DDimensions = ['lng', 'lat'];
+
 
 class Geo extends View {
 
-    dimensions = ['lng', 'lat'];
+    dimensions = geo2DDimensions;
 
     type = 'geo';
 
