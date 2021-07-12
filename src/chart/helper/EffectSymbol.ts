@@ -26,8 +26,6 @@ import type { ZRColor, ECElement } from '../../util/types';
 import type Displayable from 'zrender/src/graphic/Displayable';
 import { SymbolDrawItemModelOption } from './SymbolDraw';
 
-const EFFECT_RIPPLE_NUMBER = 3;
-
 interface RippleEffectCfg {
     showEffectOn?: 'emphasis' | 'render'
     rippleScale?: number
@@ -38,7 +36,8 @@ interface RippleEffectCfg {
     zlevel?: number
     symbolType?: string
     color?: ZRColor
-    rippleEffectColor?: ZRColor
+    rippleEffectColor?: ZRColor,
+    effectCount?: number
 }
 
 function updateRipplePath(rippleGroup: Group, effectCfg: RippleEffectCfg) {
@@ -78,9 +77,10 @@ class EffectSymbol extends Group {
     startEffectAnimation(effectCfg: RippleEffectCfg) {
         const symbolType = effectCfg.symbolType;
         const color = effectCfg.color;
+        const effectCount = effectCfg.effectCount;
         const rippleGroup = this.childAt(1) as Group;
 
-        for (let i = 0; i < EFFECT_RIPPLE_NUMBER; i++) {
+        for (let i = 0; i < effectCount; i++) {
             // If width/height are set too small (e.g., set to 1) on ios10
             // and macOS Sierra, a circle stroke become a rect, no matter what
             // the scale is set. So we set width/height as 2. See #4136.
@@ -97,7 +97,7 @@ class EffectSymbol extends Group {
                 scaleY: 0.5
             });
 
-            const delay = -i / EFFECT_RIPPLE_NUMBER * effectCfg.period + effectCfg.effectOffset;
+            const delay = -i / effectCount * effectCfg.period + effectCfg.effectOffset;
             // TODO Configurable effectCfg.period
             ripplePath.animate('', true)
                 .when(effectCfg.period, {
@@ -202,6 +202,7 @@ class EffectSymbol extends Group {
         effectCfg.symbolType = symbolType;
         effectCfg.color = color;
         effectCfg.rippleEffectColor = itemModel.get(['rippleEffect', 'color']);
+        effectCfg.effectCount = itemModel.get(['rippleEffect', 'count']);
 
         this.off('mouseover').off('mouseout').off('emphasis').off('normal');
 
