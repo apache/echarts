@@ -29,13 +29,16 @@ import {
 } from '../../util/types';
 import SeriesData from '../SeriesData';
 import DataDimensionInfo from '../DataDimensionInfo';
-import { clone, createHashMap, defaults, each, extend, HashMap, isObject, isString, keys, map } from 'zrender/src/core/util';
+import { clone, createHashMap, defaults, each, HashMap, isObject, isString, map } from 'zrender/src/core/util';
 import OrdinalMeta from '../OrdinalMeta';
 import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../Source';
-import DataStorage, { CtorInt32Array, CtorUint32Array } from '../DataStorage';
-import { normalizeToArray } from '../../util/model';
+import DataStorage, { CtorInt32Array } from '../DataStorage';
+import { makeInner, normalizeToArray } from '../../util/model';
 import { BE_ORDINAL, guessOrdinal } from './sourceHelper';
 
+const inner = makeInner<{
+    dimNameMap: HashMap<DimensionIndex, DimensionName>
+}, Source>();
 
 export interface CoordDimensionDefinition extends DimensionDefinition {
     dimsDef?: (DimensionName | { name: DimensionName, defaultTooltip?: boolean })[];
@@ -98,12 +101,19 @@ export default function createDimensions(
 
     opt = opt || {};
 
-    const sysDims = (opt.coordDimensions || []).slice();
-    const dimsDef = (opt.dimensionsDefine || source.dimensionsDefine || []).slice();
-    const dataDimNameMap = createHashMap<DimensionIndex, DimensionName>();
+    const sysDims = opt.coordDimensions || [];
+    const dimsDef = opt.dimensionsDefine || source.dimensionsDefine || [];
     const coordDimNameMap = createHashMap<true, DimensionName>();
     const result: DataDimensionInfo[] = [];
     const omitUnusedDimensions = opt.omitUnusedDimensions;
+    // Try to cache the dimNameMap if the dimensionsDefine is from source.
+    const canCacheDimNameMap = (dimsDef === source.dimensionsDefine && omitUnusedDimensions);
+    let dataDimNameMap = canCacheDimNameMap && inner(source).dimNameMap;
+    let needsUpdateDataDimNameMap = false;
+    if (!dataDimNameMap) {
+        needsUpdateDataDimNameMap = true;
+        dataDimNameMap = createHashMap<DimensionIndex, DimensionName>();
+    }
 
     const dimCount = getDimCount(source, sysDims, dimsDef, opt.dimensionsCount);
 
@@ -137,19 +147,24 @@ export default function createDimensions(
         return result[idx];
     }
 
-    // Apply user defined dims (`name` and `type`) and init result.
-    for (let i = 0; i < dimCount; i++) {
-        const dimDefItemRaw = dimsDef[i];
-        const userDimName = isObject(dimDefItemRaw) ? dimDefItemRaw.name : dimDefItemRaw;
-        // Name will be applied later for avoiding duplication.
-        if (userDimName != null && dataDimNameMap.get(userDimName) == null) {
-            // Only if `series.dimensions` is defined in option
-            // displayName, will be set, and dimension will be diplayed vertically in
-            // tooltip by default.
-            dataDimNameMap.set(userDimName, i);
+    if (needsUpdateDataDimNameMap) {
+        for (let i = 0; i < dimCount; i++) {
+            const dimDefItemRaw = dimsDef[i];
+            const userDimName = isObject(dimDefItemRaw) ? dimDefItemRaw.name : dimDefItemRaw;
+            // Name will be applied later for avoiding duplication.
+            if (userDimName != null && dataDimNameMap.get(userDimName) == null) {
+                // Only if `series.dimensions` is defined in option
+                // displayName, will be set, and dimension will be diplayed vertically in
+                // tooltip by default.
+                dataDimNameMap.set(userDimName, i);
+            }
         }
-
-        if (!omitUnusedDimensions) {
+        if (canCacheDimNameMap) {
+            inner(source).dimNameMap = dataDimNameMap;
+        }
+    }
+    if (!omitUnusedDimensions) {
+        for (let i = 0; i < dimCount; i++) {
             getResultItem(i);
         }
     }
