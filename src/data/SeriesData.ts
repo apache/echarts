@@ -128,14 +128,15 @@ export interface DataCalculationInfo<SERIES_MODEL> {
 // -----------------------------
 // Internal method declarations:
 // -----------------------------
-let prepareInvertedIndex: (list: SeriesData) => void;
-let getId: (list: SeriesData, rawIndex: number) => string;
-let getIdNameFromStore: (list: SeriesData, dimIdx: number, dataIdx: number) => string;
+let prepareInvertedIndex: (data: SeriesData) => void;
+let getId: (data: SeriesData, rawIndex: number) => string;
+let getIdNameFromStore: (data: SeriesData, dimIdx: number, dataIdx: number) => string;
 let normalizeDimensions: (dimensions: ItrParamDims) => Array<DimensionLoose>;
-let validateDimensions: (list: SeriesData, dims: DimensionIndex[]) => void;
+let validateDimensions: (data: SeriesData, dims: DimensionIndex[]) => void;
 let setItemDataAndSeriesIndex: (this: Element, child: Element) => void;
 let transferProperties: (target: SeriesData, source: SeriesData) => void;
 let cloneListForMapAndSample: (original: SeriesData) => SeriesData;
+let makeIdFromName: (data: SeriesData, idx: number) => void;
 
 class SeriesData<
     HostModel extends Model = Model,
@@ -407,14 +408,6 @@ class SeriesData<
             store.initData(provider, dimensionInfos, dimValueGetter);
         }
 
-        for (let i = 0; i < dimensions.length; i++) {
-            const dimInfo = this._dimensionInfos[dimensions[i]];
-            if (dimInfo.ordinalMeta) {
-                const dimIdx = store.getDimensionIndex(dimensions[i]);
-                store.setOrdinalMeta(dimIdx, dimInfo.ordinalMeta);
-            }
-        }
-
         this._store = store;
 
         // Reset
@@ -432,6 +425,56 @@ class SeriesData<
         const range = this._store.appendData(data);
         this._doInit(range[0], range[1]);
     }
+    /**
+     * Caution: Can be only called on raw data (before `this._indices` created).
+     * This method does not modify `rawData` (`dataProvider`), but only
+     * add values to storage.
+     *
+     * The final count will be increased by `Math.max(values.length, names.length)`.
+     *
+     * @param values That is the SourceType: 'arrayRows', like
+     *        [
+     *            [12, 33, 44],
+     *            [NaN, 43, 1],
+     *            ['-', 'asdf', 0]
+     *        ]
+     *        Each item is exaclty cooresponding to a dimension.
+     */
+    appendValues(values: any[][], names?: string[]): void {
+        const {start, end} = this._store.appendValues(values, names.length);
+        const shouldMakeIdFromName = this._shouldMakeIdFromName();
+
+        this._updateOrdinalMeta();
+
+        if (names) {
+            for (let idx = start; idx < end; idx++) {
+                const sourceIdx = idx - start;
+                this._nameList[idx] = names[sourceIdx];
+                if (shouldMakeIdFromName) {
+                    makeIdFromName(this, idx);
+                }
+            }
+        }
+    }
+
+    private _updateOrdinalMeta() {
+        const store = this._store;
+        const dimensions = this.dimensions;
+        for (let i = 0; i < dimensions.length; i++) {
+            const dimInfo = this._dimensionInfos[dimensions[i]];
+            if (dimInfo.ordinalMeta) {
+                const dimIdx = store.getDimensionIndex(dimensions[i]);
+                store.setOrdinalMeta(dimIdx, dimInfo.ordinalMeta);
+            }
+        }
+    }
+
+    private _shouldMakeIdFromName() {
+        const provider = this._store.getProvider();
+        return this._idDimIdx == null
+            && provider.getSource().sourceFormat !== SOURCE_FORMAT_TYPED_ARRAY
+            && !provider.fillStorage;
+    }
 
     private _doInit(start: number, end: number): void {
         if (start >= end) {
@@ -441,14 +484,12 @@ class SeriesData<
         const store = this._store;
         const provider = store.getProvider();
 
+        this._updateOrdinalMeta();
+
         const nameList = this._nameList;
         const idList = this._idList;
         const sourceFormat = provider.getSource().sourceFormat;
         const isFormatOriginal = sourceFormat === SOURCE_FORMAT_ORIGINAL;
-
-        const dontMakeIdFromName = this._idDimIdx != null
-            || sourceFormat === SOURCE_FORMAT_TYPED_ARRAY // Consider performance.
-            || !!provider.fillStorage;
 
         // Each data item is value
         // [1, 2]
@@ -479,29 +520,9 @@ class SeriesData<
             }
         }
 
-        if (!dontMakeIdFromName) {
-            const nameDimIdx = this._nameDimIdx;
-            const idDimIdx = this._idDimIdx;
-
+        if (this._shouldMakeIdFromName()) {
             for (let idx = start; idx < end; idx++) {
-                let name = nameList[idx];
-                let id = idList[idx];
-
-                if (name == null && nameDimIdx != null) {
-                    nameList[idx] = name = getIdNameFromStore(this, nameDimIdx, idx);
-                }
-                if (id == null && idDimIdx != null) {
-                    idList[idx] = id = getIdNameFromStore(this, idDimIdx, idx);
-                }
-                if (id == null && name != null) {
-                    const nameRepeatCount = this._nameRepeatCount;
-                    const nmCnt = nameRepeatCount[name] = (nameRepeatCount[name] || 0) + 1;
-                    id = name;
-                    if (nmCnt > 1) {
-                        id += '__ec__' + nmCnt;
-                    }
-                    idList[idx] = id;
-                }
+                makeIdFromName(this, idx);
             }
         }
 
@@ -1306,7 +1327,31 @@ class SeriesData<
 
             target._calculationInfo = zrUtil.extend({}, source._calculationInfo);
         };
+        makeIdFromName = function (data: SeriesData, idx: number): void {
+            const nameList = data._nameList;
+            const idList = data._idList;
+            const nameDimIdx = data._nameDimIdx;
+            const idDimIdx = data._idDimIdx;
 
+            let name = nameList[idx];
+            let id = idList[idx];
+
+            if (name == null && nameDimIdx != null) {
+                nameList[idx] = name = getIdNameFromStore(data, nameDimIdx, idx);
+            }
+            if (id == null && idDimIdx != null) {
+                idList[idx] = id = getIdNameFromStore(data, idDimIdx, idx);
+            }
+            if (id == null && name != null) {
+                const nameRepeatCount = data._nameRepeatCount;
+                const nmCnt = nameRepeatCount[name] = (nameRepeatCount[name] || 0) + 1;
+                id = name;
+                if (nmCnt > 1) {
+                    id += '__ec__' + nmCnt;
+                }
+                idList[idx] = id;
+            }
+        };
     })();
 
 }

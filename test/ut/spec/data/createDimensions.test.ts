@@ -77,8 +77,7 @@ describe('createDimensions', function () {
                 sourceHeader: 0,
                 dimensions: void 0
             },
-            SOURCE_FORMAT_ARRAY_ROWS,
-            null
+            SOURCE_FORMAT_ARRAY_ROWS
         );
 
         const opt = {

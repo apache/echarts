@@ -133,10 +133,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         // Complete data with missing regions. The consequent processes (like visual
         // map and render) can not be performed without a "full data". For example,
         // find `dataIndex` by name.
-        data.appendData(zrUtil.map(toAppendNames, name => ({
-            name,
-            value: NaN
-        })));
+        data.appendValues([], toAppendNames);
 
         return data;
     }

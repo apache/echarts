@@ -32,7 +32,7 @@ const ID_PREFIX = 'e\0\0';
 const NAME_REPEAT_PREFIX = '__ec__';
 
 
-describe('List', function () {
+describe('SeriesData', function () {
 
     describe('Data Manipulation', function () {
 
@@ -218,11 +218,11 @@ describe('List', function () {
             let getNameDataIndex = 0;
 
             return {
-                idEqualsTo: function (expectedId: string): void {
+                nextIdEqualsTo: function (expectedId: string): void {
                     expect(list.getId(getIdDataIndex)).toEqual(expectedId);
                     getIdDataIndex++;
                 },
-                nameEqualsTo: function (expectedName: string): void {
+                nextNameEqualsTo: function (expectedName: string): void {
                     expect(list.getName(getNameDataIndex)).toEqual(expectedName);
                     getNameDataIndex++;
                 },
@@ -240,23 +240,23 @@ describe('List', function () {
             function doChecks(list: SeriesData) {
                 const oneByOne = makeOneByOneChecker(list);
 
-                oneByOne.idEqualsTo('a');
-                oneByOne.idEqualsTo('b');
-                oneByOne.idEqualsTo(`b${NAME_REPEAT_PREFIX}2`);
-                oneByOne.idEqualsTo('c');
-                oneByOne.idEqualsTo(`${ID_PREFIX}4`);
-                oneByOne.idEqualsTo(`c${NAME_REPEAT_PREFIX}2`);
-                oneByOne.idEqualsTo('d');
-                oneByOne.idEqualsTo(`c${NAME_REPEAT_PREFIX}3`);
+                oneByOne.nextIdEqualsTo('a');
+                oneByOne.nextIdEqualsTo('b');
+                oneByOne.nextIdEqualsTo(`b${NAME_REPEAT_PREFIX}2`);
+                oneByOne.nextIdEqualsTo('c');
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}4`);
+                oneByOne.nextIdEqualsTo(`c${NAME_REPEAT_PREFIX}2`);
+                oneByOne.nextIdEqualsTo('d');
+                oneByOne.nextIdEqualsTo(`c${NAME_REPEAT_PREFIX}3`);
 
-                oneByOne.nameEqualsTo('a');
-                oneByOne.nameEqualsTo('b');
-                oneByOne.nameEqualsTo('b');
-                oneByOne.nameEqualsTo('c');
-                oneByOne.nameEqualsTo('');
-                oneByOne.nameEqualsTo('c');
-                oneByOne.nameEqualsTo('d');
-                oneByOne.nameEqualsTo('c');
+                oneByOne.nextNameEqualsTo('a');
+                oneByOne.nextNameEqualsTo('b');
+                oneByOne.nextNameEqualsTo('b');
+                oneByOne.nextNameEqualsTo('c');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('c');
+                oneByOne.nextNameEqualsTo('d');
+                oneByOne.nextNameEqualsTo('c');
             }
 
             it('sourceFormatOriginal', function () {
@@ -299,10 +299,7 @@ describe('List', function () {
                         sourceHeader: 0,
                         dimensions: null
                     },
-                    SOURCE_FORMAT_ARRAY_ROWS,
-                    {
-                        itemName: 1
-                    }
+                    SOURCE_FORMAT_ARRAY_ROWS
                 );
                 list.initData(source);
 
@@ -333,33 +330,33 @@ describe('List', function () {
                     { value: 120, id: 'myId_better' } // duplicated id.
                 ]);
 
-                oneByOne.idEqualsTo('myId_10');
-                oneByOne.idEqualsTo('555');
-                oneByOne.idEqualsTo('666%');
-                oneByOne.idEqualsTo('myId_good');
-                oneByOne.idEqualsTo('b');
-                oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
-                oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
-                oneByOne.idEqualsTo('NaN');
-                oneByOne.idEqualsTo('');
-                oneByOne.idEqualsTo(`b${NAME_REPEAT_PREFIX}2`);
-                oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
-                oneByOne.idEqualsTo('myId_better');
-                oneByOne.idEqualsTo('myId_better');
+                oneByOne.nextIdEqualsTo('myId_10');
+                oneByOne.nextIdEqualsTo('555');
+                oneByOne.nextIdEqualsTo('666%');
+                oneByOne.nextIdEqualsTo('myId_good');
+                oneByOne.nextIdEqualsTo('b');
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
+                oneByOne.nextIdEqualsTo('NaN');
+                oneByOne.nextIdEqualsTo('');
+                oneByOne.nextIdEqualsTo(`b${NAME_REPEAT_PREFIX}2`);
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
+                oneByOne.nextIdEqualsTo('myId_better');
+                oneByOne.nextIdEqualsTo('myId_better');
 
-                oneByOne.nameEqualsTo('');
-                oneByOne.nameEqualsTo('');
-                oneByOne.nameEqualsTo('');
-                oneByOne.nameEqualsTo('b');
-                oneByOne.nameEqualsTo('b');
-                oneByOne.nameEqualsTo('');
-                oneByOne.nameEqualsTo('');
-                oneByOne.nameEqualsTo('');
-                oneByOne.nameEqualsTo('');
-                oneByOne.nameEqualsTo('b');
-                oneByOne.nameEqualsTo('');
-                oneByOne.nameEqualsTo('');
-                oneByOne.nameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('b');
+                oneByOne.nextNameEqualsTo('b');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('b');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
 
                 list.appendData([
                     { value: 200, id: 'myId_best' },
@@ -369,95 +366,32 @@ describe('List', function () {
                     { value: 240 }
                 ]);
 
-                oneByOne.idEqualsTo('myId_best');
-                oneByOne.idEqualsTo('999');
-                oneByOne.idEqualsTo('777px');
-                oneByOne.idEqualsTo(`b${NAME_REPEAT_PREFIX}3`);
-                oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
+                oneByOne.nextIdEqualsTo('myId_best');
+                oneByOne.nextIdEqualsTo('999');
+                oneByOne.nextIdEqualsTo('777px');
+                oneByOne.nextIdEqualsTo(`b${NAME_REPEAT_PREFIX}3`);
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
 
-                oneByOne.nameEqualsTo('');
-                oneByOne.nameEqualsTo('');
-                oneByOne.nameEqualsTo('');
-                oneByOne.nameEqualsTo('b');
-                oneByOne.nameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('b');
+                oneByOne.nextNameEqualsTo('');
 
-                list.appendData(
-                    [
-                        { name: 'b', value: 300 },
-                        { name: 'c', value: 310 },
-                        { name: null, value: 320}
-                    ]
-                );
+                list.appendValues([], ['b', 'c', null]);
 
-                oneByOne.idEqualsTo(`b${NAME_REPEAT_PREFIX}4`);
-                oneByOne.idEqualsTo('c');
-                oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
+                oneByOne.nextIdEqualsTo(`b${NAME_REPEAT_PREFIX}4`);
+                oneByOne.nextIdEqualsTo('c');
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
 
-                oneByOne.nameEqualsTo('b');
-                oneByOne.nameEqualsTo('c');
-                oneByOne.nameEqualsTo('');
+                oneByOne.nextNameEqualsTo('b');
+                oneByOne.nextNameEqualsTo('c');
+                oneByOne.nextNameEqualsTo('');
             });
 
         });
 
         describe('id_name_declared_sourceFormat_arrayRows', function () {
-
-            function makeChecker(list: SeriesData) {
-                const oneByOne = makeOneByOneChecker(list);
-                return {
-                    checkAfterInitData() {
-                        oneByOne.idEqualsTo('myId_10');
-                        oneByOne.idEqualsTo('555');
-                        oneByOne.idEqualsTo('666%');
-                        oneByOne.idEqualsTo('myId_good');
-                        oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
-                        oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
-                        oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
-                        oneByOne.idEqualsTo('NaN');
-                        oneByOne.idEqualsTo('');
-                        oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
-                        oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
-                        oneByOne.idEqualsTo('myId_better');
-                        oneByOne.idEqualsTo('myId_better');
-
-                        oneByOne.nameEqualsTo('');
-                        oneByOne.nameEqualsTo('');
-                        oneByOne.nameEqualsTo('');
-                        oneByOne.nameEqualsTo('b');
-                        oneByOne.nameEqualsTo('b');
-                        oneByOne.nameEqualsTo('');
-                        oneByOne.nameEqualsTo('');
-                        oneByOne.nameEqualsTo('');
-                        oneByOne.nameEqualsTo('');
-                        oneByOne.nameEqualsTo('b');
-                        oneByOne.nameEqualsTo('');
-                        oneByOne.nameEqualsTo('');
-                        oneByOne.nameEqualsTo('');
-                    },
-                    checkAfterAppendData() {
-                        oneByOne.idEqualsTo('myId_best');
-                        oneByOne.idEqualsTo('999');
-                        oneByOne.idEqualsTo('777px');
-                        oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
-                        oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
-
-                        oneByOne.nameEqualsTo('');
-                        oneByOne.nameEqualsTo('');
-                        oneByOne.nameEqualsTo('');
-                        oneByOne.nameEqualsTo('b');
-                        oneByOne.nameEqualsTo('');
-                    },
-                    checkAfterAppendValues() {
-                        oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
-                        oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
-                        oneByOne.idEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
-
-                        oneByOne.nameEqualsTo('b');
-                        oneByOne.nameEqualsTo('c');
-                        oneByOne.nameEqualsTo('');
-                    }
-                };
-            }
 
             it('no_ordinalMeta', function () {
                 testArrayRowsInSource([
@@ -487,7 +421,7 @@ describe('List', function () {
 
             function testArrayRowsInSource(dimensionsInfo: DataDimensionInfo[]): void {
                 const list = new SeriesData(dimensionsInfo, new Model());
-                const checker = makeChecker(list);
+                const oneByOne = makeOneByOneChecker(list);
 
                 const source = createSource(
                     [
@@ -510,15 +444,36 @@ describe('List', function () {
                         sourceHeader: 0,
                         dimensions: null
                     },
-                    SOURCE_FORMAT_ARRAY_ROWS,
-                    {
-                        itemId: 1,
-                        itemName: 2
-                    }
+                    SOURCE_FORMAT_ARRAY_ROWS
                 );
                 list.initData(source);
+                oneByOne.nextIdEqualsTo('myId_10');
+                oneByOne.nextIdEqualsTo('555');
+                oneByOne.nextIdEqualsTo('666%');
+                oneByOne.nextIdEqualsTo('myId_good');
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
+                oneByOne.nextIdEqualsTo('NaN');
+                oneByOne.nextIdEqualsTo('');
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
+                oneByOne.nextIdEqualsTo('myId_better');
+                oneByOne.nextIdEqualsTo('myId_better');
 
-                checker.checkAfterInitData();
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('b');
+                oneByOne.nextNameEqualsTo('b');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('b');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
 
                 list.appendData([
                     [ 200, 'myId_best', null ],
@@ -528,20 +483,29 @@ describe('List', function () {
                     [ 240, null, null ]
                 ]);
 
-                checker.checkAfterAppendData();
+                oneByOne.nextIdEqualsTo('myId_best');
+                oneByOne.nextIdEqualsTo('999');
+                oneByOne.nextIdEqualsTo('777px');
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
 
-                list.appendData(
-                    [
-                        { name: 'b', value: 300 },
-                        { name: 'c', value: 310 },
-                        { name: null, value: 320}
-                    ]
-                );
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('');
+                oneByOne.nextNameEqualsTo('b');
+                oneByOne.nextNameEqualsTo('');
 
-                checker.checkAfterAppendValues();
+                list.appendValues([], ['b', 'c', null]);
+
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
+                oneByOne.nextIdEqualsTo(`${ID_PREFIX}${oneByOne.currGetIdDataIndex()}`);
+
+                oneByOne.nextNameEqualsTo('b');
+                oneByOne.nextNameEqualsTo('c');
+                oneByOne.nextNameEqualsTo('');
             }
 
         });
-
     });
 });

@@ -88,7 +88,12 @@ export interface DataStorageDimensionInfo {
      * Category strings will be collected and stored in ordinalMeta.categories.
      * And storage will store the index of categories.
      */
-    ordinalMeta?: OrdinalMeta
+    ordinalMeta?: OrdinalMeta,
+
+    /**
+     * Offset for ordinal parsing and collect
+     */
+    ordinalOffset?: number
 }
 
 let defaultDimValueGetters: {[sourceFormat: string]: DimValueGetter};
@@ -234,20 +239,23 @@ class DataStorage {
         return this._dimensions.length;
     }
 
-    setOrdinalMeta(dimIdx: number, ordinalMeta: OrdinalMeta) {
+    setOrdinalMeta(
+        dimIdx: number,
+        ordinalMeta: OrdinalMeta
+    ) {
         const chunk = this._chunks[dimIdx];
         const dim = this._dimensions[dimIdx];
 
-        // ordinalMeta already being set.
-        if (dim.ordinalMeta) {
-            return;
-        }
+        const offset = dim.ordinalOffset || 0;
+        const len = chunk.length;
 
-        for (let i = 0; i < chunk.length; i++) {
+        // Parse from previous data offset. len may be changed after appendData
+        for (let i = offset; i < len; i++) {
             (chunk as any)[i] = ordinalMeta.parseAndCollect(chunk[i]);
         }
 
         dim.ordinalMeta = ordinalMeta;
+        dim.ordinalOffset = len;
     }
 
     getOrdinalMeta(dimIdx: number) {
@@ -304,6 +312,42 @@ class DataStorage {
         }
 
         return [start, end];
+    }
+
+    appendValues(values: any[][], minFillLen?: number) {
+        const storage = this._chunks;
+        const dimensions = this._dimensions;
+        const dimLen = dimensions.length;
+        const rawExtent = this._rawExtent;
+
+        const start = this.count();
+        const end = start + Math.max(values.length, minFillLen || 0);
+
+        for (let i = 0; i < dimLen; i++) {
+            const dim = dimensions[i];
+            prepareStorage(storage, i, dim.type, end, true);
+        }
+
+        const emptyDataItem: number[] = [];
+        for (let idx = start; idx < end; idx++) {
+            const sourceIdx = idx - start;
+            // Store the data by dimensions
+            for (let dimIdx = 0; dimIdx < dimLen; dimIdx++) {
+                const dim = dimensions[dimIdx];
+                const val = defaultDimValueGetters.arrayRows.call(
+                    this, values[sourceIdx] || emptyDataItem, dim.name, sourceIdx, dimIdx
+                ) as ParsedValueNumeric;
+                (storage[dimIdx] as any)[idx] = val;
+
+                const dimRawExtent = rawExtent[dimIdx];
+                val < dimRawExtent[0] && (dimRawExtent[0] = val);
+                val > dimRawExtent[1] && (dimRawExtent[1] = val);
+            }
+        }
+
+        this._count = end;
+
+        return {start, end};
     }
 
     private _initDataFromProvider(
