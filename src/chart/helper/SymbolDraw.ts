@@ -83,7 +83,12 @@ interface RippleEffectOption {
 
     brushType?: 'fill' | 'stroke'
 
-    color?: ZRColor
+    color?: ZRColor,
+
+    /**
+     * ripple number
+     */
+    number?: number
 }
 
 interface SymbolDrawStateOption {
