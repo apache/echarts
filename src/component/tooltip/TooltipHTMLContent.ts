@@ -403,7 +403,10 @@ class TooltipHTMLContent {
         borderColor?: ZRColor,
         arrowPosition?: TooltipOption['position']
     ) {
+        const el = this.el;
+
         if (content == null) {
+            el.innerHTML = '';
             return;
         }
 
@@ -412,7 +415,6 @@ class TooltipHTMLContent {
             && !shouldTooltipConfine(tooltipModel)) {
             arrow = assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition);
         }
-        const el = this.el;
         if (isString(content)) {
             el.innerHTML = content + arrow;
         }
