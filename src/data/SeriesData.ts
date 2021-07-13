@@ -812,6 +812,8 @@ class SeriesData<
             validateDimensions(this, dimIndices);
         }
 
+        // Clone first
+        this._store = this._store.clone();
         this._store.filterSelf(dimIndices, (fCtx
             ? zrUtil.bind(cb as any, fCtx as any)
             : cb) as any
@@ -840,6 +842,7 @@ class SeriesData<
             validateDimensions(this, dimIndices);
         }
 
+        this._store = this._store.clone();
         this._store.selectRange(innerRange);
         return this;
     }
@@ -1195,7 +1198,7 @@ class SeriesData<
         }
 
         transferProperties(list, this);
-        list._store = this._store.clone();
+        list._store = this._store;
 
         return list;
     }
