@@ -42,17 +42,6 @@ export type DimensionSummary = {
     encodeFirstDimNotExtra: {[coordDim: string]: DimensionName},
 };
 
-/**
- * Omit unused dimensions.
- * This will improve performance signifantly when multiple series
- * is sharing a extra high dimension dataset.
- */
-export function omitUnusedDimensions(dims: DataDimensionInfo[]) {
-    return filter(dims, (dim) => {
-        return !dim.isExtraCoord || keys(dim.otherDims).length > 0;
-    });
-}
-
 export function summarizeDimensions(data: SeriesData): DimensionSummary {
     const summary: DimensionSummary = {} as DimensionSummary;
     const encode = summary.encode = {} as DimensionSummaryEncode;

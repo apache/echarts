@@ -29,10 +29,10 @@ import {
 } from '../../util/types';
 import SeriesData from '../SeriesData';
 import DataDimensionInfo from '../DataDimensionInfo';
-import { clone, createHashMap, defaults, each, extend, HashMap, isObject, isString, keys } from 'zrender/src/core/util';
+import { clone, createHashMap, defaults, each, extend, HashMap, isObject, isString, keys, map } from 'zrender/src/core/util';
 import OrdinalMeta from '../OrdinalMeta';
 import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../Source';
-import DataStorage from '../DataStorage';
+import DataStorage, { CtorInt32Array, CtorUint32Array } from '../DataStorage';
 import { normalizeToArray } from '../../util/model';
 import { BE_ORDINAL, guessOrdinal } from './sourceHelper';
 
@@ -62,7 +62,13 @@ export type CreateDimensionsParams = {
      */
     encodeDefaulter?: EncodeDefaulter,
     generateCoord?: string,
-    generateCoordCount?: number
+    generateCoordCount?: number,
+
+    /**
+     * If omit unused dimension
+     * Used to improve the performance on high dimension data.
+     */
+    omitUnusedDimensions?: boolean
 };
 
 /**
@@ -96,37 +102,57 @@ export default function createDimensions(
     const dimsDef = (opt.dimensionsDefine || source.dimensionsDefine || []).slice();
     const dataDimNameMap = createHashMap<DimensionIndex, DimensionName>();
     const coordDimNameMap = createHashMap<true, DimensionName>();
-    // let valueCandidate;
     const result: DataDimensionInfo[] = [];
+    const omitUnusedDimensions = opt.omitUnusedDimensions;
 
     const dimCount = getDimCount(source, sysDims, dimsDef, opt.dimensionsCount);
-
-    // Apply user defined dims (`name` and `type`) and init result.
-    for (let i = 0; i < dimCount; i++) {
-        const dimDefItemRaw = dimsDef[i];
-        const dimDefItem = dimsDef[i] = extend(
-            {}, isObject(dimDefItemRaw) ? dimDefItemRaw : { name: dimDefItemRaw }
-        );
-
-        const userDimName = dimDefItem.name;
-        const resultItem = result[i] = new DataDimensionInfo();
-        // Name will be applied later for avoiding duplication.
-        if (userDimName != null && dataDimNameMap.get(userDimName) == null) {
-            // Only if `series.dimensions` is defined in option
-            // displayName, will be set, and dimension will be diplayed vertically in
-            // tooltip by default.
-            resultItem.name = resultItem.displayName = userDimName;
-            dataDimNameMap.set(userDimName, i);
-        }
-        dimDefItem.type != null && (resultItem.type = dimDefItem.type);
-        dimDefItem.displayName != null && (resultItem.displayName = dimDefItem.displayName);
-    }
 
     let encodeDef = opt.encodeDefine;
     if (!encodeDef && opt.encodeDefaulter) {
         encodeDef = opt.encodeDefaulter(source, dimCount);
     }
     const encodeDefMap = createHashMap<DimensionIndex[] | false, DimensionName>(encodeDef as any);
+
+    const indicesMap = new CtorInt32Array(dimCount);
+    for (let i = 0; i < indicesMap.length; i++) {
+        indicesMap[i] = -1;
+    }
+    function getResultItem(dimIdx: number) {
+        const idx = indicesMap[dimIdx];
+        if (idx < 0) {
+            const dimDefItemRaw = dimsDef[dimIdx];
+            const dimDefItem = isObject(dimDefItemRaw) ? dimDefItemRaw : { name: dimDefItemRaw };
+            const resultItem = new DataDimensionInfo();
+            const userDimName = dimDefItem.name;
+            if (dataDimNameMap.get(userDimName) != null) {
+                resultItem.name = resultItem.displayName = userDimName;
+            }
+            dimDefItem.type != null && (resultItem.type = dimDefItem.type);
+            dimDefItem.displayName != null && (resultItem.displayName = dimDefItem.displayName);
+            const newIdx = result.length;
+            indicesMap[dimIdx] = newIdx;
+            result.push(resultItem);
+            return resultItem;
+        }
+        return result[idx];
+    }
+
+    // Apply user defined dims (`name` and `type`) and init result.
+    for (let i = 0; i < dimCount; i++) {
+        const dimDefItemRaw = dimsDef[i];
+        const userDimName = isObject(dimDefItemRaw) ? dimDefItemRaw.name : dimDefItemRaw;
+        // Name will be applied later for avoiding duplication.
+        if (userDimName != null && dataDimNameMap.get(userDimName) == null) {
+            // Only if `series.dimensions` is defined in option
+            // displayName, will be set, and dimension will be diplayed vertically in
+            // tooltip by default.
+            dataDimNameMap.set(userDimName, i);
+        }
+
+        if (!omitUnusedDimensions) {
+            getResultItem(i);
+        }
+    }
 
     // Set `coordDim` and `coordDimIndex` by `encodeDefMap` and normalize `encodeDefMap`.
     encodeDefMap.each(function (dataDimsRaw, coordDim) {
@@ -148,7 +174,7 @@ export default function createDimensions(
                 : resultDimIdxOrName;
             if (resultDimIdx != null && resultDimIdx < dimCount) {
                 validDataDims[idx] = resultDimIdx;
-                applyDim(result[resultDimIdx], coordDim, idx);
+                applyDim(getResultItem(resultDimIdx), coordDim, idx);
             }
         });
     });
@@ -190,16 +216,16 @@ export default function createDimensions(
         // dimensions provides default dim sequences.
         if (!dataDims.length) {
             for (let i = 0; i < (sysDimItemDimsDef && sysDimItemDimsDef.length || 1); i++) {
-                while (availDimIdx < result.length && result[availDimIdx].coordDim != null) {
+                while (availDimIdx < dimCount && getResultItem(availDimIdx).coordDim != null) {
                     availDimIdx++;
                 }
-                availDimIdx < result.length && dataDims.push(availDimIdx++);
+                availDimIdx < dimCount && dataDims.push(availDimIdx++);
             }
         }
 
         // Apply templates.
         each(dataDims, function (resultDimIdx, coordDimIndex) {
-            const resultItem = result[resultDimIdx];
+            const resultItem = getResultItem(resultDimIdx);
             applyDim(defaults(resultItem, sysDimItem), coordDim, coordDimIndex);
             if (resultItem.name == null && sysDimItemDimsDef) {
                 let sysDimItemDimsDefItem = sysDimItemDimsDef[coordDimIndex];
@@ -233,59 +259,71 @@ export default function createDimensions(
     let dataDimNameAutoIdx = 0;
 
     // Set dim `name` and other `coordDim` and other props.
-    for (let resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
-        const resultItem = result[resultDimIdx] = result[resultDimIdx] || new DataDimensionInfo();
-        const coordDim = resultItem.coordDim;
+    if (!omitUnusedDimensions) {
+        for (let resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
+            const resultItem = getResultItem(resultDimIdx);
+            const coordDim = resultItem.coordDim;
 
-        if (coordDim == null) {
-            const res = genName(
-                extra, coordDimNameMap, coordDimNameAutoIdx, fromZero
-            );
-            coordDimNameAutoIdx = res.autoIdx;
-            resultItem.coordDim = res.name;
-            resultItem.coordDimIndex = 0;
-            // Series specified generateCoord is using out.
-            if (!generateCoord || generateCoordCount <= 0) {
-                resultItem.isExtraCoord = true;
+            if (coordDim == null) {
+                const res = genName(
+                    extra, coordDimNameMap, coordDimNameAutoIdx, fromZero
+                );
+                coordDimNameAutoIdx = res.autoIdx;
+                resultItem.coordDim = res.name;
+                resultItem.coordDimIndex = 0;
+                // Series specified generateCoord is using out.
+                if (!generateCoord || generateCoordCount <= 0) {
+                    resultItem.isExtraCoord = true;
+                }
+                generateCoordCount--;
             }
-            generateCoordCount--;
-        }
 
-        if (resultItem.name == null) {
-            const res = genName(
-                resultItem.coordDim, dataDimNameMap, dataDimNameAutoIdx, false
-            );
-            resultItem.name = res.name;
-            dataDimNameAutoIdx = res.autoIdx;
-        }
+            if (resultItem.name == null) {
+                const res = genName(
+                    resultItem.coordDim, dataDimNameMap, dataDimNameAutoIdx, false
+                );
+                resultItem.name = res.name;
+                dataDimNameAutoIdx = res.autoIdx;
+            }
 
-        if (resultItem.type == null
-            && (
-                guessOrdinal(source, resultDimIdx) === BE_ORDINAL.Must
-                // Consider the case:
-                // {
-                //    dataset: {source: [
-                //        ['2001', 123],
-                //        ['2002', 456],
-                //        ...
-                //        ['The others', 987],
-                //    ]},
-                //    series: {type: 'pie'}
-                // }
-                // The first colum should better be treated as a "ordinal" although it
-                // might not able to be detected as an "ordinal" by `guessOrdinal`.
-                || (resultItem.isExtraCoord
-                    && (resultItem.otherDims.itemName != null
-                        || resultItem.otherDims.seriesName != null
+            if (resultItem.type == null
+                && (
+                    guessOrdinal(source, resultDimIdx) === BE_ORDINAL.Must
+                    // Consider the case:
+                    // {
+                    //    dataset: {source: [
+                    //        ['2001', 123],
+                    //        ['2002', 456],
+                    //        ...
+                    //        ['The others', 987],
+                    //    ]},
+                    //    series: {type: 'pie'}
+                    // }
+                    // The first colum should better be treated as a "ordinal" although it
+                    // might not able to be detected as an "ordinal" by `guessOrdinal`.
+                    || (resultItem.isExtraCoord
+                        && (resultItem.otherDims.itemName != null
+                            || resultItem.otherDims.seriesName != null
+                        )
                     )
                 )
-            )
-        ) {
-            resultItem.type = 'ordinal';
+            ) {
+                resultItem.type = 'ordinal';
+            }
         }
+        return result;
     }
-
-    return result;
+    else {
+        // Sort dimensions
+        const toSort = [];
+        for (let i = 0; i < indicesMap.length; i++) {
+            if (indicesMap[i] >= 0) {
+                toSort.push({ i, o: result[indicesMap[i]]});
+            }
+        }
+        toSort.sort((a, b) => a.i - b.i);
+        return map(toSort, item => item.o);
+    }
 }
 
 
@@ -299,11 +337,11 @@ export default function createDimensions(
 // (2) sometimes user need to calcualte bubble size or use visualMap
 // on other dimensions besides coordSys needed.
 // So, dims that is not used by system, should be shared in storage?
-function getDimCount(
+export function getDimCount(
     source: Source,
     sysDims: CoordDimensionDefinitionLoose[],
     dimsDef: DimensionDefinitionLoose[],
-    optDimCount: number
+    optDimCount?: number
 ): number {
     // Note that the result dimCount should not small than columns count
     // of data, otherwise `dataDimNameMap` checking will be incorrect.
@@ -335,7 +373,7 @@ function genName(
             i++;
         }
         name += i;
-        autoIdx = i;
+        autoIdx = i + 1;
     }
     map.set(name, true);
     return { name, autoIdx };

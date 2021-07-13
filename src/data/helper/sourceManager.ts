@@ -223,8 +223,8 @@ export class SourceManager {
             }
 
             // See [REQUIREMENT_MEMO], merge settings on series and parent dataset if it is root.
-            const newMetaRawOption = this._getSourceMetaRawOption();
-            const upMetaRawOption = upSource ? upSource.metaRawOption : {} as SourceMetaRawOption;
+            const newMetaRawOption = this._getSourceMetaRawOption() || {} as SourceMetaRawOption;
+            const upMetaRawOption = upSource && upSource.metaRawOption || {} as SourceMetaRawOption;
             const seriesLayoutBy = retrieve2(newMetaRawOption.seriesLayoutBy, upMetaRawOption.seriesLayoutBy) || null;
             const sourceHeader = retrieve2(newMetaRawOption.sourceHeader, upMetaRawOption.sourceHeader) || null;
             // Note here we should not use `upSource.dimensionsDefine`. Consider the case:

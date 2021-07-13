@@ -34,6 +34,12 @@ import { Source } from './Source';
 const UNDEFINED = 'undefined';
 /* global Float64Array, Int32Array, Uint32Array, Uint16Array */
 
+// Caution: MUST not use `new CtorUint32Array(arr, 0, len)`, because the Ctor of array is
+// different from the Ctor of typed array.
+export const CtorUint32Array = typeof Uint32Array === UNDEFINED ? Array : Uint32Array;
+export const CtorUint16Array = typeof Uint16Array === UNDEFINED ? Array : Uint16Array;
+export const CtorInt32Array = typeof Int32Array === UNDEFINED ? Array : Int32Array;
+export const CtorFloat64Array = typeof Float64Array === UNDEFINED ? Array : Int32Array;
 /**
  * Multi dimensional data storage
  */
@@ -54,10 +60,6 @@ type DataTypedArray = Uint32Array | Int32Array | Uint16Array | Float64Array;
 type DataTypedArrayConstructor = typeof Uint32Array | typeof Int32Array | typeof Uint16Array | typeof Float64Array;
 type DataArrayLikeConstructor = typeof Array | DataTypedArrayConstructor;
 
-// Caution: MUST not use `new CtorUint32Array(arr, 0, len)`, because the Ctor of array is
-// different from the Ctor of typed array.
-const CtorUint32Array = typeof Uint32Array === UNDEFINED ? Array : Uint32Array;
-const CtorUint16Array = typeof Uint16Array === UNDEFINED ? Array : Uint16Array;
 
 type DataValueChunk = ArrayLike<ParsedValue>;
 

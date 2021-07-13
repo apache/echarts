@@ -19,8 +19,8 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesData from '../../data/SeriesData';
-import createDimensions, { CreateDimensionsParams } from '../../data/helper/createDimensions';
-import {getDimensionTypeByAxis, omitUnusedDimensions} from '../../data/helper/dimensionHelper';
+import createDimensions, { CreateDimensionsParams, getDimCount } from '../../data/helper/createDimensions';
+import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../core/CoordinateSystem';
 import {getCoordSysInfoBySeries} from '../../model/referHelper';
@@ -120,38 +120,46 @@ function createListFromArray(
         );
     }
 
+    const source = isDataStorage(sourceOrStore) ? sourceOrStore.getSource() : sourceOrStore;
     const coordSysInfo = getCoordSysInfoBySeries(seriesModel);
     const coordSysDimDefs = getCoordSysDimDefs(seriesModel, coordSysInfo);
     const useEncodeDefaulter = opt.useEncodeDefaulter;
 
-    // NOTE: don't call createDimensions on same source multiple times.
-    // It will break the encodeDefaulter which has sideeffects.
-    let dimInfoList = createDimensions(sourceOrStore, {
-        coordDimensions: coordSysDimDefs,
-        generateCoord: opt.generateCoord,
-        encodeDefine: seriesModel.getEncode(),
-        encodeDefaulter: zrUtil.isFunction(useEncodeDefaulter)
-            ? useEncodeDefaulter
-            : useEncodeDefaulter
-            ? zrUtil.curry(makeSeriesEncodeForAxisCoordSys, coordSysDimDefs, seriesModel)
-            : null
-    });
-    let firstCategoryDimIndex = injectOrdinalMeta(dimInfoList, opt.createInvertedIndices, coordSysInfo);
-
     // Try to ignore unsed dimensions if sharing a high dimension datastorage
     // 10 is an experience value.
-    if (isDataStorage(sourceOrStore) && sourceOrStore.getDimensionCount() > 10) {
-        const omitedDimInfoList = omitUnusedDimensions(dimInfoList);
+    const omitUnusedDimensions = isDataStorage(sourceOrStore) && sourceOrStore.getDimensionCount() > 10;
+    const encodeDefaulter = zrUtil.isFunction(useEncodeDefaulter)
+        ? useEncodeDefaulter
+        : useEncodeDefaulter
+        ? zrUtil.curry(makeSeriesEncodeForAxisCoordSys, coordSysDimDefs, seriesModel)
+        : null;
+
+    const createDimensionOptions = {
+        coordDimensions: coordSysDimDefs,
+        generateCoord: opt.generateCoord,
+        encodeDefine: seriesModel.getEncode()
+            // NOTE: If we call createDimensions on same source multiple times.
+            // It will break the encodeDefaulter which has sideeffects.
+            // So we prepare the default encode here instead of passing encoderDefaulter function.
+            || (encodeDefaulter && encodeDefaulter(
+                source, getDimCount(source, coordSysDimDefs, source.dimensionsDefine || [])
+            )),
+        omitUnusedDimensions
+    };
+    let dimInfoList = createDimensions(sourceOrStore, createDimensionOptions);
+    let firstCategoryDimIndex = injectOrdinalMeta(dimInfoList, opt.createInvertedIndices, coordSysInfo);
+
+    if (omitUnusedDimensions) {
         // sourceOrStore
-        if (sourceOrStore.syncDimensionTypes(omitedDimInfoList)) {
-            dimInfoList = omitedDimInfoList;
-        }
-        else {
+        if (!(sourceOrStore as DataStorage).syncDimensionTypes(dimInfoList)) {
+            dimInfoList = createDimensions(sourceOrStore, zrUtil.extend(createDimensionOptions, {
+                omitUnusedDimensions: true
+            }));
             // Fallback
             firstCategoryDimIndex = injectOrdinalMeta(
                 dimInfoList, opt.createInvertedIndices, coordSysInfo
             );
-            sourceOrStore = sourceOrStore.getSource();
+            sourceOrStore = source;
         }
     }
 
