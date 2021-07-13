@@ -86,9 +86,9 @@ interface RippleEffectOption {
     color?: ZRColor,
 
     /**
-     * Count of ripple effect
+     * ripple number
      */
-    count?: number
+    number?: number
 }
 
 interface SymbolDrawStateOption {

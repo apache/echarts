@@ -117,8 +117,8 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
             scale: 2.5,
             // Brush type can be fill or stroke
             brushType: 'fill',
-            // Count of ripple effect
-            count: 3
+            // Ripple number
+            number: 3
         },
 
         universalTransition: {
