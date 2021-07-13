@@ -356,12 +356,24 @@ export class SourceManager {
 
     /**
      * Will return undefined if source don't have dimensions.
+     *
+     * Only available for series.
      */
     getDataStorage(): DataStorage | undefined {
-        return this._innerGetDataStorage(this.getSource(0));
+        if (__DEV__) {
+            assert(isSeries(this._sourceHost), 'Can only call getDataStorage on series source manager.')
+        }
+        const source = this.getSource(0);
+        const dimensionsDefine = source.dimensionsDefine;
+        const sourceReadKey = source.seriesLayoutBy
+            + '$$'
+            + source.startIndex
+            + (dimensionsDefine ? map(dimensionsDefine, def => def.name).join('$$') : '');
+
+        return this._innerGetDataStorage(source, sourceReadKey);
     }
 
-    private _innerGetDataStorage(endSource?: Source): DataStorage | undefined {
+    private _innerGetDataStorage(endSource: Source, sourceReadKey: string): DataStorage | undefined {
         // TODO Can use other sourceIndex?
         const sourceIndex = 0;
 
@@ -373,10 +385,6 @@ export class SourceManager {
         // when seriesLayoutBy or startIndex(which is affected by sourceHeader) are different.
         // So we use this two props as key. Another fact `dimensions` will be checked when initializing SeriesData.
         const sourceToInit = (endSource || source);
-        const seriesLayoutBy = sourceToInit.seriesLayoutBy;
-        const startIndex = sourceToInit.startIndex;
-        const sourceReadKey = seriesLayoutBy + '_' + startIndex;
-
         let cachedStoreMap = storeList[sourceIndex];
 
         if (!cachedStoreMap) {
@@ -388,7 +396,7 @@ export class SourceManager {
             const upSourceMgr = this._getUpstreamSourceManagers()[0];
 
             if (isSeries(this._sourceHost) && upSourceMgr) {
-                cachedStore = upSourceMgr._innerGetDataStorage(endSource);
+                cachedStore = upSourceMgr._innerGetDataStorage(endSource, sourceReadKey);
             }
             else {
                 const dimensionsDefine = source.dimensionsDefine;

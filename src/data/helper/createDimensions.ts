@@ -62,13 +62,7 @@ export type CreateDimensionsParams = {
      */
     encodeDefaulter?: EncodeDefaulter,
     generateCoord?: string,
-    generateCoordCount?: number,
-    /**
-     * If ignore unused dimensions.
-     * This config will improve performance signifantly when multiple series
-     * is sharing a extra high dimension dataset.
-     */
-    ignoreUnusedDimension?: boolean
+    generateCoordCount?: number
 };
 
 /**
@@ -238,7 +232,6 @@ export default function createDimensions(
     let coordDimNameAutoIdx = 0;
     let dataDimNameAutoIdx = 0;
 
-    const pickedResult = [];
     // Set dim `name` and other `coordDim` and other props.
     for (let resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
         const resultItem = result[resultDimIdx] = result[resultDimIdx] || new DataDimensionInfo();
@@ -290,13 +283,9 @@ export default function createDimensions(
         ) {
             resultItem.type = 'ordinal';
         }
-
-        if (!resultItem.isExtraCoord || keys(resultItem.otherDims).length > 0) {
-            pickedResult.push(resultItem);
-        }
     }
 
-    return opt.ignoreUnusedDimension ? pickedResult : result;
+    return result;
 }
 
 

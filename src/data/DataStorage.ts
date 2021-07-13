@@ -239,7 +239,7 @@ class DataStorage {
         return this._dimensions.length;
     }
 
-    setOrdinalMeta(
+    collectOrdinalMeta(
         dimIdx: number,
         ordinalMeta: OrdinalMeta
     ) {

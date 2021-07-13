@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesData from '../../data/SeriesData';
 import createDimensions, { CreateDimensionsParams } from '../../data/helper/createDimensions';
-import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
+import {getDimensionTypeByAxis, omitUnusedDimensions} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../core/CoordinateSystem';
 import {getCoordSysInfoBySeries} from '../../model/referHelper';
@@ -122,9 +122,11 @@ function createListFromArray(
 
     const coordSysInfo = getCoordSysInfoBySeries(seriesModel);
     const coordSysDimDefs = getCoordSysDimDefs(seriesModel, coordSysInfo);
-
     const useEncodeDefaulter = opt.useEncodeDefaulter;
-    const createDimensionsConfig = {
+
+    // NOTE: don't call createDimensions on same source multiple times.
+    // It will break the encodeDefaulter which has sideeffects.
+    let dimInfoList = createDimensions(sourceOrStore, {
         coordDimensions: coordSysDimDefs,
         generateCoord: opt.generateCoord,
         encodeDefine: seriesModel.getEncode(),
@@ -132,22 +134,20 @@ function createListFromArray(
             ? useEncodeDefaulter
             : useEncodeDefaulter
             ? zrUtil.curry(makeSeriesEncodeForAxisCoordSys, coordSysDimDefs, seriesModel)
-            : null,
-        // Try to ignore unsed dimensions if sharing a high dimension datastorage
-        // 10 is an experience value.
-        ignoreUnusedDimension: isDataStorage(sourceOrStore)
-            && sourceOrStore.getDimensionCount() > 10
-    } as CreateDimensionsParams;
-    let dimInfoList = createDimensions(sourceOrStore, createDimensionsConfig);
+            : null
+    });
     let firstCategoryDimIndex = injectOrdinalMeta(dimInfoList, opt.createInvertedIndices, coordSysInfo);
 
-    if (isDataStorage(sourceOrStore)) {
+    // Try to ignore unsed dimensions if sharing a high dimension datastorage
+    // 10 is an experience value.
+    if (isDataStorage(sourceOrStore) && sourceOrStore.getDimensionCount() > 10) {
+        const omitedDimInfoList = omitUnusedDimensions(dimInfoList);
         // sourceOrStore
-        if (!sourceOrStore.syncDimensionTypes(dimInfoList)) {
-            // Fallback.
-            dimInfoList = createDimensions(sourceOrStore, zrUtil.extend(
-                createDimensionsConfig, { ignoreUnusedDimension: false }
-            ));
+        if (sourceOrStore.syncDimensionTypes(omitedDimInfoList)) {
+            dimInfoList = omitedDimInfoList;
+        }
+        else {
+            // Fallback
             firstCategoryDimIndex = injectOrdinalMeta(
                 dimInfoList, opt.createInvertedIndices, coordSysInfo
             );

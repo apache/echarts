@@ -18,12 +18,13 @@
 */
 
 
-import {each, createHashMap, assert} from 'zrender/src/core/util';
+import {each, createHashMap, assert, filter, keys} from 'zrender/src/core/util';
 import SeriesData from '../SeriesData';
 import {
     DimensionName, VISUAL_DIMENSIONS, DimensionType, DimensionUserOuput, DimensionUserOuputEncode, DimensionIndex
 } from '../../util/types';
 import { DataStorageDimensionType } from '../DataStorage';
+import DataDimensionInfo from '../DataDimensionInfo';
 
 export type DimensionSummaryEncode = {
     defaultedLabel: DimensionName[],
@@ -40,6 +41,17 @@ export type DimensionSummary = {
     dataDimsOnCoord: DimensionName[],
     encodeFirstDimNotExtra: {[coordDim: string]: DimensionName},
 };
+
+/**
+ * Omit unused dimensions.
+ * This will improve performance signifantly when multiple series
+ * is sharing a extra high dimension dataset.
+ */
+export function omitUnusedDimensions(dims: DataDimensionInfo[]) {
+    return filter(dims, (dim) => {
+        return !dim.isExtraCoord || keys(dim.otherDims).length > 0;
+    });
+}
 
 export function summarizeDimensions(data: SeriesData): DimensionSummary {
     const summary: DimensionSummary = {} as DimensionSummary;

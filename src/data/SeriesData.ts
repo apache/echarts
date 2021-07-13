@@ -464,7 +464,7 @@ class SeriesData<
             const dimInfo = this._dimensionInfos[dimensions[i]];
             if (dimInfo.ordinalMeta) {
                 const dimIdx = store.getDimensionIndex(dimensions[i]);
-                store.setOrdinalMeta(dimIdx, dimInfo.ordinalMeta);
+                store.collectOrdinalMeta(dimIdx, dimInfo.ordinalMeta);
             }
         }
     }
