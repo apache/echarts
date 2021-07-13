@@ -142,6 +142,8 @@ export class SourceManager {
 
     private _versionSignBase = 0;
 
+    private _dirty = true;
+
     constructor(sourceHost: DatasetModel | SeriesModel) {
         this._sourceHost = sourceHost;
     }
@@ -152,6 +154,7 @@ export class SourceManager {
     dirty() {
         this._setLocalSource([], []);
         this._storeList = [];
+        this._dirty = true;
     }
 
     private _setLocalSource(
@@ -182,11 +185,13 @@ export class SourceManager {
         // cache the result source to prevent from repeating transform.
         if (this._isDirty()) {
             this._createSource();
+            this._dirty = false;
         }
     }
 
     private _createSource(): void {
         this._setLocalSource([], []);
+
         const sourceHost = this._sourceHost;
 
         const upSourceMgrList = this._getUpstreamSourceManagers();
@@ -219,28 +224,24 @@ export class SourceManager {
 
             // See [REQUIREMENT_MEMO], merge settings on series and parent dataset if it is root.
             const newMetaRawOption = this._getSourceMetaRawOption();
-            const upMetaRawOption = upSource ? upSource.metaRawOption : null;
-            const seriesLayoutBy = retrieve2(
-                newMetaRawOption.seriesLayoutBy,
-                upMetaRawOption ? upMetaRawOption.seriesLayoutBy : null
-            );
-            const sourceHeader = retrieve2(
-                newMetaRawOption.sourceHeader,
-                upMetaRawOption ? upMetaRawOption.sourceHeader : null
-            );
+            const upMetaRawOption = upSource ? upSource.metaRawOption : {} as SourceMetaRawOption;
+            const seriesLayoutBy = retrieve2(newMetaRawOption.seriesLayoutBy, upMetaRawOption.seriesLayoutBy) || null;
+            const sourceHeader = retrieve2(newMetaRawOption.sourceHeader, upMetaRawOption.sourceHeader) || null;
             // Note here we should not use `upSource.dimensionsDefine`. Consider the case:
             // `upSource.dimensionsDefine` is detected by `seriesLayoutBy: 'column'`,
             // but series need `seriesLayoutBy: 'row'`.
-            const dimensions = retrieve2(
-                newMetaRawOption.dimensions,
-                upMetaRawOption ? upMetaRawOption.dimensions : null
-            );
+            const dimensions = retrieve2(newMetaRawOption.dimensions, upMetaRawOption.dimensions);
 
-            resultSourceList = [createSource(
+            // We share source with dataset as much as possible
+            // to avoid extra memroy cost of high dimensional data.
+            const needsCreateSource = seriesLayoutBy !== upMetaRawOption.seriesLayoutBy
+                || !!sourceHeader !== !!upMetaRawOption.sourceHeader
+                || dimensions;
+            resultSourceList = needsCreateSource ? [createSource(
                 data,
                 { seriesLayoutBy, sourceHeader, dimensions },
                 sourceFormat
-            )];
+            )] : [];
         }
         else {
             const datasetModel = sourceHost as DatasetModel;
@@ -326,8 +327,7 @@ export class SourceManager {
     }
 
     private _isDirty(): boolean {
-        const sourceList = this._sourceList;
-        if (!sourceList.length) {
+        if (this._dirty) {
             return true;
         }
 
@@ -350,8 +350,16 @@ export class SourceManager {
      * @param sourceIndex By defualt 0, means "main source".
      *                    Most cases there is only one source.
      */
-    getSource(sourceIndex?: number) {
-        return this._sourceList[sourceIndex || 0];
+    getSource(sourceIndex?: number): Source {
+        sourceIndex = sourceIndex || 0;
+        const source = this._sourceList[sourceIndex];
+        if (!source) {
+            // Series may share source instance with dataset.
+            const upSourceMgrList = this._getUpstreamSourceManagers();
+            return upSourceMgrList[0]
+                && upSourceMgrList[0].getSource(sourceIndex);
+        }
+        return source;
     }
 
     /**
