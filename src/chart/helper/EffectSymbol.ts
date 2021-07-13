@@ -98,7 +98,6 @@ class EffectSymbol extends Group {
             });
 
             const delay = -i / effectCount * effectCfg.period + effectCfg.effectOffset;
-            // TODO Configurable effectCfg.period
             ripplePath.animate('', true)
                 .when(effectCfg.period, {
                     scaleX: effectCfg.rippleScale / 2,
@@ -127,7 +126,7 @@ class EffectSymbol extends Group {
         const rippleGroup = this.childAt(1) as Group;
 
         // Must reinitialize effect if following configuration changed
-        const DIFFICULT_PROPS = ['symbolType', 'period', 'rippleScale'] as const;
+        const DIFFICULT_PROPS = ['symbolType', 'period', 'rippleScale', 'effectCount'] as const;
         for (let i = 0; i < DIFFICULT_PROPS.length; i++) {
             const propName = DIFFICULT_PROPS[i];
             if (oldEffectCfg[propName] !== effectCfg[propName]) {
