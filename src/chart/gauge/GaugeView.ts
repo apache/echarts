@@ -568,6 +568,8 @@ class GaugeView extends ChartView {
         const newDetailEls: graphic.Text[] = [];
         const hasAnimation = seriesModel.isAnimationEnabled();
 
+        const showPointerAbove = seriesModel.get(['pointer', 'showAbove']);
+
         data.diff(this._data)
             .add((idx) => {
                 newTitleEls[idx] = new graphic.Text({
@@ -598,6 +600,7 @@ class GaugeView extends ChartView {
                 const titleY = posInfo.cy + parsePercent(titleOffsetCenter[1], posInfo.r);
                 const labelEl = newTitleEls[idx];
                 labelEl.attr({
+                    z2: showPointerAbove ? 0 : 2,
                     style: createTextStyle(itemTitleModel, {
                         x: titleX,
                         y: titleY,
@@ -623,7 +626,7 @@ class GaugeView extends ChartView {
                 const labelEl = newDetailEls[idx];
                 const formatter = itemDetailModel.get('formatter');
                 labelEl.attr({
-                    z2: 10,
+                    z2: showPointerAbove ? 0 : 2,
                     style: createTextStyle(itemDetailModel, {
                         x: detailX,
                         y: detailY,

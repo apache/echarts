@@ -43,6 +43,10 @@ interface LabelFormatter {
 interface PointerOption {
     icon?: string
     show?: boolean
+    /** 
+     * If pointer shows above title and detail
+     */
+    showAbove?: boolean,
     keepAspect?: boolean
     itemStyle?: ItemStyleOption
     /**
@@ -260,6 +264,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             icon: null,
             offsetCenter: [0, 0],
             show: true,
+            showAbove: true,
             length: '60%',
             width: 6,
             keepAspect: false
