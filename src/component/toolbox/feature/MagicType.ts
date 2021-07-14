@@ -130,7 +130,6 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
                     for (let i = 0; i <= axisIndex; i++) {
                         (newOption[axisType] as any)[axisIndex] = (newOption[axisType] as any)[axisIndex] || {};
                     }
-                    (newOption[axisType] as any)[axisIndex].boundaryGap = type === 'bar';
                 }
             }
         };
