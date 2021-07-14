@@ -267,28 +267,25 @@ class DataStorage {
     }
 
     /**
-     * If we using dataset.
-     * Dimensions types may only know when we initializing series.
-     * So we need to sync the type back to storage when initlializing SeriesData back
-     *
-     * Will return false if dimension type has been known and different from given.
-     * We need to recreate a new data storage in this case.
+     * The dimension defines of series may be different with dataset. For example
+     * in dataset one dimension is not ordinal and being parsed to number.
+     * In this case we can't used it in series if we wan't to use it as ordinal. This storage needs to be discarded.
      */
-    syncDimensionTypes(targetDims: DataStorageDimensionInfo[]) {
+    // TODO Can't sure what's frequency will this validate fail and cause datastorage recreate.
+    canUse(targetDims: DataStorageDimensionInfo[]) {
         for (let i = 0; i < targetDims.length; i++) {
             const targetDim = targetDims[i];
             const selfDimIdx = this.getDimensionIndex(targetDim.name);
             const selfDim = this._dimensions[selfDimIdx];
-            const targetDimType = targetDim.type || 'float';
-            if (!selfDim
+            if (
+                !selfDim
                 // Type is different
-                || (selfDim.type && selfDim.type !== targetDimType)
-                // ordinalMeta is differnt. Usually being on the different axis.
+                || selfDim.type || 'float' !== targetDim.type || 'float'
+                // ordinalMeta is different. Usually being on the different axis.
                 || (selfDim.ordinalMeta && selfDim.ordinalMeta !== targetDim.ordinalMeta)
             ) {
                 return false;
             }
-            selfDim.type = targetDimType;
         }
         return true;
     }

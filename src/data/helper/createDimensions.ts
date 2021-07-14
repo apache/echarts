@@ -29,7 +29,7 @@ import {
 } from '../../util/types';
 import SeriesData from '../SeriesData';
 import DataDimensionInfo from '../DataDimensionInfo';
-import { clone, createHashMap, defaults, each, HashMap, isObject, isString, map } from 'zrender/src/core/util';
+import { createHashMap, defaults, each, extend, HashMap, isObject, isString, map } from 'zrender/src/core/util';
 import OrdinalMeta from '../OrdinalMeta';
 import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../Source';
 import DataStorage, { CtorInt32Array } from '../DataStorage';
@@ -106,8 +106,9 @@ export default function createDimensions(
     const coordDimNameMap = createHashMap<true, DimensionName>();
     const result: DataDimensionInfo[] = [];
     const omitUnusedDimensions = opt.omitUnusedDimensions;
+    const isUsingSourceDimensionsDef = dimsDef === source.dimensionsDefine;
     // Try to cache the dimNameMap if the dimensionsDefine is from source.
-    const canCacheDimNameMap = (dimsDef === source.dimensionsDefine && omitUnusedDimensions);
+    const canCacheDimNameMap = (isUsingSourceDimensionsDef && omitUnusedDimensions);
     let dataDimNameMap = canCacheDimNameMap && inner(source).dimNameMap;
     let needsUpdateDataDimNameMap = false;
     if (!dataDimNameMap) {
@@ -210,7 +211,7 @@ export default function createDimensions(
             coordDim = sysDimItem.name;
             const ordinalMeta = sysDimItem.ordinalMeta;
             sysDimItem.ordinalMeta = null;
-            sysDimItem = clone(sysDimItem);
+            sysDimItem = extend({}, sysDimItem);
             sysDimItem.ordinalMeta = ordinalMeta;
             // `coordDimIndex` should not be set directly.
             sysDimItemDimsDef = sysDimItem.dimsDef;
@@ -241,6 +242,10 @@ export default function createDimensions(
         // Apply templates.
         each(dataDims, function (resultDimIdx, coordDimIndex) {
             const resultItem = getResultItem(resultDimIdx);
+            // Coordinate system has a higher priority on dim type than source.
+            if (isUsingSourceDimensionsDef && sysDimItem.type != null) {
+                resultItem.type = sysDimItem.type;
+            }
             applyDim(defaults(resultItem, sysDimItem), coordDim, coordDimIndex);
             if (resultItem.name == null && sysDimItemDimsDef) {
                 let sysDimItemDimsDefItem = sysDimItemDimsDef[coordDimIndex];

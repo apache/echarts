@@ -126,8 +126,8 @@ function createListFromArray(
     const useEncodeDefaulter = opt.useEncodeDefaulter;
 
     // Try to ignore unsed dimensions if sharing a high dimension datastorage
-    // 10 is an experience value.
-    const omitUnusedDimensions = isDataStorage(sourceOrStore) && sourceOrStore.getDimensionCount() > 10;
+    // 30 is an experience value.
+    const omitUnusedDimensions = isDataStorage(sourceOrStore) && sourceOrStore.getDimensionCount() > 30;
     const encodeDefaulter = zrUtil.isFunction(useEncodeDefaulter)
         ? useEncodeDefaulter
         : useEncodeDefaulter
@@ -151,7 +151,7 @@ function createListFromArray(
 
     if (omitUnusedDimensions) {
         // sourceOrStore
-        if (!(sourceOrStore as DataStorage).syncDimensionTypes(dimInfoList)) {
+        if (!(sourceOrStore as DataStorage).canUse(dimInfoList)) {
             dimInfoList = createDimensions(sourceOrStore, zrUtil.extend(createDimensionOptions, {
                 omitUnusedDimensions: true
             }));
