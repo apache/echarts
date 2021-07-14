@@ -390,7 +390,7 @@ class SeriesData<
         const dimensions = this.dimensions;
         const dimensionInfos = map(dimensions, dimName => this._dimensionInfos[dimName]);
         if (data instanceof DataStorage) {
-            if (data.canUse(dimensionInfos)) {
+            if (data.syncDimensionTypes(dimensionInfos)) {
                 store = data;
             }
             // Sync failed

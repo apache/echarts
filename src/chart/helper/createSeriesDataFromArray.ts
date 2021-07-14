@@ -151,7 +151,7 @@ function createListFromArray(
 
     if (omitUnusedDimensions) {
         // sourceOrStore
-        if (!(sourceOrStore as DataStorage).canUse(dimInfoList)) {
+        if (!(sourceOrStore as DataStorage).syncDimensionTypes(dimInfoList)) {
             dimInfoList = createDimensions(sourceOrStore, zrUtil.extend(createDimensionOptions, {
                 omitUnusedDimensions: true
             }));

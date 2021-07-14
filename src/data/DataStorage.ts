@@ -39,20 +39,25 @@ const UNDEFINED = 'undefined';
 export const CtorUint32Array = typeof Uint32Array === UNDEFINED ? Array : Uint32Array;
 export const CtorUint16Array = typeof Uint16Array === UNDEFINED ? Array : Uint16Array;
 export const CtorInt32Array = typeof Int32Array === UNDEFINED ? Array : Int32Array;
-export const CtorFloat64Array = typeof Float64Array === UNDEFINED ? Array : Int32Array;
+export const CtorFloat64Array = typeof Float64Array === UNDEFINED ? Array : Float64Array;
 /**
  * Multi dimensional data storage
  */
- const dataCtors = {
-    'float': typeof Float64Array === UNDEFINED
-        ? Array : Float64Array,
-    'int': typeof Int32Array === UNDEFINED
-        ? Array : Int32Array,
+const dataCtors = {
+    'float': CtorFloat64Array,
+    'int': CtorInt32Array,
     // Ordinal data type can be string or int
     'ordinal': Array,
     'number': Array,
-    'time': Array
+    'time': CtorFloat64Array
 } as const;
+
+// Dim with same category can be convert between.
+const dataCtorCategory = {
+    'float': 0, 'time': 0,
+    'number': 1, 'int': 2,
+    'ordinal': 3
+};
 
 export type DataStorageDimensionType = keyof typeof dataCtors;
 
@@ -267,25 +272,29 @@ class DataStorage {
     }
 
     /**
-     * The dimension defines of series may be different with dataset. For example
-     * in dataset one dimension is not ordinal and being parsed to number.
-     * In this case we can't used it in series if we wan't to use it as ordinal. This storage needs to be discarded.
+     * If we using dataset.
+     * Dimensions types may only know when we initializing series.
+     * So we need to sync the type back to storage when initlializing SeriesData back
+     *
+     * Will return false if dimension type has been known and different from given.
+     * We need to recreate a new data storage in this case.
      */
     // TODO Can't sure what's frequency will this validate fail and cause datastorage recreate.
-    canUse(targetDims: DataStorageDimensionInfo[]) {
+    syncDimensionTypes(targetDims: DataStorageDimensionInfo[]) {
         for (let i = 0; i < targetDims.length; i++) {
             const targetDim = targetDims[i];
             const selfDimIdx = this.getDimensionIndex(targetDim.name);
             const selfDim = this._dimensions[selfDimIdx];
             if (
                 !selfDim
-                // Type is different
-                || selfDim.type || 'float' !== targetDim.type || 'float'
+                // Dim type can be convert between because ctors are compatitable.
+                || dataCtorCategory[selfDim.type || 'float'] !== dataCtorCategory[targetDim.type || 'float']
                 // ordinalMeta is different. Usually being on the different axis.
                 || (selfDim.ordinalMeta && selfDim.ordinalMeta !== targetDim.ordinalMeta)
             ) {
                 return false;
             }
+            selfDim.type = targetDim.type;
         }
         return true;
     }

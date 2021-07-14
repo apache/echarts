@@ -18,7 +18,6 @@
 */
 
 import { ParsedValue, DimensionType } from '../../util/types';
-import OrdinalMeta from '../OrdinalMeta';
 import { parseDate, numericToNumber } from '../../util/number';
 import { createHashMap, trim, hasOwn } from 'zrender/src/core/util';
 import { throwError } from '../../util/log';
