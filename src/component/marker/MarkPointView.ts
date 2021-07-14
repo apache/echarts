@@ -29,7 +29,7 @@ import MarkPointModel, {MarkPointDataItemOption} from './MarkPointModel';
 import GlobalModel from '../../model/Global';
 import MarkerModel from './MarkerModel';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { HashMap, isFunction, map, defaults, filter, curry } from 'zrender/src/core/util';
+import { HashMap, isFunction, map, defaults, filter, curry, extend } from 'zrender/src/core/util';
 import { getECData } from '../../util/innerStore';
 import { getVisualFromData } from '../../visual/helper';
 import { ZRColor } from '../../util/types';
@@ -59,7 +59,6 @@ function updateMarkerLayout(
             const x = mpData.get(coordSys.dimensions[0], idx);
             const y = mpData.get(coordSys.dimensions[1], idx);
             point = coordSys.dataToPoint([x, y]);
-
         }
 
         // Use x, y if has any
@@ -108,7 +107,7 @@ class MarkPointView extends MarkerView {
         const symbolDraw = symbolDrawMap.get(seriesId)
             || symbolDrawMap.set(seriesId, new SymbolDraw());
 
-        const mpData = createList(coordSys, seriesModel, mpModel);
+        const mpData = createData(coordSys, seriesModel, mpModel);
 
         // FIXME
         mpModel.setData(mpData);
@@ -176,7 +175,7 @@ class MarkPointView extends MarkerView {
     }
 }
 
-function createList(
+function createData(
     coordSys: CoordinateSystem,
     seriesModel: SeriesModel,
     mpModel: MarkPointModel
@@ -188,7 +187,11 @@ function createList(
                 seriesModel.getData().mapDimension(coordDim)
             ) || {};
             // In map series data don't have lng and lat dimension. Fallback to same with coordSys
-            return defaults({name: coordDim}, info);
+            return extend(extend({}, info), {
+                name: coordDim,
+                // DON'T use ordinalMeta to parse and collect ordinal.
+                ordinalMeta: null
+            });
         });
     }
     else {

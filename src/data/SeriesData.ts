@@ -658,8 +658,8 @@ class SeriesData<
     getValues(dimensions: readonly DimensionName[] | number, idx?: number): ParsedValue[] {
         const values = [];
         if (!zrUtil.isArray(dimensions)) {
-            // stack = idx;
             idx = dimensions as number;
+            // TODO get all from store?
             dimensions = this.dimensions;
         }
 

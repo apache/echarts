@@ -26,7 +26,7 @@ import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
-import { retrieve, mergeAll, map, defaults, curry, filter, HashMap } from 'zrender/src/core/util';
+import { retrieve, mergeAll, map, defaults, curry, filter, HashMap, extend } from 'zrender/src/core/util';
 import { ScaleDataValue, ParsedValue, ZRColor } from '../../util/types';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import MarkAreaModel, { MarkArea2DDataItemOption } from './MarkAreaModel';
@@ -372,9 +372,11 @@ function createList(
                 data.mapDimension(coordDim)
             ) || {};
             // In map series data don't have lng and lat dimension. Fallback to same with coordSys
-            return defaults({
-                name: coordDim
-            }, info);
+            return extend(extend({}, info), {
+                name: coordDim,
+                // DON'T use ordinalMeta to parse and collect ordinal.
+                ordinalMeta: null
+            });
         });
         areaData = new SeriesData(map(dims, function (dim, idx) {
             return {
