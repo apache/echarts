@@ -796,7 +796,7 @@ class DataStorage {
      */
     map(dims: DimensionIndex[], cb: MapCb): DataStorage {
         // TODO only clone picked chunks.
-        const target = this.clone(dims, true);
+        const target = this.clone(dims);
         const targetChunks = target._chunks;
 
 
@@ -854,7 +854,7 @@ class DataStorage {
         valueDimension: DimensionIndex,
         rate: number
     ) {
-        const target = this.clone([valueDimension]);
+        const target = this.clone([valueDimension], true);
         const targetStorage = target._chunks;
         const dimStore = targetStorage[valueDimension];
         const len = this.count();
@@ -941,7 +941,7 @@ class DataStorage {
         sampleValue: (frameValues: ArrayLike<ParsedValue>) => ParsedValueNumeric,
         sampleIndex: (frameValues: ArrayLike<ParsedValue>, value: ParsedValueNumeric) => number
     ): DataStorage {
-        const target = this.clone([dimension]);
+        const target = this.clone([dimension], true);
         const targetStorage = target._chunks;
 
         const frameValues = [];
@@ -1108,7 +1108,7 @@ class DataStorage {
      *
      * @param clonedDims Determine which dims to clone. Will share the data if not specified.
      */
-    clone(clonedDims?: number[], cloneIndices?: boolean): DataStorage {
+    clone(clonedDims?: number[], ignoreIndices?: boolean): DataStorage {
         const target = new DataStorage();
         const chunks = this._chunks;
         const clonedDimsMap = clonedDims && reduce(clonedDims, (obj, dimIdx) => {
@@ -1128,7 +1128,7 @@ class DataStorage {
         }
         this._copyCommonProps(target);
 
-        if (cloneIndices) {
+        if (!ignoreIndices) {
             target._indices = this._cloneIndices();
         }
         target._updateGetRawIdx();
