@@ -190,7 +190,7 @@ export interface TreemapSeriesOption
         show?: boolean
         height?: number
 
-        emptyItemWidth: number  // With of empty width
+        emptyItemWidth?: number  // With of empty width
         itemStyle?: BreadcrumbItemStyleOption
 
         emphasis?: {
@@ -370,7 +370,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         function beforeLink(nodeData: List) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 const node = tree.getNodeByDataIndex(idx);
-                const levelModel = levelModels[node.depth];
+                const levelModel = node ? levelModels[node.depth] : null;
                 // If no levelModel, we also need `designatedVisualModel`.
                 model.parentModel = levelModel || designatedVisualModel;
                 return model;

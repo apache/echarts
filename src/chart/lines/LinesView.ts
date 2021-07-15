@@ -186,7 +186,6 @@ class LinesView extends ChartView {
             this._hasEffet = hasEffect;
             this._isPolyline = isPolyline;
             this._isLargeDraw = isLargeDraw;
-            this.group.removeAll();
         }
 
         this.group.add(lineDraw.group);
@@ -212,6 +211,10 @@ class LinesView extends ChartView {
         this._lineDraw = null;
         // Clear motion when lineDraw is removed
         this._clearLayer(api);
+    }
+
+    dispose(ecModel: GlobalModel, api: ExtensionAPI) {
+        this.remove(ecModel, api);
     }
 
 }

@@ -20,7 +20,6 @@
 import BaseAxisPointer, {AxisPointerElementOptions} from './BaseAxisPointer';
 import * as viewHelper from './viewHelper';
 import * as cartesianAxisHelper from '../../coord/cartesian/cartesianAxisHelper';
-import AxisView from '../axis/AxisView';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { ScaleDataValue, VerticalAlign, HorizontalAlign, CommonAxisPointerOption } from '../../util/types';

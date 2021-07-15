@@ -46,6 +46,7 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
+import Model from '../model/Model';
 
 
 
@@ -101,10 +102,6 @@ export interface ComponentTypeInfo {
 }
 
 export interface ECElement extends Element {
-    tooltip?: CommonTooltipOption<unknown> & {
-        content?: string;
-        formatterParams?: unknown;
-    };
     highDownSilentOnTouch?: boolean;
     onHoverStateChange?: (toState: DisplayState) => void;
 
@@ -124,13 +121,17 @@ export interface ECElement extends Element {
      * Force disable overall layout
      */
     disableLabelLayout?: boolean
+    /**
+     * Force disable morphing
+     */
+    disableMorphing?: boolean
 }
 
 export interface DataHost {
     getData(dataType?: SeriesDataType): List;
 }
 
-export interface DataModel extends DataHost, DataFormatMixin {}
+export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {}
     // Pick<DataHost, 'getData'>,
     // Pick<DataFormatMixin, 'getDataParams' | 'formatTooltip'> {}
 
@@ -416,7 +417,7 @@ export type DimensionLoose = DimensionName | DimensionIndexLoose;
 export type DimensionType = ListDimensionType;
 
 export const VISUAL_DIMENSIONS = createHashMap<number, keyof DataVisualDimensions>([
-    'tooltip', 'label', 'itemName', 'itemId', 'seriesName'
+    'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'seriesName'
 ]);
 // The key is VISUAL_DIMENSIONS
 export interface DataVisualDimensions {
@@ -427,6 +428,10 @@ export interface DataVisualDimensions {
     label?: DimensionIndex;
     itemName?: DimensionIndex;
     itemId?: DimensionIndex;
+    // Group id is used for linking the aggregate relationship between two set of data.
+    // Which is useful in prepresenting the transition key of drilldown/up animation.
+    // Or hover linking.
+    itemGroupId?: DimensionIndex;
     seriesName?: DimensionIndex;
 }
 
@@ -600,6 +605,7 @@ export type OptionDataItem =
 export type OptionDataItemObject<T> = {
     id?: OptionId;
     name?: OptionName;
+    groupId?: OptionId;
     value?: T[] | T;
     selected?: boolean;
 };
@@ -835,7 +841,7 @@ export interface ShadowOptionMixin {
 }
 
 export interface BorderOptionMixin {
-    borderColor?: string
+    borderColor?: ZRColor
     borderWidth?: number
     borderType?: ZRLineType
     borderCap?: CanvasLineCap
@@ -925,7 +931,7 @@ export interface RoamOptionMixin {
 export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
 export type SymbolCallback<T> = (rawValue: any, params: T) => string;
 export type SymbolRotateCallback<T> = (rawValue: any, params: T) => number;
-// export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => (string | number)[];
+export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => string | number | (string | number)[];
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -944,7 +950,7 @@ export interface SymbolOptionMixin<T = unknown> {
 
     symbolKeepAspect?: boolean
 
-    symbolOffset?: (string | number)[]
+    symbolOffset?: string | number | (string | number)[] | (unknown extends T ? never : SymbolOffsetCallback<T>)
 }
 
 /**
@@ -1218,34 +1224,39 @@ export interface LabelLayoutOption {
 export type LabelLayoutOptionCallback = (params: LabelLayoutOptionCallbackParams) => LabelLayoutOption;
 
 
-interface TooltipFormatterCallback<T> {
+export interface TooltipFormatterCallback<T> {
     /**
      * For sync callback
      * params will be an array on axis trigger.
      */
-    (params: T, asyncTicket: string): string | HTMLElement[]
+    (params: T, asyncTicket: string): string | HTMLElement | HTMLElement[]
     /**
      * For async callback.
      * Returned html string will be a placeholder when callback is not invoked.
      */
-    (params: T, asyncTicket: string, callback: (cbTicket: string, htmlOrDomNodes: string | HTMLElement[]) => void)
-        : string | HTMLElement[]
+    (
+        params: T, asyncTicket: string,
+        callback: (cbTicket: string, htmlOrDomNodes: string | HTMLElement | HTMLElement[]) => void
+    ) : string | HTMLElement | HTMLElement[]
 }
 
 type TooltipBuiltinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom';
 type TooltipBoxLayoutOption = Pick<
     BoxLayoutOptionMixin, 'top' | 'left' | 'right' | 'bottom'
 >;
+
+export type TooltipPositionCallbackParams = CallbackDataParams | CallbackDataParams[];
+
 /**
  * Position relative to the hoverred element. Only available when trigger is item.
  */
-interface PositionCallback {
+export interface TooltipPositionCallback {
     (
         point: [number, number],
         /**
          * params will be an array on axis trigger.
          */
-        params: CallbackDataParams | CallbackDataParams[],
+        params: TooltipPositionCallbackParams,
         /**
          * Will be HTMLDivElement when renderMode is html
          * Otherwise it's graphic.Text
@@ -1265,7 +1276,7 @@ interface PositionCallback {
              */
             viewSize: [number, number]
         }
-    ): number[] | string[] | TooltipBuiltinPosition | TooltipBoxLayoutOption
+    ): Array<number | string> | TooltipBuiltinPosition | TooltipBoxLayoutOption
 }
 /**
  * Common tooltip option
@@ -1292,7 +1303,7 @@ export interface CommonTooltipOption<FormatterParams> {
      *
      * Support to be a callback
      */
-    position?: (number | string)[] | TooltipBuiltinPosition | PositionCallback | TooltipBoxLayoutOption
+    position?: (number | string)[] | TooltipBuiltinPosition | TooltipPositionCallback | TooltipBoxLayoutOption
 
     confine?: boolean
 
@@ -1349,12 +1360,31 @@ export interface CommonTooltipOption<FormatterParams> {
     }
 }
 
+export type ComponentItemTooltipOption<T> = CommonTooltipOption<T> & {
+    // Default content HTML.
+    content?: string;
+    formatterParams?: ComponentItemTooltipLabelFormatterParams;
+};
+export type ComponentItemTooltipLabelFormatterParams = {
+    componentType: string
+    name: string
+    // properies key array like ['name']
+    $vars: string[]
+} & {
+    // Other properties
+    [key in string]: unknown
+};
+
+
 /**
  * Tooltip option configured on each series
  */
 export type SeriesTooltipOption = CommonTooltipOption<CallbackDataParams> & {
     trigger?: 'item' | 'axis' | boolean | 'none'
 };
+
+
+
 
 type LabelFormatterParams = {
     value: ScaleDataValue
@@ -1458,7 +1488,6 @@ export interface ComponentOption {
 
     z?: number;
     zlevel?: number;
-    // FIXME:TS more
 }
 
 export type BlurScope = 'coordinateSystem' | 'series' | 'global';
@@ -1467,7 +1496,7 @@ export type BlurScope = 'coordinateSystem' | 'series' | 'global';
  * can be array of data indices.
  * Or may be an dictionary if have different types of data like in graph.
  */
-export type InnerFocus = string | ArrayLike<number> | Dictionary<ArrayLike<number>>;
+export type InnerFocus = DefaultEmphasisFocus | ArrayLike<number> | Dictionary<ArrayLike<number>>;
 
 export interface DefaultExtraStateOpts {
     emphasis: any
@@ -1519,6 +1548,30 @@ export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStat
     blur?: StateOption & ExtraStateOpts['blur']
 }
 
+export interface UniversalTransitionOption {
+    enabled?: boolean
+    /**
+     * Animation delay of each divided element
+     */
+    delay?: (index: number, count: number) => number
+    /**
+     * How to divide the shape in combine and split animation.
+     */
+    divideShape?: 'clone' | 'split'
+    /**
+     * Series will have transition between if they have same seriesKey.
+     * Usually it is a string. It can also be an array,
+     * which means it can be transition from or to multiple series with each key in this array item.
+     *
+     * Note:
+     * If two series have both array seriesKey. They will be compared after concated to a string(which is order independent)
+     * Transition between string key has higher priority.
+     *
+     * Default to use series id.
+     */
+    seriesKey?: string | string[]
+}
+
 export interface SeriesOption<
     StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
     ComponentOption,
@@ -1537,6 +1590,13 @@ export interface SeriesOption<
      */
     cursor?: string
 
+    /**
+     * groupId of data. can be used for doing drilldown / up animation
+     * It will be ignored if:
+     *  - groupId is specified in each data
+     *  - encode.itemGroupId is given.
+     */
+    dataGroupId?: OptionId
     // Needs to be override
     data?: unknown
 
@@ -1554,7 +1614,6 @@ export interface SeriesOption<
     coordinateSystem?: string
 
     hoverLayerThreshold?: number
-    // FIXME:TS more
 
     /**
      * When dataset is used, seriesLayoutBy specifies whether the column or the row of dataset is mapped to the series
@@ -1576,6 +1635,14 @@ export interface SeriesOption<
     stateAnimation?: AnimationOption
 
     /**
+     * If enabled universal transition cross series.
+     * @example
+     *  universalTransition: true
+     *  universalTransition: { enabled: true }
+     */
+    universalTransition?: boolean | UniversalTransitionOption
+
+    /**
      * Map of selected data
      * key is name or index of data.
      */
@@ -1592,11 +1659,8 @@ export interface SeriesOnCartesianOptionMixin {
 }
 
 export interface SeriesOnPolarOptionMixin {
-    radiusAxisIndex?: number
-    angleAxisIndex?: number
-
-    radiusAxisId?: string
-    angleAxisId?: string
+    polarIndex?: number
+    polarId?: string;
 }
 
 export interface SeriesOnSingleOptionMixin {

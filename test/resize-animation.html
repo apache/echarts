@@ -1,0 +1,113 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            body {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+        </style>
+        <div id="main0"></div>
+
+        <script>
+
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                require([
+                    'echarts'
+                ], function (echarts) {
+                    const option = {
+                        tooltip : {
+                            trigger: 'item',
+                            formatter: "{a} <br/>{b} : {c} ({d}%)"
+                        },
+                        legend: {
+                            orient: 'vertical',
+                            left: 'left',
+                            data: ['直接访问','邮件营销','联盟广告','视频广告(value is null)','搜索引擎']
+                        },
+                        series : [
+                            {
+                                name: '访问来源',
+                                type: 'pie',
+                                radius : '55%',
+                                center: ['50%', '60%'],
+                                selectedMode: 'single',
+                                data:[
+                                    {value:335, name:'直接访问'},
+                                    {value:310, name:'邮件营销'},
+                                    {value:234, name:'联盟广告'},
+                                    {value:null, name:'视频广告(value is null)'},
+                                    {value:1548, name:'搜索引擎'}
+                                ]
+                            }
+                        ]
+                    };
+
+                    var myChart = testHelper.create(echarts, 'main0', {
+                        width: 600,
+                        height: 400,
+                        title: [
+                            'Resize animation should be configured properly'
+                        ],
+                        option: option,
+                        buttons: [{
+                            text: 'Resize without animation by default',
+                            onClick: () => {
+                                myChart.resize({
+                                    width: 400,
+                                    height: 266
+                                })
+                            }
+                        }, {
+                            text: 'Resize with animaiton',
+                            onClick: () => {
+                                myChart.resize({
+                                    width: 300,
+                                    height: 200,
+                                    animation: {
+                                        // Use a long duration so it can be recorded
+                                        duration: 2000,
+                                        easing: 'cubicInOut'
+                                    }
+                                })
+                            }
+                        }]
+                    });
+                });
+
+            });
+        </script>
+    </body>
+</html>

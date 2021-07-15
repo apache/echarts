@@ -1,4 +1,3 @@
-
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -19,126 +18,167 @@ under the License.
 -->
 
 <html>
-    <head>
-        <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
-        <script src="lib/config.js"></script>
-        <link rel="stylesheet" href="lib/reset.css" />
-    </head>
-    <body>
-        <div id="main"></div>
-        <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/treemap',
-            ], function (echarts) {
+<head>
+    <meta charset="utf-8">
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
 
-                var chart = echarts.init(document.getElementById('main'), null, {
+<style>
+    .chart {
+        width: 100%;
+        height: 50%;
+    }
+</style>
 
-                });
+<body>
+    <div id="main1" class="chart"></div>
+    <div id="main2" class="chart"></div>
+    <script>
 
-                chart.setOption({
+        require([
+            'echarts'
+        ], function (echarts) {
 
-                    series: [
-                        {
-                            name:'矩形树图',
-                            type:'treemap',
-                            label: {
-                                normal: {
-                                    // show: false,
-                                    position: 'insideRight'
-                                    // position: ['100%', 10],
-                                    // textStyle: {
-                                    //     align: 'right'
-                                    // }
-                                },
-                                emphasis: {
-                                    show: true
-                                }
-                            },
-                            breadcrumb: {
-                            },
-                            levels: [
-                                {
-                                    itemStyle: {
-                                        normal: {
-                                            borderWidth: 15,
-                                            gapWidth: 30,
-                                            borderColor: '#999'
-                                        }
-                                    }
-                                },
-                                {
-                                    itemStyle: {
-                                        normal: {
-                                            borderWidth: 15,
-                                            gapWidth: 40,
-                                            borderColor: '#333'
-                                        }
-                                    }
-                                },
-                                {
-                                    itemStyle: {
-                                        normal: {
-                                            borderWidth: 10,
-                                            borderColor: '#555570'
-                                        }
-                                    }
-                                }
-                            ],
-                            data:[
-                                {
-                                    name: '三星',
-                                    value: 6,
-                                },
-                                {
-                                    name: '小米',
-                                    value: 4,
-                                    children: [
-                                        {
-                                            name: '小米0',
-                                            value: 10,
-                                            children: [
-                                                {
-                                                    itemStyle: {
-                                                        normal: {
-                                                            color: 'yellow'
-                                                        }
-                                                    },
-                                                    name: '小尺',
-                                                    value: 400
-                                                },
-                                                {
-                                                    name: '小寸',
-                                                    value: 200
-                                                },
-                                                {
-                                                    name: '小光年',
-                                                    value: 100
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            name: '小米1',
-                                            value: 4
-                                        },
-                                        {
-                                            name: '小米2',
-                                            value: 4
-                                        }
-                                    ]
-                                },
-                                {
-                                    name: '中兴',
-                                    value: 1
-                                }
-                            ]
-                        }
-                    ]
-                });
+            var chart = echarts.init(document.getElementById('main1'), null, {
+
             });
 
-        </script>
-    </body>
+            chart.setOption({
+
+                series: [
+                    {
+                        name: '矩形树图',
+                        type: 'treemap',
+                        label: {
+                            normal: {
+                                // show: false,
+                                position: 'insideRight'
+                                // position: ['100%', 10],
+                                // textStyle: {
+                                //     align: 'right'
+                                // }
+                            },
+                            emphasis: {
+                                show: true
+                            }
+                        },
+                        breadcrumb: {
+                        },
+                        levels: [
+                            {
+                                itemStyle: {
+                                    normal: {
+                                        borderWidth: 15,
+                                        gapWidth: 30,
+                                        borderColor: '#999'
+                                    }
+                                }
+                            },
+                            {
+                                itemStyle: {
+                                    normal: {
+                                        borderWidth: 15,
+                                        gapWidth: 40,
+                                        borderColor: '#333'
+                                    }
+                                }
+                            },
+                            {
+                                itemStyle: {
+                                    normal: {
+                                        borderWidth: 10,
+                                        borderColor: '#555570'
+                                    }
+                                }
+                            }
+                        ],
+                        data: [
+                            {
+                                name: '三星',
+                                value: 6,
+                            },
+                            {
+                                name: '小米',
+                                value: 4,
+                                children: [
+                                    {
+                                        name: '小米0',
+                                        value: 10,
+                                        children: [
+                                            {
+                                                itemStyle: {
+                                                    normal: {
+                                                        color: 'yellow'
+                                                    }
+                                                },
+                                                name: '小尺',
+                                                value: 400
+                                            },
+                                            {
+                                                name: '小寸',
+                                                value: 200
+                                            },
+                                            {
+                                                name: '小光年',
+                                                value: 100
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        name: '小米1',
+                                        value: 4
+                                    },
+                                    {
+                                        name: '小米2',
+                                        value: 4
+                                    }
+                                ]
+                            },
+                            {
+                                name: '中兴',
+                                value: 1
+                            }
+                        ]
+                    }
+                ]
+            });
+
+            var chart1 = echarts.init(document.getElementById('main2'));
+            option = {
+                series: [{
+                    label: {
+                        show: false
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            formatter() {
+                                return 11111;
+                            }
+                        }
+                    },
+                    type: 'treemap',
+                    data: [{
+                        name: 'nodeA',            // First tree
+                        value: 10,
+                        children: [{
+                            name: 'nodeAa',       // First leaf of first tree
+                            value: 4
+                        }, {
+                            name: 'nodeAb',       // Second leaf of first tree
+                            value: 6
+                        }]
+                    }]
+                }]
+            };
+
+            chart1.setOption(option);
+        });
+
+    </script>
+</body>
+
 </html>

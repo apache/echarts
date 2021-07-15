@@ -27,7 +27,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -53,39 +53,23 @@ under the License.
             var groupColors = [];
 
             require([
-                'echarts'
-                // 'zrender/tool/color',
-                // 'echarts/chart/parallel',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox',
-                // 'echarts/component/visualMap'
-            ], function (ec) {
+                'echarts',
+                './data/nutrients.json'
+            ], function (ec, data) {
 
-                $.getJSON('./data/nutrients.json', function (data) {
-                    echarts = ec;
-                    colorTool = echarts.color;
-
-                    normalizeData(data);
-
-                    chart = myChart = echarts.init(document.getElementById('main'));
-
-                    console.time('render');
-                    chart.setOption(getOption(data));
-                    console.timeEnd('render');
-
-                    chart.on('axisAreaSelected', function (event) {
-                        // var indices = chart.getModel().getSeries()[0].getRawIndicesByActiveState('active');
-                        // console.log('北京: ', indices);
-                    });
-
-                });
+                echarts = ec;
+                colorTool = echarts.color;
 
                 var indices = {
                     name: 0,
                     group: 1,
                     id: 16
                 };
+
+                normalizeData(data);
+
+                chart = myChart = echarts.init(document.getElementById('main'));
+
                 var schema = [
                     {name: 'name', index: 0},
                     {name: 'group', index: 1},
@@ -157,17 +141,7 @@ under the License.
                             padding: 10,
                             backgroundColor: '#222',
                             borderColor: '#777',
-                            borderWidth: 1,
-                            formatter: function (obj) {
-                                var value = obj[0].value;
-                                return '<div style="border-bottom: 1px solid rgba(255,255,255,.3); font-size: 18px;padding-bottom: 7px;margin-bottom: 7px">'
-                                    + schema[1].name + '：' + value[1] + '<br>'
-                                    + schema[2].name + '：' + value[2] + '<br>'
-                                    + schema[3].name + '：' + value[3] + '<br>'
-                                    + schema[4].name + '：' + value[4] + '<br>'
-                                    + schema[5].name + '：' + value[5] + '<br>'
-                                    + schema[6].name + '：' + value[6] + '<br>';
-                            }
+                            borderWidth: 1
                         },
                         title: [
                             {
@@ -265,6 +239,15 @@ under the License.
                         ]
                     };
                 }
+
+                console.time('render');
+                chart.setOption(getOption(data));
+                console.timeEnd('render');
+
+                chart.on('axisAreaSelected', function (event) {
+                    // var indices = chart.getModel().getSeries()[0].getRawIndicesByActiveState('active');
+                    // console.log('北京: ', indices);
+                });
 
             });
 

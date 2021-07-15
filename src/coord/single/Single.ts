@@ -33,6 +33,7 @@ import SingleAxisModel from './AxisModel';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
 
+export const singleDimensions = ['single'];
 /**
  * Create a single coordinates system.
  */
@@ -44,7 +45,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
     /**
      * Add it just for draw tooltip.
      */
-    readonly dimensions = ['single'];
+    readonly dimensions = singleDimensions;
 
     name: string;
 

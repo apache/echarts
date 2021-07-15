@@ -38,4 +38,9 @@ export default {
         // @ts-ignore
         return init.apply(null, arguments);
     }
-}
+};
+
+// Import label layout by default.
+// TODO remove
+import {installLabelLayout} from './label/installLabelLayout';
+use(installLabelLayout);

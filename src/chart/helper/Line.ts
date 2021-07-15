@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
+import { isArray, each } from 'zrender/src/core/util';
 import * as vector from 'zrender/src/core/vector';
 import * as symbolUtil from '../../util/symbol';
 import ECLinePath from './LinePath';
@@ -29,7 +29,6 @@ import List from '../../data/List';
 import { ZRTextAlign, ZRTextVerticalAlign, LineLabelOption, ColorString } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
-
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
 import Model from '../../model/Model';
@@ -70,12 +69,22 @@ function createSymbol(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: 
 
     const symbolSize = lineData.getItemVisual(idx, name + 'Size' as 'fromSymbolSize' | 'toSymbolSize');
     const symbolRotate = lineData.getItemVisual(idx, name + 'Rotate' as 'fromSymbolRotate' | 'toSymbolRotate');
+    const symbolOffset = lineData.getItemVisual(idx, name + 'Offset' as 'fromSymbolOffset' | 'toSymbolOffset');
+    const symbolKeepAspect = lineData.getItemVisual(idx,
+        name + 'KeepAspect' as 'fromSymbolKeepAspect' | 'toSymbolKeepAspect');
 
-    const symbolSizeArr = zrUtil.isArray(symbolSize)
-        ? symbolSize : [symbolSize, symbolSize];
+    const symbolSizeArr = symbolUtil.normalizeSymbolSize(symbolSize);
+
+    const symbolOffsetArr = symbolUtil.normalizeSymbolOffset(symbolOffset || 0, symbolSizeArr);
+
     const symbolPath = symbolUtil.createSymbol(
-        symbolType, -symbolSizeArr[0] / 2, -symbolSizeArr[1] / 2,
-        symbolSizeArr[0], symbolSizeArr[1]
+        symbolType,
+        -symbolSizeArr[0] / 2 + (symbolOffsetArr as number[])[0],
+        -symbolSizeArr[1] / 2 + (symbolOffsetArr as number[])[1],
+        symbolSizeArr[0],
+        symbolSizeArr[1],
+        null,
+        symbolKeepAspect
     );
 
     (symbolPath as LineECSymbol).__specifiedRotation = symbolRotate == null || isNaN(symbolRotate)
@@ -142,7 +151,7 @@ class Line extends graphic.Group {
 
         this.add(line);
 
-        zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
+        each(SYMBOL_CATEGORIES, function (symbolCategory) {
             const symbol = createSymbol(symbolCategory, lineData, idx);
             // symbols must added after line to make sure
             // it will be updated after line#update.
@@ -167,7 +176,7 @@ class Line extends graphic.Group {
         setLinePoints(target.shape, linePoints);
         graphic.updateProps(line, target, seriesModel, idx);
 
-        zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
+        each(SYMBOL_CATEGORIES, function (symbolCategory) {
             const symbolType = (lineData as LineList).getItemVisual(idx, symbolCategory);
             const key = makeSymbolTypeKey(symbolCategory);
             // Symbol changed
@@ -220,7 +229,7 @@ class Line extends graphic.Group {
         line.ensureState('select').style = selectLineStyle;
 
         // Update symbol
-        zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
+        each(SYMBOL_CATEGORIES, function (symbolCategory) {
             const symbol = this.childOfName(symbolCategory) as ECSymbol;
             if (symbol) {
                 // Share opacity and color with line.
@@ -275,7 +284,7 @@ class Line extends graphic.Group {
             label.__position = labelNormalModel.get('position') || 'middle';
 
             let distance = labelNormalModel.get('distance');
-            if (!zrUtil.isArray(distance)) {
+            if (!isArray(distance)) {
                 distance = [distance, distance];
             }
             label.__labelDistance = distance;

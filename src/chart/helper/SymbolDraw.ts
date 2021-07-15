@@ -32,7 +32,8 @@ import {
     ZRStyleProps,
     StatesOptionMixin,
     BlurScope,
-    DisplayState
+    DisplayState,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
@@ -82,7 +83,12 @@ interface RippleEffectOption {
 
     brushType?: 'fill' | 'stroke'
 
-    color?: ZRColor
+    color?: ZRColor,
+
+    /**
+     * ripple number
+     */
+    number?: number
 }
 
 interface SymbolDrawStateOption {
@@ -94,7 +100,7 @@ interface SymbolDrawStateOption {
 export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object>,
     StatesOptionMixin<SymbolDrawStateOption, {
         emphasis?: {
-            focus?: string
+            focus?: DefaultEmphasisFocus
             scale?: boolean
         }
     }>,
@@ -111,11 +117,8 @@ export interface SymbolDrawSeriesScope {
     blurItemStyle?: ZRStyleProps
     selectItemStyle?: ZRStyleProps
 
-    focus?: string
+    focus?: DefaultEmphasisFocus
     blurScope?: BlurScope
-
-    symbolRotate?: ScatterSeriesOption['symbolRotate']
-    symbolOffset?: (number | string)[]
 
     labelStatesModels: Record<DisplayState, Model<LabelOption>>
 
@@ -138,8 +141,6 @@ function makeSeriesScope(data: List): SymbolDrawSeriesScope {
         focus: emphasisModel.get('focus'),
         blurScope: emphasisModel.get('blurScope'),
 
-        symbolRotate: seriesModel.get('symbolRotate'),
-        symbolOffset: seriesModel.get('symbolOffset'),
         hoverScale: emphasisModel.get('scale'),
 
         labelStatesModels: getLabelStatesModels(seriesModel),
@@ -148,7 +149,7 @@ function makeSeriesScope(data: List): SymbolDrawSeriesScope {
     };
 }
 
-type ListForSymbolDraw = List<Model<SymbolDrawItemModelOption & AnimationOptionMixin>>;
+export type ListForSymbolDraw = List<Model<SymbolDrawItemModelOption & AnimationOptionMixin>>;
 
 class SymbolDraw {
     group = new graphic.Group();
@@ -210,8 +211,17 @@ class SymbolDraw {
                     group.remove(symbolEl);
                     return;
                 }
-                if (!symbolEl) {
-                    symbolEl = new SymbolCtor(data, newIdx);
+                const newSymbolType = data.getItemVisual(newIdx, 'symbol') || 'circle';
+                const oldSymbolType = symbolEl
+                    && (symbolEl as SymbolClz).getSymbolType
+                    && (symbolEl as SymbolClz).getSymbolType();
+
+                if (!symbolEl
+                    // Create a new if symbol type changed.
+                    || (oldSymbolType && oldSymbolType !== newSymbolType)
+                ) {
+                    group.remove(symbolEl);
+                    symbolEl = new SymbolCtor(data, newIdx, seriesScope, symbolUpdateOpt);
                     symbolEl.setPosition(point);
                 }
                 else {

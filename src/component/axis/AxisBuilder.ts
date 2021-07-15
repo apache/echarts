@@ -23,7 +23,7 @@ import {getECData} from '../../util/innerStore';
 import {createTextStyle} from '../../label/labelStyle';
 import Model from '../../model/Model';
 import {isRadianAroundZero, remRadian} from '../../util/number';
-import {createSymbol} from '../../util/symbol';
+import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
 import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
 import {shouldShowAllLabels} from '../../coord/axisHelper';
@@ -33,7 +33,6 @@ import { AxisBaseOption } from '../../coord/axisCommonTypes';
 import Element from 'zrender/src/Element';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import OrdinalScale from '../../scale/Ordinal';
-
 
 const PI = Math.PI;
 
@@ -46,14 +45,6 @@ type AxisEventData = {
     targetType: 'axisName' | 'axisLabel'
     name?: string
     value?: string | number
-} & {
-    [key in AxisIndexKey]?: number
-};
-
-type LabelFormatterParams = {
-    componentType: string
-    name: string
-    $vars: ['name']
 } & {
     [key in AxisIndexKey]?: number
 };
@@ -291,14 +282,10 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         group.add(line);
 
         let arrows = axisModel.get(['axisLine', 'symbol']);
-        let arrowSize = axisModel.get(['axisLine', 'symbolSize']);
-
-        let arrowOffset = axisModel.get(['axisLine', 'symbolOffset']) || 0;
-        if (typeof arrowOffset === 'number') {
-            arrowOffset = [arrowOffset, arrowOffset];
-        }
 
         if (arrows != null) {
+            let arrowSize = axisModel.get(['axisLine', 'symbolSize']);
+
             if (typeof arrows === 'string') {
                 // Use the same arrow for start and end point
                 arrows = [arrows, arrows];
@@ -309,6 +296,8 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
                 // Use the same size for width and height
                 arrowSize = [arrowSize, arrowSize];
             }
+
+            const arrowOffset = normalizeSymbolOffset(axisModel.get(['axisLine', 'symbolOffset']) || 0, arrowSize);
 
             const symbolWidth = arrowSize[0];
             const symbolHeight = arrowSize[1];
@@ -422,16 +411,6 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             opt.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth
         );
 
-        const tooltipOpt = axisModel.get('tooltip', true);
-
-        const mainType = axisModel.mainType;
-        const formatterParams: LabelFormatterParams = {
-            componentType: mainType,
-            name: name,
-            $vars: ['name']
-        };
-        formatterParams[mainType + 'Index' as AxisIndexKey] = axisModel.componentIndex;
-
         const textEl = new graphic.Text({
             x: pos[0],
             y: pos[1],
@@ -452,15 +431,13 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             }),
             z2: 1
         }) as AxisLabelText;
-        textEl.tooltip = (tooltipOpt && tooltipOpt.show)
-            ? extend({
-                content: name,
-                formatter() {
-                    return name;
-                },
-                formatterParams: formatterParams
-            }, tooltipOpt)
-            : null;
+
+        graphic.setTooltipConfig({
+            el: textEl,
+            componentModel: axisModel,
+            itemName: name
+        });
+
         textEl.__fullText = name;
         // Id for animation
         textEl.anid = 'name';

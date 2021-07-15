@@ -20,6 +20,7 @@
 import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
 import {extend, defaults, each, map} from 'zrender/src/core/util';
+import {BuiltinTextPosition} from 'zrender/src/core/types';
 import {
     Rect,
     Sector,
@@ -46,7 +47,7 @@ import {
     OrdinalNumber,
     ParsedValue
 } from '../../util/types';
-import BarSeriesModel, {BarSeriesOption, BarDataItemOption} from './BarSeries';
+import BarSeriesModel, {BarSeriesOption, BarDataItemOption, PolarBarLabelPosition} from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
@@ -60,9 +61,9 @@ import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import {LayoutRect} from '../../util/layout';
 import {EventCallback} from 'zrender/src/core/Eventful';
 import { warn } from '../../util/log';
+import {createSectorCalculateTextPosition, SectorTextPosition, setSectorTextRotation} from '../../label/sectorLabel';
+import { saveOldStyle } from '../../animation/basicTrasition';
 
-const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
-const BAR_BORDER_RADIUS_QUERY = ['itemStyle', 'borderRadius'] as const;
 const _eventPos = [0, 0];
 
 const mathMax = Math.max;
@@ -119,7 +120,7 @@ class BarView extends ChartView {
     private _isLargeDraw: boolean;
 
     private _isFirstFrame: boolean; // First frame after series added
-    private _onRendered: EventCallback<unknown, unknown>;
+    private _onRendered: EventCallback;
 
     private _backgroundGroup: Group;
 
@@ -243,7 +244,7 @@ class BarView extends ChartView {
                 }
 
                 // If dataZoom in filteMode: 'empty', the baseValue can be set as NaN in "axisProxy".
-                if (!data.hasValue(dataIndex)) {
+                if (!data.hasValue(dataIndex) || !isValidLayout[coord.type](layout)) {
                     return;
                 }
 
@@ -314,13 +315,12 @@ class BarView extends ChartView {
                     }
                     const bgLayout = getLayout[coord.type](data, newIndex);
                     const shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
-                    updateProps(bgEl, { shape: shape }, animationModel, newIndex);
+                    updateProps(bgEl, { shape }, animationModel, newIndex);
                 }
 
                 let el = oldData.getItemGraphicEl(oldIndex) as BarPossiblePath;
-                if (!data.hasValue(newIndex)) {
+                if (!data.hasValue(newIndex) || !isValidLayout[coord.type](layout)) {
                     group.remove(el);
-                    el = null;
                     return;
                 }
 
@@ -344,6 +344,9 @@ class BarView extends ChartView {
                         !!el,
                         roundCap
                     );
+                }
+                else {
+                    saveOldStyle(el);
                 }
 
                 // Not change anything if only order changed.
@@ -581,12 +584,7 @@ class BarView extends ChartView {
             componentType: baseAxis.dim + 'Axis',
             isInitSort: true,
             axisId: baseAxis.index,
-            sortInfo: sortResult,
-            animation: {
-                // Update the axis label from the natural initial layout to
-                // sorted layout should has no animation.
-                duration: 0
-            }
+            sortInfo: sortResult
         });
     }
 
@@ -763,6 +761,9 @@ const elementCreator: {
 
         sector.name = 'item';
 
+        const positionMap = createPolarPositionMapping(isRadial);
+        sector.calculateTextPosition = createSectorCalculateTextPosition<PolarBarLabelPosition>(positionMap);
+
         // Animation
         if (animationModel) {
             const sectorShape = sector.shape;
@@ -851,6 +852,28 @@ function updateRealtimeAnimation(
     }, axisAnimationModel, newIndex);
 }
 
+function checkPropertiesNotValid<T extends Record<string, any>>(obj: T, props: readonly (keyof T)[]) {
+    for (let i = 0; i < props.length; i++) {
+        if (!isFinite(obj[props[i]])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+const rectPropties = ['x', 'y', 'width', 'height'] as const;
+const polarPropties = ['cx', 'cy', 'r', 'startAngle', 'endAngle'] as const;
+const isValidLayout: Record<'cartesian2d' | 'polar', (layout: RectLayout | SectorLayout) => boolean> = {
+    cartesian2d(layout: RectLayout) {
+        return !checkPropertiesNotValid(layout, rectPropties);
+    },
+
+    polar(layout: SectorLayout) {
+        return !checkPropertiesNotValid(layout, polarPropties);
+    }
+} as const;
+
 interface GetLayout {
     (data: List, dataIndex: number, itemModel?: Model<BarDataItemOption>): RectLayout | SectorLayout
 }
@@ -893,19 +916,37 @@ function isZeroOnPolar(layout: SectorLayout) {
         && layout.startAngle === layout.endAngle;
 }
 
+function createPolarPositionMapping(isRadial: boolean)
+    : (position: PolarBarLabelPosition) => SectorTextPosition {
+    return ((isRadial: boolean) => {
+        const arcOrAngle = isRadial ? 'Arc' : 'Angle';
+        return (position: PolarBarLabelPosition) => {
+            switch (position) {
+                case 'start':
+                case 'insideStart':
+                case 'end':
+                case 'insideEnd':
+                    return position + arcOrAngle as SectorTextPosition;
+                default:
+                    return position;
+            }
+        };
+    })(isRadial);
+}
+
 function updateStyle(
     el: BarPossiblePath,
     data: List, dataIndex: number,
     itemModel: Model<BarDataItemOption>,
     layout: RectLayout | SectorLayout,
     seriesModel: BarSeriesModel,
-    isHorizontal: boolean,
+    isHorizontalOrRadial: boolean,
     isPolar: boolean
 ) {
     const style = data.getItemVisual(dataIndex, 'style');
 
     if (!isPolar) {
-        (el as Rect).setShape('r', itemModel.get(BAR_BORDER_RADIUS_QUERY) || 0);
+        (el as Rect).setShape('r', itemModel.get(['itemStyle', 'borderRadius']) || 0);
     }
 
     el.useStyle(style);
@@ -913,33 +954,50 @@ function updateStyle(
     const cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && (el as Path).attr('cursor', cursorStyle);
 
-    if (!isPolar) {
-        const labelPositionOutside = isHorizontal
-            ? ((layout as RectLayout).height > 0 ? 'bottom' as const : 'top' as const)
-            : ((layout as RectLayout).width > 0 ? 'left' as const : 'right' as const);
-        const labelStatesModels = getLabelStatesModels(itemModel);
+    const labelPositionOutside = isPolar
+        ? (isHorizontalOrRadial
+            ? ((layout as SectorLayout).r >= (layout as SectorLayout).r0 ? 'endArc' as const : 'startArc' as const)
+            : ((layout as SectorLayout).endAngle >= (layout as SectorLayout).startAngle
+                ? 'endAngle' as const
+                : 'startAngle' as const
+            )
+        )
+        : (isHorizontalOrRadial
+            ? ((layout as RectLayout).height >= 0 ? 'bottom' as const : 'top' as const)
+            : ((layout as RectLayout).width >= 0 ? 'right' as const : 'left' as const));
 
-        setLabelStyle(
-            el, labelStatesModels,
-            {
-                labelFetcher: seriesModel,
-                labelDataIndex: dataIndex,
-                defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
-                inheritColor: style.fill as ColorString,
-                defaultOpacity: style.opacity,
-                defaultOutsidePosition: labelPositionOutside
-            }
-        );
+    const labelStatesModels = getLabelStatesModels(itemModel);
 
-        const label = el.getTextContent();
+    setLabelStyle(
+        el, labelStatesModels,
+        {
+            labelFetcher: seriesModel,
+            labelDataIndex: dataIndex,
+            defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
+            inheritColor: style.fill as ColorString,
+            defaultOpacity: style.opacity,
+            defaultOutsidePosition: labelPositionOutside as BuiltinTextPosition
+        }
+    );
 
-        setLabelValueAnimation(
-            label,
-            labelStatesModels,
-            seriesModel.getRawValue(dataIndex) as ParsedValue,
-            (value: number) => getDefaultInterpolatedLabel(data, value)
+    const label = el.getTextContent();
+    if (isPolar && label) {
+        const position = itemModel.get(['label', 'position']);
+        el.textConfig.inside = position === 'middle' ? true : null;
+        setSectorTextRotation(
+            el as Sector,
+            position === 'outside' ? labelPositionOutside : position,
+            createPolarPositionMapping(isHorizontalOrRadial),
+            itemModel.get(['label', 'rotate'])
         );
     }
+
+    setLabelValueAnimation(
+        label,
+        labelStatesModels,
+        seriesModel.getRawValue(dataIndex) as ParsedValue,
+        (value: number) => getDefaultInterpolatedLabel(data, value)
+    );
 
     const emphasisModel = itemModel.getModel(['emphasis']);
     enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
@@ -961,7 +1019,12 @@ function getLineWidth(
     itemModel: Model<BarDataItemOption>,
     rawLayout: RectLayout
 ) {
-    const lineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0;
+    // Has no border.
+    const borderColor = itemModel.get(['itemStyle', 'borderColor']);
+    if (!borderColor || borderColor === 'none') {
+        return 0;
+    }
+    const lineWidth = itemModel.get(['itemStyle', 'borderWidth']) || 0;
     // width or height may be NaN for empty data
     const width = isNaN(rawLayout.width) ? Number.MAX_VALUE : Math.abs(rawLayout.width);
     const height = isNaN(rawLayout.height) ? Number.MAX_VALUE : Math.abs(rawLayout.height);

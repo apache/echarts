@@ -17,18 +17,14 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
-import {createSymbol} from '../../util/symbol';
+import {createSymbol, normalizeSymbolOffset, normalizeSymbolSize} from '../../util/symbol';
 import {Group, Path} from '../../util/graphic';
 import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
-import {parsePercent} from '../../util/number';
 import SymbolClz from './Symbol';
 import List from '../../data/List';
 import type { ZRColor, ECElement } from '../../util/types';
 import type Displayable from 'zrender/src/graphic/Displayable';
 import { SymbolDrawItemModelOption } from './SymbolDraw';
-
-const EFFECT_RIPPLE_NUMBER = 3;
 
 interface RippleEffectCfg {
     showEffectOn?: 'emphasis' | 'render'
@@ -40,14 +36,8 @@ interface RippleEffectCfg {
     zlevel?: number
     symbolType?: string
     color?: ZRColor
-    rippleEffectColor?: ZRColor
-}
-
-function normalizeSymbolSize(symbolSize: number | number[]): number[] {
-    if (!zrUtil.isArray(symbolSize)) {
-        symbolSize = [+symbolSize, +symbolSize];
-    }
-    return symbolSize;
+    rippleEffectColor?: ZRColor,
+    rippleNumber?: number
 }
 
 function updateRipplePath(rippleGroup: Group, effectCfg: RippleEffectCfg) {
@@ -87,9 +77,10 @@ class EffectSymbol extends Group {
     startEffectAnimation(effectCfg: RippleEffectCfg) {
         const symbolType = effectCfg.symbolType;
         const color = effectCfg.color;
+        const rippleNumber = effectCfg.rippleNumber;
         const rippleGroup = this.childAt(1) as Group;
 
-        for (let i = 0; i < EFFECT_RIPPLE_NUMBER; i++) {
+        for (let i = 0; i < rippleNumber; i++) {
             // If width/height are set too small (e.g., set to 1) on ios10
             // and macOS Sierra, a circle stroke become a rect, no matter what
             // the scale is set. So we set width/height as 2. See #4136.
@@ -106,11 +97,11 @@ class EffectSymbol extends Group {
                 scaleY: 0.5
             });
 
-            const delay = -i / EFFECT_RIPPLE_NUMBER * effectCfg.period + effectCfg.effectOffset;
-            // TODO Configurable effectCfg.period
+            const delay = -i / rippleNumber * effectCfg.period + effectCfg.effectOffset;
             ripplePath.animate('', true)
                 .when(effectCfg.period, {
-                    scale: [effectCfg.rippleScale / 2, effectCfg.rippleScale / 2]
+                    scaleX: effectCfg.rippleScale / 2,
+                    scaleY: effectCfg.rippleScale / 2
                 })
                 .delay(delay)
                 .start();
@@ -135,7 +126,7 @@ class EffectSymbol extends Group {
         const rippleGroup = this.childAt(1) as Group;
 
         // Must reinitialize effect if following configuration changed
-        const DIFFICULT_PROPS = ['symbolType', 'period', 'rippleScale'] as const;
+        const DIFFICULT_PROPS = ['symbolType', 'period', 'rippleScale', 'rippleNumber'] as const;
         for (let i = 0; i < DIFFICULT_PROPS.length; i++) {
             const propName = DIFFICULT_PROPS[i];
             if (oldEffectCfg[propName] !== effectCfg[propName]) {
@@ -162,6 +153,11 @@ class EffectSymbol extends Group {
         leaveEmphasis(this);
     }
 
+    getSymbolType() {
+        const symbol = this.childAt(0) as SymbolClz;
+        return symbol && symbol.getSymbolType();
+    }
+
     /**
      * Update symbol properties
      */
@@ -184,11 +180,12 @@ class EffectSymbol extends Group {
             ripplePath.setStyle('fill', color);
         });
 
-        const symbolOffset = itemModel.getShallow('symbolOffset');
+        const symbolOffset = normalizeSymbolOffset(data.getItemVisual(idx, 'symbolOffset'), symbolSize);
         if (symbolOffset) {
-            rippleGroup.x = parsePercent(symbolOffset[0], symbolSize[0]);
-            rippleGroup.y = parsePercent(symbolOffset[1], symbolSize[1]);
+            rippleGroup.x = symbolOffset[0];
+            rippleGroup.y = symbolOffset[1];
         }
+
         const symbolRotate = data.getItemVisual(idx, 'symbolRotate');
         rippleGroup.rotation = (symbolRotate || 0) * Math.PI / 180 || 0;
 
@@ -204,6 +201,7 @@ class EffectSymbol extends Group {
         effectCfg.symbolType = symbolType;
         effectCfg.color = color;
         effectCfg.rippleEffectColor = itemModel.get(['rippleEffect', 'color']);
+        effectCfg.rippleNumber = itemModel.get(['rippleEffect', 'number']);
 
         this.off('mouseover').off('mouseout').off('emphasis').off('normal');
 
@@ -245,6 +243,5 @@ class EffectSymbol extends Group {
     };
 
 }
-zrUtil.inherits(EffectSymbol, Group);
 
 export default EffectSymbol;

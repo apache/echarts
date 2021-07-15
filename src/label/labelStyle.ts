@@ -30,7 +30,8 @@ import {
     ColorString,
     ZRStyleProps,
     AnimationOptionMixin,
-    InterpolatableValue
+    InterpolatableValue,
+    SeriesDataType
 } from '../util/types';
 import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
@@ -39,6 +40,7 @@ import { deprecateReplaceLog } from '../util/log';
 import { makeInner, interpolateRawValues } from '../util/model';
 import List from '../data/List';
 import { initProps, updateProps } from '../util/graphic';
+import { getECData } from '../util/innerStore';
 
 type TextCommonParams = {
     /**
@@ -672,7 +674,6 @@ export function setLabelValueAnimation(
     const obj = labelInner(label);
     obj.prevValue = obj.value;
     obj.value = value;
-
     const normalLabelModel = labelStatesModels.normal;
 
     obj.valueAnimation = normalLabelModel.get('valueAnimation');
@@ -709,6 +710,7 @@ export function animateLabelValue(
             targetValue,
             percent
         );
+
         labelInnerStore.interpolatedValue = percent === 1 ? null : interpolated;
 
         const labelText = getLabelText({
@@ -722,7 +724,7 @@ export function animateLabelValue(
         setLabelText(textEl, labelText);
     }
 
-    (currValue == null
+    (labelInnerStore.prevValue == null
         ? initProps
         : updateProps
     )(textEl, {}, animatableModel, dataIndex, null, during);

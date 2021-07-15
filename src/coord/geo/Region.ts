@@ -22,10 +22,38 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import * as bbox from 'zrender/src/core/bbox';
 import * as vec2 from 'zrender/src/core/vector';
 import * as polygonContain from 'zrender/src/contain/polygon';
-import { GeoJSON } from './geoTypes';
+import { GeoJSON, GeoSVGGraphicRoot } from './geoTypes';
+import * as matrix from 'zrender/src/core/matrix';
+import Element from 'zrender/src/Element';
+
+const TMP_TRANSFORM = [] as number[];
+
+export class Region {
+
+    readonly name: string;
+    readonly type: 'geoJSON' | 'geoSVG';
+
+    constructor(
+        name: string
+    ) {
+        this.name = name;
+    }
+
+    /**
+     * Get center point in data unit. That is,
+     * for GeoJSONRegion, the unit is lat/lng,
+     * for GeoSVGRegion, the unit is SVG local coord.
+     */
+    getCenter(): number[] {
+        return;
+    }
+
+}
 
 
-class Region {
+export class GeoJSONRegion extends Region {
+
+    readonly type = 'geoJSON';
 
     readonly geometries: {
         type: 'polygon'; // FIXME:TS Is there other types?
@@ -33,9 +61,7 @@ class Region {
         interiors?: number[][][];
     }[];
 
-    readonly name: string;
-
-    center: number[];
+    private _center: number[];
 
     // Injected outside.
     properties: GeoJSON['features'][0]['properties'];
@@ -45,10 +71,11 @@ class Region {
 
     constructor(
         name: string,
-        geometries: Region['geometries'],
+        geometries: GeoJSONRegion['geometries'],
         cp: GeoJSON['features'][0]['properties']['cp']
     ) {
-        this.name = name;
+        super(name);
+
         this.geometries = geometries;
 
         if (!cp) {
@@ -61,7 +88,7 @@ class Region {
         else {
             cp = [cp[0], cp[1]];
         }
-        this.center = cp;
+        this._center = cp;
     }
 
     getBoundingRect(): BoundingRect {
@@ -155,20 +182,81 @@ class Region {
         rect = this._rect;
         rect.copy(target);
         // Update center
-        this.center = [
+        this._center = [
             rect.x + rect.width / 2,
             rect.y + rect.height / 2
         ];
     }
 
-    cloneShallow(name: string): Region {
+    cloneShallow(name: string): GeoJSONRegion {
         name == null && (name = this.name);
-        const newRegion = new Region(name, this.geometries, this.center);
+        const newRegion = new GeoJSONRegion(name, this.geometries, this._center);
         newRegion._rect = this._rect;
         newRegion.transformTo = null; // Simply avoid to be called.
         return newRegion;
     }
 
+    getCenter() {
+        return this._center;
+    }
+
+    setCenter(center: number[]) {
+        this._center = center;
+    }
+
 }
 
-export default Region;
+export class GeoSVGRegion extends Region {
+
+    readonly type = 'geoSVG';
+
+    private _center: number[];
+
+    // Can only be used to calculate, but not be modified.
+    // Becuase this el may not belongs to this view,
+    // but been displaying on some other view.
+    private _elOnlyForCalculate: Element;
+
+    constructor(
+        name: string,
+        elOnlyForCalculate: Element
+    ) {
+        super(name);
+        this._elOnlyForCalculate = elOnlyForCalculate;
+    }
+
+    getCenter() {
+        let center = this._center;
+        if (!center) {
+            // In most cases there are no need to calculate this center.
+            // So calculate only when called.
+            center = this._center = this._calculateCenter();
+        }
+        return center;
+    }
+
+    private _calculateCenter(): number[] {
+        const el = this._elOnlyForCalculate;
+        const rect = el.getBoundingRect();
+        const center = [
+            rect.x + rect.width / 2,
+            rect.y + rect.height / 2
+        ];
+
+        const mat = matrix.identity(TMP_TRANSFORM);
+
+        let target = el;
+        while (target && !(target as GeoSVGGraphicRoot).isGeoSVGGraphicRoot) {
+            matrix.mul(mat, target.getLocalTransform(), mat);
+            target = target.parent;
+        }
+
+        matrix.invert(mat, mat);
+
+        vec2.applyTransform(center, center, mat);
+
+        return center;
+    }
+
+}
+
