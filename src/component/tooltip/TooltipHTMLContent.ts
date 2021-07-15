@@ -408,24 +408,26 @@ class TooltipHTMLContent {
     }
 
     setContent(
-        content: string | HTMLElement[],
+        content: string | HTMLElement | HTMLElement[],
         markers: unknown,
         tooltipModel: Model<TooltipOption>,
         borderColor?: ZRColor,
         arrowPosition?: TooltipOption['position']
     ) {
+        const el = this.el;
+
         if (content == null) {
+            el.innerHTML = '';
             return;
         }
 
-        const el = this.el;
-
+        let arrow = '';
         if (isString(arrowPosition) && tooltipModel.get('trigger') === 'item'
             && !shouldTooltipConfine(tooltipModel)) {
-            content += assembleArrow(tooltipModel, borderColor, arrowPosition);
+            arrow = assembleArrow(tooltipModel, borderColor, arrowPosition);
         }
         if (isString(content)) {
-            el.innerHTML = content;
+            el.innerHTML = content + arrow;
         }
         else if (content) {
             // Clear previous
@@ -437,6 +439,14 @@ class TooltipHTMLContent {
                 if (isDom(content[i]) && content[i].parentNode !== el) {
                     el.appendChild(content[i]);
                 }
+            }
+            // no arrow if empty
+            if (arrow && el.childNodes.length) {
+                // no need to create a new parent element, but it's not supported by IE 10 and older.
+                // const arrowEl = document.createRange().createContextualFragment(arrow);
+                const arrowEl = document.createElement('div');
+                arrowEl.innerHTML = arrow;
+                el.appendChild(arrowEl);
             }
         }
     }
