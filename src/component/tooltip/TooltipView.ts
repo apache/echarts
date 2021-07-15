@@ -784,7 +784,7 @@ class TooltipView extends ComponentView {
 
         const formatter = tooltipModel.get('formatter');
         positionExpr = positionExpr || tooltipModel.get('position');
-        let html: string | HTMLElement[] = defaultHtml;
+        let html: string | HTMLElement | HTMLElement[] = defaultHtml;
         const nearPoint = this._getNearestPoint(
             [x, y],
             params,
@@ -793,27 +793,32 @@ class TooltipView extends ComponentView {
         );
         const nearPointColor = nearPoint.color;
 
-        if (formatter && zrUtil.isString(formatter)) {
-            const useUTC = tooltipModel.ecModel.get('useUTC');
-            const params0 = zrUtil.isArray(params) ? params[0] : params;
-            const isTimeAxis = params0 && params0.axisType && params0.axisType.indexOf('time') >= 0;
-            html = formatter;
-            if (isTimeAxis) {
-                html = timeFormat(params0.axisValue, html, useUTC);
-            }
-            html = formatUtil.formatTpl(html, params, true);
-        }
-        else if (zrUtil.isFunction(formatter)) {
-            const callback = bind(function (cbTicket: string, html: string | HTMLElement[]) {
-                if (cbTicket === this._ticket) {
-                    tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPointColor, positionExpr);
-                    this._updatePosition(
-                        tooltipModel, positionExpr, x, y, tooltipContent, params, el
-                    );
+        if (formatter) {
+            if (zrUtil.isString(formatter)) {
+                const useUTC = tooltipModel.ecModel.get('useUTC');
+                const params0 = zrUtil.isArray(params) ? params[0] : params;
+                const isTimeAxis = params0 && params0.axisType && params0.axisType.indexOf('time') >= 0;
+                html = formatter;
+                if (isTimeAxis) {
+                    html = timeFormat(params0.axisValue, html, useUTC);
                 }
-            }, this);
-            this._ticket = asyncTicket;
-            html = formatter(params, asyncTicket, callback);
+                html = formatUtil.formatTpl(html, params, true);
+            }
+            else if (zrUtil.isFunction(formatter)) {
+                const callback = bind(function (cbTicket: string, html: string | HTMLElement | HTMLElement[]) {
+                    if (cbTicket === this._ticket) {
+                        tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPointColor, positionExpr);
+                        this._updatePosition(
+                            tooltipModel, positionExpr, x, y, tooltipContent, params, el
+                        );
+                    }
+                }, this);
+                this._ticket = asyncTicket;
+                html = formatter(params, asyncTicket, callback);
+            }
+            else {
+                html = formatter;
+            }
         }
 
         tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPointColor, positionExpr);
@@ -894,7 +899,7 @@ class TooltipView extends ComponentView {
         // Specify tooltip position by string 'top' 'bottom' 'left' 'right' around graphic element
         else if (zrUtil.isString(positionExpr) && el) {
             const pos = calcTooltipPosition(
-                positionExpr, rect, contentSize
+                positionExpr, rect, contentSize, tooltipModel.get('borderWidth'),
             );
             x = pos[0];
             y = pos[1];
@@ -1089,12 +1094,12 @@ function confineTooltipPosition(
 function calcTooltipPosition(
     position: TooltipOption['position'],
     rect: ZRRectLike,
-    contentSize: number[]
+    contentSize: number[],
+    borderWidth: number
 ): [number, number] {
     const domWidth = contentSize[0];
     const domHeight = contentSize[1];
-    const gap = 10;
-    const offset = 5;
+    const offset = Math.max(Math.ceil(Math.sqrt(2 * borderWidth * borderWidth)), 5);
     let x = 0;
     let y = 0;
     const rectWidth = rect.width;
@@ -1106,18 +1111,18 @@ function calcTooltipPosition(
             break;
         case 'top':
             x = rect.x + rectWidth / 2 - domWidth / 2;
-            y = rect.y - domHeight - gap;
+            y = rect.y - domHeight - offset;
             break;
         case 'bottom':
             x = rect.x + rectWidth / 2 - domWidth / 2;
-            y = rect.y + rectHeight + gap;
+            y = rect.y + rectHeight + offset;
             break;
         case 'left':
-            x = rect.x - domWidth - gap - offset;
+            x = rect.x - domWidth - offset;
             y = rect.y + rectHeight / 2 - domHeight / 2;
             break;
         case 'right':
-            x = rect.x + rectWidth + gap + offset;
+            x = rect.x + rectWidth + offset;
             y = rect.y + rectHeight / 2 - domHeight / 2;
     }
     return [x, y];
