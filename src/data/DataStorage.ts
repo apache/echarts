@@ -252,17 +252,29 @@ class DataStorage {
     ) {
         const chunk = this._chunks[dimIdx];
         const dim = this._dimensions[dimIdx];
+        const rawExtents = this._rawExtent;
 
         const offset = dim.ordinalOffset || 0;
         const len = chunk.length;
 
+        if (offset === 0) {
+            // We need to reset the rawExtent if collect is from start.
+            // Because this dimension may be guessed as number and calcuating a wrong extent.
+            rawExtents[dimIdx] = getInitialExtent();
+        }
+
+        const dimRawExtent = rawExtents[dimIdx];
+
         // Parse from previous data offset. len may be changed after appendData
         for (let i = offset; i < len; i++) {
-            (chunk as any)[i] = ordinalMeta.parseAndCollect(chunk[i]);
+            const val = (chunk as any)[i] = ordinalMeta.parseAndCollect(chunk[i]);
+            dimRawExtent[0] = Math.min(val, dimRawExtent[0]);
+            dimRawExtent[1] = Math.max(val, dimRawExtent[1]);
         }
 
         dim.ordinalMeta = ordinalMeta;
         dim.ordinalOffset = len;
+        dim.type = 'ordinal';   // Force to be ordinal
     }
 
     getOrdinalMeta(dimIdx: number) {
@@ -815,8 +827,12 @@ class DataStorage {
         const values = [];
         const rawExtent = target._rawExtent;
 
+        for (let i = 0; i < dims.length; i++) {
+            rawExtent[dims[i]] = getInitialExtent();
+        }
+
         for (let dataIndex = 0; dataIndex < dataCount; dataIndex++) {
-        const rawIndex = this.getRawIndex(dataIndex);
+            const rawIndex = this.getRawIndex(dataIndex);
 
             for (let k = 0; k < dimSize; k++) {
                 values[k] = targetChunks[dims[k]][rawIndex];
@@ -877,7 +893,7 @@ class DataStorage {
         let area;
         let nextRawIndex;
 
-        const newIndices = new (getIndicesCtor(this._rawCount))(Math.ceil(len / frameSize) + 1);
+        const newIndices = new (getIndicesCtor(this._rawCount))(Math.ceil(len / frameSize) + 2);
 
         // First frame use the first data.
         newIndices[sampledIndex++] = currentRawIndex;
@@ -958,7 +974,7 @@ class DataStorage {
 
         const dimStore = targetStorage[dimension];
         const len = this.count();
-        const rawExtentOnDim = target._rawExtent[dimension];
+        const rawExtentOnDim = target._rawExtent[dimension] = getInitialExtent();
 
         const newIndices = new (getIndicesCtor(this._rawCount))(Math.ceil(len / frameSize));
 
