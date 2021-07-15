@@ -40,7 +40,7 @@ import {
     OrdinalNumber
 } from '../util/types';
 import {convertOptionIdName, isDataItemOption} from '../util/model';
-import { getECData } from '../util/innerStore';
+import { setCommonECData } from '../util/innerStore';
 import type Graph from './Graph';
 import type Tree from './Tree';
 import type { VisualMeta } from '../component/visualMap/VisualMapModel';
@@ -133,7 +133,6 @@ let getId: (data: SeriesData, rawIndex: number) => string;
 let getIdNameFromStore: (data: SeriesData, dimIdx: number, dataIdx: number) => string;
 let normalizeDimensions: (dimensions: ItrParamDims) => Array<DimensionLoose>;
 let validateDimensions: (data: SeriesData, dims: DimensionIndex[]) => void;
-let setItemDataAndSeriesIndex: (this: Element, child: Element) => void;
 let transferProperties: (target: SeriesData, source: SeriesData) => void;
 let cloneListForMapAndSample: (original: SeriesData) => SeriesData;
 let makeIdFromName: (data: SeriesData, idx: number) => void;
@@ -1145,21 +1144,9 @@ class SeriesData<
      * Set graphic element relative to data. It can be set as null
      */
     setItemGraphicEl(idx: number, el: Element): void {
-        const hostModel = this.hostModel;
+        const seriesIndex = this.hostModel && (this.hostModel as any).seriesIndex;
 
-        if (el) {
-            const ecData = getECData(el);
-            // Add data index and series index for indexing the data by element
-            // Useful in tooltip
-            ecData.dataIndex = idx;
-            ecData.dataType = this.dataType;
-            ecData.seriesIndex = hostModel && (hostModel as any).seriesIndex;
-
-            // TODO: not store dataIndex on children.
-            if (el.type === 'group') {
-                el.traverse(setItemDataAndSeriesIndex, el);
-            }
-        }
+        setCommonECData(seriesIndex, this.dataType, idx, el);
 
         this._graphicEls[idx] = el;
     }
@@ -1294,14 +1281,6 @@ class SeriesData<
             // FIXME If needs stackedOn, value may already been stacked
             transferProperties(list, original);
             return list;
-        };
-
-        setItemDataAndSeriesIndex = function (this: Element, child: Element): void {
-            const childECData = getECData(child);
-            const thisECData = getECData(this);
-            childECData.seriesIndex = thisECData.seriesIndex;
-            childECData.dataIndex = thisECData.dataIndex;
-            childECData.dataType = thisECData.dataType;
         };
 
         transferProperties = function (target: SeriesData, source: SeriesData): void {
