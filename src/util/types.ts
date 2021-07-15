@@ -852,9 +852,6 @@ export interface BorderOptionMixin {
 
 export type ColorBy = 'series' | 'data';
 
-// Sunburst color mapping on levels and items are yet to be implemented
-// export type SunburstColorBy = ColorBy | 'inherit' | 'childIndex' | 'lighter';
-
 export interface ColorByMixin {
     colorBy?: ColorBy
 }
