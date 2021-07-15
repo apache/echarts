@@ -23,9 +23,11 @@
 import SeriesData from '@/src/data/SeriesData';
 import Model from '@/src/model/Model';
 import { createSourceFromSeriesDataOption, Source, createSource } from '@/src/data/Source';
-import { OptionDataItemObject, OptionDataValue, SOURCE_FORMAT_ARRAY_ROWS } from '@/src/util/types';
+import { OptionDataItemObject, OptionDataValue, SOURCE_FORMAT_ARRAY_ROWS, SOURCE_FORMAT_ORIGINAL } from '@/src/util/types';
 import DataDimensionInfo from '@/src/data/DataDimensionInfo';
 import OrdinalMeta from '@/src/data/OrdinalMeta';
+import DataStorage from '@/src/data/DataStorage';
+import { DefaultDataProvider } from '@/src/data/helper/dataProvider';
 
 
 const ID_PREFIX = 'e\0\0';
@@ -37,113 +39,113 @@ describe('SeriesData', function () {
     describe('Data Manipulation', function () {
 
         it('initData 1d', function () {
-            const list = new SeriesData(['x', 'y'], new Model());
-            list.initData([10, 20, 30]);
-            expect(list.get('x', 0)).toEqual(10);
-            expect(list.get('x', 1)).toEqual(20);
-            expect(list.get('x', 2)).toEqual(30);
-            expect(list.get('y', 1)).toEqual(20);
+            const data = new SeriesData(['x', 'y'], new Model());
+            data.initData([10, 20, 30]);
+            expect(data.get('x', 0)).toEqual(10);
+            expect(data.get('x', 1)).toEqual(20);
+            expect(data.get('x', 2)).toEqual(30);
+            expect(data.get('y', 1)).toEqual(20);
         });
 
         it('initData 2d', function () {
-            const list = new SeriesData(['x', 'y'], new Model());
-            list.initData([[10, 15], [20, 25], [30, 35]]);
-            expect(list.get('x', 1)).toEqual(20);
-            expect(list.get('y', 1)).toEqual(25);
+            const data = new SeriesData(['x', 'y'], new Model());
+            data.initData([[10, 15], [20, 25], [30, 35]]);
+            expect(data.get('x', 1)).toEqual(20);
+            expect(data.get('y', 1)).toEqual(25);
         });
 
         it('initData 2d yx', function () {
-            const list = new SeriesData(['y', 'x'], new Model());
-            list.initData([[10, 15], [20, 25], [30, 35]]);
-            expect(list.get('x', 1)).toEqual(25);
-            expect(list.get('y', 1)).toEqual(20);
+            const data = new SeriesData(['y', 'x'], new Model());
+            data.initData([[10, 15], [20, 25], [30, 35]]);
+            expect(data.get('x', 1)).toEqual(25);
+            expect(data.get('y', 1)).toEqual(20);
         });
 
         it('Data with option 1d', function () {
-            const list = new SeriesData(['x', 'y'], new Model());
-            list.initData([
+            const data = new SeriesData(['x', 'y'], new Model());
+            data.initData([
                 1,
                 {
                     value: 2,
                     somProp: 'foo'
                 } as OptionDataItemObject<OptionDataValue>
             ]);
-            expect(list.getItemModel(1).get('somProp' as any)).toEqual('foo');
-            expect(list.getItemModel(0).get('somProp' as any)).toBeNull();
+            expect(data.getItemModel(1).get('somProp' as any)).toEqual('foo');
+            expect(data.getItemModel(0).get('somProp' as any)).toBeNull();
         });
 
         it('Empty data', function () {
-            const list = new SeriesData(['x', 'y'], new Model());
-            list.initData([1, '-']);
-            expect(list.get('y', 1)).toBeNaN();
+            const data = new SeriesData(['x', 'y'], new Model());
+            data.initData([1, '-']);
+            expect(data.get('y', 1)).toBeNaN();
         });
 
         it('getRawValue', function () {
-            const list1 = new SeriesData(['x', 'y'], new Model());
-            // here construct a new list2 because if we only use one list
-            // to call initData() twice, list._chunkCount will be accumulated
+            const data1 = new SeriesData(['x', 'y'], new Model());
+            // here construct a new data2 because if we only use one data
+            // to call initData() twice, data._chunkCount will be accumulated
             // to 1 instead of 0.
-            const list2 = new SeriesData(['x', 'y'], new Model());
+            const data2 = new SeriesData(['x', 'y'], new Model());
 
-            list1.initData([1, 2, 3]);
-            expect(list1.getItemModel(1).option).toEqual(2);
+            data1.initData([1, 2, 3]);
+            expect(data1.getItemModel(1).option).toEqual(2);
 
-            list2.initData([[10, 15], [20, 25], [30, 35]]);
-            expect(list2.getItemModel(1).option).toEqual([20, 25]);
+            data2.initData([[10, 15], [20, 25], [30, 35]]);
+            expect(data2.getItemModel(1).option).toEqual([20, 25]);
         });
 
         it('indexOfRawIndex', function () {
-            const list = new SeriesData(['x'], new Model());
-            list.initData([]);
-            expect(list.indexOfRawIndex(1)).toEqual(-1);
+            const data = new SeriesData(['x'], new Model());
+            data.initData([]);
+            expect(data.indexOfRawIndex(1)).toEqual(-1);
 
-            const list1 = new SeriesData(['x'], new Model());
-            list1.initData([0]);
-            expect(list1.indexOfRawIndex(0)).toEqual(0);
-            expect(list1.indexOfRawIndex(1)).toEqual(-1);
+            const data1 = new SeriesData(['x'], new Model());
+            data1.initData([0]);
+            expect(data1.indexOfRawIndex(0)).toEqual(0);
+            expect(data1.indexOfRawIndex(1)).toEqual(-1);
 
-            const list2 = new SeriesData(['x'], new Model());
-            list2.initData([0, 1, 2, 3]);
-            expect(list2.indexOfRawIndex(1)).toEqual(1);
-            expect(list2.indexOfRawIndex(2)).toEqual(2);
-            expect(list2.indexOfRawIndex(5)).toEqual(-1);
+            const data2 = new SeriesData(['x'], new Model());
+            data2.initData([0, 1, 2, 3]);
+            expect(data2.indexOfRawIndex(1)).toEqual(1);
+            expect(data2.indexOfRawIndex(2)).toEqual(2);
+            expect(data2.indexOfRawIndex(5)).toEqual(-1);
 
-            const list3 = new SeriesData(['x'], new Model());
-            list3.initData([0, 1, 2, 3, 4]);
-            expect(list3.indexOfRawIndex(2)).toEqual(2);
-            expect(list3.indexOfRawIndex(3)).toEqual(3);
-            expect(list3.indexOfRawIndex(5)).toEqual(-1);
+            const data3 = new SeriesData(['x'], new Model());
+            data3.initData([0, 1, 2, 3, 4]);
+            expect(data3.indexOfRawIndex(2)).toEqual(2);
+            expect(data3.indexOfRawIndex(3)).toEqual(3);
+            expect(data3.indexOfRawIndex(5)).toEqual(-1);
 
-            list3.filterSelf(function (idx) {
+            data3.filterSelf(function (idx) {
                 return idx >= 2;
             });
-            expect(list3.indexOfRawIndex(2)).toEqual(0);
+            expect(data3.indexOfRawIndex(2)).toEqual(0);
         });
 
         it('getDataExtent', function () {
-            const list = new SeriesData(['x', 'y'], new Model());
-            list.initData([1, 2, 3]);
-            expect(list.getDataExtent('x')).toEqual([1, 3]);
-            expect(list.getDataExtent('y')).toEqual([1, 3]);
+            const data = new SeriesData(['x', 'y'], new Model());
+            data.initData([1, 2, 3]);
+            expect(data.getDataExtent('x')).toEqual([1, 3]);
+            expect(data.getDataExtent('y')).toEqual([1, 3]);
         });
 
         it('Data types', function () {
-            const list = new SeriesData([{
+            const data = new SeriesData([{
                 name: 'x',
                 type: 'int'
             }, {
                 name: 'y',
                 type: 'float'
             }], new Model());
-            list.initData([[1.1, 1.1]]);
-            expect(list.get('x', 0)).toEqual(1);
-            expect(list.get('y', 0)).toBeCloseTo(1.1, 5);
+            data.initData([[1.1, 1.1]]);
+            expect(data.get('x', 0)).toEqual(1);
+            expect(data.get('y', 0)).toBeCloseTo(1.1, 5);
         });
 
         it('map', function () {
-            const list = new SeriesData(['x', 'y'], new Model());
-            list.initData([[10, 15], [20, 25], [30, 35]]);
-            expect(list.map(['x', 'y'], function (x: number, y: number) {
+            const data = new SeriesData(['x', 'y'], new Model());
+            data.initData([[10, 15], [20, 25], [30, 35]]);
+            expect(data.map(['x', 'y'], function (x: number, y: number) {
                 return [x + 2, y + 2];
             }).mapArray('x', function (x) {
                 return x;
@@ -151,17 +153,17 @@ describe('SeriesData', function () {
         });
 
         it('mapArray', function () {
-            const list = new SeriesData(['x', 'y'], new Model());
-            list.initData([[10, 15], [20, 25], [30, 35]]);
-            expect(list.mapArray(['x', 'y'], function (x, y) {
+            const data = new SeriesData(['x', 'y'], new Model());
+            data.initData([[10, 15], [20, 25], [30, 35]]);
+            expect(data.mapArray(['x', 'y'], function (x, y) {
                 return [x, y];
             })).toEqual([[10, 15], [20, 25], [30, 35]]);
         });
 
         it('filterSelf', function () {
-            const list = new SeriesData(['x', 'y'], new Model());
-            list.initData([[10, 15], [20, 25], [30, 35]]);
-            expect(list.filterSelf(['x', 'y'], function (x, y) {
+            const data = new SeriesData(['x', 'y'], new Model());
+            data.initData([[10, 15], [20, 25], [30, 35]]);
+            expect(data.filterSelf(['x', 'y'], function (x, y) {
                 return x < 30 && x > 10;
             }).mapArray('x', function (x) {
                 return x;
@@ -169,10 +171,10 @@ describe('SeriesData', function () {
         });
 
         it('dataProvider', function () {
-            const list = new SeriesData(['x', 'y'], new Model());
+            const data = new SeriesData(['x', 'y'], new Model());
             const typedArray = new Float32Array([10, 10, 20, 20]);
             const source = createSourceFromSeriesDataOption(typedArray);
-            list.initData({
+            data.initData({
                 count: function (): number {
                     return typedArray.length / 2;
                 },
@@ -183,31 +185,107 @@ describe('SeriesData', function () {
                     return source;
                 }
             });
-            expect(list.mapArray(['x', 'y'], function (x, y) {
+            expect(data.mapArray(['x', 'y'], function (x, y) {
                 return [x, y];
             })).toEqual([[10, 10], [20, 20]]);
-            expect(list.getRawDataItem(0)).toEqual([10, 10]);
-            expect(list.getItemModel(0).option).toEqual([10, 10]);
+            expect(data.getRawDataItem(0)).toEqual([10, 10]);
+            expect(data.getItemModel(0).option).toEqual([10, 10]);
+        });
+    });
+
+    describe('Data storage', function () {
+        it('should guess ordinal correctly', function () {
+            const source = createSource([['A', 15], ['B', 25], ['C', 35]], {
+                dimensions: ['A', 'B'],
+                seriesLayoutBy: null,
+                sourceHeader: false
+            }, SOURCE_FORMAT_ORIGINAL);
+            expect(source.dimensionsDefine[0].type).toEqual('ordinal');
+        });
+
+        function createStore() {
+            const provider = new DefaultDataProvider([['A', 15], ['B', 25], ['C', 35]]);
+            const store = new DataStorage();
+            store.initData(provider, [{type: 'ordinal', name: 'dim0'}, {type: 'float', name: 'dim1'}]);
+            return store;
+        }
+
+        it('should use storage if dimensions types are same', function () {
+            const store = createStore();
+            const data = new SeriesData([{type: 'ordinal', name: 'dim0'}, {type: 'float', name: 'dim1'}], null);
+            data.initData(store);
+            expect(data.getStorage()).toBe(store);
+        });
+        it('should recreate storage if dimensions types not compatitable', function () {
+            const store = createStore();
+            const dims = [{ type: 'float', name: 'dim0' }, { type: 'float', name: 'dim1'}];
+            const data = new SeriesData(dims, null);
+            data.initData(store);
+            expect(data.getStorage()).not.toBe(store);
+            // Can reuse now
+            const data2 = new SeriesData(dims, null);
+            data2.initData(data.getStorage());
+            expect(data2.getStorage()).toBe(data.getStorage());
+        });
+        it('should recreate storage if dimensions name not exits', function () {
+            const store = createStore();
+            const dims = [{ type: 'float', name: 'dim2' }];
+            const data = new SeriesData(dims, null);
+            data.initData(store);
+            expect(data.getStorage()).not.toBe(store);
+        });
+
+        it('SeriesData can still get other dims value from storage when only part of dims are given.', function () {
+            const provider = new DefaultDataProvider([['A', 15, 20], ['B', 25, 30], ['C', 35, 40]]);
+            const store = new DataStorage();
+            store.initData(provider, [
+                {type: 'ordinal', name: 'dim0'}, {type: 'float', name: 'dim1'}, {type: 'float', name: 'dim2'}
+            ]);
+            const dims = [{ type: 'float', name: 'dim1'}];
+            const data = new SeriesData(dims, null);
+            data.initData(store);
+            // Store should be the same.
+            expect(data.getStorage()).toBe(store);
+            // Get self dim
+            expect(data.get('dim1', 0)).toEqual(15);
+            expect(data.get('dim1', 1)).toEqual(25);
+            // Get other dim
+            expect(data.get('dim0', 0)).toEqual('A');
+            expect(data.get('dim0', 1)).toEqual('B');
+            expect(data.get('dim2', 0)).toEqual(20);
+            expect(data.get('dim2', 1)).toEqual(30);
+            // Get all
+            expect(data.getValues(['dim0', 'dim1'], 0)).toEqual(['A', 15]);
+            expect(data.getValues(1)).toEqual(['B', 25, 30]);
+        });
+
+        it('SeriesData#cloneShallow should share storage', function () {
+            const store = createStore();
+            const dims = [{ type: 'float', name: 'dim2' }];
+            const data = new SeriesData(dims, null);
+            data.initData(store);
+            const data2 = data.cloneShallow();
+            expect(data2.getStorage()).toBe(data.getStorage());
         });
     });
 
     describe('Data read', function () {
         it('indicesOfNearest', function () {
-            const list = new SeriesData(['value'], new Model());
+            const data = new SeriesData(['value'], new Model());
             // ---- index: 0   1   2   3   4   5   6   7
-            list.initData([10, 20, 30, 35, 40, 40, 35, 50]);
+            data.initData([10, 20, 30, 35, 40, 40, 35, 50]);
 
-            expect(list.indicesOfNearest('value', 24.5)).toEqual([1]);
-            expect(list.indicesOfNearest('value', 25)).toEqual([1]);
-            expect(list.indicesOfNearest('value', 25.5)).toEqual([2]);
-            expect(list.indicesOfNearest('value', 25.5)).toEqual([2]);
-            expect(list.indicesOfNearest('value', 41)).toEqual([4, 5]);
-            expect(list.indicesOfNearest('value', 39)).toEqual([4, 5]);
-            expect(list.indicesOfNearest('value', 41)).toEqual([4, 5]);
-            expect(list.indicesOfNearest('value', 36)).toEqual([3, 6]);
+            expect(data.indicesOfNearest('value', 24.5)).toEqual([1]);
+            expect(data.indicesOfNearest('value', 25)).toEqual([1]);
+            expect(data.indicesOfNearest('value', 25.5)).toEqual([2]);
+            expect(data.indicesOfNearest('value', 25.5)).toEqual([2]);
+            expect(data.indicesOfNearest('value', 41)).toEqual([4, 5]);
+            expect(data.indicesOfNearest('value', 39)).toEqual([4, 5]);
+            expect(data.indicesOfNearest('value', 41)).toEqual([4, 5]);
+            expect(data.indicesOfNearest('value', 36)).toEqual([3, 6]);
 
-            expect(list.indicesOfNearest('value', 50.6, 0.5)).toEqual([]);
-            expect(list.indicesOfNearest('value', 50.5, 0.5)).toEqual([7]);
+            expect(data.indicesOfNearest('value', 50.6, 0.5)).toEqual([]);
+            expect(data.indicesOfNearest('value', 50.5, 0.5)).toEqual([7]);
         });
     });
 
