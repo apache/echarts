@@ -656,18 +656,10 @@ class SeriesData<
     getValues(idx: number): ParsedValue[];
     getValues(dimensions: readonly DimensionName[], idx: number): ParsedValue[];
     getValues(dimensions: readonly DimensionName[] | number, idx?: number): ParsedValue[] {
-        const values = [];
-        if (!zrUtil.isArray(dimensions)) {
-            idx = dimensions as number;
-            // TODO get all from store?
-            dimensions = this.dimensions;
-        }
-
-        for (let i = 0, len = dimensions.length; i < len; i++) {
-            values.push(this.get(dimensions[i], idx));
-        }
-
-        return values;
+        const store = this._store;
+        return zrUtil.isArray(dimensions)
+            ? store.getValues(map(dimensions, dim => this._getStoreDimIndex(dim)), idx)
+            : store.getValues(dimensions as number);
     }
 
     /**

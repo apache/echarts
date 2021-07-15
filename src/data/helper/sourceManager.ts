@@ -369,7 +369,7 @@ export class SourceManager {
      */
     getDataStorage(): DataStorage | undefined {
         if (__DEV__) {
-            assert(isSeries(this._sourceHost), 'Can only call getDataStorage on series source manager.')
+            assert(isSeries(this._sourceHost), 'Can only call getDataStorage on series source manager.');
         }
         const source = this.getSource(0);
         const dimensionsDefine = source.dimensionsDefine;

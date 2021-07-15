@@ -447,6 +447,31 @@ class DataStorage {
         return dimStore ? dimStore[this.getRawIndex(idx)] : NaN;
     }
 
+    getValues(idx: number): ParsedValue[];
+    getValues(dimensions: readonly DimensionIndex[], idx?: number): ParsedValue[]
+    getValues(dimensions: readonly DimensionIndex[] | number, idx?: number): ParsedValue[] {
+        const values = [];
+        let dimArr: DimensionIndex[] = [];
+        if (idx == null) {
+            idx = dimensions as number;
+            // TODO get all from store?
+            dimensions = [];
+            // All dimensions
+            for (let i = 0; i < this._dimensions.length; i++) {
+                dimArr.push(i);
+            }
+        }
+        else {
+            dimArr = dimensions as DimensionIndex[];
+        }
+
+        for (let i = 0, len = dimArr.length; i < len; i++) {
+            values.push(this.get(dimArr[i], idx));
+        }
+
+        return values;
+    }
+
     /**
      * @param dim concrete dim
      */
