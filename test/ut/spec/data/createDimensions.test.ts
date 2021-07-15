@@ -18,10 +18,10 @@
 */
 
 
-import DataDimensionInfo from '../../../../src/data/DataDimensionInfo';
-import createDimensions from '../../../../src/data/helper/createDimensions';
-import { createSource } from '../../../../src/data/Source';
-import { SOURCE_FORMAT_ARRAY_ROWS, SERIES_LAYOUT_BY_COLUMN } from '../../../../src/util/types';
+import DataDimensionInfo from '@/src/data/DataDimensionInfo';
+import createDimensions from '@/src/data/helper/createDimensions';
+import { createSource } from '@/src/data/Source';
+import { SOURCE_FORMAT_ARRAY_ROWS, SERIES_LAYOUT_BY_COLUMN } from '@/src/util/types';
 
 type ParametersOfCreateDimensions = Parameters<typeof createDimensions>;
 

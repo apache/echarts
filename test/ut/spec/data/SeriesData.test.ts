@@ -20,12 +20,12 @@
 
 /* global Float32Array */
 
-import SeriesData from '../../../../src/data/SeriesData';
-import Model from '../../../../src/model/Model';
-import { createSourceFromSeriesDataOption, Source, createSource } from '../../../../src/data/Source';
-import { OptionDataItemObject, OptionDataValue, SOURCE_FORMAT_ARRAY_ROWS } from '../../../../src/util/types';
-import DataDimensionInfo from '../../../../src/data/DataDimensionInfo';
-import OrdinalMeta from '../../../../src/data/OrdinalMeta';
+import SeriesData from '@/src/data/SeriesData';
+import Model from '@/src/model/Model';
+import { createSourceFromSeriesDataOption, Source, createSource } from '@/src/data/Source';
+import { OptionDataItemObject, OptionDataValue, SOURCE_FORMAT_ARRAY_ROWS } from '@/src/util/types';
+import DataDimensionInfo from '@/src/data/DataDimensionInfo';
+import OrdinalMeta from '@/src/data/OrdinalMeta';
 
 
 const ID_PREFIX = 'e\0\0';
