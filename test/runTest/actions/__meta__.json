@@ -87,6 +87,7 @@
   "geo-map-features": 3,
   "geo-svg": 8,
   "geo-svg-demo": 6,
+  "geo-update": 1,
   "geoScatter": 1,
   "getOption": 1,
   "graph": 2,
