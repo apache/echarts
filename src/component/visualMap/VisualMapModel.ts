@@ -38,7 +38,7 @@ import ComponentModel from '../../model/Component';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import SeriesModel from '../../model/Series';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
 const mapVisual = VisualMapping.mapVisual;
 const eachVisual = VisualMapping.eachVisual;
@@ -379,7 +379,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     /**
      * Return  Concrete dimention. If return null/undefined, no dimension used.
      */
-    getDataDimension(list: List) {
+    getDataDimension(list: SeriesData) {
         const optDim = this.option.dimension;
         const listDimensions = list.dimensions;
         if (optDim == null && !listDimensions.length) {

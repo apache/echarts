@@ -17,10 +17,10 @@
 * under the License.
 */
 
-import { EChartsType } from '../../../../src/echarts';
+import { EChartsType } from '@/src/echarts';
 import { createChart } from '../../core/utHelper';
-import { ZRColor } from '../../../../src/util/types';
-import { CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams } from '../../../../src/chart/custom/CustomSeries';
+import { ZRColor } from '@/src/util/types';
+import { CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams } from '@/src/chart/custom/CustomSeries';
 
 
 describe('custom_series', function () {

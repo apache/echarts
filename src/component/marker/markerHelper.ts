@@ -20,7 +20,7 @@
 import * as numberUtil from '../../util/number';
 import {isDimensionStacked} from '../../data/helper/dataStackHelper';
 import SeriesModel from '../../model/Series';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { MarkerStatisticType, MarkerPositionOption } from './MarkerModel';
 import { indexOf, curry, clone, isArray } from 'zrender/src/core/util';
 import Axis from '../../coord/Axis';
@@ -68,7 +68,7 @@ function hasXAndY(item: MarkerPositionOption) {
 
 function markerTypeCalculatorWithExtent(
     markerType: MarkerStatisticType,
-    data: List,
+    data: SeriesData,
     otherDataDim: string,
     targetDataDim: string,
     otherCoordIndex: number,
@@ -171,7 +171,7 @@ export function dataTransform(
 
 export function getAxisInfo(
     item: MarkerPositionOption,
-    data: List,
+    data: SeriesData,
     coordSys: CoordinateSystem,
     seriesModel: SeriesModel
 ) {
@@ -236,7 +236,7 @@ export function dimValueGetter(
 }
 
 export function numCalculate(
-    data: List,
+    data: SeriesData,
     valueDataDim: string,
     type: MarkerStatisticType
 ) {

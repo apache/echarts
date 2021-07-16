@@ -20,7 +20,7 @@
 import {each, isString} from 'zrender/src/core/util';
 import DataDimensionInfo from '../DataDimensionInfo';
 import SeriesModel from '../../model/Series';
-import List, { DataCalculationInfo } from '../List';
+import SeriesData, { DataCalculationInfo } from '../SeriesData';
 import type { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../../util/types';
 
 
@@ -30,7 +30,7 @@ import type { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../../
  * we just support that stacked by index.
  *
  * @param seriesModel
- * @param dimensionInfoList The same as the input of <module:echarts/data/List>.
+ * @param dimensionInfoList The same as the input of <module:echarts/data/SeriesData>.
  *        The input dimensionInfoList will be modified.
  * @param opt
  * @param opt.stackedCoordDimension Specify a coord dimension if needed.
@@ -154,7 +154,7 @@ export function enableDataStack(
     };
 }
 
-export function isDimensionStacked(data: List, stackedDim: string /*, stackedByDim*/): boolean {
+export function isDimensionStacked(data: SeriesData, stackedDim: string /*, stackedByDim*/): boolean {
     // Each single series only maps to one pair of axis. So we do not need to
     // check stackByDim, whatever stacked by a dimension or stacked by index.
     return !!stackedDim && stackedDim === data.getCalculationInfo('stackedDimension');
@@ -165,7 +165,7 @@ export function isDimensionStacked(data: List, stackedDim: string /*, stackedByD
         // );
 }
 
-export function getStackedDimension(data: List, targetDim: string): DimensionName {
+export function getStackedDimension(data: SeriesData, targetDim: string): DimensionName {
     return isDimensionStacked(data, targetDim)
         ? data.getCalculationInfo('stackResultDimension')
         : targetDim;

@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { DefaultDataVisual } from '../data/List';
+import { DefaultDataVisual } from '../data/SeriesData';
 
 export interface LineDataVisual extends DefaultDataVisual {
     fromSymbol: string

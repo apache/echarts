@@ -20,7 +20,7 @@
 /* global Uint32Array, Float64Array, Float32Array */
 
 import SeriesModel from '../../model/Series';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { concatArray, mergeAll, map } from 'zrender/src/core/util';
 import CoordinateSystem from '../../core/CoordinateSystem';
 import {
@@ -297,7 +297,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
             }
         }
 
-        const lineData = new List(['value'], this);
+        const lineData = new SeriesData(['value'], this);
         lineData.hasItemOption = false;
 
         lineData.initData(option.data, [], function (dataItem, dimName, dataIndex, dimIndex) {

@@ -25,7 +25,7 @@ import SankeySeriesModel, { SankeyEdgeItemOption, SankeyNodeItemOption } from '.
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
@@ -107,7 +107,7 @@ class SankeyView extends ChartView {
 
     private _focusAdjacencyDisabled = false;
 
-    private _data: List;
+    private _data: SeriesData;
 
     render(seriesModel: SankeySeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const sankeyView = this;

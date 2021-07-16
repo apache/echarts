@@ -18,18 +18,18 @@
 * under the License.
 */
 
-import { init, use, EChartsType } from '../../../../src/export/core';
+import { init, use, EChartsType } from '@/src/export/core';
 import {
     PieChart
-} from '../../../../src/export/charts';
+} from '@/src/export/charts';
 import {
     TitleComponent
-} from '../../../../src/export/components';
+} from '@/src/export/components';
 import {
     CanvasRenderer
-} from '../../../../src/export/renderers';
+} from '@/src/export/renderers';
 use([PieChart, TitleComponent, CanvasRenderer]);
-import { EChartsOption } from '../../../../src/export/option';
+import { EChartsOption } from '@/src/export/option';
 
 
 function createChart(theme?: object): EChartsType {

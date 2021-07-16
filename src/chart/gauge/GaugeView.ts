@@ -27,7 +27,7 @@ import GaugeSeriesModel, { GaugeDataItemOption } from './GaugeSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { ColorString, ECElement } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
@@ -78,7 +78,7 @@ class GaugeView extends ChartView {
     static type = 'gauge' as const;
     type = GaugeView.type;
 
-    private _data: List;
+    private _data: SeriesData;
     private _progressEls: graphic.Path[];
 
     private _titleEls: graphic.Text[];

@@ -41,7 +41,7 @@ import {
 import { extend, indexOf, isArrayLike, isObject, keys, isArray, each } from 'zrender/src/core/util';
 import { getECData } from './innerStore';
 import * as colorTool from 'zrender/src/tool/color';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import SeriesModel from '../model/Series';
 import { CoordinateSystemMaster, CoordinateSystem } from '../coord/CoordinateSystem';
 import { queryDataIndex, makeInner } from './model';
@@ -422,7 +422,7 @@ export function blurSeries(
     const ecModel = api.getModel();
     blurScope = blurScope || 'coordinateSystem';
 
-    function leaveBlurOfIndices(data: List, dataIndices: ArrayLike<number>) {
+    function leaveBlurOfIndices(data: SeriesData, dataIndices: ArrayLike<number>) {
         for (let i = 0; i < dataIndices.length; i++) {
             const itemEl = data.getItemGraphicEl(dataIndices[i]);
             itemEl && leaveBlur(itemEl);

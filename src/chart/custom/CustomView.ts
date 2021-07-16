@@ -51,7 +51,7 @@ import prepareGeo from '../../coord/geo/prepareCustom';
 import prepareSingleAxis from '../../coord/single/prepareCustom';
 import preparePolar from '../../coord/polar/prepareCustom';
 import prepareCalendar from '../../coord/calendar/prepareCustom';
-import List, { DefaultDataVisual } from '../../data/List';
+import SeriesData, { DefaultDataVisual } from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
@@ -199,7 +199,7 @@ export default class CustomChartView extends ChartView {
     static type = 'custom';
     readonly type = CustomChartView.type;
 
-    private _data: List;
+    private _data: SeriesData;
 
     render(
         customSeries: CustomSeriesModel,
@@ -822,7 +822,7 @@ function updateZForEachState(
 
 function makeRenderItem(
     customSeries: CustomSeriesModel,
-    data: List<CustomSeriesModel>,
+    data: SeriesData<CustomSeriesModel>,
     ecModel: GlobalModel,
     api: ExtensionAPI
 ) {
@@ -1129,7 +1129,7 @@ function makeRenderItem(
     }
 }
 
-function wrapEncodeDef(data: List<CustomSeriesModel>): WrapEncodeDefRet {
+function wrapEncodeDef(data: SeriesData<CustomSeriesModel>): WrapEncodeDefRet {
     const encodeDef = {} as WrapEncodeDefRet;
     each(data.dimensions, function (dimName, dataDimIndex) {
         const dimInfo = data.getDimensionInfo(dimName);
@@ -1149,7 +1149,7 @@ function createOrUpdateItem(
     elOption: CustomElementOption,
     seriesModel: CustomSeriesModel,
     group: ViewRootGroup,
-    data: List<CustomSeriesModel>
+    data: SeriesData<CustomSeriesModel>
 ): Element {
     // [Rule]
     // If `renderItem` returns `null`/`undefined`/`false`, remove the previous el if existing.

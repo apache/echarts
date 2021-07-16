@@ -23,37 +23,37 @@
  */
 
 import { curry, each, assert, extend, map, keys } from 'zrender/src/core/util';
-import List from '../List';
+import SeriesData from '../SeriesData';
 import { makeInner } from '../../util/model';
 import { SeriesDataType } from '../../util/types';
 
 // That is: { dataType: data },
 // like: { node: nodeList, edge: edgeList }.
 // Should contain mainData.
-type Datas = { [key in SeriesDataType]?: List };
+type Datas = { [key in SeriesDataType]?: SeriesData };
 type StructReferDataAttr = 'data' | 'edgeData';
 type StructAttr = 'tree' | 'graph';
 
 const inner = makeInner<{
     datas: Datas;
-    mainData: List;
-}, List>();
+    mainData: SeriesData;
+}, SeriesData>();
 
 
 // Caution:
-// In most case, either list or its shallow clones (see list.cloneShallow)
+// In most case, either seriesData or its shallow clones (see seriesData.cloneShallow)
 // is active in echarts process. So considering heap memory consumption,
-// we do not clone tree or graph, but share them among list and its shallow clones.
-// But in some rare case, we have to keep old list (like do animation in chart). So
-// please take care that both the old list and the new list share the same tree/graph.
+// we do not clone tree or graph, but share them among seriesData and its shallow clones.
+// But in some rare case, we have to keep old seriesData (like do animation in chart). So
+// please take care that both the old seriesData and the new seriesData share the same tree/graph.
 
-type LinkListOpt = {
-    mainData: List;
+type LinkSeriesDataOpt = {
+    mainData: SeriesData;
     // For example, instance of Graph or Tree.
     struct: {
         update: () => void;
     } & {
-        [key in StructReferDataAttr]?: List
+        [key in StructReferDataAttr]?: SeriesData
     };
     // Will designate: `mainData[structAttr] = struct;`
     structAttr: StructAttr;
@@ -63,7 +63,7 @@ type LinkListOpt = {
     datasAttr?: { [key in SeriesDataType]?: StructReferDataAttr };
 };
 
-function linkList(opt: LinkListOpt): void {
+function linkSeriesData(opt: LinkSeriesDataOpt): void {
     const mainData = opt.mainData;
     let datas = opt.datas;
 
@@ -76,7 +76,7 @@ function linkList(opt: LinkListOpt): void {
     linkAll(mainData, datas, opt);
 
     // Porxy data original methods.
-    each(datas, function (data: List) {
+    each(datas, function (data: SeriesData) {
         each(mainData.TRANSFERABLE_METHODS, function (methodName) {
             data.wrapMethod(methodName, curry(transferInjection, opt));
         });
@@ -95,7 +95,7 @@ function linkList(opt: LinkListOpt): void {
     assert(datas[mainData.dataType] === mainData);
 }
 
-function transferInjection(this: List, opt: LinkListOpt, res: List): unknown {
+function transferInjection(this: SeriesData, opt: LinkSeriesDataOpt, res: SeriesData): unknown {
     if (isMainData(this)) {
         // Transfer datas to new main data.
         const datas = extend({}, inner(this).datas);
@@ -109,17 +109,17 @@ function transferInjection(this: List, opt: LinkListOpt, res: List): unknown {
     return res;
 }
 
-function changeInjection(opt: LinkListOpt, res: unknown): unknown {
+function changeInjection(opt: LinkSeriesDataOpt, res: unknown): unknown {
     opt.struct && opt.struct.update();
     return res;
 }
 
-function cloneShallowInjection(opt: LinkListOpt, res: List): List {
+function cloneShallowInjection(opt: LinkSeriesDataOpt, res: SeriesData): SeriesData {
     // cloneShallow, which brings about some fragilities, may be inappropriate
     // to be exposed as an API. So for implementation simplicity we can make
     // the restriction that cloneShallow of not-mainData should not be invoked
     // outside, but only be invoked here.
-    each(inner(res).datas, function (data: List, dataType) {
+    each(inner(res).datas, function (data: SeriesData, dataType) {
         data !== res && linkSingle(data.cloneShallow(), dataType, res, opt);
     });
     return res;
@@ -131,7 +131,7 @@ function cloneShallowInjection(opt: LinkListOpt, res: List): List {
  * @public
  * @param [dataType] If not specified, return mainData.
  */
-function getLinkedData(this: List, dataType?: SeriesDataType): List {
+function getLinkedData(this: SeriesData, dataType?: SeriesDataType): SeriesData {
     const mainData = inner(this).mainData;
     return (dataType == null || mainData == null)
         ? mainData
@@ -141,8 +141,8 @@ function getLinkedData(this: List, dataType?: SeriesDataType): List {
 /**
  * Get list of all linked data
  */
-function getLinkedDataAll(this: List): {
-    data: List,
+function getLinkedDataAll(this: SeriesData): {
+    data: SeriesData,
     type?: SeriesDataType
 }[] {
     const mainData = inner(this).mainData;
@@ -156,18 +156,18 @@ function getLinkedDataAll(this: List): {
         });
 }
 
-function isMainData(data: List): boolean {
+function isMainData(data: SeriesData): boolean {
     return inner(data).mainData === data;
 }
 
-function linkAll(mainData: List, datas: Datas, opt: LinkListOpt): void {
+function linkAll(mainData: SeriesData, datas: Datas, opt: LinkSeriesDataOpt): void {
     inner(mainData).datas = {};
-    each(datas, function (data: List, dataType) {
+    each(datas, function (data: SeriesData, dataType) {
         linkSingle(data, dataType, mainData, opt);
     });
 }
 
-function linkSingle(data: List, dataType: SeriesDataType, mainData: List, opt: LinkListOpt): void {
+function linkSingle(data: SeriesData, dataType: SeriesDataType, mainData: SeriesData, opt: LinkSeriesDataOpt): void {
     inner(mainData).datas[dataType] = data;
     inner(data).mainData = mainData;
 
@@ -183,4 +183,4 @@ function linkSingle(data: List, dataType: SeriesDataType, mainData: List, opt: L
     data.getLinkedDataAll = getLinkedDataAll;
 }
 
-export default linkList;
+export default linkSeriesData;

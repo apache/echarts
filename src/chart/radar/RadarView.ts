@@ -24,7 +24,7 @@ import * as symbolUtil from '../../util/symbol';
 import ChartView from '../../view/Chart';
 import RadarSeriesModel, { RadarSeriesDataItemOption } from './RadarSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { ColorString } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { VectorArray } from 'zrender/src/core/vector';
@@ -40,7 +40,7 @@ class RadarView extends ChartView {
     static type = 'radar';
     type = RadarView.type;
 
-    private _data: List<RadarSeriesModel>;
+    private _data: SeriesData<RadarSeriesModel>;
 
     render(seriesModel: RadarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const polar = seriesModel.coordinateSystem;
@@ -49,7 +49,7 @@ class RadarView extends ChartView {
         const data = seriesModel.getData();
         const oldData = this._data;
 
-        function createSymbol(data: List<RadarSeriesModel>, idx: number) {
+        function createSymbol(data: SeriesData<RadarSeriesModel>, idx: number) {
             const symbolType = data.getItemVisual(idx, 'symbol') as string || 'circle';
             if (symbolType === 'none') {
                 return;
@@ -77,7 +77,7 @@ class RadarView extends ChartView {
             oldPoints: VectorArray[],
             newPoints: VectorArray[],
             symbolGroup: graphic.Group,
-            data: List<RadarSeriesModel>,
+            data: SeriesData<RadarSeriesModel>,
             idx: number,
             isInit?: boolean
         ) {

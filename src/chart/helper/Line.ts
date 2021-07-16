@@ -25,7 +25,7 @@ import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis, enterEmphasis, leaveEmphasis, SPECIAL_STATES } from '../../util/states';
 import {getLabelStatesModels, setLabelStyle} from '../../label/labelStyle';
 import {round} from '../../util/number';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { ZRTextAlign, ZRTextVerticalAlign, LineLabelOption, ColorString } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
@@ -41,7 +41,7 @@ type LineECSymbol = ECSymbol & {
     __specifiedRotation: number
 };
 
-type LineList = List<SeriesModel, LineDataVisual>;
+type LineList = SeriesData<SeriesModel, LineDataVisual>;
 
 export interface LineLabel extends graphic.Text {
     lineLabelOriginalOpacity: number
@@ -133,7 +133,7 @@ class Line extends graphic.Group {
     private _fromSymbolType: string;
     private _toSymbolType: string;
 
-    constructor(lineData: List, idx: number, seriesScope?: LineDrawSeriesScope) {
+    constructor(lineData: SeriesData, idx: number, seriesScope?: LineDrawSeriesScope) {
         super();
         this._createLine(lineData as LineList, idx, seriesScope);
     }
@@ -164,7 +164,7 @@ class Line extends graphic.Group {
     }
 
     // TODO More strict on the List type in parameters?
-    updateData(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
+    updateData(lineData: SeriesData, idx: number, seriesScope: LineDrawSeriesScope) {
         const seriesModel = lineData.hostModel;
 
         const line = this.childOfName('line') as ECLinePath;
@@ -195,7 +195,7 @@ class Line extends graphic.Group {
         return this.childAt(0) as graphic.Line;
     }
 
-    _updateCommonStl(lineData: List, idx: number, seriesScope?: LineDrawSeriesScope) {
+    _updateCommonStl(lineData: SeriesData, idx: number, seriesScope?: LineDrawSeriesScope) {
         const seriesModel = lineData.hostModel as SeriesModel;
 
         const line = this.childOfName('line') as ECLinePath;
@@ -307,7 +307,7 @@ class Line extends graphic.Group {
         leaveEmphasis(this);
     }
 
-    updateLayout(lineData: List, idx: number) {
+    updateLayout(lineData: SeriesData, idx: number) {
         this.setLinePoints(lineData.getItemLayout(idx));
     }
 

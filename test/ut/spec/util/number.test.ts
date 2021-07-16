@@ -22,7 +22,7 @@ import {
     linearMap, parseDate, reformIntervals, getPrecisionSafe, getPrecision,
     getPercentWithPrecision, quantityExponent, quantity, nice,
     isNumeric, numericToNumber, addSafe
-} from '../../../../src/util/number';
+} from '@/src/util/number';
 
 
 describe('util/number', function () {

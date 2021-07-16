@@ -20,7 +20,7 @@
 import TimelineModel, { TimelineOption } from './TimelineModel';
 import { DataFormatMixin } from '../../model/mixin/dataFormat';
 import { mixin } from 'zrender/src/core/util';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { inheritDefaultOption } from '../../util/component';
 
 export interface SliderTimelineOption extends TimelineOption {
@@ -149,7 +149,7 @@ class SliderTimelineModel extends TimelineModel {
 }
 
 interface SliderTimelineModel extends DataFormatMixin {
-    getData(): List<SliderTimelineModel>
+    getData(): SeriesData<SliderTimelineModel>
 }
 
 mixin(SliderTimelineModel, DataFormatMixin.prototype);

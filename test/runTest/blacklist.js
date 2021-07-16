@@ -39,7 +39,9 @@ module.exports.blacklist = [
 
     // This case will have timeout
     'visualMap-performance1.html',
-    'lines-stream-not-large.html'
+    'lines-stream-not-large.html',
+
+    'dataset-performance.html'
 ];
 
 

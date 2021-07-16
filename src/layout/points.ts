@@ -56,11 +56,12 @@ export default function pointsLayout(seriesType: string, forceStoreInTypedArray?
                 dims[1] = stackResultDim;
             }
 
-            const dimInfo0 = data.getDimensionInfo(dims[0]);
-            const dimInfo1 = data.getDimensionInfo(dims[1]);
+            const store = data.getStorage();
+            const dim0 = data.getDimension(dims[0]);
+            const dim1 = data.getDimension(dims[1]);
 
-            const dimIdx0 = dimInfo0 && dimInfo0.index;
-            const dimIdx1 = dimInfo1 && dimInfo1.index;
+            const dimIdx0 = store.getDimensionIndex(dim0);
+            const dimIdx1 = store.getDimensionIndex(dim1);
 
             return dimLen && {
                 progress(params, data) {
@@ -74,13 +75,13 @@ export default function pointsLayout(seriesType: string, forceStoreInTypedArray?
                         let point;
 
                         if (dimLen === 1) {
-                            const x = data.getByDimIdx(dimIdx0, i) as ParsedValueNumeric;
+                            const x = store.get(dimIdx0, i) as ParsedValueNumeric;
                             // NOTE: Make sure the second parameter is null to use default strategy.
                             point = coordSys.dataToPoint(x, null, tmpOut);
                         }
                         else {
-                            tmpIn[0] = data.getByDimIdx(dimIdx0, i) as ParsedValueNumeric;
-                            tmpIn[1] = data.getByDimIdx(dimIdx1, i) as ParsedValueNumeric;
+                            tmpIn[0] = store.get(dimIdx0, i) as ParsedValueNumeric;
+                            tmpIn[1] = store.get(dimIdx1, i) as ParsedValueNumeric;
                             // Let coordinate system to handle the NaN data.
                             point = coordSys.dataToPoint(tmpIn, null, tmpOut);
                         }

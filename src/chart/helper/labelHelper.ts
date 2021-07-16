@@ -19,7 +19,7 @@
 
 
 import {retrieveRawValue} from '../../data/helper/dataProvider';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { InterpolatableValue } from '../../util/types';
 import { isArray } from 'zrender/src/core/util';
 
@@ -27,7 +27,7 @@ import { isArray } from 'zrender/src/core/util';
  * @return label string. Not null/undefined
  */
 export function getDefaultLabel(
-    data: List,
+    data: SeriesData,
     dataIndex: number
 ): string {
     const labelDims = data.mapDimensionsAll('defaultedLabel');
@@ -48,7 +48,7 @@ export function getDefaultLabel(
 }
 
 export function getDefaultInterpolatedLabel(
-    data: List,
+    data: SeriesData,
     interpolatedValue: InterpolatableValue
 ): string {
     const labelDims = data.mapDimensionsAll('defaultedLabel');

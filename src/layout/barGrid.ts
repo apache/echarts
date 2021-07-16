@@ -472,7 +472,7 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
 
         const valueDim = data.mapDimension(valueAxis.dim);
         const baseDim = data.mapDimension(baseAxis.dim);
-        const stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
+        const stacked = isDimensionStacked(data, valueDim);
         const isValueAxisH = valueAxis.isHorizontal();
 
         const valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);

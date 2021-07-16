@@ -19,12 +19,12 @@
 
 
 import * as zrUtil from 'zrender/src/core/util';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import MapSeries, { MapValueCalculationType } from './MapSeries';
 import GlobalModel from '../../model/Global';
 
 // FIXME 公用？
-function dataStatistics(datas: List[], statisticType: MapValueCalculationType): List {
+function dataStatistics(datas: SeriesData[], statisticType: MapValueCalculationType): SeriesData {
     const dataNameMap = {} as {[mapKey: string]: number[]};
 
     zrUtil.each(datas, function (data) {

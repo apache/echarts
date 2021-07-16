@@ -6,7 +6,12 @@
         "noImplicitThis": true,
         "strictBindCallApply": true,
 
-        "esModuleInterop": true
+        "esModuleInterop": true,
+
+        "baseUrl": "./",
+        "paths": {
+            "@/*": ["../../*"]
+        }
     },
     "include": [
         "**/*.ts"

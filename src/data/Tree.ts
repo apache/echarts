@@ -23,8 +23,8 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
-import linkList from './helper/linkList';
-import List from './List';
+import linkSeriesData from './helper/linkSeriesData';
+import SeriesData from './SeriesData';
 import createDimensions from './helper/createDimensions';
 import {
     DimensionLoose, ParsedValue, OptionDataValue,
@@ -307,7 +307,7 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
 
     root: TreeNode;
 
-    data: List;
+    data: SeriesData;
 
     hostModel: HostModel;
 
@@ -399,7 +399,7 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
     static createTree<T extends TreeNodeOption, HostModel extends Model, LevelOption>(
         dataRoot: T,
         hostModel: HostModel,
-        beforeLink?: (data: List) => void
+        beforeLink?: (data: SeriesData) => void
     ) {
 
         const tree = new Tree(hostModel);
@@ -436,12 +436,12 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
             dimensionsCount: dimMax
         });
 
-        const list = new List(dimensionsInfo, hostModel);
+        const list = new SeriesData(dimensionsInfo, hostModel);
         list.initData(listData);
 
         beforeLink && beforeLink(list);
 
-        linkList({
+        linkSeriesData({
             mainData: list,
             struct: tree,
             structAttr: 'tree'

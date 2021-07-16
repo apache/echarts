@@ -18,13 +18,13 @@
 * under the License.
 */
 
-import { EChartsType } from '../../../../src/echarts';
+import { EChartsType } from '@/src/echarts';
 import { createChart, getECModel } from '../../core/utHelper';
-import { ComponentMainType, ParsedValue } from '../../../../src/util/types';
-import SeriesModel from '../../../../src/model/Series';
-import ComponentModel from '../../../../src/model/Component';
-import ChartView from '../../../../src/view/Chart';
-import { EChartsOption } from '../../../../src/export/option';
+import { ComponentMainType, ParsedValue } from '@/src/util/types';
+import SeriesModel from '@/src/model/Series';
+import ComponentModel from '@/src/model/Component';
+import ChartView from '@/src/view/Chart';
+import { EChartsOption } from '@/src/export/option';
 
 type OriginModelView = {
     model: SeriesModel;

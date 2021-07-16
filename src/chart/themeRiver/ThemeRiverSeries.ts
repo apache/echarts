@@ -20,7 +20,7 @@
 import SeriesModel from '../../model/Series';
 import createDimensions from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import * as zrUtil from 'zrender/src/core/util';
 import {groupData, SINGLE_REFERRING} from '../../util/model';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
@@ -154,7 +154,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
      * @param  option  the initial option that user gived
      * @param  ecModel  the model object for themeRiver option
      */
-    getInitialData(option: ThemeRiverSeriesOption, ecModel: GlobalModel): List {
+    getInitialData(option: ThemeRiverSeriesOption, ecModel: GlobalModel): SeriesData {
 
         const singleAxisModel = this.getReferringComponents('singleAxis', SINGLE_REFERRING).models[0];
 
@@ -202,7 +202,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             }
         });
 
-        const list = new List(dimensionsInfo, this);
+        const list = new SeriesData(dimensionsInfo, this);
         list.initData(data);
 
         return list;

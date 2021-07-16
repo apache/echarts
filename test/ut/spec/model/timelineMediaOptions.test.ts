@@ -18,13 +18,13 @@
 * under the License.
 */
 
-import { EChartsType } from '../../../../src/echarts';
-import SeriesModel from '../../../../src/model/Series';
-import { ParsedValue } from '../../../../src/util/types';
-import { LegendOption } from '../../../../src/component/legend/LegendModel';
-import TimelineModel from '../../../../src/component/timeline/TimelineModel';
+import { EChartsType } from '@/src/echarts';
+import SeriesModel from '@/src/model/Series';
+import { ParsedValue } from '@/src/util/types';
+import { LegendOption } from '@/src/component/legend/LegendModel';
+import TimelineModel from '@/src/component/timeline/TimelineModel';
 import { createChart, getECModel } from '../../core/utHelper';
-import { EChartsOption } from '../../../../src/export/option';
+import { EChartsOption } from '@/src/export/option';
 
 
 describe('timelineMediaOptions', function () {

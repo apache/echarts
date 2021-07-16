@@ -32,7 +32,7 @@ import {
 import env from 'zrender/src/core/env';
 import GlobalModel from '../model/Global';
 import ComponentModel, {ComponentModelConstructor} from '../model/Component';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import {
     ComponentOption,
     ComponentMainType,
@@ -686,7 +686,7 @@ export function compressBatches(
  *                         each of which can be Array or primary type.
  * @return dataIndex If not found, return undefined/null.
  */
-export function queryDataIndex(data: List, payload: Payload & {
+export function queryDataIndex(data: SeriesData, payload: Payload & {
     dataIndexInside?: number | number[]
     dataIndex?: number | number[]
     name?: string | string[]
@@ -1032,7 +1032,7 @@ export function groupData<T, R extends string | number>(
  *                     Other cases do not supported.
  */
 export function interpolateRawValues(
-    data: List,
+    data: SeriesData,
     precision: number | 'auto',
     sourceValue: InterpolatableValue,
     targetValue: InterpolatableValue,

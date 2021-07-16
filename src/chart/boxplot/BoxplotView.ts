@@ -25,7 +25,7 @@ import Path, { PathProps } from 'zrender/src/graphic/Path';
 import BoxplotSeriesModel, { BoxplotDataItemOption } from './BoxplotSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { BoxplotItemLayout } from './boxplotLayout';
 import { saveOldStyle } from '../../animation/basicTrasition';
 
@@ -33,7 +33,7 @@ class BoxplotView extends ChartView {
     static type = 'boxplot';
     type = BoxplotView.type;
 
-    private _data: List;
+    private _data: SeriesData;
 
     render(seriesModel: BoxplotSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const data = seriesModel.getData();
@@ -141,7 +141,7 @@ class BoxPath extends Path<BoxPathProps> {
 
 function createNormalBox(
     itemLayout: BoxplotItemLayout,
-    data: List,
+    data: SeriesData,
     dataIndex: number,
     constDim: number,
     isInit?: boolean
@@ -164,7 +164,7 @@ function createNormalBox(
 function updateNormalBoxData(
     itemLayout: BoxplotItemLayout,
     el: BoxPath,
-    data: List,
+    data: SeriesData,
     dataIndex: number,
     isInit?: boolean
 ) {

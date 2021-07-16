@@ -21,7 +21,7 @@ import Polyline from './Polyline';
 import EffectLine, {ECSymbolOnEffectLine} from './EffectLine';
 import * as vec2 from 'zrender/src/core/vector';
 import { LineDrawSeriesScope } from './LineDraw';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
 
 class EffectPolyline extends EffectLine {
@@ -33,7 +33,7 @@ class EffectPolyline extends EffectLine {
     private _offsets: number[];
 
     // Override
-    createLine(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
+    createLine(lineData: SeriesData, idx: number, seriesScope: LineDrawSeriesScope) {
         return new Polyline(lineData, idx, seriesScope);
     };
 

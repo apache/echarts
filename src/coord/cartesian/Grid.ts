@@ -44,7 +44,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { Dictionary } from 'zrender/src/core/types';
 import {CoordinateSystemMaster} from '../CoordinateSystem';
 import { ScaleDataValue } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import OrdinalScale from '../../scale/Ordinal';
 import { isCartesian2DSeries, findAxisModels } from './cartesianAxisHelper';
 
@@ -450,7 +450,7 @@ class Grid implements CoordinateSystemMaster {
             }
         }, this);
 
-        function unionExtent(data: List, axis: Axis2D): void {
+        function unionExtent(data: SeriesData, axis: Axis2D): void {
             each(getDataDimensionsOnAxis(data, axis.dim), function (dim) {
                 axis.scale.unionExtentFromData(data, dim);
             });

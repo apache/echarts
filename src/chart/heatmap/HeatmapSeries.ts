@@ -18,7 +18,7 @@
 */
 
 import SeriesModel from '../../model/Series';
-import createListFromArray from '../helper/createListFromArray';
+import createListFromArray from '../helper/createSeriesDataFromArray';
 import CoordinateSystem from '../../core/CoordinateSystem';
 import {
     SeriesOption,
@@ -32,7 +32,7 @@ import {
     SeriesOnCalendarOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import type Geo from '../../coord/geo/Geo';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Calendar from '../../coord/calendar/Calendar';
@@ -72,7 +72,7 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
     // @ts-ignore
     coordinateSystem: Cartesian2D | Geo | Calendar;
 
-    getInitialData(option: HeatmapSeriesOption, ecModel: GlobalModel): List {
+    getInitialData(option: HeatmapSeriesOption, ecModel: GlobalModel): SeriesData {
         return createListFromArray(this.getSource(), this, {
             generateCoord: 'value'
         });

@@ -19,8 +19,8 @@
 */
 
 // import { Dictionary } from 'zrender/src/core/types';
-import { mergeLayoutParam } from '../../../../src/util/layout';
-import { BoxLayoutOptionMixin } from '../../../../src/util/types';
+import { mergeLayoutParam } from '@/src/util/layout';
+import { BoxLayoutOptionMixin } from '@/src/util/types';
 
 describe('util/number', function () {
 

@@ -533,7 +533,6 @@ function applySingleDataTransform(
         return createSource(
             result.data,
             resultMetaRawOption,
-            null,
             null
         );
     });

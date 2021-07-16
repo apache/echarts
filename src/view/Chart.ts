@@ -34,7 +34,7 @@ import {
     StageHandlerPlanReturn, DisplayState, StageHandlerProgressParams, ECElementEvent
 } from '../util/types';
 import { SeriesTaskContext, SeriesTask } from '../core/Scheduler';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 
 const inner = modelUtil.makeInner<{
     updateMethod: keyof ChartView
@@ -206,7 +206,7 @@ function elSetState(el: Element, state: DisplayState, highlightDigit: number) {
     }
 }
 
-function toggleHighlight(data: List, payload: Payload, state: DisplayState) {
+function toggleHighlight(data: SeriesData, payload: Payload, state: DisplayState) {
     const dataIndex = modelUtil.queryDataIndex(data, payload);
 
     const highlightDigit = (payload && payload.highlightKey != null)

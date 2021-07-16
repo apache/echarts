@@ -25,7 +25,7 @@ import {parsePercent} from '../../util/number';
 import {retrieve2} from 'zrender/src/core/util';
 import { StageHandler, StageHandlerProgressParams } from '../../util/types';
 import CandlestickSeriesModel from './CandlestickSeries';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 
 const LargeArr = typeof Float32Array !== 'undefined' ? Float32Array : Array;
@@ -78,7 +78,7 @@ const candlestickLayout: StageHandler = {
                 ? largeProgress : normalProgress
         };
 
-        function normalProgress(params: StageHandlerProgressParams, data: List) {
+        function normalProgress(params: StageHandlerProgressParams, data: SeriesData) {
             let dataIndex;
             while ((dataIndex = params.next()) != null) {
 
@@ -162,7 +162,7 @@ const candlestickLayout: StageHandler = {
             }
         }
 
-        function largeProgress(params: StageHandlerProgressParams, data: List) {
+        function largeProgress(params: StageHandlerProgressParams, data: SeriesData) {
             // Structure: [sign, x, yhigh, ylow, sign, x, yhigh, ylow, ...]
             const points = new LargeArr(params.count * 4);
             let offset = 0;
@@ -202,7 +202,7 @@ const candlestickLayout: StageHandler = {
     }
 };
 
-function getSign(data: List, dataIndex: number, openVal: number, closeVal: number, closeDim: string) {
+function getSign(data: SeriesData, dataIndex: number, openVal: number, closeVal: number, closeDim: string) {
     let sign;
     if (openVal > closeVal) {
         sign = -1;
@@ -221,7 +221,7 @@ function getSign(data: List, dataIndex: number, openVal: number, closeVal: numbe
     return sign;
 }
 
-function calculateCandleWidth(seriesModel: CandlestickSeriesModel, data: List) {
+function calculateCandleWidth(seriesModel: CandlestickSeriesModel, data: SeriesData) {
     const baseAxis = seriesModel.getBaseAxis();
     let extent;
 
