@@ -28,7 +28,8 @@ import {
     ItemStyleOption,
     OptionDataValueNumeric,
     StatesOptionMixin,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    ColorByMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -115,6 +116,7 @@ export interface GaugeDataItemOption extends GaugeStateOption, StatesOptionMixin
     detail?: DetailOption
 }
 export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, GaugeStateOption,
+    ColorByMixin,
     CircleLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'gauge'
 
@@ -182,7 +184,6 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
     type = GaugeSeriesModel.type;
 
     visualStyleAccessPath = 'itemStyle';
-    useColorPaletteOnData = true;
 
     getInitialData(option: GaugeSeriesOption, ecModel: GlobalModel): List {
         return createListSimply(this, ['value']);
@@ -191,6 +192,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
     static defaultOption: GaugeSeriesOption = {
         zlevel: 0,
         z: 2,
+        colorBy: 'data',
         // 默认全局居中
         center: ['50%', '50%'],
         legendHoverLink: true,

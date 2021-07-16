@@ -850,6 +850,16 @@ export interface BorderOptionMixin {
     borderMiterLimit?: number
 }
 
+export type ColorBy = 'series' | 'data';
+
+export interface ColorByMixin {
+    colorBy?: ColorBy
+}
+
+export interface SunburstColorByMixin {
+    colorBy?: ColorBy
+}
+
 export type AnimationDelayCallbackParam = {
     count: number
     index: number
