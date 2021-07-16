@@ -271,6 +271,7 @@ under the License.
                             data: ['scatter', 'scatter2']
                         },
                         geo: [{
+                            show: false,
                             map: 'china',
                             roam: true,
                             left: 100,
@@ -296,20 +297,6 @@ under the License.
                                     }
                                 }
                             }]
-                        }, {
-                            map: 'china',
-                            roam: true,
-                            selectedMode: 'multiple',
-                            left: null,
-                            right: 100,
-                            width: 300,
-                            itemStyle: {
-                                repeat: 'repeat',
-                                areaColor: {
-                                    image: pattern,
-                                    repeat: 'repeat'
-                                }
-                            }
                         }],
                         tooltip: {
                             trigger: 'axis',
@@ -319,6 +306,14 @@ under the License.
                         },
                         series: []
                     });
+
+                    setTimeout(function () {
+                        chart.setOption({
+                            geo: {
+                                show: true
+                            }
+                        })
+                    }, 2000)
 
                     chart.on('geoselectchanged', function (param) {
                         console.log(param);
