@@ -41,6 +41,7 @@
   "calendar-heatmap": 1,
   "calendar-month": 1,
   "candlestick": 2,
+  "candlestick-case": 1,
   "candlestick-empty": 1,
   "candlestick-large": 4,
   "candlestick-large2": 1,
