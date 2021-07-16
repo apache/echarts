@@ -931,14 +931,13 @@ class TooltipView extends ComponentView {
         let contentNotChanged = !!lastCoordSys
             && lastCoordSys.length === dataByCoordSys.length;
 
-        const self = this;
-        contentNotChanged && each(lastCoordSys, function (lastItemCoordSys, indexCoordSys) {
+        contentNotChanged && each(lastCoordSys, (lastItemCoordSys, indexCoordSys) => {
             const lastDataByAxis = lastItemCoordSys.dataByAxis || [] as DataByAxis[];
             const thisItemCoordSys = dataByCoordSys[indexCoordSys] || {} as DataByCoordSys;
             const thisDataByAxis = thisItemCoordSys.dataByAxis || [] as DataByAxis[];
             contentNotChanged = contentNotChanged && lastDataByAxis.length === thisDataByAxis.length;
 
-            contentNotChanged && each(lastDataByAxis, function (lastItem, indexAxis) {
+            contentNotChanged && each(lastDataByAxis, (lastItem, indexAxis) => {
                 const thisItem = thisDataByAxis[indexAxis] || {} as DataByAxis;
                 const lastIndices = lastItem.seriesDataIndices || [] as DataIndex[];
                 const newIndices = thisItem.seriesDataIndices || [] as DataIndex[];
@@ -949,7 +948,7 @@ class TooltipView extends ComponentView {
                     && lastItem.axisId === thisItem.axisId
                     && lastIndices.length === newIndices.length;
 
-                contentNotChanged && each(lastIndices, function (lastIdxItem, j) {
+                contentNotChanged && each(lastIndices, (lastIdxItem, j) => {
                     const newIdxItem = newIndices[j];
                     contentNotChanged = contentNotChanged
                         && lastIdxItem.seriesIndex === newIdxItem.seriesIndex
@@ -958,8 +957,7 @@ class TooltipView extends ComponentView {
 
                 // check is cbParams data value changed
                 lastCbParamsList && zrUtil.each(lastItem.seriesDataIndices, (idxItem) => {
-                    const series = self._ecModel.getSeriesByIndex(idxItem.seriesIndex);
-                    const cbParams = series.getDataParams(idxItem.dataIndexInside) as TooltipCallbackDataParams;
+                    const cbParams = cbParamsList[idxItem.dataIndexInside];
                     if (lastCbParamsList[idxItem.seriesIndex].data !== cbParams.data) {
                         contentNotChanged = false;
                     }
