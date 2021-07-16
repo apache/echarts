@@ -957,7 +957,10 @@ class TooltipView extends ComponentView {
 
                 // check is cbParams data value changed
                 lastCbParamsList && zrUtil.each(lastItem.seriesDataIndices, (idxItem) => {
-                    const cbParams = cbParamsList[idxItem.dataIndexInside];
+                    const cbParams = cbParamsList[idxItem.seriesIndex];
+                    if (!cbParams) {
+                        return;
+                    }
                     if (lastCbParamsList[idxItem.seriesIndex].data !== cbParams.data) {
                         contentNotChanged = false;
                     }
