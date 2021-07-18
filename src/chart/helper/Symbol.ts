@@ -65,7 +65,8 @@ class Symbol extends graphic.Group {
         data: List,
         idx: number,
         symbolSize: number[],
-        keepAspect: boolean
+        keepAspect: boolean,
+        rotate: number
     ) {
         // Remove paths created before
         this.removeAll();
@@ -77,7 +78,7 @@ class Symbol extends graphic.Group {
         // and macOS Sierra, a circle stroke become a rect, no matter what
         // the scale is set. So we set width/height as 2. See #4150.
         const symbolPath = createSymbol(
-            symbolType, -1, -1, 2, 2, null, keepAspect
+            symbolType, -1, -1, 2, 2, null, keepAspect, rotate
         );
 
         symbolPath.attr({
@@ -162,7 +163,8 @@ class Symbol extends graphic.Group {
 
         if (isInit) {
             const keepAspect = data.getItemVisual(idx, 'symbolKeepAspect');
-            this._createSymbol(symbolType as string, data, idx, symbolSize, keepAspect);
+            const rotate = data.getItemVisual(idx, 'symbolRotate') || 0;
+            this._createSymbol(symbolType as string, data, idx, symbolSize, keepAspect, rotate);
         }
         else {
             const symbolPath = this.childAt(0) as ECSymbol;
