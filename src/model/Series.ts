@@ -399,6 +399,10 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         return colorBy || 'series';
     }
 
+    isColorBySeries(): boolean {
+        return this.getColorBy() === 'series';
+    }
+
     /**
      * Get base axis if has coordinate system and has axis.
      * By default use coordSys.getBaseAxis();
