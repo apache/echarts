@@ -25,7 +25,6 @@ import { BarGridLayoutOptionForCustomSeries, BarGridLayoutResult } from '../../l
 import {
     BlurScope,
     CallbackDataParams,
-    ColorByMixin,
     Dictionary,
     DimensionLoose,
     ItemStyleOption,
@@ -342,7 +341,6 @@ interface CustomSeriesStateOption {
 }
 
 export interface CustomSeriesOption extends
-    ColorByMixin,
     SeriesOption<never>,    // don't support StateOption in custom series.
     SeriesEncodeOptionMixin,
     SeriesOnCartesianOptionMixin,

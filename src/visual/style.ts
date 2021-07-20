@@ -18,7 +18,7 @@
 */
 
 import { isFunction, extend, createHashMap } from 'zrender/src/core/util';
-import { StageHandler, CallbackDataParams, ZRColor, Dictionary, InnerDecalObject, SeriesOption, ColorByMixin }
+import { StageHandler, CallbackDataParams, ZRColor, Dictionary, InnerDecalObject, SeriesOption }
     from '../util/types';
 import makeStyleMapper from '../model/mixin/makeStyleMapper';
 import { ITEM_STYLE_KEY_MAP } from '../model/mixin/itemStyle';
@@ -180,7 +180,7 @@ const dataColorPaletteTask: StageHandler = {
         // Each type of series use one scope.
         // Pie and funnel are using diferrent scopes
         const paletteScopeGroupByType = createHashMap<object>();
-        ecModel.eachSeries((seriesModel: SeriesModel<SeriesOption & ColorByMixin>) => {
+        ecModel.eachSeries((seriesModel: SeriesModel) => {
             const colorBy = seriesModel.getColorBy();
             if (seriesModel.isColorBySeries()) {
                 return;
@@ -195,7 +195,7 @@ const dataColorPaletteTask: StageHandler = {
         });
 
 
-        ecModel.eachSeries((seriesModel: SeriesModel<SeriesOption & ColorByMixin>) => {
+        ecModel.eachSeries((seriesModel: SeriesModel) => {
             if (seriesModel.isColorBySeries() || ecModel.isSeriesFiltered(seriesModel)) {
                 return;
             }

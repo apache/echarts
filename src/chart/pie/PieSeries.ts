@@ -36,8 +36,7 @@ import {
     OptionDataItemObject,
     StatesOptionMixin,
     SeriesLabelOption,
-    DefaultEmphasisFocus,
-    ColorByMixin
+    DefaultEmphasisFocus
 } from '../../util/types';
 import List from '../../data/List';
 
@@ -97,7 +96,7 @@ export interface PieDataItemOption extends
 }
 export interface PieSeriesOption extends
     Omit<SeriesOption<PieStateOption, ExtraStateOption>, 'labelLine'>, PieStateOption,
-    ColorByMixin,
+
     CircleLayoutOptionMixin,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {

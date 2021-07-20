@@ -36,8 +36,7 @@ import {
     OptionDataItemObject,
     SeriesEncodeOptionMixin,
     CallbackDataParams,
-    DefaultEmphasisFocus,
-    ColorByMixin
+    DefaultEmphasisFocus
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -61,7 +60,7 @@ export interface ScatterDataItemOption extends SymbolOptionMixin,
 }
 
 export interface ScatterSeriesOption extends SeriesOption<ScatterStateOption, ExtraStateOption>, ScatterStateOption,
-    ColorByMixin,
+
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SeriesLargeOptionMixin, SeriesStackOptionMixin,

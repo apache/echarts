@@ -32,8 +32,7 @@ import {
     SeriesLabelOption,
     StatesOptionMixin,
     SeriesEncodeOptionMixin,
-    CallbackDataParams,
-    ColorByMixin
+    CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -58,7 +57,6 @@ export interface EffectScatterDataItemOption extends SymbolOptionMixin,
 }
 
 export interface EffectScatterSeriesOption extends SeriesOption<EffectScatterStateOption>, EffectScatterStateOption,
-    ColorByMixin,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin, SymbolOptionMixin<CallbackDataParams>,
     SeriesEncodeOptionMixin {

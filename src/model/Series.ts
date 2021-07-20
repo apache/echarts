@@ -24,7 +24,7 @@ import {
     DataHost, DimensionName, StageHandlerProgressParams,
     SeriesOption, ZRColor, BoxLayoutOptionMixin,
     ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType,
-    ColorBy, ColorByMixin
+    ColorBy
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {PaletteMixin} from './mixin/palette';
@@ -395,7 +395,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     getColorBy(): ColorBy {
-        const colorBy = (this as SeriesModel<SeriesOption & ColorByMixin>).get('colorBy');
+        const colorBy = this.get('colorBy');
         return colorBy || 'series';
     }
 

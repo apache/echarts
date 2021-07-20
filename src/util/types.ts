@@ -852,10 +852,6 @@ export interface BorderOptionMixin {
 
 export type ColorBy = 'series' | 'data';
 
-export interface ColorByMixin {
-    colorBy?: ColorBy
-}
-
 export interface SunburstColorByMixin {
     colorBy?: ColorBy
 }
@@ -1608,6 +1604,8 @@ export interface SeriesOption<
     dataGroupId?: OptionId
     // Needs to be override
     data?: unknown
+
+    colorBy?: ColorBy
 
     legendHoverLink?: boolean
 

@@ -28,8 +28,7 @@ import {
     ItemStyleOption,
     OptionDataValueNumeric,
     StatesOptionMixin,
-    SeriesEncodeOptionMixin,
-    ColorByMixin
+    SeriesEncodeOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -44,7 +43,7 @@ interface LabelFormatter {
 interface PointerOption {
     icon?: string
     show?: boolean
-    /** 
+    /**
      * If pointer shows above title and detail
      */
     showAbove?: boolean,
@@ -116,7 +115,7 @@ export interface GaugeDataItemOption extends GaugeStateOption, StatesOptionMixin
     detail?: DetailOption
 }
 export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, GaugeStateOption,
-    ColorByMixin,
+
     CircleLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'gauge'
 

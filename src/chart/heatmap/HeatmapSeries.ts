@@ -29,8 +29,7 @@ import {
     OptionDataValue,
     StatesOptionMixin,
     SeriesEncodeOptionMixin,
-    SeriesOnCalendarOptionMixin,
-    ColorByMixin
+    SeriesOnCalendarOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -51,7 +50,7 @@ export interface HeatmapDataItemOption extends HeatmapStateOption, StatesOptionM
 }
 
 export interface HeatmapSeriesOption extends SeriesOption<HeatmapStateOption>, HeatmapStateOption,
-    ColorByMixin,
+
     SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesOnCalendarOptionMixin, SeriesEncodeOptionMixin {
     type?: 'heatmap'
 

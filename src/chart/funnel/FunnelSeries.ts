@@ -36,8 +36,7 @@ import {
     LayoutOrient,
     VerticalAlign,
     SeriesLabelOption,
-    SeriesEncodeOptionMixin,
-    ColorByMixin
+    SeriesEncodeOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -64,7 +63,7 @@ export interface FunnelDataItemOption
 }
 
 export interface FunnelSeriesOption extends SeriesOption<FunnelStateOption>, FunnelStateOption,
-    ColorByMixin,
+
     BoxLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'funnel'
 

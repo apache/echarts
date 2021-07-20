@@ -24,7 +24,7 @@ import GlobalModel from '../model/Global';
 import Model from '../model/Model';
 import SeriesModel from '../model/Series';
 import {makeInner} from '../util/model';
-import {Dictionary, DecalObject, InnerDecalObject, AriaOption, SeriesOption, ColorByMixin} from '../util/types';
+import {Dictionary, DecalObject, InnerDecalObject, AriaOption, SeriesOption} from '../util/types';
 import {LocaleOption} from '../core/locale';
 import { getDecalFromPalette } from '../model/mixin/palette';
 import type {TitleOption} from '../component/title/install';
@@ -67,7 +67,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
             // Each type of series use one scope.
             // Pie and funnel are using diferrent scopes
             const paletteScopeGroupByType = zrUtil.createHashMap<object>();
-            ecModel.eachSeries((seriesModel: SeriesModel<SeriesOption & ColorByMixin>) => {
+            ecModel.eachSeries((seriesModel: SeriesModel) => {
                 if (seriesModel.isColorBySeries()) {
                     return;
                 }
@@ -79,7 +79,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
                 inner(seriesModel).scope = decalScope;
             });
 
-            ecModel.eachRawSeries((seriesModel: SeriesModel<SeriesOption & ColorByMixin>) => {
+            ecModel.eachRawSeries((seriesModel: SeriesModel) => {
                 if (ecModel.isSeriesFiltered(seriesModel)) {
                     return;
                 }

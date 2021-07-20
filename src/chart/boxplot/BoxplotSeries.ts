@@ -28,8 +28,7 @@ import {
     OptionDataValueNumeric,
     StatesOptionMixin,
     SeriesEncodeOptionMixin,
-    DefaultEmphasisFocus,
-    ColorByMixin
+    DefaultEmphasisFocus
 } from '../../util/types';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -57,7 +56,6 @@ interface ExtraStateOption {
 }
 
 export interface BoxplotSeriesOption extends SeriesOption<BoxplotStateOption, ExtraStateOption>, BoxplotStateOption,
-    ColorByMixin,
     SeriesOnCartesianOptionMixin, SeriesEncodeOptionMixin {
     type?: 'boxplot'
 
