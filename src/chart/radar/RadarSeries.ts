@@ -152,7 +152,8 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
         radarIndex: 0,
         lineStyle: {
             width: 2,
-            type: 'solid'
+            type: 'solid',
+            join: 'round'
         },
         label: {
             position: 'top'
