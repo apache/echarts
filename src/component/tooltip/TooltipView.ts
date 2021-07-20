@@ -555,6 +555,11 @@ class TooltipView extends ComponentView {
                     const series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
                     const dataIndex = idxItem.dataIndexInside;
                     const cbParams = series.getDataParams(dataIndex) as TooltipCallbackDataParams;
+                    // Can't find data.
+                    if (cbParams.dataIndex < 0) {
+                        return;
+                    }
+
                     cbParams.axisDim = axisItem.axisDim;
                     cbParams.axisIndex = axisItem.axisIndex;
                     cbParams.axisType = axisItem.axisType;
@@ -929,8 +934,10 @@ class TooltipView extends ComponentView {
 
     // FIXME
     // Should we remove this but leave this to user?
-    private _updateContentNotChangedOnAxis(dataByCoordSys: DataByCoordSys[],
-        cbParamsList: TooltipCallbackDataParams[]) {
+    private _updateContentNotChangedOnAxis(
+        dataByCoordSys: DataByCoordSys[],
+        cbParamsList: TooltipCallbackDataParams[]
+    ) {
         const lastCoordSys = this._lastDataByCoordSys;
         const lastCbParamsList = this._cbParamsList;
         let contentNotChanged = !!lastCoordSys
