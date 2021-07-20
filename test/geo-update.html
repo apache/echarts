@@ -38,6 +38,7 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main1"></div>
 
 
 
@@ -375,6 +376,54 @@ under the License.
         });
         </script>
 
+        <script>
+
+            require(['echarts', 'map/js/china'], function (echarts) {
+                option = {
+                    geo: {
+                        map: 'china',
+                        roam: true
+                    }
+                };
+
+                let zoom = 1;
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Should switch from hide to show properly',
+                    ],
+                    option: option,
+                    buttons: [{
+                        text: 'Show',
+                        onclick() {
+                            chart.setOption({
+                                geo: {
+                                    show: true
+                                }
+                            });
+                        }
+                    }, {
+                        text: 'Hide',
+                        onclick() {
+                            chart.setOption({
+                                geo: {
+                                    show: false
+                                }
+                            });
+                        }
+                    }, {
+                        text: 'Zoom',
+                        onclick() {
+                            chart.setOption({
+                                geo: {
+                                    zoom: ++zoom
+                                }
+                            });
+                        }
+                    }],
+                    height: 300
+                });
+            });
+        </script>
 
     </body>
 </html>

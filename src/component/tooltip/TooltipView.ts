@@ -47,7 +47,7 @@ import {
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import TooltipModel, {TooltipOption} from './TooltipModel';
+import TooltipModel, { TooltipOption } from './TooltipModel';
 import Element from 'zrender/src/Element';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 // import { isDimensionStacked } from '../../data/helper/dataStackHelper';
@@ -63,7 +63,7 @@ const each = zrUtil.each;
 const parsePercent = numberUtil.parsePercent;
 
 const proxyRect = new graphic.Rect({
-    shape: {x: -1, y: -1, width: 2, height: 2}
+    shape: { x: -1, y: -1, width: 2, height: 2 }
 });
 
 interface DataIndex {
@@ -165,6 +165,7 @@ class TooltipView extends ComponentView {
     private _showTimout: number;
 
     private _lastDataByCoordSys: DataByCoordSys[];
+    private _cbParamsList: TooltipCallbackDataParams[];
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         if (env.node) {
@@ -599,7 +600,7 @@ class TooltipView extends ComponentView {
         const allMarkupText = markupTextArrLegacy.join(blockBreak);
 
         this._showOrMove(singleTooltipModel, function (this: TooltipView) {
-            if (this._updateContentNotChangedOnAxis(dataByCoordSys)) {
+            if (this._updateContentNotChangedOnAxis(dataByCoordSys, cbParamsList)) {
                 this._updatePosition(
                     singleTooltipModel,
                     positionExpr,
@@ -887,7 +888,7 @@ class TooltipView extends ComponentView {
             boxLayoutPosition.width = contentSize[0];
             boxLayoutPosition.height = contentSize[1];
             const layoutRect = layoutUtil.getLayoutRect(
-                boxLayoutPosition, {width: viewWidth, height: viewHeight}
+                boxLayoutPosition, { width: viewWidth, height: viewHeight }
             );
             x = layoutRect.x;
             y = layoutRect.y;
@@ -928,18 +929,20 @@ class TooltipView extends ComponentView {
 
     // FIXME
     // Should we remove this but leave this to user?
-    private _updateContentNotChangedOnAxis(dataByCoordSys: DataByCoordSys[]) {
+    private _updateContentNotChangedOnAxis(dataByCoordSys: DataByCoordSys[],
+        cbParamsList: TooltipCallbackDataParams[]) {
         const lastCoordSys = this._lastDataByCoordSys;
+        const lastCbParamsList = this._cbParamsList;
         let contentNotChanged = !!lastCoordSys
             && lastCoordSys.length === dataByCoordSys.length;
 
-        contentNotChanged && each(lastCoordSys, function (lastItemCoordSys, indexCoordSys) {
+        contentNotChanged && each(lastCoordSys, (lastItemCoordSys, indexCoordSys) => {
             const lastDataByAxis = lastItemCoordSys.dataByAxis || [] as DataByAxis[];
             const thisItemCoordSys = dataByCoordSys[indexCoordSys] || {} as DataByCoordSys;
             const thisDataByAxis = thisItemCoordSys.dataByAxis || [] as DataByAxis[];
             contentNotChanged = contentNotChanged && lastDataByAxis.length === thisDataByAxis.length;
 
-            contentNotChanged && each(lastDataByAxis, function (lastItem, indexAxis) {
+            contentNotChanged && each(lastDataByAxis, (lastItem, indexAxis) => {
                 const thisItem = thisDataByAxis[indexAxis] || {} as DataByAxis;
                 const lastIndices = lastItem.seriesDataIndices || [] as DataIndex[];
                 const newIndices = thisItem.seriesDataIndices || [] as DataIndex[];
@@ -950,16 +953,25 @@ class TooltipView extends ComponentView {
                     && lastItem.axisId === thisItem.axisId
                     && lastIndices.length === newIndices.length;
 
-                contentNotChanged && each(lastIndices, function (lastIdxItem, j) {
+                contentNotChanged && each(lastIndices, (lastIdxItem, j) => {
                     const newIdxItem = newIndices[j];
                     contentNotChanged = contentNotChanged
                         && lastIdxItem.seriesIndex === newIdxItem.seriesIndex
                         && lastIdxItem.dataIndex === newIdxItem.dataIndex;
                 });
+
+                // check is cbParams data value changed
+                lastCbParamsList && zrUtil.each(lastItem.seriesDataIndices, (idxItem) => {
+                    const cbParams = cbParamsList[idxItem.seriesIndex];
+                    if (cbParams && lastCbParamsList[idxItem.seriesIndex].data !== cbParams.data) {
+                        contentNotChanged = false;
+                    }
+                });
             });
         });
 
         this._lastDataByCoordSys = dataByCoordSys;
+        this._cbParamsList = cbParamsList;
 
         return !!contentNotChanged;
     }

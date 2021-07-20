@@ -94,18 +94,21 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
         const otherAxisType = axisModels[1 - baseAxisDimIndex].get('type');
         const data = option.data as WhiskerBoxCommonData;
 
-        // ??? FIXME make a stage to perform data transfrom.
-        // MUST create a new data, consider setOption({}) again.
+        // Clone a new data for next setOption({}) usage.
+        // Avoid modifying current data will affect further update.
         if (data && addOrdinal) {
             const newOptionData: WhiskerBoxCommonData = [];
             zrUtil.each(data, function (item, index) {
                 let newItem;
                 if (zrUtil.isArray(item)) {
                     newItem = item.slice();
+                    // Modify current using data.
                     item.unshift(index);
                 }
                 else if (zrUtil.isArray(item.value)) {
-                    newItem = item.value.slice();
+                    newItem = zrUtil.extend({}, item);
+                    newItem.value = newItem.value.slice();
+                    // Modify current using data.
                     item.value.unshift(index);
                 }
                 else {
