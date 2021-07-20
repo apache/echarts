@@ -61,8 +61,7 @@ interface ExtraStateOption {
 }
 
 export interface CandlestickSeriesOption
-    extends SeriesOption<CandlestickStateOption, ExtraStateOption>,
-    CandlestickStateOption,
+    extends SeriesOption<CandlestickStateOption, ExtraStateOption>, CandlestickStateOption,
     SeriesOnCartesianOptionMixin,
     SeriesLargeOptionMixin,
     SeriesEncodeOptionMixin {

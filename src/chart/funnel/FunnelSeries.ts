@@ -63,7 +63,6 @@ export interface FunnelDataItemOption
 }
 
 export interface FunnelSeriesOption extends SeriesOption<FunnelStateOption>, FunnelStateOption,
-
     BoxLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'funnel'
 

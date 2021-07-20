@@ -50,7 +50,6 @@ export interface HeatmapDataItemOption extends HeatmapStateOption, StatesOptionM
 }
 
 export interface HeatmapSeriesOption extends SeriesOption<HeatmapStateOption>, HeatmapStateOption,
-
     SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesOnCalendarOptionMixin, SeriesEncodeOptionMixin {
     type?: 'heatmap'
 

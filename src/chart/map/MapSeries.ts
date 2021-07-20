@@ -58,8 +58,6 @@ export type MapValueCalculationType = 'sum' | 'average' | 'min' | 'max';
 export interface MapSeriesOption extends
     SeriesOption<MapStateOption>, MapStateOption,
 
-
-
     GeoCommonOptionMixin,
     // If `geoIndex` is not specified, a exclusive geo will be
     // created. Otherwise use the specified geo component, and

@@ -115,7 +115,6 @@ export interface GaugeDataItemOption extends GaugeStateOption, StatesOptionMixin
     detail?: DetailOption
 }
 export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, GaugeStateOption,
-
     CircleLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'gauge'
 

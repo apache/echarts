@@ -82,7 +82,6 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
         areaStyle?: AreaStyleOption
     }
 }>, LineStateOption,
-
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,

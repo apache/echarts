@@ -93,7 +93,6 @@ export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStat
 
 export interface SankeySeriesOption
     extends SeriesOption<SankeyBothStateOption, ExtraStateOption>, SankeyBothStateOption,
-
     BoxLayoutOptionMixin {
     type?: 'sankey'
 

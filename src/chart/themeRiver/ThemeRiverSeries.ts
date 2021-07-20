@@ -54,7 +54,6 @@ export interface ThemeRiverStateOption {
 }
 
 export interface ThemeRiverSeriesOption extends SeriesOption<ThemeRiverStateOption>, ThemeRiverStateOption,
-
     SeriesOnSingleOptionMixin, BoxLayoutOptionMixin {
     type?: 'themeRiver'
 

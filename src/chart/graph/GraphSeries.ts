@@ -137,7 +137,6 @@ export interface GraphCategoryItemOption extends SymbolOptionMixin,
 }
 
 export interface GraphSeriesOption extends SeriesOption,
-
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SymbolOptionMixin<CallbackDataParams>,

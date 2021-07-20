@@ -53,7 +53,6 @@ export interface ParallelSeriesDataItemOption extends ParallelStateOption, State
 
 export interface ParallelSeriesOption extends
     SeriesOption<ParallelStateOption>, ParallelStateOption,
-
     SeriesEncodeOptionMixin {
 
     type?: 'parallel';

@@ -96,7 +96,6 @@ export interface PieDataItemOption extends
 }
 export interface PieSeriesOption extends
     Omit<SeriesOption<PieStateOption, ExtraStateOption>, 'labelLine'>, PieStateOption,
-
     CircleLayoutOptionMixin,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {
