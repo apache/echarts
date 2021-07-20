@@ -101,6 +101,7 @@ export interface LinesDataItemOption extends LinesStateOption, StatesOptionMixin
 }
 
 export interface LinesSeriesOption extends SeriesOption<LinesStateOption>, LinesStateOption,
+
     SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesOnPolarOptionMixin,
     SeriesOnCalendarOptionMixin, SeriesLargeOptionMixin {
 

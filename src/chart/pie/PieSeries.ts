@@ -129,8 +129,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
     static type = 'series.pie' as const;
 
-    useColorPaletteOnData = true;
-
     /**
      * @overwrite
      */
@@ -203,7 +201,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         zlevel: 0,
         z: 2,
         legendHoverLink: true,
-
+        colorBy: 'data',
         // 默认全局居中
         center: ['50%', '50%'],
         radius: [0, '75%'],
