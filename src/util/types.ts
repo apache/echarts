@@ -1109,8 +1109,6 @@ export interface LabelOption extends TextCommonOption {
     // formatter?: string | ((params: CallbackDataParams) => string)
 
     rich?: Dictionary<TextCommonOption>
-    ellipsis?: TextStyleProps['ellipsis']
-    lineOverflow?: TextStyleProps['lineOverflow']
 }
 
 export interface SeriesLabelOption extends LabelOption {
@@ -1360,10 +1358,12 @@ export interface CommonTooltipOption<FormatterParams> {
         'color' | 'fontStyle' | 'fontWeight' | 'fontFamily' | 'fontSize' |
         'lineHeight' | 'width' | 'height' | 'textBorderColor' | 'textBorderWidth' |
         'textShadowColor' | 'textShadowBlur' | 'textShadowOffsetX' | 'textShadowOffsetY'
-        | 'align' | 'overflow' | 'ellipsis' | 'lineOverflow'> & {
+        | 'align' | 'overflow'> & {
 
         // Available when renderMode is html
         decoration?: string
+        ellipsis?: TextStyleProps['ellipsis']
+        lineOverflow?: TextStyleProps['lineOverflow']
     }
 }
 

@@ -170,8 +170,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
         },
         textStyle: {
             color: '#666',
-            fontSize: 14,
-            lineOverflow: 'truncate'
+            fontSize: 14
         }
     };
 }

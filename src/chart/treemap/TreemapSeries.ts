@@ -305,7 +305,6 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             upperLabel: {
                 show: true,
                 position: [0, '50%'],
-                ellipsis: '...',
                 verticalAlign: 'middle'
             }
         },
