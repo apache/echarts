@@ -32,6 +32,7 @@ import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
 import {extend} from 'zrender/src/core/util';
+import {setCommonECData} from '../../util/innerStore';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
 
@@ -439,6 +440,9 @@ class GaugeView extends ChartView {
                             }
                         }, seriesModel);
                         group.add(progress);
+                        // Add data index and series index for indexing the data by element
+                        // Useful in tooltip
+                        setCommonECData(seriesModel.seriesIndex, data.dataType, idx, progress);
                         progressList[idx] = progress;
                     }
                 })
@@ -471,6 +475,9 @@ class GaugeView extends ChartView {
                             }
                         }, seriesModel);
                         group.add(progress);
+                        // Add data index and series index for indexing the data by element
+                        // Useful in tooltip
+                        setCommonECData(seriesModel.seriesIndex, data.dataType, newIdx, progress);
                         progressList[newIdx] = progress;
                     }
                 })
@@ -568,6 +575,8 @@ class GaugeView extends ChartView {
         const newDetailEls: graphic.Text[] = [];
         const hasAnimation = seriesModel.isAnimationEnabled();
 
+        const showPointerAbove = seriesModel.get(['pointer', 'showAbove']);
+
         data.diff(this._data)
             .add((idx) => {
                 newTitleEls[idx] = new graphic.Text({
@@ -598,6 +607,7 @@ class GaugeView extends ChartView {
                 const titleY = posInfo.cy + parsePercent(titleOffsetCenter[1], posInfo.r);
                 const labelEl = newTitleEls[idx];
                 labelEl.attr({
+                    z2: showPointerAbove ? 0 : 2,
                     style: createTextStyle(itemTitleModel, {
                         x: titleX,
                         y: titleY,
@@ -623,7 +633,7 @@ class GaugeView extends ChartView {
                 const labelEl = newDetailEls[idx];
                 const formatter = itemDetailModel.get('formatter');
                 labelEl.attr({
-                    z2: 10,
+                    z2: showPointerAbove ? 0 : 2,
                     style: createTextStyle(itemDetailModel, {
                         x: detailX,
                         y: detailY,

@@ -60,7 +60,7 @@ function mirrorPos(pos: string): string {
 }
 
 function assembleArrow(
-    backgroundColor: ColorString,
+    tooltipModel: Model<TooltipOption>,
     borderColor: ZRColor,
     arrowPosition: TooltipOption['position']
 ) {
@@ -68,28 +68,39 @@ function assembleArrow(
         return '';
     }
 
+    const backgroundColor = tooltipModel.get('backgroundColor');
+    const borderWidth = tooltipModel.get('borderWidth');
+
     borderColor = convertToColorString(borderColor);
     const arrowPos = mirrorPos(arrowPosition);
-    let positionStyle = `${arrowPos}:-6px;`;
+    const arrowSize = Math.max(Math.round(borderWidth) * 1.5, 6);
+    let positionStyle = '';
     let transformStyle = CSS_TRANSFORM_VENDOR + ':';
+    let rotateDeg;
     if (indexOf(['left', 'right'], arrowPos) > -1) {
         positionStyle += 'top:50%';
-        transformStyle += `translateY(-50%) rotate(${arrowPos === 'left' ? -225 : -45}deg)`;
+        transformStyle += `translateY(-50%) rotate(${rotateDeg = arrowPos === 'left' ? -225 : -45}deg)`;
     }
     else {
         positionStyle += 'left:50%';
-        transformStyle += `translateX(-50%) rotate(${arrowPos === 'top' ? 225 : 45}deg)`;
+        transformStyle += `translateX(-50%) rotate(${rotateDeg = arrowPos === 'top' ? 225 : 45}deg)`;
     }
+    const rotateRadian = rotateDeg * Math.PI / 180;
+    const arrowWH = arrowSize + borderWidth;
+    const rotatedWH = arrowWH * Math.abs(Math.cos(rotateRadian)) + arrowWH * Math.abs(Math.sin(rotateRadian));
+    const arrowOffset = Math.round(((rotatedWH - Math.SQRT2 * borderWidth) / 2
+        + Math.SQRT2 * borderWidth - (rotatedWH - arrowWH) / 2) * 100) / 100;
+    positionStyle += `;${arrowPos}:-${arrowOffset}px`;
 
-    const borderStyle = `${borderColor} solid 1px;`;
+    const borderStyle = `${borderColor} solid ${borderWidth}px;`;
     const styleCss = [
-        'position:absolute;width:10px;height:10px;',
+        `position:absolute;width:${arrowSize}px;height:${arrowSize}px;`,
         `${positionStyle};${transformStyle};`,
         `border-bottom:${borderStyle}`,
         `border-right:${borderStyle}`,
-        `background-color:${backgroundColor};`,
-        'box-shadow:8px 8px 16px -3px #000;'
+        `background-color:${backgroundColor};`
     ];
+
     return `<div style="${styleCss.join('')}"></div>`;
 }
 
@@ -397,24 +408,26 @@ class TooltipHTMLContent {
     }
 
     setContent(
-        content: string | HTMLElement[],
+        content: string | HTMLElement | HTMLElement[],
         markers: unknown,
         tooltipModel: Model<TooltipOption>,
         borderColor?: ZRColor,
         arrowPosition?: TooltipOption['position']
     ) {
+        const el = this.el;
+
         if (content == null) {
+            el.innerHTML = '';
             return;
         }
 
-        const el = this.el;
-
+        let arrow = '';
         if (isString(arrowPosition) && tooltipModel.get('trigger') === 'item'
             && !shouldTooltipConfine(tooltipModel)) {
-            content += assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition);
+            arrow = assembleArrow(tooltipModel, borderColor, arrowPosition);
         }
         if (isString(content)) {
-            el.innerHTML = content;
+            el.innerHTML = content + arrow;
         }
         else if (content) {
             // Clear previous
@@ -427,6 +440,14 @@ class TooltipHTMLContent {
                     el.appendChild(content[i]);
                 }
             }
+            // no arrow if empty
+            if (arrow && el.childNodes.length) {
+                // no need to create a new parent element, but it's not supported by IE 10 and older.
+                // const arrowEl = document.createRange().createContextualFragment(arrow);
+                const arrowEl = document.createElement('div');
+                arrowEl.innerHTML = arrow;
+                el.appendChild(arrowEl);
+            }
         }
     }
 
@@ -436,7 +457,7 @@ class TooltipHTMLContent {
 
     getSize() {
         const el = this.el;
-        return [el.clientWidth, el.clientHeight];
+        return [el.offsetWidth, el.offsetHeight];
     }
 
     moveTo(zrX: number, zrY: number) {
