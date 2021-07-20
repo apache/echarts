@@ -36,7 +36,8 @@ import {
     DecalObject,
     SeriesLabelOption,
     DefaultEmphasisFocus,
-    AriaOptionMixin
+    AriaOptionMixin,
+    ColorBy
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -75,7 +76,12 @@ interface TreePathInfo {
 }
 
 interface TreemapSeriesCallbackDataParams extends CallbackDataParams {
+    /**
+     * @deprecated
+     */
     treePathInfo?: TreePathInfo[]
+
+    treeAncestors?: TreePathInfo[]
 }
 
 interface ExtraStateOption {
@@ -96,6 +102,9 @@ export interface TreemapSeriesVisualOption {
      */
     visualDimension?: number | string
 
+    /**
+     * @deprecated Use colorBy instead
+     */
     colorMappingBy?: 'value' | 'index' | 'id'
 
     visualMin?: number
@@ -139,7 +148,8 @@ export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
 }
 
 export interface TreemapSeriesOption
-    extends SeriesOption<TreemapStateOption, ExtraStateOption>, TreemapStateOption,
+    extends SeriesOption<TreemapStateOption, ExtraStateOption>,
+    TreemapStateOption,
     BoxLayoutOptionMixin,
     RoamOptionMixin,
     TreemapSeriesVisualOption {
@@ -189,7 +199,7 @@ export interface TreemapSeriesOption
         show?: boolean
         height?: number
 
-        emptyItemWidth: number  // With of empty width
+        emptyItemWidth?: number  // With of empty width
         itemStyle?: BreadcrumbItemStyleOption
 
         emphasis?: {
@@ -411,7 +421,9 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         const params = super.getDataParams.apply(this, arguments as any) as TreemapSeriesCallbackDataParams;
 
         const node = this.getData().tree.getNodeByDataIndex(dataIndex);
-        params.treePathInfo = wrapTreePathInfo(node, this);
+        params.treeAncestors = wrapTreePathInfo(node, this);
+        // compatitable the previous code.
+        params.treePathInfo = params.treeAncestors;
 
         return params;
     }

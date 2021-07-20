@@ -120,8 +120,11 @@ class MarkPointView extends MarkerView {
             let symbol = itemModel.getShallow('symbol');
             let symbolSize = itemModel.getShallow('symbolSize');
             let symbolRotate = itemModel.getShallow('symbolRotate');
+            let symbolOffset = itemModel.getShallow('symbolOffset');
+            const symbolKeepAspect = itemModel.getShallow('symbolKeepAspect');
 
-            if (isFunction(symbol) || isFunction(symbolSize) || isFunction(symbolRotate)) {
+            // TODO: refactor needed: single data item should not support callback function
+            if (isFunction(symbol) || isFunction(symbolSize) || isFunction(symbolRotate) || isFunction(symbolOffset)) {
                 const rawIdx = mpModel.getRawValue(idx);
                 const dataParams = mpModel.getDataParams(idx);
                 if (isFunction(symbol)) {
@@ -133,6 +136,9 @@ class MarkPointView extends MarkerView {
                 }
                 if (isFunction(symbolRotate)) {
                     symbolRotate = symbolRotate(rawIdx, dataParams);
+                }
+                if (isFunction(symbolOffset)) {
+                    symbolOffset = symbolOffset(rawIdx, dataParams);
                 }
             }
 
@@ -146,6 +152,8 @@ class MarkPointView extends MarkerView {
                 symbol: symbol,
                 symbolSize: symbolSize,
                 symbolRotate: symbolRotate,
+                symbolOffset: symbolOffset,
+                symbolKeepAspect: symbolKeepAspect,
                 style
             });
         });

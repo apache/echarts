@@ -70,7 +70,18 @@ under the License.
                                 color: 'gradient',
                                 curveness: 0.5
                             }
-                        }
+                        },
+                        {
+                            orient: 'vertical',
+                            type: 'sankey',
+                            focusNodeAdjacency: true,
+                            data: data.nodes,
+                            links: data.links,
+                            lineStyle: {
+                                color: 'gradient',
+                                curveness: 0.5
+                            }
+                        },
                     ]
                 });
             });

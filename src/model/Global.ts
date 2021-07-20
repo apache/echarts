@@ -530,11 +530,6 @@ echarts.use([${seriesImportName}]);`);
         return this._locale;
     }
 
-    getLocale(localePosition: Parameters<Model<LocaleOption>['get']>[0]): any {
-        const locale = this.getLocaleModel();
-        return locale.get(localePosition as any);
-    }
-
     setUpdatePayload(payload: Payload) {
         this._payload = payload;
     }

@@ -78,7 +78,7 @@ import CustomSeriesModel, {
     CustomElementOption,
     CustomElementOptionOnState,
     CustomSVGPathOption,
-    CustomZRPathOption,
+    CustomBaseZRPathOption,
     CustomDisplayableOption,
     CustomSeriesRenderItemAPI,
     CustomSeriesRenderItemParams,
@@ -91,7 +91,8 @@ import CustomSeriesModel, {
     NON_STYLE_VISUAL_PROPS,
     customInnerStore,
     LooseElementProps,
-    PrepareCustomInfo
+    PrepareCustomInfo,
+    CustomPathOption
 } from './CustomSeries';
 import {
     prepareShapeOrExtraAllPropsFinal,
@@ -100,6 +101,7 @@ import {
     prepareTransformAllPropsFinal,
     prepareTransformTransitionFrom
 } from './prepare';
+import { PatternObject } from 'zrender/src/graphic/Pattern';
 
 const transformPropNamesStr = keys(TRANSFORM_PROPS).join(', ');
 
@@ -363,6 +365,7 @@ function createEl(elOption: CustomElementOption): Element {
     return el;
 }
 
+
 /**
  * ----------------------------------------------------------
  * [STRATEGY_MERGE] Merge properties or erase all properties:
@@ -415,6 +418,11 @@ function createEl(elOption: CustomElementOption): Element {
  *
  * @return if `isMorphTo`, return `allPropsFinal`.
  */
+
+interface InnerCustomZRPathOptionStyle extends PathStyleProps {
+    __decalPattern: PatternObject
+}
+
 function updateElNormal(
     // Can be null/undefined
     api: ExtensionAPI,
@@ -435,7 +443,7 @@ function updateElNormal(
     }
 
     // Do some normalization on style.
-    const styleOpt = elOption && elOption.style;
+    const styleOpt = elOption && (elOption as CustomDisplayableOption).style;
 
     if (styleOpt) {
         if (el.type === 'text') {
@@ -450,13 +458,13 @@ function updateElNormal(
         }
 
         let decalPattern;
-        const decalObj = isPath(el) ? (styleOpt as CustomZRPathOption['style']).decal : null;
+        const decalObj = isPath(el) ? (styleOpt as CustomBaseZRPathOption['style']).decal : null;
         if (api && decalObj) {
             (decalObj as InnerDecalObject).dirty = true;
             decalPattern = createOrUpdatePatternFromDecal(decalObj, api);
         }
         // Always overwrite in case user specify this prop.
-        (styleOpt as CustomZRPathOption['style']).__decalPattern = decalPattern;
+        (styleOpt as InnerCustomZRPathOptionStyle).__decalPattern = decalPattern;
     }
 
     // Save the meta info for further morphing. Like apply on the sub morphing elements.
@@ -488,10 +496,10 @@ function applyMiscProps(
     hasOwn(elOption, 'silent') && (el.silent = elOption.silent);
     hasOwn(elOption, 'ignore') && (el.ignore = elOption.ignore);
     if (isDisplayable(el)) {
-        hasOwn(elOption, 'invisible') && (el.invisible = elOption.invisible);
+        hasOwn(elOption, 'invisible') && (el.invisible = (elOption as CustomDisplayableOption).invisible);
     }
     if (isPath(el)) {
-        hasOwn(elOption, 'autoBatch') && (el.autoBatch = (elOption as CustomZRPathOption).autoBatch);
+        hasOwn(elOption, 'autoBatch') && (el.autoBatch = (elOption as CustomBaseZRPathOption).autoBatch);
     }
 
     if (!isTextContent) {
@@ -516,7 +524,7 @@ function applyPropsDirectly(
         // Good for performance but bad for compatibility control.
         elDisplayable.useStyle(styleOpt);
 
-        const decalPattern = (styleOpt as CustomZRPathOption['style']).__decalPattern;
+        const decalPattern = (styleOpt as InnerCustomZRPathOptionStyle).__decalPattern;
         if (decalPattern) {
             elDisplayable.style.decal = decalPattern;
         }
@@ -598,13 +606,13 @@ const customDuringAPI: CustomDuringAPI = {
         tmpDuringScope.el[key] = val as number;
         return this;
     },
-    getTransform(key: TransformProp): unknown {
+    getTransform(key: TransformProp): number {
         if (__DEV__) {
             assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `getTransform`.');
         }
         return tmpDuringScope.el[key];
     },
-    setShape(key: string, val: unknown) {
+    setShape(key: any, val: unknown) {
         if (__DEV__) {
             assertNotReserved(key);
         }
@@ -614,7 +622,7 @@ const customDuringAPI: CustomDuringAPI = {
         tmpDuringScope.isShapeDirty = true;
         return this;
     },
-    getShape(key: string): unknown {
+    getShape(key: any): any {
         if (__DEV__) {
             assertNotReserved(key);
         }
@@ -623,7 +631,7 @@ const customDuringAPI: CustomDuringAPI = {
             return shape[key];
         }
     },
-    setStyle(key: string, val: unknown) {
+    setStyle(key: any, val: unknown) {
         if (__DEV__) {
             assertNotReserved(key);
         }
@@ -639,7 +647,7 @@ const customDuringAPI: CustomDuringAPI = {
         }
         return this;
     },
-    getStyle(key: string): unknown {
+    getStyle(key: any): any {
         if (__DEV__) {
             assertNotReserved(key);
         }
@@ -648,7 +656,7 @@ const customDuringAPI: CustomDuringAPI = {
             return style[key];
         }
     },
-    setExtra(key: string, val: unknown) {
+    setExtra(key: any, val: unknown) {
         if (__DEV__) {
             assertNotReserved(key);
         }
@@ -785,7 +793,7 @@ function updateZ(
     elDisplayable.z = currentZ;
     elDisplayable.zlevel = currentZLevel;
     // z2 must not be null/undefined, otherwise sort error may occur.
-    const optZ2 = elOption.z2;
+    const optZ2 = (elOption as CustomDisplayableOption).z2;
     optZ2 != null && (elDisplayable.z2 = optZ2 || 0);
 
     for (let i = 0; i < STATES.length; i++) {
@@ -799,7 +807,10 @@ function updateZForEachState(
     state: DisplayState
 ): void {
     const isNormal = state === NORMAL;
-    const elStateOpt = isNormal ? elOption : retrieveStateOption(elOption, state as DisplayStateNonNormal);
+    const elStateOpt = isNormal ? elOption : retrieveStateOption(
+        elOption as CustomElementOption,
+        state as DisplayStateNonNormal
+    );
     const optZ2 = elStateOpt ? elStateOpt.z2 : null;
     let stateObj;
     if (optZ2 != null) {
@@ -860,7 +871,7 @@ function makeRenderItem(
         coordSys: prepareResult.coordSys,
         dataInsideLength: data.count(),
         encode: wrapEncodeDef(customSeries.getData())
-    };
+    } as CustomSeriesRenderItemParams;
 
     // If someday intending to refactor them to a class, should consider do not
     // break change: currently these attribute member are encapsulated in a closure
@@ -920,7 +931,7 @@ function makeRenderItem(
                 dataIndex: data.getRawIndex(dataIndexInside),
                 // Can be used for optimization when zoom or roam.
                 actionType: payload ? payload.type : null
-            }, userParams),
+            } as CustomSeriesRenderItemParams, userParams),
             userAPI
         );
     };
@@ -1209,7 +1220,7 @@ function doCreateOrUpdateEl(
     }
 
     // Need to set morph: false explictly to disable automatically morphing.
-    if ((elOption as CustomZRPathOption).morph === false) {
+    if ((elOption as CustomBaseZRPathOption).morph === false) {
         (el as ECElement).disableMorphing = true;
     }
     else if ((el as ECElement).disableMorphing) {
@@ -1273,8 +1284,8 @@ function doCreateOrUpdateEl(
 function doesElNeedRecreate(el: Element, elOption: CustomElementOption, seriesModel: CustomSeriesModel): boolean {
     const elInner = customInnerStore(el);
     const elOptionType = elOption.type;
-    const elOptionShape = (elOption as CustomZRPathOption).shape;
-    const elOptionStyle = elOption.style;
+    const elOptionShape = (elOption as CustomBaseZRPathOption).shape;
+    const elOptionStyle = (elOption as CustomDisplayableOption).style;
     return (
         // Always create new if universal transition is enabled.
         // Because we do transition after render. It needs to know what old element is. Replacement will loose it.
@@ -1309,7 +1320,7 @@ function doCreateOrUpdateClipPath(
     // Based on the "merge" principle, if no clipPath provided,
     // do nothing. The exists clip will be totally removed only if
     // `el.clipPath` is `false`. Otherwise it will be merged/replaced.
-    const clipPathOpt = elOption.clipPath;
+    const clipPathOpt = elOption.clipPath as CustomPathOption | false;
     if (clipPathOpt === false) {
         if (el && el.getClipPath()) {
             el.removeClipPath();
@@ -1317,7 +1328,11 @@ function doCreateOrUpdateClipPath(
     }
     else if (clipPathOpt) {
         let clipPath = el.getClipPath();
-        if (clipPath && doesElNeedRecreate(clipPath, clipPathOpt, seriesModel)) {
+        if (clipPath && doesElNeedRecreate(
+            clipPath,
+            clipPathOpt,
+            seriesModel
+        )) {
             clipPath = null;
         }
         if (!clipPath) {
@@ -1385,7 +1400,7 @@ function doCreateOrUpdateAttachedTx(
             updateElNormal(
                 null, textContent, dataIndex, txConOptNormal, null, seriesModel, isInit, true
             );
-            const txConStlOptNormal = txConOptNormal && txConOptNormal.style;
+            const txConStlOptNormal = txConOptNormal && (txConOptNormal as CustomDisplayableOption).style;
             for (let i = 0; i < STATES.length; i++) {
                 const stateName = STATES[i];
                 if (stateName !== NORMAL) {
@@ -1411,7 +1426,9 @@ function processTxInfo(
     attachedTxInfo: AttachedTxInfo
 ): void {
     const stateOpt = !state ? elOption : retrieveStateOption(elOption, state);
-    const styleOpt = !state ? elOption.style : retrieveStyleOptionOnState(elOption, stateOpt, EMPHASIS);
+    const styleOpt = !state
+        ? (elOption as CustomDisplayableOption).style
+        : retrieveStyleOptionOnState(elOption, stateOpt, EMPHASIS);
 
     const elType = elOption.type;
     let txCfg = stateOpt ? stateOpt.textConfig : null;
@@ -1444,7 +1461,7 @@ function processTxInfo(
         !txConOptNormal.type && (txConOptNormal.type = 'text');
         if (__DEV__) {
             // Do not tolerate incorret type for forward compat.
-            txConOptNormal.type !== 'text' && assert(
+            assert(
                 txConOptNormal.type === 'text',
                 'textContent.type must be "text"'
             );
@@ -1459,7 +1476,7 @@ function processTxInfo(
 function retrieveStateOption(
     elOption: CustomElementOption, state: DisplayStateNonNormal
 ): CustomElementOptionOnState {
-    return !state ? elOption : elOption ? elOption[state] : null;
+    return !state ? elOption : elOption ? (elOption as CustomDisplayableOption)[state] : null;
 }
 
 function retrieveStyleOptionOnState(
@@ -1469,7 +1486,7 @@ function retrieveStyleOptionOnState(
 ): CustomElementOptionOnState['style'] {
     let style = stateOption && stateOption.style;
     if (style == null && state === EMPHASIS && stateOptionNormal) {
-        style = stateOptionNormal.styleEmphasis;
+        style = (stateOptionNormal as CustomDisplayableOption).styleEmphasis;
     }
     return style;
 }
@@ -1514,7 +1531,7 @@ function mergeChildren(
         diffGroupChildren({
             api: api,
             oldChildren: el.children() || [],
-            newChildren: newChildren || [],
+            newChildren: newChildren as CustomElementOption[] || [],
             dataIndex: dataIndex,
             seriesModel: seriesModel,
             group: el
@@ -1532,7 +1549,7 @@ function mergeChildren(
             api,
             el.childAt(index),
             dataIndex,
-            newChildren[index],
+            newChildren[index] as CustomElementOption,
             seriesModel,
             el,
             false

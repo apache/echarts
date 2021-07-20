@@ -142,6 +142,21 @@ function animateElementStyles(el: Element, dataIndex: number, seriesModel: Serie
 }
 
 
+function isAllIdSame(oldDiffItems: DiffItem[], newDiffItems: DiffItem[]) {
+    const len = oldDiffItems.length;
+    if (len !== newDiffItems.length) {
+        return false;
+    }
+    for (let i = 0; i < len; i++) {
+        const oldItem = oldDiffItems[i];
+        const newItem = newDiffItems[i];
+        if (oldItem.data.getId(oldItem.dataIndex) !== newItem.data.getId(newItem.dataIndex)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function transitionBetween(
     oldList: TransitionSeries[],
     newList: TransitionSeries[],
@@ -220,7 +235,7 @@ function transitionBetween(
     // Use id if it's very likely to be an one to one animation
     // It's more robust than groupId
     // TODO Check if key dimension is specified.
-    const useId = oldDiffItems.length === newDiffItems.length;
+    const useId = isAllIdSame(oldDiffItems, newDiffItems);
     const isElementStillInChart: Dictionary<boolean> = {};
 
     if (!useId) {

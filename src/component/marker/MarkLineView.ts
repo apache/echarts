@@ -318,10 +318,15 @@ class MarkLineView extends MarkerView {
         // Line data for tooltip and formatter
         mlModel.setData(lineData);
 
+        // TODO
+        // Functionally, `symbolSize` & `symbolOffset` can also be 2D array now.
+        // But the related logic and type definition are not finished yet.
+        // Finish it if required
         let symbolType = mlModel.get('symbol');
         let symbolSize = mlModel.get('symbolSize');
         let symbolRotate = mlModel.get('symbolRotate');
         let symbolOffset = mlModel.get('symbolOffset');
+        // TODO: support callback function like markPoint
         if (!isArray(symbolType)) {
             symbolType = [symbolType, symbolType];
         }
@@ -402,13 +407,14 @@ class MarkLineView extends MarkerView {
                 symbolKeepAspect: itemModel.get('symbolKeepAspect'),
                 // `0` should be considered as a valid value, so use `retrieve2` instead of `||`
                 symbolOffset: retrieve2(
-                    itemModel.get('symbolOffset'),
+                    itemModel.get('symbolOffset', true),
                     (symbolOffset as (string | number)[])[isFrom ? 0 : 1]
                 ),
                 symbolRotate: retrieve2(
                     itemModel.get('symbolRotate', true),
                     (symbolRotate as number[])[isFrom ? 0 : 1]
                 ),
+                // TODO: when 2d array is supported, it should ignore parent
                 symbolSize: retrieve2(
                     itemModel.get('symbolSize'),
                     (symbolSize as number[])[isFrom ? 0 : 1]

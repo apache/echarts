@@ -23,7 +23,8 @@ import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
     SeriesOption, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType, UniversalTransitionOption
+    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType,
+    ColorBy
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {PaletteMixin} from './mixin/palette';
@@ -157,8 +158,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // If ignore style on data. It's only for global visual/style.ts
     // Enabled when series it self will handle it.
     ignoreStyleOnData: boolean;
-    // If use palette on each data.
-    useColorPaletteOnData: boolean;
     // If do symbol visual encoding
     hasSymbolVisual: boolean;
     // Default symbol type.
@@ -181,7 +180,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const proto = SeriesModel.prototype;
         proto.type = 'series.__base__';
         proto.seriesIndex = 0;
-        proto.useColorPaletteOnData = false;
         proto.ignoreStyleOnData = false;
         proto.hasSymbolVisual = false;
         proto.defaultSymbol = 'circle';
@@ -396,6 +394,15 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         return inner(this).dataBeforeProcessed;
     }
 
+    getColorBy(): ColorBy {
+        const colorBy = this.get('colorBy');
+        return colorBy || 'series';
+    }
+
+    isColorBySeries(): boolean {
+        return this.getColorBy() === 'series';
+    }
+
     /**
      * Get base axis if has coordinate system and has axis.
      * By default use coordSys.getBaseAxis();
@@ -541,6 +548,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             return true;
         }
 
+        // NOTE: don't support define universalTransition in global option yet.
         const universalTransitionOpt = this.option.universalTransition;
         // Quick reject
         if (!universalTransitionOpt) {

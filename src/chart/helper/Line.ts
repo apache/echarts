@@ -17,19 +17,18 @@
 * under the License.
 */
 
-import { isArray, each, retrieve2 } from 'zrender/src/core/util';
+import { isArray, each } from 'zrender/src/core/util';
 import * as vector from 'zrender/src/core/vector';
 import * as symbolUtil from '../../util/symbol';
 import ECLinePath from './LinePath';
 import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis, enterEmphasis, leaveEmphasis, SPECIAL_STATES } from '../../util/states';
 import {getLabelStatesModels, setLabelStyle} from '../../label/labelStyle';
-import {round, parsePercent} from '../../util/number';
+import {round} from '../../util/number';
 import List from '../../data/List';
 import { ZRTextAlign, ZRTextVerticalAlign, LineLabelOption, ColorString } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
-
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
 import Model from '../../model/Model';
@@ -70,18 +69,13 @@ function createSymbol(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: 
 
     const symbolSize = lineData.getItemVisual(idx, name + 'Size' as 'fromSymbolSize' | 'toSymbolSize');
     const symbolRotate = lineData.getItemVisual(idx, name + 'Rotate' as 'fromSymbolRotate' | 'toSymbolRotate');
-    const symbolOffset = lineData.getItemVisual(idx, name + 'Offset' as 'fromSymbolOffset' | 'toSymbolOffset') || 0;
+    const symbolOffset = lineData.getItemVisual(idx, name + 'Offset' as 'fromSymbolOffset' | 'toSymbolOffset');
     const symbolKeepAspect = lineData.getItemVisual(idx,
         name + 'KeepAspect' as 'fromSymbolKeepAspect' | 'toSymbolKeepAspect');
 
-    const symbolSizeArr = isArray(symbolSize)
-        ? symbolSize : [symbolSize, symbolSize];
+    const symbolSizeArr = symbolUtil.normalizeSymbolSize(symbolSize);
 
-    const symbolOffsetArr = isArray(symbolOffset)
-        ? symbolOffset : [symbolOffset, symbolOffset];
-
-    symbolOffsetArr[0] = parsePercent(symbolOffsetArr[0], symbolSizeArr[0]);
-    symbolOffsetArr[1] = parsePercent(retrieve2(symbolOffsetArr[1], symbolOffsetArr[0]), symbolSizeArr[1]);
+    const symbolOffsetArr = symbolUtil.normalizeSymbolOffset(symbolOffset || 0, symbolSizeArr);
 
     const symbolPath = symbolUtil.createSymbol(
         symbolType,
