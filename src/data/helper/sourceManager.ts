@@ -373,6 +373,10 @@ export class SourceManager {
         }
         const source = this.getSource(0);
         const dimensionsDefine = source.dimensionsDefine;
+
+        // Source from endpoint(usually series) will be read differently
+        // when seriesLayoutBy or startIndex(which is affected by sourceHeader) are different.
+        // So we use this three props as key.
         const sourceReadKey = source.seriesLayoutBy
             + '$$'
             + source.startIndex
@@ -381,18 +385,12 @@ export class SourceManager {
         return this._innerGetDataStorage(source, sourceReadKey);
     }
 
-    private _innerGetDataStorage(endSource: Source, sourceReadKey: string): DataStorage | undefined {
+    private _innerGetDataStorage(seriesSource: Source, sourceReadKey: string): DataStorage | undefined {
         // TODO Can use other sourceIndex?
         const sourceIndex = 0;
 
-
-        const source = this.getSource(sourceIndex);
         const storeList = this._storeList;
 
-        // Source from endpoint(usually series) will be read differently
-        // when seriesLayoutBy or startIndex(which is affected by sourceHeader) are different.
-        // So we use this two props as key. Another fact `dimensions` will be checked when initializing SeriesData.
-        const sourceToInit = (endSource || source);
         let cachedStoreMap = storeList[sourceIndex];
 
         if (!cachedStoreMap) {
@@ -404,16 +402,17 @@ export class SourceManager {
             const upSourceMgr = this._getUpstreamSourceManagers()[0];
 
             if (isSeries(this._sourceHost) && upSourceMgr) {
-                cachedStore = upSourceMgr._innerGetDataStorage(endSource, sourceReadKey);
+                cachedStore = upSourceMgr._innerGetDataStorage(seriesSource, sourceReadKey);
             }
             else {
-                const dimensionsDefine = source.dimensionsDefine;
+                // Always create datastorage based on source from series.
+                const dimensionsDefine = seriesSource.dimensionsDefine;
                 // Can't create a store if don't know dimension..
-                if (source && dimensionsDefine) {
+                if (seriesSource && dimensionsDefine) {
                     cachedStore = new DataStorage();
                     // Always create storage from source of series.
                     cachedStore.initData(
-                        new DefaultDataProvider(sourceToInit, dimensionsDefine.length),
+                        new DefaultDataProvider(seriesSource, dimensionsDefine.length),
                         dimensionsDefine
                     );
                 }
