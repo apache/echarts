@@ -191,6 +191,10 @@ export function isSourceInstance(val: unknown): val is Source {
     return val instanceof SourceImpl;
 }
 
+/**
+ * Create a source from option.
+ * NOTE: Created source is immutable. Don't change any properties in it.
+ */
 export function createSource(
     sourceData: OptionSourceData,
     thisMetaRawOption: SourceMetaRawOption,

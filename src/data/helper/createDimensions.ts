@@ -76,8 +76,8 @@ export type CreateDimensionsParams = {
 
 /**
  * This method builds the relationship between:
- * + "what the coord sys or series requires (see `sysDims`)",
- * + "what the user defines (in `encode` and `dimensions`, see `opt.dimsDef` and `opt.encodeDef`)"
+ * + "what the coord sys or series requires (see `coordDimensions`)",
+ * + "what the user defines (in `encode` and `dimensions`, see `opt.dimensionsDefine` and `opt.encodeDefine`)"
  * + "what the data source provids (see `source`)".
  *
  * Some guess strategy will be adapted if user does not define something.
