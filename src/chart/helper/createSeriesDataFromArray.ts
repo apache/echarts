@@ -152,6 +152,8 @@ function createListFromArray(
     if (omitUnusedDimensions) {
         // sourceOrStore
         if (!(sourceOrStore as DataStorage).syncDimensionTypes(dimInfoList)) {
+            // We need a full dimensions list if we want to recreate the storage.
+            // Or the storage will ignore the data of other dimensions.
             dimInfoList = createDimensions(sourceOrStore, zrUtil.extend(createDimensionOptions, {
                 omitUnusedDimensions: true
             }));
