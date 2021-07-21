@@ -392,7 +392,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     getEncode() {
-        const encode = (this as Model<SeriesEncodeOptionMixin>).get('encode');
+        const encode = (this as Model<SeriesEncodeOptionMixin>).get('encode', true);
         if (encode) {
             return zrUtil.createHashMap<OptionEncodeValue, DimensionName>(encode);
         }
