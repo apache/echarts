@@ -158,7 +158,8 @@ class TitleView extends ComponentView {
         const textEl = new graphic.Text({
             style: createTextStyle(textStyleModel, {
                 text: titleModel.get('text'),
-                fill: textStyleModel.getTextColor()
+                fill: textStyleModel.getTextColor(),
+                lineOverflow: textStyleModel.get('lineOverflow')
             }, {disableBox: true}),
             z2: 10
         });
@@ -171,7 +172,8 @@ class TitleView extends ComponentView {
                 text: subText,
                 fill: subtextStyleModel.getTextColor(),
                 y: textRect.height + titleModel.get('itemGap'),
-                verticalAlign: 'top'
+                verticalAlign: 'top',
+                lineOverflow: textStyleModel.get('lineOverflow')
             }, {disableBox: true}),
             z2: 10
         });
