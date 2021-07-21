@@ -238,6 +238,7 @@ class RadarView extends ChartView {
                 else {
                     symbolPath.useStyle(itemStyle);
                     symbolPath.setColor(color);
+                    symbolPath.style.strokeNoScale = true;
                 }
 
                 const pathEmphasisState = symbolPath.ensureState('emphasis');
