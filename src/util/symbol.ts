@@ -286,7 +286,7 @@ const SymbolClz = graphic.Path.extend({
         const shape = this.shape;
         if (shape && shape.symbolType === 'pin' && config.position === 'inside') {
             res.x = res.x - rect.width * 0.1 * Math.sin(Math.PI * shape.rotate / 180);
-            res.y = res.y + rect.height * 0.001 * Math.cos(Math.PI * shape.rotate / 180);;
+            res.y = res.y - rect.height * 0.1 * Math.cos(Math.PI * shape.rotate / 180);
         }
 
         return res;
