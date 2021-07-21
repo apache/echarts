@@ -17,12 +17,18 @@
 * under the License.
 */
 
+import { lift } from 'zrender/src/tool/color';
+import { extend, map } from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption } from './SunburstSeries';
-import { extend } from 'zrender/src/core/util';
-import { Dictionary, ColorString } from '../../util/types';
+import { Dictionary, ColorString, ZRColor } from '../../util/types';
+import { setItemVisualFromData } from '../../visual/helper';
 import { TreeNode } from '../../data/Tree';
-import { lift } from 'zrender/src/tool/color';
+
+type ParentColorMap = {
+    node: TreeNode,
+    parentColor: ZRColor
+};
 
 export default function sunburstVisual(ecModel: GlobalModel) {
 

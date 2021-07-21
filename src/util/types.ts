@@ -853,6 +853,12 @@ export interface BorderOptionMixin {
     borderMiterLimit?: number
 }
 
+export type ColorBy = 'series' | 'data';
+
+export interface SunburstColorByMixin {
+    colorBy?: ColorBy
+}
+
 export type AnimationDelayCallbackParam = {
     count: number
     index: number
@@ -1601,6 +1607,8 @@ export interface SeriesOption<
     dataGroupId?: OptionId
     // Needs to be override
     data?: unknown
+
+    colorBy?: ColorBy
 
     legendHoverLink?: boolean
 
