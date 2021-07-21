@@ -1109,6 +1109,8 @@ export interface LabelOption extends TextCommonOption {
     // formatter?: string | ((params: CallbackDataParams) => string)
 
     rich?: Dictionary<TextCommonOption>
+    lineOverflow?: 'truncate'
+    ellipsis?: string
 }
 
 export interface SeriesLabelOption extends LabelOption {
