@@ -159,7 +159,6 @@ function createSeriesData(
 
     const data = new SeriesData(dimInfoList, seriesModel);
     data.setCalculationInfo(stackCalculationInfo);
-    console.log(stackCalculationInfo)
 
     const dimValueGetter =
         firstCategoryDimIndex != null
@@ -171,11 +170,19 @@ function createSeriesData(
                     : this.defaultDimValueGetter(itemOpt, dimName, dataIndex, dimIndex);
             }
             : null;
+    let storage;
+    if (!isOriginalSource) {
+        storage = sourceManager.getSharedDataStorage(dimInfoList);
+        if (stackCalculationInfo.stackedOverDimension) {
+            storage.appendDimension(stackCalculationInfo.stackedOverDimension, 'float');
+            storage.appendDimension(stackCalculationInfo.stackResultDimension, 'float');
+        }
+    }
 
     data.hasItemOption = false;
     data.initData(
         // Try to reuse the data storage in sourceManager if using dataset.
-        isOriginalSource ? source : sourceManager.getDataStorage(dimInfoList)
+        isOriginalSource ? source : storage
     , null, dimValueGetter);
 
     return data;

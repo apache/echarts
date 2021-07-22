@@ -104,8 +104,10 @@ export function enableDataStack(
     // might not be a good way.
     if (stackedDimInfo) {
         // Use a weird name that not duplicated with other names.
-        stackResultDimension = '__\0ecstackresult';
-        stackedOverDimension = '__\0ecstackedover';
+        // Also need to use seriesModel.id as postfix because different
+        // series may share same data storage. The stack dimension needs to be distinguished.
+        stackResultDimension = '__\0ecstackresult_' + seriesModel.id;
+        stackedOverDimension = '__\0ecstackedover_' + seriesModel.id;
 
         // Create inverted index to fast query index by value.
         if (stackedByDimInfo) {

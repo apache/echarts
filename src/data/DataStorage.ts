@@ -200,27 +200,47 @@ class DataStorage {
         }) as DataStorageDimensionDefine);
 
         const dimensionsIdxMap: Dictionary<number> = {};
-        let prefix = '';
+        let needsHasOwn = false;
 
         // Needs to add prefix if key is used in object prototype
         for (let i = 0; i < dimensions.length; i++) {
             const name = dimensions[i].name;
             if ((emptyObj as any)[name] != null) {
-                prefix = '$$';
+                needsHasOwn = true;
+                break;
             }
         }
         for (let i = 0; i < dimensions.length; i++) {
             const dim = dimensions[i];
             const name = dim.name;
-            dimensionsIdxMap[prefix + name] = i;
+            dimensionsIdxMap[name] = i;
         }
-
         // We use different functions because it may be a hotspot code.
-        this.getDimensionIndex = prefix ? function (dim) {
-            return dimensionsIdxMap[prefix + dim];
-        } : function (dim) {
-            return dimensionsIdxMap[dim];
+        const updateGetDimensionIndex = () => {
+            this.getDimensionIndex = needsHasOwn ? function (dim) {
+                return dimensionsIdxMap.hasOwnProperty(dim) ? dimensionsIdxMap[dim] : undefined;
+            } : function (dim) {
+                return dimensionsIdxMap[dim];
+            };
         };
+
+        this.appendDimension = (dimName, dimType) => {
+            if (!needsHasOwn && (emptyObj as any)[dimName] != null) {
+                needsHasOwn = true;
+                updateGetDimensionIndex();
+            }
+            const dimensions = this._dimensions;
+            const idx = dimensions.length;
+            dimensions.push({
+                name: dimName,
+                type: dimType
+            });
+            this._chunks.push(new dataCtors[dimType || 'float'](this._rawCount));
+            this._rawExtent.push(getInitialExtent());
+            dimensionsIdxMap[dimName] = idx;
+        };
+
+        updateGetDimensionIndex();
 
         this._initDataFromProvider(0, provider.count());
     }
@@ -234,6 +254,7 @@ class DataStorage {
     }
 
     getDimensionIndex: (dim: DimensionName) => number;
+    appendDimension: (dim: DimensionName, type: DataStorageDimensionType) => void;
 
     getDimensionCount() {
         return this._dimensions.length;
@@ -833,12 +854,27 @@ class DataStorage {
     map(dims: DimensionIndex[], cb: MapCb): DataStorage {
         // TODO only clone picked chunks.
         const target = this.clone(dims);
-        const targetChunks = target._chunks;
+        this._updateDims(target, dims, cb);
+        return target;
+    }
 
+    /**
+     * Danger only can be used in SeriesData.
+     */
+    modify(dims: DimensionIndex[], cb: MapCb) {
+        this._updateDims(this, dims, cb);
+    }
+
+    _updateDims(
+        target: DataStorage,
+        dims: DimensionIndex[],
+        cb: MapCb
+    ) {
+        const targetChunks = target._chunks;
 
         const tmpRetValue = [];
         const dimSize = dims.length;
-        const dataCount = this.count();
+        const dataCount = target.count();
         const values = [];
         const rawExtent = target._rawExtent;
 
@@ -847,7 +883,7 @@ class DataStorage {
         }
 
         for (let dataIndex = 0; dataIndex < dataCount; dataIndex++) {
-            const rawIndex = this.getRawIndex(dataIndex);
+            const rawIndex = target.getRawIndex(dataIndex);
 
             for (let k = 0; k < dimSize; k++) {
                 values[k] = targetChunks[dims[k]][rawIndex];
@@ -881,8 +917,6 @@ class DataStorage {
                 }
             }
         }
-
-        return target;
     }
 
     /**

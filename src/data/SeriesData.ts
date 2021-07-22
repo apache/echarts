@@ -321,7 +321,13 @@ class SeriesData<
     }
 
     private _getStoreDimIndex(dim: DimensionLoose): DimensionIndex {
-        return this._store.getDimensionIndex(this.getDimension(dim));
+        const dimIdx = this._store.getDimensionIndex(this.getDimension(dim));
+        if (__DEV__) {
+            if (dimIdx == null) {
+                throw new Error('Unkown dimension ' + dim);
+            }
+        }
+        return dimIdx;
     }
 
     /**
@@ -389,14 +395,7 @@ class SeriesData<
         const dimensions = this.dimensions;
         const dimensionInfos = map(dimensions, dimName => this._dimensionInfos[dimName]);
         if (data instanceof DataStorage) {
-            if (data.canUse(dimensionInfos)) {
-                store = data;
-            }
-            // Sync failed
-            else {
-                // Needs to recreate data storage if it's not match the given dimension.
-                data = data.getSource();
-            }
+            store = data;
         }
 
         if (!store) {
@@ -764,10 +763,6 @@ class SeriesData<
 
         const dimIndices = map(normalizeDimensions(dims), this._getStoreDimIndex, this);
 
-        if (__DEV__) {
-            validateDimensions(this, dimIndices);
-        }
-
         this._store.each(dimIndices, (fCtx
             ? zrUtil.bind(cb as any, fCtx as any)
             : cb) as any
@@ -799,10 +794,6 @@ class SeriesData<
 
         const dimIndices = map(normalizeDimensions(dims), this._getStoreDimIndex, this);
 
-        if (__DEV__) {
-            validateDimensions(this, dimIndices);
-        }
-
         // Clone first
         this._store = this._store.clone();
         this._store.filterSelf(dimIndices, (fCtx
@@ -828,10 +819,6 @@ class SeriesData<
             innerRange[dimIdx] = range[dim];
             dimIndices.push(dimIdx);
         });
-
-        if (__DEV__) {
-            validateDimensions(this, dimIndices);
-        }
 
         this._store = this._store.clone();
         this._store.selectRange(innerRange);
@@ -893,16 +880,47 @@ class SeriesData<
             normalizeDimensions(dims), this._getStoreDimIndex, this
         );
 
-        if (__DEV__) {
-            validateDimensions(this, dimIndices);
-        }
-
         const list = cloneListForMapAndSample(this);
         list._store = this._store.map(dimIndices, (fCtx
             ? zrUtil.bind(cb as any, fCtx as any)
             : cb) as any
         );
         return list;
+    }
+
+    /**
+     * !!Danger: used on stack dimension only.
+     */
+    modify<Ctx>(dims: DimensionLoose, cb: MapCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): void;
+    modify<Ctx>(dims: [DimensionLoose], cb: MapCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): void;
+    /* eslint-disable-next-line */
+    modify<Ctx>(dims: [DimensionLoose, DimensionLoose], cb: MapCb2<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): void;
+    modify<Ctx>(
+        dims: ItrParamDims,
+        cb: MapCb<Ctx>,
+        ctx?: Ctx,
+        ctxCompat?: Ctx
+    ) {
+        // ctxCompat just for compat echarts3
+        const fCtx = (ctx || ctxCompat || this) as CtxOrList<Ctx>;
+
+        if (__DEV__) {
+            zrUtil.each(normalizeDimensions(dims), dim => {
+                const dimInfo = this.getDimensionInfo(dim);
+                if (!dimInfo.isCalculationCoord) {
+                    console.error('Danger: only stack dimension can be modified');
+                }
+            });
+        }
+
+        const dimIndices = map(
+            normalizeDimensions(dims), this._getStoreDimIndex, this
+        );
+
+        this._store.modify(dimIndices, (fCtx
+            ? zrUtil.bind(cb as any, fCtx as any)
+            : cb) as any
+        );
     }
 
     /**
@@ -1207,13 +1225,13 @@ class SeriesData<
     // ----------------------------------------------------------
     private static internalField = (function () {
 
-        prepareInvertedIndex = function (list: SeriesData): void {
-            const invertedIndicesMap = list._invertedIndicesMap;
+        prepareInvertedIndex = function (data: SeriesData): void {
+            const invertedIndicesMap = data._invertedIndicesMap;
             zrUtil.each(invertedIndicesMap, function (invertedIndices, dim) {
-                const dimInfo = list._dimensionInfos[dim];
+                const dimInfo = data._dimensionInfos[dim];
                 // Currently, only dimensions that has ordinalMeta can create inverted indices.
                 const ordinalMeta = dimInfo.ordinalMeta;
-                const store = list._store;
+                const store = data._store;
                 const dimIdx = store.getDimensionIndex(dim);
                 if (ordinalMeta) {
                     invertedIndices = invertedIndicesMap[dim] = new CtorInt32Array(
@@ -1233,18 +1251,18 @@ class SeriesData<
         };
 
         getIdNameFromStore = function (
-            list: SeriesData, dimIdx: number, idx: number
+            data: SeriesData, dimIdx: number, idx: number
         ): string {
-            return convertOptionIdName(list._getCategory(dimIdx, idx), null);
+            return convertOptionIdName(data._getCategory(dimIdx, idx), null);
         };
 
         /**
          * @see the comment of `List['getId']`.
          */
-        getId = function (list: SeriesData, rawIndex: number): string {
-            let id = list._idList[rawIndex];
-            if (id == null && list._idDimIdx != null) {
-                id = getIdNameFromStore(list, list._idDimIdx, rawIndex);
+        getId = function (data: SeriesData, rawIndex: number): string {
+            let id = data._idList[rawIndex];
+            if (id == null && data._idDimIdx != null) {
+                id = getIdNameFromStore(data, data._idDimIdx, rawIndex);
             }
             if (id == null) {
                 id = ID_PREFIX + rawIndex;
@@ -1261,15 +1279,6 @@ class SeriesData<
             return dimensions;
         };
 
-        validateDimensions = function (list: SeriesData, dims: DimensionIndex[]): void {
-            for (let i = 0; i < dims.length; i++) {
-                // stroage may be empty when no data, so use
-                // dimensionInfos to check.
-                if (!list.dimensions[dims[i]]) {
-                    console.error('Unkown dimension ' + dims[i]);
-                }
-            }
-        };
 
         // Data in excludeDimensions is copied, otherwise transfered.
         cloneListForMapAndSample = function (original: SeriesData): SeriesData {

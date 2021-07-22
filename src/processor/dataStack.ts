@@ -87,7 +87,7 @@ function calculateStack(stackInfoList: StackInfo[]) {
 
         // Should not write on raw data, because stack series model list changes
         // depending on legend selection.
-        const newData = targetData.map(dims, function (v0, v1, dataIndex) {
+        targetData.modify(dims, function (v0, v1, dataIndex) {
             let sum = targetData.get(targetStackInfo.stackedDimension, dataIndex) as number;
 
             // Consider `connectNulls` of line area, if value is NaN, stackedOver
@@ -141,9 +141,5 @@ function calculateStack(stackInfoList: StackInfo[]) {
 
             return resultVal;
         });
-
-        (targetData.hostModel as SeriesModel).setData(newData);
-        // Update for consequent calculation
-        targetStackInfo.data = newData;
     });
 }

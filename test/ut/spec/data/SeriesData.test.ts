@@ -23,8 +23,11 @@
 import SeriesData from '@/src/data/SeriesData';
 import Model from '@/src/model/Model';
 import { createSourceFromSeriesDataOption, Source, createSource } from '@/src/data/Source';
-import { OptionDataItemObject, OptionDataValue, SOURCE_FORMAT_ARRAY_ROWS, SOURCE_FORMAT_ORIGINAL } from '@/src/util/types';
-import DataDimensionInfo from '@/src/data/DataDimensionInfo';
+import { OptionDataItemObject,
+    OptionDataValue,
+    SOURCE_FORMAT_ARRAY_ROWS,
+    SOURCE_FORMAT_ORIGINAL } from '@/src/util/types';
+import SeriesDimensionDefine from '@/src/data/SeriesDimensionDefine';
 import OrdinalMeta from '@/src/data/OrdinalMeta';
 import DataStorage from '@/src/data/DataStorage';
 import { DefaultDataProvider } from '@/src/data/helper/dataProvider';
@@ -210,30 +213,6 @@ describe('SeriesData', function () {
             return store;
         }
 
-        it('should use storage if dimensions types are same', function () {
-            const store = createStore();
-            const data = new SeriesData([{type: 'ordinal', name: 'dim0'}, {type: 'float', name: 'dim1'}], null);
-            data.initData(store);
-            expect(data.getStorage()).toBe(store);
-        });
-        it('should recreate storage if dimensions types not compatitable', function () {
-            const store = createStore();
-            const dims = [{ type: 'float', name: 'dim0' }, { type: 'float', name: 'dim1'}];
-            const data = new SeriesData(dims, null);
-            data.initData(store);
-            expect(data.getStorage()).not.toBe(store);
-            // Can reuse now
-            const data2 = new SeriesData(dims, null);
-            data2.initData(data.getStorage());
-            expect(data2.getStorage()).toBe(data.getStorage());
-        });
-        it('should recreate storage if dimensions name not exits', function () {
-            const store = createStore();
-            const dims = [{ type: 'float', name: 'dim2' }];
-            const data = new SeriesData(dims, null);
-            data.initData(store);
-            expect(data.getStorage()).not.toBe(store);
-        });
 
         it('SeriesData can still get other dims value from storage when only part of dims are given.', function () {
             const provider = new DefaultDataProvider([['A', 15, 20], ['B', 25, 30], ['C', 35, 40]]);
@@ -497,7 +476,7 @@ describe('SeriesData', function () {
                 ]);
             });
 
-            function testArrayRowsInSource(dimensionsInfo: DataDimensionInfo[]): void {
+            function testArrayRowsInSource(dimensionsInfo: SeriesDimensionDefine[]): void {
                 const list = new SeriesData(dimensionsInfo, new Model());
                 const oneByOne = makeOneByOneChecker(list);
 

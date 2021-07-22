@@ -364,11 +364,13 @@ export class SourceManager {
     }
 
     /**
+     *
+     * Get a data storage which can be shared across series.
      * Only available for series.
      *
      * @param dimensions Dimensions that are generated in series.
      */
-    getDataStorage(seriesDims: SeriesDimensionDefine[]): DataStorage {
+    getSharedDataStorage(seriesDims: SeriesDimensionDefine[]): DataStorage {
         if (__DEV__) {
             assert(isSeries(this._sourceHost), 'Can only call getDataStorage on series source manager.');
         }
