@@ -48,13 +48,30 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
         );
         const p1 = vec2.clone(edge.node1.getLayout());
         const p2 = vec2.clone(edge.node2.getLayout());
-        const points = [p1, p2];
-        if (+curveness) {
+        let points = [p1, p2];
+        if (+curveness && edge.node1 !== edge.node2) {
             points.push([
-                (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * curveness,
-                (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * curveness
+                (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * curveness / 2,
+                (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * curveness / 2
+            ]);
+            points.push([
+                (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * curveness / 2,
+                (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * curveness / 2
+            ]);
+        }
+        if (edge.node1 === edge.node2) {
+            const size = Number(seriesModel.get('symbolSize'));
+            points = [[p1[0] + size / 4, p1[1] - size / 5], [p2[0] + size / 4, p2[1] - size / 5]];
+            points.push([
+                (points[0][0] + points[1][0]) / 2 - Number(size) * 2,
+                (points[0][1] + points[1][1]) / 2 + Number(size) * 2.5
+            ]);
+            points.push([
+                (points[0][0] + points[1][0]) / 2 - Number(size) * 2,
+                (points[0][1] + points[1][1]) / 2 - Number(size) * 1.5
             ]);
         }
         edge.setLayout(points);
+        console.log(points);
     });
 }

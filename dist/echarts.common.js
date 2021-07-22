@@ -48,6 +48,8 @@
     };
 
     function __extends(d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -64,12 +66,14 @@
         return __assign.apply(this, arguments);
     };
 
-    function __spreadArrays() {
-        for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-        for (var r = Array(s), k = 0, i = 0; i < il; i++)
-            for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-                r[k] = a[j];
-        return r;
+    function __spreadArray(to, from, pack) {
+        if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+            if (ar || !(i in from)) {
+                if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+                ar[i] = from[i];
+            }
+        }
+        return to.concat(ar || from);
     }
 
     var Browser = (function () {
@@ -1026,13 +1030,16 @@
             return this;
         };
         Eventful.prototype.triggerWithContext = function (type) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
             if (!this._$handlers) {
                 return this;
             }
             var _h = this._$handlers[type];
             var eventProcessor = this._$eventProcessor;
             if (_h) {
-                var args = arguments;
                 var argLen = args.length;
                 var ctx = args[argLen - 1];
                 var len = _h.length;
@@ -3291,7 +3298,10 @@
             }
         };
         Track.prototype.needsAnimate = function () {
-            return !this._isAllValueEqual && this.keyframes.length >= 2 && this.interpolable;
+            return !this._isAllValueEqual
+                && this.keyframes.length >= 2
+                && this.interpolable
+                && this.maxTime > 0;
         };
         Track.prototype.getAdditiveTrack = function () {
             return this._additiveTrack;
@@ -3624,7 +3634,7 @@
         Animator.prototype._doneCallback = function () {
             this._setTracksFinished();
             this._clip = null;
-            var doneList = this._doneList;
+            var doneList = this._doneCbs;
             if (doneList) {
                 var len = doneList.length;
                 for (var i = 0; i < len; i++) {
@@ -3635,7 +3645,7 @@
         Animator.prototype._abortedCallback = function () {
             this._setTracksFinished();
             var animation = this.animation;
-            var abortedList = this._abortedList;
+            var abortedList = this._abortedCbs;
             if (animation) {
                 animation.removeClip(this._clip);
             }
@@ -3712,7 +3722,7 @@
                         for (var i = 0; i < tracks.length; i++) {
                             tracks[i].step(self._target, percent);
                         }
-                        var onframeList = self._onframeList;
+                        var onframeList = self._onframeCbs;
                         if (onframeList) {
                             for (var i = 0; i < onframeList.length; i++) {
                                 onframeList[i](self._target, percent);
@@ -3752,28 +3762,28 @@
         };
         Animator.prototype.during = function (cb) {
             if (cb) {
-                if (!this._onframeList) {
-                    this._onframeList = [];
+                if (!this._onframeCbs) {
+                    this._onframeCbs = [];
                 }
-                this._onframeList.push(cb);
+                this._onframeCbs.push(cb);
             }
             return this;
         };
         Animator.prototype.done = function (cb) {
             if (cb) {
-                if (!this._doneList) {
-                    this._doneList = [];
+                if (!this._doneCbs) {
+                    this._doneCbs = [];
                 }
-                this._doneList.push(cb);
+                this._doneCbs.push(cb);
             }
             return this;
         };
         Animator.prototype.aborted = function (cb) {
             if (cb) {
-                if (!this._abortedList) {
-                    this._abortedList = [];
+                if (!this._abortedCbs) {
+                    this._abortedCbs = [];
                 }
-                this._abortedList.push(cb);
+                this._abortedCbs.push(cb);
             }
             return this;
         };
@@ -4420,6 +4430,9 @@
     var Transformable = (function () {
         function Transformable() {
         }
+        Transformable.prototype.getLocalTransform = function (m) {
+            return Transformable.getLocalTransform(this, m);
+        };
         Transformable.prototype.setPosition = function (arr) {
             this.x = arr[0];
             this.y = arr[1];
@@ -4444,11 +4457,10 @@
                 || isNotAroundZero(this.scaleY - 1);
         };
         Transformable.prototype.updateTransform = function () {
-            var parent = this.parent;
-            var parentHasTransform = parent && parent.transform;
+            var parentTransform = this.parent && this.parent.transform;
             var needLocalTransform = this.needLocalTransform();
             var m = this.transform;
-            if (!(needLocalTransform || parentHasTransform)) {
+            if (!(needLocalTransform || parentTransform)) {
                 m && mIdentity(m);
                 return;
             }
@@ -4459,12 +4471,12 @@
             else {
                 mIdentity(m);
             }
-            if (parentHasTransform) {
+            if (parentTransform) {
                 if (needLocalTransform) {
-                    mul$1(m, parent.transform, m);
+                    mul$1(m, parentTransform, m);
                 }
                 else {
-                    copy$1(m, parent.transform);
+                    copy$1(m, parentTransform);
                 }
             }
             this.transform = m;
@@ -4485,9 +4497,6 @@
             }
             this.invTransform = this.invTransform || create$1();
             invert(this.invTransform, m);
-        };
-        Transformable.prototype.getLocalTransform = function (m) {
-            return Transformable.getLocalTransform(this, m);
         };
         Transformable.prototype.getComputedTransform = function () {
             var transformNode = this;
@@ -4583,6 +4592,13 @@
                 ? Math.sqrt(abs(m[0] * m[3] - m[2] * m[1]))
                 : 1;
         };
+        Transformable.prototype.copyTransform = function (source) {
+            var target = this;
+            for (var i = 0; i < TRANSFORMABLE_PROPS.length; i++) {
+                var propName = TRANSFORMABLE_PROPS[i];
+                target[propName] = source[propName];
+            }
+        };
         Transformable.getLocalTransform = function (target, m) {
             m = m || [];
             var ox = target.originX || 0;
@@ -4625,6 +4641,9 @@
         })();
         return Transformable;
     }());
+    var TRANSFORMABLE_PROPS = [
+        'x', 'y', 'originX', 'originY', 'rotation', 'scaleX', 'scaleY', 'skewX', 'skewY'
+    ];
 
     var Point = (function () {
         function Point(x, y) {
@@ -5207,24 +5226,13 @@
                 }
                 var textConfig = this.textConfig;
                 var isLocal = textConfig.local;
-                var attachedTransform = textEl.attachedTransform;
+                var innerTransformable = textEl.innerTransformable;
                 var textAlign = void 0;
                 var textVerticalAlign = void 0;
                 var textStyleChanged = false;
-                if (isLocal) {
-                    attachedTransform.parent = this;
-                }
-                else {
-                    attachedTransform.parent = null;
-                }
+                innerTransformable.parent = isLocal ? this : null;
                 var innerOrigin = false;
-                attachedTransform.x = textEl.x;
-                attachedTransform.y = textEl.y;
-                attachedTransform.originX = textEl.originX;
-                attachedTransform.originY = textEl.originY;
-                attachedTransform.rotation = textEl.rotation;
-                attachedTransform.scaleX = textEl.scaleX;
-                attachedTransform.scaleY = textEl.scaleY;
+                innerTransformable.copyTransform(textEl);
                 if (textConfig.position != null) {
                     var layoutRect = tmpBoundingRect;
                     if (textConfig.layoutRect) {
@@ -5242,8 +5250,8 @@
                     else {
                         calculateTextPosition(tmpTextPosCalcRes, textConfig, layoutRect);
                     }
-                    attachedTransform.x = tmpTextPosCalcRes.x;
-                    attachedTransform.y = tmpTextPosCalcRes.y;
+                    innerTransformable.x = tmpTextPosCalcRes.x;
+                    innerTransformable.y = tmpTextPosCalcRes.y;
                     textAlign = tmpTextPosCalcRes.align;
                     textVerticalAlign = tmpTextPosCalcRes.verticalAlign;
                     var textOrigin = textConfig.origin;
@@ -5259,20 +5267,20 @@
                             relOriginY = parsePercent(textOrigin[1], layoutRect.height);
                         }
                         innerOrigin = true;
-                        attachedTransform.originX = -attachedTransform.x + relOriginX + (isLocal ? 0 : layoutRect.x);
-                        attachedTransform.originY = -attachedTransform.y + relOriginY + (isLocal ? 0 : layoutRect.y);
+                        innerTransformable.originX = -innerTransformable.x + relOriginX + (isLocal ? 0 : layoutRect.x);
+                        innerTransformable.originY = -innerTransformable.y + relOriginY + (isLocal ? 0 : layoutRect.y);
                     }
                 }
                 if (textConfig.rotation != null) {
-                    attachedTransform.rotation = textConfig.rotation;
+                    innerTransformable.rotation = textConfig.rotation;
                 }
                 var textOffset = textConfig.offset;
                 if (textOffset) {
-                    attachedTransform.x += textOffset[0];
-                    attachedTransform.y += textOffset[1];
+                    innerTransformable.x += textOffset[0];
+                    innerTransformable.y += textOffset[1];
                     if (!innerOrigin) {
-                        attachedTransform.originX = -textOffset[0];
-                        attachedTransform.originY = -textOffset[1];
+                        innerTransformable.originX = -textOffset[0];
+                        innerTransformable.originY = -textOffset[1];
                     }
                 }
                 var isInside = textConfig.inside == null
@@ -5719,7 +5727,7 @@
             if (textEl.__zr && !textEl.__hostTarget) {
                 throw new Error('Text element has been added to zrender.');
             }
-            textEl.attachedTransform = new Transformable();
+            textEl.innerTransformable = new Transformable();
             this._attachComponent(textEl);
             this._textContent = textEl;
             this.markRedraw();
@@ -5738,7 +5746,7 @@
         Element.prototype.removeTextContent = function () {
             var textEl = this._textContent;
             if (textEl) {
-                textEl.attachedTransform = null;
+                textEl.innerTransformable = null;
                 this._detachComponent(textEl);
                 this._textContent = null;
                 this._innerTextDefaultStyle = null;
@@ -5794,6 +5802,9 @@
             }
         };
         Element.prototype.addSelfToZr = function (zr) {
+            if (this.__zr === zr) {
+                return;
+            }
             this.__zr = zr;
             var animators = this.animators;
             if (animators) {
@@ -5812,6 +5823,9 @@
             }
         };
         Element.prototype.removeSelfFromZr = function (zr) {
+            if (!this.__zr) {
+                return;
+            }
             this.__zr = null;
             var animators = this.animators;
             if (animators) {
@@ -6201,6 +6215,13 @@
                     children.splice(idx, 0, child);
                     this._doAdd(child);
                 }
+            }
+            return this;
+        };
+        Group.prototype.replace = function (oldChild, newChild) {
+            var idx = indexOf(this._children, oldChild);
+            if (idx >= 0) {
+                this.replaceAt(newChild, idx);
             }
             return this;
         };
@@ -7972,7 +7993,7 @@
               superClass.apply(this, arguments);
             } else {
               var ins = createObject( // @ts-ignore
-              ExtendedClass.prototype, new (superClass.bind.apply(superClass, __spreadArrays([void 0], args)))());
+              ExtendedClass.prototype, new (superClass.bind.apply(superClass, __spreadArray([void 0], args)))());
               return ins;
             }
           } else {
@@ -10346,6 +10367,14 @@
                 }
             }
         };
+        PathProxy.prototype.clone = function () {
+            var newProxy = new PathProxy();
+            var data = this.data;
+            newProxy.data = data.slice ? data.slice()
+                : Array.prototype.slice.call(data);
+            newProxy._len = this._len;
+            return newProxy;
+        };
         PathProxy.CMD = CMD;
         PathProxy.initDefaultProps = (function () {
             var proto = PathProxy.prototype;
@@ -10914,9 +10943,15 @@
                 }
             }
         };
-        Path.prototype.buildPath = function (ctx, shapeCfg, inBundle) { };
+        Path.prototype.buildPath = function (ctx, shapeCfg, inBatch) { };
         Path.prototype.pathUpdated = function () {
             this.__dirty &= ~SHAPE_CHANGED_BIT;
+        };
+        Path.prototype.getUpdatedPathProxy = function (inBatch) {
+            !this.path && this.createPathProxy();
+            this.path.beginPath();
+            this.buildPath(this.path, this.shape, inBatch);
+            return this.path;
         };
         Path.prototype.createPathProxy = function () {
             this.path = new PathProxy(false);
@@ -11513,6 +11548,7 @@
             return this._children;
         };
         ZRText.prototype.update = function () {
+            _super.prototype.update.call(this);
             if (this.styleChanged()) {
                 this._updateSubTexts();
             }
@@ -11525,29 +11561,31 @@
                 child.cursor = this.cursor;
                 child.invisible = this.invisible;
             }
-            var attachedTransform = this.attachedTransform;
-            if (attachedTransform) {
-                attachedTransform.updateTransform();
-                var m = attachedTransform.transform;
-                if (m) {
-                    this.transform = this.transform || [];
-                    copy$1(this.transform, m);
-                }
-                else {
-                    this.transform = null;
+        };
+        ZRText.prototype.updateTransform = function () {
+            var innerTransformable = this.innerTransformable;
+            if (innerTransformable) {
+                innerTransformable.updateTransform();
+                if (innerTransformable.transform) {
+                    this.transform = innerTransformable.transform;
                 }
             }
             else {
-                _super.prototype.update.call(this);
+                _super.prototype.updateTransform.call(this);
             }
+        };
+        ZRText.prototype.getLocalTransform = function (m) {
+            var innerTransformable = this.innerTransformable;
+            return innerTransformable
+                ? innerTransformable.getLocalTransform(m)
+                : _super.prototype.getLocalTransform.call(this, m);
         };
         ZRText.prototype.getComputedTransform = function () {
             if (this.__hostTarget) {
                 this.__hostTarget.getComputedTransform();
                 this.__hostTarget.updateInnerText(true);
             }
-            return this.attachedTransform ? this.attachedTransform.getComputedTransform()
-                : _super.prototype.getComputedTransform.call(this);
+            return _super.prototype.getComputedTransform.call(this);
         };
         ZRText.prototype._updateSubTexts = function () {
             this._childCursor = 0;
@@ -11863,7 +11901,7 @@
             var self = this;
             var rectEl;
             var imgEl;
-            if (isPlainOrGradientBg || (textBorderWidth && textBorderColor)) {
+            if (isPlainOrGradientBg || style.lineHeight || (textBorderWidth && textBorderColor)) {
                 rectEl = this._getOrCreateChild(Rect);
                 rectEl.useStyle(rectEl.createStyle());
                 rectEl.style.fill = null;
@@ -11989,6 +12027,7 @@
     }
     function needDrawBackground(style) {
         return !!(style.backgroundColor
+            || style.lineHeight
             || (style.borderWidth && style.borderColor));
     }
 
@@ -12134,26 +12173,31 @@
         var fromStroke = hasSelect ? store.selectStroke || store.normalStroke : store.normalStroke;
 
         if (hasFillOrStroke(fromFill) || hasFillOrStroke(fromStroke)) {
-          state = state || {}; // Apply default color lift
+          state = state || {};
+          var emphasisStyle = state.style || {}; // inherit case
 
-          var emphasisStyle = state.style || {};
-
-          if (!hasFillOrStroke(emphasisStyle.fill) && hasFillOrStroke(fromFill)) {
-            cloned = true; // Not modify the original value.
-
+          if (emphasisStyle.fill === 'inherit') {
+            cloned = true;
             state = extend({}, state);
-            emphasisStyle = extend({}, emphasisStyle); // Already being applied 'emphasis'. DON'T lift color multiple times.
+            emphasisStyle = extend({}, emphasisStyle);
+            emphasisStyle.fill = fromFill;
+          } // Apply default color lift
+          else if (!hasFillOrStroke(emphasisStyle.fill) && hasFillOrStroke(fromFill)) {
+              cloned = true; // Not modify the original value.
 
-            emphasisStyle.fill = liftColor(fromFill);
-          } // Not highlight stroke if fill has been highlighted.
-          else if (!hasFillOrStroke(emphasisStyle.stroke) && hasFillOrStroke(fromStroke)) {
-              if (!cloned) {
-                state = extend({}, state);
-                emphasisStyle = extend({}, emphasisStyle);
+              state = extend({}, state);
+              emphasisStyle = extend({}, emphasisStyle); // Already being applied 'emphasis'. DON'T lift color multiple times.
+
+              emphasisStyle.fill = liftColor(fromFill);
+            } // Not highlight stroke if fill has been highlighted.
+            else if (!hasFillOrStroke(emphasisStyle.stroke) && hasFillOrStroke(fromStroke)) {
+                if (!cloned) {
+                  state = extend({}, state);
+                  emphasisStyle = extend({}, emphasisStyle);
+                }
+
+                emphasisStyle.stroke = liftColor(fromStroke);
               }
-
-              emphasisStyle.stroke = liftColor(fromStroke);
-            }
 
           state.style = emphasisStyle;
         }
@@ -12686,6 +12730,9 @@
     var mathSqrt$2 = Math.sqrt;
     var mathAtan2 = Math.atan2;
     function transformPath(path, m) {
+        if (!m) {
+            return;
+        }
         var data = path.data;
         var len = path.len();
         var cmd;
@@ -13082,13 +13129,7 @@
         var len = pathEls.length;
         for (var i = 0; i < len; i++) {
             var pathEl = pathEls[i];
-            if (!pathEl.path) {
-                pathEl.createPathProxy();
-            }
-            if (pathEl.shapeChanged()) {
-                pathEl.buildPath(pathEl.path, pathEl.shape, true);
-            }
-            pathList.push(pathEl.path);
+            pathList.push(pathEl.getUpdatedPathProxy(true));
         }
         var pathBundle = new Path(opts);
         pathBundle.createPathProxy();
@@ -14116,6 +14157,224 @@
         return IncrementalDisplayable;
     }(Displayable));
 
+    var transitionStore = makeInner();
+    /**
+     * Return null if animation is disabled.
+     */
+
+    function getAnimationConfig(animationType, animatableModel, dataIndex, // Extra opts can override the option in animatable model.
+    extraOpts, // TODO It's only for pictorial bar now.
+    extraDelayParams) {
+      var animationPayload; // Check if there is global animation configuration from dataZoom/resize can override the config in option.
+      // If animation is enabled. Will use this animation config in payload.
+      // If animation is disabled. Just ignore it.
+
+      if (animatableModel && animatableModel.ecModel) {
+        var updatePayload = animatableModel.ecModel.getUpdatePayload();
+        animationPayload = updatePayload && updatePayload.animation;
+      }
+
+      var animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
+      var isUpdate = animationType === 'update';
+
+      if (animationEnabled) {
+        var duration = void 0;
+        var easing = void 0;
+        var delay = void 0;
+
+        if (extraOpts) {
+          duration = retrieve2(extraOpts.duration, 200);
+          easing = retrieve2(extraOpts.easing, 'cubicOut');
+          delay = 0;
+        } else {
+          duration = animatableModel.getShallow(isUpdate ? 'animationDurationUpdate' : 'animationDuration');
+          easing = animatableModel.getShallow(isUpdate ? 'animationEasingUpdate' : 'animationEasing');
+          delay = animatableModel.getShallow(isUpdate ? 'animationDelayUpdate' : 'animationDelay');
+        } // animation from payload has highest priority.
+
+
+        if (animationPayload) {
+          animationPayload.duration != null && (duration = animationPayload.duration);
+          animationPayload.easing != null && (easing = animationPayload.easing);
+          animationPayload.delay != null && (delay = animationPayload.delay);
+        }
+
+        if (typeof delay === 'function') {
+          delay = delay(dataIndex, extraDelayParams);
+        }
+
+        if (typeof duration === 'function') {
+          duration = duration(dataIndex);
+        }
+
+        var config = {
+          duration: duration || 0,
+          delay: delay,
+          easing: easing
+        };
+        return config;
+      } else {
+        return null;
+      }
+    }
+
+    function animateOrSetProps(animationType, el, props, animatableModel, dataIndex, cb, during) {
+      var isFrom = false;
+      var removeOpt;
+
+      if (typeof dataIndex === 'function') {
+        during = cb;
+        cb = dataIndex;
+        dataIndex = null;
+      } else if (isObject(dataIndex)) {
+        cb = dataIndex.cb;
+        during = dataIndex.during;
+        isFrom = dataIndex.isFrom;
+        removeOpt = dataIndex.removeOpt;
+        dataIndex = dataIndex.dataIndex;
+      }
+
+      var isRemove = animationType === 'remove';
+
+      if (!isRemove) {
+        // Must stop the remove animation.
+        el.stopAnimation('remove');
+      }
+
+      var animationConfig = getAnimationConfig(animationType, animatableModel, dataIndex, isRemove ? removeOpt || {} : null, animatableModel && animatableModel.getAnimationDelayParams ? animatableModel.getAnimationDelayParams(el, dataIndex) : null);
+
+      if (animationConfig && animationConfig.duration > 0) {
+        var duration = animationConfig.duration;
+        var animationDelay = animationConfig.delay;
+        var animationEasing = animationConfig.easing;
+        var animateConfig = {
+          duration: duration,
+          delay: animationDelay || 0,
+          easing: animationEasing,
+          done: cb,
+          force: !!cb || !!during,
+          // Set to final state in update/init animation.
+          // So the post processing based on the path shape can be done correctly.
+          setToFinal: !isRemove,
+          scope: animationType,
+          during: during
+        };
+        isFrom ? el.animateFrom(props, animateConfig) : el.animateTo(props, animateConfig);
+      } else {
+        el.stopAnimation(); // If `isFrom`, the props is the "from" props.
+
+        !isFrom && el.attr(props); // Call during at least once.
+
+        during && during(1);
+        cb && cb();
+      }
+    }
+    /**
+     * Update graphic element properties with or without animation according to the
+     * configuration in series.
+     *
+     * Caution: this method will stop previous animation.
+     * So do not use this method to one element twice before
+     * animation starts, unless you know what you are doing.
+     * @example
+     *     graphic.updateProps(el, {
+     *         position: [100, 100]
+     *     }, seriesModel, dataIndex, function () { console.log('Animation done!'); });
+     *     // Or
+     *     graphic.updateProps(el, {
+     *         position: [100, 100]
+     *     }, seriesModel, function () { console.log('Animation done!'); });
+     */
+
+
+    function updateProps(el, props, // TODO: TYPE AnimatableModel
+    animatableModel, dataIndex, cb, during) {
+      animateOrSetProps('update', el, props, animatableModel, dataIndex, cb, during);
+    }
+    /**
+     * Init graphic element properties with or without animation according to the
+     * configuration in series.
+     *
+     * Caution: this method will stop previous animation.
+     * So do not use this method to one element twice before
+     * animation starts, unless you know what you are doing.
+     */
+
+    function initProps(el, props, animatableModel, dataIndex, cb, during) {
+      animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, during);
+    }
+    /**
+     * If element is removed.
+     * It can determine if element is having remove animation.
+     */
+
+    function isElementRemoved(el) {
+      if (!el.__zr) {
+        return true;
+      }
+
+      for (var i = 0; i < el.animators.length; i++) {
+        var animator = el.animators[i];
+
+        if (animator.scope === 'remove') {
+          return true;
+        }
+      }
+
+      return false;
+    }
+    /**
+     * Remove graphic element
+     */
+
+    function removeElement(el, props, animatableModel, dataIndex, cb, during) {
+      // Don't do remove animation twice.
+      if (isElementRemoved(el)) {
+        return;
+      }
+
+      animateOrSetProps('remove', el, props, animatableModel, dataIndex, cb, during);
+    }
+
+    function fadeOutDisplayable(el, animatableModel, dataIndex, done) {
+      el.removeTextContent();
+      el.removeTextGuideLine();
+      removeElement(el, {
+        style: {
+          opacity: 0
+        }
+      }, animatableModel, dataIndex, done);
+    }
+
+    function removeElementWithFadeOut(el, animatableModel, dataIndex) {
+      function doRemove() {
+        el.parent && el.parent.remove(el);
+      } // Hide label and labelLine first
+      // TODO Also use fade out animation?
+
+
+      if (!el.isGroup) {
+        fadeOutDisplayable(el, animatableModel, dataIndex, doRemove);
+      } else {
+        el.traverse(function (disp) {
+          if (!disp.isGroup) {
+            // Can invoke doRemove multiple times.
+            fadeOutDisplayable(disp, animatableModel, dataIndex, doRemove);
+          }
+        });
+      }
+    }
+    /**
+     * Save old style for style transition in universalTransition module.
+     * It's used when element will be reused in each render.
+     * For chart like map, heatmap, which will always create new element.
+     * We don't need to save this because universalTransition can get old style from the old element
+     */
+
+    function saveOldStyle(el) {
+      transitionStore(el).oldStyle = el.style;
+    }
+
     var mathMax$4 = Math.max;
     var mathMin$4 = Math.min;
     var _customShapeMap = {};
@@ -14305,196 +14564,6 @@
      */
 
     var subPixelOptimize$1 = subPixelOptimize;
-
-    function animateOrSetProps(animationType, el, props, animatableModel, dataIndex, cb, during) {
-      var isFrom = false;
-      var removeOpt;
-
-      if (typeof dataIndex === 'function') {
-        during = cb;
-        cb = dataIndex;
-        dataIndex = null;
-      } else if (isObject(dataIndex)) {
-        cb = dataIndex.cb;
-        during = dataIndex.during;
-        isFrom = dataIndex.isFrom;
-        removeOpt = dataIndex.removeOpt;
-        dataIndex = dataIndex.dataIndex;
-      }
-
-      var isUpdate = animationType === 'update';
-      var isRemove = animationType === 'remove';
-      var animationPayload; // Check if there is global animation configuration from dataZoom/resize can override the config in option.
-      // If animation is enabled. Will use this animation config in payload.
-      // If animation is disabled. Just ignore it.
-
-      if (animatableModel && animatableModel.ecModel) {
-        var updatePayload = animatableModel.ecModel.getUpdatePayload();
-        animationPayload = updatePayload && updatePayload.animation;
-      }
-
-      var animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
-
-      if (!isRemove) {
-        // Must stop the remove animation.
-        el.stopAnimation('remove');
-      }
-
-      if (animationEnabled) {
-        var duration = void 0;
-        var animationEasing = void 0;
-        var animationDelay = void 0;
-
-        if (animationPayload) {
-          duration = animationPayload.duration || 0;
-          animationEasing = animationPayload.easing || 'cubicOut';
-          animationDelay = animationPayload.delay || 0;
-        } else if (isRemove) {
-          removeOpt = removeOpt || {};
-          duration = retrieve2(removeOpt.duration, 200);
-          animationEasing = retrieve2(removeOpt.easing, 'cubicOut');
-          animationDelay = 0;
-        } else {
-          duration = animatableModel.getShallow(isUpdate ? 'animationDurationUpdate' : 'animationDuration');
-          animationEasing = animatableModel.getShallow(isUpdate ? 'animationEasingUpdate' : 'animationEasing');
-          animationDelay = animatableModel.getShallow(isUpdate ? 'animationDelayUpdate' : 'animationDelay');
-        }
-
-        if (typeof animationDelay === 'function') {
-          animationDelay = animationDelay(dataIndex, animatableModel.getAnimationDelayParams ? animatableModel.getAnimationDelayParams(el, dataIndex) : null);
-        }
-
-        if (typeof duration === 'function') {
-          duration = duration(dataIndex);
-        }
-
-        duration > 0 ? isFrom ? el.animateFrom(props, {
-          duration: duration,
-          delay: animationDelay || 0,
-          easing: animationEasing,
-          done: cb,
-          force: !!cb || !!during,
-          scope: animationType,
-          during: during
-        }) : el.animateTo(props, {
-          duration: duration,
-          delay: animationDelay || 0,
-          easing: animationEasing,
-          done: cb,
-          force: !!cb || !!during,
-          setToFinal: true,
-          scope: animationType,
-          during: during
-        }) : ( // FIXME:
-        // If `duration` is 0, only the animation on props
-        // can be stoped, other animation should be continued?
-        // But at present using duration 0 in `animateTo`, `animateFrom`
-        // might cause unexpected behavior.
-        el.stopAnimation(), // If `isFrom`, the props is the "from" props.
-        !isFrom && el.attr(props), cb && cb());
-      } else {
-        el.stopAnimation();
-        !isFrom && el.attr(props); // Call during once.
-
-        during && during(1);
-        cb && cb();
-      }
-    }
-    /**
-     * Update graphic element properties with or without animation according to the
-     * configuration in series.
-     *
-     * Caution: this method will stop previous animation.
-     * So do not use this method to one element twice before
-     * animation starts, unless you know what you are doing.
-     * @example
-     *     graphic.updateProps(el, {
-     *         position: [100, 100]
-     *     }, seriesModel, dataIndex, function () { console.log('Animation done!'); });
-     *     // Or
-     *     graphic.updateProps(el, {
-     *         position: [100, 100]
-     *     }, seriesModel, function () { console.log('Animation done!'); });
-     */
-
-
-    function updateProps(el, props, // TODO: TYPE AnimatableModel
-    animatableModel, dataIndex, cb, during) {
-      animateOrSetProps('update', el, props, animatableModel, dataIndex, cb, during);
-    }
-    /**
-     * Init graphic element properties with or without animation according to the
-     * configuration in series.
-     *
-     * Caution: this method will stop previous animation.
-     * So do not use this method to one element twice before
-     * animation starts, unless you know what you are doing.
-     */
-
-    function initProps(el, props, animatableModel, dataIndex, cb, during) {
-      animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, during);
-    }
-    /**
-     * Remove graphic element
-     */
-
-    function removeElement(el, props, animatableModel, dataIndex, cb, during) {
-      // Don't do remove animation twice.
-      if (isElementRemoved(el)) {
-        return;
-      }
-
-      animateOrSetProps('remove', el, props, animatableModel, dataIndex, cb, during);
-    }
-
-    function fadeOutDisplayable(el, animatableModel, dataIndex, done) {
-      el.removeTextContent();
-      el.removeTextGuideLine();
-      removeElement(el, {
-        style: {
-          opacity: 0
-        }
-      }, animatableModel, dataIndex, done);
-    }
-
-    function removeElementWithFadeOut(el, animatableModel, dataIndex) {
-      function doRemove() {
-        el.parent && el.parent.remove(el);
-      } // Hide label and labelLine first
-      // TODO Also use fade out animation?
-
-
-      if (!el.isGroup) {
-        fadeOutDisplayable(el, animatableModel, dataIndex, doRemove);
-      } else {
-        el.traverse(function (disp) {
-          if (!disp.isGroup) {
-            // Can invoke doRemove multiple times.
-            fadeOutDisplayable(disp, animatableModel, dataIndex, doRemove);
-          }
-        });
-      }
-    }
-    /**
-     * If element is removed.
-     * It can determine if element is having remove animation.
-     */
-
-    function isElementRemoved(el) {
-      if (!el.__zr) {
-        return true;
-      }
-
-      for (var i = 0; i < el.animators.length; i++) {
-        var animator = el.animators[i];
-
-        if (animator.scope === 'remove') {
-          return true;
-        }
-      }
-
-      return false;
-    }
     /**
      * Get transform matrix of target (param target),
      * in coordinate of its ancestor (param ancestor)
@@ -14780,6 +14849,11 @@
 
     var graphic = /*#__PURE__*/Object.freeze({
         __proto__: null,
+        updateProps: updateProps,
+        initProps: initProps,
+        removeElement: removeElement,
+        removeElementWithFadeOut: removeElementWithFadeOut,
+        isElementRemoved: isElementRemoved,
         extendShape: extendShape,
         extendPath: extendPath,
         registerShape: registerShape,
@@ -14791,11 +14865,6 @@
         subPixelOptimizeLine: subPixelOptimizeLine$1,
         subPixelOptimizeRect: subPixelOptimizeRect$1,
         subPixelOptimize: subPixelOptimize$1,
-        updateProps: updateProps,
-        initProps: initProps,
-        removeElement: removeElement,
-        removeElementWithFadeOut: removeElementWithFadeOut,
-        isElementRemoved: isElementRemoved,
         getTransform: getTransform,
         applyTransform: applyTransform$1,
         transformDirection: transformDirection,
@@ -15315,32 +15384,6 @@
         obj.defaultInterpolatedText = getDefaultText;
         obj.statesModels = labelStatesModels;
       }
-    }
-    function animateLabelValue(textEl, dataIndex, data, animatableModel, labelFetcher) {
-      var labelInnerStore = labelInner(textEl);
-
-      if (!labelInnerStore.valueAnimation) {
-        return;
-      }
-
-      var defaultInterpolatedText = labelInnerStore.defaultInterpolatedText; // Consider the case that being animating, do not use the `obj.value`,
-      // Otherwise it will jump to the `obj.value` when this new animation started.
-
-      var currValue = retrieve2(labelInnerStore.interpolatedValue, labelInnerStore.prevValue);
-      var targetValue = labelInnerStore.value;
-
-      function during(percent) {
-        var interpolated = interpolateRawValues(data, labelInnerStore.precision, currValue, targetValue, percent);
-        labelInnerStore.interpolatedValue = percent === 1 ? null : interpolated;
-        var labelText = getLabelText({
-          labelDataIndex: dataIndex,
-          labelFetcher: labelFetcher,
-          defaultText: defaultInterpolatedText ? defaultInterpolatedText(interpolated) : interpolated + ''
-        }, labelInnerStore.statesModels, interpolated);
-        setLabelText(textEl, labelText);
-      }
-
-      (currValue == null ? initProps : updateProps)(textEl, {}, animatableModel, dataIndex, null, during);
     }
 
     var PATH_COLOR = ['textStyle', 'color']; // TODO Performance improvement?
@@ -17380,7 +17423,7 @@
       useUTC: false
     };
 
-    var VISUAL_DIMENSIONS = createHashMap(['tooltip', 'label', 'itemName', 'itemId', 'seriesName']);
+    var VISUAL_DIMENSIONS = createHashMap(['tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'seriesName']);
     var SOURCE_FORMAT_ORIGINAL = 'original';
     var SOURCE_FORMAT_ARRAY_ROWS = 'arrayRows';
     var SOURCE_FORMAT_OBJECT_ROWS = 'objectRows';
@@ -18215,11 +18258,6 @@
         return this._locale;
       };
 
-      GlobalModel.prototype.getLocale = function (localePosition) {
-        var locale = this.getLocaleModel();
-        return locale.get(localePosition);
-      };
-
       GlobalModel.prototype.setUpdatePayload = function (payload) {
         this._payload = payload;
       };
@@ -18395,7 +18433,7 @@
 
 
       GlobalModel.prototype.getSeries = function () {
-        return filter(this._componentsMap.get('series').slice(), function (oneSeries) {
+        return filter(this._componentsMap.get('series'), function (oneSeries) {
           return !!oneSeries;
         });
       };
@@ -20246,7 +20284,7 @@
       var method = rawSourceItemGetterMap[getMethodMapKey(sourceFormat, seriesLayoutBy)];
 
       if ("development" !== 'production') {
-        assert(method, 'Do not suppport get item on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
+        assert(method, 'Do not support get item on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
       }
 
       return method;
@@ -22210,6 +22248,8 @@
       return data.getName(dataIndex) || data.getId(dataIndex);
     }
 
+    var SERIES_UNIVERSAL_TRANSITION_PROP = '__universalTransitionEnabled';
+
     var SeriesModel =
     /** @class */
     function (_super) {
@@ -22577,6 +22617,25 @@
         return selectedMap[nameOrId] || false;
       };
 
+      SeriesModel.prototype.isUniversalTransitionEnabled = function () {
+        if (this[SERIES_UNIVERSAL_TRANSITION_PROP]) {
+          return true;
+        }
+
+        var universalTransitionOpt = this.option.universalTransition; // Quick reject
+
+        if (!universalTransitionOpt) {
+          return false;
+        }
+
+        if (universalTransitionOpt === true) {
+          return true;
+        } // Can be simply 'universalTransition: true'
+
+
+        return universalTransitionOpt && universalTransitionOpt.enabled;
+      };
+
       SeriesModel.prototype._innerSelect = function (data, innerDataIndices) {
         var _a, _b;
 
@@ -22702,7 +22761,7 @@
 
 
     function wrapData(data, seriesModel) {
-      each(__spreadArrays(data.CHANGABLE_METHODS, data.DOWNSAMPLE_METHODS), function (methodName) {
+      each(__spreadArray(__spreadArray([], data.CHANGABLE_METHODS), data.DOWNSAMPLE_METHODS), function (methodName) {
         data.wrapMethod(methodName, curry(onDataChange, seriesModel));
       });
     }
@@ -24516,1319 +24575,6 @@
       }
     }
 
-    var PI2$6 = Math.PI * 2;
-    var CMD$3 = PathProxy.CMD;
-    var DEFAULT_SEARCH_SPACE = ['top', 'right', 'bottom', 'left'];
-
-    function getCandidateAnchor(pos, distance, rect, outPt, outDir) {
-      var width = rect.width;
-      var height = rect.height;
-
-      switch (pos) {
-        case 'top':
-          outPt.set(rect.x + width / 2, rect.y - distance);
-          outDir.set(0, -1);
-          break;
-
-        case 'bottom':
-          outPt.set(rect.x + width / 2, rect.y + height + distance);
-          outDir.set(0, 1);
-          break;
-
-        case 'left':
-          outPt.set(rect.x - distance, rect.y + height / 2);
-          outDir.set(-1, 0);
-          break;
-
-        case 'right':
-          outPt.set(rect.x + width + distance, rect.y + height / 2);
-          outDir.set(1, 0);
-          break;
-      }
-    }
-
-    function projectPointToArc(cx, cy, r, startAngle, endAngle, anticlockwise, x, y, out) {
-      x -= cx;
-      y -= cy;
-      var d = Math.sqrt(x * x + y * y);
-      x /= d;
-      y /= d; // Intersect point.
-
-      var ox = x * r + cx;
-      var oy = y * r + cy;
-
-      if (Math.abs(startAngle - endAngle) % PI2$6 < 1e-4) {
-        // Is a circle
-        out[0] = ox;
-        out[1] = oy;
-        return d - r;
-      }
-
-      if (anticlockwise) {
-        var tmp = startAngle;
-        startAngle = normalizeRadian(endAngle);
-        endAngle = normalizeRadian(tmp);
-      } else {
-        startAngle = normalizeRadian(startAngle);
-        endAngle = normalizeRadian(endAngle);
-      }
-
-      if (startAngle > endAngle) {
-        endAngle += PI2$6;
-      }
-
-      var angle = Math.atan2(y, x);
-
-      if (angle < 0) {
-        angle += PI2$6;
-      }
-
-      if (angle >= startAngle && angle <= endAngle || angle + PI2$6 >= startAngle && angle + PI2$6 <= endAngle) {
-        // Project point is on the arc.
-        out[0] = ox;
-        out[1] = oy;
-        return d - r;
-      }
-
-      var x1 = r * Math.cos(startAngle) + cx;
-      var y1 = r * Math.sin(startAngle) + cy;
-      var x2 = r * Math.cos(endAngle) + cx;
-      var y2 = r * Math.sin(endAngle) + cy;
-      var d1 = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y);
-      var d2 = (x2 - x) * (x2 - x) + (y2 - y) * (y2 - y);
-
-      if (d1 < d2) {
-        out[0] = x1;
-        out[1] = y1;
-        return Math.sqrt(d1);
-      } else {
-        out[0] = x2;
-        out[1] = y2;
-        return Math.sqrt(d2);
-      }
-    }
-
-    function projectPointToLine(x1, y1, x2, y2, x, y, out, limitToEnds) {
-      var dx = x - x1;
-      var dy = y - y1;
-      var dx1 = x2 - x1;
-      var dy1 = y2 - y1;
-      var lineLen = Math.sqrt(dx1 * dx1 + dy1 * dy1);
-      dx1 /= lineLen;
-      dy1 /= lineLen; // dot product
-
-      var projectedLen = dx * dx1 + dy * dy1;
-      var t = projectedLen / lineLen;
-
-      if (limitToEnds) {
-        t = Math.min(Math.max(t, 0), 1);
-      }
-
-      t *= lineLen;
-      var ox = out[0] = x1 + t * dx1;
-      var oy = out[1] = y1 + t * dy1;
-      return Math.sqrt((ox - x) * (ox - x) + (oy - y) * (oy - y));
-    }
-
-    function projectPointToRect(x1, y1, width, height, x, y, out) {
-      if (width < 0) {
-        x1 = x1 + width;
-        width = -width;
-      }
-
-      if (height < 0) {
-        y1 = y1 + height;
-        height = -height;
-      }
-
-      var x2 = x1 + width;
-      var y2 = y1 + height;
-      var ox = out[0] = Math.min(Math.max(x, x1), x2);
-      var oy = out[1] = Math.min(Math.max(y, y1), y2);
-      return Math.sqrt((ox - x) * (ox - x) + (oy - y) * (oy - y));
-    }
-
-    var tmpPt = [];
-
-    function nearestPointOnRect(pt, rect, out) {
-      var dist = projectPointToRect(rect.x, rect.y, rect.width, rect.height, pt.x, pt.y, tmpPt);
-      out.set(tmpPt[0], tmpPt[1]);
-      return dist;
-    }
-    /**
-     * Calculate min distance corresponding point.
-     * This method won't evaluate if point is in the path.
-     */
-
-
-    function nearestPointOnPath(pt, path, out) {
-      var xi = 0;
-      var yi = 0;
-      var x0 = 0;
-      var y0 = 0;
-      var x1;
-      var y1;
-      var minDist = Infinity;
-      var data = path.data;
-      var x = pt.x;
-      var y = pt.y;
-
-      for (var i = 0; i < data.length;) {
-        var cmd = data[i++];
-
-        if (i === 1) {
-          xi = data[i];
-          yi = data[i + 1];
-          x0 = xi;
-          y0 = yi;
-        }
-
-        var d = minDist;
-
-        switch (cmd) {
-          case CMD$3.M:
-            // moveTo 命令重新创建一个新的 subpath, 并且更新新的起点
-            // 在 closePath 的时候使用
-            x0 = data[i++];
-            y0 = data[i++];
-            xi = x0;
-            yi = y0;
-            break;
-
-          case CMD$3.L:
-            d = projectPointToLine(xi, yi, data[i], data[i + 1], x, y, tmpPt, true);
-            xi = data[i++];
-            yi = data[i++];
-            break;
-
-          case CMD$3.C:
-            d = cubicProjectPoint(xi, yi, data[i++], data[i++], data[i++], data[i++], data[i], data[i + 1], x, y, tmpPt);
-            xi = data[i++];
-            yi = data[i++];
-            break;
-
-          case CMD$3.Q:
-            d = quadraticProjectPoint(xi, yi, data[i++], data[i++], data[i], data[i + 1], x, y, tmpPt);
-            xi = data[i++];
-            yi = data[i++];
-            break;
-
-          case CMD$3.A:
-            // TODO Arc 判断的开销比较大
-            var cx = data[i++];
-            var cy = data[i++];
-            var rx = data[i++];
-            var ry = data[i++];
-            var theta = data[i++];
-            var dTheta = data[i++]; // TODO Arc 旋转
-
-            i += 1;
-            var anticlockwise = !!(1 - data[i++]);
-            x1 = Math.cos(theta) * rx + cx;
-            y1 = Math.sin(theta) * ry + cy; // 不是直接使用 arc 命令
-
-            if (i <= 1) {
-              // 第一个命令起点还未定义
-              x0 = x1;
-              y0 = y1;
-            } // zr 使用scale来模拟椭圆, 这里也对x做一定的缩放
-
-
-            var _x = (x - cx) * ry / rx + cx;
-
-            d = projectPointToArc(cx, cy, ry, theta, theta + dTheta, anticlockwise, _x, y, tmpPt);
-            xi = Math.cos(theta + dTheta) * rx + cx;
-            yi = Math.sin(theta + dTheta) * ry + cy;
-            break;
-
-          case CMD$3.R:
-            x0 = xi = data[i++];
-            y0 = yi = data[i++];
-            var width = data[i++];
-            var height = data[i++];
-            d = projectPointToRect(x0, y0, width, height, x, y, tmpPt);
-            break;
-
-          case CMD$3.Z:
-            d = projectPointToLine(xi, yi, x0, y0, x, y, tmpPt, true);
-            xi = x0;
-            yi = y0;
-            break;
-        }
-
-        if (d < minDist) {
-          minDist = d;
-          out.set(tmpPt[0], tmpPt[1]);
-        }
-      }
-
-      return minDist;
-    } // Temporal varible for intermediate usage.
-
-
-    var pt0 = new Point();
-    var pt1 = new Point();
-    var pt2 = new Point();
-    var dir = new Point();
-    var dir2 = new Point();
-    /**
-     * Calculate a proper guide line based on the label position and graphic element definition
-     * @param label
-     * @param labelRect
-     * @param target
-     * @param targetRect
-     */
-
-    function updateLabelLinePoints(target, labelLineModel) {
-      if (!target) {
-        return;
-      }
-
-      var labelLine = target.getTextGuideLine();
-      var label = target.getTextContent(); // Needs to create text guide in each charts.
-
-      if (!(label && labelLine)) {
-        return;
-      }
-
-      var labelGuideConfig = target.textGuideLineConfig || {};
-      var points = [[0, 0], [0, 0], [0, 0]];
-      var searchSpace = labelGuideConfig.candidates || DEFAULT_SEARCH_SPACE;
-      var labelRect = label.getBoundingRect().clone();
-      labelRect.applyTransform(label.getComputedTransform());
-      var minDist = Infinity;
-      var anchorPoint = labelGuideConfig.anchor;
-      var targetTransform = target.getComputedTransform();
-      var targetInversedTransform = targetTransform && invert([], targetTransform);
-      var len = labelLineModel.get('length2') || 0;
-
-      if (anchorPoint) {
-        pt2.copy(anchorPoint);
-      }
-
-      for (var i = 0; i < searchSpace.length; i++) {
-        var candidate = searchSpace[i];
-        getCandidateAnchor(candidate, 0, labelRect, pt0, dir);
-        Point.scaleAndAdd(pt1, pt0, dir, len); // Transform to target coord space.
-
-        pt1.transform(targetInversedTransform); // Note: getBoundingRect will ensure the `path` being created.
-
-        var boundingRect = target.getBoundingRect();
-        var dist = anchorPoint ? anchorPoint.distance(pt1) : target instanceof Path ? nearestPointOnPath(pt1, target.path, pt2) : nearestPointOnRect(pt1, boundingRect, pt2); // TODO pt2 is in the path
-
-        if (dist < minDist) {
-          minDist = dist; // Transform back to global space.
-
-          pt1.transform(targetTransform);
-          pt2.transform(targetTransform);
-          pt2.toArray(points[0]);
-          pt1.toArray(points[1]);
-          pt0.toArray(points[2]);
-        }
-      }
-
-      limitTurnAngle(points, labelLineModel.get('minTurnAngle'));
-      labelLine.setShape({
-        points: points
-      });
-    } // Temporal variable for the limitTurnAngle function
-
-    var tmpArr = [];
-    var tmpProjPoint = new Point();
-    /**
-     * Reduce the line segment attached to the label to limit the turn angle between two segments.
-     * @param linePoints
-     * @param minTurnAngle Radian of minimum turn angle. 0 - 180
-     */
-
-    function limitTurnAngle(linePoints, minTurnAngle) {
-      if (!(minTurnAngle <= 180 && minTurnAngle > 0)) {
-        return;
-      }
-
-      minTurnAngle = minTurnAngle / 180 * Math.PI; // The line points can be
-      //      /pt1----pt2 (label)
-      //     /
-      // pt0/
-
-      pt0.fromArray(linePoints[0]);
-      pt1.fromArray(linePoints[1]);
-      pt2.fromArray(linePoints[2]);
-      Point.sub(dir, pt0, pt1);
-      Point.sub(dir2, pt2, pt1);
-      var len1 = dir.len();
-      var len2 = dir2.len();
-
-      if (len1 < 1e-3 || len2 < 1e-3) {
-        return;
-      }
-
-      dir.scale(1 / len1);
-      dir2.scale(1 / len2);
-      var angleCos = dir.dot(dir2);
-      var minTurnAngleCos = Math.cos(minTurnAngle);
-
-      if (minTurnAngleCos < angleCos) {
-        // Smaller than minTurnAngle
-        // Calculate project point of pt0 on pt1-pt2
-        var d = projectPointToLine(pt1.x, pt1.y, pt2.x, pt2.y, pt0.x, pt0.y, tmpArr, false);
-        tmpProjPoint.fromArray(tmpArr); // Calculate new projected length with limited minTurnAngle and get the new connect point
-
-        tmpProjPoint.scaleAndAdd(dir2, d / Math.tan(Math.PI - minTurnAngle)); // Limit the new calculated connect point between pt1 and pt2.
-
-        var t = pt2.x !== pt1.x ? (tmpProjPoint.x - pt1.x) / (pt2.x - pt1.x) : (tmpProjPoint.y - pt1.y) / (pt2.y - pt1.y);
-
-        if (isNaN(t)) {
-          return;
-        }
-
-        if (t < 0) {
-          Point.copy(tmpProjPoint, pt1);
-        } else if (t > 1) {
-          Point.copy(tmpProjPoint, pt2);
-        }
-
-        tmpProjPoint.toArray(linePoints[1]);
-      }
-    }
-    /**
-     * Limit the angle of line and the surface
-     * @param maxSurfaceAngle Radian of minimum turn angle. 0 - 180. 0 is same direction to normal. 180 is opposite
-     */
-
-    function limitSurfaceAngle(linePoints, surfaceNormal, maxSurfaceAngle) {
-      if (!(maxSurfaceAngle <= 180 && maxSurfaceAngle > 0)) {
-        return;
-      }
-
-      maxSurfaceAngle = maxSurfaceAngle / 180 * Math.PI;
-      pt0.fromArray(linePoints[0]);
-      pt1.fromArray(linePoints[1]);
-      pt2.fromArray(linePoints[2]);
-      Point.sub(dir, pt1, pt0);
-      Point.sub(dir2, pt2, pt1);
-      var len1 = dir.len();
-      var len2 = dir2.len();
-
-      if (len1 < 1e-3 || len2 < 1e-3) {
-        return;
-      }
-
-      dir.scale(1 / len1);
-      dir2.scale(1 / len2);
-      var angleCos = dir.dot(surfaceNormal);
-      var maxSurfaceAngleCos = Math.cos(maxSurfaceAngle);
-
-      if (angleCos < maxSurfaceAngleCos) {
-        // Calculate project point of pt0 on pt1-pt2
-        var d = projectPointToLine(pt1.x, pt1.y, pt2.x, pt2.y, pt0.x, pt0.y, tmpArr, false);
-        tmpProjPoint.fromArray(tmpArr);
-        var HALF_PI = Math.PI / 2;
-        var angle2 = Math.acos(dir2.dot(surfaceNormal));
-        var newAngle = HALF_PI + angle2 - maxSurfaceAngle;
-
-        if (newAngle >= HALF_PI) {
-          // parallel
-          Point.copy(tmpProjPoint, pt2);
-        } else {
-          // Calculate new projected length with limited minTurnAngle and get the new connect point
-          tmpProjPoint.scaleAndAdd(dir2, d / Math.tan(Math.PI / 2 - newAngle)); // Limit the new calculated connect point between pt1 and pt2.
-
-          var t = pt2.x !== pt1.x ? (tmpProjPoint.x - pt1.x) / (pt2.x - pt1.x) : (tmpProjPoint.y - pt1.y) / (pt2.y - pt1.y);
-
-          if (isNaN(t)) {
-            return;
-          }
-
-          if (t < 0) {
-            Point.copy(tmpProjPoint, pt1);
-          } else if (t > 1) {
-            Point.copy(tmpProjPoint, pt2);
-          }
-        }
-
-        tmpProjPoint.toArray(linePoints[1]);
-      }
-    }
-
-    function setLabelLineState(labelLine, ignore, stateName, stateModel) {
-      var isNormal = stateName === 'normal';
-      var stateObj = isNormal ? labelLine : labelLine.ensureState(stateName); // Make sure display.
-
-      stateObj.ignore = ignore; // Set smooth
-
-      var smooth = stateModel.get('smooth');
-
-      if (smooth && smooth === true) {
-        smooth = 0.3;
-      }
-
-      stateObj.shape = stateObj.shape || {};
-
-      if (smooth > 0) {
-        stateObj.shape.smooth = smooth;
-      }
-
-      var styleObj = stateModel.getModel('lineStyle').getLineStyle();
-      isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
-    }
-
-    function buildLabelLinePath(path, shape) {
-      var smooth = shape.smooth;
-      var points = shape.points;
-
-      if (!points) {
-        return;
-      }
-
-      path.moveTo(points[0][0], points[0][1]);
-
-      if (smooth > 0 && points.length >= 3) {
-        var len1 = dist(points[0], points[1]);
-        var len2 = dist(points[1], points[2]);
-
-        if (!len1 || !len2) {
-          path.lineTo(points[1][0], points[1][1]);
-          path.lineTo(points[2][0], points[2][1]);
-          return;
-        }
-
-        var moveLen = Math.min(len1, len2) * smooth;
-        var midPoint0 = lerp([], points[1], points[0], moveLen / len1);
-        var midPoint2 = lerp([], points[1], points[2], moveLen / len2);
-        var midPoint1 = lerp([], midPoint0, midPoint2, 0.5);
-        path.bezierCurveTo(midPoint0[0], midPoint0[1], midPoint0[0], midPoint0[1], midPoint1[0], midPoint1[1]);
-        path.bezierCurveTo(midPoint2[0], midPoint2[1], midPoint2[0], midPoint2[1], points[2][0], points[2][1]);
-      } else {
-        for (var i = 1; i < points.length; i++) {
-          path.lineTo(points[i][0], points[i][1]);
-        }
-      }
-    }
-    /**
-     * Create a label line if necessary and set it's style.
-     */
-
-
-    function setLabelLineStyle(targetEl, statesModels, defaultStyle) {
-      var labelLine = targetEl.getTextGuideLine();
-      var label = targetEl.getTextContent();
-
-      if (!label) {
-        // Not show label line if there is no label.
-        if (labelLine) {
-          targetEl.removeTextGuideLine();
-        }
-
-        return;
-      }
-
-      var normalModel = statesModels.normal;
-      var showNormal = normalModel.get('show');
-      var labelIgnoreNormal = label.ignore;
-
-      for (var i = 0; i < DISPLAY_STATES.length; i++) {
-        var stateName = DISPLAY_STATES[i];
-        var stateModel = statesModels[stateName];
-        var isNormal = stateName === 'normal';
-
-        if (stateModel) {
-          var stateShow = stateModel.get('show');
-          var isLabelIgnored = isNormal ? labelIgnoreNormal : retrieve2(label.states[stateName] && label.states[stateName].ignore, labelIgnoreNormal);
-
-          if (isLabelIgnored // Not show when label is not shown in this state.
-          || !retrieve2(stateShow, showNormal) // Use normal state by default if not set.
-          ) {
-              var stateObj = isNormal ? labelLine : labelLine && labelLine.states.normal;
-
-              if (stateObj) {
-                stateObj.ignore = true;
-              }
-
-              continue;
-            } // Create labelLine if not exists
-
-
-          if (!labelLine) {
-            labelLine = new Polyline();
-            targetEl.setTextGuideLine(labelLine); // Reset state of normal because it's new created.
-            // NOTE: NORMAL should always been the first!
-
-            if (!isNormal && (labelIgnoreNormal || !showNormal)) {
-              setLabelLineState(labelLine, true, 'normal', statesModels.normal);
-            } // Use same state proxy.
-
-
-            if (targetEl.stateProxy) {
-              labelLine.stateProxy = targetEl.stateProxy;
-            }
-          }
-
-          setLabelLineState(labelLine, false, stateName, stateModel);
-        }
-      }
-
-      if (labelLine) {
-        defaults(labelLine.style, defaultStyle); // Not fill.
-
-        labelLine.style.fill = null;
-        var showAbove = normalModel.get('showAbove');
-        var labelLineConfig = targetEl.textGuideLineConfig = targetEl.textGuideLineConfig || {};
-        labelLineConfig.showAbove = showAbove || false; // Custom the buildPath.
-
-        labelLine.buildPath = buildLabelLinePath;
-      }
-    }
-    function getLabelLineStatesModels(itemModel, labelLineName) {
-      labelLineName = labelLineName || 'labelLine';
-      var statesModels = {
-        normal: itemModel.getModel(labelLineName)
-      };
-
-      for (var i = 0; i < SPECIAL_STATES.length; i++) {
-        var stateName = SPECIAL_STATES[i];
-        statesModels[stateName] = itemModel.getModel([stateName, labelLineName]);
-      }
-
-      return statesModels;
-    }
-
-    function prepareLayoutList(input) {
-      var list = [];
-
-      for (var i = 0; i < input.length; i++) {
-        var rawItem = input[i];
-
-        if (rawItem.defaultAttr.ignore) {
-          continue;
-        }
-
-        var label = rawItem.label;
-        var transform = label.getComputedTransform(); // NOTE: Get bounding rect after getComputedTransform, or label may not been updated by the host el.
-
-        var localRect = label.getBoundingRect();
-        var isAxisAligned = !transform || transform[1] < 1e-5 && transform[2] < 1e-5;
-        var minMargin = label.style.margin || 0;
-        var globalRect = localRect.clone();
-        globalRect.applyTransform(transform);
-        globalRect.x -= minMargin / 2;
-        globalRect.y -= minMargin / 2;
-        globalRect.width += minMargin;
-        globalRect.height += minMargin;
-        var obb = isAxisAligned ? new OrientedBoundingRect(localRect, transform) : null;
-        list.push({
-          label: label,
-          labelLine: rawItem.labelLine,
-          rect: globalRect,
-          localRect: localRect,
-          obb: obb,
-          priority: rawItem.priority,
-          defaultAttr: rawItem.defaultAttr,
-          layoutOption: rawItem.computedLayoutOption,
-          axisAligned: isAxisAligned,
-          transform: transform
-        });
-      }
-
-      return list;
-    }
-
-    function shiftLayout(list, xyDim, sizeDim, minBound, maxBound, balanceShift) {
-      var len = list.length;
-
-      if (len < 2) {
-        return;
-      }
-
-      list.sort(function (a, b) {
-        return a.rect[xyDim] - b.rect[xyDim];
-      });
-      var lastPos = 0;
-      var delta;
-      var adjusted = false;
-      var totalShifts = 0;
-
-      for (var i = 0; i < len; i++) {
-        var item = list[i];
-        var rect = item.rect;
-        delta = rect[xyDim] - lastPos;
-
-        if (delta < 0) {
-          // shiftForward(i, len, -delta);
-          rect[xyDim] -= delta;
-          item.label[xyDim] -= delta;
-          adjusted = true;
-        }
-
-        var shift = Math.max(-delta, 0);
-        totalShifts += shift;
-        lastPos = rect[xyDim] + rect[sizeDim];
-      }
-
-      if (totalShifts > 0 && balanceShift) {
-        // Shift back to make the distribution more equally.
-        shiftList(-totalShifts / len, 0, len);
-      } // TODO bleedMargin?
-
-
-      var first = list[0];
-      var last = list[len - 1];
-      var minGap;
-      var maxGap;
-      updateMinMaxGap(); // If ends exceed two bounds, squeeze at most 80%, then take the gap of two bounds.
-
-      minGap < 0 && squeezeGaps(-minGap, 0.8);
-      maxGap < 0 && squeezeGaps(maxGap, 0.8);
-      updateMinMaxGap();
-      takeBoundsGap(minGap, maxGap, 1);
-      takeBoundsGap(maxGap, minGap, -1); // Handle bailout when there is not enough space.
-
-      updateMinMaxGap();
-
-      if (minGap < 0) {
-        squeezeWhenBailout(-minGap);
-      }
-
-      if (maxGap < 0) {
-        squeezeWhenBailout(maxGap);
-      }
-
-      function updateMinMaxGap() {
-        minGap = first.rect[xyDim] - minBound;
-        maxGap = maxBound - last.rect[xyDim] - last.rect[sizeDim];
-      }
-
-      function takeBoundsGap(gapThisBound, gapOtherBound, moveDir) {
-        if (gapThisBound < 0) {
-          // Move from other gap if can.
-          var moveFromMaxGap = Math.min(gapOtherBound, -gapThisBound);
-
-          if (moveFromMaxGap > 0) {
-            shiftList(moveFromMaxGap * moveDir, 0, len);
-            var remained = moveFromMaxGap + gapThisBound;
-
-            if (remained < 0) {
-              squeezeGaps(-remained * moveDir, 1);
-            }
-          } else {
-            squeezeGaps(-gapThisBound * moveDir, 1);
-          }
-        }
-      }
-
-      function shiftList(delta, start, end) {
-        if (delta !== 0) {
-          adjusted = true;
-        }
-
-        for (var i = start; i < end; i++) {
-          var item = list[i];
-          var rect = item.rect;
-          rect[xyDim] += delta;
-          item.label[xyDim] += delta;
-        }
-      } // Squeeze gaps if the labels exceed margin.
-
-
-      function squeezeGaps(delta, maxSqeezePercent) {
-        var gaps = [];
-        var totalGaps = 0;
-
-        for (var i = 1; i < len; i++) {
-          var prevItemRect = list[i - 1].rect;
-          var gap = Math.max(list[i].rect[xyDim] - prevItemRect[xyDim] - prevItemRect[sizeDim], 0);
-          gaps.push(gap);
-          totalGaps += gap;
-        }
-
-        if (!totalGaps) {
-          return;
-        }
-
-        var squeezePercent = Math.min(Math.abs(delta) / totalGaps, maxSqeezePercent);
-
-        if (delta > 0) {
-          for (var i = 0; i < len - 1; i++) {
-            // Distribute the shift delta to all gaps.
-            var movement = gaps[i] * squeezePercent; // Forward
-
-            shiftList(movement, 0, i + 1);
-          }
-        } else {
-          // Backward
-          for (var i = len - 1; i > 0; i--) {
-            // Distribute the shift delta to all gaps.
-            var movement = gaps[i - 1] * squeezePercent;
-            shiftList(-movement, i, len);
-          }
-        }
-      }
-      /**
-       * Squeeze to allow overlap if there is no more space available.
-       * Let other overlapping strategy like hideOverlap do the job instead of keep exceeding the bounds.
-       */
-
-
-      function squeezeWhenBailout(delta) {
-        var dir = delta < 0 ? -1 : 1;
-        delta = Math.abs(delta);
-        var moveForEachLabel = Math.ceil(delta / (len - 1));
-
-        for (var i = 0; i < len - 1; i++) {
-          if (dir > 0) {
-            // Forward
-            shiftList(moveForEachLabel, 0, i + 1);
-          } else {
-            // Backward
-            shiftList(-moveForEachLabel, len - i - 1, len);
-          }
-
-          delta -= moveForEachLabel;
-
-          if (delta <= 0) {
-            return;
-          }
-        }
-      }
-
-      return adjusted;
-    }
-    /**
-     * Adjust labels on x direction to avoid overlap.
-     */
-
-
-    function shiftLayoutOnX(list, leftBound, rightBound, // If average the shifts on all labels and add them to 0
-    // TODO: Not sure if should enable it.
-    // Pros: The angle of lines will distribute more equally
-    // Cons: In some layout. It may not what user wanted. like in pie. the label of last sector is usually changed unexpectedly.
-    balanceShift) {
-      return shiftLayout(list, 'x', 'width', leftBound, rightBound, balanceShift);
-    }
-    /**
-     * Adjust labels on y direction to avoid overlap.
-     */
-
-    function shiftLayoutOnY(list, topBound, bottomBound, // If average the shifts on all labels and add them to 0
-    balanceShift) {
-      return shiftLayout(list, 'y', 'height', topBound, bottomBound, balanceShift);
-    }
-    function hideOverlap(labelList) {
-      var displayedLabels = []; // TODO, render overflow visible first, put in the displayedLabels.
-
-      labelList.sort(function (a, b) {
-        return b.priority - a.priority;
-      });
-      var globalRect = new BoundingRect(0, 0, 0, 0);
-
-      function hideEl(el) {
-        if (!el.ignore) {
-          // Show on emphasis.
-          var emphasisState = el.ensureState('emphasis');
-
-          if (emphasisState.ignore == null) {
-            emphasisState.ignore = false;
-          }
-        }
-
-        el.ignore = true;
-      }
-
-      for (var i = 0; i < labelList.length; i++) {
-        var labelItem = labelList[i];
-        var isAxisAligned = labelItem.axisAligned;
-        var localRect = labelItem.localRect;
-        var transform = labelItem.transform;
-        var label = labelItem.label;
-        var labelLine = labelItem.labelLine;
-        globalRect.copy(labelItem.rect); // Add a threshold because layout may be aligned precisely.
-
-        globalRect.width -= 0.1;
-        globalRect.height -= 0.1;
-        globalRect.x += 0.05;
-        globalRect.y += 0.05;
-        var obb = labelItem.obb;
-        var overlapped = false;
-
-        for (var j = 0; j < displayedLabels.length; j++) {
-          var existsTextCfg = displayedLabels[j]; // Fast rejection.
-
-          if (!globalRect.intersect(existsTextCfg.rect)) {
-            continue;
-          }
-
-          if (isAxisAligned && existsTextCfg.axisAligned) {
-            // Is overlapped
-            overlapped = true;
-            break;
-          }
-
-          if (!existsTextCfg.obb) {
-            // If self is not axis aligned. But other is.
-            existsTextCfg.obb = new OrientedBoundingRect(existsTextCfg.localRect, existsTextCfg.transform);
-          }
-
-          if (!obb) {
-            // If self is axis aligned. But other is not.
-            obb = new OrientedBoundingRect(localRect, transform);
-          }
-
-          if (obb.intersect(existsTextCfg.obb)) {
-            overlapped = true;
-            break;
-          }
-        } // TODO Callback to determine if this overlap should be handled?
-
-
-        if (overlapped) {
-          hideEl(label);
-          labelLine && hideEl(labelLine);
-        } else {
-          label.attr('ignore', labelItem.defaultAttr.ignore);
-          labelLine && labelLine.attr('ignore', labelItem.defaultAttr.labelGuideIgnore);
-          displayedLabels.push(labelItem);
-        }
-      }
-    }
-
-    function cloneArr(points) {
-      if (points) {
-        var newPoints = [];
-
-        for (var i = 0; i < points.length; i++) {
-          newPoints.push(points[i].slice());
-        }
-
-        return newPoints;
-      }
-    }
-
-    function prepareLayoutCallbackParams(labelItem, hostEl) {
-      var label = labelItem.label;
-      var labelLine = hostEl && hostEl.getTextGuideLine();
-      return {
-        dataIndex: labelItem.dataIndex,
-        dataType: labelItem.dataType,
-        seriesIndex: labelItem.seriesModel.seriesIndex,
-        text: labelItem.label.style.text,
-        rect: labelItem.hostRect,
-        labelRect: labelItem.rect,
-        // x: labelAttr.x,
-        // y: labelAttr.y,
-        align: label.style.align,
-        verticalAlign: label.style.verticalAlign,
-        labelLinePoints: cloneArr(labelLine && labelLine.shape.points)
-      };
-    }
-
-    var LABEL_OPTION_TO_STYLE_KEYS = ['align', 'verticalAlign', 'width', 'height', 'fontSize'];
-    var dummyTransformable = new Transformable();
-    var labelLayoutInnerStore = makeInner();
-    var labelLineAnimationStore = makeInner();
-
-    function extendWithKeys(target, source, keys) {
-      for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
-
-        if (source[key] != null) {
-          target[key] = source[key];
-        }
-      }
-    }
-
-    var LABEL_LAYOUT_PROPS = ['x', 'y', 'rotation'];
-
-    var LabelManager =
-    /** @class */
-    function () {
-      function LabelManager() {
-        this._labelList = [];
-        this._chartViewList = [];
-      }
-
-      LabelManager.prototype.clearLabels = function () {
-        this._labelList = [];
-        this._chartViewList = [];
-      };
-      /**
-       * Add label to manager
-       */
-
-
-      LabelManager.prototype._addLabel = function (dataIndex, dataType, seriesModel, label, layoutOption) {
-        var labelStyle = label.style;
-        var hostEl = label.__hostTarget;
-        var textConfig = hostEl.textConfig || {}; // TODO: If label is in other state.
-
-        var labelTransform = label.getComputedTransform();
-        var labelRect = label.getBoundingRect().plain();
-        BoundingRect.applyTransform(labelRect, labelRect, labelTransform);
-
-        if (labelTransform) {
-          dummyTransformable.setLocalTransform(labelTransform);
-        } else {
-          // Identity transform.
-          dummyTransformable.x = dummyTransformable.y = dummyTransformable.rotation = dummyTransformable.originX = dummyTransformable.originY = 0;
-          dummyTransformable.scaleX = dummyTransformable.scaleY = 1;
-        }
-
-        var host = label.__hostTarget;
-        var hostRect;
-
-        if (host) {
-          hostRect = host.getBoundingRect().plain();
-          var transform = host.getComputedTransform();
-          BoundingRect.applyTransform(hostRect, hostRect, transform);
-        }
-
-        var labelGuide = hostRect && host.getTextGuideLine();
-
-        this._labelList.push({
-          label: label,
-          labelLine: labelGuide,
-          seriesModel: seriesModel,
-          dataIndex: dataIndex,
-          dataType: dataType,
-          layoutOption: layoutOption,
-          computedLayoutOption: null,
-          rect: labelRect,
-          hostRect: hostRect,
-          // Label with lower priority will be hidden when overlapped
-          // Use rect size as default priority
-          priority: hostRect ? hostRect.width * hostRect.height : 0,
-          // Save default label attributes.
-          // For restore if developers want get back to default value in callback.
-          defaultAttr: {
-            ignore: label.ignore,
-            labelGuideIgnore: labelGuide && labelGuide.ignore,
-            x: dummyTransformable.x,
-            y: dummyTransformable.y,
-            scaleX: dummyTransformable.scaleX,
-            scaleY: dummyTransformable.scaleY,
-            rotation: dummyTransformable.rotation,
-            style: {
-              x: labelStyle.x,
-              y: labelStyle.y,
-              align: labelStyle.align,
-              verticalAlign: labelStyle.verticalAlign,
-              width: labelStyle.width,
-              height: labelStyle.height,
-              fontSize: labelStyle.fontSize
-            },
-            cursor: label.cursor,
-            attachedPos: textConfig.position,
-            attachedRot: textConfig.rotation
-          }
-        });
-      };
-
-      LabelManager.prototype.addLabelsOfSeries = function (chartView) {
-        var _this = this;
-
-        this._chartViewList.push(chartView);
-
-        var seriesModel = chartView.__model;
-        var layoutOption = seriesModel.get('labelLayout');
-        /**
-         * Ignore layouting if it's not specified anything.
-         */
-
-        if (!(isFunction(layoutOption) || keys(layoutOption).length)) {
-          return;
-        }
-
-        chartView.group.traverse(function (child) {
-          if (child.ignore) {
-            return true; // Stop traverse descendants.
-          } // Only support label being hosted on graphic elements.
-
-
-          var textEl = child.getTextContent();
-          var ecData = getECData(child); // Can only attach the text on the element with dataIndex
-
-          if (textEl && !textEl.disableLabelLayout) {
-            _this._addLabel(ecData.dataIndex, ecData.dataType, seriesModel, textEl, layoutOption);
-          }
-        });
-      };
-
-      LabelManager.prototype.updateLayoutConfig = function (api) {
-        var width = api.getWidth();
-        var height = api.getHeight();
-
-        function createDragHandler(el, labelLineModel) {
-          return function () {
-            updateLabelLinePoints(el, labelLineModel);
-          };
-        }
-
-        for (var i = 0; i < this._labelList.length; i++) {
-          var labelItem = this._labelList[i];
-          var label = labelItem.label;
-          var hostEl = label.__hostTarget;
-          var defaultLabelAttr = labelItem.defaultAttr;
-          var layoutOption = void 0; // TODO A global layout option?
-
-          if (typeof labelItem.layoutOption === 'function') {
-            layoutOption = labelItem.layoutOption(prepareLayoutCallbackParams(labelItem, hostEl));
-          } else {
-            layoutOption = labelItem.layoutOption;
-          }
-
-          layoutOption = layoutOption || {};
-          labelItem.computedLayoutOption = layoutOption;
-          var degreeToRadian = Math.PI / 180; // TODO hostEl should always exists.
-          // Or label should not have parent because the x, y is all in global space.
-
-          if (hostEl) {
-            hostEl.setTextConfig({
-              // Force to set local false.
-              local: false,
-              // Ignore position and rotation config on the host el if x or y is changed.
-              position: layoutOption.x != null || layoutOption.y != null ? null : defaultLabelAttr.attachedPos,
-              // Ignore rotation config on the host el if rotation is changed.
-              rotation: layoutOption.rotate != null ? layoutOption.rotate * degreeToRadian : defaultLabelAttr.attachedRot,
-              offset: [layoutOption.dx || 0, layoutOption.dy || 0]
-            });
-          }
-
-          var needsUpdateLabelLine = false;
-
-          if (layoutOption.x != null) {
-            // TODO width of chart view.
-            label.x = parsePercent$1(layoutOption.x, width);
-            label.setStyle('x', 0); // Ignore movement in style. TODO: origin.
-
-            needsUpdateLabelLine = true;
-          } else {
-            label.x = defaultLabelAttr.x;
-            label.setStyle('x', defaultLabelAttr.style.x);
-          }
-
-          if (layoutOption.y != null) {
-            // TODO height of chart view.
-            label.y = parsePercent$1(layoutOption.y, height);
-            label.setStyle('y', 0); // Ignore movement in style.
-
-            needsUpdateLabelLine = true;
-          } else {
-            label.y = defaultLabelAttr.y;
-            label.setStyle('y', defaultLabelAttr.style.y);
-          }
-
-          if (layoutOption.labelLinePoints) {
-            var guideLine = hostEl.getTextGuideLine();
-
-            if (guideLine) {
-              guideLine.setShape({
-                points: layoutOption.labelLinePoints
-              }); // Not update
-
-              needsUpdateLabelLine = false;
-            }
-          }
-
-          var labelLayoutStore = labelLayoutInnerStore(label);
-          labelLayoutStore.needsUpdateLabelLine = needsUpdateLabelLine;
-          label.rotation = layoutOption.rotate != null ? layoutOption.rotate * degreeToRadian : defaultLabelAttr.rotation;
-          label.scaleX = defaultLabelAttr.scaleX;
-          label.scaleY = defaultLabelAttr.scaleY;
-
-          for (var k = 0; k < LABEL_OPTION_TO_STYLE_KEYS.length; k++) {
-            var key = LABEL_OPTION_TO_STYLE_KEYS[k];
-            label.setStyle(key, layoutOption[key] != null ? layoutOption[key] : defaultLabelAttr.style[key]);
-          }
-
-          if (layoutOption.draggable) {
-            label.draggable = true;
-            label.cursor = 'move';
-
-            if (hostEl) {
-              var hostModel = labelItem.seriesModel;
-
-              if (labelItem.dataIndex != null) {
-                var data = labelItem.seriesModel.getData(labelItem.dataType);
-                hostModel = data.getItemModel(labelItem.dataIndex);
-              }
-
-              label.on('drag', createDragHandler(hostEl, hostModel.getModel('labelLine')));
-            }
-          } else {
-            // TODO Other drag functions?
-            label.off('drag');
-            label.cursor = defaultLabelAttr.cursor;
-          }
-        }
-      };
-
-      LabelManager.prototype.layout = function (api) {
-        var width = api.getWidth();
-        var height = api.getHeight();
-        var labelList = prepareLayoutList(this._labelList);
-        var labelsNeedsAdjustOnX = filter(labelList, function (item) {
-          return item.layoutOption.moveOverlap === 'shiftX';
-        });
-        var labelsNeedsAdjustOnY = filter(labelList, function (item) {
-          return item.layoutOption.moveOverlap === 'shiftY';
-        });
-        shiftLayoutOnX(labelsNeedsAdjustOnX, 0, width);
-        shiftLayoutOnY(labelsNeedsAdjustOnY, 0, height);
-        var labelsNeedsHideOverlap = filter(labelList, function (item) {
-          return item.layoutOption.hideOverlap;
-        });
-        hideOverlap(labelsNeedsHideOverlap);
-      };
-      /**
-       * Process all labels. Not only labels with layoutOption.
-       */
-
-
-      LabelManager.prototype.processLabelsOverall = function () {
-        var _this = this;
-
-        each(this._chartViewList, function (chartView) {
-          var seriesModel = chartView.__model;
-          var ignoreLabelLineUpdate = chartView.ignoreLabelLineUpdate;
-          var animationEnabled = seriesModel.isAnimationEnabled();
-          chartView.group.traverse(function (child) {
-            if (child.ignore) {
-              return true; // Stop traverse descendants.
-            }
-
-            var needsUpdateLabelLine = !ignoreLabelLineUpdate;
-            var label = child.getTextContent();
-
-            if (!needsUpdateLabelLine && label) {
-              needsUpdateLabelLine = labelLayoutInnerStore(label).needsUpdateLabelLine;
-            }
-
-            if (needsUpdateLabelLine) {
-              _this._updateLabelLine(child, seriesModel);
-            }
-
-            if (animationEnabled) {
-              _this._animateLabels(child, seriesModel);
-            }
-          });
-        });
-      };
-
-      LabelManager.prototype._updateLabelLine = function (el, seriesModel) {
-        // Only support label being hosted on graphic elements.
-        var textEl = el.getTextContent(); // Update label line style.
-
-        var ecData = getECData(el);
-        var dataIndex = ecData.dataIndex; // Only support labelLine on the labels represent data.
-
-        if (textEl && dataIndex != null) {
-          var data = seriesModel.getData(ecData.dataType);
-          var itemModel = data.getItemModel(dataIndex);
-          var defaultStyle = {};
-          var visualStyle = data.getItemVisual(dataIndex, 'style');
-          var visualType = data.getVisual('drawType'); // Default to be same with main color
-
-          defaultStyle.stroke = visualStyle[visualType];
-          var labelLineModel = itemModel.getModel('labelLine');
-          setLabelLineStyle(el, getLabelLineStatesModels(itemModel), defaultStyle);
-          updateLabelLinePoints(el, labelLineModel);
-        }
-      };
-
-      LabelManager.prototype._animateLabels = function (el, seriesModel) {
-        var textEl = el.getTextContent();
-        var guideLine = el.getTextGuideLine(); // Animate
-
-        if (textEl && !textEl.ignore && !textEl.invisible && !el.disableLabelAnimation && !isElementRemoved(el)) {
-          var layoutStore = labelLayoutInnerStore(textEl);
-          var oldLayout = layoutStore.oldLayout;
-          var ecData = getECData(el);
-          var dataIndex = ecData.dataIndex;
-          var newProps = {
-            x: textEl.x,
-            y: textEl.y,
-            rotation: textEl.rotation
-          };
-          var data = seriesModel.getData(ecData.dataType);
-
-          if (!oldLayout) {
-            textEl.attr(newProps); // Disable fade in animation if value animation is enabled.
-
-            if (!labelInner(textEl).valueAnimation) {
-              var oldOpacity = retrieve2(textEl.style.opacity, 1); // Fade in animation
-
-              textEl.style.opacity = 0;
-              initProps(textEl, {
-                style: {
-                  opacity: oldOpacity
-                }
-              }, seriesModel, dataIndex);
-            }
-          } else {
-            textEl.attr(oldLayout); // Make sure the animation from is in the right status.
-
-            var prevStates = el.prevStates;
-
-            if (prevStates) {
-              if (indexOf(prevStates, 'select') >= 0) {
-                textEl.attr(layoutStore.oldLayoutSelect);
-              }
-
-              if (indexOf(prevStates, 'emphasis') >= 0) {
-                textEl.attr(layoutStore.oldLayoutEmphasis);
-              }
-            }
-
-            updateProps(textEl, newProps, seriesModel, dataIndex);
-          }
-
-          layoutStore.oldLayout = newProps;
-
-          if (textEl.states.select) {
-            var layoutSelect = layoutStore.oldLayoutSelect = {};
-            extendWithKeys(layoutSelect, newProps, LABEL_LAYOUT_PROPS);
-            extendWithKeys(layoutSelect, textEl.states.select, LABEL_LAYOUT_PROPS);
-          }
-
-          if (textEl.states.emphasis) {
-            var layoutEmphasis = layoutStore.oldLayoutEmphasis = {};
-            extendWithKeys(layoutEmphasis, newProps, LABEL_LAYOUT_PROPS);
-            extendWithKeys(layoutEmphasis, textEl.states.emphasis, LABEL_LAYOUT_PROPS);
-          }
-
-          animateLabelValue(textEl, dataIndex, data, seriesModel, seriesModel);
-        }
-
-        if (guideLine && !guideLine.ignore && !guideLine.invisible) {
-          var layoutStore = labelLineAnimationStore(guideLine);
-          var oldLayout = layoutStore.oldLayout;
-          var newLayout = {
-            points: guideLine.shape.points
-          };
-
-          if (!oldLayout) {
-            guideLine.setShape(newLayout);
-            guideLine.style.strokePercent = 0;
-            initProps(guideLine, {
-              style: {
-                strokePercent: 1
-              }
-            }, seriesModel);
-          } else {
-            guideLine.attr({
-              shape: oldLayout
-            });
-            updateProps(guideLine, {
-              shape: newLayout
-            }, seriesModel);
-          }
-
-          layoutStore.oldLayout = newLayout;
-        }
-      };
-
-      return LabelManager;
-    }();
-
     // Inlucdes: pieSelect, pieUnSelect, pieToggleSelect, mapSelect, mapUnSelect, mapToggleSelect
 
     function createLegacyDataSelectAction(seriesType, ecRegisterAction) {
@@ -25969,6 +24715,7 @@
     }
 
     var wmUniqueIndex = Math.round(Math.random() * 9);
+    var supportDefineProperty = typeof Object.defineProperty === 'function';
     var WeakMap = (function () {
         function WeakMap() {
             this._id = '__ec_inner_' + wmUniqueIndex++;
@@ -25978,7 +24725,7 @@
         };
         WeakMap.prototype.set = function (key, value) {
             var target = this._guard(key);
-            if (typeof Object.defineProperty === 'function') {
+            if (supportDefineProperty) {
                 Object.defineProperty(target, this._id, {
                     value: value,
                     enumerable: false,
@@ -29070,11 +27817,8 @@
       }
     };
 
-    var assert$1 = assert;
-    var each$3 = each;
-    var isFunction$1 = isFunction;
-    var isObject$2 = isObject;
-    var indexOf$1 = indexOf;
+    var lifecycle = new Eventful();
+
     var hasWindow = typeof window !== 'undefined';
     var version$1 = '5.1.2';
     var dependencies = {
@@ -29130,7 +27874,7 @@
     // All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
 
     var IN_MAIN_PROCESS_KEY = '__flagInMainProcess';
-    var OPTION_UPDATED_KEY = '__optionUpdated';
+    var PENDING_UPDATE = '__pendingUpdate';
     var STATUS_NEEDS_UPDATE_KEY = '__needsUpdateStatus';
     var ACTION_REG = /^[a-zA-Z0-9_]+$/;
     var CONNECT_STATUS_KEY = '__connectUpdateStatus';
@@ -29206,10 +27950,8 @@
     var render;
     var renderComponents;
     var renderSeries;
-    var performPostUpdateFuncs;
     var createExtensionAPI;
     var enableConnect;
-    var setTransitionOpt;
     var markStatusToUpdate;
     var applyChangedStates;
 
@@ -29270,8 +28012,7 @@
         sort(visualFuncs, prioritySortFunc);
         sort(dataProcessorFuncs, prioritySortFunc);
         _this._scheduler = new Scheduler(_this, api, dataProcessorFuncs, visualFuncs);
-        _this._messageCenter = new MessageCenter();
-        _this._labelManager = new LabelManager(); // Init mouse events
+        _this._messageCenter = new MessageCenter(); // Init mouse events
 
         _this._initEvents(); // In case some people write `window.onresize = chart.resize`
 
@@ -29293,11 +28034,11 @@
         applyChangedStates(this);
         var scheduler = this._scheduler; // Lazy update
 
-        if (this[OPTION_UPDATED_KEY]) {
-          var silent = this[OPTION_UPDATED_KEY].silent;
+        if (this[PENDING_UPDATE]) {
+          var silent = this[PENDING_UPDATE].silent;
           this[IN_MAIN_PROCESS_KEY] = true;
           prepare(this);
-          updateMethods.update.call(this); // At present, in each frame, zrender performs:
+          updateMethods.update.call(this, null, this[PENDING_UPDATE].updateParams); // At present, in each frame, zrender performs:
           //   (1) animation step forward.
           //   (2) trigger('frame') (where this `_onframe` is called)
           //   (3) zrender flush (render).
@@ -29307,7 +28048,7 @@
           this._zr.flush();
 
           this[IN_MAIN_PROCESS_KEY] = false;
-          this[OPTION_UPDATED_KEY] = false;
+          this[PENDING_UPDATE] = null;
           flushPendingActions.call(this, silent);
           triggerUpdatedEvent.call(this, silent);
         } // Avoid do both lazy update and progress in one frame.
@@ -29331,7 +28072,7 @@
               // console.log('--- ec frame visual ---', remainTime);
 
               scheduler.performVisualTasks(ecModel);
-              renderSeries(this, this._model, api, 'remain');
+              renderSeries(this, this._model, api, 'remain', {});
               remainTime -= +new Date() - startTime;
             } while (remainTime > 0 && scheduler.unfinished); // Call flush explicitly for trigger finished event.
 
@@ -29360,7 +28101,7 @@
 
       ECharts.prototype.setOption = function (option, notMerge, lazyUpdate) {
         if ("development" !== 'production') {
-          assert$1(!this[IN_MAIN_PROCESS_KEY], '`setOption` should not be called during main process.');
+          assert(!this[IN_MAIN_PROCESS_KEY], '`setOption` should not be called during main process.');
         }
 
         if (this._disposed) {
@@ -29372,7 +28113,7 @@
         var replaceMerge;
         var transitionOpt;
 
-        if (isObject$2(notMerge)) {
+        if (isObject(notMerge)) {
           lazyUpdate = notMerge.lazyUpdate;
           silent = notMerge.silent;
           replaceMerge = notMerge.replaceMerge;
@@ -29394,11 +28135,15 @@
           replaceMerge: replaceMerge
         }, optionPreprocessorFuncs);
 
-        setTransitionOpt(this, transitionOpt);
+        var updateParams = {
+          seriesTransition: transitionOpt,
+          optionChanged: true
+        };
 
         if (lazyUpdate) {
-          this[OPTION_UPDATED_KEY] = {
-            silent: silent
+          this[PENDING_UPDATE] = {
+            silent: silent,
+            updateParams: updateParams
           };
           this[IN_MAIN_PROCESS_KEY] = false; // `setOption(option, {lazyMode: true})` may be called when zrender has been slept.
           // It should wake it up to make sure zrender start to render at the next frame.
@@ -29406,12 +28151,12 @@
           this.getZr().wakeUp();
         } else {
           prepare(this);
-          updateMethods.update.call(this); // Ensure zr refresh sychronously, and then pixel in canvas can be
+          updateMethods.update.call(this, null, updateParams); // Ensure zr refresh sychronously, and then pixel in canvas can be
           // fetched after `setOption`.
 
           this._zr.flush();
 
-          this[OPTION_UPDATED_KEY] = false;
+          this[PENDING_UPDATE] = null;
           this[IN_MAIN_PROCESS_KEY] = false;
           flushPendingActions.call(this, silent);
           triggerUpdatedEvent.call(this, silent);
@@ -29494,7 +28239,7 @@
         var ecModel = this._model;
         var excludesComponentViews = [];
         var self = this;
-        each$3(excludeComponents, function (componentType) {
+        each(excludeComponents, function (componentType) {
           ecModel.eachComponent({
             mainType: componentType
           }, function (component) {
@@ -29507,7 +28252,7 @@
           });
         });
         var url = this._zr.painter.getType() === 'svg' ? this.getSvgDataURL() : this.getRenderedCanvas(opts).toDataURL('image/' + (opts && opts.type || 'png'));
-        each$3(excludesComponentViews, function (view) {
+        each(excludesComponentViews, function (view) {
           view.group.ignore = false;
         });
         return url;
@@ -29568,7 +28313,7 @@
 
           if (isSvg) {
             var content_1 = '';
-            each$3(canvasList_1, function (item) {
+            each(canvasList_1, function (item) {
               var x = item.left - left_1;
               var y = item.top - top_1;
               content_1 += '<g transform="translate(' + x + ',' + y + ')">' + item.dom + '</g>';
@@ -29597,7 +28342,7 @@
               }));
             }
 
-            each$3(canvasList_1, function (item) {
+            each(canvasList_1, function (item) {
               var img = new ZRImage({
                 style: {
                   x: item.left * dpr_1 - left_1,
@@ -29717,7 +28462,7 @@
       ECharts.prototype._initEvents = function () {
         var _this = this;
 
-        each$3(MOUSE_EVENT_NAMES, function (eveName) {
+        each(MOUSE_EVENT_NAMES, function (eveName) {
           var handler = function (e) {
             var ecModel = _this.getModel();
 
@@ -29797,14 +28542,14 @@
 
           _this._zr.on(eveName, handler, _this);
         });
-        each$3(eventActionMap, function (actionType, eventType) {
+        each(eventActionMap, function (actionType, eventType) {
           _this._messageCenter.on(eventType, function (event) {
             this.trigger(eventType, event);
           }, _this);
         }); // Extra events
         // TODO register?
 
-        each$3(['selectchanged'], function (eventType) {
+        each(['selectchanged'], function (eventType) {
           _this._messageCenter.on(eventType, function (event) {
             this.trigger(eventType, event);
           }, _this);
@@ -29837,10 +28582,10 @@
         setAttribute(this.getDom(), DOM_ATTRIBUTE_KEY, '');
         var api = this._api;
         var ecModel = this._model;
-        each$3(this._componentsViews, function (component) {
+        each(this._componentsViews, function (component) {
           component.dispose(ecModel, api);
         });
-        each$3(this._chartsViews, function (chart) {
+        each(this._chartsViews, function (chart) {
           chart.dispose(ecModel, api);
         }); // Dispose after all views disposed
 
@@ -29855,7 +28600,7 @@
 
       ECharts.prototype.resize = function (opts) {
         if ("development" !== 'production') {
-          assert$1(!this[IN_MAIN_PROCESS_KEY], '`resize` should not be called during main process.');
+          assert(!this[IN_MAIN_PROCESS_KEY], '`resize` should not be called during main process.');
         }
 
         if (this._disposed) {
@@ -29878,13 +28623,13 @@
         // chart.setOption(option, { lazyUpdate: true });
         // chart.resize();
 
-        if (this[OPTION_UPDATED_KEY]) {
+        if (this[PENDING_UPDATE]) {
           if (silent == null) {
-            silent = this[OPTION_UPDATED_KEY].silent;
+            silent = this[PENDING_UPDATE].silent;
           }
 
           needPrepare = true;
-          this[OPTION_UPDATED_KEY] = false;
+          this[PENDING_UPDATE] = null;
         }
 
         this[IN_MAIN_PROCESS_KEY] = true;
@@ -29907,7 +28652,7 @@
           return;
         }
 
-        if (isObject$2(name)) {
+        if (isObject(name)) {
           cfg = name;
           name = '';
         }
@@ -29965,7 +28710,7 @@
           return;
         }
 
-        if (!isObject$2(opt)) {
+        if (!isObject(opt)) {
           opt = {
             silent: !!opt
           };
@@ -30007,10 +28752,11 @@
       };
 
       ECharts.prototype.updateLabelLayout = function () {
-        var labelManager = this._labelManager;
-        labelManager.updateLayoutConfig(this._api);
-        labelManager.layout(this._api);
-        labelManager.processLabelsOverall();
+        lifecycle.trigger('series:layoutlabels', this._model, this._api, {
+          // Not adding series labels.
+          // TODO
+          updatedSeries: []
+        });
       };
 
       ECharts.prototype.appendData = function (params) {
@@ -30024,7 +28770,7 @@
         var seriesModel = ecModel.getSeriesByIndex(seriesIndex);
 
         if ("development" !== 'production') {
-          assert$1(params.data && seriesModel);
+          assert(params.data && seriesModel);
         }
 
         seriesModel.appendData(params); // Note: `appendData` does not support that update extent of coordinate
@@ -30095,7 +28841,7 @@
               ChartView.getClass(classType.sub);
 
               if ("development" !== 'production') {
-                assert$1(Clazz, classType.sub + ' does not exist.');
+                assert(Clazz, classType.sub + ' does not exist.');
               }
 
               view = new Clazz();
@@ -30143,7 +28889,7 @@
             // FIXME
             // Chart will not be update directly here, except set dirty.
             // But there is no such scenario now.
-            each$3([].concat(ecIns._componentsViews).concat(ecIns._chartsViews), callView);
+            each([].concat(ecIns._componentsViews).concat(ecIns._chartsViews), callView);
             return;
           }
 
@@ -30162,7 +28908,7 @@
 
           if (excludeSeriesId != null) {
             excludeSeriesIdMap = createHashMap();
-            each$3(normalizeToArray(excludeSeriesId), function (id) {
+            each(normalizeToArray(excludeSeriesId), function (id) {
               var modelId = convertOptionIdName(id, null);
 
               if (modelId != null) {
@@ -30177,42 +28923,52 @@
 
 
           ecModel && ecModel.eachComponent(condition, function (model) {
-            if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
-              if (isHighDownPayload(payload)) {
-                if (model instanceof SeriesModel) {
-                  if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
-                    blurSeriesFromHighlightPayload(model, payload, ecIns._api);
-                  }
-                } else {
-                  var _a = findComponentHighDownDispatchers(model.mainType, model.componentIndex, payload.name, ecIns._api),
-                      focusSelf = _a.focusSelf,
-                      dispatchers = _a.dispatchers;
+            var isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
 
-                  if (payload.type === HIGHLIGHT_ACTION_TYPE && focusSelf && !payload.notBlur) {
-                    blurComponent(model.mainType, model.componentIndex, ecIns._api);
-                  } // PENDING:
-                  // Whether to put this "enter emphasis" code in `ComponentView`,
-                  // which will be the same as `ChartView` but might be not necessary
-                  // and will be far from this logic.
+            if (isExcluded) {
+              return;
+            }
 
-
-                  if (dispatchers) {
-                    each$3(dispatchers, function (dispatcher) {
-                      payload.type === HIGHLIGHT_ACTION_TYPE ? enterEmphasis(dispatcher) : leaveEmphasis(dispatcher);
-                    });
-                  }
+            if (isHighDownPayload(payload)) {
+              if (model instanceof SeriesModel) {
+                if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
+                  blurSeriesFromHighlightPayload(model, payload, ecIns._api);
                 }
-              } else if (isSelectChangePayload(payload)) {
-                // TODO geo
-                if (model instanceof SeriesModel) {
-                  toggleSelectionFromPayload(model, payload, ecIns._api);
-                  updateSeriesElementSelection(model);
-                  markStatusToUpdate(ecIns);
+              } else {
+                var _a = findComponentHighDownDispatchers(model.mainType, model.componentIndex, payload.name, ecIns._api),
+                    focusSelf = _a.focusSelf,
+                    dispatchers = _a.dispatchers;
+
+                if (payload.type === HIGHLIGHT_ACTION_TYPE && focusSelf && !payload.notBlur) {
+                  blurComponent(model.mainType, model.componentIndex, ecIns._api);
+                } // PENDING:
+                // Whether to put this "enter emphasis" code in `ComponentView`,
+                // which will be the same as `ChartView` but might be not necessary
+                // and will be far from this logic.
+
+
+                if (dispatchers) {
+                  each(dispatchers, function (dispatcher) {
+                    payload.type === HIGHLIGHT_ACTION_TYPE ? enterEmphasis(dispatcher) : leaveEmphasis(dispatcher);
+                  });
                 }
               }
-
-              callView(ecIns[mainType === 'series' ? '_chartsMap' : '_componentsMap'][model.__viewId]);
+            } else if (isSelectChangePayload(payload)) {
+              // TODO geo
+              if (model instanceof SeriesModel) {
+                toggleSelectionFromPayload(model, payload, ecIns._api);
+                updateSeriesElementSelection(model);
+                markStatusToUpdate(ecIns);
+              }
             }
+          }, ecIns);
+          ecModel && ecModel.eachComponent(condition, function (model) {
+            var isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
+
+            if (isExcluded) {
+              return;
+            }
+            callView(ecIns[mainType === 'series' ? '_chartsMap' : '_componentsMap'][model.__viewId]);
           }, ecIns);
 
           function callView(view) {
@@ -30223,10 +28979,14 @@
         updateMethods = {
           prepareAndUpdate: function (payload) {
             prepare(this);
-            updateMethods.update.call(this, payload);
+            updateMethods.update.call(this, payload, {
+              // Needs to mark option changed if newOption is given.
+              // It's from MagicType.
+              // TODO If use a separate flag optionChanged in payload?
+              optionChanged: payload.newOption != null
+            });
           },
-          update: function (payload) {
-            // console.profile && console.profile('update');
+          update: function (payload, updateParams) {
             var ecModel = this._model;
             var api = this._api;
             var zr = this._zr;
@@ -30258,7 +29018,7 @@
             coordSysMgr.update(ecModel, api);
             clearColorPalette(ecModel);
             scheduler.performVisualTasks(ecModel, payload);
-            render(this, ecModel, api, payload); // Set background
+            render(this, ecModel, api, payload, updateParams); // Set background
 
             var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
             var darkMode = ecModel.get('darkMode'); // In IE8
@@ -30278,7 +29038,7 @@
               }
             }
 
-            performPostUpdateFuncs(ecModel, api); // console.profile && console.profileEnd('update');
+            lifecycle.trigger('afterupdate', ecModel, api);
           },
           updateTransform: function (payload) {
             var _this = this;
@@ -30330,8 +29090,8 @@
             // renderComponents(ecIns, ecModel, api, payload, componentDirtyList);
 
 
-            renderSeries(this, ecModel, api, payload, seriesDirtyMap);
-            performPostUpdateFuncs(ecModel, this._api);
+            renderSeries(this, ecModel, api, payload, {}, seriesDirtyMap);
+            lifecycle.trigger('afterupdate', ecModel, api);
           },
           updateView: function (payload) {
             var ecModel = this._model; // update before setOption
@@ -30348,8 +29108,8 @@
               setDirty: true
             });
 
-            render(this, this._model, this._api, payload);
-            performPostUpdateFuncs(ecModel, this._api);
+            render(this, ecModel, this._api, payload, {});
+            lifecycle.trigger('afterupdate', ecModel, this._api);
           },
           updateVisual: function (payload) {
             // updateMethods.update.call(this, payload);
@@ -30386,7 +29146,7 @@
               var chartView = _this._chartsMap[seriesModel.__viewId];
               chartView.updateVisual(seriesModel, ecModel, _this._api, payload);
             });
-            performPostUpdateFuncs(ecModel, this._api);
+            lifecycle.trigger('afterupdate', ecModel, this._api);
           },
           updateLayout: function (payload) {
             updateMethods.update.call(this, payload);
@@ -30455,7 +29215,7 @@
           var eventObj;
           var isSelectChange = isSelectChangePayload(payload);
           var isHighDown = isHighDownPayload(payload);
-          each$3(payloads, function (batchItem) {
+          each(payloads, function (batchItem) {
             // Action can specify the event by return it.
             eventObj = actionWrap.action(batchItem, _this._model, _this._api); // Emit event outside
 
@@ -30484,10 +29244,10 @@
 
           if (updateMethod !== 'none' && !isHighDown && !isSelectChange && !cptType) {
             // Still dirty
-            if (this[OPTION_UPDATED_KEY]) {
+            if (this[PENDING_UPDATE]) {
               prepare(this);
               updateMethods.update.call(this, payload);
-              this[OPTION_UPDATED_KEY] = false;
+              this[PENDING_UPDATE] = null;
             } else {
               updateMethods[updateMethod].call(this, payload);
             }
@@ -30560,7 +29320,7 @@
             if ( // Although zr is dirty if initial animation is not finished
             // and this checking is called on frame, we also check
             // animation finished for robustness.
-            zr.animation.isFinished() && !ecIns[OPTION_UPDATED_KEY] && !ecIns._scheduler.unfinished && !ecIns._pendingActions.length) {
+            zr.animation.isFinished() && !ecIns[PENDING_UPDATE] && !ecIns._scheduler.unfinished && !ecIns._pendingActions.length) {
               ecIns.trigger('finished');
             }
           });
@@ -30611,22 +29371,22 @@
           });
         };
 
-        render = function (ecIns, ecModel, api, payload) {
-          renderComponents(ecIns, ecModel, api, payload);
-          each$3(ecIns._chartsViews, function (chart) {
+        render = function (ecIns, ecModel, api, payload, updateParams) {
+          renderComponents(ecIns, ecModel, api, payload, updateParams);
+          each(ecIns._chartsViews, function (chart) {
             chart.__alive = false;
           });
-          renderSeries(ecIns, ecModel, api, payload); // Remove groups of unrendered charts
+          renderSeries(ecIns, ecModel, api, payload, updateParams); // Remove groups of unrendered charts
 
-          each$3(ecIns._chartsViews, function (chart) {
+          each(ecIns._chartsViews, function (chart) {
             if (!chart.__alive) {
               chart.remove(ecModel, api);
             }
           });
         };
 
-        renderComponents = function (ecIns, ecModel, api, payload, dirtyList) {
-          each$3(dirtyList || ecIns._componentsViews, function (componentView) {
+        renderComponents = function (ecIns, ecModel, api, payload, updateParams, dirtyList) {
+          each(dirtyList || ecIns._componentsViews, function (componentView) {
             var componentModel = componentView.__model;
             clearStates(componentModel, componentView);
             componentView.render(componentModel, ecModel, api, payload);
@@ -30639,11 +29399,14 @@
          */
 
 
-        renderSeries = function (ecIns, ecModel, api, payload, dirtyMap) {
+        renderSeries = function (ecIns, ecModel, api, payload, updateParams, dirtyMap) {
           // Render all charts
           var scheduler = ecIns._scheduler;
-          var labelManager = ecIns._labelManager;
-          labelManager.clearLabels();
+          updateParams = extend(updateParams || {}, {
+            updatedSeries: ecModel.getSeries()
+          }); // TODO progressive?
+
+          lifecycle.trigger('series:beforeupdate', ecModel, api, updateParams);
           var unfinished = false;
           ecModel.eachSeries(function (seriesModel) {
             var chartView = ecIns._chartsMap[seriesModel.__viewId];
@@ -30661,20 +29424,17 @@
               unfinished = true;
             }
 
-            seriesModel.__transientTransitionOpt = null;
             chartView.group.silent = !!seriesModel.get('silent'); // Should not call markRedraw on group, because it will disable zrender
             // increamental render (alway render from the __startIndex each frame)
             // chartView.group.markRedraw();
 
             updateBlend(seriesModel, chartView);
-            updateSeriesElementSelection(seriesModel); // Add labels.
-
-            labelManager.addLabelsOfSeries(chartView);
+            updateSeriesElementSelection(seriesModel);
           });
           scheduler.unfinished = unfinished || scheduler.unfinished;
-          labelManager.updateLayoutConfig(api);
-          labelManager.layout(api);
-          labelManager.processLabelsOverall();
+          lifecycle.trigger('series:layoutlabels', ecModel, api, updateParams); // transition after label is layouted.
+
+          lifecycle.trigger('series:transition', ecModel, api, updateParams);
           ecModel.eachSeries(function (seriesModel) {
             var chartView = ecIns._chartsMap[seriesModel.__viewId]; // Update Z after labels updated. Before applying states.
 
@@ -30685,12 +29445,7 @@
           }); // If use hover layer
 
           updateHoverLayerStatus(ecIns, ecModel);
-        };
-
-        performPostUpdateFuncs = function (ecModel, api) {
-          each$3(postUpdateFuncs, function (func) {
-            func(ecModel, api);
-          });
+          lifecycle.trigger('series:afterupdate', ecModel, api, updateParams);
         };
 
         markStatusToUpdate = function (ecIns) {
@@ -31014,7 +29769,7 @@
             }
           }
 
-          each$3(eventActionMap, function (actionType, eventType) {
+          each(eventActionMap, function (actionType, eventType) {
             chart._messageCenter.on(eventType, function (event) {
               if (connectedGroups[chart.group] && chart[CONNECT_STATUS_KEY] !== CONNECT_STATUS_PENDING) {
                 if (event && event.escapeConnect) {
@@ -31023,13 +29778,13 @@
 
                 var action_1 = chart.makeActionFromEvent(event);
                 var otherCharts_1 = [];
-                each$3(instances$1, function (otherChart) {
+                each(instances$1, function (otherChart) {
                   if (otherChart !== chart && otherChart.group === chart.group) {
                     otherCharts_1.push(otherChart);
                   }
                 });
                 updateConnectedChartsStatus(otherCharts_1, CONNECT_STATUS_PENDING);
-                each$3(otherCharts_1, function (otherChart) {
+                each(otherCharts_1, function (otherChart) {
                   if (otherChart[CONNECT_STATUS_KEY] !== CONNECT_STATUS_UPDATING) {
                     otherChart.dispatchAction(action_1);
                   }
@@ -31037,59 +29792,6 @@
                 updateConnectedChartsStatus(otherCharts_1, CONNECT_STATUS_UPDATED);
               }
             });
-          });
-        };
-
-        setTransitionOpt = function (chart, transitionOpt) {
-          var ecModel = chart._model;
-          each(normalizeToArray(transitionOpt), function (transOpt) {
-            var errMsg;
-            var fromOpt = transOpt.from;
-            var toOpt = transOpt.to;
-
-            if (toOpt == null) {
-              if ("development" !== 'production') {
-                errMsg = '`transition.to` must be specified.';
-              }
-
-              throwError(errMsg);
-            }
-
-            var finderOpt = {
-              includeMainTypes: ['series'],
-              enableAll: false,
-              enableNone: false
-            };
-            var fromResult = fromOpt ? parseFinder(ecModel, fromOpt, finderOpt) : null;
-            var toResult = parseFinder(ecModel, toOpt, finderOpt);
-            var toSeries = toResult.seriesModel;
-
-            if (toSeries == null) {
-              errMsg = '';
-
-              if ("development" !== 'production') {
-                errMsg = '`transition` is only supported on series.';
-              }
-            }
-
-            if (fromResult && fromResult.seriesModel !== toSeries) {
-              errMsg = '';
-
-              if ("development" !== 'production') {
-                errMsg = '`transition.from` and `transition.to` must be specified to the same series.';
-              }
-            }
-
-            if (errMsg != null) {
-              throwError(errMsg);
-            } // Just a temp solution: mount them on series.
-
-
-            toSeries.__transientTransitionOpt = {
-              from: fromOpt ? fromOpt.dimension : null,
-              to: toOpt.dimension,
-              dividingMethod: transOpt.dividingMethod
-            };
           });
         };
       }();
@@ -31162,8 +29864,6 @@
     var eventActionMap = {};
     var dataProcessorFuncs = [];
     var optionPreprocessorFuncs = [];
-    var postInitFuncs = [];
-    var postUpdateFuncs = [];
     var visualFuncs = [];
     var themeStorage = {};
     var loadingEffects = {};
@@ -31209,9 +29909,7 @@
       instances$1[chart.id] = chart;
       setAttribute(dom, DOM_ATTRIBUTE_KEY, chart.id);
       enableConnect(chart);
-      each$3(postInitFuncs, function (postInitFunc) {
-        postInitFunc(chart);
-      });
+      lifecycle.trigger('afterinit', chart);
       return chart;
     }
     /**
@@ -31238,13 +29936,13 @@
         var charts = groupId;
         groupId = null; // If any chart has group
 
-        each$3(charts, function (chart) {
+        each(charts, function (chart) {
           if (chart.group != null) {
             groupId = chart.group;
           }
         });
         groupId = groupId || 'g_' + groupIdBase++;
-        each$3(charts, function (chart) {
+        each(charts, function (chart) {
           chart.group = groupId;
         });
       }
@@ -31298,7 +29996,7 @@
      */
 
     function registerPreprocessor(preprocessorFunc) {
-      if (indexOf$1(optionPreprocessorFuncs, preprocessorFunc) < 0) {
+      if (indexOf(optionPreprocessorFuncs, preprocessorFunc) < 0) {
         optionPreprocessorFuncs.push(preprocessorFunc);
       }
     }
@@ -31311,9 +30009,7 @@
      */
 
     function registerPostInit(postInitFunc) {
-      if (indexOf$1(postInitFuncs, postInitFunc) < 0) {
-        postInitFunc && postInitFuncs.push(postInitFunc);
-      }
+      registerUpdateLifecycle('afterinit', postInitFunc);
     }
     /**
      * Register postUpdater
@@ -31321,9 +30017,10 @@
      */
 
     function registerPostUpdate(postUpdateFunc) {
-      if (indexOf$1(postUpdateFuncs, postUpdateFunc) < 0) {
-        postUpdateFunc && postUpdateFuncs.push(postUpdateFunc);
-      }
+      registerUpdateLifecycle('afterupdate', postUpdateFunc);
+    }
+    function registerUpdateLifecycle(name, cb) {
+      lifecycle.on(name, cb);
     }
     function registerAction(actionInfo, eventName, action) {
       if (typeof eventName === 'function') {
@@ -31331,7 +30028,7 @@
         eventName = '';
       }
 
-      var actionType = isObject$2(actionInfo) ? actionInfo.type : [actionInfo, actionInfo = {
+      var actionType = isObject(actionInfo) ? actionInfo.type : [actionInfo, actionInfo = {
         event: eventName
       }][0]; // Event name is all lowercase
 
@@ -31344,7 +30041,7 @@
       } // Validate action type and event name.
 
 
-      assert$1(ACTION_REG.test(actionType) && ACTION_REG.test(eventName));
+      assert(ACTION_REG.test(actionType) && ACTION_REG.test(eventName));
 
       if (!actions[actionType]) {
         actions[actionType] = {
@@ -31382,7 +30079,7 @@
     var registeredTasks = [];
 
     function normalizeRegister(targetList, priority, fn, defaultPriority, visualType) {
-      if (isFunction$1(priority) || isObject$2(priority)) {
+      if (isFunction(priority) || isObject(priority)) {
         fn = priority;
         priority = defaultPriority;
       }
@@ -31393,13 +30090,13 @@
         } // Check duplicate
 
 
-        each$3(targetList, function (wrap) {
-          assert$1(wrap.__raw !== fn);
+        each(targetList, function (wrap) {
+          assert(wrap.__raw !== fn);
         });
       } // Already registered
 
 
-      if (indexOf$1(registeredTasks, fn) >= 0) {
+      if (indexOf(registeredTasks, fn) >= 0) {
         return;
       }
 
@@ -31507,6 +30204,7 @@
       registerProcessor: registerProcessor,
       registerPostInit: registerPostInit,
       registerPostUpdate: registerPostUpdate,
+      registerUpdateLifecycle: registerUpdateLifecycle,
       registerAction: registerAction,
       registerCoordinateSystem: registerCoordinateSystem,
       registerLayout: registerLayout,
@@ -31666,6 +30364,15 @@
         return this;
       };
       /**
+       * Callback function when update a data and only work in `cbMode: 'byKey'`.
+       */
+
+
+      DataDiffer.prototype.updateManyToMany = function (func) {
+        this._updateManyToMany = func;
+        return this;
+      };
+      /**
        * Callback function when remove a data
        */
 
@@ -31769,6 +30476,9 @@
             newDataIndexMap[oldKey] = null;
           } else if (oldIdxMapValLen === 1 && newIdxMapValLen === 1) {
             this._update && this._update(newIdxMapVal, oldIdxMapVal);
+            newDataIndexMap[oldKey] = null;
+          } else if (oldIdxMapValLen > 1 && newIdxMapValLen > 1) {
+            this._updateManyToMany && this._updateManyToMany(newIdxMapVal, oldIdxMapVal);
             newDataIndexMap[oldKey] = null;
           } else if (oldIdxMapValLen > 1) {
             for (var i_1 = 0; i_1 < oldIdxMapValLen; i_1++) {
@@ -31966,10 +30676,10 @@
          * The format of `otherDims` is:
          * ```js
          * {
-         *     tooltip: number optional,
-         *     label: number optional,
-         *     itemName: number optional,
-         *     seriesName: number optional,
+         *     tooltip?: number
+         *     label?: number
+         *     itemName?: number
+         *     seriesName?: number
          * }
          * ```
          *
@@ -31988,7 +30698,7 @@
          * this.otherDims = {
          *     // `3` is at the index `0` of the `encode.tooltip`
          *     tooltip: 0,
-         *     // `3` is at the index `1` of the `encode.tooltip`
+         *     // `3` is at the index `1` of the `encode.label`
          *     label: 1
          * };
          * ```
@@ -32006,7 +30716,7 @@
     }();
 
     var mathFloor = Math.floor;
-    var isObject$3 = isObject;
+    var isObject$2 = isObject;
     var map$1 = map;
     var UNDEFINED = 'undefined';
     var INDEX_NOT_FOUND = -1; // Use prefix to avoid index to be the same as otherIdList[idx],
@@ -32653,7 +31363,7 @@
       };
 
       List.prototype.setCalculationInfo = function (key, value) {
-        isObject$3(key) ? extend(this._calculationInfo, key) : this._calculationInfo[key] = value;
+        isObject$2(key) ? extend(this._calculationInfo, key) : this._calculationInfo[key] = value;
       };
       /**
        * Get sum of data in one dimension
@@ -33417,7 +32127,7 @@
       List.prototype.setVisual = function (kvObj, val) {
         this._visual = this._visual || {};
 
-        if (isObject$3(kvObj)) {
+        if (isObject$2(kvObj)) {
           extend(this._visual, kvObj);
         } else {
           this._visual[kvObj] = val;
@@ -33469,7 +32179,7 @@
 
           if (isArray(val)) {
             val = val.slice();
-          } else if (isObject$3(val)) {
+          } else if (isObject$2(val)) {
             val = extend({}, val);
           }
 
@@ -33484,7 +32194,7 @@
         var itemVisual = this._itemVisuals[idx] || {};
         this._itemVisuals[idx] = itemVisual;
 
-        if (isObject$3(key)) {
+        if (isObject$2(key)) {
           extend(itemVisual, key);
         } else {
           itemVisual[key] = value;
@@ -33501,7 +32211,7 @@
       };
 
       List.prototype.setLayout = function (key, val) {
-        if (isObject$3(key)) {
+        if (isObject$2(key)) {
           for (var name_1 in key) {
             if (key.hasOwnProperty(name_1)) {
               this.setLayout(name_1, key[name_1]);
@@ -37775,6 +36485,464 @@
       return View;
     }
 
+    function projectPointToLine(x1, y1, x2, y2, x, y, out, limitToEnds) {
+      var dx = x - x1;
+      var dy = y - y1;
+      var dx1 = x2 - x1;
+      var dy1 = y2 - y1;
+      var lineLen = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+      dx1 /= lineLen;
+      dy1 /= lineLen; // dot product
+
+      var projectedLen = dx * dx1 + dy * dy1;
+      var t = projectedLen / lineLen;
+
+      if (limitToEnds) {
+        t = Math.min(Math.max(t, 0), 1);
+      }
+
+      t *= lineLen;
+      var ox = out[0] = x1 + t * dx1;
+      var oy = out[1] = y1 + t * dy1;
+      return Math.sqrt((ox - x) * (ox - x) + (oy - y) * (oy - y));
+    }
+
+
+    var pt0 = new Point();
+    var pt1 = new Point();
+    var pt2 = new Point();
+    var dir = new Point();
+    var dir2 = new Point();
+
+    var tmpArr = [];
+    var tmpProjPoint = new Point();
+    /**
+     * Reduce the line segment attached to the label to limit the turn angle between two segments.
+     * @param linePoints
+     * @param minTurnAngle Radian of minimum turn angle. 0 - 180
+     */
+
+    function limitTurnAngle(linePoints, minTurnAngle) {
+      if (!(minTurnAngle <= 180 && minTurnAngle > 0)) {
+        return;
+      }
+
+      minTurnAngle = minTurnAngle / 180 * Math.PI; // The line points can be
+      //      /pt1----pt2 (label)
+      //     /
+      // pt0/
+
+      pt0.fromArray(linePoints[0]);
+      pt1.fromArray(linePoints[1]);
+      pt2.fromArray(linePoints[2]);
+      Point.sub(dir, pt0, pt1);
+      Point.sub(dir2, pt2, pt1);
+      var len1 = dir.len();
+      var len2 = dir2.len();
+
+      if (len1 < 1e-3 || len2 < 1e-3) {
+        return;
+      }
+
+      dir.scale(1 / len1);
+      dir2.scale(1 / len2);
+      var angleCos = dir.dot(dir2);
+      var minTurnAngleCos = Math.cos(minTurnAngle);
+
+      if (minTurnAngleCos < angleCos) {
+        // Smaller than minTurnAngle
+        // Calculate project point of pt0 on pt1-pt2
+        var d = projectPointToLine(pt1.x, pt1.y, pt2.x, pt2.y, pt0.x, pt0.y, tmpArr, false);
+        tmpProjPoint.fromArray(tmpArr); // Calculate new projected length with limited minTurnAngle and get the new connect point
+
+        tmpProjPoint.scaleAndAdd(dir2, d / Math.tan(Math.PI - minTurnAngle)); // Limit the new calculated connect point between pt1 and pt2.
+
+        var t = pt2.x !== pt1.x ? (tmpProjPoint.x - pt1.x) / (pt2.x - pt1.x) : (tmpProjPoint.y - pt1.y) / (pt2.y - pt1.y);
+
+        if (isNaN(t)) {
+          return;
+        }
+
+        if (t < 0) {
+          Point.copy(tmpProjPoint, pt1);
+        } else if (t > 1) {
+          Point.copy(tmpProjPoint, pt2);
+        }
+
+        tmpProjPoint.toArray(linePoints[1]);
+      }
+    }
+    /**
+     * Limit the angle of line and the surface
+     * @param maxSurfaceAngle Radian of minimum turn angle. 0 - 180. 0 is same direction to normal. 180 is opposite
+     */
+
+    function limitSurfaceAngle(linePoints, surfaceNormal, maxSurfaceAngle) {
+      if (!(maxSurfaceAngle <= 180 && maxSurfaceAngle > 0)) {
+        return;
+      }
+
+      maxSurfaceAngle = maxSurfaceAngle / 180 * Math.PI;
+      pt0.fromArray(linePoints[0]);
+      pt1.fromArray(linePoints[1]);
+      pt2.fromArray(linePoints[2]);
+      Point.sub(dir, pt1, pt0);
+      Point.sub(dir2, pt2, pt1);
+      var len1 = dir.len();
+      var len2 = dir2.len();
+
+      if (len1 < 1e-3 || len2 < 1e-3) {
+        return;
+      }
+
+      dir.scale(1 / len1);
+      dir2.scale(1 / len2);
+      var angleCos = dir.dot(surfaceNormal);
+      var maxSurfaceAngleCos = Math.cos(maxSurfaceAngle);
+
+      if (angleCos < maxSurfaceAngleCos) {
+        // Calculate project point of pt0 on pt1-pt2
+        var d = projectPointToLine(pt1.x, pt1.y, pt2.x, pt2.y, pt0.x, pt0.y, tmpArr, false);
+        tmpProjPoint.fromArray(tmpArr);
+        var HALF_PI = Math.PI / 2;
+        var angle2 = Math.acos(dir2.dot(surfaceNormal));
+        var newAngle = HALF_PI + angle2 - maxSurfaceAngle;
+
+        if (newAngle >= HALF_PI) {
+          // parallel
+          Point.copy(tmpProjPoint, pt2);
+        } else {
+          // Calculate new projected length with limited minTurnAngle and get the new connect point
+          tmpProjPoint.scaleAndAdd(dir2, d / Math.tan(Math.PI / 2 - newAngle)); // Limit the new calculated connect point between pt1 and pt2.
+
+          var t = pt2.x !== pt1.x ? (tmpProjPoint.x - pt1.x) / (pt2.x - pt1.x) : (tmpProjPoint.y - pt1.y) / (pt2.y - pt1.y);
+
+          if (isNaN(t)) {
+            return;
+          }
+
+          if (t < 0) {
+            Point.copy(tmpProjPoint, pt1);
+          } else if (t > 1) {
+            Point.copy(tmpProjPoint, pt2);
+          }
+        }
+
+        tmpProjPoint.toArray(linePoints[1]);
+      }
+    }
+
+    function setLabelLineState(labelLine, ignore, stateName, stateModel) {
+      var isNormal = stateName === 'normal';
+      var stateObj = isNormal ? labelLine : labelLine.ensureState(stateName); // Make sure display.
+
+      stateObj.ignore = ignore; // Set smooth
+
+      var smooth = stateModel.get('smooth');
+
+      if (smooth && smooth === true) {
+        smooth = 0.3;
+      }
+
+      stateObj.shape = stateObj.shape || {};
+
+      if (smooth > 0) {
+        stateObj.shape.smooth = smooth;
+      }
+
+      var styleObj = stateModel.getModel('lineStyle').getLineStyle();
+      isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
+    }
+
+    function buildLabelLinePath(path, shape) {
+      var smooth = shape.smooth;
+      var points = shape.points;
+
+      if (!points) {
+        return;
+      }
+
+      path.moveTo(points[0][0], points[0][1]);
+
+      if (smooth > 0 && points.length >= 3) {
+        var len1 = dist(points[0], points[1]);
+        var len2 = dist(points[1], points[2]);
+
+        if (!len1 || !len2) {
+          path.lineTo(points[1][0], points[1][1]);
+          path.lineTo(points[2][0], points[2][1]);
+          return;
+        }
+
+        var moveLen = Math.min(len1, len2) * smooth;
+        var midPoint0 = lerp([], points[1], points[0], moveLen / len1);
+        var midPoint2 = lerp([], points[1], points[2], moveLen / len2);
+        var midPoint1 = lerp([], midPoint0, midPoint2, 0.5);
+        path.bezierCurveTo(midPoint0[0], midPoint0[1], midPoint0[0], midPoint0[1], midPoint1[0], midPoint1[1]);
+        path.bezierCurveTo(midPoint2[0], midPoint2[1], midPoint2[0], midPoint2[1], points[2][0], points[2][1]);
+      } else {
+        for (var i = 1; i < points.length; i++) {
+          path.lineTo(points[i][0], points[i][1]);
+        }
+      }
+    }
+    /**
+     * Create a label line if necessary and set it's style.
+     */
+
+
+    function setLabelLineStyle(targetEl, statesModels, defaultStyle) {
+      var labelLine = targetEl.getTextGuideLine();
+      var label = targetEl.getTextContent();
+
+      if (!label) {
+        // Not show label line if there is no label.
+        if (labelLine) {
+          targetEl.removeTextGuideLine();
+        }
+
+        return;
+      }
+
+      var normalModel = statesModels.normal;
+      var showNormal = normalModel.get('show');
+      var labelIgnoreNormal = label.ignore;
+
+      for (var i = 0; i < DISPLAY_STATES.length; i++) {
+        var stateName = DISPLAY_STATES[i];
+        var stateModel = statesModels[stateName];
+        var isNormal = stateName === 'normal';
+
+        if (stateModel) {
+          var stateShow = stateModel.get('show');
+          var isLabelIgnored = isNormal ? labelIgnoreNormal : retrieve2(label.states[stateName] && label.states[stateName].ignore, labelIgnoreNormal);
+
+          if (isLabelIgnored // Not show when label is not shown in this state.
+          || !retrieve2(stateShow, showNormal) // Use normal state by default if not set.
+          ) {
+              var stateObj = isNormal ? labelLine : labelLine && labelLine.states.normal;
+
+              if (stateObj) {
+                stateObj.ignore = true;
+              }
+
+              continue;
+            } // Create labelLine if not exists
+
+
+          if (!labelLine) {
+            labelLine = new Polyline();
+            targetEl.setTextGuideLine(labelLine); // Reset state of normal because it's new created.
+            // NOTE: NORMAL should always been the first!
+
+            if (!isNormal && (labelIgnoreNormal || !showNormal)) {
+              setLabelLineState(labelLine, true, 'normal', statesModels.normal);
+            } // Use same state proxy.
+
+
+            if (targetEl.stateProxy) {
+              labelLine.stateProxy = targetEl.stateProxy;
+            }
+          }
+
+          setLabelLineState(labelLine, false, stateName, stateModel);
+        }
+      }
+
+      if (labelLine) {
+        defaults(labelLine.style, defaultStyle); // Not fill.
+
+        labelLine.style.fill = null;
+        var showAbove = normalModel.get('showAbove');
+        var labelLineConfig = targetEl.textGuideLineConfig = targetEl.textGuideLineConfig || {};
+        labelLineConfig.showAbove = showAbove || false; // Custom the buildPath.
+
+        labelLine.buildPath = buildLabelLinePath;
+      }
+    }
+    function getLabelLineStatesModels(itemModel, labelLineName) {
+      labelLineName = labelLineName || 'labelLine';
+      var statesModels = {
+        normal: itemModel.getModel(labelLineName)
+      };
+
+      for (var i = 0; i < SPECIAL_STATES.length; i++) {
+        var stateName = SPECIAL_STATES[i];
+        statesModels[stateName] = itemModel.getModel([stateName, labelLineName]);
+      }
+
+      return statesModels;
+    }
+
+    function shiftLayout(list, xyDim, sizeDim, minBound, maxBound, balanceShift) {
+      var len = list.length;
+
+      if (len < 2) {
+        return;
+      }
+
+      list.sort(function (a, b) {
+        return a.rect[xyDim] - b.rect[xyDim];
+      });
+      var lastPos = 0;
+      var delta;
+      var adjusted = false;
+      var totalShifts = 0;
+
+      for (var i = 0; i < len; i++) {
+        var item = list[i];
+        var rect = item.rect;
+        delta = rect[xyDim] - lastPos;
+
+        if (delta < 0) {
+          // shiftForward(i, len, -delta);
+          rect[xyDim] -= delta;
+          item.label[xyDim] -= delta;
+          adjusted = true;
+        }
+
+        var shift = Math.max(-delta, 0);
+        totalShifts += shift;
+        lastPos = rect[xyDim] + rect[sizeDim];
+      }
+
+      if (totalShifts > 0 && balanceShift) {
+        // Shift back to make the distribution more equally.
+        shiftList(-totalShifts / len, 0, len);
+      } // TODO bleedMargin?
+
+
+      var first = list[0];
+      var last = list[len - 1];
+      var minGap;
+      var maxGap;
+      updateMinMaxGap(); // If ends exceed two bounds, squeeze at most 80%, then take the gap of two bounds.
+
+      minGap < 0 && squeezeGaps(-minGap, 0.8);
+      maxGap < 0 && squeezeGaps(maxGap, 0.8);
+      updateMinMaxGap();
+      takeBoundsGap(minGap, maxGap, 1);
+      takeBoundsGap(maxGap, minGap, -1); // Handle bailout when there is not enough space.
+
+      updateMinMaxGap();
+
+      if (minGap < 0) {
+        squeezeWhenBailout(-minGap);
+      }
+
+      if (maxGap < 0) {
+        squeezeWhenBailout(maxGap);
+      }
+
+      function updateMinMaxGap() {
+        minGap = first.rect[xyDim] - minBound;
+        maxGap = maxBound - last.rect[xyDim] - last.rect[sizeDim];
+      }
+
+      function takeBoundsGap(gapThisBound, gapOtherBound, moveDir) {
+        if (gapThisBound < 0) {
+          // Move from other gap if can.
+          var moveFromMaxGap = Math.min(gapOtherBound, -gapThisBound);
+
+          if (moveFromMaxGap > 0) {
+            shiftList(moveFromMaxGap * moveDir, 0, len);
+            var remained = moveFromMaxGap + gapThisBound;
+
+            if (remained < 0) {
+              squeezeGaps(-remained * moveDir, 1);
+            }
+          } else {
+            squeezeGaps(-gapThisBound * moveDir, 1);
+          }
+        }
+      }
+
+      function shiftList(delta, start, end) {
+        if (delta !== 0) {
+          adjusted = true;
+        }
+
+        for (var i = start; i < end; i++) {
+          var item = list[i];
+          var rect = item.rect;
+          rect[xyDim] += delta;
+          item.label[xyDim] += delta;
+        }
+      } // Squeeze gaps if the labels exceed margin.
+
+
+      function squeezeGaps(delta, maxSqeezePercent) {
+        var gaps = [];
+        var totalGaps = 0;
+
+        for (var i = 1; i < len; i++) {
+          var prevItemRect = list[i - 1].rect;
+          var gap = Math.max(list[i].rect[xyDim] - prevItemRect[xyDim] - prevItemRect[sizeDim], 0);
+          gaps.push(gap);
+          totalGaps += gap;
+        }
+
+        if (!totalGaps) {
+          return;
+        }
+
+        var squeezePercent = Math.min(Math.abs(delta) / totalGaps, maxSqeezePercent);
+
+        if (delta > 0) {
+          for (var i = 0; i < len - 1; i++) {
+            // Distribute the shift delta to all gaps.
+            var movement = gaps[i] * squeezePercent; // Forward
+
+            shiftList(movement, 0, i + 1);
+          }
+        } else {
+          // Backward
+          for (var i = len - 1; i > 0; i--) {
+            // Distribute the shift delta to all gaps.
+            var movement = gaps[i - 1] * squeezePercent;
+            shiftList(-movement, i, len);
+          }
+        }
+      }
+      /**
+       * Squeeze to allow overlap if there is no more space available.
+       * Let other overlapping strategy like hideOverlap do the job instead of keep exceeding the bounds.
+       */
+
+
+      function squeezeWhenBailout(delta) {
+        var dir = delta < 0 ? -1 : 1;
+        delta = Math.abs(delta);
+        var moveForEachLabel = Math.ceil(delta / (len - 1));
+
+        for (var i = 0; i < len - 1; i++) {
+          if (dir > 0) {
+            // Forward
+            shiftList(moveForEachLabel, 0, i + 1);
+          } else {
+            // Backward
+            shiftList(-moveForEachLabel, len - i - 1, len);
+          }
+
+          delta -= moveForEachLabel;
+
+          if (delta <= 0) {
+            return;
+          }
+        }
+      }
+
+      return adjusted;
+    }
+    /**
+     * Adjust labels on y direction to avoid overlap.
+     */
+
+    function shiftLayoutOnY(list, topBound, bottomBound, // If average the shifts on all labels and add them to 0
+    balanceShift) {
+      return shiftLayout(list, 'y', 'height', topBound, bottomBound, balanceShift);
+    }
+
     function createElement(name) {
         return document.createElementNS('http://www.w3.org/2000/svg', name);
     }
@@ -37926,7 +37094,7 @@
     var mathSin$4 = Math.sin;
     var mathCos$4 = Math.cos;
     var PI$4 = Math.PI;
-    var PI2$7 = Math.PI * 2;
+    var PI2$6 = Math.PI * 2;
     var degree = 180 / PI$4;
     var EPSILON$4 = 1e-4;
     function round3(val) {
@@ -38048,9 +37216,9 @@
             var dTheta = endAngle - startAngle;
             var clockwise = !anticlockwise;
             var dThetaPositive = Math.abs(dTheta);
-            var isCircle = isAroundZero$1(dThetaPositive - PI2$7)
-                || (clockwise ? dTheta >= PI2$7 : -dTheta >= PI2$7);
-            var unifiedTheta = dTheta > 0 ? dTheta % PI2$7 : (dTheta % PI2$7 + PI2$7);
+            var isCircle = isAroundZero$1(dThetaPositive - PI2$6)
+                || (clockwise ? dTheta >= PI2$6 : -dTheta >= PI2$6);
+            var unifiedTheta = dTheta > 0 ? dTheta % PI2$6 : (dTheta % PI2$6 + PI2$6);
             var large = false;
             if (isCircle) {
                 large = true;
@@ -38065,10 +37233,10 @@
             var y0 = round4(cy + ry * mathSin$4(startAngle));
             if (isCircle) {
                 if (clockwise) {
-                    dTheta = PI2$7 - 1e-4;
+                    dTheta = PI2$6 - 1e-4;
                 }
                 else {
-                    dTheta = -PI2$7 + 1e-4;
+                    dTheta = -PI2$6 + 1e-4;
                 }
                 large = true;
                 if (firstCmd) {
@@ -40258,7 +39426,10 @@
         animationEasing: 'linear',
         // Disable progressive
         progressive: 0,
-        hoverLayerThreshold: Infinity
+        hoverLayerThreshold: Infinity,
+        universalTransition: {
+          divideShape: 'clone'
+        }
       };
       return LineSeriesModel;
     }(SeriesModel);
@@ -40347,6 +39518,10 @@
       Symbol.prototype.stopSymbolAnimation = function (toLastFrame) {
         this.childAt(0).stopAnimation(null, toLastFrame);
       };
+
+      Symbol.prototype.getSymbolType = function () {
+        return this._symbolType;
+      };
       /**
        * FIXME:
        * Caution: This method breaks the encapsulation of this module,
@@ -40419,6 +39594,7 @@
             scaleY: symbolSize[1] / 2
           };
           disableAnimation ? symbolPath.attr(target) : updateProps(symbolPath, target, seriesModel, idx);
+          saveOldStyle(symbolPath);
         }
 
         this._updateCommon(data, idx, symbolSize, seriesScope, opts);
@@ -40712,8 +39888,13 @@
             return;
           }
 
-          if (!symbolEl) {
-            symbolEl = new SymbolCtor(data, newIdx);
+          var newSymbolType = data.getItemVisual(newIdx, 'symbol') || 'circle';
+          var oldSymbolType = symbolEl && symbolEl.getSymbolType && symbolEl.getSymbolType();
+
+          if (!symbolEl // Create a new if symbol type changed.
+          || oldSymbolType && oldSymbolType !== newSymbolType) {
+            group.remove(symbolEl);
+            symbolEl = new SymbolCtor(data, newIdx, seriesScope, symbolUpdateOpt);
             symbolEl.setPosition(point);
           } else {
             symbolEl.updateData(data, newIdx, seriesScope, symbolUpdateOpt);
@@ -41860,16 +41041,29 @@
       };
     }
 
+    function anyStateShowEndLabel(seriesModel) {
+      if (seriesModel.get(['endLabel', 'show'])) {
+        return true;
+      }
+
+      for (var i = 0; i < SPECIAL_STATES.length; i++) {
+        if (seriesModel.get([SPECIAL_STATES[i], 'endLabel', 'show'])) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
     function createLineClipPath(lineView, coordSys, hasAnimation, seriesModel) {
       if (isCoordinateSystemType(coordSys, 'cartesian2d')) {
         var endLabelModel_1 = seriesModel.getModel('endLabel');
-        var showEndLabel = endLabelModel_1.get('show');
         var valueAnimation_1 = endLabelModel_1.get('valueAnimation');
         var data_1 = seriesModel.getData();
         var labelAnimationRecord_1 = {
           lastFrameIndex: 0
         };
-        var during = showEndLabel ? function (percent, clipRect) {
+        var during = anyStateShowEndLabel(seriesModel) ? function (percent, clipRect) {
           lineView._endLabelOnDuring(percent, clipRect, data_1, labelAnimationRecord_1, valueAnimation_1, endLabelModel_1, coordSys);
         } : null;
         var isHorizontal = coordSys.getBaseAxis().isHorizontal();
@@ -42370,6 +41564,7 @@
               scaleY: 1
             }, {
               duration: 200,
+              setToFinal: true,
               delay: delay
             });
 
@@ -42392,7 +41587,7 @@
       LineView.prototype._initOrUpdateEndLabel = function (seriesModel, coordSys, inheritColor) {
         var endLabelModel = seriesModel.getModel('endLabel');
 
-        if (endLabelModel.get('show')) {
+        if (anyStateShowEndLabel(seriesModel)) {
           var data_2 = seriesModel.getData();
           var polyline = this._polyline;
           var endLabel = this._endLabel;
@@ -43215,7 +42410,7 @@
           } // If dataZoom in filteMode: 'empty', the baseValue can be set as NaN in "axisProxy".
 
 
-          if (!data.hasValue(dataIndex)) {
+          if (!data.hasValue(dataIndex) || !isValidLayout[coord.type](layout)) {
             return;
           }
 
@@ -43274,9 +42469,8 @@
 
           var el = oldData.getItemGraphicEl(oldIndex);
 
-          if (!data.hasValue(newIndex)) {
+          if (!data.hasValue(newIndex) || !isValidLayout[coord.type](layout)) {
             group.remove(el);
-            el = null;
             return;
           }
 
@@ -43292,6 +42486,8 @@
 
           if (!el) {
             el = elementCreator[coord.type](seriesModel, data, newIndex, layout, isHorizontalOrRadial, animationModel, baseAxis.model, !!el, roundCap);
+          } else {
+            saveOldStyle(el);
           } // Not change anything if only order changed.
           // Especially not change label.
 
@@ -43486,12 +42682,7 @@
           componentType: baseAxis.dim + 'Axis',
           isInitSort: true,
           axisId: baseAxis.index,
-          sortInfo: sortResult,
-          animation: {
-            // Update the axis label from the natural initial layout to
-            // sorted layout should has no animation.
-            duration: 0
-          }
+          sortInfo: sortResult
         });
       };
 
@@ -43718,6 +42909,26 @@
       }, axisAnimationModel, newIndex);
     }
 
+    function checkPropertiesNotValid(obj, props) {
+      for (var i = 0; i < props.length; i++) {
+        if (!isFinite(obj[props[i]])) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    var rectPropties = ['x', 'y', 'width', 'height'];
+    var polarPropties = ['cx', 'cy', 'r', 'startAngle', 'endAngle'];
+    var isValidLayout = {
+      cartesian2d: function (layout) {
+        return !checkPropertiesNotValid(layout, rectPropties);
+      },
+      polar: function (layout) {
+        return !checkPropertiesNotValid(layout, polarPropties);
+      }
+    };
     var getLayout = {
       // itemModel is only used to get borderWidth, which is not needed
       // when calculating bar background layout.
@@ -44024,7 +43235,7 @@
       });
     }
 
-    var PI2$8 = Math.PI * 2;
+    var PI2$7 = Math.PI * 2;
     var RADIAN = Math.PI / 180;
 
     function getViewRect(seriesModel, api) {
@@ -44034,29 +43245,45 @@
       });
     }
 
+    function getBasicPieLayout(seriesModel, api) {
+      var viewRect = getViewRect(seriesModel, api);
+      var center = seriesModel.get('center');
+      var radius = seriesModel.get('radius');
+
+      if (!isArray(radius)) {
+        radius = [0, radius];
+      }
+
+      if (!isArray(center)) {
+        center = [center, center];
+      }
+
+      var width = parsePercent$1(viewRect.width, api.getWidth());
+      var height = parsePercent$1(viewRect.height, api.getHeight());
+      var size = Math.min(width, height);
+      var cx = parsePercent$1(center[0], width) + viewRect.x;
+      var cy = parsePercent$1(center[1], height) + viewRect.y;
+      var r0 = parsePercent$1(radius[0], size / 2);
+      var r = parsePercent$1(radius[1], size / 2);
+      return {
+        cx: cx,
+        cy: cy,
+        r0: r0,
+        r: r
+      };
+    }
     function pieLayout(seriesType, ecModel, api) {
       ecModel.eachSeriesByType(seriesType, function (seriesModel) {
         var data = seriesModel.getData();
         var valueDim = data.mapDimension('value');
         var viewRect = getViewRect(seriesModel, api);
-        var center = seriesModel.get('center');
-        var radius = seriesModel.get('radius');
 
-        if (!isArray(radius)) {
-          radius = [0, radius];
-        }
+        var _a = getBasicPieLayout(seriesModel, api),
+            cx = _a.cx,
+            cy = _a.cy,
+            r = _a.r,
+            r0 = _a.r0;
 
-        if (!isArray(center)) {
-          center = [center, center];
-        }
-
-        var width = parsePercent$1(viewRect.width, api.getWidth());
-        var height = parsePercent$1(viewRect.height, api.getHeight());
-        var size = Math.min(width, height);
-        var cx = parsePercent$1(center[0], width) + viewRect.x;
-        var cy = parsePercent$1(center[1], height) + viewRect.y;
-        var r0 = parsePercent$1(radius[0], size / 2);
-        var r = parsePercent$1(radius[1], size / 2);
         var startAngle = -seriesModel.get('startAngle') * RADIAN;
         var minAngle = seriesModel.get('minAngle') * RADIAN;
         var validDataCount = 0;
@@ -44073,7 +43300,7 @@
         var extent = data.getDataExtent(valueDim);
         extent[0] = 0; // In the case some sector angle is smaller than minAngle
 
-        var restAngle = PI2$8;
+        var restAngle = PI2$7;
         var valueSumLargerThanMinAngle = 0;
         var currentAngle = startAngle;
         var dir = clockwise ? 1 : -1;
@@ -44102,7 +43329,7 @@
           if (roseType !== 'area') {
             angle = sum === 0 && stillShowZeroSum ? unitRadian : value * unitRadian;
           } else {
-            angle = PI2$8 / validDataCount;
+            angle = PI2$7 / validDataCount;
           }
 
           if (angle < minAngle) {
@@ -44127,11 +43354,11 @@
         }); // Some sector is constrained by minAngle
         // Rest sectors needs recalculate angle
 
-        if (restAngle < PI2$8 && validDataCount) {
+        if (restAngle < PI2$7 && validDataCount) {
           // Average the angle if rest angle is not enough after all angles is
           // Constrained by minAngle
           if (restAngle <= 1e-3) {
-            var angle_1 = PI2$8 / validDataCount;
+            var angle_1 = PI2$7 / validDataCount;
             data.each(valueDim, function (value, idx) {
               if (!isNaN(value)) {
                 var layout_1 = data.getItemLayout(idx);
@@ -44606,11 +43833,14 @@
       }
     }
 
-    function getSectorCornerRadius(model, shape) {
+    function getSectorCornerRadius(model, shape, zeroIfNull) {
       var cornerRadius = model.get('borderRadius');
 
       if (cornerRadius == null) {
-        return null;
+        return zeroIfNull ? {
+          innerCornerRadius: 0,
+          cornerRadius: 0
+        } : null;
       }
 
       if (!isArray(cornerRadius)) {
@@ -44650,8 +43880,10 @@
         var seriesModel = data.hostModel;
         var itemModel = data.getItemModel(idx);
         var emphasisModel = itemModel.getModel('emphasis');
-        var layout = data.getItemLayout(idx);
-        var sectorShape = extend(getSectorCornerRadius(itemModel.getModel('itemStyle'), layout) || {}, layout); // Ignore NaN data.
+        var layout = data.getItemLayout(idx); // cornerRadius & innerCornerRadius doesn't exist in the item layout. Use `0` if null value is specified.
+        // see `setItemLayout` in `pieLayout.ts`.
+
+        var sectorShape = extend(getSectorCornerRadius(itemModel.getModel('itemStyle'), layout, true), layout); // Ignore NaN data.
 
         if (isNaN(sectorShape.startAngle)) {
           // Use NaN shape to avoid drawing shape.
@@ -44693,7 +43925,8 @@
               }
             }
         } else {
-          // Transition animation from the old shape
+          saveOldStyle(sector); // Transition animation from the old shape
+
           updateProps(sector, {
             shape: sectorShape
           }, seriesModel, idx);
@@ -44818,6 +44051,21 @@
           if (shape) {
             startAngle = shape.startAngle;
           }
+        } // remove empty-circle if it exists
+
+
+        if (this._emptyCircleSector) {
+          group.remove(this._emptyCircleSector);
+        } // when all data are filtered, show lightgray empty circle
+
+
+        if (data.count() === 0 && seriesModel.get('showEmptyCircle')) {
+          var sector = new Sector({
+            shape: getBasicPieLayout(seriesModel, api)
+          });
+          sector.useStyle(seriesModel.getModel('emptyCircleStyle').getItemStyle());
+          this._emptyCircleSector = sector;
+          group.add(sector);
         }
 
         data.diff(oldData).add(function (idx) {
@@ -45115,7 +44363,13 @@
           }
         },
         itemStyle: {
-          borderWidth: 1
+          borderWidth: 1,
+          borderJoin: 'round'
+        },
+        showEmptyCircle: true,
+        emptyCircleStyle: {
+          color: 'lightgray',
+          opacity: 1
         },
         labelLayout: {
           // Hide the overlapped label.
@@ -45139,12 +44393,75 @@
       return PieSeriesModel;
     }(SeriesModel);
 
+    /*
+    * Licensed to the Apache Software Foundation (ASF) under one
+    * or more contributor license agreements.  See the NOTICE file
+    * distributed with this work for additional information
+    * regarding copyright ownership.  The ASF licenses this file
+    * to you under the Apache License, Version 2.0 (the
+    * "License"); you may not use this file except in compliance
+    * with the License.  You may obtain a copy of the License at
+    *
+    *   http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing,
+    * software distributed under the License is distributed on an
+    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    * KIND, either express or implied.  See the License for the
+    * specific language governing permissions and limitations
+    * under the License.
+    */
+
+
+    /**
+     * AUTO-GENERATED FILE. DO NOT MODIFY.
+     */
+
+    /*
+    * Licensed to the Apache Software Foundation (ASF) under one
+    * or more contributor license agreements.  See the NOTICE file
+    * distributed with this work for additional information
+    * regarding copyright ownership.  The ASF licenses this file
+    * to you under the Apache License, Version 2.0 (the
+    * "License"); you may not use this file except in compliance
+    * with the License.  You may obtain a copy of the License at
+    *
+    *   http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing,
+    * software distributed under the License is distributed on an
+    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    * KIND, either express or implied.  See the License for the
+    * specific language governing permissions and limitations
+    * under the License.
+    */
+    function negativeDataFilter(seriesType) {
+      return {
+        seriesType: seriesType,
+        reset: function (seriesModel, ecModel) {
+          var data = seriesModel.getData();
+          data.filterSelf(function (idx) {
+            // handle negative value condition
+            var valueDim = data.mapDimension('value');
+            var curValue = data.get(valueDim, idx);
+
+            if (typeof curValue === 'number' && !isNaN(curValue) && curValue < 0) {
+              return false;
+            }
+
+            return true;
+          });
+        }
+      };
+    }
+
     function install$4(registers) {
       registers.registerChartView(PieView);
       registers.registerSeriesModel(PieSeriesModel);
       createLegacyDataSelectAction('pie', registers.registerAction);
       registers.registerLayout(curry(pieLayout, 'pie'));
       registers.registerProcessor(dataFilter('pie'));
+      registers.registerProcessor(negativeDataFilter('pie'));
     }
 
     var ScatterSeriesModel =
@@ -45219,6 +44536,9 @@
           itemStyle: {
             borderColor: '#212121'
           }
+        },
+        universalTransition: {
+          divideShape: 'clone'
         } // progressive: null
 
       };
@@ -47811,8 +47131,15 @@
           if (axisModel.get([name, 'show'])) {
             axisElementBuilders[name](this, this._axisGroup, axisModel, gridModel);
           }
-        }, this);
-        groupTransition(oldAxisGroup, this._axisGroup, axisModel);
+        }, this); // THIS is a special case for bar racing chart.
+        // Update the axis label from the natural initial layout to
+        // sorted layout should has no animation.
+
+        var isInitialSortFromBarRacing = payload && payload.type === 'changeAxisOrder' && payload.isInitSort;
+
+        if (!isInitialSortFromBarRacing) {
+          groupTransition(oldAxisGroup, this._axisGroup, axisModel);
+        }
 
         _super.prototype.render.call(this, axisModel, ecModel, api, payload);
       };
@@ -48773,7 +48100,7 @@
     }(ComponentModel);
 
     var inner$7 = makeInner();
-    var each$4 = each;
+    var each$3 = each;
     /**
      * @param {string} key
      * @param {module:echarts/ExtensionAPI} api
@@ -48808,7 +48135,7 @@
       function useHandler(eventType, cb) {
         zr.on(eventType, function (e) {
           var dis = makeDispatchAction(api);
-          each$4(inner$7(zr).records, function (record) {
+          each$3(inner$7(zr).records, function (record) {
             record && cb(record, e, dis.dispatchAction);
           });
           dispatchTooltipFinally(dis.pendings, api);
@@ -50769,7 +50096,7 @@
       return Math.min(extend[1] != null ? extend[1] : Infinity, Math.max(extend[0] != null ? extend[0] : -Infinity, value));
     }
 
-    var each$5 = each;
+    var each$4 = each;
     var asc$1 = asc;
     /**
      * Operate single axis.
@@ -50855,7 +50182,7 @@
         var percentWindow = [];
         var valueWindow = [];
         var hasPropModeValue;
-        each$5(['start', 'end'], function (prop, idx) {
+        each$4(['start', 'end'], function (prop, idx) {
           var boundPercent = opt[prop];
           var boundValue = opt[prop + 'Value']; // Notice: dataZoom is based either on `percentProp` ('start', 'end') or
           // on `valueProp` ('startValue', 'endValue'). (They are based on the data extent
@@ -50981,7 +50308,7 @@
         // filterMode 'weakFilter' and 'empty' is not optimized for huge data yet.
 
 
-        each$5(seriesModels, function (seriesModel) {
+        each$4(seriesModels, function (seriesModel) {
           var seriesData = seriesModel.getData();
           var dataDims = seriesData.mapDimensionsAll(axisDim);
 
@@ -51014,7 +50341,7 @@
               return hasValue && leftOut && rightOut;
             });
           } else {
-            each$5(dataDims, function (dim) {
+            each$4(dataDims, function (dim) {
               if (filterMode === 'empty') {
                 seriesModel.setData(seriesData = seriesData.map(dim, function (value) {
                   return !isInWindow(value) ? NaN : value;
@@ -51028,7 +50355,7 @@
             });
           }
 
-          each$5(dataDims, function (dim) {
+          each$4(dataDims, function (dim) {
             seriesData.setApproximateExtent(valueWindow, dim);
           });
         });
@@ -51042,7 +50369,7 @@
         var minMaxSpan = this._minMaxSpan = {};
         var dataZoomModel = this._dataZoomModel;
         var dataExtent = this._dataExtent;
-        each$5(['min', 'max'], function (minMax) {
+        each$4(['min', 'max'], function (minMax) {
           var percentSpan = dataZoomModel.get(minMax + 'Span');
           var valueSpan = dataZoomModel.get(minMax + 'ValueSpan');
           valueSpan != null && (valueSpan = this.getAxisModel().axis.scale.parse(valueSpan)); // minValueSpan and maxValueSpan has higher priority than minSpan and maxSpan
@@ -51092,7 +50419,7 @@
 
     function calculateDataExtent(axisProxy, axisDim, seriesModels) {
       var dataExtent = [Infinity, -Infinity];
-      each$5(seriesModels, function (seriesModel) {
+      each$4(seriesModels, function (seriesModel) {
         unionAxisExtentFromData(dataExtent, seriesModel.getData(), axisDim);
       }); // It is important to get "consistent" extent when more then one axes is
       // controlled by a `dataZoom`, otherwise those axes will not be synchronized
@@ -51736,7 +51063,7 @@
         var defaultOption = {
           show: true,
           icon: 'M4.7,22.9L29.3,45.5L54.7,23.4M4.6,43.6L4.6,58L53.8,58L53.8,43.6M29.2,45.1L29.2,0',
-          title: ecModel.getLocale(['toolbox', 'saveAsImage', 'title']),
+          title: ecModel.getLocaleModel().get(['toolbox', 'saveAsImage', 'title']),
           type: 'png',
           // Default use option.backgroundColor
           // backgroundColor: '#fff',
@@ -51745,7 +51072,7 @@
           excludeComponents: ['toolbox'],
           // use current pixel ratio of device by default
           // pixelRatio: 1,
-          lang: ecModel.getLocale(['toolbox', 'saveAsImage', 'lang'])
+          lang: ecModel.getLocaleModel().get(['toolbox', 'saveAsImage', 'lang'])
         };
         return defaultOption;
       };
@@ -51792,7 +51119,7 @@
 
           },
           // `line`, `bar`, `stack`, `tiled`
-          title: ecModel.getLocale(['toolbox', 'magicType', 'title']),
+          title: ecModel.getLocaleModel().get(['toolbox', 'magicType', 'title']),
           option: {},
           seriesIndex: {}
         };
@@ -52314,8 +51641,8 @@
           contentToOption: null,
           // eslint-disable-next-line
           icon: 'M17.5,17.3H33 M17.5,17.3H33 M45.4,29.5h-28 M11.5,2v56H51V14.8L38.4,2H11.5z M38.4,2.2v12.7H51 M45.4,41.7h-28',
-          title: ecModel.getLocale(['toolbox', 'dataView', 'title']),
-          lang: ecModel.getLocale(['toolbox', 'dataView', 'lang']),
+          title: ecModel.getLocaleModel().get(['toolbox', 'dataView', 'title']),
+          lang: ecModel.getLocaleModel().get(['toolbox', 'dataView', 'lang']),
           backgroundColor: '#fff',
           textColor: '#000',
           textareaColor: '#fff',
@@ -52388,7 +51715,7 @@
       }, payload.newOption));
     });
 
-    var each$6 = each;
+    var each$5 = each;
     var inner$a = makeInner();
     /**
      * @param ecModel
@@ -52399,7 +51726,7 @@
       var storedSnapshots = getStoreSnapshots(ecModel); // If previous dataZoom can not be found,
       // complete an range with current range.
 
-      each$6(newSnapshot, function (batchItem, dataZoomId) {
+      each$5(newSnapshot, function (batchItem, dataZoomId) {
         var i = storedSnapshots.length - 1;
 
         for (; i >= 0; i--) {
@@ -52436,7 +51763,7 @@
       storedSnapshots.length > 1 && storedSnapshots.pop(); // Find top for all dataZoom.
 
       var snapshot = {};
-      each$6(head, function (batchItem, dataZoomId) {
+      each$5(head, function (batchItem, dataZoomId) {
         for (var i = storedSnapshots.length - 1; i >= 0; i--) {
           batchItem = storedSnapshots[i][dataZoomId];
 
@@ -52491,7 +51818,7 @@
           show: true,
           // eslint-disable-next-line
           icon: 'M3.8,33.4 M47,18.9h9.8V8.7 M56.3,20.1 C52.1,9,40.5,0.6,26.8,2.1C12.6,3.7,1.6,16.2,2.1,30.6 M13,41.1H3.1v10.2 M3.7,39.9c4.2,11.1,15.8,19.5,29.5,18 c14.2-1.6,25.2-14.1,24.7-28.5',
-          title: ecModel.getLocale(['toolbox', 'restore', 'title'])
+          title: ecModel.getLocaleModel().get(['toolbox', 'restore', 'title'])
         };
         return defaultOption;
       };
@@ -53746,7 +53073,7 @@
       return xyMinMax ? [xyMinMax[0][1] - xyMinMax[0][0], xyMinMax[1][1] - xyMinMax[1][0]] : [NaN, NaN];
     }
 
-    var each$7 = each;
+    var each$6 = each;
     var DATA_ZOOM_ID_BASE = makeInternalComponentId('toolbox-dataZoom_');
 
     var DataZoomFeature =
@@ -53852,7 +53179,7 @@
       DataZoomFeature.prototype._dispatchZoomAction = function (snapshot) {
         var batch = []; // Convert from hash map to array.
 
-        each$7(snapshot, function (batchItem, dataZoomId) {
+        each$6(snapshot, function (batchItem, dataZoomId) {
           batch.push(clone(batchItem));
         });
         batch.length && this.api.dispatchAction({
@@ -53872,7 +53199,7 @@
             back: 'M22,1.4L9.9,13.5l12.3,12.3 M10.3,13.5H54.9v44.6 H10.3v-26'
           },
           // `zoom`, `back`
-          title: ecModel.getLocale(['toolbox', 'dataZoom', 'title']),
+          title: ecModel.getLocaleModel().get(['toolbox', 'dataZoom', 'title']),
           brushStyle: {
             borderWidth: 0,
             color: 'rgba(210,219,238,0.2)'
@@ -53958,10 +53285,10 @@
       var dzOptions = [];
       var finder = makeAxisFinder(dzFeatureModel);
       var finderResult = parseFinder(ecModel, finder);
-      each$7(finderResult.xAxisModels, function (axisModel) {
+      each$6(finderResult.xAxisModels, function (axisModel) {
         return buildInternalOptions(axisModel, 'xAxis', 'xAxisIndex');
       });
-      each$7(finderResult.yAxisModels, function (axisModel) {
+      each$6(finderResult.yAxisModels, function (axisModel) {
         return buildInternalOptions(axisModel, 'yAxis', 'yAxisIndex');
       });
 
@@ -54390,7 +53717,7 @@
           // stop, "unfocusAdjacency". Here `pointer-events: none` is used to solve
           // it. Although it is not supported by IE8~IE10, fortunately it is a rare
           // scenario.
-          + (";pointer-event:" + (this._enterable ? 'auto' : 'none'));
+          + (";pointer-events:" + (this._enterable ? 'auto' : 'none'));
         }
 
         this._show = true;
@@ -54716,7 +54043,7 @@
     }
 
     var bind$2 = bind;
-    var each$8 = each;
+    var each$7 = each;
     var parsePercent$2 = parsePercent$1;
     var proxyRect = new Rect({
       shape: {
@@ -55040,8 +54367,8 @@
 
         var markupTextArrLegacy = [];
         var markupStyleCreator = new TooltipMarkupStyleCreator();
-        each$8(dataByCoordSys, function (itemCoordSys) {
-          each$8(itemCoordSys.dataByAxis, function (axisItem) {
+        each$7(dataByCoordSys, function (itemCoordSys) {
+          each$7(itemCoordSys.dataByAxis, function (axisItem) {
             var axisModel = ecModel.getComponent(axisItem.axisDim + 'Axis', axisItem.axisIndex);
             var axisValue = axisItem.value;
 
@@ -55340,17 +54667,17 @@
       TooltipView.prototype._updateContentNotChangedOnAxis = function (dataByCoordSys) {
         var lastCoordSys = this._lastDataByCoordSys;
         var contentNotChanged = !!lastCoordSys && lastCoordSys.length === dataByCoordSys.length;
-        contentNotChanged && each$8(lastCoordSys, function (lastItemCoordSys, indexCoordSys) {
+        contentNotChanged && each$7(lastCoordSys, function (lastItemCoordSys, indexCoordSys) {
           var lastDataByAxis = lastItemCoordSys.dataByAxis || [];
           var thisItemCoordSys = dataByCoordSys[indexCoordSys] || {};
           var thisDataByAxis = thisItemCoordSys.dataByAxis || [];
           contentNotChanged = contentNotChanged && lastDataByAxis.length === thisDataByAxis.length;
-          contentNotChanged && each$8(lastDataByAxis, function (lastItem, indexAxis) {
+          contentNotChanged && each$7(lastDataByAxis, function (lastItem, indexAxis) {
             var thisItem = thisDataByAxis[indexAxis] || {};
             var lastIndices = lastItem.seriesDataIndices || [];
             var newIndices = thisItem.seriesDataIndices || [];
             contentNotChanged = contentNotChanged && lastItem.value === thisItem.value && lastItem.axisType === thisItem.axisType && lastItem.axisId === thisItem.axisId && lastIndices.length === newIndices.length;
-            contentNotChanged && each$8(lastIndices, function (lastIdxItem, j) {
+            contentNotChanged && each$7(lastIndices, function (lastIdxItem, j) {
               var newIdxItem = newIndices[j];
               contentNotChanged = contentNotChanged && lastIdxItem.seriesIndex === newIdxItem.seriesIndex && lastIdxItem.dataIndex === newIdxItem.dataIndex;
             });
@@ -57783,12 +57110,12 @@
       if (type === 'all') {
         return {
           type: 'all',
-          title: ecModel.getLocale(['legend', 'selector', 'all'])
+          title: ecModel.getLocaleModel().get(['legend', 'selector', 'all'])
         };
       } else if (type === 'inverse') {
         return {
           type: 'inverse',
-          title: ecModel.getLocale(['legend', 'selector', 'inverse'])
+          title: ecModel.getLocaleModel().get(['legend', 'selector', 'inverse'])
         };
       }
     };
@@ -58086,7 +57413,7 @@
     }(ComponentModel);
 
     var curry$1 = curry;
-    var each$9 = each;
+    var each$8 = each;
     var Group$1 = Group;
 
     var LegendView =
@@ -58188,7 +57515,7 @@
         ecModel.eachRawSeries(function (seriesModel) {
           !seriesModel.get('legendHoverLink') && excludeSeriesId.push(seriesModel.id);
         });
-        each$9(legendModel.getData(), function (legendItemModel, dataIndex) {
+        each$8(legendModel.getData(), function (legendItemModel, dataIndex) {
           var name = legendItemModel.get('name'); // Use empty string or \n as a newline string
 
           if (!this.newlineDisabled && (name === '' || name === '\n')) {
@@ -58275,7 +57602,7 @@
 
       LegendView.prototype._createSelector = function (selector, legendModel, api, orient, selectorPosition) {
         var selectorGroup = this.getSelectorGroup();
-        each$9(selector, function createSelectorButton(selectorItem) {
+        each$8(selector, function createSelectorButton(selectorItem) {
           var type = selectorItem.type;
           var labelText = new ZRText({
             style: {
@@ -59529,7 +58856,8 @@
     function trigger$1(controller, eventName, behaviorToCheck, e, contollerEvent) {
       // Also provide behavior checker for event listener, for some case that
       // multiple components share one listener.
-      contollerEvent.isAvailableBehavior = bind(isAvailableBehavior, null, behaviorToCheck, e);
+      contollerEvent.isAvailableBehavior = bind(isAvailableBehavior, null, behaviorToCheck, e); // TODO should not have type issue.
+
       controller.trigger(eventName, contollerEvent);
     } // settings: {
     //     zoomOnMouseWheel
@@ -60018,7 +59346,8 @@
     var SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'candlestick', 'scatter'];
     var REALTIME_ANIMATION_CONFIG = {
       easing: 'cubicOut',
-      duration: 100
+      duration: 100,
+      delay: 0
     };
 
     var SliderZoomView =
@@ -61225,6 +60554,7 @@
     exports.registerProcessor = registerProcessor;
     exports.registerTheme = registerTheme;
     exports.registerTransform = registerTransform;
+    exports.registerUpdateLifecycle = registerUpdateLifecycle;
     exports.registerVisual = registerVisual;
     exports.setCanvasCreator = setCanvasCreator;
     exports.throttle = throttle;

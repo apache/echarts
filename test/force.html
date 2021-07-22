@@ -40,9 +40,9 @@ under the License.
             require([
                 'echarts'
             ], function (echarts) {
-
+                
                 var chart = echarts.init(document.getElementById('main'));
-
+                console.log(chart.setOption);
                 function createNodes(count) {
                     var nodes = [];
                     for (var i = 0; i < count; i++) {
