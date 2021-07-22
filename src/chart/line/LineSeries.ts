@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListFromArray from '../helper/createSeriesDataFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import SeriesModel from '../../model/Series';
 import {
     SeriesOnCartesianOptionMixin,
@@ -137,7 +137,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
                 throw new Error('Line not support coordinateSystem besides cartesian and polar');
             }
         }
-        return createListFromArray(this.getSource(), this, {
+        return createSeriesData(null, this, {
             useEncodeDefaulter: true
         });
     }

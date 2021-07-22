@@ -24,7 +24,7 @@ import Graph from '../../data/Graph';
 import linkSeriesData from '../../data/helper/linkSeriesData';
 import createDimensions from '../../data/helper/createDimensions';
 import CoordinateSystem from '../../core/CoordinateSystem';
-import createListFromArray from './createSeriesDataFromArray';
+import createSeriesData from './createSeriesData';
 import {
     OptionSourceDataOriginal, GraphEdgeItemObject, OptionDataValue,
     OptionDataItemObject
@@ -70,7 +70,7 @@ export default function createGraphFromNodeEdge(
     const coordSys = seriesModel.get('coordinateSystem');
     let nodeData;
     if (coordSys === 'cartesian2d' || coordSys === 'polar') {
-        nodeData = createListFromArray(nodes, seriesModel);
+        nodeData = createSeriesData(nodes, seriesModel);
     }
     else {
         const coordSysCtor = CoordinateSystem.get(coordSys);

@@ -29,7 +29,7 @@ import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
 import {DataProvider, DefaultDataProvider} from './helper/dataProvider';
 import {summarizeDimensions, DimensionSummary} from './helper/dimensionHelper';
-import DataDimensionInfo from './DataDimensionInfo';
+import SeriesDimensionDefine from './SeriesDimensionDefine';
 import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/types';
 import Element from 'zrender/src/Element';
 import {
@@ -147,7 +147,7 @@ class SeriesData<
     readonly dimensions: string[];
 
     // Infomation of each data dimension, like data type.
-    private _dimensionInfos: {[dimName: string]: DataDimensionInfo};
+    private _dimensionInfos: {[dimName: string]: SeriesDimensionDefine};
 
     readonly hostModel: HostModel;
 
@@ -236,10 +236,10 @@ class SeriesData<
      *        For example, ['someDimName', {name: 'someDimName', type: 'someDimType'}, ...].
      *        Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
      */
-    constructor(dimensions: Array<string | object | DataDimensionInfo>, hostModel: HostModel) {
+    constructor(dimensions: Array<string | object | SeriesDimensionDefine>, hostModel: HostModel) {
         dimensions = dimensions || ['x', 'y'];
 
-        const dimensionInfos: Dictionary<DataDimensionInfo> = {};
+        const dimensionInfos: Dictionary<SeriesDimensionDefine> = {};
         const dimensionNames = [];
         const invertedIndicesMap: Dictionary<number[]> = {};
 
@@ -247,11 +247,11 @@ class SeriesData<
             // Use the original dimensions[i], where other flag props may exists.
             const dimInfoInput = dimensions[i];
 
-            const dimensionInfo: DataDimensionInfo =
+            const dimensionInfo: SeriesDimensionDefine =
                 zrUtil.isString(dimInfoInput)
-                ? new DataDimensionInfo({name: dimInfoInput})
-                : !(dimInfoInput instanceof DataDimensionInfo)
-                ? new DataDimensionInfo(dimInfoInput)
+                ? new SeriesDimensionDefine({name: dimInfoInput})
+                : !(dimInfoInput instanceof SeriesDimensionDefine)
+                ? new SeriesDimensionDefine(dimInfoInput)
                 : dimInfoInput;
 
             const dimensionName = dimensionInfo.name;
@@ -330,7 +330,7 @@ class SeriesData<
      *        Dimension can be concrete names like x, y, z, lng, lat, angle, radius
      *        Or a ordinal number. For example getDimensionInfo(0) will return 'x' or 'lng' or 'radius'
      */
-    getDimensionInfo(dim: DimensionLoose): DataDimensionInfo {
+    getDimensionInfo(dim: DimensionLoose): SeriesDimensionDefine {
         // Do not clone, because there may be categories in dimInfo.
         return this._dimensionInfos[this.getDimension(dim)];
     }
@@ -389,7 +389,7 @@ class SeriesData<
         const dimensions = this.dimensions;
         const dimensionInfos = map(dimensions, dimName => this._dimensionInfos[dimName]);
         if (data instanceof DataStorage) {
-            if (data.syncDimensionTypes(dimensionInfos)) {
+            if (data.canUse(dimensionInfos)) {
                 store = data;
             }
             // Sync failed

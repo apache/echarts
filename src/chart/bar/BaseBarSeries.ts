@@ -18,7 +18,7 @@
 */
 
 import SeriesModel from '../../model/Series';
-import createListFromArray from '../helper/createSeriesDataFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import {
     SeriesOption,
     SeriesOnCartesianOptionMixin,
@@ -79,7 +79,7 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
     type = BaseBarSeriesModel.type;
 
     getInitialData(option: Opts, ecModel: GlobalModel): SeriesData {
-        return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
+        return createSeriesData(null, this, {useEncodeDefaulter: true});
     }
 
     getMarkerPosition(value: ScaleDataValue[]) {

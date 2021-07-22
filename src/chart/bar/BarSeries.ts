@@ -29,7 +29,7 @@ import {
     SeriesEncodeOptionMixin
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
-import createListFromArray from '../helper/createSeriesDataFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import type Polar from '../../coord/polar/Polar';
 import { inheritDefaultOption } from '../../util/component';
 import SeriesData from '../../data/SeriesData';
@@ -90,7 +90,7 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
     coordinateSystem: Cartesian2D | Polar;
 
     getInitialData(): SeriesData {
-        return createListFromArray(this.getSource(), this, {
+        return createSeriesData(null, this, {
             useEncodeDefaulter: true,
             createInvertedIndices: !!this.get('realtimeSort', true) || null
         });

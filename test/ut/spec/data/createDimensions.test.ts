@@ -18,7 +18,7 @@
 */
 
 
-import DataDimensionInfo from '@/src/data/DataDimensionInfo';
+import SeriesDimensionDefine from '@/src/data/SeriesDimensionDefine';
 import createDimensions from '@/src/data/helper/createDimensions';
 import { createSource } from '@/src/data/Source';
 import { SOURCE_FORMAT_ARRAY_ROWS, SERIES_LAYOUT_BY_COLUMN } from '@/src/util/types';
@@ -146,7 +146,7 @@ describe('createDimensions', function () {
             'dimensionsCount': 5
         };
 
-        const result: DataDimensionInfo[] = [
+        const result: SeriesDimensionDefine[] = [
             {
                 'otherDims': {
                     'tooltip': false,
@@ -248,7 +248,7 @@ describe('createDimensions', function () {
             }
         ];
 
-        expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new DataDimensionInfo(a)));
+        expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new SeriesDimensionDefine(a)));
     });
 
 
@@ -256,9 +256,9 @@ describe('createDimensions', function () {
         function doTest(
             source: ParametersOfCreateDimensions[0],
             opt: ParametersOfCreateDimensions[1],
-            result: DataDimensionInfo[]
+            result: SeriesDimensionDefine[]
         ) {
-            expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new DataDimensionInfo(a)));
+            expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new SeriesDimensionDefine(a)));
         }
 
         // test dimcount
@@ -390,9 +390,9 @@ describe('createDimensions', function () {
         function doTest(
             source: ParametersOfCreateDimensions[0],
             opt: ParametersOfCreateDimensions[1],
-            result: DataDimensionInfo[]
+            result: SeriesDimensionDefine[]
         ) {
-            expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new DataDimensionInfo(a)));
+            expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new SeriesDimensionDefine(a)));
         }
 
         const data = [
@@ -606,9 +606,9 @@ describe('createDimensions', function () {
         function doTest(
             source: ParametersOfCreateDimensions[0],
             opt: ParametersOfCreateDimensions[1],
-            result: DataDimensionInfo[]
+            result: SeriesDimensionDefine[]
         ) {
-            expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new DataDimensionInfo(a)));
+            expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new SeriesDimensionDefine(a)));
         }
 
         const data = [['iw', 332, 4434, 323, 59], ['vrr', 44, 11, 144, 55]];
@@ -714,9 +714,9 @@ describe('createDimensions', function () {
         function doTest(
             source: ParametersOfCreateDimensions[0],
             opt: ParametersOfCreateDimensions[1],
-            result: DataDimensionInfo[]
+            result: SeriesDimensionDefine[]
         ) {
-            expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new DataDimensionInfo(a)));
+            expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new SeriesDimensionDefine(a)));
         }
 
         const data = [['iw', 332, 4434, 323, 'd8', 59], ['vrr', 44, 11, 144, '-', 55]];

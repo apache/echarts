@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListFromArray from '../helper/createSeriesDataFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import SeriesModel from '../../model/Series';
 import {
     SeriesOption,
@@ -85,7 +85,7 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
     hasSymbolVisual = true;
 
     getInitialData(option: ScatterSeriesOption, ecModel: GlobalModel): SeriesData {
-        return createListFromArray(this.getSource(), this, {
+        return createSeriesData(null, this, {
             useEncodeDefaulter: true
         });
     }

@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesData from '../../data/SeriesData';
-import createDimensions, { CreateDimensionsParams, getDimCount } from '../../data/helper/createDimensions';
+import createDimensions, { getDimCount } from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../core/CoordinateSystem';
@@ -28,15 +28,15 @@ import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../.
 import {enableDataStack} from '../../data/helper/dataStackHelper';
 import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
 import {
-    SOURCE_FORMAT_ORIGINAL, DimensionDefinitionLoose, DimensionDefinition, OptionSourceData, EncodeDefaulter
+    SOURCE_FORMAT_ORIGINAL,
+    DimensionDefinitionLoose,
+    DimensionDefinition,
+    OptionSourceData,
+    EncodeDefaulter
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import DataStorage from '../../data/DataStorage';
-import DataDimensionInfo from '../../data/DataDimensionInfo';
-
-function isDataStorage(val: unknown): val is DataStorage {
-    return val instanceof DataStorage;
-}
+import SeriesDimensionDefine from '../../data/SeriesDimensionDefine';
 
 function getCoordSysDimDefs(
     seriesModel: SeriesModel,
@@ -74,7 +74,7 @@ function getCoordSysDimDefs(
 }
 
 function injectOrdinalMeta(
-    dimInfoList: DataDimensionInfo[],
+    dimInfoList: SeriesDimensionDefine[],
     createInvertedIndices: boolean,
     coordSysInfo: ReturnType<typeof getCoordSysInfoBySeries>
 ) {
@@ -102,8 +102,8 @@ function injectOrdinalMeta(
     return firstCategoryDimIndex;
 }
 
-function createListFromArray(
-    sourceOrStore: Source | OptionSourceData | DataStorage,
+function createSeriesData(
+    sourceRaw: OptionSourceData | null | undefined,
     seriesModel: SeriesModel,
     opt?: {
         generateCoord?: string
@@ -114,20 +114,26 @@ function createListFromArray(
 ): SeriesData {
     opt = opt || {};
 
-    if (!isSourceInstance(sourceOrStore) && !isDataStorage(sourceOrStore)) {
-        sourceOrStore = createSourceFromSeriesDataOption(
-            sourceOrStore as OptionSourceData
-        );
+    const sourceManager = seriesModel.getSourceManager();
+    let source;
+    let isOriginalSource = false;
+    if (sourceRaw) {
+        isOriginalSource = true;
+        source = createSourceFromSeriesDataOption(sourceRaw);
     }
-
-    const source = isDataStorage(sourceOrStore) ? sourceOrStore.getSource() : sourceOrStore;
+    else {
+        source = sourceManager.getSource();
+        // Is series.data. not dataset.
+        isOriginalSource = source.sourceFormat === SOURCE_FORMAT_ORIGINAL;
+    }
     const coordSysInfo = getCoordSysInfoBySeries(seriesModel);
     const coordSysDimDefs = getCoordSysDimDefs(seriesModel, coordSysInfo);
     const useEncodeDefaulter = opt.useEncodeDefaulter;
 
     // Try to ignore unsed dimensions if sharing a high dimension datastorage
     // 30 is an experience value.
-    const omitUnusedDimensions = isDataStorage(sourceOrStore) && sourceOrStore.getDimensionCount() > 30;
+    const omitUnusedDimensions = !isOriginalSource && source.dimensionsDefine && source.dimensionsDefine.length > 30;
+
     const encodeDefaulter = zrUtil.isFunction(useEncodeDefaulter)
         ? useEncodeDefaulter
         : useEncodeDefaulter
@@ -146,35 +152,18 @@ function createListFromArray(
             )),
         omitUnusedDimensions
     };
-    let dimInfoList = createDimensions(sourceOrStore, createDimensionOptions);
-    let firstCategoryDimIndex = injectOrdinalMeta(dimInfoList, opt.createInvertedIndices, coordSysInfo);
-
-    if (omitUnusedDimensions) {
-        // sourceOrStore
-        if (!(sourceOrStore as DataStorage).syncDimensionTypes(dimInfoList)) {
-            // We need a full dimensions list if we want to recreate the storage.
-            // Or the storage will ignore the data of other dimensions.
-            dimInfoList = createDimensions(sourceOrStore, zrUtil.extend(createDimensionOptions, {
-                omitUnusedDimensions: true
-            }));
-            // Fallback
-            firstCategoryDimIndex = injectOrdinalMeta(
-                dimInfoList, opt.createInvertedIndices, coordSysInfo
-            );
-            sourceOrStore = source;
-        }
-    }
+    const dimInfoList = createDimensions(source, createDimensionOptions);
+    const firstCategoryDimIndex = injectOrdinalMeta(dimInfoList, opt.createInvertedIndices, coordSysInfo);
 
     const stackCalculationInfo = enableDataStack(seriesModel, dimInfoList);
 
     const data = new SeriesData(dimInfoList, seriesModel);
-
     data.setCalculationInfo(stackCalculationInfo);
+    console.log(stackCalculationInfo)
 
     const dimValueGetter =
-        !isDataStorage(sourceOrStore)
-        && firstCategoryDimIndex != null
-        && isNeedCompleteOrdinalData(sourceOrStore)
+        firstCategoryDimIndex != null
+        && isNeedCompleteOrdinalData(source)
             ? function (this: DataStorage, itemOpt: any, dimName: string, dataIndex: number, dimIndex: number) {
                 // Use dataIndex as ordinal value in categoryAxis
                 return dimIndex === firstCategoryDimIndex
@@ -184,7 +173,10 @@ function createListFromArray(
             : null;
 
     data.hasItemOption = false;
-    data.initData(sourceOrStore, null, dimValueGetter);
+    data.initData(
+        // Try to reuse the data storage in sourceManager if using dataset.
+        isOriginalSource ? source : sourceManager.getDataStorage(dimInfoList)
+    , null, dimValueGetter);
 
     return data;
 }
@@ -205,4 +197,4 @@ function firstDataNotNull(arr: ArrayLike<any>) {
     return arr[i];
 }
 
-export default createListFromArray;
+export default createSeriesData;

@@ -18,7 +18,7 @@
 */
 
 import SeriesModel from '../../model/Series';
-import createListFromArray from '../helper/createSeriesDataFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import CoordinateSystem from '../../core/CoordinateSystem';
 import {
     SeriesOption,
@@ -73,7 +73,7 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
     coordinateSystem: Cartesian2D | Geo | Calendar;
 
     getInitialData(option: HeatmapSeriesOption, ecModel: GlobalModel): SeriesData {
-        return createListFromArray(this.getSource(), this, {
+        return createSeriesData(null, this, {
             generateCoord: 'value'
         });
     }

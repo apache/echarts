@@ -24,7 +24,7 @@ import {
     DimensionName, VISUAL_DIMENSIONS, DimensionType, DimensionUserOuput, DimensionUserOuputEncode, DimensionIndex
 } from '../../util/types';
 import { DataStorageDimensionType } from '../DataStorage';
-import DataDimensionInfo from '../DataDimensionInfo';
+import SeriesDimensionDefine from '../SeriesDimensionDefine';
 
 export type DimensionSummaryEncode = {
     defaultedLabel: DimensionName[],

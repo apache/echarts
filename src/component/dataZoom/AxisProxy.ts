@@ -245,16 +245,6 @@ class AxisProxy {
         // Culculate data window and data extent, and record them.
         this._dataExtent = calculateDataExtent(this, this._dimName, targetSeries);
 
-        // this.hasSeriesStacked = false;
-        // each(targetSeries, function (series) {
-            // let data = series.getData();
-            // let dataDim = data.mapDimension(this._dimName);
-            // let stackedDimension = data.getCalculationInfo('stackedDimension');
-            // if (stackedDimension && stackedDimension === dataDim) {
-                // this.hasSeriesStacked = true;
-            // }
-        // }, this);
-
         // `calculateDataWindow` uses min/maxSpan.
         this._updateMinMaxSpan();
 

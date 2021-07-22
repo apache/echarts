@@ -52,13 +52,6 @@ const dataCtors = {
     'time': CtorFloat64Array
 } as const;
 
-// Dim with same category can be convert between.
-const dataCtorCategory = {
-    'float': 0, 'time': 0,
-    'number': 1, 'int': 2,
-    'ordinal': 3
-};
-
 export type DataStorageDimensionType = keyof typeof dataCtors;
 
 type DataTypedArray = Uint32Array | Int32Array | Uint16Array | Float64Array;
@@ -87,7 +80,7 @@ export type DimValueGetter = (
     dimIndex: DimensionIndex
 ) => ParsedValue;
 
-export interface DataStorageDimensionInfo {
+export interface DataStorageDimensionDefine {
     type?: DataStorageDimensionType;  // Default to be float.
     name?: string;
     /**
@@ -164,7 +157,7 @@ class DataStorage {
     private _count: number = 0;
     private _rawCount: number = 0;
 
-    private _dimensions: DataStorageDimensionInfo[];
+    private _dimensions: DataStorageDimensionDefine[];
     private _dimValueGetter: DimValueGetter;
 
     defaultDimValueGetter: DimValueGetter;
@@ -174,7 +167,7 @@ class DataStorage {
      */
     initData(
         provider: DataProvider,
-        dimensions: DataStorageDimensionInfo[],
+        dimensions: DataStorageDimensionDefine[],
         dimValueGetter?: DimValueGetter
     ): void {
         if (__DEV__) {
@@ -204,7 +197,7 @@ class DataStorage {
             // Only pick these two props. Not leak other properties like orderMeta.
             type: dim.type,
             name: dim.name
-        }) as DataStorageDimensionInfo);
+        }) as DataStorageDimensionDefine);
 
         const dimensionsIdxMap: Dictionary<number> = {};
         let prefix = '';
@@ -292,21 +285,18 @@ class DataStorage {
      * We need to recreate a new data storage in this case.
      */
     // TODO Can't sure what's frequency will this validate fail and cause datastorage recreate.
-    syncDimensionTypes(targetDims: DataStorageDimensionInfo[]) {
+    canUse(targetDims: DataStorageDimensionDefine[]) {
         for (let i = 0; i < targetDims.length; i++) {
             const targetDim = targetDims[i];
             const selfDimIdx = this.getDimensionIndex(targetDim.name);
             const selfDim = this._dimensions[selfDimIdx];
             if (
                 !selfDim
-                // Dim type can be convert between because ctors are compatitable.
-                || dataCtorCategory[selfDim.type || 'float'] !== dataCtorCategory[targetDim.type || 'float']
                 // ordinalMeta is different. Usually being on the different axis.
                 || (selfDim.ordinalMeta && selfDim.ordinalMeta !== targetDim.ordinalMeta)
             ) {
                 return false;
             }
-            selfDim.type = targetDim.type;
         }
         return true;
     }

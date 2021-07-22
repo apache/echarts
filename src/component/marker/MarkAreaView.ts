@@ -32,7 +32,7 @@ import { CoordinateSystem, isCoordinateSystemType } from '../../coord/Coordinate
 import MarkAreaModel, { MarkArea2DDataItemOption } from './MarkAreaModel';
 import SeriesModel from '../../model/Series';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
-import DataDimensionInfo from '../../data/DataDimensionInfo';
+import SeriesDimensionDefine from '../../data/SeriesDimensionDefine';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import MarkerModel from './MarkerModel';
@@ -362,7 +362,7 @@ function createList(
     maModel: MarkAreaModel
 ) {
 
-    let coordDimsInfos: DataDimensionInfo[];
+    let coordDimsInfos: SeriesDimensionDefine[];
     let areaData: SeriesData<MarkAreaModel>;
     const dims = ['x0', 'y0', 'x1', 'y1'];
     if (coordSys) {

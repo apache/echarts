@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListFromArray from '../helper/createSeriesDataFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import SeriesModel from '../../model/Series';
 import {
     SeriesOption,
@@ -89,7 +89,7 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
     hasSymbolVisual = true;
 
     getInitialData(option: EffectScatterSeriesOption, ecModel: GlobalModel): SeriesData {
-        return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
+        return createSeriesData(null, this, {useEncodeDefaulter: true});
     }
 
     brushSelector(dataIndex: number, data: SeriesData, selectors: BrushCommonSelectorsForSeries): boolean {

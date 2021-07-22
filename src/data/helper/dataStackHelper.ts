@@ -18,7 +18,7 @@
 */
 
 import {each, isString} from 'zrender/src/core/util';
-import DataDimensionInfo from '../DataDimensionInfo';
+import SeriesDimensionDefine from '../SeriesDimensionDefine';
 import SeriesModel from '../../model/Series';
 import SeriesData, { DataCalculationInfo } from '../SeriesData';
 import type { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../../util/types';
@@ -46,7 +46,7 @@ import type { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../../
  */
 export function enableDataStack(
     seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>,
-    dimensionInfoList: (DataDimensionInfo | string)[],
+    dimensionInfoList: (SeriesDimensionDefine | string)[],
     opt?: {
         stackedCoordDimension?: string
         byIndex?: boolean
@@ -65,8 +65,8 @@ export function enableDataStack(
 
     // Compatibal: when `stack` is set as '', do not stack.
     const mayStack = !!(seriesModel && seriesModel.get('stack'));
-    let stackedByDimInfo: DataDimensionInfo;
-    let stackedDimInfo: DataDimensionInfo;
+    let stackedByDimInfo: SeriesDimensionDefine;
+    let stackedDimInfo: SeriesDimensionDefine;
     let stackResultDimension: string;
     let stackedOverDimension: string;
 
@@ -74,7 +74,7 @@ export function enableDataStack(
         if (isString(dimensionInfo)) {
             dimensionInfoList[index] = dimensionInfo = {
                 name: dimensionInfo as string
-            } as DataDimensionInfo;
+            } as SeriesDimensionDefine;
         }
 
         if (mayStack && !dimensionInfo.isExtraCoord) {
@@ -116,7 +116,7 @@ export function enableDataStack(
         const stackedDimType = stackedDimInfo.type;
         let stackedDimCoordIndex = 0;
 
-        each(dimensionInfoList, function (dimensionInfo: DataDimensionInfo) {
+        each(dimensionInfoList, function (dimensionInfo: SeriesDimensionDefine) {
             if (dimensionInfo.coordDim === stackedDimCoordDim) {
                 stackedDimCoordIndex++;
             }
@@ -154,15 +154,10 @@ export function enableDataStack(
     };
 }
 
-export function isDimensionStacked(data: SeriesData, stackedDim: string /*, stackedByDim*/): boolean {
+export function isDimensionStacked(data: SeriesData, stackedDim: string): boolean {
     // Each single series only maps to one pair of axis. So we do not need to
     // check stackByDim, whatever stacked by a dimension or stacked by index.
     return !!stackedDim && stackedDim === data.getCalculationInfo('stackedDimension');
-        // && (
-        //     stackedByDim != null
-        //         ? stackedByDim === data.getCalculationInfo('stackedByDimension')
-        //         : data.getCalculationInfo('isStackedByIndex')
-        // );
 }
 
 export function getStackedDimension(data: SeriesData, targetDim: string): DimensionName {

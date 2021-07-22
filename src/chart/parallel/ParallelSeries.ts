@@ -20,7 +20,7 @@
 
 import {each, bind} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
-import createListFromArray from '../helper/createSeriesDataFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import {
     SeriesOption,
     SeriesEncodeOptionMixin,
@@ -92,7 +92,7 @@ class ParallelSeriesModel extends SeriesModel<ParallelSeriesOption> {
 
 
     getInitialData(this: ParallelSeriesModel, option: ParallelSeriesOption, ecModel: GlobalModel): SeriesData {
-        return createListFromArray(this.getSource(), this, {
+        return createSeriesData(null, this, {
             useEncodeDefaulter: bind(makeDefaultEncode, null, this)
         });
     }

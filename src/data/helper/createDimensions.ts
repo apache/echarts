@@ -28,7 +28,7 @@ import {
     VISUAL_DIMENSIONS
 } from '../../util/types';
 import SeriesData from '../SeriesData';
-import DataDimensionInfo from '../DataDimensionInfo';
+import SeriesDimensionDefine from '../SeriesDimensionDefine';
 import { createHashMap, defaults, each, extend, HashMap, isObject, isString, map } from 'zrender/src/core/util';
 import OrdinalMeta from '../OrdinalMeta';
 import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../Source';
@@ -88,7 +88,7 @@ export default function createDimensions(
     // TODO: TYPE completeDimensions type
     source: Source | SeriesData | OptionSourceData | DataStorage,
     opt?: CreateDimensionsParams
-): DataDimensionInfo[] {
+): SeriesDimensionDefine[] {
     if (source instanceof DataStorage) {
         source = source.getSource();
     }
@@ -104,7 +104,7 @@ export default function createDimensions(
     const sysDims = opt.coordDimensions || [];
     const dimsDef = opt.dimensionsDefine || source.dimensionsDefine || [];
     const coordDimNameMap = createHashMap<true, DimensionName>();
-    const result: DataDimensionInfo[] = [];
+    const result: SeriesDimensionDefine[] = [];
     const omitUnusedDimensions = opt.omitUnusedDimensions;
     const isUsingSourceDimensionsDef = dimsDef === source.dimensionsDefine;
     // Try to cache the dimNameMap if the dimensionsDefine is from source.
@@ -133,7 +133,7 @@ export default function createDimensions(
         if (idx < 0) {
             const dimDefItemRaw = dimsDef[dimIdx];
             const dimDefItem = isObject(dimDefItemRaw) ? dimDefItemRaw : { name: dimDefItemRaw };
-            const resultItem = new DataDimensionInfo();
+            const resultItem = new SeriesDimensionDefine();
             const userDimName = dimDefItem.name;
             if (dataDimNameMap.get(userDimName) != null) {
                 resultItem.name = resultItem.displayName = userDimName;
@@ -258,7 +258,7 @@ export default function createDimensions(
         });
     });
 
-    function applyDim(resultItem: DataDimensionInfo, coordDim: DimensionName, coordDimIndex: DimensionIndex) {
+    function applyDim(resultItem: SeriesDimensionDefine, coordDim: DimensionName, coordDimIndex: DimensionIndex) {
         if (VISUAL_DIMENSIONS.get(coordDim as keyof DataVisualDimensions) != null) {
             resultItem.otherDims[coordDim as keyof DataVisualDimensions] = coordDimIndex;
         }

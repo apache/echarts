@@ -19,7 +19,7 @@
 
 import { DatasetModel } from '../../component/dataset/install';
 import SeriesModel from '../../model/Series';
-import { setAsPrimitive, map, isTypedArray, assert, each, retrieve2 } from 'zrender/src/core/util';
+import { setAsPrimitive, map, isTypedArray, assert, each, retrieve2, createHashMap } from 'zrender/src/core/util';
 import { SourceMetaRawOption, Source, createSource, cloneSourceShallow } from '../Source';
 import {
     SeriesEncodableModel, OptionSourceData,
@@ -30,8 +30,9 @@ import {
     querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels
 } from './sourceHelper';
 import { applyDataTransform } from './transform';
-import DataStorage from '../DataStorage';
+import DataStorage, { DataStorageDimensionDefine, DataStorageDimensionType } from '../DataStorage';
 import { DefaultDataProvider } from './dataProvider';
+import SeriesDimensionDefine from '../SeriesDimensionDefine';
 
 type DataStorageMap = Dictionary<DataStorage>;
 
@@ -363,17 +364,18 @@ export class SourceManager {
     }
 
     /**
-     * Will return undefined if source don't have dimensions.
-     *
      * Only available for series.
+     *
+     * @param dimensions Dimensions that are generated in series.
      */
-    getDataStorage(): DataStorage | undefined {
+    getDataStorage(seriesDims: SeriesDimensionDefine[]): DataStorage {
         if (__DEV__) {
             assert(isSeries(this._sourceHost), 'Can only call getDataStorage on series source manager.');
         }
         const source = this.getSource(0);
-        const dimensionsDefine = source.dimensionsDefine;
         const delimiter = '$$';
+        const storageDims = getDataStorageDimensions(seriesDims, source);
+
         // Source from endpoint(usually series) will be read differently
         // when seriesLayoutBy or startIndex(which is affected by sourceHeader) are different.
         // So we use this three props as key.
@@ -381,12 +383,16 @@ export class SourceManager {
             + delimiter
             + source.startIndex
             + delimiter
-            + (dimensionsDefine ? map(dimensionsDefine, def => def.name).join(delimiter) : '');
+            + generateDimensionsHash(storageDims);
 
-        return this._innerGetDataStorage(source, sourceReadKey);
+        return this._innerGetDataStorage(storageDims, source, sourceReadKey);
     }
 
-    private _innerGetDataStorage(seriesSource: Source, sourceReadKey: string): DataStorage | undefined {
+    private _innerGetDataStorage(
+        storageDims: DataStorageDimensionDefine[],
+        seriesSource: Source,
+        sourceReadKey: string
+    ): DataStorage | undefined {
         // TODO Can use other sourceIndex?
         const sourceIndex = 0;
 
@@ -403,26 +409,22 @@ export class SourceManager {
             const upSourceMgr = this._getUpstreamSourceManagers()[0];
 
             if (isSeries(this._sourceHost) && upSourceMgr) {
-                cachedStore = upSourceMgr._innerGetDataStorage(seriesSource, sourceReadKey);
+                cachedStore = upSourceMgr._innerGetDataStorage(
+                    storageDims, seriesSource, sourceReadKey
+                );
             }
             else {
-                // Always create datastorage based on source from series.
-                const dimensionsDefine = seriesSource && seriesSource.dimensionsDefine;
-                // Can't create a store if don't know dimension..
-                if (dimensionsDefine) {
-                    cachedStore = new DataStorage();
-                    // Always create storage from source of series.
-                    cachedStore.initData(
-                        new DefaultDataProvider(seriesSource, dimensionsDefine.length),
-                        dimensionsDefine
-                    );
-                }
+                cachedStore = new DataStorage();
+                // Always create storage from source of series.
+                cachedStore.initData(
+                    new DefaultDataProvider(seriesSource, storageDims.length),
+                    storageDims
+                );
             }
             cachedStoreMap[sourceReadKey] = cachedStore;
         }
 
         return cachedStore;
-
     }
 
     /**
@@ -483,4 +485,44 @@ function isSeries(sourceHost: SourceManager['_sourceHost']): sourceHost is Serie
 
 function doThrow(errMsg: string): void {
     throw new Error(errMsg);
+}
+
+const dimTypeShort = {
+    float: 'f', int: 'i', ordinal: 'o', number: 'n', time: 't'
+} as const;
+
+function getDataStorageDimensions(seriesDims: SeriesDimensionDefine[], source: Source) {
+    const sourceDims = source.dimensionsDefine;
+    // If source don't have dimensions or series don't omit unsed dimensions.
+    // Use seriesDims directly
+    if (!sourceDims || seriesDims.length === sourceDims.length) {
+        return seriesDims;
+    }
+    const dims: DataStorageDimensionDefine[] = [];
+    const seriesDimsTypeMap = createHashMap<DataStorageDimensionType>();
+    for (let i = 0; i < seriesDims.length; i++) {
+        seriesDimsTypeMap.set(seriesDims[i].name, seriesDims[i].type);
+    }
+    for (let i = 0; i < sourceDims.length; i++) {
+        const dimName = sourceDims[i].name;
+        // Dim type from series has higher certainty
+        const seriesDimDefType = seriesDimsTypeMap.get(dimName);
+        dims.push({
+            name: dimName,
+            type: seriesDimDefType || sourceDims[i].type
+        });
+    }
+    return dims;
+}
+
+function generateDimensionsHash(dims: DataStorageDimensionDefine[]) {
+    // TODO ordinalMeta
+
+    // If source don't have dimensions or series don't omit unsed dimensions.
+    // Generate from seriesDims directly
+    let key = '';
+    for (let i = 0; i < dims.length; i++) {
+        key += dimTypeShort[dims[i].type] || 'f';
+    }
+    return key;
 }

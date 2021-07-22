@@ -46,7 +46,7 @@ import {
 import Element, { ElementProps } from 'zrender/src/Element';
 import SeriesData, { DefaultDataVisual } from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
-import createListFromArray from '../helper/createSeriesDataFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import { makeInner } from '../../util/model';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import SeriesModel from '../../model/Series';
@@ -414,7 +414,7 @@ export default class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
     }
 
     getInitialData(option: CustomSeriesOption, ecModel: GlobalModel): SeriesData {
-        return createListFromArray(this.getSource(), this);
+        return createSeriesData(null, this);
     }
 
     getDataParams(dataIndex: number, dataType?: SeriesDataType, el?: Element): CallbackDataParams & {

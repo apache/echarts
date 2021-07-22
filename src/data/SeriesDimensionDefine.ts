@@ -21,7 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import OrdinalMeta from './OrdinalMeta';
 import { DataVisualDimensions, DimensionType } from '../util/types';
 
-class DataDimensionInfo {
+class SeriesDimensionDefine {
 
     /**
      * Dimension type. The enumerable values are the key of
@@ -125,7 +125,7 @@ class DataDimensionInfo {
     /**
      * @param opt All of the fields will be shallow copied.
      */
-    constructor(opt?: object | DataDimensionInfo) {
+    constructor(opt?: object | SeriesDimensionDefine) {
         if (opt != null) {
             zrUtil.extend(this, opt);
         }
@@ -133,4 +133,4 @@ class DataDimensionInfo {
 
 };
 
-export default DataDimensionInfo;
+export default SeriesDimensionDefine;

@@ -42,30 +42,6 @@ function hasXAndY(item: MarkerPositionOption) {
     return !isNaN(parseFloat(item.x as string)) && !isNaN(parseFloat(item.y as string));
 }
 
-// Make it simple, do not visit all stacked value to count precision.
-// function getPrecision(data, valueAxisDim, dataIndex) {
-//     let precision = -1;
-//     let stackedDim = data.mapDimension(valueAxisDim);
-//     do {
-//         precision = Math.max(
-//             numberUtil.getPrecision(data.get(stackedDim, dataIndex)),
-//             precision
-//         );
-//         let stackedOnSeries = data.getCalculationInfo('stackedOnSeries');
-//         if (stackedOnSeries) {
-//             let byValue = data.get(data.getCalculationInfo('stackedByDimension'), dataIndex);
-//             data = stackedOnSeries.getData();
-//             dataIndex = data.indexOf(data.getCalculationInfo('stackedByDimension'), byValue);
-//             stackedDim = data.getCalculationInfo('stackedDimension');
-//         }
-//         else {
-//             data = null;
-//         }
-//     } while (data);
-
-//     return precision;
-// }
-
 function markerTypeCalculatorWithExtent(
     markerType: MarkerStatisticType,
     data: SeriesData,
@@ -109,10 +85,6 @@ const markerTypeCalculator = {
  * Transform markPoint data item to format used in List by do the following
  * 1. Calculate statistic like `max`, `min`, `average`
  * 2. Convert `item.xAxis`, `item.yAxis` to `item.coord` array
- * @param  {module:echarts/model/Series} seriesModel
- * @param  {module:echarts/coord/*} [coordSys]
- * @param  {Object} item
- * @return {Object}
  */
 export function dataTransform(
     seriesModel: SeriesModel,
