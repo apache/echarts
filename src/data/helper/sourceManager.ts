@@ -373,14 +373,15 @@ export class SourceManager {
         }
         const source = this.getSource(0);
         const dimensionsDefine = source.dimensionsDefine;
-
+        const delimiter = '$$';
         // Source from endpoint(usually series) will be read differently
         // when seriesLayoutBy or startIndex(which is affected by sourceHeader) are different.
         // So we use this three props as key.
         const sourceReadKey = source.seriesLayoutBy
-            + '$$'
+            + delimiter
             + source.startIndex
-            + (dimensionsDefine ? map(dimensionsDefine, def => def.name).join('$$') : '');
+            + delimiter
+            + (dimensionsDefine ? map(dimensionsDefine, def => def.name).join(delimiter) : '');
 
         return this._innerGetDataStorage(source, sourceReadKey);
     }
@@ -406,9 +407,9 @@ export class SourceManager {
             }
             else {
                 // Always create datastorage based on source from series.
-                const dimensionsDefine = seriesSource.dimensionsDefine;
+                const dimensionsDefine = seriesSource && seriesSource.dimensionsDefine;
                 // Can't create a store if don't know dimension..
-                if (seriesSource && dimensionsDefine) {
+                if (dimensionsDefine) {
                     cachedStore = new DataStorage();
                     // Always create storage from source of series.
                     cachedStore.initData(
