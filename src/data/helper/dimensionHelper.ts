@@ -18,13 +18,12 @@
 */
 
 
-import {each, createHashMap, assert, filter, keys} from 'zrender/src/core/util';
+import {each, createHashMap, assert} from 'zrender/src/core/util';
 import SeriesData from '../SeriesData';
 import {
     DimensionName, VISUAL_DIMENSIONS, DimensionType, DimensionUserOuput, DimensionUserOuputEncode, DimensionIndex
 } from '../../util/types';
 import { DataStorageDimensionType } from '../DataStorage';
-import SeriesDimensionDefine from '../SeriesDimensionDefine';
 
 export type DimensionSummaryEncode = {
     defaultedLabel: DimensionName[],

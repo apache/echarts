@@ -30,7 +30,7 @@ import {
     querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels
 } from './sourceHelper';
 import { applyDataTransform } from './transform';
-import DataStorage, { DataStorageDimensionDefine } from '../DataStorage';
+import DataStorage, { DataStorageDimensionDefine, DataStorageDimensionType } from '../DataStorage';
 import { DefaultDataProvider } from './dataProvider';
 import SeriesDimensionDefine from '../SeriesDimensionDefine';
 import WeakMap from 'zrender/src/core/WeakMap';
@@ -528,6 +528,7 @@ function generateDimensionsHash(dims: DataStorageDimensionDefine[]) {
     let key = '';
     for (let i = 0; i < dims.length; i++) {
         const ordinalMeta = dims[i].ordinalMeta;
+        key += dims[i].name;
         key += dimTypeShort[dims[i].type] || 'f';
         if (ordinalMeta) {
             let id = ordinalIdMap.get(ordinalMeta);
@@ -537,6 +538,7 @@ function generateDimensionsHash(dims: DataStorageDimensionDefine[]) {
             }
             key += id;
         }
+        key += '$$';
     }
     return key;
 }
