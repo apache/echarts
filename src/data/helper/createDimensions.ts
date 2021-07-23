@@ -274,8 +274,8 @@ export default function createDimensions(
     // Make sure the first extra dim is 'value'.
     const generateCoord = opt.generateCoord;
     let generateCoordCount = opt.generateCoordCount;
-    generateCoordCount = generateCoord ? (generateCoordCount || 1) : 0;
     const fromZero = generateCoordCount != null;
+    generateCoordCount = generateCoord ? (generateCoordCount || 1) : 0;
     const extra = generateCoord || 'value';
 
     // Set dim `name` and other `coordDim` and other props.
