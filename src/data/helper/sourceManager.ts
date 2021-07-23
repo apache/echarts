@@ -33,6 +33,8 @@ import { applyDataTransform } from './transform';
 import DataStorage, { DataStorageDimensionDefine, DataStorageDimensionType } from '../DataStorage';
 import { DefaultDataProvider } from './dataProvider';
 import SeriesDimensionDefine from '../SeriesDimensionDefine';
+import WeakMap from 'zrender/src/core/WeakMap';
+import OrdinalMeta from '../OrdinalMeta';
 
 type DataStorageMap = Dictionary<DataStorage>;
 
@@ -501,30 +503,40 @@ function getDataStorageDimensions(seriesDims: SeriesDimensionDefine[], source: S
         return seriesDims;
     }
     const dims: DataStorageDimensionDefine[] = [];
-    const seriesDimsTypeMap = createHashMap<DataStorageDimensionType>();
+    const seriesDimsMap = createHashMap<SeriesDimensionDefine>();
     for (let i = 0; i < seriesDims.length; i++) {
-        seriesDimsTypeMap.set(seriesDims[i].name, seriesDims[i].type);
+        seriesDimsMap.set(seriesDims[i].name, seriesDims[i]);
     }
     for (let i = 0; i < sourceDims.length; i++) {
         const dimName = sourceDims[i].name;
         // Dim type from series has higher certainty
-        const seriesDimDefType = seriesDimsTypeMap.get(dimName);
+        const seriesDim = seriesDimsMap.get(dimName);
         dims.push({
             name: dimName,
-            type: seriesDimDefType || sourceDims[i].type
+            ordinalMeta: seriesDim && seriesDim.ordinalMeta,
+            type: seriesDim ? seriesDim.type : sourceDims[i].type
         });
     }
     return dims;
 }
 
+const ordinalIdMap = new WeakMap<OrdinalMeta, string>();
+let ordinalMetaId = 0;
 function generateDimensionsHash(dims: DataStorageDimensionDefine[]) {
-    // TODO ordinalMeta
-
     // If source don't have dimensions or series don't omit unsed dimensions.
     // Generate from seriesDims directly
     let key = '';
     for (let i = 0; i < dims.length; i++) {
+        const ordinalMeta = dims[i].ordinalMeta;
         key += dimTypeShort[dims[i].type] || 'f';
+        if (ordinalMeta) {
+            let id = ordinalIdMap.get(ordinalMeta);
+            if (!id) {
+                id = 'm' + ordinalMetaId++;
+                ordinalIdMap.set(ordinalMeta, id);
+            }
+            key += id;
+        }
     }
     return key;
 }

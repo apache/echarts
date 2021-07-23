@@ -144,7 +144,6 @@ class DataStorage {
 
     private _provider: DataProvider;
 
-    // Raw extent will not be cloned, but only transfered.
     // It will not be calculated util needed.
     private _rawExtent: [number, number][] = [];
 
@@ -298,14 +297,8 @@ class DataStorage {
     }
 
     /**
-     * If we using dataset.
-     * Dimensions types may only know when we initializing series.
-     * So we need to sync the type back to storage when initlializing SeriesData back
-     *
-     * Will return false if dimension type has been known and different from given.
-     * We need to recreate a new data storage in this case.
+     * Check if SeriesData can use this DataStorage.
      */
-    // TODO Can't sure what's frequency will this validate fail and cause datastorage recreate.
     canUse(targetDims: DataStorageDimensionDefine[]) {
         for (let i = 0; i < targetDims.length; i++) {
             const targetDim = targetDims[i];
@@ -313,6 +306,7 @@ class DataStorage {
             const selfDim = this._dimensions[selfDimIdx];
             if (
                 !selfDim
+                || (selfDim.type || 'float') !== (targetDim.type || 'float')
                 // ordinalMeta is different. Usually being on the different axis.
                 || (selfDim.ordinalMeta && selfDim.ordinalMeta !== targetDim.ordinalMeta)
             ) {

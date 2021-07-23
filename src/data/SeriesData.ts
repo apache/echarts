@@ -395,7 +395,13 @@ class SeriesData<
         const dimensions = this.dimensions;
         const dimensionInfos = map(dimensions, dimName => this._dimensionInfos[dimName]);
         if (data instanceof DataStorage) {
-            store = data;
+            if (data.canUse(dimensionInfos)) {
+                store = data;
+            }
+            else {
+                // Fallback
+                data = store.getSource();
+            }
         }
 
         if (!store) {

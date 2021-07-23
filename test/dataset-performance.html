@@ -38,6 +38,7 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main1"></div>
 
 
 
@@ -55,6 +56,7 @@ under the License.
                 return `index${i}`
             })
             // var option = {
+            //     animation: false,
             //     xAxis: {
             //         type: 'category',
             //         data: Array.from(Array(10), (_, i) => {
@@ -69,6 +71,8 @@ under the License.
             //             data: Array.from(Array(10), (_, i) => {
             //                 return Math.random()*100
             //             }),
+            //             lineStyle: { width: 0.5 },
+            //             showSymbol: false,
             //             type: 'line',
             //         }
             //     })
@@ -107,17 +111,96 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'Dataset with 10000 dimensions.',
+                    'Dataset with 1000 dimensions.',
                     'Case from https://github.com/apache/echarts/issues/11907'
                 ],
                 option: {}
             });
 
-            console.profile('render');
+            console.time('render');
             chart.setOption(option)
-            console.profileEnd('render');
+            console.timeEnd('render');
         });
         </script>
+
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                var option;
+                var indexes = Array.from(Array(1000), (_, i) => {
+                    return `index${i}`
+                })
+                // var option = {
+                //     animation: false,
+                //     xAxis: {
+                //         type: 'category',
+                //         data: Array.from(Array(10), (_, i) => {
+                //             return i
+                //         })
+                //     },
+                //     yAxis: {
+                //         type: 'value'
+                //     },
+                //     series: indexes.map(index => {
+                //         return {
+                //             data: Array.from(Array(10), (_, i) => {
+                //                 return Math.random()*100
+                //             }),
+                //             lineStyle: { width: 0.5 },
+                //             showSymbol: false,
+                //             stack: 'main',
+                //             type: 'line',
+                //         }
+                //     })
+                // };
+                var option = {
+                    xAxis: {
+                        type: 'category',
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    dataset: {
+                        dimension: ['date', ...indexes],
+                        source: Array.from(Array(10), (_, i) => {
+                            return {
+                                date: i,
+                                ...indexes.reduce((item, next) => {
+                                    item[next] = Math.random()*100
+                                    return item
+                                }, {})
+                            }
+                        })
+                    },
+                    series: indexes.map(index => {
+                        return {
+                            type: 'line',
+                            name: index,
+                            animation: false,
+                            showSymbol: false,
+                            stack: 'main',
+                            lineStyle: {
+                                width: 0.5
+                            }
+                        }
+                    })
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Dataset with 1000 dimensions. Stacked'
+                    ],
+                    option: {}
+                });
+
+                console.time('render');
+                chart.setOption(option)
+                console.timeEnd('render');
+            });
+            </script>
 
 
     </body>
