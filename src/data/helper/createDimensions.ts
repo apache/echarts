@@ -274,9 +274,9 @@ export default function createDimensions(
     // Make sure the first extra dim is 'value'.
     const generateCoord = opt.generateCoord;
     let generateCoordCount = opt.generateCoordCount;
-    const fromZero = generateCoordCount != null;
     generateCoordCount = generateCoord ? (generateCoordCount || 1) : 0;
     const extra = generateCoord || 'value';
+    let coordDimAutoIdx = 0;
 
     // Set dim `name` and other `coordDim` and other props.
     if (!omitUnusedDimensions) {
@@ -285,9 +285,13 @@ export default function createDimensions(
             const coordDim = resultItem.coordDim;
 
             if (coordDim == null) {
-                resultItem.coordDim = genName(
-                    extra, coordDimNameMap, fromZero
+                // TODO no need to generate coordDim for isExtraCoord?
+                const res = genCoordDimName(
+                    extra, coordDimNameMap, coordDimAutoIdx
                 );
+                resultItem.coordDim = res.name;
+                coordDimAutoIdx = res.autoIdx;
+
                 resultItem.coordDimIndex = 0;
                 // Series specified generateCoord is using out.
                 if (!generateCoord || generateCoordCount <= 0) {
@@ -297,9 +301,8 @@ export default function createDimensions(
             }
 
             if (resultItem.name == null) {
-                resultItem.name = genName(
-                    resultItem.coordDim, dataDimNameMap, false
-                );
+                // Duplication will be removed in the next step.
+                resultItem.name = resultItem.coordDim;
             }
 
             if (resultItem.type == null
@@ -327,7 +330,7 @@ export default function createDimensions(
                 resultItem.type = 'ordinal';
             }
         }
-        return result;
+        return removeDuplication(result);
     }
     else {
         // Sort dimensions
@@ -338,10 +341,25 @@ export default function createDimensions(
             }
         }
         toSort.sort((a, b) => a.i - b.i);
-        return map(toSort, item => item.o);
+        return removeDuplication(map(toSort, item => item.o));
     }
 }
 
+function removeDuplication(result: SeriesDimensionDefine[]) {
+    const duplicationMap = createHashMap<number>();
+    for (let i = 0; i < result.length; i++) {
+        const dim = result[i];
+        const dimOriginalName = dim.name;
+        let count = duplicationMap.get(dimOriginalName) || 0;
+        if (count > 0) {
+            // Starts from 0.
+            dim.name = dimOriginalName + (count - 1);
+        }
+        count++;
+        duplicationMap.set(dimOriginalName, count);
+    }
+    return result;
+}
 
 // ??? TODO
 // Originally detect dimCount by data[0]. Should we
@@ -376,19 +394,20 @@ export function getDimCount(
     return dimCount;
 }
 
-function genName(
+function genCoordDimName(
     name: DimensionName,
     map: HashMap<unknown, DimensionName>,
-    fromZero: boolean
+    autoIdx: number
 ) {
     const mapData = map.data;
-    if (fromZero || mapData.hasOwnProperty(name)) {
-        let i = 0;
+    if (mapData.hasOwnProperty(name)) {
+        let i = autoIdx || 0;
         while (mapData.hasOwnProperty(name + i)) {
             i++;
         }
         name += i;
+        autoIdx = i + 1;
     }
     map.set(name, true);
-    return name;
+    return {name, autoIdx};
 }

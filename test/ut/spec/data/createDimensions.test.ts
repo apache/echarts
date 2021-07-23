@@ -700,6 +700,34 @@ describe('createDimensions', function () {
                 }
             ]
         );
+
+        // Duplicate name
+        doTest(
+            data,
+            {
+                dimensionsDefine: [{name: '泰亩', type: 'ordinal'}, {name: '泰亩', type: 'float'}],
+                coordDimensions: [{name: 'time', type: 'time' as const}, 'value']
+            },
+            [
+                {
+                    'otherDims': {},
+                    'displayName': '泰亩',
+                    'name': '泰亩',
+                    'type': 'ordinal',
+                    'ordinalMeta': undefined,
+                    'coordDimIndex': 0,
+                    'coordDim': 'time'
+                },
+                {
+                    'otherDims': {},
+                    'displayName': '泰亩',
+                    'name': '泰亩0',
+                    'type': 'float',
+                    'coordDim': 'value',
+                    'coordDimIndex': 0
+                }
+            ]
+        );
     });
 
 
