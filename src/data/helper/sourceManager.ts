@@ -529,6 +529,7 @@ function generateDimensionsHash(dims: DataStorageDimensionDefine[]) {
     for (let i = 0; i < dims.length; i++) {
         const ordinalMeta = dims[i].ordinalMeta;
         key += dims[i].name;
+        key += '$';
         key += dimTypeShort[dims[i].type] || 'f';
         if (ordinalMeta) {
             let id = ordinalIdMap.get(ordinalMeta);
@@ -538,7 +539,7 @@ function generateDimensionsHash(dims: DataStorageDimensionDefine[]) {
             }
             key += id;
         }
-        key += '$$';
+        key += '$';
     }
     return key;
 }
