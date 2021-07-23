@@ -18,12 +18,12 @@
 */
 
 import {
-    isTypedArray, HashMap, clone, createHashMap, isArray, isObject, isArrayLike,
+    isTypedArray, clone, createHashMap, isArray, isObject, isArrayLike,
     hasOwn, assert, each, map, isNumber, isString
 } from 'zrender/src/core/util';
 import {
     SourceFormat, SeriesLayoutBy, DimensionDefinition,
-    OptionEncodeValue, OptionSourceData,
+    OptionSourceData,
     SOURCE_FORMAT_ORIGINAL,
     SERIES_LAYOUT_BY_COLUMN,
     SOURCE_FORMAT_UNKNOWN,
@@ -119,6 +119,8 @@ class SourceImpl {
      */
     readonly dimensionsDefine: DimensionDefinition[];
 
+    readonly isGeneratedDimensions: boolean = false;
+
     /**
      * Only make sense in `SOURCE_FORMAT_ARRAY_ROWS`.
      * That is the same as `sourceHeader: number`,
@@ -152,27 +154,35 @@ class SourceImpl {
         startIndex?: number, // default: 0
         dimensionsDetectedCount?: number,
 
-        metaRawOption?: SourceMetaRawOption,
-
-        // [Caveat]
-        // This is the raw user defined `encode` in `series`.
-        // If user not defined, DO NOT make a empty object or hashMap here.
-        // An empty object or hashMap will prevent from auto generating encode.
-        encodeDefine?: HashMap<OptionEncodeValue, DimensionName>
+        metaRawOption?: SourceMetaRawOption
     }) {
 
         this.data = fields.data || (
             fields.sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS ? {} : []
         );
-        this.sourceFormat = fields.sourceFormat || SOURCE_FORMAT_UNKNOWN;
+        const sourceFormat = this.sourceFormat = fields.sourceFormat || SOURCE_FORMAT_UNKNOWN;
+        const dimensionsDetectedCount = this.dimensionsDetectedCount = fields.dimensionsDetectedCount;
+        let dimensionsDefine = this.dimensionsDefine = fields.dimensionsDefine;
 
         // Visit config
         this.seriesLayoutBy = fields.seriesLayoutBy || SERIES_LAYOUT_BY_COLUMN;
         this.startIndex = fields.startIndex || 0;
-        this.dimensionsDetectedCount = fields.dimensionsDetectedCount;
         this.metaRawOption = fields.metaRawOption;
 
-        const dimensionsDefine = this.dimensionsDefine = fields.dimensionsDefine;
+        if (!dimensionsDefine && dimensionsDetectedCount && sourceFormat !== SOURCE_FORMAT_ORIGINAL) {
+            // Generate dimensionsDefine automatically for dataset.
+            const generatedDims: DimensionDefinition[] = [];
+            for (let i = 0; i < dimensionsDetectedCount; i++) {
+                const name = 'dim' + i;
+                generatedDims.push({
+                    name,
+                    displayName: name
+                });
+            }
+            dimensionsDefine = this.dimensionsDefine = generatedDims;
+            this.isGeneratedDimensions = true;
+        }
+
         if (dimensionsDefine) {
             for (let i = 0; i < dimensionsDefine.length; i++) {
                 const dim = dimensionsDefine[i];

@@ -107,6 +107,7 @@ export default function createDimensions(
     const result: SeriesDimensionDefine[] = [];
     const omitUnusedDimensions = opt.omitUnusedDimensions;
     const isUsingSourceDimensionsDef = dimsDef === source.dimensionsDefine;
+    const isGeneratedDimensionsDef = isUsingSourceDimensionsDef && source.isGeneratedDimensions;
     // Try to cache the dimNameMap if the dimensionsDefine is from source.
     const canCacheDimNameMap = (isUsingSourceDimensionsDef && omitUnusedDimensions);
     let dataDimNameMap = canCacheDimNameMap && inner(source).dimNameMap;
@@ -142,7 +143,10 @@ export default function createDimensions(
                 resultItem.name = resultItem.displayName = userDimName;
             }
             dimDefItem.type != null && (resultItem.type = dimDefItem.type);
-            dimDefItem.displayName != null && (resultItem.displayName = dimDefItem.displayName);
+            // We don't use the displayName if it's generated automatically.
+            // Instead, we try to use a more semantic name from coordinate system later.
+            !isGeneratedDimensionsDef && dimDefItem.displayName != null
+                    && (resultItem.displayName = dimDefItem.displayName);
             const newIdx = result.length;
             indicesMap[dimIdx] = newIdx;
             result.push(resultItem);
@@ -300,11 +304,6 @@ export default function createDimensions(
                 generateCoordCount--;
             }
 
-            if (resultItem.name == null) {
-                // Duplication will be removed in the next step.
-                resultItem.name = resultItem.coordDim;
-            }
-
             if (resultItem.type == null
                 && (
                     guessOrdinal(source, resultDimIdx) === BE_ORDINAL.Must
@@ -330,7 +329,7 @@ export default function createDimensions(
                 resultItem.type = 'ordinal';
             }
         }
-        return removeDuplication(result);
+        return postProcessDimNames(result);
     }
     else {
         // Sort dimensions
@@ -341,14 +340,23 @@ export default function createDimensions(
             }
         }
         toSort.sort((a, b) => a.i - b.i);
-        return removeDuplication(map(toSort, item => item.o));
+        return postProcessDimNames(map(toSort, item => item.o));
     }
 }
 
-function removeDuplication(result: SeriesDimensionDefine[]) {
+// Remove duplications and give a default name if not exists.
+function postProcessDimNames(result: SeriesDimensionDefine[]) {
     const duplicationMap = createHashMap<number>();
     for (let i = 0; i < result.length; i++) {
         const dim = result[i];
+        if (dim.name == null) {
+            dim.name = dim.coordDim;
+        }
+        // We don't assign displayName again if name is already use the default coordDim
+        else if (dim.displayName == null) {
+            dim.displayName = dim.coordDim;
+        }
+
         const dimOriginalName = dim.name;
         let count = duplicationMap.get(dimOriginalName) || 0;
         if (count > 0) {
