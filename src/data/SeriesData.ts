@@ -400,7 +400,7 @@ class SeriesData<
             }
             else {
                 // Fallback
-                data = store.getSource();
+                data = data.getSource();
             }
         }
 
