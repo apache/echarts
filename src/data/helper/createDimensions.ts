@@ -275,8 +275,8 @@ export default function createDimensions(
     const generateCoord = opt.generateCoord;
     let generateCoordCount = opt.generateCoordCount;
     generateCoordCount = generateCoord ? (generateCoordCount || 1) : 0;
+    const fromZero = generateCoordCount != null;
     const extra = generateCoord || 'value';
-    let coordDimAutoIdx = 0;
 
     // Set dim `name` and other `coordDim` and other props.
     if (!omitUnusedDimensions) {
@@ -286,11 +286,9 @@ export default function createDimensions(
 
             if (coordDim == null) {
                 // TODO no need to generate coordDim for isExtraCoord?
-                const res = genCoordDimName(
-                    extra, coordDimNameMap, coordDimAutoIdx
+                resultItem.coordDim = genCoordDimName(
+                    extra, coordDimNameMap, fromZero
                 );
-                resultItem.coordDim = res.name;
-                coordDimAutoIdx = res.autoIdx;
 
                 resultItem.coordDimIndex = 0;
                 // Series specified generateCoord is using out.
@@ -397,17 +395,16 @@ export function getDimCount(
 function genCoordDimName(
     name: DimensionName,
     map: HashMap<unknown, DimensionName>,
-    autoIdx: number
+    fromZero: boolean
 ) {
     const mapData = map.data;
-    if (mapData.hasOwnProperty(name)) {
-        let i = autoIdx || 0;
+    if (fromZero || mapData.hasOwnProperty(name)) {
+        let i = 0;
         while (mapData.hasOwnProperty(name + i)) {
             i++;
         }
         name += i;
-        autoIdx = i + 1;
     }
     map.set(name, true);
-    return {name, autoIdx};
+    return name;
 }
