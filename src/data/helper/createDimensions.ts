@@ -136,6 +136,9 @@ export default function createDimensions(
             const resultItem = new SeriesDimensionDefine();
             const userDimName = dimDefItem.name;
             if (dataDimNameMap.get(userDimName) != null) {
+                // Only if `series.dimensions` is defined in option
+                // displayName, will be set, and dimension will be diplayed vertically in
+                // tooltip by default.
                 resultItem.name = resultItem.displayName = userDimName;
             }
             dimDefItem.type != null && (resultItem.type = dimDefItem.type);
@@ -154,9 +157,6 @@ export default function createDimensions(
             const userDimName = isObject(dimDefItemRaw) ? dimDefItemRaw.name : dimDefItemRaw;
             // Name will be applied later for avoiding duplication.
             if (userDimName != null && dataDimNameMap.get(userDimName) == null) {
-                // Only if `series.dimensions` is defined in option
-                // displayName, will be set, and dimension will be diplayed vertically in
-                // tooltip by default.
                 dataDimNameMap.set(userDimName, i);
             }
         }
@@ -249,7 +249,9 @@ export default function createDimensions(
             applyDim(defaults(resultItem, sysDimItem), coordDim, coordDimIndex);
             if (resultItem.name == null && sysDimItemDimsDef) {
                 let sysDimItemDimsDefItem = sysDimItemDimsDef[coordDimIndex];
-                !isObject(sysDimItemDimsDefItem) && (sysDimItemDimsDefItem = {name: sysDimItemDimsDefItem});
+                !isObject(sysDimItemDimsDefItem) && (sysDimItemDimsDefItem = {
+                    name: sysDimItemDimsDefItem
+                });
                 resultItem.name = resultItem.displayName = sysDimItemDimsDefItem.name;
                 resultItem.defaultTooltip = sysDimItemDimsDefItem.defaultTooltip;
             }
@@ -275,8 +277,6 @@ export default function createDimensions(
     const fromZero = generateCoordCount != null;
     generateCoordCount = generateCoord ? (generateCoordCount || 1) : 0;
     const extra = generateCoord || 'value';
-    let coordDimNameAutoIdx = 0;
-    let dataDimNameAutoIdx = 0;
 
     // Set dim `name` and other `coordDim` and other props.
     if (!omitUnusedDimensions) {
@@ -285,11 +285,9 @@ export default function createDimensions(
             const coordDim = resultItem.coordDim;
 
             if (coordDim == null) {
-                const res = genName(
-                    extra, coordDimNameMap, coordDimNameAutoIdx, fromZero
+                resultItem.coordDim = genName(
+                    extra, coordDimNameMap, fromZero
                 );
-                coordDimNameAutoIdx = res.autoIdx;
-                resultItem.coordDim = res.name;
                 resultItem.coordDimIndex = 0;
                 // Series specified generateCoord is using out.
                 if (!generateCoord || generateCoordCount <= 0) {
@@ -299,11 +297,9 @@ export default function createDimensions(
             }
 
             if (resultItem.name == null) {
-                const res = genName(
-                    resultItem.coordDim, dataDimNameMap, dataDimNameAutoIdx, false
+                resultItem.name = genName(
+                    resultItem.coordDim, dataDimNameMap, false
                 );
-                resultItem.name = res.name;
-                dataDimNameAutoIdx = res.autoIdx;
             }
 
             if (resultItem.type == null
@@ -383,18 +379,16 @@ export function getDimCount(
 function genName(
     name: DimensionName,
     map: HashMap<unknown, DimensionName>,
-    autoIdx: number,
     fromZero: boolean
-): { name: DimensionName, autoIdx: number } {
+) {
     const mapData = map.data;
     if (fromZero || mapData.hasOwnProperty(name)) {
-        let i = autoIdx || 0;
+        let i = 0;
         while (mapData.hasOwnProperty(name + i)) {
             i++;
         }
         name += i;
-        autoIdx = i + 1;
     }
     map.set(name, true);
-    return { name, autoIdx };
+    return name;
 }

@@ -24,7 +24,7 @@ import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../core/CoordinateSystem';
 import {getCoordSysInfoBySeries} from '../../model/referHelper';
-import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../../data/Source';
+import { createSourceFromSeriesDataOption, Source } from '../../data/Source';
 import {enableDataStack} from '../../data/helper/dataStackHelper';
 import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
 import {
