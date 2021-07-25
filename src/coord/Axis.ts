@@ -30,6 +30,7 @@ import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
 import { AxisBaseOption, OptionAxisType } from './axisCommonTypes';
 import { AxisBaseModel } from './AxisBaseModel';
+import TimeScale from '../scale/Time';
 
 const NORMALIZED_EXTENT = [0, 1] as [number, number];
 
@@ -246,7 +247,13 @@ class Axis {
         const axisExtent = this._extent;
         const dataExtent = this.scale.getExtent();
 
-        let len = dataExtent[1] - dataExtent[0] + (this.onBand ? 1 : 0);
+        let len = 0;
+        if (this.scale.type === 'time') {
+            len = Math.ceil((dataExtent[1] - dataExtent[0]) / (this.scale as TimeScale)._approxInterval);
+        }
+        else {
+            len = dataExtent[1] - dataExtent[0] + (this.onBand ? 1 : 0);
+        }
         // Fix #2728, avoid NaN when only one data.
         len === 0 && (len = 1);
 
