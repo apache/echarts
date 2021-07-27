@@ -57,6 +57,10 @@ class CalendarView extends ComponentView {
     type = CalendarView.type;
 
     /**
+     * invalid date line points
+     */
+    private _invalidpoints: number[] = [0, 0];
+    /**
      * top/left line points
      */
     private _tlpoints: number[][];
@@ -177,8 +181,8 @@ class CalendarView extends ComponentView {
 
             const points = self._getLinePointsOfOneWeek(calendarModel, date, orient);
 
-            self._tlpoints.push(points[0]);
-            self._blpoints.push(points[points.length - 1]);
+            self._tlpoints.push(points[0] ?? self._invalidpoints);
+            self._blpoints.push(points[points.length - 1] ?? self._invalidpoints);
 
             show && self._drawSplitline(points, lineStyleModel, group);
         }
