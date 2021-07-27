@@ -39,8 +39,7 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
-
-
+        <div id="main2"></div>
 
 
 
@@ -87,9 +86,9 @@ under the License.
                             emphasis: {
                                 focus: 'series'
                             },
-                            lineStyle: {
-                                color: '#FEC171'
-                            },
+                            // lineStyle: {
+                            //     color: '#FEC171'
+                            // },
                             data: [15, 200, 3000, 50000, 1200000],
                             markLine: {
                                 data: [{
@@ -110,35 +109,41 @@ under the License.
                             emphasis: {
                                 focus: 'series'
                             },
-                            lineStyle: {
-                                color: '#409EFF'
-                            },
+                            // lineStyle: {
+                            //     color: '#409EFF'
+                            // },
                             data: [1200000, 50000, 3000, 200, 15],
                             markLine: {
                                 data: [{
-                                    name: `Y 轴值为 150 的水平线`,
-                                    yAxis: 150
+                                    name: `X 轴值为 4-2 的水平线`,
+                                    xAxis: '4-2'
                                 }],
                                 lineStyle: {
-                                    color: '#30B08F'
+                                    color: 'red'
                                 }
                             }
                         }
                     ],
                     visualMap: {
-                        show: false,
+                        // show: false,
                         pieces: [{
-                            gt: 0,
+                            gte: 0,
                             lte: 150,
                             color: '#30B08F'
                         }, {
                             gt: 150,
                             color: '#C03639'
                         }],
-                        left: '55%',
-                        top: -2,
-                        orient: 'horizontal'
-                    }
+                        outOfRange: {
+                            color: 'gray'
+                        },
+                        right: '10%',
+                        bottom: '10%',
+                        orient: 'vertical'
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }]
                 };
 
                 testHelper.create(echarts, 'main0', {
@@ -221,6 +226,144 @@ under the License.
                 });
             });
 
+        </script>
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: {
+                        type: 'time'
+                    },
+                    yAxis: {
+                        //type: 'log',
+                        //logBase: 2
+                    },
+                    visualMap: {
+                        top: 50,
+                        right: 10,
+                        pieces: [
+                            {
+                                "gte": 300,
+                                "lt": 400,
+                                "color": "#FF2E00"
+                            },
+                            {
+                                "gte": 400,
+                                "color": "#D00000"
+                            }
+                        ],
+                        outOfRange: {
+                            color: '#999'
+                        }
+                    },
+                    dataZoom: [{
+                        startValue: '2014-06-01'
+                    }, {
+                        type: 'inside'
+                    }],
+                    series: {
+                        name: 'Beijing AQI',
+                        type: 'line',
+                        data: [
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626943980000,
+                                    128
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944040000,
+                                    186
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944100000,
+                                    262
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944160000,
+                                    231
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944220000,
+                                    65
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944280000,
+                                    200
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944340000,
+                                    31
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944400000,
+                                    241
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944460000,
+                                    103
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944520000,
+                                    172
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944580000,
+                                    241
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944640000,
+                                    222
+                                ]
+                            }
+                        ]
+                    }
+                };
+
+                testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Line color should be correct when visualMap is enabled',
+                        'Test case from https://github.com/apache/echarts/issues/15407'
+                    ],
+                    option: option
+                });
+            });
         </script>
 
 
