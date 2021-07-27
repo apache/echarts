@@ -1122,20 +1122,37 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         modelUtil.setAttribute(this.getDom(), DOM_ATTRIBUTE_KEY, '');
 
-        const api = this._api;
-        const ecModel = this._model;
+        const chart = this;
+        const api = chart._api;
+        const ecModel = chart._model;
 
-        each(this._componentsViews, function (component) {
+        each(chart._componentsViews, function (component) {
             component.dispose(ecModel, api);
         });
-        each(this._chartsViews, function (chart) {
+        each(chart._chartsViews, function (chart) {
             chart.dispose(ecModel, api);
         });
 
         // Dispose after all views disposed
-        this._zr.dispose();
+        chart._zr.dispose();
 
-        delete instances[this.id];
+        // Set properties to null.
+        // To reduce the memory cost in case the top code still holds this instance unexpectedly.
+        chart._dom =
+        chart._model =
+        chart._chartsMap =
+        chart._componentsMap =
+        chart._chartsViews =
+        chart._componentsViews =
+        chart._scheduler =
+        chart._api =
+        chart._zr =
+        chart._throttledZrFlush =
+        chart._theme =
+        chart._coordSysMgr =
+        chart._messageCenter = null;
+
+        delete instances[chart.id];
     }
 
     /**
