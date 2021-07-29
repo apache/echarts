@@ -115,8 +115,8 @@ function setLinePoints(targetShape: ECLinePath['shape'], points: number[][]) {
     type CurveShape = ECLinePath['shape'] & {
         cpx1: number
         cpy1: number
-        cpx2?: number
-        cpy2?: number
+        cpx2?: number | null
+        cpy2?: number | null
     };
 
     targetShape.x1 = points[0][0];
@@ -141,8 +141,8 @@ function setLinePoints(targetShape: ECLinePath['shape'], points: number[][]) {
         (targetShape as CurveShape).cpy2 = cp2[1];
     }
     else {
-        (targetShape as CurveShape).cpx2 = NaN;
-        (targetShape as CurveShape).cpy2 = NaN;
+        (targetShape as CurveShape).cpx2 = null;
+        (targetShape as CurveShape).cpy2 = null;
     }
 }
 
