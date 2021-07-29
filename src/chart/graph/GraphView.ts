@@ -37,6 +37,8 @@ import List from '../../data/List';
 import Line from '../helper/Line';
 import { getECData } from '../../util/innerStore';
 
+import { simpleLayoutEdge } from './simpleLayoutHelper';
+
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
 }
@@ -139,13 +141,20 @@ class GraphView extends ChartView {
                         // Write position back to layout
                         data.setItemLayout(idx, [el.x, el.y]);
                     }
+                    // handle simple layout dragging
+                    if (!seriesModel.get('layout') || seriesModel.get('layout') === 'none') {
+                        data.setItemLayout(idx, [el.x, el.y]);
+                        // update edge
+                        simpleLayoutEdge(seriesModel.getGraph(), seriesModel);
+                        this.updateLayout(seriesModel);
+                    }
                 }).on('dragend', () => {
                     if (forceLayout) {
                         forceLayout.setUnfixed(idx);
                     }
                 });
             }
-            el.setDraggable(draggable && !!forceLayout);
+            el.setDraggable(draggable);
 
             const focus = itemModel.get(['emphasis', 'focus']);
 
