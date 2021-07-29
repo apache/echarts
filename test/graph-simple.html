@@ -75,7 +75,8 @@ under the License.
                                     name: '节点1',
                                     x: 300,
                                     y: 300,
-                                    value: 'set_style_on_item'
+                                    value: 'set_style_on_item',
+                                    draggable: true,
                                 }, {
                                     name: '节点2',
                                     x: 800,
@@ -162,7 +163,7 @@ under the License.
                     title: [
                         '[focusNodeAdjacency: **true**]',
                         'hover node3, edge label should be displayed.',
-                        '节点1 should display value in tooltip.',
+                        '节点1 should display value in tooltip, and should be draggable',
                         'series.lineStyle: 5',
                         'hover set_style_on_item, lineStyle: {opacity 0.1, color: "blue", width: 20}, label: {color: "red", fontSize: 40}.',
                         'focusNodeAdjacency triggered and returned, opacity change MUST NOT be kept'
@@ -175,7 +176,7 @@ under the License.
                     title: [
                         '[focusNodeAdjacency: **false**]',
                         'hover node3, edge label should be displayed.',
-                        '节点1 should display value in tooltip.',
+                        '节点1 should display value in tooltip, and should be draggable',
                         'hover set_style_on_item, lineStyle: {opacity 0.1, color: "blue", width: 20}, label: {color: "red", fontSize: 40}.',
                         'focusNodeAdjacency triggered and returned, opacity change MUST NOT be kept'
                     ],
