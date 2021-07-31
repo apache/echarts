@@ -333,6 +333,9 @@ class GraphNode {
     // Used in traverse of Graph
     __visited: boolean;
 
+    // NOTE: only use in circular layout
+    private _fixed: boolean = false;
+
     constructor(id?: string, dataIndex?: number) {
         this.id = id == null ? '' : id;
         this.dataIndex = dataIndex == null ? -1 : dataIndex;
@@ -386,6 +389,14 @@ class GraphNode {
             dataIndices.node.push(adjacentEdge.node1.dataIndex, adjacentEdge.node2.dataIndex);
         }
         return dataIndices;
+    }
+
+    setFixed(fixed: boolean) {
+        this._fixed = fixed;
+    }
+
+    getFixed() {
+        return this._fixed;
     }
 }
 
