@@ -118,60 +118,62 @@ export default function adjustEdge(graph: Graph, scale: number) {
             }
         }
         const originalPoints = linePoints.__original;
+        if(edge.node1 !== edge.node2){
         // Quadratic curve
-        if (linePoints[2] != null) {
-            vec2.copy(pts[0], originalPoints[0]);
-            vec2.copy(pts[1], originalPoints[2]);
-            vec2.copy(pts[2], originalPoints[1]);
-            if (fromSymbol && fromSymbol !== 'none') {
-                const symbolSize = getSymbolSize(edge.node1);
+            if (linePoints[2] != null) {
+                vec2.copy(pts[0], originalPoints[0]);
+                vec2.copy(pts[1], originalPoints[2]);
+                vec2.copy(pts[2], originalPoints[1]);
+                if (fromSymbol && fromSymbol !== 'none') {
+                    const symbolSize = getSymbolSize(edge.node1);
 
-                const t = intersectCurveCircle(pts, originalPoints[0], symbolSize * scale);
-                // Subdivide and get the second
-                quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
-                pts[0][0] = tmp0[3];
-                pts[1][0] = tmp0[4];
-                quadraticSubdivide(pts[0][1], pts[1][1], pts[2][1], t, tmp0);
-                pts[0][1] = tmp0[3];
-                pts[1][1] = tmp0[4];
+                    const t = intersectCurveCircle(pts, originalPoints[0], symbolSize * scale);
+                    // Subdivide and get the second
+                    quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
+                    pts[0][0] = tmp0[3];
+                    pts[1][0] = tmp0[4];
+                    quadraticSubdivide(pts[0][1], pts[1][1], pts[2][1], t, tmp0);
+                    pts[0][1] = tmp0[3];
+                    pts[1][1] = tmp0[4];
+                }
+                if (toSymbol && toSymbol !== 'none') {
+                    const symbolSize = getSymbolSize(edge.node2);
+
+                    const t = intersectCurveCircle(pts, originalPoints[1], symbolSize * scale);
+                    // Subdivide and get the first
+                    quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
+                    pts[1][0] = tmp0[1];
+                    pts[2][0] = tmp0[2];
+                    quadraticSubdivide(pts[0][1], pts[1][1], pts[2][1], t, tmp0);
+                    pts[1][1] = tmp0[1];
+                    pts[2][1] = tmp0[2];
+                }
+                // Copy back to layout
+                vec2.copy(linePoints[0], pts[0]);
+                vec2.copy(linePoints[1], pts[2]);
+                vec2.copy(linePoints[2], pts[1]);
             }
-            if (toSymbol && toSymbol !== 'none') {
-                const symbolSize = getSymbolSize(edge.node2);
+            // Line
+            else {
+                vec2.copy(pts2[0], originalPoints[0]);
+                vec2.copy(pts2[1], originalPoints[1]);
 
-                const t = intersectCurveCircle(pts, originalPoints[1], symbolSize * scale);
-                // Subdivide and get the first
-                quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
-                pts[1][0] = tmp0[1];
-                pts[2][0] = tmp0[2];
-                quadraticSubdivide(pts[0][1], pts[1][1], pts[2][1], t, tmp0);
-                pts[1][1] = tmp0[1];
-                pts[2][1] = tmp0[2];
+                vec2.sub(v, pts2[1], pts2[0]);
+                vec2.normalize(v, v);
+                if (fromSymbol && fromSymbol !== 'none') {
+
+                    const symbolSize = getSymbolSize(edge.node1);
+
+                    vec2.scaleAndAdd(pts2[0], pts2[0], v, symbolSize * scale);
+                }
+                if (toSymbol && toSymbol !== 'none') {
+                    const symbolSize = getSymbolSize(edge.node2);
+
+                    vec2.scaleAndAdd(pts2[1], pts2[1], v, -symbolSize * scale);
+                }
+                vec2.copy(linePoints[0], pts2[0]);
+                vec2.copy(linePoints[1], pts2[1]);
             }
-            // Copy back to layout
-            vec2.copy(linePoints[0], pts[0]);
-            vec2.copy(linePoints[1], pts[2]);
-            vec2.copy(linePoints[2], pts[1]);
-        }
-        // Line
-        else {
-            vec2.copy(pts2[0], originalPoints[0]);
-            vec2.copy(pts2[1], originalPoints[1]);
-
-            vec2.sub(v, pts2[1], pts2[0]);
-            vec2.normalize(v, v);
-            if (fromSymbol && fromSymbol !== 'none') {
-
-                const symbolSize = getSymbolSize(edge.node1);
-
-                vec2.scaleAndAdd(pts2[0], pts2[0], v, symbolSize * scale);
-            }
-            if (toSymbol && toSymbol !== 'none') {
-                const symbolSize = getSymbolSize(edge.node2);
-
-                vec2.scaleAndAdd(pts2[1], pts2[1], v, -symbolSize * scale);
-            }
-            vec2.copy(linePoints[0], pts2[0]);
-            vec2.copy(linePoints[1], pts2[1]);
         }
     });
 }
