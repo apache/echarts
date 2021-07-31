@@ -20,8 +20,9 @@
 
 import * as vec2 from 'zrender/src/core/vector';
 import {getSymbolSize, getNodeGlobalScale} from './graphHelper';
-import GraphSeriesModel, { GraphEdgeItemOption } from './GraphSeries';
-import Graph from '../../data/Graph';
+import GraphSeriesModel, { GraphEdgeItemOption, GraphNodeItemOption } from './GraphSeries';
+import Graph, { GraphNode } from '../../data/Graph';
+import Symbol from '../helper/Symbol';
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
 import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
@@ -51,7 +52,8 @@ const _symbolRadiansHalf: number[] = [];
  */
 export function circularLayout(
     seriesModel: GraphSeriesModel,
-    basedOn: 'value' | 'symbolSize'
+    basedOn: 'value' | 'symbolSize',
+    draggingNode?: GraphNode
 ) {
     const coordSys = seriesModel.coordinateSystem;
     if (coordSys && coordSys.type !== 'view') {
@@ -75,6 +77,25 @@ export function circularLayout(
 
     if (!count) {
         return;
+    }
+
+    if (draggingNode) {
+        const [tempX, tempY] = draggingNode.getLayout();
+        const tan = (tempY - cy) / (tempX - cx);
+        const radian = -Math.atan(tan);
+
+        tempX > cx
+        ? draggingNode.setLayout([
+            r * Math.cos(radian) + cx,
+            r * -Math.sin(radian) + cy
+        ]) : draggingNode.setLayout([
+            r * -Math.cos(radian) + cx,
+            r * Math.sin(radian) + cy
+        ]);
+
+        const circularRotateLabel = seriesModel.get('layout') === 'circular'
+                && seriesModel.get(['circular', 'rotateLabel']);
+        rotateNodeLabel(draggingNode, circularRotateLabel, cx, cy);
     }
 
     _layoutNodesBasedOn[basedOn](seriesModel, graph, nodeData, r, cx, cy, count);
@@ -163,7 +184,8 @@ const _layoutNodesBasedOn: Record<'value' | 'symbolSize', LayoutNode> = {
             const radianHalf = halfRemainRadian + _symbolRadiansHalf[node.dataIndex];
 
             angle += radianHalf;
-            node.setLayout([
+            // auto circular layout for not dragged node
+            !node.getFixed() && node.setLayout([
                 r * Math.cos(angle) + cx,
                 r * Math.sin(angle) + cy
             ]);
@@ -171,3 +193,42 @@ const _layoutNodesBasedOn: Record<'value' | 'symbolSize', LayoutNode> = {
         });
     }
 };
+
+export function rotateNodeLabel(
+    node: GraphNode,
+    circularRotateLabel: boolean,
+    cx: number,
+    cy: number
+) {
+    const nodeModel = node.getModel<GraphNodeItemOption>();
+    const el = node.getGraphicEl() as Symbol;
+    let labelRotate = nodeModel.get(['label', 'rotate']) || 0;
+    const symbolPath = el.getSymbolPath();
+    if (circularRotateLabel) {
+        const pos = node.getLayout();
+        let rad = Math.atan2(pos[1] - cy, pos[0] - cx);
+        if (rad < 0) {
+            rad = Math.PI * 2 + rad;
+        }
+        const isLeft = pos[0] < cx;
+        if (isLeft) {
+            rad = rad - Math.PI;
+        }
+        const textPosition = isLeft ? 'left' as const : 'right' as const;
+
+        symbolPath.setTextConfig({
+            rotation: -rad,
+            position: textPosition,
+            origin: 'center'
+        });
+        const emphasisState = symbolPath.ensureState('emphasis');
+        zrUtil.extend(emphasisState.textConfig || (emphasisState.textConfig = {}), {
+            position: textPosition
+        });
+    }
+    else {
+        symbolPath.setTextConfig({
+            rotation: labelRotate *= Math.PI / 180
+        });
+    }
+}
