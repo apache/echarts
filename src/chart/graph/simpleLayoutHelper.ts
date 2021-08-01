@@ -69,6 +69,5 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
             ]);
         }
         edge.setLayout(points);
-        console.log(points);
     });
 }
