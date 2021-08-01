@@ -248,9 +248,9 @@ export default function adjustEdge(graph: Graph, scale: number) {
                 pts3[1][0] = tmp0[5];
                 pts3[2][0] = tmp0[6];
                 cubicSubdivide(pts3[0][1], pts3[1][1], pts3[2][1], pts3[3][1], t, tmp0);
-                pts3[0][1] = tmp0[1];
-                pts3[1][1] = tmp0[2];
-                pts3[2][1] = tmp0[3];
+                pts3[0][1] = tmp0[4];
+                pts3[1][1] = tmp0[5];
+                pts3[2][1] = tmp0[6];
             }
             if (toSymbol && toSymbol !== 'none') {
                 const symbolSize = getSymbolSize(edge.node2);
@@ -268,8 +268,8 @@ export default function adjustEdge(graph: Graph, scale: number) {
             }
             vec2.copy(linePoints[0], pts3[0]);
             vec2.copy(linePoints[1], pts3[3]);
-            vec2.copy(linePoints[2], linePoints[2]);
-            vec2.copy(linePoints[3], linePoints[3]);
+            vec2.copy(linePoints[2], pts3[1]);
+            vec2.copy(linePoints[3], pts3[2]);
         }
     });
 }
