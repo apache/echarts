@@ -26,6 +26,7 @@ const v1: number[] = [];
 const v2: number[] = [];
 const v3: number[] = [];
 const quadraticAt = curveTool.quadraticAt;
+const cubicAt = curveTool.cubicAt;
 const v2DistSquare = vec2.distSquare;
 const mathAbs = Math.abs;
 function intersectCurveCircle(
@@ -36,57 +37,109 @@ function intersectCurveCircle(
     const p0 = curvePoints[0];
     const p1 = curvePoints[1];
     const p2 = curvePoints[2];
+    const p3 = curvePoints[3];
 
     let d = Infinity;
     let t;
     const radiusSquare = radius * radius;
     let interval = 0.1;
 
-    for (let _t = 0.1; _t <= 0.9; _t += 0.1) {
-        v1[0] = quadraticAt(p0[0], p1[0], p2[0], _t);
-        v1[1] = quadraticAt(p0[1], p1[1], p2[1], _t);
-        const diff = mathAbs(v2DistSquare(v1, center) - radiusSquare);
-        if (diff < d) {
-            d = diff;
-            t = _t;
+    if(p3) {
+        for (let _t = 0.1; _t <= 0.9; _t += 0.1) {
+            v1[0] = cubicAt(p0[0], p1[0], p2[0], p3[0], _t);
+            v1[1] = cubicAt(p0[1], p1[1], p2[1], p3[1], _t);
+            const diff = mathAbs(v2DistSquare(v1, center) - radiusSquare);
+            if (diff < d) {
+                d = diff;
+                t = _t;
+            }
+        }
+        // Assume the segment is monotone，Find root through Bisection method
+        // At most 32 iteration
+        for (let i = 0; i < 32; i++) {
+            // let prev = t - interval;
+            const next = t + interval;
+            // v1[0] = quadraticAt(p0[0], p1[0], p2[0], prev);
+            // v1[1] = quadraticAt(p0[1], p1[1], p2[1], prev);
+            v2[0] = cubicAt(p0[0], p1[0], p2[0], p3[0], t);
+            v2[1] = cubicAt(p0[1], p1[1], p2[1], p3[1], t);
+            v3[0] = cubicAt(p0[0], p1[0], p2[0], p3[0], next);
+            v3[1] = cubicAt(p0[1], p1[1], p2[1], p3[1], next);
+
+            const diff = v2DistSquare(v2, center) - radiusSquare;
+            if (mathAbs(diff) < 1e-2) {
+                break;
+            }
+
+            // let prevDiff = v2DistSquare(v1, center) - radiusSquare;
+            const nextDiff = v2DistSquare(v3, center) - radiusSquare;
+
+            interval /= 2;
+            if (diff < 0) {
+                if (nextDiff >= 0) {
+                    t = t + interval;
+                }
+                else {
+                    t = t - interval;
+                }
+            }
+            else {
+                if (nextDiff >= 0) {
+                    t = t - interval;
+                }
+                else {
+                    t = t + interval;
+                }
+            }
         }
     }
-
-    // Assume the segment is monotone，Find root through Bisection method
-    // At most 32 iteration
-    for (let i = 0; i < 32; i++) {
-        // let prev = t - interval;
-        const next = t + interval;
-        // v1[0] = quadraticAt(p0[0], p1[0], p2[0], prev);
-        // v1[1] = quadraticAt(p0[1], p1[1], p2[1], prev);
-        v2[0] = quadraticAt(p0[0], p1[0], p2[0], t);
-        v2[1] = quadraticAt(p0[1], p1[1], p2[1], t);
-        v3[0] = quadraticAt(p0[0], p1[0], p2[0], next);
-        v3[1] = quadraticAt(p0[1], p1[1], p2[1], next);
-
-        const diff = v2DistSquare(v2, center) - radiusSquare;
-        if (mathAbs(diff) < 1e-2) {
-            break;
-        }
-
-        // let prevDiff = v2DistSquare(v1, center) - radiusSquare;
-        const nextDiff = v2DistSquare(v3, center) - radiusSquare;
-
-        interval /= 2;
-        if (diff < 0) {
-            if (nextDiff >= 0) {
-                t = t + interval;
-            }
-            else {
-                t = t - interval;
+    else {
+        for (let _t = 0.1; _t <= 0.9; _t += 0.1) {
+            v1[0] = quadraticAt(p0[0], p1[0], p2[0], _t);
+            v1[1] = quadraticAt(p0[1], p1[1], p2[1], _t);
+            const diff = mathAbs(v2DistSquare(v1, center) - radiusSquare);
+            if (diff < d) {
+                d = diff;
+                t = _t;
             }
         }
-        else {
-            if (nextDiff >= 0) {
-                t = t - interval;
+
+        // Assume the segment is monotone，Find root through Bisection method
+        // At most 32 iteration
+        for (let i = 0; i < 32; i++) {
+            // let prev = t - interval;
+            const next = t + interval;
+            // v1[0] = quadraticAt(p0[0], p1[0], p2[0], prev);
+            // v1[1] = quadraticAt(p0[1], p1[1], p2[1], prev);
+            v2[0] = quadraticAt(p0[0], p1[0], p2[0], t);
+            v2[1] = quadraticAt(p0[1], p1[1], p2[1], t);
+            v3[0] = quadraticAt(p0[0], p1[0], p2[0], next);
+            v3[1] = quadraticAt(p0[1], p1[1], p2[1], next);
+
+            const diff = v2DistSquare(v2, center) - radiusSquare;
+            if (mathAbs(diff) < 1e-2) {
+                break;
+            }
+
+            // let prevDiff = v2DistSquare(v1, center) - radiusSquare;
+            const nextDiff = v2DistSquare(v3, center) - radiusSquare;
+
+            interval /= 2;
+            if (diff < 0) {
+                if (nextDiff >= 0) {
+                    t = t + interval;
+                }
+                else {
+                    t = t - interval;
+                }
             }
             else {
-                t = t + interval;
+                if (nextDiff >= 0) {
+                    t = t - interval;
+                }
+                else {
+                    t = t + interval;
+                }
             }
         }
     }
@@ -98,8 +151,10 @@ function intersectCurveCircle(
 export default function adjustEdge(graph: Graph, scale: number) {
     const tmp0: number[] = [];
     const quadraticSubdivide = curveTool.quadraticSubdivide;
+    const cubicSubdivide = curveTool.cubicSubdivide;
     const pts: number[][] = [[], [], []];
     const pts2: number[][] = [[], []];
+    const pts3 : number[][] = [[], [], [], []];
     const v: number[] = [];
     scale /= 2;
 
@@ -115,6 +170,9 @@ export default function adjustEdge(graph: Graph, scale: number) {
             ];
             if (linePoints[2]) {
                 linePoints.__original.push(vec2.clone(linePoints[2]));
+            }
+            if (linePoints[3]) {
+                linePoints.__original.push(vec2.clone(linePoints[3]));
             }
         }
         const originalPoints = linePoints.__original;
@@ -174,6 +232,44 @@ export default function adjustEdge(graph: Graph, scale: number) {
                 vec2.copy(linePoints[0], pts2[0]);
                 vec2.copy(linePoints[1], pts2[1]);
             }
+        }
+        else {
+            vec2.copy(pts3[0], originalPoints[0]);
+            vec2.copy(pts3[1], originalPoints[2]);
+            vec2.copy(pts3[2], originalPoints[3]);
+            vec2.copy(pts3[3], originalPoints[1]);
+            if (fromSymbol && fromSymbol !== 'none') {
+                const symbolSize = getSymbolSize(edge.node1);
+
+                const t = intersectCurveCircle(pts3, originalPoints[0], symbolSize * scale);
+                // Subdivide and get the second
+                cubicSubdivide(pts3[0][0], pts3[1][0], pts3[2][0], pts3[3][0], t, tmp0);
+                pts3[0][0] = tmp0[4];
+                pts3[1][0] = tmp0[5];
+                pts3[2][0] = tmp0[6];
+                cubicSubdivide(pts3[0][1], pts3[1][1], pts3[2][1], pts3[3][1], t, tmp0);
+                pts3[0][1] = tmp0[1];
+                pts3[1][1] = tmp0[2];
+                pts3[2][1] = tmp0[3];
+            }
+            if (toSymbol && toSymbol !== 'none') {
+                const symbolSize = getSymbolSize(edge.node2);
+
+                const t = intersectCurveCircle(pts3, originalPoints[1], symbolSize * scale);
+                // Subdivide and get the first
+                cubicSubdivide(pts3[0][0], pts3[1][0], pts3[2][0], pts3[3][0],t, tmp0);
+                pts3[1][0] = tmp0[1];
+                pts3[2][0] = tmp0[2];
+                pts3[3][0] = tmp0[3];
+                cubicSubdivide(pts3[0][1], pts3[1][1], pts3[2][1], pts3[3][1], t, tmp0);
+                pts3[1][1] = tmp0[1];
+                pts3[2][1] = tmp0[2];
+                pts3[3][1] = tmp0[3];
+            }
+            vec2.copy(linePoints[0], pts3[0]);
+            vec2.copy(linePoints[1], pts3[3]);
+            vec2.copy(linePoints[2], linePoints[2]);
+            vec2.copy(linePoints[3], linePoints[3]);
         }
     });
 }

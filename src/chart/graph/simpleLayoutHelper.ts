@@ -49,19 +49,17 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
         );
         const p1 = vec2.clone(edge.node1.getLayout());
         const p2 = vec2.clone(edge.node2.getLayout());
-        let points = [p1, p2];
+        const points = [p1, p2];
         if (edge.node1 === edge.node2) {
             const size = Number(seriesModel.get('symbolSize'));
             const radius = getNodeGlobalScale(seriesModel) * size / 2;
-            points = [[p1[0] - radius * Math.sin(20 * Math.PI / 180), p1[1] - radius * Math.cos(20 * Math.PI / 180)]];
-            points.push([2 * p1[0] - points[0][0], points[0][1]]);
             points.push([
-                p1[0] - radius,
-                p2[1] - radius * 4
+                p1[0] - radius * 4,
+                p2[1] - radius * 8,
             ]);
             points.push([
-                p1[0] + radius,
-                p2[1] - radius * 4
+                p1[0] + radius * 4,
+                p2[1] - radius * 8,
             ]);
         }
         else if (+curveness) {
@@ -71,5 +69,6 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
             ]);
         }
         edge.setLayout(points);
+        console.log(points);
     });
 }
