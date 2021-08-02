@@ -26,6 +26,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
 import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './GraphSeries';
 import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
+import { getNodeGlobalScale, getSymbolSize } from './graphHelper';
 
 export interface ForceLayoutInstance {
     step(cb: (stopped: boolean) => void): void
@@ -144,7 +145,13 @@ export default function graphForceLayout(ecModel: GlobalModel) {
                     points[1] = points[1] || [];
                     vec2.copy(points[0], p1);
                     vec2.copy(points[1], p2);
-                    if (+e.curveness) {
+                    if(e.n1 === e.n2) {
+                        const size = getSymbolSize(edge.node1);
+                        const radius = getNodeGlobalScale(graphSeries) * size / 2;
+                        points[2] = [p1[0] - radius * 2, p2[1] - radius * 4];
+                        points[3] = [p1[0] + radius * 2, p2[1] - radius * 4];
+                    }
+                    else if (+e.curveness) {
                         points[2] = [
                             (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * e.curveness,
                             (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * e.curveness

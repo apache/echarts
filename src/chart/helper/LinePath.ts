@@ -43,6 +43,8 @@ class StraightLineShape {
 class CurveShape extends StraightLineShape {
     cpx1: number;
     cpy1: number;
+    cpx2?: number | null = null;
+    cpy2?: number | null = null;
 }
 
 interface ECLineProps extends PathProps {

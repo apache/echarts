@@ -22,6 +22,7 @@ import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './Gr
 import Graph from '../../data/Graph';
 import * as zrUtil from 'zrender/src/core/util';
 import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
+import { getNodeGlobalScale } from './graphHelper';
 
 
 export function simpleLayout(seriesModel: GraphSeriesModel) {
@@ -49,10 +50,22 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
         const p1 = vec2.clone(edge.node1.getLayout());
         const p2 = vec2.clone(edge.node2.getLayout());
         const points = [p1, p2];
-        if (+curveness) {
+        if (edge.node1 === edge.node2) {
+            const size = Number(seriesModel.get('symbolSize'));
+            const radius = getNodeGlobalScale(seriesModel) * size / 2;
             points.push([
-                (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * curveness,
-                (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * curveness
+                p1[0] - radius * 2,
+                p2[1] - radius * 4,
+            ]);
+            points.push([
+                p1[0] + radius * 2,
+                p2[1] - radius * 4,
+            ]);
+        }
+        else if (+curveness) {
+            points.push([
+                (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * curveness / 2,
+                (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * curveness / 2
             ]);
         }
         edge.setLayout(points);
