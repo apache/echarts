@@ -54,12 +54,12 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
             const size = Number(seriesModel.get('symbolSize'));
             const radius = getNodeGlobalScale(seriesModel) * size / 2;
             points.push([
-                p1[0] - radius * 4,
-                p2[1] - radius * 8,
+                p1[0] - radius * 2,
+                p2[1] - radius * 4,
             ]);
             points.push([
-                p1[0] + radius * 4,
-                p2[1] - radius * 8,
+                p1[0] + radius * 2,
+                p2[1] - radius * 4,
             ]);
         }
         else if (+curveness) {
