@@ -59,9 +59,14 @@ import { convertToColorString } from '../../util/format';
 
 type PolarArea = ReturnType<Polar['getArea']>;
 type Cartesian2DArea = ReturnType<Cartesian2D['getArea']>;
-
 interface SymbolExtended extends SymbolClz {
     __temp: boolean
+}
+
+interface ColorStop {
+    offset: number
+    coord?: number
+    color: ColorString
 }
 
 function isPointsSame(points1: ArrayLike<number>, points2: ArrayLike<number>) {
@@ -233,17 +238,17 @@ function getVisualGradient(
     // LinearGradient to render `outerColors`.
 
     const axis = coordSys.getAxis(coordDim);
+    const axisScaleExtent = axis.scale.getExtent();
 
-    interface ColorStop {
-        offset: number
-        coord?: number
-        color: ColorString
-    }
     // dataToCoord mapping may not be linear, but must be monotonic.
     const colorStops: ColorStop[] = zrUtil.map(visualMeta.stops, function (stop) {
+        let coord = axis.toGlobalCoord(axis.dataToCoord(stop.value));
+        // normalize the infinite value
+        isNaN(coord) || isFinite(coord)
+            || (coord = axis.toGlobalCoord(axis.dataToCoord(axisScaleExtent[+(coord < 0)])));
         return {
             offset: 0,
-            coord: axis.toGlobalCoord(axis.dataToCoord(stop.value, true)),
+            coord,
             color: stop.color
         };
     });
