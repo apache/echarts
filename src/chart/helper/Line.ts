@@ -63,6 +63,7 @@ function makeSymbolTypeKey(symbolCategory: 'fromSymbol' | 'toSymbol') {
  * @inner
  */
 function createSymbol(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: number) {
+    const linePoints = lineData.getItemLayout(idx);
     const symbolType = lineData.getItemVisual(idx, name);
     if (!symbolType || symbolType === 'none') {
         return;
@@ -96,7 +97,9 @@ function createSymbol(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: 
     (symbolPath as LineECSymbol).__specifiedRotation = symbolRotate == null || isNaN(symbolRotate)
         ? void 0
         : +symbolRotate * Math.PI / 180 || 0;
-
+    // if (linePoints[3] && linePoints.__original) {
+    //     (symbolPath as LineECSymbol).__specifiedRotation = 155 * Math.PI / 180;
+    // }
     symbolPath.name = name;
 
     return symbolPath;
@@ -115,8 +118,8 @@ function setLinePoints(targetShape: ECLinePath['shape'], points: number[][]) {
     type CurveShape = ECLinePath['shape'] & {
         cpx1: number
         cpy1: number
-        cpx2?: number | null
-        cpy2?: number | null
+        cpx2?: number
+        cpy2?: number
     };
 
     targetShape.x1 = points[0][0];

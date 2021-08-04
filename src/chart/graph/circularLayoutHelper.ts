@@ -87,15 +87,15 @@ export function circularLayout(
         );
         const p1 = vec2.clone(edge.node1.getLayout());
         const p2 = vec2.clone(edge.node2.getLayout());
-        let cp1,cp2;
+        let cp1;
+        let cp2;
         const x12 = (p1[0] + p2[0]) / 2;
         const y12 = (p1[1] + p2[1]) / 2;
-        if(edge.node1 === edge.node2) {
+        if (edge.node1 === edge.node2) {
             const size = getSymbolSize(edge.node1);
             const radius = getNodeGlobalScale(seriesModel) * size / 2;
             cp1 = [p1[0] - radius * 2, p2[1] - radius * 4]
-            cp2 = [p1[0] + radius * 2,p2[1] - radius * 4]
-            edge.setLayout([p1, p2, cp1, cp2]);
+            cp2 = [p1[0] + radius * 2, p2[1] - radius * 4]
         }
         else if (+curveness) {
             curveness *= 3;
@@ -103,8 +103,8 @@ export function circularLayout(
                 cx * curveness + x12 * (1 - curveness),
                 cy * curveness + y12 * (1 - curveness)
             ];
-            edge.setLayout([p1, p2, cp1]);
         }
+        edge.setLayout([p1, p2, cp1, cp2]);
     });
 }
 

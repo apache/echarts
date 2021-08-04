@@ -145,7 +145,7 @@ export default function graphForceLayout(ecModel: GlobalModel) {
                     points[1] = points[1] || [];
                     vec2.copy(points[0], p1);
                     vec2.copy(points[1], p2);
-                    if(e.n1 === e.n2) {
+                    if (e.n1 === e.n2) {
                         const size = getSymbolSize(edge.node1);
                         const radius = getNodeGlobalScale(graphSeries) * size / 2;
                         points[2] = [p1[0] - radius * 2, p2[1] - radius * 4];

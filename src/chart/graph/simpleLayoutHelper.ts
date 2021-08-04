@@ -24,6 +24,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
 import { getNodeGlobalScale } from './graphHelper';
 
+const v2DistSquare = vec2.distSquare;
 
 export function simpleLayout(seriesModel: GraphSeriesModel) {
     const coordSys = seriesModel.coordinateSystem;
@@ -54,18 +55,18 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
             const size = Number(seriesModel.get('symbolSize'));
             const radius = getNodeGlobalScale(seriesModel) * size / 2;
             points.push([
-                p1[0] - radius * 2,
-                p2[1] - radius * 4,
+                p1[0] - radius * 4,
+                p2[1] - radius * 6,
             ]);
             points.push([
-                p1[0] + radius * 2,
-                p2[1] - radius * 4,
+                p1[0] + radius * 4,
+                p2[1] - radius * 6,
             ]);
         }
         else if (+curveness) {
             points.push([
-                (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * curveness / 2,
-                (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * curveness / 2
+                (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * curveness,
+                (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * curveness
             ]);
         }
         edge.setLayout(points);
