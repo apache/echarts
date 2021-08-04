@@ -386,6 +386,10 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
             return;
         }
 
+        if (optDim != null) {
+            return data.getDimension(optDim);
+        }
+
         const dimNames = data.dimensions;
         for (let i = dimNames.length - 1; i >= 0; i--) {
             const dimName = dimNames[i];
