@@ -698,7 +698,7 @@ export type DimensionUserOuputEncode = {
 };
 export type DimensionUserOuput = {
     // The same as `data.dimensions`
-    dimensionNames: DimensionName[]
+    fullDimensions: DimensionName[]
     encode: DimensionUserOuputEncode
 };
 

@@ -157,6 +157,7 @@ class DataStorage {
     private _rawCount: number = 0;
 
     private _dimensions: DataStorageDimensionDefine[];
+    private _dimensionNames: string[];
     private _dimValueGetter: DimValueGetter;
 
     defaultDimValueGetter: DimValueGetter;
@@ -166,7 +167,7 @@ class DataStorage {
      */
     initData(
         provider: DataProvider,
-        dimensions: DataStorageDimensionDefine[],
+        inputDimensions: DataStorageDimensionDefine[],
         dimValueGetter?: DimValueGetter
     ): void {
         if (__DEV__) {
@@ -192,7 +193,7 @@ class DataStorage {
 
         // Reset raw extent.
         this._rawExtent = [];
-        this._dimensions = map(dimensions, dim => ({
+        const dimensions = this._dimensions = map(inputDimensions, dim => ({
             // Only pick these two props. Not leak other properties like orderMeta.
             type: dim.type,
             name: dim.name
@@ -202,15 +203,15 @@ class DataStorage {
         let needsHasOwn = false;
 
         // Needs to add prefix if key is used in object prototype
-        for (let i = 0; i < dimensions.length; i++) {
-            const name = dimensions[i].name;
+        for (let i = 0; i < inputDimensions.length; i++) {
+            const name = inputDimensions[i].name;
             if ((emptyObj as any)[name] != null) {
                 needsHasOwn = true;
                 break;
             }
         }
-        for (let i = 0; i < dimensions.length; i++) {
-            const dim = dimensions[i];
+        for (let i = 0; i < inputDimensions.length; i++) {
+            const dim = inputDimensions[i];
             const name = dim.name;
             dimensionsIdxMap[name] = i;
         }
@@ -228,7 +229,6 @@ class DataStorage {
                 needsHasOwn = true;
                 updateGetDimensionIndex();
             }
-            const dimensions = this._dimensions;
             const idx = dimensions.length;
             dimensions.push({
                 name: dimName,
@@ -254,6 +254,10 @@ class DataStorage {
 
     getDimensionIndex: (dim: DimensionName) => number;
     appendDimension: (dim: DimensionName, type: DataStorageDimensionType) => void;
+
+    getDimensionNames() {
+        return map(this._dimensions, dim => dim.name);
+    }
 
     getDimensionCount() {
         return this._dimensions.length;

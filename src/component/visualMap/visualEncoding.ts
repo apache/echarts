@@ -66,10 +66,10 @@ export const visualMapEncodingHandlers: StageHandler[] = [
                     } as VisualMeta;
 
                     const concreteDim = visualMapModel.getDataDimension(data);
-                    const dimInfo = data.getDimensionInfo(concreteDim);
-                    if (dimInfo != null) {
+                    const dimIdx = data.getDimensionIndex(concreteDim);
+                    if (dimIdx >= 0) {
                         // visualMeta.dimension should be dimension index, but not concrete dimension.
-                        visualMeta.dimension = dimInfo.index;
+                        visualMeta.dimension = dimIdx;
                         visualMetaList.push(visualMeta);
                     }
                 }

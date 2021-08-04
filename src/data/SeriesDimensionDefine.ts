@@ -60,13 +60,6 @@ class SeriesDimensionDefine {
      * Mandatory.
      */
     coordDimIndex?: number;
-
-    /**
-     * This index of this dimension info in `data/SeriesData#_dimensionInfos`.
-     * Mandatory after added to `data/SeriesData`.
-     */
-    index?: number;
-
     /**
      * The format of `otherDims` is:
      * ```js

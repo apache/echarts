@@ -56,7 +56,6 @@ import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatToo
 import {ECSymbol} from '../util/symbol';
 import {Group} from '../util/graphic';
 import {LegendIconParams} from '../component/legend/LegendModel';
-import DataStorage from '../data/DataStorage';
 
 const inner = modelUtil.makeInner<{
     data: SeriesData

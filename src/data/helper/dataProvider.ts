@@ -485,14 +485,8 @@ export function retrieveRawValue(
     }
 
     const sourceFormat = data.getStorage().getSource().sourceFormat;
-    let dimName;
-    let dimIndex;
-
-    const dimInfo = data.getDimensionInfo(dim);
-    if (dimInfo) {
-        dimName = dimInfo.name;
-        dimIndex = dimInfo.index;
-    }
+    const dimName = data.getDimension(dim);
+    const dimIndex = dimName != null ? data.getDimensionIndex(dimName) : null;
 
     return getRawSourceValueGetter(sourceFormat)(dataItem, dimIndex, dimName);
 }

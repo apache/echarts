@@ -82,6 +82,7 @@ type MapCb<Ctx> = (this: CtxOrList<Ctx>, ...args: any) => ParsedValue | ParsedVa
 
 const TRANSFERABLE_PROPERTIES = [
     'hasItemOption', '_nameList', '_idList', '_invertedIndicesMap',
+    '_dimensionsSummary', 'userOutput',
     '_rawData', '_dimValueGetter',
     '_nameDimIdx', '_idDimIdx', '_nameRepeatCount'
 ];
@@ -132,7 +133,6 @@ let prepareInvertedIndex: (data: SeriesData) => void;
 let getId: (data: SeriesData, rawIndex: number) => string;
 let getIdNameFromStore: (data: SeriesData, dimIdx: number, dataIdx: number) => string;
 let normalizeDimensions: (dimensions: ItrParamDims) => Array<DimensionLoose>;
-let validateDimensions: (data: SeriesData, dims: DimensionIndex[]) => void;
 let transferProperties: (target: SeriesData, source: SeriesData) => void;
 let cloneListForMapAndSample: (original: SeriesData) => SeriesData;
 let makeIdFromName: (data: SeriesData, idx: number) => void;
@@ -144,6 +144,12 @@ class SeriesData<
 
     readonly type = 'list';
 
+    /**
+     * Name of dimensions list of SeriesData. It's be a subset of the dimensions in the DataStorage.
+     * When DataStorage is an extra high dimension(>30) dataset. We will only pick the used dimensions from DataStorage to avoid performance issue.
+     *
+     * So be careful of using it.
+     */
     readonly dimensions: string[];
 
     // Infomation of each data dimension, like data type.
@@ -208,7 +214,7 @@ class SeriesData<
     // from modifying them to effect built-in logic. And for
     // performance consideration we make this `userOutput` to
     // avoid clone them too many times.
-    readonly userOutput: DimensionUserOuput;
+    userOutput: DimensionUserOuput;
 
     // Having detected that there is data item is non primitive type
     // (in type `OptionDataItemObject`).
@@ -265,8 +271,6 @@ class SeriesData<
             dimensionNames.push(dimensionName);
             dimensionInfos[dimensionName] = dimensionInfo;
 
-            dimensionInfo.index = i;
-
             if (dimensionInfo.createInvertedIndices) {
                 invertedIndicesMap[dimensionName] = [];
             }
@@ -282,12 +286,7 @@ class SeriesData<
         this._dimensionInfos = dimensionInfos;
         this.hostModel = hostModel;
 
-        // Cache summary info for fast visit. See "dimensionHelper".
-        this._dimensionsSummary = summarizeDimensions(this);
-
         this._invertedIndicesMap = invertedIndicesMap;
-
-        this.userOutput = this._dimensionsSummary.userOutput;
     }
 
     /**
@@ -318,6 +317,19 @@ class SeriesData<
             dim = this.dimensions[dim as DimensionIndex];
         }
         return dim as DimensionName;
+    }
+
+    /**
+     * Get dimension index in the storage. Return -1 if not found.
+     * Can be used to index value from getRawValue.
+     */
+    getDimensionIndex(dim: DimensionLoose): number {
+        // For outer usage so it won't throw error as _getStoreDimIndex did.
+        return zrUtil.retrieve2(this._store.getDimensionIndex(this.getDimension(dim)), -1);
+    }
+
+    getStoreDimensions() {
+        return this._store.getDimensionNames();
     }
 
     private _getStoreDimIndex(dim: DimensionLoose): DimensionIndex {
@@ -420,6 +432,11 @@ class SeriesData<
         this._nameRepeatCount = {};
 
         this._doInit(0, store.count());
+
+        // Cache summary info for fast visit. See "dimensionHelper".
+        // Needs to be initialized after store is prepared.
+        this._dimensionsSummary = summarizeDimensions(this);
+        this.userOutput = this._dimensionsSummary.userOutput;
     }
 
     /**

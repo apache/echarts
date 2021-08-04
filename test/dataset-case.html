@@ -119,7 +119,9 @@ under the License.
                     dataset: {
                         source: source
                     },
-                    tooltip: {},
+                    tooltip: {
+                        position: 'top'
+                    },
                     series: {
                         type: 'scatter',
                         encode: {
@@ -137,6 +139,12 @@ under the License.
                     // buttons: [{text: 'btn-txt', onclick: function () {}}],
                     // recordCanvas: true,
                 });
+
+                chart.dispatchAction({
+                    type: 'showTip',
+                    dataIndex: 1,
+                    seriesIndex: 0
+                })
             });
         </script>
     </body>

@@ -58,9 +58,9 @@ export function getDefaultInterpolatedLabel(
 
     const vals = [];
     for (let i = 0; i < labelDims.length; i++) {
-        const dimInfo = data.getDimensionInfo(labelDims[i]);
-        if (dimInfo) {
-            vals.push(interpolatedValue[dimInfo.index]);
+        const dimIndex = data.getDimensionIndex(labelDims[i]);
+        if (dimIndex >= 0) {
+            vals.push(interpolatedValue[dimIndex]);
         }
     }
     return vals.join(' ');

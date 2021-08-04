@@ -50,7 +50,8 @@ export function summarizeDimensions(data: SeriesData): DimensionSummary {
 
     // See the comment of `List.js#userOutput`.
     const userOutput = summary.userOutput = {
-        dimensionNames: data.dimensions.slice(),
+        // Full dimensions in storage.
+        fullDimensions: data.getStorage().getDimensionNames(),
         encode: {}
     };
 
@@ -79,7 +80,7 @@ export function summarizeDimensions(data: SeriesData): DimensionSummary {
 
                 // User output encode do not contain generated coords.
                 // And it only has index. User can use index to retrieve value from the raw item array.
-                getOrCreateEncodeArr(userOutput.encode, coordDim)[coordDimIndex] = dimItem.index;
+                getOrCreateEncodeArr(userOutput.encode, coordDim)[coordDimIndex] = data.getDimensionIndex(dimItem.name);
             }
             if (dimItem.defaultTooltip) {
                 defaultedTooltip.push(dimName);

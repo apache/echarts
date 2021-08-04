@@ -379,21 +379,17 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     /**
      * Return  Concrete dimention. If return null/undefined, no dimension used.
      */
-    getDataDimension(list: SeriesData) {
+    getDataDimension(data: SeriesData) {
         const optDim = this.option.dimension;
-        const listDimensions = list.dimensions;
-        if (optDim == null && !listDimensions.length) {
+        const allDimensions = data.getStoreDimensions();
+        if (optDim == null && !allDimensions.length) {
             return;
         }
 
-        if (optDim != null) {
-            return list.getDimension(optDim);
-        }
-
-        const dimNames = list.dimensions;
+        const dimNames = data.dimensions;
         for (let i = dimNames.length - 1; i >= 0; i--) {
             const dimName = dimNames[i];
-            const dimInfo = list.getDimensionInfo(dimName);
+            const dimInfo = data.getDimensionInfo(dimName);
             if (!dimInfo.isCalculationCoord) {
                 return dimName;
             }

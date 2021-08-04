@@ -87,7 +87,7 @@ export class DataFormatMixin {
             value: rawValue,
             color: color,
             borderColor: borderColor,
-            dimensionNames: userOutput ? userOutput.dimensionNames : null,
+            dimensionNames: userOutput ? userOutput.fullDimensions : null,
             encode: userOutput ? userOutput.encode : null,
 
             // Param name list for mapping `a`, `b`, `c`, `d`, `e`
@@ -156,9 +156,9 @@ export class DataFormatMixin {
                 let val = retrieveRawValue(data, dataIndex, dimLoose) as OptionDataValue;
 
                 if (extendParams && zrUtil.isArray(extendParams.interpolatedValue)) {
-                    const dimInfo = data.getDimensionInfo(dimLoose);
-                    if (dimInfo) {
-                        val = extendParams.interpolatedValue[dimInfo.index];
+                    const dimIndex = data.getDimensionIndex(dimLoose);
+                    if (dimIndex >= 0) {
+                        val = extendParams.interpolatedValue[dimIndex];
                     }
                 }
 
