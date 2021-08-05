@@ -322,7 +322,7 @@ type ECEventDefinition = {
     // TODO: Use ECActionEvent
     [key: string]: (...args: unknown[]) => void | boolean
 };
-type EChartsOpts = {
+type EChartsInitOpts = {
     locale?: string | LocaleOption,
     renderer?: RendererType,
     devicePixelRatio?: number,
@@ -395,7 +395,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         dom: HTMLElement,
         // Theme name or themeOption.
         theme?: string | ThemeOption,
-        opts?: EChartsOpts
+        opts?: EChartsInitOpts
     ) {
         super(new ECEventProcessor());
 
@@ -2544,7 +2544,7 @@ const DOM_ATTRIBUTE_KEY = '_echarts_instance_';
 export function init(
     dom: HTMLElement,
     theme?: string | object,
-    opts?: EChartsOpts
+    opts?: EChartsInitOpts
 ): EChartsType {
     if (__DEV__) {
         if (!dom) {
