@@ -322,6 +322,14 @@ type ECEventDefinition = {
     // TODO: Use ECActionEvent
     [key: string]: (...args: unknown[]) => void | boolean
 };
+type EChartsInitOpts = {
+    locale?: string | LocaleOption,
+    renderer?: RendererType,
+    devicePixelRatio?: number,
+    useDirtyRect?: boolean,
+    width?: number,
+    height?: number
+};
 class ECharts extends Eventful<ECEventDefinition> {
 
     /**
@@ -387,14 +395,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         dom: HTMLElement,
         // Theme name or themeOption.
         theme?: string | ThemeOption,
-        opts?: {
-            locale?: string | LocaleOption,
-            renderer?: RendererType,
-            devicePixelRatio?: number,
-            useDirtyRect?: boolean,
-            width?: number,
-            height?: number
-        }
+        opts?: EChartsInitOpts
     ) {
         super(new ECEventProcessor());
 
@@ -2537,17 +2538,13 @@ const DOM_ATTRIBUTE_KEY = '_echarts_instance_';
  *        Can be 'auto' (the same as null/undefined)
  * @param opts.height Use clientHeight of the input `dom` by default.
  *        Can be 'auto' (the same as null/undefined)
+ * @param opts.locale Specify the locale.
+ * @param opts.useDirtyRect Enable dirty rectangle rendering or not.
  */
 export function init(
     dom: HTMLElement,
     theme?: string | object,
-    opts?: {
-        renderer?: RendererType,
-        devicePixelRatio?: number,
-        width?: number,
-        height?: number,
-        locale?: string | LocaleOption
-    }
+    opts?: EChartsInitOpts
 ): EChartsType {
     if (__DEV__) {
         if (!dom) {
