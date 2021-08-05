@@ -200,8 +200,12 @@ export function rotateNodeLabel(
     cx: number,
     cy: number
 ) {
-    const nodeModel = node.getModel<GraphNodeItemOption>();
     const el = node.getGraphicEl() as Symbol;
+    // need to check if el exists. '-' value may not create node element.
+    if (!el) {
+        return;
+    }
+    const nodeModel = node.getModel<GraphNodeItemOption>();
     let labelRotate = nodeModel.get(['label', 'rotate']) || 0;
     const symbolPath = el.getSymbolPath();
     if (circularRotateLabel) {
