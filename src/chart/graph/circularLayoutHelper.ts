@@ -81,17 +81,10 @@ export function circularLayout(
 
     if (draggingNode) {
         const [tempX, tempY] = draggingNode.getLayout();
-        const tan = (tempY - cy) / (tempX - cx);
-        const radian = -Math.atan(tan);
-
-        tempX > cx
-        ? draggingNode.setLayout([
-            r * Math.cos(radian) + cx,
-            r * -Math.sin(radian) + cy
-        ]) : draggingNode.setLayout([
-            r * -Math.cos(radian) + cx,
-            r * Math.sin(radian) + cy
-        ]);
+        const v = [tempX - cx, tempY - cy];
+        vec2.normalize(v, v);
+        vec2.scale(v, v, r);
+        draggingNode.setLayout([cx + v[0], cy + v[1]]);
 
         const circularRotateLabel = seriesModel.get('layout') === 'circular'
                 && seriesModel.get(['circular', 'rotateLabel']);
@@ -184,8 +177,11 @@ const _layoutNodesBasedOn: Record<'value' | 'symbolSize', LayoutNode> = {
             const radianHalf = halfRemainRadian + _symbolRadiansHalf[node.dataIndex];
 
             angle += radianHalf;
-            // auto circular layout for not dragged node
-            !node.getFixed() && node.setLayout([
+            // init circular layout for
+            // 1. layout undefined node
+            // 2. not fixed node
+            (!node.getLayout() || !node.getModel<GraphNodeItemOption>().get('fixed'))
+            && node.setLayout([
                 r * Math.cos(angle) + cx,
                 r * Math.sin(angle) + cy
             ]);
