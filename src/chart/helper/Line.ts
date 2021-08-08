@@ -98,7 +98,7 @@ function createSymbol(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: 
         ? void 0
         : +symbolRotate * Math.PI / 180 || 0;
     // if (linePoints[3] && linePoints.__original) {
-    //     (symbolPath as LineECSymbol).__specifiedRotation = 155 * Math.PI / 180;
+    //     (symbolPath as LineECSymbol).__specifiedRotation = 245 * Math.PI / 180;
     // }
     symbolPath.name = name;
 
