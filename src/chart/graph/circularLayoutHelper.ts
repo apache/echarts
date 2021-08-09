@@ -21,10 +21,11 @@
 import * as vec2 from 'zrender/src/core/vector';
 import {getSymbolSize, getNodeGlobalScale} from './graphHelper';
 import GraphSeriesModel, { GraphEdgeItemOption } from './GraphSeries';
-import Graph from '../../data/Graph';
+import Graph, { GraphNode } from '../../data/Graph';
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
 import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
+import {cubicPosition} from './simpleLayoutHelper'
 
 const PI = Math.PI;
 
@@ -94,8 +95,67 @@ export function circularLayout(
         if (edge.node1 === edge.node2) {
             const size = getSymbolSize(edge.node1);
             const radius = getNodeGlobalScale(seriesModel) * size / 2;
-            cp1 = [p1[0] - radius * 2, p2[1] - radius * 4]
-            cp2 = [p1[0] + radius * 2, p2[1] - radius * 4]
+            const inEdges = edge.node1.inEdges.filter((edge) => {
+                return edge.node1 !== edge.node2;
+            });
+            const outEdges = edge.node1.outEdges.filter((edge) => {
+                return edge.node1 !== edge.node2;
+            });
+            const allNodes: GraphNode[] = []
+            inEdges.forEach((edge) => {
+                allNodes.push(edge.node1);
+            });
+            outEdges.forEach((edge) => {
+                allNodes.push(edge.node2);
+            });
+            const vectors: any[][] = [];
+            let d = -Infinity;
+            let pt1: number[] = [];
+            let pt2: number[] = [];
+            if (allNodes.length > 1) {
+                allNodes.forEach(node => {
+                    let v: any[] = [];
+                    vec2.sub(v, node.getLayout(), edge.node1.getLayout());
+                    vec2.normalize(v, v);
+                    vectors.push(v);
+                })
+                // find the max angle
+                for (let i = 0; i < vectors.length; i++) {
+                    for (let j = i + 1; j < vectors.length; j++) {
+                        if (vec2.distSquare(vectors[i], vectors[j]) > d) {
+                            d = vec2.distSquare(vectors[i], vectors[j]);
+                            pt1 = vectors[i];
+                            pt2 = vectors[j];
+                        }
+                    }
+                }
+                // if the angle is more than sixty degree
+                if (vec2.distSquare(pt1, pt2) > Math.sqrt(3)) {
+                    vec2.scaleAndAdd(pt1, p1, pt1, radius);
+                    vec2.scaleAndAdd(pt2, p2, pt2, radius);
+                    const point1 = cubicPosition(pt1, p1, 10 * radius);
+                    const point2 = cubicPosition(pt2, p2, 10 * radius);
+                    const mid = [(point1[0] + point2[0]) / 2, (point1[1] + point2[1]) / 2];
+                    vec2.sub(mid, mid, p1);
+                    const degree = Math.atan2(mid[1], mid[0]) / Math.PI * 180;
+                    const v1 = [Math.cos((degree - 30) * Math.PI / 180), Math.sin((degree - 30) * Math.PI / 180)];
+                    const v2 = [Math.cos((degree + 30) * Math.PI / 180), Math.sin((degree + 30) * Math.PI / 180)];
+                    vec2.scaleAndAdd(v1, p1, v1, 10 * radius);
+                    vec2.scaleAndAdd(v2, p2, v2, 10 * radius);
+                    cp1 = v1; 
+                    cp2 = v2;
+                }
+                else {
+                    vec2.scaleAndAdd(pt1, p1, pt1, radius);
+                    vec2.scaleAndAdd(pt2, p2, pt2, radius);
+                    cp1 = cubicPosition(pt1, p1, 10 * radius);
+                    cp2 = cubicPosition(pt2, p2, 10 * radius);
+                }
+            }
+            else {
+                cp1 = [p1[0] - radius * 2, p2[1] - radius * 4]
+                cp2 = [p1[0] + radius * 2, p2[1] - radius * 4]
+            }
         }
         else if (+curveness) {
             curveness *= 3;

@@ -24,7 +24,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
 import { getNodeGlobalScale } from './graphHelper';
 
-function cubicPosition(pt: number[], center: number[], radius: number) {
+export function cubicPosition(pt: number[], center: number[], radius: number) {
     const rSquare = radius * radius;
     const sqrt = Math.sqrt;
     const pow = Math.pow;
@@ -87,7 +87,6 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
                 allNodes.push(edge.node2);
             });
             const vectors: any[][] = [];
-            const toSymbol = edge.getVisual('toSymbol');
             let d = -Infinity;
             let pt1: number[] = [];
             let pt2: number[] = [];
@@ -139,8 +138,6 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
                     p1[0] + radius * 4,
                     p2[1] - radius * 6,
                 ]);
-            }
-            if (toSymbol && toSymbol !== 'none') {
             }
         }
         else if (+curveness) {
