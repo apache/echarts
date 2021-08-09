@@ -29,7 +29,7 @@ const quadraticAt = curveTool.quadraticAt;
 const cubicAt = curveTool.cubicAt;
 const v2DistSquare = vec2.distSquare;
 const mathAbs = Math.abs;
-function intersectCurveCircle(
+export function intersectCurveCircle(
     curvePoints: number[][],
     center: number[],
     radius: number

@@ -86,8 +86,8 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
             outEdges.forEach((edge) => {
                 allNodes.push(edge.node2);
             });
-            console.log(allNodes)
             const vectors: any[][] = [];
+            const toSymbol = edge.getVisual('toSymbol');
             let d = -Infinity;
             let pt1: number[] = [];
             let pt2: number[] = [];
@@ -116,12 +116,11 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
                     const point2 = cubicPosition(pt2, p2, 10 * radius)
                     const mid = [(point1[0] + point2[0]) / 2, (point1[1] + point2[1]) / 2];
                     vec2.sub(mid, mid, p1);
-                    const degree = Math.atan2(mid[1], mid[0]) / Math.PI * 180
+                    const degree = Math.atan2(mid[1], mid[0]) / Math.PI * 180;
                     const v1 = [Math.cos((degree - 30) * Math.PI /180), Math.sin((degree - 30) * Math.PI / 180)];
                     const v2 = [Math.cos((degree + 30) * Math.PI / 180), Math.sin((degree + 30) * Math.PI / 180)];
                     vec2.scaleAndAdd(v1, p1, v1, 10 * radius);
                     vec2.scaleAndAdd(v2, p2, v2, 10 * radius);
-                    console.log(v1,v2)
                     points.push(v1, v2);
                 }
                 else {
@@ -140,6 +139,8 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
                     p1[0] + radius * 4,
                     p2[1] - radius * 6,
                 ]);
+            }
+            if (toSymbol && toSymbol !== 'none') {
             }
         }
         else if (+curveness) {
