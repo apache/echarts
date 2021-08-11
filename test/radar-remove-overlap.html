@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <!-- <script src="ut/lib/canteen.js"></script> -->
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+
+<body>
+    <style>
+    </style>
+
+
+
+    <div id="main"></div>
+    <script>
+        option = {
+            title: {
+                text: '基础雷达图'
+            },
+            legend: {
+                data: ['预算分配（Allocated Budget）', '实际开销（Actual Spending）']
+            },
+            radar: {
+                // shape: 'circle',
+                indicator: [
+                    { name: '销售（Sales）', max: 6500 },
+                    { name: '管理（Administration）', max: 16000 },
+                    { name: '信息技术（Information Technology）', max: 30000 },
+                    { name: '客服（Customer Support）', max: 38000 },
+                    { name: '研发（Development）', max: 52000 },
+                    { name: '市场（Marketing）', max: 25000 }
+                ]
+            },
+            series: [{
+                name: '预算 vs 开销（Budget vs spending）',
+                type: 'radar',
+                data: [
+                    {
+                        value: [4200, 3000, 20000, 35000, 50000, 18000],
+                        name: '预算分配（Allocated Budget）'
+                    },
+                    {
+                        value: [4500, 3500, 2050, 37000, 45000, 18800],
+                        name: '预算分配（Allocated Budget）'
+                    },
+                    {
+                        value: [5000, 14000, 28000, 26000, 42000, 20800],
+                        name: '实际开销（Actual Spending）'
+                    },
+                    {
+                        value: [5300, 14200, 27800, 25800, 39000, 21400],
+                        name: '实际开销（Actual Spending）'
+                    }
+                ],
+                symbolSize: 15,
+                label: {
+                    show: true,
+                    position: 'top'
+                },
+                labelLayout: {
+                    //hideOverlap:true
+                    removeOverlap: true,
+                    fontSize: 15
+                }
+            }]
+        };
+
+        require([
+            'echarts'
+        ], function (echarts) {
+            let mychart = echarts.init(document.getElementById("main"))
+            mychart.setOption(option)
+        })
+
+    </script>
+
+
+</body>
+
+</html>

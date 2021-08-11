@@ -1199,6 +1199,11 @@ export interface LabelLayoutOption {
      */
     hideOverlap?: boolean
     /**
+     * If labels overlap. It will Remove overlaps;
+     * @default 'none'
+     */
+    removeOverlap?: boolean
+    /**
      * If label is draggable.
      */
     draggable?: boolean
