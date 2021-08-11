@@ -30,7 +30,7 @@ import {
     querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels
 } from './sourceHelper';
 import { applyDataTransform } from './transform';
-import DataStorage, { DataStorageDimensionDefine, DataStorageDimensionType } from '../DataStorage';
+import DataStorage, { DataStorageDimensionDefine } from '../DataStorage';
 import { DefaultDataProvider } from './dataProvider';
 import SeriesDimensionDefine from '../SeriesDimensionDefine';
 import WeakMap from 'zrender/src/core/WeakMap';

@@ -135,7 +135,7 @@ export default function createDimensions(
             const dimDefItem = isObject(dimDefItemRaw) ? dimDefItemRaw : { name: dimDefItemRaw };
             const resultItem = new SeriesDimensionDefine();
             const userDimName = dimDefItem.name;
-            if (dataDimNameMap.get(userDimName) != null) {
+            if (userDimName != null && dataDimNameMap.get(userDimName) != null) {
                 // Only if `series.dimensions` is defined in option
                 // displayName, will be set, and dimension will be diplayed vertically in
                 // tooltip by default.
@@ -278,6 +278,13 @@ export default function createDimensions(
     generateCoordCount = generateCoord ? (generateCoordCount || 1) : 0;
     const extra = generateCoord || 'value';
 
+    function ifNoNameFillWithCoordName(resultItem: SeriesDimensionDefine): void {
+        if (resultItem.name == null) {
+            // Duplication will be removed in the next step.
+            resultItem.name = resultItem.coordDim;
+        }
+    }
+
     // Set dim `name` and other `coordDim` and other props.
     if (!omitUnusedDimensions) {
         for (let resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
@@ -298,10 +305,7 @@ export default function createDimensions(
                 generateCoordCount--;
             }
 
-            if (resultItem.name == null) {
-                // Duplication will be removed in the next step.
-                resultItem.name = resultItem.coordDim;
-            }
+            ifNoNameFillWithCoordName(resultItem);
 
             if (resultItem.type == null
                 && (
@@ -331,15 +335,17 @@ export default function createDimensions(
         return removeDuplication(result);
     }
     else {
-        // Sort dimensions
-        const toSort = [];
+        // Sort dimensions: there are some rule that use the last dim as label.
+        const sortedResult: SeriesDimensionDefine[] = [];
         for (let i = 0; i < indicesMap.length; i++) {
             if (indicesMap[i] >= 0) {
-                toSort.push({ i, o: result[indicesMap[i]]});
+                const resultItem = result[indicesMap[i]];
+                // PENDING: guessOrdinal or let user specify type: 'ordinal' manually?
+                ifNoNameFillWithCoordName(resultItem);
+                sortedResult.push(resultItem);
             }
         }
-        toSort.sort((a, b) => a.i - b.i);
-        return removeDuplication(map(toSort, item => item.o));
+        return removeDuplication(sortedResult);
     }
 }
 
