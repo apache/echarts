@@ -280,7 +280,6 @@ export function calculateCategoryInterval(axis: Axis) {
 
     let dw = maxW / unitW;
     let dh = maxH / unitH;
-    console.log(maxW, dw);
     // 0/0 is NaN, 1/0 is Infinity.
     isNaN(dw) && (dw = Infinity);
     isNaN(dh) && (dh = Infinity);
