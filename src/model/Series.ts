@@ -500,7 +500,18 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         if (!selectedMap) {
             return;
         }
+        const selectedMode = this.option.selectedMode;
+
         const data = this.getData(dataType);
+        if (selectedMode === 'series') {
+            data.each(idx => {
+                const nameOrId = getSelectionKey(data, idx);
+                selectedMap[nameOrId] = false;
+                this._selectedDataIndicesMap[nameOrId] = -1;
+            });
+            return;
+        }
+
         for (let i = 0; i < innerDataIndices.length; i++) {
             const dataIndex = innerDataIndices[i];
             const nameOrId = getSelectionKey(data, dataIndex);
@@ -570,10 +581,26 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             return;
         }
 
-        if (selectedMode === 'multiple') {
+        if (selectedMode === 'series') {
+            const selectedMap = this.option.selectedMap || (this.option.selectedMap = {});
+            const self = this;
+            data.each(idx => {
+                if ((data.getItemModel(idx) as Model).get(['itemStyle', 'selectable']) === false) {
+                    return;
+                }
+                const nameOrId = getSelectionKey(data, idx);
+                selectedMap[nameOrId] = true;
+                self._selectedDataIndicesMap[nameOrId] = data.getRawIndex(idx);
+
+            });
+        }
+        else if (selectedMode === 'multiple') {
             const selectedMap = this.option.selectedMap || (this.option.selectedMap = {});
             for (let i = 0; i < len; i++) {
                 const dataIndex = innerDataIndices[i];
+                if ((data.getItemModel(dataIndex) as Model).get(['itemStyle', 'selectable']) === false) {
+                    return;
+                }
                 // TODO diffrent types of data share same object.
                 const nameOrId = getSelectionKey(data, dataIndex);
                 selectedMap[nameOrId] = true;
@@ -582,6 +609,9 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         }
         else if (selectedMode === 'single' || selectedMode === true) {
             const lastDataIndex = innerDataIndices[len - 1];
+            if ((data.getItemModel(lastDataIndex) as Model).get(['itemStyle', 'selectable']) === false) {
+                return;
+            }
             const nameOrId = getSelectionKey(data, lastDataIndex);
             this.option.selectedMap = {
                 [nameOrId]: true

@@ -967,6 +967,7 @@ export interface ItemStyleOption extends ShadowOptionMixin, BorderOptionMixin {
     color?: ZRColor
     opacity?: number
     decal?: DecalObject | 'none'
+    selectable?: boolean
 }
 
 /**
@@ -1654,7 +1655,7 @@ export interface SeriesOption<
      * key is name or index of data.
      */
     selectedMap?: Dictionary<boolean>
-    selectedMode?: 'single' | 'multiple' | boolean
+    selectedMode?: 'single' | 'multiple' | 'series' | boolean
 }
 
 export interface SeriesOnCartesianOptionMixin {
