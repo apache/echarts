@@ -740,6 +740,7 @@ function buildAxisLabel(
 
     const labelModel = axisModel.getModel('axisLabel');
     const labelMargin = labelModel.get('margin');
+    const interleaved = labelModel.get('interleaved') || false;
     const labels = axis.getViewLabels();
 
     // Special label rotate.
@@ -776,9 +777,16 @@ function buildAxisLabel(
 
         const tickCoord = axis.dataToCoord(tickValue);
 
+        // interleaved labels
+        const labelDirection = interleaved && index % 2 ? (-1) * opt.labelDirection 
+                                                        : opt.labelDirection;
+
+        // correct labels margin in the other side
+        const labelMarginCorrected = interleaved && index % 2 ? 2 * labelMargin : labelMargin;  
+
         const textEl = new graphic.Text({
             x: tickCoord,
-            y: opt.labelOffset + opt.labelDirection * labelMargin,
+            y: opt.labelOffset + labelDirection * labelMarginCorrected,
             rotation: labelLayout.rotation,
             silent: silent,
             z2: 10 + (labelItem.level || 0),

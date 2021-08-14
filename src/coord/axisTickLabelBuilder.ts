@@ -225,6 +225,8 @@ export function calculateCategoryInterval(axis: Axis) {
     const params = fetchAutoCategoryIntervalCalculationParams(axis);
     const labelFormatter = makeLabelFormatter(axis);
     const rotation = (params.axisRotate - params.labelRotate) / 180 * Math.PI;
+    const labelModel = axis.getLabelModel();
+    const interleaved = labelModel.get("interleaved") || false;
 
     const ordinalScale = axis.scale as OrdinalScale;
     const ordinalExtent = ordinalScale.getExtent();
@@ -244,8 +246,14 @@ export function calculateCategoryInterval(axis: Axis) {
     }
     let tickValue = ordinalExtent[0];
     const unitSpan = axis.dataToCoord(tickValue + 1) - axis.dataToCoord(tickValue);
-    const unitW = Math.abs(unitSpan * Math.cos(rotation));
-    const unitH = Math.abs(unitSpan * Math.sin(rotation));
+    let unitW = Math.abs(unitSpan * Math.cos(rotation));
+    let unitH = Math.abs(unitSpan * Math.sin(rotation));
+
+    // When interleaved option is enable, multiply unit width and height.
+    if(interleaved) {
+        unitW = unitW * 2;
+        unitH = unitH * 2;
+    }
 
     let maxW = 0;
     let maxH = 0;
@@ -272,6 +280,7 @@ export function calculateCategoryInterval(axis: Axis) {
 
     let dw = maxW / unitW;
     let dh = maxH / unitH;
+    console.log(maxW, dw);
     // 0/0 is NaN, 1/0 is Infinity.
     isNaN(dw) && (dw = Infinity);
     isNaN(dh) && (dh = Infinity);
