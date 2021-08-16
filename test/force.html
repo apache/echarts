@@ -42,7 +42,6 @@ under the License.
             ], function (echarts) {
                 
                 var chart = echarts.init(document.getElementById('main'));
-                console.log(chart.setOption);
                 function createNodes(count) {
                     var nodes = [];
                     for (var i = 0; i < count; i++) {
@@ -92,7 +91,7 @@ under the License.
                             edges: item.edges.map(function (e) {
                                 return {
                                     source: e[0],
-                                    target: e[1]
+                                    target: e[0]
                                 };
                             })
                         };

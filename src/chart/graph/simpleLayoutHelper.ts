@@ -70,9 +70,11 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
         const p2 = vec2.clone(edge.node2.getLayout());
         const points = [p1, p2];
         if (edge.node1 === edge.node2) {
+            const curve = getCurvenessForEdge(edge, seriesModel, index, true)
+            const curveness = curve >= 1 ? curve : 1 - curve;
             const symbolSize = seriesModel.get('symbolSize');
             const size = zrUtil.isArray(symbolSize) ? Number((symbolSize[0] + symbolSize[1]) / 2) : Number(symbolSize);
-            const radius = getNodeGlobalScale(seriesModel) * size / 2;
+            const radius = getNodeGlobalScale(seriesModel) * size / 2 * curveness;
             const inEdges = edge.node1.inEdges.filter((edge) => {
                 return edge.node1 !== edge.node2;
             });
