@@ -34,7 +34,7 @@ import {
     SERIES_LAYOUT_BY_COLUMN,
     SERIES_LAYOUT_BY_ROW,
     DimensionName, DimensionIndex, OptionSourceData,
-    DimensionIndexLoose, OptionDataItem, OptionDataValue, SourceFormat, SeriesLayoutBy, ParsedValue
+    OptionDataItem, OptionDataValue, SourceFormat, SeriesLayoutBy, ParsedValue, DimensionLoose
 } from '../../util/types';
 import SeriesData from '../SeriesData';
 
@@ -469,7 +469,7 @@ function getMethodMapKey(sourceFormat: SourceFormat, seriesLayoutBy: SeriesLayou
 // value may be 0.91000000001, which have brings trouble to display.
 // TODO: consider how to treat null/undefined/NaN when display?
 export function retrieveRawValue(
-    data: SeriesData, dataIndex: number, dim?: DimensionName | DimensionIndexLoose
+    data: SeriesData, dataIndex: number, dim?: DimensionLoose
     // If dimIndex is null/undefined, return OptionDataItem.
     // Otherwise, return OptionDataValue.
 ): OptionDataValue | OptionDataItem {
@@ -484,11 +484,12 @@ export function retrieveRawValue(
         return;
     }
 
-    const sourceFormat = data.getStorage().getSource().sourceFormat;
-    const dimName = data.getDimension(dim);
-    const dimIndex = dimName != null ? data.getDimensionIndex(dimName) : null;
+    const storage = data.getStorage();
+    const sourceFormat = storage.getSource().sourceFormat;
+    const dimIndex = data.getDimensionIndex(dim);
+    const property = storage.getDimensionProperty(dimIndex);
 
-    return getRawSourceValueGetter(sourceFormat)(dataItem, dimIndex, dimName);
+    return getRawSourceValueGetter(sourceFormat)(dataItem, dimIndex, property);
 }
 
 

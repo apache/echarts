@@ -19,12 +19,15 @@
 
 import { DatasetModel } from '../../component/dataset/install';
 import SeriesModel from '../../model/Series';
-import { setAsPrimitive, map, isTypedArray, assert, each, retrieve2, createHashMap } from 'zrender/src/core/util';
-import { SourceMetaRawOption, Source, createSource, cloneSourceShallow } from '../Source';
+import {
+    setAsPrimitive, map, isTypedArray, assert, each, retrieve2
+} from 'zrender/src/core/util';
+import { SourceMetaRawOption, Source, createSource, cloneSourceShallow, shouldRetrieveDataByName } from '../Source';
 import {
     SeriesEncodableModel, OptionSourceData,
     SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL,
-    SourceFormat, SeriesLayoutBy, OptionSourceHeader, DimensionDefinitionLoose, Dictionary
+    SourceFormat, SeriesLayoutBy, OptionSourceHeader,
+    DimensionDefinitionLoose, Dictionary
 } from '../../util/types';
 import {
     querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels
@@ -32,12 +35,9 @@ import {
 import { applyDataTransform } from './transform';
 import DataStorage, { DataStorageDimensionDefine } from '../DataStorage';
 import { DefaultDataProvider } from './dataProvider';
-import SeriesDimensionDefine from '../SeriesDimensionDefine';
-import WeakMap from 'zrender/src/core/WeakMap';
-import OrdinalMeta from '../OrdinalMeta';
+import { SeriesDimensionRequest, shouldOmitUnusedDimensions } from './SeriesDimensionRequest';
 
 type DataStorageMap = Dictionary<DataStorage>;
-
 
 /**
  * [REQUIREMENT_MEMO]:
@@ -370,26 +370,17 @@ export class SourceManager {
      * Get a data storage which can be shared across series.
      * Only available for series.
      *
-     * @param dimensions Dimensions that are generated in series.
+     * @param seriesDimRequest Dimensions that are generated in series.
+     *        Should have been sorted by `storageDimensionIndex` asc.
      */
-    getSharedDataStorage(seriesDims: SeriesDimensionDefine[]): DataStorage {
+    getSharedDataStorage(seriesDimRequest: SeriesDimensionRequest): DataStorage {
         if (__DEV__) {
             assert(isSeries(this._sourceHost), 'Can only call getDataStorage on series source manager.');
         }
-        const source = this.getSource(0);
-        const delimiter = '$$';
-        const storageDims = getDataStorageDimensions(seriesDims, source);
-
-        // Source from endpoint(usually series) will be read differently
-        // when seriesLayoutBy or startIndex(which is affected by sourceHeader) are different.
-        // So we use this three props as key.
-        const sourceReadKey = source.seriesLayoutBy
-            + delimiter
-            + source.startIndex
-            + delimiter
-            + generateDimensionsHash(storageDims);
-
-        return this._innerGetDataStorage(storageDims, source, sourceReadKey);
+        const schema = seriesDimRequest.makeStorageSchema();
+        return this._innerGetDataStorage(
+            schema.dimensions, seriesDimRequest.source, schema.hash
+        );
     }
 
     private _innerGetDataStorage(
@@ -489,57 +480,4 @@ function isSeries(sourceHost: SourceManager['_sourceHost']): sourceHost is Serie
 
 function doThrow(errMsg: string): void {
     throw new Error(errMsg);
-}
-
-const dimTypeShort = {
-    float: 'f', int: 'i', ordinal: 'o', number: 'n', time: 't'
-} as const;
-
-function getDataStorageDimensions(seriesDims: SeriesDimensionDefine[], source: Source) {
-    const sourceDims = source.dimensionsDefine;
-    // If source don't have dimensions or series don't omit unsed dimensions.
-    // Use seriesDims directly
-    if (!sourceDims || seriesDims.length === sourceDims.length) {
-        return seriesDims;
-    }
-    const dims: DataStorageDimensionDefine[] = [];
-    const seriesDimsMap = createHashMap<SeriesDimensionDefine>();
-    for (let i = 0; i < seriesDims.length; i++) {
-        seriesDimsMap.set(seriesDims[i].name, seriesDims[i]);
-    }
-    for (let i = 0; i < sourceDims.length; i++) {
-        const dimName = sourceDims[i].name;
-        // Dim type from series has higher certainty
-        const seriesDim = seriesDimsMap.get(dimName);
-        dims.push({
-            name: dimName,
-            ordinalMeta: seriesDim && seriesDim.ordinalMeta,
-            type: seriesDim ? seriesDim.type : sourceDims[i].type
-        });
-    }
-    return dims;
-}
-
-const ordinalIdMap = new WeakMap<OrdinalMeta, string>();
-let ordinalMetaId = 0;
-function generateDimensionsHash(dims: DataStorageDimensionDefine[]) {
-    // If source don't have dimensions or series don't omit unsed dimensions.
-    // Generate from seriesDims directly
-    let key = '';
-    for (let i = 0; i < dims.length; i++) {
-        const ordinalMeta = dims[i].ordinalMeta;
-        key += dims[i].name;
-        key += '$';
-        key += dimTypeShort[dims[i].type] || 'f';
-        if (ordinalMeta) {
-            let id = ordinalIdMap.get(ordinalMeta);
-            if (!id) {
-                id = 'm' + ordinalMetaId++;
-                ordinalIdMap.set(ordinalMeta, id);
-            }
-            key += id;
-        }
-        key += '$';
-    }
-    return key;
 }

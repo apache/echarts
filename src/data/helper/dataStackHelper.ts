@@ -22,7 +22,17 @@ import SeriesDimensionDefine from '../SeriesDimensionDefine';
 import SeriesModel from '../../model/Series';
 import SeriesData, { DataCalculationInfo } from '../SeriesData';
 import type { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../../util/types';
+import { isSeriesDimensionRequest, SeriesDimensionRequest } from './SeriesDimensionRequest';
+import DataStorage from '../DataStorage';
 
+type EnableDataStackDimensionsInput = {
+    dimensionRequest: SeriesDimensionRequest;
+    // If given, stack dimension will be ensured on this storage.
+    // Otherwise, stack dimesnion will be appended at the tail, and should not
+    // be used on a shared storage, but should create a brand new stroage later.
+    storage?: DataStorage;
+};
+type EnableDataStackDimensionsInputLegacy = (SeriesDimensionDefine | string)[];
 
 /**
  * Note that it is too complicated to support 3d stack by value
@@ -30,8 +40,8 @@ import type { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../../
  * we just support that stacked by index.
  *
  * @param seriesModel
- * @param dimensionInfoList The same as the input of <module:echarts/data/SeriesData>.
- *        The input dimensionInfoList will be modified.
+ * @param dimensionsInput The same as the input of <module:echarts/data/SeriesData>.
+ *        The input will be modified.
  * @param opt
  * @param opt.stackedCoordDimension Specify a coord dimension if needed.
  * @param opt.byIndex=false
@@ -46,8 +56,9 @@ import type { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../../
  */
 export function enableDataStack(
     seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>,
-    dimensionInfoList: (SeriesDimensionDefine | string)[],
+    dimensionsInput: EnableDataStackDimensionsInput | EnableDataStackDimensionsInputLegacy,
     opt?: {
+        // Backward compat
         stackedCoordDimension?: string
         byIndex?: boolean
     }
@@ -63,6 +74,19 @@ export function enableDataStack(
     let byIndex = opt.byIndex;
     const stackedCoordDimension = opt.stackedCoordDimension;
 
+    let dimensionDefineList: EnableDataStackDimensionsInputLegacy;
+    let dimensionRequest: SeriesDimensionRequest;
+    let storage: DataStorage;
+
+    if (isLegacyDimensionsInput(dimensionsInput)) {
+        dimensionDefineList = dimensionsInput;
+    }
+    else {
+        dimensionRequest = dimensionsInput.dimensionRequest;
+        dimensionDefineList = dimensionRequest.dimensionList;
+        storage = dimensionsInput.storage;
+    }
+
     // Compatibal: when `stack` is set as '', do not stack.
     const mayStack = !!(seriesModel && seriesModel.get('stack'));
     let stackedByDimInfo: SeriesDimensionDefine;
@@ -70,9 +94,9 @@ export function enableDataStack(
     let stackResultDimension: string;
     let stackedOverDimension: string;
 
-    each(dimensionInfoList, function (dimensionInfo, index) {
+    each(dimensionDefineList, function (dimensionInfo, index) {
         if (isString(dimensionInfo)) {
-            dimensionInfoList[index] = dimensionInfo = {
+            dimensionDefineList[index] = dimensionInfo = {
                 name: dimensionInfo as string
             } as SeriesDimensionDefine;
         }
@@ -118,33 +142,49 @@ export function enableDataStack(
         const stackedDimType = stackedDimInfo.type;
         let stackedDimCoordIndex = 0;
 
-        each(dimensionInfoList, function (dimensionInfo: SeriesDimensionDefine) {
+        each(dimensionDefineList, function (dimensionInfo: SeriesDimensionDefine) {
             if (dimensionInfo.coordDim === stackedDimCoordDim) {
                 stackedDimCoordIndex++;
             }
         });
 
-        dimensionInfoList.push({
+        const stackedOverDimensionDefine: SeriesDimensionDefine = {
             name: stackResultDimension,
             coordDim: stackedDimCoordDim,
             coordDimIndex: stackedDimCoordIndex,
             type: stackedDimType,
             isExtraCoord: true,
-            isCalculationCoord: true
-        });
+            isCalculationCoord: true,
+            storageDimensionIndex: dimensionDefineList.length
+        };
 
-        stackedDimCoordIndex++;
-
-        dimensionInfoList.push({
+        const stackResultDimensionDefine: SeriesDimensionDefine = {
             name: stackedOverDimension,
             // This dimension contains stack base (generally, 0), so do not set it as
             // `stackedDimCoordDim` to avoid extent calculation, consider log scale.
             coordDim: stackedOverDimension,
-            coordDimIndex: stackedDimCoordIndex,
+            coordDimIndex: stackedDimCoordIndex + 1,
             type: stackedDimType,
             isExtraCoord: true,
-            isCalculationCoord: true
-        });
+            isCalculationCoord: true,
+            storageDimensionIndex: dimensionDefineList.length + 1
+        };
+
+        if (dimensionRequest) {
+            if (storage) {
+                stackedOverDimensionDefine.storageDimensionIndex =
+                    storage.ensureCalculationDimension(stackedOverDimension, stackedDimType);
+                stackResultDimensionDefine.storageDimensionIndex =
+                    storage.ensureCalculationDimension(stackResultDimension, stackedDimType);
+            }
+
+            dimensionRequest.appendCalculationDimension(stackedOverDimensionDefine);
+            dimensionRequest.appendCalculationDimension(stackResultDimensionDefine);
+        }
+        else {
+            dimensionDefineList.push(stackedOverDimensionDefine);
+            dimensionDefineList.push(stackResultDimensionDefine);
+        }
     }
 
     return {
@@ -154,6 +194,12 @@ export function enableDataStack(
         stackedOverDimension: stackedOverDimension,
         stackResultDimension: stackResultDimension
     };
+}
+
+function isLegacyDimensionsInput(
+    dimensionsInput: Parameters<typeof enableDataStack>[1]
+): dimensionsInput is EnableDataStackDimensionsInputLegacy {
+    return !isSeriesDimensionRequest((dimensionsInput as EnableDataStackDimensionsInput).dimensionRequest);
 }
 
 export function isDimensionStacked(data: SeriesData, stackedDim: string): boolean {

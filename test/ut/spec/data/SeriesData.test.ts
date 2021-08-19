@@ -31,6 +31,7 @@ import SeriesDimensionDefine from '@/src/data/SeriesDimensionDefine';
 import OrdinalMeta from '@/src/data/OrdinalMeta';
 import DataStorage from '@/src/data/DataStorage';
 import { DefaultDataProvider } from '@/src/data/helper/dataProvider';
+import { SeriesDimensionRequest } from '@/src/data/helper/SeriesDimensionRequest';
 
 
 const ID_PREFIX = 'e\0\0';
@@ -209,19 +210,35 @@ describe('SeriesData', function () {
         function createStore() {
             const provider = new DefaultDataProvider([['A', 15], ['B', 25], ['C', 35]]);
             const store = new DataStorage();
-            store.initData(provider, [{type: 'ordinal', name: 'dim0'}, {type: 'float', name: 'dim1'}]);
+            store.initData(provider, [{type: 'ordinal'}, {type: 'float'}]);
             return store;
         }
 
 
         it('SeriesData can still get other dims value from storage when only part of dims are given.', function () {
-            const provider = new DefaultDataProvider([['A', 15, 20], ['B', 25, 30], ['C', 35, 40]]);
+            const source = createSource(
+                [['A', 15, 20, 'cat'], ['B', 25, 30, 'mouse'], ['C', 35, 40, 'dog']],
+                {
+                    dimensions: null,
+                    seriesLayoutBy: null,
+                    sourceHeader: false
+                },
+                SOURCE_FORMAT_ARRAY_ROWS
+            );
             const store = new DataStorage();
-            store.initData(provider, [
-                {type: 'ordinal', name: 'dim0'}, {type: 'float', name: 'dim1'}, {type: 'float', name: 'dim2'}
+            store.initData(new DefaultDataProvider(source), [
+                {type: 'ordinal'}, {type: 'float'}, {type: 'float'}, {type: 'ordinal'}
             ]);
-            const dims = [{ type: 'float', name: 'dim1'}];
-            const data = new SeriesData(dims, null);
+            const dimensionRequest = new SeriesDimensionRequest({
+                source: source,
+                dimensionList: [
+                    { type: 'float', name: 'dim1', storageDimensionIndex: 1 },
+                    { type: 'ordinal', name: 'dim3', storageDimensionIndex: 3 }
+                ],
+                fullDimensionCount: 2,
+                dimensionOmitted: true
+            });
+            const data = new SeriesData(dimensionRequest, null);
             data.initData(store);
             // Store should be the same.
             expect(data.getStorage()).toBe(store);
@@ -229,13 +246,13 @@ describe('SeriesData', function () {
             expect(data.get('dim1', 0)).toEqual(15);
             expect(data.get('dim1', 1)).toEqual(25);
             // Get other dim
-            expect(data.get('dim0', 0)).toEqual('A');
-            expect(data.get('dim0', 1)).toEqual('B');
-            expect(data.get('dim2', 0)).toEqual(20);
-            expect(data.get('dim2', 1)).toEqual(30);
+            expect(data.getStorage().get(0, 0)).toEqual('A');
+            expect(data.getStorage().get(0, 1)).toEqual('B');
+            expect(data.getStorage().get(2, 0)).toEqual(20);
+            expect(data.getStorage().get(2, 1)).toEqual(30);
             // Get all
-            expect(data.getValues(['dim0', 'dim1'], 0)).toEqual(['A', 15]);
-            expect(data.getValues(1)).toEqual(['B', 25, 30]);
+            expect(data.getValues(['dim3', 'dim1'], 0)).toEqual(['cat', 15]);
+            expect(data.getValues(1)).toEqual(['B', 25, 30, 'mouse']);
         });
 
         it('SeriesData#cloneShallow should share storage', function () {

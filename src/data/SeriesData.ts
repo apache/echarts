@@ -17,11 +17,8 @@
 * under the License.
 */
 
-/* global Float64Array, Int32Array, Uint32Array, Uint16Array */
+/* global Int32Array */
 
-/**
- * List for data storage
- */
 
 import * as zrUtil from 'zrender/src/core/util';
 import {PathStyleProps} from 'zrender/src/graphic/Path';
@@ -34,10 +31,11 @@ import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/typ
 import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
-    ParsedValue, ParsedValueNumeric, DimensionUserOuput,
+    ParsedValue, ParsedValueNumeric,
     ModelOption, SeriesDataType, OptionSourceData, SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL,
     DecalObject,
-    OrdinalNumber
+    OrdinalNumber,
+    OrdinalRawValue
 } from '../util/types';
 import {convertOptionIdName, isDataItemOption} from '../util/model';
 import { setCommonECData } from '../util/innerStore';
@@ -47,6 +45,7 @@ import type { VisualMeta } from '../component/visualMap/VisualMapModel';
 import {isSourceInstance, Source} from './Source';
 import { LineStyleProps } from '../model/mixin/lineStyle';
 import DataStorage, { DimValueGetter } from './DataStorage';
+import { isSeriesDimensionRequest, SeriesDimensionRequest } from './helper/SeriesDimensionRequest';
 
 const isObject = zrUtil.isObject;
 const map = zrUtil.map;
@@ -79,6 +78,17 @@ type MapCb1<Ctx> = (this: CtxOrList<Ctx>, x: ParsedValue, idx: number) => Parsed
 type MapCb2<Ctx> = (this: CtxOrList<Ctx>, x: ParsedValue, y: ParsedValue, idx: number) =>
     ParsedValue | ParsedValue[];
 type MapCb<Ctx> = (this: CtxOrList<Ctx>, ...args: any) => ParsedValue | ParsedValue[];
+
+type SeriesDimensionDefineLoose = string | object | SeriesDimensionDefine;
+
+// `SeriesDimensionLoose` and `SeriesDimensionName` is the dimension that is used by coordinate
+// system or declared in `series.encode`, which will be saved in `SeriesData`. Other dimension
+// might not be saved in `SeriesData` for performance consideration. See `createDimension` for
+// more details.
+type SeriesDimensionLoose = DimensionLoose;
+type SeriesDimensionName = DimensionName;
+// type SeriesDimensionIndex = DimensionIndex;
+
 
 const TRANSFERABLE_PROPERTIES = [
     'hasItemOption', '_nameList', '_idList', '_invertedIndicesMap',
@@ -118,11 +128,11 @@ export interface DefaultDataVisual {
 }
 
 export interface DataCalculationInfo<SERIES_MODEL> {
-    stackedDimension: string;
-    stackedByDimension: string;
+    stackedDimension: DimensionName;
+    stackedByDimension: DimensionName;
     isStackedByIndex: boolean;
-    stackedOverDimension: string;
-    stackResultDimension: string;
+    stackedOverDimension: DimensionName;
+    stackResultDimension: DimensionName;
     stackedOnSeries?: SERIES_MODEL;
 }
 
@@ -145,15 +155,26 @@ class SeriesData<
     readonly type = 'list';
 
     /**
-     * Name of dimensions list of SeriesData. It's be a subset of the dimensions in the DataStorage.
-     * When DataStorage is an extra high dimension(>30) dataset. We will only pick the used dimensions from DataStorage to avoid performance issue.
+     * Name of dimensions list of SeriesData.
      *
-     * So be careful of using it.
+     * @caution Carefully use the index of this array.
+     * Becuase when DataStorage is an extra high dimension(>30) dataset. We will only pick
+     * the used dimensions from DataStorage to avoid performance issue.
      */
-    readonly dimensions: string[];
+    readonly dimensions: SeriesDimensionName[];
 
     // Infomation of each data dimension, like data type.
-    private _dimensionInfos: {[dimName: string]: SeriesDimensionDefine};
+    private _dimensionInfos: Record<SeriesDimensionName, SeriesDimensionDefine>;
+
+    private _dimensionOmitted = false;
+    private _dimensionRequest?: SeriesDimensionRequest;
+    /**
+     * @pending
+     * Actually we do not really need to convert dimensionIndex to dimensionName
+     * and do not need `_dimIdxToName` if we do everything internally based on dimension
+     * index rather than dimension name.
+     */
+    private _dimIdxToName?: zrUtil.HashMap<DimensionName, DimensionIndex>;
 
     readonly hostModel: HostModel;
 
@@ -199,11 +220,11 @@ class SeriesData<
     private _graphicEls: Element[] = [];
 
     // key: dim, value: extent
-    private _approximateExtent: {[dimName: string]: [number, number]} = {};
+    private _approximateExtent: Record<SeriesDimensionName, [number, number]> = {};
 
     private _dimensionsSummary: DimensionSummary;
 
-    private _invertedIndicesMap: {[dimName: string]: ArrayLike<number>};
+    private _invertedIndicesMap: Record<SeriesDimensionName, ArrayLike<number>>;
 
     private _calculationInfo: DataCalculationInfo<HostModel> = {} as DataCalculationInfo<HostModel>;
 
@@ -214,7 +235,7 @@ class SeriesData<
     // from modifying them to effect built-in logic. And for
     // performance consideration we make this `userOutput` to
     // avoid clone them too many times.
-    userOutput: DimensionUserOuput;
+    userOutput: DimensionSummary['userOutput'];
 
     // Having detected that there is data item is non primitive type
     // (in type `OptionDataItemObject`).
@@ -238,16 +259,33 @@ class SeriesData<
     DOWNSAMPLE_METHODS = ['downSample', 'lttbDownSample'] as const;
 
     /**
-     * @param dimensions
+     * @param dimensionsInput.dimensions
      *        For example, ['someDimName', {name: 'someDimName', type: 'someDimType'}, ...].
      *        Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
      */
-    constructor(dimensions: Array<string | object | SeriesDimensionDefine>, hostModel: HostModel) {
+    constructor(
+        dimensionsInput: SeriesDimensionRequest | SeriesDimensionDefineLoose[],
+        hostModel: HostModel
+    ) {
+        let dimensions: SeriesDimensionDefineLoose[];
+        let assignStorageDimIdx = false;
+        if (isSeriesDimensionRequest(dimensionsInput)) {
+            dimensions = dimensionsInput.dimensionList;
+            this._dimensionOmitted = dimensionsInput.isDimensionOmitted();
+            this._dimensionRequest = dimensionsInput;
+        }
+        else {
+            assignStorageDimIdx = true;
+            dimensions = dimensionsInput as SeriesDimensionDefineLoose[];
+        }
+
         dimensions = dimensions || ['x', 'y'];
 
         const dimensionInfos: Dictionary<SeriesDimensionDefine> = {};
         const dimensionNames = [];
         const invertedIndicesMap: Dictionary<number[]> = {};
+        let needsHasOwn = false;
+        const emptyObj = {};
 
         for (let i = 0; i < dimensions.length; i++) {
             // Use the original dimensions[i], where other flag props may exists.
@@ -270,6 +308,9 @@ class SeriesData<
             const otherDims = dimensionInfo.otherDims = dimensionInfo.otherDims || {};
             dimensionNames.push(dimensionName);
             dimensionInfos[dimensionName] = dimensionInfo;
+            if ((emptyObj as any)[dimensionName] != null) {
+                needsHasOwn = true;
+            }
 
             if (dimensionInfo.createInvertedIndices) {
                 invertedIndicesMap[dimensionName] = [];
@@ -280,13 +321,88 @@ class SeriesData<
             if (otherDims.itemId === 0) {
                 this._idDimIdx = i;
             }
+
+            if (__DEV__) {
+                zrUtil.assert(assignStorageDimIdx || dimensionInfo.storageDimensionIndex >= 0);
+            }
+            if (assignStorageDimIdx) {
+                dimensionInfo.storageDimensionIndex = i;
+            }
         }
 
         this.dimensions = dimensionNames;
         this._dimensionInfos = dimensionInfos;
+        this._initGetDimensionInfo(needsHasOwn);
+
         this.hostModel = hostModel;
 
         this._invertedIndicesMap = invertedIndicesMap;
+
+        if (this._dimensionOmitted) {
+            const dimIdxToName = this._dimIdxToName = zrUtil.createHashMap<DimensionName, DimensionIndex>();
+            zrUtil.each(dimensionNames, dimName => {
+                dimIdxToName.set(dimensionInfos[dimName].storageDimensionIndex, dimName);
+            });
+        }
+    }
+
+    /**
+     *
+     * Get concrete dimension name by dimension name or dimension index.
+     * If input a dimension name, do not validate whether the dimension name exits.
+     *
+     * @caution
+     * @param dim Must make sure the dimension is `SeriesDimensionLoose`.
+     * Because only those dimensions will have auto-generated dimension names if not
+     * have a user-specified name, and other dimensions will get a return of null/undefined.
+     * @deprecated
+     * Becuause of this reason, should better use `getDimensionIndex` instead, for examples:
+     * ```js
+     * const val = data.getStorage().get(data.getDimensionIndex(dim), dataIdx);
+     * ```
+     *
+     * @return Concrete dim name.
+     */
+    getDimension(dim: SeriesDimensionLoose): DimensionName {
+        let dimIdx = this._recognizeDimensionIndex(dim);
+        if (dimIdx == null) {
+            return dim as DimensionName;
+        }
+        dimIdx = dim as DimensionIndex;
+
+        if (!this._dimensionOmitted) {
+            return this.dimensions[dimIdx];
+        }
+
+        // Retrieve from series dimension definition becuase it probably contains
+        // generated dimension name (like 'x', 'y').
+        const dimName = this._dimIdxToName.get(dimIdx);
+        if (dimName != null) {
+            return dimName;
+        }
+
+        const sourceDimDef = this._dimensionRequest.getDimensionFromSource(dimIdx);
+        if (sourceDimDef) {
+            return sourceDimDef.name;
+        }
+    }
+
+    /**
+     * Get dimension index in the storage. Return -1 if not found.
+     * Can be used to index value from getRawValue.
+     */
+    getDimensionIndex(dim: DimensionLoose): DimensionIndex {
+        const dimIdx = this._recognizeDimensionIndex(dim);
+        if (dimIdx != null) {
+            return dimIdx;
+        }
+
+        const dimInfo = this._getDimensionInfo(dim as DimensionName);
+        return dimInfo
+            ? dimInfo.storageDimensionIndex
+            : this._dimensionOmitted
+            ? this._dimensionRequest.getDimensionIndexFromSource(dim as DimensionName)
+            : -1;
     }
 
     /**
@@ -295,7 +411,8 @@ class SeriesData<
      * + If dim is a number (e.g., `1`), it means the index of the dimension.
      *   For example, `getDimension(0)` will return 'x' or 'lng' or 'radius'.
      * + If dim is a number-like string (e.g., `"1"`):
-     *     + If there is the same concrete dim name defined in `this.dimensions`, it means that concrete name.
+     *     + If there is the same concrete dim name defined in `series.dimensions` or `dataset.dimensions`,
+     *        it means that concrete name.
      *     + If not, it will be converted to a number, which means the index of the dimension.
      *        (why? because of the backward compatbility. We have been tolerating number-like string in
      *        dimension setting, although now it seems that it is not a good idea.)
@@ -305,35 +422,24 @@ class SeriesData<
      *   For example, it can be be default name `"x"`, `"y"`, `"z"`, `"lng"`, `"lat"`, `"angle"`, `"radius"`,
      *   or customized in `dimensions` property of option like `"age"`.
      *
-     * Get dimension name
-     * @param dim See above.
-     * @return Concrete dim name.
+     * @return recogonized `DimensionIndex`. Otherwise return null/undefined (means that dim is `DimensionName`).
      */
-    getDimension(dim: DimensionLoose): DimensionName {
+    private _recognizeDimensionIndex(dim: DimensionLoose): DimensionIndex {
         if (typeof dim === 'number'
-            // If being a number-like string but not being defined a dimension name.
-            || (!isNaN(dim as any) && !this._dimensionInfos.hasOwnProperty(dim))
+            // If being a number-like string but not being defined as a dimension name.
+            || (
+                dim != null
+                && !isNaN(dim as any)
+                && !this._getDimensionInfo(dim)
+                && (!this._dimensionOmitted || this._dimensionRequest.getDimensionIndexFromSource(dim) < 0)
+            )
         ) {
-            dim = this.dimensions[dim as DimensionIndex];
+            return +dim;
         }
-        return dim as DimensionName;
-    }
-
-    /**
-     * Get dimension index in the storage. Return -1 if not found.
-     * Can be used to index value from getRawValue.
-     */
-    getDimensionIndex(dim: DimensionLoose): number {
-        // For outer usage so it won't throw error as _getStoreDimIndex did.
-        return zrUtil.retrieve2(this._store.getDimensionIndex(this.getDimension(dim)), -1);
-    }
-
-    getStoreDimensions() {
-        return this._store.getDimensionNames();
     }
 
     private _getStoreDimIndex(dim: DimensionLoose): DimensionIndex {
-        const dimIdx = this._store.getDimensionIndex(this.getDimension(dim));
+        const dimIdx = this.getDimensionIndex(dim);
         if (__DEV__) {
             if (dimIdx == null) {
                 throw new Error('Unkown dimension ' + dim);
@@ -348,15 +454,28 @@ class SeriesData<
      *        Dimension can be concrete names like x, y, z, lng, lat, angle, radius
      *        Or a ordinal number. For example getDimensionInfo(0) will return 'x' or 'lng' or 'radius'
      */
-    getDimensionInfo(dim: DimensionLoose): SeriesDimensionDefine {
+    getDimensionInfo(dim: SeriesDimensionLoose): SeriesDimensionDefine {
         // Do not clone, because there may be categories in dimInfo.
-        return this._dimensionInfos[this.getDimension(dim)];
+        return this._getDimensionInfo(this.getDimension(dim));
+    }
+
+    /**
+     * If `dimName` if from outside of `SeriesData`,
+     * use this method other than visit `this._dimensionInfos` directly.
+     */
+    private _getDimensionInfo: (dimName: SeriesDimensionName) => SeriesDimensionDefine;
+
+    private _initGetDimensionInfo(needsHasOwn: boolean): void {
+        const dimensionInfos = this._dimensionInfos;
+        this._getDimensionInfo = needsHasOwn
+            ? dimName => (dimensionInfos.hasOwnProperty(dimName) ? dimensionInfos[dimName] : undefined)
+            : dimName => dimensionInfos[dimName];
     }
 
     /**
      * concrete dimension name list on coord.
      */
-    getDimensionsOnCoord(): DimensionName[] {
+    getDimensionsOnCoord(): SeriesDimensionName[] {
         return this._dimensionsSummary.dataDimsOnCoord.slice();
     }
 
@@ -366,9 +485,9 @@ class SeriesData<
      *        If not specified, return the first dim not extra.
      * @return concrete data dim. If not found, return null/undefined
      */
-    mapDimension(coordDim: DimensionName): DimensionName;
-    mapDimension(coordDim: DimensionName, idx: number): DimensionName;
-    mapDimension(coordDim: DimensionName, idx?: number): DimensionName {
+    mapDimension(coordDim: SeriesDimensionName): SeriesDimensionName;
+    mapDimension(coordDim: SeriesDimensionName, idx: number): SeriesDimensionName;
+    mapDimension(coordDim: SeriesDimensionName, idx?: number): SeriesDimensionName {
         const dimensionsSummary = this._dimensionsSummary;
 
         if (idx == null) {
@@ -379,7 +498,7 @@ class SeriesData<
         return dims ? dims[idx as number] as any : null;
     }
 
-    mapDimensionsAll(coordDim: DimensionName): DimensionName[] {
+    mapDimensionsAll(coordDim: SeriesDimensionName): SeriesDimensionName[] {
         const dimensionsSummary = this._dimensionsSummary;
         const dims = dimensionsSummary.encode[coordDim];
         return (dims || []).slice();
@@ -405,15 +524,9 @@ class SeriesData<
     ): void {
         let store: DataStorage;
         const dimensions = this.dimensions;
-        const dimensionInfos = map(dimensions, dimName => this._dimensionInfos[dimName]);
+        const dimensionInfos = map(dimensions, this._getDimensionInfo, this);
         if (data instanceof DataStorage) {
-            if (data.canUse(dimensionInfos)) {
-                store = data;
-            }
-            else {
-                // Fallback
-                data = data.getSource();
-            }
+            store = data;
         }
 
         if (!store) {
@@ -435,7 +548,7 @@ class SeriesData<
 
         // Cache summary info for fast visit. See "dimensionHelper".
         // Needs to be initialized after store is prepared.
-        this._dimensionsSummary = summarizeDimensions(this);
+        this._dimensionsSummary = summarizeDimensions(this, this._dimensionRequest);
         this.userOutput = this._dimensionsSummary.userOutput;
     }
 
@@ -478,19 +591,18 @@ class SeriesData<
         }
     }
 
-    private _updateOrdinalMeta() {
+    private _updateOrdinalMeta(): void {
         const store = this._store;
         const dimensions = this.dimensions;
         for (let i = 0; i < dimensions.length; i++) {
             const dimInfo = this._dimensionInfos[dimensions[i]];
             if (dimInfo.ordinalMeta) {
-                const dimIdx = store.getDimensionIndex(dimensions[i]);
-                store.collectOrdinalMeta(dimIdx, dimInfo.ordinalMeta);
+                store.collectOrdinalMeta(dimInfo.storageDimensionIndex, dimInfo.ordinalMeta);
             }
         }
     }
 
-    private _shouldMakeIdFromName() {
+    private _shouldMakeIdFromName(): boolean {
         const provider = this._store.getProvider();
         return this._idDimIdx == null
             && provider.getSource().sourceFormat !== SOURCE_FORMAT_TYPED_ARRAY
@@ -549,6 +661,7 @@ class SeriesData<
 
         prepareInvertedIndex(this);
     }
+
     /**
      * PENDING: In fact currently this function is only used to short-circuit
      * the calling of `scale.unionExtentFromData` when data have been filtered by modules
@@ -563,7 +676,7 @@ class SeriesData<
      * extent calculation will cost more than 10ms and the cache will
      * be erased because of the filtering.
      */
-    getApproximateExtent(dim: DimensionLoose): [number, number] {
+    getApproximateExtent(dim: SeriesDimensionLoose): [number, number] {
         return this._approximateExtent[dim] || this._store.getDataExtent(this._getStoreDimIndex(dim));
     }
 
@@ -571,7 +684,7 @@ class SeriesData<
      * Calculate extent on a filtered data might be time consuming.
      * Approximate extent is only used for: calculte extent of filtered data outside.
      */
-    setApproximateExtent(extent: [number, number], dim: DimensionLoose): void {
+    setApproximateExtent(extent: [number, number], dim: SeriesDimensionLoose): void {
         dim = this.getDimension(dim);
         this._approximateExtent[dim] = extent.slice() as [number, number];
     }
@@ -619,7 +732,7 @@ class SeriesData<
         return name;
     }
 
-    private _getCategory(dimIdx: number, idx: number) {
+    private _getCategory(dimIdx: number, idx: number): OrdinalRawValue {
         const ordinal = this._store.get(dimIdx, idx);
         const ordinalMeta = this._store.getOrdinalMeta(dimIdx);
         if (ordinalMeta) {
@@ -638,21 +751,32 @@ class SeriesData<
         return getId(this, this.getRawIndex(idx));
     }
 
-    count() {
+    count(): number {
         return this._store.count();
     }
+
     /**
      * Get value. Return NaN if idx is out of range.
-     * @param dim Dim must be concrete name.
+     *
+     * @deprecated Should better to use `data.getStorage().get(dimIndex, dataIdx)` instead.
      */
-    get(dim: DimensionName, idx: number): ParsedValue {
+    get(dim: SeriesDimensionName, idx: number): ParsedValue {
         const store = this._store;
-        return store.get(store.getDimensionIndex(dim), idx);
+        const dimInfo = this._dimensionInfos[dim];
+        if (dimInfo) {
+            return store.get(dimInfo.storageDimensionIndex, idx);
+        }
     }
 
-    getByRawIndex(dim: DimensionName, rawIdx: number): ParsedValue {
+    /**
+     * @deprecated Should better to use `data.getStorage().getByRawIndex(dimIndex, dataIdx)` instead.
+     */
+    getByRawIndex(dim: SeriesDimensionName, rawIdx: number): ParsedValue {
         const store = this._store;
-        return store.getByRawIndex(store.getDimensionIndex(dim), rawIdx);
+        const dimInfo = this._dimensionInfos[dim];
+        if (dimInfo) {
+            return store.getByRawIndex(dimInfo.storageDimensionIndex, rawIdx);
+        }
     }
 
     getIndices() {
@@ -688,12 +812,12 @@ class SeriesData<
      * Only check the coord dimensions.
      */
     hasValue(idx: number): boolean {
-        const dataDimsOnCoord = this._dimensionsSummary.dataDimsOnCoord;
-        for (let i = 0, len = dataDimsOnCoord.length; i < len; i++) {
+        const dataDimIndicesOnCoord = this._dimensionsSummary.dataDimIndicesOnCoord;
+        for (let i = 0, len = dataDimIndicesOnCoord.length; i < len; i++) {
             // Ordinal type originally can be string or number.
             // But when an ordinal type is used on coord, it can
             // not be string but only number. So we can also use isNaN.
-            if (isNaN(this.get(dataDimsOnCoord[i], idx) as any)) {
+            if (isNaN(this._store.get(dataDimIndicesOnCoord[i], idx) as any)) {
                 return false;
             }
         }
@@ -712,11 +836,11 @@ class SeriesData<
         return -1;
     }
 
-    getRawIndex(idx: number) {
+    getRawIndex(idx: number): number {
         return this._store.getRawIndex(idx);
     }
 
-    indexOfRawIndex(rawIndex: number) {
+    indexOfRawIndex(rawIndex: number): number {
         return this._store.indexOfRawIndex(rawIndex);
     }
 
@@ -727,7 +851,7 @@ class SeriesData<
      * @param value ordinal index
      * @return rawIndex
      */
-    rawIndexOf(dim: DimensionName, value: OrdinalNumber): number {
+    rawIndexOf(dim: SeriesDimensionName, value: OrdinalNumber): number {
         const invertedIndices = dim && this._invertedIndicesMap[dim];
         if (__DEV__) {
             if (!invertedIndices) {
@@ -817,9 +941,7 @@ class SeriesData<
 
         const dimIndices = map(normalizeDimensions(dims), this._getStoreDimIndex, this);
 
-        // Clone first
-        this._store = this._store.clone();
-        this._store.filterSelf(dimIndices, (fCtx
+        this._store = this._store.filter(dimIndices, (fCtx
             ? zrUtil.bind(cb as any, fCtx as any)
             : cb) as any
         );
@@ -843,8 +965,7 @@ class SeriesData<
             dimIndices.push(dimIdx);
         });
 
-        this._store = this._store.clone();
-        this._store.selectRange(innerRange);
+        this._store = this._store.selectRange(innerRange);
         return this;
     }
 
@@ -852,12 +973,12 @@ class SeriesData<
      * Data mapping to a plain array
      */
     mapArray<Ctx, Cb extends MapArrayCb0<Ctx>>(cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
-    /* eslint-disable */
+    /* eslint-disable max-len */
     mapArray<Ctx, Cb extends MapArrayCb1<Ctx>>(dims: DimensionLoose, cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
     mapArray<Ctx, Cb extends MapArrayCb1<Ctx>>(dims: [DimensionLoose], cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
     mapArray<Ctx, Cb extends MapArrayCb2<Ctx>>(dims: [DimensionLoose, DimensionLoose], cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
     mapArray<Ctx, Cb extends MapArrayCb<Ctx>>(dims: ItrParamDims, cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
-    /* eslint-enable */
+    /* eslint-enable max-len */
     mapArray<Ctx>(
         dims: ItrParamDims | MapArrayCb<Ctx>,
         cb: MapArrayCb<Ctx> | Ctx,
@@ -886,7 +1007,7 @@ class SeriesData<
      */
     map<Ctx>(dims: DimensionLoose, cb: MapCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): SeriesData<HostModel>;
     map<Ctx>(dims: [DimensionLoose], cb: MapCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): SeriesData<HostModel>;
-    /* eslint-disable-next-line */
+    // eslint-disable-next-line max-len
     map<Ctx>(dims: [DimensionLoose, DimensionLoose], cb: MapCb2<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): SeriesData<HostModel>;
     map<Ctx>(
         dims: ItrParamDims,
@@ -904,9 +1025,9 @@ class SeriesData<
         );
 
         const list = cloneListForMapAndSample(this);
-        list._store = this._store.map(dimIndices, (fCtx
-            ? zrUtil.bind(cb as any, fCtx as any)
-            : cb) as any
+        list._store = this._store.map(
+            dimIndices,
+            fCtx ? zrUtil.bind(cb, fCtx) : cb
         );
         return list;
     }
@@ -916,14 +1037,13 @@ class SeriesData<
      */
     modify<Ctx>(dims: DimensionLoose, cb: MapCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): void;
     modify<Ctx>(dims: [DimensionLoose], cb: MapCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): void;
-    /* eslint-disable-next-line */
     modify<Ctx>(dims: [DimensionLoose, DimensionLoose], cb: MapCb2<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): void;
     modify<Ctx>(
         dims: ItrParamDims,
         cb: MapCb<Ctx>,
         ctx?: Ctx,
         ctxCompat?: Ctx
-    ) {
+    ): void {
         // ctxCompat just for compat echarts3
         const fCtx = (ctx || ctxCompat || this) as CtxOrList<Ctx>;
 
@@ -940,9 +1060,13 @@ class SeriesData<
             normalizeDimensions(dims), this._getStoreDimIndex, this
         );
 
-        this._store.modify(dimIndices, (fCtx
-            ? zrUtil.bind(cb as any, fCtx as any)
-            : cb) as any
+        // If do shallow clone here, if there are too many stacked series,
+        // it still cost lots of memory, becuase `storage.dimensions` are not shared.
+        // We should consider there probably be shallow clone happen in each sereis
+        // in consequent filter/map.
+        this._store.modify(
+            dimIndices,
+            fCtx ? zrUtil.bind(cb, fCtx) : cb
         );
     }
 
@@ -974,18 +1098,19 @@ class SeriesData<
     lttbDownSample(
         valueDimension: DimensionLoose,
         rate: number
-    ) {
+    ): SeriesData<HostModel> {
         const list = cloneListForMapAndSample(this);
         list._store = this._store.lttbDownSample(
             this._getStoreDimIndex(valueDimension),
             rate
         );
-        return list;
+        return list as SeriesData<HostModel>;
     }
 
     getRawDataItem(idx: number) {
         return this._store.getRawDataItem(idx);
     }
+
     /**
      * Get model of one data item.
      */
@@ -1213,8 +1338,12 @@ class SeriesData<
      */
     cloneShallow(list?: SeriesData<HostModel>): SeriesData<HostModel> {
         if (!list) {
-            const dimensionInfoList = map(this.dimensions, this.getDimensionInfo, this);
-            list = new SeriesData(dimensionInfoList, this.hostModel);
+            list = new SeriesData(
+                this._dimensionRequest
+                    ? this._dimensionRequest
+                    : map(this.dimensions, this._getDimensionInfo, this),
+                this.hostModel
+            );
         }
 
         transferProperties(list, this);
@@ -1255,7 +1384,6 @@ class SeriesData<
                 // Currently, only dimensions that has ordinalMeta can create inverted indices.
                 const ordinalMeta = dimInfo.ordinalMeta;
                 const store = data._store;
-                const dimIdx = store.getDimensionIndex(dim);
                 if (ordinalMeta) {
                     invertedIndices = invertedIndicesMap[dim] = new CtorInt32Array(
                         ordinalMeta.categories.length
@@ -1267,7 +1395,7 @@ class SeriesData<
                     }
                     for (let i = 0; i < store.count(); i++) {
                         // Only support the case that all values are distinct.
-                        invertedIndices[store.get(dimIdx, i) as number] = i;
+                        invertedIndices[store.get(dimInfo.storageDimensionIndex, i) as number] = i;
                     }
                 }
             });
@@ -1302,12 +1430,14 @@ class SeriesData<
             return dimensions;
         };
 
-
-        // Data in excludeDimensions is copied, otherwise transfered.
+        /**
+         * Data in excludeDimensions is copied, otherwise transfered.
+         */
         cloneListForMapAndSample = function (original: SeriesData): SeriesData {
-            const allDimensions = original.dimensions;
             const list = new SeriesData(
-                map(allDimensions, original.getDimensionInfo, original),
+                original._dimensionRequest
+                    ? original._dimensionRequest
+                    : map(original.dimensions, original._getDimensionInfo, original),
                 original.hostModel
             );
             // FIXME If needs stackedOn, value may already been stacked

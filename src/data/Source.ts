@@ -139,8 +139,6 @@ class SourceImpl {
      */
     readonly metaRawOption: SourceMetaRawOption;
 
-    // readonly frozen: boolean;
-
 
     constructor(fields: {
         data: OptionSourceData,
@@ -173,6 +171,7 @@ class SourceImpl {
         this.metaRawOption = fields.metaRawOption;
 
         const dimensionsDefine = this.dimensionsDefine = fields.dimensionsDefine;
+
         if (dimensionsDefine) {
             for (let i = 0; i < dimensionsDefine.length; i++) {
                 const dim = dimensionsDefine[i];
@@ -479,4 +478,9 @@ function arrayRowsTravelFirst(
             cb(value0[i], i);
         }
     }
+}
+
+export function shouldRetrieveDataByName(source: Source): boolean {
+    const sourceFormat = source.sourceFormat;
+    return sourceFormat === SOURCE_FORMAT_OBJECT_ROWS || sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS;
 }

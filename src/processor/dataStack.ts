@@ -20,19 +20,22 @@
 import {createHashMap, each} from 'zrender/src/core/util';
 import GlobalModel from '../model/Global';
 import SeriesModel from '../model/Series';
-import { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../util/types';
-import SeriesData from '../data/SeriesData';
+import { SeriesOption, SeriesStackOptionMixin } from '../util/types';
+import SeriesData, { DataCalculationInfo } from '../data/SeriesData';
 import { addSafe } from '../util/number';
 
-interface StackInfo {
-    stackedDimension: DimensionName
-    isStackedByIndex: boolean
-    stackedByDimension: DimensionName
-    stackResultDimension: DimensionName
-    stackedOverDimension: DimensionName
+type StackInfo = Pick<
+    DataCalculationInfo<SeriesOption & SeriesStackOptionMixin>,
+    'stackedDimension'
+    | 'isStackedByIndex'
+    | 'stackedByDimension'
+    | 'stackResultDimension'
+    | 'stackedOverDimension'
+> & {
     data: SeriesData
     seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>
-}
+};
+
 // (1) [Caution]: the logic is correct based on the premises:
 //     data processing stage is blocked in stream.
 //     See <module:echarts/stream/Scheduler#performDataProcessorTasks>

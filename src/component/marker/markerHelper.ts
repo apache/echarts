@@ -25,13 +25,13 @@ import { MarkerStatisticType, MarkerPositionOption } from './MarkerModel';
 import { indexOf, curry, clone, isArray } from 'zrender/src/core/util';
 import Axis from '../../coord/Axis';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
-import { ScaleDataValue, ParsedValue } from '../../util/types';
+import { ScaleDataValue, ParsedValue, DimensionLoose, DimensionName } from '../../util/types';
 
 interface MarkerAxisInfo {
-    valueDataDim: string
+    valueDataDim: DimensionName
     valueAxis: Axis
     baseAxis: Axis
-    baseDataDim: string
+    baseDataDim: DimensionName
 }
 
 function hasXOrY(item: MarkerPositionOption) {
@@ -166,16 +166,9 @@ export function getAxisInfo(
     return ret;
 }
 
-function dataDimToCoordDim(seriesModel: SeriesModel, dataDim: string) {
-    const data = seriesModel.getData();
-    const dimensions = data.dimensions;
-    dataDim = data.getDimension(dataDim);
-    for (let i = 0; i < dimensions.length; i++) {
-        const dimItem = data.getDimensionInfo(dimensions[i]);
-        if (dimItem.name === dataDim) {
-            return dimItem.coordDim;
-        }
-    }
+function dataDimToCoordDim(seriesModel: SeriesModel, dataDim: DimensionLoose): DimensionName {
+    const dimItem = seriesModel.getData().getDimensionInfo(dataDim);
+    return dimItem && dimItem.coordDim;
 }
 
 /**

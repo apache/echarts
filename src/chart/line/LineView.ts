@@ -212,9 +212,7 @@ function getVisualGradient(
     let visualMeta;
 
     for (let i = visualMetaList.length - 1; i >= 0; i--) {
-        const dimIndex = visualMetaList[i].dimension;
-        const dimName = data.dimensions[dimIndex];
-        const dimInfo = data.getDimensionInfo(dimName);
+        const dimInfo = data.getDimensionInfo(visualMetaList[i].dimension);
         coordDim = (dimInfo && dimInfo.coordDim) as 'x' | 'y';
         // Can only be x or y
         if (coordDim === 'x' || coordDim === 'y') {

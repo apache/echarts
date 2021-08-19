@@ -210,7 +210,7 @@ export class TreeNode {
 
     getValue(dimension?: DimensionLoose): ParsedValue {
         const data = this.hostTree.data;
-        return data.get(data.getDimension(dimension || 'value'), this.dataIndex);
+        return data.getStorage().get(data.getDimensionIndex(dimension || 'value'), this.dataIndex);
     }
 
     setLayout(layout: any, merge?: boolean) {
@@ -447,12 +447,12 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
 
         tree.root.updateDepthAndHeight(0);
 
-        const dimensionsInfo = createDimensions(listData, {
+        const { dimensionList } = createDimensions(listData, {
             coordDimensions: ['value'],
             dimensionsCount: dimMax
         });
 
-        const list = new SeriesData(dimensionsInfo, hostModel);
+        const list = new SeriesData(dimensionList, hostModel);
         list.initData(listData);
 
         beforeLink && beforeLink(list);

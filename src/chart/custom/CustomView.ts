@@ -943,7 +943,7 @@ function makeRenderItem(
      */
     function value(dim?: DimensionLoose, dataIndexInside?: number): ParsedValue {
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
-        return data.get(data.getDimension(dim || 0), dataIndexInside);
+        return data.getStorage().get(data.getDimensionIndex(dim || 0), dataIndexInside);
     }
 
     /**
@@ -953,9 +953,11 @@ function makeRenderItem(
      */
     function ordinalRawValue(dim?: DimensionLoose, dataIndexInside?: number): ParsedValue | OrdinalRawValue {
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
-        const dimInfo = data.getDimensionInfo(dim || 0);
+        dim = dim || 0;
+        const dimInfo = data.getDimensionInfo(dim);
         if (!dimInfo) {
-            return;
+            const dimIndex = data.getDimensionIndex(dim);
+            return dimIndex >= 0 ? data.getStorage().get(dimIndex, dataIndexInside) : undefined;
         }
         const val = data.get(dimInfo.name, dataIndexInside);
         const ordinalMeta = dimInfo && dimInfo.ordinalMeta;
@@ -1131,12 +1133,12 @@ function makeRenderItem(
 
 function wrapEncodeDef(data: SeriesData<CustomSeriesModel>): WrapEncodeDefRet {
     const encodeDef = {} as WrapEncodeDefRet;
-    each(data.dimensions, function (dimName, dataDimIndex) {
+    each(data.dimensions, function (dimName) {
         const dimInfo = data.getDimensionInfo(dimName);
         if (!dimInfo.isExtraCoord) {
             const coordDim = dimInfo.coordDim;
             const dataDims = encodeDef[coordDim] = encodeDef[coordDim] || [];
-            dataDims[dimInfo.coordDimIndex] = dataDimIndex;
+            dataDims[dimInfo.coordDimIndex] = data.getDimensionIndex(dimName);
         }
     });
     return encodeDef;

@@ -177,7 +177,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             }
         }
 
-        const dimensionsInfo = createDimensions(data, {
+        const { dimensionList } = createDimensions(data, {
             coordDimensions: ['single'],
             dimensionsDefine: [
                 {
@@ -200,7 +200,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             }
         });
 
-        const list = new SeriesData(dimensionsInfo, this);
+        const list = new SeriesData(dimensionList, this);
         list.initData(data);
 
         return list;

@@ -48,6 +48,7 @@ import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
 import Model from '../model/Model';
 import { DataStorageDimensionType } from '../data/DataStorage';
+import { DimensionUserOuputEncode } from '../data/helper/dimensionHelper';
 
 
 
@@ -691,16 +692,6 @@ export interface CallbackDataParams {
     $vars: string[];
 }
 export type InterpolatableValue = ParsedValue | ParsedValue[];
-export type DimensionUserOuputEncode = {
-    [coordOrVisualDimName: string]:
-        // index: coordDimIndex, value: dataDimIndex
-        DimensionIndex[]
-};
-export type DimensionUserOuput = {
-    // The same as `data.dimensions`
-    fullDimensions: DimensionName[]
-    encode: DimensionUserOuputEncode
-};
 
 export type DecalDashArrayX = number | (number | number[])[];
 export type DecalDashArrayY = number | number[];

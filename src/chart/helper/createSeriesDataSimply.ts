@@ -45,9 +45,9 @@ export default function createSeriesDataSimply(
 
     const source = seriesModel.getSource();
 
-    const dimensionsInfo = createDimensions(source, opt as CreateDimensionsParams);
+    const { dimensionList } = createDimensions(source, opt as CreateDimensionsParams);
 
-    const list = new SeriesData(dimensionsInfo, seriesModel);
+    const list = new SeriesData(dimensionList, seriesModel);
     list.initData(source, nameList);
 
     return list;

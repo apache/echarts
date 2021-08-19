@@ -1070,7 +1070,7 @@ export function interpolateRawValues(
         for (let i = 0; i < length; ++i) {
             const info = data.getDimensionInfo(i);
             // Don't interpolate ordinal dims
-            if (info.type === 'ordinal') {
+            if (info && info.type === 'ordinal') {
                 // In init, there is no `sourceValue`, but should better not to get undefined result.
                 interpolated[i] = (percent < 1 && leftArr ? leftArr : rightArr)[i] as number;
             }

@@ -17,9 +17,8 @@
 * under the License.
 */
 
-import { assert, clone, isFunction, keys, map, reduce } from 'zrender/src/core/util';
+import { assert, clone, createHashMap, isFunction, keys, map, reduce } from 'zrender/src/core/util';
 import {
-    Dictionary,
     DimensionIndex,
     DimensionName,
     OptionDataItem,
@@ -69,20 +68,34 @@ type EachCb = (...args: any) => void;
 type FilterCb0 = (idx: number) => boolean;
 type FilterCb1 = (x: ParsedValue, idx: number) => boolean;
 type FilterCb = (...args: any) => boolean;
-type MapArrayCb = (...args: any) => any;
+// type MapArrayCb = (...args: any) => any;
 type MapCb = (...args: any) => ParsedValue | ParsedValue[];
 
 export type DimValueGetter = (
     this: DataStorage,
     dataItem: any,
-    dimName: string,
+    property: string,
     dataIndex: number,
     dimIndex: DimensionIndex
 ) => ParsedValue;
 
 export interface DataStorageDimensionDefine {
-    type?: DataStorageDimensionType;  // Default to be float.
-    name?: string;
+    /**
+     * Default to be float.
+     */
+    type?: DataStorageDimensionType;
+
+    /**
+     * Only used in SOURCE_FORMAT_OBJECT_ROWS and SOURCE_FORMAT_KEYED_COLUMNS to retrieve value
+     * by "object property".
+     * For example, in `[{bb: 124, aa: 543}, ...]`, "aa" and "bb" is "object property".
+     *
+     * Deliberately name it as "property" rather than "name" to prevent it from been used in
+     * SOURCE_FORMAT_ARRAY_ROWS, becuase if it comes from series, it probably
+     * can not be shared by different series.
+     */
+    property?: string;
+
     /**
      * When using category axis.
      * Category strings will be collected and stored in ordinalMeta.categories.
@@ -139,6 +152,10 @@ function prepareStorage(
         storage[dimIdx] = new DataCtor(end);
     }
 };
+
+/**
+ * Basically, DataStorage API keep immutable.
+ */
 class DataStorage {
     private _chunks: DataValueChunk[] = [];
 
@@ -157,8 +174,9 @@ class DataStorage {
     private _rawCount: number = 0;
 
     private _dimensions: DataStorageDimensionDefine[];
-    private _dimensionNames: string[];
     private _dimValueGetter: DimValueGetter;
+
+    private _calcDimNameToIdx = createHashMap<DimensionIndex, DimensionName>();
 
     defaultDimValueGetter: DimValueGetter;
     /**
@@ -189,57 +207,13 @@ class DataStorage {
         // Default dim value getter
         this._dimValueGetter = dimValueGetter || defaultGetter;
 
-        const emptyObj = {};
-
         // Reset raw extent.
         this._rawExtent = [];
-        const dimensions = this._dimensions = map(inputDimensions, dim => ({
+        this._dimensions = map(inputDimensions, dim => ({
             // Only pick these two props. Not leak other properties like orderMeta.
             type: dim.type,
-            name: dim.name
-        }) as DataStorageDimensionDefine);
-
-        const dimensionsIdxMap: Dictionary<number> = {};
-        let needsHasOwn = false;
-
-        // Needs to add prefix if key is used in object prototype
-        for (let i = 0; i < inputDimensions.length; i++) {
-            const name = inputDimensions[i].name;
-            if ((emptyObj as any)[name] != null) {
-                needsHasOwn = true;
-                break;
-            }
-        }
-        for (let i = 0; i < inputDimensions.length; i++) {
-            const dim = inputDimensions[i];
-            const name = dim.name;
-            dimensionsIdxMap[name] = i;
-        }
-        // We use different functions because it may be a hotspot code.
-        const updateGetDimensionIndex = () => {
-            this.getDimensionIndex = needsHasOwn ? function (dim) {
-                return dimensionsIdxMap.hasOwnProperty(dim) ? dimensionsIdxMap[dim] : undefined;
-            } : function (dim) {
-                return dimensionsIdxMap[dim];
-            };
-        };
-
-        this.appendDimension = (dimName, dimType) => {
-            if (!needsHasOwn && (emptyObj as any)[dimName] != null) {
-                needsHasOwn = true;
-                updateGetDimensionIndex();
-            }
-            const idx = dimensions.length;
-            dimensions.push({
-                name: dimName,
-                type: dimType
-            });
-            this._chunks.push(new dataCtors[dimType || 'float'](this._rawCount));
-            this._rawExtent.push(getInitialExtent());
-            dimensionsIdxMap[dimName] = idx;
-        };
-
-        updateGetDimensionIndex();
+            property: dim.property
+        }));
 
         this._initDataFromProvider(0, provider.count());
     }
@@ -248,25 +222,47 @@ class DataStorage {
         return this._provider;
     }
 
+    /**
+     * Caution: even when a `source` instance owned by a series, the created data storage
+     * may still be shared by different sereis (the source hash does not use all `source`
+     * props, see `sourceManager`). In this case, the `source` props that are not used in
+     * hash (like `source.dimensionDefine`) probably only belongs to a certain series and
+     * thus should not be fetch here.
+     */
     getSource(): Source {
         return this._provider.getSource();
     }
 
-    getDimensionIndex: (dim: DimensionName) => number;
-    appendDimension: (dim: DimensionName, type: DataStorageDimensionType) => void;
+    /**
+     * @caution Only used in dataStack.
+     */
+    ensureCalculationDimension(dimName: DimensionName, type: DataStorageDimensionType): DimensionIndex {
+        const calcDimNameToIdx = this._calcDimNameToIdx;
+        const dimensions = this._dimensions;
 
-    getDimensionNames() {
-        return map(this._dimensions, dim => dim.name);
-    }
+        let calcDimIdx = calcDimNameToIdx.get(dimName);
+        if (calcDimIdx != null) {
+            if (dimensions[calcDimIdx].type === type) {
+                return calcDimIdx;
+            }
+        }
+        else {
+            calcDimIdx = dimensions.length;
+        }
 
-    getDimensionCount() {
-        return this._dimensions.length;
+        dimensions[calcDimIdx] = { type: type };
+        calcDimNameToIdx.set(dimName, calcDimIdx);
+
+        this._chunks[calcDimIdx] = new dataCtors[type || 'float'](this._rawCount);
+        this._rawExtent[calcDimIdx] = getInitialExtent();
+
+        return calcDimIdx;
     }
 
     collectOrdinalMeta(
         dimIdx: number,
         ordinalMeta: OrdinalMeta
-    ) {
+    ): void {
         const chunk = this._chunks[dimIdx];
         const dim = this._dimensions[dimIdx];
         const rawExtents = this._rawExtent;
@@ -294,36 +290,21 @@ class DataStorage {
         dim.type = 'ordinal';   // Force to be ordinal
     }
 
-    getOrdinalMeta(dimIdx: number) {
+    getOrdinalMeta(dimIdx: number): OrdinalMeta {
         const dimInfo = this._dimensions[dimIdx];
         const ordinalMeta = dimInfo.ordinalMeta;
         return ordinalMeta;
     }
 
-    /**
-     * Check if SeriesData can use this DataStorage.
-     */
-    canUse(targetDims: DataStorageDimensionDefine[]) {
-        for (let i = 0; i < targetDims.length; i++) {
-            const targetDim = targetDims[i];
-            const selfDimIdx = this.getDimensionIndex(targetDim.name);
-            const selfDim = this._dimensions[selfDimIdx];
-            if (
-                !selfDim
-                || (selfDim.type || 'float') !== (targetDim.type || 'float')
-                // ordinalMeta is different. Usually being on the different axis.
-                || (selfDim.ordinalMeta && selfDim.ordinalMeta !== targetDim.ordinalMeta)
-            ) {
-                return false;
-            }
-        }
-        return true;
+    getDimensionProperty(dimIndex: DimensionIndex): DataStorageDimensionDefine['property'] {
+        const item = this._dimensions[dimIndex];
+        return item && item.property;
     }
 
     /**
      * Caution: Can be only called on raw data (before `this._indices` created).
      */
-    appendData(data: ArrayLike<any>) {
+    appendData(data: ArrayLike<any>): number[] {
         if (__DEV__) {
             assert(!this._indices, 'appendData can only be called on raw data.');
         }
@@ -343,7 +324,7 @@ class DataStorage {
         return [start, end];
     }
 
-    appendValues(values: any[][], minFillLen?: number) {
+    appendValues(values: any[][], minFillLen?: number): { start: number; end: number } {
         const storage = this._chunks;
         const dimensions = this._dimensions;
         const dimLen = dimensions.length;
@@ -364,7 +345,7 @@ class DataStorage {
             for (let dimIdx = 0; dimIdx < dimLen; dimIdx++) {
                 const dim = dimensions[dimIdx];
                 const val = defaultDimValueGetters.arrayRows.call(
-                    this, values[sourceIdx] || emptyDataItem, dim.name, sourceIdx, dimIdx
+                    this, values[sourceIdx] || emptyDataItem, dim.property, sourceIdx, dimIdx
                 ) as ParsedValueNumeric;
                 (storage[dimIdx] as any)[idx] = val;
 
@@ -374,7 +355,7 @@ class DataStorage {
             }
         }
 
-        this._count = end;
+        this._rawCount = this._count = end;
 
         return {start, end};
     }
@@ -389,7 +370,7 @@ class DataStorage {
         const dimensions = this._dimensions;
         const dimLen = dimensions.length;
         const rawExtent = this._rawExtent;
-        const dimNames = map(dimensions, dim => dim.name);
+        const dimNames = map(dimensions, dim => dim.property);
 
         for (let i = 0; i < dimLen; i++) {
             const dim = dimensions[i];
@@ -448,7 +429,7 @@ class DataStorage {
     /**
      * Get value. Return NaN if idx is out of range.
      */
-    get(dim: number, idx: number): ParsedValue {
+    get(dim: DimensionIndex, idx: number): ParsedValue {
         if (!(idx >= 0 && idx < this._count)) {
             return NaN;
         }
@@ -484,7 +465,7 @@ class DataStorage {
     /**
      * @param dim concrete dim
      */
-    getByRawIndex(dim: number, rawIdx: number): ParsedValue {
+    getByRawIndex(dim: DimensionIndex, rawIdx: number): ParsedValue {
         if (!(rawIdx >= 0 && rawIdx < this._rawCount)) {
             return NaN;
         }
@@ -538,7 +519,7 @@ class DataStorage {
     /**
      * Retreive the index with given raw data index
      */
-     indexOfRawIndex(rawIndex: number): number {
+    indexOfRawIndex(rawIndex: number): number {
         if (rawIndex >= this._rawCount || rawIndex < 0) {
             return -1;
         }
@@ -662,29 +643,31 @@ class DataStorage {
     }
 
     /**
-     * Data filter
+     * Data filter.
      */
-    filterSelf(
+    filter(
         dims: DimensionIndex[],
         cb: FilterCb
-    ) {
+    ): DataStorage {
         if (!this._count) {
-            return;
+            return this;
         }
 
-        const count = this.count();
-        const Ctor = getIndicesCtor(this._rawCount);
+        const newStore = this.clone();
+
+        const count = newStore.count();
+        const Ctor = getIndicesCtor(newStore._rawCount);
         const newIndices = new Ctor(count);
         const value = [];
         const dimSize = dims.length;
 
         let offset = 0;
         const dim0 = dims[0];
-        const chunks = this._chunks;
+        const chunks = newStore._chunks;
 
         for (let i = 0; i < count; i++) {
             let keep;
-            const rawIdx = this.getRawIndex(i);
+            const rawIdx = newStore.getRawIndex(i);
             // Simple optimization
             if (dimSize === 0) {
                 keep = (cb as FilterCb0)(i);
@@ -708,22 +691,25 @@ class DataStorage {
 
         // Set indices after filtered.
         if (offset < count) {
-            this._indices = newIndices;
+            newStore._indices = newIndices;
         }
-        this._count = offset;
+        newStore._count = offset;
         // Reset data extent
-        this._extent = [];
+        newStore._extent = [];
 
-        this._updateGetRawIdx();
+        newStore._updateGetRawIdx();
+
+        return newStore;
     }
 
     /**
      * Select data in range. (For optimization of filter)
      * (Manually inline code, support 5 million data filtering in data zoom.)
      */
-    selectRange(range: {[dimIdx: number]: [number, number]}) {
+    selectRange(range: {[dimIdx: number]: [number, number]}): DataStorage {
+        const newStore = this.clone();
 
-        const len = this._count;
+        const len = newStore._count;
 
         if (!len) {
             return;
@@ -735,8 +721,8 @@ class DataStorage {
             return;
         }
 
-        const originalCount = this.count();
-        const Ctor = getIndicesCtor(this._rawCount);
+        const originalCount = newStore.count();
+        const Ctor = getIndicesCtor(newStore._rawCount);
         const newIndices = new Ctor(originalCount);
 
         let offset = 0;
@@ -744,10 +730,10 @@ class DataStorage {
 
         const min = range[dim0][0];
         const max = range[dim0][1];
-        const storeArr = this._chunks;
+        const storeArr = newStore._chunks;
 
         let quickFinished = false;
-        if (!this._indices) {
+        if (!newStore._indices) {
             // Extreme optimization for common case. About 2x faster in chrome.
             let idx = 0;
             if (dimSize === 1) {
@@ -794,7 +780,7 @@ class DataStorage {
         if (!quickFinished) {
             if (dimSize === 1) {
                 for (let i = 0; i < originalCount; i++) {
-                    const rawIndex = this.getRawIndex(i);
+                    const rawIndex = newStore.getRawIndex(i);
                     const val = storeArr[dims[0]][rawIndex];
                     // Do not filter NaN, see comment above.
                     if (
@@ -807,7 +793,7 @@ class DataStorage {
             else {
                 for (let i = 0; i < originalCount; i++) {
                     let keep = true;
-                    const rawIndex = this.getRawIndex(i);
+                    const rawIndex = newStore.getRawIndex(i);
                     for (let k = 0; k < dimSize; k++) {
                         const dimk = dims[k];
                         const val = storeArr[dimk][rawIndex];
@@ -817,7 +803,7 @@ class DataStorage {
                         }
                     }
                     if (keep) {
-                        newIndices[offset++] = this.getRawIndex(i);
+                        newIndices[offset++] = newStore.getRawIndex(i);
                     }
                 }
             }
@@ -825,26 +811,27 @@ class DataStorage {
 
         // Set indices after filtered.
         if (offset < originalCount) {
-            this._indices = newIndices;
+            newStore._indices = newIndices;
         }
-        this._count = offset;
+        newStore._count = offset;
         // Reset data extent
-        this._extent = [];
+        newStore._extent = [];
 
-        this._updateGetRawIdx();
+        newStore._updateGetRawIdx();
+
+        return newStore;
     }
 
-    /**
-     * Data mapping to a plain array
-     */
-    /* eslint-enable */
-    mapArray(dims: DimensionIndex[], cb: MapArrayCb): any[] {
-        const result: any[] = [];
-        this.each(dims, function () {
-            result.push(cb && (cb as MapArrayCb).apply(null, arguments));
-        });
-        return result;
-    }
+    // /**
+    //  * Data mapping to a plain array
+    //  */
+    // mapArray(dims: DimensionIndex[], cb: MapArrayCb): any[] {
+    //     const result: any[] = [];
+    //     this.each(dims, function () {
+    //         result.push(cb && (cb as MapArrayCb).apply(null, arguments));
+    //     });
+    //     return result;
+    // }
 
     /**
      * Data mapping to a new List with given dimensions
@@ -857,13 +844,13 @@ class DataStorage {
     }
 
     /**
-     * Danger only can be used in SeriesData.
+     * @caution Danger!! Only used in dataStack.
      */
     modify(dims: DimensionIndex[], cb: MapCb) {
         this._updateDims(this, dims, cb);
     }
 
-    _updateDims(
+    private _updateDims(
         target: DataStorage,
         dims: DimensionIndex[],
         cb: MapCb
@@ -925,7 +912,7 @@ class DataStorage {
     lttbDownSample(
         valueDimension: DimensionIndex,
         rate: number
-    ) {
+    ): DataStorage {
         const target = this.clone([valueDimension], true);
         const targetStorage = target._chunks;
         const dimStore = targetStorage[valueDimension];
@@ -1177,22 +1164,22 @@ class DataStorage {
     }
 
     /**
+     * Clone shallow.
      *
      * @param clonedDims Determine which dims to clone. Will share the data if not specified.
      */
-    clone(clonedDims?: number[], ignoreIndices?: boolean): DataStorage {
+    clone(clonedDims?: DimensionIndex[], ignoreIndices?: boolean): DataStorage {
         const target = new DataStorage();
         const chunks = this._chunks;
         const clonedDimsMap = clonedDims && reduce(clonedDims, (obj, dimIdx) => {
             obj[dimIdx] = true;
             return obj;
-        }, {} as Record<string, boolean>);
+        }, {} as Record<DimensionIndex, boolean>);
 
         if (clonedDimsMap) {
             for (let i = 0; i < chunks.length; i++) {
                 // Not clone if dim is not picked.
-                target._chunks[i] = (clonedDimsMap && !clonedDimsMap[i])
-                    ? chunks[i] : cloneChunk(chunks[i]);
+                target._chunks[i] = !clonedDimsMap[i] ? chunks[i] : cloneChunk(chunks[i]);
             }
         }
         else {
@@ -1207,18 +1194,17 @@ class DataStorage {
         return target;
     }
 
-    private _copyCommonProps(target: DataStorage) {
+    private _copyCommonProps(target: DataStorage): void {
         target._count = this._count;
         target._rawCount = this._rawCount;
         target._provider = this._provider;
         target._dimensions = this._dimensions;
-        target.getDimensionIndex = this.getDimensionIndex;
 
         target._extent = clone(this._extent);
         target._rawExtent = clone(this._rawExtent);
     }
 
-    private _cloneIndices() {
+    private _cloneIndices(): DataStorage['_indices'] {
         if (this._indices) {
             const Ctor = this._indices.constructor as DataArrayLikeConstructor;
             let indices;
@@ -1237,24 +1223,24 @@ class DataStorage {
         return null;
     }
 
-    private _getRawIdxIdentity(idx: number) {
+    private _getRawIdxIdentity(idx: number): number {
         return idx;
     }
-    private _getRawIdx(idx: number) {
+    private _getRawIdx(idx: number): number {
         if (idx < this._count && idx >= 0) {
             return this._indices[idx];
         }
         return -1;
     }
 
-    private _updateGetRawIdx() {
+    private _updateGetRawIdx(): void {
         this.getRawIndex = this._indices ? this._getRawIdx : this._getRawIdxIdentity;
     }
 
     private static internalField = (function () {
 
         function getDimValueSimply(
-            this: DataStorage, dataItem: any, dimName: string, dataIndex: number, dimIndex: number
+            this: DataStorage, dataItem: any, property: string, dataIndex: number, dimIndex: number
         ): ParsedValue {
             return parseDataValue(dataItem[dimIndex], this._dimensions[dimIndex]);
         }
@@ -1264,15 +1250,15 @@ class DataStorage {
             arrayRows: getDimValueSimply,
 
             objectRows(
-                this: DataStorage, dataItem: any, dimName: string, dataIndex: number, dimIndex: number
+                this: DataStorage, dataItem: any, property: string, dataIndex: number, dimIndex: number
             ): ParsedValue {
-                return parseDataValue(dataItem[dimName], this._dimensions[dimIndex]);
+                return parseDataValue(dataItem[property], this._dimensions[dimIndex]);
             },
 
             keyedColumns: getDimValueSimply,
 
             original(
-                this: DataStorage, dataItem: any, dimName: string, dataIndex: number, dimIndex: number
+                this: DataStorage, dataItem: any, property: string, dataIndex: number, dimIndex: number
             ): ParsedValue {
                 // Performance sensitive, do not use modelUtil.getDataItemValue.
                 // If dataItem is an plain object with no value field, the let `value`
@@ -1290,7 +1276,7 @@ class DataStorage {
             },
 
             typedArray: function (
-                this: DataStorage, dataItem: any, dimName: string, dataIndex: number, dimIndex: number
+                this: DataStorage, dataItem: any, property: string, dataIndex: number, dimIndex: number
             ): ParsedValue {
                 return dataItem[dimIndex];
             }

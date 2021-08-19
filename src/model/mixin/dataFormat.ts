@@ -35,7 +35,7 @@ import {
 } from '../../util/types';
 import GlobalModel from '../Global';
 import { TooltipMarkupBlockFragment } from '../../component/tooltip/tooltipMarkup';
-import { makePrintable } from '../../util/log';
+import { error, makePrintable } from '../../util/log';
 
 const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
@@ -70,7 +70,7 @@ export class DataFormatMixin {
         const borderColor = style && style.stroke as ColorString;
         const mainType = this.mainType;
         const isSeries = mainType === 'series';
-        const userOutput = data.userOutput;
+        const userOutput = data.userOutput && data.userOutput.get();
 
         return {
             componentType: mainType,
@@ -149,9 +149,16 @@ export class DataFormatMixin {
             // Do not support '}' in dim name util have to.
             return str.replace(DIMENSION_LABEL_REG, function (origin, dimStr: string) {
                 const len = dimStr.length;
-                const dimLoose: DimensionLoose = (dimStr.charAt(0) === '[' && dimStr.charAt(len - 1) === ']')
-                    ? +dimStr.slice(1, len - 1) // Also support: '[]' => 0
-                    : dimStr;
+
+                let dimLoose: DimensionLoose = dimStr;
+                if (dimLoose.charAt(0) === '[' && dimLoose.charAt(len - 1) === ']') {
+                    dimLoose = +dimLoose.slice(1, len - 1); // Also support: '[]' => 0
+                    if (__DEV__) {
+                        if (isNaN(dimLoose)) {
+                            error(`Invalide label formatter: @${dimStr}, only support @[0], @[1], @[2], ...`);
+                        }
+                    }
+                }
 
                 let val = retrieveRawValue(data, dataIndex, dimLoose) as OptionDataValue;
 

@@ -28,7 +28,8 @@ import {
     BuiltinVisualProperty,
     ParsedValue,
     DimensionLoose,
-    StageHandlerProgressExecutor
+    StageHandlerProgressExecutor,
+    DimensionIndex
 } from '../util/types';
 import SeriesData from '../data/SeriesData';
 import { getItemVisualFromData, setItemVisualFromData } from './helper';
@@ -209,9 +210,9 @@ export function incrementalApplyVisual<VisualState extends string>(
 
     return {
         progress: function progress(params, data) {
-            let dimName: string;
+            let dimIndex: DimensionIndex;
             if (dim != null) {
-                dimName = data.getDimension(dim);
+                dimIndex = data.getDimensionIndex(dim);
             }
 
             function getVisual(key: string) {
@@ -223,6 +224,7 @@ export function incrementalApplyVisual<VisualState extends string>(
             }
 
             let dataIndex: number;
+            const storage = data.getStorage();
             while ((dataIndex = params.next()) != null) {
                 const rawDataItem = data.getRawDataItem(dataIndex);
 
@@ -233,7 +235,7 @@ export function incrementalApplyVisual<VisualState extends string>(
                 }
 
                 const value = dim != null
-                    ? data.get(dimName, dataIndex)
+                    ? storage.get(dimIndex, dataIndex)
                     : dataIndex;
 
                 const valueState = getValueState(value);

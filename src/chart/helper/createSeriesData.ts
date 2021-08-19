@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesData from '../../data/SeriesData';
-import createDimensions, { getDimCount } from '../../data/helper/createDimensions';
+import createDimensions from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../core/CoordinateSystem';
@@ -102,6 +102,10 @@ function injectOrdinalMeta(
     return firstCategoryDimIndex;
 }
 
+/**
+ * Caution: there are side effects to `sourceManager` in this method.
+ * Should better only be called in `Series['getInitialData']`.
+ */
 function createSeriesData(
     sourceRaw: OptionSourceData | null | undefined,
     seriesModel: SeriesModel,
@@ -130,34 +134,28 @@ function createSeriesData(
     const coordSysDimDefs = getCoordSysDimDefs(seriesModel, coordSysInfo);
     const useEncodeDefaulter = opt.useEncodeDefaulter;
 
-    // Try to ignore unsed dimensions if sharing a high dimension datastorage
-    // 30 is an experience value.
-    const omitUnusedDimensions = !isOriginalSource && source.dimensionsDefine && source.dimensionsDefine.length > 30;
-
     const encodeDefaulter = zrUtil.isFunction(useEncodeDefaulter)
         ? useEncodeDefaulter
         : useEncodeDefaulter
         ? zrUtil.curry(makeSeriesEncodeForAxisCoordSys, coordSysDimDefs, seriesModel)
         : null;
-
     const createDimensionOptions = {
         coordDimensions: coordSysDimDefs,
         generateCoord: opt.generateCoord,
-        encodeDefine: seriesModel.getEncode()
-            // NOTE: If we call createDimensions on same source multiple times.
-            // It will break the encodeDefaulter which has sideeffects.
-            // So we prepare the default encode here instead of passing encoderDefaulter function.
-            || (encodeDefaulter && encodeDefaulter(
-                source, getDimCount(source, coordSysDimDefs, source.dimensionsDefine || [])
-            )),
-        omitUnusedDimensions
+        encodeDefine: seriesModel.getEncode(),
+        encodeDefaulter: encodeDefaulter,
+        canOmitUnusedDimensions: !isOriginalSource
     };
-    const dimInfoList = createDimensions(source, createDimensionOptions);
-    const firstCategoryDimIndex = injectOrdinalMeta(dimInfoList, opt.createInvertedIndices, coordSysInfo);
+    const dimensionRequest = createDimensions(source, createDimensionOptions);
+    const firstCategoryDimIndex = injectOrdinalMeta(
+        dimensionRequest.dimensionList, opt.createInvertedIndices, coordSysInfo
+    );
 
-    const stackCalculationInfo = enableDataStack(seriesModel, dimInfoList);
+    const storage = !isOriginalSource ? sourceManager.getSharedDataStorage(dimensionRequest) : null;
 
-    const data = new SeriesData(dimInfoList, seriesModel);
+    const stackCalculationInfo = enableDataStack(seriesModel, { dimensionRequest, storage });
+
+    const data = new SeriesData(dimensionRequest, seriesModel);
     data.setCalculationInfo(stackCalculationInfo);
 
     const dimValueGetter =
@@ -170,20 +168,14 @@ function createSeriesData(
                     : this.defaultDimValueGetter(itemOpt, dimName, dataIndex, dimIndex);
             }
             : null;
-    let storage;
-    if (!isOriginalSource) {
-        storage = sourceManager.getSharedDataStorage(dimInfoList);
-        if (stackCalculationInfo.stackedOverDimension) {
-            storage.appendDimension(stackCalculationInfo.stackedOverDimension, 'float');
-            storage.appendDimension(stackCalculationInfo.stackResultDimension, 'float');
-        }
-    }
 
     data.hasItemOption = false;
     data.initData(
         // Try to reuse the data storage in sourceManager if using dataset.
-        isOriginalSource ? source : storage
-    , null, dimValueGetter);
+        isOriginalSource ? source : storage,
+        null,
+        dimValueGetter
+    );
 
     return data;
 }

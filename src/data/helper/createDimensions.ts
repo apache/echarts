@@ -27,18 +27,19 @@ import {
     DimensionIndex,
     VISUAL_DIMENSIONS
 } from '../../util/types';
-import SeriesData from '../SeriesData';
 import SeriesDimensionDefine from '../SeriesDimensionDefine';
-import { createHashMap, defaults, each, extend, HashMap, isObject, isString, map } from 'zrender/src/core/util';
+import {
+    createHashMap, defaults, each, extend, HashMap, isObject, isString
+} from 'zrender/src/core/util';
 import OrdinalMeta from '../OrdinalMeta';
 import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../Source';
-import DataStorage, { CtorInt32Array } from '../DataStorage';
-import { makeInner, normalizeToArray } from '../../util/model';
+import { CtorInt32Array } from '../DataStorage';
+import { normalizeToArray } from '../../util/model';
 import { BE_ORDINAL, guessOrdinal } from './sourceHelper';
+import {
+    createDimNameMap, ensureSourceDimNameMap, SeriesDimensionRequest, shouldOmitUnusedDimensions
+} from './SeriesDimensionRequest';
 
-const inner = makeInner<{
-    dimNameMap: HashMap<DimensionIndex, DimensionName>
-}, Source>();
 
 export interface CoordDimensionDefinition extends DimensionDefinition {
     dimsDef?: (DimensionName | { name: DimensionName, defaultTooltip?: boolean })[];
@@ -68,11 +69,21 @@ export type CreateDimensionsParams = {
     generateCoordCount?: number,
 
     /**
-     * If omit unused dimension
+     * If be able to omit unused dimension
      * Used to improve the performance on high dimension data.
      */
-    omitUnusedDimensions?: boolean
+    canOmitUnusedDimensions?: boolean
 };
+
+/**
+ * For outside usage compat (like echarts-gl are using it).
+ */
+export function legacyCreateDimensions(
+    source: Source | OptionSourceData,
+    opt?: CreateDimensionsParams
+): SeriesDimensionDefine[] {
+    return createDimensions(source, opt).dimensionList;
+}
 
 /**
  * This method builds the relationship between:
@@ -83,19 +94,15 @@ export type CreateDimensionsParams = {
  * Some guess strategy will be adapted if user does not define something.
  * If no 'value' dimension specified, the first no-named dimension will be
  * named as 'value'.
+ *
+ * @return The results are always sorted by `storageDimensionIndex` asc.
  */
 export default function createDimensions(
     // TODO: TYPE completeDimensions type
-    source: Source | SeriesData | OptionSourceData | DataStorage,
+    source: Source | OptionSourceData,
     opt?: CreateDimensionsParams
-): SeriesDimensionDefine[] {
-    if (source instanceof DataStorage) {
-        source = source.getSource();
-    }
-    else if (source instanceof SeriesData) {
-        source = source.getStorage().getSource();
-    }
-    else if (!isSourceInstance(source)) {
+): SeriesDimensionRequest {
+    if (!isSourceInstance(source)) {
         source = createSourceFromSeriesDataOption(source as OptionSourceData);
     }
 
@@ -104,19 +111,16 @@ export default function createDimensions(
     const sysDims = opt.coordDimensions || [];
     const dimsDef = opt.dimensionsDefine || source.dimensionsDefine || [];
     const coordDimNameMap = createHashMap<true, DimensionName>();
-    const result: SeriesDimensionDefine[] = [];
-    const omitUnusedDimensions = opt.omitUnusedDimensions;
-    const isUsingSourceDimensionsDef = dimsDef === source.dimensionsDefine;
-    // Try to cache the dimNameMap if the dimensionsDefine is from source.
-    const canCacheDimNameMap = (isUsingSourceDimensionsDef && omitUnusedDimensions);
-    let dataDimNameMap = canCacheDimNameMap && inner(source).dimNameMap;
-    let needsUpdateDataDimNameMap = false;
-    if (!dataDimNameMap) {
-        needsUpdateDataDimNameMap = true;
-        dataDimNameMap = createHashMap<DimensionIndex, DimensionName>();
-    }
-
+    const resultList: SeriesDimensionDefine[] = [];
     const dimCount = getDimCount(source, sysDims, dimsDef, opt.dimensionsCount);
+
+    // Try to ignore unsed dimensions if sharing a high dimension datastorage
+    // 30 is an experience value.
+    const omitUnusedDimensions = opt.canOmitUnusedDimensions && shouldOmitUnusedDimensions(dimCount);
+
+    const isUsingSourceDimensionsDef = dimsDef === source.dimensionsDefine;
+    const dataDimNameMap = isUsingSourceDimensionsDef
+        ? ensureSourceDimNameMap(source) : createDimNameMap(dimsDef);
 
     let encodeDef = opt.encodeDefine;
     if (!encodeDef && opt.encodeDefaulter) {
@@ -128,6 +132,7 @@ export default function createDimensions(
     for (let i = 0; i < indicesMap.length; i++) {
         indicesMap[i] = -1;
     }
+
     function getResultItem(dimIdx: number) {
         const idx = indicesMap[dimIdx];
         if (idx < 0) {
@@ -143,27 +148,15 @@ export default function createDimensions(
             }
             dimDefItem.type != null && (resultItem.type = dimDefItem.type);
             dimDefItem.displayName != null && (resultItem.displayName = dimDefItem.displayName);
-            const newIdx = result.length;
+            const newIdx = resultList.length;
             indicesMap[dimIdx] = newIdx;
-            result.push(resultItem);
+            resultItem.storageDimensionIndex = dimIdx;
+            resultList.push(resultItem);
             return resultItem;
         }
-        return result[idx];
+        return resultList[idx];
     }
 
-    if (needsUpdateDataDimNameMap) {
-        for (let i = 0; i < dimCount; i++) {
-            const dimDefItemRaw = dimsDef[i];
-            const userDimName = isObject(dimDefItemRaw) ? dimDefItemRaw.name : dimDefItemRaw;
-            // Name will be applied later for avoiding duplication.
-            if (userDimName != null && dataDimNameMap.get(userDimName) == null) {
-                dataDimNameMap.set(userDimName, i);
-            }
-        }
-        if (canCacheDimNameMap) {
-            inner(source).dimNameMap = dataDimNameMap;
-        }
-    }
     if (!omitUnusedDimensions) {
         for (let i = 0; i < dimCount; i++) {
             getResultItem(i);
@@ -332,21 +325,25 @@ export default function createDimensions(
                 resultItem.type = 'ordinal';
             }
         }
-        return removeDuplication(result);
     }
     else {
-        // Sort dimensions: there are some rule that use the last dim as label.
-        const sortedResult: SeriesDimensionDefine[] = [];
-        for (let i = 0; i < indicesMap.length; i++) {
-            if (indicesMap[i] >= 0) {
-                const resultItem = result[indicesMap[i]];
-                // PENDING: guessOrdinal or let user specify type: 'ordinal' manually?
-                ifNoNameFillWithCoordName(resultItem);
-                sortedResult.push(resultItem);
-            }
-        }
-        return removeDuplication(sortedResult);
+        each(resultList, resultItem => {
+            // PENDING: guessOrdinal or let user specify type: 'ordinal' manually?
+            ifNoNameFillWithCoordName(resultItem);
+        });
+        // Sort dimensions: there are some rule that use the last dim as label,
+        // and for some latter travel process easier.
+        resultList.sort((item0, item1) => item0.storageDimensionIndex - item1.storageDimensionIndex);
     }
+
+    removeDuplication(resultList);
+
+    return new SeriesDimensionRequest({
+        source,
+        dimensionList: resultList,
+        fullDimensionCount: dimCount,
+        dimensionOmitted: omitUnusedDimensions
+    });
 }
 
 function removeDuplication(result: SeriesDimensionDefine[]) {
@@ -362,7 +359,6 @@ function removeDuplication(result: SeriesDimensionDefine[]) {
         count++;
         duplicationMap.set(dimOriginalName, count);
     }
-    return result;
 }
 
 // ??? TODO
@@ -375,7 +371,7 @@ function removeDuplication(result: SeriesDimensionDefine[]) {
 // (2) sometimes user need to calcualte bubble size or use visualMap
 // on other dimensions besides coordSys needed.
 // So, dims that is not used by system, should be shared in storage?
-export function getDimCount(
+function getDimCount(
     source: Source,
     sysDims: CoordDimensionDefinitionLoose[],
     dimsDef: DimensionDefinitionLoose[],

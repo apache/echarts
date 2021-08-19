@@ -312,6 +312,10 @@
      * @param checkFn {Function} param: a function `assert`.
      */
     testHelper.printAssert = function (chartOrDomId, checkerFn) {
+        if (!chartOrDomId) {
+            return;
+        }
+
         var hostDOMEl;
         var chart;
         if (typeof chartOrDomId === 'string') {

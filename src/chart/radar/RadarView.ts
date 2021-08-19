@@ -243,7 +243,7 @@ class RadarView extends ChartView {
 
                 const pathEmphasisState = symbolPath.ensureState('emphasis');
                 pathEmphasisState.style = zrUtil.clone(itemHoverStyle);
-                let defaultText = data.get(data.dimensions[symbolPath.__dimIdx], idx);
+                let defaultText = data.getStorage().get(data.getDimensionIndex(symbolPath.__dimIdx), idx);
                 (defaultText == null || isNaN(defaultText as number)) && (defaultText = '');
 
                 setLabelStyle(

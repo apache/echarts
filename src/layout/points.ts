@@ -57,11 +57,8 @@ export default function pointsLayout(seriesType: string, forceStoreInTypedArray?
             }
 
             const store = data.getStorage();
-            const dim0 = data.getDimension(dims[0]);
-            const dim1 = data.getDimension(dims[1]);
-
-            const dimIdx0 = store.getDimensionIndex(dim0);
-            const dimIdx1 = store.getDimensionIndex(dim1);
+            const dimIdx0 = data.getDimensionIndex(dims[0]);
+            const dimIdx1 = data.getDimensionIndex(dims[1]);
 
             return dimLen && {
                 progress(params, data) {
