@@ -14,8 +14,8 @@ Apache ECharts is a free, powerful charting and visualization library offering a
 
 You may choose one of the following methods:
 
-+ Download from Official Website in [中文下载页](https://echarts.apache.org/zh/download.html)
-+ Download from Official Website in [English](https://echarts.apache.org/en/download.html)
++ Download from the official website in [中文下载页](https://echarts.apache.org/zh/download.html)
++ Download from the official website in [English](https://echarts.apache.org/en/download.html)
 + `npm install echarts --save`
 + CDN: [jsDelivr CDN](https://www.jsdelivr.com/package/npm/echarts?path=dist)
 
@@ -37,7 +37,7 @@ You may choose one of the following methods:
 
 + [GitHub Issues](https://github.com/apache/echarts/issues) for bug report and feature requests
 + Email [dev@echarts.apache.org](mailto:dev@echarts.apache.org) for general questions
-+ Subscribe [mailing list](https://echarts.apache.org/en/maillist.html) to get updated with the project
++ Subscribe to the [mailing list](https://echarts.apache.org/en/maillist.html) to get updated with the project
 
 ## Build
 
@@ -66,7 +66,7 @@ More custom build approaches can be checked in this tutorial: [Create Custom Bui
 
 ## Contribution
 
-If you wish to debug locally or make pull requests, please refer to [contributing](https://github.com/apache/echarts/blob/master/CONTRIBUTING.md) document.
+If you wish to debug locally or make pull requests, please refer to the [contributing](https://github.com/apache/echarts/blob/master/CONTRIBUTING.md) document.
 
 ## Resources
 
