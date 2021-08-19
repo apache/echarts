@@ -50,8 +50,6 @@ async function run() {
             '',
             '  For example:',
             '',
-            egIndent + 'node build/build.js --release'
-                + '\n' + descIndent + '# Build all to `dist` folder.',
             egIndent + 'node build/build.js --prepublish'
                 + '\n' + descIndent + '# Only prepublish.',
             egIndent + 'node build/build.js --type ""'
@@ -60,8 +58,6 @@ async function run() {
                 + '\n' + descIndent + '# Only generate `dist/echarts.common.min.js`.',
             egIndent + 'node build/build.js --type simple --min'
                 + '\n' + descIndent + '# Only generate `dist/echarts-en.simple.min.js`.',
-            egIndent + 'node build/build.js -i "my/index.js" -o "my/bundle.js"'
-                + '\n' + descIndent + '# Take `<cwd>/my/index.js` as input and generate `<cwd>/my/bundle.js`,'
         ].join('\n'))
         .option(
             '--prepublish',
@@ -167,6 +163,7 @@ async function build(configs) {
             chalk.cyan(singleConfig.input)
         );
 
+        console.time('rollup build');
         const bundle = await rollup.rollup(singleConfig);
 
         for (let output of singleConfig.output) {
@@ -178,9 +175,8 @@ async function build(configs) {
 
             await bundle.write(output);
 
-            console.time('rollup build');
-            console.timeEnd('rollup build');
         };
+        console.timeEnd('rollup build');
 
         checkBundleCode(singleConfig);
     }

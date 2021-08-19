@@ -36,14 +36,6 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     // only exist in this module, but probably also exist in other modules, like `barPolar`.
     registers.registerLayout(registers.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, largeLayout);
 
-    registers.registerVisual({
-        seriesType: 'bar',
-        reset: function (seriesModel) {
-            // Visual coding for legend
-            seriesModel.getData().setVisual('legendSymbol', 'roundRect');
-        }
-    });
-
     // Down sample after filter
     registers.registerProcessor(
         registers.PRIORITY.PROCESSOR.STATISTIC,

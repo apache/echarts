@@ -29,6 +29,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { ColorString } from '../../util/types';
+import { saveOldStyle } from '../../animation/basicTrasition';
 
 type LayerSeries = ReturnType<ThemeRiverSeriesModel['getLayerSeries']>;
 
@@ -134,6 +135,8 @@ class ThemeRiverView extends ChartView {
                         stackedOnPoints: points1
                     }
                 }, seriesModel);
+
+                saveOldStyle(polygon);
             }
 
             setLabelStyle(polygon, getLabelStatesModels(seriesModel), {

@@ -181,8 +181,6 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
 }
 
 type ScaleConstructor = typeof Scale & clazzUtil.ClassManager;
-clazzUtil.enableClassManagement(Scale as ScaleConstructor, {
-    registerWhenExtend: true
-});
+clazzUtil.enableClassManagement(Scale as ScaleConstructor);
 
 export default Scale;

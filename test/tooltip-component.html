@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="axis-and-toolbox"></div>
+        <div id="axis-and-toolbox-formatter"></div>
+        <div id="graphic-component-tooltip"></div>
+        <div id="legend-tooltip-default-formatter"></div>
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                tooltip: {
+                    confine: true,
+                    textStyle: {
+                        fontSize: 5
+                    }
+                },
+
+                legend: {
+                    id: 'legend_id',
+                    tooltip: {
+                        show: true,
+                        textStyle: {
+                            color: 'red',
+                            fontSize: 20
+                        }
+                    },
+                    data: [{
+                        name: 'tooltip fontSize: 40 red',
+                        tooltip: {
+                            textStyle: {
+                                fontSize: 40
+                            }
+                        }
+                    }, {
+                        name: 'tooltip fontSize: 20 red'
+                        // This item inherit legend.tootip.
+                    }, {
+                        name: 'tooltip fontSize: 20 red formatter JSON',
+                        tooltip: {
+                            formatter: function (params) {
+                                return '<pre>' + JSON.stringify(params, null, 2) + '</pre>';
+                            }
+                        }
+                        // This item inherit legend.tootip.
+                    }, {
+                        name: 'only show "stringstring"',
+                        tooltip: 'stringstring'
+                        // This item inherit legend.tootip.
+                    }]
+                },
+                series: {
+                    type: 'pie',
+                    radius: '30%',
+                    data: [{
+                        name: 'tooltip fontSize: 40 red',
+                        value: 100
+                    }, {
+                        name: 'tooltip fontSize: 20 red',
+                        value: 200
+                    }, {
+                        name: 'tooltip fontSize: 20 red formatter JSON',
+                        value: 200
+                    }, {
+                        name: 'only show "stringstring"',
+                        value: 200
+                    }]
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Hover legend should show tooltip',
+                    'check each **fontSize** and **color**',
+                    '**click button** to trigger tooltip'
+                ],
+                option: option,
+                height: 200,
+                buttons: [{
+                    text: 'trigger 1st legend tooltip',
+                    onclick: function () {
+                        chart.dispatchAction({
+                            type: 'showTip',
+                            legendIndex: 0,
+                            name: 'tooltip fontSize: 40 red'
+                        });
+                    }
+                }, {
+                    text: 'trigger 2nd legend tooltip',
+                    onclick: function () {
+                        chart.dispatchAction({
+                            type: 'showTip',
+                            legendId: 'legend_id',
+                            name: 'tooltip fontSize: 20 red'
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                tooltip: {
+                    textStyle: {
+                        fontSize: 5
+                    }
+                },
+
+                legend: {
+                    data: [{
+                        name: 'tooltip fontSize: 40',
+                        tooltip: {
+                            show: true,
+                            textStyle: {
+                                fontSize: 40
+                            }
+                        }
+                    }, {
+                        tooltip: {
+                            show: true
+                        },
+                        name: 'tooltip fontSize: 5'
+                    }, {
+                        name: 'no tooltip'
+                    }]
+                },
+                series: {
+                    type: 'pie',
+                    radius: '30%',
+                    data: [{
+                        name: 'tooltip fontSize: 40',
+                        value: 100
+                    }, {
+                        name: 'tooltip fontSize: 5',
+                        value: 200
+                    }, {
+                        name: 'no tooltip',
+                        value: 200
+                    }]
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'Hover legend should show tooltip',
+                    'check each **fontSize** and **color**',
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                tooltip: {
+                    textStyle: {
+                        fontSize: 5,
+                        color: 'red'
+                    }
+                },
+                toolbox: {
+                    tooltip: {
+                        confine: true,
+                        show: true,
+                        textStyle: {
+                            fontSize: 20
+                        }
+                    },
+                    feature: {
+                        dataZoom: {},
+                        magicType: {
+                            type: ['line', 'bar', 'stack', 'tiled']
+                        }
+                    }
+                },
+                xAxis: {
+                    name: 'show tooltip',
+                    tooltip: {
+                        show: true,
+                        textStyle: {
+                            fontSize: 20
+                        }
+                    }
+                },
+                yAxis: {},
+                series: {
+                    type: 'scatter',
+                    data: [12, 22, 33]
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'axis-and-toolbox', {
+                title: [
+                    'Hover toolbox and axis name:',
+                    'should show tooltip, fontSize: 20 red',
+                    'check each **fontSize** and **color**',
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                tooltip: {
+                    textStyle: {
+                        fontSize: 5,
+                        color: 'red'
+                    }
+                },
+                toolbox: {
+                    tooltip: {
+                        confine: true,
+                        show: true,
+                        formatter: params => {
+                            return '<pre>' + JSON.stringify(params, null, 4) + '</pre>';
+                        },
+                        textStyle: {
+                            fontSize: 20
+                        }
+                    },
+                    feature: {
+                        dataZoom: {},
+                        magicType: {
+                            type: ['line', 'bar', 'stack', 'tiled']
+                        }
+                    }
+                },
+                xAxis: {
+                    name: 'show tooltip',
+                    tooltip: {
+                        formatter: params => {
+                            return '<pre>' + JSON.stringify(params, null, 4) + '</pre>';
+                        },
+                        show: true,
+                        textStyle: {
+                            fontSize: 20
+                        }
+                    }
+                },
+                yAxis: {},
+                series: {
+                    type: 'scatter',
+                    data: [12, 22, 33]
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'axis-and-toolbox-formatter', {
+                title: [
+                    'Hover toolbox and axis name:',
+                    'should show tooltip, fontSize: 20 red, **params JSON**',
+                    'check each **fontSize** and **color**',
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                tooltip: {
+                    textStyle: {
+                        fontSize: 10,
+                        color: 'red'
+                    }
+                },
+                graphic: [{
+                    tooltip: {
+                        formatter: 'asdf',
+                        textStyle: {
+                            fontSize: 20
+                        }
+                    },
+                    type: 'rect',
+                    name: '1st',
+                    shape: {
+                        y: 20,
+                        x: 250,
+                        width: 40,
+                        height: 40
+                    },
+                    textContent: {
+                        style: { text: 'show tooltip\nasdf\nfontSize: 20 red' }
+                    },
+                    textConfig: {
+                        position: 'bottom'
+                    },
+                    style: {
+                        fill: 'blue'
+                    }
+                }, {
+                    type: 'rect',
+                    shape: {
+                        y: 20,
+                        x: 350,
+                        width: 40,
+                        height: 40
+                    },
+                    textContent: {
+                        style: {
+                            text: 'show no tooltip'
+                        }
+                    },
+                    textConfig: {
+                        position: 'bottom'
+                    },
+                    style: {
+                        fill: 'blue'
+                    }
+                }, {
+                    type: 'rect',
+                    tooltip: {
+                        formatter: function (param) {
+                            return '<pre>' + JSON.stringify(param, null, 2) + '</pre>';
+                        },
+                        textStyle: {
+                            fontSize: 20
+                        }
+                    },
+                    name: '3rd',
+                    shape: {
+                        y: 20,
+                        x: 450,
+                        width: 40,
+                        height: 40
+                    },
+                    textContent: {
+                        style: { text: 'show tooltip\nJSON params\nfontSize: 20 red' }
+                    },
+                    textConfig: {
+                        position: 'bottom'
+                    },
+                    style: {
+                        fill: 'blue'
+                    }
+                }, {
+                    tooltip: 'stringstring',
+                    type: 'rect',
+                    name: '4nd',
+                    shape: {
+                        y: 20,
+                        x: 550,
+                        width: 40,
+                        height: 40
+                    },
+                    textContent: {
+                        style: { text: 'show tooltip\n"stringstring"\nfontSize: 10 red' }
+                    },
+                    textConfig: {
+                        position: 'bottom'
+                    },
+                    style: {
+                        fill: 'blue'
+                    }
+                }, {
+                    tooltip: {
+                        position: 'left'
+                    },
+                    type: 'rect',
+                    name: '5nd',
+                    shape: {
+                        y: 20,
+                        x: 650,
+                        width: 40,
+                        height: 40
+                    },
+                    textContent: {
+                        style: { text: 'show tooltip\n"5nd"\nfontSize: 10 red\nposition: "left"' }
+                    },
+                    textConfig: {
+                        position: 'bottom'
+                    },
+                    style: {
+                        fill: 'blue'
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'graphic-component-tooltip', {
+                title: [
+                    'Hover the graphic should show tooltip',
+                    'check each tooltip',
+                ],
+                option: option,
+                height: 200,
+                buttons: [{
+                    text: 'trigger 1st graphic tooltip',
+                    onclick: function () {
+                        chart.dispatchAction({
+                            type: 'showTip',
+                            graphicIndex: 0,
+                            name: '1st'
+                        });
+                    }
+                }, {
+                    text: 'trigger 3rd graphic tooltip',
+                    onclick: function () {
+                        chart.dispatchAction({
+                            type: 'showTip',
+                            graphicIndex: 0,
+                            name: '3rd'
+                        });
+                    }
+                }, {
+                    text: 'trigger 5nd graphic tooltip',
+                    onclick: function () {
+                        chart.dispatchAction({
+                            type: 'showTip',
+                            graphicIndex: 0,
+                            name: '5nd'
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option = {
+                tooltip: {
+                    // Should not use this formatter even thought
+                    // legend.tooltip.formatter is not spefied.
+                    formatter: 'this is global tooltip formatter'
+                },
+                legend: {
+                    tooltip: {
+                        show: true,
+                        // formatter: 'asdf{a}'
+                    },
+                    formatter: 'legend: {name}'
+                },
+                xAxis: {},
+                yAxis: {},
+                series: [{
+                    name: 'seriesA',
+                    type: 'scatter',
+                    data: [[12, 333]]
+                }, {
+                    name: 'seriesB',
+                    type: 'scatter',
+                    data: [[456, 123]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'legend-tooltip-default-formatter', {
+                title: [
+                    'Hover legend should show tooltip: "seriesA" or "seriesB"'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+    </body>
+</html>
+

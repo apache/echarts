@@ -85,6 +85,10 @@ export function convertFromEC4CompatibleStyle(hostStyle: ZRStyleProps, elType: s
         hasOwn(srcStyle, 'rich') && (textContentStyle.rich = srcStyle.rich);
         hasOwn(srcStyle, 'textFill') && (textContentStyle.fill = srcStyle.textFill);
         hasOwn(srcStyle, 'textStroke') && (textContentStyle.stroke = srcStyle.textStroke);
+        hasOwn(srcStyle, 'fontFamily') && (textContentStyle.fontFamily = srcStyle.fontFamily);
+        hasOwn(srcStyle, 'fontSize') && (textContentStyle.fontSize = srcStyle.fontSize);
+        hasOwn(srcStyle, 'fontStyle') && (textContentStyle.fontStyle = srcStyle.fontStyle);
+        hasOwn(srcStyle, 'fontWeight') && (textContentStyle.fontWeight = srcStyle.fontWeight);
 
         textContent = {
             type: 'text',
@@ -191,7 +195,7 @@ export function convertToEC4StyleForCustomSerise(
     }
     else {
         if (textFillNotSet) {
-            out.textFill = txCfg.outsideFill || hostFill;
+            out.textFill = itemStl.fill || txCfg.outsideFill || '#000';
         }
         !out.textStroke && txCfg.outsideStroke && (out.textStroke = txCfg.outsideStroke);
     }

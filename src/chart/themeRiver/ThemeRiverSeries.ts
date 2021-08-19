@@ -81,8 +81,6 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
 
     coordinateSystem: Single;
 
-    useColorPaletteOnData = true;
-
     /**
      * @override
      */
@@ -293,6 +291,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
         zlevel: 0,
         z: 2,
 
+        colorBy: 'data',
         coordinateSystem: 'singleAxis',
 
         // gap in axis's orthogonal orientation

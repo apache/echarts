@@ -22,7 +22,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
@@ -60,17 +60,7 @@ under the License.
             var groupCategories = [];
             var groupColors = [];
 
-            require([
-                'echarts',
-                // 'zrender/tool/color',
-                // 'echarts/chart/line',
-                // 'echarts/chart/parallel',
-                // 'echarts/component/grid',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox',
-                // 'echarts/component/dataZoom'
-            ], function (ec) {
+            require(['echarts'], function (ec) {
                 echarts = ec;
                 colorTool = echarts.color;
                 chart = myChart = echarts.init(document.getElementById('sync'));

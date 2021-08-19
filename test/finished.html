@@ -22,7 +22,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
@@ -153,57 +153,55 @@ under the License.
             }
 
             require(['echarts'], function (echarts) {
-                require(['map/js/china'], function () {
-                    var option = {
-                        tooltip: {},
-                        toolbox: {
-                            left: 'center',
-                            feature: {
-                                dataZoom: {}
-                            }
+                var option = {
+                    tooltip: {},
+                    toolbox: {
+                        left: 'center',
+                        feature: {
+                            dataZoom: {}
+                        }
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        data: ['pm2.5' /* ,'pm10' */]
+                    },
+                    xAxis: [{
+                    }],
+                    yAxis: [{
+                    }],
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {
+                        type: 'slider'
+                    }],
+                    animation: false,
+                    series : [{
+                        name: 'pm2.5',
+                        type: 'scatter',
+                        data: genData1(1e5),
+                        dimensions: ['x', 'y'],
+                        symbolSize: 3,
+                        itemStyle: {
+                            color: '#128de3',
+                            opacity: 0.4
                         },
-                        legend: {
-                            orient: 'vertical',
-                            left: 'left',
-                            data: ['pm2.5' /* ,'pm10' */]
-                        },
-                        xAxis: [{
-                        }],
-                        yAxis: [{
-                        }],
-                        dataZoom: [{
-                            type: 'inside'
-                        }, {
-                            type: 'slider'
-                        }],
-                        animation: false,
-                        series : [{
-                            name: 'pm2.5',
-                            type: 'scatter',
-                            data: genData1(1e5),
-                            dimensions: ['x', 'y'],
-                            symbolSize: 3,
-                            itemStyle: {
-                                color: '#128de3',
-                                opacity: 0.4
-                            },
-                            large: true,
-                            largeThreshold: 500,
-                            progressive: 500
-                        }]
-                    };
+                        large: true,
+                        largeThreshold: 500,
+                        progressive: 500
+                    }]
+                };
 
-                    var chart = testHelper.create(echarts, 'main0', {
-                        title: [
-                            'finished should be triggered, and not repeatly',
-                            'finished should not triggered before real finished'
-                        ],
-                        autoResize: false,
-                        option: option
-                    });
-
-                    chart && enableSnapshot(chart, 'main0');
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'finished should be triggered, and not repeatly',
+                        'finished should not triggered before real finished'
+                    ],
+                    autoResize: false,
+                    option: option
                 });
+
+                chart && enableSnapshot(chart, 'main0');
             });
         </script>
 

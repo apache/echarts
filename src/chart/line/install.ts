@@ -34,6 +34,21 @@ export function install(registers: EChartsExtensionInstallRegisters) {
 
     registers.registerLayout(layoutPoints('line', true));
 
+    registers.registerVisual({
+        seriesType: 'line',
+        reset: function (seriesModel: LineSeries) {
+            const data = seriesModel.getData();
+            // Visual coding for legend
+            const lineStyle = seriesModel.getModel('lineStyle').getLineStyle();
+            if (lineStyle && !lineStyle.stroke) {
+                // Fill in visual should be palette color if
+                // has color callback
+                lineStyle.stroke = data.getVisual('style').fill;
+            }
+            data.setVisual('legendLineStyle', lineStyle);
+        }
+    });
+
     // Down sample after filter
     registers.registerProcessor(
         registers.PRIORITY.PROCESSOR.STATISTIC,

@@ -259,8 +259,9 @@ export class TreeNode {
 
     /**
      * Get item visual
+     * FIXME: make return type better
      */
-    getVisual(key: string): any {
+    getVisual(key: string): unknown {
         return this.hostTree.data.getItemVisual(this.dataIndex, key as any);
     }
 
@@ -270,6 +271,22 @@ export class TreeNode {
 
     getId(): string {
         return this.hostTree.data.getId(this.dataIndex);
+    }
+
+    /**
+     * index in parent's children
+     */
+    getChildIndex(): number {
+        if (this.parentNode) {
+            const children = this.parentNode.children;
+            for (let i = 0; i < children.length; ++i) {
+                if (children[i] === this) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+        return -1;
     }
 
     /**

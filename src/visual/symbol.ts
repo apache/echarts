@@ -28,6 +28,7 @@ import {
     SymbolRotateCallback,
     SymbolClipCallback,
     SymbolClip
+    SymbolOffsetCallback
 } from '../util/types';
 import List from '../data/List';
 import SeriesModel from '../model/Series';
@@ -47,8 +48,8 @@ const seriesSymbolTask: StageHandler = {
     ) {
         const data = seriesModel.getData();
 
-        if (seriesModel.legendSymbol) {
-            data.setVisual('legendSymbol', seriesModel.legendSymbol);
+        if (seriesModel.legendIcon) {
+            data.setVisual('legendIcon', seriesModel.legendIcon);
         }
 
         if (!seriesModel.hasSymbolVisual) {
@@ -60,19 +61,27 @@ const seriesSymbolTask: StageHandler = {
         const keepAspect = seriesModel.get('symbolKeepAspect');
         const symbolRotate = seriesModel.get('symbolRotate');
         const symbolClip = seriesModel.get('symbolClip');
+        const symbolOffset = seriesModel.get('symbolOffset');
+
 
         const hasSymbolTypeCallback = isFunction(symbolType);
         const hasSymbolSizeCallback = isFunction(symbolSize);
         const hasSymbolRotateCallback = isFunction(symbolRotate);
+        const hasSymbolOffsetCallback = isFunction(symbolOffset);
         const hasSymbolClipCallback = isFunction(symbolClip);
-        const hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback || hasSymbolRotateCallback || hasSymbolClipCallback;
+        const hasCallback = hasSymbolTypeCallback
+            || hasSymbolSizeCallback
+            || hasSymbolRotateCallback
+            || hasSymbolOffsetCallback
+            || hasSymbolClipCallback;
         const seriesSymbol = (!hasSymbolTypeCallback && symbolType) ? symbolType : seriesModel.defaultSymbol;
         const seriesSymbolSize = !hasSymbolSizeCallback ? symbolSize : null;
         const seriesSymbolRotate = !hasSymbolRotateCallback ? symbolRotate : null;
+        const seriesSymbolOffset = !hasSymbolOffsetCallback ? symbolOffset : null;
         const seriesSymbolClip = !hasSymbolClipCallback ? symbolClip : null;
 
         data.setVisual({
-            legendSymbol: seriesModel.legendSymbol || seriesSymbol as string,
+            legendIcon: seriesModel.legendIcon || seriesSymbol as string,
             // If seting callback functions on `symbol` or `symbolSize`, for simplicity and avoiding
             // to bring trouble, we do not pick a reuslt from one of its calling on data item here,
             // but just use the default value. Callback on `symbol` or `symbolSize` is convenient in
@@ -81,7 +90,8 @@ const seriesSymbolTask: StageHandler = {
             symbolSize: seriesSymbolSize as number | number[],
             symbolKeepAspect: keepAspect,
             symbolRotate: seriesSymbolRotate as number,
-            symbolClip: seriesSymbolClip as SymbolClip
+            symbolClip: seriesSymbolClip as SymbolClip,
+            symbolOffset: seriesSymbolOffset as string | number | (string | number)[]
         });
 
         // Only visible series has each data be visual encoded
@@ -103,6 +113,9 @@ const seriesSymbolTask: StageHandler = {
             );
             hasSymbolClipCallback && data.setItemVisual(
                 idx, 'symbolClip', (symbolClip as SymbolClipCallback<CallbackDataParams>)(rawValue, params)
+            );
+            hasSymbolOffsetCallback && data.setItemVisual(
+                idx, 'symbolOffset', (symbolOffset as SymbolOffsetCallback<CallbackDataParams>)(rawValue, params)
             );
         }
 
@@ -136,6 +149,7 @@ const dataSymbolTask: StageHandler = {
             const itemSymbolType = itemModel.getShallow('symbol', true);
             const itemSymbolSize = itemModel.getShallow('symbolSize', true);
             const itemSymbolRotate = itemModel.getShallow('symbolRotate', true);
+            const itemSymbolOffset = itemModel.getShallow('symbolOffset', true);
             const itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect', true);
             const itemSymbolClip = itemModel.getShallow('symbolClip', true);
 
@@ -149,6 +163,9 @@ const dataSymbolTask: StageHandler = {
             }
             if (itemSymbolRotate != null) {
                 data.setItemVisual(idx, 'symbolRotate', itemSymbolRotate);
+            }
+            if (itemSymbolOffset != null) {
+                data.setItemVisual(idx, 'symbolOffset', itemSymbolOffset);
             }
             if (itemSymbolKeepAspect != null) {
                 data.setItemVisual(idx, 'symbolKeepAspect', itemSymbolKeepAspect);

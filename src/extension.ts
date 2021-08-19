@@ -29,6 +29,7 @@ import {
     registerTransform,
     registerLoading,
     registerMap,
+    registerUpdateLifecycle,
     PRIORITY
 } from './core/echarts';
 import ComponentView from './view/Component';
@@ -47,6 +48,7 @@ const extensionRegisters = {
     registerProcessor,
     registerPostInit,
     registerPostUpdate,
+    registerUpdateLifecycle,
     registerAction,
     registerCoordinateSystem,
     registerLayout,
@@ -55,6 +57,11 @@ const extensionRegisters = {
     registerLoading,
     registerMap,
     PRIORITY,
+
+    ComponentModel,
+    ComponentView,
+    SeriesModel,
+    ChartView,
     // TODO Use ComponentModel and SeriesModel instead of Constructor
     registerComponentModel(ComponentModelClass: Constructor) {
         ComponentModel.registerClass(ComponentModelClass);

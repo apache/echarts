@@ -19,7 +19,7 @@
 
 import * as graphic from '../../util/graphic';
 import { enterEmphasis, leaveEmphasis, enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
-import { LayoutOrient, Payload, ECElement } from '../../util/types';
+import { LayoutOrient, ECElement } from '../../util/types';
 import { PathProps } from 'zrender/src/graphic/Path';
 import SankeySeriesModel, { SankeyEdgeItemOption, SankeyNodeItemOption } from './SankeySeries';
 import ChartView from '../../view/Chart';
@@ -29,11 +29,6 @@ import List from '../../data/List';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
-
-interface FocusNodeAdjacencyPayload extends Payload {
-    dataIndex?: number
-    edgeDataIndex?: number
-}
 
 class SankeyPathShape {
     x1 = 0;
@@ -212,7 +207,7 @@ class SankeyView extends ChartView {
                     const sourceColor = edge.node1.getVisual('color');
                     const targetColor = edge.node2.getVisual('color');
                     if (typeof sourceColor === 'string' && typeof targetColor === 'string') {
-                        curve.style.fill = new graphic.LinearGradient(0, 0, 1, 0, [{
+                        curve.style.fill = new graphic.LinearGradient(0, 0, +(orient === 'horizontal'), +(orient === 'vertical'), [{
                             color: sourceColor,
                             offset: 0
                         }, {
@@ -255,7 +250,8 @@ class SankeyView extends ChartView {
                     width: layout.dx,
                     height: layout.dy
                 },
-                style: itemModel.getModel('itemStyle').getItemStyle()
+                style: itemModel.getModel('itemStyle').getItemStyle(),
+                z2: 10
             });
 
             setLabelStyle(

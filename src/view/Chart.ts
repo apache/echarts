@@ -30,8 +30,8 @@ import GlobalModel from '../model/Global';
 import ExtensionAPI from '../core/ExtensionAPI';
 import Element from 'zrender/src/Element';
 import {
-    Payload, ViewRootGroup, ECEvent, EventQueryItem,
-    StageHandlerPlanReturn, DisplayState, StageHandlerProgressParams
+    Payload, ViewRootGroup, ECActionEvent, EventQueryItem,
+    StageHandlerPlanReturn, DisplayState, StageHandlerProgressParams, ECElementEvent
 } from '../util/types';
 import { SeriesTaskContext, SeriesTask } from '../core/Scheduler';
 import List from '../data/List';
@@ -90,7 +90,7 @@ interface ChartView {
      * Implement it if needed.
      */
     filterForExposedEvent(
-        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
+        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECActionEvent | ECElementEvent
     ): boolean;
 }
 class ChartView {
@@ -230,7 +230,7 @@ export type ChartViewConstructor = typeof ChartView
     & clazzUtil.ClassManager;
 
 clazzUtil.enableClassExtend(ChartView as ChartViewConstructor, ['dispose']);
-clazzUtil.enableClassManagement(ChartView as ChartViewConstructor, {registerWhenExtend: true});
+clazzUtil.enableClassManagement(ChartView as ChartViewConstructor);
 
 
 function renderTaskPlan(context: SeriesTaskContext): StageHandlerPlanReturn {

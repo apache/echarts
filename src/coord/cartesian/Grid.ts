@@ -420,7 +420,7 @@ class Grid implements CoordinateSystemMaster {
             axis.scale.setExtent(Infinity, -Infinity);
             if (axis.type === 'category') {
                 const categorySortInfo = axis.model.get('categorySortInfo');
-                (axis.scale as OrdinalScale).setCategorySortInfo(categorySortInfo);
+                (axis.scale as OrdinalScale).setSortInfo(categorySortInfo);
             }
         });
 

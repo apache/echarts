@@ -1,5 +1,3 @@
-import Region from '../Region';
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -19,6 +17,8 @@ import Region from '../Region';
 * under the License.
 */
 
+import { GeoJSONRegion } from '../Region';
+
 // Fix for 钓鱼岛
 
 // let Region = require('../Region');
@@ -36,7 +36,7 @@ const points = [
     ]
 ];
 
-export default function fixDiaoyuIsland(mapType: string, region: Region) {
+export default function fixDiaoyuIsland(mapType: string, region: GeoJSONRegion) {
     if (mapType === 'china' && region.name === '台湾') {
         region.geometries.push({
             type: 'polygon',

@@ -42,20 +42,34 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         actionInfo.update = 'geo:updateSelectStatus';
         registers.registerAction(actionInfo, function (payload, ecModel) {
             const selected = {} as {[regionName: string]: boolean};
+            const allSelected = [] as ({ name: string[], geoIndex: number })[];
 
             ecModel.eachComponent(
                 { mainType: 'geo', query: payload},
                 function (geoModel: GeoModel) {
                     geoModel[method](payload.name);
                     const geo = geoModel.coordinateSystem;
+
                     each(geo.regions, function (region) {
                         selected[region.name] = geoModel.isSelected(region.name) || false;
+                    });
+
+                    // Notice: there might be duplicated name in different regions.
+                    const names = [] as string[];
+                    each(selected, function (v, name) {
+                        selected[name] && names.push(name);
+                    });
+                    allSelected.push({
+                        geoIndex: geoModel.componentIndex,
+                        // Use singular, the same naming convention as the event `selectchanged`.
+                        name: names
                     });
                 }
             );
 
             return {
                 selected: selected,
+                allSelected: allSelected,
                 name: payload.name
             };
         });
@@ -118,5 +132,5 @@ export function install(registers: EChartsExtensionInstallRegisters) {
                 }
             }
         );
-    })
+    });
 }

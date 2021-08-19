@@ -27,7 +27,6 @@ import SingleAxisModel from '../../coord/single/AxisModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload } from '../../util/types';
-import ComponentView from '../../view/Component';
 
 const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'

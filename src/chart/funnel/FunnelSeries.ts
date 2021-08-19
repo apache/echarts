@@ -40,8 +40,6 @@ import {
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
-import ComponentModel from '../../model/Component';
-
 
 type FunnelLabelOption = Omit<SeriesLabelOption, 'position'> & {
     position?: LabelOption['position']
@@ -92,8 +90,6 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
     static type = 'series.funnel' as const;
     type = FunnelSeriesModel.type;
 
-    useColorPaletteOnData = true;
-
     init(option: FunnelSeriesOption) {
         super.init.apply(this, arguments as any);
 
@@ -143,6 +139,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
         zlevel: 0,                  // 一级层叠
         z: 2,                       // 二级层叠
         legendHoverLink: true,
+        colorBy: 'data',
         left: 80,
         top: 60,
         right: 80,

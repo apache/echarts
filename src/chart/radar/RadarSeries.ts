@@ -74,8 +74,6 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
 
     coordinateSystem: Radar;
 
-    useColorPaletteOnData = true;
-
     hasSymbolVisual = true;
 
     // Overwrite
@@ -147,12 +145,14 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
     static defaultOption: RadarSeriesOption = {
         zlevel: 0,
         z: 2,
+        colorBy: 'data',
         coordinateSystem: 'radar',
         legendHoverLink: true,
         radarIndex: 0,
         lineStyle: {
             width: 2,
-            type: 'solid'
+            type: 'solid',
+            join: 'round'
         },
         label: {
             position: 'top'
@@ -160,8 +160,7 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
         // areaStyle: {
         // },
         // itemStyle: {}
-        symbol: 'emptyCircle',
-        symbolSize: 4
+        symbolSize: 8
         // symbolRotate: null
     };
 }

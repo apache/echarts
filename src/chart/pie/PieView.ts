@@ -32,6 +32,8 @@ import labelLayout from './labelLayout';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getSectorCornerRadius } from '../helper/pieHelper';
+import {saveOldStyle} from '../../animation/basicTrasition';
+import { getBasicPieLayout } from './pieLayout';
 
 /**
  * Piece of pie including Sector, Label, LabelLine
@@ -43,10 +45,7 @@ class PiePiece extends graphic.Sector {
 
         this.z2 = 2;
 
-        const polyline = new graphic.Polyline();
         const text = new graphic.Text();
-
-        this.setTextGuideLine(polyline);
 
         this.setTextContent(text);
 
@@ -59,11 +58,20 @@ class PiePiece extends graphic.Sector {
         const seriesModel = data.hostModel as PieSeriesModel;
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const emphasisModel = itemModel.getModel('emphasis');
-        const layout = data.getItemLayout(idx);
+        const layout = data.getItemLayout(idx) as graphic.Sector['shape'];
+        // cornerRadius & innerCornerRadius doesn't exist in the item layout. Use `0` if null value is specified.
+        // see `setItemLayout` in `pieLayout.ts`.
         const sectorShape = extend(
-            getSectorCornerRadius(itemModel.getModel('itemStyle'), layout) || {},
+            getSectorCornerRadius(itemModel.getModel('itemStyle'), layout, true),
             layout
         );
+
+        // Ignore NaN data.
+        if (isNaN(sectorShape.startAngle)) {
+            // Use NaN shape to avoid drawing shape.
+            sector.setShape(sectorShape);
+            return;
+        }
 
         if (firstCreate) {
             sector.setShape(sectorShape);
@@ -97,9 +105,9 @@ class PiePiece extends graphic.Sector {
                     }, seriesModel, idx);
                 }
             }
-
         }
         else {
+            saveOldStyle(sector);
             // Transition animation from the old shape
             graphic.updateProps(sector, {
                 shape: sectorShape
@@ -107,6 +115,7 @@ class PiePiece extends graphic.Sector {
         }
 
         sector.useStyle(data.getItemVisual(idx, 'style'));
+
         setStatesStylesFromModel(sector, itemModel);
 
         const midAngle = (layout.startAngle + layout.endAngle) / 2;
@@ -136,7 +145,7 @@ class PiePiece extends graphic.Sector {
         const labelLine = sector.getTextGuideLine();
         const labelText = sector.getTextContent();
 
-        extend(labelLine.ensureState('select'), {
+        labelLine && extend(labelLine.ensureState('select'), {
             x: dx,
             y: dy
         });
@@ -185,11 +194,23 @@ class PiePiece extends graphic.Sector {
             z2: 10
         });
 
-        // Default use item visual color
-        setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
-            stroke: visualColor,
-            opacity: retrieve3(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity, 1)
-        });
+        const labelPosition = seriesModel.get(['label', 'position']);
+        if (labelPosition !== 'outside' && labelPosition !== 'outer') {
+            sector.removeTextGuideLine();
+        }
+        else {
+            let polyline = this.getTextGuideLine();
+            if (!polyline) {
+                polyline = new graphic.Polyline();
+                this.setTextGuideLine(polyline);
+            }
+
+            // Default use item visual color
+            setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
+                stroke: visualColor,
+                opacity: retrieve3(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity, 1)
+            });
+        }
     }
 }
 
@@ -203,6 +224,7 @@ class PieView extends ChartView {
 
     private _sectorGroup: graphic.Group;
     private _data: List;
+    private _emptyCircleSector: graphic.Sector;
 
     init(): void {
         const sectorGroup = new graphic.Group();
@@ -225,6 +247,20 @@ class PieView extends ChartView {
             if (shape) {
                 startAngle = shape.startAngle;
             }
+        }
+
+        // remove empty-circle if it exists
+        if (this._emptyCircleSector) {
+            group.remove(this._emptyCircleSector);
+        }
+        // when all data are filtered, show lightgray empty circle
+        if (data.count() === 0 && seriesModel.get('showEmptyCircle')) {
+            const sector = new graphic.Sector({
+                shape: getBasicPieLayout(seriesModel, api)
+            });
+            sector.useStyle(seriesModel.getModel('emptyCircleStyle').getItemStyle());
+            this._emptyCircleSector = sector;
+            group.add(sector);
         }
 
         data.diff(oldData)

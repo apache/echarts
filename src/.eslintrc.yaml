@@ -37,11 +37,12 @@ parserOptions:
     project: "tsconfig.json"
 plugins: ["@typescript-eslint"]
 env:
-    browser: true
-    node: true
     es6: false
 globals:
     jQuery: false
     Promise: false
+    console: true
+    setTimeout: true
+    clearTimeout: true
     __DEV__: true
 extends: '../.eslintrc-common.yaml'

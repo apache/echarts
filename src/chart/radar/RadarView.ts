@@ -30,13 +30,7 @@ import GlobalModel from '../../model/Global';
 import { VectorArray } from 'zrender/src/core/vector';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
-
-function normalizeSymbolSize(symbolSize: number | number[]) {
-    if (!zrUtil.isArray(symbolSize)) {
-        symbolSize = [+symbolSize, +symbolSize];
-    }
-    return symbolSize;
-}
+import { saveOldStyle } from '../../animation/basicTrasition';
 
 type RadarSymbol = ReturnType<typeof symbolUtil.createSymbol> & {
     __dimIdx: number
@@ -60,7 +54,7 @@ class RadarView extends ChartView {
             if (symbolType === 'none') {
                 return;
             }
-            const symbolSize = normalizeSymbolSize(
+            const symbolSize = symbolUtil.normalizeSymbolSize(
                 data.getItemVisual(idx, 'symbolSize')
             );
             const symbolPath = symbolUtil.createSymbol(
@@ -170,6 +164,9 @@ class RadarView extends ChartView {
                     false
                 );
 
+                saveOldStyle(polygon);
+                saveOldStyle(polyline);
+
                 graphic.updateProps(polyline, target, seriesModel);
                 graphic.updateProps(polygon, target, seriesModel);
 
@@ -241,6 +238,7 @@ class RadarView extends ChartView {
                 else {
                     symbolPath.useStyle(itemStyle);
                     symbolPath.setColor(color);
+                    symbolPath.style.strokeNoScale = true;
                 }
 
                 const pathEmphasisState = symbolPath.ensureState('emphasis');

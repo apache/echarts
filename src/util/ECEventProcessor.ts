@@ -19,7 +19,7 @@
 
 
 import { EventProcessor, EventQuery } from 'zrender/src/core/Eventful';
-import { ECEvent, NormalizedEventQuery, EventQueryItem } from './types';
+import { ECActionEvent, NormalizedEventQuery, EventQueryItem, ECElementEvent } from './types';
 import ComponentModel from '../model/Component';
 import ComponentView from '../view/Component';
 import ChartView from '../view/Chart';
@@ -49,7 +49,7 @@ export class ECEventProcessor implements EventProcessor {
     // These info required: targetEl, packedEvent, model, view
     eventInfo: {
         targetEl: Element;
-        packedEvent: ECEvent;
+        packedEvent: ECActionEvent | ECElementEvent;
         model: ComponentModel;
         view: ComponentView | ChartView;
     };

@@ -215,9 +215,8 @@ licenses.
 
 BSD 3-Clause (d3.js):
 The following files embed [d3.js](https://github.com/d3/d3) BSD 3-Clause:
-    `/src/chart/treemap/treemapLayout.js`,
-    `/src/chart/tree/layoutHelper.js`,
-    `/src/chart/graph/forceHelper.js`,
-    `/src/util/number.js`,
-    `/src/scale/Time.js`,
+    `/src/chart/treemap/treemapLayout.ts`,
+    `/src/chart/tree/layoutHelper.ts`,
+    `/src/chart/graph/forceHelper.ts`,
+    `/src/util/number.ts`
 See `/licenses/LICENSE-d3` for details of the license.

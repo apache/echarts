@@ -29,15 +29,21 @@ import {
     SeriesEncodeOptionMixin
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import createListFromArray from '../helper/createListFromArray';
 import type Polar from '../../coord/polar/Polar';
 import { inheritDefaultOption } from '../../util/component';
 import List from '../../data/List';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
+export type PolarBarLabelPosition = SeriesLabelOption['position']
+    | 'start' | 'insideStart' | 'middle' | 'end' | 'insideEnd';
+
+export type BarSeriesLabelOption = Omit<SeriesLabelOption, 'position'>
+    & {position?: PolarBarLabelPosition | 'outside'};
 
 export interface BarStateOption {
     itemStyle?: BarItemStyleOption
-    label?: SeriesLabelOption
+    label?: BarSeriesLabelOption
 }
 
 export interface BarItemStyleOption extends ItemStyleOption {
@@ -82,6 +88,13 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
     static dependencies = ['grid', 'polar'];
 
     coordinateSystem: Cartesian2D | Polar;
+
+    getInitialData(): List {
+        return createListFromArray(this.getSource(), this, {
+            useEncodeDefaulter: true,
+            createInvertedIndices: !!this.get('realtimeSort', true) || null
+        });
+    }
 
     /**
      * @override

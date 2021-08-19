@@ -23,7 +23,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="data/pie-texture.js"></script>
@@ -48,6 +48,7 @@ under the License.
         <div id="main5"></div>
         <div id="main6"></div>
         <div id="main7"></div>
+        <div id="main8"></div>
 
 
         <script>
@@ -696,6 +697,78 @@ under the License.
                 });
             });
 
+        </script>
+
+        <script>
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                const option = {
+                    series: [
+                        {
+                            name: '访问来源',
+                            type: 'pie',
+                            radius: '50%',
+                            center: ['25%', '50%'],
+                            data: [
+                                { value: 1, name: '搜索引擎' },
+                            ],
+                            emphasis: {
+                                itemStyle: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            },
+                            label: {
+                                position: 'inside'
+                            }
+                        },
+                        {
+                            name: '访问来源1',
+                            type: 'pie',
+                            radius: '50%',
+                            center: ['75%', '50%'],
+                            data: [
+                                { value: 1, name: '搜索引擎' },
+                            ],
+                            emphasis: {
+                                itemStyle: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            },
+                            label: {
+                                position: 'outside'
+                            }
+                        },
+                    ]
+                };
+
+                setTimeout(() => {
+                    option.series[0].label.position = 'outside';
+                    option.series[1].label.position = 'inside';
+                    chart.setOption(option);
+                }, 2000);
+                setTimeout(() => {
+                    option.series[0].label.position = 'inside';
+                    option.series[1].label.position = 'outside';
+                    chart.setOption(option);
+                }, 4000);
+                setTimeout(() => {
+                    option.series[0].label.position = 'outside';
+                    option.series[1].label.position = 'inside';
+                    chart.setOption(option);
+                }, 6000);
+
+                var chart = testHelper.create(echarts, 'main8', {
+                    title: 'labelLine should be hidden when position is not \'outside\'',
+                    height: 300,
+                    option: option
+                });
+
+            });
         </script>
     </body>
 </html>

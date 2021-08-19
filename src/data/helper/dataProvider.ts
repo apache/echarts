@@ -201,7 +201,8 @@ export class DefaultDataProvider implements DataProvider {
                 const count = end - start;
                 const arr = storage[dim];
                 for (let i = 0; i < count; i++) {
-                    const val = data[(start + i) * dimSize + dim];
+                    // appendData with TypedArray will always do replace in provider.
+                    const val = data[i * dimSize + dim];
                     arr[start + i] = val;
                     val < min && (min = val);
                     val > max && (max = val);
@@ -342,7 +343,7 @@ export function getRawSourceItemGetter(
 ): RawSourceItemGetter {
     const method = rawSourceItemGetterMap[getMethodMapKey(sourceFormat, seriesLayoutBy)];
     if (__DEV__) {
-        assert(method, 'Do not suppport get item on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
+        assert(method, 'Do not support get item on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
     }
     return method;
 }
