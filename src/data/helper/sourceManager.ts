@@ -35,7 +35,7 @@ import {
 import { applyDataTransform } from './transform';
 import DataStorage, { DataStorageDimensionDefine } from '../DataStorage';
 import { DefaultDataProvider } from './dataProvider';
-import { SeriesDimensionRequest, shouldOmitUnusedDimensions } from './SeriesDimensionRequest';
+import { SeriesDataSchema, shouldOmitUnusedDimensions } from './SeriesDataSchema';
 
 type DataStorageMap = Dictionary<DataStorage>;
 
@@ -373,7 +373,7 @@ export class SourceManager {
      * @param seriesDimRequest Dimensions that are generated in series.
      *        Should have been sorted by `storageDimensionIndex` asc.
      */
-    getSharedDataStorage(seriesDimRequest: SeriesDimensionRequest): DataStorage {
+    getSharedDataStorage(seriesDimRequest: SeriesDataSchema): DataStorage {
         if (__DEV__) {
             assert(isSeries(this._sourceHost), 'Can only call getDataStorage on series source manager.');
         }

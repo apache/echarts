@@ -46,7 +46,7 @@ const dimTypeShort = {
  * via ec option, so we provide `getDimensionIndexFromSource`, which only query them from
  * `source` dimensions.
  */
-export class SeriesDimensionRequest {
+export class SeriesDataSchema {
 
     /**
      * When there are too many dimensions, `dimensionDefineList` might only contain
@@ -236,10 +236,10 @@ export class SeriesDimensionRequest {
     }
 }
 
-export function isSeriesDimensionRequest(
-    dimensionRequest: any
-): dimensionRequest is SeriesDimensionRequest {
-    return dimensionRequest instanceof SeriesDimensionRequest;
+export function isSeriesDataSchema(
+    schema: any
+): schema is SeriesDataSchema {
+    return schema instanceof SeriesDataSchema;
 }
 
 

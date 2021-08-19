@@ -37,8 +37,8 @@ import { CtorInt32Array } from '../DataStorage';
 import { normalizeToArray } from '../../util/model';
 import { BE_ORDINAL, guessOrdinal } from './sourceHelper';
 import {
-    createDimNameMap, ensureSourceDimNameMap, SeriesDimensionRequest, shouldOmitUnusedDimensions
-} from './SeriesDimensionRequest';
+    createDimNameMap, ensureSourceDimNameMap, SeriesDataSchema, shouldOmitUnusedDimensions
+} from './SeriesDataSchema';
 
 
 export interface CoordDimensionDefinition extends DimensionDefinition {
@@ -101,7 +101,7 @@ export default function createDimensions(
     // TODO: TYPE completeDimensions type
     source: Source | OptionSourceData,
     opt?: CreateDimensionsParams
-): SeriesDimensionRequest {
+): SeriesDataSchema {
     if (!isSourceInstance(source)) {
         source = createSourceFromSeriesDataOption(source as OptionSourceData);
     }
@@ -338,7 +338,7 @@ export default function createDimensions(
 
     removeDuplication(resultList);
 
-    return new SeriesDimensionRequest({
+    return new SeriesDataSchema({
         source,
         dimensionList: resultList,
         fullDimensionCount: dimCount,

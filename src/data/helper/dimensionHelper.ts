@@ -24,7 +24,7 @@ import {
     DimensionName, VISUAL_DIMENSIONS, DimensionType, DimensionIndex
 } from '../../util/types';
 import { DataStorageDimensionType } from '../DataStorage';
-import { SeriesDimensionRequest } from './SeriesDimensionRequest';
+import { SeriesDataSchema } from './SeriesDataSchema';
 
 export type DimensionSummaryEncode = {
     defaultedLabel: DimensionName[],
@@ -51,14 +51,14 @@ export type DimensionUserOuputEncode = {
 class DimensionUserOuput {
     private _encode: DimensionUserOuputEncode;
     private _cachedDimNames: DimensionName[];
-    private _dimensionRequest?: SeriesDimensionRequest;
+    private _schema?: SeriesDataSchema;
 
     constructor(
         encode: DimensionUserOuputEncode,
-        dimRequest?: SeriesDimensionRequest
+        dimRequest?: SeriesDataSchema
     ) {
         this._encode = encode;
-        this._dimensionRequest = dimRequest;
+        this._schema = dimRequest;
     }
 
     get(): {
@@ -81,8 +81,8 @@ class DimensionUserOuput {
      */
     private _getFullDimensionNames(): DimensionName[] {
         if (!this._cachedDimNames) {
-            this._cachedDimNames = this._dimensionRequest
-                ? this._dimensionRequest.makeOutputDimensionNames()
+            this._cachedDimNames = this._schema
+                ? this._schema.makeOutputDimensionNames()
                 : [];
         }
         return this._cachedDimNames;
@@ -92,7 +92,7 @@ class DimensionUserOuput {
 
 export function summarizeDimensions(
     data: SeriesData,
-    dimensionRequest?: SeriesDimensionRequest
+    schema?: SeriesDataSchema
 ): DimensionSummary {
     const summary: DimensionSummary = {} as DimensionSummary;
     const encode = summary.encode = {} as DimensionSummaryEncode;
@@ -180,7 +180,7 @@ export function summarizeDimensions(
     encode.defaultedLabel = defaultedLabel;
     encode.defaultedTooltip = defaultedTooltip;
 
-    summary.userOutput = new DimensionUserOuput(userOutputEncode, dimensionRequest);
+    summary.userOutput = new DimensionUserOuput(userOutputEncode, schema);
 
     return summary;
 }

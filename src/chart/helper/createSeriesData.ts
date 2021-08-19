@@ -146,16 +146,16 @@ function createSeriesData(
         encodeDefaulter: encodeDefaulter,
         canOmitUnusedDimensions: !isOriginalSource
     };
-    const dimensionRequest = createDimensions(source, createDimensionOptions);
+    const schema = createDimensions(source, createDimensionOptions);
     const firstCategoryDimIndex = injectOrdinalMeta(
-        dimensionRequest.dimensionList, opt.createInvertedIndices, coordSysInfo
+        schema.dimensionList, opt.createInvertedIndices, coordSysInfo
     );
 
-    const storage = !isOriginalSource ? sourceManager.getSharedDataStorage(dimensionRequest) : null;
+    const storage = !isOriginalSource ? sourceManager.getSharedDataStorage(schema) : null;
 
-    const stackCalculationInfo = enableDataStack(seriesModel, { dimensionRequest, storage });
+    const stackCalculationInfo = enableDataStack(seriesModel, { schema, storage });
 
-    const data = new SeriesData(dimensionRequest, seriesModel);
+    const data = new SeriesData(schema, seriesModel);
     data.setCalculationInfo(stackCalculationInfo);
 
     const dimValueGetter =

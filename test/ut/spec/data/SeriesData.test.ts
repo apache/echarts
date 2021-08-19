@@ -31,7 +31,7 @@ import SeriesDimensionDefine from '@/src/data/SeriesDimensionDefine';
 import OrdinalMeta from '@/src/data/OrdinalMeta';
 import DataStorage from '@/src/data/DataStorage';
 import { DefaultDataProvider } from '@/src/data/helper/dataProvider';
-import { SeriesDimensionRequest } from '@/src/data/helper/SeriesDimensionRequest';
+import { SeriesDataSchema } from '@/src/data/helper/SeriesDataSchema';
 
 
 const ID_PREFIX = 'e\0\0';
@@ -229,7 +229,7 @@ describe('SeriesData', function () {
             store.initData(new DefaultDataProvider(source), [
                 {type: 'ordinal'}, {type: 'float'}, {type: 'float'}, {type: 'ordinal'}
             ]);
-            const dimensionRequest = new SeriesDimensionRequest({
+            const schema = new SeriesDataSchema({
                 source: source,
                 dimensionList: [
                     { type: 'float', name: 'dim1', storageDimensionIndex: 1 },
@@ -238,7 +238,7 @@ describe('SeriesData', function () {
                 fullDimensionCount: 2,
                 dimensionOmitted: true
             });
-            const data = new SeriesData(dimensionRequest, null);
+            const data = new SeriesData(schema, null);
             data.initData(store);
             // Store should be the same.
             expect(data.getStorage()).toBe(store);

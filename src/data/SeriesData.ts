@@ -45,7 +45,7 @@ import type { VisualMeta } from '../component/visualMap/VisualMapModel';
 import {isSourceInstance, Source} from './Source';
 import { LineStyleProps } from '../model/mixin/lineStyle';
 import DataStorage, { DimValueGetter } from './DataStorage';
-import { isSeriesDimensionRequest, SeriesDimensionRequest } from './helper/SeriesDimensionRequest';
+import { isSeriesDataSchema, SeriesDataSchema } from './helper/SeriesDataSchema';
 
 const isObject = zrUtil.isObject;
 const map = zrUtil.map;
@@ -167,7 +167,7 @@ class SeriesData<
     private _dimensionInfos: Record<SeriesDimensionName, SeriesDimensionDefine>;
 
     private _dimensionOmitted = false;
-    private _dimensionRequest?: SeriesDimensionRequest;
+    private _schema?: SeriesDataSchema;
     /**
      * @pending
      * Actually we do not really need to convert dimensionIndex to dimensionName
@@ -264,15 +264,15 @@ class SeriesData<
      *        Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
      */
     constructor(
-        dimensionsInput: SeriesDimensionRequest | SeriesDimensionDefineLoose[],
+        dimensionsInput: SeriesDataSchema | SeriesDimensionDefineLoose[],
         hostModel: HostModel
     ) {
         let dimensions: SeriesDimensionDefineLoose[];
         let assignStorageDimIdx = false;
-        if (isSeriesDimensionRequest(dimensionsInput)) {
+        if (isSeriesDataSchema(dimensionsInput)) {
             dimensions = dimensionsInput.dimensionList;
             this._dimensionOmitted = dimensionsInput.isDimensionOmitted();
-            this._dimensionRequest = dimensionsInput;
+            this._schema = dimensionsInput;
         }
         else {
             assignStorageDimIdx = true;
@@ -381,7 +381,7 @@ class SeriesData<
             return dimName;
         }
 
-        const sourceDimDef = this._dimensionRequest.getDimensionFromSource(dimIdx);
+        const sourceDimDef = this._schema.getDimensionFromSource(dimIdx);
         if (sourceDimDef) {
             return sourceDimDef.name;
         }
@@ -401,7 +401,7 @@ class SeriesData<
         return dimInfo
             ? dimInfo.storageDimensionIndex
             : this._dimensionOmitted
-            ? this._dimensionRequest.getDimensionIndexFromSource(dim as DimensionName)
+            ? this._schema.getDimensionIndexFromSource(dim as DimensionName)
             : -1;
     }
 
@@ -431,7 +431,7 @@ class SeriesData<
                 dim != null
                 && !isNaN(dim as any)
                 && !this._getDimensionInfo(dim)
-                && (!this._dimensionOmitted || this._dimensionRequest.getDimensionIndexFromSource(dim) < 0)
+                && (!this._dimensionOmitted || this._schema.getDimensionIndexFromSource(dim) < 0)
             )
         ) {
             return +dim;
@@ -548,7 +548,7 @@ class SeriesData<
 
         // Cache summary info for fast visit. See "dimensionHelper".
         // Needs to be initialized after store is prepared.
-        this._dimensionsSummary = summarizeDimensions(this, this._dimensionRequest);
+        this._dimensionsSummary = summarizeDimensions(this, this._schema);
         this.userOutput = this._dimensionsSummary.userOutput;
     }
 
@@ -1339,8 +1339,8 @@ class SeriesData<
     cloneShallow(list?: SeriesData<HostModel>): SeriesData<HostModel> {
         if (!list) {
             list = new SeriesData(
-                this._dimensionRequest
-                    ? this._dimensionRequest
+                this._schema
+                    ? this._schema
                     : map(this.dimensions, this._getDimensionInfo, this),
                 this.hostModel
             );
@@ -1435,8 +1435,8 @@ class SeriesData<
          */
         cloneListForMapAndSample = function (original: SeriesData): SeriesData {
             const list = new SeriesData(
-                original._dimensionRequest
-                    ? original._dimensionRequest
+                original._schema
+                    ? original._schema
                     : map(original.dimensions, original._getDimensionInfo, original),
                 original.hostModel
             );
