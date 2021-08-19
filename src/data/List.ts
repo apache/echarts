@@ -36,7 +36,7 @@ import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
     ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput,
     ModelOption, SeriesDataType, OptionSourceData, SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL,
-    DecalObject
+    DecalObject, SymbolClip
 } from '../util/types';
 import {isDataItemOption, convertOptionIdName} from '../util/model';
 import {getECData, setCommonECData} from '../util/innerStore';
@@ -137,6 +137,7 @@ export interface DefaultDataVisual {
     symbolSize?: number | number[]
     symbolRotate?: number
     symbolKeepAspect?: boolean
+    symbolClip?: SymbolCli
     symbolOffset?: string | number | (string | number)[]
 
     liftZ?: number

@@ -42,12 +42,11 @@ import { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
 import { RadialGradientObject } from 'zrender/src/graphic/RadialGradient';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { TSpanStyleProps } from 'zrender/src/graphic/TSpan';
-import { PathStyleProps } from 'zrender/src/graphic/Path';
+import Path, { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
 import Model from '../model/Model';
-
 
 
 // ---------------------------
@@ -934,10 +933,13 @@ export interface RoamOptionMixin {
 }
 
 // TODO: TYPE value type?
+export type SymbolClip = string | Path;
 export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
 export type SymbolCallback<T> = (rawValue: any, params: T) => string;
 export type SymbolRotateCallback<T> = (rawValue: any, params: T) => number;
+export type SymbolClipCallback<T> = (rawValue: any, params: T) => SymbolClip;
 export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => string | number | (string | number)[];
+
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -955,6 +957,8 @@ export interface SymbolOptionMixin<T = unknown> {
     symbolRotate?: number | (unknown extends T ? never : SymbolRotateCallback<T>)
 
     symbolKeepAspect?: boolean
+
+    symbolClip?: SymbolClip | (unknown extends T ? never : SymbolClipCallback<T>)
 
     symbolOffset?: string | number | (string | number)[] | (unknown extends T ? never : SymbolOffsetCallback<T>)
 }

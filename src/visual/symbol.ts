@@ -26,6 +26,8 @@ import {
     SymbolCallback,
     CallbackDataParams,
     SymbolRotateCallback,
+    SymbolClipCallback,
+    SymbolClip
     SymbolOffsetCallback
 } from '../util/types';
 import List from '../data/List';
@@ -58,20 +60,25 @@ const seriesSymbolTask: StageHandler = {
         const symbolSize = seriesModel.get('symbolSize');
         const keepAspect = seriesModel.get('symbolKeepAspect');
         const symbolRotate = seriesModel.get('symbolRotate');
+        const symbolClip = seriesModel.get('symbolClip');
         const symbolOffset = seriesModel.get('symbolOffset');
+
 
         const hasSymbolTypeCallback = isFunction(symbolType);
         const hasSymbolSizeCallback = isFunction(symbolSize);
         const hasSymbolRotateCallback = isFunction(symbolRotate);
         const hasSymbolOffsetCallback = isFunction(symbolOffset);
+        const hasSymbolClipCallback = isFunction(symbolClip);
         const hasCallback = hasSymbolTypeCallback
             || hasSymbolSizeCallback
             || hasSymbolRotateCallback
-            || hasSymbolOffsetCallback;
+            || hasSymbolOffsetCallback
+            || hasSymbolClipCallback;
         const seriesSymbol = (!hasSymbolTypeCallback && symbolType) ? symbolType : seriesModel.defaultSymbol;
         const seriesSymbolSize = !hasSymbolSizeCallback ? symbolSize : null;
         const seriesSymbolRotate = !hasSymbolRotateCallback ? symbolRotate : null;
         const seriesSymbolOffset = !hasSymbolOffsetCallback ? symbolOffset : null;
+        const seriesSymbolClip = !hasSymbolClipCallback ? symbolClip : null;
 
         data.setVisual({
             legendIcon: seriesModel.legendIcon || seriesSymbol as string,
@@ -83,6 +90,7 @@ const seriesSymbolTask: StageHandler = {
             symbolSize: seriesSymbolSize as number | number[],
             symbolKeepAspect: keepAspect,
             symbolRotate: seriesSymbolRotate as number,
+            symbolClip: seriesSymbolClip as SymbolClip,
             symbolOffset: seriesSymbolOffset as string | number | (string | number)[]
         });
 
@@ -102,6 +110,9 @@ const seriesSymbolTask: StageHandler = {
             );
             hasSymbolRotateCallback && data.setItemVisual(
                 idx, 'symbolRotate', (symbolRotate as SymbolRotateCallback<CallbackDataParams>)(rawValue, params)
+            );
+            hasSymbolClipCallback && data.setItemVisual(
+                idx, 'symbolClip', (symbolClip as SymbolClipCallback<CallbackDataParams>)(rawValue, params)
             );
             hasSymbolOffsetCallback && data.setItemVisual(
                 idx, 'symbolOffset', (symbolOffset as SymbolOffsetCallback<CallbackDataParams>)(rawValue, params)
@@ -140,6 +151,7 @@ const dataSymbolTask: StageHandler = {
             const itemSymbolRotate = itemModel.getShallow('symbolRotate', true);
             const itemSymbolOffset = itemModel.getShallow('symbolOffset', true);
             const itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect', true);
+            const itemSymbolClip = itemModel.getShallow('symbolClip', true);
 
             // If has item symbol
             if (itemSymbolType != null) {
@@ -157,6 +169,9 @@ const dataSymbolTask: StageHandler = {
             }
             if (itemSymbolKeepAspect != null) {
                 data.setItemVisual(idx, 'symbolKeepAspect', itemSymbolKeepAspect);
+            }
+            if (itemSymbolClip != null) {
+                data.setItemVisual(idx, 'symbolClip', itemSymbolClip);
             }
         }
 

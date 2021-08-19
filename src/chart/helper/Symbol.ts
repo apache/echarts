@@ -30,6 +30,7 @@ import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
 import { extend } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
+import { makeSymbolClipPath } from './symbolClipHelper';
 import { saveOldStyle } from '../../animation/basicTrasition';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
@@ -294,8 +295,8 @@ class Symbol extends graphic.Group {
             symbolPath.style.decal = null;
             symbolPath.setColor(visualColor, opts && opts.symbolInnerColor);
             symbolPath.style.strokeNoScale = true;
-
         }
+
         const liftZ = data.getItemVisual(idx, 'liftZ');
         const z2Origin = this._z2;
         if (liftZ != null) {
@@ -322,13 +323,27 @@ class Symbol extends graphic.Group {
             }
         );
 
+        this._sizeX = symbolSize[0] / 2;
+        this._sizeY = symbolSize[1] / 2;
+
+        // symbol clip
+        symbolPath.removeClipPath();
+        const symbolClip = data.getItemVisual(idx, 'symbolClip');
+        if (symbolClip) {
+            const clipPath = makeSymbolClipPath(symbolClip, symbolSize);
+            if (clipPath) {
+                clipPath.scaleX = 1 / this._sizeX;
+                clipPath.scaleY = 1 / this._sizeY;
+                symbolPath.setClipPath(clipPath);
+                // PENDING: ignore text clip?
+                symbolPath.getTextContent() && (symbolPath.getTextContent().ignoreClip = true);
+            }
+        }
+
         // Do not execute util needed.
         function getLabelDefaultText(idx: number) {
             return useNameLabel ? data.getName(idx) : getDefaultLabel(data, idx);
         }
-
-        this._sizeX = symbolSize[0] / 2;
-        this._sizeY = symbolSize[1] / 2;
 
         const emphasisState = symbolPath.ensureState('emphasis');
 
