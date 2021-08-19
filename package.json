@@ -78,7 +78,7 @@
     "@rollup/plugin-node-resolve": "^11.0.0",
     "@rollup/plugin-replace": "^2.3.4",
     "@types/jest": "^26.0.14",
-    "@typescript-eslint/eslint-plugin": "^4.9.1",
+    "@typescript-eslint/eslint-plugin": "^4.29.1",
     "@typescript-eslint/parser": "^4.9.1",
     "chalk": "^3.0.0",
     "commander": "2.11.0",
