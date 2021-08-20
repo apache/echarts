@@ -53,7 +53,7 @@ export class SeriesDataSchema {
      * used dimensions.
      *
      * CAUTION:
-     * Should have been sorted by `storageDimensionIndex` asc.
+     * Should have been sorted by `storeDimIndex` asc.
      *
      * PENDING:
      * The item can still be modified outsite.
@@ -63,9 +63,9 @@ export class SeriesDataSchema {
 
     readonly source: Source;
 
-    private _fullDimensionCount: number;
+    private _fullDimCount: number;
     private _dimNameMap: ReturnType<typeof inner>['dimNameMap'];
-    private _dimensionOmitted: boolean;
+    private _dimOmitted: boolean;
 
     constructor(opt: {
         source: Source,
@@ -74,19 +74,19 @@ export class SeriesDataSchema {
         dimensionOmitted: boolean
     }) {
         this.dimensionList = opt.dimensionList;
-        this._dimensionOmitted = opt.dimensionOmitted;
+        this._dimOmitted = opt.dimensionOmitted;
         this.source = opt.source;
-        this._fullDimensionCount = opt.fullDimensionCount;
+        this._fullDimCount = opt.fullDimensionCount;
 
-        this._updateDimensionOmitted(opt.dimensionOmitted);
+        this._updateDimOmitted(opt.dimensionOmitted);
     }
 
     isDimensionOmitted(): boolean {
-        return this._dimensionOmitted;
+        return this._dimOmitted;
     }
 
-    private _updateDimensionOmitted(dimensionOmitted: boolean): void {
-        this._dimensionOmitted = dimensionOmitted;
+    private _updateDimOmitted(dimensionOmitted: boolean): void {
+        this._dimOmitted = dimensionOmitted;
         if (!dimensionOmitted) {
             return;
         }
@@ -111,7 +111,7 @@ export class SeriesDataSchema {
      *
      * Notice: may return `null`/`undefined` if user not specify dimension names.
      */
-    getDimensionFromSource(dimIndex: DimensionIndex): DimensionDefinition {
+    getSourceDim(dimIndex: DimensionIndex): DimensionDefinition {
         const dimensionsDefine = this.source.dimensionsDefine;
         if (dimensionsDefine) {
             return dimensionsDefine[dimIndex];
@@ -122,7 +122,7 @@ export class SeriesDataSchema {
         dimensions: DataStorageDimensionDefine[];
         hash: string
     } {
-        const dimCount = this._fullDimensionCount;
+        const dimCount = this._fullDimCount;
         const willRetrieveDataByName = shouldRetrieveDataByName(this.source);
         const makeHashStrict = !shouldOmitUnusedDimensions(dimCount);
 
@@ -137,8 +137,8 @@ export class SeriesDataSchema {
             let ordinalMeta: OrdinalMeta;
 
             const seriesDimDef = this.dimensionList[seriesDimIdx];
-            // The list has been sorted by `storageDimensionIndex` asc.
-            if (seriesDimDef && seriesDimDef.storageDimensionIndex === fullDimIdx) {
+            // The list has been sorted by `storeDimIndex` asc.
+            if (seriesDimDef && seriesDimDef.storeDimIndex === fullDimIdx) {
                 property = willRetrieveDataByName ? seriesDimDef.name : null;
                 type = seriesDimDef.type;
                 ordinalMeta = seriesDimDef.ordinalMeta;
@@ -146,7 +146,7 @@ export class SeriesDataSchema {
                 seriesDimIdx++;
             }
             else {
-                const sourceDimDef = this.getDimensionFromSource(fullDimIdx);
+                const sourceDimDef = this.getSourceDim(fullDimIdx);
                 if (sourceDimDef) {
                     property = willRetrieveDataByName ? sourceDimDef.name : null;
                     type = sourceDimDef.type;
@@ -203,18 +203,18 @@ export class SeriesDataSchema {
     makeOutputDimensionNames(): DimensionName[] {
         const result = [] as DimensionName[];
 
-        for (let fullDimIdx = 0, seriesDimIdx = 0; fullDimIdx < this._fullDimensionCount; fullDimIdx++) {
+        for (let fullDimIdx = 0, seriesDimIdx = 0; fullDimIdx < this._fullDimCount; fullDimIdx++) {
             let name: DimensionName;
             const seriesDimDef = this.dimensionList[seriesDimIdx];
-            // The list has been sorted by `storageDimensionIndex` asc.
-            if (seriesDimDef && seriesDimDef.storageDimensionIndex === fullDimIdx) {
+            // The list has been sorted by `storeDimIndex` asc.
+            if (seriesDimDef && seriesDimDef.storeDimIndex === fullDimIdx) {
                 if (!seriesDimDef.isCalculationCoord) {
                     name = seriesDimDef.name;
                 }
                 seriesDimIdx++;
             }
             else {
-                const sourceDimDef = this.getDimensionFromSource(fullDimIdx);
+                const sourceDimDef = this.getSourceDim(fullDimIdx);
                 if (sourceDimDef) {
                     name = sourceDimDef.name;
                 }
@@ -228,11 +228,11 @@ export class SeriesDataSchema {
     appendCalculationDimension(dimDef: SeriesDimensionDefine): void {
         this.dimensionList.push(dimDef);
         dimDef.isCalculationCoord = true;
-        this._fullDimensionCount++;
+        this._fullDimCount++;
         // If append dimension on a data storage, consider the storage
         // might be shared by different series, series dimensions not
         // really map to storage dimensions.
-        this._updateDimensionOmitted(true);
+        this._updateDimOmitted(true);
     }
 }
 

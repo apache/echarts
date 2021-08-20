@@ -155,7 +155,7 @@ export function enableDataStack(
             type: stackedDimType,
             isExtraCoord: true,
             isCalculationCoord: true,
-            storageDimensionIndex: dimensionDefineList.length
+            storeDimIndex: dimensionDefineList.length
         };
 
         const stackResultDimensionDefine: SeriesDimensionDefine = {
@@ -167,14 +167,14 @@ export function enableDataStack(
             type: stackedDimType,
             isExtraCoord: true,
             isCalculationCoord: true,
-            storageDimensionIndex: dimensionDefineList.length + 1
+            storeDimIndex: dimensionDefineList.length + 1
         };
 
         if (schema) {
             if (storage) {
-                stackedOverDimensionDefine.storageDimensionIndex =
+                stackedOverDimensionDefine.storeDimIndex =
                     storage.ensureCalculationDimension(stackedOverDimension, stackedDimType);
-                stackResultDimensionDefine.storageDimensionIndex =
+                stackResultDimensionDefine.storeDimIndex =
                     storage.ensureCalculationDimension(stackResultDimension, stackedDimType);
             }
 

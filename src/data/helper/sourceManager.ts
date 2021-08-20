@@ -371,7 +371,7 @@ export class SourceManager {
      * Only available for series.
      *
      * @param seriesDimRequest Dimensions that are generated in series.
-     *        Should have been sorted by `storageDimensionIndex` asc.
+     *        Should have been sorted by `storeDimIndex` asc.
      */
     getSharedDataStorage(seriesDimRequest: SeriesDataSchema): DataStorage {
         if (__DEV__) {

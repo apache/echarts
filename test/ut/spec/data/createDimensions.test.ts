@@ -155,7 +155,7 @@ describe('createDimensions', function () {
                 'coordDim': 'x',
                 'coordDimIndex': 0,
                 'type': 'ordinal',
-                'storageDimensionIndex': 0
+                'storeDimIndex': 0
             },
             {
                 'otherDims': {
@@ -166,7 +166,7 @@ describe('createDimensions', function () {
                 'coordDim': 'value',
                 'coordDimIndex': 0,
                 'isExtraCoord': true,
-                'storageDimensionIndex': 1
+                'storeDimIndex': 1
             },
             {
                 'otherDims': {
@@ -177,7 +177,7 @@ describe('createDimensions', function () {
                 'coordDim': 'value0',
                 'coordDimIndex': 0,
                 'isExtraCoord': true,
-                'storageDimensionIndex': 2
+                'storeDimIndex': 2
             },
             {
                 'otherDims': {
@@ -188,7 +188,7 @@ describe('createDimensions', function () {
                 'coordDim': 'value1',
                 'coordDimIndex': 0,
                 'isExtraCoord': true,
-                'storageDimensionIndex': 3
+                'storeDimIndex': 3
             },
             {
                 'otherDims': {
@@ -199,7 +199,7 @@ describe('createDimensions', function () {
                 'coordDim': 'value2',
                 'coordDimIndex': 0,
                 'isExtraCoord': true,
-                'storageDimensionIndex': 4
+                'storeDimIndex': 4
             },
             {
                 'otherDims': {},
@@ -208,7 +208,7 @@ describe('createDimensions', function () {
                 'coordDim': 'value3',
                 'coordDimIndex': 0,
                 'isExtraCoord': true,
-                'storageDimensionIndex': 5
+                'storeDimIndex': 5
             },
             {
                 'otherDims': {},
@@ -217,7 +217,7 @@ describe('createDimensions', function () {
                 'coordDim': 'y',
                 'coordDimIndex': 0,
                 'type': 'float',
-                'storageDimensionIndex': 6
+                'storeDimIndex': 6
             },
             {
                 'otherDims': {},
@@ -226,7 +226,7 @@ describe('createDimensions', function () {
                 'coordDim': 'y',
                 'coordDimIndex': 3,
                 'type': 'float',
-                'storageDimensionIndex': 7
+                'storeDimIndex': 7
             },
             {
                 'otherDims': {},
@@ -235,7 +235,7 @@ describe('createDimensions', function () {
                 'coordDim': 'y',
                 'coordDimIndex': 2,
                 'type': 'float',
-                'storageDimensionIndex': 8
+                'storeDimIndex': 8
             },
             {
                 'otherDims': {},
@@ -244,7 +244,7 @@ describe('createDimensions', function () {
                 'coordDim': 'y',
                 'coordDimIndex': 1,
                 'type': 'float',
-                'storageDimensionIndex': 9
+                'storeDimIndex': 9
             },
             {
                 'otherDims': {},
@@ -253,7 +253,7 @@ describe('createDimensions', function () {
                 'coordDim': 'value4',
                 'coordDimIndex': 0,
                 'isExtraCoord': true,
-                'storageDimensionIndex': 10
+                'storeDimIndex': 10
             }
         ];
 
@@ -277,14 +277,14 @@ describe('createDimensions', function () {
                 'coordDim': 'x',
                 'coordDimIndex': 0,
                 'name': 'x',
-                'storageDimensionIndex': 0
+                'storeDimIndex': 0
             },
             {
                 'otherDims': {},
                 'coordDim': 'y',
                 'coordDimIndex': 0,
                 'name': 'y',
-                'storageDimensionIndex': 1
+                'storeDimIndex': 1
             }
         ]);
 
@@ -294,14 +294,14 @@ describe('createDimensions', function () {
                 'coordDim': 'x',
                 'coordDimIndex': 0,
                 'name': 'x',
-                'storageDimensionIndex': 0
+                'storeDimIndex': 0
             },
             {
                 'otherDims': {},
                 'coordDim': 'y',
                 'coordDimIndex': 0,
                 'name': 'y',
-                'storageDimensionIndex': 1
+                'storeDimIndex': 1
             }
         ]);
 
@@ -311,14 +311,14 @@ describe('createDimensions', function () {
                 'coordDim': 'x',
                 'coordDimIndex': 0,
                 'name': 'x',
-                'storageDimensionIndex': 0
+                'storeDimIndex': 0
             },
             {
                 'otherDims': {},
                 'coordDim': 'y',
                 'coordDimIndex': 0,
                 'name': 'y',
-                'storageDimensionIndex': 1
+                'storeDimIndex': 1
             }
         ]);
 
@@ -328,7 +328,7 @@ describe('createDimensions', function () {
                 'coordDim': 'x',
                 'coordDimIndex': 0,
                 'name': 'x',
-                'storageDimensionIndex': 0
+                'storeDimIndex': 0
             }
         ]);
 
@@ -338,21 +338,21 @@ describe('createDimensions', function () {
                 'coordDim': 'x',
                 'coordDimIndex': 0,
                 'name': 'x',
-                'storageDimensionIndex': 0
+                'storeDimIndex': 0
             },
             {
                 'otherDims': {},
                 'coordDim': 'y',
                 'coordDimIndex': 0,
                 'name': 'y',
-                'storageDimensionIndex': 1
+                'storeDimIndex': 1
             },
             {
                 'otherDims': {},
                 'coordDim': 'z',
                 'coordDimIndex': 0,
                 'name': 'z',
-                'storageDimensionIndex': 2
+                'storeDimIndex': 2
             }
         ]);
 
@@ -362,7 +362,7 @@ describe('createDimensions', function () {
                 'coordDim': 'x',
                 'coordDimIndex': 0,
                 'name': 'x',
-                'storageDimensionIndex': 0
+                'storeDimIndex': 0
             }
         ]);
 
@@ -375,14 +375,14 @@ describe('createDimensions', function () {
                 'coordDim': 'x',
                 'coordDimIndex': 0,
                 'name': 'x',
-                'storageDimensionIndex': 0
+                'storeDimIndex': 0
             },
             {
                 'otherDims': {},
                 'coordDim': 'y',
                 'coordDimIndex': 0,
                 'name': 'y',
-                'storageDimensionIndex': 1
+                'storeDimIndex': 1
             },
             {
                 'otherDims': {},
@@ -390,7 +390,7 @@ describe('createDimensions', function () {
                 'coordDimIndex': 0,
                 'isExtraCoord': true,
                 'name': 'value',
-                'storageDimensionIndex': 2
+                'storeDimIndex': 2
             },
             {
                 'otherDims': {},
@@ -398,7 +398,7 @@ describe('createDimensions', function () {
                 'coordDimIndex': 0,
                 'isExtraCoord': true,
                 'name': 'value0',
-                'storageDimensionIndex': 3
+                'storeDimIndex': 3
             }
         ]);
     });
@@ -433,14 +433,14 @@ describe('createDimensions', function () {
                     'coordDimIndex': 0,
                     'name': 'x',
                     'type': 'ordinal',
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'y',
                     'coordDimIndex': 0,
                     'name': 'y',
-                    'storageDimensionIndex': 1
+                    'storeDimIndex': 1
                 }
             ]
         );
@@ -454,7 +454,7 @@ describe('createDimensions', function () {
                     'coordDimIndex': 0,
                     'name': 'value',
                     'type': 'ordinal',
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 }
             ]
         );
@@ -470,14 +470,14 @@ describe('createDimensions', function () {
                     'coordDimIndex': 0,
                     'ordinalMeta': undefined,
                     'coordDim': 'time',
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'value',
                     'coordDimIndex': 0,
                     'name': 'value',
-                    'storageDimensionIndex': 1
+                    'storeDimIndex': 1
                 }
             ]
         );
@@ -507,7 +507,7 @@ describe('createDimensions', function () {
                     'type': 'ordinal',
                     'displayName': 'base',
                     'ordinalMeta': undefined,
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
@@ -517,7 +517,7 @@ describe('createDimensions', function () {
                     'coordDimIndex': 0,
                     'coordDim': 'x',
                     'displayName': 'open',
-                    'storageDimensionIndex': 1
+                    'storeDimIndex': 1
                 }
             ]
         );
@@ -550,7 +550,7 @@ describe('createDimensions', function () {
                     'coordDimIndex': 0,
                     'coordDim': 'y',
                     'type': 'ordinal',
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {
@@ -561,7 +561,7 @@ describe('createDimensions', function () {
                     'coordDimIndex': 0,
                     'ordinalMeta': undefined,
                     'coordDim': 'x',
-                    'storageDimensionIndex': 1
+                    'storeDimIndex': 1
                 },
                 {
                     'otherDims': {
@@ -572,7 +572,7 @@ describe('createDimensions', function () {
                     'ordinalMeta': undefined,
                     'coordDimIndex': 1,
                     'coordDim': 'x',
-                    'storageDimensionIndex': 2
+                    'storeDimIndex': 2
                 }
             ]
         );
@@ -603,7 +603,7 @@ describe('createDimensions', function () {
                     'coordDim': 'x',
                     'ordinalMeta': undefined,
                     'type': 'ordinal',
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {
@@ -615,7 +615,7 @@ describe('createDimensions', function () {
                     'defaultTooltip': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'y',
-                    'storageDimensionIndex': 1
+                    'storeDimIndex': 1
                 },
                 {
                     'otherDims': {},
@@ -624,7 +624,7 @@ describe('createDimensions', function () {
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
                     'coordDim': 'value',
-                    'storageDimensionIndex': 2
+                    'storeDimIndex': 2
                 }
             ]
         );
@@ -663,14 +663,14 @@ describe('createDimensions', function () {
                     'type': 'ordinal',
                     'coordDim': 'x',
                     'coordDimIndex': 0,
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'y',
                     'coordDimIndex': 0,
                     'name': 'y',
-                    'storageDimensionIndex': 1
+                    'storeDimIndex': 1
                 },
                 {
                     'otherDims': {},
@@ -678,7 +678,7 @@ describe('createDimensions', function () {
                     'name': '歪溜',
                     'coordDim': 'value',
                     'coordDimIndex': 0,
-                    'storageDimensionIndex': 2
+                    'storeDimIndex': 2
                 }
             ]
         );
@@ -697,14 +697,14 @@ describe('createDimensions', function () {
                     'type': 'ordinal',
                     'coordDim': 'x',
                     'coordDimIndex': 0,
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'y',
                     'coordDimIndex': 0,
                     'name': 'y',
-                    'storageDimensionIndex': 1
+                    'storeDimIndex': 1
                 },
                 {
                     'otherDims': {},
@@ -712,7 +712,7 @@ describe('createDimensions', function () {
                     'coordDim': 'value',
                     'type': 'ordinal',
                     'coordDimIndex': 0,
-                    'storageDimensionIndex': 2
+                    'storeDimIndex': 2
                 }
             ]
         );
@@ -732,7 +732,7 @@ describe('createDimensions', function () {
                     'ordinalMeta': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'time',
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
@@ -741,7 +741,7 @@ describe('createDimensions', function () {
                     'type': 'float',
                     'coordDim': 'value',
                     'coordDimIndex': 0,
-                    'storageDimensionIndex': 1
+                    'storeDimIndex': 1
                 }
             ]
         );
@@ -762,7 +762,7 @@ describe('createDimensions', function () {
                     'ordinalMeta': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'time',
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
@@ -771,7 +771,7 @@ describe('createDimensions', function () {
                     'type': 'float',
                     'coordDim': 'value',
                     'coordDimIndex': 0,
-                    'storageDimensionIndex': 1
+                    'storeDimIndex': 1
                 }
             ]
         );
@@ -814,7 +814,7 @@ describe('createDimensions', function () {
                     'name': 'value',
                     'isExtraCoord': true,
                     'type': 'ordinal',
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 }
             ]
         );
@@ -839,14 +839,14 @@ describe('createDimensions', function () {
                     'coordDim': 'value',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'y',
                     'coordDimIndex': 0,
                     'name': 'y',
-                    'storageDimensionIndex': 1
+                    'storeDimIndex': 1
                 },
                 {
                     'otherDims': {
@@ -856,7 +856,7 @@ describe('createDimensions', function () {
                     'name': '歪溜',
                     'coordDim': 'x',
                     'coordDimIndex': 0,
-                    'storageDimensionIndex': 2
+                    'storeDimIndex': 2
                 }
             ]
         );
@@ -881,7 +881,7 @@ describe('createDimensions', function () {
                     'type': 'ordinal',
                     'coordDim': 'z',
                     'coordDimIndex': 0,
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
@@ -890,7 +890,7 @@ describe('createDimensions', function () {
                     'name': 'y',
                     'type': 'time',
                     'ordinalMeta': undefined,
-                    'storageDimensionIndex': 1
+                    'storeDimIndex': 1
                 },
                 {
                     'otherDims': {
@@ -900,7 +900,7 @@ describe('createDimensions', function () {
                     'name': '歪溜',
                     'coordDim': 'x',
                     'coordDimIndex': 0,
-                    'storageDimensionIndex': 2
+                    'storeDimIndex': 2
                 }
             ]
         );
@@ -924,7 +924,7 @@ describe('createDimensions', function () {
                     'ordinalMeta': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'time',
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
@@ -933,7 +933,7 @@ describe('createDimensions', function () {
                     'type': 'float',
                     'coordDim': 'value',
                     'coordDimIndex': 0,
-                    'storageDimensionIndex': 1
+                    'storeDimIndex': 1
                 }
             ]
         );
@@ -957,7 +957,7 @@ describe('createDimensions', function () {
                     'ordinalMeta': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'time',
-                    'storageDimensionIndex': 0
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
@@ -966,7 +966,7 @@ describe('createDimensions', function () {
                     'type': 'float',
                     'coordDim': 'value',
                     'coordDimIndex': 0,
-                    'storageDimensionIndex': 1
+                    'storeDimIndex': 1
                 }
             ]
         );

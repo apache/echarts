@@ -158,7 +158,7 @@ export function summarizeDimensions(
 
     summary.dataDimsOnCoord = dataDimsOnCoord;
     summary.dataDimIndicesOnCoord = map(
-        dataDimsOnCoord, dimName => data.getDimensionInfo(dimName).storageDimensionIndex
+        dataDimsOnCoord, dimName => data.getDimensionInfo(dimName).storeDimIndex
     );
     summary.encodeFirstDimNotExtra = encodeFirstDimNotExtra;
 

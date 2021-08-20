@@ -95,7 +95,7 @@ export function legacyCreateDimensions(
  * If no 'value' dimension specified, the first no-named dimension will be
  * named as 'value'.
  *
- * @return The results are always sorted by `storageDimensionIndex` asc.
+ * @return The results are always sorted by `storeDimIndex` asc.
  */
 export default function createDimensions(
     // TODO: TYPE completeDimensions type
@@ -150,7 +150,7 @@ export default function createDimensions(
             dimDefItem.displayName != null && (resultItem.displayName = dimDefItem.displayName);
             const newIdx = resultList.length;
             indicesMap[dimIdx] = newIdx;
-            resultItem.storageDimensionIndex = dimIdx;
+            resultItem.storeDimIndex = dimIdx;
             resultList.push(resultItem);
             return resultItem;
         }
@@ -333,7 +333,7 @@ export default function createDimensions(
         });
         // Sort dimensions: there are some rule that use the last dim as label,
         // and for some latter travel process easier.
-        resultList.sort((item0, item1) => item0.storageDimensionIndex - item1.storageDimensionIndex);
+        resultList.sort((item0, item1) => item0.storeDimIndex - item1.storeDimIndex);
     }
 
     removeDuplication(resultList);

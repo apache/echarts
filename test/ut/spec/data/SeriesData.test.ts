@@ -232,8 +232,8 @@ describe('SeriesData', function () {
             const schema = new SeriesDataSchema({
                 source: source,
                 dimensionList: [
-                    { type: 'float', name: 'dim1', storageDimensionIndex: 1 },
-                    { type: 'ordinal', name: 'dim3', storageDimensionIndex: 3 }
+                    { type: 'float', name: 'dim1', storeDimIndex: 1 },
+                    { type: 'ordinal', name: 'dim3', storeDimIndex: 3 }
                 ],
                 fullDimensionCount: 2,
                 dimensionOmitted: true

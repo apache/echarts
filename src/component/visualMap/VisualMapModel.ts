@@ -412,7 +412,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
             const dimName = dimNames[i];
             const dimInfo = data.getDimensionInfo(dimName);
             if (!dimInfo.isCalculationCoord) {
-                return dimInfo.storageDimensionIndex;
+                return dimInfo.storeDimIndex;
             }
         }
     }

@@ -92,10 +92,11 @@ type SeriesDimensionName = DimensionName;
 
 const TRANSFERABLE_PROPERTIES = [
     'hasItemOption', '_nameList', '_idList', '_invertedIndicesMap',
-    '_dimensionsSummary', 'userOutput',
+    '_dimSummary', 'userOutput',
     '_rawData', '_dimValueGetter',
     '_nameDimIdx', '_idDimIdx', '_nameRepeatCount'
 ];
+
 const CLONE_PROPERTIES = [
     '_approximateExtent'
 ];
@@ -164,9 +165,9 @@ class SeriesData<
     readonly dimensions: SeriesDimensionName[];
 
     // Infomation of each data dimension, like data type.
-    private _dimensionInfos: Record<SeriesDimensionName, SeriesDimensionDefine>;
+    private _dimInfos: Record<SeriesDimensionName, SeriesDimensionDefine>;
 
-    private _dimensionOmitted = false;
+    private _dimOmitted = false;
     private _schema?: SeriesDataSchema;
     /**
      * @pending
@@ -222,7 +223,7 @@ class SeriesData<
     // key: dim, value: extent
     private _approximateExtent: Record<SeriesDimensionName, [number, number]> = {};
 
-    private _dimensionsSummary: DimensionSummary;
+    private _dimSummary: DimensionSummary;
 
     private _invertedIndicesMap: Record<SeriesDimensionName, ArrayLike<number>>;
 
@@ -271,7 +272,7 @@ class SeriesData<
         let assignStorageDimIdx = false;
         if (isSeriesDataSchema(dimensionsInput)) {
             dimensions = dimensionsInput.dimensionList;
-            this._dimensionOmitted = dimensionsInput.isDimensionOmitted();
+            this._dimOmitted = dimensionsInput.isDimensionOmitted();
             this._schema = dimensionsInput;
         }
         else {
@@ -323,25 +324,25 @@ class SeriesData<
             }
 
             if (__DEV__) {
-                zrUtil.assert(assignStorageDimIdx || dimensionInfo.storageDimensionIndex >= 0);
+                zrUtil.assert(assignStorageDimIdx || dimensionInfo.storeDimIndex >= 0);
             }
             if (assignStorageDimIdx) {
-                dimensionInfo.storageDimensionIndex = i;
+                dimensionInfo.storeDimIndex = i;
             }
         }
 
         this.dimensions = dimensionNames;
-        this._dimensionInfos = dimensionInfos;
+        this._dimInfos = dimensionInfos;
         this._initGetDimensionInfo(needsHasOwn);
 
         this.hostModel = hostModel;
 
         this._invertedIndicesMap = invertedIndicesMap;
 
-        if (this._dimensionOmitted) {
+        if (this._dimOmitted) {
             const dimIdxToName = this._dimIdxToName = zrUtil.createHashMap<DimensionName, DimensionIndex>();
             zrUtil.each(dimensionNames, dimName => {
-                dimIdxToName.set(dimensionInfos[dimName].storageDimensionIndex, dimName);
+                dimIdxToName.set(dimensionInfos[dimName].storeDimIndex, dimName);
             });
         }
     }
@@ -370,7 +371,7 @@ class SeriesData<
         }
         dimIdx = dim as DimensionIndex;
 
-        if (!this._dimensionOmitted) {
+        if (!this._dimOmitted) {
             return this.dimensions[dimIdx];
         }
 
@@ -381,7 +382,7 @@ class SeriesData<
             return dimName;
         }
 
-        const sourceDimDef = this._schema.getDimensionFromSource(dimIdx);
+        const sourceDimDef = this._schema.getSourceDim(dimIdx);
         if (sourceDimDef) {
             return sourceDimDef.name;
         }
@@ -397,10 +398,10 @@ class SeriesData<
             return dimIdx;
         }
 
-        const dimInfo = this._getDimensionInfo(dim as DimensionName);
+        const dimInfo = this._getDimInfo(dim as DimensionName);
         return dimInfo
-            ? dimInfo.storageDimensionIndex
-            : this._dimensionOmitted
+            ? dimInfo.storeDimIndex
+            : this._dimOmitted
             ? this._schema.getDimensionIndexFromSource(dim as DimensionName)
             : -1;
     }
@@ -430,8 +431,8 @@ class SeriesData<
             || (
                 dim != null
                 && !isNaN(dim as any)
-                && !this._getDimensionInfo(dim)
-                && (!this._dimensionOmitted || this._schema.getDimensionIndexFromSource(dim) < 0)
+                && !this._getDimInfo(dim)
+                && (!this._dimOmitted || this._schema.getDimensionIndexFromSource(dim) < 0)
             )
         ) {
             return +dim;
@@ -456,18 +457,18 @@ class SeriesData<
      */
     getDimensionInfo(dim: SeriesDimensionLoose): SeriesDimensionDefine {
         // Do not clone, because there may be categories in dimInfo.
-        return this._getDimensionInfo(this.getDimension(dim));
+        return this._getDimInfo(this.getDimension(dim));
     }
 
     /**
      * If `dimName` if from outside of `SeriesData`,
-     * use this method other than visit `this._dimensionInfos` directly.
+     * use this method other than visit `this._dimInfos` directly.
      */
-    private _getDimensionInfo: (dimName: SeriesDimensionName) => SeriesDimensionDefine;
+    private _getDimInfo: (dimName: SeriesDimensionName) => SeriesDimensionDefine;
 
     private _initGetDimensionInfo(needsHasOwn: boolean): void {
-        const dimensionInfos = this._dimensionInfos;
-        this._getDimensionInfo = needsHasOwn
+        const dimensionInfos = this._dimInfos;
+        this._getDimInfo = needsHasOwn
             ? dimName => (dimensionInfos.hasOwnProperty(dimName) ? dimensionInfos[dimName] : undefined)
             : dimName => dimensionInfos[dimName];
     }
@@ -476,7 +477,7 @@ class SeriesData<
      * concrete dimension name list on coord.
      */
     getDimensionsOnCoord(): SeriesDimensionName[] {
-        return this._dimensionsSummary.dataDimsOnCoord.slice();
+        return this._dimSummary.dataDimsOnCoord.slice();
     }
 
     /**
@@ -488,7 +489,7 @@ class SeriesData<
     mapDimension(coordDim: SeriesDimensionName): SeriesDimensionName;
     mapDimension(coordDim: SeriesDimensionName, idx: number): SeriesDimensionName;
     mapDimension(coordDim: SeriesDimensionName, idx?: number): SeriesDimensionName {
-        const dimensionsSummary = this._dimensionsSummary;
+        const dimensionsSummary = this._dimSummary;
 
         if (idx == null) {
             return dimensionsSummary.encodeFirstDimNotExtra[coordDim] as any;
@@ -499,7 +500,7 @@ class SeriesData<
     }
 
     mapDimensionsAll(coordDim: SeriesDimensionName): SeriesDimensionName[] {
-        const dimensionsSummary = this._dimensionsSummary;
+        const dimensionsSummary = this._dimSummary;
         const dims = dimensionsSummary.encode[coordDim];
         return (dims || []).slice();
     }
@@ -524,7 +525,7 @@ class SeriesData<
     ): void {
         let store: DataStorage;
         const dimensions = this.dimensions;
-        const dimensionInfos = map(dimensions, this._getDimensionInfo, this);
+        const dimensionInfos = map(dimensions, this._getDimInfo, this);
         if (data instanceof DataStorage) {
             store = data;
         }
@@ -548,8 +549,8 @@ class SeriesData<
 
         // Cache summary info for fast visit. See "dimensionHelper".
         // Needs to be initialized after store is prepared.
-        this._dimensionsSummary = summarizeDimensions(this, this._schema);
-        this.userOutput = this._dimensionsSummary.userOutput;
+        this._dimSummary = summarizeDimensions(this, this._schema);
+        this.userOutput = this._dimSummary.userOutput;
     }
 
     /**
@@ -595,9 +596,9 @@ class SeriesData<
         const store = this._store;
         const dimensions = this.dimensions;
         for (let i = 0; i < dimensions.length; i++) {
-            const dimInfo = this._dimensionInfos[dimensions[i]];
+            const dimInfo = this._dimInfos[dimensions[i]];
             if (dimInfo.ordinalMeta) {
-                store.collectOrdinalMeta(dimInfo.storageDimensionIndex, dimInfo.ordinalMeta);
+                store.collectOrdinalMeta(dimInfo.storeDimIndex, dimInfo.ordinalMeta);
             }
         }
     }
@@ -762,9 +763,9 @@ class SeriesData<
      */
     get(dim: SeriesDimensionName, idx: number): ParsedValue {
         const store = this._store;
-        const dimInfo = this._dimensionInfos[dim];
+        const dimInfo = this._dimInfos[dim];
         if (dimInfo) {
-            return store.get(dimInfo.storageDimensionIndex, idx);
+            return store.get(dimInfo.storeDimIndex, idx);
         }
     }
 
@@ -773,9 +774,9 @@ class SeriesData<
      */
     getByRawIndex(dim: SeriesDimensionName, rawIdx: number): ParsedValue {
         const store = this._store;
-        const dimInfo = this._dimensionInfos[dim];
+        const dimInfo = this._dimInfos[dim];
         if (dimInfo) {
-            return store.getByRawIndex(dimInfo.storageDimensionIndex, rawIdx);
+            return store.getByRawIndex(dimInfo.storeDimIndex, rawIdx);
         }
     }
 
@@ -812,7 +813,7 @@ class SeriesData<
      * Only check the coord dimensions.
      */
     hasValue(idx: number): boolean {
-        const dataDimIndicesOnCoord = this._dimensionsSummary.dataDimIndicesOnCoord;
+        const dataDimIndicesOnCoord = this._dimSummary.dataDimIndicesOnCoord;
         for (let i = 0, len = dataDimIndicesOnCoord.length; i < len; i++) {
             // Ordinal type originally can be string or number.
             // But when an ordinal type is used on coord, it can
@@ -1341,7 +1342,7 @@ class SeriesData<
             list = new SeriesData(
                 this._schema
                     ? this._schema
-                    : map(this.dimensions, this._getDimensionInfo, this),
+                    : map(this.dimensions, this._getDimInfo, this),
                 this.hostModel
             );
         }
@@ -1380,7 +1381,7 @@ class SeriesData<
         prepareInvertedIndex = function (data: SeriesData): void {
             const invertedIndicesMap = data._invertedIndicesMap;
             zrUtil.each(invertedIndicesMap, function (invertedIndices, dim) {
-                const dimInfo = data._dimensionInfos[dim];
+                const dimInfo = data._dimInfos[dim];
                 // Currently, only dimensions that has ordinalMeta can create inverted indices.
                 const ordinalMeta = dimInfo.ordinalMeta;
                 const store = data._store;
@@ -1395,7 +1396,7 @@ class SeriesData<
                     }
                     for (let i = 0; i < store.count(); i++) {
                         // Only support the case that all values are distinct.
-                        invertedIndices[store.get(dimInfo.storageDimensionIndex, i) as number] = i;
+                        invertedIndices[store.get(dimInfo.storeDimIndex, i) as number] = i;
                     }
                 }
             });
@@ -1437,7 +1438,7 @@ class SeriesData<
             const list = new SeriesData(
                 original._schema
                     ? original._schema
-                    : map(original.dimensions, original._getDimensionInfo, original),
+                    : map(original.dimensions, original._getDimInfo, original),
                 original.hostModel
             );
             // FIXME If needs stackedOn, value may already been stacked
