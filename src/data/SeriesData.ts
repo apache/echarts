@@ -355,8 +355,8 @@ class SeriesData<
      * @param dim Must make sure the dimension is `SeriesDimensionLoose`.
      * Because only those dimensions will have auto-generated dimension names if not
      * have a user-specified name, and other dimensions will get a return of null/undefined.
-     * @deprecated
-     * Becuause of this reason, should better use `getDimensionIndex` instead, for examples:
+     *
+     * @notice Becuause of this reason, should better use `getDimensionIndex` instead, for examples:
      * ```js
      * const val = data.getStorage().get(data.getDimensionIndex(dim), dataIdx);
      * ```
@@ -758,7 +758,7 @@ class SeriesData<
     /**
      * Get value. Return NaN if idx is out of range.
      *
-     * @deprecated Should better to use `data.getStorage().get(dimIndex, dataIdx)` instead.
+     * @notice Should better to use `data.getStorage().get(dimIndex, dataIdx)` instead.
      */
     get(dim: SeriesDimensionName, idx: number): ParsedValue {
         const store = this._store;
@@ -769,7 +769,7 @@ class SeriesData<
     }
 
     /**
-     * @deprecated Should better to use `data.getStorage().getByRawIndex(dimIndex, dataIdx)` instead.
+     * @notice Should better to use `data.getStorage().getByRawIndex(dimIndex, dataIdx)` instead.
      */
     getByRawIndex(dim: SeriesDimensionName, rawIdx: number): ParsedValue {
         const store = this._store;
