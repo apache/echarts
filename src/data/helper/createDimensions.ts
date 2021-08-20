@@ -78,11 +78,11 @@ export type CreateDimensionsParams = {
 /**
  * For outside usage compat (like echarts-gl are using it).
  */
-export function legacyCreateDimensions(
+export function createDimensions(
     source: Source | OptionSourceData,
     opt?: CreateDimensionsParams
 ): SeriesDimensionDefine[] {
-    return createDimensions(source, opt).dimensionList;
+    return prepareSeriesDataSchema(source, opt).dimList;
 }
 
 /**
@@ -97,7 +97,7 @@ export function legacyCreateDimensions(
  *
  * @return The results are always sorted by `storeDimIndex` asc.
  */
-export default function createDimensions(
+export default function prepareSeriesDataSchema(
     // TODO: TYPE completeDimensions type
     source: Source | OptionSourceData,
     opt?: CreateDimensionsParams

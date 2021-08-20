@@ -54,7 +54,7 @@ export function createList(seriesModel: SeriesModel) {
 
 export {getLayoutRect};
 
-export {legacyCreateDimensions as createDimensions} from '../../data/helper/createDimensions';
+export {createDimensions} from '../../data/helper/createDimensions';
 
 export const dataStack = {
     isDimensionStacked: isDimensionStacked,

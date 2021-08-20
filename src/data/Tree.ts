@@ -25,7 +25,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import linkSeriesData from './helper/linkSeriesData';
 import SeriesData from './SeriesData';
-import createDimensions from './helper/createDimensions';
+import prepareSeriesDataSchema from './helper/createDimensions';
 import {
     DimensionLoose, ParsedValue, OptionDataValue,
     OptionDataItemObject
@@ -447,12 +447,12 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
 
         tree.root.updateDepthAndHeight(0);
 
-        const { dimensionList } = createDimensions(listData, {
+        const { dimList } = prepareSeriesDataSchema(listData, {
             coordDimensions: ['value'],
             dimensionsCount: dimMax
         });
 
-        const list = new SeriesData(dimensionList, hostModel);
+        const list = new SeriesData(dimList, hostModel);
         list.initData(listData);
 
         beforeLink && beforeLink(list);

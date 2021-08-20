@@ -22,7 +22,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import SeriesData from '../../data/SeriesData';
 import Graph from '../../data/Graph';
 import linkSeriesData from '../../data/helper/linkSeriesData';
-import createDimensions from '../../data/helper/createDimensions';
+import prepareSeriesDataSchema from '../../data/helper/createDimensions';
 import CoordinateSystem from '../../core/CoordinateSystem';
 import createSeriesData from './createSeriesData';
 import {
@@ -83,11 +83,11 @@ export default function createGraphFromNodeEdge(
             coordDimensions.concat(['value']);
         }
 
-        const { dimensionList } = createDimensions(nodes, {
+        const { dimList } = prepareSeriesDataSchema(nodes, {
             coordDimensions: coordDimensions,
             encodeDefine: seriesModel.getEncode()
         });
-        nodeData = new SeriesData(dimensionList, seriesModel);
+        nodeData = new SeriesData(dimList, seriesModel);
         nodeData.initData(nodes);
     }
 

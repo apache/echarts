@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createDimensions, {CreateDimensionsParams} from '../../data/helper/createDimensions';
+import prepareSeriesDataSchema, {CreateDimensionsParams} from '../../data/helper/createDimensions';
 import SeriesData from '../../data/SeriesData';
 import {extend, isArray} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
@@ -45,9 +45,9 @@ export default function createSeriesDataSimply(
 
     const source = seriesModel.getSource();
 
-    const { dimensionList } = createDimensions(source, opt as CreateDimensionsParams);
+    const { dimList } = prepareSeriesDataSchema(source, opt as CreateDimensionsParams);
 
-    const list = new SeriesData(dimensionList, seriesModel);
+    const list = new SeriesData(dimList, seriesModel);
     list.initData(source, nameList);
 
     return list;

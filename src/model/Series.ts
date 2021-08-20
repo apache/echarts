@@ -699,7 +699,7 @@ function dataTaskProgress(param: StageHandlerProgressParams, context: SeriesTask
 
 // TODO refactor
 function wrapData(data: SeriesData, seriesModel: SeriesModel): void {
-    zrUtil.each([...data.CHANGABLE_METHODS, ...data.DOWNSAMPLE_METHODS], function (methodName) {
+    zrUtil.each(zrUtil.concatArray(data.CHANGABLE_METHODS, data.DOWNSAMPLE_METHODS), function (methodName) {
         data.wrapMethod(methodName as any, zrUtil.curry(onDataChange, seriesModel));
     });
 }

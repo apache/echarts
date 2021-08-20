@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesData from '../../data/SeriesData';
-import createDimensions from '../../data/helper/createDimensions';
+import prepareSeriesDataSchema from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../core/CoordinateSystem';
@@ -146,9 +146,9 @@ function createSeriesData(
         encodeDefaulter: encodeDefaulter,
         canOmitUnusedDimensions: !isOriginalSource
     };
-    const schema = createDimensions(source, createDimensionOptions);
+    const schema = prepareSeriesDataSchema(source, createDimensionOptions);
     const firstCategoryDimIndex = injectOrdinalMeta(
-        schema.dimensionList, opt.createInvertedIndices, coordSysInfo
+        schema.dimList, opt.createInvertedIndices, coordSysInfo
     );
 
     const storage = !isOriginalSource ? sourceManager.getSharedDataStorage(schema) : null;

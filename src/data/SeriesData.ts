@@ -271,8 +271,8 @@ class SeriesData<
         let dimensions: SeriesDimensionDefineLoose[];
         let assignStorageDimIdx = false;
         if (isSeriesDataSchema(dimensionsInput)) {
-            dimensions = dimensionsInput.dimensionList;
-            this._dimOmitted = dimensionsInput.isDimensionOmitted();
+            dimensions = dimensionsInput.dimList;
+            this._dimOmitted = dimensionsInput.isDimOmitted();
             this._schema = dimensionsInput;
         }
         else {
@@ -365,7 +365,7 @@ class SeriesData<
      * @return Concrete dim name.
      */
     getDimension(dim: SeriesDimensionLoose): DimensionName {
-        let dimIdx = this._recognizeDimensionIndex(dim);
+        let dimIdx = this._recognizeDimIndex(dim);
         if (dimIdx == null) {
             return dim as DimensionName;
         }
@@ -393,7 +393,7 @@ class SeriesData<
      * Can be used to index value from getRawValue.
      */
     getDimensionIndex(dim: DimensionLoose): DimensionIndex {
-        const dimIdx = this._recognizeDimensionIndex(dim);
+        const dimIdx = this._recognizeDimIndex(dim);
         if (dimIdx != null) {
             return dimIdx;
         }
@@ -402,7 +402,7 @@ class SeriesData<
         return dimInfo
             ? dimInfo.storeDimIndex
             : this._dimOmitted
-            ? this._schema.getDimensionIndexFromSource(dim as DimensionName)
+            ? this._schema.getSourceDimIndex(dim as DimensionName)
             : -1;
     }
 
@@ -425,14 +425,14 @@ class SeriesData<
      *
      * @return recogonized `DimensionIndex`. Otherwise return null/undefined (means that dim is `DimensionName`).
      */
-    private _recognizeDimensionIndex(dim: DimensionLoose): DimensionIndex {
+    private _recognizeDimIndex(dim: DimensionLoose): DimensionIndex {
         if (typeof dim === 'number'
             // If being a number-like string but not being defined as a dimension name.
             || (
                 dim != null
                 && !isNaN(dim as any)
                 && !this._getDimInfo(dim)
-                && (!this._dimOmitted || this._schema.getDimensionIndexFromSource(dim) < 0)
+                && (!this._dimOmitted || this._schema.getSourceDimIndex(dim) < 0)
             )
         ) {
             return +dim;

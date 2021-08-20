@@ -82,7 +82,7 @@ class DimensionUserOuput {
     private _getFullDimensionNames(): DimensionName[] {
         if (!this._cachedDimNames) {
             this._cachedDimNames = this._schema
-                ? this._schema.makeOutputDimensionNames()
+                ? this._schema.makeOutputDimNames()
                 : [];
         }
         return this._cachedDimNames;

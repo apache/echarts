@@ -18,7 +18,7 @@
 */
 
 import SeriesModel from '../../model/Series';
-import createDimensions from '../../data/helper/createDimensions';
+import prepareSeriesDataSchema from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import SeriesData from '../../data/SeriesData';
 import * as zrUtil from 'zrender/src/core/util';
@@ -177,7 +177,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             }
         }
 
-        const { dimensionList } = createDimensions(data, {
+        const { dimList } = prepareSeriesDataSchema(data, {
             coordDimensions: ['single'],
             dimensionsDefine: [
                 {
@@ -200,7 +200,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             }
         });
 
-        const list = new SeriesData(dimensionList, this);
+        const list = new SeriesData(dimList, this);
         list.initData(data);
 
         return list;

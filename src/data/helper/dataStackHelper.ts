@@ -83,7 +83,7 @@ export function enableDataStack(
     }
     else {
         schema = dimensionsInput.schema;
-        dimensionDefineList = schema.dimensionList;
+        dimensionDefineList = schema.dimList;
         storage = dimensionsInput.storage;
     }
 
@@ -178,8 +178,8 @@ export function enableDataStack(
                     storage.ensureCalculationDimension(stackResultDimension, stackedDimType);
             }
 
-            schema.appendCalculationDimension(stackedOverDimensionDefine);
-            schema.appendCalculationDimension(stackResultDimensionDefine);
+            schema.appendCalcDim(stackedOverDimensionDefine);
+            schema.appendCalcDim(stackResultDimensionDefine);
         }
         else {
             dimensionDefineList.push(stackedOverDimensionDefine);
