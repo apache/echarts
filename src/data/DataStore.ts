@@ -51,7 +51,7 @@ const dataCtors = {
     'time': CtorFloat64Array
 } as const;
 
-export type DataStorageDimensionType = keyof typeof dataCtors;
+export type DataStoreDimensionType = keyof typeof dataCtors;
 
 type DataTypedArray = Uint32Array | Int32Array | Uint16Array | Float64Array;
 type DataTypedArrayConstructor = typeof Uint32Array | typeof Int32Array | typeof Uint16Array | typeof Float64Array;
@@ -72,18 +72,18 @@ type FilterCb = (...args: any) => boolean;
 type MapCb = (...args: any) => ParsedValue | ParsedValue[];
 
 export type DimValueGetter = (
-    this: DataStorage,
+    this: DataStore,
     dataItem: any,
     property: string,
     dataIndex: number,
     dimIndex: DimensionIndex
 ) => ParsedValue;
 
-export interface DataStorageDimensionDefine {
+export interface DataStoreDimensionDefine {
     /**
      * Default to be float.
      */
-    type?: DataStorageDimensionType;
+    type?: DataStoreDimensionType;
 
     /**
      * Only used in SOURCE_FORMAT_OBJECT_ROWS and SOURCE_FORMAT_KEYED_COLUMNS to retrieve value
@@ -129,7 +129,7 @@ function cloneChunk(originalChunk: DataValueChunk): DataValueChunk {
 function prepareStorage(
     storage: DataValueChunk[],
     dimIdx: number,
-    dimType: DataStorageDimensionType,
+    dimType: DataStoreDimensionType,
     end: number,
     append?: boolean
 ): void {
@@ -154,9 +154,9 @@ function prepareStorage(
 };
 
 /**
- * Basically, DataStorage API keep immutable.
+ * Basically, DataStore API keep immutable.
  */
-class DataStorage {
+class DataStore {
     private _chunks: DataValueChunk[] = [];
 
     private _provider: DataProvider;
@@ -173,7 +173,7 @@ class DataStorage {
     private _count: number = 0;
     private _rawCount: number = 0;
 
-    private _dimensions: DataStorageDimensionDefine[];
+    private _dimensions: DataStoreDimensionDefine[];
     private _dimValueGetter: DimValueGetter;
 
     private _calcDimNameToIdx = createHashMap<DimensionIndex, DimensionName>();
@@ -185,7 +185,7 @@ class DataStorage {
      */
     initData(
         provider: DataProvider,
-        inputDimensions: DataStorageDimensionDefine[],
+        inputDimensions: DataStoreDimensionDefine[],
         dimValueGetter?: DimValueGetter
     ): void {
         if (__DEV__) {
@@ -236,7 +236,7 @@ class DataStorage {
     /**
      * @caution Only used in dataStack.
      */
-    ensureCalculationDimension(dimName: DimensionName, type: DataStorageDimensionType): DimensionIndex {
+    ensureCalculationDimension(dimName: DimensionName, type: DataStoreDimensionType): DimensionIndex {
         const calcDimNameToIdx = this._calcDimNameToIdx;
         const dimensions = this._dimensions;
 
@@ -296,7 +296,7 @@ class DataStorage {
         return ordinalMeta;
     }
 
-    getDimensionProperty(dimIndex: DimensionIndex): DataStorageDimensionDefine['property'] {
+    getDimensionProperty(dimIndex: DimensionIndex): DataStoreDimensionDefine['property'] {
         const item = this._dimensions[dimIndex];
         return item && item.property;
     }
@@ -648,7 +648,7 @@ class DataStorage {
     filter(
         dims: DimensionIndex[],
         cb: FilterCb
-    ): DataStorage {
+    ): DataStore {
         if (!this._count) {
             return this;
         }
@@ -706,7 +706,7 @@ class DataStorage {
      * Select data in range. (For optimization of filter)
      * (Manually inline code, support 5 million data filtering in data zoom.)
      */
-    selectRange(range: {[dimIdx: number]: [number, number]}): DataStorage {
+    selectRange(range: {[dimIdx: number]: [number, number]}): DataStore {
         const newStore = this.clone();
 
         const len = newStore._count;
@@ -836,7 +836,7 @@ class DataStorage {
     /**
      * Data mapping to a new List with given dimensions
      */
-    map(dims: DimensionIndex[], cb: MapCb): DataStorage {
+    map(dims: DimensionIndex[], cb: MapCb): DataStore {
         // TODO only clone picked chunks.
         const target = this.clone(dims);
         this._updateDims(target, dims, cb);
@@ -851,7 +851,7 @@ class DataStorage {
     }
 
     private _updateDims(
-        target: DataStorage,
+        target: DataStore,
         dims: DimensionIndex[],
         cb: MapCb
     ) {
@@ -912,7 +912,7 @@ class DataStorage {
     lttbDownSample(
         valueDimension: DimensionIndex,
         rate: number
-    ): DataStorage {
+    ): DataStore {
         const target = this.clone([valueDimension], true);
         const targetStorage = target._chunks;
         const dimStore = targetStorage[valueDimension];
@@ -999,7 +999,7 @@ class DataStorage {
         rate: number,
         sampleValue: (frameValues: ArrayLike<ParsedValue>) => ParsedValueNumeric,
         sampleIndex: (frameValues: ArrayLike<ParsedValue>, value: ParsedValueNumeric) => number
-    ): DataStorage {
+    ): DataStore {
         const target = this.clone([dimension], true);
         const targetStorage = target._chunks;
 
@@ -1168,8 +1168,8 @@ class DataStorage {
      *
      * @param clonedDims Determine which dims to clone. Will share the data if not specified.
      */
-    clone(clonedDims?: DimensionIndex[], ignoreIndices?: boolean): DataStorage {
-        const target = new DataStorage();
+    clone(clonedDims?: DimensionIndex[], ignoreIndices?: boolean): DataStore {
+        const target = new DataStore();
         const chunks = this._chunks;
         const clonedDimsMap = clonedDims && reduce(clonedDims, (obj, dimIdx) => {
             obj[dimIdx] = true;
@@ -1194,7 +1194,7 @@ class DataStorage {
         return target;
     }
 
-    private _copyCommonProps(target: DataStorage): void {
+    private _copyCommonProps(target: DataStore): void {
         target._count = this._count;
         target._rawCount = this._rawCount;
         target._provider = this._provider;
@@ -1204,7 +1204,7 @@ class DataStorage {
         target._rawExtent = clone(this._rawExtent);
     }
 
-    private _cloneIndices(): DataStorage['_indices'] {
+    private _cloneIndices(): DataStore['_indices'] {
         if (this._indices) {
             const Ctor = this._indices.constructor as DataArrayLikeConstructor;
             let indices;
@@ -1240,7 +1240,7 @@ class DataStorage {
     private static internalField = (function () {
 
         function getDimValueSimply(
-            this: DataStorage, dataItem: any, property: string, dataIndex: number, dimIndex: number
+            this: DataStore, dataItem: any, property: string, dataIndex: number, dimIndex: number
         ): ParsedValue {
             return parseDataValue(dataItem[dimIndex], this._dimensions[dimIndex]);
         }
@@ -1250,7 +1250,7 @@ class DataStorage {
             arrayRows: getDimValueSimply,
 
             objectRows(
-                this: DataStorage, dataItem: any, property: string, dataIndex: number, dimIndex: number
+                this: DataStore, dataItem: any, property: string, dataIndex: number, dimIndex: number
             ): ParsedValue {
                 return parseDataValue(dataItem[property], this._dimensions[dimIndex]);
             },
@@ -1258,7 +1258,7 @@ class DataStorage {
             keyedColumns: getDimValueSimply,
 
             original(
-                this: DataStorage, dataItem: any, property: string, dataIndex: number, dimIndex: number
+                this: DataStore, dataItem: any, property: string, dataIndex: number, dimIndex: number
             ): ParsedValue {
                 // Performance sensitive, do not use modelUtil.getDataItemValue.
                 // If dataItem is an plain object with no value field, the let `value`
@@ -1276,7 +1276,7 @@ class DataStorage {
             },
 
             typedArray: function (
-                this: DataStorage, dataItem: any, property: string, dataIndex: number, dimIndex: number
+                this: DataStore, dataItem: any, property: string, dataIndex: number, dimIndex: number
             ): ParsedValue {
                 return dataItem[dimIndex];
             }
@@ -1286,4 +1286,4 @@ class DataStorage {
     })();
 }
 
-export default DataStorage;
+export default DataStore;

@@ -23,14 +23,14 @@ import SeriesModel from '../../model/Series';
 import SeriesData, { DataCalculationInfo } from '../SeriesData';
 import type { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../../util/types';
 import { isSeriesDataSchema, SeriesDataSchema } from './SeriesDataSchema';
-import DataStorage from '../DataStorage';
+import DataStore from '../DataStore';
 
 type EnableDataStackDimensionsInput = {
     schema: SeriesDataSchema;
     // If given, stack dimension will be ensured on this storage.
     // Otherwise, stack dimesnion will be appended at the tail, and should not
     // be used on a shared storage, but should create a brand new stroage later.
-    storage?: DataStorage;
+    storage?: DataStore;
 };
 type EnableDataStackDimensionsInputLegacy = (SeriesDimensionDefine | string)[];
 
@@ -76,14 +76,14 @@ export function enableDataStack(
 
     let dimensionDefineList: EnableDataStackDimensionsInputLegacy;
     let schema: SeriesDataSchema;
-    let storage: DataStorage;
+    let storage: DataStore;
 
     if (isLegacyDimensionsInput(dimensionsInput)) {
         dimensionDefineList = dimensionsInput;
     }
     else {
         schema = dimensionsInput.schema;
-        dimensionDefineList = schema.dimList;
+        dimensionDefineList = schema.dimensions;
         storage = dimensionsInput.storage;
     }
 
@@ -178,8 +178,8 @@ export function enableDataStack(
                     storage.ensureCalculationDimension(stackResultDimension, stackedDimType);
             }
 
-            schema.appendCalcDim(stackedOverDimensionDefine);
-            schema.appendCalcDim(stackResultDimensionDefine);
+            schema.appendCalculationDimension(stackedOverDimensionDefine);
+            schema.appendCalculationDimension(stackResultDimensionDefine);
         }
         else {
             dimensionDefineList.push(stackedOverDimensionDefine);

@@ -44,7 +44,7 @@ import type Tree from './Tree';
 import type { VisualMeta } from '../component/visualMap/VisualMapModel';
 import {isSourceInstance, Source} from './Source';
 import { LineStyleProps } from '../model/mixin/lineStyle';
-import DataStorage, { DimValueGetter } from './DataStorage';
+import DataStore, { DimValueGetter } from './DataStore';
 import { isSeriesDataSchema, SeriesDataSchema } from './helper/SeriesDataSchema';
 
 const isObject = zrUtil.isObject;
@@ -159,8 +159,8 @@ class SeriesData<
      * Name of dimensions list of SeriesData.
      *
      * @caution Carefully use the index of this array.
-     * Becuase when DataStorage is an extra high dimension(>30) dataset. We will only pick
-     * the used dimensions from DataStorage to avoid performance issue.
+     * Becuase when DataStore is an extra high dimension(>30) dataset. We will only pick
+     * the used dimensions from DataStore to avoid performance issue.
      */
     readonly dimensions: SeriesDimensionName[];
 
@@ -196,7 +196,7 @@ class SeriesData<
      */
     tree?: Tree;
 
-    private _store: DataStorage;
+    private _store: DataStore;
 
     private _nameList: string[] = [];
     private _idList: string[] = [];
@@ -271,8 +271,8 @@ class SeriesData<
         let dimensions: SeriesDimensionDefineLoose[];
         let assignStorageDimIdx = false;
         if (isSeriesDataSchema(dimensionsInput)) {
-            dimensions = dimensionsInput.dimList;
-            this._dimOmitted = dimensionsInput.isDimOmitted();
+            dimensions = dimensionsInput.dimensions;
+            this._dimOmitted = dimensionsInput.isDimensionOmitted();
             this._schema = dimensionsInput;
         }
         else {
@@ -382,7 +382,7 @@ class SeriesData<
             return dimName;
         }
 
-        const sourceDimDef = this._schema.getSourceDim(dimIdx);
+        const sourceDimDef = this._schema.getSourceDimension(dimIdx);
         if (sourceDimDef) {
             return sourceDimDef.name;
         }
@@ -402,7 +402,7 @@ class SeriesData<
         return dimInfo
             ? dimInfo.storeDimIndex
             : this._dimOmitted
-            ? this._schema.getSourceDimIndex(dim as DimensionName)
+            ? this._schema.getSourceDimensionIndex(dim as DimensionName)
             : -1;
     }
 
@@ -432,7 +432,7 @@ class SeriesData<
                 dim != null
                 && !isNaN(dim as any)
                 && !this._getDimInfo(dim)
-                && (!this._dimOmitted || this._schema.getSourceDimIndex(dim) < 0)
+                && (!this._dimOmitted || this._schema.getSourceDimensionIndex(dim) < 0)
             )
         ) {
             return +dim;
@@ -519,14 +519,14 @@ class SeriesData<
      *        or provided in nameList from outside.
      */
     initData(
-        data: Source | OptionSourceData | DataStorage | DataProvider,
+        data: Source | OptionSourceData | DataStore | DataProvider,
         nameList?: string[],
         dimValueGetter?: DimValueGetter
     ): void {
-        let store: DataStorage;
+        let store: DataStore;
         const dimensions = this.dimensions;
         const dimensionInfos = map(dimensions, this._getDimInfo, this);
-        if (data instanceof DataStorage) {
+        if (data instanceof DataStore) {
             store = data;
         }
 
@@ -534,7 +534,7 @@ class SeriesData<
             const provider = (isSourceInstance(data) || zrUtil.isArrayLike(data))
                 ? new DefaultDataProvider(data as Source | OptionSourceData, dimensions.length)
                 : data as DataProvider;
-            store = new DataStorage();
+            store = new DataStore();
             store.initData(provider, dimensionInfos, dimValueGetter);
         }
 

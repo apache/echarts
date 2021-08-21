@@ -33,7 +33,7 @@ import {
 } from 'zrender/src/core/util';
 import OrdinalMeta from '../OrdinalMeta';
 import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../Source';
-import { CtorInt32Array } from '../DataStorage';
+import { CtorInt32Array } from '../DataStore';
 import { normalizeToArray } from '../../util/model';
 import { BE_ORDINAL, guessOrdinal } from './sourceHelper';
 import {
@@ -50,7 +50,7 @@ export interface CoordDimensionDefinition extends DimensionDefinition {
 }
 export type CoordDimensionDefinitionLoose = CoordDimensionDefinition['name'] | CoordDimensionDefinition;
 
-export type CreateDimensionsParams = {
+export type PrepareSeriesDataSchemaParams = {
     coordDimensions?: CoordDimensionDefinitionLoose[],
     /**
      * Will use `source.dimensionsDefine` if not given.
@@ -80,9 +80,9 @@ export type CreateDimensionsParams = {
  */
 export function createDimensions(
     source: Source | OptionSourceData,
-    opt?: CreateDimensionsParams
+    opt?: PrepareSeriesDataSchemaParams
 ): SeriesDimensionDefine[] {
-    return prepareSeriesDataSchema(source, opt).dimList;
+    return prepareSeriesDataSchema(source, opt).dimensions;
 }
 
 /**
@@ -100,7 +100,7 @@ export function createDimensions(
 export default function prepareSeriesDataSchema(
     // TODO: TYPE completeDimensions type
     source: Source | OptionSourceData,
-    opt?: CreateDimensionsParams
+    opt?: PrepareSeriesDataSchemaParams
 ): SeriesDataSchema {
     if (!isSourceInstance(source)) {
         source = createSourceFromSeriesDataOption(source as OptionSourceData);
@@ -114,7 +114,7 @@ export default function prepareSeriesDataSchema(
     const resultList: SeriesDimensionDefine[] = [];
     const dimCount = getDimCount(source, sysDims, dimsDef, opt.dimensionsCount);
 
-    // Try to ignore unsed dimensions if sharing a high dimension datastorage
+    // Try to ignore unsed dimensions if sharing a high dimension datastore
     // 30 is an experience value.
     const omitUnusedDimensions = opt.canOmitUnusedDimensions && shouldOmitUnusedDimensions(dimCount);
 
@@ -340,7 +340,7 @@ export default function prepareSeriesDataSchema(
 
     return new SeriesDataSchema({
         source,
-        dimensionList: resultList,
+        dimensions: resultList,
         fullDimensionCount: dimCount,
         dimensionOmitted: omitUnusedDimensions
     });

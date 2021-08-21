@@ -447,12 +447,12 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
 
         tree.root.updateDepthAndHeight(0);
 
-        const { dimList } = prepareSeriesDataSchema(listData, {
+        const { dimensions } = prepareSeriesDataSchema(listData, {
             coordDimensions: ['value'],
             dimensionsCount: dimMax
         });
 
-        const list = new SeriesData(dimList, hostModel);
+        const list = new SeriesData(dimensions, hostModel);
         list.initData(listData);
 
         beforeLink && beforeLink(list);

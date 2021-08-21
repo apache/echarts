@@ -46,7 +46,7 @@ class SeriesDimensionDefine {
     tooltip?: boolean;
 
     /**
-     * This dimension maps to the the dimension in dataStorage by `storeDimIndex`.
+     * This dimension maps to the the dimension in dataStore by `storeDimIndex`.
      * Notice the facts:
      * 1. When there are too many dimensions in storage, seriesData only save the
      * used storage dimensions.

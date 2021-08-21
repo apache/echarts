@@ -35,7 +35,7 @@ import {
     EncodeDefaulter
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
-import DataStorage from '../../data/DataStorage';
+import DataStore from '../../data/DataStore';
 import SeriesDimensionDefine from '../../data/SeriesDimensionDefine';
 
 function getCoordSysDimDefs(
@@ -148,10 +148,10 @@ function createSeriesData(
     };
     const schema = prepareSeriesDataSchema(source, createDimensionOptions);
     const firstCategoryDimIndex = injectOrdinalMeta(
-        schema.dimList, opt.createInvertedIndices, coordSysInfo
+        schema.dimensions, opt.createInvertedIndices, coordSysInfo
     );
 
-    const storage = !isOriginalSource ? sourceManager.getSharedDataStorage(schema) : null;
+    const storage = !isOriginalSource ? sourceManager.getSharedDataStore(schema) : null;
 
     const stackCalculationInfo = enableDataStack(seriesModel, { schema, storage });
 
@@ -161,7 +161,7 @@ function createSeriesData(
     const dimValueGetter =
         firstCategoryDimIndex != null
         && isNeedCompleteOrdinalData(source)
-            ? function (this: DataStorage, itemOpt: any, dimName: string, dataIndex: number, dimIndex: number) {
+            ? function (this: DataStore, itemOpt: any, dimName: string, dataIndex: number, dimIndex: number) {
                 // Use dataIndex as ordinal value in categoryAxis
                 return dimIndex === firstCategoryDimIndex
                     ? dataIndex

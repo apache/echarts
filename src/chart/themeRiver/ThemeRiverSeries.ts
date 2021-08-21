@@ -177,7 +177,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             }
         }
 
-        const { dimList } = prepareSeriesDataSchema(data, {
+        const { dimensions } = prepareSeriesDataSchema(data, {
             coordDimensions: ['single'],
             dimensionsDefine: [
                 {
@@ -200,7 +200,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             }
         });
 
-        const list = new SeriesData(dimList, this);
+        const list = new SeriesData(dimensions, this);
         list.initData(data);
 
         return list;

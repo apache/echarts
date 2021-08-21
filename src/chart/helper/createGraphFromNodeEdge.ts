@@ -83,11 +83,11 @@ export default function createGraphFromNodeEdge(
             coordDimensions.concat(['value']);
         }
 
-        const { dimList } = prepareSeriesDataSchema(nodes, {
+        const { dimensions } = prepareSeriesDataSchema(nodes, {
             coordDimensions: coordDimensions,
             encodeDefine: seriesModel.getEncode()
         });
-        nodeData = new SeriesData(dimList, seriesModel);
+        nodeData = new SeriesData(dimensions, seriesModel);
         nodeData.initData(nodes);
     }
 

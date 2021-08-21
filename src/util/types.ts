@@ -47,7 +47,7 @@ import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
 import Model from '../model/Model';
-import { DataStorageDimensionType } from '../data/DataStorage';
+import { DataStoreDimensionType } from '../data/DataStore';
 import { DimensionUserOuputEncode } from '../data/helper/dimensionHelper';
 
 
@@ -416,7 +416,7 @@ export type DimensionIndex = number;
 export type DimensionIndexLoose = DimensionIndex | string;
 export type DimensionName = string;
 export type DimensionLoose = DimensionName | DimensionIndexLoose;
-export type DimensionType = DataStorageDimensionType;
+export type DimensionType = DataStoreDimensionType;
 
 export const VISUAL_DIMENSIONS = createHashMap<number, keyof DataVisualDimensions>([
     'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'seriesName'
@@ -435,7 +435,7 @@ export interface DataVisualDimensions {
 }
 
 export type DimensionDefinition = {
-    type?: DataStorageDimensionType,
+    type?: DataStoreDimensionType,
     name?: DimensionName,
     displayName?: string
 };

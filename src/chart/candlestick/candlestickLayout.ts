@@ -27,7 +27,7 @@ import { DimensionIndex, StageHandler, StageHandlerProgressParams } from '../../
 import CandlestickSeriesModel from './CandlestickSeries';
 import SeriesData from '../../data/SeriesData';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import DataStorage from '../../data/DataStorage';
+import DataStore from '../../data/DataStore';
 
 const LargeArr = typeof Float32Array !== 'undefined' ? Float32Array : Array;
 
@@ -206,7 +206,7 @@ const candlestickLayout: StageHandler = {
 };
 
 function getSign(
-    storage: DataStorage, dataIndex: number, openVal: number, closeVal: number, closeDimI: DimensionIndex
+    storage: DataStore, dataIndex: number, openVal: number, closeVal: number, closeDimI: DimensionIndex
 ): -1 | 1 {
     let sign: -1 | 1;
     if (openVal > closeVal) {

@@ -22,7 +22,7 @@ import SeriesModel from '../../model/Series';
 import {
     setAsPrimitive, map, isTypedArray, assert, each, retrieve2
 } from 'zrender/src/core/util';
-import { SourceMetaRawOption, Source, createSource, cloneSourceShallow, shouldRetrieveDataByName } from '../Source';
+import { SourceMetaRawOption, Source, createSource, cloneSourceShallow } from '../Source';
 import {
     SeriesEncodableModel, OptionSourceData,
     SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL,
@@ -33,11 +33,11 @@ import {
     querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels
 } from './sourceHelper';
 import { applyDataTransform } from './transform';
-import DataStorage, { DataStorageDimensionDefine } from '../DataStorage';
+import DataStore, { DataStoreDimensionDefine } from '../DataStore';
 import { DefaultDataProvider } from './dataProvider';
-import { SeriesDataSchema, shouldOmitUnusedDimensions } from './SeriesDataSchema';
+import { SeriesDataSchema } from './SeriesDataSchema';
 
-type DataStorageMap = Dictionary<DataStorage>;
+type DataStoreMap = Dictionary<DataStore>;
 
 /**
  * [REQUIREMENT_MEMO]:
@@ -138,7 +138,7 @@ export class SourceManager {
     // Cached source. Do not repeat calculating if not dirty.
     private _sourceList: Source[] = [];
 
-    private _storeList: DataStorageMap[] = [];
+    private _storeList: DataStoreMap[] = [];
 
     // version sign of each upstream source manager.
     private _upstreamSignList: string[] = [];
@@ -373,21 +373,21 @@ export class SourceManager {
      * @param seriesDimRequest Dimensions that are generated in series.
      *        Should have been sorted by `storeDimIndex` asc.
      */
-    getSharedDataStorage(seriesDimRequest: SeriesDataSchema): DataStorage {
+    getSharedDataStore(seriesDimRequest: SeriesDataSchema): DataStore {
         if (__DEV__) {
-            assert(isSeries(this._sourceHost), 'Can only call getDataStorage on series source manager.');
+            assert(isSeries(this._sourceHost), 'Can only call getDataStore on series source manager.');
         }
         const schema = seriesDimRequest.makeStorageSchema();
-        return this._innerGetDataStorage(
+        return this._innerGetDataStore(
             schema.dimensions, seriesDimRequest.source, schema.hash
         );
     }
 
-    private _innerGetDataStorage(
-        storageDims: DataStorageDimensionDefine[],
+    private _innerGetDataStore(
+        storageDims: DataStoreDimensionDefine[],
         seriesSource: Source,
         sourceReadKey: string
-    ): DataStorage | undefined {
+    ): DataStore | undefined {
         // TODO Can use other sourceIndex?
         const sourceIndex = 0;
 
@@ -404,12 +404,12 @@ export class SourceManager {
             const upSourceMgr = this._getUpstreamSourceManagers()[0];
 
             if (isSeries(this._sourceHost) && upSourceMgr) {
-                cachedStore = upSourceMgr._innerGetDataStorage(
+                cachedStore = upSourceMgr._innerGetDataStore(
                     storageDims, seriesSource, sourceReadKey
                 );
             }
             else {
-                cachedStore = new DataStorage();
+                cachedStore = new DataStore();
                 // Always create storage from source of series.
                 cachedStore.initData(
                     new DefaultDataProvider(seriesSource, storageDims.length),

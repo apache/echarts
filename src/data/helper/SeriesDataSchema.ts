@@ -22,7 +22,7 @@ import { makeInner } from '../../util/model';
 import {
     DimensionDefinition, DimensionDefinitionLoose, DimensionIndex, DimensionName, DimensionType
 } from '../../util/types';
-import { DataStorageDimensionDefine } from '../DataStorage';
+import { DataStoreDimensionDefine } from '../DataStore';
 import OrdinalMeta from '../OrdinalMeta';
 import SeriesDimensionDefine from '../SeriesDimensionDefine';
 import { shouldRetrieveDataByName, Source } from '../Source';
@@ -59,7 +59,7 @@ export class SeriesDataSchema {
      * The item can still be modified outsite.
      * But MUST NOT add/remove item of this array.
      */
-    readonly dimList: SeriesDimensionDefine[];
+    readonly dimensions: SeriesDimensionDefine[];
 
     readonly source: Source;
 
@@ -69,11 +69,11 @@ export class SeriesDataSchema {
 
     constructor(opt: {
         source: Source,
-        dimensionList: SeriesDimensionDefine[],
+        dimensions: SeriesDimensionDefine[],
         fullDimensionCount: number,
         dimensionOmitted: boolean
     }) {
-        this.dimList = opt.dimensionList;
+        this.dimensions = opt.dimensions;
         this._dimOmitted = opt.dimensionOmitted;
         this.source = opt.source;
         this._fullDimCount = opt.fullDimensionCount;
@@ -81,7 +81,7 @@ export class SeriesDataSchema {
         this._updateDimOmitted(opt.dimensionOmitted);
     }
 
-    isDimOmitted(): boolean {
+    isDimensionOmitted(): boolean {
         return this._dimOmitted;
     }
 
@@ -102,7 +102,7 @@ export class SeriesDataSchema {
      * That is, get index from `dimensionsDefine`.
      * If no `dimensionsDefine`, or no name get, return -1.
      */
-    getSourceDimIndex(dimName: DimensionName): DimensionIndex {
+    getSourceDimensionIndex(dimName: DimensionName): DimensionIndex {
         return retrieve2(this._dimNameMap.get(dimName), -1);
     }
 
@@ -111,7 +111,7 @@ export class SeriesDataSchema {
      *
      * Notice: may return `null`/`undefined` if user not specify dimension names.
      */
-    getSourceDim(dimIndex: DimensionIndex): DimensionDefinition {
+    getSourceDimension(dimIndex: DimensionIndex): DimensionDefinition {
         const dimensionsDefine = this.source.dimensionsDefine;
         if (dimensionsDefine) {
             return dimensionsDefine[dimIndex];
@@ -119,7 +119,7 @@ export class SeriesDataSchema {
     }
 
     makeStorageSchema(): {
-        dimensions: DataStorageDimensionDefine[];
+        dimensions: DataStoreDimensionDefine[];
         hash: string
     } {
         const dimCount = this._fullDimCount;
@@ -129,14 +129,14 @@ export class SeriesDataSchema {
         // If source don't have dimensions or series don't omit unsed dimensions.
         // Generate from seriesDimList directly
         let dimHash = '';
-        const dims: DataStorageDimensionDefine[] = [];
+        const dims: DataStoreDimensionDefine[] = [];
 
         for (let fullDimIdx = 0, seriesDimIdx = 0; fullDimIdx < dimCount; fullDimIdx++) {
             let property: string;
             let type: DimensionType;
             let ordinalMeta: OrdinalMeta;
 
-            const seriesDimDef = this.dimList[seriesDimIdx];
+            const seriesDimDef = this.dimensions[seriesDimIdx];
             // The list has been sorted by `storeDimIndex` asc.
             if (seriesDimDef && seriesDimDef.storeDimIndex === fullDimIdx) {
                 property = willRetrieveDataByName ? seriesDimDef.name : null;
@@ -146,7 +146,7 @@ export class SeriesDataSchema {
                 seriesDimIdx++;
             }
             else {
-                const sourceDimDef = this.getSourceDim(fullDimIdx);
+                const sourceDimDef = this.getSourceDimension(fullDimIdx);
                 if (sourceDimDef) {
                     property = willRetrieveDataByName ? sourceDimDef.name : null;
                     type = sourceDimDef.type;
@@ -200,12 +200,12 @@ export class SeriesDataSchema {
         };
     }
 
-    makeOutputDimNames(): DimensionName[] {
+    makeOutputDimensionNames(): DimensionName[] {
         const result = [] as DimensionName[];
 
         for (let fullDimIdx = 0, seriesDimIdx = 0; fullDimIdx < this._fullDimCount; fullDimIdx++) {
             let name: DimensionName;
-            const seriesDimDef = this.dimList[seriesDimIdx];
+            const seriesDimDef = this.dimensions[seriesDimIdx];
             // The list has been sorted by `storeDimIndex` asc.
             if (seriesDimDef && seriesDimDef.storeDimIndex === fullDimIdx) {
                 if (!seriesDimDef.isCalculationCoord) {
@@ -214,7 +214,7 @@ export class SeriesDataSchema {
                 seriesDimIdx++;
             }
             else {
-                const sourceDimDef = this.getSourceDim(fullDimIdx);
+                const sourceDimDef = this.getSourceDimension(fullDimIdx);
                 if (sourceDimDef) {
                     name = sourceDimDef.name;
                 }
@@ -225,8 +225,8 @@ export class SeriesDataSchema {
         return result;
     }
 
-    appendCalcDim(dimDef: SeriesDimensionDefine): void {
-        this.dimList.push(dimDef);
+    appendCalculationDimension(dimDef: SeriesDimensionDefine): void {
+        this.dimensions.push(dimDef);
         dimDef.isCalculationCoord = true;
         this._fullDimCount++;
         // If append dimension on a data storage, consider the storage
