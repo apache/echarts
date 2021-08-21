@@ -159,9 +159,9 @@ function getValueAxesMinGaps(barSeries: BarSeriesModel[]) {
         const data = seriesModel.getData();
         const key = baseAxis.dim + '_' + baseAxis.index;
         const dimIdx = data.getDimensionIndex(data.mapDimension(baseAxis.dim));
-        const storage = data.getStorage();
-        for (let i = 0, cnt = storage.count(); i < cnt; ++i) {
-            const value = storage.get(dimIdx, i) as number;
+        const store = data.getStore();
+        for (let i = 0, cnt = store.count(); i < cnt; ++i) {
+            const value = store.get(dimIdx, i) as number;
             if (!axisValues[key]) {
                 // No previous data for the axis
                 axisValues[key] = [value];
@@ -478,12 +478,12 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
 
         const valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
 
-        const storage = data.getStorage();
+        const store = data.getStore();
         const valueDimIdx = data.getDimensionIndex(valueDim);
         const baseDimIdx = data.getDimensionIndex(baseDim);
-        for (let idx = 0, len = storage.count(); idx < len; idx++) {
-            const value = storage.get(valueDimIdx, idx);
-            const baseValue = storage.get(baseDimIdx, idx) as number;
+        for (let idx = 0, len = store.count(); idx < len; idx++) {
+            const value = store.get(valueDimIdx, idx);
+            const baseValue = store.get(baseDimIdx, idx) as number;
 
             const sign = value >= 0 ? 'p' : 'n' as 'p' | 'n';
             let baseCoord = valueAxisStart;
@@ -590,11 +590,11 @@ export const largeLayout: StageHandler = {
                 const valuePair = [];
                 let pointsOffset = 0;
                 let idxOffset = 0;
-                const storage = data.getStorage();
+                const store = data.getStore();
 
                 while ((dataIndex = params.next()) != null) {
-                    valuePair[valueDimIdx] = storage.get(valueDimI, dataIndex);
-                    valuePair[1 - valueDimIdx] = storage.get(baseDimI, dataIndex);
+                    valuePair[valueDimIdx] = store.get(valueDimI, dataIndex);
+                    valuePair[1 - valueDimIdx] = store.get(baseDimI, dataIndex);
 
                     coord = cartesian.dataToPoint(valuePair, null);
                     // Data index might not be in order, depends on `progressiveChunkMode`.

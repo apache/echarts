@@ -224,7 +224,7 @@ export function incrementalApplyVisual<VisualState extends string>(
             }
 
             let dataIndex: number;
-            const storage = data.getStorage();
+            const store = data.getStore();
             while ((dataIndex = params.next()) != null) {
                 const rawDataItem = data.getRawDataItem(dataIndex);
 
@@ -235,7 +235,7 @@ export function incrementalApplyVisual<VisualState extends string>(
                 }
 
                 const value = dim != null
-                    ? storage.get(dimIndex, dataIndex)
+                    ? store.get(dimIndex, dataIndex)
                     : dataIndex;
 
                 const valueState = getValueState(value);

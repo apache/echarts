@@ -73,8 +73,8 @@ class DimensionUserOuput {
     }
 
     /**
-     * Get all storage dimension names.
-     * Theoretically a series storage is defined both by series and used dataset (if any).
+     * Get all data store dimension names.
+     * Theoretically a series data store is defined both by series and used dataset (if any).
      * If some dimensions are omitted for performance reason in `this.dimensions`,
      * the dimension name may not be auto-generated if user does not specify a dimension name.
      * In this case, the dimension name is `null`/`undefined`.

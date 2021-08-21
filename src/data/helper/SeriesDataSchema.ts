@@ -118,7 +118,7 @@ export class SeriesDataSchema {
         }
     }
 
-    makeStorageSchema(): {
+    makeStoreSchema(): {
         dimensions: DataStoreDimensionDefine[];
         hash: string
     } {
@@ -163,8 +163,8 @@ export class SeriesDataSchema {
             //   use <property, type, ordinalMeta> in hash.
             if (willRetrieveDataByName
                 && property != null
-                // For data stack, we have make sure each series has its own dim on this storage.
-                // So we do not add property to hash to make sure they can share this storage.
+                // For data stack, we have make sure each series has its own dim on this store.
+                // So we do not add property to hash to make sure they can share this store.
                 && (!seriesDimDef || !seriesDimDef.isCalculationCoord)
             ) {
                 dimHash += (makeHashStrict
@@ -229,9 +229,9 @@ export class SeriesDataSchema {
         this.dimensions.push(dimDef);
         dimDef.isCalculationCoord = true;
         this._fullDimCount++;
-        // If append dimension on a data storage, consider the storage
+        // If append dimension on a data store, consider the store
         // might be shared by different series, series dimensions not
-        // really map to storage dimensions.
+        // really map to store dimensions.
         this._updateDimOmitted(true);
     }
 }

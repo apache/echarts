@@ -56,7 +56,7 @@ export default function pointsLayout(seriesType: string, forceStoreInTypedArray?
                 dims[1] = stackResultDim;
             }
 
-            const store = data.getStorage();
+            const store = data.getStore();
             const dimIdx0 = data.getDimensionIndex(dims[0]);
             const dimIdx1 = data.getDimensionIndex(dims[1]);
 

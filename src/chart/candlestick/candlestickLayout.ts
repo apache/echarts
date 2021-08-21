@@ -81,14 +81,14 @@ const candlestickLayout: StageHandler = {
 
         function normalProgress(params: StageHandlerProgressParams, data: SeriesData) {
             let dataIndex;
-            const storage = data.getStorage();
+            const store = data.getStore();
             while ((dataIndex = params.next()) != null) {
 
-                const axisDimVal = storage.get(cDimI, dataIndex) as number;
-                const openVal = storage.get(openDimI, dataIndex) as number;
-                const closeVal = storage.get(closeDimI, dataIndex) as number;
-                const lowestVal = storage.get(lowestDimI, dataIndex) as number;
-                const highestVal = storage.get(highestDimI, dataIndex) as number;
+                const axisDimVal = store.get(cDimI, dataIndex) as number;
+                const openVal = store.get(openDimI, dataIndex) as number;
+                const closeVal = store.get(closeDimI, dataIndex) as number;
+                const lowestVal = store.get(lowestDimI, dataIndex) as number;
+                const highestVal = store.get(highestDimI, dataIndex) as number;
 
                 const ocLow = Math.min(openVal, closeVal);
                 const ocHigh = Math.max(openVal, closeVal);
@@ -110,7 +110,7 @@ const candlestickLayout: StageHandler = {
                 );
 
                 data.setItemLayout(dataIndex, {
-                    sign: getSign(storage, dataIndex, openVal, closeVal, closeDimI),
+                    sign: getSign(store, dataIndex, openVal, closeVal, closeDimI),
                     initBaseline: openVal > closeVal
                         ? ocHighPoint[vDimIdx] : ocLowPoint[vDimIdx], // open point.
                     ends: ends,
@@ -172,14 +172,14 @@ const candlestickLayout: StageHandler = {
             const tmpIn: number[] = [];
             const tmpOut: number[] = [];
             let dataIndex;
-            const storage = data.getStorage();
+            const store = data.getStore();
 
             while ((dataIndex = params.next()) != null) {
-                const axisDimVal = storage.get(cDimI, dataIndex) as number;
-                const openVal = storage.get(openDimI, dataIndex) as number;
-                const closeVal = storage.get(closeDimI, dataIndex) as number;
-                const lowestVal = storage.get(lowestDimI, dataIndex) as number;
-                const highestVal = storage.get(highestDimI, dataIndex) as number;
+                const axisDimVal = store.get(cDimI, dataIndex) as number;
+                const openVal = store.get(openDimI, dataIndex) as number;
+                const closeVal = store.get(closeDimI, dataIndex) as number;
+                const lowestVal = store.get(lowestDimI, dataIndex) as number;
+                const highestVal = store.get(highestDimI, dataIndex) as number;
 
                 if (isNaN(axisDimVal) || isNaN(lowestVal) || isNaN(highestVal)) {
                     points[offset++] = NaN;
@@ -187,7 +187,7 @@ const candlestickLayout: StageHandler = {
                     continue;
                 }
 
-                points[offset++] = getSign(storage, dataIndex, openVal, closeVal, closeDimI);
+                points[offset++] = getSign(store, dataIndex, openVal, closeVal, closeDimI);
 
                 tmpIn[cDimIdx] = axisDimVal;
 
@@ -206,7 +206,7 @@ const candlestickLayout: StageHandler = {
 };
 
 function getSign(
-    storage: DataStore, dataIndex: number, openVal: number, closeVal: number, closeDimI: DimensionIndex
+    store: DataStore, dataIndex: number, openVal: number, closeVal: number, closeDimI: DimensionIndex
 ): -1 | 1 {
     let sign: -1 | 1;
     if (openVal > closeVal) {
@@ -218,7 +218,7 @@ function getSign(
     else {
         sign = dataIndex > 0
             // If close === open, compare with close of last record
-            ? (storage.get(closeDimI, dataIndex - 1) <= closeVal ? 1 : -1)
+            ? (store.get(closeDimI, dataIndex - 1) <= closeVal ? 1 : -1)
             // No record of previous, set to be positive
             : 1;
     }

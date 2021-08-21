@@ -367,7 +367,7 @@ export class SourceManager {
 
     /**
      *
-     * Get a data storage which can be shared across series.
+     * Get a data store which can be shared across series.
      * Only available for series.
      *
      * @param seriesDimRequest Dimensions that are generated in series.
@@ -377,14 +377,14 @@ export class SourceManager {
         if (__DEV__) {
             assert(isSeries(this._sourceHost), 'Can only call getDataStore on series source manager.');
         }
-        const schema = seriesDimRequest.makeStorageSchema();
+        const schema = seriesDimRequest.makeStoreSchema();
         return this._innerGetDataStore(
             schema.dimensions, seriesDimRequest.source, schema.hash
         );
     }
 
     private _innerGetDataStore(
-        storageDims: DataStoreDimensionDefine[],
+        storeDims: DataStoreDimensionDefine[],
         seriesSource: Source,
         sourceReadKey: string
     ): DataStore | undefined {
@@ -405,15 +405,15 @@ export class SourceManager {
 
             if (isSeries(this._sourceHost) && upSourceMgr) {
                 cachedStore = upSourceMgr._innerGetDataStore(
-                    storageDims, seriesSource, sourceReadKey
+                    storeDims, seriesSource, sourceReadKey
                 );
             }
             else {
                 cachedStore = new DataStore();
-                // Always create storage from source of series.
+                // Always create store from source of series.
                 cachedStore.initData(
-                    new DefaultDataProvider(seriesSource, storageDims.length),
-                    storageDims
+                    new DefaultDataProvider(seriesSource, storeDims.length),
+                    storeDims
                 );
             }
             cachedStoreMap[sourceReadKey] = cachedStore;

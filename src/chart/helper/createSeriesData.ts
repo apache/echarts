@@ -151,9 +151,9 @@ function createSeriesData(
         schema.dimensions, opt.createInvertedIndices, coordSysInfo
     );
 
-    const storage = !isOriginalSource ? sourceManager.getSharedDataStore(schema) : null;
+    const store = !isOriginalSource ? sourceManager.getSharedDataStore(schema) : null;
 
-    const stackCalculationInfo = enableDataStack(seriesModel, { schema, storage });
+    const stackCalculationInfo = enableDataStack(seriesModel, { schema, store });
 
     const data = new SeriesData(schema, seriesModel);
     data.setCalculationInfo(stackCalculationInfo);
@@ -171,8 +171,8 @@ function createSeriesData(
 
     data.hasItemOption = false;
     data.initData(
-        // Try to reuse the data storage in sourceManager if using dataset.
-        isOriginalSource ? source : storage,
+        // Try to reuse the data store in sourceManager if using dataset.
+        isOriginalSource ? source : store,
         null,
         dimValueGetter
     );

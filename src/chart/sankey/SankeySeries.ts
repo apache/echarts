@@ -148,9 +148,6 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
     /**
      * Init a graph data structure from data in option series
-     *
-     * @param  {Object} option  the object used to config echarts view
-     * @return {module:echarts/data/SeriesData} storage initial data
      */
     getInitialData(option: SankeySeriesOption, ecModel: GlobalModel) {
         const links = option.edges || option.links;

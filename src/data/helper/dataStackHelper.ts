@@ -27,10 +27,10 @@ import DataStore from '../DataStore';
 
 type EnableDataStackDimensionsInput = {
     schema: SeriesDataSchema;
-    // If given, stack dimension will be ensured on this storage.
+    // If given, stack dimension will be ensured on this store.
     // Otherwise, stack dimesnion will be appended at the tail, and should not
-    // be used on a shared storage, but should create a brand new stroage later.
-    storage?: DataStore;
+    // be used on a shared store, but should create a brand new stroage later.
+    store?: DataStore;
 };
 type EnableDataStackDimensionsInputLegacy = (SeriesDimensionDefine | string)[];
 
@@ -76,7 +76,7 @@ export function enableDataStack(
 
     let dimensionDefineList: EnableDataStackDimensionsInputLegacy;
     let schema: SeriesDataSchema;
-    let storage: DataStore;
+    let store: DataStore;
 
     if (isLegacyDimensionsInput(dimensionsInput)) {
         dimensionDefineList = dimensionsInput;
@@ -84,7 +84,7 @@ export function enableDataStack(
     else {
         schema = dimensionsInput.schema;
         dimensionDefineList = schema.dimensions;
-        storage = dimensionsInput.storage;
+        store = dimensionsInput.store;
     }
 
     // Compatibal: when `stack` is set as '', do not stack.
@@ -129,7 +129,7 @@ export function enableDataStack(
     if (stackedDimInfo) {
         // Use a weird name that not duplicated with other names.
         // Also need to use seriesModel.id as postfix because different
-        // series may share same data storage. The stack dimension needs to be distinguished.
+        // series may share same data store. The stack dimension needs to be distinguished.
         stackResultDimension = '__\0ecstackresult_' + seriesModel.id;
         stackedOverDimension = '__\0ecstackedover_' + seriesModel.id;
 
@@ -171,11 +171,11 @@ export function enableDataStack(
         };
 
         if (schema) {
-            if (storage) {
+            if (store) {
                 stackedOverDimensionDefine.storeDimIndex =
-                    storage.ensureCalculationDimension(stackedOverDimension, stackedDimType);
+                    store.ensureCalculationDimension(stackedOverDimension, stackedDimType);
                 stackResultDimensionDefine.storeDimIndex =
-                    storage.ensureCalculationDimension(stackResultDimension, stackedDimType);
+                    store.ensureCalculationDimension(stackResultDimension, stackedDimType);
             }
 
             schema.appendCalculationDimension(stackedOverDimensionDefine);

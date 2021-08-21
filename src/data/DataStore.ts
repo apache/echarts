@@ -40,7 +40,7 @@ export const CtorUint16Array = typeof Uint16Array === UNDEFINED ? Array : Uint16
 export const CtorInt32Array = typeof Int32Array === UNDEFINED ? Array : Int32Array;
 export const CtorFloat64Array = typeof Float64Array === UNDEFINED ? Array : Float64Array;
 /**
- * Multi dimensional data storage
+ * Multi dimensional data store
  */
 const dataCtors = {
     'float': CtorFloat64Array,
@@ -99,7 +99,7 @@ export interface DataStoreDimensionDefine {
     /**
      * When using category axis.
      * Category strings will be collected and stored in ordinalMeta.categories.
-     * And storage will store the index of categories.
+     * And store will store the index of categories.
      */
     ordinalMeta?: OrdinalMeta,
 
@@ -126,8 +126,8 @@ function cloneChunk(originalChunk: DataValueChunk): DataValueChunk {
         : new (Ctor as DataTypedArrayConstructor)(originalChunk as DataTypedArray);
 }
 
-function prepareStorage(
-    storage: DataValueChunk[],
+function prepareStore(
+    store: DataValueChunk[],
     dimIdx: number,
     dimType: DataStoreDimensionType,
     end: number,
@@ -136,7 +136,7 @@ function prepareStorage(
     const DataCtor = dataCtors[dimType || 'float'];
 
     if (append) {
-        const oldStore = storage[dimIdx];
+        const oldStore = store[dimIdx];
         const oldLen = oldStore && oldStore.length;
         if (!(oldLen === end)) {
             const newStore = new DataCtor(end);
@@ -145,11 +145,11 @@ function prepareStorage(
             for (let j = 0; j < oldLen; j++) {
                 newStore[j] = oldStore[j];
             }
-            storage[dimIdx] = newStore;
+            store[dimIdx] = newStore;
         }
     }
     else {
-        storage[dimIdx] = new DataCtor(end);
+        store[dimIdx] = new DataCtor(end);
     }
 };
 
@@ -223,7 +223,7 @@ class DataStore {
     }
 
     /**
-     * Caution: even when a `source` instance owned by a series, the created data storage
+     * Caution: even when a `source` instance owned by a series, the created data store
      * may still be shared by different sereis (the source hash does not use all `source`
      * props, see `sourceManager`). In this case, the `source` props that are not used in
      * hash (like `source.dimensionDefine`) probably only belongs to a certain series and
@@ -325,7 +325,7 @@ class DataStore {
     }
 
     appendValues(values: any[][], minFillLen?: number): { start: number; end: number } {
-        const storage = this._chunks;
+        const chunks = this._chunks;
         const dimensions = this._dimensions;
         const dimLen = dimensions.length;
         const rawExtent = this._rawExtent;
@@ -335,7 +335,7 @@ class DataStore {
 
         for (let i = 0; i < dimLen; i++) {
             const dim = dimensions[i];
-            prepareStorage(storage, i, dim.type, end, true);
+            prepareStore(chunks, i, dim.type, end, true);
         }
 
         const emptyDataItem: number[] = [];
@@ -347,7 +347,7 @@ class DataStore {
                 const val = defaultDimValueGetters.arrayRows.call(
                     this, values[sourceIdx] || emptyDataItem, dim.property, sourceIdx, dimIdx
                 ) as ParsedValueNumeric;
-                (storage[dimIdx] as any)[idx] = val;
+                (chunks[dimIdx] as any)[idx] = val;
 
                 const dimRawExtent = rawExtent[dimIdx];
                 val < dimRawExtent[0] && (dimRawExtent[0] = val);
@@ -377,9 +377,8 @@ class DataStore {
             if (!rawExtent[i]) {
                 rawExtent[i] = getInitialExtent();
             }
-            prepareStorage(chunks, i, dim.type, end, append);
+            prepareStore(chunks, i, dim.type, end, append);
         }
-
 
         if (provider.fillStorage) {
             provider.fillStorage(start, end, chunks, rawExtent);

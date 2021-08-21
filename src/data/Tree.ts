@@ -210,7 +210,7 @@ export class TreeNode {
 
     getValue(dimension?: DimensionLoose): ParsedValue {
         const data = this.hostTree.data;
-        return data.getStorage().get(data.getDimensionIndex(dimension || 'value'), this.dataIndex);
+        return data.getStore().get(data.getDimensionIndex(dimension || 'value'), this.dataIndex);
     }
 
     setLayout(layout: any, merge?: boolean) {

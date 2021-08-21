@@ -480,12 +480,12 @@ export function retrieveRawValue(
         return;
     }
 
-    const storage = data.getStorage();
-    const sourceFormat = storage.getSource().sourceFormat;
+    const store = data.getStore();
+    const sourceFormat = store.getSource().sourceFormat;
 
     if (dim != null) {
         const dimIndex = data.getDimensionIndex(dim);
-        const property = storage.getDimensionProperty(dimIndex);
+        const property = store.getDimensionProperty(dimIndex);
 
         return getRawSourceValueGetter(sourceFormat)(dataItem, dimIndex, property);
     }
@@ -516,7 +516,7 @@ export function retrieveRawAttr(data: SeriesData, dataIndex: number, attr: strin
         return;
     }
 
-    const sourceFormat = data.getStorage().getSource().sourceFormat;
+    const sourceFormat = data.getStore().getSource().sourceFormat;
 
     if (sourceFormat !== SOURCE_FORMAT_ORIGINAL
         && sourceFormat !== SOURCE_FORMAT_OBJECT_ROWS

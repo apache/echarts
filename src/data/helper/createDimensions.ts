@@ -370,7 +370,7 @@ function removeDuplication(result: SeriesDimensionDefine[]) {
 // may be visited.
 // (2) sometimes user need to calcualte bubble size or use visualMap
 // on other dimensions besides coordSys needed.
-// So, dims that is not used by system, should be shared in storage?
+// So, dims that is not used by system, should be shared in data store?
 function getDimCount(
     source: Source,
     sysDims: CoordDimensionDefinitionLoose[],

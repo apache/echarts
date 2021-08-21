@@ -141,8 +141,6 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 
     /**
      * Init a tree data structure from data in option series
-     * @param  option  the object used to config echarts view
-     * @return storage initial data
      */
     getInitialData(option: TreeSeriesOption): SeriesData {
 

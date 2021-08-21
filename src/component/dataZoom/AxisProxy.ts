@@ -301,14 +301,14 @@ class AxisProxy {
             }
 
             if (filterMode === 'weakFilter') {
-                const storage = seriesData.getStorage();
+                const store = seriesData.getStore();
                 const dataDimIndices = zrUtil.map(dataDims, dim => seriesData.getDimensionIndex(dim), seriesData);
                 seriesData.filterSelf(function (dataIndex) {
                     let leftOut;
                     let rightOut;
                     let hasValue;
                     for (let i = 0; i < dataDims.length; i++) {
-                        const value = storage.get(dataDimIndices[i], dataIndex) as number;
+                        const value = store.get(dataDimIndices[i], dataIndex) as number;
                         const thisHasValue = !isNaN(value);
                         const thisLeftOut = value < valueWindow[0];
                         const thisRightOut = value > valueWindow[1];

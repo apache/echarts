@@ -943,7 +943,7 @@ function makeRenderItem(
      */
     function value(dim?: DimensionLoose, dataIndexInside?: number): ParsedValue {
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
-        return data.getStorage().get(data.getDimensionIndex(dim || 0), dataIndexInside);
+        return data.getStore().get(data.getDimensionIndex(dim || 0), dataIndexInside);
     }
 
     /**
@@ -957,7 +957,7 @@ function makeRenderItem(
         const dimInfo = data.getDimensionInfo(dim);
         if (!dimInfo) {
             const dimIndex = data.getDimensionIndex(dim);
-            return dimIndex >= 0 ? data.getStorage().get(dimIndex, dataIndexInside) : undefined;
+            return dimIndex >= 0 ? data.getStore().get(dimIndex, dataIndexInside) : undefined;
         }
         const val = data.get(dimInfo.name, dataIndexInside);
         const ordinalMeta = dimInfo && dimInfo.ordinalMeta;

@@ -269,14 +269,14 @@ class SeriesData<
         hostModel: HostModel
     ) {
         let dimensions: SeriesDimensionDefineLoose[];
-        let assignStorageDimIdx = false;
+        let assignStoreDimIdx = false;
         if (isSeriesDataSchema(dimensionsInput)) {
             dimensions = dimensionsInput.dimensions;
             this._dimOmitted = dimensionsInput.isDimensionOmitted();
             this._schema = dimensionsInput;
         }
         else {
-            assignStorageDimIdx = true;
+            assignStoreDimIdx = true;
             dimensions = dimensionsInput as SeriesDimensionDefineLoose[];
         }
 
@@ -324,9 +324,9 @@ class SeriesData<
             }
 
             if (__DEV__) {
-                zrUtil.assert(assignStorageDimIdx || dimensionInfo.storeDimIndex >= 0);
+                zrUtil.assert(assignStoreDimIdx || dimensionInfo.storeDimIndex >= 0);
             }
-            if (assignStorageDimIdx) {
+            if (assignStoreDimIdx) {
                 dimensionInfo.storeDimIndex = i;
             }
         }
@@ -359,7 +359,7 @@ class SeriesData<
      *
      * @notice Becuause of this reason, should better use `getDimensionIndex` instead, for examples:
      * ```js
-     * const val = data.getStorage().get(data.getDimensionIndex(dim), dataIdx);
+     * const val = data.getStore().get(data.getDimensionIndex(dim), dataIdx);
      * ```
      *
      * @return Concrete dim name.
@@ -389,7 +389,7 @@ class SeriesData<
     }
 
     /**
-     * Get dimension index in the storage. Return -1 if not found.
+     * Get dimension index in data store. Return -1 if not found.
      * Can be used to index value from getRawValue.
      */
     getDimensionIndex(dim: DimensionLoose): DimensionIndex {
@@ -509,13 +509,13 @@ class SeriesData<
         return (dims || []).slice();
     }
 
-    getStorage() {
+    getStore() {
         return this._store;
     }
 
     /**
      * Initialize from data
-     * @param data source or data or data storage.
+     * @param data source or data or data store.
      * @param nameList The name of a datum is used on data diff and
      *        default label/tooltip.
      *        A name can be specified in encode.itemName,
@@ -567,7 +567,7 @@ class SeriesData<
     /**
      * Caution: Can be only called on raw data (before `this._indices` created).
      * This method does not modify `rawData` (`dataProvider`), but only
-     * add values to storage.
+     * add values to store.
      *
      * The final count will be increased by `Math.max(values.length, names.length)`.
      *
@@ -763,7 +763,7 @@ class SeriesData<
     /**
      * Get value. Return NaN if idx is out of range.
      *
-     * @notice Should better to use `data.getStorage().get(dimIndex, dataIdx)` instead.
+     * @notice Should better to use `data.getStore().get(dimIndex, dataIdx)` instead.
      */
     get(dim: SeriesDimensionName, idx: number): ParsedValue {
         const store = this._store;
@@ -774,7 +774,7 @@ class SeriesData<
     }
 
     /**
-     * @notice Should better to use `data.getStorage().getByRawIndex(dimIndex, dataIdx)` instead.
+     * @notice Should better to use `data.getStore().getByRawIndex(dimIndex, dataIdx)` instead.
      */
     getByRawIndex(dim: SeriesDimensionName, rawIdx: number): ParsedValue {
         const store = this._store;
@@ -1066,7 +1066,7 @@ class SeriesData<
         );
 
         // If do shallow clone here, if there are too many stacked series,
-        // it still cost lots of memory, becuase `storage.dimensions` are not shared.
+        // it still cost lots of memory, becuase `_store.dimensions` are not shared.
         // We should consider there probably be shallow clone happen in each sereis
         // in consequent filter/map.
         this._store.modify(
@@ -1136,8 +1136,8 @@ class SeriesData<
         const thisList = this;
 
         return new DataDiffer(
-            otherList ? otherList.getStorage().getIndices() : [],
-            this.getStorage().getIndices(),
+            otherList ? otherList.getStore().getIndices() : [],
+            this.getStore().getIndices(),
             function (idx: number) {
                 return getId(otherList, idx);
             },

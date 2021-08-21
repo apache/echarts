@@ -458,7 +458,7 @@ function createGraphDataProxyMixin<Host extends GraphEdge | GraphNode>(
          */
         getValue(this: Host, dimension?: DimensionLoose): ParsedValue {
             const data = this[hostName][dataName];
-            return data.getStorage().get(data.getDimensionIndex(dimension || 'value'), this.dataIndex);
+            return data.getStore().get(data.getDimensionIndex(dimension || 'value'), this.dataIndex);
         },
         // TODO: TYPE stricter type.
         setVisual(this: Host, key: string | Dictionary<any>, value?: any) {

@@ -48,9 +48,9 @@ class SeriesDimensionDefine {
     /**
      * This dimension maps to the the dimension in dataStore by `storeDimIndex`.
      * Notice the facts:
-     * 1. When there are too many dimensions in storage, seriesData only save the
-     * used storage dimensions.
-     * 2. We use dimensionIndex but not name to reference storage dimension
+     * 1. When there are too many dimensions in data store, seriesData only save the
+     * used store dimensions.
+     * 2. We use dimensionIndex but not name to reference store dimension
      * becuause the dataset dimension definition might has no name specified by users,
      * or names in sereis dimension definition might be different from dataset.
      */
