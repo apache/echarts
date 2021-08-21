@@ -712,13 +712,13 @@ class DataStore {
         const len = newStore._count;
 
         if (!len) {
-            return;
+            return this;
         }
 
         const dims = keys(range);
         const dimSize = dims.length;
         if (!dimSize) {
-            return;
+            return this;
         }
 
         const originalCount = newStore.count();
@@ -1159,7 +1159,7 @@ class DataStore {
             return val;
         }
         else {
-            return this._provider.getItem(this.getRawIndex(idx));
+            return this._provider.getItem(rawIdx);
         }
     }
 

@@ -24,7 +24,7 @@ import GlobalModel from '../model/Global';
 import Model from '../model/Model';
 import SeriesModel from '../model/Series';
 import {makeInner} from '../util/model';
-import {Dictionary, DecalObject, InnerDecalObject, AriaOption, SeriesOption} from '../util/types';
+import {Dictionary, DecalObject, InnerDecalObject, AriaOption} from '../util/types';
 import {LocaleOption} from '../core/locale';
 import { getDecalFromPalette } from '../model/mixin/palette';
 import type {TitleOption} from '../component/title/install';

@@ -34,7 +34,7 @@ import {
     SERIES_LAYOUT_BY_COLUMN,
     SERIES_LAYOUT_BY_ROW,
     DimensionName, DimensionIndex, OptionSourceData,
-    OptionDataItem, OptionDataValue, SourceFormat, SeriesLayoutBy, ParsedValue, DimensionLoose
+    OptionDataItem, OptionDataValue, SourceFormat, SeriesLayoutBy, ParsedValue, DimensionLoose, NullUndefined
 } from '../../util/types';
 import SeriesData from '../SeriesData';
 
@@ -402,42 +402,37 @@ export function getRawSourceDataCounter(
 }
 
 
-
-// TODO
-// merge it to dataProvider?
 type RawSourceValueGetter = (
     dataItem: OptionDataItem,
     dimIndex: DimensionIndex,
-    dimName: DimensionName
-    // If dimIndex is null/undefined, return OptionDataItem.
-    // Otherwise, return OptionDataValue.
-) => OptionDataValue | OptionDataItem;
+    property: DimensionName
+) => OptionDataValue;
 
 const getRawValueSimply = function (
-    dataItem: ArrayLike<OptionDataValue>, dimIndex: number, dimName: string
-): OptionDataValue | ArrayLike<OptionDataValue> {
-    return dimIndex != null ? dataItem[dimIndex] : dataItem;
+    dataItem: ArrayLike<OptionDataValue>, dimIndex: number, property: string
+): OptionDataValue {
+    return dataItem[dimIndex];
 };
 
-const rawSourceValueGetterMap: {[sourceFormat: string]: RawSourceValueGetter} = {
+const rawSourceValueGetterMap: Partial<Record<SourceFormat, RawSourceValueGetter>> = {
 
     [SOURCE_FORMAT_ARRAY_ROWS]: getRawValueSimply,
 
     [SOURCE_FORMAT_OBJECT_ROWS]: function (
-        dataItem: Dictionary<OptionDataValue>, dimIndex: number, dimName: string
-    ): OptionDataValue | Dictionary<OptionDataValue> {
-        return dimIndex != null ? dataItem[dimName] : dataItem;
+        dataItem: Dictionary<OptionDataValue>, dimIndex: number, property: string
+    ): OptionDataValue {
+        return dataItem[property];
     },
 
     [SOURCE_FORMAT_KEYED_COLUMNS]: getRawValueSimply,
 
     [SOURCE_FORMAT_ORIGINAL]: function (
-        dataItem: OptionDataItem, dimIndex: number, dimName: string
-    ): OptionDataValue | OptionDataItem {
+        dataItem: OptionDataItem, dimIndex: number, property: string
+    ): OptionDataValue {
         // FIXME: In some case (markpoint in geo (geo-map.html)),
         // dataItem is {coord: [...]}
         const value = getDataItemValue(dataItem);
-        return (dimIndex == null || !(value instanceof Array))
+        return !(value instanceof Array)
             ? value
             : value[dimIndex];
     },
@@ -469,9 +464,10 @@ function getMethodMapKey(sourceFormat: SourceFormat, seriesLayoutBy: SeriesLayou
 // value may be 0.91000000001, which have brings trouble to display.
 // TODO: consider how to treat null/undefined/NaN when display?
 export function retrieveRawValue(
-    data: SeriesData, dataIndex: number, dim?: DimensionLoose
+    data: SeriesData, dataIndex: number,
     // If dimIndex is null/undefined, return OptionDataItem.
     // Otherwise, return OptionDataValue.
+    dim?: DimensionLoose | NullUndefined
 ): OptionDataValue | OptionDataItem {
     if (!data) {
         return;
@@ -486,10 +482,20 @@ export function retrieveRawValue(
 
     const storage = data.getStorage();
     const sourceFormat = storage.getSource().sourceFormat;
-    const dimIndex = data.getDimensionIndex(dim);
-    const property = storage.getDimensionProperty(dimIndex);
 
-    return getRawSourceValueGetter(sourceFormat)(dataItem, dimIndex, property);
+    if (dim != null) {
+        const dimIndex = data.getDimensionIndex(dim);
+        const property = storage.getDimensionProperty(dimIndex);
+
+        return getRawSourceValueGetter(sourceFormat)(dataItem, dimIndex, property);
+    }
+    else {
+        let result = dataItem;
+        if (sourceFormat === SOURCE_FORMAT_ORIGINAL) {
+            result = getDataItemValue(dataItem);
+        }
+        return result;
+    }
 }
 
 

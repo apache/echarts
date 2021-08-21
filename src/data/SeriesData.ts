@@ -398,6 +398,10 @@ class SeriesData<
             return dimIdx;
         }
 
+        if (dim == null) {
+            return -1;
+        }
+
         const dimInfo = this._getDimInfo(dim as DimensionName);
         return dimInfo
             ? dimInfo.storeDimIndex

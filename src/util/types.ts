@@ -59,6 +59,7 @@ import { DimensionUserOuputEncode } from '../data/helper/dimensionHelper';
 export {Dictionary};
 
 export type RendererType = 'canvas' | 'svg';
+export type NullUndefined = null | undefined;
 
 export type LayoutOrient = 'vertical' | 'horizontal';
 export type HorizontalAlign = 'left' | 'center' | 'right';
