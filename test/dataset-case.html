@@ -160,12 +160,12 @@ under the License.
                     printAssert: function (chart) {
                         testHelper.printAssert(chart, function (assert) {
                             var ecModel = chart.getModel();
-                            var storage0 = ecModel.getSeriesByIndex(0).getData().getStorage();
-                            var storage1 = ecModel.getSeriesByIndex(1).getData().getStorage();
-                            var storage2 = ecModel.getSeriesByIndex(2).getData().getStorage();
-                            var storage3 = ecModel.getSeriesByIndex(3).getData().getStorage();
-                            var storage4 = ecModel.getSeriesByIndex(4).getData().getStorage();
-                            var storage5 = ecModel.getSeriesByIndex(5).getData().getStorage();
+                            var storage0 = ecModel.getSeriesByIndex(0).getData().getStore();
+                            var storage1 = ecModel.getSeriesByIndex(1).getData().getStore();
+                            var storage2 = ecModel.getSeriesByIndex(2).getData().getStore();
+                            var storage3 = ecModel.getSeriesByIndex(3).getData().getStore();
+                            var storage4 = ecModel.getSeriesByIndex(4).getData().getStore();
+                            var storage5 = ecModel.getSeriesByIndex(5).getData().getStore();
                             assert(
                                 storage0 === storage1
                                 && storage1 === storage2
@@ -277,12 +277,12 @@ under the License.
                     printAssert: function (chart) {
                         testHelper.printAssert(chart, function (assert) {
                             var ecModel = chart.getModel();
-                            var storage0 = ecModel.getSeriesByIndex(0).getData().getStorage();
-                            var storage1 = ecModel.getSeriesByIndex(1).getData().getStorage();
-                            var storage2 = ecModel.getSeriesByIndex(2).getData().getStorage();
-                            var storage3 = ecModel.getSeriesByIndex(3).getData().getStorage();
-                            var storage4 = ecModel.getSeriesByIndex(4).getData().getStorage();
-                            var storage5 = ecModel.getSeriesByIndex(5).getData().getStorage();
+                            var storage0 = ecModel.getSeriesByIndex(0).getData().getStore();
+                            var storage1 = ecModel.getSeriesByIndex(1).getData().getStore();
+                            var storage2 = ecModel.getSeriesByIndex(2).getData().getStore();
+                            var storage3 = ecModel.getSeriesByIndex(3).getData().getStore();
+                            var storage4 = ecModel.getSeriesByIndex(4).getData().getStore();
+                            var storage5 = ecModel.getSeriesByIndex(5).getData().getStore();
                             assert(
                                 storage0 === storage1
                                 && storage1 === storage2
@@ -475,9 +475,9 @@ under the License.
 
                 testHelper.printAssert(chart, function (assert) {
                     var ecModel = chart.getModel();
-                    var storage0 = ecModel.getSeriesByIndex(0).getData().getStorage();
-                    var storage1 = ecModel.getSeriesByIndex(1).getData().getStorage();
-                    var storage2 = ecModel.getSeriesByIndex(1).getData().getStorage();
+                    var storage0 = ecModel.getSeriesByIndex(0).getData().getStore();
+                    var storage1 = ecModel.getSeriesByIndex(1).getData().getStore();
+                    var storage2 = ecModel.getSeriesByIndex(1).getData().getStore();
                     assert(storage0 === storage1);
                     assert(storage1 === storage2);
 
@@ -577,8 +577,8 @@ under the License.
 
                 testHelper.printAssert(chart, function (assert) {
                     var ecModel = chart.getModel();
-                    var storage0 = ecModel.getSeriesByIndex(0).getData().getStorage();
-                    var storage1 = ecModel.getSeriesByIndex(1).getData().getStorage();
+                    var storage0 = ecModel.getSeriesByIndex(0).getData().getStore();
+                    var storage1 = ecModel.getSeriesByIndex(1).getData().getStore();
                     assert(storage0 === storage1);
 
                     var data0 = ecModel.getSeriesByIndex(0).getData();
@@ -723,8 +723,8 @@ under the License.
                 function commonAsserts() {
                     testHelper.printAssert(chart, function (assert) {
                         var ecModel = chart.getModel();
-                        var storage0 = ecModel.getSeriesByIndex(0).getData().getStorage();
-                        var storage1 = ecModel.getSeriesByIndex(1).getData().getStorage();
+                        var storage0 = ecModel.getSeriesByIndex(0).getData().getStore();
+                        var storage1 = ecModel.getSeriesByIndex(1).getData().getStore();
                         assert(storage0 === storage1);
                         // 2 more dimension for data stack calculation for each series.
                         var expectedChunkCount = dimIndexMax + 1 + 2 * 2;

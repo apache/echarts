@@ -82,6 +82,7 @@ pre.test-print-object {
     font-family: Menlo, Monaco, 'Courier New', monospace;
 }
 .test-chart {
+    position: relative;
     height: 400px;
 }
 
