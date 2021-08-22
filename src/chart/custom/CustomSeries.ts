@@ -44,9 +44,9 @@ import {
     ZRStyleProps
 } from '../../util/types';
 import Element, { ElementProps } from 'zrender/src/Element';
-import List, { DefaultDataVisual } from '../../data/List';
+import SeriesData, { DefaultDataVisual } from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
-import createListFromArray from '../helper/createListFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import { makeInner } from '../../util/model';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import SeriesModel from '../../model/Series';
@@ -413,8 +413,8 @@ export default class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
         this.currentZ = this.get('z', true);
     }
 
-    getInitialData(option: CustomSeriesOption, ecModel: GlobalModel): List {
-        return createListFromArray(this.getSource(), this);
+    getInitialData(option: CustomSeriesOption, ecModel: GlobalModel): SeriesData {
+        return createSeriesData(null, this);
     }
 
     getDataParams(dataIndex: number, dataType?: SeriesDataType, el?: Element): CallbackDataParams & {

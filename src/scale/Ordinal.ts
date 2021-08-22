@@ -26,7 +26,7 @@
 
 import Scale from './Scale';
 import OrdinalMeta from '../data/OrdinalMeta';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import * as scaleHelper from './helper';
 import {
     OrdinalRawValue,
@@ -263,7 +263,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
         return this._extent[1] - this._extent[0] + 1;
     }
 
-    unionExtentFromData(data: List, dim: DimensionLoose) {
+    unionExtentFromData(data: SeriesData, dim: DimensionLoose) {
         this.unionExtent(data.getApproximateExtent(dim));
     }
 

@@ -33,7 +33,7 @@ import ExtensionAPI from '../core/ExtensionAPI';
 import SeriesModel from '../model/Series';
 import { createHashMap, HashMap } from 'zrender/src/core/util';
 import { TaskPlanCallbackReturn, TaskProgressParams } from '../core/task';
-import List, {ListDimensionType} from '../data/List';
+import SeriesData from '../data/SeriesData';
 import { Dictionary, ElementEventName, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { TooltipMarker } from './format';
@@ -47,6 +47,8 @@ import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
 import Model from '../model/Model';
+import { DataStoreDimensionType } from '../data/DataStore';
+import { DimensionUserOuputEncode } from '../data/helper/dimensionHelper';
 
 
 
@@ -57,6 +59,7 @@ import Model from '../model/Model';
 export {Dictionary};
 
 export type RendererType = 'canvas' | 'svg';
+export type NullUndefined = null | undefined;
 
 export type LayoutOrient = 'vertical' | 'horizontal';
 export type HorizontalAlign = 'left' | 'center' | 'right';
@@ -128,7 +131,7 @@ export interface ECElement extends Element {
 }
 
 export interface DataHost {
-    getData(dataType?: SeriesDataType): List;
+    getData(dataType?: SeriesDataType): SeriesData;
 }
 
 export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {}
@@ -300,8 +303,8 @@ export interface StageHandlerInternal extends StageHandler {
 
 export type StageHandlerProgressParams = TaskProgressParams;
 export interface StageHandlerProgressExecutor {
-    dataEach?: (data: List, idx: number) => void;
-    progress?: (params: StageHandlerProgressParams, data: List) => void;
+    dataEach?: (data: SeriesData, idx: number) => void;
+    progress?: (params: StageHandlerProgressParams, data: SeriesData) => void;
 }
 export type StageHandlerPlanReturn = TaskPlanCallbackReturn;
 export interface StageHandlerPlan {
@@ -355,11 +358,11 @@ export type OrdinalSortInfo = {
 /**
  * `OptionDataValue` is the primitive value in `series.data` or `dataset.source`.
  * `OptionDataValue` are parsed (see `src/data/helper/dataValueHelper.parseDataValue`)
- * into `ParsedValue` and stored into `data/List` storage.
+ * into `ParsedValue` and stored into `data/SeriesData` storage.
  * Note:
  * (1) The term "parse" does not mean `src/scale/Scale['parse']`.
  * (2) If a category dimension is not mapped to any axis, its raw value will NOT be
- * parsed to `OrdinalNumber` but keep the original `OrdinalRawValue` in `src/data/List` storage.
+ * parsed to `OrdinalNumber` but keep the original `OrdinalRawValue` in `src/data/SeriesData` storage.
  */
 export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
 export type ParsedValueNumeric = number | OrdinalNumber;
@@ -414,7 +417,7 @@ export type DimensionIndex = number;
 export type DimensionIndexLoose = DimensionIndex | string;
 export type DimensionName = string;
 export type DimensionLoose = DimensionName | DimensionIndexLoose;
-export type DimensionType = ListDimensionType;
+export type DimensionType = DataStoreDimensionType;
 
 export const VISUAL_DIMENSIONS = createHashMap<number, keyof DataVisualDimensions>([
     'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'seriesName'
@@ -428,15 +431,12 @@ export interface DataVisualDimensions {
     label?: DimensionIndex;
     itemName?: DimensionIndex;
     itemId?: DimensionIndex;
-    // Group id is used for linking the aggregate relationship between two set of data.
-    // Which is useful in prepresenting the transition key of drilldown/up animation.
-    // Or hover linking.
     itemGroupId?: DimensionIndex;
     seriesName?: DimensionIndex;
 }
 
 export type DimensionDefinition = {
-    type?: ListDimensionType,
+    type?: DataStoreDimensionType,
     name?: DimensionName,
     displayName?: string
 };
@@ -650,6 +650,11 @@ export interface OptionEncodeVisualDimensions {
     itemId?: OptionEncodeValue;
     seriesName?: OptionEncodeValue;
     // Notice: `value` is coordDim, not nonCoordDim.
+
+    // Group id is used for linking the aggregate relationship between two set of data.
+    // Which is useful in prepresenting the transition key of drilldown/up animation.
+    // Or hover linking.
+    itemGroupId?: OptionEncodeValue;
 }
 export interface OptionEncode extends OptionEncodeVisualDimensions {
     [coordDim: string]: OptionEncodeValue | undefined
@@ -688,16 +693,6 @@ export interface CallbackDataParams {
     $vars: string[];
 }
 export type InterpolatableValue = ParsedValue | ParsedValue[];
-export type DimensionUserOuputEncode = {
-    [coordOrVisualDimName: string]:
-        // index: coordDimIndex, value: dataDimIndex
-        DimensionIndex[]
-};
-export type DimensionUserOuput = {
-    // The same as `data.dimensions`
-    dimensionNames: DimensionName[]
-    encode: DimensionUserOuputEncode
-};
 
 export type DecalDashArrayX = number | (number | number[])[];
 export type DecalDashArrayY = number | number[];

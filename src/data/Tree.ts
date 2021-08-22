@@ -23,9 +23,9 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
-import linkList from './helper/linkList';
-import List from './List';
-import createDimensions from './helper/createDimensions';
+import linkSeriesData from './helper/linkSeriesData';
+import SeriesData from './SeriesData';
+import prepareSeriesDataSchema from './helper/createDimensions';
 import {
     DimensionLoose, ParsedValue, OptionDataValue,
     OptionDataItemObject
@@ -210,7 +210,7 @@ export class TreeNode {
 
     getValue(dimension?: DimensionLoose): ParsedValue {
         const data = this.hostTree.data;
-        return data.get(data.getDimension(dimension || 'value'), this.dataIndex);
+        return data.getStore().get(data.getDimensionIndex(dimension || 'value'), this.dataIndex);
     }
 
     setLayout(layout: any, merge?: boolean) {
@@ -323,7 +323,7 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
 
     root: TreeNode;
 
-    data: List;
+    data: SeriesData;
 
     hostModel: HostModel;
 
@@ -415,7 +415,7 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
     static createTree<T extends TreeNodeOption, HostModel extends Model, LevelOption>(
         dataRoot: T,
         hostModel: HostModel,
-        beforeLink?: (data: List) => void
+        beforeLink?: (data: SeriesData) => void
     ) {
 
         const tree = new Tree(hostModel);
@@ -447,17 +447,17 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
 
         tree.root.updateDepthAndHeight(0);
 
-        const dimensionsInfo = createDimensions(listData, {
+        const { dimensions } = prepareSeriesDataSchema(listData, {
             coordDimensions: ['value'],
             dimensionsCount: dimMax
         });
 
-        const list = new List(dimensionsInfo, hostModel);
+        const list = new SeriesData(dimensions, hostModel);
         list.initData(listData);
 
         beforeLink && beforeLink(list);
 
-        linkList({
+        linkSeriesData({
             mainData: list,
             struct: tree,
             structAttr: 'tree'

@@ -35,7 +35,7 @@ import LogScale from '../scale/Log';
 import Axis from './Axis';
 import { AxisBaseOption, TimeAxisLabelFormatterOption } from './axisCommonTypes';
 import type CartesianAxisModel from './cartesian/AxisModel';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
 import { Dictionary, DimensionName, ScaleTick, TimeScaleTick } from '../util/types';
 import { ensureScaleRawExtentInfo } from './scaleRawExtentInfo';
@@ -361,7 +361,7 @@ export function shouldShowAllLabels(axis: Axis): boolean {
         && getOptionCategoryInterval(axis.getLabelModel()) === 0;
 }
 
-export function getDataDimensionsOnAxis(data: List, axisDim: string): DimensionName[] {
+export function getDataDimensionsOnAxis(data: SeriesData, axisDim: string): DimensionName[] {
     // Remove duplicated dat dimensions caused by `getStackedDimension`.
     const dataDimMap = {} as Dictionary<boolean>;
     // Currently `mapDimensionsAll` will contain stack result dimension ('__\0ecstackresult').
@@ -379,7 +379,7 @@ export function getDataDimensionsOnAxis(data: List, axisDim: string): DimensionN
     return zrUtil.keys(dataDimMap);
 }
 
-export function unionAxisExtentFromData(dataExtent: number[], data: List, axisDim: string): void {
+export function unionAxisExtentFromData(dataExtent: number[], data: SeriesData, axisDim: string): void {
     if (data) {
         zrUtil.each(getDataDimensionsOnAxis(data, axisDim), function (dim) {
             const seriesExtent = data.getApproximateExtent(dim);

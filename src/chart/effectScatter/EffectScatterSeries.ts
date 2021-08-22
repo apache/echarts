@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListFromArray from '../helper/createListFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import SeriesModel from '../../model/Series';
 import {
     SeriesOption,
@@ -35,7 +35,7 @@ import {
     CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import type { SymbolDrawItemModelOption } from '../helper/SymbolDraw';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
@@ -88,11 +88,11 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
 
     hasSymbolVisual = true;
 
-    getInitialData(option: EffectScatterSeriesOption, ecModel: GlobalModel): List {
-        return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
+    getInitialData(option: EffectScatterSeriesOption, ecModel: GlobalModel): SeriesData {
+        return createSeriesData(null, this, {useEncodeDefaulter: true});
     }
 
-    brushSelector(dataIndex: number, data: List, selectors: BrushCommonSelectorsForSeries): boolean {
+    brushSelector(dataIndex: number, data: SeriesData, selectors: BrushCommonSelectorsForSeries): boolean {
         return selectors.point(data.getItemLayout(dataIndex));
     }
 

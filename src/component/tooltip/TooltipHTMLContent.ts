@@ -28,7 +28,7 @@ import type { ZRenderType } from 'zrender/src/zrender';
 import type { TooltipOption } from './TooltipModel';
 import Model from '../../model/Model';
 import type { ZRRawEvent } from 'zrender/src/core/types';
-import type { ColorString, ZRColor } from '../../util/types';
+import type { ZRColor } from '../../util/types';
 import type CanvasPainter from 'zrender/src/canvas/Painter';
 import type SVGPainter from 'zrender/src/svg/Painter';
 import {

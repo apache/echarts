@@ -29,10 +29,10 @@ import {
     SeriesEncodeOptionMixin
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
-import createListFromArray from '../helper/createListFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import type Polar from '../../coord/polar/Polar';
 import { inheritDefaultOption } from '../../util/component';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 export type PolarBarLabelPosition = SeriesLabelOption['position']
@@ -89,8 +89,8 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
 
     coordinateSystem: Cartesian2D | Polar;
 
-    getInitialData(): List {
-        return createListFromArray(this.getSource(), this, {
+    getInitialData(): SeriesData {
+        return createSeriesData(null, this, {
             useEncodeDefaulter: true,
             createInvertedIndices: !!this.get('realtimeSort', true) || null
         });
@@ -119,7 +119,7 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
         return progressiveThreshold;
     }
 
-    brushSelector(dataIndex: number, data: List, selectors: BrushCommonSelectorsForSeries): boolean {
+    brushSelector(dataIndex: number, data: SeriesData, selectors: BrushCommonSelectorsForSeries): boolean {
         return selectors.rect(data.getItemLayout(dataIndex));
     }
 

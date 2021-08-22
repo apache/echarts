@@ -69,9 +69,6 @@ export default function axisModelCreator<
 
             private __ordinalMeta: OrdinalMeta;
 
-            constructor(...args: any[]) {
-                super(...args);
-            }
 
             mergeDefaultAndTheme(option: AxisOptionT, ecModel: GlobalModel): void {
                 const layoutMode = fetchLayoutMode(this);

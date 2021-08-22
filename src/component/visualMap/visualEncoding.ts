@@ -42,7 +42,7 @@ export const visualMapEncodingHandlers: StageHandler[] = [
                     visualMapModel.stateList,
                     visualMapModel.targetVisuals,
                     zrUtil.bind(visualMapModel.getValueState, visualMapModel),
-                    visualMapModel.getDataDimension(seriesModel.getData())
+                    visualMapModel.getDataDimensionIndex(seriesModel.getData())
                 ));
             });
 
@@ -65,11 +65,10 @@ export const visualMapEncodingHandlers: StageHandler[] = [
                         outerColors: []
                     } as VisualMeta;
 
-                    const concreteDim = visualMapModel.getDataDimension(data);
-                    const dimInfo = data.getDimensionInfo(concreteDim);
-                    if (dimInfo != null) {
+                    const dimIdx = visualMapModel.getDataDimensionIndex(data);
+                    if (dimIdx >= 0) {
                         // visualMeta.dimension should be dimension index, but not concrete dimension.
-                        visualMeta.dimension = dimInfo.index;
+                        visualMeta.dimension = dimIdx;
                         visualMetaList.push(visualMeta);
                     }
                 }

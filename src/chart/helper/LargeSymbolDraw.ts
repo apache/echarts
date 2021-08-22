@@ -24,7 +24,7 @@
 import * as graphic from '../../util/graphic';
 import {createSymbol} from '../../util/symbol';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { PathProps } from 'zrender/src/graphic/Path';
 import PathProxy from 'zrender/src/core/PathProxy';
 import SeriesModel from '../../model/Series';
@@ -182,7 +182,7 @@ class LargeSymbolDraw {
     /**
      * Update symbols draw by new data
      */
-    updateData(data: List, opt?: UpdateOpt) {
+    updateData(data: SeriesData, opt?: UpdateOpt) {
         this.group.removeAll();
         const symbolEl = new LargeSymbolPath({
             rectHover: true,
@@ -198,7 +198,7 @@ class LargeSymbolDraw {
         this._incremental = null;
     }
 
-    updateLayout(data: List) {
+    updateLayout(data: SeriesData) {
         if (this._incremental) {
             return;
         }
@@ -214,7 +214,7 @@ class LargeSymbolDraw {
         });
     }
 
-    incrementalPrepareUpdate(data: List) {
+    incrementalPrepareUpdate(data: SeriesData) {
         this.group.removeAll();
 
         this._clearIncremental();
@@ -233,7 +233,7 @@ class LargeSymbolDraw {
         }
     }
 
-    incrementalUpdate(taskParams: StageHandlerProgressParams, data: List, opt: UpdateOpt) {
+    incrementalUpdate(taskParams: StageHandlerProgressParams, data: SeriesData, opt: UpdateOpt) {
         let symbolEl;
         if (this._incremental) {
             symbolEl = new LargeSymbolPath();
@@ -258,7 +258,7 @@ class LargeSymbolDraw {
 
     _setCommon(
         symbolEl: LargeSymbolPath,
-        data: List,
+        data: SeriesData,
         isIncremental: boolean,
         opt: UpdateOpt
     ) {

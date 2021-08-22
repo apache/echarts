@@ -24,7 +24,7 @@ import * as scaleHelper from './helper';
 
 // Use some method of IntervalScale
 import IntervalScale from './Interval';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import { DimensionName, ScaleTick } from '../util/types';
 
 const scaleProto = Scale.prototype;
@@ -118,7 +118,7 @@ class LogScale extends Scale {
         scaleProto.unionExtent.call(this, extent);
     }
 
-    unionExtentFromData(data: List, dim: DimensionName): void {
+    unionExtentFromData(data: SeriesData, dim: DimensionName): void {
         // TODO
         // filter value that <= 0
         this.unionExtent(data.getApproximateExtent(dim));
