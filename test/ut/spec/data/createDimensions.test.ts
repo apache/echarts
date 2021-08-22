@@ -32,13 +32,13 @@ describe('createDimensions', function () {
         opt: ParametersOfCreateDimensions[1]
     ): SeriesDimensionDefine[] {
         const result = createDimensions(source, opt);
-        for (let i = 0; i < result.dimensionList.length; i++) {
-            const item = result.dimensionList[i];
+        for (let i = 0; i < result.dimensions.length; i++) {
+            const item = result.dimensions[i];
             if (item && item.hasOwnProperty('dimsDef') && (item as any).dimsDef == null) {
                 delete (item as any).dimsDef;
             }
         }
-        return result.dimensionList;
+        return result.dimensions;
     }
 
     it('namesMoreThanDimCount', function () {
