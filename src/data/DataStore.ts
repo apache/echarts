@@ -28,7 +28,7 @@ import {
 import { DataProvider } from './helper/dataProvider';
 import { parseDataValue } from './helper/dataValueHelper';
 import OrdinalMeta from './OrdinalMeta';
-import { Source } from './Source';
+import { shouldRetrieveDataByName, Source } from './Source';
 
 const UNDEFINED = 'undefined';
 /* global Float64Array, Int32Array, Uint32Array, Uint16Array */
@@ -179,9 +179,9 @@ class DataStore {
     private _calcDimNameToIdx = createHashMap<DimensionIndex, DimensionName>();
 
     defaultDimValueGetter: DimValueGetter;
+
     /**
      * Initialize from data
-     * @param data source or data or data provider.
      */
     initData(
         provider: DataProvider,
@@ -202,18 +202,27 @@ class DataStore {
         this._indices = null;
         this.getRawIndex = this._getRawIdxIdentity;
 
+        const source = provider.getSource();
         const defaultGetter = this.defaultDimValueGetter =
-             defaultDimValueGetters[provider.getSource().sourceFormat];
+             defaultDimValueGetters[source.sourceFormat];
         // Default dim value getter
         this._dimValueGetter = dimValueGetter || defaultGetter;
 
         // Reset raw extent.
         this._rawExtent = [];
-        this._dimensions = map(inputDimensions, dim => ({
-            // Only pick these two props. Not leak other properties like orderMeta.
-            type: dim.type,
-            property: dim.property
-        }));
+        const willRetrieveDataByName = shouldRetrieveDataByName(source);
+        this._dimensions = map(inputDimensions, dim => {
+            if (__DEV__) {
+                if (willRetrieveDataByName) {
+                    assert(dim.property != null);
+                }
+            }
+            return {
+                // Only pick these two props. Not leak other properties like orderMeta.
+                type: dim.type,
+                property: dim.property
+            };
+        });
 
         this._initDataFromProvider(0, provider.count());
     }

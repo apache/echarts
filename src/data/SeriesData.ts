@@ -44,7 +44,7 @@ import type Tree from './Tree';
 import type { VisualMeta } from '../component/visualMap/VisualMapModel';
 import {isSourceInstance, Source} from './Source';
 import { LineStyleProps } from '../model/mixin/lineStyle';
-import DataStore, { DimValueGetter } from './DataStore';
+import DataStore, { DataStoreDimensionDefine, DimValueGetter } from './DataStore';
 import { isSeriesDataSchema, SeriesDataSchema } from './helper/SeriesDataSchema';
 
 const isObject = zrUtil.isObject;
@@ -528,17 +528,20 @@ class SeriesData<
         dimValueGetter?: DimValueGetter
     ): void {
         let store: DataStore;
-        const dimensions = this.dimensions;
-        const dimensionInfos = map(dimensions, this._getDimInfo, this);
         if (data instanceof DataStore) {
             store = data;
         }
 
         if (!store) {
+            const dimensions = this.dimensions;
             const provider = (isSourceInstance(data) || zrUtil.isArrayLike(data))
                 ? new DefaultDataProvider(data as Source | OptionSourceData, dimensions.length)
                 : data as DataProvider;
             store = new DataStore();
+            const dimensionInfos: DataStoreDimensionDefine[] = map(dimensions, dimName => ({
+                type: this._dimInfos[dimName].type,
+                property: dimName
+            }));
             store.initData(provider, dimensionInfos, dimValueGetter);
         }
 

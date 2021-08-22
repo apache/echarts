@@ -136,7 +136,7 @@ export class DefaultDataProvider implements DataProvider {
         return 0;
     }
 
-    getItem(idx: number, out?: ArrayLike<number>): OptionDataItem {
+    getItem(idx: number, out?: ArrayLike<OptionDataValue>): OptionDataItem {
         return;
     }
 
@@ -291,8 +291,11 @@ type RawSourceItemGetter = (
     rawData: OptionSourceData,
     startIndex: number,
     dimsDef: { name?: DimensionName }[],
-    idx: number
-) => OptionDataItem;
+    idx: number,
+    // Only used in SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_ROW and SOURCE_FORMAT_KEYED_COLUMNS
+    // to avoid create a new [] if `out` is provided.
+    out?: ArrayLike<OptionDataValue>
+) => OptionDataItem | ArrayLike<OptionDataValue>;
 
 const getItemSimply: RawSourceItemGetter = function (
     rawData, startIndex, dimsDef, idx
@@ -303,26 +306,26 @@ const getItemSimply: RawSourceItemGetter = function (
 const rawSourceItemGetterMap: Dictionary<RawSourceItemGetter> = {
     [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_COLUMN]: function (
         rawData, startIndex, dimsDef, idx
-    ): OptionDataValue[] {
+    ) {
         return (rawData as OptionDataValue[][])[idx + startIndex];
     },
     [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_ROW]: function (
-        rawData, startIndex, dimsDef, idx
-    ): OptionDataValue[] {
+        rawData, startIndex, dimsDef, idx, out
+    ) {
         idx += startIndex;
-        const item = [];
+        const item = out || [];
         const data = rawData as OptionDataValue[][];
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
-            item.push(row ? row[idx] : null);
+            item[i] = row ? row[idx] : null;
         }
         return item;
     },
     [SOURCE_FORMAT_OBJECT_ROWS]: getItemSimply,
     [SOURCE_FORMAT_KEYED_COLUMNS]: function (
-        rawData, startIndex, dimsDef, idx
-    ): OptionDataValue[] {
-        const item = [];
+        rawData, startIndex, dimsDef, idx, out
+    ) {
+        const item = out || [];
         for (let i = 0; i < dimsDef.length; i++) {
             const dimName = dimsDef[i].name;
             if (__DEV__) {
@@ -331,7 +334,7 @@ const rawSourceItemGetterMap: Dictionary<RawSourceItemGetter> = {
                 }
             }
             const col = (rawData as Dictionary<OptionDataValue[]>)[dimName];
-            item.push(col ? col[idx] : null);
+            item[i] = col ? col[idx] : null;
         }
         return item;
     },
