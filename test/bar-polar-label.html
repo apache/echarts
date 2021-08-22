@@ -27,7 +27,7 @@ under the License.
     </head>
     <body>
         <style>
-            #main0, #main1 {
+            #main0, #main1, #main2 {
                 width: 100%;
                 height: 1200px;
                 margin: 20px 0;
@@ -36,6 +36,7 @@ under the License.
         <h3>Polar bar series label positions</h3>
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
         <script>
 
             require(['echarts'], function (echarts) {
@@ -93,6 +94,7 @@ under the License.
                                 ],
                                 coordinateSystem: 'polar',
                                 polarIndex: id,
+                                roundCap: chartIndex === 2,
                                 label: {
                                     show: true,
                                     position: positions[id],
@@ -125,6 +127,7 @@ under the License.
 
                 setChart(0);
                 setChart(1);
+                setChart(2);
             });
         </script>
     </body>

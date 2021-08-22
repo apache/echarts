@@ -755,14 +755,18 @@ const elementCreator: {
         const ShapeClass = (!isRadial && roundCap) ? Sausage : Sector;
 
         const sector = new ShapeClass({
-            shape: defaults({clockwise: clockwise}, layout),
+            shape: defaults({
+                clockwise: clockwise
+            }, layout),
             z2: 1
         });
 
         sector.name = 'item';
 
         const positionMap = createPolarPositionMapping(isRadial);
-        sector.calculateTextPosition = createSectorCalculateTextPosition<PolarBarLabelPosition>(positionMap);
+        sector.calculateTextPosition = createSectorCalculateTextPosition(positionMap, {
+            isRoundCap: ShapeClass === Sausage
+        });
 
         // Animation
         if (animationModel) {
