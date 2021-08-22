@@ -24,8 +24,18 @@ export type SectorLike = {
 };
 
 export function createSectorCalculateTextPosition<T extends (string | (number | string)[])>(
-    positionMapping: (seriesLabelPosition: T) => SectorTextPosition
+    positionMapping: (seriesLabelPosition: T) => SectorTextPosition,
+    opts?: {
+        /**
+         * If has round cap on two ends. If so, label should have an extra offset
+         */
+        isRoundCap?: boolean
+    }
 ): ElementCalculateTextPosition {
+
+    opts = opts || {};
+    const isRoundCap = opts.isRoundCap;
+
     return function (
         this: Sector,
         out: TextPositionCalculationResult,
@@ -57,82 +67,86 @@ export function createSectorCalculateTextPosition<T extends (string | (number | 
         const startAngle = sector.startAngle;
         const endAngle = sector.endAngle;
         const middleAngle = (startAngle + endAngle) / 2;
+        const extraDist = isRoundCap ? Math.abs(r - r0) / 2 : 0;
+
+        const mathCos = Math.cos;
+        const mathSin = Math.sin;
 
         // base position: top-left
-        let x = cx + r * Math.cos(startAngle);
-        let y = cy + r * Math.sin(startAngle);
+        let x = cx + r * mathCos(startAngle);
+        let y = cy + r * mathSin(startAngle);
 
         let textAlign: TextAlign = 'left';
         let textVerticalAlign: TextVerticalAlign = 'top';
 
         switch (mappedSectorPosition) {
             case 'startArc':
-                x = cx + (r0 - distance) * Math.cos(middleAngle);
-                y = cy + (r0 - distance) * Math.sin(middleAngle);
+                x = cx + (r0 - distance) * mathCos(middleAngle);
+                y = cy + (r0 - distance) * mathSin(middleAngle);
                 textAlign = 'center';
                 textVerticalAlign = 'top';
                 break;
 
             case 'insideStartArc':
-                x = cx + (r0 + distance) * Math.cos(middleAngle);
-                y = cy + (r0 + distance) * Math.sin(middleAngle);
+                x = cx + (r0 + distance) * mathCos(middleAngle);
+                y = cy + (r0 + distance) * mathSin(middleAngle);
                 textAlign = 'center';
                 textVerticalAlign = 'bottom';
                 break;
 
             case 'startAngle':
-                x = cx + middleR * Math.cos(startAngle)
-                    + adjustAngleDistanceX(startAngle, distance, false);
-                y = cy + middleR * Math.sin(startAngle)
-                    + adjustAngleDistanceY(startAngle, distance, false);
+                x = cx + middleR * mathCos(startAngle)
+                    + adjustAngleDistanceX(startAngle, distance + extraDist, false);
+                y = cy + middleR * mathSin(startAngle)
+                    + adjustAngleDistanceY(startAngle, distance + extraDist, false);
                 textAlign = 'right';
                 textVerticalAlign = 'middle';
                 break;
 
             case 'insideStartAngle':
-                x = cx + middleR * Math.cos(startAngle)
-                    + adjustAngleDistanceX(startAngle, -distance, false);
-                y = cy + middleR * Math.sin(startAngle)
-                    + adjustAngleDistanceY(startAngle, -distance, false);
+                x = cx + middleR * mathCos(startAngle)
+                    + adjustAngleDistanceX(startAngle, -distance + extraDist, false);
+                y = cy + middleR * mathSin(startAngle)
+                    + adjustAngleDistanceY(startAngle, -distance + extraDist, false);
                 textAlign = 'left';
                 textVerticalAlign = 'middle';
                 break;
 
             case 'middle':
-                x = cx + middleR * Math.cos(middleAngle);
-                y = cy + middleR * Math.sin(middleAngle);
+                x = cx + middleR * mathCos(middleAngle);
+                y = cy + middleR * mathSin(middleAngle);
                 textAlign = 'center';
                 textVerticalAlign = 'middle';
                 break;
 
             case 'endArc':
-                x = cx + (r + distance) * Math.cos(middleAngle);
-                y = cy + (r + distance) * Math.sin(middleAngle);
+                x = cx + (r + distance) * mathCos(middleAngle);
+                y = cy + (r + distance) * mathSin(middleAngle);
                 textAlign = 'center';
                 textVerticalAlign = 'bottom';
                 break;
 
             case 'insideEndArc':
-                x = cx + (r - distance) * Math.cos(middleAngle);
-                y = cy + (r - distance) * Math.sin(middleAngle);
+                x = cx + (r - distance) * mathCos(middleAngle);
+                y = cy + (r - distance) * mathSin(middleAngle);
                 textAlign = 'center';
                 textVerticalAlign = 'top';
                 break;
 
             case 'endAngle':
-                x = cx + middleR * Math.cos(endAngle)
-                    + adjustAngleDistanceX(endAngle, distance, true);
-                y = cy + middleR * Math.sin(endAngle)
-                    + adjustAngleDistanceY(endAngle, distance, true);
+                x = cx + middleR * mathCos(endAngle)
+                    + adjustAngleDistanceX(endAngle, distance + extraDist, true);
+                y = cy + middleR * mathSin(endAngle)
+                    + adjustAngleDistanceY(endAngle, distance + extraDist, true);
                 textAlign = 'left';
                 textVerticalAlign = 'middle';
                 break;
 
             case 'insideEndAngle':
-                x = cx + middleR * Math.cos(endAngle)
-                    + adjustAngleDistanceX(endAngle, -distance, true);
-                y = cy + middleR * Math.sin(endAngle)
-                    + adjustAngleDistanceY(endAngle, -distance, true);
+                x = cx + middleR * mathCos(endAngle)
+                    + adjustAngleDistanceX(endAngle, -distance + extraDist, true);
+                y = cy + middleR * mathSin(endAngle)
+                    + adjustAngleDistanceY(endAngle, -distance + extraDist, true);
                 textAlign = 'right';
                 textVerticalAlign = 'middle';
                 break;
