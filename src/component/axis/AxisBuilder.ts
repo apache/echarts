@@ -33,6 +33,7 @@ import { AxisBaseOption } from '../../coord/axisCommonTypes';
 import Element from 'zrender/src/Element';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import OrdinalScale from '../../scale/Ordinal';
+import { prepareLayoutList, hideOverlap } from '../../label/labelLayoutHelper';
 
 const PI = Math.PI;
 
@@ -347,6 +348,16 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         fixMinMaxLabelShow(axisModel, labelEls, ticksEls);
 
         buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection);
+
+        const labelList = prepareLayoutList(labelEls.map(label => ({
+            label,
+            priority: label.style.text?.includes('primary') ? 1 : 0,
+            defaultAttr: {
+                ignore: label.ignore
+            }
+        })));
+
+        hideOverlap(labelList);
     },
 
     axisName(opt, axisModel, group, transformGroup) {
