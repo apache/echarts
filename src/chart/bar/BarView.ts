@@ -750,7 +750,7 @@ const elementCreator: {
         // direction. Notice that if clockwise is true (by default), the sector
         // will always draw clockwisely, no matter whether endAngle is greater
         // or less than startAngle.
-        const clockwise = layout.startAngle < layout.endAngle;
+        const clockwise = layout.startAngle <= layout.endAngle;
 
         const ShapeClass = (!isRadial && roundCap) ? Sausage : Sector;
 
