@@ -377,6 +377,7 @@ export type ParsedValueNumeric = number | OrdinalNumber;
 export type ScaleDataValue = ParsedValueNumeric | OrdinalRawValue | Date;
 
 export interface ScaleTick {
+    level?: number,
     value: number
 };
 export interface TimeScaleTick extends ScaleTick {

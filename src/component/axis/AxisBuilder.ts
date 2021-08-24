@@ -349,15 +349,17 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
 
         buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection);
 
-        const labelList = prepareLayoutList(labelEls.map(label => ({
-            label,
-            priority: label.style.text?.includes('primary') ? 1 : 0,
-            defaultAttr: {
-                ignore: label.ignore
-            }
-        })));
+        if (axisModel.type === 'xAxis.time') {
+            const labelList = prepareLayoutList(labelEls.map(label => ({
+                label,
+                priority: label.zlevel,
+                defaultAttr: {
+                    ignore: label.ignore
+                }
+            })));
 
-        hideOverlap(labelList);
+            hideOverlap(labelList);
+        }
     },
 
     axisName(opt, axisModel, group, transformGroup) {
@@ -819,6 +821,8 @@ function buildAxisLabel(
         // FIXME
         transformGroup.add(textEl);
         textEl.updateTransform();
+
+        textEl.zlevel = labelItem.level;
 
         labelEls.push(textEl);
         group.add(textEl);
