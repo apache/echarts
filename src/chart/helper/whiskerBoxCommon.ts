@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from './createSeriesDataSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
@@ -25,7 +25,7 @@ import type { SeriesOption, SeriesOnCartesianOptionMixin, LayoutOrient } from '.
 import type GlobalModel from '../../model/Global';
 import type SeriesModel from '../../model/Series';
 import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
-import type List from '../../data/List';
+import type SeriesData from '../../data/SeriesData';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordDimensionDefinition } from '../../data/helper/createDimensions';
 
@@ -55,7 +55,7 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
     /**
      * @override
      */
-    getInitialData(option: Opts, ecModel: GlobalModel): List {
+    getInitialData(option: Opts, ecModel: GlobalModel): SeriesData {
         // When both types of xAxis and yAxis are 'value', layout is
         // needed to be specified by user. Otherwise, layout can be
         // judged by which axis is category.
@@ -94,18 +94,21 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
         const otherAxisType = axisModels[1 - baseAxisDimIndex].get('type');
         const data = option.data as WhiskerBoxCommonData;
 
-        // ??? FIXME make a stage to perform data transfrom.
-        // MUST create a new data, consider setOption({}) again.
+        // Clone a new data for next setOption({}) usage.
+        // Avoid modifying current data will affect further update.
         if (data && addOrdinal) {
             const newOptionData: WhiskerBoxCommonData = [];
             zrUtil.each(data, function (item, index) {
                 let newItem;
                 if (zrUtil.isArray(item)) {
                     newItem = item.slice();
+                    // Modify current using data.
                     item.unshift(index);
                 }
                 else if (zrUtil.isArray(item.value)) {
-                    newItem = item.value.slice();
+                    newItem = zrUtil.extend({}, item);
+                    newItem.value = newItem.value.slice();
+                    // Modify current using data.
                     item.value.unshift(index);
                 }
                 else {
@@ -132,7 +135,7 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
             dimsDef: defaultValueDimensions.slice()
         }];
 
-        return createListSimply(
+        return createSeriesDataSimply(
             this,
             {
                 coordDimensions: coordDimensions,

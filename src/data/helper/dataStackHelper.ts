@@ -18,11 +18,21 @@
 */
 
 import {each, isString} from 'zrender/src/core/util';
-import DataDimensionInfo from '../DataDimensionInfo';
+import SeriesDimensionDefine from '../SeriesDimensionDefine';
 import SeriesModel from '../../model/Series';
-import List, { DataCalculationInfo } from '../List';
+import SeriesData, { DataCalculationInfo } from '../SeriesData';
 import type { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../../util/types';
+import { isSeriesDataSchema, SeriesDataSchema } from './SeriesDataSchema';
+import DataStore from '../DataStore';
 
+type EnableDataStackDimensionsInput = {
+    schema: SeriesDataSchema;
+    // If given, stack dimension will be ensured on this store.
+    // Otherwise, stack dimesnion will be appended at the tail, and should not
+    // be used on a shared store, but should create a brand new stroage later.
+    store?: DataStore;
+};
+type EnableDataStackDimensionsInputLegacy = (SeriesDimensionDefine | string)[];
 
 /**
  * Note that it is too complicated to support 3d stack by value
@@ -30,8 +40,8 @@ import type { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../../
  * we just support that stacked by index.
  *
  * @param seriesModel
- * @param dimensionInfoList The same as the input of <module:echarts/data/List>.
- *        The input dimensionInfoList will be modified.
+ * @param dimensionsInput The same as the input of <module:echarts/data/SeriesData>.
+ *        The input will be modified.
  * @param opt
  * @param opt.stackedCoordDimension Specify a coord dimension if needed.
  * @param opt.byIndex=false
@@ -46,8 +56,9 @@ import type { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../../
  */
 export function enableDataStack(
     seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>,
-    dimensionInfoList: (DataDimensionInfo | string)[],
+    dimensionsInput: EnableDataStackDimensionsInput | EnableDataStackDimensionsInputLegacy,
     opt?: {
+        // Backward compat
         stackedCoordDimension?: string
         byIndex?: boolean
     }
@@ -63,18 +74,31 @@ export function enableDataStack(
     let byIndex = opt.byIndex;
     const stackedCoordDimension = opt.stackedCoordDimension;
 
+    let dimensionDefineList: EnableDataStackDimensionsInputLegacy;
+    let schema: SeriesDataSchema;
+    let store: DataStore;
+
+    if (isLegacyDimensionsInput(dimensionsInput)) {
+        dimensionDefineList = dimensionsInput;
+    }
+    else {
+        schema = dimensionsInput.schema;
+        dimensionDefineList = schema.dimensions;
+        store = dimensionsInput.store;
+    }
+
     // Compatibal: when `stack` is set as '', do not stack.
     const mayStack = !!(seriesModel && seriesModel.get('stack'));
-    let stackedByDimInfo: DataDimensionInfo;
-    let stackedDimInfo: DataDimensionInfo;
+    let stackedByDimInfo: SeriesDimensionDefine;
+    let stackedDimInfo: SeriesDimensionDefine;
     let stackResultDimension: string;
     let stackedOverDimension: string;
 
-    each(dimensionInfoList, function (dimensionInfo, index) {
+    each(dimensionDefineList, function (dimensionInfo, index) {
         if (isString(dimensionInfo)) {
-            dimensionInfoList[index] = dimensionInfo = {
+            dimensionDefineList[index] = dimensionInfo = {
                 name: dimensionInfo as string
-            } as DataDimensionInfo;
+            } as SeriesDimensionDefine;
         }
 
         if (mayStack && !dimensionInfo.isExtraCoord) {
@@ -104,8 +128,10 @@ export function enableDataStack(
     // might not be a good way.
     if (stackedDimInfo) {
         // Use a weird name that not duplicated with other names.
-        stackResultDimension = '__\0ecstackresult';
-        stackedOverDimension = '__\0ecstackedover';
+        // Also need to use seriesModel.id as postfix because different
+        // series may share same data store. The stack dimension needs to be distinguished.
+        stackResultDimension = '__\0ecstackresult_' + seriesModel.id;
+        stackedOverDimension = '__\0ecstackedover_' + seriesModel.id;
 
         // Create inverted index to fast query index by value.
         if (stackedByDimInfo) {
@@ -116,33 +142,49 @@ export function enableDataStack(
         const stackedDimType = stackedDimInfo.type;
         let stackedDimCoordIndex = 0;
 
-        each(dimensionInfoList, function (dimensionInfo: DataDimensionInfo) {
+        each(dimensionDefineList, function (dimensionInfo: SeriesDimensionDefine) {
             if (dimensionInfo.coordDim === stackedDimCoordDim) {
                 stackedDimCoordIndex++;
             }
         });
 
-        dimensionInfoList.push({
+        const stackedOverDimensionDefine: SeriesDimensionDefine = {
             name: stackResultDimension,
             coordDim: stackedDimCoordDim,
             coordDimIndex: stackedDimCoordIndex,
             type: stackedDimType,
             isExtraCoord: true,
-            isCalculationCoord: true
-        });
+            isCalculationCoord: true,
+            storeDimIndex: dimensionDefineList.length
+        };
 
-        stackedDimCoordIndex++;
-
-        dimensionInfoList.push({
+        const stackResultDimensionDefine: SeriesDimensionDefine = {
             name: stackedOverDimension,
             // This dimension contains stack base (generally, 0), so do not set it as
             // `stackedDimCoordDim` to avoid extent calculation, consider log scale.
             coordDim: stackedOverDimension,
-            coordDimIndex: stackedDimCoordIndex,
+            coordDimIndex: stackedDimCoordIndex + 1,
             type: stackedDimType,
             isExtraCoord: true,
-            isCalculationCoord: true
-        });
+            isCalculationCoord: true,
+            storeDimIndex: dimensionDefineList.length + 1
+        };
+
+        if (schema) {
+            if (store) {
+                stackedOverDimensionDefine.storeDimIndex =
+                    store.ensureCalculationDimension(stackedOverDimension, stackedDimType);
+                stackResultDimensionDefine.storeDimIndex =
+                    store.ensureCalculationDimension(stackResultDimension, stackedDimType);
+            }
+
+            schema.appendCalculationDimension(stackedOverDimensionDefine);
+            schema.appendCalculationDimension(stackResultDimensionDefine);
+        }
+        else {
+            dimensionDefineList.push(stackedOverDimensionDefine);
+            dimensionDefineList.push(stackResultDimensionDefine);
+        }
     }
 
     return {
@@ -154,18 +196,19 @@ export function enableDataStack(
     };
 }
 
-export function isDimensionStacked(data: List, stackedDim: string /*, stackedByDim*/): boolean {
+function isLegacyDimensionsInput(
+    dimensionsInput: Parameters<typeof enableDataStack>[1]
+): dimensionsInput is EnableDataStackDimensionsInputLegacy {
+    return !isSeriesDataSchema((dimensionsInput as EnableDataStackDimensionsInput).schema);
+}
+
+export function isDimensionStacked(data: SeriesData, stackedDim: string): boolean {
     // Each single series only maps to one pair of axis. So we do not need to
     // check stackByDim, whatever stacked by a dimension or stacked by index.
     return !!stackedDim && stackedDim === data.getCalculationInfo('stackedDimension');
-        // && (
-        //     stackedByDim != null
-        //         ? stackedByDim === data.getCalculationInfo('stackedByDimension')
-        //         : data.getCalculationInfo('isStackedByIndex')
-        // );
 }
 
-export function getStackedDimension(data: List, targetDim: string): DimensionName {
+export function getStackedDimension(data: SeriesData, targetDim: string): DimensionName {
     return isDimensionStacked(data, targetDim)
         ? data.getCalculationInfo('stackResultDimension')
         : targetDim;

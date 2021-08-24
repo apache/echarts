@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import { Dictionary } from 'zrender/src/core/types';
-import List from './List';
+import SeriesData from './SeriesData';
 import Model from '../model/Model';
 import Element from 'zrender/src/Element';
 import { DimensionLoose, ParsedValue } from '../util/types';
@@ -36,9 +36,9 @@ class Graph {
 
     readonly edges: GraphEdge[] = [];
 
-    data: List;
+    data: SeriesData;
 
-    edgeData: List;
+    edgeData: SeriesData;
 
     /**
      * Whether directed graph.
@@ -458,7 +458,7 @@ function createGraphDataProxyMixin<Host extends GraphEdge | GraphNode>(
          */
         getValue(this: Host, dimension?: DimensionLoose): ParsedValue {
             const data = this[hostName][dataName];
-            return data.get(data.getDimension(dimension || 'value'), this.dataIndex);
+            return data.getStore().get(data.getDimensionIndex(dimension || 'value'), this.dataIndex);
         },
         // TODO: TYPE stricter type.
         setVisual(this: Host, key: string | Dictionary<any>, value?: any) {

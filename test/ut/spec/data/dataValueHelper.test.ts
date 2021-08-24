@@ -18,7 +18,7 @@
 */
 
 
-import * as dataValueHelper from '../../../../src/data/helper/dataValueHelper';
+import * as dataValueHelper from '@/src/data/helper/dataValueHelper';
 
 
 const NO_SUCH_CASE = 'NO_SUCH_CASE';

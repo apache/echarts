@@ -100,6 +100,38 @@ under the License.
                             ],
                             center : ['75%', 210],
                             radius : 150
+                        },
+                        {
+                            indicator: [{
+                                name: 'a',
+                                max: 13
+                            },
+                            {
+                                name: 'b',
+                                max: 1,
+                                min: 0
+                            },
+                            {
+                                name: 'c',
+                                max: 16000
+                            },
+                            {
+                                name: 'd',
+                                max: 30000
+                            },
+                            {
+                                name: 'e',
+                                max: 38000
+                            },
+                            {
+                                name: 'f',
+                                max: 52000
+                            },
+                            {
+                                name: 'g',
+                                max: 25000
+                            }],
+                            radius : 150
                         }
                     ],
                     series : [
@@ -191,6 +223,22 @@ under the License.
                                     }
                                 }
                             ]
+                        },
+                        {
+                            name: 'join',
+                            polarIndex: 2,
+                            type: 'radar',
+                            data: [{
+                                value: [
+                                    3,
+                                    1,
+                                    1,
+                                    53,
+                                    66,
+                                    18,
+                                    0.0121
+                                ]
+                            }]
                         }
                     ]
                 });

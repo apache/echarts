@@ -17,6 +17,8 @@
 * under the License.
 */
 
+/* global document */
+
 import * as echarts from '../../../core/echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../../model/Global';
@@ -449,8 +451,8 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
 
             // eslint-disable-next-line
             icon: 'M17.5,17.3H33 M17.5,17.3H33 M45.4,29.5h-28 M11.5,2v56H51V14.8L38.4,2H11.5z M38.4,2.2v12.7H51 M45.4,41.7h-28',
-            title: ecModel.getLocale(['toolbox', 'dataView', 'title']),
-            lang: ecModel.getLocale(['toolbox', 'dataView', 'lang']),
+            title: ecModel.getLocaleModel().get(['toolbox', 'dataView', 'title']),
+            lang: ecModel.getLocaleModel().get(['toolbox', 'dataView', 'lang']),
             backgroundColor: '#fff',
             textColor: '#000',
             textareaColor: '#fff',

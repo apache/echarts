@@ -21,7 +21,7 @@
  * Single coordinate system creator.
  */
 
-import Single from './Single';
+import Single, { singleDimensions } from './Single';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SingleAxisModel from './AxisModel';
@@ -62,7 +62,7 @@ function create(ecModel: GlobalModel, api: ExtensionAPI) {
 
 const singleCreator = {
     create: create,
-    dimensions: Single.prototype.dimensions
+    dimensions: singleDimensions
 };
 
 export default singleCreator;

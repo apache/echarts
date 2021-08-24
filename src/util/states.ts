@@ -41,7 +41,7 @@ import {
 import { extend, indexOf, isArrayLike, isObject, keys, isArray, each } from 'zrender/src/core/util';
 import { getECData } from './innerStore';
 import * as colorTool from 'zrender/src/tool/color';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import SeriesModel from '../model/Series';
 import { CoordinateSystemMaster, CoordinateSystem } from '../coord/CoordinateSystem';
 import { queryDataIndex, makeInner } from './model';
@@ -236,9 +236,17 @@ function createEmphasisDefaultState(
         const fromStroke = hasSelect ? (store.selectStroke || store.normalStroke) : store.normalStroke;
         if (hasFillOrStroke(fromFill) || hasFillOrStroke(fromStroke)) {
             state = state || {};
-            // Apply default color lift
             let emphasisStyle = state.style || {};
-            if (!hasFillOrStroke(emphasisStyle.fill) && hasFillOrStroke(fromFill)) {
+
+            // inherit case
+            if (emphasisStyle.fill === 'inherit') {
+                cloned = true;
+                state = extend({}, state);
+                emphasisStyle = extend({}, emphasisStyle);
+                emphasisStyle.fill = fromFill;
+            }
+            // Apply default color lift
+            else if (!hasFillOrStroke(emphasisStyle.fill) && hasFillOrStroke(fromFill)) {
                 cloned = true;
                 // Not modify the original value.
                 state = extend({}, state);
@@ -414,7 +422,7 @@ export function blurSeries(
     const ecModel = api.getModel();
     blurScope = blurScope || 'coordinateSystem';
 
-    function leaveBlurOfIndices(data: List, dataIndices: ArrayLike<number>) {
+    function leaveBlurOfIndices(data: SeriesData, dataIndices: ArrayLike<number>) {
         for (let i = 0; i < dataIndices.length; i++) {
             const itemEl = data.getItemGraphicEl(dataIndices[i]);
             itemEl && leaveBlur(itemEl);

@@ -547,12 +547,17 @@ under the License.
                 });
 
                 setInterval(function () {
+                    var rippleEffectCount = ~~(Math.random() * 9) + 1;
+                    console.log('rippleEffectCount', rippleEffectCount);
                     myChart.setOption({
                         series: [{
                             name: 'Top 5',
                             data: convertData(data.sort(function (a, b) {
                                 return b.value - a.value;
-                            }).slice(0, Math.round(6 * Math.random())))
+                            }).slice(0, Math.round(6 * Math.random()))),
+                            rippleEffect: {
+                                count: rippleEffectCount
+                            }
                         }]
                     });
                 }, 2000);

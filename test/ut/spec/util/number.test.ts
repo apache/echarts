@@ -22,7 +22,7 @@ import {
     linearMap, parseDate, reformIntervals, getPrecisionSafe, getPrecision,
     getPercentWithPrecision, quantityExponent, quantity, nice,
     isNumeric, numericToNumber, addSafe
-} from '../../../../src/util/number';
+} from '@/src/util/number';
 
 
 describe('util/number', function () {
@@ -271,6 +271,7 @@ describe('util/number', function () {
             expect(+parseDate('2012-03-04T05:06:07.123-0700')).toEqual(1330862767123);
             expect(+parseDate('2012-03-04T05:06:07.123-07:00')).toEqual(1330862767123);
             expect(+parseDate('2012-03-04T5:6:7.123-07:00')).toEqual(1330862767123);
+            expect(+parseDate('2012-03-04T05:06:07.123000Z')).toEqual(+new Date('2012-03-04T05:06:07.123Z'));
 
             // Other string
             expect(+parseDate('2012')).toEqual(+new Date('2012-01-01T00:00:00'));

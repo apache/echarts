@@ -26,19 +26,21 @@ import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, ColorString } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import labelLayout from './labelLayout';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getSectorCornerRadius } from '../helper/pieHelper';
+import {saveOldStyle} from '../../animation/basicTrasition';
+import { getBasicPieLayout } from './pieLayout';
 
 /**
  * Piece of pie including Sector, Label, LabelLine
  */
 class PiePiece extends graphic.Sector {
 
-    constructor(data: List, idx: number, startAngle: number) {
+    constructor(data: SeriesData, idx: number, startAngle: number) {
         super();
 
         this.z2 = 2;
@@ -50,15 +52,17 @@ class PiePiece extends graphic.Sector {
         this.updateData(data, idx, startAngle, true);
     }
 
-    updateData(data: List, idx: number, startAngle?: number, firstCreate?: boolean): void {
+    updateData(data: SeriesData, idx: number, startAngle?: number, firstCreate?: boolean): void {
         const sector = this;
 
         const seriesModel = data.hostModel as PieSeriesModel;
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const emphasisModel = itemModel.getModel('emphasis');
         const layout = data.getItemLayout(idx) as graphic.Sector['shape'];
+        // cornerRadius & innerCornerRadius doesn't exist in the item layout. Use `0` if null value is specified.
+        // see `setItemLayout` in `pieLayout.ts`.
         const sectorShape = extend(
-            getSectorCornerRadius(itemModel.getModel('itemStyle'), layout) || {},
+            getSectorCornerRadius(itemModel.getModel('itemStyle'), layout, true),
             layout
         );
 
@@ -103,6 +107,7 @@ class PiePiece extends graphic.Sector {
             }
         }
         else {
+            saveOldStyle(sector);
             // Transition animation from the old shape
             graphic.updateProps(sector, {
                 shape: sectorShape
@@ -110,6 +115,7 @@ class PiePiece extends graphic.Sector {
         }
 
         sector.useStyle(data.getItemVisual(idx, 'style'));
+
         setStatesStylesFromModel(sector, itemModel);
 
         const midAngle = (layout.startAngle + layout.endAngle) / 2;
@@ -152,7 +158,7 @@ class PiePiece extends graphic.Sector {
         enableHoverEmphasis(this, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
     }
 
-    private _updateLabel(seriesModel: PieSeriesModel, data: List, idx: number): void {
+    private _updateLabel(seriesModel: PieSeriesModel, data: SeriesData, idx: number): void {
         const sector = this;
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const labelLineModel = itemModel.getModel('labelLine');
@@ -217,7 +223,8 @@ class PieView extends ChartView {
     ignoreLabelLineUpdate = true;
 
     private _sectorGroup: graphic.Group;
-    private _data: List;
+    private _data: SeriesData;
+    private _emptyCircleSector: graphic.Sector;
 
     init(): void {
         const sectorGroup = new graphic.Group();
@@ -240,6 +247,20 @@ class PieView extends ChartView {
             if (shape) {
                 startAngle = shape.startAngle;
             }
+        }
+
+        // remove empty-circle if it exists
+        if (this._emptyCircleSector) {
+            group.remove(this._emptyCircleSector);
+        }
+        // when all data are filtered, show lightgray empty circle
+        if (data.count() === 0 && seriesModel.get('showEmptyCircle')) {
+            const sector = new graphic.Sector({
+                shape: getBasicPieLayout(seriesModel, api)
+            });
+            sector.useStyle(seriesModel.getModel('emptyCircleStyle').getItemStyle());
+            this._emptyCircleSector = sector;
+            group.add(sector);
         }
 
         data.diff(oldData)

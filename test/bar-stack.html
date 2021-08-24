@@ -35,78 +35,10 @@ under the License.
         </style>
 
 
-        <!-- <div id="main0"></div> -->
         <div id="main1"></div>
-
-
-        <script>
-
-            require([
-                'echarts'
-            ], function (echarts) {
-
-                var option = {
-                    "xAxis": {
-                        type: 'category'
-                    },
-                    "yAxis": {
-                    },
-                    "legend": {
-                        "tooltip": {
-                            "show": false
-                        }
-                    },
-                    dataZoom: [{
-                        type: 'inside'
-                    }, {
-                        type: 'slider'
-                    }],
-                    "series": [{
-                        "type": "bar",
-                        "stack": "all",
-                        "data": [
-                            ["审批通过", 33],
-                            ["审批中", 154],
-                            ["撤回", 13],
-                            ["barMinHeight:10px", 1]
-                        ],
-                        barMinHeight: 10,
-                        label: {
-                            show: true
-                        },
-                        "name": "zly13"
-                    }, {
-                        "type": "bar",
-                        "stack": "all",
-                        label: {
-                            show: true
-                        },
-                        "data": [
-                            ["哪有那么多审批", 66],
-                            ["审批中", 66],
-                            ["撤回",150],
-                            ["barMinHeight:10px", 100]
-                        ],
-                        "name": "zly0031"
-                    }],
-                    "grid": {
-                        "top": "65px",
-                        "bottom": "10%",
-                        "normalBottom": "10%",
-                        "dataZoomBottom": "90px",
-                        "containLabel": true
-                    }
-                };
-
-                testHelper.create(echarts, 'main0', {
-                    title: 'Click the first legend (to hide the bottom series), yAxis extent should be changed',
-                    option: option
-                });
-            });
-
-        </script>
-
-
+        <div id="main2_source_format_original"></div>
+        <div id="main2_dataset"></div>
+        <div id="main3"></div>
 
 
 
@@ -503,6 +435,290 @@ under the License.
             });
 
         </script>
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    xAxis: {
+                        type: 'category',
+                        data: ['a', 'b', 'c']
+                    },
+                    yAxis: {
+                    },
+                    legend: {
+                    },
+                    series: [{
+                        name: 'a',
+                        type: 'bar',
+                        stack: 'all',
+                        data: [10, 20, 30],
+                        label: {show: true}
+                    }, {
+                        name: 'b',
+                        type: 'bar',
+                        stack: 'all',
+                        label: {show: true},
+                        data: [7, 17, 27]
+                    }, {
+                        name: 'c',
+                        type: 'bar',
+                        label: {show: true},
+                        data: [9, 19, 29]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main2_source_format_original', {
+                    title: 'data in series',
+                    option: option,
+                    height: 300,
+                    buttons: [{
+                        text: 'stack: b+c',
+                        onclick: function () {
+                            var option2 = {
+                                series: [
+                                    {name: 'a', stack: undefined},
+                                    {name: 'b', stack: 'all'},
+                                    {name: 'c', stack: 'all'}
+                                ]
+                            };
+                            chart.setOption(option2);
+                            commonAsserts(false, true, true);
+                        }
+                    }, {
+                        text: 'stack: a+b',
+                        onclick: function () {
+                            var option2 = {
+                                series: [
+                                    {name: 'a', stack: 'all'},
+                                    {name: 'b', stack: 'all'},
+                                    {name: 'c', stack: undefined}
+                                ]
+                            };
+                            chart.setOption(option2);
+                            commonAsserts(true, true, false);
+                        }
+                    }]
+                });
+
+                commonAsserts(true, true, false);
+
+                // After click, chunks count should be the same.
+                function commonAsserts(aIsStack, bIsStack, cIsStack) {
+                    testHelper.printAssert(chart, function (assert) {
+                        var ecModel = chart.getModel();
+                        var storageA = ecModel.getSeriesByIndex(0).getData().getStore();
+                        var storageB = ecModel.getSeriesByIndex(1).getData().getStore();
+                        var storageC = ecModel.getSeriesByIndex(2).getData().getStore();
+                        assert(
+                            storageA !== storageB
+                            && storageB !== storageC
+                            && storageC !== storageA
+                        );
+                        // 2 more dimension for data stack calculation for each series.
+                        function getExpectedChunkCount(isStack) {
+                            var dimIndexMax = 1;
+                            if (isStack) {
+                                return dimIndexMax + 1 + 2;
+                            }
+                            else {
+                                return dimIndexMax + 1;
+                            }
+                        }
+                        assert(storageA._chunks.length === getExpectedChunkCount(aIsStack));
+                        assert(storageB._chunks.length === getExpectedChunkCount(bIsStack));
+                        assert(storageC._chunks.length === getExpectedChunkCount(cIsStack));
+                    });
+                }
+
+            });
+
+        </script>
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    dataset: {
+                        source: [
+                            ['a', 'b', 'c'],
+                            [10, 20, 30],
+                            [7, 17, 27],
+                            [9, 19, 29]
+                        ]
+                    },
+                    xAxis: {
+                        type: 'category'
+                    },
+                    yAxis: {
+                    },
+                    legend: {
+                    },
+                    series: [{
+                        name: 'a',
+                        type: 'bar',
+                        stack: 'all',
+                        seriesLayoutBy: 'row',
+                        encode: {x: 0, y: 1},
+                        label: {show: true}
+                    }, {
+                        name: 'b',
+                        type: 'bar',
+                        stack: 'all',
+                        seriesLayoutBy: 'row',
+                        encode: {x: 0, y: 2},
+                        label: {show: true},
+                    }, {
+                        name: 'c',
+                        type: 'bar',
+                        seriesLayoutBy: 'row',
+                        encode: {x: 0, y: 3},
+                        label: {show: true}
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main2_dataset', {
+                    title: 'data in dataset',
+                    option: option,
+                    height: 300,
+                    buttons: [{
+                        text: 'stack: b+c',
+                        onclick: function () {
+                            var option2 = {
+                                series: [
+                                    {name: 'a', stack: undefined},
+                                    {name: 'b', stack: 'all'},
+                                    {name: 'c', stack: 'all'}
+                                ]
+                            };
+                            chart.setOption(option2);
+                            commonAsserts([false, true, true]);
+                        }
+                    }, {
+                        text: 'stack: a+b',
+                        onclick: function () {
+                            var option2 = {
+                                series: [
+                                    {name: 'a', stack: 'all'},
+                                    {name: 'b', stack: 'all'},
+                                    {name: 'c', stack: undefined}
+                                ]
+                            };
+                            chart.setOption(option2);
+                            commonAsserts([true, true, false]);
+                        }
+                    }]
+                });
+
+                var sharedStoreStacks = [];
+                commonAsserts([true, true, false]);
+
+                // After click, chunks count should be the same.
+                function commonAsserts(isStackArr) {
+                    for (var i = 0; i < isStackArr.length; i++) {
+                        sharedStoreStacks[i] |= isStackArr[i];
+                    }
+                    testHelper.printAssert(chart, function (assert) {
+                        var ecModel = chart.getModel();
+                        var storageA = ecModel.getSeriesByIndex(0).getData().getStore();
+                        var storageB = ecModel.getSeriesByIndex(1).getData().getStore();
+                        var storageC = ecModel.getSeriesByIndex(2).getData().getStore();
+                        assert(
+                            storageA === storageB
+                            && storageB === storageC
+                        );
+                        var stackSeriesCount = 0;
+                        for (var i = 0; i < sharedStoreStacks.length; i++) {
+                            if (sharedStoreStacks[i]) {
+                                stackSeriesCount++;
+                            }
+                        }
+                        var dimIndexMax = 3;
+                        console.log(storageA._chunks.length);
+                        // 2 more dimension for data stack calculation for each series.
+                        assert(storageA._chunks.length === dimIndexMax + 1 + 2 * stackSeriesCount);
+                    });
+                }
+
+            });
+
+        </script>
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    xAxis: {
+                        type: 'category',
+                        data: ['a', 'b', 'c']
+                    },
+                    yAxis: {
+                        inverse: true
+                    },
+                    legend: {
+                    },
+                    series: [{
+                        type: 'bar',
+                        stack: 'all',
+                        data: [
+                            10, 20, 30
+                        ],
+                        label: {
+                            show: true,
+                            fontSize: 30
+                        },
+                        name: 'positive'
+                    }, {
+                        type: 'bar',
+                        stack: 'all',
+                        label: {
+                            show: true,
+                            fontSize: 30
+                        },
+                        data: [
+                            -10, 0, -15
+                        ],
+                        name: 'negative'
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: 'Check 0 label should be at the correct place',
+                    option: option,
+                    height: 300
+                });
+
+            });
+
+        </script>
+
 
 
 

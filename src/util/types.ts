@@ -33,7 +33,7 @@ import ExtensionAPI from '../core/ExtensionAPI';
 import SeriesModel from '../model/Series';
 import { createHashMap, HashMap } from 'zrender/src/core/util';
 import { TaskPlanCallbackReturn, TaskProgressParams } from '../core/task';
-import List, {ListDimensionType} from '../data/List';
+import SeriesData from '../data/SeriesData';
 import { Dictionary, ElementEventName, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { TooltipMarker } from './format';
@@ -47,6 +47,8 @@ import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
 import Model from '../model/Model';
+import { DataStoreDimensionType } from '../data/DataStore';
+import { DimensionUserOuputEncode } from '../data/helper/dimensionHelper';
 
 
 
@@ -57,6 +59,7 @@ import Model from '../model/Model';
 export {Dictionary};
 
 export type RendererType = 'canvas' | 'svg';
+export type NullUndefined = null | undefined;
 
 export type LayoutOrient = 'vertical' | 'horizontal';
 export type HorizontalAlign = 'left' | 'center' | 'right';
@@ -121,10 +124,14 @@ export interface ECElement extends Element {
      * Force disable overall layout
      */
     disableLabelLayout?: boolean
+    /**
+     * Force disable morphing
+     */
+    disableMorphing?: boolean
 }
 
 export interface DataHost {
-    getData(dataType?: SeriesDataType): List;
+    getData(dataType?: SeriesDataType): SeriesData;
 }
 
 export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {}
@@ -296,8 +303,8 @@ export interface StageHandlerInternal extends StageHandler {
 
 export type StageHandlerProgressParams = TaskProgressParams;
 export interface StageHandlerProgressExecutor {
-    dataEach?: (data: List, idx: number) => void;
-    progress?: (params: StageHandlerProgressParams, data: List) => void;
+    dataEach?: (data: SeriesData, idx: number) => void;
+    progress?: (params: StageHandlerProgressParams, data: SeriesData) => void;
 }
 export type StageHandlerPlanReturn = TaskPlanCallbackReturn;
 export interface StageHandlerPlan {
@@ -351,11 +358,11 @@ export type OrdinalSortInfo = {
 /**
  * `OptionDataValue` is the primitive value in `series.data` or `dataset.source`.
  * `OptionDataValue` are parsed (see `src/data/helper/dataValueHelper.parseDataValue`)
- * into `ParsedValue` and stored into `data/List` storage.
+ * into `ParsedValue` and stored into `data/SeriesData` storage.
  * Note:
  * (1) The term "parse" does not mean `src/scale/Scale['parse']`.
  * (2) If a category dimension is not mapped to any axis, its raw value will NOT be
- * parsed to `OrdinalNumber` but keep the original `OrdinalRawValue` in `src/data/List` storage.
+ * parsed to `OrdinalNumber` but keep the original `OrdinalRawValue` in `src/data/SeriesData` storage.
  */
 export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
 export type ParsedValueNumeric = number | OrdinalNumber;
@@ -410,10 +417,10 @@ export type DimensionIndex = number;
 export type DimensionIndexLoose = DimensionIndex | string;
 export type DimensionName = string;
 export type DimensionLoose = DimensionName | DimensionIndexLoose;
-export type DimensionType = ListDimensionType;
+export type DimensionType = DataStoreDimensionType;
 
 export const VISUAL_DIMENSIONS = createHashMap<number, keyof DataVisualDimensions>([
-    'tooltip', 'label', 'itemName', 'itemId', 'seriesName'
+    'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'seriesName'
 ]);
 // The key is VISUAL_DIMENSIONS
 export interface DataVisualDimensions {
@@ -424,11 +431,12 @@ export interface DataVisualDimensions {
     label?: DimensionIndex;
     itemName?: DimensionIndex;
     itemId?: DimensionIndex;
+    itemGroupId?: DimensionIndex;
     seriesName?: DimensionIndex;
 }
 
 export type DimensionDefinition = {
-    type?: ListDimensionType,
+    type?: DataStoreDimensionType,
     name?: DimensionName,
     displayName?: string
 };
@@ -597,6 +605,7 @@ export type OptionDataItem =
 export type OptionDataItemObject<T> = {
     id?: OptionId;
     name?: OptionName;
+    groupId?: OptionId;
     value?: T[] | T;
     selected?: boolean;
 };
@@ -641,6 +650,11 @@ export interface OptionEncodeVisualDimensions {
     itemId?: OptionEncodeValue;
     seriesName?: OptionEncodeValue;
     // Notice: `value` is coordDim, not nonCoordDim.
+
+    // Group id is used for linking the aggregate relationship between two set of data.
+    // Which is useful in prepresenting the transition key of drilldown/up animation.
+    // Or hover linking.
+    itemGroupId?: OptionEncodeValue;
 }
 export interface OptionEncode extends OptionEncodeVisualDimensions {
     [coordDim: string]: OptionEncodeValue | undefined
@@ -679,16 +693,6 @@ export interface CallbackDataParams {
     $vars: string[];
 }
 export type InterpolatableValue = ParsedValue | ParsedValue[];
-export type DimensionUserOuputEncode = {
-    [coordOrVisualDimName: string]:
-        // index: coordDimIndex, value: dataDimIndex
-        DimensionIndex[]
-};
-export type DimensionUserOuput = {
-    // The same as `data.dimensions`
-    dimensionNames: DimensionName[]
-    encode: DimensionUserOuputEncode
-};
 
 export type DecalDashArrayX = number | (number | number[])[];
 export type DecalDashArrayY = number | number[];
@@ -841,6 +845,12 @@ export interface BorderOptionMixin {
     borderMiterLimit?: number
 }
 
+export type ColorBy = 'series' | 'data';
+
+export interface SunburstColorByMixin {
+    colorBy?: ColorBy
+}
+
 export type AnimationDelayCallbackParam = {
     count: number
     index: number
@@ -922,7 +932,7 @@ export interface RoamOptionMixin {
 export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
 export type SymbolCallback<T> = (rawValue: any, params: T) => string;
 export type SymbolRotateCallback<T> = (rawValue: any, params: T) => number;
-export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => (string | number)[];
+export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => string | number | (string | number)[];
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -941,7 +951,7 @@ export interface SymbolOptionMixin<T = unknown> {
 
     symbolKeepAspect?: boolean
 
-    symbolOffset?: (string | number)[] | (unknown extends T ? never : SymbolOffsetCallback<T>)
+    symbolOffset?: string | number | (string | number)[] | (unknown extends T ? never : SymbolOffsetCallback<T>)
 }
 
 /**
@@ -1219,13 +1229,15 @@ export interface TooltipFormatterCallback<T> {
      * For sync callback
      * params will be an array on axis trigger.
      */
-    (params: T, asyncTicket: string): string | HTMLElement[]
+    (params: T, asyncTicket: string): string | HTMLElement | HTMLElement[]
     /**
      * For async callback.
      * Returned html string will be a placeholder when callback is not invoked.
      */
-    (params: T, asyncTicket: string, callback: (cbTicket: string, htmlOrDomNodes: string | HTMLElement[]) => void)
-        : string | HTMLElement[]
+    (
+        params: T, asyncTicket: string,
+        callback: (cbTicket: string, htmlOrDomNodes: string | HTMLElement | HTMLElement[]) => void
+    ) : string | HTMLElement | HTMLElement[]
 }
 
 type TooltipBuiltinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom';
@@ -1476,7 +1488,6 @@ export interface ComponentOption {
 
     z?: number;
     zlevel?: number;
-    // FIXME:TS more
 }
 
 export type BlurScope = 'coordinateSystem' | 'series' | 'global';
@@ -1537,6 +1548,30 @@ export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStat
     blur?: StateOption & ExtraStateOpts['blur']
 }
 
+export interface UniversalTransitionOption {
+    enabled?: boolean
+    /**
+     * Animation delay of each divided element
+     */
+    delay?: (index: number, count: number) => number
+    /**
+     * How to divide the shape in combine and split animation.
+     */
+    divideShape?: 'clone' | 'split'
+    /**
+     * Series will have transition between if they have same seriesKey.
+     * Usually it is a string. It can also be an array,
+     * which means it can be transition from or to multiple series with each key in this array item.
+     *
+     * Note:
+     * If two series have both array seriesKey. They will be compared after concated to a string(which is order independent)
+     * Transition between string key has higher priority.
+     *
+     * Default to use series id.
+     */
+    seriesKey?: string | string[]
+}
+
 export interface SeriesOption<
     StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
     ComponentOption,
@@ -1555,8 +1590,17 @@ export interface SeriesOption<
      */
     cursor?: string
 
+    /**
+     * groupId of data. can be used for doing drilldown / up animation
+     * It will be ignored if:
+     *  - groupId is specified in each data
+     *  - encode.itemGroupId is given.
+     */
+    dataGroupId?: OptionId
     // Needs to be override
     data?: unknown
+
+    colorBy?: ColorBy
 
     legendHoverLink?: boolean
 
@@ -1572,7 +1616,6 @@ export interface SeriesOption<
     coordinateSystem?: string
 
     hoverLayerThreshold?: number
-    // FIXME:TS more
 
     /**
      * When dataset is used, seriesLayoutBy specifies whether the column or the row of dataset is mapped to the series
@@ -1594,6 +1637,14 @@ export interface SeriesOption<
     stateAnimation?: AnimationOption
 
     /**
+     * If enabled universal transition cross series.
+     * @example
+     *  universalTransition: true
+     *  universalTransition: { enabled: true }
+     */
+    universalTransition?: boolean | UniversalTransitionOption
+
+    /**
      * Map of selected data
      * key is name or index of data.
      */
@@ -1610,11 +1661,8 @@ export interface SeriesOnCartesianOptionMixin {
 }
 
 export interface SeriesOnPolarOptionMixin {
-    radiusAxisIndex?: number
-    angleAxisIndex?: number
-
-    radiusAxisId?: string
-    angleAxisId?: string
+    polarIndex?: number
+    polarId?: string;
 }
 
 export interface SeriesOnSingleOptionMixin {

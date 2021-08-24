@@ -530,11 +530,6 @@ echarts.use([${seriesImportName}]);`);
         return this._locale;
     }
 
-    getLocale(localePosition: Parameters<Model<LocaleOption>['get']>[0]): any {
-        const locale = this.getLocaleModel();
-        return locale.get(localePosition as any);
-    }
-
     setUpdatePayload(payload: Payload) {
         this._payload = payload;
     }
@@ -758,7 +753,7 @@ echarts.use([${seriesImportName}]);`);
      */
     getSeries(): SeriesModel[] {
         return filter(
-            this._componentsMap.get('series').slice() as SeriesModel[],
+            this._componentsMap.get('series') as SeriesModel[],
             oneSeries => !!oneSeries
         );
     }

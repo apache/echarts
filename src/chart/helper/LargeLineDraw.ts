@@ -24,7 +24,7 @@ import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as lineContain from 'zrender/src/contain/line';
 import * as quadraticContain from 'zrender/src/contain/quadratic';
 import { PathProps } from 'zrender/src/graphic/Path';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { StageHandlerProgressParams, LineStyleOption, ColorString } from '../../util/types';
 import Model from '../../model/Model';
 import { getECData } from '../../util/innerStore';
@@ -49,7 +49,7 @@ interface LargeLinesCommonOption {
 /**
  * Data which can support large lines.
  */
-type LargeLinesData = List<Model<LargeLinesCommonOption> & {
+type LargeLinesData = SeriesData<Model<LargeLinesCommonOption> & {
     seriesIndex?: number
 }>;
 

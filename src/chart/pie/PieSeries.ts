@@ -17,11 +17,11 @@
 * under the License.
 */
 
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
-import {getPercentWithPrecision} from '../../util/number';
-import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
+import { getPercentWithPrecision } from '../../util/number';
+import { makeSeriesEncodeForNameBased } from '../../data/helper/sourceHelper';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import SeriesModel from '../../model/Series';
 import {
@@ -38,7 +38,7 @@ import {
     SeriesLabelOption,
     DefaultEmphasisFocus
 } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
 interface PieItemStyleOption extends ItemStyleOption {
     // can be 10
@@ -59,7 +59,7 @@ export interface PieStateOption {
     labelLine?: PieLabelLineOption
 }
 interface PieLabelOption extends Omit<SeriesLabelOption, 'rotate' | 'position'> {
-    rotate?: number
+    rotate?: number | boolean | 'radial' | 'tangential'
     alignTo?: 'none' | 'labelLine' | 'edge'
     edgeDistance?: string | number
     /**
@@ -119,14 +119,15 @@ export interface PieSeriesOption extends
     animationType?: 'expansion' | 'scale'
     animationTypeUpdate?: 'transition' | 'expansion'
 
-    data?: OptionDataValueNumeric[] | OptionDataValueNumeric[][] | PieDataItemOption[]
+    showEmptyCircle?: boolean;
+    emptyCircleStyle?: PieItemStyleOption;
+
+    data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | PieDataItemOption)[]
 }
 
 class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
     static type = 'series.pie' as const;
-
-    useColorPaletteOnData = true;
 
     /**
      * @overwrite
@@ -153,8 +154,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
     /**
      * @overwrite
      */
-    getInitialData(this: PieSeriesModel): List {
-        return createListSimply(this, {
+    getInitialData(this: PieSeriesModel): SeriesData {
+        return createSeriesDataSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
@@ -200,7 +201,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         zlevel: 0,
         z: 2,
         legendHoverLink: true,
-
+        colorBy: 'data',
         // 默认全局居中
         center: ['50%', '50%'],
         radius: [0, '75%'],
@@ -274,7 +275,14 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             }
         },
         itemStyle: {
-            borderWidth: 1
+            borderWidth: 1,
+            borderJoin: 'round'
+        },
+
+        showEmptyCircle: true,
+        emptyCircleStyle: {
+            color: 'lightgray',
+            opacity: 1
         },
 
         labelLayout: {

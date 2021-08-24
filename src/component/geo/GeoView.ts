@@ -42,30 +42,28 @@ class GeoView extends ComponentView {
     focusBlurEnabled = true;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
-        const mapDraw = new MapDraw(api);
-        this._mapDraw = mapDraw;
-
-        this.group.add(mapDraw.group);
-
         this._api = api;
     }
 
     render(
         geoModel: GeoModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload
     ): void {
-        const mapDraw = this._mapDraw;
-        if (geoModel.get('show')) {
-            mapDraw.draw(geoModel, ecModel, api, this, payload);
-        }
-        else {
-            this._mapDraw.group.removeAll();
-        }
-
-        mapDraw.group.on('click', this._handleRegionClick, this);
-        mapDraw.group.silent = geoModel.get('silent');
-
         this._model = geoModel;
 
+        if (!geoModel.get('show')) {
+            this._mapDraw && this._mapDraw.remove();
+            this._mapDraw = null;
+            return;
+        }
+
+        if (!this._mapDraw) {
+            this._mapDraw = new MapDraw(api);
+        }
+        const mapDraw = this._mapDraw;
+        mapDraw.draw(geoModel, ecModel, api, this, payload);
+        mapDraw.group.on('click', this._handleRegionClick, this);
+        mapDraw.group.silent = geoModel.get('silent');
+        this.group.add(mapDraw.group);
         this.updateSelectStatus(geoModel, ecModel, api);
     }
 

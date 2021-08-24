@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0_0"></div>
+        <div id="main0_1"></div>
+        <div id="main0_2"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+
+
+
+
+
+        <script>
+            // opt: {addTableHead}
+            function createBasicTestOptionForArrayRows(opt) {
+                var source = [
+                    [10, 50, 100, 'T'],
+                    [19, 59, 109, 'Q']
+                ];
+                if (opt.addTableHead) {
+                    source.unshift(
+                        ['h0', 'h1', 'h2', 'h3']
+                    );
+                }
+
+                var option = {
+                    color: ['blue', 'green', 'orange', 'red', 'purple', 'pink'],
+                    dataset: {
+                        source: source
+                    },
+                    tooltip: {
+                        // formatter: function (params) {
+                        //     console.log(params);
+                        // }
+                    },
+                    xAxis: [{
+                    }, {
+                        type: 'category',
+                        name: 'category1',
+                        position: 'bottom',
+                        offset: 30
+                    }, {
+                        name: 'category2',
+                        data: ['Q', 'T'],
+                        position: 'bottom',
+                        offset: 60
+                    }],
+                    yAxis: {},
+                    legend: {
+                        orient: 'vertical',
+                        left: 0,
+                        bottom: 10
+                    },
+                    grid: {
+                        left: 170,
+                        bottom: 100
+                    },
+                    series: [{
+                        name: '{x: 0, y: 1} xAxis0',
+                        type: 'scatter',
+                        label: {
+                            show: true,
+                            position: 'bottom'
+                        },
+                        encode: {x: 0, y: 1},
+                    }, {
+                        name: '{x: 0, y: 2} xAxis0',
+                        type: 'scatter',
+                        label: {
+                            show: true,
+                            position: 'bottom'
+                        },
+                        encode: {x: 0, y: 2},
+                    }, {
+                        name: '{x: 2, y: 0} xAxis0',
+                        type: 'scatter',
+                        label: {
+                            show: true,
+                            position: 'bottom'
+                        },
+                        encode: {x: 2, y: 0},
+                    }, {
+                        name: '{x: 3, y: 0} xAxis1',
+                        type: 'scatter',
+                        xAxisIndex: 1,
+                        label: {
+                            show: true,
+                            position: 'bottom'
+                        },
+                        encode: {x: 3, y: 0},
+                    }, {
+                        name: '{x: 3, y: 1} xAxis1',
+                        type: 'scatter',
+                        xAxisIndex: 1,
+                        label: {
+                            show: true,
+                            position: 'bottom'
+                        },
+                        encode: {x: 3, y: 1},
+                    }, {
+                        name: '{x: 3, y: 0} xAxis2',
+                        type: 'scatter',
+                        xAxisIndex: 2,
+                        label: {
+                            show: true,
+                            position: 'bottom'
+                        },
+                        encode: {x: 3, y: 0},
+                    }]
+                };
+
+                return {
+                    option: option,
+                    titleDesc: [
+                        'blue: **(10, 50), (19, 59)**',
+                        'green: **(10, 100), (19, 109)**',
+                        'orange: **(100, 10), (109, 19)**',
+                        'red: **(T, 10), (Q, 19)**',
+                        'purple: **(T, 50), (Q, 59)**',
+                        'pink: **(T, 19), (Q, 10)**'
+                    ],
+                    printAssert: function (chart) {
+                        testHelper.printAssert(chart, function (assert) {
+                            var ecModel = chart.getModel();
+                            var storage0 = ecModel.getSeriesByIndex(0).getData().getStore();
+                            var storage1 = ecModel.getSeriesByIndex(1).getData().getStore();
+                            var storage2 = ecModel.getSeriesByIndex(2).getData().getStore();
+                            var storage3 = ecModel.getSeriesByIndex(3).getData().getStore();
+                            var storage4 = ecModel.getSeriesByIndex(4).getData().getStore();
+                            var storage5 = ecModel.getSeriesByIndex(5).getData().getStore();
+                            assert(
+                                storage0 === storage1
+                                && storage1 === storage2
+                                && storage2 !== storage3
+                                && storage3 === storage4
+                                && storage4 !== storage5
+                            );
+                        });
+                    }
+                };
+            }
+
+            function createBasicTestOptionForObjectRows() {
+                var option = {
+                    color: ['blue', 'green', 'orange', 'red', 'purple', 'pink'],
+                    dataset: {
+                        source: [
+                            {aa: 10, bb: 50, cc: 100, dd: 'T'},
+                            {aa: 19, bb: 59, cc: 109, dd: 'Q'}
+                        ]
+                    },
+                    tooltip: {},
+                    xAxis: [{
+                    }, {
+                        type: 'category',
+                        name: 'category1',
+                        position: 'bottom',
+                        offset: 30
+                    }, {
+                        name: 'category2',
+                        data: ['Q', 'T'],
+                        position: 'bottom',
+                        offset: 60
+                    }],
+                    yAxis: {},
+                    legend: {
+                        orient: 'vertical',
+                        left: 0,
+                        bottom: 10
+                    },
+                    grid: {
+                        left: 170,
+                        bottom: 100
+                    },
+                    series: [{
+                        name: '{x: aa, y: bb} xAxis0',
+                        type: 'scatter',
+                        label: {
+                            show: true,
+                            position: 'bottom'
+                        },
+                        encode: {x: 'aa', y: 'bb'},
+                    }, {
+                        name: '{x: aa, y: cc} xAxis0',
+                        type: 'scatter',
+                        label: {
+                            show: true,
+                            position: 'bottom'
+                        },
+                        encode: {x: 'aa', y: 'cc'},
+                    }, {
+                        name: '{x: cc, y: aa} xAxis0',
+                        type: 'scatter',
+                        label: {
+                            show: true,
+                            position: 'bottom'
+                        },
+                        encode: {x: 'cc', y: 'aa'},
+                    }, {
+                        name: '{x: dd, y: aa} xAxis1',
+                        type: 'scatter',
+                        xAxisIndex: 1,
+                        label: {
+                            show: true,
+                            position: 'bottom'
+                        },
+                        encode: {x: 'dd', y: 'aa'},
+                    }, {
+                        name: '{x: dd, y: bb} xAxis1',
+                        type: 'scatter',
+                        xAxisIndex: 1,
+                        label: {
+                            show: true,
+                            position: 'bottom'
+                        },
+                        encode: {x: 'dd', y: 'bb'},
+                    }, {
+                        name: '{x: dd, y: aa} xAxis2',
+                        type: 'scatter',
+                        xAxisIndex: 2,
+                        label: {
+                            show: true,
+                            position: 'bottom'
+                        },
+                        encode: {x: 'dd', y: 'aa'},
+                    }]
+                };
+
+                return {
+                    option: option,
+                    titleDesc: [
+                        'blue: **(10, 50), (19, 59)**',
+                        'green: **(10, 100), (19, 109)**',
+                        'orange: **(100, 10), (109, 19)**',
+                        'red: **(T, 10), (Q, 19)**',
+                        'purple: **(T, 50), (Q, 59)**',
+                        'pink: **(T, 19), (Q, 10)**'
+                    ],
+                    printAssert: function (chart) {
+                        testHelper.printAssert(chart, function (assert) {
+                            var ecModel = chart.getModel();
+                            var storage0 = ecModel.getSeriesByIndex(0).getData().getStore();
+                            var storage1 = ecModel.getSeriesByIndex(1).getData().getStore();
+                            var storage2 = ecModel.getSeriesByIndex(2).getData().getStore();
+                            var storage3 = ecModel.getSeriesByIndex(3).getData().getStore();
+                            var storage4 = ecModel.getSeriesByIndex(4).getData().getStore();
+                            var storage5 = ecModel.getSeriesByIndex(5).getData().getStore();
+                            assert(
+                                storage0 === storage1
+                                && storage1 === storage2
+                                && storage2 !== storage3
+                                && storage3 === storage4
+                                && storage4 !== storage5
+                            );
+                        });
+                    }
+                };
+            }
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts',
+        ], function (echarts) {
+            var optionInfo = createBasicTestOptionForArrayRows({addTableHead: false});
+            var chart = testHelper.create(echarts, 'main0_0', {
+                title: [
+                    '(arrayRows)',
+                    'Different encode should works properly when sharing one dataset **without** dimensions',
+                ].concat(optionInfo.titleDesc),
+                option: optionInfo.option,
+                height: 350
+            });
+
+            optionInfo.printAssert(chart);
+        });
+        </script>
+
+
+
+        <script>
+        require([
+            'echarts',
+        ], function (echarts) {
+            var optionInfo = createBasicTestOptionForArrayRows({addTableHead: true});
+            var chart = testHelper.create(echarts, 'main0_1', {
+                title: [
+                    '(arrayRows)',
+                    'Different encode should works properly when sharing one dataset **with** dimensions',
+                ].concat(optionInfo.titleDesc),
+                option: optionInfo.option,
+                height: 350
+            });
+
+            optionInfo.printAssert(chart);
+        });
+        </script>
+
+
+
+        <script>
+        require([
+            'echarts',
+        ], function (echarts) {
+            var optionInfo = createBasicTestOptionForObjectRows();
+
+            var chart = testHelper.create(echarts, 'main0_2', {
+                title: [
+                    '(objectRows)',
+                    'Different encode should works properly when sharing one dataset without dimensions',
+                ].concat(optionInfo.titleDesc),
+                option: optionInfo.option,
+                height: 350
+            });
+
+            optionInfo.printAssert(chart);
+        });
+        </script>
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                var option;
+
+                // If dimIndexMax biggger then 30, only the used dimensions will be processed.
+                var dimIndexMax = 32;
+                var dimIndexMaxMinus1 = dimIndexMax - 1;
+                var categoryDimIndex = 5;
+
+                var source = [
+                    ['year'],
+                    ['2021'],
+                    ['2022'],
+                ];
+                for (var i = 0; i < dimIndexMax; i++) {
+                    source[0].push('a' + (i + 1));
+                    source[1].push(Math.random());
+                    source[2].push(Math.random());
+                }
+                source[1][1] = 1;
+                source[2][1] = 9;
+                source[1][dimIndexMax] = 111;
+                source[2][dimIndexMax] = 999;
+                source[1][dimIndexMaxMinus1] = 555;
+                source[2][dimIndexMaxMinus1] = 333;
+                source[1][categoryDimIndex] = 'tag0';
+                source[2][categoryDimIndex] = 'tag1';
+
+                option = {
+                    xAxis: {
+                        type: 'category',
+                        scale: true
+                    },
+                    yAxis: {},
+                    dataset: {
+                        source: source
+                    },
+                    tooltip: {
+                        position: 'top'
+                    },
+                    grid: {
+                        left: 150
+                    },
+                    visualMap: {
+                        min: 111,
+                        max: 999,
+                        left: 10,
+                        top: 'middle',
+                        calculable: true,
+                        dimension: dimIndexMax,
+                        inRange: {
+                            color: ['green', 'red']
+                        }
+                    },
+                    series: [{
+                        type: 'scatter',
+                        label: {
+                            show: true,
+                            position: 'bottom'
+                        },
+                        symbolSize: 30,
+                        encode: {
+                            x: 0,
+                            y: dimIndexMax,
+                            label: categoryDimIndex
+                        }
+                    }, {
+                        type: 'line',
+                        showSymbol: false,
+                        lineStyle: {
+                            width: 5,
+                        },
+                        encode: {
+                            x: 0,
+                            y: dimIndexMax
+                        }
+                    }, {
+                        type: 'scatter',
+                        label: {
+                            show: true,
+                            formatter: '{@[' + categoryDimIndex + ']}',
+                            position: 'top'
+                        },
+                        symbol: 'rect',
+                        symbolSize: 30,
+                        encode: {
+                            x: 0,
+                            y: dimIndexMaxMinus1,
+                        }
+                    }]
+                };
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Should omit dimensions propery',
+                        '[circle scatter]: **111, 999**, label: **tag0 tag1**, color **green, red**',
+                        '[line]: color: gradient from **green** to **red**',
+                        '[rect scatter]: **555, 333**, label: **tag0 tag1**, color **green, red**',
+                    ],
+                    option: option,
+                    height: 350
+                });
+
+                chart && chart.dispatchAction({
+                    type: 'showTip',
+                    dataIndex: 1,
+                    seriesIndex: 0
+                })
+
+                testHelper.printAssert(chart, function (assert) {
+                    var ecModel = chart.getModel();
+                    var storage0 = ecModel.getSeriesByIndex(0).getData().getStore();
+                    var storage1 = ecModel.getSeriesByIndex(1).getData().getStore();
+                    var storage2 = ecModel.getSeriesByIndex(1).getData().getStore();
+                    assert(storage0 === storage1);
+                    assert(storage1 === storage2);
+
+                    var data0 = ecModel.getSeriesByIndex(0).getData();
+                    var data1 = ecModel.getSeriesByIndex(1).getData();
+                    assert(data0.dimensions.length === 3);
+                    assert(data1.dimensions.length === 2);
+                });
+
+            });
+        </script>
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                var option;
+
+                // If dimIndexMax biggger then 30, only the used dimensions will be processed.
+                var dimIndexMax = 32;
+                var dimensions = ['year'];
+
+                var source = [
+                    ['2021'],
+                    ['2022'],
+                ];
+                for (var i = 0; i < dimIndexMax; i++) {
+                    dimensions.push('a' + i);
+                    source[0].push(Math.random());
+                    source[1].push(Math.random());
+                }
+                source[0][1] = 1;
+                source[1][1] = 9;
+                source[0][dimIndexMax] = 111;
+                source[1][dimIndexMax] = 999;
+                dimensions[1] = null;
+                dimensions[2] = null;
+                dimensions[dimIndexMax] = null;
+
+                option = {
+                    xAxis: {
+                        type: 'category',
+                        scale: true
+                    },
+                    yAxis: {},
+                    dataset: {
+                        dimensions: dimensions,
+                        source: source
+                    },
+                    tooltip: {
+                        position: 'top'
+                    },
+                    visualMap: {
+                        min: 111,
+                        max: 999,
+                        left: 10,
+                        top: 'middle',
+                        calculable: true,
+                        dimension: dimIndexMax,
+                        inRange: {
+                            color: ['orange', 'blue']
+                        }
+                    },
+                    series: [{
+                        type: 'scatter',
+                        label: {
+                            show: true,
+                            position: 'bottom'
+                        },
+                        encode: {
+                            x: 0,
+                            y: dimIndexMax
+                        }
+                    }, {
+                        type: 'line',
+                        showSymbol: false,
+                        lineStyle: {
+                            width: 5,
+                        },
+                        encode: {
+                            x: 0,
+                            y: dimIndexMax
+                        }
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Should omit dimensions propery',
+                        'label and tooltip should display **111, 999**',
+                        'symbol color should be **orange, blue**',
+                        'line color should gradient from **orange to blue**'
+                    ],
+                    option: option
+                });
+
+                testHelper.printAssert(chart, function (assert) {
+                    var ecModel = chart.getModel();
+                    var storage0 = ecModel.getSeriesByIndex(0).getData().getStore();
+                    var storage1 = ecModel.getSeriesByIndex(1).getData().getStore();
+                    assert(storage0 === storage1);
+
+                    var data0 = ecModel.getSeriesByIndex(0).getData();
+                    var data1 = ecModel.getSeriesByIndex(1).getData();
+                    assert(data0.dimensions.length === 2);
+                    assert(data1.dimensions.length === 2);
+
+                    for (let i = 0; i < data1.dimensions.length; i++) {
+                        assert(data1.dimensions[i]);
+                    }
+                });
+
+            });
+        </script>
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                var option;
+                // If dimIndexMax biggger then 30, only the used dimensions will be processed.
+                var dimIndexMax = 5;
+
+                function makeDatatsetSource(dataCount3) {
+
+                    var source = [
+                        ['year'],
+                        ['2021'],
+                        ['2022'],
+                    ];
+                    if (dataCount3) {
+                        source.push(['2023']);
+                    }
+                    for (var i = 0; i < dimIndexMax; i++) {
+                        source[0].push('a' + i);
+                        source[1].push(Math.random());
+                        source[2].push(Math.random());
+                        if (dataCount3) {
+                            source[3].push(Math.random());
+                        }
+                    }
+                    source[1][1] = 1;
+                    source[1][dimIndexMax] = 110;
+                    source[1][dimIndexMax - 1] = 55;
+                    source[1][dimIndexMax - 2] = 27.5;
+                    source[2][1] = 2;
+                    source[2][dimIndexMax] = 210;
+                    source[2][dimIndexMax - 1] = 105;
+                    source[2][dimIndexMax - 2] = 52.5;
+                    if (dataCount3) {
+                        source[3][1] = 3;
+                        source[3][dimIndexMax] = 310;
+                        source[3][dimIndexMax - 1] = 155;
+                        source[3][dimIndexMax - 2] = 77.5;
+                    }
+
+                    return source;
+                }
+
+                var datasetSource = makeDatatsetSource();
+
+                option = {
+                    xAxis: {
+                        type: 'category',
+                        scale: true
+                    },
+                    yAxis: {},
+                    toolbox: {
+                        feature: {
+                            magicType: {
+                                type: ['stack', 'tiled']
+                            }
+                        }
+                    },
+                    dataset: {
+                        source: datasetSource
+                    },
+                    tooltip: {
+                        position: 'top'
+                    },
+                    legend: {},
+                    series: [{
+                        type: 'bar',
+                        name: 'Y: 110, 210',
+                        label: {show: true},
+                        stack: 'ss',
+                        encode: {
+                            x: 0,
+                            y: dimIndexMax
+                        }
+                    }, {
+                        type: 'bar',
+                        stack: 'ss',
+                        id: 'toBeChanged',
+                        name: 'Y: 55, 105',
+                        label: {show: true},
+                        encode: {
+                            x: 0,
+                            y: dimIndexMax - 1
+                        }
+                    }]
+                };
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'datastack test.',
+                    ],
+                    option: option,
+                    buttons: [{
+                        text: 'Only setOption dataset: append one item',
+                        onclick: function () {
+                            var option2 = {
+                                dataset: {
+                                    source: makeDatatsetSource(true)
+                                }
+                            };
+                            chart.setOption(option2);
+                            commonAsserts();
+                        }
+                    }, {
+                        text: 'Only setOption series: change green series encode.y',
+                        onclick: function () {
+                            var option3 = {
+                                series: {
+                                    id: 'toBeChanged',
+                                    encode: {
+                                        x: 0,
+                                        y: dimIndexMax - 2
+                                    }
+                                }
+                            };
+                            chart.setOption(option3);
+                            commonAsserts();
+                        }
+                    }]
+                });
+
+                commonAsserts();
+
+                // After click, chunks count should be the same.
+                function commonAsserts() {
+                    testHelper.printAssert(chart, function (assert) {
+                        var ecModel = chart.getModel();
+                        var storage0 = ecModel.getSeriesByIndex(0).getData().getStore();
+                        var storage1 = ecModel.getSeriesByIndex(1).getData().getStore();
+                        assert(storage0 === storage1);
+                        // 2 more dimension for data stack calculation for each series.
+                        var expectedChunkCount = dimIndexMax + 1 + 2 * 2;
+                        assert(storage0._chunks.length === expectedChunkCount);
+                    });
+                }
+            });
+        </script>
+
+
+
+
+
+
+
+
+    </body>
+</html>
+

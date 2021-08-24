@@ -13,7 +13,7 @@ Contributions can be made in varied ways:
     - Remind the authors to provide a demo if they are reporting for a bug
     - Try to reproduce the problem as describe in the issues
 - Make pull requests to fix bugs or implement new features
-- Mend or translate the documents
+- Improve or translate the documents
 - Discuss in the [mailing list](https://echarts.apache.org/en/maillist.html)
 - ...
 
@@ -21,7 +21,7 @@ Contributions can be made in varied ways:
 
 When opening new issues, please use the [echarts issue helper](https://ecomfe.github.io/echarts-issue-helper/), opening issues in any other way will cause our bot to close them automatically.
 
-And before doing so, please search for similar questions in our [issues list](https://github.com/apache/echarts/issues?utf8=%E2%9C%93&q=is%3Aissue). If you are able to reproduce an issue found in a closed issue, please create a new issue and reference the closed one.
+Additionally, before doing so, please search for similar questions in our [issues list](https://github.com/apache/echarts/issues?utf8=%E2%9C%93&q=is%3Aissue). If you are able to reproduce an issue found in a closed issue, please create a new issue and reference the closed one.
 
 Please read the [documentation](http://echarts.apache.org/option.html) carefully before asking any questions.
 
@@ -29,9 +29,9 @@ Any questions in the form of *how can I use echarts to* or *how to use echarts x
 
 ## Release Milestone Discussion
 
-We will start the discussion about the bugs to fix and features of each release in the [mailing list](https://echarts.apache.org/en/maillist.html). You may subscribe our [mailing list](https://echarts.apache.org/en/maillist.html) to give your valuable advice in the milestone dicussion.
+We will start the discussion about the bugs to fix and features of each release in the [mailing list](https://echarts.apache.org/en/maillist.html). You may subscribe to our [mailing list](https://echarts.apache.org/en/maillist.html) to give your valuable advice in milestone dicussions.
 
-About our release plan, we will release a mior version at the end of every month. Here is some detail.
+Regarding the release plan, we will release a mior version at the end of every month. Here is some detail.
 
 1. Assume our current stable release is 4.3.0. We will start the discussion of milestone of the release two versions ahead, which is 4.5.0 at the beginning of each month. At this time we should also kickoff the developing of the next release, which is 4.4.0.
 2. Finish 4.4.0 developing at about 22th of this month and start the testing. And the 4.5.0 milestone discussion is frozen and published on the [GitHub](https://github.com/apache/echarts/milestone/14)
@@ -61,9 +61,9 @@ Wiki: [How to setup the dev environment](https://github.com/apache/echarts/wiki/
     + https://www.apache.org/legal/src-headers.html#3party
 + Licenses that are compatible with the Apache license:
     + BSD and MIT are compatible with the Apache license but CC_BY_SA is not (https://apache.org/legal/resolved.html#cc-sa).
-+ Stack overflow:
-    + before intending to copy code from Stack overlow, we must check:
++ Stack Overflow:
+    + before intending to copy code from Stack Overlow, we must check:
     + https://apache.org/legal/resolved.html#stackoverflow
     + https://issues.apache.org/jira/browse/LEGAL-471
-+ Wikipedia:
-    + Wikipedia is licensed CC 4.0 BY_SA and is incompatible with the Apache license. So we should not copy code from Wikipedia.
++ Wikipedia (and most Wikimedia Foundation projects):
+    + Wikipedia, and most Wikimedia Foundation projects, are licensed under CC 4.0 BY_SA (and sometimes GFDL) and is incompatible with the Apache license. Therefore, we should not copy code from Wikipedia, or Wikimedia Foundation projects.

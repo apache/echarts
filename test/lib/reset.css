@@ -82,6 +82,7 @@ pre.test-print-object {
     font-family: Menlo, Monaco, 'Courier New', monospace;
 }
 .test-chart {
+    position: relative;
     height: 400px;
 }
 
@@ -121,6 +122,13 @@ td.test-data-table-key {
 .record-canvas textarea {
     width: 300px;
     height: 500px;
+}
+
+.record-video {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    z-index: 1000;
 }
 
 .control-frame-btn-panel {

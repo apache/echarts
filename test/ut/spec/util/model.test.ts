@@ -18,7 +18,7 @@
 * under the License.
 */
 
-import { compressBatches } from '../../../../src/util/model';
+import { compressBatches } from '@/src/util/model';
 
 
 describe('util/model', function () {

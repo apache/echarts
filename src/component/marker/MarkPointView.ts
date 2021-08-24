@@ -20,7 +20,7 @@
 
 import SymbolDraw from '../../chart/helper/SymbolDraw';
 import * as numberUtil from '../../util/number';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
@@ -29,13 +29,13 @@ import MarkPointModel, {MarkPointDataItemOption} from './MarkPointModel';
 import GlobalModel from '../../model/Global';
 import MarkerModel from './MarkerModel';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { HashMap, isFunction, map, defaults, filter, curry } from 'zrender/src/core/util';
+import { HashMap, isFunction, map, defaults, filter, curry, extend } from 'zrender/src/core/util';
 import { getECData } from '../../util/innerStore';
 import { getVisualFromData } from '../../visual/helper';
 import { ZRColor } from '../../util/types';
 
 function updateMarkerLayout(
-    mpData: List<MarkPointModel>,
+    mpData: SeriesData<MarkPointModel>,
     seriesModel: SeriesModel,
     api: ExtensionAPI
 ) {
@@ -59,7 +59,6 @@ function updateMarkerLayout(
             const x = mpData.get(coordSys.dimensions[0], idx);
             const y = mpData.get(coordSys.dimensions[1], idx);
             point = coordSys.dataToPoint([x, y]);
-
         }
 
         // Use x, y if has any
@@ -108,7 +107,7 @@ class MarkPointView extends MarkerView {
         const symbolDraw = symbolDrawMap.get(seriesId)
             || symbolDrawMap.set(seriesId, new SymbolDraw());
 
-        const mpData = createList(coordSys, seriesModel, mpModel);
+        const mpData = createData(coordSys, seriesModel, mpModel);
 
         // FIXME
         mpModel.setData(mpData);
@@ -120,8 +119,11 @@ class MarkPointView extends MarkerView {
             let symbol = itemModel.getShallow('symbol');
             let symbolSize = itemModel.getShallow('symbolSize');
             let symbolRotate = itemModel.getShallow('symbolRotate');
+            let symbolOffset = itemModel.getShallow('symbolOffset');
+            const symbolKeepAspect = itemModel.getShallow('symbolKeepAspect');
 
-            if (isFunction(symbol) || isFunction(symbolSize) || isFunction(symbolRotate)) {
+            // TODO: refactor needed: single data item should not support callback function
+            if (isFunction(symbol) || isFunction(symbolSize) || isFunction(symbolRotate) || isFunction(symbolOffset)) {
                 const rawIdx = mpModel.getRawValue(idx);
                 const dataParams = mpModel.getDataParams(idx);
                 if (isFunction(symbol)) {
@@ -133,6 +135,9 @@ class MarkPointView extends MarkerView {
                 }
                 if (isFunction(symbolRotate)) {
                     symbolRotate = symbolRotate(rawIdx, dataParams);
+                }
+                if (isFunction(symbolOffset)) {
+                    symbolOffset = symbolOffset(rawIdx, dataParams);
                 }
             }
 
@@ -146,6 +151,8 @@ class MarkPointView extends MarkerView {
                 symbol: symbol,
                 symbolSize: symbolSize,
                 symbolRotate: symbolRotate,
+                symbolOffset: symbolOffset,
+                symbolKeepAspect: symbolKeepAspect,
                 style
             });
         });
@@ -168,7 +175,7 @@ class MarkPointView extends MarkerView {
     }
 }
 
-function createList(
+function createData(
     coordSys: CoordinateSystem,
     seriesModel: SeriesModel,
     mpModel: MarkPointModel
@@ -180,7 +187,11 @@ function createList(
                 seriesModel.getData().mapDimension(coordDim)
             ) || {};
             // In map series data don't have lng and lat dimension. Fallback to same with coordSys
-            return defaults({name: coordDim}, info);
+            return extend(extend({}, info), {
+                name: coordDim,
+                // DON'T use ordinalMeta to parse and collect ordinal.
+                ordinalMeta: null
+            });
         });
     }
     else {
@@ -190,7 +201,7 @@ function createList(
         }];
     }
 
-    const mpData = new List(coordDimsInfos, mpModel);
+    const mpData = new SeriesData(coordDimsInfos, mpModel);
     let dataOpt = map(mpModel.get('data'), curry(
             markerHelper.dataTransform, seriesModel
         ));

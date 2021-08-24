@@ -28,7 +28,7 @@ import {
     SymbolRotateCallback,
     SymbolOffsetCallback
 } from '../util/types';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import SeriesModel from '../model/Series';
 import GlobalModel from '../model/Global';
 
@@ -83,7 +83,7 @@ const seriesSymbolTask: StageHandler = {
             symbolSize: seriesSymbolSize as number | number[],
             symbolKeepAspect: keepAspect,
             symbolRotate: seriesSymbolRotate as number,
-            symbolOffset: seriesSymbolOffset as (string | number)[]
+            symbolOffset: seriesSymbolOffset as string | number | (string | number)[]
         });
 
         // Only visible series has each data be visual encoded
@@ -91,7 +91,7 @@ const seriesSymbolTask: StageHandler = {
             return;
         }
 
-        function dataEach(data: List, idx: number) {
+        function dataEach(data: SeriesData, idx: number) {
             const rawValue = seriesModel.getRawValue(idx);
             const params = seriesModel.getDataParams(idx);
             hasSymbolTypeCallback && data.setItemVisual(
@@ -133,7 +133,7 @@ const dataSymbolTask: StageHandler = {
 
         const data = seriesModel.getData();
 
-        function dataEach(data: List, idx: number) {
+        function dataEach(data: SeriesData, idx: number) {
             const itemModel = data.getItemModel<SymbolOptionMixin>(idx);
             const itemSymbolType = itemModel.getShallow('symbol', true);
             const itemSymbolSize = itemModel.getShallow('symbolSize', true);

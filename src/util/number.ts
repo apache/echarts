@@ -359,7 +359,7 @@ export function parseDate(value: unknown): Date {
                 +match[4] || 0,
                 +(match[5] || 0),
                 +match[6] || 0,
-                +match[7] || 0
+                match[7] ? +match[7].substring(0, 3) : 0
             );
         }
         // Timezoneoffset of Javascript Date has considered DST (Daylight Saving Time,
@@ -381,7 +381,7 @@ export function parseDate(value: unknown): Date {
                 hour,
                 +(match[5] || 0),
                 +match[6] || 0,
-                +match[7] || 0
+                match[7] ? +match[7].substring(0, 3) : 0
             ));
         }
     }

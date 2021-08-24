@@ -24,7 +24,7 @@ import { createTextStyle } from '../../label/labelStyle';
 import * as layout from '../../util/layout';
 import TimelineView from './TimelineView';
 import TimelineAxis from './TimelineAxis';
-import {createSymbol} from '../../util/symbol';
+import {createSymbol, normalizeSymbolOffset, normalizeSymbolSize} from '../../util/symbol';
 import * as numberUtil from '../../util/number';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -823,20 +823,15 @@ function giveSymbol(
         z2: 100
     }, opt, true);
 
-    let symbolSize = hostModel.get('symbolSize');
-    symbolSize = symbolSize instanceof Array
-        ? symbolSize.slice()
-        : [+symbolSize, +symbolSize];
+    const symbolSize = normalizeSymbolSize(hostModel.get('symbolSize'));
 
     opt.scaleX = symbolSize[0] / 2;
     opt.scaleY = symbolSize[1] / 2;
 
-    const symbolOffset = hostModel.get('symbolOffset');
+    const symbolOffset = normalizeSymbolOffset(hostModel.get('symbolOffset'), symbolSize);
     if (symbolOffset) {
-        opt.x = opt.x || 0;
-        opt.y = opt.y || 0;
-        opt.x += numberUtil.parsePercent(symbolOffset[0], symbolSize[0]);
-        opt.y += numberUtil.parsePercent(symbolOffset[1], symbolSize[1]);
+        opt.x = (opt.x || 0) + symbolOffset[0];
+        opt.y = (opt.y || 0) + symbolOffset[1];
     }
 
     const symbolRotate = hostModel.get('symbolRotate');

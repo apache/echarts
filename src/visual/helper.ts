@@ -24,10 +24,10 @@
  * In the List module storage:
  *  'style', 'symbol', 'symbolSize'...
  */
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 
 
-export function getItemVisualFromData(data: List, dataIndex: number, key: string) {
+export function getItemVisualFromData(data: SeriesData, dataIndex: number, key: string) {
     switch (key) {
         case 'color':
             const style = data.getItemVisual(dataIndex, 'style');
@@ -45,7 +45,7 @@ export function getItemVisualFromData(data: List, dataIndex: number, key: string
     }
 }
 
-export function getVisualFromData(data: List, key: string) {
+export function getVisualFromData(data: SeriesData, key: string) {
     switch (key) {
         case 'color':
             const style = data.getVisual('style');
@@ -63,7 +63,7 @@ export function getVisualFromData(data: List, key: string) {
     }
 }
 
-export function setItemVisualFromData(data: List, dataIndex: number, key: string, value: any) {
+export function setItemVisualFromData(data: SeriesData, dataIndex: number, key: string, value: any) {
     switch (key) {
         case 'color':
             // Make sure not sharing style object.

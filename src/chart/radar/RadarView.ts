@@ -24,19 +24,13 @@ import * as symbolUtil from '../../util/symbol';
 import ChartView from '../../view/Chart';
 import RadarSeriesModel, { RadarSeriesDataItemOption } from './RadarSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { ColorString } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { VectorArray } from 'zrender/src/core/vector';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
-
-function normalizeSymbolSize(symbolSize: number | number[]) {
-    if (!zrUtil.isArray(symbolSize)) {
-        symbolSize = [+symbolSize, +symbolSize];
-    }
-    return symbolSize;
-}
+import { saveOldStyle } from '../../animation/basicTrasition';
 
 type RadarSymbol = ReturnType<typeof symbolUtil.createSymbol> & {
     __dimIdx: number
@@ -46,7 +40,7 @@ class RadarView extends ChartView {
     static type = 'radar';
     type = RadarView.type;
 
-    private _data: List<RadarSeriesModel>;
+    private _data: SeriesData<RadarSeriesModel>;
 
     render(seriesModel: RadarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const polar = seriesModel.coordinateSystem;
@@ -55,12 +49,12 @@ class RadarView extends ChartView {
         const data = seriesModel.getData();
         const oldData = this._data;
 
-        function createSymbol(data: List<RadarSeriesModel>, idx: number) {
+        function createSymbol(data: SeriesData<RadarSeriesModel>, idx: number) {
             const symbolType = data.getItemVisual(idx, 'symbol') as string || 'circle';
             if (symbolType === 'none') {
                 return;
             }
-            const symbolSize = normalizeSymbolSize(
+            const symbolSize = symbolUtil.normalizeSymbolSize(
                 data.getItemVisual(idx, 'symbolSize')
             );
             const symbolPath = symbolUtil.createSymbol(
@@ -83,7 +77,7 @@ class RadarView extends ChartView {
             oldPoints: VectorArray[],
             newPoints: VectorArray[],
             symbolGroup: graphic.Group,
-            data: List<RadarSeriesModel>,
+            data: SeriesData<RadarSeriesModel>,
             idx: number,
             isInit?: boolean
         ) {
@@ -170,6 +164,9 @@ class RadarView extends ChartView {
                     false
                 );
 
+                saveOldStyle(polygon);
+                saveOldStyle(polyline);
+
                 graphic.updateProps(polyline, target, seriesModel);
                 graphic.updateProps(polygon, target, seriesModel);
 
@@ -241,11 +238,12 @@ class RadarView extends ChartView {
                 else {
                     symbolPath.useStyle(itemStyle);
                     symbolPath.setColor(color);
+                    symbolPath.style.strokeNoScale = true;
                 }
 
                 const pathEmphasisState = symbolPath.ensureState('emphasis');
                 pathEmphasisState.style = zrUtil.clone(itemHoverStyle);
-                let defaultText = data.get(data.dimensions[symbolPath.__dimIdx], idx);
+                let defaultText = data.getStore().get(data.getDimensionIndex(symbolPath.__dimIdx), idx);
                 (defaultText == null || isNaN(defaultText as number)) && (defaultText = '');
 
                 setLabelStyle(

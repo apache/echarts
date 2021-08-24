@@ -202,9 +202,11 @@ class TreemapView extends ChartView {
             : null;
 
         const containerGroup = this._giveContainerGroup(layoutInfo);
+        const hasAnimation = seriesModel.get('animation');
 
         const renderResult = this._doRender(containerGroup, seriesModel, reRoot);
         (
+            hasAnimation &&
             !isInit && (
                 !payloadType
                 || payloadType === 'treemapZoomToNode'
@@ -357,10 +359,6 @@ class TreemapView extends ChartView {
         seriesModel: TreemapSeriesModel,
         reRoot: ReRoot
     ) {
-        if (!seriesModel.get('animation')) {
-            return;
-        }
-
         const durationOption = seriesModel.get('animationDurationUpdate');
         const easingOption = seriesModel.get('animationEasing');
         // TODO: do not support function until necessary.
@@ -830,6 +828,8 @@ function renderNode(
         const content = giveGraphic('content', Rect, depth, Z2_CONTENT);
         content && renderContent(group, content);
 
+        (bg as ECElement).disableMorphing = true;
+
         if (bg && isHighDownDispatcher(bg)) {
             setAsHighDownDispatcher(bg, false);
         }
@@ -980,6 +980,9 @@ function renderNode(
         );
 
         const textEl = rectEl.getTextContent();
+        if (!textEl) {
+            return;
+        }
         const textStyle = textEl.style;
         const textPadding = normalizeCssArray(textStyle.padding || 0);
 

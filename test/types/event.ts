@@ -34,9 +34,16 @@ chart.setOption(option);
 // Mouse event.
 chart.on('click', function (params) {
     console.log(params.name);
+    this.off('click');
 });
 
 // Rendered event.
 chart.on('rendered', function (params) {
     console.log(params.elapsedTime);
+    this.off('rendered');
+});
+
+chart.getZr().on('click', function (params) {
+    console.log(params.offsetX);
+    this.off('click');
 });

@@ -21,11 +21,10 @@ import * as zrUtil from 'zrender/src/core/util';
 import OrdinalMeta from './OrdinalMeta';
 import { DataVisualDimensions, DimensionType } from '../util/types';
 
-class DataDimensionInfo {
+class SeriesDimensionDefine {
 
     /**
      * Dimension type. The enumerable values are the key of
-     * `dataCtors` of `data/List`.
      * Optional.
      */
     type?: DimensionType;
@@ -47,6 +46,17 @@ class DataDimensionInfo {
     tooltip?: boolean;
 
     /**
+     * This dimension maps to the the dimension in dataStore by `storeDimIndex`.
+     * Notice the facts:
+     * 1. When there are too many dimensions in data store, seriesData only save the
+     * used store dimensions.
+     * 2. We use dimensionIndex but not name to reference store dimension
+     * becuause the dataset dimension definition might has no name specified by users,
+     * or names in sereis dimension definition might be different from dataset.
+     */
+    storeDimIndex?: number;
+
+    /**
      * Which coordSys dimension this dimension mapped to.
      * A `coordDim` can be a "coordSysDim" that the coordSys required
      * (for example, an item in `coordSysDims` of `model/referHelper#CoordSysInfo`),
@@ -61,21 +71,14 @@ class DataDimensionInfo {
      * Mandatory.
      */
     coordDimIndex?: number;
-
-    /**
-     * This index of this dimension info in `data/List#_dimensionInfos`.
-     * Mandatory after added to `data/List`.
-     */
-    index?: number;
-
     /**
      * The format of `otherDims` is:
      * ```js
      * {
-     *     tooltip: number optional,
-     *     label: number optional,
-     *     itemName: number optional,
-     *     seriesName: number optional,
+     *     tooltip?: number
+     *     label?: number
+     *     itemName?: number
+     *     seriesName?: number
      * }
      * ```
      *
@@ -94,7 +97,7 @@ class DataDimensionInfo {
      * this.otherDims = {
      *     // `3` is at the index `0` of the `encode.tooltip`
      *     tooltip: 0,
-     *     // `3` is at the index `1` of the `encode.tooltip`
+     *     // `3` is at the index `1` of the `encode.label`
      *     label: 1
      * };
      * ```
@@ -126,7 +129,7 @@ class DataDimensionInfo {
     /**
      * @param opt All of the fields will be shallow copied.
      */
-    constructor(opt?: object | DataDimensionInfo) {
+    constructor(opt?: object | SeriesDimensionDefine) {
         if (opt != null) {
             zrUtil.extend(this, opt);
         }
@@ -134,4 +137,4 @@ class DataDimensionInfo {
 
 };
 
-export default DataDimensionInfo;
+export default SeriesDimensionDefine;

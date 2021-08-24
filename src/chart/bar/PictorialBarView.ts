@@ -22,15 +22,15 @@ import * as graphic from '../../util/graphic';
 import {
     enableHoverEmphasis
 } from '../../util/states';
-import {createSymbol} from '../../util/symbol';
+import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
 import {parsePercent, isNumeric} from '../../util/number';
 import ChartView from '../../view/Chart';
 import PictorialBarSeriesModel, {PictorialBarDataItemOption} from './PictorialBarSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 import Model from '../../model/Model';
-import { ColorString, AnimationOptionMixin } from '../../util/types';
+import { ColorString, AnimationOptionMixin, ECElement } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Displayable from 'zrender/src/graphic/Displayable';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -40,7 +40,6 @@ import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { getECData } from '../../util/innerStore';
-
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 
@@ -132,7 +131,7 @@ class PictorialBarView extends ChartView {
     static type = 'pictorialBar';
     readonly type = PictorialBarView.type;
 
-    private _data: List;
+    private _data: SeriesData;
 
     render(
         seriesModel: PictorialBarSeriesModel,
@@ -240,7 +239,7 @@ class PictorialBarView extends ChartView {
 
 // Set or calculate default value about symbol, and calculate layout info.
 function getSymbolMeta(
-    data: List,
+    data: SeriesData,
     dataIndex: number,
     itemModel: ItemModel,
     opt: CreateOpts
@@ -280,13 +279,7 @@ function getSymbolMeta(
     prepareLineWidth(itemModel, symbolMeta.symbolScale, rotation, opt, symbolMeta);
 
     const symbolSize = symbolMeta.symbolSize;
-    let symbolOffset = itemModel.get('symbolOffset');
-    if (zrUtil.isArray(symbolOffset)) {
-        symbolOffset = [
-            parsePercent(symbolOffset[0], symbolSize[0]),
-            parsePercent(symbolOffset[1], symbolSize[1])
-        ];
-    }
+    const symbolOffset = normalizeSymbolOffset(itemModel.get('symbolOffset'), symbolSize);
 
     prepareLayoutInfo(
         itemModel, symbolSize, layout, symbolRepeat, symbolClip, symbolOffset as number[],
@@ -345,7 +338,7 @@ function convertToCoordOnAxis(axis: Axis2D, value: number) {
 
 // Support ['100%', '100%']
 function prepareSymbolSize(
-    data: List,
+    data: SeriesData,
     dataIndex: number,
     layout: RectLayout,
     symbolRepeat: PictorialBarDataItemOption['symbolRepeat'],
@@ -478,7 +471,7 @@ function prepareLayoutInfo(
         // Adjust calculate margin, to ensure each symbol is displayed
         // entirely in the given layout area.
         const mDiff = absBoundingLength - repeatTimes * unitLength;
-        symbolMarginNumeric = mDiff / 2 / (hasEndGap ? repeatTimes : repeatTimes - 1);
+        symbolMarginNumeric = mDiff / 2 / (hasEndGap ? repeatTimes : Math.max(repeatTimes - 1, 1));
         uLenWithMargin = unitLength + symbolMarginNumeric * 2;
         endFix = hasEndGap ? 0 : symbolMarginNumeric * 2;
 
@@ -689,6 +682,7 @@ function createOrUpdateBarRect(
                 lineWidth: 0
             }
         });
+        (barRect as ECElement).disableMorphing = true;
 
         bar.add(barRect);
     }
@@ -732,7 +726,7 @@ function createOrUpdateClip(
     }
 }
 
-function getItemModel(data: List, dataIndex: number) {
+function getItemModel(data: SeriesData, dataIndex: number) {
     const itemModel = data.getItemModel(dataIndex) as ItemModel;
     itemModel.getAnimationDelayParams = getAnimationDelayParams;
     itemModel.isAnimationEnabled = isAnimationEnabled;
@@ -752,7 +746,7 @@ function isAnimationEnabled(this: ItemModel) {
     return this.parentModel.isAnimationEnabled() && !!this.getShallow('animation');
 }
 
-function createBar(data: List, opt: CreateOpts, symbolMeta: SymbolMeta, isUpdate?: boolean) {
+function createBar(data: SeriesData, opt: CreateOpts, symbolMeta: SymbolMeta, isUpdate?: boolean) {
     // bar is the main element for each data.
     const bar = new graphic.Group() as PictorialBarElement;
     // bundle is used for location and clip.
@@ -776,7 +770,6 @@ function createBar(data: List, opt: CreateOpts, symbolMeta: SymbolMeta, isUpdate
 
     bar.__pictorialShapeStr = getShapeStr(data, symbolMeta);
     bar.__pictorialSymbolMeta = symbolMeta;
-
     return bar;
 }
 
@@ -805,7 +798,7 @@ function updateBar(bar: PictorialBarElement, opt: CreateOpts, symbolMeta: Symbol
 }
 
 function removeBar(
-    data: List, dataIndex: number, animationModel: Model<AnimationOptionMixin>, bar: PictorialBarElement
+    data: SeriesData, dataIndex: number, animationModel: Model<AnimationOptionMixin>, bar: PictorialBarElement
 ) {
     // Not show text when animating
     const labelRect = bar.__pictorialBarRect;
@@ -832,7 +825,7 @@ function removeBar(
     data.setItemGraphicEl(dataIndex, null);
 }
 
-function getShapeStr(data: List, symbolMeta: SymbolMeta) {
+function getShapeStr(data: SeriesData, symbolMeta: SymbolMeta) {
     return [
         data.getItemVisual(symbolMeta.dataIndex, 'symbol') || 'none',
         !!symbolMeta.symbolRepeat,

@@ -345,7 +345,7 @@ async function bundleDTS() {
 
     // Bundle chunks.
     const parts = [
-        'core', 'charts', 'components', 'renderers', 'option'
+        'core', 'charts', 'components', 'renderers', 'option', 'features'
     ];
     const inputs = {};
     parts.forEach(partName => {
@@ -387,7 +387,7 @@ function readTSConfig() {
 
 
 function generateEntries() {
-    ['charts', 'components', 'renderers', 'core'].forEach(entryName => {
+    ['charts', 'components', 'renderers', 'core', 'features'].forEach(entryName => {
         if (entryName !== 'option') {
             const jsCode = fs.readFileSync(nodePath.join(__dirname, `template/${entryName}.js`), 'utf-8');
             fs.writeFileSync(nodePath.join(__dirname, `../${entryName}.js`), jsCode, 'utf-8');

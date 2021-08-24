@@ -20,7 +20,7 @@
 import * as graphic from '../../util/graphic';
 import SymbolClz from './Symbol';
 import { isObject } from 'zrender/src/core/util';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import type Displayable from 'zrender/src/graphic/Displayable';
 import {
     StageHandlerProgressParams,
@@ -49,15 +49,15 @@ interface UpdateOpt {
 }
 
 interface SymbolLike extends graphic.Group {
-    updateData(data: List, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): void
+    updateData(data: SeriesData, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): void
     fadeOut?(cb: () => void): void
 }
 
 interface SymbolLikeCtor {
-    new(data: List, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): SymbolLike
+    new(data: SeriesData, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): SymbolLike
 }
 
-function symbolNeedsDraw(data: List, point: number[], idx: number, opt: UpdateOpt) {
+function symbolNeedsDraw(data: SeriesData, point: number[], idx: number, opt: UpdateOpt) {
     return point && !isNaN(point[0]) && !isNaN(point[1])
         && !(opt.isIgnore && opt.isIgnore(idx))
         // We do not set clipShape on group, because it will cut part of
@@ -83,7 +83,12 @@ interface RippleEffectOption {
 
     brushType?: 'fill' | 'stroke'
 
-    color?: ZRColor
+    color?: ZRColor,
+
+    /**
+     * ripple number
+     */
+    number?: number
 }
 
 interface SymbolDrawStateOption {
@@ -125,7 +130,7 @@ export interface SymbolDrawSeriesScope {
     fadeIn?: boolean
 }
 
-function makeSeriesScope(data: List): SymbolDrawSeriesScope {
+function makeSeriesScope(data: SeriesData): SymbolDrawSeriesScope {
     const seriesModel = data.hostModel as Model<ScatterSeriesOption>;
     const emphasisModel = seriesModel.getModel('emphasis');
     return {
@@ -144,7 +149,7 @@ function makeSeriesScope(data: List): SymbolDrawSeriesScope {
     };
 }
 
-export type ListForSymbolDraw = List<Model<SymbolDrawItemModelOption & AnimationOptionMixin>>;
+export type ListForSymbolDraw = SeriesData<Model<SymbolDrawItemModelOption & AnimationOptionMixin>>;
 
 class SymbolDraw {
     group = new graphic.Group();
@@ -206,8 +211,17 @@ class SymbolDraw {
                     group.remove(symbolEl);
                     return;
                 }
-                if (!symbolEl) {
-                    symbolEl = new SymbolCtor(data, newIdx);
+                const newSymbolType = data.getItemVisual(newIdx, 'symbol') || 'circle';
+                const oldSymbolType = symbolEl
+                    && (symbolEl as SymbolClz).getSymbolType
+                    && (symbolEl as SymbolClz).getSymbolType();
+
+                if (!symbolEl
+                    // Create a new if symbol type changed.
+                    || (oldSymbolType && oldSymbolType !== newSymbolType)
+                ) {
+                    group.remove(symbolEl);
+                    symbolEl = new SymbolCtor(data, newIdx, seriesScope, symbolUpdateOpt);
                     symbolEl.setPosition(point);
                 }
                 else {

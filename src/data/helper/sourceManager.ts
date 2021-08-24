@@ -19,18 +19,25 @@
 
 import { DatasetModel } from '../../component/dataset/install';
 import SeriesModel from '../../model/Series';
-import { setAsPrimitive, map, isTypedArray, assert, each, retrieve2 } from 'zrender/src/core/util';
+import {
+    setAsPrimitive, map, isTypedArray, assert, each, retrieve2
+} from 'zrender/src/core/util';
 import { SourceMetaRawOption, Source, createSource, cloneSourceShallow } from '../Source';
 import {
     SeriesEncodableModel, OptionSourceData,
     SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL,
-    SourceFormat, SeriesLayoutBy, OptionSourceHeader, DimensionDefinitionLoose
+    SourceFormat, SeriesLayoutBy, OptionSourceHeader,
+    DimensionDefinitionLoose, Dictionary
 } from '../../util/types';
 import {
     querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels
 } from './sourceHelper';
 import { applyDataTransform } from './transform';
+import DataStore, { DataStoreDimensionDefine } from '../DataStore';
+import { DefaultDataProvider } from './dataProvider';
+import { SeriesDataSchema } from './SeriesDataSchema';
 
+type DataStoreMap = Dictionary<DataStore>;
 
 /**
  * [REQUIREMENT_MEMO]:
@@ -131,10 +138,14 @@ export class SourceManager {
     // Cached source. Do not repeat calculating if not dirty.
     private _sourceList: Source[] = [];
 
+    private _storeList: DataStoreMap[] = [];
+
     // version sign of each upstream source manager.
     private _upstreamSignList: string[] = [];
 
     private _versionSignBase = 0;
+
+    private _dirty = true;
 
     constructor(sourceHost: DatasetModel | SeriesModel) {
         this._sourceHost = sourceHost;
@@ -145,6 +156,8 @@ export class SourceManager {
      */
     dirty() {
         this._setLocalSource([], []);
+        this._storeList = [];
+        this._dirty = true;
     }
 
     private _setLocalSource(
@@ -175,11 +188,13 @@ export class SourceManager {
         // cache the result source to prevent from repeating transform.
         if (this._isDirty()) {
             this._createSource();
+            this._dirty = false;
         }
     }
 
     private _createSource(): void {
         this._setLocalSource([], []);
+
         const sourceHost = this._sourceHost;
 
         const upSourceMgrList = this._getUpstreamSourceManagers();
@@ -211,30 +226,25 @@ export class SourceManager {
             }
 
             // See [REQUIREMENT_MEMO], merge settings on series and parent dataset if it is root.
-            const newMetaRawOption = this._getSourceMetaRawOption();
-            const upMetaRawOption = upSource ? upSource.metaRawOption : null;
-            const seriesLayoutBy = retrieve2(
-                newMetaRawOption.seriesLayoutBy,
-                upMetaRawOption ? upMetaRawOption.seriesLayoutBy : null
-            );
-            const sourceHeader = retrieve2(
-                newMetaRawOption.sourceHeader,
-                upMetaRawOption ? upMetaRawOption.sourceHeader : null
-            );
+            const newMetaRawOption = this._getSourceMetaRawOption() || {} as SourceMetaRawOption;
+            const upMetaRawOption = upSource && upSource.metaRawOption || {} as SourceMetaRawOption;
+            const seriesLayoutBy = retrieve2(newMetaRawOption.seriesLayoutBy, upMetaRawOption.seriesLayoutBy) || null;
+            const sourceHeader = retrieve2(newMetaRawOption.sourceHeader, upMetaRawOption.sourceHeader) || null;
             // Note here we should not use `upSource.dimensionsDefine`. Consider the case:
             // `upSource.dimensionsDefine` is detected by `seriesLayoutBy: 'column'`,
             // but series need `seriesLayoutBy: 'row'`.
-            const dimensions = retrieve2(
-                newMetaRawOption.dimensions,
-                upMetaRawOption ? upMetaRawOption.dimensions : null
-            );
+            const dimensions = retrieve2(newMetaRawOption.dimensions, upMetaRawOption.dimensions);
 
-            resultSourceList = [createSource(
+            // We share source with dataset as much as possible
+            // to avoid extra memroy cost of high dimensional data.
+            const needsCreateSource = seriesLayoutBy !== upMetaRawOption.seriesLayoutBy
+                || !!sourceHeader !== !!upMetaRawOption.sourceHeader
+                || dimensions;
+            resultSourceList = needsCreateSource ? [createSource(
                 data,
                 { seriesLayoutBy, sourceHeader, dimensions },
-                sourceFormat,
-                seriesModel.get('encode', true)
-            )];
+                sourceFormat
+            )] : [];
         }
         else {
             const datasetModel = sourceHost as DatasetModel;
@@ -251,8 +261,6 @@ export class SourceManager {
                 resultSourceList = [createSource(
                     sourceData,
                     this._getSourceMetaRawOption(),
-                    null,
-                    // Note: dataset option does not have `encode`.
                     null
                 )];
                 upstreamSignList = [];
@@ -322,8 +330,7 @@ export class SourceManager {
     }
 
     private _isDirty(): boolean {
-        const sourceList = this._sourceList;
-        if (!sourceList.length) {
+        if (this._dirty) {
             return true;
         }
 
@@ -346,8 +353,73 @@ export class SourceManager {
      * @param sourceIndex By defualt 0, means "main source".
      *                    Most cases there is only one source.
      */
-    getSource(sourceIndex?: number) {
-        return this._sourceList[sourceIndex || 0];
+    getSource(sourceIndex?: number): Source {
+        sourceIndex = sourceIndex || 0;
+        const source = this._sourceList[sourceIndex];
+        if (!source) {
+            // Series may share source instance with dataset.
+            const upSourceMgrList = this._getUpstreamSourceManagers();
+            return upSourceMgrList[0]
+                && upSourceMgrList[0].getSource(sourceIndex);
+        }
+        return source;
+    }
+
+    /**
+     *
+     * Get a data store which can be shared across series.
+     * Only available for series.
+     *
+     * @param seriesDimRequest Dimensions that are generated in series.
+     *        Should have been sorted by `storeDimIndex` asc.
+     */
+    getSharedDataStore(seriesDimRequest: SeriesDataSchema): DataStore {
+        if (__DEV__) {
+            assert(isSeries(this._sourceHost), 'Can only call getDataStore on series source manager.');
+        }
+        const schema = seriesDimRequest.makeStoreSchema();
+        return this._innerGetDataStore(
+            schema.dimensions, seriesDimRequest.source, schema.hash
+        );
+    }
+
+    private _innerGetDataStore(
+        storeDims: DataStoreDimensionDefine[],
+        seriesSource: Source,
+        sourceReadKey: string
+    ): DataStore | undefined {
+        // TODO Can use other sourceIndex?
+        const sourceIndex = 0;
+
+        const storeList = this._storeList;
+
+        let cachedStoreMap = storeList[sourceIndex];
+
+        if (!cachedStoreMap) {
+            cachedStoreMap = storeList[sourceIndex] = {};
+        }
+
+        let cachedStore = cachedStoreMap[sourceReadKey];
+        if (!cachedStore) {
+            const upSourceMgr = this._getUpstreamSourceManagers()[0];
+
+            if (isSeries(this._sourceHost) && upSourceMgr) {
+                cachedStore = upSourceMgr._innerGetDataStore(
+                    storeDims, seriesSource, sourceReadKey
+                );
+            }
+            else {
+                cachedStore = new DataStore();
+                // Always create store from source of series.
+                cachedStore.initData(
+                    new DefaultDataProvider(seriesSource, storeDims.length),
+                    storeDims
+                );
+            }
+            cachedStoreMap[sourceReadKey] = cachedStore;
+        }
+
+        return cachedStore;
     }
 
     /**

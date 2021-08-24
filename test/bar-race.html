@@ -26,6 +26,7 @@ under the License.
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
@@ -39,22 +40,12 @@ under the License.
                 color: #eee;
                 font-size: 14px;
             }
-            .chart {
-                height: 600px;
-            }
         </style>
 
-        <div id="main1" class="chart"></div>
-
-
-        <button id='btn-1'>A++</button>
-        <button id='btn-2'>B++</button>
-        <button id='btn-3'>C++</button>
-        <button id='btn-4'>D++</button>
-        <div id="main2" class="chart"></div>
-
-
-        <div id="main3" class="chart"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
 
 
         <script>
@@ -63,10 +54,6 @@ under the License.
             'echarts',
             'data/life-expectancy-table.json'
         ], function (echarts, data) {
-            var chart = echarts.init(document.getElementById('main1'), null, {
-                // renderer: 'svg'
-            });
-
             var updateFrequency = 5000;
             var dimension = 1;
 
@@ -141,9 +128,6 @@ under the License.
                 }
             };
 
-            // console.log(option);
-            chart.setOption(option);
-
             for (var i = 1; i < years.length; ++i) {
                 (function (i) {
                     setTimeout(function () {
@@ -160,6 +144,13 @@ under the License.
                 option.graphic.elements[0].style.text = year;
                 chart.setOption(option);
             }
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'Bar Racing'
+                ],
+                option: option
+            });
         });
         </script>
 
@@ -171,8 +162,6 @@ under the License.
             'echarts'
         ],
             function (echarts) {
-                var chart = echarts.init(document.getElementById('main2'), null, {
-                });
                 var option = {
                     xAxis: {
                         max: 'dataMax'
@@ -230,8 +219,6 @@ under the License.
                     animationEasingUpdate: 'linear'
                 };
 
-                chart.setOption(option);
-
                 setTimeout(() => {
                     var data = option.series[0].data;
                     data[1].value += 100;
@@ -244,16 +231,28 @@ under the License.
                     chart.setOption(option);
                 }, 3400);
 
+                const buttons = [];
+                const texts = ['A++', 'B++', 'C++', 'D++'];
                 for (var x = 0; x < 4; ++x) {
                     (function (x) {
-                        var btn = document.getElementById('btn-' + (x + 1));
-                        btn.onclick = function () {
-                            var data = option.series[0].data;
-                            data[x].value += Math.round(100 * Math.random());
-                            chart.setOption(option);
-                        };
+                        buttons.push({
+                            text: texts[x],
+                            onclick() {
+                                var data = option.series[0].data;
+                                data[x].value += Math.round(100 * Math.random());
+                                chart.setOption(option);
+                            }
+                        });
                     })(x);
                 }
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Update Data Dynamically'
+                    ],
+                    option: option,
+                    buttons
+                });
             }
         );
         </script>
@@ -264,8 +263,7 @@ under the License.
 
         require(['echarts'],
             function (echarts) {
-                var chart = echarts.init(document.getElementById('main3'), null, {
-                });
+
                 var option = {
                     title: {
                         text: 'When yAxis max is larger than yAxis data length, it should not get error'
@@ -284,10 +282,64 @@ under the License.
                     }]
                 };
 
-                chart.setOption(option);
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'When yAxis max is larger than yAxis data length, it should not get error'
+                    ],
+                    option: option
+                });
             }
 
         );
         </script>
+
+        <script>
+
+            require(['echarts'],
+                function (echarts) {
+                    var data = [0, 1, 10, 100, 1000];
+                    var option = {
+                        xAxis: {
+                            type: 'log'
+                        },
+                        yAxis: {
+                            type: 'category',
+                            data: ['a', 'b', 'c', 'd', 'e']
+                        },
+                        series: [{
+                            type: 'bar',
+                            data: data,
+                            label: {
+                                show: true,
+                                position: 'right',
+                                valueAnimation: true
+                            }
+                        }]
+                    };
+
+                    var chart = testHelper.create(echarts, 'main4', {
+                        title: [
+                            'click "all +10"',
+                            'check the x extent should be correct',
+                            'the 0 bar should be displayed with animation'
+                        ],
+                        option: option,
+                        buttons: [{
+                            text: 'all +10',
+                            onclick: function () {
+                                for (var i = 0; i < data.length; i++) {
+                                    data[i] += 10;
+                                }
+                                chart.setOption({
+                                    series: {
+                                        data: data
+                                    }
+                                });
+                            }
+                        }]
+                    });
+                }
+            );
+            </script>
     </body>
 </html>

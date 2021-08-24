@@ -43,7 +43,7 @@ type RoamEventType = keyof RoamEventParams;
 
 type RoamBehavior = 'zoomOnMouseWheel' | 'moveOnMouseMove' | 'moveOnMouseWheel';
 
-export type RoamEventParams = {
+export interface RoamEventParams {
     'zoom': {
         scale: number
         originX: number
@@ -79,7 +79,9 @@ export interface RoamControllerHost {
     }
 }
 
-class RoamController extends Eventful<RoamEventParams> {
+class RoamController extends Eventful<{
+    [key in keyof RoamEventParams]: (params: RoamEventParams[key]) => void | undefined
+}> {
 
     pointerChecker: (e: ZRElementEvent, x: number, y: number) => boolean;
 
@@ -309,7 +311,8 @@ function trigger<T extends RoamEventType>(
     // Also provide behavior checker for event listener, for some case that
     // multiple components share one listener.
     contollerEvent.isAvailableBehavior = bind(isAvailableBehavior, null, behaviorToCheck, e);
-    controller.trigger(eventName, contollerEvent);
+    // TODO should not have type issue.
+    (controller as any).trigger(eventName, contollerEvent);
 }
 
 // settings: {

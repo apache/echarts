@@ -18,7 +18,7 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import {defaultEmphasis} from '../../util/model';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
@@ -39,7 +39,7 @@ import {
     SeriesEncodeOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
 type FunnelLabelOption = Omit<SeriesLabelOption, 'position'> & {
     position?: LabelOption['position']
@@ -90,8 +90,6 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
     static type = 'series.funnel' as const;
     type = FunnelSeriesModel.type;
 
-    useColorPaletteOnData = true;
-
     init(option: FunnelSeriesOption) {
         super.init.apply(this, arguments as any);
 
@@ -104,8 +102,8 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
         this._defaultLabelLine(option);
     }
 
-    getInitialData(this: FunnelSeriesModel, option: FunnelSeriesOption, ecModel: GlobalModel): List {
-        return createListSimply(this, {
+    getInitialData(this: FunnelSeriesModel, option: FunnelSeriesOption, ecModel: GlobalModel): SeriesData {
+        return createSeriesDataSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
@@ -141,6 +139,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
         zlevel: 0,                  // 一级层叠
         z: 2,                       // 二级层叠
         legendHoverLink: true,
+        colorBy: 'data',
         left: 80,
         top: 60,
         right: 80,
