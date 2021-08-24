@@ -349,6 +349,8 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
 
         buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection);
 
+        // This bit fixes the label overlap issue for the Time chart.
+        // See https://github.com/apache/echarts/issues/14266 for more.
         if (axisModel.type === 'xAxis.time') {
             const labelList = prepareLayoutList(labelEls.map(label => ({
                 label,
