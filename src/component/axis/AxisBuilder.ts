@@ -28,7 +28,8 @@ import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
 import {shouldShowAllLabels} from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../util/types';
+import { getSeriesTypeFromAxis } from '../../coord/axisTickLabelBuilder';
+import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString, ComponentOption, Dictionary } from '../../util/types';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
 import Element from 'zrender/src/Element';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
@@ -515,6 +516,7 @@ function fixMinMaxLabelShow(
     labelEls: graphic.Text[],
     tickEls: graphic.Line[]
 ) {
+    console.log(shouldShowAllLabels(axisModel.axis));
     if (shouldShowAllLabels(axisModel.axis)) {
         return;
     }
@@ -733,15 +735,19 @@ function buildAxisLabel(
 ) {
     const axis = axisModel.axis;
     const show = retrieve(opt.axisLabelShow, axisModel.get(['axisLabel', 'show']));
-
     if (!show || axis.scale.isBlank()) {
         return;
     }
 
     const labelModel = axisModel.getModel('axisLabel');
     const labelMargin = labelModel.get('margin');
-    const interleaved = labelModel.get('interleaved') || false;
     const labels = axis.getViewLabels();
+
+    let interleaved: boolean = false;
+    const seriesType: string = getSeriesTypeFromAxis(axis);
+    if(seriesType != 'bar') {
+        interleaved = labelModel.get('interleaved') || interleaved;
+    }
 
     // Special label rotate.
     const labelRotation = (
@@ -777,11 +783,11 @@ function buildAxisLabel(
 
         const tickCoord = axis.dataToCoord(tickValue);
 
-        // interleaved labels
+        // interleaved labels if interleave is enabled.
         const labelDirection = interleaved && index % 2 ? (-1) * opt.labelDirection 
                                                         : opt.labelDirection;
 
-        // correct labels margin in the other side
+        // correct labels margin in the other side.
         const labelMarginCorrected = interleaved && index % 2 ? 2 * labelMargin : labelMargin;  
 
         const textEl = new graphic.Text({

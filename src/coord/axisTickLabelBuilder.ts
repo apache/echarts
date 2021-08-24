@@ -19,7 +19,8 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
-import {makeInner} from '../util/model';
+import { makeInner } from '../util/model';
+import { ComponentOption, Dictionary } from '../util/types';
 import {
     makeLabelFormatter,
     getOptionCategoryInterval,
@@ -119,10 +120,10 @@ function makeCategoryLabelsActually(axis: Axis, labelModel: Model<AxisBaseOption
     }
     else {
         numericLabelInterval = optionLabelInterval === 'auto'
-            ? makeAutoCategoryInterval(axis) : optionLabelInterval;
+            ? makeAutoCategoryInterval(axis) : +optionLabelInterval;
         labels = makeLabelsByNumericCategoryInterval(axis, numericLabelInterval);
     }
-
+    debugger;
     // Cache to avoid calling interval function repeatly.
     return listCacheSet(labelsCache, optionLabelInterval as CacheKey, {
         labels: labels, labelCategoryInterval: numericLabelInterval
@@ -162,12 +163,12 @@ function makeCategoryTicks(axis: Axis, tickModel: AxisBaseModel) {
     }
     else {
         tickCategoryInterval = optionTickInterval;
-        ticks = makeLabelsByNumericCategoryInterval(axis, tickCategoryInterval, true);
+        ticks = makeLabelsByNumericCategoryInterval(axis, Number.isNaN(+tickCategoryInterval) ? 0 : +tickCategoryInterval, true);
     }
 
     // Cache to avoid calling interval function repeatly.
     return listCacheSet(ticksCache, optionTickInterval as CacheKey, {
-        ticks: ticks, tickCategoryInterval: tickCategoryInterval
+        ticks: ticks, tickCategoryInterval: Number.isNaN(+tickCategoryInterval) ? 0 : +tickCategoryInterval
     });
 }
 
@@ -209,11 +210,26 @@ function listCacheSet<T>(cache: InnerTickLabelCache<T>, key: CacheKey, value: T)
     return value;
 }
 
-function makeAutoCategoryInterval(axis: Axis) {
+export function makeAutoCategoryInterval(axis: Axis) {
     const result = inner(axis).autoInterval;
     return result != null
         ? result
         : (inner(axis).autoInterval = axis.calculateCategoryInterval());
+}
+
+export function getSeriesTypeFromAxis(axis: Axis): string {
+    const axisIndex: number = axis.index;
+    const axisModel = axis.model;
+    const series: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown = axisModel.ecModel.option.series;
+    let seriesType: string = 'unknown';
+
+    if(series instanceof Array && series[axisIndex] && Object.prototype.hasOwnProperty.call(series[axisIndex], 'type')) {
+        seriesType = series[axisIndex].type;
+    } else if(series && Object.prototype.hasOwnProperty.call(series, 'type')) {
+        seriesType = (series as ComponentOption).type;
+    }
+
+    return seriesType;
 }
 
 /**
@@ -226,7 +242,11 @@ export function calculateCategoryInterval(axis: Axis) {
     const labelFormatter = makeLabelFormatter(axis);
     const rotation = (params.axisRotate - params.labelRotate) / 180 * Math.PI;
     const labelModel = axis.getLabelModel();
-    const interleaved = labelModel.get("interleaved") || false;
+    const seriesType: string = getSeriesTypeFromAxis(axis);
+    let interleaved: boolean = false;
+    if(seriesType != 'bar') {
+        interleaved = labelModel.get('interleaved') || interleaved;
+    }
 
     const ordinalScale = axis.scale as OrdinalScale;
     const ordinalExtent = ordinalScale.getExtent();

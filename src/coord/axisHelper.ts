@@ -33,6 +33,7 @@ import Model from '../model/Model';
 import { AxisBaseModel } from './AxisBaseModel';
 import LogScale from '../scale/Log';
 import Axis from './Axis';
+import { makeAutoCategoryInterval } from './axisTickLabelBuilder';
 import { AxisBaseOption, TimeAxisLabelFormatterOption } from './axisCommonTypes';
 import type CartesianAxisModel from './cartesian/AxisModel';
 import SeriesData from '../data/SeriesData';
@@ -114,7 +115,7 @@ function adjustScaleForOverflow(
     // Get bars on current base axis and calculate min and max overflow
     const barsOnCurrentAxis = retrieveColumnLayout(barWidthAndOffset, model.axis);
     if (barsOnCurrentAxis === undefined) {
-        return {min: min, max: max};
+        return { min: min, max: max };
     }
 
     let minOverflow = Infinity;
@@ -137,7 +138,7 @@ function adjustScaleForOverflow(
     max += overflowBuffer * (maxOverflow / totalOverFlow);
     min -= overflowBuffer * (minOverflow / totalOverFlow);
 
-    return {min: min, max: max};
+    return { min: min, max: max };
 }
 
 // Precondition of calling this method:
@@ -346,7 +347,7 @@ function rotateTextRect(textRect: RectLike, rotate: number) {
  * @param model axisLabelModel or axisTickModel
  * @return {number|String} Can be null|'auto'|number|function
  */
-export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel']>) {
+export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel']>): string | number | ((index:number, value: string) => boolean) {
     const interval = model.get('interval');
     return interval == null ? 'auto' : interval;
 }
@@ -357,8 +358,19 @@ export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel
  * @param {Object} axis axisModel.axis
  */
 export function shouldShowAllLabels(axis: Axis): boolean {
-    return axis.type === 'category'
-        && getOptionCategoryInterval(axis.getLabelModel()) === 0;
+    const optionCategoryInterval = getOptionCategoryInterval(axis.getLabelModel());
+    // return axis.type === 'category'
+    //     && getOptionCategoryInterval(axis.getLabelModel()) === 0;
+    if (axis.type === 'category') {
+        if (typeof optionCategoryInterval === 'string') {
+            return (optionCategoryInterval === 'auto' && makeAutoCategoryInterval(axis) === 0)
+                || (+optionCategoryInterval) === 0 || Number.isNaN(+optionCategoryInterval);
+        } else if(typeof optionCategoryInterval === 'number') {
+            return optionCategoryInterval === 0;
+        }
+    }
+    debugger;
+    return false;
 }
 
 export function getDataDimensionsOnAxis(data: SeriesData, axisDim: string): DimensionName[] {
