@@ -59,7 +59,7 @@ under the License.
                     tooltip: {},
                     series: [{
                         type: 'bar',
-                        data: [1, 2, 4, 3, 6, 5, 7],
+                        data: [1, 2, 0, 3, 6, 5, 7],
                         coordinateSystem: 'polar',
                         itemStyle: {
                             normal: {
@@ -68,6 +68,14 @@ under the License.
                         },
                         barWidth: '50%'
                     }]
+                });
+
+                setTimeout(function () {
+                    chart.setOption({
+                        series: [{
+                            data: [1, 2, 4, 3, 6, 5, 7]
+                        }]
+                    });
                 });
 
                 chart.on('click', function (params) {
