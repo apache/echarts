@@ -29,7 +29,7 @@ const quadraticAt = curveTool.quadraticAt;
 const cubicAt = curveTool.cubicAt;
 const v2DistSquare = vec2.distSquare;
 const mathAbs = Math.abs;
-function intersectCurveCircle(
+export function intersectCurveCircle(
     curvePoints: number[][],
     center: number[],
     radius: number
@@ -44,7 +44,7 @@ function intersectCurveCircle(
     const radiusSquare = radius * radius;
     let interval = 0.1;
 
-    if(p3) {
+    if (p3) {
         for (let _t = 0.1; _t <= 0.9; _t += 0.1) {
             v1[0] = cubicAt(p0[0], p1[0], p2[0], p3[0], _t);
             v1[1] = cubicAt(p0[1], p1[1], p2[1], p3[1], _t);
@@ -57,10 +57,10 @@ function intersectCurveCircle(
         // Assume the segment is monotone，Find root through Bisection method
         // At most 32 iteration
         for (let i = 0; i < 32; i++) {
-            // let prev = t - interval;
+            // const prev = t - interval;
             const next = t + interval;
-            // v1[0] = quadraticAt(p0[0], p1[0], p2[0], prev);
-            // v1[1] = quadraticAt(p0[1], p1[1], p2[1], prev);
+            // v1[0] = cubicAt(p0[0], p1[0], p2[0], p3[0], prev);
+            // v1[1] = cubicAt(p0[1], p1[1], p2[1], p3[1], prev);
             v2[0] = cubicAt(p0[0], p1[0], p2[0], p3[0], t);
             v2[1] = cubicAt(p0[1], p1[1], p2[1], p3[1], t);
             v3[0] = cubicAt(p0[0], p1[0], p2[0], p3[0], next);
@@ -71,26 +71,26 @@ function intersectCurveCircle(
                 break;
             }
 
-            // let prevDiff = v2DistSquare(v1, center) - radiusSquare;
+            // const prevDiff = v2DistSquare(v1, center) - radiusSquare;
             const nextDiff = v2DistSquare(v3, center) - radiusSquare;
 
             interval /= 2;
-            if (diff < 0) {
-                if (nextDiff >= 0) {
-                    t = t + interval;
+                if (diff < 0) {
+                    if (nextDiff >= 0) {
+                        t = t + interval;
+                    }
+                    else {
+                        t = t - interval;
+                    }
                 }
                 else {
-                    t = t - interval;
+                    if (nextDiff >= 0) {
+                        t = t - interval;
+                    }
+                    else {
+                        t = t + interval;
+                    }
                 }
-            }
-            else {
-                if (nextDiff >= 0) {
-                    t = t - interval;
-                }
-                else {
-                    t = t + interval;
-                }
-            }
         }
     }
     else {
@@ -162,7 +162,6 @@ export default function adjustEdge(graph: Graph, scale: number) {
         const linePoints = edge.getLayout();
         const fromSymbol = edge.getVisual('fromSymbol');
         const toSymbol = edge.getVisual('toSymbol');
-
         if (!linePoints.__original) {
             linePoints.__original = [
                 vec2.clone(linePoints[0]),
@@ -176,72 +175,20 @@ export default function adjustEdge(graph: Graph, scale: number) {
             }
         }
         const originalPoints = linePoints.__original;
-        if(edge.node1 !== edge.node2){
-        // Quadratic curve
-            if (linePoints[2] != null) {
-                vec2.copy(pts[0], originalPoints[0]);
-                vec2.copy(pts[1], originalPoints[2]);
-                vec2.copy(pts[2], originalPoints[1]);
-                if (fromSymbol && fromSymbol !== 'none') {
-                    const symbolSize = getSymbolSize(edge.node1);
-
-                    const t = intersectCurveCircle(pts, originalPoints[0], symbolSize * scale);
-                    // Subdivide and get the second
-                    quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
-                    pts[0][0] = tmp0[3];
-                    pts[1][0] = tmp0[4];
-                    quadraticSubdivide(pts[0][1], pts[1][1], pts[2][1], t, tmp0);
-                    pts[0][1] = tmp0[3];
-                    pts[1][1] = tmp0[4];
-                }
-                if (toSymbol && toSymbol !== 'none') {
-                    const symbolSize = getSymbolSize(edge.node2);
-
-                    const t = intersectCurveCircle(pts, originalPoints[1], symbolSize * scale);
-                    // Subdivide and get the first
-                    quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
-                    pts[1][0] = tmp0[1];
-                    pts[2][0] = tmp0[2];
-                    quadraticSubdivide(pts[0][1], pts[1][1], pts[2][1], t, tmp0);
-                    pts[1][1] = tmp0[1];
-                    pts[2][1] = tmp0[2];
-                }
-                // Copy back to layout
-                vec2.copy(linePoints[0], pts[0]);
-                vec2.copy(linePoints[1], pts[2]);
-                vec2.copy(linePoints[2], pts[1]);
-            }
-            // Line
-            else {
-                vec2.copy(pts2[0], originalPoints[0]);
-                vec2.copy(pts2[1], originalPoints[1]);
-
-                vec2.sub(v, pts2[1], pts2[0]);
-                vec2.normalize(v, v);
-                if (fromSymbol && fromSymbol !== 'none') {
-
-                    const symbolSize = getSymbolSize(edge.node1);
-
-                    vec2.scaleAndAdd(pts2[0], pts2[0], v, symbolSize * scale);
-                }
-                if (toSymbol && toSymbol !== 'none') {
-                    const symbolSize = getSymbolSize(edge.node2);
-
-                    vec2.scaleAndAdd(pts2[1], pts2[1], v, -symbolSize * scale);
-                }
-                vec2.copy(linePoints[0], pts2[0]);
-                vec2.copy(linePoints[1], pts2[1]);
-            }
-        }
-        else {
+        // Cubic curve
+        if (linePoints[3] != null) {
             vec2.copy(pts3[0], originalPoints[0]);
             vec2.copy(pts3[1], originalPoints[2]);
             vec2.copy(pts3[2], originalPoints[3]);
             vec2.copy(pts3[3], originalPoints[1]);
+
             if (fromSymbol && fromSymbol !== 'none') {
                 const symbolSize = getSymbolSize(edge.node1);
 
-                const t = intersectCurveCircle(pts3, originalPoints[0], symbolSize * scale);
+                let t = intersectCurveCircle(pts3, originalPoints[0], symbolSize * scale);
+                if (t > 0.5) {
+                    t = 1 - t;
+                }
                 // Subdivide and get the second
                 cubicSubdivide(pts3[0][0], pts3[1][0], pts3[2][0], pts3[3][0], t, tmp0);
                 pts3[0][0] = tmp0[4];
@@ -255,9 +202,12 @@ export default function adjustEdge(graph: Graph, scale: number) {
             if (toSymbol && toSymbol !== 'none') {
                 const symbolSize = getSymbolSize(edge.node2);
 
-                const t = intersectCurveCircle(pts3, originalPoints[1], symbolSize * scale);
+                let t = intersectCurveCircle(pts3, originalPoints[1], symbolSize * scale);
+                if (t < 0.5) {
+                    t = 1 - t;
+                }
                 // Subdivide and get the first
-                cubicSubdivide(pts3[0][0], pts3[1][0], pts3[2][0], pts3[3][0],t, tmp0);
+                cubicSubdivide(pts3[0][0], pts3[1][0], pts3[2][0], pts3[3][0], t, tmp0);
                 pts3[1][0] = tmp0[1];
                 pts3[2][0] = tmp0[2];
                 pts3[3][0] = tmp0[3];
@@ -270,6 +220,61 @@ export default function adjustEdge(graph: Graph, scale: number) {
             vec2.copy(linePoints[1], pts3[3]);
             vec2.copy(linePoints[2], pts3[1]);
             vec2.copy(linePoints[3], pts3[2]);
+        }
+        // Quadratic curve
+        else if (linePoints[2] != null) {
+            vec2.copy(pts[0], originalPoints[0]);
+            vec2.copy(pts[1], originalPoints[2]);
+            vec2.copy(pts[2], originalPoints[1]);
+            if (fromSymbol && fromSymbol !== 'none') {
+                const symbolSize = getSymbolSize(edge.node1);
+
+                const t = intersectCurveCircle(pts, originalPoints[0], symbolSize * scale);
+                // Subdivide and get the second
+                quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
+                pts[0][0] = tmp0[3];
+                pts[1][0] = tmp0[4];
+                quadraticSubdivide(pts[0][1], pts[1][1], pts[2][1], t, tmp0);
+                pts[0][1] = tmp0[3];
+                pts[1][1] = tmp0[4];
+            }
+            if (toSymbol && toSymbol !== 'none') {
+                const symbolSize = getSymbolSize(edge.node2);
+
+                const t = intersectCurveCircle(pts, originalPoints[1], symbolSize * scale);
+                // Subdivide and get the first
+                quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
+                pts[1][0] = tmp0[1];
+                pts[2][0] = tmp0[2];
+                quadraticSubdivide(pts[0][1], pts[1][1], pts[2][1], t, tmp0);
+                pts[1][1] = tmp0[1];
+                pts[2][1] = tmp0[2];
+            }
+            // Copy back to layout
+            vec2.copy(linePoints[0], pts[0]);
+            vec2.copy(linePoints[1], pts[2]);
+            vec2.copy(linePoints[2], pts[1]);
+        }
+        // Line
+        else {
+            vec2.copy(pts2[0], originalPoints[0]);
+            vec2.copy(pts2[1], originalPoints[1]);
+
+            vec2.sub(v, pts2[1], pts2[0]);
+            vec2.normalize(v, v);
+            if (fromSymbol && fromSymbol !== 'none') {
+
+                const symbolSize = getSymbolSize(edge.node1);
+
+                vec2.scaleAndAdd(pts2[0], pts2[0], v, symbolSize * scale);
+            }
+            if (toSymbol && toSymbol !== 'none') {
+                const symbolSize = getSymbolSize(edge.node2);
+
+                vec2.scaleAndAdd(pts2[1], pts2[1], v, -symbolSize * scale);
+            }
+            vec2.copy(linePoints[0], pts2[0]);
+            vec2.copy(linePoints[1], pts2[1]);
         }
     });
 }

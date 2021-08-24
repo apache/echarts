@@ -18,7 +18,7 @@
 */
 
 import {forceLayout} from './forceHelper';
-import {simpleLayout} from './simpleLayoutHelper';
+import {cubicPosition, simpleLayout} from './simpleLayoutHelper';
 import {circularLayout} from './circularLayoutHelper';
 import {linearMap} from '../../util/number';
 import * as vec2 from 'zrender/src/core/vector';
@@ -27,6 +27,7 @@ import GlobalModel from '../../model/Global';
 import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './GraphSeries';
 import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
 import { getNodeGlobalScale, getSymbolSize } from './graphHelper';
+import { GraphNode } from '../../data/Graph';
 
 export interface ForceLayoutInstance {
     step(cb: (stopped: boolean) => void): void
@@ -145,11 +146,76 @@ export default function graphForceLayout(ecModel: GlobalModel) {
                     points[1] = points[1] || [];
                     vec2.copy(points[0], p1);
                     vec2.copy(points[1], p2);
-                    if(e.n1 === e.n2) {
+                    if (e.n1 === e.n2) {
                         const size = getSymbolSize(edge.node1);
                         const radius = getNodeGlobalScale(graphSeries) * size / 2;
-                        points[2] = [p1[0] - radius * 2, p2[1] - radius * 4];
-                        points[3] = [p1[0] + radius * 2, p2[1] - radius * 4];
+                        const inEdges = edge.node1.inEdges.filter((edge) => {
+                            return edge.node1 !== edge.node2;
+                        });
+                        const outEdges = edge.node1.outEdges.filter((edge) => {
+                            return edge.node1 !== edge.node2;
+                        });
+                        const allNodes: GraphNode[] = []
+                        inEdges.forEach((edge) => {
+                            allNodes.push(edge.node1);
+                        });
+                        outEdges.forEach((edge) => {
+                            allNodes.push(edge.node2);
+                        });
+                        const vectors: any[][] = [];
+                        let d = -Infinity;
+                        let pt1: number[] = [];
+                        let pt2: number[] = [];
+                        if (allNodes.length > 1) {
+                            allNodes.forEach(node => {
+                                let v: any[] = [];
+                                vec2.sub(v, node.getLayout(), edge.node1.getLayout());
+                                vec2.normalize(v, v);
+                                vectors.push(v);
+                            })
+                            // find the max angle
+                            for (let i = 0; i < vectors.length; i++) {
+                                for (let j = i + 1; j < vectors.length; j++) {
+                                    if (vec2.distSquare(vectors[i], vectors[j]) > d) {
+                                        d = vec2.distSquare(vectors[i], vectors[j]);
+                                        pt1 = vectors[i];
+                                        pt2 = vectors[j];
+                                    }
+                                }
+                            }
+                            // if the angle is more than sixty degree
+                            if (vec2.distSquare(pt1, pt2) > Math.sqrt(3)) {
+                                vec2.scaleAndAdd(pt1, p1, pt1, radius);
+                                vec2.scaleAndAdd(pt2, p2, pt2, radius);
+                                const point1 = cubicPosition(pt1, p1, 10 * radius)
+                                const point2 = cubicPosition(pt2, p2, 10 * radius)
+                                const mid = [(point1[0] + point2[0]) / 2, (point1[1] + point2[1]) / 2];
+                                vec2.sub(mid, mid, p1);
+                                const degree = Math.atan2(mid[1], mid[0]) / Math.PI * 180;
+                                const v1 = [Math.cos((degree - 30) * Math.PI / 180), Math.sin((degree - 30) * Math.PI / 180)];
+                                const v2 = [Math.cos((degree + 30) * Math.PI / 180), Math.sin((degree + 30) * Math.PI / 180)];
+                                vec2.scaleAndAdd(v1, p1, v1, 10 * radius);
+                                vec2.scaleAndAdd(v2, p2, v2, 10 * radius);
+                                points[2] = v1;
+                                points[3] = v2;
+                            }
+                            else {
+                                vec2.scaleAndAdd(pt1, p1, pt1, radius);
+                                vec2.scaleAndAdd(pt2, p2, pt2, radius);
+                                points[2] = cubicPosition(pt1, p1, 10 * radius);
+                                points[3] = cubicPosition(pt2, p2, 10 * radius);
+                            }
+                        }
+                        else {
+                            points[2] = [
+                                p1[0] - radius * 4,
+                                p2[1] - radius * 6,
+                            ];
+                            points[3] = [
+                                p1[0] + radius * 4,
+                                p2[1] - radius * 6,
+                            ];
+                        }
                     }
                     else if (+e.curveness) {
                         points[2] = [

@@ -20,6 +20,9 @@
 import GlobalModel from '../../model/Global';
 import GraphSeriesModel, { GraphEdgeItemOption } from './GraphSeries';
 import { extend } from 'zrender/src/core/util';
+import { intersectCurveCircle } from './adjustEdge'
+import { getNodeGlobalScale, getSymbolSize } from './graphHelper';
+import { cubicDerivativeAt } from 'zrender/src/core/curve';
 
 function normalize(a: string | string[]): string[];
 function normalize(a: number | number[]): number[];
@@ -50,6 +53,7 @@ export default function graphEdgeVisual(ecModel: GlobalModel) {
         edgeData.each(function (idx) {
             const itemModel = edgeData.getItemModel<GraphEdgeItemOption>(idx);
             const edge = graph.getEdgeByIndex(idx);
+            const toSymbol = edge.getVisual('toSymbol');
             const symbolType = normalize(itemModel.getShallow('symbol', true));
             const symbolSize = normalize(itemModel.getShallow('symbolSize', true));
             // Edge visual must after node visual
@@ -75,6 +79,26 @@ export default function graphEdgeVisual(ecModel: GlobalModel) {
             symbolType[1] && edge.setVisual('toSymbol', symbolType[1]);
             symbolSize[0] && edge.setVisual('fromSymbolSize', symbolSize[0]);
             symbolSize[1] && edge.setVisual('toSymbolSize', symbolSize[1]);
+
+           
+            if (edge.node1 === edge.node2 && toSymbol && toSymbol !== 'none') {
+                const edgeData = edge.getLayout();
+                const size = getSymbolSize(edge.node1);
+                const radius = getNodeGlobalScale(seriesModel) * size / 2;
+                
+                let t = intersectCurveCircle(edgeData, edgeData[0], radius);
+                if (t < 0.5) {
+                    t = 1 - t;
+                }
+                const tdx = cubicDerivativeAt(edgeData[0][0], edgeData[1][0], edgeData[2][0], edgeData[3][0], t);
+                const tdy = cubicDerivativeAt(edgeData[0][1], edgeData[1][1], edgeData[2][1], edgeData[3][1], t);
+                const degree = Math.atan2(tdy, tdx) / Math.PI * 180;
+                if( degree > 90 || degree < 0 && degree > -90) {
+                    edge.setVisual('toSymbolRotate', degree + 188);
+                } else {
+                    edge.setVisual('toSymbolRotate', degree - 8);
+                }
+            }
         });
     });
 }
