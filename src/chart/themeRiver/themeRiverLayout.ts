@@ -23,7 +23,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import ThemeRiverSeriesModel, { ThemeRiverSeriesOption } from './ThemeRiverSeries';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import SeriesData from '../../data/SeriesData';
+import List from '../../data/List';
 
 export interface ThemeRiverLayoutInfo {
     rect: RectLike
@@ -46,7 +46,7 @@ export default function themeRiverLayout(ecModel: GlobalModel, api: ExtensionAPI
         layoutInfo.rect = rect;
 
         const boundaryGap = seriesModel.get('boundaryGap');
-
+        
         const axis = single.getAxis();
 
         layoutInfo.boundaryGap = boundaryGap;
@@ -75,14 +75,15 @@ export default function themeRiverLayout(ecModel: GlobalModel, api: ExtensionAPI
  * @param seriesModel  the model object of themeRiver series
  * @param height  value used to compute every series height
  */
-function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel: ThemeRiverSeriesModel, height: number) {
+function doThemeRiverLayout(data: List<ThemeRiverSeriesModel>, seriesModel: ThemeRiverSeriesModel, height: number) {
     if (!data.count()) {
         return;
     }
     const coordSys = seriesModel.coordinateSystem;
+    const drawMode = seriesModel.get("drawMode");
+
     // the data in each layer are organized into a series.
     const layerSeries = seriesModel.getLayerSeries();
-
     // the points in each layer.
     const timeDim = data.mapDimension('single');
     const valueDim = data.mapDimension('value');
@@ -95,15 +96,24 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
     });
 
     const base = computeBaseline(layerPoints);
-    const baseLine = base.y0;
+    var baseLine;
+    if(drawMode == "symmetrical")
+    {
+        baseLine = base.y0_symmetric
+    }else if(drawMode=="wiggle")
+    {
+        baseLine = base.y0_wiggle
+    }
+    
     const ky = height / base.max;
 
     // set layout information for each item.
-    const n = layerSeries.length;
-    const m = layerSeries[0].indices.length;
+    const n = layerSeries.length;//6
+    const m = layerSeries[0].indices.length;//21
     let baseY0;
     for (let j = 0; j < m; ++j) {
         baseY0 = baseLine[j] * ky;
+        // console.log(baseY0)
         data.setItemLayout(layerSeries[0].indices[j], {
             layerIndex: 0,
             x: layerPoints[0][j][0],
@@ -112,6 +122,7 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
         });
         for (let i = 1; i < n; ++i) {
             baseY0 += layerPoints[i - 1][j][1] * ky;
+            // console.log(baseY0)
             data.setItemLayout(layerSeries[i].indices[j], {
                 layerIndex: i,
                 x: layerPoints[i][j][0],
@@ -127,39 +138,48 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
  * Inspired by Lee Byron's paper Stacked Graphs - Geometry & Aesthetics
  *
  * @param  data  the points in each layer
- */
+*/
+
 function computeBaseline(data: number[][][]) {
-    const layerNum = data.length;
-    const pointNum = data[0].length;
-    const sums = [];
-    const y0 = [];
+    //console.log(data);
+    const layerNum = data.length;//6
+    const pointNum = data[0].length;//21
+    const sums = [];//sums of each vertical row at a single time point 
+    const sums1 = [];
+    const y0_symmetric = [];
+    const y0_wiggle = [];
     let max = 0;
 
     for (let i = 0; i < pointNum; ++i) {
         let temp = 0;
+        let temp1 = 0;
         for (let j = 0; j < layerNum; ++j) {
             temp += data[j][i][1];
+            temp1 += (layerNum-(j+1))*data[j][i][1];
         }
         if (temp > max) {
             max = temp;
         }
         sums.push(temp);
+        sums1.push(temp1)
     }
 
-    for (let k = 0; k < pointNum; ++k) {
-        y0[k] = (max - sums[k]) / 2;
+    
+    for (let k = 0 ; k < pointNum; ++k) { 
+        y0_symmetric[k] = (max-sums[k])/2      
+        y0_wiggle[k] = max/2-sums1[k]/layerNum;
     }
     max = 0;
 
     for (let l = 0; l < pointNum; ++l) {
-        const sum = sums[l] + y0[l];
+        const sum = sums[l] + y0_symmetric[l];
         if (sum > max) {
             max = sum;
         }
     }
-
     return {
-        y0,
+        y0_symmetric,
+        y0_wiggle,
         max
     };
 }
