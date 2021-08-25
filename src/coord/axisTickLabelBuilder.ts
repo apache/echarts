@@ -120,10 +120,9 @@ function makeCategoryLabelsActually(axis: Axis, labelModel: Model<AxisBaseOption
     }
     else {
         numericLabelInterval = optionLabelInterval === 'auto'
-            ? makeAutoCategoryInterval(axis) : +optionLabelInterval;
+            ? makeAutoCategoryInterval(axis) : (Number.isNaN(+optionLabelInterval) ? 0 : +optionLabelInterval);
         labels = makeLabelsByNumericCategoryInterval(axis, numericLabelInterval);
     }
-    debugger;
     // Cache to avoid calling interval function repeatly.
     return listCacheSet(labelsCache, optionLabelInterval as CacheKey, {
         labels: labels, labelCategoryInterval: numericLabelInterval

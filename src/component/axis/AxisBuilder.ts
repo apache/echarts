@@ -516,7 +516,6 @@ function fixMinMaxLabelShow(
     labelEls: graphic.Text[],
     tickEls: graphic.Line[]
 ) {
-    console.log(shouldShowAllLabels(axisModel.axis));
     if (shouldShowAllLabels(axisModel.axis)) {
         return;
     }

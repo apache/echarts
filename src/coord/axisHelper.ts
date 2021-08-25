@@ -359,8 +359,6 @@ export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel
  */
 export function shouldShowAllLabels(axis: Axis): boolean {
     const optionCategoryInterval = getOptionCategoryInterval(axis.getLabelModel());
-    // return axis.type === 'category'
-    //     && getOptionCategoryInterval(axis.getLabelModel()) === 0;
     if (axis.type === 'category') {
         if (typeof optionCategoryInterval === 'string') {
             return (optionCategoryInterval === 'auto' && makeAutoCategoryInterval(axis) === 0)
@@ -369,7 +367,6 @@ export function shouldShowAllLabels(axis: Axis): boolean {
             return optionCategoryInterval === 0;
         }
     }
-    debugger;
     return false;
 }
 
