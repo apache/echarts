@@ -351,10 +351,10 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
 
         // This bit fixes the label overlap issue for the Time chart.
         // See https://github.com/apache/echarts/issues/14266 for more.
-        if (axisModel.type === 'xAxis.time') {
+        if (axisModel.get('type') === 'time') {
             const labelList = prepareLayoutList(labelEls.map(label => ({
                 label,
-                priority: label.zlevel,
+                priority: label.z2,
                 defaultAttr: {
                     ignore: label.ignore
                 }
@@ -781,7 +781,7 @@ function buildAxisLabel(
             y: opt.labelOffset + opt.labelDirection * labelMargin,
             rotation: labelLayout.rotation,
             silent: silent,
-            z2: 10,
+            z2: labelItem.level,
             style: createTextStyle(itemLabelModel, {
                 text: formattedLabel,
                 align: itemLabelModel.getShallow('align', true)
@@ -823,8 +823,6 @@ function buildAxisLabel(
         // FIXME
         transformGroup.add(textEl);
         textEl.updateTransform();
-
-        textEl.zlevel = labelItem.level;
 
         labelEls.push(textEl);
         group.add(textEl);
