@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {retrieve, defaults, extend, each, isObject} from 'zrender/src/core/util';
+import {retrieve, defaults, extend, each, isObject, map} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
 import {createTextStyle} from '../../label/labelStyle';
@@ -352,7 +352,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         // This bit fixes the label overlap issue for the Time chart.
         // See https://github.com/apache/echarts/issues/14266 for more.
         if (axisModel.get('type') === 'time') {
-            const labelList = prepareLayoutList(labelEls.map(label => ({
+            const labelList = prepareLayoutList(map(labelEls, label => ({
                 label,
                 priority: label.z2,
                 defaultAttr: {
@@ -781,7 +781,7 @@ function buildAxisLabel(
             y: opt.labelOffset + opt.labelDirection * labelMargin,
             rotation: labelLayout.rotation,
             silent: silent,
-            z2: labelItem.level,
+            z2: 10 + (labelItem.level || 0),
             style: createTextStyle(itemLabelModel, {
                 text: formattedLabel,
                 align: itemLabelModel.getShallow('align', true)
