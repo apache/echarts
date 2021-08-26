@@ -129,7 +129,7 @@ function stopAnimation(el: Element) {
 }
 function animateElementStyles(el: Element, dataIndex: number, seriesModel: SeriesModel) {
     const animationConfig = getAnimationConfig('update', seriesModel, dataIndex);
-    el.traverse(child => {
+    animationConfig && el.traverse(child => {
         if (child instanceof Displayable) {
             const oldStyle = getOldStyle(child);
             if (oldStyle) {
@@ -412,7 +412,7 @@ function transitionBetween(
             const seriesModel = data.hostModel as SeriesModel;
             const view = seriesModel && api.getViewOfSeriesModel(seriesModel as SeriesModel);
             const animationCfg = getAnimationConfig('update', seriesModel, 0);  // use 0 index.
-            if (view && seriesModel.isAnimationEnabled() && animationCfg.duration > 0) {
+            if (view && seriesModel.isAnimationEnabled() && animationCfg && animationCfg.duration > 0) {
                 view.group.traverse(el => {
                     if (el instanceof Path && !el.animators.length) {
                         // We can't accept there still exists element that has no animation
