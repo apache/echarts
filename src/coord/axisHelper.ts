@@ -361,8 +361,11 @@ export function shouldShowAllLabels(axis: Axis): boolean {
     const optionCategoryInterval = getOptionCategoryInterval(axis.getLabelModel());
     if (axis.type === 'category') {
         if (typeof optionCategoryInterval === 'string') {
-            return (optionCategoryInterval === 'auto' && makeAutoCategoryInterval(axis) === 0)
-                || (+optionCategoryInterval) === 0 || Number.isNaN(+optionCategoryInterval);
+            if(optionCategoryInterval === 'auto') {
+                return makeAutoCategoryInterval(axis) === 0;
+            } else {
+                return (+optionCategoryInterval) === 0 || Number.isNaN(+optionCategoryInterval);
+            }
         } else if(typeof optionCategoryInterval === 'number') {
             return optionCategoryInterval === 0;
         }
