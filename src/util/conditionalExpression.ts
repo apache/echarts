@@ -167,7 +167,7 @@ interface RelationalExpressionOption extends
     parser?: RawValueParserType;
 }
 
-type RelationalExpressionOpEvaluate = (tarVal: unknown, condVal: unknown) => boolean;
+// type RelationalExpressionOpEvaluate = (tarVal: unknown, condVal: unknown) => boolean;
 
 
 class RegExpEvaluator implements FilterComparator {

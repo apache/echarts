@@ -228,6 +228,7 @@ export class TreeNode {
     getModel<T = unknown>(): Model<T>
     // @depcrecated
     // getModel<T = unknown, S extends keyof T = keyof T>(path: S): Model<T[S]>
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     getModel<T = unknown>(path?: string): Model {
         if (this.dataIndex < 0) {
             return;
@@ -412,7 +413,7 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
      *     ]
      * }
      */
-    static createTree<T extends TreeNodeOption, HostModel extends Model, LevelOption>(
+    static createTree<T extends TreeNodeOption, HostModel extends Model>(
         dataRoot: T,
         hostModel: HostModel,
         beforeLink?: (data: SeriesData) => void
