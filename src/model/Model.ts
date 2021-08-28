@@ -36,12 +36,13 @@ import { mixin, clone, merge } from 'zrender/src/core/util';
 
 // Since model.option can be not only `Dictionary` but also primary types,
 // we do this conditional type to avoid getting type 'never';
-type Key<Opt> = Opt extends Dictionary<any>
-    ? keyof Opt : string;
-type Value<Opt, R> = Opt extends Dictionary<any>
-    ? (R extends keyof Opt ? Opt[R] : ModelOption)
-    : ModelOption;
+// type Key<Opt> = Opt extends Dictionary<any>
+//     ? keyof Opt : string;
+// type Value<Opt, R> = Opt extends Dictionary<any>
+//     ? (R extends keyof Opt ? Opt[R] : ModelOption)
+//     : ModelOption;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface Model<Opt = ModelOption>
     extends LineStyleMixin, ItemStyleMixin, TextStyleMixin, AreaStyleMixin {}
 class Model<Opt = ModelOption> {    // TODO: TYPE use unkown insteadof any?

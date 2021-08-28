@@ -412,6 +412,7 @@ class GraphEdge {
 
     getModel<T = unknown>(): Model<T>
     getModel<T = unknown, S extends keyof T= keyof T>(path: S): Model<T[S]>
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     getModel<T = unknown>(path?: string): Model {
         if (this.dataIndex < 0) {
             return;
