@@ -216,21 +216,6 @@ export function makeAutoCategoryInterval(axis: Axis) {
         : (inner(axis).autoInterval = axis.calculateCategoryInterval());
 }
 
-export function getSeriesTypeFromAxis(axis: Axis): string {
-    const axisIndex: number = axis.index;
-    const axisModel = axis.model;
-    const series: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown = axisModel.ecModel.option.series;
-    let seriesType: string = 'unknown';
-
-    if(series instanceof Array && series[axisIndex] && Object.prototype.hasOwnProperty.call(series[axisIndex], 'type')) {
-        seriesType = series[axisIndex].type;
-    } else if(series && Object.prototype.hasOwnProperty.call(series, 'type')) {
-        seriesType = (series as ComponentOption).type;
-    }
-
-    return seriesType;
-}
-
 /**
  * Calculate interval for category axis ticks and labels.
  * To get precise result, at least one of `getRotate` and `isHorizontal`
@@ -241,11 +226,9 @@ export function calculateCategoryInterval(axis: Axis) {
     const labelFormatter = makeLabelFormatter(axis);
     const rotation = (params.axisRotate - params.labelRotate) / 180 * Math.PI;
     const labelModel = axis.getLabelModel();
-    const seriesType: string = getSeriesTypeFromAxis(axis);
+    const labelInside = labelModel.get('inside');
     let interleaved: boolean = false;
-    if(seriesType != 'bar') {
-        interleaved = labelModel.get('interleaved') || interleaved;
-    }
+    interleaved = labelModel.get('interleaved') || interleaved;
 
     const ordinalScale = axis.scale as OrdinalScale;
     const ordinalExtent = ordinalScale.getExtent();
