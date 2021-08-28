@@ -48,6 +48,8 @@
     };
 
     function __extends(d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -64,12 +66,14 @@
         return __assign.apply(this, arguments);
     };
 
-    function __spreadArrays() {
-        for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-        for (var r = Array(s), k = 0, i = 0; i < il; i++)
-            for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-                r[k] = a[j];
-        return r;
+    function __spreadArray(to, from, pack) {
+        if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+            if (ar || !(i in from)) {
+                if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+                ar[i] = from[i];
+            }
+        }
+        return to.concat(ar || from);
     }
 
     var Browser = (function () {
@@ -1026,13 +1030,16 @@
             return this;
         };
         Eventful.prototype.triggerWithContext = function (type) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
             if (!this._$handlers) {
                 return this;
             }
             var _h = this._$handlers[type];
             var eventProcessor = this._$eventProcessor;
             if (_h) {
-                var args = arguments;
                 var argLen = args.length;
                 var ctx = args[argLen - 1];
                 var len = _h.length;
@@ -3283,7 +3290,10 @@
             }
         };
         Track.prototype.needsAnimate = function () {
-            return !this._isAllValueEqual && this.keyframes.length >= 2 && this.interpolable;
+            return !this._isAllValueEqual
+                && this.keyframes.length >= 2
+                && this.interpolable
+                && this.maxTime > 0;
         };
         Track.prototype.getAdditiveTrack = function () {
             return this._additiveTrack;
@@ -3389,8 +3399,8 @@
                 for (var i = 0; i < kfsLen; i++) {
                     if (arrDim === 0) {
                         if (this.isValueColor) {
-                            kfs[i].additiveValue
-                                = add1DArray([], kfs[i].value, startValue, -1);
+                            kfs[i].additiveValue =
+                                add1DArray([], kfs[i].value, startValue, -1);
                         }
                         else {
                             kfs[i].additiveValue = kfs[i].value - startValue;
@@ -3616,7 +3626,7 @@
         Animator.prototype._doneCallback = function () {
             this._setTracksFinished();
             this._clip = null;
-            var doneList = this._doneList;
+            var doneList = this._doneCbs;
             if (doneList) {
                 var len = doneList.length;
                 for (var i = 0; i < len; i++) {
@@ -3627,7 +3637,7 @@
         Animator.prototype._abortedCallback = function () {
             this._setTracksFinished();
             var animation = this.animation;
-            var abortedList = this._abortedList;
+            var abortedList = this._abortedCbs;
             if (animation) {
                 animation.removeClip(this._clip);
             }
@@ -3704,7 +3714,7 @@
                         for (var i = 0; i < tracks.length; i++) {
                             tracks[i].step(self._target, percent);
                         }
-                        var onframeList = self._onframeList;
+                        var onframeList = self._onframeCbs;
                         if (onframeList) {
                             for (var i = 0; i < onframeList.length; i++) {
                                 onframeList[i](self._target, percent);
@@ -3744,28 +3754,28 @@
         };
         Animator.prototype.during = function (cb) {
             if (cb) {
-                if (!this._onframeList) {
-                    this._onframeList = [];
+                if (!this._onframeCbs) {
+                    this._onframeCbs = [];
                 }
-                this._onframeList.push(cb);
+                this._onframeCbs.push(cb);
             }
             return this;
         };
         Animator.prototype.done = function (cb) {
             if (cb) {
-                if (!this._doneList) {
-                    this._doneList = [];
+                if (!this._doneCbs) {
+                    this._doneCbs = [];
                 }
-                this._doneList.push(cb);
+                this._doneCbs.push(cb);
             }
             return this;
         };
         Animator.prototype.aborted = function (cb) {
             if (cb) {
-                if (!this._abortedList) {
-                    this._abortedList = [];
+                if (!this._abortedCbs) {
+                    this._abortedCbs = [];
                 }
-                this._abortedList.push(cb);
+                this._abortedCbs.push(cb);
             }
             return this;
         };
@@ -4412,6 +4422,9 @@
     var Transformable = (function () {
         function Transformable() {
         }
+        Transformable.prototype.getLocalTransform = function (m) {
+            return Transformable.getLocalTransform(this, m);
+        };
         Transformable.prototype.setPosition = function (arr) {
             this.x = arr[0];
             this.y = arr[1];
@@ -4436,11 +4449,10 @@
                 || isNotAroundZero(this.scaleY - 1);
         };
         Transformable.prototype.updateTransform = function () {
-            var parent = this.parent;
-            var parentHasTransform = parent && parent.transform;
+            var parentTransform = this.parent && this.parent.transform;
             var needLocalTransform = this.needLocalTransform();
             var m = this.transform;
-            if (!(needLocalTransform || parentHasTransform)) {
+            if (!(needLocalTransform || parentTransform)) {
                 m && mIdentity(m);
                 return;
             }
@@ -4451,12 +4463,12 @@
             else {
                 mIdentity(m);
             }
-            if (parentHasTransform) {
+            if (parentTransform) {
                 if (needLocalTransform) {
-                    mul$1(m, parent.transform, m);
+                    mul$1(m, parentTransform, m);
                 }
                 else {
-                    copy$1(m, parent.transform);
+                    copy$1(m, parentTransform);
                 }
             }
             this.transform = m;
@@ -4477,9 +4489,6 @@
             }
             this.invTransform = this.invTransform || create$1();
             invert(this.invTransform, m);
-        };
-        Transformable.prototype.getLocalTransform = function (m) {
-            return Transformable.getLocalTransform(this, m);
         };
         Transformable.prototype.getComputedTransform = function () {
             var transformNode = this;
@@ -4575,6 +4584,13 @@
                 ? Math.sqrt(abs(m[0] * m[3] - m[2] * m[1]))
                 : 1;
         };
+        Transformable.prototype.copyTransform = function (source) {
+            var target = this;
+            for (var i = 0; i < TRANSFORMABLE_PROPS.length; i++) {
+                var propName = TRANSFORMABLE_PROPS[i];
+                target[propName] = source[propName];
+            }
+        };
         Transformable.getLocalTransform = function (target, m) {
             m = m || [];
             var ox = target.originX || 0;
@@ -4617,6 +4633,9 @@
         })();
         return Transformable;
     }());
+    var TRANSFORMABLE_PROPS = [
+        'x', 'y', 'originX', 'originY', 'rotation', 'scaleX', 'scaleY', 'skewX', 'skewY'
+    ];
 
     var Point = (function () {
         function Point(x, y) {
@@ -5199,24 +5218,13 @@
                 }
                 var textConfig = this.textConfig;
                 var isLocal = textConfig.local;
-                var attachedTransform = textEl.attachedTransform;
+                var innerTransformable = textEl.innerTransformable;
                 var textAlign = void 0;
                 var textVerticalAlign = void 0;
                 var textStyleChanged = false;
-                if (isLocal) {
-                    attachedTransform.parent = this;
-                }
-                else {
-                    attachedTransform.parent = null;
-                }
+                innerTransformable.parent = isLocal ? this : null;
                 var innerOrigin = false;
-                attachedTransform.x = textEl.x;
-                attachedTransform.y = textEl.y;
-                attachedTransform.originX = textEl.originX;
-                attachedTransform.originY = textEl.originY;
-                attachedTransform.rotation = textEl.rotation;
-                attachedTransform.scaleX = textEl.scaleX;
-                attachedTransform.scaleY = textEl.scaleY;
+                innerTransformable.copyTransform(textEl);
                 if (textConfig.position != null) {
                     var layoutRect = tmpBoundingRect;
                     if (textConfig.layoutRect) {
@@ -5234,8 +5242,8 @@
                     else {
                         calculateTextPosition(tmpTextPosCalcRes, textConfig, layoutRect);
                     }
-                    attachedTransform.x = tmpTextPosCalcRes.x;
-                    attachedTransform.y = tmpTextPosCalcRes.y;
+                    innerTransformable.x = tmpTextPosCalcRes.x;
+                    innerTransformable.y = tmpTextPosCalcRes.y;
                     textAlign = tmpTextPosCalcRes.align;
                     textVerticalAlign = tmpTextPosCalcRes.verticalAlign;
                     var textOrigin = textConfig.origin;
@@ -5251,20 +5259,20 @@
                             relOriginY = parsePercent(textOrigin[1], layoutRect.height);
                         }
                         innerOrigin = true;
-                        attachedTransform.originX = -attachedTransform.x + relOriginX + (isLocal ? 0 : layoutRect.x);
-                        attachedTransform.originY = -attachedTransform.y + relOriginY + (isLocal ? 0 : layoutRect.y);
+                        innerTransformable.originX = -innerTransformable.x + relOriginX + (isLocal ? 0 : layoutRect.x);
+                        innerTransformable.originY = -innerTransformable.y + relOriginY + (isLocal ? 0 : layoutRect.y);
                     }
                 }
                 if (textConfig.rotation != null) {
-                    attachedTransform.rotation = textConfig.rotation;
+                    innerTransformable.rotation = textConfig.rotation;
                 }
                 var textOffset = textConfig.offset;
                 if (textOffset) {
-                    attachedTransform.x += textOffset[0];
-                    attachedTransform.y += textOffset[1];
+                    innerTransformable.x += textOffset[0];
+                    innerTransformable.y += textOffset[1];
                     if (!innerOrigin) {
-                        attachedTransform.originX = -textOffset[0];
-                        attachedTransform.originY = -textOffset[1];
+                        innerTransformable.originX = -textOffset[0];
+                        innerTransformable.originY = -textOffset[1];
                     }
                 }
                 var isInside = textConfig.inside == null
@@ -5711,7 +5719,7 @@
             if (textEl.__zr && !textEl.__hostTarget) {
                 throw new Error('Text element has been added to zrender.');
             }
-            textEl.attachedTransform = new Transformable();
+            textEl.innerTransformable = new Transformable();
             this._attachComponent(textEl);
             this._textContent = textEl;
             this.markRedraw();
@@ -5730,7 +5738,7 @@
         Element.prototype.removeTextContent = function () {
             var textEl = this._textContent;
             if (textEl) {
-                textEl.attachedTransform = null;
+                textEl.innerTransformable = null;
                 this._detachComponent(textEl);
                 this._textContent = null;
                 this._innerTextDefaultStyle = null;
@@ -5786,6 +5794,9 @@
             }
         };
         Element.prototype.addSelfToZr = function (zr) {
+            if (this.__zr === zr) {
+                return;
+            }
             this.__zr = zr;
             var animators = this.animators;
             if (animators) {
@@ -5804,6 +5815,9 @@
             }
         };
         Element.prototype.removeSelfFromZr = function (zr) {
+            if (!this.__zr) {
+                return;
+            }
             this.__zr = null;
             var animators = this.animators;
             if (animators) {
@@ -6196,6 +6210,13 @@
             }
             return this;
         };
+        Group.prototype.replace = function (oldChild, newChild) {
+            var idx = indexOf(this._children, oldChild);
+            if (idx >= 0) {
+                this.replaceAt(newChild, idx);
+            }
+            return this;
+        };
         Group.prototype.replaceAt = function (child, index) {
             var children = this._children;
             var old = children[index];
@@ -6564,7 +6585,7 @@
     function registerPainter(name, Ctor) {
         painterCtors[name] = Ctor;
     }
-    var version = '5.1.1';
+    var version = '5.2.0';
 
     var zrender = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -6883,7 +6904,7 @@
         if (!match[8]) {
           // match[n] can only be string or undefined.
           // But take care of '12' + 1 => '121'.
-          return new Date(+match[1], +(match[2] || 1) - 1, +match[3] || 1, +match[4] || 0, +(match[5] || 0), +match[6] || 0, +match[7] || 0);
+          return new Date(+match[1], +(match[2] || 1) - 1, +match[3] || 1, +match[4] || 0, +(match[5] || 0), +match[6] || 0, match[7] ? +match[7].substring(0, 3) : 0);
         } // Timezoneoffset of Javascript Date has considered DST (Daylight Saving Time,
         // https://tc39.github.io/ecma262/#sec-daylight-saving-time-adjustment).
         // For example, system timezone is set as "Time Zone: America/Toronto",
@@ -6898,7 +6919,7 @@
               hour -= +match[8].slice(0, 3);
             }
 
-            return new Date(Date.UTC(+match[1], +(match[2] || 1) - 1, +match[3] || 1, hour, +(match[5] || 0), +match[6] || 0, +match[7] || 0));
+            return new Date(Date.UTC(+match[1], +(match[2] || 1) - 1, +match[3] || 1, hour, +(match[5] || 0), +match[6] || 0, match[7] ? +match[7].substring(0, 3) : 0));
           }
       } else if (value == null) {
         return new Date(NaN);
@@ -7856,7 +7877,7 @@
         for (var i = 0; i < length_1; ++i) {
           var info = data.getDimensionInfo(i); // Don't interpolate ordinal dims
 
-          if (info.type === 'ordinal') {
+          if (info && info.type === 'ordinal') {
             // In init, there is no `sourceValue`, but should better not to get undefined result.
             interpolated[i] = (percent < 1 && leftArr ? leftArr : rightArr)[i];
           } else {
@@ -7948,7 +7969,7 @@
               superClass.apply(this, arguments);
             } else {
               var ins = createObject( // @ts-ignore
-              ExtendedClass.prototype, new (superClass.bind.apply(superClass, __spreadArrays([void 0], args)))());
+              ExtendedClass.prototype, new (superClass.bind.apply(superClass, __spreadArray([void 0], args)))());
               return ins;
             }
           } else {
@@ -9668,6 +9689,7 @@
             return this;
         };
         PathProxy.prototype.bezierCurveTo = function (x1, y1, x2, y2, x3, y3) {
+            this._drawPendingPt();
             this.addData(CMD.C, x1, y1, x2, y2, x3, y3);
             if (this._ctx) {
                 this._needsDash ? this._dashedBezierTo(x1, y1, x2, y2, x3, y3)
@@ -9678,6 +9700,7 @@
             return this;
         };
         PathProxy.prototype.quadraticCurveTo = function (x1, y1, x2, y2) {
+            this._drawPendingPt();
             this.addData(CMD.Q, x1, y1, x2, y2);
             if (this._ctx) {
                 this._needsDash ? this._dashedQuadraticTo(x1, y1, x2, y2)
@@ -9688,6 +9711,7 @@
             return this;
         };
         PathProxy.prototype.arc = function (cx, cy, r, startAngle, endAngle, anticlockwise) {
+            this._drawPendingPt();
             tmpAngles[0] = startAngle;
             tmpAngles[1] = endAngle;
             normalizeArcAngles(tmpAngles, anticlockwise);
@@ -9701,12 +9725,14 @@
             return this;
         };
         PathProxy.prototype.arcTo = function (x1, y1, x2, y2, radius) {
+            this._drawPendingPt();
             if (this._ctx) {
                 this._ctx.arcTo(x1, y1, x2, y2, radius);
             }
             return this;
         };
         PathProxy.prototype.rect = function (x, y, w, h) {
+            this._drawPendingPt();
             this._ctx && this._ctx.rect(x, y, w, h);
             this.addData(CMD.R, x, y, w, h);
             return this;
@@ -10150,12 +10176,12 @@
                     x0 = xi;
                     y0 = yi;
                 }
+                if (cmd !== CMD.L && pendingPtDist > 0) {
+                    ctx.lineTo(pendingPtX, pendingPtY);
+                    pendingPtDist = 0;
+                }
                 switch (cmd) {
                     case CMD.M:
-                        if (pendingPtDist > 0) {
-                            ctx.lineTo(pendingPtX, pendingPtY);
-                            pendingPtDist = 0;
-                        }
                         x0 = xi = d[i++];
                         y0 = yi = d[i++];
                         ctx.moveTo(xi, yi);
@@ -10303,10 +10329,6 @@
                         ctx.rect(x, y, width, height);
                         break;
                     case CMD.Z:
-                        if (pendingPtDist > 0) {
-                            ctx.lineTo(pendingPtX, pendingPtY);
-                            pendingPtDist = 0;
-                        }
                         if (drawPart) {
                             var l = pathSegLen[segCount++];
                             if (accumLength + l > displayedLength) {
@@ -10321,6 +10343,14 @@
                         yi = y0;
                 }
             }
+        };
+        PathProxy.prototype.clone = function () {
+            var newProxy = new PathProxy();
+            var data = this.data;
+            newProxy.data = data.slice ? data.slice()
+                : Array.prototype.slice.call(data);
+            newProxy._len = this._len;
+            return newProxy;
         };
         PathProxy.CMD = CMD;
         PathProxy.initDefaultProps = (function () {
@@ -10890,9 +10920,15 @@
                 }
             }
         };
-        Path.prototype.buildPath = function (ctx, shapeCfg, inBundle) { };
+        Path.prototype.buildPath = function (ctx, shapeCfg, inBatch) { };
         Path.prototype.pathUpdated = function () {
             this.__dirty &= ~SHAPE_CHANGED_BIT;
+        };
+        Path.prototype.getUpdatedPathProxy = function (inBatch) {
+            !this.path && this.createPathProxy();
+            this.path.beginPath();
+            this.buildPath(this.path, this.shape, inBatch);
+            return this.path;
         };
         Path.prototype.createPathProxy = function () {
             this.path = new PathProxy(false);
@@ -11489,6 +11525,7 @@
             return this._children;
         };
         ZRText.prototype.update = function () {
+            _super.prototype.update.call(this);
             if (this.styleChanged()) {
                 this._updateSubTexts();
             }
@@ -11501,29 +11538,31 @@
                 child.cursor = this.cursor;
                 child.invisible = this.invisible;
             }
-            var attachedTransform = this.attachedTransform;
-            if (attachedTransform) {
-                attachedTransform.updateTransform();
-                var m = attachedTransform.transform;
-                if (m) {
-                    this.transform = this.transform || [];
-                    copy$1(this.transform, m);
-                }
-                else {
-                    this.transform = null;
+        };
+        ZRText.prototype.updateTransform = function () {
+            var innerTransformable = this.innerTransformable;
+            if (innerTransformable) {
+                innerTransformable.updateTransform();
+                if (innerTransformable.transform) {
+                    this.transform = innerTransformable.transform;
                 }
             }
             else {
-                _super.prototype.update.call(this);
+                _super.prototype.updateTransform.call(this);
             }
+        };
+        ZRText.prototype.getLocalTransform = function (m) {
+            var innerTransformable = this.innerTransformable;
+            return innerTransformable
+                ? innerTransformable.getLocalTransform(m)
+                : _super.prototype.getLocalTransform.call(this, m);
         };
         ZRText.prototype.getComputedTransform = function () {
             if (this.__hostTarget) {
                 this.__hostTarget.getComputedTransform();
                 this.__hostTarget.updateInnerText(true);
             }
-            return this.attachedTransform ? this.attachedTransform.getComputedTransform()
-                : _super.prototype.getComputedTransform.call(this);
+            return _super.prototype.getComputedTransform.call(this);
         };
         ZRText.prototype._updateSubTexts = function () {
             this._childCursor = 0;
@@ -11792,7 +11831,7 @@
             var defaultStyle = this._defaultStyle;
             var useDefaultFill = false;
             var defaultLineWidth = 0;
-            var textFill = getStroke('fill' in tokenStyle ? tokenStyle.fill
+            var textFill = getFill('fill' in tokenStyle ? tokenStyle.fill
                 : 'fill' in style ? style.fill
                     : (useDefaultFill = true, defaultStyle.fill));
             var textStroke = getStroke('stroke' in tokenStyle ? tokenStyle.stroke
@@ -11839,7 +11878,7 @@
             var self = this;
             var rectEl;
             var imgEl;
-            if (isPlainOrGradientBg || (textBorderWidth && textBorderColor)) {
+            if (isPlainOrGradientBg || style.lineHeight || (textBorderWidth && textBorderColor)) {
                 rectEl = this._getOrCreateChild(Rect);
                 rectEl.useStyle(rectEl.createStyle());
                 rectEl.style.fill = null;
@@ -11965,10 +12004,30 @@
     }
     function needDrawBackground(style) {
         return !!(style.backgroundColor
+            || style.lineHeight
             || (style.borderWidth && style.borderColor));
     }
 
     var getECData = makeInner();
+    var setCommonECData = function (seriesIndex, dataType, dataIdx, el) {
+      if (el) {
+        var ecData = getECData(el); // Add data index and series index for indexing the data by element
+        // Useful in tooltip
+
+        ecData.dataIndex = dataIdx;
+        ecData.dataType = dataType;
+        ecData.seriesIndex = seriesIndex; // TODO: not store dataIndex on children.
+
+        if (el.type === 'group') {
+          el.traverse(function (child) {
+            var childECData = getECData(child);
+            childECData.seriesIndex = seriesIndex;
+            childECData.dataIndex = dataIdx;
+            childECData.dataType = dataType;
+          });
+        }
+      }
+    };
 
     var _highlightNextDigit = 1;
     var _highlightKeyMap = {};
@@ -12110,26 +12169,31 @@
         var fromStroke = hasSelect ? store.selectStroke || store.normalStroke : store.normalStroke;
 
         if (hasFillOrStroke(fromFill) || hasFillOrStroke(fromStroke)) {
-          state = state || {}; // Apply default color lift
+          state = state || {};
+          var emphasisStyle = state.style || {}; // inherit case
 
-          var emphasisStyle = state.style || {};
-
-          if (!hasFillOrStroke(emphasisStyle.fill) && hasFillOrStroke(fromFill)) {
-            cloned = true; // Not modify the original value.
-
+          if (emphasisStyle.fill === 'inherit') {
+            cloned = true;
             state = extend({}, state);
-            emphasisStyle = extend({}, emphasisStyle); // Already being applied 'emphasis'. DON'T lift color multiple times.
+            emphasisStyle = extend({}, emphasisStyle);
+            emphasisStyle.fill = fromFill;
+          } // Apply default color lift
+          else if (!hasFillOrStroke(emphasisStyle.fill) && hasFillOrStroke(fromFill)) {
+              cloned = true; // Not modify the original value.
 
-            emphasisStyle.fill = liftColor(fromFill);
-          } // Not highlight stroke if fill has been highlighted.
-          else if (!hasFillOrStroke(emphasisStyle.stroke) && hasFillOrStroke(fromStroke)) {
-              if (!cloned) {
-                state = extend({}, state);
-                emphasisStyle = extend({}, emphasisStyle);
+              state = extend({}, state);
+              emphasisStyle = extend({}, emphasisStyle); // Already being applied 'emphasis'. DON'T lift color multiple times.
+
+              emphasisStyle.fill = liftColor(fromFill);
+            } // Not highlight stroke if fill has been highlighted.
+            else if (!hasFillOrStroke(emphasisStyle.stroke) && hasFillOrStroke(fromStroke)) {
+                if (!cloned) {
+                  state = extend({}, state);
+                  emphasisStyle = extend({}, emphasisStyle);
+                }
+
+                emphasisStyle.stroke = liftColor(fromStroke);
               }
-
-              emphasisStyle.stroke = liftColor(fromStroke);
-            }
 
           state.style = emphasisStyle;
         }
@@ -12662,6 +12726,9 @@
     var mathSqrt$2 = Math.sqrt;
     var mathAtan2 = Math.atan2;
     function transformPath(path, m) {
+        if (!m) {
+            return;
+        }
         var data = path.data;
         var len = path.len();
         var cmd;
@@ -13058,13 +13125,7 @@
         var len = pathEls.length;
         for (var i = 0; i < len; i++) {
             var pathEl = pathEls[i];
-            if (!pathEl.path) {
-                pathEl.createPathProxy();
-            }
-            if (pathEl.shapeChanged()) {
-                pathEl.buildPath(pathEl.path, pathEl.shape, true);
-            }
-            pathList.push(pathEl.path);
+            pathList.push(pathEl.getUpdatedPathProxy(true));
         }
         var pathBundle = new Path(opts);
         pathBundle.createPathProxy();
@@ -13864,125 +13925,6 @@
         return RadialGradient;
     }(Gradient));
 
-    var extent = [0, 0];
-    var extent2 = [0, 0];
-    var minTv$1 = new Point();
-    var maxTv$1 = new Point();
-    var OrientedBoundingRect = (function () {
-        function OrientedBoundingRect(rect, transform) {
-            this._corners = [];
-            this._axes = [];
-            this._origin = [0, 0];
-            for (var i = 0; i < 4; i++) {
-                this._corners[i] = new Point();
-            }
-            for (var i = 0; i < 2; i++) {
-                this._axes[i] = new Point();
-            }
-            if (rect) {
-                this.fromBoundingRect(rect, transform);
-            }
-        }
-        OrientedBoundingRect.prototype.fromBoundingRect = function (rect, transform) {
-            var corners = this._corners;
-            var axes = this._axes;
-            var x = rect.x;
-            var y = rect.y;
-            var x2 = x + rect.width;
-            var y2 = y + rect.height;
-            corners[0].set(x, y);
-            corners[1].set(x2, y);
-            corners[2].set(x2, y2);
-            corners[3].set(x, y2);
-            if (transform) {
-                for (var i = 0; i < 4; i++) {
-                    corners[i].transform(transform);
-                }
-            }
-            Point.sub(axes[0], corners[1], corners[0]);
-            Point.sub(axes[1], corners[3], corners[0]);
-            axes[0].normalize();
-            axes[1].normalize();
-            for (var i = 0; i < 2; i++) {
-                this._origin[i] = axes[i].dot(corners[0]);
-            }
-        };
-        OrientedBoundingRect.prototype.intersect = function (other, mtv) {
-            var overlapped = true;
-            var noMtv = !mtv;
-            minTv$1.set(Infinity, Infinity);
-            maxTv$1.set(0, 0);
-            if (!this._intersectCheckOneSide(this, other, minTv$1, maxTv$1, noMtv, 1)) {
-                overlapped = false;
-                if (noMtv) {
-                    return overlapped;
-                }
-            }
-            if (!this._intersectCheckOneSide(other, this, minTv$1, maxTv$1, noMtv, -1)) {
-                overlapped = false;
-                if (noMtv) {
-                    return overlapped;
-                }
-            }
-            if (!noMtv) {
-                Point.copy(mtv, overlapped ? minTv$1 : maxTv$1);
-            }
-            return overlapped;
-        };
-        OrientedBoundingRect.prototype._intersectCheckOneSide = function (self, other, minTv, maxTv, noMtv, inverse) {
-            var overlapped = true;
-            for (var i = 0; i < 2; i++) {
-                var axis = this._axes[i];
-                this._getProjMinMaxOnAxis(i, self._corners, extent);
-                this._getProjMinMaxOnAxis(i, other._corners, extent2);
-                if (extent[1] < extent2[0] || extent[0] > extent2[1]) {
-                    overlapped = false;
-                    if (noMtv) {
-                        return overlapped;
-                    }
-                    var dist0 = Math.abs(extent2[0] - extent[1]);
-                    var dist1 = Math.abs(extent[0] - extent2[1]);
-                    if (Math.min(dist0, dist1) > maxTv.len()) {
-                        if (dist0 < dist1) {
-                            Point.scale(maxTv, axis, -dist0 * inverse);
-                        }
-                        else {
-                            Point.scale(maxTv, axis, dist1 * inverse);
-                        }
-                    }
-                }
-                else if (minTv) {
-                    var dist0 = Math.abs(extent2[0] - extent[1]);
-                    var dist1 = Math.abs(extent[0] - extent2[1]);
-                    if (Math.min(dist0, dist1) < minTv.len()) {
-                        if (dist0 < dist1) {
-                            Point.scale(minTv, axis, dist0 * inverse);
-                        }
-                        else {
-                            Point.scale(minTv, axis, -dist1 * inverse);
-                        }
-                    }
-                }
-            }
-            return overlapped;
-        };
-        OrientedBoundingRect.prototype._getProjMinMaxOnAxis = function (dim, corners, out) {
-            var axis = this._axes[dim];
-            var origin = this._origin;
-            var proj = corners[0].dot(axis) + origin[dim];
-            var min = proj;
-            var max = proj;
-            for (var i = 1; i < corners.length; i++) {
-                var proj_1 = corners[i].dot(axis) + origin[dim];
-                min = Math.min(proj_1, min);
-                max = Math.max(proj_1, max);
-            }
-            out[0] = min;
-            out[1] = max;
-        };
-        return OrientedBoundingRect;
-    }());
-
     var m = [];
     var IncrementalDisplayable = (function (_super) {
         __extends(IncrementalDisplayable, _super);
@@ -14091,6 +14033,224 @@
         };
         return IncrementalDisplayable;
     }(Displayable));
+
+    var transitionStore = makeInner();
+    /**
+     * Return null if animation is disabled.
+     */
+
+    function getAnimationConfig(animationType, animatableModel, dataIndex, // Extra opts can override the option in animatable model.
+    extraOpts, // TODO It's only for pictorial bar now.
+    extraDelayParams) {
+      var animationPayload; // Check if there is global animation configuration from dataZoom/resize can override the config in option.
+      // If animation is enabled. Will use this animation config in payload.
+      // If animation is disabled. Just ignore it.
+
+      if (animatableModel && animatableModel.ecModel) {
+        var updatePayload = animatableModel.ecModel.getUpdatePayload();
+        animationPayload = updatePayload && updatePayload.animation;
+      }
+
+      var animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
+      var isUpdate = animationType === 'update';
+
+      if (animationEnabled) {
+        var duration = void 0;
+        var easing = void 0;
+        var delay = void 0;
+
+        if (extraOpts) {
+          duration = retrieve2(extraOpts.duration, 200);
+          easing = retrieve2(extraOpts.easing, 'cubicOut');
+          delay = 0;
+        } else {
+          duration = animatableModel.getShallow(isUpdate ? 'animationDurationUpdate' : 'animationDuration');
+          easing = animatableModel.getShallow(isUpdate ? 'animationEasingUpdate' : 'animationEasing');
+          delay = animatableModel.getShallow(isUpdate ? 'animationDelayUpdate' : 'animationDelay');
+        } // animation from payload has highest priority.
+
+
+        if (animationPayload) {
+          animationPayload.duration != null && (duration = animationPayload.duration);
+          animationPayload.easing != null && (easing = animationPayload.easing);
+          animationPayload.delay != null && (delay = animationPayload.delay);
+        }
+
+        if (typeof delay === 'function') {
+          delay = delay(dataIndex, extraDelayParams);
+        }
+
+        if (typeof duration === 'function') {
+          duration = duration(dataIndex);
+        }
+
+        var config = {
+          duration: duration || 0,
+          delay: delay,
+          easing: easing
+        };
+        return config;
+      } else {
+        return null;
+      }
+    }
+
+    function animateOrSetProps(animationType, el, props, animatableModel, dataIndex, cb, during) {
+      var isFrom = false;
+      var removeOpt;
+
+      if (typeof dataIndex === 'function') {
+        during = cb;
+        cb = dataIndex;
+        dataIndex = null;
+      } else if (isObject(dataIndex)) {
+        cb = dataIndex.cb;
+        during = dataIndex.during;
+        isFrom = dataIndex.isFrom;
+        removeOpt = dataIndex.removeOpt;
+        dataIndex = dataIndex.dataIndex;
+      }
+
+      var isRemove = animationType === 'remove';
+
+      if (!isRemove) {
+        // Must stop the remove animation.
+        el.stopAnimation('remove');
+      }
+
+      var animationConfig = getAnimationConfig(animationType, animatableModel, dataIndex, isRemove ? removeOpt || {} : null, animatableModel && animatableModel.getAnimationDelayParams ? animatableModel.getAnimationDelayParams(el, dataIndex) : null);
+
+      if (animationConfig && animationConfig.duration > 0) {
+        var duration = animationConfig.duration;
+        var animationDelay = animationConfig.delay;
+        var animationEasing = animationConfig.easing;
+        var animateConfig = {
+          duration: duration,
+          delay: animationDelay || 0,
+          easing: animationEasing,
+          done: cb,
+          force: !!cb || !!during,
+          // Set to final state in update/init animation.
+          // So the post processing based on the path shape can be done correctly.
+          setToFinal: !isRemove,
+          scope: animationType,
+          during: during
+        };
+        isFrom ? el.animateFrom(props, animateConfig) : el.animateTo(props, animateConfig);
+      } else {
+        el.stopAnimation(); // If `isFrom`, the props is the "from" props.
+
+        !isFrom && el.attr(props); // Call during at least once.
+
+        during && during(1);
+        cb && cb();
+      }
+    }
+    /**
+     * Update graphic element properties with or without animation according to the
+     * configuration in series.
+     *
+     * Caution: this method will stop previous animation.
+     * So do not use this method to one element twice before
+     * animation starts, unless you know what you are doing.
+     * @example
+     *     graphic.updateProps(el, {
+     *         position: [100, 100]
+     *     }, seriesModel, dataIndex, function () { console.log('Animation done!'); });
+     *     // Or
+     *     graphic.updateProps(el, {
+     *         position: [100, 100]
+     *     }, seriesModel, function () { console.log('Animation done!'); });
+     */
+
+
+    function updateProps(el, props, // TODO: TYPE AnimatableModel
+    animatableModel, dataIndex, cb, during) {
+      animateOrSetProps('update', el, props, animatableModel, dataIndex, cb, during);
+    }
+    /**
+     * Init graphic element properties with or without animation according to the
+     * configuration in series.
+     *
+     * Caution: this method will stop previous animation.
+     * So do not use this method to one element twice before
+     * animation starts, unless you know what you are doing.
+     */
+
+    function initProps(el, props, animatableModel, dataIndex, cb, during) {
+      animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, during);
+    }
+    /**
+     * If element is removed.
+     * It can determine if element is having remove animation.
+     */
+
+    function isElementRemoved(el) {
+      if (!el.__zr) {
+        return true;
+      }
+
+      for (var i = 0; i < el.animators.length; i++) {
+        var animator = el.animators[i];
+
+        if (animator.scope === 'remove') {
+          return true;
+        }
+      }
+
+      return false;
+    }
+    /**
+     * Remove graphic element
+     */
+
+    function removeElement(el, props, animatableModel, dataIndex, cb, during) {
+      // Don't do remove animation twice.
+      if (isElementRemoved(el)) {
+        return;
+      }
+
+      animateOrSetProps('remove', el, props, animatableModel, dataIndex, cb, during);
+    }
+
+    function fadeOutDisplayable(el, animatableModel, dataIndex, done) {
+      el.removeTextContent();
+      el.removeTextGuideLine();
+      removeElement(el, {
+        style: {
+          opacity: 0
+        }
+      }, animatableModel, dataIndex, done);
+    }
+
+    function removeElementWithFadeOut(el, animatableModel, dataIndex) {
+      function doRemove() {
+        el.parent && el.parent.remove(el);
+      } // Hide label and labelLine first
+      // TODO Also use fade out animation?
+
+
+      if (!el.isGroup) {
+        fadeOutDisplayable(el, animatableModel, dataIndex, doRemove);
+      } else {
+        el.traverse(function (disp) {
+          if (!disp.isGroup) {
+            // Can invoke doRemove multiple times.
+            fadeOutDisplayable(disp, animatableModel, dataIndex, doRemove);
+          }
+        });
+      }
+    }
+    /**
+     * Save old style for style transition in universalTransition module.
+     * It's used when element will be reused in each render.
+     * For chart like map, heatmap, which will always create new element.
+     * We don't need to save this because universalTransition can get old style from the old element
+     */
+
+    function saveOldStyle(el) {
+      transitionStore(el).oldStyle = el.style;
+    }
 
     var mathMax$4 = Math.max;
     var mathMin$4 = Math.min;
@@ -14254,196 +14414,6 @@
       var pathRect = path.getBoundingRect();
       var m = pathRect.calculateTransform(rect);
       path.applyTransform(m);
-    }
-
-    function animateOrSetProps(animationType, el, props, animatableModel, dataIndex, cb, during) {
-      var isFrom = false;
-      var removeOpt;
-
-      if (typeof dataIndex === 'function') {
-        during = cb;
-        cb = dataIndex;
-        dataIndex = null;
-      } else if (isObject(dataIndex)) {
-        cb = dataIndex.cb;
-        during = dataIndex.during;
-        isFrom = dataIndex.isFrom;
-        removeOpt = dataIndex.removeOpt;
-        dataIndex = dataIndex.dataIndex;
-      }
-
-      var isUpdate = animationType === 'update';
-      var isRemove = animationType === 'remove';
-      var animationPayload; // Check if there is global animation configuration from dataZoom/resize can override the config in option.
-      // If animation is enabled. Will use this animation config in payload.
-      // If animation is disabled. Just ignore it.
-
-      if (animatableModel && animatableModel.ecModel) {
-        var updatePayload = animatableModel.ecModel.getUpdatePayload();
-        animationPayload = updatePayload && updatePayload.animation;
-      }
-
-      var animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
-
-      if (!isRemove) {
-        // Must stop the remove animation.
-        el.stopAnimation('remove');
-      }
-
-      if (animationEnabled) {
-        var duration = void 0;
-        var animationEasing = void 0;
-        var animationDelay = void 0;
-
-        if (animationPayload) {
-          duration = animationPayload.duration || 0;
-          animationEasing = animationPayload.easing || 'cubicOut';
-          animationDelay = animationPayload.delay || 0;
-        } else if (isRemove) {
-          removeOpt = removeOpt || {};
-          duration = retrieve2(removeOpt.duration, 200);
-          animationEasing = retrieve2(removeOpt.easing, 'cubicOut');
-          animationDelay = 0;
-        } else {
-          duration = animatableModel.getShallow(isUpdate ? 'animationDurationUpdate' : 'animationDuration');
-          animationEasing = animatableModel.getShallow(isUpdate ? 'animationEasingUpdate' : 'animationEasing');
-          animationDelay = animatableModel.getShallow(isUpdate ? 'animationDelayUpdate' : 'animationDelay');
-        }
-
-        if (typeof animationDelay === 'function') {
-          animationDelay = animationDelay(dataIndex, animatableModel.getAnimationDelayParams ? animatableModel.getAnimationDelayParams(el, dataIndex) : null);
-        }
-
-        if (typeof duration === 'function') {
-          duration = duration(dataIndex);
-        }
-
-        duration > 0 ? isFrom ? el.animateFrom(props, {
-          duration: duration,
-          delay: animationDelay || 0,
-          easing: animationEasing,
-          done: cb,
-          force: !!cb || !!during,
-          scope: animationType,
-          during: during
-        }) : el.animateTo(props, {
-          duration: duration,
-          delay: animationDelay || 0,
-          easing: animationEasing,
-          done: cb,
-          force: !!cb || !!during,
-          setToFinal: true,
-          scope: animationType,
-          during: during
-        }) : ( // FIXME:
-        // If `duration` is 0, only the animation on props
-        // can be stoped, other animation should be continued?
-        // But at present using duration 0 in `animateTo`, `animateFrom`
-        // might cause unexpected behavior.
-        el.stopAnimation(), // If `isFrom`, the props is the "from" props.
-        !isFrom && el.attr(props), cb && cb());
-      } else {
-        el.stopAnimation();
-        !isFrom && el.attr(props); // Call during once.
-
-        during && during(1);
-        cb && cb();
-      }
-    }
-    /**
-     * Update graphic element properties with or without animation according to the
-     * configuration in series.
-     *
-     * Caution: this method will stop previous animation.
-     * So do not use this method to one element twice before
-     * animation starts, unless you know what you are doing.
-     * @example
-     *     graphic.updateProps(el, {
-     *         position: [100, 100]
-     *     }, seriesModel, dataIndex, function () { console.log('Animation done!'); });
-     *     // Or
-     *     graphic.updateProps(el, {
-     *         position: [100, 100]
-     *     }, seriesModel, function () { console.log('Animation done!'); });
-     */
-
-
-    function updateProps(el, props, // TODO: TYPE AnimatableModel
-    animatableModel, dataIndex, cb, during) {
-      animateOrSetProps('update', el, props, animatableModel, dataIndex, cb, during);
-    }
-    /**
-     * Init graphic element properties with or without animation according to the
-     * configuration in series.
-     *
-     * Caution: this method will stop previous animation.
-     * So do not use this method to one element twice before
-     * animation starts, unless you know what you are doing.
-     */
-
-    function initProps(el, props, animatableModel, dataIndex, cb, during) {
-      animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, during);
-    }
-    /**
-     * Remove graphic element
-     */
-
-    function removeElement(el, props, animatableModel, dataIndex, cb, during) {
-      // Don't do remove animation twice.
-      if (isElementRemoved(el)) {
-        return;
-      }
-
-      animateOrSetProps('remove', el, props, animatableModel, dataIndex, cb, during);
-    }
-
-    function fadeOutDisplayable(el, animatableModel, dataIndex, done) {
-      el.removeTextContent();
-      el.removeTextGuideLine();
-      removeElement(el, {
-        style: {
-          opacity: 0
-        }
-      }, animatableModel, dataIndex, done);
-    }
-
-    function removeElementWithFadeOut(el, animatableModel, dataIndex) {
-      function doRemove() {
-        el.parent && el.parent.remove(el);
-      } // Hide label and labelLine first
-      // TODO Also use fade out animation?
-
-
-      if (!el.isGroup) {
-        fadeOutDisplayable(el, animatableModel, dataIndex, doRemove);
-      } else {
-        el.traverse(function (disp) {
-          if (!disp.isGroup) {
-            // Can invoke doRemove multiple times.
-            fadeOutDisplayable(disp, animatableModel, dataIndex, doRemove);
-          }
-        });
-      }
-    }
-    /**
-     * If element is removed.
-     * It can determine if element is having remove animation.
-     */
-
-    function isElementRemoved(el) {
-      if (!el.__zr) {
-        return true;
-      }
-
-      for (var i = 0; i < el.animators.length; i++) {
-        var animator = el.animators[i];
-
-        if (animator.scope === 'remove') {
-          return true;
-        }
-      }
-
-      return false;
     }
     /**
      * Get transform matrix of target (param target),
@@ -15108,32 +15078,6 @@
         obj.defaultInterpolatedText = getDefaultText;
         obj.statesModels = labelStatesModels;
       }
-    }
-    function animateLabelValue(textEl, dataIndex, data, animatableModel, labelFetcher) {
-      var labelInnerStore = labelInner(textEl);
-
-      if (!labelInnerStore.valueAnimation) {
-        return;
-      }
-
-      var defaultInterpolatedText = labelInnerStore.defaultInterpolatedText; // Consider the case that being animating, do not use the `obj.value`,
-      // Otherwise it will jump to the `obj.value` when this new animation started.
-
-      var currValue = retrieve2(labelInnerStore.interpolatedValue, labelInnerStore.prevValue);
-      var targetValue = labelInnerStore.value;
-
-      function during(percent) {
-        var interpolated = interpolateRawValues(data, labelInnerStore.precision, currValue, targetValue, percent);
-        labelInnerStore.interpolatedValue = percent === 1 ? null : interpolated;
-        var labelText = getLabelText({
-          labelDataIndex: dataIndex,
-          labelFetcher: labelFetcher,
-          defaultText: defaultInterpolatedText ? defaultInterpolatedText(interpolated) : interpolated + ''
-        }, labelInnerStore.statesModels, interpolated);
-        setLabelText(textEl, labelText);
-      }
-
-      (currValue == null ? initProps : updateProps)(textEl, {}, animatableModel, dataIndex, null, during);
     }
 
     var PATH_COLOR = ['textStyle', 'color']; // TODO Performance improvement?
@@ -15944,8 +15888,8 @@
       hour: '{HH}:{mm}',
       minute: '{HH}:{mm}',
       second: '{HH}:{mm}:{ss}',
-      millisecond: '{hh}:{mm}:{ss} {SSS}',
-      none: '{yyyy}-{MM}-{dd} {hh}:{mm}:{ss} {SSS}'
+      millisecond: '{HH}:{mm}:{ss} {SSS}',
+      none: '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss} {SSS}'
     };
     var fullDayFormatter = '{yyyy}-{MM}-{dd}';
     var fullLeveledFormatter = {
@@ -16156,7 +16100,7 @@
       return isUTC ? 'getUTCSeconds' : 'getSeconds';
     }
     function millisecondsGetterName(isUTC) {
-      return isUTC ? 'getUTCSeconds' : 'getSeconds';
+      return isUTC ? 'getUTCMilliseconds' : 'getMilliseconds';
     }
     function fullYearSetterName(isUTC) {
       return isUTC ? 'setUTCFullYear' : 'setFullYear';
@@ -16177,7 +16121,7 @@
       return isUTC ? 'setUTCSeconds' : 'setSeconds';
     }
     function millisecondsSetterName(isUTC) {
-      return isUTC ? 'setUTCSeconds' : 'setSeconds';
+      return isUTC ? 'setUTCMilliseconds' : 'setMilliseconds';
     }
 
     function getTextRect(text, font, align, verticalAlign, padding, rich, truncate, lineHeight) {
@@ -16931,18 +16875,8 @@
     var globalDefault = {
       darkMode: 'auto',
       // backgroundColor: 'rgba(0,0,0,0)',
-      // https://dribbble.com/shots/1065960-Infographic-Pie-chart-visualization
-      // color: ['#5793f3', '#d14a61', '#fd9c35', '#675bba', '#fec42c', '#dd4444', '#d4df5a', '#cd4870'],
-      // Light colors:
-      // color: ['#bcd3bb', '#e88f70', '#edc1a5', '#9dc5c8', '#e1e8c8', '#7b7c68', '#e5b5b5', '#f0b489', '#928ea8', '#bda29a'],
-      // color: ['#cc5664', '#9bd6ec', '#ea946e', '#8acaaa', '#f1ec64', '#ee8686', '#a48dc1', '#5da6bc', '#b9dcae'],
-      // Dark colors:
-      // color: [
-      //     '#c23531', '#2f4554', '#61a0a8', '#d48265', '#91c7ae', '#749f83',
-      //     '#ca8622', '#bda29a', '#6e7074', '#546570', '#c4ccd3'
-      // ],
-      color: [// '#51689b', '#ce5c5c', '#fbc357', '#8fbf8f', '#659d84', '#fb8e6a', '#c77288', '#786090', '#91c4c5', '#6890ba'
-      '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'],
+      colorBy: 'series',
+      color: ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'],
       gradientColor: ['#f6efa6', '#d88273', '#bf444c'],
       aria: {
         decal: {
@@ -17020,7 +16954,7 @@
       useUTC: false
     };
 
-    var VISUAL_DIMENSIONS = createHashMap(['tooltip', 'label', 'itemName', 'itemId', 'seriesName']);
+    var VISUAL_DIMENSIONS = createHashMap(['tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'seriesName']);
     var SOURCE_FORMAT_ORIGINAL = 'original';
     var SOURCE_FORMAT_ARRAY_ROWS = 'arrayRows';
     var SOURCE_FORMAT_OBJECT_ROWS = 'objectRows';
@@ -17851,11 +17785,6 @@
         return this._locale;
       };
 
-      GlobalModel.prototype.getLocale = function (localePosition) {
-        var locale = this.getLocaleModel();
-        return locale.get(localePosition);
-      };
-
       GlobalModel.prototype.setUpdatePayload = function (payload) {
         this._payload = payload;
       };
@@ -18031,7 +17960,7 @@
 
 
       GlobalModel.prototype.getSeries = function () {
-        return filter(this._componentsMap.get('series').slice(), function (oneSeries) {
+        return filter(this._componentsMap.get('series'), function (oneSeries) {
           return !!oneSeries;
         });
       };
@@ -19294,7 +19223,7 @@
         var isStackedByIndex = targetStackInfo.isStackedByIndex; // Should not write on raw data, because stack series model list changes
         // depending on legend selection.
 
-        var newData = targetData.map(dims, function (v0, v1, dataIndex) {
+        targetData.modify(dims, function (v0, v1, dataIndex) {
           var sum = targetData.get(targetStackInfo.stackedDimension, dataIndex); // Consider `connectNulls` of line area, if value is NaN, stackedOver
           // should also be NaN, to draw a appropriate belt area.
 
@@ -19341,26 +19270,33 @@
           resultVal[1] = stackedOver;
           return resultVal;
         });
-        targetData.hostModel.setData(newData); // Update for consequent calculation
-
-        targetStackInfo.data = newData;
       });
     }
 
     var SourceImpl =
     /** @class */
     function () {
-      // readonly frozen: boolean;
       function SourceImpl(fields) {
         this.data = fields.data || (fields.sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS ? {} : []);
         this.sourceFormat = fields.sourceFormat || SOURCE_FORMAT_UNKNOWN; // Visit config
 
         this.seriesLayoutBy = fields.seriesLayoutBy || SERIES_LAYOUT_BY_COLUMN;
         this.startIndex = fields.startIndex || 0;
-        this.dimensionsDefine = fields.dimensionsDefine;
         this.dimensionsDetectedCount = fields.dimensionsDetectedCount;
-        this.encodeDefine = fields.encodeDefine;
         this.metaRawOption = fields.metaRawOption;
+        var dimensionsDefine = this.dimensionsDefine = fields.dimensionsDefine;
+
+        if (dimensionsDefine) {
+          for (var i = 0; i < dimensionsDefine.length; i++) {
+            var dim = dimensionsDefine[i];
+
+            if (dim.type == null) {
+              if (guessOrdinal(this, i) === BE_ORDINAL.Must) {
+                dim.type = 'ordinal';
+              }
+            }
+          }
+        }
       }
 
       return SourceImpl;
@@ -19369,9 +19305,13 @@
     function isSourceInstance(val) {
       return val instanceof SourceImpl;
     }
+    /**
+     * Create a source from option.
+     * NOTE: Created source is immutable. Don't change any properties in it.
+     */
+
     function createSource(sourceData, thisMetaRawOption, // can be null. If not provided, auto detect it from `sourceData`.
-    sourceFormat, encodeDefine // can be null
-    ) {
+    sourceFormat) {
       sourceFormat = sourceFormat || detectSourceFormat(sourceData);
       var seriesLayoutBy = thisMetaRawOption.seriesLayoutBy;
       var determined = determineSourceDimensions(sourceData, sourceFormat, seriesLayoutBy, thisMetaRawOption.sourceHeader, thisMetaRawOption.dimensions);
@@ -19382,7 +19322,6 @@
         dimensionsDefine: determined.dimensionsDefine,
         startIndex: determined.startIndex,
         dimensionsDetectedCount: determined.dimensionsDetectedCount,
-        encodeDefine: makeEncodeDefine(encodeDefine),
         metaRawOption: clone(thisMetaRawOption)
       });
       return source;
@@ -19408,19 +19347,12 @@
         seriesLayoutBy: source.seriesLayoutBy,
         dimensionsDefine: clone(source.dimensionsDefine),
         startIndex: source.startIndex,
-        dimensionsDetectedCount: source.dimensionsDetectedCount,
-        encodeDefine: makeEncodeDefine(source.encodeDefine)
+        dimensionsDetectedCount: source.dimensionsDetectedCount
       });
-    }
-
-    function makeEncodeDefine(encodeDefine) {
-      // null means user not specify `series.encode`.
-      return encodeDefine ? createHashMap(encodeDefine) : null;
     }
     /**
      * Note: An empty array will be detected as `SOURCE_FORMAT_ARRAY_ROWS`.
      */
-
 
     function detectSourceFormat(data) {
       var sourceFormat = SOURCE_FORMAT_UNKNOWN;
@@ -19619,6 +19551,11 @@
           cb(value0[i], i);
         }
       }
+    }
+
+    function shouldRetrieveDataByName(source) {
+      var sourceFormat = source.sourceFormat;
+      return sourceFormat === SOURCE_FORMAT_OBJECT_ROWS || sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS;
     }
 
     /*
@@ -19849,19 +19786,19 @@
 
     var rawSourceItemGetterMap = (_a = {}, _a[SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_COLUMN] = function (rawData, startIndex, dimsDef, idx) {
       return rawData[idx + startIndex];
-    }, _a[SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_ROW] = function (rawData, startIndex, dimsDef, idx) {
+    }, _a[SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_ROW] = function (rawData, startIndex, dimsDef, idx, out) {
       idx += startIndex;
-      var item = [];
+      var item = out || [];
       var data = rawData;
 
       for (var i = 0; i < data.length; i++) {
         var row = data[i];
-        item.push(row ? row[idx] : null);
+        item[i] = row ? row[idx] : null;
       }
 
       return item;
-    }, _a[SOURCE_FORMAT_OBJECT_ROWS] = getItemSimply, _a[SOURCE_FORMAT_KEYED_COLUMNS] = function (rawData, startIndex, dimsDef, idx) {
-      var item = [];
+    }, _a[SOURCE_FORMAT_OBJECT_ROWS] = getItemSimply, _a[SOURCE_FORMAT_KEYED_COLUMNS] = function (rawData, startIndex, dimsDef, idx, out) {
+      var item = out || [];
 
       for (var i = 0; i < dimsDef.length; i++) {
         var dimName = dimsDef[i].name;
@@ -19873,7 +19810,7 @@
         }
 
         var col = rawData[dimName];
-        item.push(col ? col[idx] : null);
+        item[i] = col ? col[idx] : null;
       }
 
       return item;
@@ -19882,7 +19819,7 @@
       var method = rawSourceItemGetterMap[getMethodMapKey(sourceFormat, seriesLayoutBy)];
 
       if ("development" !== 'production') {
-        assert(method, 'Do not suppport get item on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
+        assert(method, 'Do not support get item on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
       }
 
       return method;
@@ -19919,17 +19856,17 @@
       return method;
     }
 
-    var getRawValueSimply = function (dataItem, dimIndex, dimName) {
-      return dimIndex != null ? dataItem[dimIndex] : dataItem;
+    var getRawValueSimply = function (dataItem, dimIndex, property) {
+      return dataItem[dimIndex];
     };
 
-    var rawSourceValueGetterMap = (_c = {}, _c[SOURCE_FORMAT_ARRAY_ROWS] = getRawValueSimply, _c[SOURCE_FORMAT_OBJECT_ROWS] = function (dataItem, dimIndex, dimName) {
-      return dimIndex != null ? dataItem[dimName] : dataItem;
-    }, _c[SOURCE_FORMAT_KEYED_COLUMNS] = getRawValueSimply, _c[SOURCE_FORMAT_ORIGINAL] = function (dataItem, dimIndex, dimName) {
+    var rawSourceValueGetterMap = (_c = {}, _c[SOURCE_FORMAT_ARRAY_ROWS] = getRawValueSimply, _c[SOURCE_FORMAT_OBJECT_ROWS] = function (dataItem, dimIndex, property) {
+      return dataItem[property];
+    }, _c[SOURCE_FORMAT_KEYED_COLUMNS] = getRawValueSimply, _c[SOURCE_FORMAT_ORIGINAL] = function (dataItem, dimIndex, property) {
       // FIXME: In some case (markpoint in geo (geo-map.html)),
       // dataItem is {coord: [...]}
       var value = getDataItemValue(dataItem);
-      return dimIndex == null || !(value instanceof Array) ? value : value[dimIndex];
+      return !(value instanceof Array) ? value : value[dimIndex];
     }, _c[SOURCE_FORMAT_TYPED_ARRAY] = getRawValueSimply, _c);
     function getRawSourceValueGetter(sourceFormat) {
       var method = rawSourceValueGetterMap[sourceFormat];
@@ -19952,9 +19889,9 @@
     // TODO: consider how to treat null/undefined/NaN when display?
 
 
-    function retrieveRawValue(data, dataIndex, dim // If dimIndex is null/undefined, return OptionDataItem.
+    function retrieveRawValue(data, dataIndex, // If dimIndex is null/undefined, return OptionDataItem.
     // Otherwise, return OptionDataValue.
-    ) {
+    dim) {
       if (!data) {
         return;
       } // Consider data may be not persistent.
@@ -19966,17 +19903,22 @@
         return;
       }
 
-      var sourceFormat = data.getProvider().getSource().sourceFormat;
-      var dimName;
-      var dimIndex;
-      var dimInfo = data.getDimensionInfo(dim);
+      var store = data.getStore();
+      var sourceFormat = store.getSource().sourceFormat;
 
-      if (dimInfo) {
-        dimName = dimInfo.name;
-        dimIndex = dimInfo.index;
+      if (dim != null) {
+        var dimIndex = data.getDimensionIndex(dim);
+        var property = store.getDimensionProperty(dimIndex);
+        return getRawSourceValueGetter(sourceFormat)(dataItem, dimIndex, property);
+      } else {
+        var result = dataItem;
+
+        if (sourceFormat === SOURCE_FORMAT_ORIGINAL) {
+          result = getDataItemValue(dataItem);
+        }
+
+        return result;
       }
-
-      return getRawSourceValueGetter(sourceFormat)(dataItem, dimIndex, dimName);
     }
 
     var DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
@@ -20001,7 +19943,7 @@
         var borderColor = style && style.stroke;
         var mainType = this.mainType;
         var isSeries = mainType === 'series';
-        var userOutput = data.userOutput;
+        var userOutput = data.userOutput && data.userOutput.get();
         return {
           componentType: mainType,
           componentSubType: this.subType,
@@ -20017,7 +19959,7 @@
           value: rawValue,
           color: color,
           borderColor: borderColor,
-          dimensionNames: userOutput ? userOutput.dimensionNames : null,
+          dimensionNames: userOutput ? userOutput.fullDimensions : null,
           encode: userOutput ? userOutput.encode : null,
           // Param name list for mapping `a`, `b`, `c`, `d`, `e`
           $vars: ['seriesName', 'name', 'value']
@@ -20064,15 +20006,25 @@
 
           return str.replace(DIMENSION_LABEL_REG, function (origin, dimStr) {
             var len = dimStr.length;
-            var dimLoose = dimStr.charAt(0) === '[' && dimStr.charAt(len - 1) === ']' ? +dimStr.slice(1, len - 1) // Also support: '[]' => 0
-            : dimStr;
+            var dimLoose = dimStr;
+
+            if (dimLoose.charAt(0) === '[' && dimLoose.charAt(len - 1) === ']') {
+              dimLoose = +dimLoose.slice(1, len - 1); // Also support: '[]' => 0
+
+              if ("development" !== 'production') {
+                if (isNaN(dimLoose)) {
+                  error("Invalide label formatter: @" + dimStr + ", only support @[0], @[1], @[2], ...");
+                }
+              }
+            }
+
             var val = retrieveRawValue(data, dataIndex, dimLoose);
 
             if (extendParams && isArray(extendParams.interpolatedValue)) {
-              var dimInfo = data.getDimensionInfo(dimLoose);
+              var dimIndex = data.getDimensionIndex(dimLoose);
 
-              if (dimInfo) {
-                val = extendParams.interpolatedValue[dimInfo.index];
+              if (dimIndex >= 0) {
+                val = extendParams.interpolatedValue[dimIndex];
               }
             }
 
@@ -20464,8 +20416,7 @@
 
       if (dimType === 'ordinal') {
         // If given value is a category string
-        var ordinalMeta = opt && opt.ordinalMeta;
-        return ordinalMeta ? ordinalMeta.parseAndCollect(value) : value;
+        return value;
       }
 
       if (dimType === 'time' // spead up when using timestamp
@@ -20938,13 +20889,1155 @@
           };
         }
 
-        return createSource(result.data, resultMetaRawOption, null, null);
+        return createSource(result.data, resultMetaRawOption, null);
       });
     }
 
     function isSupportedSourceFormat(sourceFormat) {
       return sourceFormat === SOURCE_FORMAT_ARRAY_ROWS || sourceFormat === SOURCE_FORMAT_OBJECT_ROWS;
     }
+
+    var UNDEFINED = 'undefined';
+    /* global Float64Array, Int32Array, Uint32Array, Uint16Array */
+    // Caution: MUST not use `new CtorUint32Array(arr, 0, len)`, because the Ctor of array is
+    // different from the Ctor of typed array.
+
+    var CtorUint32Array = typeof Uint32Array === UNDEFINED ? Array : Uint32Array;
+    var CtorUint16Array = typeof Uint16Array === UNDEFINED ? Array : Uint16Array;
+    var CtorInt32Array = typeof Int32Array === UNDEFINED ? Array : Int32Array;
+    var CtorFloat64Array = typeof Float64Array === UNDEFINED ? Array : Float64Array;
+    /**
+     * Multi dimensional data store
+     */
+
+    var dataCtors = {
+      'float': CtorFloat64Array,
+      'int': CtorInt32Array,
+      // Ordinal data type can be string or int
+      'ordinal': Array,
+      'number': Array,
+      'time': CtorFloat64Array
+    };
+    var defaultDimValueGetters;
+
+    function getIndicesCtor(rawCount) {
+      // The possible max value in this._indicies is always this._rawCount despite of filtering.
+      return rawCount > 65535 ? CtorUint32Array : CtorUint16Array;
+    }
+
+    function getInitialExtent() {
+      return [Infinity, -Infinity];
+    }
+
+    function cloneChunk(originalChunk) {
+      var Ctor = originalChunk.constructor; // Only shallow clone is enough when Array.
+
+      return Ctor === Array ? originalChunk.slice() : new Ctor(originalChunk);
+    }
+
+    function prepareStore(store, dimIdx, dimType, end, append) {
+      var DataCtor = dataCtors[dimType || 'float'];
+
+      if (append) {
+        var oldStore = store[dimIdx];
+        var oldLen = oldStore && oldStore.length;
+
+        if (!(oldLen === end)) {
+          var newStore = new DataCtor(end); // The cost of the copy is probably inconsiderable
+          // within the initial chunkSize.
+
+          for (var j = 0; j < oldLen; j++) {
+            newStore[j] = oldStore[j];
+          }
+
+          store[dimIdx] = newStore;
+        }
+      } else {
+        store[dimIdx] = new DataCtor(end);
+      }
+    }
+    /**
+     * Basically, DataStore API keep immutable.
+     */
+
+    var DataStore =
+    /** @class */
+    function () {
+      function DataStore() {
+        this._chunks = []; // It will not be calculated util needed.
+
+        this._rawExtent = [];
+        this._extent = [];
+        this._count = 0;
+        this._rawCount = 0;
+        this._calcDimNameToIdx = createHashMap();
+      }
+      /**
+       * Initialize from data
+       */
+
+
+      DataStore.prototype.initData = function (provider, inputDimensions, dimValueGetter) {
+        if ("development" !== 'production') {
+          assert(isFunction(provider.getItem) && isFunction(provider.count), 'Inavlid data provider.');
+        }
+
+        this._provider = provider; // Clear
+
+        this._chunks = [];
+        this._indices = null;
+        this.getRawIndex = this._getRawIdxIdentity;
+        var source = provider.getSource();
+        var defaultGetter = this.defaultDimValueGetter = defaultDimValueGetters[source.sourceFormat]; // Default dim value getter
+
+        this._dimValueGetter = dimValueGetter || defaultGetter; // Reset raw extent.
+
+        this._rawExtent = [];
+        var willRetrieveDataByName = shouldRetrieveDataByName(source);
+        this._dimensions = map(inputDimensions, function (dim) {
+          if ("development" !== 'production') {
+            if (willRetrieveDataByName) {
+              assert(dim.property != null);
+            }
+          }
+
+          return {
+            // Only pick these two props. Not leak other properties like orderMeta.
+            type: dim.type,
+            property: dim.property
+          };
+        });
+
+        this._initDataFromProvider(0, provider.count());
+      };
+
+      DataStore.prototype.getProvider = function () {
+        return this._provider;
+      };
+      /**
+       * Caution: even when a `source` instance owned by a series, the created data store
+       * may still be shared by different sereis (the source hash does not use all `source`
+       * props, see `sourceManager`). In this case, the `source` props that are not used in
+       * hash (like `source.dimensionDefine`) probably only belongs to a certain series and
+       * thus should not be fetch here.
+       */
+
+
+      DataStore.prototype.getSource = function () {
+        return this._provider.getSource();
+      };
+      /**
+       * @caution Only used in dataStack.
+       */
+
+
+      DataStore.prototype.ensureCalculationDimension = function (dimName, type) {
+        var calcDimNameToIdx = this._calcDimNameToIdx;
+        var dimensions = this._dimensions;
+        var calcDimIdx = calcDimNameToIdx.get(dimName);
+
+        if (calcDimIdx != null) {
+          if (dimensions[calcDimIdx].type === type) {
+            return calcDimIdx;
+          }
+        } else {
+          calcDimIdx = dimensions.length;
+        }
+
+        dimensions[calcDimIdx] = {
+          type: type
+        };
+        calcDimNameToIdx.set(dimName, calcDimIdx);
+        this._chunks[calcDimIdx] = new dataCtors[type || 'float'](this._rawCount);
+        this._rawExtent[calcDimIdx] = getInitialExtent();
+        return calcDimIdx;
+      };
+
+      DataStore.prototype.collectOrdinalMeta = function (dimIdx, ordinalMeta) {
+        var chunk = this._chunks[dimIdx];
+        var dim = this._dimensions[dimIdx];
+        var rawExtents = this._rawExtent;
+        var offset = dim.ordinalOffset || 0;
+        var len = chunk.length;
+
+        if (offset === 0) {
+          // We need to reset the rawExtent if collect is from start.
+          // Because this dimension may be guessed as number and calcuating a wrong extent.
+          rawExtents[dimIdx] = getInitialExtent();
+        }
+
+        var dimRawExtent = rawExtents[dimIdx]; // Parse from previous data offset. len may be changed after appendData
+
+        for (var i = offset; i < len; i++) {
+          var val = chunk[i] = ordinalMeta.parseAndCollect(chunk[i]);
+          dimRawExtent[0] = Math.min(val, dimRawExtent[0]);
+          dimRawExtent[1] = Math.max(val, dimRawExtent[1]);
+        }
+
+        dim.ordinalMeta = ordinalMeta;
+        dim.ordinalOffset = len;
+        dim.type = 'ordinal'; // Force to be ordinal
+      };
+
+      DataStore.prototype.getOrdinalMeta = function (dimIdx) {
+        var dimInfo = this._dimensions[dimIdx];
+        var ordinalMeta = dimInfo.ordinalMeta;
+        return ordinalMeta;
+      };
+
+      DataStore.prototype.getDimensionProperty = function (dimIndex) {
+        var item = this._dimensions[dimIndex];
+        return item && item.property;
+      };
+      /**
+       * Caution: Can be only called on raw data (before `this._indices` created).
+       */
+
+
+      DataStore.prototype.appendData = function (data) {
+        if ("development" !== 'production') {
+          assert(!this._indices, 'appendData can only be called on raw data.');
+        }
+
+        var provider = this._provider;
+        var start = this.count();
+        provider.appendData(data);
+        var end = provider.count();
+
+        if (!provider.persistent) {
+          end += start;
+        }
+
+        if (start < end) {
+          this._initDataFromProvider(start, end, true);
+        }
+
+        return [start, end];
+      };
+
+      DataStore.prototype.appendValues = function (values, minFillLen) {
+        var chunks = this._chunks;
+        var dimensions = this._dimensions;
+        var dimLen = dimensions.length;
+        var rawExtent = this._rawExtent;
+        var start = this.count();
+        var end = start + Math.max(values.length, minFillLen || 0);
+
+        for (var i = 0; i < dimLen; i++) {
+          var dim = dimensions[i];
+          prepareStore(chunks, i, dim.type, end, true);
+        }
+
+        var emptyDataItem = [];
+
+        for (var idx = start; idx < end; idx++) {
+          var sourceIdx = idx - start; // Store the data by dimensions
+
+          for (var dimIdx = 0; dimIdx < dimLen; dimIdx++) {
+            var dim = dimensions[dimIdx];
+            var val = defaultDimValueGetters.arrayRows.call(this, values[sourceIdx] || emptyDataItem, dim.property, sourceIdx, dimIdx);
+            chunks[dimIdx][idx] = val;
+            var dimRawExtent = rawExtent[dimIdx];
+            val < dimRawExtent[0] && (dimRawExtent[0] = val);
+            val > dimRawExtent[1] && (dimRawExtent[1] = val);
+          }
+        }
+
+        this._rawCount = this._count = end;
+        return {
+          start: start,
+          end: end
+        };
+      };
+
+      DataStore.prototype._initDataFromProvider = function (start, end, append) {
+        var provider = this._provider;
+        var chunks = this._chunks;
+        var dimensions = this._dimensions;
+        var dimLen = dimensions.length;
+        var rawExtent = this._rawExtent;
+        var dimNames = map(dimensions, function (dim) {
+          return dim.property;
+        });
+
+        for (var i = 0; i < dimLen; i++) {
+          var dim = dimensions[i];
+
+          if (!rawExtent[i]) {
+            rawExtent[i] = getInitialExtent();
+          }
+
+          prepareStore(chunks, i, dim.type, end, append);
+        }
+
+        if (provider.fillStorage) {
+          provider.fillStorage(start, end, chunks, rawExtent);
+        } else {
+          var dataItem = [];
+
+          for (var idx = start; idx < end; idx++) {
+            // NOTICE: Try not to write things into dataItem
+            dataItem = provider.getItem(idx, dataItem); // Each data item is value
+            // [1, 2]
+            // 2
+            // Bar chart, line chart which uses category axis
+            // only gives the 'y' value. 'x' value is the indices of category
+            // Use a tempValue to normalize the value to be a (x, y) value
+            // Store the data by dimensions
+
+            for (var dimIdx = 0; dimIdx < dimLen; dimIdx++) {
+              var dimStorage = chunks[dimIdx]; // PENDING NULL is empty or zero
+
+              var val = this._dimValueGetter(dataItem, dimNames[dimIdx], idx, dimIdx);
+
+              dimStorage[idx] = val;
+              var dimRawExtent = rawExtent[dimIdx];
+              val < dimRawExtent[0] && (dimRawExtent[0] = val);
+              val > dimRawExtent[1] && (dimRawExtent[1] = val);
+            }
+          }
+        }
+
+        if (!provider.persistent && provider.clean) {
+          // Clean unused data if data source is typed array.
+          provider.clean();
+        }
+
+        this._rawCount = this._count = end; // Reset data extent
+
+        this._extent = [];
+      };
+
+      DataStore.prototype.count = function () {
+        return this._count;
+      };
+      /**
+       * Get value. Return NaN if idx is out of range.
+       */
+
+
+      DataStore.prototype.get = function (dim, idx) {
+        if (!(idx >= 0 && idx < this._count)) {
+          return NaN;
+        }
+
+        var dimStore = this._chunks[dim];
+        return dimStore ? dimStore[this.getRawIndex(idx)] : NaN;
+      };
+
+      DataStore.prototype.getValues = function (dimensions, idx) {
+        var values = [];
+        var dimArr = [];
+
+        if (idx == null) {
+          idx = dimensions; // TODO get all from store?
+
+          dimensions = []; // All dimensions
+
+          for (var i = 0; i < this._dimensions.length; i++) {
+            dimArr.push(i);
+          }
+        } else {
+          dimArr = dimensions;
+        }
+
+        for (var i = 0, len = dimArr.length; i < len; i++) {
+          values.push(this.get(dimArr[i], idx));
+        }
+
+        return values;
+      };
+      /**
+       * @param dim concrete dim
+       */
+
+
+      DataStore.prototype.getByRawIndex = function (dim, rawIdx) {
+        if (!(rawIdx >= 0 && rawIdx < this._rawCount)) {
+          return NaN;
+        }
+
+        var dimStore = this._chunks[dim];
+        return dimStore ? dimStore[rawIdx] : NaN;
+      };
+      /**
+       * Get sum of data in one dimension
+       */
+
+
+      DataStore.prototype.getSum = function (dim) {
+        var dimData = this._chunks[dim];
+        var sum = 0;
+
+        if (dimData) {
+          for (var i = 0, len = this.count(); i < len; i++) {
+            var value = this.get(dim, i);
+
+            if (!isNaN(value)) {
+              sum += value;
+            }
+          }
+        }
+
+        return sum;
+      };
+      /**
+       * Get median of data in one dimension
+       */
+
+
+      DataStore.prototype.getMedian = function (dim) {
+        var dimDataArray = []; // map all data of one dimension
+
+        this.each([dim], function (val) {
+          if (!isNaN(val)) {
+            dimDataArray.push(val);
+          }
+        }); // TODO
+        // Use quick select?
+
+        var sortedDimDataArray = dimDataArray.sort(function (a, b) {
+          return a - b;
+        });
+        var len = this.count(); // calculate median
+
+        return len === 0 ? 0 : len % 2 === 1 ? sortedDimDataArray[(len - 1) / 2] : (sortedDimDataArray[len / 2] + sortedDimDataArray[len / 2 - 1]) / 2;
+      };
+      /**
+       * Retreive the index with given raw data index
+       */
+
+
+      DataStore.prototype.indexOfRawIndex = function (rawIndex) {
+        if (rawIndex >= this._rawCount || rawIndex < 0) {
+          return -1;
+        }
+
+        if (!this._indices) {
+          return rawIndex;
+        } // Indices are ascending
+
+
+        var indices = this._indices; // If rawIndex === dataIndex
+
+        var rawDataIndex = indices[rawIndex];
+
+        if (rawDataIndex != null && rawDataIndex < this._count && rawDataIndex === rawIndex) {
+          return rawIndex;
+        }
+
+        var left = 0;
+        var right = this._count - 1;
+
+        while (left <= right) {
+          var mid = (left + right) / 2 | 0;
+
+          if (indices[mid] < rawIndex) {
+            left = mid + 1;
+          } else if (indices[mid] > rawIndex) {
+            right = mid - 1;
+          } else {
+            return mid;
+          }
+        }
+
+        return -1;
+      };
+      /**
+       * Retreive the index of nearest value
+       * @param dim
+       * @param value
+       * @param [maxDistance=Infinity]
+       * @return If and only if multiple indices has
+       *         the same value, they are put to the result.
+       */
+
+
+      DataStore.prototype.indicesOfNearest = function (dim, value, maxDistance) {
+        var chunks = this._chunks;
+        var dimData = chunks[dim];
+        var nearestIndices = [];
+
+        if (!dimData) {
+          return nearestIndices;
+        }
+
+        if (maxDistance == null) {
+          maxDistance = Infinity;
+        }
+
+        var minDist = Infinity;
+        var minDiff = -1;
+        var nearestIndicesLen = 0; // Check the test case of `test/ut/spec/data/SeriesData.js`.
+
+        for (var i = 0, len = this.count(); i < len; i++) {
+          var dataIndex = this.getRawIndex(i);
+          var diff = value - dimData[dataIndex];
+          var dist = Math.abs(diff);
+
+          if (dist <= maxDistance) {
+            // When the `value` is at the middle of `this.get(dim, i)` and `this.get(dim, i+1)`,
+            // we'd better not push both of them to `nearestIndices`, otherwise it is easy to
+            // get more than one item in `nearestIndices` (more specifically, in `tooltip`).
+            // So we chose the one that `diff >= 0` in this csae.
+            // But if `this.get(dim, i)` and `this.get(dim, j)` get the same value, both of them
+            // should be push to `nearestIndices`.
+            if (dist < minDist || dist === minDist && diff >= 0 && minDiff < 0) {
+              minDist = dist;
+              minDiff = diff;
+              nearestIndicesLen = 0;
+            }
+
+            if (diff === minDiff) {
+              nearestIndices[nearestIndicesLen++] = i;
+            }
+          }
+        }
+
+        nearestIndices.length = nearestIndicesLen;
+        return nearestIndices;
+      };
+
+      DataStore.prototype.getIndices = function () {
+        var newIndices;
+        var indices = this._indices;
+
+        if (indices) {
+          var Ctor = indices.constructor;
+          var thisCount = this._count; // `new Array(a, b, c)` is different from `new Uint32Array(a, b, c)`.
+
+          if (Ctor === Array) {
+            newIndices = new Ctor(thisCount);
+
+            for (var i = 0; i < thisCount; i++) {
+              newIndices[i] = indices[i];
+            }
+          } else {
+            newIndices = new Ctor(indices.buffer, 0, thisCount);
+          }
+        } else {
+          var Ctor = getIndicesCtor(this._rawCount);
+          newIndices = new Ctor(this.count());
+
+          for (var i = 0; i < newIndices.length; i++) {
+            newIndices[i] = i;
+          }
+        }
+
+        return newIndices;
+      };
+      /**
+       * Data filter.
+       */
+
+
+      DataStore.prototype.filter = function (dims, cb) {
+        if (!this._count) {
+          return this;
+        }
+
+        var newStore = this.clone();
+        var count = newStore.count();
+        var Ctor = getIndicesCtor(newStore._rawCount);
+        var newIndices = new Ctor(count);
+        var value = [];
+        var dimSize = dims.length;
+        var offset = 0;
+        var dim0 = dims[0];
+        var chunks = newStore._chunks;
+
+        for (var i = 0; i < count; i++) {
+          var keep = void 0;
+          var rawIdx = newStore.getRawIndex(i); // Simple optimization
+
+          if (dimSize === 0) {
+            keep = cb(i);
+          } else if (dimSize === 1) {
+            var val = chunks[dim0][rawIdx];
+            keep = cb(val, i);
+          } else {
+            var k = 0;
+
+            for (; k < dimSize; k++) {
+              value[k] = chunks[dims[k]][rawIdx];
+            }
+
+            value[k] = i;
+            keep = cb.apply(null, value);
+          }
+
+          if (keep) {
+            newIndices[offset++] = rawIdx;
+          }
+        } // Set indices after filtered.
+
+
+        if (offset < count) {
+          newStore._indices = newIndices;
+        }
+
+        newStore._count = offset; // Reset data extent
+
+        newStore._extent = [];
+
+        newStore._updateGetRawIdx();
+
+        return newStore;
+      };
+      /**
+       * Select data in range. (For optimization of filter)
+       * (Manually inline code, support 5 million data filtering in data zoom.)
+       */
+
+
+      DataStore.prototype.selectRange = function (range) {
+        var newStore = this.clone();
+        var len = newStore._count;
+
+        if (!len) {
+          return this;
+        }
+
+        var dims = keys(range);
+        var dimSize = dims.length;
+
+        if (!dimSize) {
+          return this;
+        }
+
+        var originalCount = newStore.count();
+        var Ctor = getIndicesCtor(newStore._rawCount);
+        var newIndices = new Ctor(originalCount);
+        var offset = 0;
+        var dim0 = dims[0];
+        var min = range[dim0][0];
+        var max = range[dim0][1];
+        var storeArr = newStore._chunks;
+        var quickFinished = false;
+
+        if (!newStore._indices) {
+          // Extreme optimization for common case. About 2x faster in chrome.
+          var idx = 0;
+
+          if (dimSize === 1) {
+            var dimStorage = storeArr[dims[0]];
+
+            for (var i = 0; i < len; i++) {
+              var val = dimStorage[i]; // NaN will not be filtered. Consider the case, in line chart, empty
+              // value indicates the line should be broken. But for the case like
+              // scatter plot, a data item with empty value will not be rendered,
+              // but the axis extent may be effected if some other dim of the data
+              // item has value. Fortunately it is not a significant negative effect.
+
+              if (val >= min && val <= max || isNaN(val)) {
+                newIndices[offset++] = idx;
+              }
+
+              idx++;
+            }
+
+            quickFinished = true;
+          } else if (dimSize === 2) {
+            var dimStorage = storeArr[dims[0]];
+            var dimStorage2 = storeArr[dims[1]];
+            var min2 = range[dims[1]][0];
+            var max2 = range[dims[1]][1];
+
+            for (var i = 0; i < len; i++) {
+              var val = dimStorage[i];
+              var val2 = dimStorage2[i]; // Do not filter NaN, see comment above.
+
+              if ((val >= min && val <= max || isNaN(val)) && (val2 >= min2 && val2 <= max2 || isNaN(val2))) {
+                newIndices[offset++] = idx;
+              }
+
+              idx++;
+            }
+
+            quickFinished = true;
+          }
+        }
+
+        if (!quickFinished) {
+          if (dimSize === 1) {
+            for (var i = 0; i < originalCount; i++) {
+              var rawIndex = newStore.getRawIndex(i);
+              var val = storeArr[dims[0]][rawIndex]; // Do not filter NaN, see comment above.
+
+              if (val >= min && val <= max || isNaN(val)) {
+                newIndices[offset++] = rawIndex;
+              }
+            }
+          } else {
+            for (var i = 0; i < originalCount; i++) {
+              var keep = true;
+              var rawIndex = newStore.getRawIndex(i);
+
+              for (var k = 0; k < dimSize; k++) {
+                var dimk = dims[k];
+                var val = storeArr[dimk][rawIndex]; // Do not filter NaN, see comment above.
+
+                if (val < range[dimk][0] || val > range[dimk][1]) {
+                  keep = false;
+                }
+              }
+
+              if (keep) {
+                newIndices[offset++] = newStore.getRawIndex(i);
+              }
+            }
+          }
+        } // Set indices after filtered.
+
+
+        if (offset < originalCount) {
+          newStore._indices = newIndices;
+        }
+
+        newStore._count = offset; // Reset data extent
+
+        newStore._extent = [];
+
+        newStore._updateGetRawIdx();
+
+        return newStore;
+      }; // /**
+      //  * Data mapping to a plain array
+      //  */
+      // mapArray(dims: DimensionIndex[], cb: MapArrayCb): any[] {
+      //     const result: any[] = [];
+      //     this.each(dims, function () {
+      //         result.push(cb && (cb as MapArrayCb).apply(null, arguments));
+      //     });
+      //     return result;
+      // }
+
+      /**
+       * Data mapping to a new List with given dimensions
+       */
+
+
+      DataStore.prototype.map = function (dims, cb) {
+        // TODO only clone picked chunks.
+        var target = this.clone(dims);
+
+        this._updateDims(target, dims, cb);
+
+        return target;
+      };
+      /**
+       * @caution Danger!! Only used in dataStack.
+       */
+
+
+      DataStore.prototype.modify = function (dims, cb) {
+        this._updateDims(this, dims, cb);
+      };
+
+      DataStore.prototype._updateDims = function (target, dims, cb) {
+        var targetChunks = target._chunks;
+        var tmpRetValue = [];
+        var dimSize = dims.length;
+        var dataCount = target.count();
+        var values = [];
+        var rawExtent = target._rawExtent;
+
+        for (var i = 0; i < dims.length; i++) {
+          rawExtent[dims[i]] = getInitialExtent();
+        }
+
+        for (var dataIndex = 0; dataIndex < dataCount; dataIndex++) {
+          var rawIndex = target.getRawIndex(dataIndex);
+
+          for (var k = 0; k < dimSize; k++) {
+            values[k] = targetChunks[dims[k]][rawIndex];
+          }
+
+          values[dimSize] = dataIndex;
+          var retValue = cb && cb.apply(null, values);
+
+          if (retValue != null) {
+            // a number or string (in oridinal dimension)?
+            if (typeof retValue !== 'object') {
+              tmpRetValue[0] = retValue;
+              retValue = tmpRetValue;
+            }
+
+            for (var i = 0; i < retValue.length; i++) {
+              var dim = dims[i];
+              var val = retValue[i];
+              var rawExtentOnDim = rawExtent[dim];
+              var dimStore = targetChunks[dim];
+
+              if (dimStore) {
+                dimStore[rawIndex] = val;
+              }
+
+              if (val < rawExtentOnDim[0]) {
+                rawExtentOnDim[0] = val;
+              }
+
+              if (val > rawExtentOnDim[1]) {
+                rawExtentOnDim[1] = val;
+              }
+            }
+          }
+        }
+      };
+      /**
+       * Large data down sampling using largest-triangle-three-buckets
+       * @param {string} valueDimension
+       * @param {number} targetCount
+       */
+
+
+      DataStore.prototype.lttbDownSample = function (valueDimension, rate) {
+        var target = this.clone([valueDimension], true);
+        var targetStorage = target._chunks;
+        var dimStore = targetStorage[valueDimension];
+        var len = this.count();
+        var sampledIndex = 0;
+        var frameSize = Math.floor(1 / rate);
+        var currentRawIndex = this.getRawIndex(0);
+        var maxArea;
+        var area;
+        var nextRawIndex;
+        var newIndices = new (getIndicesCtor(this._rawCount))(Math.ceil(len / frameSize) + 2); // First frame use the first data.
+
+        newIndices[sampledIndex++] = currentRawIndex;
+
+        for (var i = 1; i < len - 1; i += frameSize) {
+          var nextFrameStart = Math.min(i + frameSize, len - 1);
+          var nextFrameEnd = Math.min(i + frameSize * 2, len);
+          var avgX = (nextFrameEnd + nextFrameStart) / 2;
+          var avgY = 0;
+
+          for (var idx = nextFrameStart; idx < nextFrameEnd; idx++) {
+            var rawIndex = this.getRawIndex(idx);
+            var y = dimStore[rawIndex];
+
+            if (isNaN(y)) {
+              continue;
+            }
+
+            avgY += y;
+          }
+
+          avgY /= nextFrameEnd - nextFrameStart;
+          var frameStart = i;
+          var frameEnd = Math.min(i + frameSize, len);
+          var pointAX = i - 1;
+          var pointAY = dimStore[currentRawIndex];
+          maxArea = -1;
+          nextRawIndex = frameStart; // Find a point from current frame that construct a triangel with largest area with previous selected point
+          // And the average of next frame.
+
+          for (var idx = frameStart; idx < frameEnd; idx++) {
+            var rawIndex = this.getRawIndex(idx);
+            var y = dimStore[rawIndex];
+
+            if (isNaN(y)) {
+              continue;
+            } // Calculate triangle area over three buckets
+
+
+            area = Math.abs((pointAX - avgX) * (y - pointAY) - (pointAX - idx) * (avgY - pointAY));
+
+            if (area > maxArea) {
+              maxArea = area;
+              nextRawIndex = rawIndex; // Next a is this b
+            }
+          }
+
+          newIndices[sampledIndex++] = nextRawIndex;
+          currentRawIndex = nextRawIndex; // This a is the next a (chosen b)
+        } // First frame use the last data.
+
+
+        newIndices[sampledIndex++] = this.getRawIndex(len - 1);
+        target._count = sampledIndex;
+        target._indices = newIndices;
+        target.getRawIndex = this._getRawIdx;
+        return target;
+      };
+      /**
+       * Large data down sampling on given dimension
+       * @param sampleIndex Sample index for name and id
+       */
+
+
+      DataStore.prototype.downSample = function (dimension, rate, sampleValue, sampleIndex) {
+        var target = this.clone([dimension], true);
+        var targetStorage = target._chunks;
+        var frameValues = [];
+        var frameSize = Math.floor(1 / rate);
+        var dimStore = targetStorage[dimension];
+        var len = this.count();
+        var rawExtentOnDim = target._rawExtent[dimension] = getInitialExtent();
+        var newIndices = new (getIndicesCtor(this._rawCount))(Math.ceil(len / frameSize));
+        var offset = 0;
+
+        for (var i = 0; i < len; i += frameSize) {
+          // Last frame
+          if (frameSize > len - i) {
+            frameSize = len - i;
+            frameValues.length = frameSize;
+          }
+
+          for (var k = 0; k < frameSize; k++) {
+            var dataIdx = this.getRawIndex(i + k);
+            frameValues[k] = dimStore[dataIdx];
+          }
+
+          var value = sampleValue(frameValues);
+          var sampleFrameIdx = this.getRawIndex(Math.min(i + sampleIndex(frameValues, value) || 0, len - 1)); // Only write value on the filtered data
+
+          dimStore[sampleFrameIdx] = value;
+
+          if (value < rawExtentOnDim[0]) {
+            rawExtentOnDim[0] = value;
+          }
+
+          if (value > rawExtentOnDim[1]) {
+            rawExtentOnDim[1] = value;
+          }
+
+          newIndices[offset++] = sampleFrameIdx;
+        }
+
+        target._count = offset;
+        target._indices = newIndices;
+
+        target._updateGetRawIdx();
+
+        return target;
+      };
+      /**
+       * Data iteration
+       * @param ctx default this
+       * @example
+       *  list.each('x', function (x, idx) {});
+       *  list.each(['x', 'y'], function (x, y, idx) {});
+       *  list.each(function (idx) {})
+       */
+
+
+      DataStore.prototype.each = function (dims, cb) {
+        if (!this._count) {
+          return;
+        }
+
+        var dimSize = dims.length;
+        var chunks = this._chunks;
+
+        for (var i = 0, len = this.count(); i < len; i++) {
+          var rawIdx = this.getRawIndex(i); // Simple optimization
+
+          switch (dimSize) {
+            case 0:
+              cb(i);
+              break;
+
+            case 1:
+              cb(chunks[dims[0]][rawIdx], i);
+              break;
+
+            case 2:
+              cb(chunks[dims[0]][rawIdx], chunks[dims[1]][rawIdx], i);
+              break;
+
+            default:
+              var k = 0;
+              var value = [];
+
+              for (; k < dimSize; k++) {
+                value[k] = chunks[dims[k]][rawIdx];
+              } // Index
+
+
+              value[k] = i;
+              cb.apply(null, value);
+          }
+        }
+      };
+      /**
+       * Get extent of data in one dimension
+       */
+
+
+      DataStore.prototype.getDataExtent = function (dim) {
+        // Make sure use concrete dim as cache name.
+        var dimData = this._chunks[dim];
+        var initialExtent = getInitialExtent();
+
+        if (!dimData) {
+          return initialExtent;
+        } // Make more strict checkings to ensure hitting cache.
+
+
+        var currEnd = this.count(); // Consider the most cases when using data zoom, `getDataExtent`
+        // happened before filtering. We cache raw extent, which is not
+        // necessary to be cleared and recalculated when restore data.
+
+        var useRaw = !this._indices;
+        var dimExtent;
+
+        if (useRaw) {
+          return this._rawExtent[dim].slice();
+        }
+
+        dimExtent = this._extent[dim];
+
+        if (dimExtent) {
+          return dimExtent.slice();
+        }
+
+        dimExtent = initialExtent;
+        var min = dimExtent[0];
+        var max = dimExtent[1];
+
+        for (var i = 0; i < currEnd; i++) {
+          var rawIdx = this.getRawIndex(i);
+          var value = dimData[rawIdx];
+          value < min && (min = value);
+          value > max && (max = value);
+        }
+
+        dimExtent = [min, max];
+        this._extent[dim] = dimExtent;
+        return dimExtent;
+      };
+      /**
+       * Get raw data item
+       */
+
+
+      DataStore.prototype.getRawDataItem = function (idx) {
+        var rawIdx = this.getRawIndex(idx);
+
+        if (!this._provider.persistent) {
+          var val = [];
+          var chunks = this._chunks;
+
+          for (var i = 0; i < chunks.length; i++) {
+            val.push(chunks[i][rawIdx]);
+          }
+
+          return val;
+        } else {
+          return this._provider.getItem(rawIdx);
+        }
+      };
+      /**
+       * Clone shallow.
+       *
+       * @param clonedDims Determine which dims to clone. Will share the data if not specified.
+       */
+
+
+      DataStore.prototype.clone = function (clonedDims, ignoreIndices) {
+        var target = new DataStore();
+        var chunks = this._chunks;
+        var clonedDimsMap = clonedDims && reduce(clonedDims, function (obj, dimIdx) {
+          obj[dimIdx] = true;
+          return obj;
+        }, {});
+
+        if (clonedDimsMap) {
+          for (var i = 0; i < chunks.length; i++) {
+            // Not clone if dim is not picked.
+            target._chunks[i] = !clonedDimsMap[i] ? chunks[i] : cloneChunk(chunks[i]);
+          }
+        } else {
+          target._chunks = chunks;
+        }
+
+        this._copyCommonProps(target);
+
+        if (!ignoreIndices) {
+          target._indices = this._cloneIndices();
+        }
+
+        target._updateGetRawIdx();
+
+        return target;
+      };
+
+      DataStore.prototype._copyCommonProps = function (target) {
+        target._count = this._count;
+        target._rawCount = this._rawCount;
+        target._provider = this._provider;
+        target._dimensions = this._dimensions;
+        target._extent = clone(this._extent);
+        target._rawExtent = clone(this._rawExtent);
+      };
+
+      DataStore.prototype._cloneIndices = function () {
+        if (this._indices) {
+          var Ctor = this._indices.constructor;
+          var indices = void 0;
+
+          if (Ctor === Array) {
+            var thisCount = this._indices.length;
+            indices = new Ctor(thisCount);
+
+            for (var i = 0; i < thisCount; i++) {
+              indices[i] = this._indices[i];
+            }
+          } else {
+            indices = new Ctor(this._indices);
+          }
+
+          return indices;
+        }
+
+        return null;
+      };
+
+      DataStore.prototype._getRawIdxIdentity = function (idx) {
+        return idx;
+      };
+
+      DataStore.prototype._getRawIdx = function (idx) {
+        if (idx < this._count && idx >= 0) {
+          return this._indices[idx];
+        }
+
+        return -1;
+      };
+
+      DataStore.prototype._updateGetRawIdx = function () {
+        this.getRawIndex = this._indices ? this._getRawIdx : this._getRawIdxIdentity;
+      };
+
+      DataStore.internalField = function () {
+        function getDimValueSimply(dataItem, property, dataIndex, dimIndex) {
+          return parseDataValue(dataItem[dimIndex], this._dimensions[dimIndex]);
+        }
+
+        defaultDimValueGetters = {
+          arrayRows: getDimValueSimply,
+          objectRows: function (dataItem, property, dataIndex, dimIndex) {
+            return parseDataValue(dataItem[property], this._dimensions[dimIndex]);
+          },
+          keyedColumns: getDimValueSimply,
+          original: function (dataItem, property, dataIndex, dimIndex) {
+            // Performance sensitive, do not use modelUtil.getDataItemValue.
+            // If dataItem is an plain object with no value field, the let `value`
+            // will be assigned with the object, but it will be tread correctly
+            // in the `convertValue`.
+            var value = dataItem && (dataItem.value == null ? dataItem : dataItem.value);
+            return parseDataValue(value instanceof Array ? value[dimIndex] // If value is a single number or something else not array.
+            : value, this._dimensions[dimIndex]);
+          },
+          typedArray: function (dataItem, property, dataIndex, dimIndex) {
+            return dataItem[dimIndex];
+          }
+        };
+      }();
+
+      return DataStore;
+    }();
 
     /**
      * [REQUIREMENT_MEMO]:
@@ -21042,10 +22135,12 @@
     function () {
       function SourceManager(sourceHost) {
         // Cached source. Do not repeat calculating if not dirty.
-        this._sourceList = []; // version sign of each upstream source manager.
+        this._sourceList = [];
+        this._storeList = []; // version sign of each upstream source manager.
 
         this._upstreamSignList = [];
         this._versionSignBase = 0;
+        this._dirty = true;
         this._sourceHost = sourceHost;
       }
       /**
@@ -21055,6 +22150,9 @@
 
       SourceManager.prototype.dirty = function () {
         this._setLocalSource([], []);
+
+        this._storeList = [];
+        this._dirty = true;
       };
 
       SourceManager.prototype._setLocalSource = function (sourceList, upstreamSignList) {
@@ -21085,6 +22183,8 @@
         // cache the result source to prevent from repeating transform.
         if (this._isDirty()) {
           this._createSource();
+
+          this._dirty = false;
         }
       };
 
@@ -21120,20 +22220,22 @@
             } // See [REQUIREMENT_MEMO], merge settings on series and parent dataset if it is root.
 
 
-          var newMetaRawOption = this._getSourceMetaRawOption();
-
-          var upMetaRawOption = upSource ? upSource.metaRawOption : null;
-          var seriesLayoutBy = retrieve2(newMetaRawOption.seriesLayoutBy, upMetaRawOption ? upMetaRawOption.seriesLayoutBy : null);
-          var sourceHeader = retrieve2(newMetaRawOption.sourceHeader, upMetaRawOption ? upMetaRawOption.sourceHeader : null); // Note here we should not use `upSource.dimensionsDefine`. Consider the case:
+          var newMetaRawOption = this._getSourceMetaRawOption() || {};
+          var upMetaRawOption = upSource && upSource.metaRawOption || {};
+          var seriesLayoutBy = retrieve2(newMetaRawOption.seriesLayoutBy, upMetaRawOption.seriesLayoutBy) || null;
+          var sourceHeader = retrieve2(newMetaRawOption.sourceHeader, upMetaRawOption.sourceHeader) || null; // Note here we should not use `upSource.dimensionsDefine`. Consider the case:
           // `upSource.dimensionsDefine` is detected by `seriesLayoutBy: 'column'`,
           // but series need `seriesLayoutBy: 'row'`.
 
-          var dimensions = retrieve2(newMetaRawOption.dimensions, upMetaRawOption ? upMetaRawOption.dimensions : null);
-          resultSourceList = [createSource(data, {
+          var dimensions = retrieve2(newMetaRawOption.dimensions, upMetaRawOption.dimensions); // We share source with dataset as much as possible
+          // to avoid extra memroy cost of high dimensional data.
+
+          var needsCreateSource = seriesLayoutBy !== upMetaRawOption.seriesLayoutBy || !!sourceHeader !== !!upMetaRawOption.sourceHeader || dimensions;
+          resultSourceList = needsCreateSource ? [createSource(data, {
             seriesLayoutBy: seriesLayoutBy,
             sourceHeader: sourceHeader,
             dimensions: dimensions
-          }, sourceFormat, seriesModel.get('encode', true))];
+          }, sourceFormat)] : [];
         } else {
           var datasetModel = sourceHost; // Has upstream dataset.
 
@@ -21145,8 +22247,7 @@
           } // Is root dataset.
           else {
               var sourceData = datasetModel.get('source', true);
-              resultSourceList = [createSource(sourceData, this._getSourceMetaRawOption(), null, // Note: dataset option does not have `encode`.
-              null)];
+              resultSourceList = [createSource(sourceData, this._getSourceMetaRawOption(), null)];
               upstreamSignList = [];
             }
         }
@@ -21214,9 +22315,7 @@
       };
 
       SourceManager.prototype._isDirty = function () {
-        var sourceList = this._sourceList;
-
-        if (!sourceList.length) {
+        if (this._dirty) {
           return true;
         } // All sourceList is from the some upsteam.
 
@@ -21240,7 +22339,64 @@
 
 
       SourceManager.prototype.getSource = function (sourceIndex) {
-        return this._sourceList[sourceIndex || 0];
+        sourceIndex = sourceIndex || 0;
+        var source = this._sourceList[sourceIndex];
+
+        if (!source) {
+          // Series may share source instance with dataset.
+          var upSourceMgrList = this._getUpstreamSourceManagers();
+
+          return upSourceMgrList[0] && upSourceMgrList[0].getSource(sourceIndex);
+        }
+
+        return source;
+      };
+      /**
+       *
+       * Get a data store which can be shared across series.
+       * Only available for series.
+       *
+       * @param seriesDimRequest Dimensions that are generated in series.
+       *        Should have been sorted by `storeDimIndex` asc.
+       */
+
+
+      SourceManager.prototype.getSharedDataStore = function (seriesDimRequest) {
+        if ("development" !== 'production') {
+          assert(isSeries(this._sourceHost), 'Can only call getDataStore on series source manager.');
+        }
+
+        var schema = seriesDimRequest.makeStoreSchema();
+        return this._innerGetDataStore(schema.dimensions, seriesDimRequest.source, schema.hash);
+      };
+
+      SourceManager.prototype._innerGetDataStore = function (storeDims, seriesSource, sourceReadKey) {
+        // TODO Can use other sourceIndex?
+        var sourceIndex = 0;
+        var storeList = this._storeList;
+        var cachedStoreMap = storeList[sourceIndex];
+
+        if (!cachedStoreMap) {
+          cachedStoreMap = storeList[sourceIndex] = {};
+        }
+
+        var cachedStore = cachedStoreMap[sourceReadKey];
+
+        if (!cachedStore) {
+          var upSourceMgr = this._getUpstreamSourceManagers()[0];
+
+          if (isSeries(this._sourceHost) && upSourceMgr) {
+            cachedStore = upSourceMgr._innerGetDataStore(storeDims, seriesSource, sourceReadKey);
+          } else {
+            cachedStore = new DataStore(); // Always create store from source of series.
+
+            cachedStore.initData(new DefaultDataProvider(seriesSource, storeDims.length), storeDims);
+          }
+
+          cachedStoreMap[sourceReadKey] = cachedStore;
+        }
+
+        return cachedStore;
       };
       /**
        * PEDING: Is it fast enough?
@@ -21424,6 +22580,8 @@
       return data.getName(dataIndex) || data.getId(dataIndex);
     }
 
+    var SERIES_UNIVERSAL_TRANSITION_PROP = '__universalTransitionEnabled';
+
     var SeriesModel =
     /** @class */
     function (_super) {
@@ -21472,7 +22630,7 @@
         // dataBeforeProcessed by cloneShallow), cloneShallow will
         // cause data.graph.data !== data when using
         // module:echarts/data/Graph or module:echarts/data/Tree.
-        // See module:echarts/data/helper/linkList
+        // See module:echarts/data/helper/linkSeriesData
         // Theoretically, it is unreasonable to call `seriesModel.getData()` in the model
         // init or merge stage, because the data can be restored. So we do not `restoreData`
         // and `setData` here, which forbids calling `seriesModel.getData()` in this stage.
@@ -21627,8 +22785,20 @@
         inner$1(this).data = data;
       };
 
+      SeriesModel.prototype.getEncode = function () {
+        var encode = this.get('encode', true);
+
+        if (encode) {
+          return createHashMap(encode);
+        }
+      };
+
+      SeriesModel.prototype.getSourceManager = function () {
+        return inner$1(this).sourceManager;
+      };
+
       SeriesModel.prototype.getSource = function () {
-        return inner$1(this).sourceManager.getSource();
+        return this.getSourceManager().getSource();
       };
       /**
        * Get data before processed
@@ -21637,6 +22807,15 @@
 
       SeriesModel.prototype.getRawData = function () {
         return inner$1(this).dataBeforeProcessed;
+      };
+
+      SeriesModel.prototype.getColorBy = function () {
+        var colorBy = this.get('colorBy');
+        return colorBy || 'series';
+      };
+
+      SeriesModel.prototype.isColorBySeries = function () {
+        return this.getColorBy() === 'series';
       };
       /**
        * Get base axis if has coordinate system and has axis.
@@ -21791,6 +22970,25 @@
         return selectedMap[nameOrId] || false;
       };
 
+      SeriesModel.prototype.isUniversalTransitionEnabled = function () {
+        if (this[SERIES_UNIVERSAL_TRANSITION_PROP]) {
+          return true;
+        }
+
+        var universalTransitionOpt = this.option.universalTransition; // Quick reject
+
+        if (!universalTransitionOpt) {
+          return false;
+        }
+
+        if (universalTransitionOpt === true) {
+          return true;
+        } // Can be simply 'universalTransition: true'
+
+
+        return universalTransitionOpt && universalTransitionOpt.enabled;
+      };
+
       SeriesModel.prototype._innerSelect = function (data, innerDataIndices) {
         var _a, _b;
 
@@ -21855,7 +23053,6 @@
         var proto = SeriesModel.prototype;
         proto.type = 'series.__base__';
         proto.seriesIndex = 0;
-        proto.useColorPaletteOnData = false;
         proto.ignoreStyleOnData = false;
         proto.hasSymbolVisual = false;
         proto.defaultSymbol = 'circle'; // Make sure the values can be accessed!
@@ -21916,7 +23113,7 @@
 
 
     function wrapData(data, seriesModel) {
-      each(__spreadArrays(data.CHANGABLE_METHODS, data.DOWNSAMPLE_METHODS), function (methodName) {
+      each(concatArray(data.CHANGABLE_METHODS, data.DOWNSAMPLE_METHODS), function (methodName) {
         data.wrapMethod(methodName, curry(onDataChange, seriesModel));
       });
     }
@@ -22378,21 +23575,24 @@
         // Pie and funnel are using diferrent scopes
         var paletteScopeGroupByType = createHashMap();
         ecModel.eachSeries(function (seriesModel) {
-          if (!seriesModel.useColorPaletteOnData) {
+          var colorBy = seriesModel.getColorBy();
+
+          if (seriesModel.isColorBySeries()) {
             return;
           }
 
-          var colorScope = paletteScopeGroupByType.get(seriesModel.type);
+          var key = seriesModel.type + '-' + colorBy;
+          var colorScope = paletteScopeGroupByType.get(key);
 
           if (!colorScope) {
             colorScope = {};
-            paletteScopeGroupByType.set(seriesModel.type, colorScope);
+            paletteScopeGroupByType.set(key, colorScope);
           }
 
           inner$3(seriesModel).scope = colorScope;
         });
         ecModel.eachSeries(function (seriesModel) {
-          if (!seriesModel.useColorPaletteOnData || ecModel.isSeriesFiltered(seriesModel)) {
+          if (seriesModel.isColorBySeries() || ecModel.isSeriesFiltered(seriesModel)) {
             return;
           }
 
@@ -23628,1319 +24828,6 @@
       }
     }
 
-    var PI2$6 = Math.PI * 2;
-    var CMD$3 = PathProxy.CMD;
-    var DEFAULT_SEARCH_SPACE = ['top', 'right', 'bottom', 'left'];
-
-    function getCandidateAnchor(pos, distance, rect, outPt, outDir) {
-      var width = rect.width;
-      var height = rect.height;
-
-      switch (pos) {
-        case 'top':
-          outPt.set(rect.x + width / 2, rect.y - distance);
-          outDir.set(0, -1);
-          break;
-
-        case 'bottom':
-          outPt.set(rect.x + width / 2, rect.y + height + distance);
-          outDir.set(0, 1);
-          break;
-
-        case 'left':
-          outPt.set(rect.x - distance, rect.y + height / 2);
-          outDir.set(-1, 0);
-          break;
-
-        case 'right':
-          outPt.set(rect.x + width + distance, rect.y + height / 2);
-          outDir.set(1, 0);
-          break;
-      }
-    }
-
-    function projectPointToArc(cx, cy, r, startAngle, endAngle, anticlockwise, x, y, out) {
-      x -= cx;
-      y -= cy;
-      var d = Math.sqrt(x * x + y * y);
-      x /= d;
-      y /= d; // Intersect point.
-
-      var ox = x * r + cx;
-      var oy = y * r + cy;
-
-      if (Math.abs(startAngle - endAngle) % PI2$6 < 1e-4) {
-        // Is a circle
-        out[0] = ox;
-        out[1] = oy;
-        return d - r;
-      }
-
-      if (anticlockwise) {
-        var tmp = startAngle;
-        startAngle = normalizeRadian(endAngle);
-        endAngle = normalizeRadian(tmp);
-      } else {
-        startAngle = normalizeRadian(startAngle);
-        endAngle = normalizeRadian(endAngle);
-      }
-
-      if (startAngle > endAngle) {
-        endAngle += PI2$6;
-      }
-
-      var angle = Math.atan2(y, x);
-
-      if (angle < 0) {
-        angle += PI2$6;
-      }
-
-      if (angle >= startAngle && angle <= endAngle || angle + PI2$6 >= startAngle && angle + PI2$6 <= endAngle) {
-        // Project point is on the arc.
-        out[0] = ox;
-        out[1] = oy;
-        return d - r;
-      }
-
-      var x1 = r * Math.cos(startAngle) + cx;
-      var y1 = r * Math.sin(startAngle) + cy;
-      var x2 = r * Math.cos(endAngle) + cx;
-      var y2 = r * Math.sin(endAngle) + cy;
-      var d1 = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y);
-      var d2 = (x2 - x) * (x2 - x) + (y2 - y) * (y2 - y);
-
-      if (d1 < d2) {
-        out[0] = x1;
-        out[1] = y1;
-        return Math.sqrt(d1);
-      } else {
-        out[0] = x2;
-        out[1] = y2;
-        return Math.sqrt(d2);
-      }
-    }
-
-    function projectPointToLine(x1, y1, x2, y2, x, y, out, limitToEnds) {
-      var dx = x - x1;
-      var dy = y - y1;
-      var dx1 = x2 - x1;
-      var dy1 = y2 - y1;
-      var lineLen = Math.sqrt(dx1 * dx1 + dy1 * dy1);
-      dx1 /= lineLen;
-      dy1 /= lineLen; // dot product
-
-      var projectedLen = dx * dx1 + dy * dy1;
-      var t = projectedLen / lineLen;
-
-      if (limitToEnds) {
-        t = Math.min(Math.max(t, 0), 1);
-      }
-
-      t *= lineLen;
-      var ox = out[0] = x1 + t * dx1;
-      var oy = out[1] = y1 + t * dy1;
-      return Math.sqrt((ox - x) * (ox - x) + (oy - y) * (oy - y));
-    }
-
-    function projectPointToRect(x1, y1, width, height, x, y, out) {
-      if (width < 0) {
-        x1 = x1 + width;
-        width = -width;
-      }
-
-      if (height < 0) {
-        y1 = y1 + height;
-        height = -height;
-      }
-
-      var x2 = x1 + width;
-      var y2 = y1 + height;
-      var ox = out[0] = Math.min(Math.max(x, x1), x2);
-      var oy = out[1] = Math.min(Math.max(y, y1), y2);
-      return Math.sqrt((ox - x) * (ox - x) + (oy - y) * (oy - y));
-    }
-
-    var tmpPt = [];
-
-    function nearestPointOnRect(pt, rect, out) {
-      var dist = projectPointToRect(rect.x, rect.y, rect.width, rect.height, pt.x, pt.y, tmpPt);
-      out.set(tmpPt[0], tmpPt[1]);
-      return dist;
-    }
-    /**
-     * Calculate min distance corresponding point.
-     * This method won't evaluate if point is in the path.
-     */
-
-
-    function nearestPointOnPath(pt, path, out) {
-      var xi = 0;
-      var yi = 0;
-      var x0 = 0;
-      var y0 = 0;
-      var x1;
-      var y1;
-      var minDist = Infinity;
-      var data = path.data;
-      var x = pt.x;
-      var y = pt.y;
-
-      for (var i = 0; i < data.length;) {
-        var cmd = data[i++];
-
-        if (i === 1) {
-          xi = data[i];
-          yi = data[i + 1];
-          x0 = xi;
-          y0 = yi;
-        }
-
-        var d = minDist;
-
-        switch (cmd) {
-          case CMD$3.M:
-            // moveTo 命令重新创建一个新的 subpath, 并且更新新的起点
-            // 在 closePath 的时候使用
-            x0 = data[i++];
-            y0 = data[i++];
-            xi = x0;
-            yi = y0;
-            break;
-
-          case CMD$3.L:
-            d = projectPointToLine(xi, yi, data[i], data[i + 1], x, y, tmpPt, true);
-            xi = data[i++];
-            yi = data[i++];
-            break;
-
-          case CMD$3.C:
-            d = cubicProjectPoint(xi, yi, data[i++], data[i++], data[i++], data[i++], data[i], data[i + 1], x, y, tmpPt);
-            xi = data[i++];
-            yi = data[i++];
-            break;
-
-          case CMD$3.Q:
-            d = quadraticProjectPoint(xi, yi, data[i++], data[i++], data[i], data[i + 1], x, y, tmpPt);
-            xi = data[i++];
-            yi = data[i++];
-            break;
-
-          case CMD$3.A:
-            // TODO Arc 判断的开销比较大
-            var cx = data[i++];
-            var cy = data[i++];
-            var rx = data[i++];
-            var ry = data[i++];
-            var theta = data[i++];
-            var dTheta = data[i++]; // TODO Arc 旋转
-
-            i += 1;
-            var anticlockwise = !!(1 - data[i++]);
-            x1 = Math.cos(theta) * rx + cx;
-            y1 = Math.sin(theta) * ry + cy; // 不是直接使用 arc 命令
-
-            if (i <= 1) {
-              // 第一个命令起点还未定义
-              x0 = x1;
-              y0 = y1;
-            } // zr 使用scale来模拟椭圆, 这里也对x做一定的缩放
-
-
-            var _x = (x - cx) * ry / rx + cx;
-
-            d = projectPointToArc(cx, cy, ry, theta, theta + dTheta, anticlockwise, _x, y, tmpPt);
-            xi = Math.cos(theta + dTheta) * rx + cx;
-            yi = Math.sin(theta + dTheta) * ry + cy;
-            break;
-
-          case CMD$3.R:
-            x0 = xi = data[i++];
-            y0 = yi = data[i++];
-            var width = data[i++];
-            var height = data[i++];
-            d = projectPointToRect(x0, y0, width, height, x, y, tmpPt);
-            break;
-
-          case CMD$3.Z:
-            d = projectPointToLine(xi, yi, x0, y0, x, y, tmpPt, true);
-            xi = x0;
-            yi = y0;
-            break;
-        }
-
-        if (d < minDist) {
-          minDist = d;
-          out.set(tmpPt[0], tmpPt[1]);
-        }
-      }
-
-      return minDist;
-    } // Temporal varible for intermediate usage.
-
-
-    var pt0 = new Point();
-    var pt1 = new Point();
-    var pt2 = new Point();
-    var dir = new Point();
-    var dir2 = new Point();
-    /**
-     * Calculate a proper guide line based on the label position and graphic element definition
-     * @param label
-     * @param labelRect
-     * @param target
-     * @param targetRect
-     */
-
-    function updateLabelLinePoints(target, labelLineModel) {
-      if (!target) {
-        return;
-      }
-
-      var labelLine = target.getTextGuideLine();
-      var label = target.getTextContent(); // Needs to create text guide in each charts.
-
-      if (!(label && labelLine)) {
-        return;
-      }
-
-      var labelGuideConfig = target.textGuideLineConfig || {};
-      var points = [[0, 0], [0, 0], [0, 0]];
-      var searchSpace = labelGuideConfig.candidates || DEFAULT_SEARCH_SPACE;
-      var labelRect = label.getBoundingRect().clone();
-      labelRect.applyTransform(label.getComputedTransform());
-      var minDist = Infinity;
-      var anchorPoint = labelGuideConfig.anchor;
-      var targetTransform = target.getComputedTransform();
-      var targetInversedTransform = targetTransform && invert([], targetTransform);
-      var len = labelLineModel.get('length2') || 0;
-
-      if (anchorPoint) {
-        pt2.copy(anchorPoint);
-      }
-
-      for (var i = 0; i < searchSpace.length; i++) {
-        var candidate = searchSpace[i];
-        getCandidateAnchor(candidate, 0, labelRect, pt0, dir);
-        Point.scaleAndAdd(pt1, pt0, dir, len); // Transform to target coord space.
-
-        pt1.transform(targetInversedTransform); // Note: getBoundingRect will ensure the `path` being created.
-
-        var boundingRect = target.getBoundingRect();
-        var dist = anchorPoint ? anchorPoint.distance(pt1) : target instanceof Path ? nearestPointOnPath(pt1, target.path, pt2) : nearestPointOnRect(pt1, boundingRect, pt2); // TODO pt2 is in the path
-
-        if (dist < minDist) {
-          minDist = dist; // Transform back to global space.
-
-          pt1.transform(targetTransform);
-          pt2.transform(targetTransform);
-          pt2.toArray(points[0]);
-          pt1.toArray(points[1]);
-          pt0.toArray(points[2]);
-        }
-      }
-
-      limitTurnAngle(points, labelLineModel.get('minTurnAngle'));
-      labelLine.setShape({
-        points: points
-      });
-    } // Temporal variable for the limitTurnAngle function
-
-    var tmpArr = [];
-    var tmpProjPoint = new Point();
-    /**
-     * Reduce the line segment attached to the label to limit the turn angle between two segments.
-     * @param linePoints
-     * @param minTurnAngle Radian of minimum turn angle. 0 - 180
-     */
-
-    function limitTurnAngle(linePoints, minTurnAngle) {
-      if (!(minTurnAngle <= 180 && minTurnAngle > 0)) {
-        return;
-      }
-
-      minTurnAngle = minTurnAngle / 180 * Math.PI; // The line points can be
-      //      /pt1----pt2 (label)
-      //     /
-      // pt0/
-
-      pt0.fromArray(linePoints[0]);
-      pt1.fromArray(linePoints[1]);
-      pt2.fromArray(linePoints[2]);
-      Point.sub(dir, pt0, pt1);
-      Point.sub(dir2, pt2, pt1);
-      var len1 = dir.len();
-      var len2 = dir2.len();
-
-      if (len1 < 1e-3 || len2 < 1e-3) {
-        return;
-      }
-
-      dir.scale(1 / len1);
-      dir2.scale(1 / len2);
-      var angleCos = dir.dot(dir2);
-      var minTurnAngleCos = Math.cos(minTurnAngle);
-
-      if (minTurnAngleCos < angleCos) {
-        // Smaller than minTurnAngle
-        // Calculate project point of pt0 on pt1-pt2
-        var d = projectPointToLine(pt1.x, pt1.y, pt2.x, pt2.y, pt0.x, pt0.y, tmpArr, false);
-        tmpProjPoint.fromArray(tmpArr); // Calculate new projected length with limited minTurnAngle and get the new connect point
-
-        tmpProjPoint.scaleAndAdd(dir2, d / Math.tan(Math.PI - minTurnAngle)); // Limit the new calculated connect point between pt1 and pt2.
-
-        var t = pt2.x !== pt1.x ? (tmpProjPoint.x - pt1.x) / (pt2.x - pt1.x) : (tmpProjPoint.y - pt1.y) / (pt2.y - pt1.y);
-
-        if (isNaN(t)) {
-          return;
-        }
-
-        if (t < 0) {
-          Point.copy(tmpProjPoint, pt1);
-        } else if (t > 1) {
-          Point.copy(tmpProjPoint, pt2);
-        }
-
-        tmpProjPoint.toArray(linePoints[1]);
-      }
-    }
-    /**
-     * Limit the angle of line and the surface
-     * @param maxSurfaceAngle Radian of minimum turn angle. 0 - 180. 0 is same direction to normal. 180 is opposite
-     */
-
-    function limitSurfaceAngle(linePoints, surfaceNormal, maxSurfaceAngle) {
-      if (!(maxSurfaceAngle <= 180 && maxSurfaceAngle > 0)) {
-        return;
-      }
-
-      maxSurfaceAngle = maxSurfaceAngle / 180 * Math.PI;
-      pt0.fromArray(linePoints[0]);
-      pt1.fromArray(linePoints[1]);
-      pt2.fromArray(linePoints[2]);
-      Point.sub(dir, pt1, pt0);
-      Point.sub(dir2, pt2, pt1);
-      var len1 = dir.len();
-      var len2 = dir2.len();
-
-      if (len1 < 1e-3 || len2 < 1e-3) {
-        return;
-      }
-
-      dir.scale(1 / len1);
-      dir2.scale(1 / len2);
-      var angleCos = dir.dot(surfaceNormal);
-      var maxSurfaceAngleCos = Math.cos(maxSurfaceAngle);
-
-      if (angleCos < maxSurfaceAngleCos) {
-        // Calculate project point of pt0 on pt1-pt2
-        var d = projectPointToLine(pt1.x, pt1.y, pt2.x, pt2.y, pt0.x, pt0.y, tmpArr, false);
-        tmpProjPoint.fromArray(tmpArr);
-        var HALF_PI = Math.PI / 2;
-        var angle2 = Math.acos(dir2.dot(surfaceNormal));
-        var newAngle = HALF_PI + angle2 - maxSurfaceAngle;
-
-        if (newAngle >= HALF_PI) {
-          // parallel
-          Point.copy(tmpProjPoint, pt2);
-        } else {
-          // Calculate new projected length with limited minTurnAngle and get the new connect point
-          tmpProjPoint.scaleAndAdd(dir2, d / Math.tan(Math.PI / 2 - newAngle)); // Limit the new calculated connect point between pt1 and pt2.
-
-          var t = pt2.x !== pt1.x ? (tmpProjPoint.x - pt1.x) / (pt2.x - pt1.x) : (tmpProjPoint.y - pt1.y) / (pt2.y - pt1.y);
-
-          if (isNaN(t)) {
-            return;
-          }
-
-          if (t < 0) {
-            Point.copy(tmpProjPoint, pt1);
-          } else if (t > 1) {
-            Point.copy(tmpProjPoint, pt2);
-          }
-        }
-
-        tmpProjPoint.toArray(linePoints[1]);
-      }
-    }
-
-    function setLabelLineState(labelLine, ignore, stateName, stateModel) {
-      var isNormal = stateName === 'normal';
-      var stateObj = isNormal ? labelLine : labelLine.ensureState(stateName); // Make sure display.
-
-      stateObj.ignore = ignore; // Set smooth
-
-      var smooth = stateModel.get('smooth');
-
-      if (smooth && smooth === true) {
-        smooth = 0.3;
-      }
-
-      stateObj.shape = stateObj.shape || {};
-
-      if (smooth > 0) {
-        stateObj.shape.smooth = smooth;
-      }
-
-      var styleObj = stateModel.getModel('lineStyle').getLineStyle();
-      isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
-    }
-
-    function buildLabelLinePath(path, shape) {
-      var smooth = shape.smooth;
-      var points = shape.points;
-
-      if (!points) {
-        return;
-      }
-
-      path.moveTo(points[0][0], points[0][1]);
-
-      if (smooth > 0 && points.length >= 3) {
-        var len1 = dist(points[0], points[1]);
-        var len2 = dist(points[1], points[2]);
-
-        if (!len1 || !len2) {
-          path.lineTo(points[1][0], points[1][1]);
-          path.lineTo(points[2][0], points[2][1]);
-          return;
-        }
-
-        var moveLen = Math.min(len1, len2) * smooth;
-        var midPoint0 = lerp([], points[1], points[0], moveLen / len1);
-        var midPoint2 = lerp([], points[1], points[2], moveLen / len2);
-        var midPoint1 = lerp([], midPoint0, midPoint2, 0.5);
-        path.bezierCurveTo(midPoint0[0], midPoint0[1], midPoint0[0], midPoint0[1], midPoint1[0], midPoint1[1]);
-        path.bezierCurveTo(midPoint2[0], midPoint2[1], midPoint2[0], midPoint2[1], points[2][0], points[2][1]);
-      } else {
-        for (var i = 1; i < points.length; i++) {
-          path.lineTo(points[i][0], points[i][1]);
-        }
-      }
-    }
-    /**
-     * Create a label line if necessary and set it's style.
-     */
-
-
-    function setLabelLineStyle(targetEl, statesModels, defaultStyle) {
-      var labelLine = targetEl.getTextGuideLine();
-      var label = targetEl.getTextContent();
-
-      if (!label) {
-        // Not show label line if there is no label.
-        if (labelLine) {
-          targetEl.removeTextGuideLine();
-        }
-
-        return;
-      }
-
-      var normalModel = statesModels.normal;
-      var showNormal = normalModel.get('show');
-      var labelIgnoreNormal = label.ignore;
-
-      for (var i = 0; i < DISPLAY_STATES.length; i++) {
-        var stateName = DISPLAY_STATES[i];
-        var stateModel = statesModels[stateName];
-        var isNormal = stateName === 'normal';
-
-        if (stateModel) {
-          var stateShow = stateModel.get('show');
-          var isLabelIgnored = isNormal ? labelIgnoreNormal : retrieve2(label.states[stateName] && label.states[stateName].ignore, labelIgnoreNormal);
-
-          if (isLabelIgnored // Not show when label is not shown in this state.
-          || !retrieve2(stateShow, showNormal) // Use normal state by default if not set.
-          ) {
-              var stateObj = isNormal ? labelLine : labelLine && labelLine.states.normal;
-
-              if (stateObj) {
-                stateObj.ignore = true;
-              }
-
-              continue;
-            } // Create labelLine if not exists
-
-
-          if (!labelLine) {
-            labelLine = new Polyline();
-            targetEl.setTextGuideLine(labelLine); // Reset state of normal because it's new created.
-            // NOTE: NORMAL should always been the first!
-
-            if (!isNormal && (labelIgnoreNormal || !showNormal)) {
-              setLabelLineState(labelLine, true, 'normal', statesModels.normal);
-            } // Use same state proxy.
-
-
-            if (targetEl.stateProxy) {
-              labelLine.stateProxy = targetEl.stateProxy;
-            }
-          }
-
-          setLabelLineState(labelLine, false, stateName, stateModel);
-        }
-      }
-
-      if (labelLine) {
-        defaults(labelLine.style, defaultStyle); // Not fill.
-
-        labelLine.style.fill = null;
-        var showAbove = normalModel.get('showAbove');
-        var labelLineConfig = targetEl.textGuideLineConfig = targetEl.textGuideLineConfig || {};
-        labelLineConfig.showAbove = showAbove || false; // Custom the buildPath.
-
-        labelLine.buildPath = buildLabelLinePath;
-      }
-    }
-    function getLabelLineStatesModels(itemModel, labelLineName) {
-      labelLineName = labelLineName || 'labelLine';
-      var statesModels = {
-        normal: itemModel.getModel(labelLineName)
-      };
-
-      for (var i = 0; i < SPECIAL_STATES.length; i++) {
-        var stateName = SPECIAL_STATES[i];
-        statesModels[stateName] = itemModel.getModel([stateName, labelLineName]);
-      }
-
-      return statesModels;
-    }
-
-    function prepareLayoutList(input) {
-      var list = [];
-
-      for (var i = 0; i < input.length; i++) {
-        var rawItem = input[i];
-
-        if (rawItem.defaultAttr.ignore) {
-          continue;
-        }
-
-        var label = rawItem.label;
-        var transform = label.getComputedTransform(); // NOTE: Get bounding rect after getComputedTransform, or label may not been updated by the host el.
-
-        var localRect = label.getBoundingRect();
-        var isAxisAligned = !transform || transform[1] < 1e-5 && transform[2] < 1e-5;
-        var minMargin = label.style.margin || 0;
-        var globalRect = localRect.clone();
-        globalRect.applyTransform(transform);
-        globalRect.x -= minMargin / 2;
-        globalRect.y -= minMargin / 2;
-        globalRect.width += minMargin;
-        globalRect.height += minMargin;
-        var obb = isAxisAligned ? new OrientedBoundingRect(localRect, transform) : null;
-        list.push({
-          label: label,
-          labelLine: rawItem.labelLine,
-          rect: globalRect,
-          localRect: localRect,
-          obb: obb,
-          priority: rawItem.priority,
-          defaultAttr: rawItem.defaultAttr,
-          layoutOption: rawItem.computedLayoutOption,
-          axisAligned: isAxisAligned,
-          transform: transform
-        });
-      }
-
-      return list;
-    }
-
-    function shiftLayout(list, xyDim, sizeDim, minBound, maxBound, balanceShift) {
-      var len = list.length;
-
-      if (len < 2) {
-        return;
-      }
-
-      list.sort(function (a, b) {
-        return a.rect[xyDim] - b.rect[xyDim];
-      });
-      var lastPos = 0;
-      var delta;
-      var adjusted = false;
-      var totalShifts = 0;
-
-      for (var i = 0; i < len; i++) {
-        var item = list[i];
-        var rect = item.rect;
-        delta = rect[xyDim] - lastPos;
-
-        if (delta < 0) {
-          // shiftForward(i, len, -delta);
-          rect[xyDim] -= delta;
-          item.label[xyDim] -= delta;
-          adjusted = true;
-        }
-
-        var shift = Math.max(-delta, 0);
-        totalShifts += shift;
-        lastPos = rect[xyDim] + rect[sizeDim];
-      }
-
-      if (totalShifts > 0 && balanceShift) {
-        // Shift back to make the distribution more equally.
-        shiftList(-totalShifts / len, 0, len);
-      } // TODO bleedMargin?
-
-
-      var first = list[0];
-      var last = list[len - 1];
-      var minGap;
-      var maxGap;
-      updateMinMaxGap(); // If ends exceed two bounds, squeeze at most 80%, then take the gap of two bounds.
-
-      minGap < 0 && squeezeGaps(-minGap, 0.8);
-      maxGap < 0 && squeezeGaps(maxGap, 0.8);
-      updateMinMaxGap();
-      takeBoundsGap(minGap, maxGap, 1);
-      takeBoundsGap(maxGap, minGap, -1); // Handle bailout when there is not enough space.
-
-      updateMinMaxGap();
-
-      if (minGap < 0) {
-        squeezeWhenBailout(-minGap);
-      }
-
-      if (maxGap < 0) {
-        squeezeWhenBailout(maxGap);
-      }
-
-      function updateMinMaxGap() {
-        minGap = first.rect[xyDim] - minBound;
-        maxGap = maxBound - last.rect[xyDim] - last.rect[sizeDim];
-      }
-
-      function takeBoundsGap(gapThisBound, gapOtherBound, moveDir) {
-        if (gapThisBound < 0) {
-          // Move from other gap if can.
-          var moveFromMaxGap = Math.min(gapOtherBound, -gapThisBound);
-
-          if (moveFromMaxGap > 0) {
-            shiftList(moveFromMaxGap * moveDir, 0, len);
-            var remained = moveFromMaxGap + gapThisBound;
-
-            if (remained < 0) {
-              squeezeGaps(-remained * moveDir, 1);
-            }
-          } else {
-            squeezeGaps(-gapThisBound * moveDir, 1);
-          }
-        }
-      }
-
-      function shiftList(delta, start, end) {
-        if (delta !== 0) {
-          adjusted = true;
-        }
-
-        for (var i = start; i < end; i++) {
-          var item = list[i];
-          var rect = item.rect;
-          rect[xyDim] += delta;
-          item.label[xyDim] += delta;
-        }
-      } // Squeeze gaps if the labels exceed margin.
-
-
-      function squeezeGaps(delta, maxSqeezePercent) {
-        var gaps = [];
-        var totalGaps = 0;
-
-        for (var i = 1; i < len; i++) {
-          var prevItemRect = list[i - 1].rect;
-          var gap = Math.max(list[i].rect[xyDim] - prevItemRect[xyDim] - prevItemRect[sizeDim], 0);
-          gaps.push(gap);
-          totalGaps += gap;
-        }
-
-        if (!totalGaps) {
-          return;
-        }
-
-        var squeezePercent = Math.min(Math.abs(delta) / totalGaps, maxSqeezePercent);
-
-        if (delta > 0) {
-          for (var i = 0; i < len - 1; i++) {
-            // Distribute the shift delta to all gaps.
-            var movement = gaps[i] * squeezePercent; // Forward
-
-            shiftList(movement, 0, i + 1);
-          }
-        } else {
-          // Backward
-          for (var i = len - 1; i > 0; i--) {
-            // Distribute the shift delta to all gaps.
-            var movement = gaps[i - 1] * squeezePercent;
-            shiftList(-movement, i, len);
-          }
-        }
-      }
-      /**
-       * Squeeze to allow overlap if there is no more space available.
-       * Let other overlapping strategy like hideOverlap do the job instead of keep exceeding the bounds.
-       */
-
-
-      function squeezeWhenBailout(delta) {
-        var dir = delta < 0 ? -1 : 1;
-        delta = Math.abs(delta);
-        var moveForEachLabel = Math.ceil(delta / (len - 1));
-
-        for (var i = 0; i < len - 1; i++) {
-          if (dir > 0) {
-            // Forward
-            shiftList(moveForEachLabel, 0, i + 1);
-          } else {
-            // Backward
-            shiftList(-moveForEachLabel, len - i - 1, len);
-          }
-
-          delta -= moveForEachLabel;
-
-          if (delta <= 0) {
-            return;
-          }
-        }
-      }
-
-      return adjusted;
-    }
-    /**
-     * Adjust labels on x direction to avoid overlap.
-     */
-
-
-    function shiftLayoutOnX(list, leftBound, rightBound, // If average the shifts on all labels and add them to 0
-    // TODO: Not sure if should enable it.
-    // Pros: The angle of lines will distribute more equally
-    // Cons: In some layout. It may not what user wanted. like in pie. the label of last sector is usually changed unexpectedly.
-    balanceShift) {
-      return shiftLayout(list, 'x', 'width', leftBound, rightBound, balanceShift);
-    }
-    /**
-     * Adjust labels on y direction to avoid overlap.
-     */
-
-    function shiftLayoutOnY(list, topBound, bottomBound, // If average the shifts on all labels and add them to 0
-    balanceShift) {
-      return shiftLayout(list, 'y', 'height', topBound, bottomBound, balanceShift);
-    }
-    function hideOverlap(labelList) {
-      var displayedLabels = []; // TODO, render overflow visible first, put in the displayedLabels.
-
-      labelList.sort(function (a, b) {
-        return b.priority - a.priority;
-      });
-      var globalRect = new BoundingRect(0, 0, 0, 0);
-
-      function hideEl(el) {
-        if (!el.ignore) {
-          // Show on emphasis.
-          var emphasisState = el.ensureState('emphasis');
-
-          if (emphasisState.ignore == null) {
-            emphasisState.ignore = false;
-          }
-        }
-
-        el.ignore = true;
-      }
-
-      for (var i = 0; i < labelList.length; i++) {
-        var labelItem = labelList[i];
-        var isAxisAligned = labelItem.axisAligned;
-        var localRect = labelItem.localRect;
-        var transform = labelItem.transform;
-        var label = labelItem.label;
-        var labelLine = labelItem.labelLine;
-        globalRect.copy(labelItem.rect); // Add a threshold because layout may be aligned precisely.
-
-        globalRect.width -= 0.1;
-        globalRect.height -= 0.1;
-        globalRect.x += 0.05;
-        globalRect.y += 0.05;
-        var obb = labelItem.obb;
-        var overlapped = false;
-
-        for (var j = 0; j < displayedLabels.length; j++) {
-          var existsTextCfg = displayedLabels[j]; // Fast rejection.
-
-          if (!globalRect.intersect(existsTextCfg.rect)) {
-            continue;
-          }
-
-          if (isAxisAligned && existsTextCfg.axisAligned) {
-            // Is overlapped
-            overlapped = true;
-            break;
-          }
-
-          if (!existsTextCfg.obb) {
-            // If self is not axis aligned. But other is.
-            existsTextCfg.obb = new OrientedBoundingRect(existsTextCfg.localRect, existsTextCfg.transform);
-          }
-
-          if (!obb) {
-            // If self is axis aligned. But other is not.
-            obb = new OrientedBoundingRect(localRect, transform);
-          }
-
-          if (obb.intersect(existsTextCfg.obb)) {
-            overlapped = true;
-            break;
-          }
-        } // TODO Callback to determine if this overlap should be handled?
-
-
-        if (overlapped) {
-          hideEl(label);
-          labelLine && hideEl(labelLine);
-        } else {
-          label.attr('ignore', labelItem.defaultAttr.ignore);
-          labelLine && labelLine.attr('ignore', labelItem.defaultAttr.labelGuideIgnore);
-          displayedLabels.push(labelItem);
-        }
-      }
-    }
-
-    function cloneArr(points) {
-      if (points) {
-        var newPoints = [];
-
-        for (var i = 0; i < points.length; i++) {
-          newPoints.push(points[i].slice());
-        }
-
-        return newPoints;
-      }
-    }
-
-    function prepareLayoutCallbackParams(labelItem, hostEl) {
-      var label = labelItem.label;
-      var labelLine = hostEl && hostEl.getTextGuideLine();
-      return {
-        dataIndex: labelItem.dataIndex,
-        dataType: labelItem.dataType,
-        seriesIndex: labelItem.seriesModel.seriesIndex,
-        text: labelItem.label.style.text,
-        rect: labelItem.hostRect,
-        labelRect: labelItem.rect,
-        // x: labelAttr.x,
-        // y: labelAttr.y,
-        align: label.style.align,
-        verticalAlign: label.style.verticalAlign,
-        labelLinePoints: cloneArr(labelLine && labelLine.shape.points)
-      };
-    }
-
-    var LABEL_OPTION_TO_STYLE_KEYS = ['align', 'verticalAlign', 'width', 'height', 'fontSize'];
-    var dummyTransformable = new Transformable();
-    var labelLayoutInnerStore = makeInner();
-    var labelLineAnimationStore = makeInner();
-
-    function extendWithKeys(target, source, keys) {
-      for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
-
-        if (source[key] != null) {
-          target[key] = source[key];
-        }
-      }
-    }
-
-    var LABEL_LAYOUT_PROPS = ['x', 'y', 'rotation'];
-
-    var LabelManager =
-    /** @class */
-    function () {
-      function LabelManager() {
-        this._labelList = [];
-        this._chartViewList = [];
-      }
-
-      LabelManager.prototype.clearLabels = function () {
-        this._labelList = [];
-        this._chartViewList = [];
-      };
-      /**
-       * Add label to manager
-       */
-
-
-      LabelManager.prototype._addLabel = function (dataIndex, dataType, seriesModel, label, layoutOption) {
-        var labelStyle = label.style;
-        var hostEl = label.__hostTarget;
-        var textConfig = hostEl.textConfig || {}; // TODO: If label is in other state.
-
-        var labelTransform = label.getComputedTransform();
-        var labelRect = label.getBoundingRect().plain();
-        BoundingRect.applyTransform(labelRect, labelRect, labelTransform);
-
-        if (labelTransform) {
-          dummyTransformable.setLocalTransform(labelTransform);
-        } else {
-          // Identity transform.
-          dummyTransformable.x = dummyTransformable.y = dummyTransformable.rotation = dummyTransformable.originX = dummyTransformable.originY = 0;
-          dummyTransformable.scaleX = dummyTransformable.scaleY = 1;
-        }
-
-        var host = label.__hostTarget;
-        var hostRect;
-
-        if (host) {
-          hostRect = host.getBoundingRect().plain();
-          var transform = host.getComputedTransform();
-          BoundingRect.applyTransform(hostRect, hostRect, transform);
-        }
-
-        var labelGuide = hostRect && host.getTextGuideLine();
-
-        this._labelList.push({
-          label: label,
-          labelLine: labelGuide,
-          seriesModel: seriesModel,
-          dataIndex: dataIndex,
-          dataType: dataType,
-          layoutOption: layoutOption,
-          computedLayoutOption: null,
-          rect: labelRect,
-          hostRect: hostRect,
-          // Label with lower priority will be hidden when overlapped
-          // Use rect size as default priority
-          priority: hostRect ? hostRect.width * hostRect.height : 0,
-          // Save default label attributes.
-          // For restore if developers want get back to default value in callback.
-          defaultAttr: {
-            ignore: label.ignore,
-            labelGuideIgnore: labelGuide && labelGuide.ignore,
-            x: dummyTransformable.x,
-            y: dummyTransformable.y,
-            scaleX: dummyTransformable.scaleX,
-            scaleY: dummyTransformable.scaleY,
-            rotation: dummyTransformable.rotation,
-            style: {
-              x: labelStyle.x,
-              y: labelStyle.y,
-              align: labelStyle.align,
-              verticalAlign: labelStyle.verticalAlign,
-              width: labelStyle.width,
-              height: labelStyle.height,
-              fontSize: labelStyle.fontSize
-            },
-            cursor: label.cursor,
-            attachedPos: textConfig.position,
-            attachedRot: textConfig.rotation
-          }
-        });
-      };
-
-      LabelManager.prototype.addLabelsOfSeries = function (chartView) {
-        var _this = this;
-
-        this._chartViewList.push(chartView);
-
-        var seriesModel = chartView.__model;
-        var layoutOption = seriesModel.get('labelLayout');
-        /**
-         * Ignore layouting if it's not specified anything.
-         */
-
-        if (!(isFunction(layoutOption) || keys(layoutOption).length)) {
-          return;
-        }
-
-        chartView.group.traverse(function (child) {
-          if (child.ignore) {
-            return true; // Stop traverse descendants.
-          } // Only support label being hosted on graphic elements.
-
-
-          var textEl = child.getTextContent();
-          var ecData = getECData(child); // Can only attach the text on the element with dataIndex
-
-          if (textEl && !textEl.disableLabelLayout) {
-            _this._addLabel(ecData.dataIndex, ecData.dataType, seriesModel, textEl, layoutOption);
-          }
-        });
-      };
-
-      LabelManager.prototype.updateLayoutConfig = function (api) {
-        var width = api.getWidth();
-        var height = api.getHeight();
-
-        function createDragHandler(el, labelLineModel) {
-          return function () {
-            updateLabelLinePoints(el, labelLineModel);
-          };
-        }
-
-        for (var i = 0; i < this._labelList.length; i++) {
-          var labelItem = this._labelList[i];
-          var label = labelItem.label;
-          var hostEl = label.__hostTarget;
-          var defaultLabelAttr = labelItem.defaultAttr;
-          var layoutOption = void 0; // TODO A global layout option?
-
-          if (typeof labelItem.layoutOption === 'function') {
-            layoutOption = labelItem.layoutOption(prepareLayoutCallbackParams(labelItem, hostEl));
-          } else {
-            layoutOption = labelItem.layoutOption;
-          }
-
-          layoutOption = layoutOption || {};
-          labelItem.computedLayoutOption = layoutOption;
-          var degreeToRadian = Math.PI / 180; // TODO hostEl should always exists.
-          // Or label should not have parent because the x, y is all in global space.
-
-          if (hostEl) {
-            hostEl.setTextConfig({
-              // Force to set local false.
-              local: false,
-              // Ignore position and rotation config on the host el if x or y is changed.
-              position: layoutOption.x != null || layoutOption.y != null ? null : defaultLabelAttr.attachedPos,
-              // Ignore rotation config on the host el if rotation is changed.
-              rotation: layoutOption.rotate != null ? layoutOption.rotate * degreeToRadian : defaultLabelAttr.attachedRot,
-              offset: [layoutOption.dx || 0, layoutOption.dy || 0]
-            });
-          }
-
-          var needsUpdateLabelLine = false;
-
-          if (layoutOption.x != null) {
-            // TODO width of chart view.
-            label.x = parsePercent$1(layoutOption.x, width);
-            label.setStyle('x', 0); // Ignore movement in style. TODO: origin.
-
-            needsUpdateLabelLine = true;
-          } else {
-            label.x = defaultLabelAttr.x;
-            label.setStyle('x', defaultLabelAttr.style.x);
-          }
-
-          if (layoutOption.y != null) {
-            // TODO height of chart view.
-            label.y = parsePercent$1(layoutOption.y, height);
-            label.setStyle('y', 0); // Ignore movement in style.
-
-            needsUpdateLabelLine = true;
-          } else {
-            label.y = defaultLabelAttr.y;
-            label.setStyle('y', defaultLabelAttr.style.y);
-          }
-
-          if (layoutOption.labelLinePoints) {
-            var guideLine = hostEl.getTextGuideLine();
-
-            if (guideLine) {
-              guideLine.setShape({
-                points: layoutOption.labelLinePoints
-              }); // Not update
-
-              needsUpdateLabelLine = false;
-            }
-          }
-
-          var labelLayoutStore = labelLayoutInnerStore(label);
-          labelLayoutStore.needsUpdateLabelLine = needsUpdateLabelLine;
-          label.rotation = layoutOption.rotate != null ? layoutOption.rotate * degreeToRadian : defaultLabelAttr.rotation;
-          label.scaleX = defaultLabelAttr.scaleX;
-          label.scaleY = defaultLabelAttr.scaleY;
-
-          for (var k = 0; k < LABEL_OPTION_TO_STYLE_KEYS.length; k++) {
-            var key = LABEL_OPTION_TO_STYLE_KEYS[k];
-            label.setStyle(key, layoutOption[key] != null ? layoutOption[key] : defaultLabelAttr.style[key]);
-          }
-
-          if (layoutOption.draggable) {
-            label.draggable = true;
-            label.cursor = 'move';
-
-            if (hostEl) {
-              var hostModel = labelItem.seriesModel;
-
-              if (labelItem.dataIndex != null) {
-                var data = labelItem.seriesModel.getData(labelItem.dataType);
-                hostModel = data.getItemModel(labelItem.dataIndex);
-              }
-
-              label.on('drag', createDragHandler(hostEl, hostModel.getModel('labelLine')));
-            }
-          } else {
-            // TODO Other drag functions?
-            label.off('drag');
-            label.cursor = defaultLabelAttr.cursor;
-          }
-        }
-      };
-
-      LabelManager.prototype.layout = function (api) {
-        var width = api.getWidth();
-        var height = api.getHeight();
-        var labelList = prepareLayoutList(this._labelList);
-        var labelsNeedsAdjustOnX = filter(labelList, function (item) {
-          return item.layoutOption.moveOverlap === 'shiftX';
-        });
-        var labelsNeedsAdjustOnY = filter(labelList, function (item) {
-          return item.layoutOption.moveOverlap === 'shiftY';
-        });
-        shiftLayoutOnX(labelsNeedsAdjustOnX, 0, width);
-        shiftLayoutOnY(labelsNeedsAdjustOnY, 0, height);
-        var labelsNeedsHideOverlap = filter(labelList, function (item) {
-          return item.layoutOption.hideOverlap;
-        });
-        hideOverlap(labelsNeedsHideOverlap);
-      };
-      /**
-       * Process all labels. Not only labels with layoutOption.
-       */
-
-
-      LabelManager.prototype.processLabelsOverall = function () {
-        var _this = this;
-
-        each(this._chartViewList, function (chartView) {
-          var seriesModel = chartView.__model;
-          var ignoreLabelLineUpdate = chartView.ignoreLabelLineUpdate;
-          var animationEnabled = seriesModel.isAnimationEnabled();
-          chartView.group.traverse(function (child) {
-            if (child.ignore) {
-              return true; // Stop traverse descendants.
-            }
-
-            var needsUpdateLabelLine = !ignoreLabelLineUpdate;
-            var label = child.getTextContent();
-
-            if (!needsUpdateLabelLine && label) {
-              needsUpdateLabelLine = labelLayoutInnerStore(label).needsUpdateLabelLine;
-            }
-
-            if (needsUpdateLabelLine) {
-              _this._updateLabelLine(child, seriesModel);
-            }
-
-            if (animationEnabled) {
-              _this._animateLabels(child, seriesModel);
-            }
-          });
-        });
-      };
-
-      LabelManager.prototype._updateLabelLine = function (el, seriesModel) {
-        // Only support label being hosted on graphic elements.
-        var textEl = el.getTextContent(); // Update label line style.
-
-        var ecData = getECData(el);
-        var dataIndex = ecData.dataIndex; // Only support labelLine on the labels represent data.
-
-        if (textEl && dataIndex != null) {
-          var data = seriesModel.getData(ecData.dataType);
-          var itemModel = data.getItemModel(dataIndex);
-          var defaultStyle = {};
-          var visualStyle = data.getItemVisual(dataIndex, 'style');
-          var visualType = data.getVisual('drawType'); // Default to be same with main color
-
-          defaultStyle.stroke = visualStyle[visualType];
-          var labelLineModel = itemModel.getModel('labelLine');
-          setLabelLineStyle(el, getLabelLineStatesModels(itemModel), defaultStyle);
-          updateLabelLinePoints(el, labelLineModel);
-        }
-      };
-
-      LabelManager.prototype._animateLabels = function (el, seriesModel) {
-        var textEl = el.getTextContent();
-        var guideLine = el.getTextGuideLine(); // Animate
-
-        if (textEl && !textEl.ignore && !textEl.invisible && !el.disableLabelAnimation && !isElementRemoved(el)) {
-          var layoutStore = labelLayoutInnerStore(textEl);
-          var oldLayout = layoutStore.oldLayout;
-          var ecData = getECData(el);
-          var dataIndex = ecData.dataIndex;
-          var newProps = {
-            x: textEl.x,
-            y: textEl.y,
-            rotation: textEl.rotation
-          };
-          var data = seriesModel.getData(ecData.dataType);
-
-          if (!oldLayout) {
-            textEl.attr(newProps); // Disable fade in animation if value animation is enabled.
-
-            if (!labelInner(textEl).valueAnimation) {
-              var oldOpacity = retrieve2(textEl.style.opacity, 1); // Fade in animation
-
-              textEl.style.opacity = 0;
-              initProps(textEl, {
-                style: {
-                  opacity: oldOpacity
-                }
-              }, seriesModel, dataIndex);
-            }
-          } else {
-            textEl.attr(oldLayout); // Make sure the animation from is in the right status.
-
-            var prevStates = el.prevStates;
-
-            if (prevStates) {
-              if (indexOf(prevStates, 'select') >= 0) {
-                textEl.attr(layoutStore.oldLayoutSelect);
-              }
-
-              if (indexOf(prevStates, 'emphasis') >= 0) {
-                textEl.attr(layoutStore.oldLayoutEmphasis);
-              }
-            }
-
-            updateProps(textEl, newProps, seriesModel, dataIndex);
-          }
-
-          layoutStore.oldLayout = newProps;
-
-          if (textEl.states.select) {
-            var layoutSelect = layoutStore.oldLayoutSelect = {};
-            extendWithKeys(layoutSelect, newProps, LABEL_LAYOUT_PROPS);
-            extendWithKeys(layoutSelect, textEl.states.select, LABEL_LAYOUT_PROPS);
-          }
-
-          if (textEl.states.emphasis) {
-            var layoutEmphasis = layoutStore.oldLayoutEmphasis = {};
-            extendWithKeys(layoutEmphasis, newProps, LABEL_LAYOUT_PROPS);
-            extendWithKeys(layoutEmphasis, textEl.states.emphasis, LABEL_LAYOUT_PROPS);
-          }
-
-          animateLabelValue(textEl, dataIndex, data, seriesModel, seriesModel);
-        }
-
-        if (guideLine && !guideLine.ignore && !guideLine.invisible) {
-          var layoutStore = labelLineAnimationStore(guideLine);
-          var oldLayout = layoutStore.oldLayout;
-          var newLayout = {
-            points: guideLine.shape.points
-          };
-
-          if (!oldLayout) {
-            guideLine.setShape(newLayout);
-            guideLine.style.strokePercent = 0;
-            initProps(guideLine, {
-              style: {
-                strokePercent: 1
-              }
-            }, seriesModel);
-          } else {
-            guideLine.attr({
-              shape: oldLayout
-            });
-            updateProps(guideLine, {
-              shape: newLayout
-            }, seriesModel);
-          }
-
-          layoutStore.oldLayout = newLayout;
-        }
-      };
-
-      return LabelManager;
-    }();
-
     // Inlucdes: pieSelect, pieUnSelect, pieToggleSelect, mapSelect, mapUnSelect, mapToggleSelect
 
     function createLegacyDataSelectAction(seriesType, ecRegisterAction) {
@@ -25081,6 +24968,7 @@
     }
 
     var wmUniqueIndex = Math.round(Math.random() * 9);
+    var supportDefineProperty = typeof Object.defineProperty === 'function';
     var WeakMap = (function () {
         function WeakMap() {
             this._id = '__ec_inner_' + wmUniqueIndex++;
@@ -25090,7 +24978,7 @@
         };
         WeakMap.prototype.set = function (key, value) {
             var target = this._guard(key);
-            if (typeof Object.defineProperty === 'function') {
+            if (supportDefineProperty) {
                 Object.defineProperty(target, this._id, {
                     value: value,
                     enumerable: false,
@@ -25410,6 +25298,24 @@
 
       return symbolPath;
     }
+    function normalizeSymbolSize(symbolSize) {
+      if (!isArray(symbolSize)) {
+        symbolSize = [+symbolSize, +symbolSize];
+      }
+
+      return [symbolSize[0] || 0, symbolSize[1] || 0];
+    }
+    function normalizeSymbolOffset(symbolOffset, symbolSize) {
+      if (symbolOffset == null) {
+        return;
+      }
+
+      if (!isArray(symbolOffset)) {
+        symbolOffset = [symbolOffset, symbolOffset];
+      }
+
+      return [parsePercent$1(symbolOffset[0], symbolSize[0]) || 0, parsePercent$1(retrieve2(symbolOffset[1], symbolOffset[0]), symbolSize[1]) || 0];
+    }
 
     function createLinearGradient(ctx, obj, rect) {
         var x = obj.x == null ? 0 : obj.x;
@@ -25486,6 +25392,9 @@
     function styleHasStroke(style) {
         var stroke = style.stroke;
         return !(stroke == null || stroke === 'none' || !(style.lineWidth > 0));
+    }
+    function isValidStrokeFillStyle(strokeOrFill) {
+        return typeof strokeOrFill === 'string' && strokeOrFill !== 'none';
     }
     function styleHasFill(style) {
         var fill = style.fill;
@@ -25804,14 +25713,14 @@
                 flushPathDrawn(ctx, scope);
                 styleChanged = true;
             }
-            ctx.fillStyle = style.fill;
+            isValidStrokeFillStyle(style.fill) && (ctx.fillStyle = style.fill);
         }
         if (forceSetAll || style.stroke !== prevStyle.stroke) {
             if (!styleChanged) {
                 flushPathDrawn(ctx, scope);
                 styleChanged = true;
             }
-            ctx.strokeStyle = style.stroke;
+            isValidStrokeFillStyle(style.stroke) && (ctx.strokeStyle = style.stroke);
         }
         if (forceSetAll || style.opacity !== prevStyle.opacity) {
             if (!styleChanged) {
@@ -28182,15 +28091,12 @@
       }
     };
 
-    var assert$1 = assert;
-    var each$3 = each;
-    var isFunction$1 = isFunction;
-    var isObject$2 = isObject;
-    var indexOf$1 = indexOf;
+    var lifecycle = new Eventful();
+
     var hasWindow = typeof window !== 'undefined';
-    var version$1 = '5.1.2';
+    var version$1 = '5.2.0';
     var dependencies = {
-      zrender: '5.1.1'
+      zrender: '5.2.0'
     };
     var TEST_FRAME_REMAIN_TIME = 1;
     var PRIORITY_PROCESSOR_SERIES_FILTER = 800; // Some data processors depends on the stack result dimension (to calculate data extent).
@@ -28242,7 +28148,7 @@
     // All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
 
     var IN_MAIN_PROCESS_KEY = '__flagInMainProcess';
-    var OPTION_UPDATED_KEY = '__optionUpdated';
+    var PENDING_UPDATE = '__pendingUpdate';
     var STATUS_NEEDS_UPDATE_KEY = '__needsUpdateStatus';
     var ACTION_REG = /^[a-zA-Z0-9_]+$/;
     var CONNECT_STATUS_KEY = '__connectUpdateStatus';
@@ -28318,10 +28224,8 @@
     var render;
     var renderComponents;
     var renderSeries;
-    var performPostUpdateFuncs;
     var createExtensionAPI;
     var enableConnect;
-    var setTransitionOpt;
     var markStatusToUpdate;
     var applyChangedStates;
 
@@ -28382,8 +28286,7 @@
         sort(visualFuncs, prioritySortFunc);
         sort(dataProcessorFuncs, prioritySortFunc);
         _this._scheduler = new Scheduler(_this, api, dataProcessorFuncs, visualFuncs);
-        _this._messageCenter = new MessageCenter();
-        _this._labelManager = new LabelManager(); // Init mouse events
+        _this._messageCenter = new MessageCenter(); // Init mouse events
 
         _this._initEvents(); // In case some people write `window.onresize = chart.resize`
 
@@ -28405,11 +28308,11 @@
         applyChangedStates(this);
         var scheduler = this._scheduler; // Lazy update
 
-        if (this[OPTION_UPDATED_KEY]) {
-          var silent = this[OPTION_UPDATED_KEY].silent;
+        if (this[PENDING_UPDATE]) {
+          var silent = this[PENDING_UPDATE].silent;
           this[IN_MAIN_PROCESS_KEY] = true;
           prepare(this);
-          updateMethods.update.call(this); // At present, in each frame, zrender performs:
+          updateMethods.update.call(this, null, this[PENDING_UPDATE].updateParams); // At present, in each frame, zrender performs:
           //   (1) animation step forward.
           //   (2) trigger('frame') (where this `_onframe` is called)
           //   (3) zrender flush (render).
@@ -28419,7 +28322,7 @@
           this._zr.flush();
 
           this[IN_MAIN_PROCESS_KEY] = false;
-          this[OPTION_UPDATED_KEY] = false;
+          this[PENDING_UPDATE] = null;
           flushPendingActions.call(this, silent);
           triggerUpdatedEvent.call(this, silent);
         } // Avoid do both lazy update and progress in one frame.
@@ -28443,7 +28346,7 @@
               // console.log('--- ec frame visual ---', remainTime);
 
               scheduler.performVisualTasks(ecModel);
-              renderSeries(this, this._model, api, 'remain');
+              renderSeries(this, this._model, api, 'remain', {});
               remainTime -= +new Date() - startTime;
             } while (remainTime > 0 && scheduler.unfinished); // Call flush explicitly for trigger finished event.
 
@@ -28472,7 +28375,7 @@
 
       ECharts.prototype.setOption = function (option, notMerge, lazyUpdate) {
         if ("development" !== 'production') {
-          assert$1(!this[IN_MAIN_PROCESS_KEY], '`setOption` should not be called during main process.');
+          assert(!this[IN_MAIN_PROCESS_KEY], '`setOption` should not be called during main process.');
         }
 
         if (this._disposed) {
@@ -28484,7 +28387,7 @@
         var replaceMerge;
         var transitionOpt;
 
-        if (isObject$2(notMerge)) {
+        if (isObject(notMerge)) {
           lazyUpdate = notMerge.lazyUpdate;
           silent = notMerge.silent;
           replaceMerge = notMerge.replaceMerge;
@@ -28506,11 +28409,15 @@
           replaceMerge: replaceMerge
         }, optionPreprocessorFuncs);
 
-        setTransitionOpt(this, transitionOpt);
+        var updateParams = {
+          seriesTransition: transitionOpt,
+          optionChanged: true
+        };
 
         if (lazyUpdate) {
-          this[OPTION_UPDATED_KEY] = {
-            silent: silent
+          this[PENDING_UPDATE] = {
+            silent: silent,
+            updateParams: updateParams
           };
           this[IN_MAIN_PROCESS_KEY] = false; // `setOption(option, {lazyMode: true})` may be called when zrender has been slept.
           // It should wake it up to make sure zrender start to render at the next frame.
@@ -28518,12 +28425,12 @@
           this.getZr().wakeUp();
         } else {
           prepare(this);
-          updateMethods.update.call(this); // Ensure zr refresh sychronously, and then pixel in canvas can be
+          updateMethods.update.call(this, null, updateParams); // Ensure zr refresh sychronously, and then pixel in canvas can be
           // fetched after `setOption`.
 
           this._zr.flush();
 
-          this[OPTION_UPDATED_KEY] = false;
+          this[PENDING_UPDATE] = null;
           this[IN_MAIN_PROCESS_KEY] = false;
           flushPendingActions.call(this, silent);
           triggerUpdatedEvent.call(this, silent);
@@ -28606,7 +28513,7 @@
         var ecModel = this._model;
         var excludesComponentViews = [];
         var self = this;
-        each$3(excludeComponents, function (componentType) {
+        each(excludeComponents, function (componentType) {
           ecModel.eachComponent({
             mainType: componentType
           }, function (component) {
@@ -28619,7 +28526,7 @@
           });
         });
         var url = this._zr.painter.getType() === 'svg' ? this.getSvgDataURL() : this.getRenderedCanvas(opts).toDataURL('image/' + (opts && opts.type || 'png'));
-        each$3(excludesComponentViews, function (view) {
+        each(excludesComponentViews, function (view) {
           view.group.ignore = false;
         });
         return url;
@@ -28680,7 +28587,7 @@
 
           if (isSvg) {
             var content_1 = '';
-            each$3(canvasList_1, function (item) {
+            each(canvasList_1, function (item) {
               var x = item.left - left_1;
               var y = item.top - top_1;
               content_1 += '<g transform="translate(' + x + ',' + y + ')">' + item.dom + '</g>';
@@ -28709,7 +28616,7 @@
               }));
             }
 
-            each$3(canvasList_1, function (item) {
+            each(canvasList_1, function (item) {
               var img = new ZRImage({
                 style: {
                   x: item.left * dpr_1 - left_1,
@@ -28829,7 +28736,7 @@
       ECharts.prototype._initEvents = function () {
         var _this = this;
 
-        each$3(MOUSE_EVENT_NAMES, function (eveName) {
+        each(MOUSE_EVENT_NAMES, function (eveName) {
           var handler = function (e) {
             var ecModel = _this.getModel();
 
@@ -28909,14 +28816,14 @@
 
           _this._zr.on(eveName, handler, _this);
         });
-        each$3(eventActionMap, function (actionType, eventType) {
+        each(eventActionMap, function (actionType, eventType) {
           _this._messageCenter.on(eventType, function (event) {
             this.trigger(eventType, event);
           }, _this);
         }); // Extra events
         // TODO register?
 
-        each$3(['selectchanged'], function (eventType) {
+        each(['selectchanged'], function (eventType) {
           _this._messageCenter.on(eventType, function (event) {
             this.trigger(eventType, event);
           }, _this);
@@ -28947,18 +28854,22 @@
 
         this._disposed = true;
         setAttribute(this.getDom(), DOM_ATTRIBUTE_KEY, '');
-        var api = this._api;
-        var ecModel = this._model;
-        each$3(this._componentsViews, function (component) {
+        var chart = this;
+        var api = chart._api;
+        var ecModel = chart._model;
+        each(chart._componentsViews, function (component) {
           component.dispose(ecModel, api);
         });
-        each$3(this._chartsViews, function (chart) {
+        each(chart._chartsViews, function (chart) {
           chart.dispose(ecModel, api);
         }); // Dispose after all views disposed
 
-        this._zr.dispose();
+        chart._zr.dispose(); // Set properties to null.
+        // To reduce the memory cost in case the top code still holds this instance unexpectedly.
 
-        delete instances$1[this.id];
+
+        chart._dom = chart._model = chart._chartsMap = chart._componentsMap = chart._chartsViews = chart._componentsViews = chart._scheduler = chart._api = chart._zr = chart._throttledZrFlush = chart._theme = chart._coordSysMgr = chart._messageCenter = null;
+        delete instances$1[chart.id];
       };
       /**
        * Resize the chart
@@ -28967,7 +28878,7 @@
 
       ECharts.prototype.resize = function (opts) {
         if ("development" !== 'production') {
-          assert$1(!this[IN_MAIN_PROCESS_KEY], '`resize` should not be called during main process.');
+          assert(!this[IN_MAIN_PROCESS_KEY], '`resize` should not be called during main process.');
         }
 
         if (this._disposed) {
@@ -28990,13 +28901,13 @@
         // chart.setOption(option, { lazyUpdate: true });
         // chart.resize();
 
-        if (this[OPTION_UPDATED_KEY]) {
+        if (this[PENDING_UPDATE]) {
           if (silent == null) {
-            silent = this[OPTION_UPDATED_KEY].silent;
+            silent = this[PENDING_UPDATE].silent;
           }
 
           needPrepare = true;
-          this[OPTION_UPDATED_KEY] = false;
+          this[PENDING_UPDATE] = null;
         }
 
         this[IN_MAIN_PROCESS_KEY] = true;
@@ -29019,7 +28930,7 @@
           return;
         }
 
-        if (isObject$2(name)) {
+        if (isObject(name)) {
           cfg = name;
           name = '';
         }
@@ -29077,7 +28988,7 @@
           return;
         }
 
-        if (!isObject$2(opt)) {
+        if (!isObject(opt)) {
           opt = {
             silent: !!opt
           };
@@ -29119,10 +29030,11 @@
       };
 
       ECharts.prototype.updateLabelLayout = function () {
-        var labelManager = this._labelManager;
-        labelManager.updateLayoutConfig(this._api);
-        labelManager.layout(this._api);
-        labelManager.processLabelsOverall();
+        lifecycle.trigger('series:layoutlabels', this._model, this._api, {
+          // Not adding series labels.
+          // TODO
+          updatedSeries: []
+        });
       };
 
       ECharts.prototype.appendData = function (params) {
@@ -29136,7 +29048,7 @@
         var seriesModel = ecModel.getSeriesByIndex(seriesIndex);
 
         if ("development" !== 'production') {
-          assert$1(params.data && seriesModel);
+          assert(params.data && seriesModel);
         }
 
         seriesModel.appendData(params); // Note: `appendData` does not support that update extent of coordinate
@@ -29207,7 +29119,7 @@
               ChartView.getClass(classType.sub);
 
               if ("development" !== 'production') {
-                assert$1(Clazz, classType.sub + ' does not exist.');
+                assert(Clazz, classType.sub + ' does not exist.');
               }
 
               view = new Clazz();
@@ -29255,7 +29167,7 @@
             // FIXME
             // Chart will not be update directly here, except set dirty.
             // But there is no such scenario now.
-            each$3([].concat(ecIns._componentsViews).concat(ecIns._chartsViews), callView);
+            each([].concat(ecIns._componentsViews).concat(ecIns._chartsViews), callView);
             return;
           }
 
@@ -29274,7 +29186,7 @@
 
           if (excludeSeriesId != null) {
             excludeSeriesIdMap = createHashMap();
-            each$3(normalizeToArray(excludeSeriesId), function (id) {
+            each(normalizeToArray(excludeSeriesId), function (id) {
               var modelId = convertOptionIdName(id, null);
 
               if (modelId != null) {
@@ -29289,42 +29201,52 @@
 
 
           ecModel && ecModel.eachComponent(condition, function (model) {
-            if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
-              if (isHighDownPayload(payload)) {
-                if (model instanceof SeriesModel) {
-                  if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
-                    blurSeriesFromHighlightPayload(model, payload, ecIns._api);
-                  }
-                } else {
-                  var _a = findComponentHighDownDispatchers(model.mainType, model.componentIndex, payload.name, ecIns._api),
-                      focusSelf = _a.focusSelf,
-                      dispatchers = _a.dispatchers;
+            var isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
 
-                  if (payload.type === HIGHLIGHT_ACTION_TYPE && focusSelf && !payload.notBlur) {
-                    blurComponent(model.mainType, model.componentIndex, ecIns._api);
-                  } // PENDING:
-                  // Whether to put this "enter emphasis" code in `ComponentView`,
-                  // which will be the same as `ChartView` but might be not necessary
-                  // and will be far from this logic.
+            if (isExcluded) {
+              return;
+            }
 
-
-                  if (dispatchers) {
-                    each$3(dispatchers, function (dispatcher) {
-                      payload.type === HIGHLIGHT_ACTION_TYPE ? enterEmphasis(dispatcher) : leaveEmphasis(dispatcher);
-                    });
-                  }
+            if (isHighDownPayload(payload)) {
+              if (model instanceof SeriesModel) {
+                if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
+                  blurSeriesFromHighlightPayload(model, payload, ecIns._api);
                 }
-              } else if (isSelectChangePayload(payload)) {
-                // TODO geo
-                if (model instanceof SeriesModel) {
-                  toggleSelectionFromPayload(model, payload, ecIns._api);
-                  updateSeriesElementSelection(model);
-                  markStatusToUpdate(ecIns);
+              } else {
+                var _a = findComponentHighDownDispatchers(model.mainType, model.componentIndex, payload.name, ecIns._api),
+                    focusSelf = _a.focusSelf,
+                    dispatchers = _a.dispatchers;
+
+                if (payload.type === HIGHLIGHT_ACTION_TYPE && focusSelf && !payload.notBlur) {
+                  blurComponent(model.mainType, model.componentIndex, ecIns._api);
+                } // PENDING:
+                // Whether to put this "enter emphasis" code in `ComponentView`,
+                // which will be the same as `ChartView` but might be not necessary
+                // and will be far from this logic.
+
+
+                if (dispatchers) {
+                  each(dispatchers, function (dispatcher) {
+                    payload.type === HIGHLIGHT_ACTION_TYPE ? enterEmphasis(dispatcher) : leaveEmphasis(dispatcher);
+                  });
                 }
               }
-
-              callView(ecIns[mainType === 'series' ? '_chartsMap' : '_componentsMap'][model.__viewId]);
+            } else if (isSelectChangePayload(payload)) {
+              // TODO geo
+              if (model instanceof SeriesModel) {
+                toggleSelectionFromPayload(model, payload, ecIns._api);
+                updateSeriesElementSelection(model);
+                markStatusToUpdate(ecIns);
+              }
             }
+          }, ecIns);
+          ecModel && ecModel.eachComponent(condition, function (model) {
+            var isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
+
+            if (isExcluded) {
+              return;
+            }
+            callView(ecIns[mainType === 'series' ? '_chartsMap' : '_componentsMap'][model.__viewId]);
           }, ecIns);
 
           function callView(view) {
@@ -29335,10 +29257,14 @@
         updateMethods = {
           prepareAndUpdate: function (payload) {
             prepare(this);
-            updateMethods.update.call(this, payload);
+            updateMethods.update.call(this, payload, {
+              // Needs to mark option changed if newOption is given.
+              // It's from MagicType.
+              // TODO If use a separate flag optionChanged in payload?
+              optionChanged: payload.newOption != null
+            });
           },
-          update: function (payload) {
-            // console.profile && console.profile('update');
+          update: function (payload, updateParams) {
             var ecModel = this._model;
             var api = this._api;
             var zr = this._zr;
@@ -29370,7 +29296,7 @@
             coordSysMgr.update(ecModel, api);
             clearColorPalette(ecModel);
             scheduler.performVisualTasks(ecModel, payload);
-            render(this, ecModel, api, payload); // Set background
+            render(this, ecModel, api, payload, updateParams); // Set background
 
             var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
             var darkMode = ecModel.get('darkMode'); // In IE8
@@ -29390,7 +29316,7 @@
               }
             }
 
-            performPostUpdateFuncs(ecModel, api); // console.profile && console.profileEnd('update');
+            lifecycle.trigger('afterupdate', ecModel, api);
           },
           updateTransform: function (payload) {
             var _this = this;
@@ -29442,8 +29368,8 @@
             // renderComponents(ecIns, ecModel, api, payload, componentDirtyList);
 
 
-            renderSeries(this, ecModel, api, payload, seriesDirtyMap);
-            performPostUpdateFuncs(ecModel, this._api);
+            renderSeries(this, ecModel, api, payload, {}, seriesDirtyMap);
+            lifecycle.trigger('afterupdate', ecModel, api);
           },
           updateView: function (payload) {
             var ecModel = this._model; // update before setOption
@@ -29460,8 +29386,8 @@
               setDirty: true
             });
 
-            render(this, this._model, this._api, payload);
-            performPostUpdateFuncs(ecModel, this._api);
+            render(this, ecModel, this._api, payload, {});
+            lifecycle.trigger('afterupdate', ecModel, this._api);
           },
           updateVisual: function (payload) {
             // updateMethods.update.call(this, payload);
@@ -29498,7 +29424,7 @@
               var chartView = _this._chartsMap[seriesModel.__viewId];
               chartView.updateVisual(seriesModel, ecModel, _this._api, payload);
             });
-            performPostUpdateFuncs(ecModel, this._api);
+            lifecycle.trigger('afterupdate', ecModel, this._api);
           },
           updateLayout: function (payload) {
             updateMethods.update.call(this, payload);
@@ -29567,7 +29493,7 @@
           var eventObj;
           var isSelectChange = isSelectChangePayload(payload);
           var isHighDown = isHighDownPayload(payload);
-          each$3(payloads, function (batchItem) {
+          each(payloads, function (batchItem) {
             // Action can specify the event by return it.
             eventObj = actionWrap.action(batchItem, _this._model, _this._api); // Emit event outside
 
@@ -29596,10 +29522,10 @@
 
           if (updateMethod !== 'none' && !isHighDown && !isSelectChange && !cptType) {
             // Still dirty
-            if (this[OPTION_UPDATED_KEY]) {
+            if (this[PENDING_UPDATE]) {
               prepare(this);
               updateMethods.update.call(this, payload);
-              this[OPTION_UPDATED_KEY] = false;
+              this[PENDING_UPDATE] = null;
             } else {
               updateMethods[updateMethod].call(this, payload);
             }
@@ -29672,7 +29598,7 @@
             if ( // Although zr is dirty if initial animation is not finished
             // and this checking is called on frame, we also check
             // animation finished for robustness.
-            zr.animation.isFinished() && !ecIns[OPTION_UPDATED_KEY] && !ecIns._scheduler.unfinished && !ecIns._pendingActions.length) {
+            zr.animation.isFinished() && !ecIns[PENDING_UPDATE] && !ecIns._scheduler.unfinished && !ecIns._pendingActions.length) {
               ecIns.trigger('finished');
             }
           });
@@ -29723,22 +29649,22 @@
           });
         };
 
-        render = function (ecIns, ecModel, api, payload) {
-          renderComponents(ecIns, ecModel, api, payload);
-          each$3(ecIns._chartsViews, function (chart) {
+        render = function (ecIns, ecModel, api, payload, updateParams) {
+          renderComponents(ecIns, ecModel, api, payload, updateParams);
+          each(ecIns._chartsViews, function (chart) {
             chart.__alive = false;
           });
-          renderSeries(ecIns, ecModel, api, payload); // Remove groups of unrendered charts
+          renderSeries(ecIns, ecModel, api, payload, updateParams); // Remove groups of unrendered charts
 
-          each$3(ecIns._chartsViews, function (chart) {
+          each(ecIns._chartsViews, function (chart) {
             if (!chart.__alive) {
               chart.remove(ecModel, api);
             }
           });
         };
 
-        renderComponents = function (ecIns, ecModel, api, payload, dirtyList) {
-          each$3(dirtyList || ecIns._componentsViews, function (componentView) {
+        renderComponents = function (ecIns, ecModel, api, payload, updateParams, dirtyList) {
+          each(dirtyList || ecIns._componentsViews, function (componentView) {
             var componentModel = componentView.__model;
             clearStates(componentModel, componentView);
             componentView.render(componentModel, ecModel, api, payload);
@@ -29751,11 +29677,14 @@
          */
 
 
-        renderSeries = function (ecIns, ecModel, api, payload, dirtyMap) {
+        renderSeries = function (ecIns, ecModel, api, payload, updateParams, dirtyMap) {
           // Render all charts
           var scheduler = ecIns._scheduler;
-          var labelManager = ecIns._labelManager;
-          labelManager.clearLabels();
+          updateParams = extend(updateParams || {}, {
+            updatedSeries: ecModel.getSeries()
+          }); // TODO progressive?
+
+          lifecycle.trigger('series:beforeupdate', ecModel, api, updateParams);
           var unfinished = false;
           ecModel.eachSeries(function (seriesModel) {
             var chartView = ecIns._chartsMap[seriesModel.__viewId];
@@ -29773,20 +29702,17 @@
               unfinished = true;
             }
 
-            seriesModel.__transientTransitionOpt = null;
             chartView.group.silent = !!seriesModel.get('silent'); // Should not call markRedraw on group, because it will disable zrender
             // increamental render (alway render from the __startIndex each frame)
             // chartView.group.markRedraw();
 
             updateBlend(seriesModel, chartView);
-            updateSeriesElementSelection(seriesModel); // Add labels.
-
-            labelManager.addLabelsOfSeries(chartView);
+            updateSeriesElementSelection(seriesModel);
           });
           scheduler.unfinished = unfinished || scheduler.unfinished;
-          labelManager.updateLayoutConfig(api);
-          labelManager.layout(api);
-          labelManager.processLabelsOverall();
+          lifecycle.trigger('series:layoutlabels', ecModel, api, updateParams); // transition after label is layouted.
+
+          lifecycle.trigger('series:transition', ecModel, api, updateParams);
           ecModel.eachSeries(function (seriesModel) {
             var chartView = ecIns._chartsMap[seriesModel.__viewId]; // Update Z after labels updated. Before applying states.
 
@@ -29797,12 +29723,7 @@
           }); // If use hover layer
 
           updateHoverLayerStatus(ecIns, ecModel);
-        };
-
-        performPostUpdateFuncs = function (ecModel, api) {
-          each$3(postUpdateFuncs, function (func) {
-            func(ecModel, api);
-          });
+          lifecycle.trigger('series:afterupdate', ecModel, api, updateParams);
         };
 
         markStatusToUpdate = function (ecIns) {
@@ -30126,7 +30047,7 @@
             }
           }
 
-          each$3(eventActionMap, function (actionType, eventType) {
+          each(eventActionMap, function (actionType, eventType) {
             chart._messageCenter.on(eventType, function (event) {
               if (connectedGroups[chart.group] && chart[CONNECT_STATUS_KEY] !== CONNECT_STATUS_PENDING) {
                 if (event && event.escapeConnect) {
@@ -30135,13 +30056,13 @@
 
                 var action_1 = chart.makeActionFromEvent(event);
                 var otherCharts_1 = [];
-                each$3(instances$1, function (otherChart) {
+                each(instances$1, function (otherChart) {
                   if (otherChart !== chart && otherChart.group === chart.group) {
                     otherCharts_1.push(otherChart);
                   }
                 });
                 updateConnectedChartsStatus(otherCharts_1, CONNECT_STATUS_PENDING);
-                each$3(otherCharts_1, function (otherChart) {
+                each(otherCharts_1, function (otherChart) {
                   if (otherChart[CONNECT_STATUS_KEY] !== CONNECT_STATUS_UPDATING) {
                     otherChart.dispatchAction(action_1);
                   }
@@ -30149,59 +30070,6 @@
                 updateConnectedChartsStatus(otherCharts_1, CONNECT_STATUS_UPDATED);
               }
             });
-          });
-        };
-
-        setTransitionOpt = function (chart, transitionOpt) {
-          var ecModel = chart._model;
-          each(normalizeToArray(transitionOpt), function (transOpt) {
-            var errMsg;
-            var fromOpt = transOpt.from;
-            var toOpt = transOpt.to;
-
-            if (toOpt == null) {
-              if ("development" !== 'production') {
-                errMsg = '`transition.to` must be specified.';
-              }
-
-              throwError(errMsg);
-            }
-
-            var finderOpt = {
-              includeMainTypes: ['series'],
-              enableAll: false,
-              enableNone: false
-            };
-            var fromResult = fromOpt ? parseFinder(ecModel, fromOpt, finderOpt) : null;
-            var toResult = parseFinder(ecModel, toOpt, finderOpt);
-            var toSeries = toResult.seriesModel;
-
-            if (toSeries == null) {
-              errMsg = '';
-
-              if ("development" !== 'production') {
-                errMsg = '`transition` is only supported on series.';
-              }
-            }
-
-            if (fromResult && fromResult.seriesModel !== toSeries) {
-              errMsg = '';
-
-              if ("development" !== 'production') {
-                errMsg = '`transition.from` and `transition.to` must be specified to the same series.';
-              }
-            }
-
-            if (errMsg != null) {
-              throwError(errMsg);
-            } // Just a temp solution: mount them on series.
-
-
-            toSeries.__transientTransitionOpt = {
-              from: fromOpt ? fromOpt.dimension : null,
-              to: toOpt.dimension,
-              dividingMethod: transOpt.dividingMethod
-            };
           });
         };
       }();
@@ -30274,8 +30142,6 @@
     var eventActionMap = {};
     var dataProcessorFuncs = [];
     var optionPreprocessorFuncs = [];
-    var postInitFuncs = [];
-    var postUpdateFuncs = [];
     var visualFuncs = [];
     var themeStorage = {};
     var loadingEffects = {};
@@ -30291,6 +30157,8 @@
      *        Can be 'auto' (the same as null/undefined)
      * @param opts.height Use clientHeight of the input `dom` by default.
      *        Can be 'auto' (the same as null/undefined)
+     * @param opts.locale Specify the locale.
+     * @param opts.useDirtyRect Enable dirty rectangle rendering or not.
      */
 
     function init$1(dom, theme, opts) {
@@ -30321,9 +30189,7 @@
       instances$1[chart.id] = chart;
       setAttribute(dom, DOM_ATTRIBUTE_KEY, chart.id);
       enableConnect(chart);
-      each$3(postInitFuncs, function (postInitFunc) {
-        postInitFunc(chart);
-      });
+      lifecycle.trigger('afterinit', chart);
       return chart;
     }
     /**
@@ -30350,13 +30216,13 @@
         var charts = groupId;
         groupId = null; // If any chart has group
 
-        each$3(charts, function (chart) {
+        each(charts, function (chart) {
           if (chart.group != null) {
             groupId = chart.group;
           }
         });
         groupId = groupId || 'g_' + groupIdBase++;
-        each$3(charts, function (chart) {
+        each(charts, function (chart) {
           chart.group = groupId;
         });
       }
@@ -30410,7 +30276,7 @@
      */
 
     function registerPreprocessor(preprocessorFunc) {
-      if (indexOf$1(optionPreprocessorFuncs, preprocessorFunc) < 0) {
+      if (indexOf(optionPreprocessorFuncs, preprocessorFunc) < 0) {
         optionPreprocessorFuncs.push(preprocessorFunc);
       }
     }
@@ -30423,9 +30289,7 @@
      */
 
     function registerPostInit(postInitFunc) {
-      if (indexOf$1(postInitFuncs, postInitFunc) < 0) {
-        postInitFunc && postInitFuncs.push(postInitFunc);
-      }
+      registerUpdateLifecycle('afterinit', postInitFunc);
     }
     /**
      * Register postUpdater
@@ -30433,9 +30297,10 @@
      */
 
     function registerPostUpdate(postUpdateFunc) {
-      if (indexOf$1(postUpdateFuncs, postUpdateFunc) < 0) {
-        postUpdateFunc && postUpdateFuncs.push(postUpdateFunc);
-      }
+      registerUpdateLifecycle('afterupdate', postUpdateFunc);
+    }
+    function registerUpdateLifecycle(name, cb) {
+      lifecycle.on(name, cb);
     }
     function registerAction(actionInfo, eventName, action) {
       if (typeof eventName === 'function') {
@@ -30443,7 +30308,7 @@
         eventName = '';
       }
 
-      var actionType = isObject$2(actionInfo) ? actionInfo.type : [actionInfo, actionInfo = {
+      var actionType = isObject(actionInfo) ? actionInfo.type : [actionInfo, actionInfo = {
         event: eventName
       }][0]; // Event name is all lowercase
 
@@ -30456,7 +30321,7 @@
       } // Validate action type and event name.
 
 
-      assert$1(ACTION_REG.test(actionType) && ACTION_REG.test(eventName));
+      assert(ACTION_REG.test(actionType) && ACTION_REG.test(eventName));
 
       if (!actions[actionType]) {
         actions[actionType] = {
@@ -30494,7 +30359,7 @@
     var registeredTasks = [];
 
     function normalizeRegister(targetList, priority, fn, defaultPriority, visualType) {
-      if (isFunction$1(priority) || isObject$2(priority)) {
+      if (isFunction(priority) || isObject(priority)) {
         fn = priority;
         priority = defaultPriority;
       }
@@ -30505,13 +30370,13 @@
         } // Check duplicate
 
 
-        each$3(targetList, function (wrap) {
-          assert$1(wrap.__raw !== fn);
+        each(targetList, function (wrap) {
+          assert(wrap.__raw !== fn);
         });
       } // Already registered
 
 
-      if (indexOf$1(registeredTasks, fn) >= 0) {
+      if (indexOf(registeredTasks, fn) >= 0) {
         return;
       }
 
@@ -30619,6 +30484,7 @@
       registerProcessor: registerProcessor,
       registerPostInit: registerPostInit,
       registerPostUpdate: registerPostUpdate,
+      registerUpdateLifecycle: registerUpdateLifecycle,
       registerAction: registerAction,
       registerCoordinateSystem: registerCoordinateSystem,
       registerLayout: registerLayout,
@@ -30778,6 +30644,15 @@
         return this;
       };
       /**
+       * Callback function when update a data and only work in `cbMode: 'byKey'`.
+       */
+
+
+      DataDiffer.prototype.updateManyToMany = function (func) {
+        this._updateManyToMany = func;
+        return this;
+      };
+      /**
        * Callback function when remove a data
        */
 
@@ -30882,6 +30757,9 @@
           } else if (oldIdxMapValLen === 1 && newIdxMapValLen === 1) {
             this._update && this._update(newIdxMapVal, oldIdxMapVal);
             newDataIndexMap[oldKey] = null;
+          } else if (oldIdxMapValLen > 1 && newIdxMapValLen > 1) {
+            this._updateManyToMany && this._updateManyToMany(newIdxMapVal, oldIdxMapVal);
+            newDataIndexMap[oldKey] = null;
           } else if (oldIdxMapValLen > 1) {
             for (var i_1 = 0; i_1 < oldIdxMapValLen; i_1++) {
               this._remove && this._remove(oldIdxMapVal[i_1]);
@@ -30954,17 +30832,47 @@
       return DataDiffer;
     }();
 
-    function summarizeDimensions(data) {
+    var DimensionUserOuput =
+    /** @class */
+    function () {
+      function DimensionUserOuput(encode, dimRequest) {
+        this._encode = encode;
+        this._schema = dimRequest;
+      }
+
+      DimensionUserOuput.prototype.get = function () {
+        return {
+          // Do not generate full dimension name until fist used.
+          fullDimensions: this._getFullDimensionNames(),
+          encode: this._encode
+        };
+      };
+      /**
+       * Get all data store dimension names.
+       * Theoretically a series data store is defined both by series and used dataset (if any).
+       * If some dimensions are omitted for performance reason in `this.dimensions`,
+       * the dimension name may not be auto-generated if user does not specify a dimension name.
+       * In this case, the dimension name is `null`/`undefined`.
+       */
+
+
+      DimensionUserOuput.prototype._getFullDimensionNames = function () {
+        if (!this._cachedDimNames) {
+          this._cachedDimNames = this._schema ? this._schema.makeOutputDimensionNames() : [];
+        }
+
+        return this._cachedDimNames;
+      };
+
+      return DimensionUserOuput;
+    }();
+    function summarizeDimensions(data, schema) {
       var summary = {};
       var encode = summary.encode = {};
       var notExtraCoordDimMap = createHashMap();
       var defaultedLabel = [];
-      var defaultedTooltip = []; // See the comment of `List.js#userOutput`.
-
-      var userOutput = summary.userOutput = {
-        dimensionNames: data.dimensions.slice(),
-        encode: {}
-      };
+      var defaultedTooltip = [];
+      var userOutputEncode = {};
       each(data.dimensions, function (dimName) {
         var dimItem = data.getDimensionInfo(dimName);
         var coordDim = dimItem.coordDim;
@@ -30989,7 +30897,7 @@
             // And it only has index. User can use index to retrieve value from the raw item array.
 
 
-            getOrCreateEncodeArr(userOutput.encode, coordDim)[coordDimIndex] = dimItem.index;
+            getOrCreateEncodeArr(userOutputEncode, coordDim)[coordDimIndex] = data.getDimensionIndex(dimItem.name);
           }
 
           if (dimItem.defaultTooltip) {
@@ -31016,6 +30924,9 @@
         dataDimsOnCoord = dataDimsOnCoord.concat(dimArr);
       });
       summary.dataDimsOnCoord = dataDimsOnCoord;
+      summary.dataDimIndicesOnCoord = map(dataDimsOnCoord, function (dimName) {
+        return data.getDimensionInfo(dimName).storeDimIndex;
+      });
       summary.encodeFirstDimNotExtra = encodeFirstDimNotExtra;
       var encodeLabel = encode.label; // FIXME `encode.label` is not recommanded, because formatter can not be set
       // in this way. Use label.formatter instead. May be remove this approach someday.
@@ -31034,6 +30945,7 @@
 
       encode.defaultedLabel = defaultedLabel;
       encode.defaultedTooltip = defaultedTooltip;
+      summary.userOutput = new DimensionUserOuput(userOutputEncode, schema);
       return summary;
     }
 
@@ -31067,21 +30979,21 @@
     //     return valueDim;
     // }
 
-    var DataDimensionInfo =
+    var SeriesDimensionDefine =
     /** @class */
     function () {
       /**
        * @param opt All of the fields will be shallow copied.
        */
-      function DataDimensionInfo(opt) {
+      function SeriesDimensionDefine(opt) {
         /**
          * The format of `otherDims` is:
          * ```js
          * {
-         *     tooltip: number optional,
-         *     label: number optional,
-         *     itemName: number optional,
-         *     seriesName: number optional,
+         *     tooltip?: number
+         *     label?: number
+         *     itemName?: number
+         *     seriesName?: number
          * }
          * ```
          *
@@ -31100,7 +31012,7 @@
          * this.otherDims = {
          *     // `3` is at the index `0` of the `encode.tooltip`
          *     tooltip: 0,
-         *     // `3` is at the index `1` of the `encode.tooltip`
+         *     // `3` is at the index `1` of the `encode.label`
          *     label: 1
          * };
          * ```
@@ -31114,69 +31026,248 @@
         }
       }
 
-      return DataDimensionInfo;
+      return SeriesDimensionDefine;
     }();
 
-    var mathFloor = Math.floor;
-    var isObject$3 = isObject;
+    var inner$4 = makeInner();
+    var dimTypeShort = {
+      float: 'f',
+      int: 'i',
+      ordinal: 'o',
+      number: 'n',
+      time: 't'
+    };
+    /**
+     * Represents the dimension requirement of a series.
+     *
+     * NOTICE:
+     * When there are too many dimensions in dataset and many series, only the used dimensions
+     * (i.e., used by coord sys and declared in `series.encode`) are add to `dimensionDefineList`.
+     * But users may query data by other unused dimension names.
+     * In this case, users can only query data if and only if they have defined dimension names
+     * via ec option, so we provide `getDimensionIndexFromSource`, which only query them from
+     * `source` dimensions.
+     */
+
+    var SeriesDataSchema =
+    /** @class */
+    function () {
+      function SeriesDataSchema(opt) {
+        this.dimensions = opt.dimensions;
+        this._dimOmitted = opt.dimensionOmitted;
+        this.source = opt.source;
+        this._fullDimCount = opt.fullDimensionCount;
+
+        this._updateDimOmitted(opt.dimensionOmitted);
+      }
+
+      SeriesDataSchema.prototype.isDimensionOmitted = function () {
+        return this._dimOmitted;
+      };
+
+      SeriesDataSchema.prototype._updateDimOmitted = function (dimensionOmitted) {
+        this._dimOmitted = dimensionOmitted;
+
+        if (!dimensionOmitted) {
+          return;
+        }
+
+        if (!this._dimNameMap) {
+          this._dimNameMap = ensureSourceDimNameMap(this.source);
+        }
+      };
+      /**
+       * @caution Can only be used when `dimensionOmitted: true`.
+       *
+       * Get index by user defined dimension name (i.e., not internal generate name).
+       * That is, get index from `dimensionsDefine`.
+       * If no `dimensionsDefine`, or no name get, return -1.
+       */
+
+
+      SeriesDataSchema.prototype.getSourceDimensionIndex = function (dimName) {
+        return retrieve2(this._dimNameMap.get(dimName), -1);
+      };
+      /**
+       * @caution Can only be used when `dimensionOmitted: true`.
+       *
+       * Notice: may return `null`/`undefined` if user not specify dimension names.
+       */
+
+
+      SeriesDataSchema.prototype.getSourceDimension = function (dimIndex) {
+        var dimensionsDefine = this.source.dimensionsDefine;
+
+        if (dimensionsDefine) {
+          return dimensionsDefine[dimIndex];
+        }
+      };
+
+      SeriesDataSchema.prototype.makeStoreSchema = function () {
+        var dimCount = this._fullDimCount;
+        var willRetrieveDataByName = shouldRetrieveDataByName(this.source);
+        var makeHashStrict = !shouldOmitUnusedDimensions(dimCount); // If source don't have dimensions or series don't omit unsed dimensions.
+        // Generate from seriesDimList directly
+
+        var dimHash = '';
+        var dims = [];
+
+        for (var fullDimIdx = 0, seriesDimIdx = 0; fullDimIdx < dimCount; fullDimIdx++) {
+          var property = void 0;
+          var type = void 0;
+          var ordinalMeta = void 0;
+          var seriesDimDef = this.dimensions[seriesDimIdx]; // The list has been sorted by `storeDimIndex` asc.
+
+          if (seriesDimDef && seriesDimDef.storeDimIndex === fullDimIdx) {
+            property = willRetrieveDataByName ? seriesDimDef.name : null;
+            type = seriesDimDef.type;
+            ordinalMeta = seriesDimDef.ordinalMeta;
+            seriesDimIdx++;
+          } else {
+            var sourceDimDef = this.getSourceDimension(fullDimIdx);
+
+            if (sourceDimDef) {
+              property = willRetrieveDataByName ? sourceDimDef.name : null;
+              type = sourceDimDef.type;
+            }
+          }
+
+          dims.push({
+            property: property,
+            type: type,
+            ordinalMeta: ordinalMeta
+          }); // If retrieving data by index,
+          //   use <index, type, ordinalMeta> to determine whether data can be shared.
+          //   (Becuase in this case there might be no dimension name defined in dataset, but indices always exists).
+          //   (indices are always 0, 1, 2, ..., so we can ignore them to shorten the hash).
+          // Otherwise if retrieving data by property name (like `data: [{aa: 123, bb: 765}, ...]`),
+          //   use <property, type, ordinalMeta> in hash.
+
+          if (willRetrieveDataByName && property != null // For data stack, we have make sure each series has its own dim on this store.
+          // So we do not add property to hash to make sure they can share this store.
+          && (!seriesDimDef || !seriesDimDef.isCalculationCoord)) {
+            dimHash += makeHashStrict // Use escape character '`' in case that property name contains '$'.
+            ? property.replace(/\`/g, '`1').replace(/\$/g, '`2') // For better performance, when there are large dimensions, tolerant this defects that hardly meet.
+            : property;
+          }
+
+          dimHash += '$';
+          dimHash += dimTypeShort[type] || 'f';
+
+          if (ordinalMeta) {
+            dimHash += ordinalMeta.uid;
+          }
+
+          dimHash += '$';
+        } // Source from endpoint(usually series) will be read differently
+        // when seriesLayoutBy or startIndex(which is affected by sourceHeader) are different.
+        // So we use this three props as key.
+
+
+        var source = this.source;
+        var hash = [source.seriesLayoutBy, source.startIndex, dimHash].join('$$');
+        return {
+          dimensions: dims,
+          hash: hash
+        };
+      };
+
+      SeriesDataSchema.prototype.makeOutputDimensionNames = function () {
+        var result = [];
+
+        for (var fullDimIdx = 0, seriesDimIdx = 0; fullDimIdx < this._fullDimCount; fullDimIdx++) {
+          var name_1 = void 0;
+          var seriesDimDef = this.dimensions[seriesDimIdx]; // The list has been sorted by `storeDimIndex` asc.
+
+          if (seriesDimDef && seriesDimDef.storeDimIndex === fullDimIdx) {
+            if (!seriesDimDef.isCalculationCoord) {
+              name_1 = seriesDimDef.name;
+            }
+
+            seriesDimIdx++;
+          } else {
+            var sourceDimDef = this.getSourceDimension(fullDimIdx);
+
+            if (sourceDimDef) {
+              name_1 = sourceDimDef.name;
+            }
+          }
+
+          result.push(name_1);
+        }
+
+        return result;
+      };
+
+      SeriesDataSchema.prototype.appendCalculationDimension = function (dimDef) {
+        this.dimensions.push(dimDef);
+        dimDef.isCalculationCoord = true;
+        this._fullDimCount++; // If append dimension on a data store, consider the store
+        // might be shared by different series, series dimensions not
+        // really map to store dimensions.
+
+        this._updateDimOmitted(true);
+      };
+
+      return SeriesDataSchema;
+    }();
+    function isSeriesDataSchema(schema) {
+      return schema instanceof SeriesDataSchema;
+    }
+    function createDimNameMap(dimsDef) {
+      var dataDimNameMap = createHashMap();
+
+      for (var i = 0; i < (dimsDef || []).length; i++) {
+        var dimDefItemRaw = dimsDef[i];
+        var userDimName = isObject(dimDefItemRaw) ? dimDefItemRaw.name : dimDefItemRaw;
+
+        if (userDimName != null && dataDimNameMap.get(userDimName) == null) {
+          dataDimNameMap.set(userDimName, i);
+        }
+      }
+
+      return dataDimNameMap;
+    }
+    function ensureSourceDimNameMap(source) {
+      var innerSource = inner$4(source);
+      return innerSource.dimNameMap || (innerSource.dimNameMap = createDimNameMap(source.dimensionsDefine));
+    }
+    function shouldOmitUnusedDimensions(dimCount) {
+      return dimCount > 30;
+    }
+
+    var isObject$2 = isObject;
     var map$1 = map;
-    var UNDEFINED = 'undefined';
-    var INDEX_NOT_FOUND = -1; // Use prefix to avoid index to be the same as otherIdList[idx],
+    var CtorInt32Array$1 = typeof Int32Array === 'undefined' ? Array : Int32Array; // Use prefix to avoid index to be the same as otherIdList[idx],
     // which will cause weird udpate animation.
 
     var ID_PREFIX = 'e\0\0';
-    var dataCtors = {
-      'float': typeof Float64Array === UNDEFINED ? Array : Float64Array,
-      'int': typeof Int32Array === UNDEFINED ? Array : Int32Array,
-      // Ordinal data type can be string or int
-      'ordinal': Array,
-      'number': Array,
-      'time': Array
-    }; // Caution: MUST not use `new CtorUint32Array(arr, 0, len)`, because the Ctor of array is
-    // different from the Ctor of typed array.
+    var INDEX_NOT_FOUND = -1; // type SeriesDimensionIndex = DimensionIndex;
 
-    var CtorUint32Array = typeof Uint32Array === UNDEFINED ? Array : Uint32Array;
-    var CtorInt32Array = typeof Int32Array === UNDEFINED ? Array : Int32Array;
-    var CtorUint16Array = typeof Uint16Array === UNDEFINED ? Array : Uint16Array;
-    var TRANSFERABLE_PROPERTIES = ['hasItemOption', '_nameList', '_idList', '_invertedIndicesMap', '_rawData', '_dimValueGetter', '_count', '_rawCount', '_nameDimIdx', '_idDimIdx', '_nameRepeatCount'];
-    var CLONE_PROPERTIES = ['_extent', '_approximateExtent', '_rawExtent']; // -----------------------------
+    var TRANSFERABLE_PROPERTIES = ['hasItemOption', '_nameList', '_idList', '_invertedIndicesMap', '_dimSummary', 'userOutput', '_rawData', '_dimValueGetter', '_nameDimIdx', '_idDimIdx', '_nameRepeatCount'];
+    var CLONE_PROPERTIES = ['_approximateExtent']; // -----------------------------
     // Internal method declarations:
     // -----------------------------
 
-    var defaultDimValueGetters;
     var prepareInvertedIndex;
-    var getIndicesCtor;
-    var prepareStorage;
-    var getRawIndexWithoutIndices;
-    var getRawIndexWithIndices;
     var getId;
     var getIdNameFromStore;
-    var makeIdFromName;
     var normalizeDimensions;
-    var validateDimensions;
-    var cloneListForMapAndSample;
-    var getInitialExtent;
-    var setItemDataAndSeriesIndex;
     var transferProperties;
+    var cloneListForMapAndSample;
+    var makeIdFromName;
 
-    var List =
+    var SeriesData =
     /** @class */
     function () {
       /**
-       * @param dimensions
+       * @param dimensionsInput.dimensions
        *        For example, ['someDimName', {name: 'someDimName', type: 'someDimType'}, ...].
        *        Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
        */
-      function List(dimensions, hostModel) {
+      function SeriesData(dimensionsInput, hostModel) {
         this.type = 'list';
-        this._count = 0;
-        this._rawCount = 0;
-        this._storage = {}; // We have an extra array store here. It's faster to be acessed than KV structured `_storage`.
-        // We profile the code `storage[dim]` and it seems to be KeyedLoadIC_Megamorphic instead of fast property access.
-        // Not sure why this happens. But using an extra array seems leads to faster `initData`
-        // See https://github.com/apache/incubator-echarts/pull/13314 for more explanation.
-
-        this._storageArr = [];
+        this._dimOmitted = false;
         this._nameList = [];
         this._idList = []; // Models of data option is stored sparse for optimizing memory cost
         // Never used yet (not used yet).
@@ -31191,11 +31282,7 @@
 
         this._itemLayouts = []; // Graphic elemnents
 
-        this._graphicEls = []; // Raw extent will not be cloned, but only transfered.
-        // It will not be calculated util needed.
-
-        this._rawExtent = {};
-        this._extent = {}; // key: dim, value: extent
+        this._graphicEls = []; // key: dim, value: extent
 
         this._approximateExtent = {};
         this._calculationInfo = {}; // Having detected that there is data item is non primitive type
@@ -31203,31 +31290,38 @@
         // Like `data: [ { value: xx, itemStyle: {...} }, ...]`
         // At present it only happen in `SOURCE_FORMAT_ORIGINAL`.
 
-        this.hasItemOption = true; // Methods that create a new list based on this list should be listed here.
+        this.hasItemOption = false; // Methods that create a new list based on this list should be listed here.
         // Notice that those method should `RETURN` the new list.
 
         this.TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'lttbDownSample', 'map']; // Methods that change indices of this list should be listed here.
 
         this.CHANGABLE_METHODS = ['filterSelf', 'selectRange'];
         this.DOWNSAMPLE_METHODS = ['downSample', 'lttbDownSample'];
-        /**
-         * Get raw data index.
-         * Do not initialize.
-         * Default `getRawIndex`. And it can be changed.
-         */
+        var dimensions;
+        var assignStoreDimIdx = false;
 
-        this.getRawIndex = getRawIndexWithoutIndices;
+        if (isSeriesDataSchema(dimensionsInput)) {
+          dimensions = dimensionsInput.dimensions;
+          this._dimOmitted = dimensionsInput.isDimensionOmitted();
+          this._schema = dimensionsInput;
+        } else {
+          assignStoreDimIdx = true;
+          dimensions = dimensionsInput;
+        }
+
         dimensions = dimensions || ['x', 'y'];
         var dimensionInfos = {};
         var dimensionNames = [];
         var invertedIndicesMap = {};
+        var needsHasOwn = false;
+        var emptyObj = {};
 
         for (var i = 0; i < dimensions.length; i++) {
           // Use the original dimensions[i], where other flag props may exists.
           var dimInfoInput = dimensions[i];
-          var dimensionInfo = isString(dimInfoInput) ? new DataDimensionInfo({
+          var dimensionInfo = isString(dimInfoInput) ? new SeriesDimensionDefine({
             name: dimInfoInput
-          }) : !(dimInfoInput instanceof DataDimensionInfo) ? new DataDimensionInfo(dimInfoInput) : dimInfoInput;
+          }) : !(dimInfoInput instanceof SeriesDimensionDefine) ? new SeriesDimensionDefine(dimInfoInput) : dimInfoInput;
           var dimensionName = dimensionInfo.name;
           dimensionInfo.type = dimensionInfo.type || 'float';
 
@@ -31239,7 +31333,10 @@
           var otherDims = dimensionInfo.otherDims = dimensionInfo.otherDims || {};
           dimensionNames.push(dimensionName);
           dimensionInfos[dimensionName] = dimensionInfo;
-          dimensionInfo.index = i;
+
+          if (emptyObj[dimensionName] != null) {
+            needsHasOwn = true;
+          }
 
           if (dimensionInfo.createInvertedIndices) {
             invertedIndicesMap[dimensionName] = [];
@@ -31247,30 +31344,111 @@
 
           if (otherDims.itemName === 0) {
             this._nameDimIdx = i;
-            this._nameOrdinalMeta = dimensionInfo.ordinalMeta;
           }
 
           if (otherDims.itemId === 0) {
             this._idDimIdx = i;
-            this._idOrdinalMeta = dimensionInfo.ordinalMeta;
+          }
+
+          if ("development" !== 'production') {
+            assert(assignStoreDimIdx || dimensionInfo.storeDimIndex >= 0);
+          }
+
+          if (assignStoreDimIdx) {
+            dimensionInfo.storeDimIndex = i;
           }
         }
 
         this.dimensions = dimensionNames;
-        this._dimensionInfos = dimensionInfos;
-        this.hostModel = hostModel; // Cache summary info for fast visit. See "dimensionHelper".
+        this._dimInfos = dimensionInfos;
 
-        this._dimensionsSummary = summarizeDimensions(this);
+        this._initGetDimensionInfo(needsHasOwn);
+
+        this.hostModel = hostModel;
         this._invertedIndicesMap = invertedIndicesMap;
-        this.userOutput = this._dimensionsSummary.userOutput;
+
+        if (this._dimOmitted) {
+          var dimIdxToName_1 = this._dimIdxToName = createHashMap();
+          each(dimensionNames, function (dimName) {
+            dimIdxToName_1.set(dimensionInfos[dimName].storeDimIndex, dimName);
+          });
+        }
       }
+      /**
+       *
+       * Get concrete dimension name by dimension name or dimension index.
+       * If input a dimension name, do not validate whether the dimension name exits.
+       *
+       * @caution
+       * @param dim Must make sure the dimension is `SeriesDimensionLoose`.
+       * Because only those dimensions will have auto-generated dimension names if not
+       * have a user-specified name, and other dimensions will get a return of null/undefined.
+       *
+       * @notice Becuause of this reason, should better use `getDimensionIndex` instead, for examples:
+       * ```js
+       * const val = data.getStore().get(data.getDimensionIndex(dim), dataIdx);
+       * ```
+       *
+       * @return Concrete dim name.
+       */
+
+
+      SeriesData.prototype.getDimension = function (dim) {
+        var dimIdx = this._recognizeDimIndex(dim);
+
+        if (dimIdx == null) {
+          return dim;
+        }
+
+        dimIdx = dim;
+
+        if (!this._dimOmitted) {
+          return this.dimensions[dimIdx];
+        } // Retrieve from series dimension definition becuase it probably contains
+        // generated dimension name (like 'x', 'y').
+
+
+        var dimName = this._dimIdxToName.get(dimIdx);
+
+        if (dimName != null) {
+          return dimName;
+        }
+
+        var sourceDimDef = this._schema.getSourceDimension(dimIdx);
+
+        if (sourceDimDef) {
+          return sourceDimDef.name;
+        }
+      };
+      /**
+       * Get dimension index in data store. Return -1 if not found.
+       * Can be used to index value from getRawValue.
+       */
+
+
+      SeriesData.prototype.getDimensionIndex = function (dim) {
+        var dimIdx = this._recognizeDimIndex(dim);
+
+        if (dimIdx != null) {
+          return dimIdx;
+        }
+
+        if (dim == null) {
+          return -1;
+        }
+
+        var dimInfo = this._getDimInfo(dim);
+
+        return dimInfo ? dimInfo.storeDimIndex : this._dimOmitted ? this._schema.getSourceDimensionIndex(dim) : -1;
+      };
       /**
        * The meanings of the input parameter `dim`:
        *
        * + If dim is a number (e.g., `1`), it means the index of the dimension.
        *   For example, `getDimension(0)` will return 'x' or 'lng' or 'radius'.
        * + If dim is a number-like string (e.g., `"1"`):
-       *     + If there is the same concrete dim name defined in `this.dimensions`, it means that concrete name.
+       *     + If there is the same concrete dim name defined in `series.dimensions` or `dataset.dimensions`,
+       *        it means that concrete name.
        *     + If not, it will be converted to a number, which means the index of the dimension.
        *        (why? because of the backward compatbility. We have been tolerating number-like string in
        *        dimension setting, although now it seems that it is not a good idea.)
@@ -31280,19 +31458,27 @@
        *   For example, it can be be default name `"x"`, `"y"`, `"z"`, `"lng"`, `"lat"`, `"angle"`, `"radius"`,
        *   or customized in `dimensions` property of option like `"age"`.
        *
-       * Get dimension name
-       * @param dim See above.
-       * @return Concrete dim name.
+       * @return recogonized `DimensionIndex`. Otherwise return null/undefined (means that dim is `DimensionName`).
        */
 
 
-      List.prototype.getDimension = function (dim) {
-        if (typeof dim === 'number' // If being a number-like string but not being defined a dimension name.
-        || !isNaN(dim) && !this._dimensionInfos.hasOwnProperty(dim)) {
-          dim = this.dimensions[dim];
+      SeriesData.prototype._recognizeDimIndex = function (dim) {
+        if (typeof dim === 'number' // If being a number-like string but not being defined as a dimension name.
+        || dim != null && !isNaN(dim) && !this._getDimInfo(dim) && (!this._dimOmitted || this._schema.getSourceDimensionIndex(dim) < 0)) {
+          return +dim;
+        }
+      };
+
+      SeriesData.prototype._getStoreDimIndex = function (dim) {
+        var dimIdx = this.getDimensionIndex(dim);
+
+        if ("development" !== 'production') {
+          if (dimIdx == null) {
+            throw new Error('Unkown dimension ' + dim);
+          }
         }
 
-        return dim;
+        return dimIdx;
       };
       /**
        * Get type and calculation info of particular dimension
@@ -31302,21 +31488,30 @@
        */
 
 
-      List.prototype.getDimensionInfo = function (dim) {
+      SeriesData.prototype.getDimensionInfo = function (dim) {
         // Do not clone, because there may be categories in dimInfo.
-        return this._dimensionInfos[this.getDimension(dim)];
+        return this._getDimInfo(this.getDimension(dim));
+      };
+
+      SeriesData.prototype._initGetDimensionInfo = function (needsHasOwn) {
+        var dimensionInfos = this._dimInfos;
+        this._getDimInfo = needsHasOwn ? function (dimName) {
+          return dimensionInfos.hasOwnProperty(dimName) ? dimensionInfos[dimName] : undefined;
+        } : function (dimName) {
+          return dimensionInfos[dimName];
+        };
       };
       /**
        * concrete dimension name list on coord.
        */
 
 
-      List.prototype.getDimensionsOnCoord = function () {
-        return this._dimensionsSummary.dataDimsOnCoord.slice();
+      SeriesData.prototype.getDimensionsOnCoord = function () {
+        return this._dimSummary.dataDimsOnCoord.slice();
       };
 
-      List.prototype.mapDimension = function (coordDim, idx) {
-        var dimensionsSummary = this._dimensionsSummary;
+      SeriesData.prototype.mapDimension = function (coordDim, idx) {
+        var dimensionsSummary = this._dimSummary;
 
         if (idx == null) {
           return dimensionsSummary.encodeFirstDimNotExtra[coordDim];
@@ -31326,14 +31521,18 @@
         return dims ? dims[idx] : null;
       };
 
-      List.prototype.mapDimensionsAll = function (coordDim) {
-        var dimensionsSummary = this._dimensionsSummary;
+      SeriesData.prototype.mapDimensionsAll = function (coordDim) {
+        var dimensionsSummary = this._dimSummary;
         var dims = dimensionsSummary.encode[coordDim];
         return (dims || []).slice();
       };
+
+      SeriesData.prototype.getStore = function () {
+        return this._store;
+      };
       /**
        * Initialize from data
-       * @param data source or data or data provider.
+       * @param data source or data or data store.
        * @param nameList The name of a datum is used on data diff and
        *        default label/tooltip.
        *        A name can be specified in encode.itemName,
@@ -31342,72 +31541,55 @@
        */
 
 
-      List.prototype.initData = function (data, nameList, dimValueGetter) {
-        var notProvider = isSourceInstance(data) || isArrayLike(data);
-        var provider = notProvider ? new DefaultDataProvider(data, this.dimensions.length) : data;
+      SeriesData.prototype.initData = function (data, nameList, dimValueGetter) {
+        var _this = this;
 
-        if ("development" !== 'production') {
-          assert(notProvider || isFunction(provider.getItem) && isFunction(provider.count), 'Inavlid data provider.');
+        var store;
+
+        if (data instanceof DataStore) {
+          store = data;
         }
 
-        this._rawData = provider;
-        var sourceFormat = provider.getSource().sourceFormat; // Clear
+        if (!store) {
+          var dimensions = this.dimensions;
+          var provider = isSourceInstance(data) || isArrayLike(data) ? new DefaultDataProvider(data, dimensions.length) : data;
+          store = new DataStore();
+          var dimensionInfos = map$1(dimensions, function (dimName) {
+            return {
+              type: _this._dimInfos[dimName].type,
+              property: dimName
+            };
+          });
+          store.initData(provider, dimensionInfos, dimValueGetter);
+        }
 
-        this._storage = {};
-        this._indices = null;
-        this._dontMakeIdFromName = this._idDimIdx != null || sourceFormat === SOURCE_FORMAT_TYPED_ARRAY // Cosndier performance.
-        || !!provider.fillStorage;
+        this._store = store; // Reset
+
         this._nameList = (nameList || []).slice();
         this._idList = [];
         this._nameRepeatCount = {};
 
-        if (!dimValueGetter) {
-          this.hasItemOption = false;
-        }
-
-        this.defaultDimValueGetter = defaultDimValueGetters[sourceFormat]; // Default dim value getter
-
-        this._dimValueGetter = dimValueGetter = dimValueGetter || this.defaultDimValueGetter;
-        this._dimValueGetterArrayRows = defaultDimValueGetters.arrayRows; // Reset raw extent.
-
-        this._rawExtent = {};
-
-        this._initDataFromProvider(0, provider.count()); // If data has no item option.
+        this._doInit(0, store.count()); // Cache summary info for fast visit. See "dimensionHelper".
+        // Needs to be initialized after store is prepared.
 
 
-        if (provider.pure) {
-          this.hasItemOption = false;
-        }
-      };
-
-      List.prototype.getProvider = function () {
-        return this._rawData;
+        this._dimSummary = summarizeDimensions(this, this._schema);
+        this.userOutput = this._dimSummary.userOutput;
       };
       /**
        * Caution: Can be only called on raw data (before `this._indices` created).
        */
 
 
-      List.prototype.appendData = function (data) {
-        if ("development" !== 'production') {
-          assert(!this._indices, 'appendData can only be called on raw data.');
-        }
+      SeriesData.prototype.appendData = function (data) {
+        var range = this._store.appendData(data);
 
-        var rawData = this._rawData;
-        var start = this.count();
-        rawData.appendData(data);
-        var end = rawData.count();
-
-        if (!rawData.persistent) {
-          end += start;
-        }
-
-        this._initDataFromProvider(start, end, true);
+        this._doInit(range[0], range[1]);
       };
       /**
        * Caution: Can be only called on raw data (before `this._indices` created).
        * This method does not modify `rawData` (`dataProvider`), but only
-       * add values to storage.
+       * add values to store.
        *
        * The final count will be increased by `Math.max(values.length, names.length)`.
        *
@@ -31421,124 +31603,80 @@
        */
 
 
-      List.prototype.appendValues = function (values, names) {
-        var storage = this._storage;
-        var dimensions = this.dimensions;
-        var dimLen = dimensions.length;
-        var rawExtent = this._rawExtent;
-        var start = this.count();
-        var end = start + Math.max(values.length, names ? names.length : 0);
+      SeriesData.prototype.appendValues = function (values, names) {
+        var _a = this._store.appendValues(values, names.length),
+            start = _a.start,
+            end = _a.end;
 
-        for (var i = 0; i < dimLen; i++) {
-          var dim = dimensions[i];
+        var shouldMakeIdFromName = this._shouldMakeIdFromName();
 
-          if (!rawExtent[dim]) {
-            rawExtent[dim] = getInitialExtent();
-          }
+        this._updateOrdinalMeta();
 
-          prepareStorage(storage, this._dimensionInfos[dim], end, true);
-        }
-
-        var rawExtentArr = map$1(dimensions, function (dim) {
-          return rawExtent[dim];
-        });
-        var storageArr = this._storageArr = map$1(dimensions, function (dim) {
-          return storage[dim];
-        });
-        var emptyDataItem = [];
-
-        for (var idx = start; idx < end; idx++) {
-          var sourceIdx = idx - start; // Store the data by dimensions
-
-          for (var dimIdx = 0; dimIdx < dimLen; dimIdx++) {
-            var dim = dimensions[dimIdx];
-
-            var val = this._dimValueGetterArrayRows(values[sourceIdx] || emptyDataItem, dim, sourceIdx, dimIdx);
-
-            storageArr[dimIdx][idx] = val;
-            var dimRawExtent = rawExtentArr[dimIdx];
-            val < dimRawExtent[0] && (dimRawExtent[0] = val);
-            val > dimRawExtent[1] && (dimRawExtent[1] = val);
-          }
-
-          if (names) {
+        if (names) {
+          for (var idx = start; idx < end; idx++) {
+            var sourceIdx = idx - start;
             this._nameList[idx] = names[sourceIdx];
 
-            if (!this._dontMakeIdFromName) {
+            if (shouldMakeIdFromName) {
               makeIdFromName(this, idx);
             }
           }
         }
-
-        this._rawCount = this._count = end; // Reset data extent
-
-        this._extent = {};
-        prepareInvertedIndex(this);
       };
 
-      List.prototype._initDataFromProvider = function (start, end, append) {
+      SeriesData.prototype._updateOrdinalMeta = function () {
+        var store = this._store;
+        var dimensions = this.dimensions;
+
+        for (var i = 0; i < dimensions.length; i++) {
+          var dimInfo = this._dimInfos[dimensions[i]];
+
+          if (dimInfo.ordinalMeta) {
+            store.collectOrdinalMeta(dimInfo.storeDimIndex, dimInfo.ordinalMeta);
+          }
+        }
+      };
+
+      SeriesData.prototype._shouldMakeIdFromName = function () {
+        var provider = this._store.getProvider();
+
+        return this._idDimIdx == null && provider.getSource().sourceFormat !== SOURCE_FORMAT_TYPED_ARRAY && !provider.fillStorage;
+      };
+
+      SeriesData.prototype._doInit = function (start, end) {
         if (start >= end) {
           return;
         }
 
-        var rawData = this._rawData;
-        var storage = this._storage;
-        var dimensions = this.dimensions;
-        var dimLen = dimensions.length;
-        var dimensionInfoMap = this._dimensionInfos;
+        var store = this._store;
+        var provider = store.getProvider();
+
+        this._updateOrdinalMeta();
+
         var nameList = this._nameList;
         var idList = this._idList;
-        var rawExtent = this._rawExtent;
-        var sourceFormat = rawData.getSource().sourceFormat;
-        var isFormatOriginal = sourceFormat === SOURCE_FORMAT_ORIGINAL;
+        var sourceFormat = provider.getSource().sourceFormat;
+        var isFormatOriginal = sourceFormat === SOURCE_FORMAT_ORIGINAL; // Each data item is value
+        // [1, 2]
+        // 2
+        // Bar chart, line chart which uses category axis
+        // only gives the 'y' value. 'x' value is the indices of category
+        // Use a tempValue to normalize the value to be a (x, y) value
+        // If dataItem is {name: ...} or {id: ...}, it has highest priority.
+        // This kind of ids and names are always stored `_nameList` and `_idList`.
 
-        for (var i = 0; i < dimLen; i++) {
-          var dim = dimensions[i];
-
-          if (!rawExtent[dim]) {
-            rawExtent[dim] = getInitialExtent();
-          }
-
-          prepareStorage(storage, dimensionInfoMap[dim], end, append);
-        }
-
-        var storageArr = this._storageArr = map$1(dimensions, function (dim) {
-          return storage[dim];
-        });
-        var rawExtentArr = map$1(dimensions, function (dim) {
-          return rawExtent[dim];
-        });
-
-        if (rawData.fillStorage) {
-          rawData.fillStorage(start, end, storageArr, rawExtentArr);
-        } else {
-          var dataItem = [];
+        if (isFormatOriginal && !provider.pure) {
+          var sharedDataItem = [];
 
           for (var idx = start; idx < end; idx++) {
             // NOTICE: Try not to write things into dataItem
-            dataItem = rawData.getItem(idx, dataItem); // Each data item is value
-            // [1, 2]
-            // 2
-            // Bar chart, line chart which uses category axis
-            // only gives the 'y' value. 'x' value is the indices of category
-            // Use a tempValue to normalize the value to be a (x, y) value
-            // Store the data by dimensions
+            var dataItem = provider.getItem(idx, sharedDataItem);
 
-            for (var dimIdx = 0; dimIdx < dimLen; dimIdx++) {
-              var dim = dimensions[dimIdx];
-              var dimStorage = storageArr[dimIdx]; // PENDING NULL is empty or zero
+            if (!this.hasItemOption && isDataItemOption(dataItem)) {
+              this.hasItemOption = true;
+            }
 
-              var val = this._dimValueGetter(dataItem, dim, idx, dimIdx);
-
-              dimStorage[idx] = val;
-              var dimRawExtent = rawExtentArr[dimIdx];
-              val < dimRawExtent[0] && (dimRawExtent[0] = val);
-              val > dimRawExtent[1] && (dimRawExtent[1] = val);
-            } // If dataItem is {name: ...} or {id: ...}, it has highest priority.
-            // This kind of ids and names are always stored `_nameList` and `_idList`.
-
-
-            if (isFormatOriginal && !rawData.pure && dataItem) {
+            if (dataItem) {
               var itemName = dataItem.name;
 
               if (nameList[idx] == null && itemName != null) {
@@ -31551,183 +31689,16 @@
                 idList[idx] = convertOptionIdName(itemId, null);
               }
             }
-
-            if (!this._dontMakeIdFromName) {
-              makeIdFromName(this, idx);
-            }
           }
         }
 
-        if (!rawData.persistent && rawData.clean) {
-          // Clean unused data if data source is typed array.
-          rawData.clean();
+        if (this._shouldMakeIdFromName()) {
+          for (var idx = start; idx < end; idx++) {
+            makeIdFromName(this, idx);
+          }
         }
 
-        this._rawCount = this._count = end; // Reset data extent
-
-        this._extent = {};
         prepareInvertedIndex(this);
-      };
-
-      List.prototype.count = function () {
-        return this._count;
-      };
-
-      List.prototype.getIndices = function () {
-        var newIndices;
-        var indices = this._indices;
-
-        if (indices) {
-          var Ctor = indices.constructor;
-          var thisCount = this._count; // `new Array(a, b, c)` is different from `new Uint32Array(a, b, c)`.
-
-          if (Ctor === Array) {
-            newIndices = new Ctor(thisCount);
-
-            for (var i = 0; i < thisCount; i++) {
-              newIndices[i] = indices[i];
-            }
-          } else {
-            newIndices = new Ctor(indices.buffer, 0, thisCount);
-          }
-        } else {
-          var Ctor = getIndicesCtor(this);
-          newIndices = new Ctor(this.count());
-
-          for (var i = 0; i < newIndices.length; i++) {
-            newIndices[i] = i;
-          }
-        }
-
-        return newIndices;
-      }; // Get data by index of dimension.
-      // Because in v8 access array by number variable is faster than access object by string variable
-      // Not sure why but the optimization just works.
-
-
-      List.prototype.getByDimIdx = function (dimIdx, idx) {
-        if (!(idx >= 0 && idx < this._count)) {
-          return NaN;
-        }
-
-        var dimStore = this._storageArr[dimIdx];
-        return dimStore ? dimStore[this.getRawIndex(idx)] : NaN;
-      };
-      /**
-       * Get value. Return NaN if idx is out of range.
-       * @param dim Dim must be concrete name.
-       */
-
-
-      List.prototype.get = function (dim, idx) {
-        if (!(idx >= 0 && idx < this._count)) {
-          return NaN;
-        }
-
-        var dimStore = this._storage[dim];
-        return dimStore ? dimStore[this.getRawIndex(idx)] : NaN;
-      };
-      /**
-       * @param dim concrete dim
-       */
-
-
-      List.prototype.getByRawIndex = function (dim, rawIdx) {
-        if (!(rawIdx >= 0 && rawIdx < this._rawCount)) {
-          return NaN;
-        }
-
-        var dimStore = this._storage[dim];
-        return dimStore ? dimStore[rawIdx] : NaN;
-      };
-
-      List.prototype.getValues = function (dimensions, idx) {
-        var values = [];
-
-        if (!isArray(dimensions)) {
-          // stack = idx;
-          idx = dimensions;
-          dimensions = this.dimensions;
-        }
-
-        for (var i = 0, len = dimensions.length; i < len; i++) {
-          values.push(this.get(dimensions[i], idx
-          /*, stack */
-          ));
-        }
-
-        return values;
-      };
-      /**
-       * If value is NaN. Inlcuding '-'
-       * Only check the coord dimensions.
-       */
-
-
-      List.prototype.hasValue = function (idx) {
-        var dataDimsOnCoord = this._dimensionsSummary.dataDimsOnCoord;
-
-        for (var i = 0, len = dataDimsOnCoord.length; i < len; i++) {
-          // Ordinal type originally can be string or number.
-          // But when an ordinal type is used on coord, it can
-          // not be string but only number. So we can also use isNaN.
-          if (isNaN(this.get(dataDimsOnCoord[i], idx))) {
-            return false;
-          }
-        }
-
-        return true;
-      };
-      /**
-       * Get extent of data in one dimension
-       */
-
-
-      List.prototype.getDataExtent = function (dim) {
-        // Make sure use concrete dim as cache name.
-        dim = this.getDimension(dim);
-        var dimData = this._storage[dim];
-        var initialExtent = getInitialExtent(); // stack = !!((stack || false) && this.getCalculationInfo(dim));
-
-        if (!dimData) {
-          return initialExtent;
-        } // Make more strict checkings to ensure hitting cache.
-
-
-        var currEnd = this.count(); // let cacheName = [dim, !!stack].join('_');
-        // let cacheName = dim;
-        // Consider the most cases when using data zoom, `getDataExtent`
-        // happened before filtering. We cache raw extent, which is not
-        // necessary to be cleared and recalculated when restore data.
-
-        var useRaw = !this._indices; // && !stack;
-
-        var dimExtent;
-
-        if (useRaw) {
-          return this._rawExtent[dim].slice();
-        }
-
-        dimExtent = this._extent[dim];
-
-        if (dimExtent) {
-          return dimExtent.slice();
-        }
-
-        dimExtent = initialExtent;
-        var min = dimExtent[0];
-        var max = dimExtent[1];
-
-        for (var i = 0; i < currEnd; i++) {
-          var rawIdx = this.getRawIndex(i);
-          var value = dimData[rawIdx];
-          value < min && (min = value);
-          value > max && (max = value);
-        }
-
-        dimExtent = [min, max];
-        this._extent[dim] = dimExtent;
-        return dimExtent;
       };
       /**
        * PENDING: In fact currently this function is only used to short-circuit
@@ -31745,9 +31716,8 @@
        */
 
 
-      List.prototype.getApproximateExtent = function (dim) {
-        dim = this.getDimension(dim);
-        return this._approximateExtent[dim] || this.getDataExtent(dim);
+      SeriesData.prototype.getApproximateExtent = function (dim) {
+        return this._approximateExtent[dim] || this._store.getDataExtent(this._getStoreDimIndex(dim));
       };
       /**
        * Calculate extent on a filtered data might be time consuming.
@@ -31755,85 +31725,162 @@
        */
 
 
-      List.prototype.setApproximateExtent = function (extent, dim) {
+      SeriesData.prototype.setApproximateExtent = function (extent, dim) {
         dim = this.getDimension(dim);
         this._approximateExtent[dim] = extent.slice();
       };
 
-      List.prototype.getCalculationInfo = function (key) {
+      SeriesData.prototype.getCalculationInfo = function (key) {
         return this._calculationInfo[key];
       };
 
-      List.prototype.setCalculationInfo = function (key, value) {
-        isObject$3(key) ? extend(this._calculationInfo, key) : this._calculationInfo[key] = value;
+      SeriesData.prototype.setCalculationInfo = function (key, value) {
+        isObject$2(key) ? extend(this._calculationInfo, key) : this._calculationInfo[key] = value;
       };
       /**
-       * Get sum of data in one dimension
+       * @return Never be null/undefined. `number` will be converted to string. Becuase:
+       * In most cases, name is used in display, where returning a string is more convenient.
+       * In other cases, name is used in query (see `indexOfName`), where we can keep the
+       * rule that name `2` equals to name `'2'`.
        */
 
 
-      List.prototype.getSum = function (dim) {
-        var dimData = this._storage[dim];
-        var sum = 0;
+      SeriesData.prototype.getName = function (idx) {
+        var rawIndex = this.getRawIndex(idx);
+        var name = this._nameList[rawIndex];
 
-        if (dimData) {
-          for (var i = 0, len = this.count(); i < len; i++) {
-            var value = this.get(dim, i);
+        if (name == null && this._nameDimIdx != null) {
+          name = getIdNameFromStore(this, this._nameDimIdx, rawIndex);
+        }
 
-            if (!isNaN(value)) {
-              sum += value;
-            }
+        if (name == null) {
+          name = '';
+        }
+
+        return name;
+      };
+
+      SeriesData.prototype._getCategory = function (dimIdx, idx) {
+        var ordinal = this._store.get(dimIdx, idx);
+
+        var ordinalMeta = this._store.getOrdinalMeta(dimIdx);
+
+        if (ordinalMeta) {
+          return ordinalMeta.categories[ordinal];
+        }
+
+        return ordinal;
+      };
+      /**
+       * @return Never null/undefined. `number` will be converted to string. Becuase:
+       * In all cases having encountered at present, id is used in making diff comparison, which
+       * are usually based on hash map. We can keep the rule that the internal id are always string
+       * (treat `2` is the same as `'2'`) to make the related logic simple.
+       */
+
+
+      SeriesData.prototype.getId = function (idx) {
+        return getId(this, this.getRawIndex(idx));
+      };
+
+      SeriesData.prototype.count = function () {
+        return this._store.count();
+      };
+      /**
+       * Get value. Return NaN if idx is out of range.
+       *
+       * @notice Should better to use `data.getStore().get(dimIndex, dataIdx)` instead.
+       */
+
+
+      SeriesData.prototype.get = function (dim, idx) {
+        var store = this._store;
+        var dimInfo = this._dimInfos[dim];
+
+        if (dimInfo) {
+          return store.get(dimInfo.storeDimIndex, idx);
+        }
+      };
+      /**
+       * @notice Should better to use `data.getStore().getByRawIndex(dimIndex, dataIdx)` instead.
+       */
+
+
+      SeriesData.prototype.getByRawIndex = function (dim, rawIdx) {
+        var store = this._store;
+        var dimInfo = this._dimInfos[dim];
+
+        if (dimInfo) {
+          return store.getByRawIndex(dimInfo.storeDimIndex, rawIdx);
+        }
+      };
+
+      SeriesData.prototype.getIndices = function () {
+        return this._store.getIndices();
+      };
+
+      SeriesData.prototype.getDataExtent = function (dim) {
+        return this._store.getDataExtent(this._getStoreDimIndex(dim));
+      };
+
+      SeriesData.prototype.getSum = function (dim) {
+        return this._store.getSum(this._getStoreDimIndex(dim));
+      };
+
+      SeriesData.prototype.getMedian = function (dim) {
+        return this._store.getMedian(this._getStoreDimIndex(dim));
+      };
+
+      SeriesData.prototype.getValues = function (dimensions, idx) {
+        var _this = this;
+
+        var store = this._store;
+        return isArray(dimensions) ? store.getValues(map$1(dimensions, function (dim) {
+          return _this._getStoreDimIndex(dim);
+        }), idx) : store.getValues(dimensions);
+      };
+      /**
+       * If value is NaN. Inlcuding '-'
+       * Only check the coord dimensions.
+       */
+
+
+      SeriesData.prototype.hasValue = function (idx) {
+        var dataDimIndicesOnCoord = this._dimSummary.dataDimIndicesOnCoord;
+
+        for (var i = 0, len = dataDimIndicesOnCoord.length; i < len; i++) {
+          // Ordinal type originally can be string or number.
+          // But when an ordinal type is used on coord, it can
+          // not be string but only number. So we can also use isNaN.
+          if (isNaN(this._store.get(dataDimIndicesOnCoord[i], idx))) {
+            return false;
           }
         }
 
-        return sum;
+        return true;
       };
       /**
-       * Get median of data in one dimension
+       * Retreive the index with given name
        */
 
 
-      List.prototype.getMedian = function (dim) {
-        var dimDataArray = []; // map all data of one dimension
-
-        this.each(dim, function (val) {
-          if (!isNaN(val)) {
-            dimDataArray.push(val);
+      SeriesData.prototype.indexOfName = function (name) {
+        for (var i = 0, len = this._store.count(); i < len; i++) {
+          if (this.getName(i) === name) {
+            return i;
           }
-        }); // TODO
-        // Use quick select?
+        }
 
-        var sortedDimDataArray = dimDataArray.sort(function (a, b) {
-          return a - b;
-        });
-        var len = this.count(); // calculate median
+        return -1;
+      };
 
-        return len === 0 ? 0 : len % 2 === 1 ? sortedDimDataArray[(len - 1) / 2] : (sortedDimDataArray[len / 2] + sortedDimDataArray[len / 2 - 1]) / 2;
-      }; // /**
-      //  * Retreive the index with given value
-      //  * @param {string} dim Concrete dimension.
-      //  * @param {number} value
-      //  * @return {number}
-      //  */
-      // Currently incorrect: should return dataIndex but not rawIndex.
-      // Do not fix it until this method is to be used somewhere.
-      // FIXME Precision of float value
-      // indexOf(dim, value) {
-      //     let storage = this._storage;
-      //     let dimData = storage[dim];
-      //     let chunkSize = this._chunkSize;
-      //     if (dimData) {
-      //         for (let i = 0, len = this.count(); i < len; i++) {
-      //             let chunkIndex = mathFloor(i / chunkSize);
-      //             let chunkOffset = i % chunkSize;
-      //             if (dimData[chunkIndex][chunkOffset] === value) {
-      //                 return i;
-      //             }
-      //         }
-      //     }
-      //     return -1;
-      // }
+      SeriesData.prototype.getRawIndex = function (idx) {
+        return this._store.getRawIndex(idx);
+      };
 
+      SeriesData.prototype.indexOfRawIndex = function (rawIndex) {
+        return this._store.indexOfRawIndex(rawIndex);
+      };
       /**
        * Only support the dimension which inverted index created.
        * Do not support other cases until required.
@@ -31843,7 +31890,7 @@
        */
 
 
-      List.prototype.rawIndexOf = function (dim, value) {
+      SeriesData.prototype.rawIndexOf = function (dim, value) {
         var invertedIndices = dim && this._invertedIndicesMap[dim];
 
         if ("development" !== 'production') {
@@ -31861,60 +31908,6 @@
         return rawIndex;
       };
       /**
-       * Retreive the index with given name
-       */
-
-
-      List.prototype.indexOfName = function (name) {
-        for (var i = 0, len = this.count(); i < len; i++) {
-          if (this.getName(i) === name) {
-            return i;
-          }
-        }
-
-        return -1;
-      };
-      /**
-       * Retreive the index with given raw data index
-       */
-
-
-      List.prototype.indexOfRawIndex = function (rawIndex) {
-        if (rawIndex >= this._rawCount || rawIndex < 0) {
-          return -1;
-        }
-
-        if (!this._indices) {
-          return rawIndex;
-        } // Indices are ascending
-
-
-        var indices = this._indices; // If rawIndex === dataIndex
-
-        var rawDataIndex = indices[rawIndex];
-
-        if (rawDataIndex != null && rawDataIndex < this._count && rawDataIndex === rawIndex) {
-          return rawIndex;
-        }
-
-        var left = 0;
-        var right = this._count - 1;
-
-        while (left <= right) {
-          var mid = (left + right) / 2 | 0;
-
-          if (indices[mid] < rawIndex) {
-            left = mid + 1;
-          } else if (indices[mid] > rawIndex) {
-            right = mid - 1;
-          } else {
-            return mid;
-          }
-        }
-
-        return -1;
-      };
-      /**
        * Retreive the index of nearest value
        * @param dim
        * @param value
@@ -31924,232 +31917,37 @@
        */
 
 
-      List.prototype.indicesOfNearest = function (dim, value, maxDistance) {
-        var storage = this._storage;
-        var dimData = storage[dim];
-        var nearestIndices = [];
-
-        if (!dimData) {
-          return nearestIndices;
-        }
-
-        if (maxDistance == null) {
-          maxDistance = Infinity;
-        }
-
-        var minDist = Infinity;
-        var minDiff = -1;
-        var nearestIndicesLen = 0; // Check the test case of `test/ut/spec/data/List.js`.
-
-        for (var i = 0, len = this.count(); i < len; i++) {
-          var dataIndex = this.getRawIndex(i);
-          var diff = value - dimData[dataIndex];
-          var dist = Math.abs(diff);
-
-          if (dist <= maxDistance) {
-            // When the `value` is at the middle of `this.get(dim, i)` and `this.get(dim, i+1)`,
-            // we'd better not push both of them to `nearestIndices`, otherwise it is easy to
-            // get more than one item in `nearestIndices` (more specifically, in `tooltip`).
-            // So we chose the one that `diff >= 0` in this csae.
-            // But if `this.get(dim, i)` and `this.get(dim, j)` get the same value, both of them
-            // should be push to `nearestIndices`.
-            if (dist < minDist || dist === minDist && diff >= 0 && minDiff < 0) {
-              minDist = dist;
-              minDiff = diff;
-              nearestIndicesLen = 0;
-            }
-
-            if (diff === minDiff) {
-              nearestIndices[nearestIndicesLen++] = i;
-            }
-          }
-        }
-
-        nearestIndices.length = nearestIndicesLen;
-        return nearestIndices;
-      };
-      /**
-       * Get raw data item
-       */
-
-
-      List.prototype.getRawDataItem = function (idx) {
-        if (!this._rawData.persistent) {
-          var val = [];
-
-          for (var i = 0; i < this.dimensions.length; i++) {
-            var dim = this.dimensions[i];
-            val.push(this.get(dim, idx));
-          }
-
-          return val;
-        } else {
-          return this._rawData.getItem(this.getRawIndex(idx));
-        }
-      };
-      /**
-       * @return Never be null/undefined. `number` will be converted to string. Becuase:
-       * In most cases, name is used in display, where returning a string is more convenient.
-       * In other cases, name is used in query (see `indexOfName`), where we can keep the
-       * rule that name `2` equals to name `'2'`.
-       */
-
-
-      List.prototype.getName = function (idx) {
-        var rawIndex = this.getRawIndex(idx);
-        var name = this._nameList[rawIndex];
-
-        if (name == null && this._nameDimIdx != null) {
-          name = getIdNameFromStore(this, this._nameDimIdx, this._nameOrdinalMeta, rawIndex);
-        }
-
-        if (name == null) {
-          name = '';
-        }
-
-        return name;
-      };
-      /**
-       * @return Never null/undefined. `number` will be converted to string. Becuase:
-       * In all cases having encountered at present, id is used in making diff comparison, which
-       * are usually based on hash map. We can keep the rule that the internal id are always string
-       * (treat `2` is the same as `'2'`) to make the related logic simple.
-       */
-
-
-      List.prototype.getId = function (idx) {
-        return getId(this, this.getRawIndex(idx));
+      SeriesData.prototype.indicesOfNearest = function (dim, value, maxDistance) {
+        return this._store.indicesOfNearest(this._getStoreDimIndex(dim), value, maxDistance);
       };
 
-      List.prototype.each = function (dims, cb, ctx, ctxCompat) {
-
-        var _this = this;
-
-        if (!this._count) {
-          return;
-        }
+      SeriesData.prototype.each = function (dims, cb, ctx) {
 
         if (typeof dims === 'function') {
-          ctxCompat = ctx;
           ctx = cb;
           cb = dims;
           dims = [];
         } // ctxCompat just for compat echarts3
 
 
-        var fCtx = ctx || ctxCompat || this;
-        var dimNames = map$1(normalizeDimensions(dims), this.getDimension, this);
+        var fCtx = ctx || this;
+        var dimIndices = map$1(normalizeDimensions(dims), this._getStoreDimIndex, this);
 
-        if ("development" !== 'production') {
-          validateDimensions(this, dimNames);
-        }
-
-        var dimSize = dimNames.length;
-        var dimIndices = map$1(dimNames, function (dimName) {
-          return _this._dimensionInfos[dimName].index;
-        });
-        var storageArr = this._storageArr;
-
-        for (var i = 0, len = this.count(); i < len; i++) {
-          var rawIdx = this.getRawIndex(i); // Simple optimization
-
-          switch (dimSize) {
-            case 0:
-              cb.call(fCtx, i);
-              break;
-
-            case 1:
-              cb.call(fCtx, storageArr[dimIndices[0]][rawIdx], i);
-              break;
-
-            case 2:
-              cb.call(fCtx, storageArr[dimIndices[0]][rawIdx], storageArr[dimIndices[1]][rawIdx], i);
-              break;
-
-            default:
-              var k = 0;
-              var value = [];
-
-              for (; k < dimSize; k++) {
-                value[k] = storageArr[dimIndices[k]][rawIdx];
-              } // Index
-
-
-              value[k] = i;
-              cb.apply(fCtx, value);
-          }
-        }
+        this._store.each(dimIndices, fCtx ? bind(cb, fCtx) : cb);
       };
 
-      List.prototype.filterSelf = function (dims, cb, ctx, ctxCompat) {
-
-        var _this = this;
-
-        if (!this._count) {
-          return;
-        }
+      SeriesData.prototype.filterSelf = function (dims, cb, ctx) {
 
         if (typeof dims === 'function') {
-          ctxCompat = ctx;
           ctx = cb;
           cb = dims;
           dims = [];
         } // ctxCompat just for compat echarts3
 
 
-        var fCtx = ctx || ctxCompat || this;
-        var dimNames = map$1(normalizeDimensions(dims), this.getDimension, this);
-
-        if ("development" !== 'production') {
-          validateDimensions(this, dimNames);
-        }
-
-        var count = this.count();
-        var Ctor = getIndicesCtor(this);
-        var newIndices = new Ctor(count);
-        var value = [];
-        var dimSize = dimNames.length;
-        var offset = 0;
-        var dimIndices = map$1(dimNames, function (dimName) {
-          return _this._dimensionInfos[dimName].index;
-        });
-        var dim0 = dimIndices[0];
-        var storageArr = this._storageArr;
-
-        for (var i = 0; i < count; i++) {
-          var keep = void 0;
-          var rawIdx = this.getRawIndex(i); // Simple optimization
-
-          if (dimSize === 0) {
-            keep = cb.call(fCtx, i);
-          } else if (dimSize === 1) {
-            var val = storageArr[dim0][rawIdx];
-            keep = cb.call(fCtx, val, i);
-          } else {
-            var k = 0;
-
-            for (; k < dimSize; k++) {
-              value[k] = storageArr[dimIndices[k]][rawIdx];
-            }
-
-            value[k] = i;
-            keep = cb.apply(fCtx, value);
-          }
-
-          if (keep) {
-            newIndices[offset++] = rawIdx;
-          }
-        } // Set indices after filtered.
-
-
-        if (offset < count) {
-          this._indices = newIndices;
-        }
-
-        this._count = offset; // Reset data extent
-
-        this._extent = {};
-        this.getRawIndex = this._indices ? getRawIndexWithIndices : getRawIndexWithoutIndices;
+        var fCtx = ctx || this;
+        var dimIndices = map$1(normalizeDimensions(dims), this._getStoreDimIndex, this);
+        this._store = this._store.filter(dimIndices, fCtx ? bind(cb, fCtx) : cb);
         return this;
       };
       /**
@@ -32158,146 +31956,33 @@
        */
 
 
-      List.prototype.selectRange = function (range) {
+      SeriesData.prototype.selectRange = function (range) {
 
         var _this = this;
 
-        var len = this._count;
+        var innerRange = {};
+        var dims = keys(range);
+        each(dims, function (dim) {
+          var dimIdx = _this._getStoreDimIndex(dim);
 
-        if (!len) {
-          return;
-        }
-
-        var dimensions = [];
-
-        for (var dim in range) {
-          if (range.hasOwnProperty(dim)) {
-            dimensions.push(dim);
-          }
-        }
-
-        if ("development" !== 'production') {
-          validateDimensions(this, dimensions);
-        }
-
-        var dimSize = dimensions.length;
-
-        if (!dimSize) {
-          return;
-        }
-
-        var originalCount = this.count();
-        var Ctor = getIndicesCtor(this);
-        var newIndices = new Ctor(originalCount);
-        var offset = 0;
-        var dim0 = dimensions[0];
-        var dimIndices = map$1(dimensions, function (dimName) {
-          return _this._dimensionInfos[dimName].index;
+          innerRange[dimIdx] = range[dim];
         });
-        var min = range[dim0][0];
-        var max = range[dim0][1];
-        var storageArr = this._storageArr;
-        var quickFinished = false;
-
-        if (!this._indices) {
-          // Extreme optimization for common case. About 2x faster in chrome.
-          var idx = 0;
-
-          if (dimSize === 1) {
-            var dimStorage = storageArr[dimIndices[0]];
-
-            for (var i = 0; i < len; i++) {
-              var val = dimStorage[i]; // NaN will not be filtered. Consider the case, in line chart, empty
-              // value indicates the line should be broken. But for the case like
-              // scatter plot, a data item with empty value will not be rendered,
-              // but the axis extent may be effected if some other dim of the data
-              // item has value. Fortunately it is not a significant negative effect.
-
-              if (val >= min && val <= max || isNaN(val)) {
-                newIndices[offset++] = idx;
-              }
-
-              idx++;
-            }
-
-            quickFinished = true;
-          } else if (dimSize === 2) {
-            var dimStorage = storageArr[dimIndices[0]];
-            var dimStorage2 = storageArr[dimIndices[1]];
-            var min2 = range[dimensions[1]][0];
-            var max2 = range[dimensions[1]][1];
-
-            for (var i = 0; i < len; i++) {
-              var val = dimStorage[i];
-              var val2 = dimStorage2[i]; // Do not filter NaN, see comment above.
-
-              if ((val >= min && val <= max || isNaN(val)) && (val2 >= min2 && val2 <= max2 || isNaN(val2))) {
-                newIndices[offset++] = idx;
-              }
-
-              idx++;
-            }
-
-            quickFinished = true;
-          }
-        }
-
-        if (!quickFinished) {
-          if (dimSize === 1) {
-            for (var i = 0; i < originalCount; i++) {
-              var rawIndex = this.getRawIndex(i);
-              var val = storageArr[dimIndices[0]][rawIndex]; // Do not filter NaN, see comment above.
-
-              if (val >= min && val <= max || isNaN(val)) {
-                newIndices[offset++] = rawIndex;
-              }
-            }
-          } else {
-            for (var i = 0; i < originalCount; i++) {
-              var keep = true;
-              var rawIndex = this.getRawIndex(i);
-
-              for (var k = 0; k < dimSize; k++) {
-                var dimk = dimensions[k];
-                var val = storageArr[dimIndices[k]][rawIndex]; // Do not filter NaN, see comment above.
-
-                if (val < range[dimk][0] || val > range[dimk][1]) {
-                  keep = false;
-                }
-              }
-
-              if (keep) {
-                newIndices[offset++] = this.getRawIndex(i);
-              }
-            }
-          }
-        } // Set indices after filtered.
-
-
-        if (offset < originalCount) {
-          this._indices = newIndices;
-        }
-
-        this._count = offset; // Reset data extent
-
-        this._extent = {};
-        this.getRawIndex = this._indices ? getRawIndexWithIndices : getRawIndexWithoutIndices;
+        this._store = this._store.selectRange(innerRange);
         return this;
       };
-      /* eslint-enable */
+      /* eslint-enable max-len */
 
 
-      List.prototype.mapArray = function (dims, cb, ctx, ctxCompat) {
+      SeriesData.prototype.mapArray = function (dims, cb, ctx) {
 
         if (typeof dims === 'function') {
-          ctxCompat = ctx;
           ctx = cb;
           cb = dims;
           dims = [];
         } // ctxCompat just for compat echarts3
 
 
-        ctx = ctx || ctxCompat || this;
+        ctx = ctx || this;
         var result = [];
         this.each(dims, function () {
           result.push(cb && cb.apply(this, arguments));
@@ -32305,66 +31990,37 @@
         return result;
       };
 
-      List.prototype.map = function (dims, cb, ctx, ctxCompat) {
+      SeriesData.prototype.map = function (dims, cb, ctx, ctxCompat) {
 
         var fCtx = ctx || ctxCompat || this;
-        var dimNames = map$1(normalizeDimensions(dims), this.getDimension, this);
+        var dimIndices = map$1(normalizeDimensions(dims), this._getStoreDimIndex, this);
+        var list = cloneListForMapAndSample(this);
+        list._store = this._store.map(dimIndices, fCtx ? bind(cb, fCtx) : cb);
+        return list;
+      };
+
+      SeriesData.prototype.modify = function (dims, cb, ctx, ctxCompat) {
+        var _this = this; // ctxCompat just for compat echarts3
+
+
+        var fCtx = ctx || ctxCompat || this;
 
         if ("development" !== 'production') {
-          validateDimensions(this, dimNames);
+          each(normalizeDimensions(dims), function (dim) {
+            var dimInfo = _this.getDimensionInfo(dim);
+
+            if (!dimInfo.isCalculationCoord) {
+              console.error('Danger: only stack dimension can be modified');
+            }
+          });
         }
 
-        var list = cloneListForMapAndSample(this, dimNames);
-        var storage = list._storage; // Following properties are all immutable.
-        // So we can reference to the same value
+        var dimIndices = map$1(normalizeDimensions(dims), this._getStoreDimIndex, this); // If do shallow clone here, if there are too many stacked series,
+        // it still cost lots of memory, becuase `_store.dimensions` are not shared.
+        // We should consider there probably be shallow clone happen in each sereis
+        // in consequent filter/map.
 
-        list._indices = this._indices;
-        list.getRawIndex = list._indices ? getRawIndexWithIndices : getRawIndexWithoutIndices;
-        var tmpRetValue = [];
-        var dimSize = dimNames.length;
-        var dataCount = this.count();
-        var values = [];
-        var rawExtent = list._rawExtent;
-
-        for (var dataIndex = 0; dataIndex < dataCount; dataIndex++) {
-          for (var dimIndex = 0; dimIndex < dimSize; dimIndex++) {
-            values[dimIndex] = this.get(dimNames[dimIndex], dataIndex);
-          }
-
-          values[dimSize] = dataIndex;
-          var retValue = cb && cb.apply(fCtx, values);
-
-          if (retValue != null) {
-            // a number or string (in oridinal dimension)?
-            if (typeof retValue !== 'object') {
-              tmpRetValue[0] = retValue;
-              retValue = tmpRetValue;
-            }
-
-            var rawIndex = this.getRawIndex(dataIndex);
-
-            for (var i = 0; i < retValue.length; i++) {
-              var dim = dimNames[i];
-              var val = retValue[i];
-              var rawExtentOnDim = rawExtent[dim];
-              var dimStore = storage[dim];
-
-              if (dimStore) {
-                dimStore[rawIndex] = val;
-              }
-
-              if (val < rawExtentOnDim[0]) {
-                rawExtentOnDim[0] = val;
-              }
-
-              if (val > rawExtentOnDim[1]) {
-                rawExtentOnDim[1] = val;
-              }
-            }
-          }
-        }
-
-        return list;
+        this._store.modify(dimIndices, fCtx ? bind(cb, fCtx) : cb);
       };
       /**
        * Large data down sampling on given dimension
@@ -32372,48 +32028,9 @@
        */
 
 
-      List.prototype.downSample = function (dimension, rate, sampleValue, sampleIndex) {
-        var list = cloneListForMapAndSample(this, [dimension]);
-        var targetStorage = list._storage;
-        var frameValues = [];
-        var frameSize = mathFloor(1 / rate);
-        var dimStore = targetStorage[dimension];
-        var len = this.count();
-        var rawExtentOnDim = list._rawExtent[dimension];
-        var newIndices = new (getIndicesCtor(this))(len);
-        var offset = 0;
-
-        for (var i = 0; i < len; i += frameSize) {
-          // Last frame
-          if (frameSize > len - i) {
-            frameSize = len - i;
-            frameValues.length = frameSize;
-          }
-
-          for (var k = 0; k < frameSize; k++) {
-            var dataIdx = this.getRawIndex(i + k);
-            frameValues[k] = dimStore[dataIdx];
-          }
-
-          var value = sampleValue(frameValues);
-          var sampleFrameIdx = this.getRawIndex(Math.min(i + sampleIndex(frameValues, value) || 0, len - 1)); // Only write value on the filtered data
-
-          dimStore[sampleFrameIdx] = value;
-
-          if (value < rawExtentOnDim[0]) {
-            rawExtentOnDim[0] = value;
-          }
-
-          if (value > rawExtentOnDim[1]) {
-            rawExtentOnDim[1] = value;
-          }
-
-          newIndices[offset++] = sampleFrameIdx;
-        }
-
-        list._count = offset;
-        list._indices = newIndices;
-        list.getRawIndex = getRawIndexWithIndices;
+      SeriesData.prototype.downSample = function (dimension, rate, sampleValue, sampleIndex) {
+        var list = cloneListForMapAndSample(this);
+        list._store = this._store.downSample(this._getStoreDimIndex(dimension), rate, sampleValue, sampleIndex);
         return list;
       };
       /**
@@ -32423,74 +32040,14 @@
        */
 
 
-      List.prototype.lttbDownSample = function (valueDimension, rate) {
-        var list = cloneListForMapAndSample(this, []);
-        var targetStorage = list._storage;
-        var dimStore = targetStorage[valueDimension];
-        var len = this.count();
-        var newIndices = new (getIndicesCtor(this))(len);
-        var sampledIndex = 0;
-        var frameSize = mathFloor(1 / rate);
-        var currentRawIndex = this.getRawIndex(0);
-        var maxArea;
-        var area;
-        var nextRawIndex; // First frame use the first data.
-
-        newIndices[sampledIndex++] = currentRawIndex;
-
-        for (var i = 1; i < len - 1; i += frameSize) {
-          var nextFrameStart = Math.min(i + frameSize, len - 1);
-          var nextFrameEnd = Math.min(i + frameSize * 2, len);
-          var avgX = (nextFrameEnd + nextFrameStart) / 2;
-          var avgY = 0;
-
-          for (var idx = nextFrameStart; idx < nextFrameEnd; idx++) {
-            var rawIndex = this.getRawIndex(idx);
-            var y = dimStore[rawIndex];
-
-            if (isNaN(y)) {
-              continue;
-            }
-
-            avgY += y;
-          }
-
-          avgY /= nextFrameEnd - nextFrameStart;
-          var frameStart = i;
-          var frameEnd = Math.min(i + frameSize, len);
-          var pointAX = i - 1;
-          var pointAY = dimStore[currentRawIndex];
-          maxArea = -1;
-          nextRawIndex = frameStart; // Find a point from current frame that construct a triangel with largest area with previous selected point
-          // And the average of next frame.
-
-          for (var idx = frameStart; idx < frameEnd; idx++) {
-            var rawIndex = this.getRawIndex(idx);
-            var y = dimStore[rawIndex];
-
-            if (isNaN(y)) {
-              continue;
-            } // Calculate triangle area over three buckets
-
-
-            area = Math.abs((pointAX - avgX) * (y - pointAY) - (pointAX - idx) * (avgY - pointAY));
-
-            if (area > maxArea) {
-              maxArea = area;
-              nextRawIndex = rawIndex; // Next a is this b
-            }
-          }
-
-          newIndices[sampledIndex++] = nextRawIndex;
-          currentRawIndex = nextRawIndex; // This a is the next a (chosen b)
-        } // First frame use the last data.
-
-
-        newIndices[sampledIndex++] = this.getRawIndex(len - 1);
-        list._count = sampledIndex;
-        list._indices = newIndices;
-        list.getRawIndex = getRawIndexWithIndices;
+      SeriesData.prototype.lttbDownSample = function (valueDimension, rate) {
+        var list = cloneListForMapAndSample(this);
+        list._store = this._store.lttbDownSample(this._getStoreDimIndex(valueDimension), rate);
         return list;
+      };
+
+      SeriesData.prototype.getRawDataItem = function (idx) {
+        return this._store.getRawDataItem(idx);
       };
       /**
        * Get model of one data item.
@@ -32498,7 +32055,7 @@
       // TODO: Type of data item
 
 
-      List.prototype.getItemModel = function (idx) {
+      SeriesData.prototype.getItemModel = function (idx) {
         var hostModel = this.hostModel;
         var dataItem = this.getRawDataItem(idx);
         return new Model(dataItem, hostModel, hostModel && hostModel.ecModel);
@@ -32508,9 +32065,9 @@
        */
 
 
-      List.prototype.diff = function (otherList) {
+      SeriesData.prototype.diff = function (otherList) {
         var thisList = this;
-        return new DataDiffer(otherList ? otherList.getIndices() : [], this.getIndices(), function (idx) {
+        return new DataDiffer(otherList ? otherList.getStore().getIndices() : [], this.getStore().getIndices(), function (idx) {
           return getId(otherList, idx);
         }, function (idx) {
           return getId(thisList, idx);
@@ -32521,15 +32078,15 @@
        */
 
 
-      List.prototype.getVisual = function (key) {
+      SeriesData.prototype.getVisual = function (key) {
         var visual = this._visual;
         return visual && visual[key];
       };
 
-      List.prototype.setVisual = function (kvObj, val) {
+      SeriesData.prototype.setVisual = function (kvObj, val) {
         this._visual = this._visual || {};
 
-        if (isObject$3(kvObj)) {
+        if (isObject$2(kvObj)) {
           extend(this._visual, kvObj);
         } else {
           this._visual[kvObj] = val;
@@ -32541,7 +32098,7 @@
       // eslint-disable-next-line
 
 
-      List.prototype.getItemVisual = function (idx, key) {
+      SeriesData.prototype.getItemVisual = function (idx, key) {
         var itemVisual = this._itemVisuals[idx];
         var val = itemVisual && itemVisual[key];
 
@@ -32557,7 +32114,7 @@
        */
 
 
-      List.prototype.hasItemVisual = function () {
+      SeriesData.prototype.hasItemVisual = function () {
         return this._itemVisuals.length > 0;
       };
       /**
@@ -32566,7 +32123,7 @@
       // TODO: use key to save visual to reduce memory.
 
 
-      List.prototype.ensureUniqueItemVisual = function (idx, key) {
+      SeriesData.prototype.ensureUniqueItemVisual = function (idx, key) {
         var itemVisuals = this._itemVisuals;
         var itemVisual = itemVisuals[idx];
 
@@ -32581,7 +32138,7 @@
 
           if (isArray(val)) {
             val = val.slice();
-          } else if (isObject$3(val)) {
+          } else if (isObject$2(val)) {
             val = extend({}, val);
           }
 
@@ -32592,11 +32149,11 @@
       }; // eslint-disable-next-line
 
 
-      List.prototype.setItemVisual = function (idx, key, value) {
+      SeriesData.prototype.setItemVisual = function (idx, key, value) {
         var itemVisual = this._itemVisuals[idx] || {};
         this._itemVisuals[idx] = itemVisual;
 
-        if (isObject$3(key)) {
+        if (isObject$2(key)) {
           extend(itemVisual, key);
         } else {
           itemVisual[key] = value;
@@ -32607,13 +32164,13 @@
        */
 
 
-      List.prototype.clearAllVisual = function () {
+      SeriesData.prototype.clearAllVisual = function () {
         this._visual = {};
         this._itemVisuals = [];
       };
 
-      List.prototype.setLayout = function (key, val) {
-        if (isObject$3(key)) {
+      SeriesData.prototype.setLayout = function (key, val) {
+        if (isObject$2(key)) {
           for (var name_1 in key) {
             if (key.hasOwnProperty(name_1)) {
               this.setLayout(name_1, key[name_1]);
@@ -32630,7 +32187,7 @@
        */
 
 
-      List.prototype.getLayout = function (key) {
+      SeriesData.prototype.getLayout = function (key) {
         return this._layout[key];
       };
       /**
@@ -32638,7 +32195,7 @@
        */
 
 
-      List.prototype.getItemLayout = function (idx) {
+      SeriesData.prototype.getItemLayout = function (idx) {
         return this._itemLayouts[idx];
       };
       /**
@@ -32646,7 +32203,7 @@
        */
 
 
-      List.prototype.setItemLayout = function (idx, layout, merge) {
+      SeriesData.prototype.setItemLayout = function (idx, layout, merge) {
         this._itemLayouts[idx] = merge ? extend(this._itemLayouts[idx] || {}, layout) : layout;
       };
       /**
@@ -32654,7 +32211,7 @@
        */
 
 
-      List.prototype.clearItemLayouts = function () {
+      SeriesData.prototype.clearItemLayouts = function () {
         this._itemLayouts.length = 0;
       };
       /**
@@ -32662,30 +32219,17 @@
        */
 
 
-      List.prototype.setItemGraphicEl = function (idx, el) {
-        var hostModel = this.hostModel;
-
-        if (el) {
-          var ecData = getECData(el); // Add data index and series index for indexing the data by element
-          // Useful in tooltip
-
-          ecData.dataIndex = idx;
-          ecData.dataType = this.dataType;
-          ecData.seriesIndex = hostModel && hostModel.seriesIndex; // TODO: not store dataIndex on children.
-
-          if (el.type === 'group') {
-            el.traverse(setItemDataAndSeriesIndex, el);
-          }
-        }
-
+      SeriesData.prototype.setItemGraphicEl = function (idx, el) {
+        var seriesIndex = this.hostModel && this.hostModel.seriesIndex;
+        setCommonECData(seriesIndex, this.dataType, idx, el);
         this._graphicEls[idx] = el;
       };
 
-      List.prototype.getItemGraphicEl = function (idx) {
+      SeriesData.prototype.getItemGraphicEl = function (idx) {
         return this._graphicEls[idx];
       };
 
-      List.prototype.eachItemGraphicEl = function (cb, context) {
+      SeriesData.prototype.eachItemGraphicEl = function (cb, context) {
         each(this._graphicEls, function (el, idx) {
           if (el) {
             cb && cb.call(context, el, idx);
@@ -32698,35 +32242,13 @@
        */
 
 
-      List.prototype.cloneShallow = function (list) {
+      SeriesData.prototype.cloneShallow = function (list) {
         if (!list) {
-          var dimensionInfoList = map$1(this.dimensions, this.getDimensionInfo, this);
-          list = new List(dimensionInfoList, this.hostModel);
-        } // FIXME
-
-
-        list._storage = this._storage;
-        list._storageArr = this._storageArr;
-        transferProperties(list, this); // Clone will not change the data extent and indices
-
-        if (this._indices) {
-          var Ctor = this._indices.constructor;
-
-          if (Ctor === Array) {
-            var thisCount = this._indices.length;
-            list._indices = new Ctor(thisCount);
-
-            for (var i = 0; i < thisCount; i++) {
-              list._indices[i] = this._indices[i];
-            }
-          } else {
-            list._indices = new Ctor(this._indices);
-          }
-        } else {
-          list._indices = null;
+          list = new SeriesData(this._schema ? this._schema : map$1(this.dimensions, this._getDimInfo, this), this.hostModel);
         }
 
-        list.getRawIndex = list._indices ? getRawIndexWithIndices : getRawIndexWithoutIndices;
+        transferProperties(list, this);
+        list._store = this._store;
         return list;
       };
       /**
@@ -32734,7 +32256,7 @@
        */
 
 
-      List.prototype.wrapMethod = function (methodName, injectFunction) {
+      SeriesData.prototype.wrapMethod = function (methodName, injectFunction) {
         var originalMethod = this[methodName];
 
         if (typeof originalMethod !== 'function') {
@@ -32754,123 +32276,44 @@
       // ----------------------------------------------------------
 
 
-      List.internalField = function () {
-        defaultDimValueGetters = {
-          arrayRows: getDimValueSimply,
-          objectRows: function (dataItem, dimName, dataIndex, dimIndex) {
-            return parseDataValue(dataItem[dimName], this._dimensionInfos[dimName]);
-          },
-          keyedColumns: getDimValueSimply,
-          original: function (dataItem, dimName, dataIndex, dimIndex) {
-            // Performance sensitive, do not use modelUtil.getDataItemValue.
-            // If dataItem is an plain object with no value field, the let `value`
-            // will be assigned with the object, but it will be tread correctly
-            // in the `convertValue`.
-            var value = dataItem && (dataItem.value == null ? dataItem : dataItem.value); // If any dataItem is like { value: 10 }
-
-            if (!this._rawData.pure && isDataItemOption(dataItem)) {
-              this.hasItemOption = true;
-            }
-
-            return parseDataValue(value instanceof Array ? value[dimIndex] // If value is a single number or something else not array.
-            : value, this._dimensionInfos[dimName]);
-          },
-          typedArray: function (dataItem, dimName, dataIndex, dimIndex) {
-            return dataItem[dimIndex];
-          }
-        };
-
-        function getDimValueSimply(dataItem, dimName, dataIndex, dimIndex) {
-          return parseDataValue(dataItem[dimIndex], this._dimensionInfos[dimName]);
-        }
-
-        prepareInvertedIndex = function (list) {
-          var invertedIndicesMap = list._invertedIndicesMap;
+      SeriesData.internalField = function () {
+        prepareInvertedIndex = function (data) {
+          var invertedIndicesMap = data._invertedIndicesMap;
           each(invertedIndicesMap, function (invertedIndices, dim) {
-            var dimInfo = list._dimensionInfos[dim]; // Currently, only dimensions that has ordinalMeta can create inverted indices.
+            var dimInfo = data._dimInfos[dim]; // Currently, only dimensions that has ordinalMeta can create inverted indices.
 
             var ordinalMeta = dimInfo.ordinalMeta;
+            var store = data._store;
 
             if (ordinalMeta) {
-              invertedIndices = invertedIndicesMap[dim] = new CtorInt32Array(ordinalMeta.categories.length); // The default value of TypedArray is 0. To avoid miss
+              invertedIndices = invertedIndicesMap[dim] = new CtorInt32Array$1(ordinalMeta.categories.length); // The default value of TypedArray is 0. To avoid miss
               // mapping to 0, we should set it as INDEX_NOT_FOUND.
 
               for (var i = 0; i < invertedIndices.length; i++) {
                 invertedIndices[i] = INDEX_NOT_FOUND;
               }
 
-              for (var i = 0; i < list._count; i++) {
+              for (var i = 0; i < store.count(); i++) {
                 // Only support the case that all values are distinct.
-                invertedIndices[list.get(dim, i)] = i;
+                invertedIndices[store.get(dimInfo.storeDimIndex, i)] = i;
               }
             }
           });
         };
 
-        getIdNameFromStore = function (list, dimIdx, ordinalMeta, rawIndex) {
-          var val;
-          var chunk = list._storageArr[dimIdx];
-
-          if (chunk) {
-            val = chunk[rawIndex];
-
-            if (ordinalMeta && ordinalMeta.categories.length) {
-              val = ordinalMeta.categories[val];
-            }
-          }
-
-          return convertOptionIdName(val, null);
-        };
-
-        getIndicesCtor = function (list) {
-          // The possible max value in this._indicies is always this._rawCount despite of filtering.
-          return list._rawCount > 65535 ? CtorUint32Array : CtorUint16Array;
-        };
-
-        prepareStorage = function (storage, dimInfo, end, append) {
-          var DataCtor = dataCtors[dimInfo.type];
-          var dim = dimInfo.name;
-
-          if (append) {
-            var oldStore = storage[dim];
-            var oldLen = oldStore && oldStore.length;
-
-            if (!(oldLen === end)) {
-              var newStore = new DataCtor(end); // The cost of the copy is probably inconsiderable
-              // within the initial chunkSize.
-
-              for (var j = 0; j < oldLen; j++) {
-                newStore[j] = oldStore[j];
-              }
-
-              storage[dim] = newStore;
-            }
-          } else {
-            storage[dim] = new DataCtor(end);
-          }
-        };
-
-        getRawIndexWithoutIndices = function (idx) {
-          return idx;
-        };
-
-        getRawIndexWithIndices = function (idx) {
-          if (idx < this._count && idx >= 0) {
-            return this._indices[idx];
-          }
-
-          return -1;
+        getIdNameFromStore = function (data, dimIdx, idx) {
+          return convertOptionIdName(data._getCategory(dimIdx, idx), null);
         };
         /**
          * @see the comment of `List['getId']`.
          */
 
 
-        getId = function (list, rawIndex) {
-          var id = list._idList[rawIndex];
+        getId = function (data, rawIndex) {
+          var id = data._idList[rawIndex];
 
-          if (id == null && list._idDimIdx != null) {
-            id = getIdNameFromStore(list, list._idDimIdx, list._idOrdinalMeta, rawIndex);
+          if (id == null && data._idDimIdx != null) {
+            id = getIdNameFromStore(data, data._idDimIdx, rawIndex);
           }
 
           if (id == null) {
@@ -32887,65 +32330,16 @@
 
           return dimensions;
         };
-
-        validateDimensions = function (list, dims) {
-          for (var i = 0; i < dims.length; i++) {
-            // stroage may be empty when no data, so use
-            // dimensionInfos to check.
-            if (!list._dimensionInfos[dims[i]]) {
-              console.error('Unkown dimension ' + dims[i]);
-            }
-          }
-        }; // Data in excludeDimensions is copied, otherwise transfered.
+        /**
+         * Data in excludeDimensions is copied, otherwise transfered.
+         */
 
 
-        cloneListForMapAndSample = function (original, excludeDimensions) {
-          var allDimensions = original.dimensions;
-          var list = new List(map$1(allDimensions, original.getDimensionInfo, original), original.hostModel); // FIXME If needs stackedOn, value may already been stacked
+        cloneListForMapAndSample = function (original) {
+          var list = new SeriesData(original._schema ? original._schema : map$1(original.dimensions, original._getDimInfo, original), original.hostModel); // FIXME If needs stackedOn, value may already been stacked
 
           transferProperties(list, original);
-          var storage = list._storage = {};
-          var originalStorage = original._storage;
-          var storageArr = list._storageArr = []; // Init storage
-
-          for (var i = 0; i < allDimensions.length; i++) {
-            var dim = allDimensions[i];
-
-            if (originalStorage[dim]) {
-              // Notice that we do not reset invertedIndicesMap here, becuase
-              // there is no scenario of mapping or sampling ordinal dimension.
-              if (indexOf(excludeDimensions, dim) >= 0) {
-                storage[dim] = cloneChunk(originalStorage[dim]);
-                list._rawExtent[dim] = getInitialExtent();
-                list._extent[dim] = null;
-              } else {
-                // Direct reference for other dimensions
-                storage[dim] = originalStorage[dim];
-              }
-
-              storageArr.push(storage[dim]);
-            }
-          }
-
           return list;
-        };
-
-        function cloneChunk(originalChunk) {
-          var Ctor = originalChunk.constructor; // Only shallow clone is enough when Array.
-
-          return Ctor === Array ? originalChunk.slice() : new Ctor(originalChunk);
-        }
-
-        getInitialExtent = function () {
-          return [Infinity, -Infinity];
-        };
-
-        setItemDataAndSeriesIndex = function (child) {
-          var childECData = getECData(child);
-          var thisECData = getECData(this);
-          childECData.seriesIndex = thisECData.seriesIndex;
-          childECData.dataIndex = thisECData.dataIndex;
-          childECData.dataType = thisECData.dataType;
         };
 
         transferProperties = function (target, source) {
@@ -32961,24 +32355,24 @@
           target._calculationInfo = extend({}, source._calculationInfo);
         };
 
-        makeIdFromName = function (list, idx) {
-          var nameList = list._nameList;
-          var idList = list._idList;
-          var nameDimIdx = list._nameDimIdx;
-          var idDimIdx = list._idDimIdx;
+        makeIdFromName = function (data, idx) {
+          var nameList = data._nameList;
+          var idList = data._idList;
+          var nameDimIdx = data._nameDimIdx;
+          var idDimIdx = data._idDimIdx;
           var name = nameList[idx];
           var id = idList[idx];
 
           if (name == null && nameDimIdx != null) {
-            nameList[idx] = name = getIdNameFromStore(list, nameDimIdx, list._nameOrdinalMeta, idx);
+            nameList[idx] = name = getIdNameFromStore(data, nameDimIdx, idx);
           }
 
           if (id == null && idDimIdx != null) {
-            idList[idx] = id = getIdNameFromStore(list, idDimIdx, list._idOrdinalMeta, idx);
+            idList[idx] = id = getIdNameFromStore(data, idDimIdx, idx);
           }
 
           if (id == null && name != null) {
-            var nameRepeatCount = list._nameRepeatCount;
+            var nameRepeatCount = data._nameRepeatCount;
             var nmCnt = nameRepeatCount[name] = (nameRepeatCount[name] || 0) + 1;
             id = name;
 
@@ -32991,90 +32385,95 @@
         };
       }();
 
-      return List;
+      return SeriesData;
     }();
 
     /**
-     * @see {module:echarts/test/ut/spec/data/completeDimensions}
-     *
+     * For outside usage compat (like echarts-gl are using it).
+     */
+
+    function createDimensions(source, opt) {
+      return prepareSeriesDataSchema(source, opt).dimensions;
+    }
+    /**
      * This method builds the relationship between:
-     * + "what the coord sys or series requires (see `sysDims`)",
-     * + "what the user defines (in `encode` and `dimensions`, see `opt.dimsDef` and `opt.encodeDef`)"
+     * + "what the coord sys or series requires (see `coordDimensions`)",
+     * + "what the user defines (in `encode` and `dimensions`, see `opt.dimensionsDefine` and `opt.encodeDefine`)"
      * + "what the data source provids (see `source`)".
      *
      * Some guess strategy will be adapted if user does not define something.
      * If no 'value' dimension specified, the first no-named dimension will be
      * named as 'value'.
      *
-     * @param {Array.<string>} sysDims Necessary dimensions, like ['x', 'y'], which
-     *      provides not only dim template, but also default order.
-     *      properties: 'name', 'type', 'displayName'.
-     *      `name` of each item provides default coord name.
-     *      [{dimsDef: [string|Object, ...]}, ...] dimsDef of sysDim item provides default dim name, and
-     *                                    provide dims count that the sysDim required.
-     *      [{ordinalMeta}] can be specified.
-     * @param {module:echarts/data/Source|Array|Object} source or data (for compatibal with pervious)
-     * @param {Object} [opt]
-     * @param {Array.<Object|string>} [opt.dimsDef] option.series.dimensions User defined dimensions
-     *      For example: ['asdf', {name, type}, ...].
-     * @param {Object|HashMap} [opt.encodeDef] option.series.encode {x: 2, y: [3, 1], tooltip: [1, 2], label: 3}
-     * @param {Function} [opt.encodeDefaulter] Called if no `opt.encodeDef` exists.
-     *      If not specified, auto find the next available data dim.
-     *      param source {module:data/Source}
-     *      param dimCount {number}
-     *      return {Object} encode Never be `null/undefined`.
-     * @param {string} [opt.generateCoord] Generate coord dim with the given name.
-     *      If not specified, extra dim names will be:
-     *      'value', 'value0', 'value1', ...
-     * @param {number} [opt.generateCoordCount] By default, the generated dim name is `generateCoord`.
-     *      If `generateCoordCount` specified, the generated dim names will be:
-     *      `generateCoord` + 0, `generateCoord` + 1, ...
-     *      can be Infinity, indicate that use all of the remain columns.
-     * @param {number} [opt.dimCount] If not specified, guess by the first data item.
-     * @return {Array.<module:data/DataDimensionInfo>}
+     * @return The results are always sorted by `storeDimIndex` asc.
      */
 
-    function completeDimensions(sysDims, source, opt) {
+    function prepareSeriesDataSchema( // TODO: TYPE completeDimensions type
+    source, opt) {
       if (!isSourceInstance(source)) {
         source = createSourceFromSeriesDataOption(source);
       }
 
       opt = opt || {};
-      sysDims = (sysDims || []).slice();
-      var dimsDef = (opt.dimsDef || []).slice();
-      var dataDimNameMap = createHashMap();
-      var coordDimNameMap = createHashMap(); // let valueCandidate;
+      var sysDims = opt.coordDimensions || [];
+      var dimsDef = opt.dimensionsDefine || source.dimensionsDefine || [];
+      var coordDimNameMap = createHashMap();
+      var resultList = [];
+      var dimCount = getDimCount(source, sysDims, dimsDef, opt.dimensionsCount); // Try to ignore unsed dimensions if sharing a high dimension datastore
+      // 30 is an experience value.
 
-      var result = [];
-      var dimCount = getDimCount(source, sysDims, dimsDef, opt.dimCount); // Apply user defined dims (`name` and `type`) and init result.
-
-      for (var i = 0; i < dimCount; i++) {
-        var dimDefItemRaw = dimsDef[i];
-        var dimDefItem = dimsDef[i] = extend({}, isObject(dimDefItemRaw) ? dimDefItemRaw : {
-          name: dimDefItemRaw
-        });
-        var userDimName = dimDefItem.name;
-        var resultItem = result[i] = new DataDimensionInfo(); // Name will be applied later for avoiding duplication.
-
-        if (userDimName != null && dataDimNameMap.get(userDimName) == null) {
-          // Only if `series.dimensions` is defined in option
-          // displayName, will be set, and dimension will be diplayed vertically in
-          // tooltip by default.
-          resultItem.name = resultItem.displayName = userDimName;
-          dataDimNameMap.set(userDimName, i);
-        }
-
-        dimDefItem.type != null && (resultItem.type = dimDefItem.type);
-        dimDefItem.displayName != null && (resultItem.displayName = dimDefItem.displayName);
-      }
-
-      var encodeDef = opt.encodeDef;
+      var omitUnusedDimensions = opt.canOmitUnusedDimensions && shouldOmitUnusedDimensions(dimCount);
+      var isUsingSourceDimensionsDef = dimsDef === source.dimensionsDefine;
+      var dataDimNameMap = isUsingSourceDimensionsDef ? ensureSourceDimNameMap(source) : createDimNameMap(dimsDef);
+      var encodeDef = opt.encodeDefine;
 
       if (!encodeDef && opt.encodeDefaulter) {
         encodeDef = opt.encodeDefaulter(source, dimCount);
       }
 
-      var encodeDefMap = createHashMap(encodeDef); // Set `coordDim` and `coordDimIndex` by `encodeDefMap` and normalize `encodeDefMap`.
+      var encodeDefMap = createHashMap(encodeDef);
+      var indicesMap = new CtorInt32Array(dimCount);
+
+      for (var i = 0; i < indicesMap.length; i++) {
+        indicesMap[i] = -1;
+      }
+
+      function getResultItem(dimIdx) {
+        var idx = indicesMap[dimIdx];
+
+        if (idx < 0) {
+          var dimDefItemRaw = dimsDef[dimIdx];
+          var dimDefItem = isObject(dimDefItemRaw) ? dimDefItemRaw : {
+            name: dimDefItemRaw
+          };
+          var resultItem = new SeriesDimensionDefine();
+          var userDimName = dimDefItem.name;
+
+          if (userDimName != null && dataDimNameMap.get(userDimName) != null) {
+            // Only if `series.dimensions` is defined in option
+            // displayName, will be set, and dimension will be diplayed vertically in
+            // tooltip by default.
+            resultItem.name = resultItem.displayName = userDimName;
+          }
+
+          dimDefItem.type != null && (resultItem.type = dimDefItem.type);
+          dimDefItem.displayName != null && (resultItem.displayName = dimDefItem.displayName);
+          var newIdx = resultList.length;
+          indicesMap[dimIdx] = newIdx;
+          resultItem.storeDimIndex = dimIdx;
+          resultList.push(resultItem);
+          return resultItem;
+        }
+
+        return resultList[idx];
+      }
+
+      if (!omitUnusedDimensions) {
+        for (var i = 0; i < dimCount; i++) {
+          getResultItem(i);
+        }
+      } // Set `coordDim` and `coordDimIndex` by `encodeDefMap` and normalize `encodeDefMap`.
+
 
       encodeDefMap.each(function (dataDimsRaw, coordDim) {
         var dataDims = normalizeToArray(dataDimsRaw).slice(); // Note: It is allowed that `dataDims.length` is `0`, e.g., options is
@@ -33093,7 +32492,7 @@
 
           if (resultDimIdx != null && resultDimIdx < dimCount) {
             validDataDims[idx] = resultDimIdx;
-            applyDim(result[resultDimIdx], coordDim, idx);
+            applyDim(getResultItem(resultDimIdx), coordDim, idx);
           }
         });
       }); // Apply templetes and default order from `sysDims`.
@@ -33113,7 +32512,7 @@
           coordDim = sysDimItem.name;
           var ordinalMeta = sysDimItem.ordinalMeta;
           sysDimItem.ordinalMeta = null;
-          sysDimItem = clone(sysDimItem);
+          sysDimItem = extend({}, sysDimItem);
           sysDimItem.ordinalMeta = ordinalMeta; // `coordDimIndex` should not be set directly.
 
           sysDimItemDimsDef = sysDimItem.dimsDef;
@@ -33131,17 +32530,22 @@
 
         if (!dataDims.length) {
           for (var i = 0; i < (sysDimItemDimsDef && sysDimItemDimsDef.length || 1); i++) {
-            while (availDimIdx < result.length && result[availDimIdx].coordDim != null) {
+            while (availDimIdx < dimCount && getResultItem(availDimIdx).coordDim != null) {
               availDimIdx++;
             }
 
-            availDimIdx < result.length && dataDims.push(availDimIdx++);
+            availDimIdx < dimCount && dataDims.push(availDimIdx++);
           }
         } // Apply templates.
 
 
         each(dataDims, function (resultDimIdx, coordDimIndex) {
-          var resultItem = result[resultDimIdx];
+          var resultItem = getResultItem(resultDimIdx); // Coordinate system has a higher priority on dim type than source.
+
+          if (isUsingSourceDimensionsDef && sysDimItem.type != null) {
+            resultItem.type = sysDimItem.type;
+          }
+
           applyDim(defaults(resultItem, sysDimItem), coordDim, coordDimIndex);
 
           if (resultItem.name == null && sysDimItemDimsDef) {
@@ -33173,43 +32577,88 @@
       var generateCoordCount = opt.generateCoordCount;
       var fromZero = generateCoordCount != null;
       generateCoordCount = generateCoord ? generateCoordCount || 1 : 0;
-      var extra = generateCoord || 'value'; // Set dim `name` and other `coordDim` and other props.
+      var extra = generateCoord || 'value';
 
-      for (var resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
-        var resultItem = result[resultDimIdx] = result[resultDimIdx] || new DataDimensionInfo();
-        var coordDim = resultItem.coordDim;
+      function ifNoNameFillWithCoordName(resultItem) {
+        if (resultItem.name == null) {
+          // Duplication will be removed in the next step.
+          resultItem.name = resultItem.coordDim;
+        }
+      } // Set dim `name` and other `coordDim` and other props.
 
-        if (coordDim == null) {
-          resultItem.coordDim = genName(extra, coordDimNameMap, fromZero);
-          resultItem.coordDimIndex = 0;
 
-          if (!generateCoord || generateCoordCount <= 0) {
-            resultItem.isExtraCoord = true;
+      if (!omitUnusedDimensions) {
+        for (var resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
+          var resultItem = getResultItem(resultDimIdx);
+          var coordDim = resultItem.coordDim;
+
+          if (coordDim == null) {
+            // TODO no need to generate coordDim for isExtraCoord?
+            resultItem.coordDim = genCoordDimName(extra, coordDimNameMap, fromZero);
+            resultItem.coordDimIndex = 0; // Series specified generateCoord is using out.
+
+            if (!generateCoord || generateCoordCount <= 0) {
+              resultItem.isExtraCoord = true;
+            }
+
+            generateCoordCount--;
           }
 
-          generateCoordCount--;
-        }
+          ifNoNameFillWithCoordName(resultItem);
 
-        resultItem.name == null && (resultItem.name = genName(resultItem.coordDim, dataDimNameMap, false));
-
-        if (resultItem.type == null && (guessOrdinal(source, resultDimIdx) === BE_ORDINAL.Must // Consider the case:
-        // {
-        //    dataset: {source: [
-        //        ['2001', 123],
-        //        ['2002', 456],
-        //        ...
-        //        ['The others', 987],
-        //    ]},
-        //    series: {type: 'pie'}
-        // }
-        // The first colum should better be treated as a "ordinal" although it
-        // might not able to be detected as an "ordinal" by `guessOrdinal`.
-        || resultItem.isExtraCoord && (resultItem.otherDims.itemName != null || resultItem.otherDims.seriesName != null))) {
-          resultItem.type = 'ordinal';
+          if (resultItem.type == null && (guessOrdinal(source, resultDimIdx) === BE_ORDINAL.Must // Consider the case:
+          // {
+          //    dataset: {source: [
+          //        ['2001', 123],
+          //        ['2002', 456],
+          //        ...
+          //        ['The others', 987],
+          //    ]},
+          //    series: {type: 'pie'}
+          // }
+          // The first colum should better be treated as a "ordinal" although it
+          // might not able to be detected as an "ordinal" by `guessOrdinal`.
+          || resultItem.isExtraCoord && (resultItem.otherDims.itemName != null || resultItem.otherDims.seriesName != null))) {
+            resultItem.type = 'ordinal';
+          }
         }
+      } else {
+        each(resultList, function (resultItem) {
+          // PENDING: guessOrdinal or let user specify type: 'ordinal' manually?
+          ifNoNameFillWithCoordName(resultItem);
+        }); // Sort dimensions: there are some rule that use the last dim as label,
+        // and for some latter travel process easier.
+
+        resultList.sort(function (item0, item1) {
+          return item0.storeDimIndex - item1.storeDimIndex;
+        });
       }
 
-      return result;
+      removeDuplication(resultList);
+      return new SeriesDataSchema({
+        source: source,
+        dimensions: resultList,
+        fullDimensionCount: dimCount,
+        dimensionOmitted: omitUnusedDimensions
+      });
+    }
+
+    function removeDuplication(result) {
+      var duplicationMap = createHashMap();
+
+      for (var i = 0; i < result.length; i++) {
+        var dim = result[i];
+        var dimOriginalName = dim.name;
+        var count = duplicationMap.get(dimOriginalName) || 0;
+
+        if (count > 0) {
+          // Starts from 0.
+          dim.name = dimOriginalName + (count - 1);
+        }
+
+        count++;
+        duplicationMap.set(dimOriginalName, count);
+      }
     } // ??? TODO
     // Originally detect dimCount by data[0]. Should we
     // optimize it to only by sysDims and dimensions and encode.
@@ -33219,7 +32668,7 @@
     // may be visited.
     // (2) sometimes user need to calcualte bubble size or use visualMap
     // on other dimensions besides coordSys needed.
-    // So, dims that is not used by system, should be shared in storage?
+    // So, dims that is not used by system, should be shared in data store?
 
 
     function getDimCount(source, sysDims, dimsDef, optDimCount) {
@@ -33236,11 +32685,13 @@
       return dimCount;
     }
 
-    function genName(name, map, fromZero) {
-      if (fromZero || map.get(name) != null) {
+    function genCoordDimName(name, map, fromZero) {
+      var mapData = map.data;
+
+      if (fromZero || mapData.hasOwnProperty(name)) {
         var i = 0;
 
-        while (map.get(name + i) != null) {
+        while (mapData.hasOwnProperty(name + i)) {
           i++;
         }
 
@@ -33249,27 +32700,6 @@
 
       map.set(name, true);
       return name;
-    }
-
-    /**
-     * @param opt.coordDimensions
-     * @param opt.dimensionsDefine By default `source.dimensionsDefine` Overwrite source define.
-     * @param opt.encodeDefine By default `source.encodeDefine` Overwrite source define.
-     * @param opt.encodeDefaulter Make default encode if user not specified.
-     */
-
-    function createDimensions( // TODO: TYPE completeDimensions type
-    source, opt) {
-      opt = opt || {};
-      return completeDimensions(opt.coordDimensions || [], source, {
-        // FIXME:TS detect whether source then call `.dimensionsDefine` and `.encodeDefine`?
-        dimsDef: opt.dimensionsDefine || source.dimensionsDefine,
-        encodeDef: opt.encodeDefine || source.encodeDefine,
-        dimCount: opt.dimensionsCount,
-        encodeDefaulter: opt.encodeDefaulter,
-        generateCoord: opt.generateCoord,
-        generateCoordCount: opt.generateCoordCount
-      });
     }
 
     /**
@@ -33424,8 +32854,8 @@
      * we just support that stacked by index.
      *
      * @param seriesModel
-     * @param dimensionInfoList The same as the input of <module:echarts/data/List>.
-     *        The input dimensionInfoList will be modified.
+     * @param dimensionsInput The same as the input of <module:echarts/data/SeriesData>.
+     *        The input will be modified.
      * @param opt
      * @param opt.stackedCoordDimension Specify a coord dimension if needed.
      * @param opt.byIndex=false
@@ -33439,19 +32869,31 @@
      * }
      */
 
-    function enableDataStack(seriesModel, dimensionInfoList, opt) {
+    function enableDataStack(seriesModel, dimensionsInput, opt) {
       opt = opt || {};
       var byIndex = opt.byIndex;
-      var stackedCoordDimension = opt.stackedCoordDimension; // Compatibal: when `stack` is set as '', do not stack.
+      var stackedCoordDimension = opt.stackedCoordDimension;
+      var dimensionDefineList;
+      var schema;
+      var store;
+
+      if (isLegacyDimensionsInput(dimensionsInput)) {
+        dimensionDefineList = dimensionsInput;
+      } else {
+        schema = dimensionsInput.schema;
+        dimensionDefineList = schema.dimensions;
+        store = dimensionsInput.store;
+      } // Compatibal: when `stack` is set as '', do not stack.
+
 
       var mayStack = !!(seriesModel && seriesModel.get('stack'));
       var stackedByDimInfo;
       var stackedDimInfo;
       var stackResultDimension;
       var stackedOverDimension;
-      each(dimensionInfoList, function (dimensionInfo, index) {
+      each(dimensionDefineList, function (dimensionInfo, index) {
         if (isString(dimensionInfo)) {
-          dimensionInfoList[index] = dimensionInfo = {
+          dimensionDefineList[index] = dimensionInfo = {
             name: dimensionInfo
           };
         }
@@ -33480,8 +32922,10 @@
 
       if (stackedDimInfo) {
         // Use a weird name that not duplicated with other names.
-        stackResultDimension = '__\0ecstackresult';
-        stackedOverDimension = '__\0ecstackedover'; // Create inverted index to fast query index by value.
+        // Also need to use seriesModel.id as postfix because different
+        // series may share same data store. The stack dimension needs to be distinguished.
+        stackResultDimension = '__\0ecstackresult_' + seriesModel.id;
+        stackedOverDimension = '__\0ecstackedover_' + seriesModel.id; // Create inverted index to fast query index by value.
 
         if (stackedByDimInfo) {
           stackedByDimInfo.createInvertedIndices = true;
@@ -33490,30 +32934,44 @@
         var stackedDimCoordDim_1 = stackedDimInfo.coordDim;
         var stackedDimType = stackedDimInfo.type;
         var stackedDimCoordIndex_1 = 0;
-        each(dimensionInfoList, function (dimensionInfo) {
+        each(dimensionDefineList, function (dimensionInfo) {
           if (dimensionInfo.coordDim === stackedDimCoordDim_1) {
             stackedDimCoordIndex_1++;
           }
         });
-        dimensionInfoList.push({
+        var stackedOverDimensionDefine = {
           name: stackResultDimension,
           coordDim: stackedDimCoordDim_1,
           coordDimIndex: stackedDimCoordIndex_1,
           type: stackedDimType,
           isExtraCoord: true,
-          isCalculationCoord: true
-        });
-        stackedDimCoordIndex_1++;
-        dimensionInfoList.push({
+          isCalculationCoord: true,
+          storeDimIndex: dimensionDefineList.length
+        };
+        var stackResultDimensionDefine = {
           name: stackedOverDimension,
           // This dimension contains stack base (generally, 0), so do not set it as
           // `stackedDimCoordDim` to avoid extent calculation, consider log scale.
           coordDim: stackedOverDimension,
-          coordDimIndex: stackedDimCoordIndex_1,
+          coordDimIndex: stackedDimCoordIndex_1 + 1,
           type: stackedDimType,
           isExtraCoord: true,
-          isCalculationCoord: true
-        });
+          isCalculationCoord: true,
+          storeDimIndex: dimensionDefineList.length + 1
+        };
+
+        if (schema) {
+          if (store) {
+            stackedOverDimensionDefine.storeDimIndex = store.ensureCalculationDimension(stackedOverDimension, stackedDimType);
+            stackResultDimensionDefine.storeDimIndex = store.ensureCalculationDimension(stackResultDimension, stackedDimType);
+          }
+
+          schema.appendCalculationDimension(stackedOverDimensionDefine);
+          schema.appendCalculationDimension(stackResultDimensionDefine);
+        } else {
+          dimensionDefineList.push(stackedOverDimensionDefine);
+          dimensionDefineList.push(stackResultDimensionDefine);
+        }
       }
 
       return {
@@ -33524,31 +32982,23 @@
         stackResultDimension: stackResultDimension
       };
     }
-    function isDimensionStacked(data, stackedDim
-    /*, stackedByDim*/
-    ) {
+
+    function isLegacyDimensionsInput(dimensionsInput) {
+      return !isSeriesDataSchema(dimensionsInput.schema);
+    }
+
+    function isDimensionStacked(data, stackedDim) {
       // Each single series only maps to one pair of axis. So we do not need to
       // check stackByDim, whatever stacked by a dimension or stacked by index.
-      return !!stackedDim && stackedDim === data.getCalculationInfo('stackedDimension'); // && (
-      //     stackedByDim != null
-      //         ? stackedByDim === data.getCalculationInfo('stackedByDimension')
-      //         : data.getCalculationInfo('isStackedByIndex')
-      // );
+      return !!stackedDim && stackedDim === data.getCalculationInfo('stackedDimension');
     }
     function getStackedDimension(data, targetDim) {
       return isDimensionStacked(data, targetDim) ? data.getCalculationInfo('stackResultDimension') : targetDim;
     }
 
-    function createListFromArray(source, seriesModel, opt) {
-      opt = opt || {};
-
-      if (!isSourceInstance(source)) {
-        source = createSourceFromSeriesDataOption(source);
-      }
-
+    function getCoordSysDimDefs(seriesModel, coordSysInfo) {
       var coordSysName = seriesModel.get('coordinateSystem');
       var registeredCoordSys = CoordinateSystemManager.get(coordSysName);
-      var coordSysInfo = getCoordSysInfoBySeries(seriesModel);
       var coordSysDimDefs;
 
       if (coordSysInfo && coordSysInfo.coordSysDims) {
@@ -33560,7 +33010,7 @@
 
           if (axisModel) {
             var axisType = axisModel.get('type');
-            dimInfo.type = getDimensionTypeByAxis(axisType); // dimInfo.stackable = isStackable(axisType);
+            dimInfo.type = getDimensionTypeByAxis(axisType);
           }
 
           return dimInfo;
@@ -33572,12 +33022,10 @@
         coordSysDimDefs = registeredCoordSys && (registeredCoordSys.getDimensionsInfo ? registeredCoordSys.getDimensionsInfo() : registeredCoordSys.dimensions.slice()) || ['x', 'y'];
       }
 
-      var useEncodeDefaulter = opt.useEncodeDefaulter;
-      var dimInfoList = createDimensions(source, {
-        coordDimensions: coordSysDimDefs,
-        generateCoord: opt.generateCoord,
-        encodeDefaulter: isFunction(useEncodeDefaulter) ? useEncodeDefaulter : useEncodeDefaulter ? curry(makeSeriesEncodeForAxisCoordSys, coordSysDimDefs, seriesModel) : null
-      });
+      return coordSysDimDefs;
+    }
+
+    function injectOrdinalMeta(dimInfoList, createInvertedIndices, coordSysInfo) {
       var firstCategoryDimIndex;
       var hasNameEncode;
       coordSysInfo && each(dimInfoList, function (dimInfo, dimIndex) {
@@ -33591,7 +33039,7 @@
 
           dimInfo.ordinalMeta = categoryAxisModel.getOrdinalMeta();
 
-          if (opt.createInvertedIndices) {
+          if (createInvertedIndices) {
             dimInfo.createInvertedIndices = true;
           }
         }
@@ -33605,16 +33053,57 @@
         dimInfoList[firstCategoryDimIndex].otherDims.itemName = 0;
       }
 
-      var stackCalculationInfo = enableDataStack(seriesModel, dimInfoList);
-      var list = new List(dimInfoList, seriesModel);
-      list.setCalculationInfo(stackCalculationInfo);
+      return firstCategoryDimIndex;
+    }
+    /**
+     * Caution: there are side effects to `sourceManager` in this method.
+     * Should better only be called in `Series['getInitialData']`.
+     */
+
+
+    function createSeriesData(sourceRaw, seriesModel, opt) {
+      opt = opt || {};
+      var sourceManager = seriesModel.getSourceManager();
+      var source;
+      var isOriginalSource = false;
+
+      if (sourceRaw) {
+        isOriginalSource = true;
+        source = createSourceFromSeriesDataOption(sourceRaw);
+      } else {
+        source = sourceManager.getSource(); // Is series.data. not dataset.
+
+        isOriginalSource = source.sourceFormat === SOURCE_FORMAT_ORIGINAL;
+      }
+
+      var coordSysInfo = getCoordSysInfoBySeries(seriesModel);
+      var coordSysDimDefs = getCoordSysDimDefs(seriesModel, coordSysInfo);
+      var useEncodeDefaulter = opt.useEncodeDefaulter;
+      var encodeDefaulter = isFunction(useEncodeDefaulter) ? useEncodeDefaulter : useEncodeDefaulter ? curry(makeSeriesEncodeForAxisCoordSys, coordSysDimDefs, seriesModel) : null;
+      var createDimensionOptions = {
+        coordDimensions: coordSysDimDefs,
+        generateCoord: opt.generateCoord,
+        encodeDefine: seriesModel.getEncode(),
+        encodeDefaulter: encodeDefaulter,
+        canOmitUnusedDimensions: !isOriginalSource
+      };
+      var schema = prepareSeriesDataSchema(source, createDimensionOptions);
+      var firstCategoryDimIndex = injectOrdinalMeta(schema.dimensions, opt.createInvertedIndices, coordSysInfo);
+      var store = !isOriginalSource ? sourceManager.getSharedDataStore(schema) : null;
+      var stackCalculationInfo = enableDataStack(seriesModel, {
+        schema: schema,
+        store: store
+      });
+      var data = new SeriesData(schema, seriesModel);
+      data.setCalculationInfo(stackCalculationInfo);
       var dimValueGetter = firstCategoryDimIndex != null && isNeedCompleteOrdinalData(source) ? function (itemOpt, dimName, dataIndex, dimIndex) {
         // Use dataIndex as ordinal value in categoryAxis
         return dimIndex === firstCategoryDimIndex ? dataIndex : this.defaultDimValueGetter(itemOpt, dimName, dataIndex, dimIndex);
       } : null;
-      list.hasItemOption = false;
-      list.initData(source, null, dimValueGetter);
-      return list;
+      data.hasItemOption = false;
+      data.initData( // Try to reuse the data store in sourceManager if using dataset.
+      isOriginalSource ? source : store, null, dimValueGetter);
+      return data;
     }
 
     function isNeedCompleteOrdinalData(source) {
@@ -33624,14 +33113,14 @@
       }
     }
 
-    function firstDataNotNull(data) {
+    function firstDataNotNull(arr) {
       var i = 0;
 
-      while (i < data.length && data[i] == null) {
+      while (i < arr.length && arr[i] == null) {
         i++;
       }
 
-      return data[i];
+      return arr[i];
     }
 
     var Scale =
@@ -33722,6 +33211,8 @@
 
     enableClassManagement(Scale);
 
+    var uidBase = 0;
+
     var OrdinalMeta =
     /** @class */
     function () {
@@ -33729,6 +33220,7 @@
         this.categories = opt.categories || [];
         this._needCollect = opt.needCollect;
         this._deduplication = opt.deduplication;
+        this.uid = ++uidBase;
       }
 
       OrdinalMeta.createByAxisModel = function (axisModel) {
@@ -34383,10 +33875,11 @@
 
         var data = seriesModel.getData();
         var key = baseAxis.dim + '_' + baseAxis.index;
-        var dim = data.mapDimension(baseAxis.dim);
+        var dimIdx = data.getDimensionIndex(data.mapDimension(baseAxis.dim));
+        var store = data.getStore();
 
-        for (var i = 0, cnt = data.count(); i < cnt; ++i) {
-          var value = data.get(dim, i);
+        for (var i = 0, cnt = store.count(); i < cnt; ++i) {
+          var value = store.get(dimIdx, i);
 
           if (!axisValues[key]) {
             // No previous data for the axis
@@ -34651,15 +34144,16 @@
         });
         var valueDim = data.mapDimension(valueAxis.dim);
         var baseDim = data.mapDimension(baseAxis.dim);
-        var stacked = isDimensionStacked(data, valueDim
-        /*, baseDim*/
-        );
+        var stacked = isDimensionStacked(data, valueDim);
         var isValueAxisH = valueAxis.isHorizontal();
         var valueAxisStart = getValueAxisStart(baseAxis, valueAxis);
+        var store = data.getStore();
+        var valueDimIdx = data.getDimensionIndex(valueDim);
+        var baseDimIdx = data.getDimensionIndex(baseDim);
 
-        for (var idx = 0, len = data.count(); idx < len; idx++) {
-          var value = data.get(valueDim, idx);
-          var baseValue = data.get(baseDim, idx);
+        for (var idx = 0, len = store.count(); idx < len; idx++) {
+          var value = store.get(valueDimIdx, idx);
+          var baseValue = store.get(baseDimIdx, idx);
           var sign = value >= 0 ? 'p' : 'n';
           var baseCoord = valueAxisStart; // Because of the barMinHeight, we can not use the value in
           // stackResultDimension directly.
@@ -34739,8 +34233,8 @@
         var coordLayout = cartesian.master.getRect();
         var baseAxis = cartesian.getBaseAxis();
         var valueAxis = cartesian.getOtherAxis(baseAxis);
-        var valueDim = data.mapDimension(valueAxis.dim);
-        var baseDim = data.mapDimension(baseAxis.dim);
+        var valueDimI = data.getDimensionIndex(data.mapDimension(valueAxis.dim));
+        var baseDimI = data.getDimensionIndex(data.mapDimension(baseAxis.dim));
         var valueAxisHorizontal = valueAxis.isHorizontal();
         var valueDimIdx = valueAxisHorizontal ? 0 : 1;
         var barWidth = retrieveColumnLayout(makeColumnLayout([seriesModel]), baseAxis, seriesModel).width;
@@ -34761,10 +34255,11 @@
             var valuePair = [];
             var pointsOffset = 0;
             var idxOffset = 0;
+            var store = data.getStore();
 
             while ((dataIndex = params.next()) != null) {
-              valuePair[valueDimIdx] = data.get(valueDim, dataIndex);
-              valuePair[1 - valueDimIdx] = data.get(baseDim, dataIndex);
+              valuePair[valueDimIdx] = store.get(valueDimI, dataIndex);
+              valuePair[1 - valueDimIdx] = store.get(baseDimI, dataIndex);
               coord = cartesian.dataToPoint(valuePair, null); // Data index might not be in order, depends on `progressiveChunkMode`.
 
               largeBackgroundPoints[pointsOffset] = valueAxisHorizontal ? coordLayout.x + coordLayout.width : coord[0];
@@ -35340,7 +34835,7 @@
 
     var intervalScaleProto = IntervalScale.prototype;
     var roundingErrorFix = round;
-    var mathFloor$1 = Math.floor;
+    var mathFloor = Math.floor;
     var mathCeil = Math.ceil;
     var mathPow$1 = Math.pow;
     var mathLog = Math.log;
@@ -35447,7 +34942,7 @@
           interval *= 10;
         }
 
-        var niceExtent = [round(mathCeil(extent[0] / interval) * interval), round(mathFloor$1(extent[1] / interval) * interval)];
+        var niceExtent = [round(mathCeil(extent[0] / interval) * interval), round(mathFloor(extent[1] / interval) * interval)];
         this._interval = interval;
         this._niceExtent = niceExtent;
       };
@@ -36073,6 +35568,7 @@
     * specific language governing permissions and limitations
     * under the License.
     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     var AxisModelCommonMixin =
     /** @class */
     function () {
@@ -36100,7 +35596,7 @@
      */
 
     function createList(seriesModel) {
-      return createListFromArray(seriesModel.getSource(), seriesModel);
+      return createSeriesData(null, seriesModel);
     } // export function createGraph(seriesModel) {
     var dataStack$1 = {
       isDimensionStacked: isDimensionStacked,
@@ -36264,7 +35760,7 @@
         merge: merge
     });
 
-    var inner$4 = makeInner();
+    var inner$5 = makeInner();
     function createAxisLabels(axis) {
       // Only ordinal scale support tick interval
       return axis.type === 'category' ? makeCategoryLabels(axis) : makeRealNumberLabels(axis);
@@ -36378,7 +35874,7 @@
 
     function getListCache(axis, prop) {
       // Because key can be funciton, and cache size always be small, we use array cache.
-      return inner$4(axis)[prop] || (inner$4(axis)[prop] = []);
+      return inner$5(axis)[prop] || (inner$5(axis)[prop] = []);
     }
 
     function listCacheGet(cache, key) {
@@ -36398,8 +35894,8 @@
     }
 
     function makeAutoCategoryInterval(axis) {
-      var result = inner$4(axis).autoInterval;
-      return result != null ? result : inner$4(axis).autoInterval = axis.calculateCategoryInterval();
+      var result = inner$5(axis).autoInterval;
+      return result != null ? result : inner$5(axis).autoInterval = axis.calculateCategoryInterval();
     }
     /**
      * Calculate interval for category axis ticks and labels.
@@ -36459,7 +35955,7 @@
       isNaN(dw) && (dw = Infinity);
       isNaN(dh) && (dh = Infinity);
       var interval = Math.max(0, Math.floor(Math.min(dw, dh)));
-      var cache = inner$4(axis.model);
+      var cache = inner$5(axis.model);
       var axisExtent = axis.getExtent();
       var lastAutoInterval = cache.lastAutoInterval;
       var lastTickCount = cache.lastTickCount; // Use cache to keep interval stable while moving zoom window,
@@ -36876,6 +36372,464 @@
       var View = ChartView.extend(proto);
       ChartView.registerClass(View);
       return View;
+    }
+
+    function projectPointToLine(x1, y1, x2, y2, x, y, out, limitToEnds) {
+      var dx = x - x1;
+      var dy = y - y1;
+      var dx1 = x2 - x1;
+      var dy1 = y2 - y1;
+      var lineLen = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+      dx1 /= lineLen;
+      dy1 /= lineLen; // dot product
+
+      var projectedLen = dx * dx1 + dy * dy1;
+      var t = projectedLen / lineLen;
+
+      if (limitToEnds) {
+        t = Math.min(Math.max(t, 0), 1);
+      }
+
+      t *= lineLen;
+      var ox = out[0] = x1 + t * dx1;
+      var oy = out[1] = y1 + t * dy1;
+      return Math.sqrt((ox - x) * (ox - x) + (oy - y) * (oy - y));
+    }
+
+
+    var pt0 = new Point();
+    var pt1 = new Point();
+    var pt2 = new Point();
+    var dir = new Point();
+    var dir2 = new Point();
+
+    var tmpArr = [];
+    var tmpProjPoint = new Point();
+    /**
+     * Reduce the line segment attached to the label to limit the turn angle between two segments.
+     * @param linePoints
+     * @param minTurnAngle Radian of minimum turn angle. 0 - 180
+     */
+
+    function limitTurnAngle(linePoints, minTurnAngle) {
+      if (!(minTurnAngle <= 180 && minTurnAngle > 0)) {
+        return;
+      }
+
+      minTurnAngle = minTurnAngle / 180 * Math.PI; // The line points can be
+      //      /pt1----pt2 (label)
+      //     /
+      // pt0/
+
+      pt0.fromArray(linePoints[0]);
+      pt1.fromArray(linePoints[1]);
+      pt2.fromArray(linePoints[2]);
+      Point.sub(dir, pt0, pt1);
+      Point.sub(dir2, pt2, pt1);
+      var len1 = dir.len();
+      var len2 = dir2.len();
+
+      if (len1 < 1e-3 || len2 < 1e-3) {
+        return;
+      }
+
+      dir.scale(1 / len1);
+      dir2.scale(1 / len2);
+      var angleCos = dir.dot(dir2);
+      var minTurnAngleCos = Math.cos(minTurnAngle);
+
+      if (minTurnAngleCos < angleCos) {
+        // Smaller than minTurnAngle
+        // Calculate project point of pt0 on pt1-pt2
+        var d = projectPointToLine(pt1.x, pt1.y, pt2.x, pt2.y, pt0.x, pt0.y, tmpArr, false);
+        tmpProjPoint.fromArray(tmpArr); // Calculate new projected length with limited minTurnAngle and get the new connect point
+
+        tmpProjPoint.scaleAndAdd(dir2, d / Math.tan(Math.PI - minTurnAngle)); // Limit the new calculated connect point between pt1 and pt2.
+
+        var t = pt2.x !== pt1.x ? (tmpProjPoint.x - pt1.x) / (pt2.x - pt1.x) : (tmpProjPoint.y - pt1.y) / (pt2.y - pt1.y);
+
+        if (isNaN(t)) {
+          return;
+        }
+
+        if (t < 0) {
+          Point.copy(tmpProjPoint, pt1);
+        } else if (t > 1) {
+          Point.copy(tmpProjPoint, pt2);
+        }
+
+        tmpProjPoint.toArray(linePoints[1]);
+      }
+    }
+    /**
+     * Limit the angle of line and the surface
+     * @param maxSurfaceAngle Radian of minimum turn angle. 0 - 180. 0 is same direction to normal. 180 is opposite
+     */
+
+    function limitSurfaceAngle(linePoints, surfaceNormal, maxSurfaceAngle) {
+      if (!(maxSurfaceAngle <= 180 && maxSurfaceAngle > 0)) {
+        return;
+      }
+
+      maxSurfaceAngle = maxSurfaceAngle / 180 * Math.PI;
+      pt0.fromArray(linePoints[0]);
+      pt1.fromArray(linePoints[1]);
+      pt2.fromArray(linePoints[2]);
+      Point.sub(dir, pt1, pt0);
+      Point.sub(dir2, pt2, pt1);
+      var len1 = dir.len();
+      var len2 = dir2.len();
+
+      if (len1 < 1e-3 || len2 < 1e-3) {
+        return;
+      }
+
+      dir.scale(1 / len1);
+      dir2.scale(1 / len2);
+      var angleCos = dir.dot(surfaceNormal);
+      var maxSurfaceAngleCos = Math.cos(maxSurfaceAngle);
+
+      if (angleCos < maxSurfaceAngleCos) {
+        // Calculate project point of pt0 on pt1-pt2
+        var d = projectPointToLine(pt1.x, pt1.y, pt2.x, pt2.y, pt0.x, pt0.y, tmpArr, false);
+        tmpProjPoint.fromArray(tmpArr);
+        var HALF_PI = Math.PI / 2;
+        var angle2 = Math.acos(dir2.dot(surfaceNormal));
+        var newAngle = HALF_PI + angle2 - maxSurfaceAngle;
+
+        if (newAngle >= HALF_PI) {
+          // parallel
+          Point.copy(tmpProjPoint, pt2);
+        } else {
+          // Calculate new projected length with limited minTurnAngle and get the new connect point
+          tmpProjPoint.scaleAndAdd(dir2, d / Math.tan(Math.PI / 2 - newAngle)); // Limit the new calculated connect point between pt1 and pt2.
+
+          var t = pt2.x !== pt1.x ? (tmpProjPoint.x - pt1.x) / (pt2.x - pt1.x) : (tmpProjPoint.y - pt1.y) / (pt2.y - pt1.y);
+
+          if (isNaN(t)) {
+            return;
+          }
+
+          if (t < 0) {
+            Point.copy(tmpProjPoint, pt1);
+          } else if (t > 1) {
+            Point.copy(tmpProjPoint, pt2);
+          }
+        }
+
+        tmpProjPoint.toArray(linePoints[1]);
+      }
+    }
+
+    function setLabelLineState(labelLine, ignore, stateName, stateModel) {
+      var isNormal = stateName === 'normal';
+      var stateObj = isNormal ? labelLine : labelLine.ensureState(stateName); // Make sure display.
+
+      stateObj.ignore = ignore; // Set smooth
+
+      var smooth = stateModel.get('smooth');
+
+      if (smooth && smooth === true) {
+        smooth = 0.3;
+      }
+
+      stateObj.shape = stateObj.shape || {};
+
+      if (smooth > 0) {
+        stateObj.shape.smooth = smooth;
+      }
+
+      var styleObj = stateModel.getModel('lineStyle').getLineStyle();
+      isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
+    }
+
+    function buildLabelLinePath(path, shape) {
+      var smooth = shape.smooth;
+      var points = shape.points;
+
+      if (!points) {
+        return;
+      }
+
+      path.moveTo(points[0][0], points[0][1]);
+
+      if (smooth > 0 && points.length >= 3) {
+        var len1 = dist(points[0], points[1]);
+        var len2 = dist(points[1], points[2]);
+
+        if (!len1 || !len2) {
+          path.lineTo(points[1][0], points[1][1]);
+          path.lineTo(points[2][0], points[2][1]);
+          return;
+        }
+
+        var moveLen = Math.min(len1, len2) * smooth;
+        var midPoint0 = lerp([], points[1], points[0], moveLen / len1);
+        var midPoint2 = lerp([], points[1], points[2], moveLen / len2);
+        var midPoint1 = lerp([], midPoint0, midPoint2, 0.5);
+        path.bezierCurveTo(midPoint0[0], midPoint0[1], midPoint0[0], midPoint0[1], midPoint1[0], midPoint1[1]);
+        path.bezierCurveTo(midPoint2[0], midPoint2[1], midPoint2[0], midPoint2[1], points[2][0], points[2][1]);
+      } else {
+        for (var i = 1; i < points.length; i++) {
+          path.lineTo(points[i][0], points[i][1]);
+        }
+      }
+    }
+    /**
+     * Create a label line if necessary and set it's style.
+     */
+
+
+    function setLabelLineStyle(targetEl, statesModels, defaultStyle) {
+      var labelLine = targetEl.getTextGuideLine();
+      var label = targetEl.getTextContent();
+
+      if (!label) {
+        // Not show label line if there is no label.
+        if (labelLine) {
+          targetEl.removeTextGuideLine();
+        }
+
+        return;
+      }
+
+      var normalModel = statesModels.normal;
+      var showNormal = normalModel.get('show');
+      var labelIgnoreNormal = label.ignore;
+
+      for (var i = 0; i < DISPLAY_STATES.length; i++) {
+        var stateName = DISPLAY_STATES[i];
+        var stateModel = statesModels[stateName];
+        var isNormal = stateName === 'normal';
+
+        if (stateModel) {
+          var stateShow = stateModel.get('show');
+          var isLabelIgnored = isNormal ? labelIgnoreNormal : retrieve2(label.states[stateName] && label.states[stateName].ignore, labelIgnoreNormal);
+
+          if (isLabelIgnored // Not show when label is not shown in this state.
+          || !retrieve2(stateShow, showNormal) // Use normal state by default if not set.
+          ) {
+              var stateObj = isNormal ? labelLine : labelLine && labelLine.states.normal;
+
+              if (stateObj) {
+                stateObj.ignore = true;
+              }
+
+              continue;
+            } // Create labelLine if not exists
+
+
+          if (!labelLine) {
+            labelLine = new Polyline();
+            targetEl.setTextGuideLine(labelLine); // Reset state of normal because it's new created.
+            // NOTE: NORMAL should always been the first!
+
+            if (!isNormal && (labelIgnoreNormal || !showNormal)) {
+              setLabelLineState(labelLine, true, 'normal', statesModels.normal);
+            } // Use same state proxy.
+
+
+            if (targetEl.stateProxy) {
+              labelLine.stateProxy = targetEl.stateProxy;
+            }
+          }
+
+          setLabelLineState(labelLine, false, stateName, stateModel);
+        }
+      }
+
+      if (labelLine) {
+        defaults(labelLine.style, defaultStyle); // Not fill.
+
+        labelLine.style.fill = null;
+        var showAbove = normalModel.get('showAbove');
+        var labelLineConfig = targetEl.textGuideLineConfig = targetEl.textGuideLineConfig || {};
+        labelLineConfig.showAbove = showAbove || false; // Custom the buildPath.
+
+        labelLine.buildPath = buildLabelLinePath;
+      }
+    }
+    function getLabelLineStatesModels(itemModel, labelLineName) {
+      labelLineName = labelLineName || 'labelLine';
+      var statesModels = {
+        normal: itemModel.getModel(labelLineName)
+      };
+
+      for (var i = 0; i < SPECIAL_STATES.length; i++) {
+        var stateName = SPECIAL_STATES[i];
+        statesModels[stateName] = itemModel.getModel([stateName, labelLineName]);
+      }
+
+      return statesModels;
+    }
+
+    function shiftLayout(list, xyDim, sizeDim, minBound, maxBound, balanceShift) {
+      var len = list.length;
+
+      if (len < 2) {
+        return;
+      }
+
+      list.sort(function (a, b) {
+        return a.rect[xyDim] - b.rect[xyDim];
+      });
+      var lastPos = 0;
+      var delta;
+      var adjusted = false;
+      var totalShifts = 0;
+
+      for (var i = 0; i < len; i++) {
+        var item = list[i];
+        var rect = item.rect;
+        delta = rect[xyDim] - lastPos;
+
+        if (delta < 0) {
+          // shiftForward(i, len, -delta);
+          rect[xyDim] -= delta;
+          item.label[xyDim] -= delta;
+          adjusted = true;
+        }
+
+        var shift = Math.max(-delta, 0);
+        totalShifts += shift;
+        lastPos = rect[xyDim] + rect[sizeDim];
+      }
+
+      if (totalShifts > 0 && balanceShift) {
+        // Shift back to make the distribution more equally.
+        shiftList(-totalShifts / len, 0, len);
+      } // TODO bleedMargin?
+
+
+      var first = list[0];
+      var last = list[len - 1];
+      var minGap;
+      var maxGap;
+      updateMinMaxGap(); // If ends exceed two bounds, squeeze at most 80%, then take the gap of two bounds.
+
+      minGap < 0 && squeezeGaps(-minGap, 0.8);
+      maxGap < 0 && squeezeGaps(maxGap, 0.8);
+      updateMinMaxGap();
+      takeBoundsGap(minGap, maxGap, 1);
+      takeBoundsGap(maxGap, minGap, -1); // Handle bailout when there is not enough space.
+
+      updateMinMaxGap();
+
+      if (minGap < 0) {
+        squeezeWhenBailout(-minGap);
+      }
+
+      if (maxGap < 0) {
+        squeezeWhenBailout(maxGap);
+      }
+
+      function updateMinMaxGap() {
+        minGap = first.rect[xyDim] - minBound;
+        maxGap = maxBound - last.rect[xyDim] - last.rect[sizeDim];
+      }
+
+      function takeBoundsGap(gapThisBound, gapOtherBound, moveDir) {
+        if (gapThisBound < 0) {
+          // Move from other gap if can.
+          var moveFromMaxGap = Math.min(gapOtherBound, -gapThisBound);
+
+          if (moveFromMaxGap > 0) {
+            shiftList(moveFromMaxGap * moveDir, 0, len);
+            var remained = moveFromMaxGap + gapThisBound;
+
+            if (remained < 0) {
+              squeezeGaps(-remained * moveDir, 1);
+            }
+          } else {
+            squeezeGaps(-gapThisBound * moveDir, 1);
+          }
+        }
+      }
+
+      function shiftList(delta, start, end) {
+        if (delta !== 0) {
+          adjusted = true;
+        }
+
+        for (var i = start; i < end; i++) {
+          var item = list[i];
+          var rect = item.rect;
+          rect[xyDim] += delta;
+          item.label[xyDim] += delta;
+        }
+      } // Squeeze gaps if the labels exceed margin.
+
+
+      function squeezeGaps(delta, maxSqeezePercent) {
+        var gaps = [];
+        var totalGaps = 0;
+
+        for (var i = 1; i < len; i++) {
+          var prevItemRect = list[i - 1].rect;
+          var gap = Math.max(list[i].rect[xyDim] - prevItemRect[xyDim] - prevItemRect[sizeDim], 0);
+          gaps.push(gap);
+          totalGaps += gap;
+        }
+
+        if (!totalGaps) {
+          return;
+        }
+
+        var squeezePercent = Math.min(Math.abs(delta) / totalGaps, maxSqeezePercent);
+
+        if (delta > 0) {
+          for (var i = 0; i < len - 1; i++) {
+            // Distribute the shift delta to all gaps.
+            var movement = gaps[i] * squeezePercent; // Forward
+
+            shiftList(movement, 0, i + 1);
+          }
+        } else {
+          // Backward
+          for (var i = len - 1; i > 0; i--) {
+            // Distribute the shift delta to all gaps.
+            var movement = gaps[i - 1] * squeezePercent;
+            shiftList(-movement, i, len);
+          }
+        }
+      }
+      /**
+       * Squeeze to allow overlap if there is no more space available.
+       * Let other overlapping strategy like hideOverlap do the job instead of keep exceeding the bounds.
+       */
+
+
+      function squeezeWhenBailout(delta) {
+        var dir = delta < 0 ? -1 : 1;
+        delta = Math.abs(delta);
+        var moveForEachLabel = Math.ceil(delta / (len - 1));
+
+        for (var i = 0; i < len - 1; i++) {
+          if (dir > 0) {
+            // Forward
+            shiftList(moveForEachLabel, 0, i + 1);
+          } else {
+            // Backward
+            shiftList(-moveForEachLabel, len - i - 1, len);
+          }
+
+          delta -= moveForEachLabel;
+
+          if (delta <= 0) {
+            return;
+          }
+        }
+      }
+
+      return adjusted;
+    }
+    /**
+     * Adjust labels on y direction to avoid overlap.
+     */
+
+    function shiftLayoutOnY(list, topBound, bottomBound, // If average the shifts on all labels and add them to 0
+    balanceShift) {
+      return shiftLayout(list, 'y', 'height', topBound, bottomBound, balanceShift);
     }
 
     function returnFalse() {
@@ -37893,7 +37847,7 @@
           }
         }
 
-        return createListFromArray(this.getSource(), this, {
+        return createSeriesData(null, this, {
           useEncodeDefaulter: true
         });
       };
@@ -37980,7 +37934,10 @@
         animationEasing: 'linear',
         // Disable progressive
         progressive: 0,
-        hoverLayerThreshold: Infinity
+        hoverLayerThreshold: Infinity,
+        universalTransition: {
+          divideShape: 'clone'
+        }
       };
       return LineSeriesModel;
     }(SeriesModel);
@@ -38016,10 +37973,10 @@
       var vals = [];
 
       for (var i = 0; i < labelDims.length; i++) {
-        var dimInfo = data.getDimensionInfo(labelDims[i]);
+        var dimIndex = data.getDimensionIndex(labelDims[i]);
 
-        if (dimInfo) {
-          vals.push(interpolatedValue[dimInfo.index]);
+        if (dimIndex >= 0) {
+          vals.push(interpolatedValue[dimIndex]);
         }
       }
 
@@ -38068,6 +38025,10 @@
 
       Symbol.prototype.stopSymbolAnimation = function (toLastFrame) {
         this.childAt(0).stopAnimation(null, toLastFrame);
+      };
+
+      Symbol.prototype.getSymbolType = function () {
+        return this._symbolType;
       };
       /**
        * FIXME:
@@ -38141,6 +38102,7 @@
             scaleY: symbolSize[1] / 2
           };
           disableAnimation ? symbolPath.attr(target) : updateProps(symbolPath, target, seriesModel, idx);
+          saveOldStyle(symbolPath);
         }
 
         this._updateCommon(data, idx, symbolSize, seriesScope, opts);
@@ -38209,15 +38171,11 @@
 
         var symbolRotate = data.getItemVisual(idx, 'symbolRotate');
         symbolPath.attr('rotation', (symbolRotate || 0) * Math.PI / 180 || 0);
-        var symbolOffset = data.getItemVisual(idx, 'symbolOffset') || 0;
+        var symbolOffset = normalizeSymbolOffset(data.getItemVisual(idx, 'symbolOffset'), symbolSize);
 
         if (symbolOffset) {
-          if (!isArray(symbolOffset)) {
-            symbolOffset = [symbolOffset, symbolOffset];
-          }
-
-          symbolPath.x = parsePercent$1(symbolOffset[0], symbolSize[0]);
-          symbolPath.y = parsePercent$1(retrieve2(symbolOffset[1], symbolOffset[0]) || 0, symbolSize[1]);
+          symbolPath.x = symbolOffset[0];
+          symbolPath.y = symbolOffset[1];
         }
 
         cursorStyle && symbolPath.attr('cursor', cursorStyle);
@@ -38339,8 +38297,7 @@
       };
 
       Symbol.getSymbolSize = function (data, idx) {
-        var symbolSize = data.getItemVisual(idx, 'symbolSize');
-        return isArray(symbolSize) ? symbolSize.slice() : [+symbolSize, +symbolSize];
+        return normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
       };
 
       return Symbol;
@@ -38434,8 +38391,13 @@
             return;
           }
 
-          if (!symbolEl) {
-            symbolEl = new SymbolCtor(data, newIdx);
+          var newSymbolType = data.getItemVisual(newIdx, 'symbol') || 'circle';
+          var oldSymbolType = symbolEl && symbolEl.getSymbolType && symbolEl.getSymbolType();
+
+          if (!symbolEl // Create a new if symbol type changed.
+          || oldSymbolType && oldSymbolType !== newSymbolType) {
+            group.remove(symbolEl);
+            symbolEl = new SymbolCtor(data, newIdx, seriesScope, symbolUpdateOpt);
             symbolEl.setPosition(point);
           } else {
             symbolEl.updateData(data, newIdx, seriesScope, symbolUpdateOpt);
@@ -39396,9 +39358,7 @@
       var visualMeta;
 
       for (var i = visualMetaList.length - 1; i >= 0; i--) {
-        var dimIndex = visualMetaList[i].dimension;
-        var dimName = data.dimensions[dimIndex];
-        var dimInfo = data.getDimensionInfo(dimName);
+        var dimInfo = data.getDimensionInfo(visualMetaList[i].dimension);
         coordDim = dimInfo && dimInfo.coordDim; // Can only be x or y
 
         if (coordDim === 'x' || coordDim === 'y') {
@@ -39421,12 +39381,16 @@
       // LinearGradient to render `outerColors`.
 
 
-      var axis = coordSys.getAxis(coordDim); // dataToCoord mapping may not be linear, but must be monotonic.
+      var axis = coordSys.getAxis(coordDim);
+      var axisScaleExtent = axis.scale.getExtent(); // dataToCoord mapping may not be linear, but must be monotonic.
 
       var colorStops = map(visualMeta.stops, function (stop) {
+        var coord = axis.toGlobalCoord(axis.dataToCoord(stop.value)); // normalize the infinite value
+
+        isNaN(coord) || isFinite(coord) || (coord = axis.toGlobalCoord(axis.dataToCoord(axisScaleExtent[+(coord < 0)])));
         return {
           offset: 0,
-          coord: axis.toGlobalCoord(axis.dataToCoord(stop.value, true)),
+          coord: coord,
           color: stop.color
         };
       });
@@ -39582,16 +39546,29 @@
       };
     }
 
+    function anyStateShowEndLabel(seriesModel) {
+      if (seriesModel.get(['endLabel', 'show'])) {
+        return true;
+      }
+
+      for (var i = 0; i < SPECIAL_STATES.length; i++) {
+        if (seriesModel.get([SPECIAL_STATES[i], 'endLabel', 'show'])) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
     function createLineClipPath(lineView, coordSys, hasAnimation, seriesModel) {
       if (isCoordinateSystemType(coordSys, 'cartesian2d')) {
         var endLabelModel_1 = seriesModel.getModel('endLabel');
-        var showEndLabel = endLabelModel_1.get('show');
         var valueAnimation_1 = endLabelModel_1.get('valueAnimation');
         var data_1 = seriesModel.getData();
         var labelAnimationRecord_1 = {
           lastFrameIndex: 0
         };
-        var during = showEndLabel ? function (percent, clipRect) {
+        var during = anyStateShowEndLabel(seriesModel) ? function (percent, clipRect) {
           lineView._endLabelOnDuring(percent, clipRect, data_1, labelAnimationRecord_1, valueAnimation_1, endLabelModel_1, coordSys);
         } : null;
         var isHorizontal = coordSys.getBaseAxis().isHorizontal();
@@ -40092,6 +40069,7 @@
               scaleY: 1
             }, {
               duration: 200,
+              setToFinal: true,
               delay: delay
             });
 
@@ -40114,7 +40092,7 @@
       LineView.prototype._initOrUpdateEndLabel = function (seriesModel, coordSys, inheritColor) {
         var endLabelModel = seriesModel.getModel('endLabel');
 
-        if (endLabelModel.get('show')) {
+        if (anyStateShowEndLabel(seriesModel)) {
           var data_2 = seriesModel.getData();
           var polyline = this._polyline;
           var endLabel = this._endLabel;
@@ -40385,10 +40363,9 @@
             dims[1] = stackResultDim;
           }
 
-          var dimInfo0 = data.getDimensionInfo(dims[0]);
-          var dimInfo1 = data.getDimensionInfo(dims[1]);
-          var dimIdx0 = dimInfo0 && dimInfo0.index;
-          var dimIdx1 = dimInfo1 && dimInfo1.index;
+          var store = data.getStore();
+          var dimIdx0 = data.getDimensionIndex(dims[0]);
+          var dimIdx1 = data.getDimensionIndex(dims[1]);
           return dimLen && {
             progress: function (params, data) {
               var segCount = params.end - params.start;
@@ -40400,12 +40377,12 @@
                 var point = void 0;
 
                 if (dimLen === 1) {
-                  var x = data.getByDimIdx(dimIdx0, i); // NOTE: Make sure the second parameter is null to use default strategy.
+                  var x = store.get(dimIdx0, i); // NOTE: Make sure the second parameter is null to use default strategy.
 
                   point = coordSys.dataToPoint(x, null, tmpOut);
                 } else {
-                  tmpIn[0] = data.getByDimIdx(dimIdx0, i);
-                  tmpIn[1] = data.getByDimIdx(dimIdx1, i); // Let coordinate system to handle the NaN data.
+                  tmpIn[0] = store.get(dimIdx0, i);
+                  tmpIn[1] = store.get(dimIdx1, i); // Let coordinate system to handle the NaN data.
 
                   point = coordSys.dataToPoint(tmpIn, null, tmpOut);
                 }
@@ -40603,7 +40580,7 @@
       }
 
       BaseBarSeriesModel.prototype.getInitialData = function (option, ecModel) {
-        return createListFromArray(this.getSource(), this, {
+        return createSeriesData(null, this, {
           useEncodeDefaulter: true
         });
       };
@@ -40611,7 +40588,7 @@
       BaseBarSeriesModel.prototype.getMarkerPosition = function (value) {
         var coordSys = this.coordinateSystem;
 
-        if (coordSys) {
+        if (coordSys && coordSys.clampData) {
           // PENDING if clamp ?
           var pt = coordSys.dataToPoint(coordSys.clampData(value));
           var data = this.getData();
@@ -40661,7 +40638,7 @@
       }
 
       BarSeriesModel.prototype.getInitialData = function () {
-        return createListFromArray(this.getSource(), this, {
+        return createSeriesData(null, this, {
           useEncodeDefaulter: true,
           createInvertedIndices: !!this.get('realtimeSort', true) || null
         });
@@ -40797,6 +40774,186 @@
 
       return SausagePath;
     }(Path);
+
+    function createSectorCalculateTextPosition(positionMapping, opts) {
+      opts = opts || {};
+      var isRoundCap = opts.isRoundCap;
+      return function (out, opts, boundingRect) {
+        var textPosition = opts.position;
+
+        if (!textPosition || textPosition instanceof Array) {
+          return calculateTextPosition(out, opts, boundingRect);
+        }
+
+        var mappedSectorPosition = positionMapping(textPosition);
+        var distance = opts.distance != null ? opts.distance : 5;
+        var sector = this.shape;
+        var cx = sector.cx;
+        var cy = sector.cy;
+        var r = sector.r;
+        var r0 = sector.r0;
+        var middleR = (r + r0) / 2;
+        var startAngle = sector.startAngle;
+        var endAngle = sector.endAngle;
+        var middleAngle = (startAngle + endAngle) / 2;
+        var extraDist = isRoundCap ? Math.abs(r - r0) / 2 : 0;
+        var mathCos = Math.cos;
+        var mathSin = Math.sin; // base position: top-left
+
+        var x = cx + r * mathCos(startAngle);
+        var y = cy + r * mathSin(startAngle);
+        var textAlign = 'left';
+        var textVerticalAlign = 'top';
+
+        switch (mappedSectorPosition) {
+          case 'startArc':
+            x = cx + (r0 - distance) * mathCos(middleAngle);
+            y = cy + (r0 - distance) * mathSin(middleAngle);
+            textAlign = 'center';
+            textVerticalAlign = 'top';
+            break;
+
+          case 'insideStartArc':
+            x = cx + (r0 + distance) * mathCos(middleAngle);
+            y = cy + (r0 + distance) * mathSin(middleAngle);
+            textAlign = 'center';
+            textVerticalAlign = 'bottom';
+            break;
+
+          case 'startAngle':
+            x = cx + middleR * mathCos(startAngle) + adjustAngleDistanceX(startAngle, distance + extraDist, false);
+            y = cy + middleR * mathSin(startAngle) + adjustAngleDistanceY(startAngle, distance + extraDist, false);
+            textAlign = 'right';
+            textVerticalAlign = 'middle';
+            break;
+
+          case 'insideStartAngle':
+            x = cx + middleR * mathCos(startAngle) + adjustAngleDistanceX(startAngle, -distance + extraDist, false);
+            y = cy + middleR * mathSin(startAngle) + adjustAngleDistanceY(startAngle, -distance + extraDist, false);
+            textAlign = 'left';
+            textVerticalAlign = 'middle';
+            break;
+
+          case 'middle':
+            x = cx + middleR * mathCos(middleAngle);
+            y = cy + middleR * mathSin(middleAngle);
+            textAlign = 'center';
+            textVerticalAlign = 'middle';
+            break;
+
+          case 'endArc':
+            x = cx + (r + distance) * mathCos(middleAngle);
+            y = cy + (r + distance) * mathSin(middleAngle);
+            textAlign = 'center';
+            textVerticalAlign = 'bottom';
+            break;
+
+          case 'insideEndArc':
+            x = cx + (r - distance) * mathCos(middleAngle);
+            y = cy + (r - distance) * mathSin(middleAngle);
+            textAlign = 'center';
+            textVerticalAlign = 'top';
+            break;
+
+          case 'endAngle':
+            x = cx + middleR * mathCos(endAngle) + adjustAngleDistanceX(endAngle, distance + extraDist, true);
+            y = cy + middleR * mathSin(endAngle) + adjustAngleDistanceY(endAngle, distance + extraDist, true);
+            textAlign = 'left';
+            textVerticalAlign = 'middle';
+            break;
+
+          case 'insideEndAngle':
+            x = cx + middleR * mathCos(endAngle) + adjustAngleDistanceX(endAngle, -distance + extraDist, true);
+            y = cy + middleR * mathSin(endAngle) + adjustAngleDistanceY(endAngle, -distance + extraDist, true);
+            textAlign = 'right';
+            textVerticalAlign = 'middle';
+            break;
+
+          default:
+            return calculateTextPosition(out, opts, boundingRect);
+        }
+
+        out = out || {};
+        out.x = x;
+        out.y = y;
+        out.align = textAlign;
+        out.verticalAlign = textVerticalAlign;
+        return out;
+      };
+    }
+    function setSectorTextRotation(sector, textPosition, positionMapping, rotateType) {
+      if (typeof rotateType === 'number') {
+        // user-set rotation
+        sector.setTextConfig({
+          rotation: rotateType
+        });
+        return;
+      } else if (isArray(textPosition)) {
+        // user-set position, use 0 as auto rotation
+        sector.setTextConfig({
+          rotation: 0
+        });
+        return;
+      }
+
+      var shape = sector.shape;
+      var startAngle = shape.clockwise ? shape.startAngle : shape.endAngle;
+      var endAngle = shape.clockwise ? shape.endAngle : shape.startAngle;
+      var middleAngle = (startAngle + endAngle) / 2;
+      var anchorAngle;
+      var mappedSectorPosition = positionMapping(textPosition);
+
+      switch (mappedSectorPosition) {
+        case 'startArc':
+        case 'insideStartArc':
+        case 'middle':
+        case 'insideEndArc':
+        case 'endArc':
+          anchorAngle = middleAngle;
+          break;
+
+        case 'startAngle':
+        case 'insideStartAngle':
+          anchorAngle = startAngle;
+          break;
+
+        case 'endAngle':
+        case 'insideEndAngle':
+          anchorAngle = endAngle;
+          break;
+
+        default:
+          sector.setTextConfig({
+            rotation: 0
+          });
+          return;
+      }
+
+      var rotate = Math.PI * 1.5 - anchorAngle;
+      /**
+       * TODO: labels with rotate > Math.PI / 2 should be rotate another
+       * half round flipped to increase readability. However, only middle
+       * position supports this for now, because in other positions, the
+       * anchor point is not at the center of the text, so the positions
+       * after rotating is not as expected.
+       */
+
+      if (mappedSectorPosition === 'middle' && rotate > Math.PI / 2 && rotate < Math.PI * 1.5) {
+        rotate -= Math.PI;
+      }
+
+      sector.setTextConfig({
+        rotation: rotate
+      });
+    }
+
+    function adjustAngleDistanceX(angle, distance, isEnd) {
+      return distance * Math.sin(angle) * (isEnd ? -1 : 1);
+    }
+
+    function adjustAngleDistanceY(angle, distance, isEnd) {
+      return distance * Math.cos(angle) * (isEnd ? 1 : -1);
+    }
 
     var _eventPos = [0, 0];
     var mathMax$6 = Math.max;
@@ -40937,7 +41094,7 @@
           } // If dataZoom in filteMode: 'empty', the baseValue can be set as NaN in "axisProxy".
 
 
-          if (!data.hasValue(dataIndex)) {
+          if (!data.hasValue(dataIndex) || !isValidLayout[coord.type](layout)) {
             return;
           }
 
@@ -40996,9 +41153,8 @@
 
           var el = oldData.getItemGraphicEl(oldIndex);
 
-          if (!data.hasValue(newIndex)) {
+          if (!data.hasValue(newIndex) || !isValidLayout[coord.type](layout)) {
             group.remove(el);
-            el = null;
             return;
           }
 
@@ -41014,6 +41170,8 @@
 
           if (!el) {
             el = elementCreator[coord.type](seriesModel, data, newIndex, layout, isHorizontalOrRadial, animationModel, baseAxis.model, !!el, roundCap);
+          } else {
+            saveOldStyle(el);
           } // Not change anything if only order changed.
           // Especially not change label.
 
@@ -41208,12 +41366,7 @@
           componentType: baseAxis.dim + 'Axis',
           isInitSort: true,
           axisId: baseAxis.index,
-          sortInfo: sortResult,
-          animation: {
-            // Update the axis label from the natural initial layout to
-            // sorted layout should has no animation.
-            duration: 0
-          }
+          sortInfo: sortResult
         });
       };
 
@@ -41360,7 +41513,11 @@
           }, layout),
           z2: 1
         });
-        sector.name = 'item'; // Animation
+        sector.name = 'item';
+        var positionMap = createPolarPositionMapping(isRadial);
+        sector.calculateTextPosition = createSectorCalculateTextPosition(positionMap, {
+          isRoundCap: ShapeClass === SausagePath
+        }); // Animation
 
         if (animationModel) {
           var sectorShape = sector.shape;
@@ -41440,6 +41597,26 @@
       }, axisAnimationModel, newIndex);
     }
 
+    function checkPropertiesNotValid(obj, props) {
+      for (var i = 0; i < props.length; i++) {
+        if (!isFinite(obj[props[i]])) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    var rectPropties = ['x', 'y', 'width', 'height'];
+    var polarPropties = ['cx', 'cy', 'r', 'startAngle', 'endAngle'];
+    var isValidLayout = {
+      cartesian2d: function (layout) {
+        return !checkPropertiesNotValid(layout, rectPropties);
+      },
+      polar: function (layout) {
+        return !checkPropertiesNotValid(layout, polarPropties);
+      }
+    };
     var getLayout = {
       // itemModel is only used to get borderWidth, which is not needed
       // when calculating bar background layout.
@@ -41473,7 +41650,25 @@
       return layout.startAngle != null && layout.endAngle != null && layout.startAngle === layout.endAngle;
     }
 
-    function updateStyle(el, data, dataIndex, itemModel, layout, seriesModel, isHorizontal, isPolar) {
+    function createPolarPositionMapping(isRadial) {
+      return function (isRadial) {
+        var arcOrAngle = isRadial ? 'Arc' : 'Angle';
+        return function (position) {
+          switch (position) {
+            case 'start':
+            case 'insideStart':
+            case 'end':
+            case 'insideEnd':
+              return position + arcOrAngle;
+
+            default:
+              return position;
+          }
+        };
+      }(isRadial);
+    }
+
+    function updateStyle(el, data, dataIndex, itemModel, layout, seriesModel, isHorizontalOrRadial, isPolar) {
       var style = data.getItemVisual(dataIndex, 'style');
 
       if (!isPolar) {
@@ -41483,24 +41678,27 @@
       el.useStyle(style);
       var cursorStyle = itemModel.getShallow('cursor');
       cursorStyle && el.attr('cursor', cursorStyle);
+      var labelPositionOutside = isPolar ? isHorizontalOrRadial ? layout.r >= layout.r0 ? 'endArc' : 'startArc' : layout.endAngle >= layout.startAngle ? 'endAngle' : 'startAngle' : isHorizontalOrRadial ? layout.height >= 0 ? 'bottom' : 'top' : layout.width >= 0 ? 'right' : 'left';
+      var labelStatesModels = getLabelStatesModels(itemModel);
+      setLabelStyle(el, labelStatesModels, {
+        labelFetcher: seriesModel,
+        labelDataIndex: dataIndex,
+        defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
+        inheritColor: style.fill,
+        defaultOpacity: style.opacity,
+        defaultOutsidePosition: labelPositionOutside
+      });
+      var label = el.getTextContent();
 
-      if (!isPolar) {
-        var labelPositionOutside = isHorizontal ? layout.height > 0 ? 'bottom' : 'top' : layout.width > 0 ? 'left' : 'right';
-        var labelStatesModels = getLabelStatesModels(itemModel);
-        setLabelStyle(el, labelStatesModels, {
-          labelFetcher: seriesModel,
-          labelDataIndex: dataIndex,
-          defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
-          inheritColor: style.fill,
-          defaultOpacity: style.opacity,
-          defaultOutsidePosition: labelPositionOutside
-        });
-        var label = el.getTextContent();
-        setLabelValueAnimation(label, labelStatesModels, seriesModel.getRawValue(dataIndex), function (value) {
-          return getDefaultInterpolatedLabel(data, value);
-        });
+      if (isPolar && label) {
+        var position = itemModel.get(['label', 'position']);
+        el.textConfig.inside = position === 'middle' ? true : null;
+        setSectorTextRotation(el, position === 'outside' ? labelPositionOutside : position, createPolarPositionMapping(isHorizontalOrRadial), itemModel.get(['label', 'rotate']));
       }
 
+      setLabelValueAnimation(label, labelStatesModels, seriesModel.getRawValue(dataIndex), function (value) {
+        return getDefaultInterpolatedLabel(data, value);
+      });
       var emphasisModel = itemModel.getModel(['emphasis']);
       enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
       setStatesStylesFromModel(el, itemModel);
@@ -41746,7 +41944,7 @@
       });
     }
 
-    var PI2$7 = Math.PI * 2;
+    var PI2$6 = Math.PI * 2;
     var RADIAN = Math.PI / 180;
 
     function getViewRect(seriesModel, api) {
@@ -41756,29 +41954,45 @@
       });
     }
 
+    function getBasicPieLayout(seriesModel, api) {
+      var viewRect = getViewRect(seriesModel, api);
+      var center = seriesModel.get('center');
+      var radius = seriesModel.get('radius');
+
+      if (!isArray(radius)) {
+        radius = [0, radius];
+      }
+
+      if (!isArray(center)) {
+        center = [center, center];
+      }
+
+      var width = parsePercent$1(viewRect.width, api.getWidth());
+      var height = parsePercent$1(viewRect.height, api.getHeight());
+      var size = Math.min(width, height);
+      var cx = parsePercent$1(center[0], width) + viewRect.x;
+      var cy = parsePercent$1(center[1], height) + viewRect.y;
+      var r0 = parsePercent$1(radius[0], size / 2);
+      var r = parsePercent$1(radius[1], size / 2);
+      return {
+        cx: cx,
+        cy: cy,
+        r0: r0,
+        r: r
+      };
+    }
     function pieLayout(seriesType, ecModel, api) {
       ecModel.eachSeriesByType(seriesType, function (seriesModel) {
         var data = seriesModel.getData();
         var valueDim = data.mapDimension('value');
         var viewRect = getViewRect(seriesModel, api);
-        var center = seriesModel.get('center');
-        var radius = seriesModel.get('radius');
 
-        if (!isArray(radius)) {
-          radius = [0, radius];
-        }
+        var _a = getBasicPieLayout(seriesModel, api),
+            cx = _a.cx,
+            cy = _a.cy,
+            r = _a.r,
+            r0 = _a.r0;
 
-        if (!isArray(center)) {
-          center = [center, center];
-        }
-
-        var width = parsePercent$1(viewRect.width, api.getWidth());
-        var height = parsePercent$1(viewRect.height, api.getHeight());
-        var size = Math.min(width, height);
-        var cx = parsePercent$1(center[0], width) + viewRect.x;
-        var cy = parsePercent$1(center[1], height) + viewRect.y;
-        var r0 = parsePercent$1(radius[0], size / 2);
-        var r = parsePercent$1(radius[1], size / 2);
         var startAngle = -seriesModel.get('startAngle') * RADIAN;
         var minAngle = seriesModel.get('minAngle') * RADIAN;
         var validDataCount = 0;
@@ -41795,7 +42009,7 @@
         var extent = data.getDataExtent(valueDim);
         extent[0] = 0; // In the case some sector angle is smaller than minAngle
 
-        var restAngle = PI2$7;
+        var restAngle = PI2$6;
         var valueSumLargerThanMinAngle = 0;
         var currentAngle = startAngle;
         var dir = clockwise ? 1 : -1;
@@ -41824,7 +42038,7 @@
           if (roseType !== 'area') {
             angle = sum === 0 && stillShowZeroSum ? unitRadian : value * unitRadian;
           } else {
-            angle = PI2$7 / validDataCount;
+            angle = PI2$6 / validDataCount;
           }
 
           if (angle < minAngle) {
@@ -41849,11 +42063,11 @@
         }); // Some sector is constrained by minAngle
         // Rest sectors needs recalculate angle
 
-        if (restAngle < PI2$7 && validDataCount) {
+        if (restAngle < PI2$6 && validDataCount) {
           // Average the angle if rest angle is not enough after all angles is
           // Constrained by minAngle
           if (restAngle <= 1e-3) {
-            var angle_1 = PI2$7 / validDataCount;
+            var angle_1 = PI2$6 / validDataCount;
             data.each(valueDim, function (value, idx) {
               if (!isNaN(value)) {
                 var layout_1 = data.getItemLayout(idx);
@@ -42226,8 +42440,22 @@
 
         if (typeof rotate === 'number') {
           labelRotate = rotate * (Math.PI / 180);
+        } else if (labelPosition === 'center') {
+          labelRotate = 0;
         } else {
-          labelRotate = rotate ? nx < 0 ? -midAngle + Math.PI : -midAngle : 0;
+          var radialAngle = nx < 0 ? -midAngle + Math.PI : -midAngle;
+
+          if (rotate === 'radial' || rotate === true) {
+            labelRotate = radialAngle;
+          } else if (rotate === 'tangential' && labelPosition !== 'outside' && labelPosition !== 'outer') {
+            labelRotate = radialAngle + Math.PI / 2;
+
+            if (labelRotate > Math.PI / 2) {
+              labelRotate -= Math.PI;
+            }
+          } else {
+            labelRotate = 0;
+          }
         }
 
         hasLabelRotate = !!labelRotate;
@@ -42328,11 +42556,14 @@
       }
     }
 
-    function getSectorCornerRadius(model, shape) {
+    function getSectorCornerRadius(model, shape, zeroIfNull) {
       var cornerRadius = model.get('borderRadius');
 
       if (cornerRadius == null) {
-        return null;
+        return zeroIfNull ? {
+          innerCornerRadius: 0,
+          cornerRadius: 0
+        } : null;
       }
 
       if (!isArray(cornerRadius)) {
@@ -42372,8 +42603,10 @@
         var seriesModel = data.hostModel;
         var itemModel = data.getItemModel(idx);
         var emphasisModel = itemModel.getModel('emphasis');
-        var layout = data.getItemLayout(idx);
-        var sectorShape = extend(getSectorCornerRadius(itemModel.getModel('itemStyle'), layout) || {}, layout); // Ignore NaN data.
+        var layout = data.getItemLayout(idx); // cornerRadius & innerCornerRadius doesn't exist in the item layout. Use `0` if null value is specified.
+        // see `setItemLayout` in `pieLayout.ts`.
+
+        var sectorShape = extend(getSectorCornerRadius(itemModel.getModel('itemStyle'), layout, true), layout); // Ignore NaN data.
 
         if (isNaN(sectorShape.startAngle)) {
           // Use NaN shape to avoid drawing shape.
@@ -42415,7 +42648,8 @@
               }
             }
         } else {
-          // Transition animation from the old shape
+          saveOldStyle(sector); // Transition animation from the old shape
+
           updateProps(sector, {
             shape: sectorShape
           }, seriesModel, idx);
@@ -42540,6 +42774,21 @@
           if (shape) {
             startAngle = shape.startAngle;
           }
+        } // remove empty-circle if it exists
+
+
+        if (this._emptyCircleSector) {
+          group.remove(this._emptyCircleSector);
+        } // when all data are filtered, show lightgray empty circle
+
+
+        if (data.count() === 0 && seriesModel.get('showEmptyCircle')) {
+          var sector = new Sector({
+            shape: getBasicPieLayout(seriesModel, api)
+          });
+          sector.useStyle(seriesModel.getModel('emptyCircleStyle').getItemStyle());
+          this._emptyCircleSector = sector;
+          group.add(sector);
         }
 
         data.diff(oldData).add(function (idx) {
@@ -42592,13 +42841,15 @@
      * });
      */
 
-    function createListSimply(seriesModel, opt, nameList) {
+    function createSeriesDataSimply(seriesModel, opt, nameList) {
       opt = isArray(opt) && {
         coordDimensions: opt
-      } || extend({}, opt);
+      } || extend({
+        encodeDefine: seriesModel.getEncode()
+      }, opt);
       var source = seriesModel.getSource();
-      var dimensionsInfo = createDimensions(source, opt);
-      var list = new List(dimensionsInfo, seriesModel);
+      var dimensions = prepareSeriesDataSchema(source, opt).dimensions;
+      var list = new SeriesData(dimensions, seriesModel);
       list.initData(source, nameList);
       return list;
     }
@@ -42699,10 +42950,7 @@
       __extends(PieSeriesModel, _super);
 
       function PieSeriesModel() {
-        var _this = _super !== null && _super.apply(this, arguments) || this;
-
-        _this.useColorPaletteOnData = true;
-        return _this;
+        return _super !== null && _super.apply(this, arguments) || this;
       }
       /**
        * @overwrite
@@ -42732,7 +42980,7 @@
 
 
       PieSeriesModel.prototype.getInitialData = function () {
-        return createListSimply(this, {
+        return createSeriesDataSimply(this, {
           coordDimensions: ['value'],
           encodeDefaulter: curry(makeSeriesEncodeForNameBased, this)
         });
@@ -42772,6 +43020,7 @@
         zlevel: 0,
         z: 2,
         legendHoverLink: true,
+        colorBy: 'data',
         // 默认全局居中
         center: ['50%', '50%'],
         radius: [0, '75%'],
@@ -42837,7 +43086,13 @@
           }
         },
         itemStyle: {
-          borderWidth: 1
+          borderWidth: 1,
+          borderJoin: 'round'
+        },
+        showEmptyCircle: true,
+        emptyCircleStyle: {
+          color: 'lightgray',
+          opacity: 1
         },
         labelLayout: {
           // Hide the overlapped label.
@@ -42861,12 +43116,75 @@
       return PieSeriesModel;
     }(SeriesModel);
 
+    /*
+    * Licensed to the Apache Software Foundation (ASF) under one
+    * or more contributor license agreements.  See the NOTICE file
+    * distributed with this work for additional information
+    * regarding copyright ownership.  The ASF licenses this file
+    * to you under the Apache License, Version 2.0 (the
+    * "License"); you may not use this file except in compliance
+    * with the License.  You may obtain a copy of the License at
+    *
+    *   http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing,
+    * software distributed under the License is distributed on an
+    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    * KIND, either express or implied.  See the License for the
+    * specific language governing permissions and limitations
+    * under the License.
+    */
+
+
+    /**
+     * AUTO-GENERATED FILE. DO NOT MODIFY.
+     */
+
+    /*
+    * Licensed to the Apache Software Foundation (ASF) under one
+    * or more contributor license agreements.  See the NOTICE file
+    * distributed with this work for additional information
+    * regarding copyright ownership.  The ASF licenses this file
+    * to you under the Apache License, Version 2.0 (the
+    * "License"); you may not use this file except in compliance
+    * with the License.  You may obtain a copy of the License at
+    *
+    *   http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing,
+    * software distributed under the License is distributed on an
+    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    * KIND, either express or implied.  See the License for the
+    * specific language governing permissions and limitations
+    * under the License.
+    */
+    function negativeDataFilter(seriesType) {
+      return {
+        seriesType: seriesType,
+        reset: function (seriesModel, ecModel) {
+          var data = seriesModel.getData();
+          data.filterSelf(function (idx) {
+            // handle negative value condition
+            var valueDim = data.mapDimension('value');
+            var curValue = data.get(valueDim, idx);
+
+            if (typeof curValue === 'number' && !isNaN(curValue) && curValue < 0) {
+              return false;
+            }
+
+            return true;
+          });
+        }
+      };
+    }
+
     function install$3(registers) {
       registers.registerChartView(PieView);
       registers.registerSeriesModel(PieSeriesModel);
       createLegacyDataSelectAction('pie', registers.registerAction);
       registers.registerLayout(curry(pieLayout, 'pie'));
       registers.registerProcessor(dataFilter('pie'));
+      registers.registerProcessor(negativeDataFilter('pie'));
     }
 
     var GridModel =
@@ -43142,13 +43460,7 @@
           __extends(AxisModel, _super);
 
           function AxisModel() {
-            var args = [];
-
-            for (var _i = 0; _i < arguments.length; _i++) {
-              args[_i] = arguments[_i];
-            }
-
-            var _this = _super.apply(this, args) || this;
+            var _this = _super !== null && _super.apply(this, arguments) || this;
 
             _this.type = axisName + 'Axis.' + axisType;
             return _this;
@@ -44165,14 +44477,10 @@
         line.anid = 'line';
         group.add(line);
         var arrows = axisModel.get(['axisLine', 'symbol']);
-        var arrowSize = axisModel.get(['axisLine', 'symbolSize']);
-        var arrowOffset = axisModel.get(['axisLine', 'symbolOffset']) || 0;
-
-        if (typeof arrowOffset === 'number') {
-          arrowOffset = [arrowOffset, arrowOffset];
-        }
 
         if (arrows != null) {
+          var arrowSize = axisModel.get(['axisLine', 'symbolSize']);
+
           if (typeof arrows === 'string') {
             // Use the same arrow for start and end point
             arrows = [arrows, arrows];
@@ -44183,6 +44491,7 @@
             arrowSize = [arrowSize, arrowSize];
           }
 
+          var arrowOffset = normalizeSymbolOffset(axisModel.get(['axisLine', 'symbolOffset']) || 0, arrowSize);
           var symbolWidth_1 = arrowSize[0];
           var symbolHeight_1 = arrowSize[1];
           each([{
@@ -44732,7 +45041,7 @@
       return AxisView;
     }(ComponentView);
 
-    var inner$5 = makeInner();
+    var inner$6 = makeInner();
     function rectCoordAxisBuildSplitArea(axisView, axisGroup, axisModel, gridModel) {
       var axis = axisModel.axis;
 
@@ -44757,7 +45066,7 @@
 
 
       var areaColorsLen = areaColors.length;
-      var lastSplitAreaColors = inner$5(axisView).splitAreaColors;
+      var lastSplitAreaColors = inner$6(axisView).splitAreaColors;
       var newSplitAreaColors = createHashMap();
       var colorIndex = 0;
 
@@ -44816,10 +45125,10 @@
         colorIndex = (colorIndex + 1) % areaColorsLen;
       }
 
-      inner$5(axisView).splitAreaColors = newSplitAreaColors;
+      inner$6(axisView).splitAreaColors = newSplitAreaColors;
     }
     function rectCoordAxisHandleRemove(axisView) {
-      inner$5(axisView).splitAreaColors = null;
+      inner$6(axisView).splitAreaColors = null;
     }
 
     var axisBuilderAttrs = ['axisLine', 'axisTickLabel', 'axisName'];
@@ -44879,8 +45188,15 @@
           if (axisModel.get([name, 'show'])) {
             axisElementBuilders[name](this, this._axisGroup, axisModel, gridModel);
           }
-        }, this);
-        groupTransition(oldAxisGroup, this._axisGroup, axisModel);
+        }, this); // THIS is a special case for bar racing chart.
+        // Update the axis label from the natural initial layout to
+        // sorted layout should has no animation.
+
+        var isInitialSortFromBarRacing = payload && payload.type === 'changeAxisOrder' && payload.isInitSort;
+
+        if (!isInitialSortFromBarRacing) {
+          groupTransition(oldAxisGroup, this._axisGroup, axisModel);
+        }
 
         _super.prototype.render.call(this, axisModel, ecModel, api, payload);
       };
@@ -45094,7 +45410,7 @@
         show: false
       }
     };
-    var inner$6 = makeInner();
+    var inner$7 = makeInner();
     var decalPaletteScope = {};
     function ariaVisual(ecModel, api) {
       var ariaModel = ecModel.getModel('aria'); // See "area enabled" detection code in `GlobalModel.ts`.
@@ -45118,7 +45434,7 @@
           // Pie and funnel are using diferrent scopes
           var paletteScopeGroupByType_1 = createHashMap();
           ecModel.eachSeries(function (seriesModel) {
-            if (!seriesModel.useColorPaletteOnData) {
+            if (seriesModel.isColorBySeries()) {
               return;
             }
 
@@ -45129,7 +45445,7 @@
               paletteScopeGroupByType_1.set(seriesModel.type, decalScope);
             }
 
-            inner$6(seriesModel).scope = decalScope;
+            inner$7(seriesModel).scope = decalScope;
           });
           ecModel.eachRawSeries(function (seriesModel) {
             if (ecModel.isSeriesFiltered(seriesModel)) {
@@ -45144,10 +45460,10 @@
 
             var data = seriesModel.getData();
 
-            if (seriesModel.useColorPaletteOnData) {
+            if (!seriesModel.isColorBySeries()) {
               var dataAll_1 = seriesModel.getRawData();
               var idxMap_1 = {};
-              var decalScope_1 = inner$6(seriesModel).scope;
+              var decalScope_1 = inner$7(seriesModel).scope;
               data.each(function (idx) {
                 var rawIdx = data.getRawIndex(idx);
                 idxMap_1[rawIdx] = idx;
@@ -45391,7 +45707,7 @@
     exports.ChartView = ChartView;
     exports.ComponentModel = ComponentModel;
     exports.ComponentView = ComponentView;
-    exports.List = List;
+    exports.List = SeriesData;
     exports.Model = Model;
     exports.PRIORITY = PRIORITY;
     exports.SeriesModel = SeriesModel;
@@ -45432,6 +45748,7 @@
     exports.registerProcessor = registerProcessor;
     exports.registerTheme = registerTheme;
     exports.registerTransform = registerTransform;
+    exports.registerUpdateLifecycle = registerUpdateLifecycle;
     exports.registerVisual = registerVisual;
     exports.setCanvasCreator = setCanvasCreator;
     exports.throttle = throttle;
