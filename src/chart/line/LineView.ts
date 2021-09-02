@@ -691,9 +691,18 @@ class LineView extends ChartView {
             }
 
             // Update clipPath
-            lineGroup.setClipPath(
-                createLineClipPath(this, coordSys, false, seriesModel)
-            );
+            const oldClipPath = lineGroup.getClipPath();
+            if (oldClipPath) {
+                const newClipPath = createLineClipPath(this, coordSys, false, seriesModel);
+                graphic.initProps(oldClipPath, {
+                    shape: newClipPath.shape
+                }, seriesModel);
+            }
+            else {
+                lineGroup.setClipPath(
+                    createLineClipPath(this, coordSys, true, seriesModel)
+                );
+            }
 
             // Always update, or it is wrong in the case turning on legend
             // because points are not changed
