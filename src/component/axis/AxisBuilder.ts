@@ -17,17 +17,17 @@
 * under the License.
 */
 
-import {retrieve, defaults, extend, each, isObject, map} from 'zrender/src/core/util';
+import { retrieve, defaults, extend, each, isObject, map } from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import * as graphic from '../../util/graphic';
-import {getECData} from '../../util/innerStore';
-import {createTextStyle} from '../../label/labelStyle';
+import { getECData } from '../../util/innerStore';
+import { createTextStyle } from '../../label/labelStyle';
 import Model from '../../model/Model';
-import {isRadianAroundZero, remRadian} from '../../util/number';
-import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
+import { isRadianAroundZero, remRadian } from '../../util/number';
+import { createSymbol, normalizeSymbolOffset } from '../../util/symbol';
 import * as matrixUtil from 'zrender/src/core/matrix';
-import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
-import {shouldShowAllLabels} from '../../coord/axisHelper';
+import { applyTransform as v2ApplyTransform } from 'zrender/src/core/vector';
+import { shouldShowAllLabels } from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { makeLabelFormatter } from '../../coord/axisHelper';
 import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString, ComponentOption, Dictionary } from '../../util/types';
@@ -49,8 +49,8 @@ type AxisEventData = {
     name?: string
     value?: string | number
 } & {
-    [key in AxisIndexKey]?: number
-};
+        [key in AxisIndexKey]?: number
+    };
 
 type AxisLabelText = graphic.Text & {
     __fullText: string
@@ -235,7 +235,7 @@ interface AxisElementsBuilder {
         axisModel: AxisBaseModel,
         group: graphic.Group,
         transformGroup: graphic.Group
-    ):void
+    ): void
 }
 
 const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBuilder> = {
@@ -384,8 +384,8 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             nameLocation === 'start'
                 ? extent[0] - gapSignal * gap
                 : nameLocation === 'end'
-                ? extent[1] + gapSignal * gap
-                : (extent[0] + extent[1]) / 2, // 'middle'
+                    ? extent[1] + gapSignal * gap
+                    : (extent[0] + extent[1]) / 2, // 'middle'
             // Reuse labelOffset.
             isNameLocationCenter(nameLocation) ? opt.labelOffset + nameDirection * gap : 0
         ];
@@ -781,30 +781,15 @@ function buildAxisLabel(
 
         const tickCoord = axis.dataToCoord(tickValue);
 
-        const font = labelModel.getFont();
-        const labelFormatter = makeLabelFormatter(axis);
-        const rect = textContain.getBoundingRect(
-            labelFormatter({ value: tickValue }), font, 'center', 'top'
-        );
-
-        // correct labels margin in the other side.
-        const labelMarginCorrected = interleaved && index % 2 ? labelMargin + rect.height : labelMargin;
-
-        const textEl = new graphic.Text({
-            x: tickCoord,
-            y: opt.labelOffset + opt.labelDirection * labelMarginCorrected,
-            rotation: labelLayout.rotation,
-            silent: silent,
-            z2: 10 + (labelItem.level || 0),
-            style: createTextStyle(itemLabelModel, {
-                text: formattedLabel,
-                align: itemLabelModel.getShallow('align', true)
-                    || labelLayout.textAlign,
-                verticalAlign: itemLabelModel.getShallow('verticalAlign', true)
-                    || itemLabelModel.getShallow('baseline', true)
-                    || labelLayout.textVerticalAlign,
-                fill: typeof textColor === 'function'
-                    ? textColor(
+        const textElStyle = createTextStyle(itemLabelModel, {
+            text: formattedLabel,
+            align: itemLabelModel.getShallow('align', true)
+                || labelLayout.textAlign,
+            verticalAlign: itemLabelModel.getShallow('verticalAlign', true)
+                || itemLabelModel.getShallow('baseline', true)
+                || labelLayout.textVerticalAlign,
+            fill: typeof textColor === 'function'
+                ? textColor(
                         // (1) In category axis with data zoom, tick is not the original
                         // index of axis.data. So tick should not be exposed to user
                         // in category axis.
@@ -812,15 +797,35 @@ function buildAxisLabel(
                         // input. But in interval scale the formatted label is like '223,445', which
                         // maked user repalce ','. So we modify it to return original val but remain
                         // it as 'string' to avoid error in replacing.
-                        axis.type === 'category'
-                            ? rawLabel
-                            : axis.type === 'value'
+                    axis.type === 'category'
+                        ? rawLabel
+                        : axis.type === 'value'
                             ? tickValue + ''
                             : tickValue,
-                        index
-                    )
-                    : textColor as string
-            })
+                    index
+                )
+                : textColor as string
+        });
+
+        const textElForGettingRect = new graphic.Text({
+            rotation: labelLayout.rotation,
+            silent: silent,
+            z2: 10 + (labelItem.level || 0),
+            style: textElStyle
+        });
+
+        const textRect = textElForGettingRect.getBoundingRect();
+
+        // correct labels margin in the other side.
+        const labelMarginCorrected = interleaved && index % 2 ? labelMargin + textRect.height : labelMargin;
+
+        const textEl = new graphic.Text({
+            x: tickCoord,
+            y: opt.labelOffset + opt.labelDirection * labelMarginCorrected,
+            rotation: labelLayout.rotation,
+            silent: silent,
+            z2: 10 + (labelItem.level || 0),
+            style: textElStyle
         });
         textEl.anid = 'label_' + tickValue;
 
