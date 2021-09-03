@@ -6,7 +6,7 @@ permissions:
 
 on:
   schedule:
-    - cron: '40 * * * *'
+    - cron: '50 * * * *'
 
 jobs:
   stale:
