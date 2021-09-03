@@ -115,7 +115,7 @@ function adjustScaleForOverflow(
     // Get bars on current base axis and calculate min and max overflow
     const barsOnCurrentAxis = retrieveColumnLayout(barWidthAndOffset, model.axis);
     if (barsOnCurrentAxis === undefined) {
-        return { min: min, max: max };
+        return {min: min, max: max};
     }
 
     let minOverflow = Infinity;
@@ -138,7 +138,7 @@ function adjustScaleForOverflow(
     max += overflowBuffer * (maxOverflow / totalOverFlow);
     min -= overflowBuffer * (minOverflow / totalOverFlow);
 
-    return { min: min, max: max };
+    return {min: min, max: max};
 }
 
 // Precondition of calling this method:

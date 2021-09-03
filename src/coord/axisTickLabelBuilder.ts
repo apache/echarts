@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
-import { makeInner } from '../util/model';
+import {makeInner} from '../util/model';
 import { ComponentOption, Dictionary } from '../util/types';
 import {
     makeLabelFormatter,

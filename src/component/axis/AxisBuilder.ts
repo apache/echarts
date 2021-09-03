@@ -19,14 +19,14 @@
 
 import {retrieve, defaults, extend, each, isObject, map} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import { getECData } from '../../util/innerStore';
-import { createTextStyle } from '../../label/labelStyle';
+import {getECData} from '../../util/innerStore';
+import {createTextStyle} from '../../label/labelStyle';
 import Model from '../../model/Model';
-import { isRadianAroundZero, remRadian } from '../../util/number';
-import { createSymbol, normalizeSymbolOffset } from '../../util/symbol';
+import {isRadianAroundZero, remRadian} from '../../util/number';
+import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
 import * as matrixUtil from 'zrender/src/core/matrix';
-import { applyTransform as v2ApplyTransform } from 'zrender/src/core/vector';
-import { shouldShowAllLabels } from '../../coord/axisHelper';
+import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
+import {shouldShowAllLabels} from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { makeLabelFormatter } from '../../coord/axisHelper';
 import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString, ComponentOption, Dictionary } from '../../util/types';
@@ -48,8 +48,8 @@ type AxisEventData = {
     name?: string
     value?: string | number
 } & {
-        [key in AxisIndexKey]?: number
-    };
+    [key in AxisIndexKey]?: number
+};
 
 type AxisLabelText = graphic.Text & {
     __fullText: string
@@ -383,8 +383,8 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             nameLocation === 'start'
                 ? extent[0] - gapSignal * gap
                 : nameLocation === 'end'
-                    ? extent[1] + gapSignal * gap
-                    : (extent[0] + extent[1]) / 2, // 'middle'
+                ? extent[1] + gapSignal * gap
+                : (extent[0] + extent[1]) / 2, // 'middle'
             // Reuse labelOffset.
             isNameLocationCenter(nameLocation) ? opt.labelOffset + nameDirection * gap : 0
         ];
