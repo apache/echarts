@@ -1,0 +1,37 @@
+name: Publish Nightly Next
+
+on:
+  schedule:
+    - cron: '0 9 * * *' # After zrender nightly published
+  # committers can manually trigger with workflow_dispatch
+  workflow_dispatch: {}
+  repository_dispatch:
+    types: publish-nightly-next
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: next
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          registry-url: https://registry.npmjs.org/
+      - name: Setup and publish nightly
+        run: |
+          npm ci
+          npm run release
+          npm run test
+          npm run test:dts
+          node build/prepareNightly.js --next
+          npm publish --tag next
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
