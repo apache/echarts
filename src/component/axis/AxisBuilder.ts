@@ -17,8 +17,7 @@
 * under the License.
 */
 
-import { retrieve, defaults, extend, each, isObject, map } from 'zrender/src/core/util';
-import * as textContain from 'zrender/src/contain/text';
+import {retrieve, defaults, extend, each, isObject, map} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { getECData } from '../../util/innerStore';
 import { createTextStyle } from '../../label/labelStyle';
