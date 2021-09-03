@@ -806,26 +806,19 @@ function buildAxisLabel(
                 : textColor as string
         });
 
-        const textElForGettingRect = new graphic.Text({
+        const textEl = new graphic.Text({
             rotation: labelLayout.rotation,
             silent: silent,
             z2: 10 + (labelItem.level || 0),
             style: textElStyle
         });
 
-        const textRect = textElForGettingRect.getBoundingRect();
-
+        const textRect = textEl.getBoundingRect();
         // correct labels margin in the other side.
         const labelMarginCorrected = interleaved && index % 2 ? labelMargin + textRect.height : labelMargin;
-
-        const textEl = new graphic.Text({
-            x: tickCoord,
-            y: opt.labelOffset + opt.labelDirection * labelMarginCorrected,
-            rotation: labelLayout.rotation,
-            silent: silent,
-            z2: 10 + (labelItem.level || 0),
-            style: textElStyle
-        });
+        // setting x, y, animation id for labels
+        textEl.x = tickCoord;
+        textEl.y = opt.labelOffset + opt.labelDirection * labelMarginCorrected;
         textEl.anid = 'label_' + tickValue;
 
 
