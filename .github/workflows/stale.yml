@@ -6,7 +6,7 @@ permissions:
 
 on:
   schedule:
-    - cron: '50 * * * *'
+    - cron: '10 * * * *'
 
 jobs:
   stale:
@@ -23,8 +23,6 @@ jobs:
           close-issue-message: 'This issue has been automatically closed because it has not had recent activity. If this remains to be a problem with the latest version of Apache ECharts, please open a new issue and link this to it. Thanks!'
           stale-pr-message: 'This PR has been automatically marked as stale because it has not had recent activity. It will be closed in 7 days if no further activity occurs. If you wish not to mark it as stale, please leave a comment in this PR. We are sorry for this but 2 years is a long time and the code base has been changed a lot. Thanks for your contribution anyway.'
           close-pr-message: 'This PR has been automatically closed because it has not had recent activity. Sorry for that and we are looking forward to your next contribution.'
-          exempt-issue-labels:
-            - 'FAQ'
-            - 'priority: high'
+          exempt-issue-labels: 'FAQ,priority: high'
           operations-per-run: 50
           ascending: true
