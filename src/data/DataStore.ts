@@ -18,6 +18,7 @@
 */
 
 import { assert, clone, createHashMap, isFunction, keys, map, reduce } from 'zrender/src/core/util';
+import { parseDate } from '../util/number';
 import {
     DimensionIndex,
     DimensionName,
@@ -408,9 +409,13 @@ class DataStore {
                 for (let dimIdx = 0; dimIdx < dimLen; dimIdx++) {
                     const dimStorage = chunks[dimIdx];
                     // PENDING NULL is empty or zero
-                    const val = this._dimValueGetter(
+                    let val = this._dimValueGetter(
                         dataItem, dimNames[dimIdx], idx, dimIdx
                     ) as ParsedValueNumeric;
+
+                    if (this._dimensions[dimIdx].type === 'time') {
+                        val = parseDate(val).getTime();
+                    }
                     (dimStorage as ParsedValue[])[idx] = val;
 
                     const dimRawExtent = rawExtent[dimIdx];
