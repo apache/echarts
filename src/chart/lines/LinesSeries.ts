@@ -33,7 +33,8 @@ import {
     LineStyleOption,
     OptionDataValue,
     StatesOptionMixin,
-    SeriesLineLabelOption
+    SeriesLineLabelOption,
+    DimensionDefinitionLoose
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import type { LineDrawModelOption } from '../helper/LineDraw';
@@ -98,6 +99,10 @@ export interface LinesDataItemOption extends LinesStateOption, StatesOptionMixin
     coords?: LinesCoords
 
     value?: LinesValue
+
+    effect?: LineDrawModelOption['effect']
+
+    dimensions?: DimensionDefinitionLoose
 }
 
 export interface LinesSeriesOption extends SeriesOption<LinesStateOption>, LinesStateOption,

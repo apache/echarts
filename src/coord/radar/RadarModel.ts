@@ -42,6 +42,7 @@ function defaultsShow(opt: object, show: boolean) {
 }
 
 export interface RadarIndicatorOption {
+    name?: string
     text?: string
     min?: number
     max?: number

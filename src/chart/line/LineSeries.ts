@@ -115,7 +115,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     showSymbol?: boolean
     // false | 'auto': follow the label interval strategy.
     // true: show all symbols.
-    showAllSymbol?: 'auto'
+    showAllSymbol?: 'auto' | boolean
 
     data?: (LineDataValue | LineDataItemOption)[]
 }
