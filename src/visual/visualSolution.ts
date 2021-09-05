@@ -28,9 +28,10 @@ import {
     BuiltinVisualProperty,
     ParsedValue,
     DimensionLoose,
-    StageHandlerProgressExecutor
+    StageHandlerProgressExecutor,
+    DimensionIndex
 } from '../util/types';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import { getItemVisualFromData, setItemVisualFromData } from './helper';
 
 const each = zrUtil.each;
@@ -135,7 +136,7 @@ export function replaceVisualOption<T extends string>(
 export function applyVisual<VisualState extends string, Scope>(
     stateList: readonly VisualState[],
     visualMappings: VisualMappingCollection<VisualState>,
-    data: List,
+    data: SeriesData,
     getValueState: (this: Scope, valueOrIndex: ParsedValue | number) => VisualState,
     scope?: Scope,
     dimension?: DimensionLoose
@@ -209,9 +210,9 @@ export function incrementalApplyVisual<VisualState extends string>(
 
     return {
         progress: function progress(params, data) {
-            let dimName: string;
+            let dimIndex: DimensionIndex;
             if (dim != null) {
-                dimName = data.getDimension(dim);
+                dimIndex = data.getDimensionIndex(dim);
             }
 
             function getVisual(key: string) {
@@ -223,6 +224,7 @@ export function incrementalApplyVisual<VisualState extends string>(
             }
 
             let dataIndex: number;
+            const store = data.getStore();
             while ((dataIndex = params.next()) != null) {
                 const rawDataItem = data.getRawDataItem(dataIndex);
 
@@ -233,7 +235,7 @@ export function incrementalApplyVisual<VisualState extends string>(
                 }
 
                 const value = dim != null
-                    ? data.get(dimName, dataIndex)
+                    ? store.get(dimIndex, dataIndex)
                     : dataIndex;
 
                 const valueState = getValueState(value);

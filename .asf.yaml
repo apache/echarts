@@ -28,3 +28,36 @@ github:
     - data-viz
     - canvas
     - svg
+  protected_branches:
+    master:
+      required_status_checks:
+        # strict means "Require branches to be up to date before merging".
+        strict: false
+        # contexts are the names of checks that must pass
+        # contexts:
+        #   - gh-infra/jenkins
+      required_pull_request_reviews:
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: false
+        required_approving_review_count: 1
+      required_linear_history: false
+      required_signatures: false
+    release:
+      required_status_checks:
+        strict: false
+      required_pull_request_reviews:
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: false
+        required_approving_review_count: 1
+      required_linear_history: false
+      required_signatures: false
+    next:
+      required_status_checks:
+        strict: false
+      required_pull_request_reviews:
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: false
+        required_approving_review_count: 1
+      required_linear_history: false
+      required_signatures: false
+

@@ -126,7 +126,7 @@ export function applyMorphAnimation(
     }
 
     const updateAnimationCfg = getAnimationConfig('update', seriesModel, dataIndex);
-    if (!(updateAnimationCfg.duration > 0)) {
+    if (!(updateAnimationCfg && updateAnimationCfg.duration > 0)) {
         return;
     }
     const animationDelay = (seriesModel.getModel('universalTransition') as Model<UniversalTransitionOption>)

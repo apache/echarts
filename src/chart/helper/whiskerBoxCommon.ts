@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from './createSeriesDataSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
@@ -25,7 +25,7 @@ import type { SeriesOption, SeriesOnCartesianOptionMixin, LayoutOrient } from '.
 import type GlobalModel from '../../model/Global';
 import type SeriesModel from '../../model/Series';
 import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
-import type List from '../../data/List';
+import type SeriesData from '../../data/SeriesData';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordDimensionDefinition } from '../../data/helper/createDimensions';
 
@@ -55,7 +55,7 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
     /**
      * @override
      */
-    getInitialData(option: Opts, ecModel: GlobalModel): List {
+    getInitialData(option: Opts, ecModel: GlobalModel): SeriesData {
         // When both types of xAxis and yAxis are 'value', layout is
         // needed to be specified by user. Otherwise, layout can be
         // judged by which axis is category.
@@ -135,7 +135,7 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
             dimsDef: defaultValueDimensions.slice()
         }];
 
-        return createListSimply(
+        return createSeriesDataSimply(
             this,
             {
                 coordDimensions: coordDimensions,

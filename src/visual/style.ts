@@ -18,7 +18,7 @@
 */
 
 import { isFunction, extend, createHashMap } from 'zrender/src/core/util';
-import { StageHandler, CallbackDataParams, ZRColor, Dictionary, InnerDecalObject, SeriesOption }
+import { StageHandler, CallbackDataParams, ZRColor, Dictionary, InnerDecalObject }
     from '../util/types';
 import makeStyleMapper from '../model/mixin/makeStyleMapper';
 import { ITEM_STYLE_KEY_MAP } from '../model/mixin/itemStyle';

@@ -23,7 +23,7 @@ import {getSymbolSize, getNodeGlobalScale} from './graphHelper';
 import GraphSeriesModel, { GraphEdgeItemOption, GraphNodeItemOption } from './GraphSeries';
 import Graph, { GraphNode } from '../../data/Graph';
 import Symbol from '../helper/Symbol';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import * as zrUtil from 'zrender/src/core/util';
 import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
 
@@ -119,7 +119,7 @@ interface LayoutNode {
     (
         seriesModel: GraphSeriesModel,
         graph: Graph,
-        nodeData: List,
+        nodeData: SeriesData,
         r: number,
         cx: number,
         cy: number,

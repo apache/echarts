@@ -30,17 +30,15 @@ import {
     ColorString,
     ZRStyleProps,
     AnimationOptionMixin,
-    InterpolatableValue,
-    SeriesDataType
+    InterpolatableValue
 } from '../util/types';
 import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 import { deprecateReplaceLog } from '../util/log';
 import { makeInner, interpolateRawValues } from '../util/model';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import { initProps, updateProps } from '../util/graphic';
-import { getECData } from '../util/innerStore';
 
 type TextCommonParams = {
     /**
@@ -688,7 +686,7 @@ export function setLabelValueAnimation(
 export function animateLabelValue(
     textEl: ZRText,
     dataIndex: number,
-    data: List,
+    data: SeriesData,
     animatableModel: Model<AnimationOptionMixin>,
     labelFetcher: SetLabelStyleOpt<number>['labelFetcher']
 ) {

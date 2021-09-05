@@ -139,10 +139,10 @@ type ModelFinder = modelUtil.ModelFinder;
 
 const hasWindow = typeof window !== 'undefined';
 
-export const version = '5.1.2';
+export const version = '5.2.0';
 
 export const dependencies = {
-    zrender: '5.1.1'
+    zrender: '5.2.0'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
@@ -322,6 +322,14 @@ type ECEventDefinition = {
     // TODO: Use ECActionEvent
     [key: string]: (...args: unknown[]) => void | boolean
 };
+type EChartsInitOpts = {
+    locale?: string | LocaleOption,
+    renderer?: RendererType,
+    devicePixelRatio?: number,
+    useDirtyRect?: boolean,
+    width?: number,
+    height?: number
+};
 class ECharts extends Eventful<ECEventDefinition> {
 
     /**
@@ -387,14 +395,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         dom: HTMLElement,
         // Theme name or themeOption.
         theme?: string | ThemeOption,
-        opts?: {
-            locale?: string | LocaleOption,
-            renderer?: RendererType,
-            devicePixelRatio?: number,
-            useDirtyRect?: boolean,
-            width?: number,
-            height?: number
-        }
+        opts?: EChartsInitOpts
     ) {
         super(new ECEventProcessor());
 
@@ -1006,7 +1007,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 else {
                     el && findEventDispatcher(el, (parent) => {
                         const ecData = getECData(parent);
-                        if (ecData && ecData.dataIndex != null) {
+                        if (ecData && (ecData.dataIndex != null || ecData.seriesIndex != null)) {
                             const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
                             params = (
                                 dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {}
@@ -2537,17 +2538,13 @@ const DOM_ATTRIBUTE_KEY = '_echarts_instance_';
  *        Can be 'auto' (the same as null/undefined)
  * @param opts.height Use clientHeight of the input `dom` by default.
  *        Can be 'auto' (the same as null/undefined)
+ * @param opts.locale Specify the locale.
+ * @param opts.useDirtyRect Enable dirty rectangle rendering or not.
  */
 export function init(
     dom: HTMLElement,
     theme?: string | object,
-    opts?: {
-        renderer?: RendererType,
-        devicePixelRatio?: number,
-        width?: number,
-        height?: number,
-        locale?: string | LocaleOption
-    }
+    opts?: EChartsInitOpts
 ): EChartsType {
     if (__DEV__) {
         if (!dom) {

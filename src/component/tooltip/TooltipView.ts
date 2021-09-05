@@ -905,7 +905,7 @@ class TooltipView extends ComponentView {
         // Specify tooltip position by string 'top' 'bottom' 'left' 'right' around graphic element
         else if (zrUtil.isString(positionExpr) && el) {
             const pos = calcTooltipPosition(
-                positionExpr, rect, contentSize, tooltipModel.get('borderWidth'),
+                positionExpr, rect, contentSize, tooltipModel.get('borderWidth')
             );
             x = pos[0];
             y = pos[1];
@@ -1067,9 +1067,9 @@ function refixTooltipPosition(
     viewWidth: number, viewHeight: number,
     gapH: number, gapV: number
 ) {
-    const size = content.getOuterSize();
-    const width = size.width;
-    const height = size.height;
+    const size = content.getSize();
+    const width = size[0];
+    const height = size[1];
 
     if (gapH != null) {
         // Add extra 2 pixels for this case:
@@ -1100,9 +1100,9 @@ function confineTooltipPosition(
     viewWidth: number,
     viewHeight: number
 ): [number, number] {
-    const size = content.getOuterSize();
-    const width = size.width;
-    const height = size.height;
+    const size = content.getSize();
+    const width = size[0];
+    const height = size[1];
 
     x = Math.min(x + width, viewWidth) - width;
     y = Math.min(y + height, viewHeight) - height;
@@ -1120,7 +1120,7 @@ function calcTooltipPosition(
 ): [number, number] {
     const domWidth = contentSize[0];
     const domHeight = contentSize[1];
-    const offset = Math.max(Math.ceil(Math.sqrt(2 * borderWidth * borderWidth)), 5);
+    const offset = Math.ceil(Math.SQRT2 * borderWidth) + 8;
     let x = 0;
     let y = 0;
     const rectWidth = rect.width;

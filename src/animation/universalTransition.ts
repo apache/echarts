@@ -27,7 +27,7 @@ import Path from 'zrender/src/graphic/Path';
 import { EChartsExtensionInstallRegisters } from '../extension';
 import { initProps } from '../util/graphic';
 import DataDiffer from '../data/DataDiffer';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import { Dictionary, DimensionLoose, OptionDataItemObject, UniversalTransitionOption } from '../util/types';
 import {
     UpdateLifecycleParams,
@@ -43,22 +43,22 @@ import Displayable from 'zrender/src/graphic/Displayable';
 
 const DATA_COUNT_THRESHOLD = 1e4;
 
-interface GlobalStore { oldSeries: SeriesModel[], oldData: List[] };
+interface GlobalStore { oldSeries: SeriesModel[], oldData: SeriesData[] };
 const getUniversalTransitionGlobalStore = makeInner<GlobalStore, ExtensionAPI>();
 
 interface DiffItem {
-    data: List
+    data: SeriesData
     dim: DimensionLoose
     divide: UniversalTransitionOption['divideShape']
     dataIndex: number
 }
 interface TransitionSeries {
-    data: List
+    data: SeriesData
     divide: UniversalTransitionOption['divideShape']
     dim?: DimensionLoose
 }
 
-function getGroupIdDimension(data: List) {
+function getGroupIdDimension(data: SeriesData) {
     const dimensions = data.dimensions;
     for (let i = 0; i < dimensions.length; i++) {
         const dimInfo = data.getDimensionInfo(dimensions[i]);
@@ -129,7 +129,7 @@ function stopAnimation(el: Element) {
 }
 function animateElementStyles(el: Element, dataIndex: number, seriesModel: SeriesModel) {
     const animationConfig = getAnimationConfig('update', seriesModel, dataIndex);
-    el.traverse(child => {
+    animationConfig && el.traverse(child => {
         if (child instanceof Displayable) {
             const oldStyle = getOldStyle(child);
             if (oldStyle) {
@@ -412,7 +412,7 @@ function transitionBetween(
             const seriesModel = data.hostModel as SeriesModel;
             const view = seriesModel && api.getViewOfSeriesModel(seriesModel as SeriesModel);
             const animationCfg = getAnimationConfig('update', seriesModel, 0);  // use 0 index.
-            if (view && seriesModel.isAnimationEnabled() && animationCfg.duration > 0) {
+            if (view && seriesModel.isAnimationEnabled() && animationCfg && animationCfg.duration > 0) {
                 view.group.traverse(el => {
                     if (el instanceof Path && !el.animators.length) {
                         // We can't accept there still exists element that has no animation
@@ -452,7 +452,7 @@ interface SeriesTransitionBatch {
     newSeries: TransitionSeries[]
 }
 
-function getDivideShapeFromData(data: List) {
+function getDivideShapeFromData(data: SeriesData) {
     if (data.hostModel) {
         return ((data.hostModel as SeriesModel)
             .getModel('universalTransition') as Model<UniversalTransitionOption>)
@@ -466,12 +466,12 @@ function findTransitionSeriesBatches(
 ) {
     const updateBatches = createHashMap<SeriesTransitionBatch>();
 
-    const oldDataMap = createHashMap<List>();
+    const oldDataMap = createHashMap<SeriesData>();
     // Map that only store key in array seriesKey.
     // Which is used to query the old data when transition from one to multiple series.
     const oldDataMapForSplit = createHashMap<{
         key: string,
-        data: List
+        data: SeriesData
     }>();
 
     each(globalStore.oldSeries, (series, idx) => {
@@ -667,7 +667,7 @@ export function installUniversalTransition(registers: EChartsExtensionInstallReg
         // Save all series of current update. Not only the updated one.
         const allSeries = ecModel.getSeries();
         const savedSeries: SeriesModel[] = globalStore.oldSeries = [];
-        const savedData: List[] = globalStore.oldData = [];
+        const savedData: SeriesData[] = globalStore.oldData = [];
         for (let i = 0; i < allSeries.length; i++) {
             const data = allSeries[i].getData();
             // Only save the data that can have transition.

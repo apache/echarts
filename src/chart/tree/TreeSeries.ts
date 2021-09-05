@@ -33,7 +33,7 @@ import {
     CallbackDataParams,
     DefaultEmphasisFocus
 } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import View from '../../coord/View';
 import { LayoutRect } from '../../util/layout';
 import Model from '../../model/Model';
@@ -141,10 +141,8 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 
     /**
      * Init a tree data structure from data in option series
-     * @param  option  the object used to config echarts view
-     * @return storage initial data
      */
-    getInitialData(option: TreeSeriesOption): List {
+    getInitialData(option: TreeSeriesOption): SeriesData {
 
         //create an virtual root
         const root: TreeSeriesNodeItemOption = {
@@ -157,7 +155,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 
         const tree = Tree.createTree(root, this, beforeLink);
 
-        function beforeLink(nodeData: List) {
+        function beforeLink(nodeData: SeriesData) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 const node = tree.getNodeByDataIndex(idx);
                 if (!(node && node.children.length && node.isExpand)) {

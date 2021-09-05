@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import { getPercentWithPrecision } from '../../util/number';
@@ -38,7 +38,7 @@ import {
     SeriesLabelOption,
     DefaultEmphasisFocus
 } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
 interface PieItemStyleOption extends ItemStyleOption {
     // can be 10
@@ -154,8 +154,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
     /**
      * @overwrite
      */
-    getInitialData(this: PieSeriesModel): List {
-        return createListSimply(this, {
+    getInitialData(this: PieSeriesModel): SeriesData {
+        return createSeriesDataSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });

@@ -36,7 +36,7 @@ import {
     DefaultEmphasisFocus
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { LayoutRect } from '../../util/layout';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
@@ -148,9 +148,6 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
     /**
      * Init a graph data structure from data in option series
-     *
-     * @param  {Object} option  the object used to config echarts view
-     * @return {module:echarts/data/List} storage initial data
      */
     getInitialData(option: SankeySeriesOption, ecModel: GlobalModel) {
         const links = option.edges || option.links;
@@ -173,7 +170,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             const graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
             return graph.data;
         }
-        function beforeLink(nodeData: List, edgeData: List) {
+        function beforeLink(nodeData: SeriesData, edgeData: SeriesData) {
             nodeData.wrapMethod('getItemModel', function (model: Model, idx: number) {
                 const seriesModel = model.parentModel as SankeySeriesModel;
                 const layout = seriesModel.getData().getItemLayout(idx);

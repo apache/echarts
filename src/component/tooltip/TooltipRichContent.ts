@@ -205,14 +205,6 @@ class TooltipRichContent {
         return this._show;
     }
 
-    getOuterSize() {
-        const size = this.getSize();
-        return {
-            width: size[0],
-            height: size[1]
-        };
-    }
-
     dispose() {
         this._zr.remove(this.el);
     }

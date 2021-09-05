@@ -19,7 +19,7 @@
 
 import * as graphic from '../../util/graphic';
 import LineGroup from './Line';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import {
     StageHandlerProgressParams,
     LineStyleOption,
@@ -36,13 +36,13 @@ import Model from '../../model/Model';
 import { getLabelStatesModels } from '../../label/labelStyle';
 
 interface LineLike extends graphic.Group {
-    updateData(data: List, idx: number, scope?: LineDrawSeriesScope): void
-    updateLayout(data: List, idx: number): void
+    updateData(data: SeriesData, idx: number, scope?: LineDrawSeriesScope): void
+    updateLayout(data: SeriesData, idx: number): void
     fadeOut?(cb: () => void): void
 }
 
 interface LineLikeCtor {
-    new(data: List, idx: number, scope?: LineDrawSeriesScope): LineLike
+    new(data: SeriesData, idx: number, scope?: LineDrawSeriesScope): LineLike
 }
 
 interface LineDrawStateOption {
@@ -76,7 +76,7 @@ export interface LineDrawModelOption extends LineDrawStateOption, StatesOptionMi
     }
 }
 
-type ListForLineDraw = List<Model<LineDrawModelOption & AnimationOptionMixin>>;
+type ListForLineDraw = SeriesData<Model<LineDrawModelOption & AnimationOptionMixin>>;
 
 export interface LineDrawSeriesScope {
     lineStyle?: ZRStyleProps

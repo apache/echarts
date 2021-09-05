@@ -51,7 +51,7 @@ import prepareGeo from '../../coord/geo/prepareCustom';
 import prepareSingleAxis from '../../coord/single/prepareCustom';
 import preparePolar from '../../coord/polar/prepareCustom';
 import prepareCalendar from '../../coord/calendar/prepareCustom';
-import List, { DefaultDataVisual } from '../../data/List';
+import SeriesData, { DefaultDataVisual } from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
@@ -199,7 +199,7 @@ export default class CustomChartView extends ChartView {
     static type = 'custom';
     readonly type = CustomChartView.type;
 
-    private _data: List;
+    private _data: SeriesData;
 
     render(
         customSeries: CustomSeriesModel,
@@ -822,7 +822,7 @@ function updateZForEachState(
 
 function makeRenderItem(
     customSeries: CustomSeriesModel,
-    data: List<CustomSeriesModel>,
+    data: SeriesData<CustomSeriesModel>,
     ecModel: GlobalModel,
     api: ExtensionAPI
 ) {
@@ -943,7 +943,7 @@ function makeRenderItem(
      */
     function value(dim?: DimensionLoose, dataIndexInside?: number): ParsedValue {
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
-        return data.get(data.getDimension(dim || 0), dataIndexInside);
+        return data.getStore().get(data.getDimensionIndex(dim || 0), dataIndexInside);
     }
 
     /**
@@ -953,9 +953,11 @@ function makeRenderItem(
      */
     function ordinalRawValue(dim?: DimensionLoose, dataIndexInside?: number): ParsedValue | OrdinalRawValue {
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
-        const dimInfo = data.getDimensionInfo(dim || 0);
+        dim = dim || 0;
+        const dimInfo = data.getDimensionInfo(dim);
         if (!dimInfo) {
-            return;
+            const dimIndex = data.getDimensionIndex(dim);
+            return dimIndex >= 0 ? data.getStore().get(dimIndex, dataIndexInside) : undefined;
         }
         const val = data.get(dimInfo.name, dataIndexInside);
         const ordinalMeta = dimInfo && dimInfo.ordinalMeta;
@@ -1129,14 +1131,14 @@ function makeRenderItem(
     }
 }
 
-function wrapEncodeDef(data: List<CustomSeriesModel>): WrapEncodeDefRet {
+function wrapEncodeDef(data: SeriesData<CustomSeriesModel>): WrapEncodeDefRet {
     const encodeDef = {} as WrapEncodeDefRet;
-    each(data.dimensions, function (dimName, dataDimIndex) {
+    each(data.dimensions, function (dimName) {
         const dimInfo = data.getDimensionInfo(dimName);
         if (!dimInfo.isExtraCoord) {
             const coordDim = dimInfo.coordDim;
             const dataDims = encodeDef[coordDim] = encodeDef[coordDim] || [];
-            dataDims[dimInfo.coordDimIndex] = dataDimIndex;
+            dataDims[dimInfo.coordDimIndex] = data.getDimensionIndex(dimName);
         }
     });
     return encodeDef;
@@ -1149,7 +1151,7 @@ function createOrUpdateItem(
     elOption: CustomElementOption,
     seriesModel: CustomSeriesModel,
     group: ViewRootGroup,
-    data: List<CustomSeriesModel>
+    data: SeriesData<CustomSeriesModel>
 ): Element {
     // [Rule]
     // If `renderItem` returns `null`/`undefined`/`false`, remove the previous el if existing.
