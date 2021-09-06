@@ -238,6 +238,7 @@ class BarView extends ChartView {
             .add(function (dataIndex) {
                 const itemModel = data.getItemModel<BarDataItemOption>(dataIndex);
                 const layout = getLayout[coord.type](data, dataIndex, itemModel);
+                // console.log('get', layout.clockwise);
 
                 if (drawBackground) {
                     createBackground(dataIndex);
@@ -746,18 +747,9 @@ const elementCreator: {
         seriesModel, data, newIndex, layout: SectorLayout, isRadial: boolean,
         animationModel, axisModel, isUpdate, roundCap
     ) {
-        // Keep the same logic with bar in catesion: use end value to control
-        // direction. Notice that if clockwise is true (by default), the sector
-        // will always draw clockwisely, no matter whether endAngle is greater
-        // or less than startAngle.
-        const clockwise = layout.startAngle <= layout.endAngle;
-
         const ShapeClass = (!isRadial && roundCap) ? Sausage : Sector;
-
         const sector = new ShapeClass({
-            shape: defaults({
-                clockwise: clockwise
-            }, layout),
+            shape: layout,
             z2: 1
         });
 
@@ -909,7 +901,8 @@ const getLayout: {
             r0: layout.r0,
             r: layout.r,
             startAngle: layout.startAngle,
-            endAngle: layout.endAngle
+            endAngle: layout.endAngle,
+            clockwise: layout.clockwise
         } as SectorLayout;
     }
 };
