@@ -70,7 +70,7 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
         const p2 = vec2.clone(edge.node2.getLayout());
         const points = [p1, p2];
         if (edge.node1 === edge.node2) {
-            const curve = getCurvenessForEdge(edge, seriesModel, index, true)
+            const curve = getCurvenessForEdge(edge, seriesModel, index, true);
             const curveness = curve >= 1 ? curve : 1 - curve;
             const symbolSize = seriesModel.get('symbolSize');
             const size = zrUtil.isArray(symbolSize) ? Number((symbolSize[0] + symbolSize[1]) / 2) : Number(symbolSize);
@@ -81,7 +81,7 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
             const outEdges = edge.node1.outEdges.filter((edge) => {
                 return edge.node1 !== edge.node2;
             });
-            const allNodes: GraphNode[] = []
+            const allNodes: GraphNode[] = [];
             inEdges.forEach((edge) => {
                 allNodes.push(edge.node1);
             });
@@ -94,11 +94,11 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
             let pt2: number[] = [];
             if (allNodes.length > 1) {
                 allNodes.forEach(node => {
-                    let v: any[] = [];
+                    const v: any[] = [];
                     vec2.sub(v, node.getLayout(), edge.node1.getLayout());
                     vec2.normalize(v, v);
                     vectors.push(v);
-                })
+                });
                 // find the max angle
                 for (let i = 0; i < vectors.length; i++) {
                     for (let j = i + 1; j < vectors.length; j++) {
@@ -113,12 +113,12 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
                 if (vec2.distSquare(pt1, pt2) > Math.sqrt(3)) {
                     vec2.scaleAndAdd(pt1, p1, pt1, radius);
                     vec2.scaleAndAdd(pt2, p2, pt2, radius);
-                    const point1 = cubicPosition(pt1, p1, 10 * radius)
-                    const point2 = cubicPosition(pt2, p2, 10 * radius)
+                    const point1 = cubicPosition(pt1, p1, 10 * radius);
+                    const point2 = cubicPosition(pt2, p2, 10 * radius);
                     const mid = [(point1[0] + point2[0]) / 2, (point1[1] + point2[1]) / 2];
                     vec2.sub(mid, mid, p1);
                     const degree = Math.atan2(mid[1], mid[0]) / Math.PI * 180;
-                    const v1 = [Math.cos((degree - 30) * Math.PI /180), Math.sin((degree - 30) * Math.PI / 180)];
+                    const v1 = [Math.cos((degree - 30) * Math.PI / 180), Math.sin((degree - 30) * Math.PI / 180)];
                     const v2 = [Math.cos((degree + 30) * Math.PI / 180), Math.sin((degree + 30) * Math.PI / 180)];
                     vec2.scaleAndAdd(v1, p1, v1, 10 * radius);
                     vec2.scaleAndAdd(v2, p2, v2, 10 * radius);
@@ -134,11 +134,11 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
             else {
                 points.push([
                     p1[0] - radius * 4,
-                    p2[1] - radius * 6,
+                    p2[1] - radius * 6
                 ]);
                 points.push([
                     p1[0] + radius * 4,
-                    p2[1] - radius * 6,
+                    p2[1] - radius * 6
                 ]);
             }
         }

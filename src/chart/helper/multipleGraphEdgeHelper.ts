@@ -210,33 +210,31 @@ export function getCurvenessForEdge(edge, seriesModel, index, needReverse?: bool
         const curveness = curvenessList.filter(num => num > 0);
         return curveness[edgeIndex];
     }
-    else {
-        if (!edgeArray.isForward) {
-            // the opposite edge show outside
-            const oppositeKey = getOppositeKey(curKey);
-            const len = getEdgeMapLengthWithKey(oppositeKey, seriesModel);
-            const resValue = curvenessList[edgeIndex + len + parityCorrection];
-            // isNeedReverse, simple, force type need reverse the curveness in the junction of the forword and the opposite
-            if (needReverse) {
-                // set as array may make the parity handle with the len of opposite
-                if (isArrayParam) {
-                    if (autoCurvenessParams && autoCurvenessParams[0] === 0) {
-                        return (len + parityCorrection) % 2 ? resValue : -resValue;
-                    }
-                    else {
-                        return ((len % 2 ? 0 : 1) + parityCorrection) % 2 ? resValue : -resValue;
-                    }
+    else if (!edgeArray.isForward) {
+        // the opposite edge show outside
+        const oppositeKey = getOppositeKey(curKey);
+        const len = getEdgeMapLengthWithKey(oppositeKey, seriesModel);
+        const resValue = curvenessList[edgeIndex + len + parityCorrection];
+        // isNeedReverse, simple, force type need reverse the curveness in the junction of the forword and the opposite
+        if (needReverse) {
+            // set as array may make the parity handle with the len of opposite
+            if (isArrayParam) {
+                if (autoCurvenessParams && autoCurvenessParams[0] === 0) {
+                    return (len + parityCorrection) % 2 ? resValue : -resValue;
                 }
                 else {
-                    return (len + parityCorrection) % 2 ? resValue : -resValue;
+                    return ((len % 2 ? 0 : 1) + parityCorrection) % 2 ? resValue : -resValue;
                 }
             }
             else {
-                return curvenessList[edgeIndex + len + parityCorrection];
+                return (len + parityCorrection) % 2 ? resValue : -resValue;
             }
         }
         else {
-            return curvenessList[parityCorrection + edgeIndex];
+            return curvenessList[edgeIndex + len + parityCorrection];
         }
+    }
+    else {
+        return curvenessList[parityCorrection + edgeIndex];
     }
 }
