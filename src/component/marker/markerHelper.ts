@@ -26,6 +26,8 @@ import { indexOf, curry, clone, isArray } from 'zrender/src/core/util';
 import Axis from '../../coord/Axis';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import { ScaleDataValue, ParsedValue, DimensionLoose, DimensionName } from '../../util/types';
+import { parseDataValue } from '../../data/helper/dataValueHelper';
+import SeriesDimensionDefine from '../../data/SeriesDimensionDefine';
 
 interface MarkerAxisInfo {
     valueDataDim: DimensionName
@@ -33,6 +35,13 @@ interface MarkerAxisInfo {
     baseAxis: Axis
     baseDataDim: DimensionName
 }
+
+export type MarkerDimValueGetter<TMarkerItemOption> = (
+    item: TMarkerItemOption,
+    dimName: string,
+    dataIndex: number,
+    dimIndex: number
+) => ParsedValue;
 
 function hasXOrY(item: MarkerPositionOption) {
     return !(isNaN(parseFloat(item.x as string)) && isNaN(parseFloat(item.y as string)));
@@ -187,17 +196,21 @@ export function dataFilter(
         ? coordSys.containData(item.coord) : true;
 }
 
-export function dimValueGetter(
-    item: MarkerPositionOption,
-    dimName: string,
-    dataIndex: number,
-    dimIndex: number
-) {
-    // x, y, radius, angle
-    if (dimIndex < 2) {
-        return item.coord && item.coord[dimIndex] as ParsedValue;
-    }
-    return item.value;
+export function createMarkerDimValueGetter(
+    inCoordSys: boolean,
+    dims: SeriesDimensionDefine[]
+): MarkerDimValueGetter<MarkerPositionOption> {
+    return inCoordSys
+        ? function (item, dimName, dataIndex, dimIndex) {
+            const rawVal = dimIndex < 2
+                // x, y, radius, angle
+                ? (item.coord && item.coord[dimIndex])
+                : item.value;
+            return parseDataValue(rawVal, dims[dimIndex]);
+        }
+        : function (item, dimName, dataIndex, dimIndex) {
+            return parseDataValue(item.value, dims[dimIndex]);
+        };
 }
 
 export function numCalculate(
