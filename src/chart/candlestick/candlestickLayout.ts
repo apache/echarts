@@ -22,11 +22,12 @@
 import {subPixelOptimize} from '../../util/graphic';
 import createRenderPlanner from '../helper/createRenderPlanner';
 import {parsePercent} from '../../util/number';
-import {retrieve2} from 'zrender/src/core/util';
-import { StageHandler, StageHandlerProgressParams } from '../../util/types';
+import {map, retrieve2} from 'zrender/src/core/util';
+import { DimensionIndex, StageHandler, StageHandlerProgressParams } from '../../util/types';
 import CandlestickSeriesModel from './CandlestickSeries';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { RectLike } from 'zrender/src/core/BoundingRect';
+import DataStore from '../../data/DataStore';
 
 const LargeArr = typeof Float32Array !== 'undefined' ? Float32Array : Array;
 
@@ -56,12 +57,12 @@ const candlestickLayout: StageHandler = {
         const cDimIdx = 0;
         const vDimIdx = 1;
         const coordDims = ['x', 'y'];
-        const cDim = data.mapDimension(coordDims[cDimIdx]);
-        const vDims = data.mapDimensionsAll(coordDims[vDimIdx]);
-        const openDim = vDims[0];
-        const closeDim = vDims[1];
-        const lowestDim = vDims[2];
-        const highestDim = vDims[3];
+        const cDimI = data.getDimensionIndex(data.mapDimension(coordDims[cDimIdx]));
+        const vDimsI = map(data.mapDimensionsAll(coordDims[vDimIdx]), data.getDimensionIndex, data);
+        const openDimI = vDimsI[0];
+        const closeDimI = vDimsI[1];
+        const lowestDimI = vDimsI[2];
+        const highestDimI = vDimsI[3];
 
         data.setLayout({
             candleWidth: candleWidth,
@@ -69,7 +70,7 @@ const candlestickLayout: StageHandler = {
             isSimpleBox: candleWidth <= 1.3
         } as CandlestickLayoutMeta);
 
-        if (cDim == null || vDims.length < 4) {
+        if (cDimI < 0 || vDimsI.length < 4) {
             return;
         }
 
@@ -78,15 +79,16 @@ const candlestickLayout: StageHandler = {
                 ? largeProgress : normalProgress
         };
 
-        function normalProgress(params: StageHandlerProgressParams, data: List) {
+        function normalProgress(params: StageHandlerProgressParams, data: SeriesData) {
             let dataIndex;
+            const store = data.getStore();
             while ((dataIndex = params.next()) != null) {
 
-                const axisDimVal = data.get(cDim, dataIndex) as number;
-                const openVal = data.get(openDim, dataIndex) as number;
-                const closeVal = data.get(closeDim, dataIndex) as number;
-                const lowestVal = data.get(lowestDim, dataIndex) as number;
-                const highestVal = data.get(highestDim, dataIndex) as number;
+                const axisDimVal = store.get(cDimI, dataIndex) as number;
+                const openVal = store.get(openDimI, dataIndex) as number;
+                const closeVal = store.get(closeDimI, dataIndex) as number;
+                const lowestVal = store.get(lowestDimI, dataIndex) as number;
+                const highestVal = store.get(highestDimI, dataIndex) as number;
 
                 const ocLow = Math.min(openVal, closeVal);
                 const ocHigh = Math.max(openVal, closeVal);
@@ -108,7 +110,7 @@ const candlestickLayout: StageHandler = {
                 );
 
                 data.setItemLayout(dataIndex, {
-                    sign: getSign(data, dataIndex, openVal, closeVal, closeDim),
+                    sign: getSign(store, dataIndex, openVal, closeVal, closeDimI),
                     initBaseline: openVal > closeVal
                         ? ocHighPoint[vDimIdx] : ocLowPoint[vDimIdx], // open point.
                     ends: ends,
@@ -162,7 +164,7 @@ const candlestickLayout: StageHandler = {
             }
         }
 
-        function largeProgress(params: StageHandlerProgressParams, data: List) {
+        function largeProgress(params: StageHandlerProgressParams, data: SeriesData) {
             // Structure: [sign, x, yhigh, ylow, sign, x, yhigh, ylow, ...]
             const points = new LargeArr(params.count * 4);
             let offset = 0;
@@ -170,13 +172,14 @@ const candlestickLayout: StageHandler = {
             const tmpIn: number[] = [];
             const tmpOut: number[] = [];
             let dataIndex;
+            const store = data.getStore();
 
             while ((dataIndex = params.next()) != null) {
-                const axisDimVal = data.get(cDim, dataIndex) as number;
-                const openVal = data.get(openDim, dataIndex) as number;
-                const closeVal = data.get(closeDim, dataIndex) as number;
-                const lowestVal = data.get(lowestDim, dataIndex) as number;
-                const highestVal = data.get(highestDim, dataIndex) as number;
+                const axisDimVal = store.get(cDimI, dataIndex) as number;
+                const openVal = store.get(openDimI, dataIndex) as number;
+                const closeVal = store.get(closeDimI, dataIndex) as number;
+                const lowestVal = store.get(lowestDimI, dataIndex) as number;
+                const highestVal = store.get(highestDimI, dataIndex) as number;
 
                 if (isNaN(axisDimVal) || isNaN(lowestVal) || isNaN(highestVal)) {
                     points[offset++] = NaN;
@@ -184,7 +187,7 @@ const candlestickLayout: StageHandler = {
                     continue;
                 }
 
-                points[offset++] = getSign(data, dataIndex, openVal, closeVal, closeDim);
+                points[offset++] = getSign(store, dataIndex, openVal, closeVal, closeDimI);
 
                 tmpIn[cDimIdx] = axisDimVal;
 
@@ -202,8 +205,10 @@ const candlestickLayout: StageHandler = {
     }
 };
 
-function getSign(data: List, dataIndex: number, openVal: number, closeVal: number, closeDim: string) {
-    let sign;
+function getSign(
+    store: DataStore, dataIndex: number, openVal: number, closeVal: number, closeDimI: DimensionIndex
+): -1 | 1 {
+    let sign: -1 | 1;
     if (openVal > closeVal) {
         sign = -1;
     }
@@ -213,7 +218,7 @@ function getSign(data: List, dataIndex: number, openVal: number, closeVal: numbe
     else {
         sign = dataIndex > 0
             // If close === open, compare with close of last record
-            ? (data.get(closeDim, dataIndex - 1) <= closeVal ? 1 : -1)
+            ? (store.get(closeDimI, dataIndex - 1) <= closeVal ? 1 : -1)
             // No record of previous, set to be positive
             : 1;
     }
@@ -221,7 +226,7 @@ function getSign(data: List, dataIndex: number, openVal: number, closeVal: numbe
     return sign;
 }
 
-function calculateCandleWidth(seriesModel: CandlestickSeriesModel, data: List) {
+function calculateCandleWidth(seriesModel: CandlestickSeriesModel, data: SeriesData) {
     const baseAxis = seriesModel.getBaseAxis();
     let extent;
 

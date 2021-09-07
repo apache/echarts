@@ -18,7 +18,7 @@
 */
 
 import { StageHandler } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import LinesSeriesModel, { LinesDataItemOption } from './LinesSeries';
 import Model from '../../model/Model';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
@@ -37,7 +37,7 @@ const linesVisual: StageHandler = {
     reset(seriesModel: LinesSeriesModel) {
         const symbolType = normalize(seriesModel.get('symbol'));
         const symbolSize = normalize(seriesModel.get('symbolSize'));
-        const data = seriesModel.getData() as List<LinesSeriesModel, LineDataVisual>;
+        const data = seriesModel.getData() as SeriesData<LinesSeriesModel, LineDataVisual>;
 
         data.setVisual('fromSymbol', symbolType && symbolType[0]);
         data.setVisual('toSymbol', symbolType && symbolType[1]);
@@ -45,7 +45,7 @@ const linesVisual: StageHandler = {
         data.setVisual('toSymbolSize', symbolSize && symbolSize[1]);
 
         function dataEach(
-            data: List<LinesSeriesModel, LineDataVisual>,
+            data: SeriesData<LinesSeriesModel, LineDataVisual>,
             idx: number
         ): void {
             const itemModel = data.getItemModel(idx) as Model<LinesDataItemOption>;

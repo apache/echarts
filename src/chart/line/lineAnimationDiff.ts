@@ -18,7 +18,7 @@
 */
 
 import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 import { LineSeriesOption } from './LineSeries';
@@ -30,7 +30,7 @@ interface DiffItem {
     idx1?: number
 }
 
-function diffData(oldData: List, newData: List) {
+function diffData(oldData: SeriesData, newData: SeriesData) {
     const diffResult: DiffItem[] = [];
 
     newData.diff(oldData)
@@ -49,7 +49,7 @@ function diffData(oldData: List, newData: List) {
 }
 
 export default function lineAnimationDiff(
-    oldData: List, newData: List,
+    oldData: SeriesData, newData: SeriesData,
     oldStackedOnPoints: ArrayLike<number>, newStackedOnPoints: ArrayLike<number>,
     oldCoordSys: Cartesian2D | Polar, newCoordSys: Cartesian2D | Polar,
     oldValueOrigin: LineSeriesOption['areaStyle']['origin'],
@@ -76,7 +76,7 @@ export default function lineAnimationDiff(
     const rawIndices: number[] = [];
 
     const newDataOldCoordInfo = prepareDataCoordInfo(oldCoordSys, newData, oldValueOrigin);
-    const oldDataNewCoordInfo = prepareDataCoordInfo(newCoordSys, oldData, newValueOrigin);
+    // const oldDataNewCoordInfo = prepareDataCoordInfo(newCoordSys, oldData, newValueOrigin);
 
     const oldPoints = oldData.getLayout('points') as number[] || [];
     const newPoints = newData.getLayout('points') as number[] || [];

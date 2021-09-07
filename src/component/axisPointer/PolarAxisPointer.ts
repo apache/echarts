@@ -22,8 +22,8 @@ import * as graphic from '../../util/graphic';
 import * as viewHelper from './viewHelper';
 import * as matrix from 'zrender/src/core/matrix';
 import AxisBuilder from '../axis/AxisBuilder';
-import AxisView from '../axis/AxisView';
-import {OptionDataValue,
+import {
+    OptionDataValue,
     ScaleDataValue,
     CommonAxisPointerOption,
     ZRTextAlign,

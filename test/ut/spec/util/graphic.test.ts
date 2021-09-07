@@ -21,7 +21,7 @@
 import {
     subPixelOptimize, subPixelOptimizeLine, subPixelOptimizeRect
 } from 'zrender/src/graphic/helper/subPixelOptimize';
-import { lineLineIntersect } from '../../../../src/util/graphic';
+import { lineLineIntersect } from '@/src/util/graphic';
 
 
 describe('util/graphic', function () {

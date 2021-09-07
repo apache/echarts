@@ -23,6 +23,7 @@
     var _recordContainer;
     var CELL_MAX = 160;
 
+
     if (window.Canteen) {
         window.Canteen.globals.STACK_SIZE = 100000000;
     }

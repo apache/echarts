@@ -19,11 +19,11 @@
 */
 
 import { createChart, getECModel } from '../../core/utHelper';
-import { EChartsType } from '../../../../src/echarts';
-import CartesianAxisModel from '../../../../src/coord/cartesian/AxisModel';
-import IntervalScale from '../../../../src/scale/Interval';
-import { intervalScaleNiceTicks } from '../../../../src/scale/helper';
-import { getPrecisionSafe } from '../../../../src/util/number';
+import { EChartsType } from '@/src/echarts';
+import CartesianAxisModel from '@/src/coord/cartesian/AxisModel';
+import IntervalScale from '@/src/scale/Interval';
+import { intervalScaleNiceTicks } from '@/src/scale/helper';
+import { getPrecisionSafe } from '@/src/util/number';
 
 
 describe('scale_interval', function () {

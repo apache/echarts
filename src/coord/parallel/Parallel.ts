@@ -37,7 +37,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { Dictionary, DimensionName, ScaleDataValue } from '../../util/types';
 import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import ParallelAxisModel, { ParallelActiveState } from './AxisModel';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
 const each = zrUtil.each;
 const mathMin = Math.min;
@@ -357,7 +357,7 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
      * @param end the next dataIndex of the last dataIndex will be travel.
      */
     eachActiveState(
-        data: List,
+        data: SeriesData,
         callback: (activeState: ParallelActiveState, dataIndex: number) => void,
         start?: number,
         end?: number

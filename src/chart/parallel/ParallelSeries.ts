@@ -20,7 +20,7 @@
 
 import {each, bind} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
-import createListFromArray from '../helper/createListFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import {
     SeriesOption,
     SeriesEncodeOptionMixin,
@@ -35,7 +35,7 @@ import {
     OptionEncode
  } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { ParallelActiveState, ParallelAxisOption } from '../../coord/parallel/AxisModel';
 import Parallel from '../../coord/parallel/Parallel';
 import ParallelModel from '../../coord/parallel/ParallelModel';
@@ -91,8 +91,8 @@ class ParallelSeriesModel extends SeriesModel<ParallelSeriesOption> {
     coordinateSystem: Parallel;
 
 
-    getInitialData(this: ParallelSeriesModel, option: ParallelSeriesOption, ecModel: GlobalModel): List {
-        return createListFromArray(this.getSource(), this, {
+    getInitialData(this: ParallelSeriesModel, option: ParallelSeriesOption, ecModel: GlobalModel): SeriesData {
+        return createSeriesData(null, this, {
             useEncodeDefaulter: bind(makeDefaultEncode, null, this)
         });
     }

@@ -19,7 +19,7 @@
 
 
 import * as zrUtil from 'zrender/src/core/util';
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import SeriesModel from '../../model/Series';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
@@ -36,12 +36,12 @@ import {
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import Model from '../../model/Model';
 import Geo from '../../coord/geo/Geo';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import {createSymbol, ECSymbol} from '../../util/symbol';
-import {LegendSymbolParams} from '../../component/legend/LegendModel';
+import {LegendIconParams} from '../../component/legend/LegendModel';
 import {Group} from '../../util/graphic';
 
 export interface MapStateOption {
@@ -82,7 +82,7 @@ export interface MapSeriesOption extends
     // @deprecated. Only for echarts2 backward compat.
     geoCoord?: Dictionary<number[]>;
 
-    data?: OptionDataValueNumeric[] | OptionDataValueNumeric[][] | MapDataItemOption[]
+    data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | MapDataItemOption)[]
 
 
     nameProperty?: string;
@@ -101,7 +101,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
     // -----------------
     // Injected outside
-    originalData: List;
+    originalData: SeriesData;
     mainSeries: MapSeries;
     // Only first map series of same mapType will drawMap.
     needsDrawMap: boolean = false;
@@ -109,8 +109,8 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     seriesGroup: MapSeries[] = [];
 
 
-    getInitialData(this: MapSeries, option: MapSeriesOption): List {
-        const data = createListSimply(this, {
+    getInitialData(this: MapSeries, option: MapSeriesOption): SeriesData {
+        const data = createSeriesDataSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
@@ -227,28 +227,28 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         this.option.center = center;
     }
 
-    getLegendIcon(opt: LegendSymbolParams): ECSymbol | Group {
-        const symbolType = opt.symbolType || 'roundRect';
-        const symbol = createSymbol(
-            symbolType,
+    getLegendIcon(opt: LegendIconParams): ECSymbol | Group {
+        const iconType = opt.icon || 'roundRect';
+        const icon = createSymbol(
+            iconType,
             0,
             0,
             opt.itemWidth,
             opt.itemHeight,
-            opt.itemStyle.fill,
-            opt.symbolKeepAspect
+            opt.itemStyle.fill
         );
 
-        symbol.setStyle(opt.itemStyle);
+        icon.setStyle(opt.itemStyle);
         // Map do not use itemStyle.borderWidth as border width
-        symbol.style.stroke = 'none';
+        icon.style.stroke = 'none';
+        // No rotation because no series visual symbol for map
 
-        if (symbolType.indexOf('empty') > -1) {
-            symbol.style.stroke = symbol.style.fill;
-            symbol.style.fill = '#fff';
-            symbol.style.lineWidth = 2;
+        if (iconType.indexOf('empty') > -1) {
+            icon.style.stroke = icon.style.fill;
+            icon.style.fill = '#fff';
+            icon.style.lineWidth = 2;
         }
-        return symbol;
+        return icon;
     }
 
     static defaultOption: MapSeriesOption = {

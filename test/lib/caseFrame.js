@@ -262,7 +262,8 @@
             '__RENDERER__=' + curr.renderer,
             '__USE_DIRTY_RECT__=' + curr.useDirtyRect,
             '__ECDIST__=' + curr.dist,
-            '__FILTER__=' + curr.listFilterName
+            '__FILTER__=' + curr.listFilterName,
+            '__CASE_FRAME__=1'
         ].join('&');
     }
 

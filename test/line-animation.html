@@ -22,7 +22,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
@@ -48,6 +48,8 @@ under the License.
                 font-size: 16px;
             }
         </style>
+
+        <div class="chart" id="main3"></div>
 
         <button onclick="change()">CHANGE</button>
         <div class="chart" id="main2"></div>
@@ -399,6 +401,42 @@ under the License.
 
         </script>
 
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                var chart = echarts.init(document.getElementById('main3'), null, {
+                    renderer: 'svg'
+                });
+                option = {
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [{
+                        data: [820, 932, 901, 934, 1290, 1330, 1320],
+                        type: 'line',
+                        areaStyle: {}
+                    }],
+                    animationDuration: 5000,
+                    animationDurationUpdate: 5000
+                };
+
+                chart.setOption(option);
+
+                setTimeout(function() {
+                    chart.setOption(option);
+                }, 1000);
+
+            });
+
+        </script>
 
 
     </body>

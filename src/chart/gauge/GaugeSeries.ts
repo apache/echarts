@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import SeriesModel from '../../model/Series';
 import {
     SeriesOption,
@@ -31,7 +31,7 @@ import {
     SeriesEncodeOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
 // [percent, color]
 type GaugeColorStop = [number, ColorString];
@@ -43,6 +43,10 @@ interface LabelFormatter {
 interface PointerOption {
     icon?: string
     show?: boolean
+    /**
+     * If pointer shows above title and detail
+     */
+    showAbove?: boolean,
     keepAspect?: boolean
     itemStyle?: ItemStyleOption
     /**
@@ -132,7 +136,7 @@ export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, Gauge
         show?: boolean
         roundCap?: boolean
         lineStyle?: Omit<LineStyleOption, 'color'> & {
-            color: GaugeColorStop[]
+            color?: GaugeColorStop[]
         }
     },
 
@@ -178,15 +182,15 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
     type = GaugeSeriesModel.type;
 
     visualStyleAccessPath = 'itemStyle';
-    useColorPaletteOnData = true;
 
-    getInitialData(option: GaugeSeriesOption, ecModel: GlobalModel): List {
-        return createListSimply(this, ['value']);
+    getInitialData(option: GaugeSeriesOption, ecModel: GlobalModel): SeriesData {
+        return createSeriesDataSimply(this, ['value']);
     }
 
     static defaultOption: GaugeSeriesOption = {
         zlevel: 0,
         z: 2,
+        colorBy: 'data',
         // 默认全局居中
         center: ['50%', '50%'],
         legendHoverLink: true,
@@ -260,6 +264,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             icon: null,
             offsetCenter: [0, 0],
             show: true,
+            showAbove: true,
             length: '60%',
             width: 6,
             keepAspect: false

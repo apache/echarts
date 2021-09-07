@@ -21,6 +21,7 @@ import {createHashMap, isObject, map, HashMap} from 'zrender/src/core/util';
 import Model from '../model/Model';
 import { OrdinalNumber, OrdinalRawValue } from '../util/types';
 
+let uidBase = 0;
 
 class OrdinalMeta {
 
@@ -32,6 +33,8 @@ class OrdinalMeta {
 
     private _map: HashMap<OrdinalNumber>;
 
+    readonly uid: number;
+
 
     constructor(opt: {
         categories?: OrdinalRawValue[],
@@ -41,6 +44,7 @@ class OrdinalMeta {
         this.categories = opt.categories || [];
         this._needCollect = opt.needCollect;
         this._deduplication = opt.deduplication;
+        this.uid = ++uidBase;
     }
 
     static createByAxisModel(axisModel: Model): OrdinalMeta {

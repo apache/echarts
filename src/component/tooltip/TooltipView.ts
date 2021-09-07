@@ -47,7 +47,7 @@ import {
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import TooltipModel, {TooltipOption} from './TooltipModel';
+import TooltipModel, { TooltipOption } from './TooltipModel';
 import Element from 'zrender/src/Element';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 // import { isDimensionStacked } from '../../data/helper/dataStackHelper';
@@ -64,7 +64,7 @@ const each = zrUtil.each;
 const parsePercent = numberUtil.parsePercent;
 
 const proxyRect = new graphic.Rect({
-    shape: {x: -1, y: -1, width: 2, height: 2}
+    shape: { x: -1, y: -1, width: 2, height: 2 }
 });
 
 interface DataIndex {
@@ -166,6 +166,7 @@ class TooltipView extends ComponentView {
     private _showTimout: number;
 
     private _lastDataByCoordSys: DataByCoordSys[];
+    private _cbParamsList: TooltipCallbackDataParams[];
 
     private _updatePosition: ReturnType<typeof throttle> | TooltipView['_doUpdatePosition'];
 
@@ -274,7 +275,7 @@ class TooltipView extends ComponentView {
                     y: self._lastY,
                     dataByCoordSys: self._lastDataByCoordSys
                 });
-            });
+            }) as any;
         }
     }
 
@@ -568,6 +569,11 @@ class TooltipView extends ComponentView {
                     const series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
                     const dataIndex = idxItem.dataIndexInside;
                     const cbParams = series.getDataParams(dataIndex) as TooltipCallbackDataParams;
+                    // Can't find data.
+                    if (cbParams.dataIndex < 0) {
+                        return;
+                    }
+
                     cbParams.axisDim = axisItem.axisDim;
                     cbParams.axisIndex = axisItem.axisIndex;
                     cbParams.axisType = axisItem.axisType;
@@ -613,7 +619,7 @@ class TooltipView extends ComponentView {
         const allMarkupText = markupTextArrLegacy.join(blockBreak);
 
         this._showOrMove(singleTooltipModel, function (this: TooltipView) {
-            if (this._updateContentNotChangedOnAxis(dataByCoordSys)) {
+            if (this._updateContentNotChangedOnAxis(dataByCoordSys, cbParamsList)) {
                 this._updatePosition(
                     singleTooltipModel,
                     positionExpr,
@@ -721,7 +727,7 @@ class TooltipView extends ComponentView {
     ) {
         const ecData = getECData(el);
         const tooltipConfig = ecData.tooltipConfig;
-        let tooltipOpt = tooltipConfig.option;
+        let tooltipOpt = tooltipConfig.option || {};
         if (zrUtil.isString(tooltipOpt)) {
             const content = tooltipOpt;
             tooltipOpt = {
@@ -736,6 +742,11 @@ class TooltipView extends ComponentView {
         if (cmpt) {
             tooltipModelCascade.push(cmpt as Model<TooltipableOption>);
         }
+        // In most cases, component tooltip formatter has different params with series tooltip formatter,
+        // so that they can not share the same formatter. Since the global tooltip formatter is used for series
+        // by convension, we do not use it as the default formatter for component.
+        tooltipModelCascade.push({ formatter: tooltipOpt.content });
+
         const positionDefault = e.positionDefault;
         const subTooltipModel = buildTooltipModel(
             tooltipModelCascade,
@@ -793,7 +804,7 @@ class TooltipView extends ComponentView {
 
         const formatter = tooltipModel.get('formatter');
         positionExpr = positionExpr || tooltipModel.get('position');
-        let html: string | HTMLElement[] = defaultHtml;
+        let html: string | HTMLElement | HTMLElement[] = defaultHtml;
         const nearPoint = this._getNearestPoint(
             [x, y],
             params,
@@ -802,27 +813,32 @@ class TooltipView extends ComponentView {
         );
         const nearPointColor = nearPoint.color;
 
-        if (formatter && zrUtil.isString(formatter)) {
-            const useUTC = tooltipModel.ecModel.get('useUTC');
-            const params0 = zrUtil.isArray(params) ? params[0] : params;
-            const isTimeAxis = params0 && params0.axisType && params0.axisType.indexOf('time') >= 0;
-            html = formatter;
-            if (isTimeAxis) {
-                html = timeFormat(params0.axisValue, html, useUTC);
-            }
-            html = formatUtil.formatTpl(html, params, true);
-        }
-        else if (zrUtil.isFunction(formatter)) {
-            const callback = bind(function (cbTicket: string, html: string | HTMLElement[]) {
-                if (cbTicket === this._ticket) {
-                    tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPointColor, positionExpr);
-                    this._updatePosition(
-                        tooltipModel, positionExpr, x, y, tooltipContent, params, el
-                    );
+        if (formatter) {
+            if (zrUtil.isString(formatter)) {
+                const useUTC = tooltipModel.ecModel.get('useUTC');
+                const params0 = zrUtil.isArray(params) ? params[0] : params;
+                const isTimeAxis = params0 && params0.axisType && params0.axisType.indexOf('time') >= 0;
+                html = formatter;
+                if (isTimeAxis) {
+                    html = timeFormat(params0.axisValue, html, useUTC);
                 }
-            }, this);
-            this._ticket = asyncTicket;
-            html = formatter(params, asyncTicket, callback);
+                html = formatUtil.formatTpl(html, params, true);
+            }
+            else if (zrUtil.isFunction(formatter)) {
+                const callback = bind(function (cbTicket: string, html: string | HTMLElement | HTMLElement[]) {
+                    if (cbTicket === this._ticket) {
+                        tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPointColor, positionExpr);
+                        this._updatePosition(
+                            tooltipModel, positionExpr, x, y, tooltipContent, params, el
+                        );
+                    }
+                }, this);
+                this._ticket = asyncTicket;
+                html = formatter(params, asyncTicket, callback);
+            }
+            else {
+                html = formatter;
+            }
         }
 
         tooltipContent.setContent(html, markupStyleCreator, tooltipModel, nearPointColor, positionExpr);
@@ -891,7 +907,7 @@ class TooltipView extends ComponentView {
             boxLayoutPosition.width = contentSize[0];
             boxLayoutPosition.height = contentSize[1];
             const layoutRect = layoutUtil.getLayoutRect(
-                boxLayoutPosition, {width: viewWidth, height: viewHeight}
+                boxLayoutPosition, { width: viewWidth, height: viewHeight }
             );
             x = layoutRect.x;
             y = layoutRect.y;
@@ -903,7 +919,7 @@ class TooltipView extends ComponentView {
         // Specify tooltip position by string 'top' 'bottom' 'left' 'right' around graphic element
         else if (zrUtil.isString(positionExpr) && el) {
             const pos = calcTooltipPosition(
-                positionExpr, rect, contentSize
+                positionExpr, rect, contentSize, tooltipModel.get('borderWidth')
             );
             x = pos[0];
             y = pos[1];
@@ -932,18 +948,22 @@ class TooltipView extends ComponentView {
 
     // FIXME
     // Should we remove this but leave this to user?
-    private _updateContentNotChangedOnAxis(dataByCoordSys: DataByCoordSys[]) {
+    private _updateContentNotChangedOnAxis(
+        dataByCoordSys: DataByCoordSys[],
+        cbParamsList: TooltipCallbackDataParams[]
+    ) {
         const lastCoordSys = this._lastDataByCoordSys;
+        const lastCbParamsList = this._cbParamsList;
         let contentNotChanged = !!lastCoordSys
             && lastCoordSys.length === dataByCoordSys.length;
 
-        contentNotChanged && each(lastCoordSys, function (lastItemCoordSys, indexCoordSys) {
+        contentNotChanged && each(lastCoordSys, (lastItemCoordSys, indexCoordSys) => {
             const lastDataByAxis = lastItemCoordSys.dataByAxis || [] as DataByAxis[];
             const thisItemCoordSys = dataByCoordSys[indexCoordSys] || {} as DataByCoordSys;
             const thisDataByAxis = thisItemCoordSys.dataByAxis || [] as DataByAxis[];
             contentNotChanged = contentNotChanged && lastDataByAxis.length === thisDataByAxis.length;
 
-            contentNotChanged && each(lastDataByAxis, function (lastItem, indexAxis) {
+            contentNotChanged && each(lastDataByAxis, (lastItem, indexAxis) => {
                 const thisItem = thisDataByAxis[indexAxis] || {} as DataByAxis;
                 const lastIndices = lastItem.seriesDataIndices || [] as DataIndex[];
                 const newIndices = thisItem.seriesDataIndices || [] as DataIndex[];
@@ -954,16 +974,27 @@ class TooltipView extends ComponentView {
                     && lastItem.axisId === thisItem.axisId
                     && lastIndices.length === newIndices.length;
 
-                contentNotChanged && each(lastIndices, function (lastIdxItem, j) {
+                contentNotChanged && each(lastIndices, (lastIdxItem, j) => {
                     const newIdxItem = newIndices[j];
                     contentNotChanged = contentNotChanged
                         && lastIdxItem.seriesIndex === newIdxItem.seriesIndex
                         && lastIdxItem.dataIndex === newIdxItem.dataIndex;
                 });
+
+                // check is cbParams data value changed
+                lastCbParamsList && zrUtil.each(lastItem.seriesDataIndices, (idxItem) => {
+                    const seriesIdx = idxItem.seriesIndex;
+                    const cbParams = cbParamsList[seriesIdx];
+                    const lastCbParams = lastCbParamsList[seriesIdx];
+                    if (cbParams && lastCbParams && lastCbParams.data !== cbParams.data) {
+                        contentNotChanged = false;
+                    }
+                });
             });
         });
 
         this._lastDataByCoordSys = dataByCoordSys;
+        this._cbParamsList = cbParamsList;
 
         return !!contentNotChanged;
     }
@@ -1050,9 +1081,9 @@ function refixTooltipPosition(
     viewWidth: number, viewHeight: number,
     gapH: number, gapV: number
 ) {
-    const size = content.getOuterSize();
-    const width = size.width;
-    const height = size.height;
+    const size = content.getSize();
+    const width = size[0];
+    const height = size[1];
 
     if (gapH != null) {
         // Add extra 2 pixels for this case:
@@ -1083,9 +1114,9 @@ function confineTooltipPosition(
     viewWidth: number,
     viewHeight: number
 ): [number, number] {
-    const size = content.getOuterSize();
-    const width = size.width;
-    const height = size.height;
+    const size = content.getSize();
+    const width = size[0];
+    const height = size[1];
 
     x = Math.min(x + width, viewWidth) - width;
     y = Math.min(y + height, viewHeight) - height;
@@ -1098,12 +1129,12 @@ function confineTooltipPosition(
 function calcTooltipPosition(
     position: TooltipOption['position'],
     rect: ZRRectLike,
-    contentSize: number[]
+    contentSize: number[],
+    borderWidth: number
 ): [number, number] {
     const domWidth = contentSize[0];
     const domHeight = contentSize[1];
-    const gap = 10;
-    const offset = 5;
+    const offset = Math.ceil(Math.SQRT2 * borderWidth) + 8;
     let x = 0;
     let y = 0;
     const rectWidth = rect.width;
@@ -1115,18 +1146,18 @@ function calcTooltipPosition(
             break;
         case 'top':
             x = rect.x + rectWidth / 2 - domWidth / 2;
-            y = rect.y - domHeight - gap;
+            y = rect.y - domHeight - offset;
             break;
         case 'bottom':
             x = rect.x + rectWidth / 2 - domWidth / 2;
-            y = rect.y + rectHeight + gap;
+            y = rect.y + rectHeight + offset;
             break;
         case 'left':
-            x = rect.x - domWidth - gap - offset;
+            x = rect.x - domWidth - offset;
             y = rect.y + rectHeight / 2 - domHeight / 2;
             break;
         case 'right':
-            x = rect.x + rectWidth + gap + offset;
+            x = rect.x + rectWidth + offset;
             y = rect.y + rectHeight / 2 - domHeight / 2;
     }
     return [x, y];

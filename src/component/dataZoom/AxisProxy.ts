@@ -139,8 +139,8 @@ class AxisProxy {
     calculateDataWindow(opt?: {
         start?: number
         end?: number
-        startValue?: number
-        endValue?: number
+        startValue?: number | string | Date
+        endValue?: number | string | Date
     }) {
         const dataExtent = this._dataExtent;
         const axisModel = this.getAxisModel();
@@ -245,16 +245,6 @@ class AxisProxy {
         // Culculate data window and data extent, and record them.
         this._dataExtent = calculateDataExtent(this, this._dimName, targetSeries);
 
-        // this.hasSeriesStacked = false;
-        // each(targetSeries, function (series) {
-            // let data = series.getData();
-            // let dataDim = data.mapDimension(this._dimName);
-            // let stackedDimension = data.getCalculationInfo('stackedDimension');
-            // if (stackedDimension && stackedDimension === dataDim) {
-                // this.hasSeriesStacked = true;
-            // }
-        // }, this);
-
         // `calculateDataWindow` uses min/maxSpan.
         this._updateMinMaxSpan();
 
@@ -311,12 +301,14 @@ class AxisProxy {
             }
 
             if (filterMode === 'weakFilter') {
+                const store = seriesData.getStore();
+                const dataDimIndices = zrUtil.map(dataDims, dim => seriesData.getDimensionIndex(dim), seriesData);
                 seriesData.filterSelf(function (dataIndex) {
                     let leftOut;
                     let rightOut;
                     let hasValue;
                     for (let i = 0; i < dataDims.length; i++) {
-                        const value = seriesData.get(dataDims[i], dataIndex) as number;
+                        const value = store.get(dataDimIndices[i], dataIndex) as number;
                         const thisHasValue = !isNaN(value);
                         const thisLeftOut = value < valueWindow[0];
                         const thisRightOut = value > valueWindow[1];

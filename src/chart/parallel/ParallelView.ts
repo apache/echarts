@@ -20,7 +20,7 @@
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import ParallelSeriesModel, { ParallelSeriesDataItemOption } from './ParallelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -29,6 +29,7 @@ import Parallel from '../../coord/parallel/Parallel';
 import { OptionAxisType } from '../../coord/axisCommonTypes';
 import { numericToNumber } from '../../util/number';
 import { eqNaN } from 'zrender/src/core/util';
+import { saveOldStyle } from '../../animation/basicTrasition';
 
 const DEFAULT_SMOOTH = 0.3;
 
@@ -41,7 +42,7 @@ class ParallelView extends ChartView {
 
     private _dataGroup = new graphic.Group();
 
-    private _data: List;
+    private _data: SeriesData;
 
     private _initialized = false;
 
@@ -83,6 +84,8 @@ class ParallelView extends ChartView {
             data.setItemGraphicEl(newDataIndex, line);
 
             graphic.updateProps(line, {shape: {points: points}}, seriesModel, newDataIndex);
+
+            saveOldStyle(line);
 
             updateElCommon(line, data, newDataIndex, seriesScope);
         }
@@ -157,7 +160,7 @@ function createGridClipShape(coordSys: Parallel, seriesModel: ParallelSeriesMode
     return rectEl;
 }
 
-function createLinePoints(data: List, dataIndex: number, dimensions: string[], coordSys: Parallel) {
+function createLinePoints(data: SeriesData, dataIndex: number, dimensions: string[], coordSys: Parallel) {
     const points = [];
     for (let i = 0; i < dimensions.length; i++) {
         const dimName = dimensions[i];
@@ -169,7 +172,7 @@ function createLinePoints(data: List, dataIndex: number, dimensions: string[], c
     return points;
 }
 
-function addEl(data: List, dataGroup: graphic.Group, dataIndex: number, dimensions: string[], coordSys: Parallel) {
+function addEl(data: SeriesData, dataGroup: graphic.Group, dataIndex: number, dimensions: string[], coordSys: Parallel) {
     const points = createLinePoints(data, dataIndex, dimensions, coordSys);
     const line = new graphic.Polyline({
         shape: {points: points},
@@ -192,7 +195,7 @@ function makeSeriesScope(seriesModel: ParallelSeriesModel): ParallelDrawSeriesSc
 
 function updateElCommon(
     el: graphic.Polyline,
-    data: List,
+    data: SeriesData,
     dataIndex: number,
     seriesScope: ParallelDrawSeriesScope
 ) {

@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset='utf-8'>
-        <script src='lib/esl.js'></script>
+        <script src='lib/simpleRequire.js'></script>
         <script src='lib/config.js'></script>
         <script src='lib/jquery.min.js'></script>
         <script src='lib/testHelper.js'></script>
@@ -43,10 +43,9 @@ under the License.
         var ys = [4368000, 4537000];
 
         require([
-            'echarts'
-        ], function (echarts) {
-
-            $.get('./data/map/json/world.json', function (worldJson) {
+            'echarts',
+            './data/map/json/world.json'
+        ], function (echarts, worldJson) {
                 echarts.registerMap('world', worldJson);
 
                 var count = 35663;
@@ -160,8 +159,6 @@ under the License.
                 chart.on('finished', function () {
                     console.log('finished');
                 });
-
-            });
         });
 
         </script>

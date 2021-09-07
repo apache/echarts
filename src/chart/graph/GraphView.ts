@@ -33,7 +33,7 @@ import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './Gr
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import View from '../../coord/View';
 import Symbol from '../helper/Symbol';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import Line from '../helper/Line';
 import { getECData } from '../../util/innerStore';
 
@@ -109,7 +109,7 @@ class GraphView extends ChartView {
 
         const edgeData = seriesModel.getEdgeData();
         // TODO: TYPE
-        lineDraw.updateData(edgeData as List);
+        lineDraw.updateData(edgeData as SeriesData);
 
         this._updateNodeAndLinkScale();
 

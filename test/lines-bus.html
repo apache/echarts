@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset='utf-8'>
-        <script src='lib/esl.js'></script>
+        <script src='lib/simpleRequire.js'></script>
         <script src='lib/config.js'></script>
         <script src='lib/jquery.min.js'></script>
         <script src='http://api.map.baidu.com/api?v=3.0&ak=KOmVjPVUAey1G2E8zNhPiuQ6QiEmAwZu'></script>
@@ -39,22 +39,25 @@ under the License.
                 left: 10px;
                 top: 10px;
             }
+            #clear2 {
+                position: absolute;
+                left: 10px;
+                top: 40px;
+            }
         </style>
         <div id='main'></div>
-        <button id='clear'>Clear</button>
+        <button id='clear'>Clear(`chart.setOption`)</button>
+        <button id='clear2'>Clear(`chart.clear`)</button>
         <script>
 
             require([
                 'echarts',
-
-                // 'echarts/chart/lines',
-                // 'echarts/component/legend',
+                'data/lines-bus.json',
                 'extension/bmap'
-            ], function (echarts) {
+            ], function (echarts, data) {
 
                 var myChart = echarts.init(document.getElementById('main'));
 
-                $.get('data/lines-bus.json', function (data) {
                     var hStep = 300 / (data.length - 1);
                     var busLines = data.map(function (busLine, idx) {
                         var prevPt;
@@ -249,15 +252,18 @@ under the License.
                         }]
                     });
 
-                });
-
-              document.getElementById('clear').addEventListener('click', function() {
-                  myChart.setOption({
-                      series: [{
-                          data: []
-                      }]
-                  });
-              });
+                    document.getElementById('clear').addEventListener('click', function() {
+                        myChart.setOption({
+                            series: [{
+                                data: []
+                            }, {
+                                data: []
+                            }]
+                        });
+                    });
+                    document.getElementById('clear2').addEventListener('click', function() {
+                        myChart.clear();
+                    });
             });
         </script>
     </body>

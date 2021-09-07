@@ -17,7 +17,7 @@
 * under the License.
 */
 
-/* global Uint8Array */
+/* global Uint8Array, document */
 
 import env from 'zrender/src/core/env';
 import { ToolboxFeature, ToolboxFeatureOption } from '../featureManager';
@@ -40,6 +40,8 @@ export interface ToolboxSaveAsImageFeatureOption extends ToolboxFeatureOption {
 
     lang?: string[]
 }
+
+/* global window, document */
 
 class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
 
@@ -84,7 +86,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
                 // otherwise, like `svg` data uri exported by zrender,
                 // there will be an error, for it's not encoded with base64.
                 // (just a url-encoded string through `encodeURIComponent`)
-                base64Encoded && (bstr = atob(bstr));
+                base64Encoded && (bstr = window.atob(bstr));
                 const filename = title + '.' + type;
                 if (window.navigator.msSaveOrOpenBlob) {
                     let n = bstr.length;
@@ -125,7 +127,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
          const defaultOption: ToolboxSaveAsImageFeatureOption = {
             show: true,
             icon: 'M4.7,22.9L29.3,45.5L54.7,23.4M4.6,43.6L4.6,58L53.8,58L53.8,43.6M29.2,45.1L29.2,0',
-            title: ecModel.getLocale(['toolbox', 'saveAsImage', 'title']),
+            title: ecModel.getLocaleModel().get(['toolbox', 'saveAsImage', 'title']),
             type: 'png',
             // Default use option.backgroundColor
             // backgroundColor: '#fff',
@@ -134,7 +136,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
             excludeComponents: ['toolbox'],
             // use current pixel ratio of device by default
             // pixelRatio: 1,
-            lang: ecModel.getLocale(['toolbox', 'saveAsImage', 'lang'])
+            lang: ecModel.getLocaleModel().get(['toolbox', 'saveAsImage', 'lang'])
         };
 
         return defaultOption;

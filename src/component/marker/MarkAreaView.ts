@@ -20,19 +20,19 @@
 // TODO Optimize on polar
 
 import * as colorUtil from 'zrender/src/tool/color';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import * as numberUtil from '../../util/number';
 import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
-import { retrieve, mergeAll, map, defaults, curry, filter, HashMap } from 'zrender/src/core/util';
+import { retrieve, mergeAll, map, curry, filter, HashMap, extend } from 'zrender/src/core/util';
 import { ScaleDataValue, ParsedValue, ZRColor } from '../../util/types';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import MarkAreaModel, { MarkArea2DDataItemOption } from './MarkAreaModel';
 import SeriesModel from '../../model/Series';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
-import DataDimensionInfo from '../../data/DataDimensionInfo';
+import SeriesDimensionDefine from '../../data/SeriesDimensionDefine';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import MarkerModel from './MarkerModel';
@@ -47,7 +47,7 @@ interface MarkAreaDrawGroup {
 }
 
 const inner = makeInner<{
-    data: List<MarkAreaModel>
+    data: SeriesData<MarkAreaModel>
 }, MarkAreaDrawGroup>();
 
 // Merge two ends option into one.
@@ -137,7 +137,7 @@ function markAreaFilter(coordSys: CoordinateSystem, item: MarkAreaMergedItemOpti
 
 // dims can be ['x0', 'y0'], ['x1', 'y1'], ['x0', 'y1'], ['x1', 'y0']
 function getSingleMarkerEndPoint(
-    data: List<MarkAreaModel>,
+    data: SeriesData<MarkAreaModel>,
     idx: number,
     dims: typeof dimPermutations[number],
     seriesModel: SeriesModel,
@@ -362,8 +362,8 @@ function createList(
     maModel: MarkAreaModel
 ) {
 
-    let coordDimsInfos: DataDimensionInfo[];
-    let areaData: List<MarkAreaModel>;
+    let coordDimsInfos: SeriesDimensionDefine[];
+    let areaData: SeriesData<MarkAreaModel>;
     const dims = ['x0', 'y0', 'x1', 'y1'];
     if (coordSys) {
         coordDimsInfos = map(coordSys && coordSys.dimensions, function (coordDim) {
@@ -372,11 +372,13 @@ function createList(
                 data.mapDimension(coordDim)
             ) || {};
             // In map series data don't have lng and lat dimension. Fallback to same with coordSys
-            return defaults({
-                name: coordDim
-            }, info);
+            return extend(extend({}, info), {
+                name: coordDim,
+                // DON'T use ordinalMeta to parse and collect ordinal.
+                ordinalMeta: null
+            });
         });
-        areaData = new List(map(dims, function (dim, idx) {
+        areaData = new SeriesData(map(dims, function (dim, idx) {
             return {
                 name: dim,
                 type: coordDimsInfos[idx % 2].type
@@ -388,7 +390,7 @@ function createList(
             name: 'value',
             type: 'float'
         }];
-        areaData = new List(coordDimsInfos, maModel);
+        areaData = new SeriesData(coordDimsInfos, maModel);
     }
 
     let optData = map(maModel.get('data'), curry(

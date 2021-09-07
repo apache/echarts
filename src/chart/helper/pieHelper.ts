@@ -24,11 +24,12 @@ import { parsePercent } from 'zrender/src/contain/text';
 
 export function getSectorCornerRadius(
     model: Model<{ borderRadius?: string | number | (string | number)[] }>,
-    shape: Pick<Sector['shape'], 'r0' | 'r'>
+    shape: Pick<Sector['shape'], 'r0' | 'r'>,
+    zeroIfNull?: boolean
 ) {
     let cornerRadius = model.get('borderRadius');
     if (cornerRadius == null) {
-        return null;
+        return zeroIfNull ? {innerCornerRadius: 0, cornerRadius: 0} : null;
     }
     if (!isArray(cornerRadius)) {
         cornerRadius = [cornerRadius, cornerRadius];

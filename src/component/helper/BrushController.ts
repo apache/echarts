@@ -186,7 +186,9 @@ export interface BrushControllerEvents {
  *         removeOnClick: boolean
  *     }
  */
-class BrushController extends Eventful<BrushControllerEvents> {
+class BrushController extends Eventful<{
+    [key in keyof BrushControllerEvents]: (params: BrushControllerEvents[key]) => void | undefined
+}> {
 
     readonly group: graphic.Group;
 

@@ -20,18 +20,18 @@
 import * as numberUtil from '../../util/number';
 import {isDimensionStacked} from '../../data/helper/dataStackHelper';
 import SeriesModel from '../../model/Series';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { MarkerStatisticType, MarkerPositionOption } from './MarkerModel';
 import { indexOf, curry, clone, isArray } from 'zrender/src/core/util';
 import Axis from '../../coord/Axis';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
-import { ScaleDataValue, ParsedValue } from '../../util/types';
+import { ScaleDataValue, ParsedValue, DimensionLoose, DimensionName } from '../../util/types';
 
 interface MarkerAxisInfo {
-    valueDataDim: string
+    valueDataDim: DimensionName
     valueAxis: Axis
     baseAxis: Axis
-    baseDataDim: string
+    baseDataDim: DimensionName
 }
 
 function hasXOrY(item: MarkerPositionOption) {
@@ -42,33 +42,9 @@ function hasXAndY(item: MarkerPositionOption) {
     return !isNaN(parseFloat(item.x as string)) && !isNaN(parseFloat(item.y as string));
 }
 
-// Make it simple, do not visit all stacked value to count precision.
-// function getPrecision(data, valueAxisDim, dataIndex) {
-//     let precision = -1;
-//     let stackedDim = data.mapDimension(valueAxisDim);
-//     do {
-//         precision = Math.max(
-//             numberUtil.getPrecision(data.get(stackedDim, dataIndex)),
-//             precision
-//         );
-//         let stackedOnSeries = data.getCalculationInfo('stackedOnSeries');
-//         if (stackedOnSeries) {
-//             let byValue = data.get(data.getCalculationInfo('stackedByDimension'), dataIndex);
-//             data = stackedOnSeries.getData();
-//             dataIndex = data.indexOf(data.getCalculationInfo('stackedByDimension'), byValue);
-//             stackedDim = data.getCalculationInfo('stackedDimension');
-//         }
-//         else {
-//             data = null;
-//         }
-//     } while (data);
-
-//     return precision;
-// }
-
 function markerTypeCalculatorWithExtent(
     markerType: MarkerStatisticType,
-    data: List,
+    data: SeriesData,
     otherDataDim: string,
     targetDataDim: string,
     otherCoordIndex: number,
@@ -109,10 +85,6 @@ const markerTypeCalculator = {
  * Transform markPoint data item to format used in List by do the following
  * 1. Calculate statistic like `max`, `min`, `average`
  * 2. Convert `item.xAxis`, `item.yAxis` to `item.coord` array
- * @param  {module:echarts/model/Series} seriesModel
- * @param  {module:echarts/coord/*} [coordSys]
- * @param  {Object} item
- * @return {Object}
  */
 export function dataTransform(
     seriesModel: SeriesModel,
@@ -171,7 +143,7 @@ export function dataTransform(
 
 export function getAxisInfo(
     item: MarkerPositionOption,
-    data: List,
+    data: SeriesData,
     coordSys: CoordinateSystem,
     seriesModel: SeriesModel
 ) {
@@ -194,16 +166,9 @@ export function getAxisInfo(
     return ret;
 }
 
-function dataDimToCoordDim(seriesModel: SeriesModel, dataDim: string) {
-    const data = seriesModel.getData();
-    const dimensions = data.dimensions;
-    dataDim = data.getDimension(dataDim);
-    for (let i = 0; i < dimensions.length; i++) {
-        const dimItem = data.getDimensionInfo(dimensions[i]);
-        if (dimItem.name === dataDim) {
-            return dimItem.coordDim;
-        }
-    }
+function dataDimToCoordDim(seriesModel: SeriesModel, dataDim: DimensionLoose): DimensionName {
+    const dimItem = seriesModel.getData().getDimensionInfo(dataDim);
+    return dimItem && dimItem.coordDim;
 }
 
 /**
@@ -236,7 +201,7 @@ export function dimValueGetter(
 }
 
 export function numCalculate(
-    data: List,
+    data: SeriesData,
     valueDataDim: string,
     type: MarkerStatisticType
 ) {

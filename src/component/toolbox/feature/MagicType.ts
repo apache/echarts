@@ -87,7 +87,7 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
                 stack: 'M8.2,38.4l-8.4,4.1l30.6,15.3L60,42.5l-8.1-4.1l-21.5,11L8.2,38.4z M51.9,30l-8.1,4.2l-13.4,6.9l-13.9-6.9L8.2,30l-8.4,4.2l8.4,4.2l22.2,11l21.5-11l8.1-4.2L51.9,30z M51.9,21.7l-8.1,4.2L35.7,30l-5.3,2.8L24.9,30l-8.4-4.1l-8.3-4.2l-8.4,4.2L8.2,30l8.3,4.2l13.9,6.9l13.4-6.9l8.1-4.2l8.1-4.1L51.9,21.7zM30.4,2.2L-0.2,17.5l8.4,4.1l8.3,4.2l8.4,4.2l5.5,2.7l5.3-2.7l8.1-4.2l8.1-4.2l8.1-4.1L30.4,2.2z' // jshint ignore:line
             },
             // `line`, `bar`, `stack`, `tiled`
-            title: ecModel.getLocale(['toolbox', 'magicType', 'title']),
+            title: ecModel.getLocaleModel().get(['toolbox', 'magicType', 'title']),
             option: {},
             seriesIndex: {}
         };
@@ -155,6 +155,7 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
         );
 
         let newTitle;
+        let currentType = type as TitleType;
         // Change title of stack
         if (type === 'stack') {
             // use titles in model instead of ecModel
@@ -163,12 +164,16 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
             newTitle = zrUtil.merge({
                 stack: model.option.title.tiled,
                 tiled: model.option.title.stack
-            }, model.option.title)
+            }, model.option.title);
+
+            if (model.get(['iconStatus', type]) !== 'emphasis') {
+                currentType = 'tiled';
+            }
         }
 
         api.dispatchAction({
             type: 'changeMagicType',
-            currentType: type,
+            currentType: currentType,
             newOption: newOption,
             newTitle: newTitle,
             featureName: 'magicType'

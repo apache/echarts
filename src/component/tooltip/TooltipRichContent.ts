@@ -71,7 +71,7 @@ class TooltipRichContent {
      * Set tooltip content
      */
     setContent(
-        content: string | HTMLElement[],
+        content: string | HTMLElement | HTMLElement[],
         markupStyleCreator: TooltipMarkupStyleCreator,
         tooltipModel: Model<TooltipOption>,
         borderColor: ZRColor,
@@ -203,14 +203,6 @@ class TooltipRichContent {
 
     isShow() {
         return this._show;
-    }
-
-    getOuterSize() {
-        const size = this.getSize();
-        return {
-            width: size[0],
-            height: size[1]
-        };
     }
 
     dispose() {

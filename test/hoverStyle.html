@@ -23,7 +23,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
@@ -105,13 +105,13 @@ under the License.
                     text: 'NOT use hoverLayer',
                     onclick: function () {
                         setUseHoverLayer(false);
-                        location.reload();
+                        typeof __VRT_RELOAD__ !== 'undefined' ? __VRT_RELOAD__() : location.reload();
                     }
                 }, {
                     text: 'Use hoverLayer',
                     onclick: function () {
                         setUseHoverLayer(true);
-                        location.reload();
+                        typeof __VRT_RELOAD__ !== 'undefined' ? __VRT_RELOAD__() : location.reload();
                     }
                 }]
             }
@@ -1122,57 +1122,51 @@ under the License.
 
 
         <script>
-            $.get('./data/map/json/china.json', function (chinaJson) {
-                if (typeof chinaJson === 'string') {
-                    chinaJson = eval('(' + chinaJson + ')');
-                }
-                require(['echarts'], function (echarts) {
-                    echarts.registerMap('china', chinaJson);
-                    var option = {
-                        hoverLayerThreshold: hoverLayerThreshold,
-                        tooltip: {},
-                        legend: {},
-                        geo: [{
-                            type: 'map',
-                            map: 'china',
-                            roam: true,
-                            scaleLimit: {
-                                min: 1.5,
-                                max: 10
-                            },
-                            selectedMode: 'multiple',
-                            // emphasis: {
-                            //     itemStyle: {
-                            //         color: 'none',
-                            //         borderWidth: 2
-                            //     }
-                            // },
-                            select: {
-                                itemStyle: {
-                                    color: 'green'
-                                }
+            require(['echarts', 'data/map/js/china'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    tooltip: {},
+                    legend: {},
+                    geo: [{
+                        type: 'map',
+                        map: 'china',
+                        roam: true,
+                        scaleLimit: {
+                            min: 1.5,
+                            max: 10
+                        },
+                        selectedMode: 'multiple',
+                        // emphasis: {
+                        //     itemStyle: {
+                        //         color: 'none',
+                        //         borderWidth: 2
+                        //     }
+                        // },
+                        select: {
+                            itemStyle: {
+                                color: 'green'
                             }
-                        }]
-                    };
+                        }
+                    }]
+                };
 
-                    var chart = testHelper.create(echarts, 'main8', {
-                        title: [
-                            'Click button toggleSelected 内蒙古',
-                            'Then hover and unhover the region, highlight state will not changed'
-                        ],
-                        option: option,
-                        height: 400,
-                        buttons: [{
-                            text: 'toggleSelected 内蒙古',
-                            onclick: function () {
-                                chart.dispatchAction({
-                                    type: 'geoToggleSelect',
-                                    geoIndex: 0,
-                                    name: '内蒙古'
-                                });
-                            }
-                        }]
-                    });
+                var chart = testHelper.create(echarts, 'main8', {
+                    title: [
+                        'Click button toggleSelected 内蒙古',
+                        'Then hover and unhover the region, highlight state will not changed'
+                    ],
+                    option: option,
+                    height: 400,
+                    buttons: [{
+                        text: 'toggleSelected 内蒙古',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'geoToggleSelect',
+                                geoIndex: 0,
+                                name: '内蒙古'
+                            });
+                        }
+                    }]
                 });
             });
         </script>

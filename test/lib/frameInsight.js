@@ -43,12 +43,17 @@
         addEventListener: global.addEventListener
     };
 
-    var now = global.performance
-        // performance.now has higer accuracy.
-        ? performance.now.bind(performance)
-        : function () {
-            return +new Date();
-        };
+    // var now = global.performance
+    //     // performance.now has higer accuracy.
+    //     ? performance.now.bind(performance)
+    //     : function () {
+    //         return +new Date();
+    //     };
+
+    // performance.now is not mocked in the visual regression test. Always use Date.now
+    var now = function () {
+        return Date.now();
+    };
 
     instrumentBase();
 

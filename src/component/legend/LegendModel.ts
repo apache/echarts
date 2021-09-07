@@ -46,13 +46,13 @@ const getDefaultSelectorOptions = function (ecModel: GlobalModel, type: string):
     if (type === 'all') {
         return {
             type: 'all',
-            title: ecModel.getLocale(['legend', 'selector', 'all'])
+            title: ecModel.getLocaleModel().get(['legend', 'selector', 'all'])
         };
     }
     else if (type === 'inverse') {
         return {
             type: 'inverse',
-            title: ecModel.getLocale(['legend', 'selector', 'inverse'])
+            title: ecModel.getLocaleModel().get(['legend', 'selector', 'inverse'])
         };
     }
 };
@@ -114,9 +114,7 @@ export interface LegendStyleOption {
 
     textStyle?: LabelOption
 
-    symbolKeepAspect?: boolean
-
-    symbolSize?: number | 'auto' | 'inherit'
+    symbolRotate?: number | 'inherit'
 }
 
 interface DataItem extends LegendStyleOption {
@@ -135,14 +133,14 @@ export interface LegendTooltipFormatterParams {
     $vars: ['name']
 }
 
-export interface LegendSymbolParams {
+export interface LegendIconParams {
     itemWidth: number,
     itemHeight: number,
     /**
      * symbolType is from legend.icon, legend.data.icon, or series visual
      */
-    symbolType: string,
-    symbolKeepAspect: boolean,
+    icon: string,
+    iconRotate: number | 'inherit',
     itemStyle: PathStyleProps,
     lineStyle: LineStyleProps
 }
@@ -455,7 +453,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         itemGap: 10,
         itemWidth: 25,
         itemHeight: 14,
-        symbolSize: 'auto',
+        symbolRotate: 'inherit',
 
         inactiveColor: '#ccc',
         inactiveBorderColor: '#ccc',

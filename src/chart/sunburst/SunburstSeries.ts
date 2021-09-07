@@ -30,10 +30,11 @@ import {
     CallbackDataParams,
     StatesOptionMixin,
     OptionDataItemObject,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    SunburstColorByMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import Model from '../../model/Model';
 import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
 
@@ -105,6 +106,7 @@ interface SortParam {
 }
 export interface SunburstSeriesOption extends
     SeriesOption<SunburstStateOption, ExtraStateOption>, SunburstStateOption,
+    SunburstColorByMixin,
     CircleLayoutOptionMixin {
 
     type?: 'sunburst'
@@ -164,7 +166,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         // to choose mappings approach among old shapes and new shapes.
         const tree = Tree.createTree(root, this, beforeLink);
 
-        function beforeLink(nodeData: List) {
+        function beforeLink(nodeData: SeriesData) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 const node = tree.getNodeByDataIndex(idx);
                 const levelModel = levelModels[node.depth];
@@ -254,8 +256,6 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         animationDurationUpdate: 500,
 
         data: [],
-
-        levels: [],
 
         /**
          * Sort order.

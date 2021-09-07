@@ -19,12 +19,13 @@
 
 // Symbol factory
 
-import * as zrUtil from 'zrender/src/core/util';
+import { each, isArray, retrieve2 } from 'zrender/src/core/util';
 import * as graphic from './graphic';
 import BoundingRect from 'zrender/src/core/BoundingRect';
-import {calculateTextPosition} from 'zrender/src/contain/text';
+import { calculateTextPosition } from 'zrender/src/contain/text';
 import { Dictionary } from 'zrender/src/core/types';
-import { ZRColor } from './types';
+import { SymbolOptionMixin, ZRColor } from './types';
+import { parsePercent } from './number';
 
 export type ECSymbol = graphic.Path & {
     __isEmptyBrush?: boolean
@@ -263,7 +264,7 @@ const symbolShapeMakers: Dictionary<SymbolShapeMaker> = {
 };
 
 export const symbolBuildProxies: Dictionary<ECSymbol> = {};
-zrUtil.each(symbolCtors, function (Ctor, name) {
+each(symbolCtors, function (Ctor, name) {
     symbolBuildProxies[name] = new Ctor();
 });
 
@@ -383,4 +384,27 @@ export function createSymbol(
     }
 
     return symbolPath as ECSymbol;
+}
+
+export function normalizeSymbolSize(symbolSize: number | number[]): [number, number] {
+    if (!isArray(symbolSize)) {
+        symbolSize = [+symbolSize, +symbolSize];
+    }
+    return [symbolSize[0] || 0, symbolSize[1] || 0];
+}
+
+export function normalizeSymbolOffset(
+    symbolOffset: SymbolOptionMixin['symbolOffset'],
+    symbolSize: number[]
+): [number, number] {
+    if (symbolOffset == null) {
+        return;
+    }
+    if (!isArray(symbolOffset)) {
+        symbolOffset = [symbolOffset, symbolOffset];
+    }
+    return [
+        parsePercent(symbolOffset[0], symbolSize[0]) || 0,
+        parsePercent(retrieve2(symbolOffset[1], symbolOffset[0]), symbolSize[1]) || 0
+    ];
 }

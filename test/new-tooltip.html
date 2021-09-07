@@ -22,7 +22,7 @@ under the License.
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="lib/esl.js"></script>
+    <script src="lib/simpleRequire.js"></script>
     <script src="lib/config.js"></script>
 </head>
 
@@ -183,7 +183,7 @@ under the License.
                             ? target.checked ? 1 : 0
                             : target.value
                     );
-                    location.reload();
+                    typeof __VRT_RELOAD__ !== 'undefined' ? __VRT_RELOAD__() : location.reload();
                 }
             };
         }

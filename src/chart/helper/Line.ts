@@ -17,19 +17,18 @@
 * under the License.
 */
 
-import { isArray, each, retrieve2 } from 'zrender/src/core/util';
+import { isArray, each } from 'zrender/src/core/util';
 import * as vector from 'zrender/src/core/vector';
 import * as symbolUtil from '../../util/symbol';
 import ECLinePath from './LinePath';
 import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis, enterEmphasis, leaveEmphasis, SPECIAL_STATES } from '../../util/states';
 import {getLabelStatesModels, setLabelStyle} from '../../label/labelStyle';
-import {round, parsePercent} from '../../util/number';
-import List from '../../data/List';
+import {round} from '../../util/number';
+import SeriesData from '../../data/SeriesData';
 import { ZRTextAlign, ZRTextVerticalAlign, LineLabelOption, ColorString } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
-
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
 import Model from '../../model/Model';
@@ -42,7 +41,7 @@ type LineECSymbol = ECSymbol & {
     __specifiedRotation: number
 };
 
-type LineList = List<SeriesModel, LineDataVisual>;
+type LineList = SeriesData<SeriesModel, LineDataVisual>;
 
 export interface LineLabel extends graphic.Text {
     lineLabelOriginalOpacity: number
@@ -70,18 +69,13 @@ function createSymbol(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: 
 
     const symbolSize = lineData.getItemVisual(idx, name + 'Size' as 'fromSymbolSize' | 'toSymbolSize');
     const symbolRotate = lineData.getItemVisual(idx, name + 'Rotate' as 'fromSymbolRotate' | 'toSymbolRotate');
-    const symbolOffset = lineData.getItemVisual(idx, name + 'Offset' as 'fromSymbolOffset' | 'toSymbolOffset') || 0;
+    const symbolOffset = lineData.getItemVisual(idx, name + 'Offset' as 'fromSymbolOffset' | 'toSymbolOffset');
     const symbolKeepAspect = lineData.getItemVisual(idx,
         name + 'KeepAspect' as 'fromSymbolKeepAspect' | 'toSymbolKeepAspect');
 
-    const symbolSizeArr = isArray(symbolSize)
-        ? symbolSize : [symbolSize, symbolSize];
+    const symbolSizeArr = symbolUtil.normalizeSymbolSize(symbolSize);
 
-    const symbolOffsetArr = isArray(symbolOffset)
-        ? symbolOffset : [symbolOffset, symbolOffset];
-
-    symbolOffsetArr[0] = parsePercent(symbolOffsetArr[0], symbolSizeArr[0]);
-    symbolOffsetArr[1] = parsePercent(retrieve2(symbolOffsetArr[1], symbolOffsetArr[0]),symbolSizeArr[1]);
+    const symbolOffsetArr = symbolUtil.normalizeSymbolOffset(symbolOffset || 0, symbolSizeArr);
 
     const symbolPath = symbolUtil.createSymbol(
         symbolType,
@@ -139,7 +133,7 @@ class Line extends graphic.Group {
     private _fromSymbolType: string;
     private _toSymbolType: string;
 
-    constructor(lineData: List, idx: number, seriesScope?: LineDrawSeriesScope) {
+    constructor(lineData: SeriesData, idx: number, seriesScope?: LineDrawSeriesScope) {
         super();
         this._createLine(lineData as LineList, idx, seriesScope);
     }
@@ -170,7 +164,7 @@ class Line extends graphic.Group {
     }
 
     // TODO More strict on the List type in parameters?
-    updateData(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
+    updateData(lineData: SeriesData, idx: number, seriesScope: LineDrawSeriesScope) {
         const seriesModel = lineData.hostModel;
 
         const line = this.childOfName('line') as ECLinePath;
@@ -201,7 +195,7 @@ class Line extends graphic.Group {
         return this.childAt(0) as graphic.Line;
     }
 
-    _updateCommonStl(lineData: List, idx: number, seriesScope?: LineDrawSeriesScope) {
+    _updateCommonStl(lineData: SeriesData, idx: number, seriesScope?: LineDrawSeriesScope) {
         const seriesModel = lineData.hostModel as SeriesModel;
 
         const line = this.childOfName('line') as ECLinePath;
@@ -313,7 +307,7 @@ class Line extends graphic.Group {
         leaveEmphasis(this);
     }
 
-    updateLayout(lineData: List, idx: number) {
+    updateLayout(lineData: SeriesData, idx: number) {
         this.setLinePoints(lineData.getItemLayout(idx));
     }
 

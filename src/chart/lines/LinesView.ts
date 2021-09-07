@@ -31,7 +31,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import { StageHandlerProgressParams, StageHandlerProgressExecutor } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import type Polar from '../../coord/polar/Polar';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 
@@ -90,7 +90,7 @@ class LinesView extends ChartView {
             }
         }
 
-        lineDraw.updateData(data as List);
+        lineDraw.updateData(data as SeriesData);
 
         const clipPath = seriesModel.get('clip', true) && createClipPath(
             (seriesModel.coordinateSystem as Polar | Cartesian2D), false, seriesModel
@@ -156,7 +156,7 @@ class LinesView extends ChartView {
         }
     }
 
-    _updateLineDraw(data: List, seriesModel: LinesSeriesModel) {
+    _updateLineDraw(data: SeriesData, seriesModel: LinesSeriesModel) {
         let lineDraw = this._lineDraw;
         const hasEffect = this._showEffect(seriesModel);
         const isPolyline = !!seriesModel.get('polyline');
@@ -186,7 +186,6 @@ class LinesView extends ChartView {
             this._hasEffet = hasEffect;
             this._isPolyline = isPolyline;
             this._isLargeDraw = isLargeDraw;
-            this.group.removeAll();
         }
 
         this.group.add(lineDraw.group);
@@ -212,6 +211,10 @@ class LinesView extends ChartView {
         this._lineDraw = null;
         // Clear motion when lineDraw is removed
         this._clearLayer(api);
+    }
+
+    dispose(ecModel: GlobalModel, api: ExtensionAPI) {
+        this.remove(ecModel, api);
     }
 
 }

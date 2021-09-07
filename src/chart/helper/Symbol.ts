@@ -17,20 +17,20 @@
 * under the License.
 */
 
-import {createSymbol} from '../../util/symbol';
+import {createSymbol, normalizeSymbolOffset, normalizeSymbolSize} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
 import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
-import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { ColorString, BlurScope, AnimationOption, ZRColor } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
-import { extend, isArray, retrieve2 } from 'zrender/src/core/util';
+import { extend } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
+import { saveOldStyle } from '../../animation/basicTrasition';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
 
@@ -55,14 +55,14 @@ class Symbol extends graphic.Group {
 
     private _z2: number;
 
-    constructor(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
+    constructor(data: SeriesData, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
         super();
         this.updateData(data, idx, seriesScope, opts);
     }
 
     _createSymbol(
         symbolType: string,
-        data: List,
+        data: SeriesData,
         idx: number,
         symbolSize: number[],
         keepAspect: boolean
@@ -102,6 +102,9 @@ class Symbol extends graphic.Group {
         this.childAt(0).stopAnimation(null, toLastFrame);
     }
 
+    getSymbolType() {
+        return this._symbolType;
+    }
     /**
      * FIXME:
      * Caution: This method breaks the encapsulation of this module,
@@ -148,7 +151,7 @@ class Symbol extends graphic.Group {
     /**
      * Update symbol properties
      */
-    updateData(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
+    updateData(data: SeriesData, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
         this.silent = false;
 
         const symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
@@ -170,6 +173,8 @@ class Symbol extends graphic.Group {
             };
             disableAnimation ? symbolPath.attr(target)
                 : graphic.updateProps(symbolPath, target, seriesModel, idx);
+
+            saveOldStyle(symbolPath);
         }
 
         this._updateCommon(data, idx, symbolSize, seriesScope, opts);
@@ -201,7 +206,7 @@ class Symbol extends graphic.Group {
     }
 
     _updateCommon(
-        data: List,
+        data: SeriesData,
         idx: number,
         symbolSize: number[],
         seriesScope?: SymbolDrawSeriesScope,
@@ -255,13 +260,10 @@ class Symbol extends graphic.Group {
         const symbolRotate = data.getItemVisual(idx, 'symbolRotate');
         symbolPath.attr('rotation', (symbolRotate || 0) * Math.PI / 180 || 0);
 
-        let symbolOffset = data.getItemVisual(idx, 'symbolOffset') || 0;
+        const symbolOffset = normalizeSymbolOffset(data.getItemVisual(idx, 'symbolOffset'), symbolSize);
         if (symbolOffset) {
-            if (!isArray(symbolOffset)) {
-                symbolOffset = [symbolOffset, symbolOffset];
-            }
-            symbolPath.x = parsePercent(symbolOffset[0], symbolSize[0]);
-            symbolPath.y = parsePercent(retrieve2(symbolOffset[1], symbolOffset[0]) || 0, symbolSize[1]);
+            symbolPath.x = symbolOffset[0];
+            symbolPath.y = symbolOffset[1];
         }
 
         cursorStyle && symbolPath.attr('cursor', cursorStyle);
@@ -393,11 +395,8 @@ class Symbol extends graphic.Group {
         );
     }
 
-    static getSymbolSize(data: List, idx: number) {
-        const symbolSize = data.getItemVisual(idx, 'symbolSize');
-        return isArray(symbolSize)
-            ? symbolSize.slice()
-            : [+symbolSize, +symbolSize];
+    static getSymbolSize(data: SeriesData, idx: number) {
+        return normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
     }
 }
 
@@ -405,6 +404,5 @@ class Symbol extends graphic.Group {
 function driftSymbol(this: ECSymbol, dx: number, dy: number) {
     this.parent.drift(dx, dy);
 }
-
 
 export default Symbol;
