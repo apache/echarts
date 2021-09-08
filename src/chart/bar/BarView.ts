@@ -238,7 +238,6 @@ class BarView extends ChartView {
             .add(function (dataIndex) {
                 const itemModel = data.getItemModel<BarDataItemOption>(dataIndex);
                 const layout = getLayout[coord.type](data, dataIndex, itemModel);
-                // console.log('get', layout.clockwise);
 
                 if (drawBackground) {
                     createBackground(dataIndex);

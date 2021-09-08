@@ -27,62 +27,79 @@ under the License.
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-                margin: 0;
+            html, body {
+                position: relative;
             }
-            #main {
-                background: #fff;
+            .chart-panel {
+                display: inline-block;
+                width: 200px;
+                height: 200px;
+            }
+            .chart {
+                width: 200px;
+                height: 180px;
             }
         </style>
-        <h3>click axis labe should console log</h3>
-        <div id="main"></div>
+        <h3>click axis label should console log</h3>
+        <h3>click update button, sectors should be in the same order</h3>
+        <button type="button" id="btn-update">Update</button>
+        <div class="chart-panel">
+            <h4>clockwise: true</h4>
+            <div id="main0" class="chart"></div>
+        </div>
+        <div class="chart-panel">
+            <h4>clockwise: false</h4>
+            <div id="main1" class="chart"></div>
+        </div>
         <script>
 
             require(['echarts'], function (echarts) {
+                var charts = [];
+                for (let i = 0; i < 2; ++i) {
+                    var chart = echarts.init(document.getElementById('main' + i));
+                    charts.push(chart);
 
-                var chart = echarts.init(document.getElementById('main'));
-
-                chart.setOption({
-                    angleAxis: {
-                        triggerEvent: true
-                    },
-                    radiusAxis: {
-                        type: 'category',
-                        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-                        z: 10,
-                        triggerEvent: true
-                    },
-                    polar: {
-                    },
-                    tooltip: {},
-                    series: [{
-                        type: 'bar',
-                        data: [1, 2, 0, 3, 6, 5, 7],
-                        coordinateSystem: 'polar',
-                        itemStyle: {
-                            normal: {
-                                color: '#00f'
-                            }
-                        },
-                        barWidth: '50%'
-                    }]
-                });
-
-                setTimeout(function () {
                     chart.setOption({
+                        angleAxis: {
+                            triggerEvent: true,
+                            clockwise: !i
+                        },
+                        radiusAxis: {
+                            type: 'category',
+                            data: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+                            z: 10,
+                            triggerEvent: true
+                        },
+                        polar: {
+                        },
+                        tooltip: {},
                         series: [{
-                            data: [1, 2, 4, 3, 6, 5, 7]
+                            type: 'bar',
+                            data: [1, 2, 0, 3, 6, 5, 7],
+                            coordinateSystem: 'polar',
+                            itemStyle: {
+                                normal: {
+                                    color: '#00f'
+                                }
+                            },
+                            barWidth: '50%'
                         }]
                     });
-                });
 
-                chart.on('click', function (params) {
-                    console.log(params);
-                });
+                    chart.on('click', function (params) {
+                        console.log(params);
+                    });
+                }
 
-                window.onresize = chart.resize;
+                document.getElementById('btn-update').addEventListener('click', function () {
+                    for (var i = 0; i < 2; ++i) {
+                        charts[i].setOption({
+                            series: [{
+                                data: [1, 2, 4, 3, 6, 5, 7]
+                            }]
+                        });
+                    }
+                });
             });
         </script>
     </body>
