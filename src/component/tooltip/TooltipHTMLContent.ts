@@ -519,21 +519,6 @@ class TooltipHTMLContent {
         this.el.parentNode.removeChild(this.el);
     }
 
-    getOuterSize() {
-        let width = this.el.clientWidth;
-        let height = this.el.clientHeight;
-
-        // Consider browser compatibility.
-        // IE8 does not support getComputedStyle.
-        const stl = getComputedStyle(this.el);
-        if (stl) {
-            width += parseInt(stl.borderLeftWidth, 10) + parseInt(stl.borderRightWidth, 10);
-            height += parseInt(stl.borderTopWidth, 10) + parseInt(stl.borderBottomWidth, 10);
-        }
-
-        return {width: width, height: height};
-    }
-
 }
 
 export default TooltipHTMLContent;
