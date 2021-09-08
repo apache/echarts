@@ -29,7 +29,8 @@ import {
     OptionDataValue,
     StatesOptionMixin,
     SeriesEncodeOptionMixin,
-    SeriesOnCalendarOptionMixin
+    SeriesOnCalendarOptionMixin,
+    DefaultStatesMixinEmpasis
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -45,11 +46,15 @@ export interface HeatmapStateOption {
     label?: SeriesLabelOption
 }
 
-export interface HeatmapDataItemOption extends HeatmapStateOption, StatesOptionMixin<HeatmapStateOption> {
+interface FunnelStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
+export interface HeatmapDataItemOption extends HeatmapStateOption,
+    StatesOptionMixin<HeatmapStateOption, FunnelStatesMixin> {
     value: HeatmapDataValue
 }
 
-export interface HeatmapSeriesOption extends SeriesOption<HeatmapStateOption>, HeatmapStateOption,
+export interface HeatmapSeriesOption extends SeriesOption<HeatmapStateOption, FunnelStatesMixin>, HeatmapStateOption,
     SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesOnCalendarOptionMixin, SeriesEncodeOptionMixin {
     type?: 'heatmap'
 

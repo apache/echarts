@@ -26,7 +26,8 @@ import {
     OptionDataItemObject,
     SeriesSamplingOptionMixin,
     SeriesLabelOption,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    DefaultStatesMixinEmpasis
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import createSeriesData from '../helper/createSeriesData';
@@ -46,16 +47,21 @@ export interface BarStateOption {
     label?: BarSeriesLabelOption
 }
 
+interface BarStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
+
 export interface BarItemStyleOption extends ItemStyleOption {
     // Border radius is not supported for bar on polar
     borderRadius?: number | number[]
 }
-export interface BarDataItemOption extends BarStateOption, StatesOptionMixin<BarStateOption>,
+export interface BarDataItemOption extends BarStateOption,
+    StatesOptionMixin<BarStateOption, BarStatesMixin>,
     OptionDataItemObject<OptionDataValue> {
     cursor?: string
 }
 
-export interface BarSeriesOption extends BaseBarSeriesOption<BarStateOption>, BarStateOption,
+export interface BarSeriesOption extends BaseBarSeriesOption<BarStateOption, BarStatesMixin>, BarStateOption,
     SeriesStackOptionMixin, SeriesSamplingOptionMixin, SeriesEncodeOptionMixin {
 
     type?: 'bar'
@@ -151,7 +157,7 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
         },
 
         realtimeSort: false
-    });
+    } as BarSeriesOption);
 
 }
 

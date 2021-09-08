@@ -45,7 +45,7 @@ import {LegendIconParams} from '../../component/legend/LegendModel';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
-interface ExtraStateOption {
+interface LineStateOptionMixin {
     emphasis?: {
         focus?: DefaultEmphasisFocus
         scale?: boolean
@@ -59,7 +59,7 @@ export interface LineStateOption {
 }
 
 export interface LineDataItemOption extends SymbolOptionMixin,
-    LineStateOption, StatesOptionMixin<LineStateOption, ExtraStateOption> {
+    LineStateOption, StatesOptionMixin<LineStateOption, LineStateOptionMixin> {
     name?: string
 
     value?: LineDataValue
@@ -70,7 +70,7 @@ export interface LineEndLabelOption extends SeriesLabelOption {
 }
 
 
-export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraStateOption & {
+export interface LineSeriesOption extends SeriesOption<LineStateOption, LineStateOptionMixin & {
     emphasis?: {
         lineStyle?: LineStyleOption | {
             width?: 'bolder'

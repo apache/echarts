@@ -965,6 +965,10 @@ export interface ItemStyleOption extends ShadowOptionMixin, BorderOptionMixin {
     decal?: DecalObject | 'none'
 }
 
+export interface SeriesItemStyleOption<TParams = CallbackDataParams> extends Omit<ItemStyleOption, 'color'> {
+    color?: ZRColor | ((params: TParams) => string)
+}
+
 /**
  * ItemStyleOption is a option set to control styles on lines.
  * Used in the components or series like `line`, `axis`
@@ -1499,15 +1503,16 @@ export type BlurScope = 'coordinateSystem' | 'series' | 'global';
  */
 export type InnerFocus = DefaultEmphasisFocus | ArrayLike<number> | Dictionary<ArrayLike<number>>;
 
-export interface DefaultExtraStateOpts {
-    emphasis: any
-    select: any
-    blur: any
+export interface DefaultStatesMixin {
+    // FIXME
+    emphasis?: any
+    select?: any
+    blur?: any
 }
 
 export type DefaultEmphasisFocus = 'none' | 'self' | 'series';
 
-export interface DefaultExtraEmpasisState {
+export interface DefaultStatesMixinEmpasis {
     /**
      * self: Focus self and blur all others.
      * series: Focus series and blur all other series.
@@ -1515,19 +1520,20 @@ export interface DefaultExtraEmpasisState {
     focus?: DefaultEmphasisFocus
 }
 
-interface ExtraStateOptsBase {
-    emphasis?: {
-        focus?: string
-    },
-    select?: any
-    blur?: any
+export interface StatesMixinBase {
+    emphasis?: unknown
+    select?: unknown
+    blur?: unknown
 }
 
-export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> {
+export interface StatesOptionMixin<
+    StateOption,
+    StatesMixin extends StatesMixinBase
+> {
     /**
      * Emphasis states
      */
-    emphasis?: StateOption & ExtraStateOpts['emphasis'] & {
+    emphasis?: StateOption & StatesMixin['emphasis'] & {
         /**
          * Scope of blurred element when focus.
          *
@@ -1542,11 +1548,11 @@ export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStat
     /**
      * Select states
      */
-    select?: StateOption & ExtraStateOpts['select']
+    select?: StateOption & StatesMixin['select']
     /**
      * Blur states.
      */
-    blur?: StateOption & ExtraStateOpts['blur']
+    blur?: StateOption & StatesMixin['blur']
 }
 
 export interface UniversalTransitionOption {
@@ -1574,11 +1580,13 @@ export interface UniversalTransitionOption {
 }
 
 export interface SeriesOption<
-    StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
+    StateOption = unknown,
+    StatesMixin extends StatesMixinBase = DefaultStatesMixin
+> extends
     ComponentOption,
     AnimationOptionMixin,
     ColorPaletteOptionMixin,
-    StatesOptionMixin<StateOption, ExtraStateOpts>
+    StatesOptionMixin<StateOption, StatesMixin>
 {
     mainType?: 'series'
 

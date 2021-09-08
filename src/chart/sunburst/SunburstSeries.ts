@@ -65,7 +65,7 @@ interface SunburstDataParams extends CallbackDataParams {
     }[]
 }
 
-interface ExtraStateOption {
+interface SunburstStatesMixin {
     emphasis?: {
         focus?: DefaultEmphasisFocus | 'descendant' | 'ancestor'
     }
@@ -77,7 +77,7 @@ export interface SunburstStateOption {
 }
 
 export interface SunburstSeriesNodeItemOption extends
-    SunburstStateOption, StatesOptionMixin<SunburstStateOption, ExtraStateOption>,
+    SunburstStateOption, StatesOptionMixin<SunburstStateOption, SunburstStatesMixin>,
     OptionDataItemObject<OptionDataValue>
 {
     nodeClick?: 'rootToNode' | 'link'
@@ -91,7 +91,8 @@ export interface SunburstSeriesNodeItemOption extends
 
     cursor?: string
 }
-export interface SunburstSeriesLevelOption extends SunburstStateOption, StatesOptionMixin<SunburstStateOption> {
+export interface SunburstSeriesLevelOption
+    extends SunburstStateOption, StatesOptionMixin<SunburstStateOption, SunburstStatesMixin> {
     highlight?: {
         itemStyle?: SunburstItemStyleOption
         label?: SunburstLabelOption
@@ -105,7 +106,7 @@ interface SortParam {
     getValue(): number
 }
 export interface SunburstSeriesOption extends
-    SeriesOption<SunburstStateOption, ExtraStateOption>, SunburstStateOption,
+    SeriesOption<SunburstStateOption, SunburstStatesMixin>, SunburstStateOption,
     SunburstColorByMixin,
     CircleLayoutOptionMixin {
 

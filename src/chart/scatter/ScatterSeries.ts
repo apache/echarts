@@ -47,7 +47,7 @@ interface ScatterStateOption {
     label?: SeriesLabelOption
 }
 
-interface ExtraStateOption {
+interface ScatterStatesOptionMixin {
     emphasis?: {
         focus?: DefaultEmphasisFocus
         scale?: boolean
@@ -55,11 +55,12 @@ interface ExtraStateOption {
 }
 
 export interface ScatterDataItemOption extends SymbolOptionMixin,
-    ScatterStateOption, StatesOptionMixin<ScatterStateOption, ExtraStateOption>,
+    ScatterStateOption, StatesOptionMixin<ScatterStateOption, ScatterStatesOptionMixin>,
     OptionDataItemObject<OptionDataValue> {
 }
 
-export interface ScatterSeriesOption extends SeriesOption<ScatterStateOption, ExtraStateOption>, ScatterStateOption,
+export interface ScatterSeriesOption
+    extends SeriesOption<ScatterStateOption, ScatterStatesOptionMixin>, ScatterStateOption,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SeriesLargeOptionMixin, SeriesStackOptionMixin,

@@ -34,7 +34,8 @@ import {
     OptionDataValue,
     StatesOptionMixin,
     SeriesLineLabelOption,
-    DimensionDefinitionLoose
+    DimensionDefinitionLoose,
+    DefaultStatesMixinEmpasis
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import type { LineDrawModelOption } from '../helper/LineDraw';
@@ -82,12 +83,16 @@ interface LegacyDataItemOption {
     name: string
 }
 
+interface LinesStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
 export interface LinesStateOption {
     lineStyle?: LinesLineStyleOption
     label?: SeriesLineLabelOption
 }
 
-export interface LinesDataItemOption extends LinesStateOption, StatesOptionMixin<LinesStateOption> {
+export interface LinesDataItemOption extends LinesStateOption,
+    StatesOptionMixin<LinesStateOption, LinesStatesMixin> {
     name?: string
 
     fromName?: string
@@ -105,8 +110,8 @@ export interface LinesDataItemOption extends LinesStateOption, StatesOptionMixin
     dimensions?: DimensionDefinitionLoose
 }
 
-export interface LinesSeriesOption extends SeriesOption<LinesStateOption>, LinesStateOption,
-
+export interface LinesSeriesOption
+    extends SeriesOption<LinesStateOption, LinesStatesMixin>, LinesStateOption,
     SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesOnPolarOptionMixin,
     SeriesOnCalendarOptionMixin, SeriesLargeOptionMixin {
 

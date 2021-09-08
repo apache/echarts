@@ -32,7 +32,8 @@ import {
     ParsedValue,
     SeriesOnGeoOptionMixin,
     StatesOptionMixin,
-    SeriesLabelOption
+    SeriesLabelOption,
+    StatesMixinBase
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
@@ -48,7 +49,7 @@ export interface MapStateOption {
     itemStyle?: GeoItemStyleOption
     label?: SeriesLabelOption
 }
-export interface MapDataItemOption extends MapStateOption, StatesOptionMixin<MapStateOption>,
+export interface MapDataItemOption extends MapStateOption, StatesOptionMixin<MapStateOption, StatesMixinBase>,
     OptionDataItemObject<OptionDataValueNumeric> {
     cursor?: string
 }
@@ -56,7 +57,7 @@ export interface MapDataItemOption extends MapStateOption, StatesOptionMixin<Map
 export type MapValueCalculationType = 'sum' | 'average' | 'min' | 'max';
 
 export interface MapSeriesOption extends
-    SeriesOption<MapStateOption>, MapStateOption,
+    SeriesOption<MapStateOption, StatesMixinBase>, MapStateOption,
 
     GeoCommonOptionMixin,
     // If `geoIndex` is not specified, a exclusive geo will be

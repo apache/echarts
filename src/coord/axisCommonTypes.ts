@@ -169,9 +169,6 @@ interface AxisTickOption {
     // The length of axisTick.
     length?: number,
     lineStyle?: LineStyleOption
-
-    // --------------------------------------------
-    // [Properties below only for 'category' axis]:
 }
 
 type AxisLabelValueFormatter = (value: number, index: number) => string;

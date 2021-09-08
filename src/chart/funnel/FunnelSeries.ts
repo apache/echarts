@@ -36,7 +36,8 @@ import {
     LayoutOrient,
     VerticalAlign,
     SeriesLabelOption,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    DefaultStatesMixinEmpasis
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -46,6 +47,10 @@ type FunnelLabelOption = Omit<SeriesLabelOption, 'position'> & {
         | 'outer' | 'inner' | 'center' | 'rightTop' | 'rightBottom' | 'leftTop' | 'leftBottom'
 };
 
+interface FunnelStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
+
 export interface FunnelStateOption {
     itemStyle?: ItemStyleOption
     label?: FunnelLabelOption
@@ -53,7 +58,7 @@ export interface FunnelStateOption {
 }
 
 export interface FunnelDataItemOption
-    extends FunnelStateOption, StatesOptionMixin<FunnelStateOption>,
+    extends FunnelStateOption, StatesOptionMixin<FunnelStateOption, FunnelStatesMixin>,
     OptionDataItemObject<OptionDataValueNumeric> {
 
     itemStyle?: ItemStyleOption & {
@@ -62,7 +67,7 @@ export interface FunnelDataItemOption
     }
 }
 
-export interface FunnelSeriesOption extends SeriesOption<FunnelStateOption>, FunnelStateOption,
+export interface FunnelSeriesOption extends SeriesOption<FunnelStateOption, FunnelStatesMixin>, FunnelStateOption,
     BoxLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'funnel'
 

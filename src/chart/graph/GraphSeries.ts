@@ -71,16 +71,16 @@ export interface GraphNodeStateOption {
 interface ExtraEmphasisState {
     focus?: DefaultEmphasisFocus | 'adjacency'
 }
-interface ExtraNodeStateOption {
+interface GraphNodeStatesMixin {
     emphasis?: ExtraEmphasisState
 }
 
-interface ExtraEdgeStateOption {
+interface GraphEdgeStatesMixin {
     emphasis?: ExtraEmphasisState
 }
 
 export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOption,
-    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption, ExtraNodeStateOption> {
+    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption, GraphNodeStatesMixin> {
 
     id?: string
     name?: string
@@ -114,7 +114,7 @@ export interface GraphEdgeStateOption {
 }
 export interface GraphEdgeItemOption extends
         GraphEdgeStateOption,
-        StatesOptionMixin<GraphEdgeStateOption, ExtraEdgeStateOption>,
+        StatesOptionMixin<GraphEdgeStateOption, GraphEdgeStatesMixin>,
         GraphEdgeItemObject<OptionDataValueNumeric> {
 
     value?: number
@@ -130,13 +130,13 @@ export interface GraphEdgeItemOption extends
 }
 
 export interface GraphCategoryItemOption extends SymbolOptionMixin,
-    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption> {
+    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption, GraphNodeStatesMixin> {
     name?: string
 
     value?: OptionDataValue
 }
 
-export interface GraphSeriesOption extends SeriesOption,
+export interface GraphSeriesOption extends SeriesOption<GraphNodeStateOption, GraphNodeStatesMixin>,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SymbolOptionMixin<CallbackDataParams>,

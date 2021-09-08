@@ -91,7 +91,6 @@ interface ExtraStateOption {
 export interface PieDataItemOption extends
     OptionDataItemObject<OptionDataValueNumeric>,
     PieStateOption, StatesOptionMixin<PieStateOption, ExtraStateOption> {
-
     cursor?: string
 }
 export interface PieSeriesOption extends

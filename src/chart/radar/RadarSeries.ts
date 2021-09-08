@@ -32,7 +32,8 @@ import {
     StatesOptionMixin,
     OptionDataItemObject,
     SeriesEncodeOptionMixin,
-    CallbackDataParams
+    CallbackDataParams,
+    DefaultStatesMixinEmpasis
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -43,6 +44,9 @@ import {
 
 type RadarSeriesDataValue = OptionDataValue[];
 
+interface RadarStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
 export interface RadarSeriesStateOption {
     lineStyle?: LineStyleOption
     areaStyle?: AreaStyleOption
@@ -50,11 +54,12 @@ export interface RadarSeriesStateOption {
     itemStyle?: ItemStyleOption
 }
 export interface RadarSeriesDataItemOption extends SymbolOptionMixin,
-    RadarSeriesStateOption, StatesOptionMixin<RadarSeriesStateOption>,
+    RadarSeriesStateOption, StatesOptionMixin<RadarSeriesStateOption, RadarStatesMixin>,
     OptionDataItemObject<RadarSeriesDataValue> {
 }
 
-export interface RadarSeriesOption extends SeriesOption<RadarSeriesStateOption>, RadarSeriesStateOption,
+export interface RadarSeriesOption
+    extends SeriesOption<RadarSeriesStateOption, RadarStatesMixin>, RadarSeriesStateOption,
     SymbolOptionMixin<CallbackDataParams>, SeriesEncodeOptionMixin {
     type?: 'radar'
     coordinateSystem?: 'radar'

@@ -28,7 +28,8 @@ import {
     ItemStyleOption,
     OptionDataValueNumeric,
     StatesOptionMixin,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    DefaultStatesMixinEmpasis
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -102,11 +103,15 @@ interface DetailOption extends LabelOption {
     valueAnimation?: boolean
 }
 
+interface GaugeStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
 export interface GaugeStateOption {
     itemStyle?: ItemStyleOption
 }
 
-export interface GaugeDataItemOption extends GaugeStateOption, StatesOptionMixin<GaugeStateOption> {
+export interface GaugeDataItemOption extends GaugeStateOption,
+    StatesOptionMixin<GaugeStateOption, GaugeStatesMixin> {
     name?: string
     value?: OptionDataValueNumeric
     pointer?: PointerOption
@@ -114,7 +119,7 @@ export interface GaugeDataItemOption extends GaugeStateOption, StatesOptionMixin
     title?: TitleOption
     detail?: DetailOption
 }
-export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, GaugeStateOption,
+export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption, GaugeStatesMixin>, GaugeStateOption,
     CircleLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'gauge'
 
