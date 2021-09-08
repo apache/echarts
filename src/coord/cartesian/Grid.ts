@@ -47,6 +47,8 @@ import { ScaleDataValue } from '../../util/types';
 import SeriesData from '../../data/SeriesData';
 import OrdinalScale from '../../scale/Ordinal';
 import { isCartesian2DSeries, findAxisModels } from './cartesianAxisHelper';
+import { CategoryAxisBaseOption } from '../axisCommonTypes';
+import { AxisBaseModel } from '../AxisBaseModel';
 
 
 type Cartesian2DDimensionName = 'x' | 'y';
@@ -388,7 +390,7 @@ class Grid implements CoordinateSystemMaster {
                 );
 
                 const isCategory = axis.type === 'category';
-                axis.onBand = isCategory && axisModel.get('boundaryGap');
+                axis.onBand = isCategory && (axisModel as AxisBaseModel<CategoryAxisBaseOption>).get('boundaryGap');
                 axis.inverse = axisModel.get('inverse');
 
                 // Inject axis into axisModel

@@ -28,7 +28,7 @@ import Scale from '../scale/Scale';
 import { DimensionName, ScaleDataValue, ScaleTick } from '../util/types';
 import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
-import { AxisBaseOption, OptionAxisType } from './axisCommonTypes';
+import { AxisBaseOption, CategoryAxisBaseOption, OptionAxisType } from './axisCommonTypes';
 import { AxisBaseModel } from './AxisBaseModel';
 
 const NORMALIZED_EXTENT = [0, 1] as [number, number];
@@ -63,7 +63,7 @@ class Axis {
 
     // Injected outside
     model: AxisBaseModel;
-    onBand: AxisBaseOption['boundaryGap'] = false;
+    onBand: CategoryAxisBaseOption['boundaryGap'] = false;
     inverse: AxisBaseOption['inverse'] = false;
 
 

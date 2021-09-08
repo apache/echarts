@@ -28,7 +28,7 @@ import {
     LabelOption,
     ColorString
 } from '../../util/types';
-import { AxisBaseOption } from '../axisCommonTypes';
+import { AxisBaseOption, CategoryAxisBaseOption, ValueAxisBaseOption } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
 import Radar from './Radar';
 import {CoordinateSystemHostModel} from '../../coord/CoordinateSystem';
@@ -79,15 +79,16 @@ export interface RadarOption extends ComponentOption, CircleLayoutOptionMixin {
     scale?: boolean
     splitNumber?: number
 
-    boundaryGap?: AxisBaseOption['boundaryGap']
+    boundaryGap?: CategoryAxisBaseOption['boundaryGap']
+        | ValueAxisBaseOption['boundaryGap']
 
     indicator?: RadarIndicatorOption[]
 }
 
-export interface InnerIndicatorAxisOption extends AxisBaseOption {
+export type InnerIndicatorAxisOption = AxisBaseOption & {
     // TODO Use type?
     // axisType?: 'value' | 'log'
-}
+};
 
 class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystemHostModel {
     static readonly type = 'radar';

@@ -41,7 +41,6 @@ import {
     logError,
     merge,
     map,
-    defaults,
     curry,
     filter,
     HashMap
