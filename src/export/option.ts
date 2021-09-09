@@ -90,7 +90,8 @@ import type {
     CustomSeriesOption as CustomSeriesOptionInner,
     CustomSeriesRenderItemAPI,
     CustomSeriesRenderItemParams,
-    CustomSeriesRenderItemReturn
+    CustomSeriesRenderItemReturn,
+    CustomSeriesRenderItem
 } from '../chart/custom/CustomSeries';
 
 import type { GraphicComponentLooseOption as GraphicComponentOption } from '../component/graphic/install';
@@ -273,5 +274,6 @@ export {
 
     CustomSeriesRenderItemParams,
     CustomSeriesRenderItemAPI,
-    CustomSeriesRenderItemReturn
+    CustomSeriesRenderItemReturn,
+    CustomSeriesRenderItem
 };

@@ -204,7 +204,7 @@ interface BuiltinShapes {
     circle: Partial<Circle['shape']>
     rect: Partial<Rect['shape']>
     sector: Partial<Sector['shape']>
-    poygon: Partial<Polygon['shape']>
+    polygon: Partial<Polygon['shape']>
     polyline: Partial<Polyline['shape']>
     line: Partial<Line['shape']>
     arc: Partial<Arc['shape']>
@@ -337,12 +337,12 @@ export interface CustomSeriesRenderItemParams {
     actionType?: string;
 }
 
-export type CustomSeriesRenderItemReturn = CustomRootElementOption;
+export type CustomSeriesRenderItemReturn = CustomRootElementOption | undefined | null;
 
-type CustomSeriesRenderItem = (
+export type CustomSeriesRenderItem = (
     params: CustomSeriesRenderItemParams,
     api: CustomSeriesRenderItemAPI
-) => CustomElementOption;
+) => CustomSeriesRenderItemReturn;
 
 export interface CustomSeriesOption extends
     SeriesOption<unknown>,    // don't support StateOption in custom series.
