@@ -89,7 +89,7 @@ interface LinesStatesMixin {
     emphasis?: DefaultStatesMixinEmpasis
 }
 export interface LinesStateOption<TCbParams = never> {
-    lineStyle?: LinesLineStyleOption<TCbParams extends never ? never : (params: TCbParams) => ZRColor>
+    lineStyle?: LinesLineStyleOption<(TCbParams extends never ? never : (params: TCbParams) => ZRColor) | ZRColor>
     label?: SeriesLineLabelOption
 }
 
@@ -108,8 +108,6 @@ export interface LinesDataItemOption extends LinesStateOption<CallbackDataParams
     value?: LinesValue
 
     effect?: LineDrawModelOption['effect']
-
-    dimensions?: DimensionDefinitionLoose
 }
 
 export interface LinesSeriesOption
@@ -141,6 +139,8 @@ export interface LinesSeriesOption
         // Stored as a flat array. In format
         // Points Count(2) | x | y | x | y | Points Count(3) | x |  y | x | y | x | y |
         | ArrayLike<number>
+
+    dimensions?: DimensionDefinitionLoose | DimensionDefinitionLoose[]
 }
 
 class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {

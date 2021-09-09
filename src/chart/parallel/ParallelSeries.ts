@@ -49,7 +49,7 @@ interface ParallelStatesMixin {
     emphasis?: DefaultStatesMixinEmpasis
 }
 export interface ParallelStateOption<TCbParams = never> {
-    lineStyle?: LineStyleOption<TCbParams extends never ? never : (params: TCbParams) => ZRColor>
+    lineStyle?: LineStyleOption<(TCbParams extends never ? never : (params: TCbParams) => ZRColor) | ZRColor>
     label?: SeriesLabelOption
 }
 
