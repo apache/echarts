@@ -52,8 +52,8 @@ interface LineStateOptionMixin {
     }
 }
 
-export interface LineStateOption {
-    itemStyle?: ItemStyleOption
+export interface LineStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
     endLabel?: LineEndLabelOption
 }
@@ -70,7 +70,7 @@ export interface LineEndLabelOption extends SeriesLabelOption {
 }
 
 
-export interface LineSeriesOption extends SeriesOption<LineStateOption, LineStateOptionMixin & {
+export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackDataParams>, LineStateOptionMixin & {
     emphasis?: {
         lineStyle?: LineStyleOption | {
             width?: 'bolder'
@@ -81,7 +81,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, LineStat
         lineStyle?: LineStyleOption
         areaStyle?: AreaStyleOption
     }
-}>, LineStateOption,
+}>, LineStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,

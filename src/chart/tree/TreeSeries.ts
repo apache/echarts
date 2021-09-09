@@ -44,8 +44,8 @@ interface CurveLineStyleOption extends LineStyleOption{
     curveness?: number
 }
 
-export interface TreeSeriesStateOption {
-    itemStyle?: ItemStyleOption
+export interface TreeSeriesStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     /**
      * Line style of the edge between node and it's parent.
      */
@@ -61,7 +61,8 @@ interface TreeStatesMixin {
 }
 
 export interface TreeSeriesNodeItemOption extends SymbolOptionMixin<CallbackDataParams>,
-    TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption, TreeStatesMixin>,
+    TreeSeriesStateOption<CallbackDataParams>,
+    StatesOptionMixin<TreeSeriesStateOption<CallbackDataParams>, TreeStatesMixin>,
     OptionDataItemObject<OptionDataValue> {
 
     children?: TreeSeriesNodeItemOption[]

@@ -48,8 +48,8 @@ interface EffectScatterStatesOptionMixin {
         scale?: boolean
     }
 }
-export interface EffectScatterStateOption {
-    itemStyle?: ItemStyleOption
+export interface EffectScatterStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
 
@@ -64,7 +64,8 @@ export interface EffectScatterDataItemOption extends SymbolOptionMixin,
 }
 
 export interface EffectScatterSeriesOption
-    extends SeriesOption<EffectScatterStateOption, EffectScatterStatesOptionMixin>, EffectScatterStateOption,
+    extends SeriesOption<EffectScatterStateOption<CallbackDataParams>, EffectScatterStatesOptionMixin>,
+    EffectScatterStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin, SymbolOptionMixin<CallbackDataParams>,
     SeriesEncodeOptionMixin {

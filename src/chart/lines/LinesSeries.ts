@@ -35,7 +35,9 @@ import {
     StatesOptionMixin,
     SeriesLineLabelOption,
     DimensionDefinitionLoose,
-    DefaultStatesMixinEmpasis
+    DefaultStatesMixinEmpasis,
+    ZRColor,
+    CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import type { LineDrawModelOption } from '../helper/LineDraw';
@@ -73,7 +75,7 @@ type LinesCoords = number[][];
 
 type LinesValue = OptionDataValue | OptionDataValue[];
 
-interface LinesLineStyleOption extends LineStyleOption {
+interface LinesLineStyleOption<TClr> extends LineStyleOption<TClr> {
     curveness?: number
 }
 
@@ -86,13 +88,13 @@ interface LegacyDataItemOption {
 interface LinesStatesMixin {
     emphasis?: DefaultStatesMixinEmpasis
 }
-export interface LinesStateOption {
-    lineStyle?: LinesLineStyleOption
+export interface LinesStateOption<TCbParams = never> {
+    lineStyle?: LinesLineStyleOption<TCbParams extends never ? never : (params: TCbParams) => ZRColor>
     label?: SeriesLineLabelOption
 }
 
-export interface LinesDataItemOption extends LinesStateOption,
-    StatesOptionMixin<LinesStateOption, LinesStatesMixin> {
+export interface LinesDataItemOption extends LinesStateOption<CallbackDataParams>,
+    StatesOptionMixin<LinesStateOption<CallbackDataParams>, LinesStatesMixin> {
     name?: string
 
     fromName?: string

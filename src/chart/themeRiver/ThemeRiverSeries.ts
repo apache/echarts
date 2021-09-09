@@ -33,7 +33,9 @@ import {
     BoxLayoutOptionMixin,
     ZRColor,
     Dictionary,
-    SeriesLabelOption
+    SeriesLabelOption,
+    CallbackDataParams,
+    DefaultStatesMixinEmpasis
 } from '../../util/types';
 import SingleAxis from '../../coord/single/SingleAxis';
 import GlobalModel from '../../model/Global';
@@ -48,12 +50,17 @@ interface ThemeRiverSeriesLabelOption extends SeriesLabelOption {
 
 type ThemerRiverDataItem = [OptionDataValueDate, OptionDataValueNumeric, string];
 
-export interface ThemeRiverStateOption {
+interface ThemeRiverStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
+export interface ThemeRiverStateOption<TCbParams = never> {
     label?: ThemeRiverSeriesLabelOption
-    itemStyle?: ItemStyleOption
+    itemStyle?: ItemStyleOption<TCbParams>
 }
 
-export interface ThemeRiverSeriesOption extends SeriesOption<ThemeRiverStateOption>, ThemeRiverStateOption,
+export interface ThemeRiverSeriesOption
+    extends SeriesOption<ThemeRiverStateOption<CallbackDataParams>, ThemeRiverStatesMixin>,
+    ThemeRiverStateOption<CallbackDataParams>,
     SeriesOnSingleOptionMixin, BoxLayoutOptionMixin {
     type?: 'themeRiver'
 

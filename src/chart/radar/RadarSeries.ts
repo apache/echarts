@@ -47,19 +47,21 @@ type RadarSeriesDataValue = OptionDataValue[];
 interface RadarStatesMixin {
     emphasis?: DefaultStatesMixinEmpasis
 }
-export interface RadarSeriesStateOption {
+export interface RadarSeriesStateOption<TCbParams = never> {
     lineStyle?: LineStyleOption
     areaStyle?: AreaStyleOption
     label?: SeriesLabelOption
-    itemStyle?: ItemStyleOption
+    itemStyle?: ItemStyleOption<TCbParams>
 }
 export interface RadarSeriesDataItemOption extends SymbolOptionMixin,
-    RadarSeriesStateOption, StatesOptionMixin<RadarSeriesStateOption, RadarStatesMixin>,
+    RadarSeriesStateOption<CallbackDataParams>,
+    StatesOptionMixin<RadarSeriesStateOption<CallbackDataParams>, RadarStatesMixin>,
     OptionDataItemObject<RadarSeriesDataValue> {
 }
 
 export interface RadarSeriesOption
-    extends SeriesOption<RadarSeriesStateOption, RadarStatesMixin>, RadarSeriesStateOption,
+    extends SeriesOption<RadarSeriesStateOption, RadarStatesMixin>,
+    RadarSeriesStateOption,
     SymbolOptionMixin<CallbackDataParams>, SeriesEncodeOptionMixin {
     type?: 'radar'
     coordinateSystem?: 'radar'

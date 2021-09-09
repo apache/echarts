@@ -42,8 +42,8 @@ import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
-interface ScatterStateOption {
-    itemStyle?: ItemStyleOption
+interface ScatterStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
 
@@ -60,7 +60,8 @@ export interface ScatterDataItemOption extends SymbolOptionMixin,
 }
 
 export interface ScatterSeriesOption
-    extends SeriesOption<ScatterStateOption, ScatterStatesOptionMixin>, ScatterStateOption,
+    extends SeriesOption<ScatterStateOption<CallbackDataParams>, ScatterStatesOptionMixin>,
+    ScatterStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SeriesLargeOptionMixin, SeriesStackOptionMixin,

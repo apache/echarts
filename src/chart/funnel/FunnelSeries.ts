@@ -37,7 +37,8 @@ import {
     VerticalAlign,
     SeriesLabelOption,
     SeriesEncodeOptionMixin,
-    DefaultStatesMixinEmpasis
+    DefaultStatesMixinEmpasis,
+    CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -51,8 +52,11 @@ interface FunnelStatesMixin {
     emphasis?: DefaultStatesMixinEmpasis
 }
 
-export interface FunnelStateOption {
-    itemStyle?: ItemStyleOption
+export interface FunnelCallbackDataParams extends CallbackDataParams {
+    percent: number
+}
+export interface FunnelStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: FunnelLabelOption
     labelLine?: LabelLineOption
 }
@@ -67,7 +71,9 @@ export interface FunnelDataItemOption
     }
 }
 
-export interface FunnelSeriesOption extends SeriesOption<FunnelStateOption, FunnelStatesMixin>, FunnelStateOption,
+export interface FunnelSeriesOption
+    extends SeriesOption<FunnelStateOption<FunnelCallbackDataParams>, FunnelStatesMixin>,
+    FunnelStateOption<FunnelCallbackDataParams>,
     BoxLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'funnel'
 
@@ -128,9 +134,9 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
     }
 
     // Overwrite
-    getDataParams(dataIndex: number) {
+    getDataParams(dataIndex: number): FunnelCallbackDataParams {
         const data = this.getData();
-        const params = super.getDataParams(dataIndex);
+        const params = super.getDataParams(dataIndex) as FunnelCallbackDataParams;
         const valueDim = data.mapDimension('value');
         const sum = data.getSum(valueDim);
         // Percent is 0 if sum is 0

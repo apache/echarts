@@ -33,7 +33,8 @@ import {
     SeriesOnGeoOptionMixin,
     StatesOptionMixin,
     SeriesLabelOption,
-    StatesMixinBase
+    StatesMixinBase,
+    CallbackDataParams
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
@@ -45,11 +46,12 @@ import {createSymbol, ECSymbol} from '../../util/symbol';
 import {LegendIconParams} from '../../component/legend/LegendModel';
 import {Group} from '../../util/graphic';
 
-export interface MapStateOption {
-    itemStyle?: GeoItemStyleOption
+export interface MapStateOption<TCbParams = never> {
+    itemStyle?: GeoItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
-export interface MapDataItemOption extends MapStateOption, StatesOptionMixin<MapStateOption, StatesMixinBase>,
+export interface MapDataItemOption extends MapStateOption,
+    StatesOptionMixin<MapStateOption, StatesMixinBase>,
     OptionDataItemObject<OptionDataValueNumeric> {
     cursor?: string
 }
@@ -57,8 +59,8 @@ export interface MapDataItemOption extends MapStateOption, StatesOptionMixin<Map
 export type MapValueCalculationType = 'sum' | 'average' | 'min' | 'max';
 
 export interface MapSeriesOption extends
-    SeriesOption<MapStateOption, StatesMixinBase>, MapStateOption,
-
+    SeriesOption<MapStateOption<CallbackDataParams>, StatesMixinBase>,
+    MapStateOption<CallbackDataParams>,
     GeoCommonOptionMixin,
     // If `geoIndex` is not specified, a exclusive geo will be
     // created. Otherwise use the specified geo component, and

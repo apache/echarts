@@ -62,8 +62,8 @@ interface GraphEdgeLineStyleOption extends LineStyleOption {
     curveness?: number
 }
 
-export interface GraphNodeStateOption {
-    itemStyle?: ItemStyleOption
+export interface GraphNodeStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
 
@@ -136,7 +136,8 @@ export interface GraphCategoryItemOption extends SymbolOptionMixin,
     value?: OptionDataValue
 }
 
-export interface GraphSeriesOption extends SeriesOption<GraphNodeStateOption, GraphNodeStatesMixin>,
+export interface GraphSeriesOption
+    extends SeriesOption<GraphNodeStateOption<CallbackDataParams>, GraphNodeStatesMixin>,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SymbolOptionMixin<CallbackDataParams>,
@@ -177,7 +178,7 @@ export interface GraphSeriesOption extends SeriesOption<GraphNodeStateOption, Gr
     edgeLabel?: SeriesLineLabelOption
     label?: SeriesLabelOption
 
-    itemStyle?: ItemStyleOption
+    itemStyle?: ItemStyleOption<CallbackDataParams>
     lineStyle?: GraphEdgeLineStyleOption
 
     emphasis?: {

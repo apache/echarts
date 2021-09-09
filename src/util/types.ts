@@ -938,35 +938,31 @@ export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => string | num
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
  */
-export interface SymbolOptionMixin<T = unknown> {
+export interface SymbolOptionMixin<T = never> {
     /**
      * type of symbol, like `cirlce`, `rect`, or custom path and image.
      */
-    symbol?: string | (unknown extends T ? never : SymbolCallback<T>)
+    symbol?: string | (T extends never ? never : SymbolCallback<T>)
     /**
      * Size of symbol.
      */
-    symbolSize?: number | number[] | (unknown extends T ? never : SymbolSizeCallback<T>)
+    symbolSize?: number | number[] | (T extends never ? never : SymbolSizeCallback<T>)
 
-    symbolRotate?: number | (unknown extends T ? never : SymbolRotateCallback<T>)
+    symbolRotate?: number | (T extends never ? never : SymbolRotateCallback<T>)
 
     symbolKeepAspect?: boolean
 
-    symbolOffset?: string | number | (string | number)[] | (unknown extends T ? never : SymbolOffsetCallback<T>)
+    symbolOffset?: string | number | (string | number)[] | (T extends never ? never : SymbolOffsetCallback<T>)
 }
 
 /**
  * ItemStyleOption is a most common used set to config element styles.
  * It includes both fill and stroke style.
  */
-export interface ItemStyleOption extends ShadowOptionMixin, BorderOptionMixin {
-    color?: ZRColor
+export interface ItemStyleOption<TCbParams = never> extends ShadowOptionMixin, BorderOptionMixin {
+    color?: ZRColor | (TCbParams extends never ? never : ((params: TCbParams) => ZRColor))
     opacity?: number
     decal?: DecalObject | 'none'
-}
-
-export interface SeriesItemStyleOption<TParams = CallbackDataParams> extends Omit<ItemStyleOption, 'color'> {
-    color?: ZRColor | ((params: TParams) => string)
 }
 
 /**

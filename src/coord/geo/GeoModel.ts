@@ -43,7 +43,7 @@ import GlobalModel from '../../model/Global';
 import geoSourceManager from './geoSourceManager';
 
 
-export interface GeoItemStyleOption extends ItemStyleOption {
+export interface GeoItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
     areaColor?: ZRColor;
 };
 interface GeoLabelOption extends LabelOption {

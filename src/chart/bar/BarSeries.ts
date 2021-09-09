@@ -27,7 +27,8 @@ import {
     SeriesSamplingOptionMixin,
     SeriesLabelOption,
     SeriesEncodeOptionMixin,
-    DefaultStatesMixinEmpasis
+    DefaultStatesMixinEmpasis,
+    CallbackDataParams
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import createSeriesData from '../helper/createSeriesData';
@@ -42,8 +43,8 @@ export type PolarBarLabelPosition = SeriesLabelOption['position']
 export type BarSeriesLabelOption = Omit<SeriesLabelOption, 'position'>
     & {position?: PolarBarLabelPosition | 'outside'};
 
-export interface BarStateOption {
-    itemStyle?: BarItemStyleOption
+export interface BarStateOption<TCbParams = never> {
+    itemStyle?: BarItemStyleOption<TCbParams>
     label?: BarSeriesLabelOption
 }
 
@@ -51,7 +52,7 @@ interface BarStatesMixin {
     emphasis?: DefaultStatesMixinEmpasis
 }
 
-export interface BarItemStyleOption extends ItemStyleOption {
+export interface BarItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
     // Border radius is not supported for bar on polar
     borderRadius?: number | number[]
 }
@@ -61,7 +62,9 @@ export interface BarDataItemOption extends BarStateOption,
     cursor?: string
 }
 
-export interface BarSeriesOption extends BaseBarSeriesOption<BarStateOption, BarStatesMixin>, BarStateOption,
+export interface BarSeriesOption
+    extends BaseBarSeriesOption<BarStateOption<CallbackDataParams>, BarStatesMixin>,
+    BarStateOption<CallbackDataParams>,
     SeriesStackOptionMixin, SeriesSamplingOptionMixin, SeriesEncodeOptionMixin {
 
     type?: 'bar'
