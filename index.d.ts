@@ -19,5 +19,5 @@
 
 import * as echarts from './types/dist/echarts';
 // Export for UMD module.
-export as namespace echarts
+export as namespace echarts;
 export = echarts;
