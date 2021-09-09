@@ -996,6 +996,8 @@ function updateStyle(
         );
     }
 
+    cursorStyle && label.attr('cursor', cursorStyle);
+
     setLabelValueAnimation(
         label,
         labelStatesModels,
