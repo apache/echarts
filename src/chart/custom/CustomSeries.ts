@@ -158,9 +158,6 @@ export interface CustomBaseElementOption extends Partial<Pick<
     extra?: Dictionary<unknown> & TransitionAnyOption;
     // updateDuringAnimation
     during?(params: CustomBaseDuringAPI): void;
-
-    focus?: 'none' | 'self' | 'series' | ArrayLike<number>
-    blurScope?: BlurScope
 };
 
 export interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<
@@ -192,7 +189,7 @@ export interface CustomGroupOption extends CustomBaseElementOption {
     height?: number;
     // @deprecated
     diffChildrenByName?: boolean;
-    children: CustomChildElementOption[];
+    children: CustomElementOption[];
     $mergeChildren?: false | 'byName' | 'byIndex';
 }
 export interface CustomBaseZRPathOption<T extends PathProps['shape'] = PathProps['shape']>
@@ -204,17 +201,17 @@ export interface CustomBaseZRPathOption<T extends PathProps['shape'] = PathProps
 }
 
 interface BuiltinShapes {
-    'circle': Circle['shape']
-    'rect': Rect['shape']
-    'sector': Sector['shape']
-    'poygon': Polygon['shape']
-    'polyline': Polyline['shape']
-    'line': Line['shape']
-    'arc': Arc['shape']
-    'bezierCurve': BezierCurve['shape']
-    'ring': Ring['shape']
-    'ellipse': Ellipse['shape'],
-    'compoundPath': CompoundPath['shape']
+    circle: Partial<Circle['shape']>
+    rect: Partial<Rect['shape']>
+    sector: Partial<Sector['shape']>
+    poygon: Partial<Polygon['shape']>
+    polyline: Partial<Polyline['shape']>
+    line: Partial<Line['shape']>
+    arc: Partial<Arc['shape']>
+    bezierCurve: Partial<BezierCurve['shape']>
+    ring: Partial<Ring['shape']>
+    ellipse: Partial<Ellipse['shape']>
+    compoundPath: Partial<CompoundPath['shape']>
 }
 
 interface CustomSVGPathShapeOption {
@@ -270,7 +267,10 @@ export type CustomElementOption = CustomPathOption
     | CustomGroupOption;
 
 // Can only set focus, blur on the root element.
-export type CustomChildElementOption = Omit<CustomElementOption, 'focus' | 'blurScope'>;
+export type CustomRootElementOption = CustomElementOption & {
+    focus?: 'none' | 'self' | 'series' | ArrayLike<number>
+    blurScope?: BlurScope
+};
 
 export type CustomElementOptionOnState = CustomDisplayableOptionOnState
     | CustomImageOptionOnState;
@@ -287,7 +287,13 @@ export interface CustomSeriesRenderItemAPI extends
 
     value(dim: DimensionLoose, dataIndexInside?: number): ParsedValue;
     ordinalRawValue(dim: DimensionLoose, dataIndexInside?: number): ParsedValue | OrdinalRawValue;
+    /**
+     * @deprecated
+     */
     style(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
+    /**
+     * @deprecated
+     */
     styleEmphasis(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
     visual<VT extends NonStyleVisualProps | StyleVisualProps>(
         visualType: VT,
@@ -310,7 +316,7 @@ export interface CustomSeriesRenderItemCoordinateSystemAPI {
     ): number[];
     size?(
         dataSize: OptionDataValue | OptionDataValue[],
-        dataItem: OptionDataValue | OptionDataValue[]
+        dataItem?: OptionDataValue | OptionDataValue[]
     ): number | number[];
 }
 
@@ -330,6 +336,9 @@ export interface CustomSeriesRenderItemParams {
 
     actionType?: string;
 }
+
+export type CustomSeriesRenderItemReturn = CustomRootElementOption;
+
 type CustomSeriesRenderItem = (
     params: CustomSeriesRenderItemParams,
     api: CustomSeriesRenderItemAPI
@@ -354,7 +363,7 @@ export interface CustomSeriesOption extends
     /**
      * @deprecated
      */
-     itemStyle?: ItemStyleOption;
+    itemStyle?: ItemStyleOption;
     /**
      * @deprecated
      */

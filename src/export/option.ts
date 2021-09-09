@@ -86,7 +86,12 @@ import type {HeatmapSeriesOption as HeatmapSeriesOptionInner} from '../chart/hea
 import type {PictorialBarSeriesOption as PictorialBarSeriesOptionInner} from '../chart/bar/PictorialBarSeries';
 import type {ThemeRiverSeriesOption as ThemeRiverSeriesOptionInner} from '../chart/themeRiver/ThemeRiverSeries';
 import type {SunburstSeriesOption as SunburstSeriesOptionInner} from '../chart/sunburst/SunburstSeries';
-import type {CustomSeriesOption as CustomSeriesOptionInner} from '../chart/custom/CustomSeries';
+import type {
+    CustomSeriesOption as CustomSeriesOptionInner,
+    CustomSeriesRenderItemAPI,
+    CustomSeriesRenderItemParams,
+    CustomSeriesRenderItemReturn
+} from '../chart/custom/CustomSeries';
 
 import type { GraphicComponentLooseOption as GraphicComponentOption } from '../component/graphic/install';
 import type { DatasetOption as DatasetComponentOption } from '../component/dataset/install';
@@ -264,5 +269,9 @@ export {
     TooltipFormatterCallback as TooltipComponentFormatterCallback,
     TopLevelFormatterParams as TooltipComponentFormatterCallbackParams,
     TooltipPositionCallback as TooltipComponentPositionCallback,
-    TooltipPositionCallbackParams as TooltipComponentPositionCallbackParams
+    TooltipPositionCallbackParams as TooltipComponentPositionCallbackParams,
+
+    CustomSeriesRenderItemParams,
+    CustomSeriesRenderItemAPI,
+    CustomSeriesRenderItemReturn
 };

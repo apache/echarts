@@ -91,7 +91,8 @@ import CustomSeriesModel, {
     customInnerStore,
     LooseElementProps,
     PrepareCustomInfo,
-    CustomPathOption
+    CustomPathOption,
+    CustomRootElementOption
 } from './CustomSeries';
 import {
     prepareShapeOrExtraAllPropsFinal,
@@ -1148,7 +1149,7 @@ function createOrUpdateItem(
     api: ExtensionAPI,
     existsEl: Element,
     dataIndex: number,
-    elOption: CustomElementOption,
+    elOption: CustomRootElementOption,
     seriesModel: CustomSeriesModel,
     group: ViewRootGroup,
     data: SeriesData<CustomSeriesModel>
