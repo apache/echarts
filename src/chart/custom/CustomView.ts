@@ -82,7 +82,6 @@ import CustomSeriesModel, {
     CustomDisplayableOption,
     CustomSeriesRenderItemAPI,
     CustomSeriesRenderItemParams,
-    LegacyCustomSeriesOption,
     CustomGroupOption,
     WrapEncodeDefRet,
     NonStyleVisualProps,
@@ -102,6 +101,7 @@ import {
     prepareTransformTransitionFrom
 } from './prepare';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
+import { CustomSeriesOption } from '../../export/option';
 
 const transformPropNamesStr = keys(TRANSFORM_PROPS).join(', ');
 
@@ -879,23 +879,23 @@ function makeRenderItem(
 
     // Do not support call `api` asynchronously without dataIndexInside input.
     let currDataIndexInside: number;
-    let currItemModel: Model<LegacyCustomSeriesOption>;
-    let currItemStyleModels: Partial<Record<DisplayState, Model<LegacyCustomSeriesOption['itemStyle']>>> = {};
-    let currLabelModels: Partial<Record<DisplayState, Model<LegacyCustomSeriesOption['label']>>> = {};
+    let currItemModel: Model<CustomSeriesOption>;
+    let currItemStyleModels: Partial<Record<DisplayState, Model<CustomSeriesOption['itemStyle']>>> = {};
+    let currLabelModels: Partial<Record<DisplayState, Model<CustomSeriesOption['label']>>> = {};
 
-    const seriesItemStyleModels = {} as Record<DisplayState, Model<LegacyCustomSeriesOption['itemStyle']>>;
+    const seriesItemStyleModels = {} as Record<DisplayState, Model<CustomSeriesOption['itemStyle']>>;
 
-    const seriesLabelModels = {} as Record<DisplayState, Model<LegacyCustomSeriesOption['label']>>;
+    const seriesLabelModels = {} as Record<DisplayState, Model<CustomSeriesOption['label']>>;
 
     for (let i = 0; i < STATES.length; i++) {
         const stateName = STATES[i];
-        seriesItemStyleModels[stateName] = (customSeries as Model<LegacyCustomSeriesOption>)
+        seriesItemStyleModels[stateName] = (customSeries as Model<CustomSeriesOption>)
             .getModel(PATH_ITEM_STYLE[stateName]);
-        seriesLabelModels[stateName] = (customSeries as Model<LegacyCustomSeriesOption>)
+        seriesLabelModels[stateName] = (customSeries as Model<CustomSeriesOption>)
             .getModel(PATH_LABEL[stateName]);
     }
 
-    function getItemModel(dataIndexInside: number): Model<LegacyCustomSeriesOption> {
+    function getItemModel(dataIndexInside: number): Model<CustomSeriesOption> {
         return dataIndexInside === currDataIndexInside
             ? (currItemModel || (currItemModel = data.getItemModel(dataIndexInside)))
             : data.getItemModel(dataIndexInside);

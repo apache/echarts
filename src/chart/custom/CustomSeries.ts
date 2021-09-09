@@ -335,13 +335,8 @@ type CustomSeriesRenderItem = (
     api: CustomSeriesRenderItemAPI
 ) => CustomElementOption;
 
-interface CustomSeriesStateOption {
-    itemStyle?: ItemStyleOption;
-    label?: LabelOption;
-}
-
 export interface CustomSeriesOption extends
-    SeriesOption<never>,    // don't support StateOption in custom series.
+    SeriesOption<unknown>,    // don't support StateOption in custom series.
     SeriesEncodeOptionMixin,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
@@ -356,11 +351,32 @@ export interface CustomSeriesOption extends
 
     renderItem?: CustomSeriesRenderItem;
 
+    /**
+     * @deprecated
+     */
+     itemStyle?: ItemStyleOption;
+    /**
+     * @deprecated
+     */
+    label?: LabelOption;
+
+    /**
+     * @deprecated
+     */
+    emphasis?: {
+        /**
+         * @deprecated
+         */
+        itemStyle?: ItemStyleOption;
+        /**
+         * @deprecated
+         */
+        label?: LabelOption;
+    }
+
     // Only works on polar and cartesian2d coordinate system.
     clip?: boolean;
 }
-
-export interface LegacyCustomSeriesOption extends SeriesOption<CustomSeriesStateOption>, CustomSeriesStateOption {}
 
 export const customInnerStore = makeInner<{
     info: CustomExtraElementInfo;
