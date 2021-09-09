@@ -32,6 +32,8 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import SingleAxisModel from './AxisModel';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
+import { AxisBaseModel } from '../AxisBaseModel';
+import { CategoryAxisBaseOption } from '../axisCommonTypes';
 
 export const singleDimensions = ['single'];
 /**
@@ -80,7 +82,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
         );
 
         const isCategory = axis.type === 'category';
-        axis.onBand = isCategory && axisModel.get('boundaryGap');
+        axis.onBand = isCategory && (axisModel as AxisBaseModel<CategoryAxisBaseOption>).get('boundaryGap');
         axis.inverse = axisModel.get('inverse');
         axis.orient = axisModel.get('orient');
 

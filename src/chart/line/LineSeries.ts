@@ -45,21 +45,21 @@ import {LegendIconParams} from '../../component/legend/LegendModel';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
-interface ExtraStateOption {
+interface LineStateOptionMixin {
     emphasis?: {
         focus?: DefaultEmphasisFocus
         scale?: boolean
     }
 }
 
-export interface LineStateOption {
-    itemStyle?: ItemStyleOption
+export interface LineStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
     endLabel?: LineEndLabelOption
 }
 
 export interface LineDataItemOption extends SymbolOptionMixin,
-    LineStateOption, StatesOptionMixin<LineStateOption, ExtraStateOption> {
+    LineStateOption, StatesOptionMixin<LineStateOption, LineStateOptionMixin> {
     name?: string
 
     value?: LineDataValue
@@ -70,7 +70,7 @@ export interface LineEndLabelOption extends SeriesLabelOption {
 }
 
 
-export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraStateOption & {
+export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackDataParams>, LineStateOptionMixin & {
     emphasis?: {
         lineStyle?: LineStyleOption | {
             width?: 'bolder'
@@ -81,7 +81,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
         lineStyle?: LineStyleOption
         areaStyle?: AreaStyleOption
     }
-}>, LineStateOption,
+}>, LineStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
@@ -115,7 +115,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     showSymbol?: boolean
     // false | 'auto': follow the label interval strategy.
     // true: show all symbols.
-    showAllSymbol?: 'auto'
+    showAllSymbol?: 'auto' | boolean
 
     data?: (LineDataValue | LineDataItemOption)[]
 }

@@ -260,7 +260,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
  *           and `module:echarts/util/number#parseDate`.
  * @inner
  */
-export function formatTime(tpl: string, value: unknown, isUTC: boolean) {
+export function formatTime(tpl: string, value: unknown, isUTC?: boolean) {
     if (__DEV__) {
         deprecateReplaceLog('echarts.format.formatTime', 'echarts.time.format');
     }

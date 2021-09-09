@@ -33,7 +33,11 @@ import {
     LineStyleOption,
     OptionDataValue,
     StatesOptionMixin,
-    SeriesLineLabelOption
+    SeriesLineLabelOption,
+    DimensionDefinitionLoose,
+    DefaultStatesMixinEmpasis,
+    ZRColor,
+    CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import type { LineDrawModelOption } from '../helper/LineDraw';
@@ -71,7 +75,7 @@ type LinesCoords = number[][];
 
 type LinesValue = OptionDataValue | OptionDataValue[];
 
-interface LinesLineStyleOption extends LineStyleOption {
+interface LinesLineStyleOption<TClr> extends LineStyleOption<TClr> {
     curveness?: number
 }
 
@@ -81,12 +85,16 @@ interface LegacyDataItemOption {
     name: string
 }
 
-export interface LinesStateOption {
-    lineStyle?: LinesLineStyleOption
+interface LinesStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
+export interface LinesStateOption<TCbParams = never> {
+    lineStyle?: LinesLineStyleOption<(TCbParams extends never ? never : (params: TCbParams) => ZRColor) | ZRColor>
     label?: SeriesLineLabelOption
 }
 
-export interface LinesDataItemOption extends LinesStateOption, StatesOptionMixin<LinesStateOption> {
+export interface LinesDataItemOption extends LinesStateOption<CallbackDataParams>,
+    StatesOptionMixin<LinesStateOption<CallbackDataParams>, LinesStatesMixin> {
     name?: string
 
     fromName?: string
@@ -98,10 +106,12 @@ export interface LinesDataItemOption extends LinesStateOption, StatesOptionMixin
     coords?: LinesCoords
 
     value?: LinesValue
+
+    effect?: LineDrawModelOption['effect']
 }
 
-export interface LinesSeriesOption extends SeriesOption<LinesStateOption>, LinesStateOption,
-
+export interface LinesSeriesOption
+    extends SeriesOption<LinesStateOption, LinesStatesMixin>, LinesStateOption,
     SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesOnPolarOptionMixin,
     SeriesOnCalendarOptionMixin, SeriesLargeOptionMixin {
 
@@ -129,6 +139,8 @@ export interface LinesSeriesOption extends SeriesOption<LinesStateOption>, Lines
         // Stored as a flat array. In format
         // Points Count(2) | x | y | x | y | Points Count(3) | x |  y | x | y | x | y |
         | ArrayLike<number>
+
+    dimensions?: DimensionDefinitionLoose | DimensionDefinitionLoose[]
 }
 
 class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {

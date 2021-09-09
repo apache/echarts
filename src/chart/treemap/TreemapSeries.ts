@@ -36,8 +36,7 @@ import {
     DecalObject,
     SeriesLabelOption,
     DefaultEmphasisFocus,
-    AriaOptionMixin,
-    ColorBy
+    AriaOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -59,7 +58,7 @@ interface TreemapSeriesLabelOption extends SeriesLabelOption {
     formatter?: string | ((params: CallbackDataParams) => string)
 }
 
-interface TreemapSeriesItemStyleOption extends ItemStyleOption {
+interface TreemapSeriesItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
     borderRadius?: number | number[]
 
     colorAlpha?: number
@@ -91,8 +90,8 @@ interface ExtraStateOption {
     }
 }
 
-export interface TreemapStateOption {
-    itemStyle?: TreemapSeriesItemStyleOption
+export interface TreemapStateOption<TCbParams = never> {
+    itemStyle?: TreemapSeriesItemStyleOption<TCbParams>
     label?: TreemapSeriesLabelOption
     upperLabel?: TreemapSeriesLabelOption
 }
@@ -149,8 +148,8 @@ export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
 }
 
 export interface TreemapSeriesOption
-    extends SeriesOption<TreemapStateOption, ExtraStateOption>,
-    TreemapStateOption,
+    extends SeriesOption<TreemapStateOption<TreemapSeriesCallbackDataParams>, ExtraStateOption>,
+    TreemapStateOption<TreemapSeriesCallbackDataParams>,
     BoxLayoutOptionMixin,
     RoamOptionMixin,
     TreemapSeriesVisualOption {

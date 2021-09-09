@@ -38,7 +38,7 @@ import SeriesData from '../../data/SeriesData';
 import Model from '../../model/Model';
 import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
 
-interface SunburstItemStyleOption extends ItemStyleOption {
+interface SunburstItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
     // can be 10
     // which means that both innerCornerRadius and outerCornerRadius are 10
     // can also be an array [20, 10]
@@ -65,19 +65,20 @@ interface SunburstDataParams extends CallbackDataParams {
     }[]
 }
 
-interface ExtraStateOption {
+interface SunburstStatesMixin {
     emphasis?: {
         focus?: DefaultEmphasisFocus | 'descendant' | 'ancestor'
     }
 }
 
-export interface SunburstStateOption {
-    itemStyle?: SunburstItemStyleOption
+export interface SunburstStateOption<TCbParams = never> {
+    itemStyle?: SunburstItemStyleOption<TCbParams>
     label?: SunburstLabelOption
 }
 
 export interface SunburstSeriesNodeItemOption extends
-    SunburstStateOption, StatesOptionMixin<SunburstStateOption, ExtraStateOption>,
+    SunburstStateOption<CallbackDataParams>,
+    StatesOptionMixin<SunburstStateOption<CallbackDataParams>, SunburstStatesMixin>,
     OptionDataItemObject<OptionDataValue>
 {
     nodeClick?: 'rootToNode' | 'link'
@@ -91,7 +92,8 @@ export interface SunburstSeriesNodeItemOption extends
 
     cursor?: string
 }
-export interface SunburstSeriesLevelOption extends SunburstStateOption, StatesOptionMixin<SunburstStateOption> {
+export interface SunburstSeriesLevelOption
+    extends SunburstStateOption, StatesOptionMixin<SunburstStateOption, SunburstStatesMixin> {
     highlight?: {
         itemStyle?: SunburstItemStyleOption
         label?: SunburstLabelOption
@@ -105,7 +107,7 @@ interface SortParam {
     getValue(): number
 }
 export interface SunburstSeriesOption extends
-    SeriesOption<SunburstStateOption, ExtraStateOption>, SunburstStateOption,
+    SeriesOption<SunburstStateOption, SunburstStatesMixin>, SunburstStateOption,
     SunburstColorByMixin,
     CircleLayoutOptionMixin {
 
