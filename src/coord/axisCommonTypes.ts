@@ -183,6 +183,9 @@ interface AxisLabelOption extends Omit<TextCommonOption, 'color'> {
     margin?: number,
     // value is supposed to be OptionDataPrimitive but for time axis, it is time stamp.
     formatter?: AxisLabelFormatterOption | TimeAxisLabelFormatterOption,
+    // true | false | null/undefined (auto). When it is set true and interval is also set to true, labels will be placed interleaved automatically in cases of overlapped. 
+    // When it is set false or not set, all labels will be placed in the same side of axis
+    interleaved?: boolean,
 
     // --------------------------------------------
     // [Properties below only for 'category' axis]:

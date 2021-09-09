@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import {makeInner} from '../util/model';
+import { ComponentOption, Dictionary } from '../util/types';
 import {
     makeLabelFormatter,
     getOptionCategoryInterval,
@@ -119,10 +120,9 @@ function makeCategoryLabelsActually(axis: Axis, labelModel: Model<AxisBaseOption
     }
     else {
         numericLabelInterval = optionLabelInterval === 'auto'
-            ? makeAutoCategoryInterval(axis) : optionLabelInterval;
+            ? makeAutoCategoryInterval(axis) : (Number.isNaN(+optionLabelInterval) ? 0 : +optionLabelInterval);
         labels = makeLabelsByNumericCategoryInterval(axis, numericLabelInterval);
     }
-
     // Cache to avoid calling interval function repeatly.
     return listCacheSet(labelsCache, optionLabelInterval as CacheKey, {
         labels: labels, labelCategoryInterval: numericLabelInterval
@@ -162,12 +162,12 @@ function makeCategoryTicks(axis: Axis, tickModel: AxisBaseModel) {
     }
     else {
         tickCategoryInterval = optionTickInterval;
-        ticks = makeLabelsByNumericCategoryInterval(axis, tickCategoryInterval, true);
+        ticks = makeLabelsByNumericCategoryInterval(axis, Number.isNaN(+tickCategoryInterval) ? 0 : +tickCategoryInterval, true);
     }
 
     // Cache to avoid calling interval function repeatly.
     return listCacheSet(ticksCache, optionTickInterval as CacheKey, {
-        ticks: ticks, tickCategoryInterval: tickCategoryInterval
+        ticks: ticks, tickCategoryInterval: Number.isNaN(+tickCategoryInterval) ? 0 : +tickCategoryInterval
     });
 }
 
@@ -209,7 +209,7 @@ function listCacheSet<T>(cache: InnerTickLabelCache<T>, key: CacheKey, value: T)
     return value;
 }
 
-function makeAutoCategoryInterval(axis: Axis) {
+export function makeAutoCategoryInterval(axis: Axis) {
     const result = inner(axis).autoInterval;
     return result != null
         ? result
@@ -225,6 +225,10 @@ export function calculateCategoryInterval(axis: Axis) {
     const params = fetchAutoCategoryIntervalCalculationParams(axis);
     const labelFormatter = makeLabelFormatter(axis);
     const rotation = (params.axisRotate - params.labelRotate) / 180 * Math.PI;
+    const labelModel = axis.getLabelModel();
+    const labelInside = labelModel.get('inside');
+    let interleaved: boolean = false;
+    interleaved = labelModel.get('interleaved') || interleaved;
 
     const ordinalScale = axis.scale as OrdinalScale;
     const ordinalExtent = ordinalScale.getExtent();
@@ -244,8 +248,14 @@ export function calculateCategoryInterval(axis: Axis) {
     }
     let tickValue = ordinalExtent[0];
     const unitSpan = axis.dataToCoord(tickValue + 1) - axis.dataToCoord(tickValue);
-    const unitW = Math.abs(unitSpan * Math.cos(rotation));
-    const unitH = Math.abs(unitSpan * Math.sin(rotation));
+    let unitW = Math.abs(unitSpan * Math.cos(rotation));
+    let unitH = Math.abs(unitSpan * Math.sin(rotation));
+
+    // When interleaved option is enable, multiply unit width and height.
+    if(interleaved) {
+        unitW = unitW * 2;
+        unitH = unitH * 2;
+    }
 
     let maxW = 0;
     let maxH = 0;

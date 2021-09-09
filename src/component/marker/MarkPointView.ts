@@ -29,10 +29,11 @@ import MarkPointModel, {MarkPointDataItemOption} from './MarkPointModel';
 import GlobalModel from '../../model/Global';
 import MarkerModel from './MarkerModel';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { HashMap, isFunction, map, defaults, filter, curry, extend } from 'zrender/src/core/util';
+import { HashMap, isFunction, map, filter, curry, extend } from 'zrender/src/core/util';
 import { getECData } from '../../util/innerStore';
 import { getVisualFromData } from '../../visual/helper';
 import { ZRColor } from '../../util/types';
+import SeriesDimensionDefine from '../../data/SeriesDimensionDefine';
 
 function updateMarkerLayout(
     mpData: SeriesData<MarkPointModel>,
@@ -180,7 +181,7 @@ function createData(
     seriesModel: SeriesModel,
     mpModel: MarkPointModel
 ) {
-    let coordDimsInfos;
+    let coordDimsInfos: SeriesDimensionDefine[];
     if (coordSys) {
         coordDimsInfos = map(coordSys && coordSys.dimensions, function (coordDim) {
             const info = seriesModel.getData().getDimensionInfo(
@@ -211,11 +212,8 @@ function createData(
         );
     }
 
-    mpData.initData(dataOpt, null,
-        coordSys ? markerHelper.dimValueGetter : function (item: MarkPointDataItemOption) {
-            return item.value;
-        }
-    );
+    const dimValueGetter = markerHelper.createMarkerDimValueGetter(!!coordSys, coordDimsInfos);
+    mpData.initData(dataOpt, null, dimValueGetter);
 
     return mpData;
 }

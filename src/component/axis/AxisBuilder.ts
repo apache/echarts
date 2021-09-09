@@ -28,7 +28,8 @@ import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
 import {shouldShowAllLabels} from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../util/types';
+import { makeLabelFormatter } from '../../coord/axisHelper';
+import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString, ComponentOption, Dictionary } from '../../util/types';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
 import Element from 'zrender/src/Element';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
@@ -233,7 +234,7 @@ interface AxisElementsBuilder {
         axisModel: AxisBaseModel,
         group: graphic.Group,
         transformGroup: graphic.Group
-    ):void
+    ): void
 }
 
 const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBuilder> = {
@@ -733,7 +734,6 @@ function buildAxisLabel(
 ) {
     const axis = axisModel.axis;
     const show = retrieve(opt.axisLabelShow, axisModel.get(['axisLabel', 'show']));
-
     if (!show || axis.scale.isBlank()) {
         return;
     }
@@ -741,6 +741,10 @@ function buildAxisLabel(
     const labelModel = axisModel.getModel('axisLabel');
     const labelMargin = labelModel.get('margin');
     const labels = axis.getViewLabels();
+
+    let interleaved: boolean = false;
+    interleaved = labelModel.get('interleaved') || interleaved;
+
 
     // Special label rotate.
     const labelRotation = (
@@ -776,21 +780,15 @@ function buildAxisLabel(
 
         const tickCoord = axis.dataToCoord(tickValue);
 
-        const textEl = new graphic.Text({
-            x: tickCoord,
-            y: opt.labelOffset + opt.labelDirection * labelMargin,
-            rotation: labelLayout.rotation,
-            silent: silent,
-            z2: 10 + (labelItem.level || 0),
-            style: createTextStyle(itemLabelModel, {
-                text: formattedLabel,
-                align: itemLabelModel.getShallow('align', true)
-                    || labelLayout.textAlign,
-                verticalAlign: itemLabelModel.getShallow('verticalAlign', true)
-                    || itemLabelModel.getShallow('baseline', true)
-                    || labelLayout.textVerticalAlign,
-                fill: typeof textColor === 'function'
-                    ? textColor(
+        const textElStyle = createTextStyle(itemLabelModel, {
+            text: formattedLabel,
+            align: itemLabelModel.getShallow('align', true)
+                || labelLayout.textAlign,
+            verticalAlign: itemLabelModel.getShallow('verticalAlign', true)
+                || itemLabelModel.getShallow('baseline', true)
+                || labelLayout.textVerticalAlign,
+            fill: typeof textColor === 'function'
+                ? textColor(
                         // (1) In category axis with data zoom, tick is not the original
                         // index of axis.data. So tick should not be exposed to user
                         // in category axis.
@@ -798,16 +796,29 @@ function buildAxisLabel(
                         // input. But in interval scale the formatted label is like '223,445', which
                         // maked user repalce ','. So we modify it to return original val but remain
                         // it as 'string' to avoid error in replacing.
-                        axis.type === 'category'
-                            ? rawLabel
-                            : axis.type === 'value'
+                    axis.type === 'category'
+                        ? rawLabel
+                        : axis.type === 'value'
                             ? tickValue + ''
                             : tickValue,
-                        index
-                    )
-                    : textColor as string
-            })
+                    index
+                )
+                : textColor as string
         });
+
+        const textEl = new graphic.Text({
+            rotation: labelLayout.rotation,
+            silent: silent,
+            z2: 10 + (labelItem.level || 0),
+            style: textElStyle
+        });
+
+        const textRect = textEl.getBoundingRect();
+        // correct labels margin in the other side.
+        const labelMarginCorrected = interleaved && index % 2 ? labelMargin + textRect.height : labelMargin;
+        // setting x, y, animation id for labels
+        textEl.x = tickCoord;
+        textEl.y = opt.labelOffset + opt.labelDirection * labelMarginCorrected;
         textEl.anid = 'label_' + tickValue;
 
 

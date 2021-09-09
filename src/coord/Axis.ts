@@ -56,6 +56,9 @@ class Axis {
     // Axis dimension. Such as 'x', 'y', 'z', 'angle', 'radius'.
     readonly dim: DimensionName;
 
+    // Axis index number.
+    index: number;
+
     // Axis scale
     scale: Scale;
 
