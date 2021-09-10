@@ -23,6 +23,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption, SunburstSeriesOption } from './SunburstSeries';
 import { TreeNode } from '../../data/Tree';
+import SeriesModel from '../../model/Series';
 
 // let PI2 = Math.PI * 2;
 const RADIAN = Math.PI / 180;
@@ -119,16 +120,28 @@ export default function sunburstLayout(
                 let rStart = r0 + rPerLevel * depth;
                 let rEnd = r0 + rPerLevel * (depth + 1);
 
-                const itemModel = node.getModel<SunburstSeriesNodeItemOption>();
-                // @ts-ignore. TODO this is not provided to developer yet. Rename it.
-                if (itemModel.get('r0') != null) {
-                    // @ts-ignore
-                    rStart = parsePercent(itemModel.get('r0'), size / 2);
-                }
-                // @ts-ignore
-                if (itemModel.get('r') != null) {
-                    // @ts-ignore
-                    rEnd = parsePercent(itemModel.get('r'), size / 2);
+                const levelModel = seriesModel.getLevelModel(node);
+                if (levelModel) {
+                    const r0 = levelModel.get('r0', true);
+                    if (r0 != null) {
+                        // Compatible with deprecated r0
+                        rStart = parsePercent(r0, size / 2);
+                    }
+                    const r = levelModel.get('r', true);
+                    if (r != null) {
+                        // Compatible with deprecated r
+                        rEnd = parsePercent(r, size / 2);
+                    }
+
+                    // level-specific radius should override that of series
+                    let radius: number | number[] = levelModel.get('radius', true);
+                    if (radius != null) {
+                        if (typeof radius === 'number') {
+                            radius = [radius, radius];
+                        }
+                        rStart = parsePercent(radius[0], size / 2);
+                        rEnd = parsePercent(radius[1], size / 2);
+                    }
                 }
 
                 node.setLayout({
