@@ -451,6 +451,7 @@ class LabelManager {
             const seriesModel = chartView.__model;
             const ignoreLabelLineUpdate = chartView.ignoreLabelLineUpdate;
             const animationEnabled = seriesModel.isAnimationEnabled();
+            const cursorStyle = seriesModel.getShallow('cursor');
 
             chartView.group.traverse((child) => {
                 if (child.ignore) {
@@ -459,6 +460,7 @@ class LabelManager {
 
                 let needsUpdateLabelLine = !ignoreLabelLineUpdate;
                 const label = child.getTextContent();
+                const guideLine = child.getTextGuideLine();
                 if (!needsUpdateLabelLine && label) {
                     needsUpdateLabelLine = labelLayoutInnerStore(label).needsUpdateLabelLine;
                 }
@@ -468,6 +470,11 @@ class LabelManager {
 
                 if (animationEnabled) {
                     this._animateLabels(child, seriesModel);
+                }
+
+                if (cursorStyle) {
+                    label && label.attr('cursor', cursorStyle);
+                    guideLine && guideLine.attr('cursor', cursorStyle);
                 }
             });
         });
