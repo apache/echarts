@@ -122,26 +122,17 @@ export default function sunburstLayout(
 
                 const levelModel = seriesModel.getLevelModel(node);
                 if (levelModel) {
-                    const r0 = levelModel.get('r0', true);
-                    if (r0 != null) {
-                        // Compatible with deprecated r0
-                        rStart = parsePercent(r0, size / 2);
-                    }
-                    const r = levelModel.get('r', true);
-                    if (r != null) {
-                        // Compatible with deprecated r
-                        rEnd = parsePercent(r, size / 2);
+                    let r0 = levelModel.get('r0', true);
+                    let r = levelModel.get('r', true);
+                    let radius = levelModel.get('radius', true);
+
+                    if (radius != null) {
+                        r0 = radius[0];
+                        r = radius[1];
                     }
 
-                    // level-specific radius should override that of series
-                    let radius: number | number[] = levelModel.get('radius', true);
-                    if (radius != null) {
-                        if (typeof radius === 'number') {
-                            radius = [radius, radius];
-                        }
-                        rStart = parsePercent(radius[0], size / 2);
-                        rEnd = parsePercent(radius[1], size / 2);
-                    }
+                    (r0 != null) && (rStart = parsePercent(r0, size / 2));
+                    (r != null) && (rEnd = parsePercent(r, size / 2));
                 }
 
                 node.setLayout({

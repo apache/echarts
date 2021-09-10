@@ -95,15 +95,15 @@ export interface SunburstSeriesNodeItemOption extends
 export interface SunburstSeriesLevelOption
     extends SunburstStateOption, StatesOptionMixin<SunburstStateOption, SunburstStatesMixin> {
 
-    radius?: number | number[]
+    radius?: (number | string)[]
     /**
      * @deprecated use radius instead
      */
-    r?: number
+    r?: number | string
     /**
      * @deprecated use radius instead
      */
-    r0?: number
+    r0?: number | string
 
     highlight?: {
         itemStyle?: SunburstItemStyleOption
@@ -171,10 +171,10 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
         completeTreeValue(root);
 
-        this._levelModels = zrUtil.map(option.levels || [], function (levelDefine) {
-            return new Model(levelDefine, this, ecModel);
-        }, this);
-        const levelModels = this._levelModels;
+        const levelModels = this._levelModels
+            = zrUtil.map(option.levels || [], function (levelDefine) {
+                return new Model(levelDefine, this, ecModel);
+            }, this);
 
         // Make sure always a new tree is created when setOption,
         // in TreemapView, we check whether oldTree === newTree
