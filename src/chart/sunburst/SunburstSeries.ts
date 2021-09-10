@@ -94,6 +94,17 @@ export interface SunburstSeriesNodeItemOption extends
 }
 export interface SunburstSeriesLevelOption
     extends SunburstStateOption, StatesOptionMixin<SunburstStateOption, SunburstStatesMixin> {
+
+    radius?: (number | string)[]
+    /**
+     * @deprecated use radius instead
+     */
+    r?: number | string
+    /**
+     * @deprecated use radius instead
+     */
+    r0?: number | string
+
     highlight?: {
         itemStyle?: SunburstItemStyleOption
         label?: SunburstLabelOption
@@ -152,6 +163,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
     ignoreStyleOnData = true;
 
     private _viewRoot: TreeNode;
+    private _levelModels: Model<SunburstSeriesLevelOption>[];
 
     getInitialData(option: SunburstSeriesOption, ecModel: GlobalModel) {
         // Create a virtual root.
@@ -159,9 +171,10 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
         completeTreeValue(root);
 
-        const levelModels = zrUtil.map(option.levels || [], function (levelDefine) {
-            return new Model(levelDefine, this, ecModel);
-        }, this);
+        const levelModels = this._levelModels
+            = zrUtil.map(option.levels || [], function (levelDefine) {
+                return new Model(levelDefine, this, ecModel);
+            }, this);
 
         // Make sure always a new tree is created when setOption,
         // in TreemapView, we check whether oldTree === newTree
@@ -193,6 +206,10 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         params.treePathInfo = wrapTreePathInfo<SunburstSeriesNodeItemOption['value']>(node, this);
 
         return params;
+    }
+
+    getLevelModel(node: TreeNode) {
+        return this._levelModels && this._levelModels[node.depth];
     }
 
     static defaultOption: SunburstSeriesOption = {
