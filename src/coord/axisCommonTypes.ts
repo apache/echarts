@@ -64,15 +64,19 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     minorSplitLine?: MinorSplitLineOption;
     splitArea?: SplitAreaOption;
 
-    // Min value of the axis. can be:
-    // + ScaleDataValue
-    // + 'dataMin': use the min value in data.
-    // + null/undefined: auto decide min value (consider pretty look and boundaryGap).
+    /**
+     * Min value of the axis. can be:
+     * + ScaleDataValue
+     * + 'dataMin': use the min value in data.
+     * + null/undefined: auto decide min value (consider pretty look and boundaryGap).
+     */
     min?: ScaleDataValue | 'dataMin' | ((extent: {min: number, max: number}) => ScaleDataValue);
-    // Max value of the axis. can be:
-    // + ScaleDataValue
-    // + 'dataMax': use the max value in data.
-    // + null/undefined: auto decide max value (consider pretty look and boundaryGap).
+    /**
+     * Max value of the axis. can be:
+     * + ScaleDataValue
+     * + 'dataMax': use the max value in data.
+     * + null/undefined: auto decide max value (consider pretty look and boundaryGap).
+     */
     max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
     // Optional value can be:
     // + `false`: always include value 0.
@@ -209,7 +213,10 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     showMaxLabel?: boolean,
     margin?: number,
     rich?: Dictionary<TextCommonOption>
-
+    /**
+     * If hide overlapping labels.
+     */
+    hideOverlap?: boolean;
     // Color can be callback
     color?: ColorString | ((value?: string | number, index?: number) => ColorString)
 }
