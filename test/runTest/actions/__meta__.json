@@ -21,7 +21,7 @@
   "bar-label-rotation": 2,
   "bar-large": 2,
   "bar-overflow-time-plot": 3,
-  "bar-polar-basic": 1,
+  "bar-polar-clockwise": 1,
   "bar-polar-multi-series": 1,
   "bar-polar-multi-series-radial": 1,
   "bar-polar-null-data-radial": 1,
