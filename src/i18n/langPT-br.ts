@@ -24,18 +24,18 @@
 export default {
     time: {
         month: [
-            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",               "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
         ],
         monthAbbr: [
-            "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
-            "Jul", "Ago", "Set", "Out", "Nov", "Dez"
+            'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+            'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
         ],
         dayOfWeek: [
-            "Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira",
-"Quinta-feira", "Sexta-feira", "Sábado"
+            'Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira',
+'Quinta-feira', 'Sexta-feira', 'Sábado'
         ],
         dayOfWeekAbbr: [
-            "Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"
+            'Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'
         ]
     },
     legend: {
