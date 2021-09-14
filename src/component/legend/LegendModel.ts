@@ -115,6 +115,11 @@ export interface LegendStyleOption {
     textStyle?: LabelOption
 
     symbolRotate?: number | 'inherit'
+
+    /**
+     * @deprecated
+     */
+    symbolKeepAspect?: boolean
 }
 
 interface DataItem extends LegendStyleOption {
@@ -134,19 +139,20 @@ export interface LegendTooltipFormatterParams {
 }
 
 export interface LegendIconParams {
-    itemWidth: number,
-    itemHeight: number,
+    itemWidth: number
+    itemHeight: number
     /**
      * symbolType is from legend.icon, legend.data.icon, or series visual
      */
-    icon: string,
-    iconRotate: number | 'inherit',
-    itemStyle: PathStyleProps,
+    icon: string
+    iconRotate: number | 'inherit'
+    symbolKeepAspect: boolean
+    itemStyle: PathStyleProps
     lineStyle: LineStyleProps
 }
 
 export interface LegendSymbolStyleOption {
-    itemStyle?: ItemStyleProps,
+    itemStyle?: ItemStyleProps
     lineStyle?: LineStyleProps
 }
 
@@ -454,6 +460,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         itemWidth: 25,
         itemHeight: 14,
         symbolRotate: 'inherit',
+        symbolKeepAspect: true,
 
         inactiveColor: '#ccc',
         inactiveBorderColor: '#ccc',
@@ -462,11 +469,6 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         itemStyle: {
             color: 'inherit',
             opacity: 'inherit',
-            decal: 'inherit',
-            shadowBlur: 0,
-            shadowColor: null,
-            shadowOffsetX: 0,
-            shadowOffsetY: 0,
             borderColor: 'inherit',
             borderWidth: 'auto',
             borderCap: 'inherit',
@@ -485,11 +487,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
             cap: 'inherit',
             join: 'inherit',
             dashOffset: 'inherit',
-            miterLimit: 'inherit',
-            shadowBlur: 0,
-            shadowColor: null,
-            shadowOffsetX: 0,
-            shadowOffsetY: 0
+            miterLimit: 'inherit'
         },
 
         textStyle: {
@@ -504,7 +502,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
             borderRadius: 10,
             padding: [3, 5, 3, 5],
             fontSize: 12,
-            fontFamily: ' sans-serif',
+            fontFamily: 'sans-serif',
             color: '#666',
             borderWidth: 1,
             borderColor: '#666'
