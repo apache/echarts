@@ -57,6 +57,7 @@ import { DataByCoordSys, DataByAxis } from '../axisPointer/axisTrigger';
 import { normalizeTooltipFormatResult } from '../../model/mixin/dataFormat';
 import { createTooltipMarkup, buildTooltipMarkup, TooltipMarkupStyleCreator } from './tooltipMarkup';
 import { findEventDispatcher } from '../../util/event';
+import { throttle } from '../../util/throttle';
 
 const bind = zrUtil.bind;
 const each = zrUtil.each;
@@ -167,6 +168,8 @@ class TooltipView extends ComponentView {
     private _lastDataByCoordSys: DataByCoordSys[];
     private _cbParamsList: TooltipCallbackDataParams[];
 
+    private _updatePosition: ReturnType<typeof throttle> | TooltipView['_doUpdatePosition'];
+
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         if (env.node) {
             return;
@@ -214,6 +217,17 @@ class TooltipView extends ComponentView {
         this._initGlobalListener();
 
         this._keepShow();
+
+        // PENDING
+        // `mousemove` event will be triggered very frequently when the mouse moves fast,
+        // which causes that the updatePosition was also called very frequently.
+        // In Chrome with devtools open and Firefox, tooltip looks lagged and shaked around. See #14695.
+        // To avoid the frequent triggering,
+        // consider throttling it in 50ms. (the tested result may need to validate)
+        this._updatePosition =
+            this._renderMode === 'html'
+                ? throttle(bind(this._doUpdatePosition, this), 50)
+                : this._doUpdatePosition;
     }
 
     private _initGlobalListener() {
@@ -856,7 +870,7 @@ class TooltipView extends ComponentView {
         }
     }
 
-    private _updatePosition(
+    private _doUpdatePosition(
         tooltipModel: Model<TooltipOption>,
         positionExpr: TooltipOption['position'],
         x: number,  // Mouse x
