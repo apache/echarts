@@ -25,7 +25,7 @@ import Graph, { GraphNode } from '../../data/Graph';
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
 import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
-import {cubicPosition} from './simpleLayoutHelper'
+import {cubicPosition} from './simpleLayoutHelper';
 
 const PI = Math.PI;
 
@@ -101,7 +101,7 @@ export function circularLayout(
             const outEdges = edge.node1.outEdges.filter((edge) => {
                 return edge.node1 !== edge.node2;
             });
-            const allNodes: GraphNode[] = []
+            const allNodes: GraphNode[] = [];
             inEdges.forEach((edge) => {
                 allNodes.push(edge.node1);
             });
@@ -114,11 +114,11 @@ export function circularLayout(
             let pt2: number[] = [];
             if (allNodes.length > 1) {
                 allNodes.forEach(node => {
-                    let v: any[] = [];
+                    const v: any[] = [];
                     vec2.sub(v, node.getLayout(), edge.node1.getLayout());
                     vec2.normalize(v, v);
                     vectors.push(v);
-                })
+                });
                 // find the max angle
                 for (let i = 0; i < vectors.length; i++) {
                     for (let j = i + 1; j < vectors.length; j++) {
@@ -142,7 +142,7 @@ export function circularLayout(
                     const v2 = [Math.cos((degree + 30) * Math.PI / 180), Math.sin((degree + 30) * Math.PI / 180)];
                     vec2.scaleAndAdd(v1, p1, v1, 10 * radius);
                     vec2.scaleAndAdd(v2, p2, v2, 10 * radius);
-                    cp1 = v1; 
+                    cp1 = v1;
                     cp2 = v2;
                 }
                 else {
@@ -153,8 +153,8 @@ export function circularLayout(
                 }
             }
             else {
-                cp1 = [p1[0] - radius * 2, p2[1] - radius * 4]
-                cp2 = [p1[0] + radius * 2, p2[1] - radius * 4]
+                cp1 = [p1[0] - radius * 2, p2[1] - radius * 4];
+                cp2 = [p1[0] + radius * 2, p2[1] - radius * 4];
             }
         }
         else if (+curveness) {
