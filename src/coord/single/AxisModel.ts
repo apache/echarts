@@ -29,11 +29,11 @@ import { mixin } from 'zrender/src/core/util';
 
 export type SingleAxisPosition = 'top' | 'bottom' | 'left' | 'right';
 
-export interface SingleAxisOption extends AxisBaseOption, BoxLayoutOptionMixin {
+export type SingleAxisOption = AxisBaseOption & BoxLayoutOptionMixin & {
     mainType?: 'singleAxis'
     position?: SingleAxisPosition
     orient?: LayoutOrient
-}
+};
 
 class SingleAxisModel extends ComponentModel<SingleAxisOption>
     implements AxisBaseModel<SingleAxisOption> {
@@ -102,7 +102,7 @@ class SingleAxisModel extends ComponentModel<SingleAxisOption>
 }
 
 interface SingleAxisModel extends AxisModelCommonMixin<SingleAxisOption>,
-    AxisModelExtendedInCreator<SingleAxisOption> {}
+    AxisModelExtendedInCreator {}
 
 mixin(SingleAxisModel, AxisModelCommonMixin.prototype);
 

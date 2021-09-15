@@ -41,7 +41,6 @@ import {
     logError,
     merge,
     map,
-    defaults,
     curry,
     filter,
     HashMap
@@ -50,6 +49,7 @@ import { makeInner } from '../../util/model';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { getVisualFromData } from '../../visual/helper';
 import Axis2D from '../../coord/cartesian/Axis2D';
+import SeriesDimensionDefine from '../../data/SeriesDimensionDefine';
 
 // Item option for configuring line and each end of symbol.
 // Line option. be merged from configuration of two ends.
@@ -435,7 +435,7 @@ class MarkLineView extends MarkerView {
 
 function createList(coordSys: CoordinateSystem, seriesModel: SeriesModel, mlModel: MarkLineModel) {
 
-    let coordDimsInfos;
+    let coordDimsInfos: SeriesDimensionDefine[];
     if (coordSys) {
         coordDimsInfos = map(coordSys && coordSys.dimensions, function (coordDim) {
             const info = seriesModel.getData().getDimensionInfo(
@@ -469,9 +469,9 @@ function createList(coordSys: CoordinateSystem, seriesModel: SeriesModel, mlMode
             optData, curry(markLineFilter, coordSys)
         );
     }
-    const dimValueGetter = coordSys ? markerHelper.dimValueGetter : function (item: MarkLineMergedItemOption) {
-        return item.value;
-    };
+
+    const dimValueGetter = markerHelper.createMarkerDimValueGetter(!!coordSys, coordDimsInfos);
+
     fromData.initData(
         map(optData, function (item) {
             return item[0];

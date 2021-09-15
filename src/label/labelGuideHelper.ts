@@ -661,7 +661,7 @@ export function setLabelLineStyle(
 
 
 export function getLabelLineStatesModels<LabelName extends string = 'labelLine'>(
-    itemModel: Model<StatesOptionMixin<any> & Partial<Record<LabelName, any>>>,
+    itemModel: Model<StatesOptionMixin<any, any> & Partial<Record<LabelName, any>>>,
     labelLineName?: LabelName
 ): Record<DisplayState, LabelLineModel> {
     labelLineName = (labelLineName || 'labelLine') as LabelName;

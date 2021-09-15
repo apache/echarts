@@ -938,29 +938,29 @@ export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => string | num
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
  */
-export interface SymbolOptionMixin<T = unknown> {
+export interface SymbolOptionMixin<T = never> {
     /**
      * type of symbol, like `cirlce`, `rect`, or custom path and image.
      */
-    symbol?: string | (unknown extends T ? never : SymbolCallback<T>)
+    symbol?: string | (T extends never ? never : SymbolCallback<T>)
     /**
      * Size of symbol.
      */
-    symbolSize?: number | number[] | (unknown extends T ? never : SymbolSizeCallback<T>)
+    symbolSize?: number | number[] | (T extends never ? never : SymbolSizeCallback<T>)
 
-    symbolRotate?: number | (unknown extends T ? never : SymbolRotateCallback<T>)
+    symbolRotate?: number | (T extends never ? never : SymbolRotateCallback<T>)
 
     symbolKeepAspect?: boolean
 
-    symbolOffset?: string | number | (string | number)[] | (unknown extends T ? never : SymbolOffsetCallback<T>)
+    symbolOffset?: string | number | (string | number)[] | (T extends never ? never : SymbolOffsetCallback<T>)
 }
 
 /**
  * ItemStyleOption is a most common used set to config element styles.
  * It includes both fill and stroke style.
  */
-export interface ItemStyleOption extends ShadowOptionMixin, BorderOptionMixin {
-    color?: ZRColor
+export interface ItemStyleOption<TCbParams = never> extends ShadowOptionMixin, BorderOptionMixin {
+    color?: ZRColor | (TCbParams extends never ? never : ((params: TCbParams) => ZRColor))
     opacity?: number
     decal?: DecalObject | 'none'
 }
@@ -1499,15 +1499,16 @@ export type BlurScope = 'coordinateSystem' | 'series' | 'global';
  */
 export type InnerFocus = DefaultEmphasisFocus | ArrayLike<number> | Dictionary<ArrayLike<number>>;
 
-export interface DefaultExtraStateOpts {
-    emphasis: any
-    select: any
-    blur: any
+export interface DefaultStatesMixin {
+    // FIXME
+    emphasis?: any
+    select?: any
+    blur?: any
 }
 
 export type DefaultEmphasisFocus = 'none' | 'self' | 'series';
 
-export interface DefaultExtraEmpasisState {
+export interface DefaultStatesMixinEmpasis {
     /**
      * self: Focus self and blur all others.
      * series: Focus series and blur all other series.
@@ -1515,19 +1516,20 @@ export interface DefaultExtraEmpasisState {
     focus?: DefaultEmphasisFocus
 }
 
-interface ExtraStateOptsBase {
-    emphasis?: {
-        focus?: string
-    },
-    select?: any
-    blur?: any
+export interface StatesMixinBase {
+    emphasis?: unknown
+    select?: unknown
+    blur?: unknown
 }
 
-export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> {
+export interface StatesOptionMixin<
+    StateOption,
+    StatesMixin extends StatesMixinBase
+> {
     /**
      * Emphasis states
      */
-    emphasis?: StateOption & ExtraStateOpts['emphasis'] & {
+    emphasis?: StateOption & StatesMixin['emphasis'] & {
         /**
          * Scope of blurred element when focus.
          *
@@ -1542,11 +1544,11 @@ export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStat
     /**
      * Select states
      */
-    select?: StateOption & ExtraStateOpts['select']
+    select?: StateOption & StatesMixin['select']
     /**
      * Blur states.
      */
-    blur?: StateOption & ExtraStateOpts['blur']
+    blur?: StateOption & StatesMixin['blur']
 }
 
 export interface UniversalTransitionOption {
@@ -1574,11 +1576,13 @@ export interface UniversalTransitionOption {
 }
 
 export interface SeriesOption<
-    StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
+    StateOption = unknown,
+    StatesMixin extends StatesMixinBase = DefaultStatesMixin
+> extends
     ComponentOption,
     AnimationOptionMixin,
     ColorPaletteOptionMixin,
-    StatesOptionMixin<StateOption, ExtraStateOpts>
+    StatesOptionMixin<StateOption, StatesMixin>
 {
     mainType?: 'series'
 

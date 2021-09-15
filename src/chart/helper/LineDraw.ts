@@ -29,7 +29,8 @@ import {
     ZRStyleProps,
     StatesOptionMixin,
     DisplayState,
-    LabelOption
+    LabelOption,
+    StatesMixinBase
 } from '../../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
@@ -50,7 +51,8 @@ interface LineDrawStateOption {
     label?: LineLabelOption
 }
 
-export interface LineDrawModelOption extends LineDrawStateOption, StatesOptionMixin<LineDrawStateOption> {
+export interface LineDrawModelOption extends LineDrawStateOption,
+    StatesOptionMixin<LineDrawStateOption, StatesMixinBase> {
     // If has effect
     effect?: {
         show?: boolean

@@ -28,7 +28,9 @@ import {
     ItemStyleOption,
     OptionDataValueNumeric,
     StatesOptionMixin,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    DefaultStatesMixinEmpasis,
+    CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -102,11 +104,15 @@ interface DetailOption extends LabelOption {
     valueAnimation?: boolean
 }
 
-export interface GaugeStateOption {
-    itemStyle?: ItemStyleOption
+interface GaugeStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
+export interface GaugeStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
 }
 
-export interface GaugeDataItemOption extends GaugeStateOption, StatesOptionMixin<GaugeStateOption> {
+export interface GaugeDataItemOption extends GaugeStateOption,
+    StatesOptionMixin<GaugeStateOption<CallbackDataParams>, GaugeStatesMixin> {
     name?: string
     value?: OptionDataValueNumeric
     pointer?: PointerOption
@@ -114,7 +120,8 @@ export interface GaugeDataItemOption extends GaugeStateOption, StatesOptionMixin
     title?: TitleOption
     detail?: DetailOption
 }
-export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, GaugeStateOption,
+export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption, GaugeStatesMixin>,
+    GaugeStateOption<CallbackDataParams>,
     CircleLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'gauge'
 

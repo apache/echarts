@@ -172,7 +172,9 @@ function createLinePoints(data: SeriesData, dataIndex: number, dimensions: strin
     return points;
 }
 
-function addEl(data: SeriesData, dataGroup: graphic.Group, dataIndex: number, dimensions: string[], coordSys: Parallel) {
+function addEl(
+    data: SeriesData, dataGroup: graphic.Group, dataIndex: number, dimensions: string[], coordSys: Parallel
+) {
     const points = createLinePoints(data, dataIndex, dimensions, coordSys);
     const line = new graphic.Polyline({
         shape: {points: points},

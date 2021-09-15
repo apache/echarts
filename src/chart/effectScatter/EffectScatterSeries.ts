@@ -32,7 +32,8 @@ import {
     SeriesLabelOption,
     StatesOptionMixin,
     SeriesEncodeOptionMixin,
-    CallbackDataParams
+    CallbackDataParams,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -41,14 +42,20 @@ import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 type ScatterDataValue = OptionDataValue | OptionDataValue[];
 
-export interface EffectScatterStateOption {
-    itemStyle?: ItemStyleOption
+interface EffectScatterStatesOptionMixin {
+    emphasis?: {
+        focus?: DefaultEmphasisFocus
+        scale?: boolean
+    }
+}
+export interface EffectScatterStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
 
 export interface EffectScatterDataItemOption extends SymbolOptionMixin,
     EffectScatterStateOption,
-    StatesOptionMixin<EffectScatterStateOption> {
+    StatesOptionMixin<EffectScatterStateOption, EffectScatterStatesOptionMixin> {
     name?: string
 
     value?: ScatterDataValue
@@ -56,7 +63,9 @@ export interface EffectScatterDataItemOption extends SymbolOptionMixin,
     rippleEffect?: SymbolDrawItemModelOption['rippleEffect']
 }
 
-export interface EffectScatterSeriesOption extends SeriesOption<EffectScatterStateOption>, EffectScatterStateOption,
+export interface EffectScatterSeriesOption
+    extends SeriesOption<EffectScatterStateOption<CallbackDataParams>, EffectScatterStatesOptionMixin>,
+    EffectScatterStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin, SymbolOptionMixin<CallbackDataParams>,
     SeriesEncodeOptionMixin {

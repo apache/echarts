@@ -347,16 +347,15 @@ class LegendView extends ComponentView {
         const itemHeight = legendModel.get('itemHeight');
         const isSelected = legendModel.isSelected(name);
 
-        let iconRotate = legendItemModel.get('symbolRotate');
+        const iconRotate = legendItemModel.get('symbolRotate');
+        const symbolKeepAspect = legendItemModel.get('symbolKeepAspect');
 
         const legendIconType = legendItemModel.get('icon');
         legendIcon = legendIconType || legendIcon || 'roundRect';
 
-        const legendLineStyle = legendModel.getModel('lineStyle');
         const style = getLegendStyle(
             legendIcon,
             legendItemModel,
-            legendLineStyle,
             lineVisualStyle,
             itemVisualStyle,
             drawType,
@@ -377,7 +376,8 @@ class LegendView extends ComponentView {
                 icon: legendIcon,
                 iconRotate: iconRotate,
                 itemStyle: style.itemStyle,
-                lineStyle: style.lineStyle
+                lineStyle: style.lineStyle,
+                symbolKeepAspect
             }));
         }
         else {
@@ -394,7 +394,8 @@ class LegendView extends ComponentView {
                 icon: legendIcon,
                 iconRotate: rotate,
                 itemStyle: style.itemStyle,
-                lineStyle: style.lineStyle
+                lineStyle: style.lineStyle,
+                symbolKeepAspect
             }));
         }
 
@@ -540,8 +541,7 @@ class LegendView extends ComponentView {
 function getLegendStyle(
     iconType: string,
     legendModel: LegendModel['_data'][number],
-    legendLineStyle: Model<LegendLineStyleOption>,
-    lineVisualStyle: LineStyleProps,
+    lineVisualStyle: PathStyleProps,
     itemVisualStyle: PathStyleProps,
     drawType: 'fill' | 'stroke',
     isSelected: boolean
@@ -550,81 +550,49 @@ function getLegendStyle(
      * Use series style if is inherit;
      * elsewise, use legend style
      */
+    function handleCommonProps(style: PathStyleProps, visualStyle: PathStyleProps) {
+        // If lineStyle.width is 'auto', it is set to be 2 if series has border
+        if ((style.lineWidth as any) === 'auto') {
+            style.lineWidth = (visualStyle.lineWidth > 0) ? 2 : 0;
+        }
+
+        each(style, (propVal, propName) => {
+            style[propName] === 'inherit' && ((style as any)[propName] = visualStyle[propName]);
+        });
+    }
 
     // itemStyle
     const legendItemModel = legendModel.getModel('itemStyle') as Model<LegendItemStyleOption>;
-    const itemProperties = ITEM_STYLE_KEY_MAP.concat([
-        ['decal']
-    ]);
-    const itemStyle: PathStyleProps = {};
-    for (let i = 0; i < itemProperties.length; ++i) {
-        const propName = itemProperties[i][
-            itemProperties[i].length - 1
-        ] as keyof LegendItemStyleOption;
-        const visualName = itemProperties[i][0] as keyof PathStyleProps;
-        const value = legendItemModel.getShallow(propName) as LegendItemStyleOption[keyof LegendItemStyleOption];
-        if (value === 'inherit') {
-            switch (visualName) {
-                case 'fill':
-                    /**
-                     * Series with visualDrawType as 'stroke' should have
-                     * series stroke as legend fill
-                     */
-                    itemStyle.fill = itemVisualStyle[drawType];
-                    break;
+    const itemStyle = legendItemModel.getItemStyle();
+    const iconBrushType = iconType.lastIndexOf('empty', 0) === 0 ? 'fill' : 'stroke';
 
-                case 'stroke':
-                    /**
-                     * icon type with "emptyXXX" should use fill color
-                     * in visual style
-                     */
-                    itemStyle.stroke = itemVisualStyle[
-                        iconType.lastIndexOf('empty', 0) === 0 ? 'fill' : 'stroke'
-                    ];
-                    break;
-
-                case 'opacity':
-                    /**
-                     * Use lineStyle.opacity if drawType is stroke
-                     */
-                    itemStyle.opacity = (drawType === 'fill' ? itemVisualStyle : lineVisualStyle).opacity;
-                    break;
-
-                default:
-                    (itemStyle as any)[visualName] = itemVisualStyle[visualName];
-            }
-        }
-        else if (value === 'auto' && visualName === 'lineWidth') {
-            // If lineStyle.width is 'auto', it is set to be 2 if series has border
-            itemStyle.lineWidth = (itemVisualStyle.lineWidth > 0) ? 2 : 0;
-        }
-        else {
-            (itemStyle as any)[visualName] = value;
-        }
+    itemStyle.decal = itemVisualStyle.decal;
+    if (itemStyle.fill === 'inherit') {
+        /**
+         * Series with visualDrawType as 'stroke' should have
+         * series stroke as legend fill
+         */
+        itemStyle.fill = itemVisualStyle[drawType];
     }
+    if (itemStyle.stroke === 'inherit') {
+        /**
+         * icon type with "emptyXXX" should use fill color
+         * in visual style
+         */
+        itemStyle.stroke = itemVisualStyle[iconBrushType];
+    }
+    if ((itemStyle.opacity as any) === 'inherit') {
+        /**
+         * Use lineStyle.opacity if drawType is stroke
+         */
+        itemStyle.opacity = (drawType === 'fill' ? itemVisualStyle : lineVisualStyle).opacity;
+    }
+    handleCommonProps(itemStyle, itemVisualStyle);
 
     // lineStyle
     const legendLineModel = legendModel.getModel('lineStyle') as Model<LegendLineStyleOption>;
-    const lineProperties = LINE_STYLE_KEY_MAP.concat([
-        ['inactiveColor'],
-        ['inactiveWidth']
-    ]);
-    const lineStyle: LineStyleProps = {};
-    for (let i = 0; i < lineProperties.length; ++i) {
-        const propName = lineProperties[i][1] as keyof LegendLineStyleOption;
-        const visualName = lineProperties[i][0] as keyof LineStyleProps;
-        const value = legendLineModel.getShallow(propName) as LegendLineStyleOption[keyof LegendLineStyleOption];
-        if (value === 'inherit') {
-            (lineStyle as any)[visualName] = lineVisualStyle[visualName];
-        }
-        else if (value === 'auto' && visualName === 'lineWidth') {
-            // If lineStyle.width is 'auto', it is set to be 2 if series has border
-            lineStyle.lineWidth = lineVisualStyle.lineWidth > 0 ? 2 : 0;
-        }
-        else {
-            (lineStyle as any)[visualName] = value;
-        }
-    }
+    const lineStyle: LineStyleProps = legendLineModel.getLineStyle();
+    handleCommonProps(lineStyle, lineVisualStyle);
 
     // Fix auto color to real color
     (itemStyle.fill === 'auto') && (itemStyle.fill = itemVisualStyle.fill);
@@ -638,14 +606,14 @@ function getLegendStyle(
          * there is no border in series but border in legend, so we need to
          * use border only when series has border if is set to be auto
          */
-        const visualHasBorder = itemStyle[iconType.indexOf('empty') > -1 ? 'fill' : 'stroke'];
+        const visualHasBorder = itemStyle[iconBrushType];
         itemStyle.lineWidth = borderWidth === 'auto'
             ? (itemVisualStyle.lineWidth > 0 && visualHasBorder ? 2 : 0)
             : itemStyle.lineWidth;
         itemStyle.fill = legendModel.get('inactiveColor');
         itemStyle.stroke = legendModel.get('inactiveBorderColor');
-        lineStyle.stroke = legendLineStyle.get('inactiveColor');
-        lineStyle.lineWidth = legendLineStyle.get('inactiveWidth');
+        lineStyle.stroke = legendLineModel.get('inactiveColor');
+        lineStyle.lineWidth = legendLineModel.get('inactiveWidth');
     }
     return { itemStyle, lineStyle };
 }
@@ -658,7 +626,8 @@ function getDefaultLegendIcon(opt: LegendIconParams): ECSymbol {
         0,
         opt.itemWidth,
         opt.itemHeight,
-        opt.itemStyle.fill
+        opt.itemStyle.fill,
+        opt.symbolKeepAspect
     );
 
     icon.setStyle(opt.itemStyle);

@@ -56,6 +56,7 @@ import {getDefaultLabel, getDefaultInterpolatedLabel} from '../helper/labelHelpe
 import { getECData } from '../../util/innerStore';
 import { createFloat32Array } from '../../util/vendor';
 import { convertToColorString } from '../../util/format';
+import { lerp } from 'zrender/src/tool/color';
 
 type PolarArea = ReturnType<Polar['getArea']>;
 type Cartesian2DArea = ReturnType<Cartesian2D['getArea']>;
@@ -191,9 +192,56 @@ function turnPointsIntoStep(
     return stepPoints;
 }
 
+/**
+ * Clip color stops to edge. Avoid creating too large gradients.
+ * Which may lead to blurry when GPU acceleration is enabled. See #15680
+ *
+ * The stops has been sorted from small to large.
+ */
+function clipColorStops(colorStops: ColorStop[], maxSize: number): ColorStop[] {
+    const newColorStops: ColorStop[] = [];
+    const len = colorStops.length;
+    // coord will always < 0 in prevOutOfRangeColorStop.
+    let prevOutOfRangeColorStop: ColorStop;
+    let prevInRangeColorStop: ColorStop;
+
+    function lerpStop(stop0: ColorStop, stop1: ColorStop, clippedCoord: number) {
+        const coord0 = stop0.coord;
+        const p = (clippedCoord - coord0) / (stop1.coord - coord0);
+        const color = lerp(p, [stop0.color, stop1.color]) as string;
+        return { coord: clippedCoord, color } as ColorStop;
+    }
+
+    for (let i = 0; i < len; i++) {
+        const stop = colorStops[i];
+        const coord = stop.coord;
+        if (coord < 0) {
+            prevOutOfRangeColorStop = stop;
+        }
+        else if (coord > maxSize) {
+            if (prevInRangeColorStop) {
+                newColorStops.push(lerpStop(prevInRangeColorStop, stop, maxSize));
+            }
+            // All following stop will be out of range. So just ignore them.
+            break;
+        }
+        else {
+            if (prevOutOfRangeColorStop) {
+                newColorStops.push(lerpStop(prevOutOfRangeColorStop, stop, 0));
+                // Reset
+                prevOutOfRangeColorStop = null;
+            }
+            newColorStops.push(stop);
+            prevInRangeColorStop = stop;
+        }
+    }
+    return newColorStops;
+}
+
 function getVisualGradient(
     data: SeriesData,
-    coordSys: Cartesian2D | Polar
+    coordSys: Cartesian2D | Polar,
+    api: ExtensionAPI
 ) {
     const visualMetaList = data.getVisual('visualMeta');
     if (!visualMetaList || !visualMetaList.length || !data.count()) {
@@ -236,19 +284,14 @@ function getVisualGradient(
     // LinearGradient to render `outerColors`.
 
     const axis = coordSys.getAxis(coordDim);
-    const axisScaleExtent = axis.scale.getExtent();
 
     // dataToCoord mapping may not be linear, but must be monotonic.
     const colorStops: ColorStop[] = zrUtil.map(visualMeta.stops, function (stop) {
-        let coord = axis.toGlobalCoord(axis.dataToCoord(stop.value));
-        // normalize the infinite value
-        isNaN(coord) || isFinite(coord)
-            || (coord = axis.toGlobalCoord(axis.dataToCoord(axisScaleExtent[+(coord < 0)])));
+        // offset will be calculated later.
         return {
-            offset: 0,
-            coord,
+            coord: axis.toGlobalCoord(axis.dataToCoord(stop.value)),
             color: stop.color
-        };
+        } as ColorStop;
     });
     const stopLen = colorStops.length;
     const outerColors = visualMeta.outerColors.slice();
@@ -257,34 +300,40 @@ function getVisualGradient(
         colorStops.reverse();
         outerColors.reverse();
     }
+    const colorStopsInRange = clipColorStops(
+        colorStops, coordDim === 'x' ? api.getWidth() : api.getHeight()
+    );
+    const inRangeStopLen = colorStopsInRange.length;
+    if (!inRangeStopLen && stopLen) {
+        // All stops are out of range. All will be the same color.
+        return colorStops[0].coord < 0
+            ? (outerColors[1] ? outerColors[1] : colorStops[stopLen - 1].color)
+            : (outerColors[0] ? outerColors[0] : colorStops[0].color);
+    }
 
-    const tinyExtent = 10; // Arbitrary value: 10px
-    const minCoord = colorStops[0].coord - tinyExtent;
-    const maxCoord = colorStops[stopLen - 1].coord + tinyExtent;
+    const tinyExtent = 0; // Arbitrary value: 10px
+    const minCoord = colorStopsInRange[0].coord - tinyExtent;
+    const maxCoord = colorStopsInRange[inRangeStopLen - 1].coord + tinyExtent;
     const coordSpan = maxCoord - minCoord;
 
     if (coordSpan < 1e-3) {
         return 'transparent';
     }
 
-    zrUtil.each(colorStops, function (stop) {
+    zrUtil.each(colorStopsInRange, function (stop) {
         stop.offset = (stop.coord - minCoord) / coordSpan;
     });
-    colorStops.push({
-        offset: stopLen ? colorStops[stopLen - 1].offset : 0.5,
+    colorStopsInRange.push({
+        // NOTE: inRangeStopLen may still be 0 if stoplen is zero.
+        offset: inRangeStopLen ? colorStopsInRange[inRangeStopLen - 1].offset : 0.5,
         color: outerColors[1] || 'transparent'
     });
-    colorStops.unshift({ // notice colorStops.length have been changed.
-        offset: stopLen ? colorStops[0].offset : 0.5,
+    colorStopsInRange.unshift({ // notice newColorStops.length have been changed.
+        offset: inRangeStopLen ? colorStopsInRange[0].offset : 0.5,
         color: outerColors[0] || 'transparent'
     });
 
-    // zrUtil.each(colorStops, function (colorStop) {
-    //     // Make sure each offset has rounded px to avoid not sharp edge
-    //     colorStop.offset = (Math.round(colorStop.offset * (end - start) + start) - start) / (end - start);
-    // });
-
-    const gradient = new graphic.LinearGradient(0, 0, 0, 0, colorStops, true);
+    const gradient = new graphic.LinearGradient(0, 0, 0, 0, colorStopsInRange, true);
     gradient[coordDim] = minCoord;
     gradient[coordDim + '2' as 'x2' | 'y2'] = maxCoord;
 
@@ -626,7 +675,7 @@ class LineView extends ChartView {
             }
         }
         this._clipShapeForSymbol = clipShapeForSymbol;
-        const visualColor = getVisualGradient(data, coordSys)
+        const visualColor = getVisualGradient(data, coordSys, api)
             || data.getVisual('style')[data.getVisual('drawType')];
         // Initialization animation or coordinate system changed
         if (

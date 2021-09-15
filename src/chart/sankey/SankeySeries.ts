@@ -33,7 +33,8 @@ import {
     OptionDataItemObject,
     GraphEdgeItemObject,
     OptionDataValueNumeric,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -43,17 +44,16 @@ import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
 
-export interface SankeyNodeStateOption {
+export interface SankeyNodeStateOption<TCbParams = never> {
     label?: SeriesLabelOption
-    itemStyle?: ItemStyleOption
+    itemStyle?: ItemStyleOption<TCbParams>
 }
 
 export interface SankeyEdgeStateOption {
     lineStyle?: SankeyEdgeStyleOption
 }
 
-interface SankeyBothStateOption extends SankeyNodeStateOption, SankeyEdgeStateOption {
-}
+interface SankeyBothStateOption<TCbParams> extends SankeyNodeStateOption<TCbParams>, SankeyEdgeStateOption {}
 
 interface SankeyEdgeStyleOption extends LineStyleOption {
     curveness?: number
@@ -92,7 +92,8 @@ export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStat
 }
 
 export interface SankeySeriesOption
-    extends SeriesOption<SankeyBothStateOption, ExtraStateOption>, SankeyBothStateOption,
+    extends SeriesOption<SankeyBothStateOption<CallbackDataParams>, ExtraStateOption>,
+    SankeyBothStateOption<CallbackDataParams>,
     BoxLayoutOptionMixin {
     type?: 'sankey'
 

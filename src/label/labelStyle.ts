@@ -293,7 +293,7 @@ function setLabelStyle<TLabelDataIndex>(
 export { setLabelStyle };
 
 export function getLabelStatesModels<LabelName extends string = 'label'>(
-    itemModel: Model<StatesOptionMixin<any> & Partial<Record<LabelName, any>>>,
+    itemModel: Model<StatesOptionMixin<any, any> & Partial<Record<LabelName, any>>>,
     labelName?: LabelName
 ): Record<DisplayState, LabelModel> {
     labelName = (labelName || 'label') as LabelName;

@@ -44,8 +44,8 @@ interface CurveLineStyleOption extends LineStyleOption{
     curveness?: number
 }
 
-export interface TreeSeriesStateOption {
-    itemStyle?: ItemStyleOption
+export interface TreeSeriesStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     /**
      * Line style of the edge between node and it's parent.
      */
@@ -53,7 +53,7 @@ export interface TreeSeriesStateOption {
     label?: SeriesLabelOption
 }
 
-interface ExtraStateOption {
+interface TreeStatesMixin {
     emphasis?: {
         focus?: DefaultEmphasisFocus | 'ancestor' | 'descendant'
         scale?: boolean
@@ -61,7 +61,8 @@ interface ExtraStateOption {
 }
 
 export interface TreeSeriesNodeItemOption extends SymbolOptionMixin<CallbackDataParams>,
-    TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption, ExtraStateOption>,
+    TreeSeriesStateOption<CallbackDataParams>,
+    StatesOptionMixin<TreeSeriesStateOption<CallbackDataParams>, TreeStatesMixin>,
     OptionDataItemObject<OptionDataValue> {
 
     children?: TreeSeriesNodeItemOption[]
@@ -75,12 +76,12 @@ export interface TreeSeriesNodeItemOption extends SymbolOptionMixin<CallbackData
 /**
  * Configuration of leaves nodes.
  */
-export interface TreeSeriesLeavesOption extends TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption> {
-
+export interface TreeSeriesLeavesOption
+    extends TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption, TreeStatesMixin> {
 }
 
 export interface TreeSeriesOption extends
-    SeriesOption<TreeSeriesStateOption, ExtraStateOption>, TreeSeriesStateOption,
+    SeriesOption<TreeSeriesStateOption, TreeStatesMixin>, TreeSeriesStateOption,
     SymbolOptionMixin, BoxLayoutOptionMixin, RoamOptionMixin {
     type?: 'tree'
 

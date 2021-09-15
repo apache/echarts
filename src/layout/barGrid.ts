@@ -77,11 +77,11 @@ type BarWidthAndOffset = Dictionary<Dictionary<{
 export interface BarGridLayoutOptionForCustomSeries {
     count: number
 
-    barWidth?: number
-    barMaxWidth?: number
-    barMinWidth?: number
-    barGap?: number
-    barCategoryGap?: number
+    barWidth?: number | string
+    barMaxWidth?: number | string
+    barMinWidth?: number | string
+    barGap?: number | string
+    barCategoryGap?: number | string
 }
 interface LayoutOption extends BarGridLayoutOptionForCustomSeries {
     axis: Axis2D

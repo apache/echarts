@@ -49,8 +49,6 @@ under the License.
             }
         </style>
 
-        <div class="chart" id="main3"></div>
-
         <button onclick="change()">CHANGE</button>
         <div class="chart" id="main2"></div>
 
@@ -61,6 +59,8 @@ under the License.
         <h2>Label Animation with animationDelay callback</h2>
         <div class="chart" id="main1"></div>
 
+        <h2>Line Animation should be continued when calling setOption again.</h2>
+        <div class="chart" id="main3"></div>
 
 
 
@@ -424,8 +424,8 @@ under the License.
                         type: 'line',
                         areaStyle: {}
                     }],
-                    animationDuration: 5000,
-                    animationDurationUpdate: 5000
+                    animationDuration: 10000,
+                    animationDurationUpdate: 10000
                 };
 
                 chart.setOption(option);
