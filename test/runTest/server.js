@@ -229,7 +229,7 @@ async function start() {
     let {io} = serve();
 
     const stableVersions = await fetchVersions(false);
-    const nightlyVersions = await fetchVersions(true);
+    const nightlyVersions = (await fetchVersions(true)).slice(0, 100);
     stableVersions.unshift('local');
     nightlyVersions.unshift('local');
 
