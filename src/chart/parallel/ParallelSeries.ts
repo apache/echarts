@@ -32,7 +32,10 @@ import {
     StatesOptionMixin,
     OptionEncodeValue,
     Dictionary,
-    OptionEncode
+    OptionEncode,
+    DefaultStatesMixinEmpasis,
+    ZRColor,
+    CallbackDataParams
  } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -42,17 +45,21 @@ import ParallelModel from '../../coord/parallel/ParallelModel';
 
 type ParallelSeriesDataValue = OptionDataValue[];
 
-export interface ParallelStateOption {
-    lineStyle?: LineStyleOption
+interface ParallelStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
+export interface ParallelStateOption<TCbParams = never> {
+    lineStyle?: LineStyleOption<(TCbParams extends never ? never : (params: TCbParams) => ZRColor) | ZRColor>
     label?: SeriesLabelOption
 }
 
-export interface ParallelSeriesDataItemOption extends ParallelStateOption, StatesOptionMixin<ParallelStateOption> {
+export interface ParallelSeriesDataItemOption extends ParallelStateOption,
+    StatesOptionMixin<ParallelStateOption, ParallelStatesMixin> {
     value?: ParallelSeriesDataValue[]
 }
-
 export interface ParallelSeriesOption extends
-    SeriesOption<ParallelStateOption>, ParallelStateOption,
+    SeriesOption<ParallelStateOption<CallbackDataParams>, ParallelStatesMixin>,
+    ParallelStateOption<CallbackDataParams>,
     SeriesEncodeOptionMixin {
 
     type?: 'parallel';
@@ -70,13 +77,10 @@ export interface ParallelSeriesOption extends
 
     parallelAxisDefault?: ParallelAxisOption;
 
-    emphasis?: {
-        label?: SeriesLabelOption;
-        lineStyle?: LineStyleOption;
-    }
 
     data?: (ParallelSeriesDataValue | ParallelSeriesDataItemOption)[]
 }
+
 
 class ParallelSeriesModel extends SeriesModel<ParallelSeriesOption> {
 

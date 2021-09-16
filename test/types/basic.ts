@@ -26,7 +26,12 @@ const chart: echarts.EChartsType = echarts.init(dom);
 
 const option: echarts.EChartsOption = {
     series: [{
-        type: 'bar'
+        type: 'bar',
+        emphasis: {
+            itemStyle: {
+                color: 'red'
+            }
+        }
     }]
 };
 chart.setOption(option);

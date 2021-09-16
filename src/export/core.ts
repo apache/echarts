@@ -24,7 +24,7 @@ export * from './api';
 import { use } from '../extension';
 
 // Import label layout by default.
-// TODO remove
+// TODO will be treeshaked.
 import {installLabelLayout} from '../label/installLabelLayout';
 use(installLabelLayout);
 

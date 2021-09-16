@@ -24,14 +24,14 @@ import {
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
     ScaleDataValue,
-    DefaultExtraStateOpts
+    DefaultStatesMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import SeriesData from '../../data/SeriesData';
 
 
-export interface BaseBarSeriesOption<StateOption, ExtraStateOption = DefaultExtraStateOpts>
+export interface BaseBarSeriesOption<StateOption, ExtraStateOption = DefaultStatesMixin>
     extends SeriesOption<StateOption, ExtraStateOption>,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin {

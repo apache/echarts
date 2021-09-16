@@ -28,17 +28,17 @@ import {
     ColorString,
     SeriesLabelOption,
     SeriesLargeOptionMixin,
-    OptionDataValueNumeric,
     StatesOptionMixin,
     SeriesEncodeOptionMixin,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    OptionDataValue
 } from '../../util/types';
 import SeriesData from '../../data/SeriesData';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 import { mixin } from 'zrender/src/core/util';
 
-type CandlestickDataValue = OptionDataValueNumeric[];
+type CandlestickDataValue = OptionDataValue[];
 
 interface CandlestickItemStyleOption extends ItemStyleOption {
     color0?: ZRColor

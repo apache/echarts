@@ -27,7 +27,7 @@ import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
 import { retrieve, mergeAll, map, curry, filter, HashMap, extend } from 'zrender/src/core/util';
-import { ScaleDataValue, ParsedValue, ZRColor } from '../../util/types';
+import { ParsedValue, ScaleDataValue, ZRColor } from '../../util/types';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import MarkAreaModel, { MarkArea2DDataItemOption } from './MarkAreaModel';
 import SeriesModel from '../../model/Series';
@@ -41,6 +41,7 @@ import { getVisualFromData } from '../../visual/helper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import Axis2D from '../../coord/cartesian/Axis2D';
+import { parseDataValue } from '../../data/helper/dataValueHelper';
 
 interface MarkAreaDrawGroup {
     group: graphic.Group
@@ -362,11 +363,11 @@ function createList(
     maModel: MarkAreaModel
 ) {
 
-    let coordDimsInfos: SeriesDimensionDefine[];
     let areaData: SeriesData<MarkAreaModel>;
+    let dataDims: SeriesDimensionDefine[];
     const dims = ['x0', 'y0', 'x1', 'y1'];
     if (coordSys) {
-        coordDimsInfos = map(coordSys && coordSys.dimensions, function (coordDim) {
+        const coordDimsInfos: SeriesDimensionDefine[] = map(coordSys && coordSys.dimensions, function (coordDim) {
             const data = seriesModel.getData();
             const info = data.getDimensionInfo(
                 data.mapDimension(coordDim)
@@ -378,19 +379,18 @@ function createList(
                 ordinalMeta: null
             });
         });
-        areaData = new SeriesData(map(dims, function (dim, idx) {
-            return {
-                name: dim,
-                type: coordDimsInfos[idx % 2].type
-            };
-        }), maModel);
+        dataDims = map(dims, (dim, idx) => ({
+            name: dim,
+            type: coordDimsInfos[idx % 2].type
+        }));
+        areaData = new SeriesData(dataDims, maModel);
     }
     else {
-        coordDimsInfos = [{
+        dataDims = [{
             name: 'value',
             type: 'float'
         }];
-        areaData = new SeriesData(coordDimsInfos, maModel);
+        areaData = new SeriesData(dataDims, maModel);
     }
 
     let optData = map(maModel.get('data'), curry(
@@ -402,17 +402,15 @@ function createList(
         );
     }
 
-    const dimValueGetter = coordSys ? function (
-        item: MarkAreaMergedItemOption,
-        dimName: string,
-        dataIndex: number,
-        dimIndex: number
-    ) {
-        // TODO should convert to ParsedValue?
-        return item.coord[Math.floor(dimIndex / 2)][dimIndex % 2] as ParsedValue;
-    } : function (item: MarkAreaMergedItemOption) {
-        return item.value;
-    };
+    const dimValueGetter: markerHelper.MarkerDimValueGetter<MarkAreaMergedItemOption> = coordSys
+        ? function (item, dimName, dataIndex, dimIndex) {
+            // TODO should convert to ParsedValue?
+            const rawVal = item.coord[Math.floor(dimIndex / 2)][dimIndex % 2];
+            return parseDataValue(rawVal, dataDims[dimIndex]);
+        }
+        : function (item, dimName, dataIndex, dimIndex) {
+            return parseDataValue(item.value, dataDims[dimIndex]);
+        };
     areaData.initData(optData, null, dimValueGetter);
     areaData.hasItemOption = true;
     return areaData;

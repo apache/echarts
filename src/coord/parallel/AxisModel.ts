@@ -40,7 +40,7 @@ export type ParallelAreaSelectStyleProps = Pick<PathStyleProps, ParallelAreaSele
     width: number;
 };
 
-export interface ParallelAxisOption extends AxisBaseOption {
+export type ParallelAxisOption = AxisBaseOption & {
     /**
      * 0, 1, 2, ...
      */
@@ -55,7 +55,7 @@ export interface ParallelAxisOption extends AxisBaseOption {
     };
     // Whether realtime update view when select.
     realtime?: boolean;
-}
+};
 
 class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
 
@@ -140,7 +140,7 @@ class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
 
 }
 interface ParallelAxisModel extends AxisModelCommonMixin<ParallelAxisOption>,
-    AxisModelExtendedInCreator<ParallelAxisOption> {}
+    AxisModelExtendedInCreator {}
 
 zrUtil.mixin(ParallelAxisModel, AxisModelCommonMixin);
 
