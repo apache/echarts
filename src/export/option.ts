@@ -201,28 +201,47 @@ export type ThemeRiverSeriesOption = ThemeRiverSeriesOptionInner & SeriesInjecte
 export type SunburstSeriesOption = SunburstSeriesOptionInner & SeriesInjectedOption;
 export type CustomSeriesOption = CustomSeriesOptionInner & SeriesInjectedOption;
 
-export type SeriesOption = LineSeriesOption
-    | BarSeriesOption
-    | ScatterSeriesOption
-    | PieSeriesOption
-    | RadarSeriesOption
-    | MapSeriesOption
-    | TreeSeriesOption
-    | TreemapSeriesOption
-    | GraphSeriesOption
-    | GaugeSeriesOption
-    | FunnelSeriesOption
-    | ParallelSeriesOption
-    | SankeySeriesOption
-    | BoxplotSeriesOption
-    | CandlestickSeriesOption
-    | EffectScatterSeriesOption
-    | LinesSeriesOption
-    | HeatmapSeriesOption
-    | PictorialBarSeriesOption
-    | ThemeRiverSeriesOption
-    | SunburstSeriesOption
-    | CustomSeriesOption;
+
+/**
+ * A map from series 'type' to series option
+ * It's used for declaration merging in echarts extensions.
+ * For example:
+ * ```ts
+ * import echarts from 'echarts';
+ * declare module 'echarts/types/dist/echarts' {
+ *   interface RegisteredSeriesOption {
+ *     wordCloud: WordCloudSeriesOption
+ *   }
+ * }
+ * ```
+ */
+export interface RegisteredSeriesOption {
+    line: LineSeriesOption
+    bar: BarSeriesOption
+    scatter: ScatterSeriesOption
+    pie: PieSeriesOption
+    radar: RadarSeriesOption
+    map: MapSeriesOption
+    tree: TreeSeriesOption
+    treemap: TreemapSeriesOption
+    graph: GraphSeriesOption
+    gauge: GaugeSeriesOption
+    funnel: FunnelSeriesOption
+    parallel: ParallelSeriesOption
+    sankey: SankeySeriesOption
+    boxplot: BoxplotSeriesOption
+    candlestick: CandlestickSeriesOption
+    effectScatter: EffectScatterSeriesOption
+    lines: LinesSeriesOption
+    heatmap: HeatmapSeriesOption
+    pictorialBar: PictorialBarSeriesOption
+    themeRiver: ThemeRiverSeriesOption
+    sunburst: SunburstSeriesOption
+    custom: CustomSeriesOption
+}
+type Values<T> = T[keyof T];
+
+export type SeriesOption = Values<RegisteredSeriesOption>;
 
 export interface EChartsOption extends ECBasicOption {
     dataset?: DatasetComponentOption | DatasetComponentOption[];
