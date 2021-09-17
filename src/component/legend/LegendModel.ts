@@ -37,6 +37,7 @@ import GlobalModel from '../../model/Global';
 import { ItemStyleProps } from '../../model/mixin/itemStyle';
 import { LineStyleProps } from './../../model/mixin/lineStyle';
 import {PathStyleProps} from 'zrender/src/graphic/Path';
+import SeriesModel from '../../model/Series';
 
 type LegendDefaultSelectorOptionsProps = {
     type: string;
@@ -320,7 +321,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
             availableNames.push(seriesName);
             let isPotential;
 
-            if (seriesModel.legendVisualProvider) {
+            if (!seriesModel.isColorBySeries() && seriesModel.legendVisualProvider) {
                 const provider = seriesModel.legendVisualProvider;
                 const names = provider.getAllNames();
 
@@ -423,10 +424,43 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         });
     }
 
-    isSelected(name: string) {
+    /**
+     * Check if a name is selected in legend.
+     *
+     * If `name` is the data name of a series colored by series and the series
+     * itself is selected, true is returned in this case.
+     *
+     * @param {string} name name of series or data
+     * @param {SeriesModel} series series model. If not defined, all series in
+     * ecModels will be looped through to match.
+     * @returns {boolean} if is selected
+     */
+    isSelected(name: string, series?: SeriesModel) {
         const selected = this.option.selected;
-        return !(selected.hasOwnProperty(name) && !selected[name])
-            && zrUtil.indexOf(this._availableNames, name) >= 0;
+        if (selected.hasOwnProperty(name) && !selected[name]) {
+            return false;
+        }
+        const availableNames = this._availableNames;
+        if (zrUtil.indexOf(availableNames, name) >= 0) {
+            return true;
+        }
+
+        if (series) {
+            return isNameSpecified(series)
+                && zrUtil.indexOf(availableNames, series.name) >= 0;
+        }
+        else {
+            let isSelected = false;
+            this.ecModel.eachRawSeries(function (series) {
+                if (!isSelected && series.isColorBySeries()
+                    && isNameSpecified(series)
+                    && zrUtil.indexOf(availableNames, series.name) >= 0
+                ) {
+                    isSelected = true;
+                }
+            });
+            return isSelected;
+        }
     }
 
     getOrient(): {index: 0, name: 'horizontal'}

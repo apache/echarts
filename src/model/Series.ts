@@ -234,6 +234,14 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         autoSeriesName(this);
 
         this._initSelectedMapFromData(data);
+
+        /**
+         * The default provider for legend. Whether the data name should be used
+         * is decided by the legend component based on the series colorBy.
+         */
+        this.legendVisualProvider = new LegendVisualProvider(
+            zrUtil.bind(this.getData, this), zrUtil.bind(this.getRawData, this)
+        );
     }
 
     /**

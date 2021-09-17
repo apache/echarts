@@ -204,7 +204,7 @@ class LegendView extends ComponentView {
             }
 
             // Legend to control series.
-            if (seriesModel) {
+            if (seriesModel && seriesModel.isColorBySeries()) {
                 const data = seriesModel.getData();
                 const lineVisualStyle = data.getVisual('legendLineStyle') || {};
                 const legendIcon = data.getVisual('legendIcon');
@@ -232,7 +232,7 @@ class LegendView extends ComponentView {
                 ecModel.eachRawSeries(function (seriesModel) {
 
                     // In case multiple series has same data name
-                    if (legendDrawnMap.get(name)) {
+                    if (legendDrawnMap.get(name) || seriesModel.isColorBySeries()) {
                         return;
                     }
 
