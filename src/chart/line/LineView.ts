@@ -1290,17 +1290,18 @@ class LineView extends ChartView {
             next = turnPointsIntoStep(diff.next, coordSys, step);
             stackedOnNext = turnPointsIntoStep(diff.stackedOnNext, coordSys, step);
         }
-
         // Don't apply animation if diff is large.
         // For better result and avoid memory explosion problems like
         // https://github.com/apache/incubator-echarts/issues/12229
         if (getBoundingDiff(current, next) > 3000
             || (polygon && getBoundingDiff(stackedOnCurrent, stackedOnNext) > 3000)
         ) {
+            polyline.stopAnimation();
             polyline.setShape({
                 points: next
             });
             if (polygon) {
+                polygon.stopAnimation();
                 polygon.setShape({
                     points: next,
                     stackedOnPoints: stackedOnNext
@@ -1345,7 +1346,6 @@ class LineView extends ChartView {
             }
         }
 
-
         const updatedDataInfo: {
             el: SymbolExtended,
             ptIdx: number
@@ -1364,7 +1364,6 @@ class LineView extends ChartView {
                 }
             }
         }
-
         if (polyline.animators && polyline.animators.length) {
             polyline.animators[0].during(function () {
                 polygon && polygon.dirtyShape();
