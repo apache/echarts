@@ -13,9 +13,9 @@ The Apache ECharts team is proud to announce Apache ECharts {{ECHARTS_RELEASE_VE
 
 Apache ECharts is a powerful, interactive charting and data visualization library for browser.
 
-Download Links: https://dist.apache.org/repos/dist/release/echarts/{{ECHARTS_RELEASE_VERSION}}/
+Download Links: https://echarts.apache.org/download.html
 
-Release Notes: http://www.apache.org/dist/echarts/{{ECHARTS_RELEASE_VERSION}}/RELEASE_NOTE.txt
+Release Notes: https://echarts.apache.org/changelog.html
 
 Website: http://echarts.apache.org/
 
