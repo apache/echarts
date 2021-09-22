@@ -188,6 +188,7 @@
     var nativeMap = arrayProto.map;
     var ctorFunction = function () { }.constructor;
     var protoFunction = ctorFunction ? ctorFunction.prototype : null;
+    var protoKey = '__proto__';
     var methods = {};
     function $override(name, fn) {
         methods[name] = fn;
@@ -236,7 +237,7 @@
         else if (!BUILTIN_OBJECT[typeStr] && !isPrimitive(source) && !isDom(source)) {
             result = {};
             for (var key in source) {
-                if (source.hasOwnProperty(key)) {
+                if (source.hasOwnProperty(key) && key !== protoKey) {
                     result[key] = clone(source[key]);
                 }
             }
@@ -248,7 +249,7 @@
             return overwrite ? clone(source) : target;
         }
         for (var key in source) {
-            if (source.hasOwnProperty(key)) {
+            if (source.hasOwnProperty(key) && key !== protoKey) {
                 var targetProp = target[key];
                 var sourceProp = source[key];
                 if (isObject(sourceProp)
@@ -283,7 +284,7 @@
         }
         else {
             for (var key in source) {
-                if (source.hasOwnProperty(key)) {
+                if (source.hasOwnProperty(key) && key !== protoKey) {
                     target[key] = source[key];
                 }
             }
@@ -1216,6 +1217,7 @@
             calculateZrXY(el, e, out);
         }
         else if (env.browser.firefox
+            && env.browser.version < '39'
             && e.layerX != null
             && e.layerX !== e.offsetX) {
             out.zrX = e.layerX;
@@ -2173,7 +2175,7 @@
         ts.forceMergeRuns();
     }
 
-    var REDARAW_BIT = 1;
+    var REDRAW_BIT = 1;
     var STYLE_CHANGED_BIT = 2;
     var SHAPE_CHANGED_BIT = 4;
 
@@ -2257,7 +2259,7 @@
                 for (var i = 0; i < children.length; i++) {
                     var child = children[i];
                     if (el.__dirty) {
-                        child.__dirty |= REDARAW_BIT;
+                        child.__dirty |= REDRAW_BIT;
                     }
                     this._updateAndAddDisplayable(child, clipPaths, includeIgnore);
                 }
@@ -5318,7 +5320,7 @@
                     innerTextDefaultStyle.verticalAlign = textVerticalAlign;
                     textEl.setDefaultTextStyle(innerTextDefaultStyle);
                 }
-                textEl.__dirty |= REDARAW_BIT;
+                textEl.__dirty |= REDRAW_BIT;
                 if (textStyleChanged) {
                     textEl.dirtyStyle(true);
                 }
@@ -5495,7 +5497,7 @@
             this.markRedraw();
             if (!useHoverLayer && this.__inHover) {
                 this._toggleHoverLayerFlag(false);
-                this.__dirty &= ~REDARAW_BIT;
+                this.__dirty &= ~REDRAW_BIT;
             }
             return state;
         };
@@ -5554,7 +5556,7 @@
                 this.markRedraw();
                 if (!useHoverLayer && this.__inHover) {
                     this._toggleHoverLayerFlag(false);
-                    this.__dirty &= ~REDARAW_BIT;
+                    this.__dirty &= ~REDRAW_BIT;
                 }
             }
         };
@@ -5765,7 +5767,7 @@
             }
         };
         Element.prototype.markRedraw = function () {
-            this.__dirty |= REDARAW_BIT;
+            this.__dirty |= REDRAW_BIT;
             var zr = this.__zr;
             if (zr) {
                 if (this.__inHover) {
@@ -5914,7 +5916,7 @@
             elProto.dragging = false;
             elProto.ignoreClip = false;
             elProto.__inHover = false;
-            elProto.__dirty = REDARAW_BIT;
+            elProto.__dirty = REDRAW_BIT;
             var logs = {};
             function logDeprecatedError(key, xKey, yKey) {
                 if (!logs[key + xKey + yKey]) {
@@ -6585,7 +6587,7 @@
     function registerPainter(name, Ctor) {
         painterCtors[name] = Ctor;
     }
-    var version = '5.2.0';
+    var version = '5.2.1';
 
     var zrender = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -9062,7 +9064,7 @@
             dispProto.incremental = false;
             dispProto._rect = null;
             dispProto.dirtyRectTolerance = 0;
-            dispProto.__dirty = REDARAW_BIT | STYLE_CHANGED_BIT;
+            dispProto.__dirty = REDRAW_BIT | STYLE_CHANGED_BIT;
         })();
         return Displayable;
     }(Element));
@@ -10843,7 +10845,7 @@
                 for (var i = 0; i < pathCopyParams.length; ++i) {
                     decalEl[pathCopyParams[i]] = this[pathCopyParams[i]];
                 }
-                decalEl.__dirty |= REDARAW_BIT;
+                decalEl.__dirty |= REDRAW_BIT;
             }
             else if (this._decalEl) {
                 this._decalEl = null;
@@ -11169,7 +11171,7 @@
             pathProto.segmentIgnoreThreshold = 0;
             pathProto.subPixelOptimize = false;
             pathProto.autoBatch = false;
-            pathProto.__dirty = REDARAW_BIT | STYLE_CHANGED_BIT | SHAPE_CHANGED_BIT;
+            pathProto.__dirty = REDRAW_BIT | STYLE_CHANGED_BIT | SHAPE_CHANGED_BIT;
         })();
         return Path;
     }(Displayable));
@@ -13924,6 +13926,125 @@
         }
         return RadialGradient;
     }(Gradient));
+
+    var extent = [0, 0];
+    var extent2 = [0, 0];
+    var minTv$1 = new Point();
+    var maxTv$1 = new Point();
+    var OrientedBoundingRect = (function () {
+        function OrientedBoundingRect(rect, transform) {
+            this._corners = [];
+            this._axes = [];
+            this._origin = [0, 0];
+            for (var i = 0; i < 4; i++) {
+                this._corners[i] = new Point();
+            }
+            for (var i = 0; i < 2; i++) {
+                this._axes[i] = new Point();
+            }
+            if (rect) {
+                this.fromBoundingRect(rect, transform);
+            }
+        }
+        OrientedBoundingRect.prototype.fromBoundingRect = function (rect, transform) {
+            var corners = this._corners;
+            var axes = this._axes;
+            var x = rect.x;
+            var y = rect.y;
+            var x2 = x + rect.width;
+            var y2 = y + rect.height;
+            corners[0].set(x, y);
+            corners[1].set(x2, y);
+            corners[2].set(x2, y2);
+            corners[3].set(x, y2);
+            if (transform) {
+                for (var i = 0; i < 4; i++) {
+                    corners[i].transform(transform);
+                }
+            }
+            Point.sub(axes[0], corners[1], corners[0]);
+            Point.sub(axes[1], corners[3], corners[0]);
+            axes[0].normalize();
+            axes[1].normalize();
+            for (var i = 0; i < 2; i++) {
+                this._origin[i] = axes[i].dot(corners[0]);
+            }
+        };
+        OrientedBoundingRect.prototype.intersect = function (other, mtv) {
+            var overlapped = true;
+            var noMtv = !mtv;
+            minTv$1.set(Infinity, Infinity);
+            maxTv$1.set(0, 0);
+            if (!this._intersectCheckOneSide(this, other, minTv$1, maxTv$1, noMtv, 1)) {
+                overlapped = false;
+                if (noMtv) {
+                    return overlapped;
+                }
+            }
+            if (!this._intersectCheckOneSide(other, this, minTv$1, maxTv$1, noMtv, -1)) {
+                overlapped = false;
+                if (noMtv) {
+                    return overlapped;
+                }
+            }
+            if (!noMtv) {
+                Point.copy(mtv, overlapped ? minTv$1 : maxTv$1);
+            }
+            return overlapped;
+        };
+        OrientedBoundingRect.prototype._intersectCheckOneSide = function (self, other, minTv, maxTv, noMtv, inverse) {
+            var overlapped = true;
+            for (var i = 0; i < 2; i++) {
+                var axis = this._axes[i];
+                this._getProjMinMaxOnAxis(i, self._corners, extent);
+                this._getProjMinMaxOnAxis(i, other._corners, extent2);
+                if (extent[1] < extent2[0] || extent[0] > extent2[1]) {
+                    overlapped = false;
+                    if (noMtv) {
+                        return overlapped;
+                    }
+                    var dist0 = Math.abs(extent2[0] - extent[1]);
+                    var dist1 = Math.abs(extent[0] - extent2[1]);
+                    if (Math.min(dist0, dist1) > maxTv.len()) {
+                        if (dist0 < dist1) {
+                            Point.scale(maxTv, axis, -dist0 * inverse);
+                        }
+                        else {
+                            Point.scale(maxTv, axis, dist1 * inverse);
+                        }
+                    }
+                }
+                else if (minTv) {
+                    var dist0 = Math.abs(extent2[0] - extent[1]);
+                    var dist1 = Math.abs(extent[0] - extent2[1]);
+                    if (Math.min(dist0, dist1) < minTv.len()) {
+                        if (dist0 < dist1) {
+                            Point.scale(minTv, axis, dist0 * inverse);
+                        }
+                        else {
+                            Point.scale(minTv, axis, -dist1 * inverse);
+                        }
+                    }
+                }
+            }
+            return overlapped;
+        };
+        OrientedBoundingRect.prototype._getProjMinMaxOnAxis = function (dim, corners, out) {
+            var axis = this._axes[dim];
+            var origin = this._origin;
+            var proj = corners[0].dot(axis) + origin[dim];
+            var min = proj;
+            var max = proj;
+            for (var i = 1; i < corners.length; i++) {
+                var proj_1 = corners[i].dot(axis) + origin[dim];
+                min = Math.min(proj_1, min);
+                max = Math.max(proj_1, max);
+            }
+            out[0] = min;
+            out[1] = max;
+        };
+        return OrientedBoundingRect;
+    }());
 
     var m = [];
     var IncrementalDisplayable = (function (_super) {
@@ -25822,7 +25943,7 @@
     function brush(ctx, el, scope, isLast) {
         var m = el.transform;
         if (!el.shouldBePainted(scope.viewWidth, scope.viewHeight, false, false)) {
-            el.__dirty &= ~REDARAW_BIT;
+            el.__dirty &= ~REDRAW_BIT;
             el.__isRendered = false;
             return;
         }
@@ -26694,7 +26815,7 @@
                     inheritStyle(parentGroup, img);
                     parseAttributes(xmlNode, img, this._defsUsePending, false, false);
                     img.setStyle({
-                        image: xmlNode.getAttribute('xlink:href'),
+                        image: xmlNode.getAttribute('xlink:href') || xmlNode.getAttribute('href'),
                         x: +xmlNode.getAttribute('x'),
                         y: +xmlNode.getAttribute('y'),
                         width: +xmlNode.getAttribute('width'),
@@ -28094,9 +28215,9 @@
     var lifecycle = new Eventful();
 
     var hasWindow = typeof window !== 'undefined';
-    var version$1 = '5.2.0';
+    var version$1 = '5.2.1';
     var dependencies = {
-      zrender: '5.2.0'
+      zrender: '5.2.1'
     };
     var TEST_FRAME_REMAIN_TIME = 1;
     var PRIORITY_PROCESSOR_SERIES_FILTER = 800; // Some data processors depends on the stack result dimension (to calculate data extent).
@@ -35308,7 +35429,8 @@
     // `scale.setExtent` or `scale.unionExtentFromData`;
 
 
-    function niceScaleExtent(scale, model) {
+    function niceScaleExtent(scale, inModel) {
+      var model = inModel;
       var extentInfo = getScaleExtent(scale, model);
       var extent = extentInfo.extent;
       var splitNumber = model.get('splitNumber');
@@ -35864,6 +35986,7 @@
       return {
         labels: map(ticks, function (tick, idx) {
           return {
+            level: tick.level,
             formattedLabel: labelFormatter(tick, idx),
             rawLabel: axis.scale.getLabel(tick),
             tickValue: tick.value
@@ -36663,6 +36786,46 @@
       return statesModels;
     }
 
+    function prepareLayoutList(input) {
+      var list = [];
+
+      for (var i = 0; i < input.length; i++) {
+        var rawItem = input[i];
+
+        if (rawItem.defaultAttr.ignore) {
+          continue;
+        }
+
+        var label = rawItem.label;
+        var transform = label.getComputedTransform(); // NOTE: Get bounding rect after getComputedTransform, or label may not been updated by the host el.
+
+        var localRect = label.getBoundingRect();
+        var isAxisAligned = !transform || transform[1] < 1e-5 && transform[2] < 1e-5;
+        var minMargin = label.style.margin || 0;
+        var globalRect = localRect.clone();
+        globalRect.applyTransform(transform);
+        globalRect.x -= minMargin / 2;
+        globalRect.y -= minMargin / 2;
+        globalRect.width += minMargin;
+        globalRect.height += minMargin;
+        var obb = isAxisAligned ? new OrientedBoundingRect(localRect, transform) : null;
+        list.push({
+          label: label,
+          labelLine: rawItem.labelLine,
+          rect: globalRect,
+          localRect: localRect,
+          obb: obb,
+          priority: rawItem.priority,
+          defaultAttr: rawItem.defaultAttr,
+          layoutOption: rawItem.computedLayoutOption,
+          axisAligned: isAxisAligned,
+          transform: transform
+        });
+      }
+
+      return list;
+    }
+
     function shiftLayout(list, xyDim, sizeDim, minBound, maxBound, balanceShift) {
       var len = list.length;
 
@@ -36831,6 +36994,83 @@
     balanceShift) {
       return shiftLayout(list, 'y', 'height', topBound, bottomBound, balanceShift);
     }
+    function hideOverlap(labelList) {
+      var displayedLabels = []; // TODO, render overflow visible first, put in the displayedLabels.
+
+      labelList.sort(function (a, b) {
+        return b.priority - a.priority;
+      });
+      var globalRect = new BoundingRect(0, 0, 0, 0);
+
+      function hideEl(el) {
+        if (!el.ignore) {
+          // Show on emphasis.
+          var emphasisState = el.ensureState('emphasis');
+
+          if (emphasisState.ignore == null) {
+            emphasisState.ignore = false;
+          }
+        }
+
+        el.ignore = true;
+      }
+
+      for (var i = 0; i < labelList.length; i++) {
+        var labelItem = labelList[i];
+        var isAxisAligned = labelItem.axisAligned;
+        var localRect = labelItem.localRect;
+        var transform = labelItem.transform;
+        var label = labelItem.label;
+        var labelLine = labelItem.labelLine;
+        globalRect.copy(labelItem.rect); // Add a threshold because layout may be aligned precisely.
+
+        globalRect.width -= 0.1;
+        globalRect.height -= 0.1;
+        globalRect.x += 0.05;
+        globalRect.y += 0.05;
+        var obb = labelItem.obb;
+        var overlapped = false;
+
+        for (var j = 0; j < displayedLabels.length; j++) {
+          var existsTextCfg = displayedLabels[j]; // Fast rejection.
+
+          if (!globalRect.intersect(existsTextCfg.rect)) {
+            continue;
+          }
+
+          if (isAxisAligned && existsTextCfg.axisAligned) {
+            // Is overlapped
+            overlapped = true;
+            break;
+          }
+
+          if (!existsTextCfg.obb) {
+            // If self is not axis aligned. But other is.
+            existsTextCfg.obb = new OrientedBoundingRect(existsTextCfg.localRect, existsTextCfg.transform);
+          }
+
+          if (!obb) {
+            // If self is axis aligned. But other is not.
+            obb = new OrientedBoundingRect(localRect, transform);
+          }
+
+          if (obb.intersect(existsTextCfg.obb)) {
+            overlapped = true;
+            break;
+          }
+        } // TODO Callback to determine if this overlap should be handled?
+
+
+        if (overlapped) {
+          hideEl(label);
+          labelLine && hideEl(labelLine);
+        } else {
+          label.attr('ignore', labelItem.defaultAttr.ignore);
+          labelLine && labelLine.attr('ignore', labelItem.defaultAttr.labelGuideIgnore);
+          displayedLabels.push(labelItem);
+        }
+      }
+    }
 
     function returnFalse() {
         return false;
@@ -36986,13 +37226,13 @@
                 var el = displayList[i];
                 if (el) {
                     var shouldPaint = el.shouldBePainted(viewWidth, viewHeight, true, true);
-                    var prevRect = el.__isRendered && ((el.__dirty & REDARAW_BIT) || !shouldPaint)
+                    var prevRect = el.__isRendered && ((el.__dirty & REDRAW_BIT) || !shouldPaint)
                         ? el.getPrevPaintRect()
                         : null;
                     if (prevRect) {
                         addRectToMergePool(prevRect);
                     }
-                    var curRect = shouldPaint && ((el.__dirty & REDARAW_BIT) || !el.__isRendered)
+                    var curRect = shouldPaint && ((el.__dirty & REDRAW_BIT) || !el.__isRendered)
                         ? el.getPaintRect()
                         : null;
                     if (curRect) {
@@ -37600,7 +37840,7 @@
                     updatePrevLayer(i);
                     prevLayer = layer;
                 }
-                if ((el.__dirty & REDARAW_BIT) && !el.__inHover) {
+                if ((el.__dirty & REDRAW_BIT) && !el.__inHover) {
                     layer.__dirty = true;
                     if (layer.incremental && layer.__drawIndex < 0) {
                         layer.__drawIndex = i;
@@ -39337,8 +39577,60 @@
       stepPoints.push(points[i++], points[i++]);
       return stepPoints;
     }
+    /**
+     * Clip color stops to edge. Avoid creating too large gradients.
+     * Which may lead to blurry when GPU acceleration is enabled. See #15680
+     *
+     * The stops has been sorted from small to large.
+     */
 
-    function getVisualGradient(data, coordSys) {
+
+    function clipColorStops(colorStops, maxSize) {
+      var newColorStops = [];
+      var len = colorStops.length; // coord will always < 0 in prevOutOfRangeColorStop.
+
+      var prevOutOfRangeColorStop;
+      var prevInRangeColorStop;
+
+      function lerpStop(stop0, stop1, clippedCoord) {
+        var coord0 = stop0.coord;
+        var p = (clippedCoord - coord0) / (stop1.coord - coord0);
+        var color = lerp$1(p, [stop0.color, stop1.color]);
+        return {
+          coord: clippedCoord,
+          color: color
+        };
+      }
+
+      for (var i = 0; i < len; i++) {
+        var stop_1 = colorStops[i];
+        var coord = stop_1.coord;
+
+        if (coord < 0) {
+          prevOutOfRangeColorStop = stop_1;
+        } else if (coord > maxSize) {
+          if (prevInRangeColorStop) {
+            newColorStops.push(lerpStop(prevInRangeColorStop, stop_1, maxSize));
+          } // All following stop will be out of range. So just ignore them.
+
+
+          break;
+        } else {
+          if (prevOutOfRangeColorStop) {
+            newColorStops.push(lerpStop(prevOutOfRangeColorStop, stop_1, 0)); // Reset
+
+            prevOutOfRangeColorStop = null;
+          }
+
+          newColorStops.push(stop_1);
+          prevInRangeColorStop = stop_1;
+        }
+      }
+
+      return newColorStops;
+    }
+
+    function getVisualGradient(data, coordSys, api) {
       var visualMetaList = data.getVisual('visualMeta');
 
       if (!visualMetaList || !visualMetaList.length || !data.count()) {
@@ -39381,16 +39673,12 @@
       // LinearGradient to render `outerColors`.
 
 
-      var axis = coordSys.getAxis(coordDim);
-      var axisScaleExtent = axis.scale.getExtent(); // dataToCoord mapping may not be linear, but must be monotonic.
+      var axis = coordSys.getAxis(coordDim); // dataToCoord mapping may not be linear, but must be monotonic.
 
       var colorStops = map(visualMeta.stops, function (stop) {
-        var coord = axis.toGlobalCoord(axis.dataToCoord(stop.value)); // normalize the infinite value
-
-        isNaN(coord) || isFinite(coord) || (coord = axis.toGlobalCoord(axis.dataToCoord(axisScaleExtent[+(coord < 0)])));
+        // offset will be calculated later.
         return {
-          offset: 0,
-          coord: coord,
+          coord: axis.toGlobalCoord(axis.dataToCoord(stop.value)),
           color: stop.color
         };
       });
@@ -39402,32 +39690,37 @@
         outerColors.reverse();
       }
 
-      var tinyExtent = 10; // Arbitrary value: 10px
+      var colorStopsInRange = clipColorStops(colorStops, coordDim === 'x' ? api.getWidth() : api.getHeight());
+      var inRangeStopLen = colorStopsInRange.length;
 
-      var minCoord = colorStops[0].coord - tinyExtent;
-      var maxCoord = colorStops[stopLen - 1].coord + tinyExtent;
+      if (!inRangeStopLen && stopLen) {
+        // All stops are out of range. All will be the same color.
+        return colorStops[0].coord < 0 ? outerColors[1] ? outerColors[1] : colorStops[stopLen - 1].color : outerColors[0] ? outerColors[0] : colorStops[0].color;
+      }
+
+      var tinyExtent = 0; // Arbitrary value: 10px
+
+      var minCoord = colorStopsInRange[0].coord - tinyExtent;
+      var maxCoord = colorStopsInRange[inRangeStopLen - 1].coord + tinyExtent;
       var coordSpan = maxCoord - minCoord;
 
       if (coordSpan < 1e-3) {
         return 'transparent';
       }
 
-      each(colorStops, function (stop) {
+      each(colorStopsInRange, function (stop) {
         stop.offset = (stop.coord - minCoord) / coordSpan;
       });
-      colorStops.push({
-        offset: stopLen ? colorStops[stopLen - 1].offset : 0.5,
+      colorStopsInRange.push({
+        // NOTE: inRangeStopLen may still be 0 if stoplen is zero.
+        offset: inRangeStopLen ? colorStopsInRange[inRangeStopLen - 1].offset : 0.5,
         color: outerColors[1] || 'transparent'
       });
-      colorStops.unshift({
-        offset: stopLen ? colorStops[0].offset : 0.5,
+      colorStopsInRange.unshift({
+        offset: inRangeStopLen ? colorStopsInRange[0].offset : 0.5,
         color: outerColors[0] || 'transparent'
-      }); // zrUtil.each(colorStops, function (colorStop) {
-      //     // Make sure each offset has rounded px to avoid not sharp edge
-      //     colorStop.offset = (Math.round(colorStop.offset * (end - start) + start) - start) / (end - start);
-      // });
-
-      var gradient = new LinearGradient(0, 0, 0, 0, colorStops, true);
+      });
+      var gradient = new LinearGradient(0, 0, 0, 0, colorStopsInRange, true);
       gradient[coordDim] = minCoord;
       gradient[coordDim + '2'] = maxCoord;
       return gradient;
@@ -39702,7 +39995,7 @@
         }
 
         this._clipShapeForSymbol = clipShapeForSymbol;
-        var visualColor = getVisualGradient(data, coordSys) || data.getVisual('style')[data.getVisual('drawType')]; // Initialization animation or coordinate system changed
+        var visualColor = getVisualGradient(data, coordSys, api) || data.getVisual('style')[data.getVisual('drawType')]; // Initialization animation or coordinate system changed
 
         if (!(polyline && prevCoordSys.type === coordSys.type && step === this._step)) {
           showSymbol && symbolDraw.updateData(data, {
@@ -39752,8 +40045,18 @@
           } // Update clipPath
 
 
-          lineGroup.setClipPath(createLineClipPath(this, coordSys, false, seriesModel)); // Always update, or it is wrong in the case turning on legend
+          var oldClipPath = lineGroup.getClipPath();
+
+          if (oldClipPath) {
+            var newClipPath = createLineClipPath(this, coordSys, false, seriesModel);
+            initProps(oldClipPath, {
+              shape: newClipPath.shape
+            }, seriesModel);
+          } else {
+            lineGroup.setClipPath(createLineClipPath(this, coordSys, true, seriesModel));
+          } // Always update, or it is wrong in the case turning on legend
           // because points are not changed
+
 
           showSymbol && symbolDraw.updateData(data, {
             isIgnore: isIgnoreFunc,
@@ -40225,11 +40528,13 @@
 
 
         if (getBoundingDiff(current, next) > 3000 || polygon && getBoundingDiff(stackedOnCurrent, stackedOnNext) > 3000) {
+          polyline.stopAnimation();
           polyline.setShape({
             points: next
           });
 
           if (polygon) {
+            polygon.stopAnimation();
             polygon.setShape({
               points: next,
               stackedOnPoints: stackedOnNext
@@ -41501,16 +41806,9 @@
         return rect;
       },
       polar: function (seriesModel, data, newIndex, layout, isRadial, animationModel, axisModel, isUpdate, roundCap) {
-        // Keep the same logic with bar in catesion: use end value to control
-        // direction. Notice that if clockwise is true (by default), the sector
-        // will always draw clockwisely, no matter whether endAngle is greater
-        // or less than startAngle.
-        var clockwise = layout.startAngle < layout.endAngle;
         var ShapeClass = !isRadial && roundCap ? SausagePath : Sector;
         var sector = new ShapeClass({
-          shape: defaults({
-            clockwise: clockwise
-          }, layout),
+          shape: layout,
           z2: 1
         });
         sector.name = 'item';
@@ -41641,7 +41939,8 @@
           r0: layout.r0,
           r: layout.r,
           startAngle: layout.startAngle,
-          endAngle: layout.endAngle
+          endAngle: layout.endAngle,
+          clockwise: layout.clockwise
         };
       }
     };
@@ -44523,7 +44822,21 @@
         var ticksEls = buildAxisMajorTicks(group, transformGroup, axisModel, opt);
         var labelEls = buildAxisLabel(group, transformGroup, axisModel, opt);
         fixMinMaxLabelShow(axisModel, labelEls, ticksEls);
-        buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection);
+        buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection); // This bit fixes the label overlap issue for the time chart.
+        // See https://github.com/apache/echarts/issues/14266 for more.
+
+        if (axisModel.get(['axisLabel', 'hideOverlap'])) {
+          var labelList = prepareLayoutList(map(labelEls, function (label) {
+            return {
+              label: label,
+              priority: label.z2,
+              defaultAttr: {
+                ignore: label.ignore
+              }
+            };
+          }));
+          hideOverlap(labelList);
+        }
       },
       axisName: function (opt, axisModel, group, transformGroup) {
         var name = retrieve(opt.axisName, axisModel.get('name'));
@@ -44846,7 +45159,7 @@
           y: opt.labelOffset + opt.labelDirection * labelMargin,
           rotation: labelLayout.rotation,
           silent: silent,
-          z2: 10,
+          z2: 10 + (labelItem.level || 0),
           style: createTextStyle(itemLabelModel, {
             text: formattedLabel,
             align: itemLabelModel.getShallow('align', true) || labelLayout.textAlign,
