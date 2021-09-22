@@ -17,7 +17,7 @@ Download Links: https://echarts.apache.org/download.html
 
 Release Notes: https://echarts.apache.org/changelog.html
 
-Website: http://echarts.apache.org/
+Website: https://echarts.apache.org/
 
 
 ECharts Resources:
