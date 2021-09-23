@@ -207,7 +207,8 @@ export function getCurvenessForEdge(edge, seriesModel, index, needReverse?: bool
     // if pass array no need parity
     const parityCorrection = isArrayParam ? 0 : totalLen % 2 ? 0 : 1;
     if (isLoopEdge(edge)) {
-        const curveness = curvenessList.filter(num => num > 0);
+        // PENDING: this strategy is not applicable in self-loop edges yet.
+        const curveness = zrUtil.filter(curvenessList, num => num > 0);
         return curveness[edgeIndex];
     }
     else if (!edgeArray.isForward) {
