@@ -72,8 +72,8 @@ export interface LineEndLabelOption extends SeriesLabelOption {
 
 export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackDataParams>, LineStateOptionMixin & {
     emphasis?: {
-        lineStyle?: LineStyleOption | {
-            width?: 'bolder'
+        lineStyle?: Omit<LineStyleOption, 'width'> & {
+            width?: LineStyleOption['width'] | 'bolder'
         }
         areaStyle?: AreaStyleOption
     }
@@ -169,10 +169,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         },
 
         emphasis: {
-            scale: true,
-            lineStyle: {
-                width: 'bolder'
-            }
+            scale: true
         },
         // areaStyle: {
             // origin of areaStyle. Valid values:
