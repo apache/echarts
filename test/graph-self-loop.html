@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/enableGraphEditRoughly.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+
+
+
+
+        <script>
+        function addScaleplate(chart) {
+            if (!chart) {
+                return;
+            }
+            var dom = chart.getDom();
+            var zr = chart.getZr();
+
+            window.__upateScaleplate = upateScaleplate;
+            var els = [];
+
+
+            upateScaleplate(100);
+
+            function upateScaleplate(r) {
+                for (var i = 0; i < els.length; i++) {
+                    zr.remove(els[i]);
+                }
+                els.length = 0;
+
+                var cx = 500;
+                var cy = 300;
+                var rCurve = r;
+
+                // var cpx1 = cx + rCurve;
+                // var cpy1 = cy;
+                // var cpx2 = cx;
+                // var cpy2 = cy + rCurve;
+
+                var rCp = rCurve / 3 * 4 / Math.cos(Math.PI / 4);
+                var cpx1 = cx + rCp;
+                var cpy1 = cy;
+                var cpx2 = cx;
+                var cpy2 = cy + rCp;
+
+                els.push(new echarts.graphic.Circle({
+                    shape: {cx: cx, cy: cy, r: r},
+                    style: {fill: 'rgba(0,0,0,0.2)'}
+                }));
+                els.push(new echarts.graphic.BezierCurve({
+                    shape: {
+                        x1: cx, y1: cy,
+                        x2: cx, y2: cy,
+                        cpx1: cpx1, cpy1: cpy1,
+                        cpx2: cpx2, cpy2: cpy2
+                    },
+                    style: {lineWidth: 2, stroke: 'red'}
+                }));
+                els.push(new echarts.graphic.Circle({
+                    shape: {cx: cpx1, cy: cpy1, r: 5},
+                    style: {fill: 'rgb(10,30,50)'}
+                }));
+                els.push(new echarts.graphic.Circle({
+                    shape: {cx: cpx2, cy: cpy2, r: 5},
+                    style: {fill: 'rgb(10,30,50)'}
+                }));
+                els.push(new echarts.graphic.Polyline({
+                    shape: {points: [[cx, cy], [cpx1, cpy1], [cpx2, cpy2], [cx, cy]]},
+                    style: {stroke: 'rgb(10,30,50)'}
+                }));
+                for (var i = 0; i < els.length; i++) {
+                    zr.add(els[i]);
+                }
+            }
+        }
+        </script>
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+
+            var option = {
+                tooltip: {},
+                series: [{
+                    id: 'grh',
+                    type: 'graph',
+                    symbolSize: 100,
+                    roam: 'scale',
+                    // draggable : true,1
+                    // selectedMode: true,
+                    label: {
+                        show: true,
+                    },
+                    edgeSymbol: ['circle', 'arrow'],
+                    edgeSymbolSize: [4, 10],
+                    edgeLabel: {
+                        color: 'green',
+                        fontSize: 12,
+                        color: 'red',
+                        fontSize: 30,
+                    },
+                    // focusNodeAdjacency: focusNodeAdjacency,
+                    lineStyle: {
+                        width: 3,
+                        color: '#184029',
+                        curveness: 0
+                    },
+                    itemStyle: {
+                        opacity: 0.5
+                    },
+                    emphasis: {
+                        focus: 'adjacency'
+                    },
+                    data: [{
+                        name: 'node_1',
+                        x: 300,
+                        y: 300,
+                        value: 'set_style_on_item'
+                    }, {
+                        name: 'node_2',
+                        x: 800,
+                        y: 300
+                    }, {
+                        name: 'node_3',
+                        x: 350,
+                        y: 100
+                    }, {
+                        name: 'node_4',
+                        x: 550,
+                        y: 500
+                    }
+                    ],
+                    links: [{
+                        id: 'a',
+                        source: 0,
+                        target: 1,
+                        symbolSize: [5, 20],
+                        lineStyle: {
+                            width: 5,
+                            opacity: 1,
+                            curveness: 0.2
+                        },
+                        emphasis: {
+                            lineStyle: {
+                                color: 'blue',
+                                width: 20,
+                                opacity: 0.1
+                            }
+                        }
+                    }, {
+                        id: 'b',
+                        source: 'node_2',
+                        target: 'node_1',
+                        label: {
+                            show: true
+                        },
+                        lineStyle: {
+                            curveness: 0.2
+                        }
+                    }, {
+                        id: 'c',
+                        source: 'node_2',
+                        target: 'node_1',
+                        lineStyle: {
+                            curveness: 0.8
+                        }
+                    }, {
+                        id: 'd',
+                        source: 'node_1',
+                        target: 'node_3',
+                        emphasis: {
+                            label: {
+                                show: true
+                            }
+                        }
+                    }, {
+                        id: 'e',
+                        source: 'node_1',
+                        target: 'node_4'
+                    },
+
+                    {
+                        id: 'f',
+                        source: 'node_1',
+                        target: 'node_1',
+                    },
+                    {
+                        id: 'g',
+                        source: 'node_1',
+                        target: 'node_1',
+                        lineStyle: {
+                            // curveness: 0.9
+                        },
+                        label: {
+                            show: true
+                        }
+                    },
+
+                    ],
+                    autoCurveness: true
+                }
+            ]};
+
+
+            var chart = testHelper.create(echarts, 'main0', {
+                option: option,
+                height: 600,
+                title: [
+                    'Drag a node to modify the angles',
+                    'Drag an edge to modify the curveness',
+                    'Wheel to scale',
+                ]
+            });
+
+            if (chart) {
+                enableGraphEditRoughly({
+                    chart: chart,
+                    option: option,
+                    seriesId: 'grh',
+                    drag: true,
+                    editNodeSize: true,
+                    editSelfLoopEdgeCount: true,
+                    selfLoopEdgeNodeName: 'node_1'
+                });
+                // addScaleplate(chart);
+            }
+
+        });
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = {
+                tooltip: {},
+                animationDurationUpdate: 1500,
+                animationEasingUpdate: 'quinticInOut',
+                series : [
+                    {
+                        type: 'graph',
+                        id: 'grh',
+                        symbolSize: 120,
+                        roam: 'scale',
+                        // draggable : true,1
+                        // selectedMode: true,
+                        label: {
+                            normal: {
+                                show: true
+                            }
+                        },
+                        edgeSymbol: ['circle', 'arrow'],
+                        edgeSymbolSize: [4, 10],
+                        // focusNodeAdjacency: focusNodeAdjacency,
+                        lineStyle: {
+                            width: 3,
+                            color: '#184029',
+                            curveness: 0
+                        },
+                        itemStyle: {
+                            opacity: 0.5
+                        },
+                        data: [{
+                            name: 'node_1',
+                            x: 300,
+                            y: 300,
+                            value: 'set_style_on_item'
+                        }, {
+                            name: 'node_2',
+                            x: 800,
+                            y: 300
+                        }
+                        ],
+                        links: [{
+                            source: 'node_2',
+                            target: 'node_1',
+                            label: {
+                                show: true
+                            },
+                            lineStyle: {
+                                curveness: 0.2
+                            }
+                        },
+                        {
+                            source: 'node_1',
+                            target: 'node_1',
+                        },
+                        {
+                            source: 'node_1',
+                            target: 'node_1',
+                            lineStyle: {
+                                curveness: 0.9
+                            },
+                            label: {
+                                show: true
+                            }
+                        },
+
+                        ],
+                        autoCurveness: true
+                    }
+                ]
+            };
+            var chart = testHelper.create(echarts, 'main1', {
+                option: option,
+                height: 500,
+                title: [
+                    'Drag a node to modify the angles',
+                    'Drag an edge to modify the curveness',
+                    'Wheel to scale',
+                ]
+            });
+
+            if (chart) {
+                enableGraphEditRoughly({
+                    chart: chart,
+                    option: option,
+                    seriesId: 'grh',
+                    drag: true,
+                    editNodeSize: true,
+                    editSelfLoopEdgeCount: true,
+                    selfLoopEdgeNodeName: 'node_1'
+                });
+            }
+        });
+        </script>
+
+
+
+    </body>
+</html>
