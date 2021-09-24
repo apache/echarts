@@ -45,6 +45,10 @@ under the License.
         </style>
 
         <div id="main" class="chart"></div>
+        <p id="aria-1"></p>
+
+        <div id="main2" class="chart"></div>
+        <p id="aria-2"></p>
         <script>
 
         require(['echarts'],
@@ -95,11 +99,25 @@ under the License.
                     ]
                 });
 
-                chart.on('pieselectchanged', function (e) {
-                    console.log(e);
-                });
+                document.getElementById('aria-1').innerText = chart.getDom().getAttribute('aria-label');
 
-                window.onresize = chart.resize;
+                var chart2 = echarts.init(document.getElementById('main2'));
+
+                chart2.setOption(
+                    {
+                        "dataset": {
+                            "dimensions": ["c_0", "c_1"],
+                            "source": [{"c_0": "Amount used", "c_1": 1699.0}, {"c_0": "Amount left", "c_1": 2301.0}]
+                        },
+                        "series": [{
+                            "type": "pie", "silent": true,
+                            "encode": {"itemName": "c_0", "value": "c_1"},
+                            "radius": ["30%", "60%"]
+                        }],
+                        "aria": {"show": true}
+                    }
+                );
+                document.getElementById('aria-2').innerText = chart2.getDom().getAttribute('aria-label');
             }
         );
         </script>
