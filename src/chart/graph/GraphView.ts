@@ -36,6 +36,7 @@ import Symbol from '../helper/Symbol';
 import List from '../../data/List';
 import Line from '../helper/Line';
 import { getECData } from '../../util/innerStore';
+import { layoutSelfLoopEdges } from './layoutHelper';
 
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
@@ -102,7 +103,7 @@ class GraphView extends ChartView {
             }
         }
         // Fix edge contact point with node
-        adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
+        postLayoutEdges(seriesModel);
 
         const data = seriesModel.getData();
         symbolDraw.updateData(data as ListForSymbolDraw);
@@ -274,7 +275,7 @@ class GraphView extends ChartView {
                     originY: e.originY
                 });
                 this._updateNodeAndLinkScale();
-                adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
+                postLayoutEdges(seriesModel);
                 this._lineDraw.updateLayout();
                 // Only update label layout on zoom
                 api.updateLabelLayout();
@@ -293,7 +294,7 @@ class GraphView extends ChartView {
     }
 
     updateLayout(seriesModel: GraphSeriesModel) {
-        adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
+        postLayoutEdges(seriesModel);
 
         this._symbolDraw.updateLayout();
         this._lineDraw.updateLayout();
@@ -303,6 +304,19 @@ class GraphView extends ChartView {
         this._symbolDraw && this._symbolDraw.remove();
         this._lineDraw && this._lineDraw.remove();
     }
+}
+
+function postLayoutEdges(seriesModel: GraphSeriesModel): void {
+    const graph = seriesModel.getGraph();
+
+    // PENDING:
+    // `scaleOnCoordSys` will be changed when zooming.
+    // At present the layout stage will not be called when zooming. So
+    // we put these process here.
+    const nodeScaleOnCoordSys = getNodeGlobalScale(seriesModel);
+
+    layoutSelfLoopEdges(graph, nodeScaleOnCoordSys);
+    adjustEdge(graph, nodeScaleOnCoordSys);
 }
 
 export default GraphView;
