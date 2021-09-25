@@ -89,7 +89,6 @@ export function circularLayout(
         const p1 = vec2.clone(edge.node1.getLayout());
         const p2 = vec2.clone(edge.node2.getLayout());
         let cp1;
-        let cp2;
         const x12 = (p1[0] + p2[0]) / 2;
         const y12 = (p1[1] + p2[1]) / 2;
         if (isSelfLoopEdge(edge)) {
@@ -103,7 +102,7 @@ export function circularLayout(
                 cy * curveness + y12 * (1 - curveness)
             ];
         }
-        edge.setLayout([p1, p2, cp1, cp2]);
+        edge.setLayout([p1, p2, cp1]);
     });
 }
 
