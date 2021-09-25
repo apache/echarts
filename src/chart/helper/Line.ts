@@ -337,7 +337,7 @@ class Line extends graphic.Group {
         const label = lineGroup.getTextContent() as InnerLineLabel;
         // Quick reject
         if (!symbolFrom && !symbolTo && (!label || label.ignore)) {
-            return;
+            return ;
         }
 
         let invScale = 1;

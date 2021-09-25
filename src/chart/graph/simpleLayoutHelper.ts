@@ -25,26 +25,6 @@ import { getCurvenessForEdge } from '../helper/multipleGraphEdgeHelper';
 import { isSelfLoopEdge } from './layoutHelper';
 
 
-export function cubicPosition(pt: number[], center: number[], radius: number) {
-    const rSquare = radius * radius;
-    const sqrt = Math.sqrt;
-    const pow = Math.pow;
-    const out: number[] = [];
-    if (pt[0] < center[0]) {
-        out[0] = sqrt(rSquare / (1 + (pow(pt[1] - center[1], 2) / pow(pt[0] - center[0], 2)))) + center[0];
-    }
-    else if (pt[0] >= center[0]) {
-        out[0] = -sqrt(rSquare / (1 + (pow(pt[1] - center[1], 2) / pow(pt[0] - center[0], 2)))) + center[0];
-    }
-    if (pt[1] < center[1]) {
-        out[1] = sqrt(rSquare / (1 + (pow(pt[0] - center[0], 2) / pow(pt[1] - center[1], 2)))) + center[1];
-    }
-    else if (pt[1] - center[1] >= 0) {
-        out[1] = -sqrt(rSquare / (1 + (pow(pt[0] - center[0], 2) / pow(pt[1] - center[1], 2)))) + center[1];
-    }
-    return out;
-}
-
 export function simpleLayout(seriesModel: GraphSeriesModel) {
     const coordSys = seriesModel.coordinateSystem;
     if (coordSys && coordSys.type !== 'view') {
