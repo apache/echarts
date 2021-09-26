@@ -42,13 +42,13 @@ under the License.
 
 <body>
     <div>
-        <h2>Scatter-remove-overlap</h2>
+        <h2>Scatter-moveOverlap</h2>
         <form>
             Number of labels: <input type="text" id="n_labels" value=50 size="6"> &nbsp;&nbsp;|&nbsp;&nbsp;
             <input type="radio" name="dist" id="uniform" value="Uniform" checked="checked">Uniform&nbsp;&nbsp;<input
                 type="radio" name="dist" id="gaussian" value="Gaussian">Gaussian&nbsp;&nbsp;|&nbsp;&nbsp;
-            Number of MC sweeps: <input type="text" id="n_sweeps" value=1000 size="6"> &nbsp;&nbsp;|&nbsp;&nbsp;
-            <button type="button" id="removeOverlap">removeOverlap</button>
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            <button type="button" id="moveOverlap">moveOverlap</button>
             <button type="button" id="generateData">generateData</button>
         </form>
     </div>
@@ -86,7 +86,8 @@ under the License.
             type: "scatter",
 
             labelLayout: {
-                removeOverlap: false,
+                // moveOverlap: false,
+                moveOverlap:'',
                 draggable: true,
             },
             symbolSize: 15,
@@ -118,18 +119,18 @@ under the License.
         myChart.setOption(option, true)
 
 
-        document.getElementById("removeOverlap").onclick = function () {
-            option.series[0].labelLayout.removeOverlap = true;
+        document.getElementById("moveOverlap").onclick = function () {
+            option.series[0].labelLayout.moveOverlap = true;
+            // option.series[0].labelLayout.moveOverlap = 'repel';
             myChart.setOption(option, true)
         }
 
         document.getElementById("generateData").onclick = function () {
             var nlabels = document.getElementById('n_labels').value;
             var is_uniform = document.getElementById('uniform').checked;
-            var nsweeps = document.getElementById('n_sweeps').value;
             randomize(nlabels, is_uniform);
             option.series[0].data = anchor_array;
-            option.series[0].labelLayout.removeOverlap = false;
+            option.series[0].labelLayout.moveOverlap = '';
             myChart.setOption(option, true)
         }
     }

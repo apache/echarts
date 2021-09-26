@@ -51,7 +51,8 @@ import { makeInner } from '../util/model';
 import { retrieve2, each, keys, isFunction, filter, indexOf } from 'zrender/src/core/util';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
-import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY, removeOverlap } from './labelLayoutHelper';
+import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
+import { shiftLayoutByRepelling } from './repelLabels';
 import { labelInner, animateLabelValue } from './labelStyle';
 
 interface LabelDesc {
@@ -345,7 +346,8 @@ class LabelManager {
                     // Force to set local false.
                     local: false,
                     // Ignore position and rotation config on the host el if x or y is changed.
-                    position: (layoutOption.x != null || layoutOption.y != null || layoutOption.removeOverlap)
+                    position: (layoutOption.x != null || layoutOption.y != null || layoutOption.moveOverlap === true
+                        || layoutOption.moveOverlap === 'repel')
                         ? null : defaultLabelAttr.attachedPos,
                     // Ignore rotation config on the host el if rotation is changed.
                     rotation: layoutOption.rotate != null
@@ -442,11 +444,11 @@ class LabelManager {
 
         hideOverlap(labelsNeedsHideOverlap);
 
-        const labelsNeedsRemoveOverlap = filter(labelList, function (item) {
-            return item.layoutOption.removeOverlap;
+        const labelsNeedsMoveOverlap = filter(labelList, function (item) {
+            return item.layoutOption.moveOverlap === 'repel' || item.layoutOption.moveOverlap === true;
         });
         // todo Add some optional parameters later
-        removeOverlap(labelsNeedsRemoveOverlap, 0, width, 0, height);
+        shiftLayoutByRepelling(labelsNeedsMoveOverlap, 0, width, 0, height);
     }
 
     /**

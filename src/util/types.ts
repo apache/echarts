@@ -1193,16 +1193,13 @@ export interface LabelLayoutOption {
         | 'shiftY'
         | 'shuffleX'
         | 'shuffleY'
+        | 'repel'
+        | true
     /**
      * If hide the overlapped label. It will be handled after move.
      * @default 'none'
      */
     hideOverlap?: boolean
-    /**
-     * If labels overlap. It will Remove overlaps;
-     * @default 'none'
-     */
-    removeOverlap?: boolean
     /**
      * If label is draggable.
      */
