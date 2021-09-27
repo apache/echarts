@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+    </head>
+    <style>
+        div {
+            margin-top: 35px;
+            margin-bottom: 0px;
+            margin-left: 10px;
+        }
+
+        html,
+        body,
+        #main {
+            width: 1200px;
+            height: 600px;
+        }
+    </style>
+
+    <body>
+        <div>
+            <h2>Scatter-moveOverlap</h2>
+            <form>
+                Number of labels: <input type="text" id="n_labels" value=50 size="6"> &nbsp;&nbsp;|&nbsp;&nbsp;
+                <input type="radio" name="dist" id="uniform" value="Uniform" checked="checked">Uniform&nbsp;&nbsp;<input
+                    type="radio" name="dist" id="gaussian" value="Gaussian">Gaussian&nbsp;&nbsp;|&nbsp;&nbsp;
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <button type="button" id="moveOverlap">moveOverlap</button>
+                <button type="button" id="generateData">generateData</button>
+            </form>
+        </div>
+        <div id="main"></div>
+    </body>
+
+</html>
+
+<script>
+    var width = 1200,
+        height = 600,
+        anchor_array = [],
+        is_uniform = true,
+        x_mean = width / 2,
+        y_mean = height / 2;
+
+    randomize(50, true);
+    let option = {
+        legend: {},
+        xAxis: {
+            type: "value",
+            scale: true,
+            splitLine: {
+                show: false
+            }
+        },
+        yAxis: {
+            type: "value",
+            scale: true,
+            splitLine: {
+                show: false
+            }
+        },
+        series: [{
+            type: "scatter",
+
+            labelLayout: {
+                moveOverlap: '',
+                draggable: true,
+            },
+            symbolSize: 15,
+            labelLine: {
+                show: true,
+                smooth: true,
+                lineStyle: {
+                    color: '#bbb'
+                },
+                minLength: 0
+            },
+            label: {
+                align: 'middle',
+                verticalAlign: 'middle',
+                show: true,
+                formatter: function (param) {
+                    return param.data[2];
+                },
+                fontSize: 15
+            },
+            data: anchor_array
+        }]
+    }
+
+    require([
+        'echarts'
+    ], function (echarts) {
+        myChart = echarts.init(document.getElementById('main'));
+        myChart.setOption(option, true)
+
+
+        document.getElementById("moveOverlap").onclick = function () {
+            option.series[0].labelLayout.moveOverlap = true;
+            // option.series[0].labelLayout.moveOverlap = 'force';
+            myChart.setOption(option, true)
+        }
+
+        document.getElementById("generateData").onclick = function () {
+            var nlabels = document.getElementById('n_labels').value;
+            var is_uniform = document.getElementById('uniform').checked;
+            randomize(nlabels, is_uniform);
+            option.series[0].data = anchor_array;
+            option.series[0].labelLayout.moveOverlap = '';
+            myChart.setOption(option, true)
+        }
+    }
+    );
+
+    function randomize(count, is_uniform) {
+        anchor_array = [];
+        for (var i = 0; i < count; i++) {
+            var xval, yval;
+            if (is_uniform) {
+                // Uniformly distributed of x, y
+                do {
+                    xval = Math.random() * width;
+                } while (xval < 10 || xval > width - 60);
+
+                do {
+                    yval = Math.random() * width;
+                } while (yval < 28 || yval > height - 15);
+
+            } else {
+                // Gaussian distributed x, y
+                do {
+                    xval = x_mean + gaussian() * width / 6;
+                } while (xval < 10 || xval > width - 60);
+
+                do {
+                    yval = y_mean + gaussian() * height / 6;
+                } while (yval < 28 || yval > height - 15);
+
+            }
+            // Put label and anchor positions into arrays
+            anchor_array.push([xval, yval, "Node " + String(i)]);
+        }
+    };
+
+    function gaussian() {
+        // Box-Muller transformation
+        do {
+            u = 2 * Math.random() - 1;
+            v = 2 * Math.random() - 1;
+            r = u * u + v * v;
+        }
+        while (r >= 1.0);
+
+        var c = Math.sqrt(-2 * Math.log(r) / r);
+        return u * c;
+    }
+</script>
