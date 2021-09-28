@@ -179,6 +179,14 @@ class RoamController extends Eventful<{
             return;
         }
 
+        let el = e.target;
+        while (el) {
+            if (el.draggable) {
+                return;
+            }
+            el = el.__hostTarget ? el.__hostTarget : el.parent;
+        }
+
         const x = e.offsetX;
         const y = e.offsetY;
 
