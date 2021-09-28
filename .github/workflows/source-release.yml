@@ -77,7 +77,7 @@ jobs:
 
       # TODO Check release version is RC
 
-      # Archive before run others to avoid packing unkown files.
+      # Archive before run others to avoid packing unknown files.
       - name: Archive source release
         uses: actions/upload-artifact@v2
         with:
