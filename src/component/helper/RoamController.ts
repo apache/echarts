@@ -184,7 +184,8 @@ class RoamController extends Eventful<{
             if (el.draggable) {
                 return;
             }
-            el = el.__hostTarget ? el.__hostTarget : el.parent;
+            // check if host is draggable
+            el = el.__hostTarget || el.parent;
         }
 
         const x = e.offsetX;

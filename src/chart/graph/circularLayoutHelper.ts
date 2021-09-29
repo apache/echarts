@@ -86,8 +86,7 @@ export function circularLayout(
         vec2.scale(v, v, r);
         draggingNode.setLayout([cx + v[0], cy + v[1]]);
 
-        const circularRotateLabel = seriesModel.get('layout') === 'circular'
-                && seriesModel.get(['circular', 'rotateLabel']);
+        const circularRotateLabel = seriesModel.get(['circular', 'rotateLabel']);
         rotateNodeLabel(draggingNode, circularRotateLabel, cx, cy);
     }
 
