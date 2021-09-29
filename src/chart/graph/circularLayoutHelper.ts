@@ -53,7 +53,8 @@ const _symbolRadiansHalf: number[] = [];
 export function circularLayout(
     seriesModel: GraphSeriesModel,
     basedOn: 'value' | 'symbolSize',
-    draggingNode?: GraphNode
+    draggingNode?: GraphNode,
+    pointer?: [number, number]
 ) {
     const coordSys = seriesModel.coordinateSystem;
     if (coordSys && coordSys.type !== 'view') {
@@ -80,7 +81,7 @@ export function circularLayout(
     }
 
     if (draggingNode) {
-        const [tempX, tempY] = draggingNode.getLayout();
+        const [tempX, tempY] = coordSys.pointToData(pointer) as [number, number];
         const v = [tempX - cx, tempY - cy];
         vec2.normalize(v, v);
         vec2.scale(v, v, r);

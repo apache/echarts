@@ -135,7 +135,7 @@ class GraphView extends ChartView {
             el.off('drag').off('dragend');
             const draggable = itemModel.get('draggable');
             if (draggable) {
-                el.on('drag', () => {
+                el.on('drag', (e) => {
                     switch (layout) {
                         case 'force':
                             forceLayout.warmUp();
@@ -150,7 +150,7 @@ class GraphView extends ChartView {
                             // mark node fixed
                             node.setLayout({ fixed: true }, true);
                             // recalculate circular layout
-                            circularLayout(seriesModel, 'symbolSize', node);
+                            circularLayout(seriesModel, 'symbolSize', node, [e.offsetX, e.offsetY]);
                             this.updateLayout(seriesModel);
                             break;
                         case 'none':
