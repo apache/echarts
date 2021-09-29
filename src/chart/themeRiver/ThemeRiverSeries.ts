@@ -69,12 +69,11 @@ export interface ThemeRiverSeriesOption extends SeriesOption<ThemeRiverStateOpti
      * [date, value, name]
      */
     data?: ThemerRiverDataItem[]
-
     /**
      * draw mode symmetrical or asymmetical
      * default symmetrical
      */
-     drawMode ?:"symmetrical"|"wiggle"
+     drawMode ?:'symmetrical'|'wiggle'
 }
 
 class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
@@ -133,7 +132,6 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             });
         });
         const layerNum = layerData.length;
-
         for (let k = 0; k < layerNum; ++k) {
             const name = layerData[k].name;
             for (let j = 0; j < layerData[k].dataList.length; ++j) {
@@ -300,7 +298,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
         coordinateSystem: 'singleAxis',
 
         //default draw mode 
-        drawMode:"symmetrical",
+        drawMode:'symmetrical',
 
         // gap in axis's orthogonal orientation
         boundaryGap: ['10%', '10%'],

@@ -82,7 +82,7 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
     const coordSys = seriesModel.coordinateSystem;
     // the data in each layer are organized into a series.
     const layerSeries = seriesModel.getLayerSeries();
-    const drawMode = seriesModel.get("drawMode");
+    const drawMode = seriesModel.get('drawMode');
 
     // the points in each layer.
     const timeDim = data.mapDimension('single');
@@ -97,12 +97,13 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
 
     const base = computeBaseline(layerPoints);
     var baseLine;
-    if(drawMode == "symmetrical")
+    if (drawMode === 'symmetrical')
     {
-        baseLine = base.y0_symmetric
-    }else if(drawMode=="wiggle")
+        baseLine = base.y0Symmetric
+    } 
+    else if (drawMode === 'wiggle')
     {
-        baseLine = base.y0_wiggle
+        baseLine = base.y0Wiggle
     }
     
     const ky = height / base.max;
@@ -138,45 +139,44 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
  * @param  data  the points in each layer
  */
  function computeBaseline(data: number[][][]) {
-    //console.log(data);
-    const layerNum = data.length;//6
-    const pointNum = data[0].length;//21
+    const layerNum = data.length;
+    const pointNum = data[0].length;
     const sums = [];//sums of each vertical row at a single time point 
-    const sums1 = [];
-    const y0_symmetric = [];
-    const y0_wiggle = [];
+    const sumsWiggle = [];
+    const y0Symmetric = [];
+    const y0Wiggle = [];
     let max = 0;
 
     for (let i = 0; i < pointNum; ++i) {
         let temp = 0;
-        let temp1 = 0;
+        let tempWiggle = 0;
         for (let j = 0; j < layerNum; ++j) {
             temp += data[j][i][1];
-            temp1 += (layerNum-(j+1))*data[j][i][1];
+            tempWiggle += (layerNum-(j+1)) * data[j][i][1];
         }
         if (temp > max) {
             max = temp;
         }
         sums.push(temp);
-        sums1.push(temp1)
+        sumsWiggle.push(tempWiggle);
     }
 
     
     for (let k = 0 ; k < pointNum; ++k) { 
-        y0_symmetric[k] = (max-sums[k])/2      
-        y0_wiggle[k] = max/2-sums1[k]/layerNum;
+        y0Symmetric[k] = (max - sums[k]) / 2;      
+        y0Wiggle[k] = max / 2 - sumsWiggle[k] / layerNum;
     }
     max = 0;
 
     for (let l = 0; l < pointNum; ++l) {
-        const sum = sums[l] + y0_symmetric[l];
+        const sum = sums[l] + y0Symmetric[l];
         if (sum > max) {
             max = sum;
         }
     }
     return {
-        y0_symmetric,
-        y0_wiggle,
+        y0Symmetric,
+        y0Wiggle,
         max
     };
 }
