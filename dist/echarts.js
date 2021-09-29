@@ -18354,7 +18354,7 @@
                     if (seriesImportName) {
                       error("Series " + subType + " is used but not imported.\nimport { " + seriesImportName + " } from 'echarts/charts';\necharts.use([" + seriesImportName + "]);");
                     } else {
-                      error("Unkown series " + subType);
+                      error("Unknown series " + subType);
                     }
                   }
                 }
@@ -24765,7 +24765,7 @@
       var styleMapper = seriesModel.visualStyleMapper || defaultStyleMappers[stylePath];
 
       if (!styleMapper) {
-        console.warn("Unkown style type '" + stylePath + "'.");
+        console.warn("Unknown style type '" + stylePath + "'.");
         return defaultStyleMappers.itemStyle;
       }
 
@@ -24777,7 +24777,7 @@
       var colorKey = seriesModel.visualDrawType || defaultColorKey[stylePath];
 
       if (!colorKey) {
-        console.warn("Unkown style type '" + stylePath + "'.");
+        console.warn("Unknown style type '" + stylePath + "'.");
         return 'fill';
       }
 
@@ -32813,7 +32813,7 @@
 
         if ("development" !== 'production') {
           if (dimIdx == null) {
-            throw new Error('Unkown dimension ' + dim);
+            throw new Error('Unknown dimension ' + dim);
           }
         }
 
@@ -41256,7 +41256,7 @@
                     layer = this.getLayer(zlevel + (incrementalLayerCount > 0 ? EL_AFTER_INCREMENTAL_INC : 0), this._needsManuallyCompositing);
                 }
                 if (!layer.__builtin__) {
-                    logError('ZLevel ' + zlevel + ' has been used by unkown layer ' + layer.id);
+                    logError('ZLevel ' + zlevel + ' has been used by unknown layer ' + layer.id);
                 }
                 if (layer !== prevLayer) {
                     layer.__used = true;
@@ -68031,7 +68031,7 @@
           var CoordSys = CoordinateSystemManager.get(option.coordinateSystem);
 
           if (!CoordSys) {
-            throw new Error('Unkown coordinate system ' + option.coordinateSystem);
+            throw new Error('Unknown coordinate system ' + option.coordinateSystem);
           }
         }
 
