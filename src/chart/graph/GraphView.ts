@@ -146,9 +146,9 @@ class GraphView extends ChartView {
                             data.setItemLayout(idx, [el.x, el.y]);
                             break;
                         case 'circular':
-                            // mark node fixed
-                            node.getModel<GraphNodeItemOption>().mergeOption({fixed: true});
                             data.setItemLayout(idx, [el.x, el.y]);
+                            // mark node fixed
+                            node.setLayout({ fixed: true }, true);
                             // recalculate circular layout
                             circularLayout(seriesModel, 'symbolSize', node);
                             this.updateLayout(seriesModel);

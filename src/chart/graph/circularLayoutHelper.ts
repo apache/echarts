@@ -84,7 +84,7 @@ export function circularLayout(
         const v = [tempX - cx, tempY - cy];
         vec2.normalize(v, v);
         vec2.scale(v, v, r);
-        draggingNode.setLayout([cx + v[0], cy + v[1]]);
+        draggingNode.setLayout([cx + v[0], cy + v[1]], true);
 
         const circularRotateLabel = seriesModel.get(['circular', 'rotateLabel']);
         rotateNodeLabel(draggingNode, circularRotateLabel, cx, cy);
@@ -179,7 +179,7 @@ const _layoutNodesBasedOn: Record<'value' | 'symbolSize', LayoutNode> = {
             // init circular layout for
             // 1. layout undefined node
             // 2. not fixed node
-            (!node.getLayout() || !node.getModel<GraphNodeItemOption>().get('fixed'))
+            (!node.getLayout() || !node.getLayout().fixed)
             && node.setLayout([
                 r * Math.cos(angle) + cx,
                 r * Math.sin(angle) + cy
