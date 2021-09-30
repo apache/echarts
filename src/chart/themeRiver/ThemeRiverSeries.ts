@@ -70,10 +70,10 @@ export interface ThemeRiverSeriesOption extends SeriesOption<ThemeRiverStateOpti
      */
     data?: ThemerRiverDataItem[]
     /**
-     * draw mode symmetrical or asymmetical
+     * center mode symmetrical or asymmetical
      * default symmetrical
      */
-     drawMode ?:'symmetrical'|'wiggle'
+     centerMode ?:'symmetrical'|'wiggle'
 }
 
 class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
@@ -297,8 +297,8 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
         colorBy: 'data',
         coordinateSystem: 'singleAxis',
 
-        //default draw mode 
-        drawMode:'symmetrical',
+        //default center mode 
+        centerMode:'symmetrical',
 
         // gap in axis's orthogonal orientation
         boundaryGap: ['10%', '10%'],

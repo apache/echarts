@@ -82,7 +82,7 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
     const coordSys = seriesModel.coordinateSystem;
     // the data in each layer are organized into a series.
     const layerSeries = seriesModel.getLayerSeries();
-    const drawMode = seriesModel.get('drawMode');
+    const centerMode = seriesModel.get('centerMode');
 
     // the points in each layer.
     const timeDim = data.mapDimension('single');
@@ -97,15 +97,12 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
 
     const base = computeBaseline(layerPoints);
     var baseLine;
-    if (drawMode === 'symmetrical')
-    {
-        baseLine = base.y0Symmetric
+    if (centerMode === 'symmetrical') {
+        baseLine = base.y0Symmetric;
     } 
-    else if (drawMode === 'wiggle')
-    {
-        baseLine = base.y0Wiggle
+    else if (centerMode === 'wiggle') {
+        baseLine = base.y0Wiggle;
     }
-    
     const ky = height / base.max;
 
     // set layout information for each item.
@@ -138,7 +135,7 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
  *
  * @param  data  the points in each layer
  */
- function computeBaseline(data: number[][][]) {
+function computeBaseline(data: number[][][]) {
     const layerNum = data.length;
     const pointNum = data[0].length;
     const sums = [];//sums of each vertical row at a single time point 
@@ -152,7 +149,7 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
         let tempWiggle = 0;
         for (let j = 0; j < layerNum; ++j) {
             temp += data[j][i][1];
-            tempWiggle += (layerNum-(j+1)) * data[j][i][1];
+            tempWiggle += (layerNum - (j+1)) * data[j][i][1];
         }
         if (temp > max) {
             max = temp;
@@ -160,7 +157,6 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
         sums.push(temp);
         sumsWiggle.push(tempWiggle);
     }
-
     
     for (let k = 0 ; k < pointNum; ++k) { 
         y0Symmetric[k] = (max - sums[k]) / 2;      
@@ -174,6 +170,7 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
             max = sum;
         }
     }
+
     return {
         y0Symmetric,
         y0Wiggle,
