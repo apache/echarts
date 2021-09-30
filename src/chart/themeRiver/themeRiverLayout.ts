@@ -149,7 +149,7 @@ function computeBaseline(data: number[][][]) {
         let tempWiggle = 0;
         for (let j = 0; j < layerNum; ++j) {
             temp += data[j][i][1];
-            tempWiggle += (layerNum - (j+1)) * data[j][i][1];
+            tempWiggle += (layerNum - (j + 1)) * data[j][i][1];
         }
         if (temp > max) {
             max = temp;

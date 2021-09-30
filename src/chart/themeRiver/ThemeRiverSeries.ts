@@ -73,7 +73,7 @@ export interface ThemeRiverSeriesOption extends SeriesOption<ThemeRiverStateOpti
      * center mode symmetrical or asymmetical
      * default symmetrical
      */
-     centerMode ?:'symmetrical'|'wiggle'
+     centerMode?: 'symmetrical'|'wiggle'
 }
 
 class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
