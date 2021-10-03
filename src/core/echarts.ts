@@ -327,6 +327,7 @@ type EChartsInitOpts = {
     renderer?: RendererType,
     devicePixelRatio?: number,
     useDirtyRect?: boolean,
+    ssr?: boolean,
     width?: number,
     height?: number
 };
@@ -342,6 +343,8 @@ class ECharts extends Eventful<ECEventDefinition> {
      * @readonly
      */
     group: string;
+
+    private _ssr: boolean;
 
     private _zr: zrender.ZRenderType;
 
@@ -429,8 +432,10 @@ class ECharts extends Eventful<ECEventDefinition> {
             devicePixelRatio: opts.devicePixelRatio,
             width: opts.width,
             height: opts.height,
+            ssr: opts.ssr,
             useDirtyRect: opts.useDirtyRect == null ? defaultUseDirtyRect : opts.useDirtyRect
         });
+        this._ssr = opts.ssr;
 
         // Expect 60 fps.
         this._throttledZrFlush = throttle(bind(zr.flush, zr), 17);
@@ -634,7 +639,10 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             // Ensure zr refresh sychronously, and then pixel in canvas can be
             // fetched after `setOption`.
-            this._zr.flush();
+            if (!this._ssr) {
+                // not use flush when using ssr mode.
+                this._zr.flush();
+            }
 
             this[PENDING_UPDATE] = null;
             this[IN_MAIN_PROCESS_KEY] = false;
@@ -1121,7 +1129,10 @@ class ECharts extends Eventful<ECEventDefinition> {
         }
         this._disposed = true;
 
-        modelUtil.setAttribute(this.getDom(), DOM_ATTRIBUTE_KEY, '');
+        const dom = this.getDom();
+        if (dom) {
+            modelUtil.setAttribute(this.getDom(), DOM_ATTRIBUTE_KEY, '');
+        }
 
         const chart = this;
         const api = chart._api;
@@ -2546,32 +2557,35 @@ export function init(
     theme?: string | object,
     opts?: EChartsInitOpts
 ): EChartsType {
-    if (__DEV__) {
-        if (!dom) {
-            throw new Error('Initialize failed: invalid dom.');
-        }
-    }
-
-    const existInstance = getInstanceByDom(dom);
-    if (existInstance) {
+    const isClient = !(opts && opts.ssr);
+    if (isClient) {
         if (__DEV__) {
-            console.warn('There is a chart instance already initialized on the dom.');
+            if (!dom) {
+                throw new Error('Initialize failed: invalid dom.');
+            }
         }
-        return existInstance;
-    }
 
-    if (__DEV__) {
-        if (isDom(dom)
-            && dom.nodeName.toUpperCase() !== 'CANVAS'
-            && (
-                (!dom.clientWidth && (!opts || opts.width == null))
-                || (!dom.clientHeight && (!opts || opts.height == null))
-            )
-        ) {
-            console.warn('Can\'t get DOM width or height. Please check '
-            + 'dom.clientWidth and dom.clientHeight. They should not be 0.'
-            + 'For example, you may need to call this in the callback '
-            + 'of window.onload.');
+        const existInstance = getInstanceByDom(dom);
+        if (existInstance) {
+            if (__DEV__) {
+                console.warn('There is a chart instance already initialized on the dom.');
+            }
+            return existInstance;
+        }
+
+        if (__DEV__) {
+            if (isDom(dom)
+                && dom.nodeName.toUpperCase() !== 'CANVAS'
+                && (
+                    (!dom.clientWidth && (!opts || opts.width == null))
+                    || (!dom.clientHeight && (!opts || opts.height == null))
+                )
+            ) {
+                console.warn('Can\'t get DOM width or height. Please check '
+                + 'dom.clientWidth and dom.clientHeight. They should not be 0.'
+                + 'For example, you may need to call this in the callback '
+                + 'of window.onload.');
+            }
         }
     }
 
@@ -2579,7 +2593,7 @@ export function init(
     chart.id = 'ec_' + idBase++;
     instances[chart.id] = chart;
 
-    modelUtil.setAttribute(dom, DOM_ATTRIBUTE_KEY, chart.id);
+    isClient && modelUtil.setAttribute(dom, DOM_ATTRIBUTE_KEY, chart.id);
 
     enableConnect(chart);
 

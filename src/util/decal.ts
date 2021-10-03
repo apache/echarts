@@ -28,10 +28,11 @@ import ExtensionAPI from '../core/ExtensionAPI';
 import type SVGPainter from 'zrender/src/svg/Painter';
 import { brushSingle } from 'zrender/src/canvas/graphic';
 import {DecalDashArrayX, DecalDashArrayY, InnerDecalObject, DecalObject} from './types';
+import { SVGVNode } from 'zrender/src/svg/core';
 
 const decalMap = new WeakMap<DecalObject, PatternObject>();
 
-const decalCache = new LRU<HTMLCanvasElement | SVGElement>(100);
+const decalCache = new LRU<HTMLCanvasElement | SVGVNode>(100);
 
 const decalKeys = [
     'symbol', 'symbolSize', 'symbolKeepAspect',
@@ -117,7 +118,7 @@ export function createOrUpdatePatternFromDecal(
             cacheKey = keys.join(',') + (isSVG ? '-svg' : '');
             const cache = decalCache.get(cacheKey);
             if (cache) {
-                isSVG ? (pattern as SVGPatternObject).svgElement = cache as SVGElement
+                isSVG ? (pattern as SVGPatternObject).svgElement = cache as SVGVNode
                     : (pattern as ImagePatternObject).image = cache as HTMLCanvasElement;
             }
         }
@@ -129,7 +130,12 @@ export function createOrUpdatePatternFromDecal(
         const lineBlockLengthY = getLineBlockLengthY(dashArrayY);
 
         const canvas = !isSVG && createCanvas();
-        const svgRoot = isSVG && (zr.painter as SVGPainter).createSVGElement('g');
+        const svgRoot: SVGVNode = isSVG && {
+            tag: 'g',
+            attrs: {},
+            key: 'dcl',
+            children: []
+        };
         const pSize = getPatternSize();
         let ctx: CanvasRenderingContext2D;
         if (canvas) {
@@ -284,7 +290,10 @@ export function createOrUpdatePatternFromDecal(
                     decalOpt.symbolKeepAspect
                 );
                 if (isSVG) {
-                    svgRoot.appendChild((zr.painter as SVGPainter).paintOne(symbol));
+                    const symbolVNode = (zr.painter as SVGPainter).renderOneToVNode(symbol);
+                    if (symbolVNode) {
+                        svgRoot.children.push(symbolVNode);
+                    }
                 }
                 else {
                     // Paint to canvas for all other renderers.

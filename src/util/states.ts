@@ -216,7 +216,7 @@ function getFromStateStyle(
             // Dont consider the animation to emphasis state.
             && animator.__fromStateTransition.indexOf(toStateName) < 0
             && animator.targetName === 'style') {
-            animator.saveFinalToTarget(fromState, props);
+            animator.saveTo(fromState, props);
         }
     }
     return fromState;

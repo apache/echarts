@@ -26,8 +26,9 @@ const outFilePath = path.resolve(__dirname, '../dist/echarts.js');
 const umdMark = '// ------------- WRAPPED UMD --------------- //';
 const umdWrapperHead = `
 ${umdMark}
+typeof window !== 'undefined' ? window.__DEV__ = true
+    : typeof global !== 'undefined' ? global.__DEV__ = true : __DEV__ = true;
 (function (root, factory) {
-    window.__DEV__ = true;
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define(['exports'], factory);
