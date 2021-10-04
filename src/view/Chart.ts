@@ -146,7 +146,11 @@ class ChartView {
 
     init(ecModel: GlobalModel, api: ExtensionAPI): void {}
 
-    render(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {}
+    render(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
+        if (__DEV__) {
+            throw new Error('render method must been implemented');
+        }
+    }
 
     /**
      * Highlight series or specified data item.
