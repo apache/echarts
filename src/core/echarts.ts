@@ -689,9 +689,6 @@ class ECharts extends Eventful<ECEventDefinition> {
         backgroundColor?: ZRColor
         pixelRatio?: number
     }): HTMLCanvasElement {
-        if (!env.canvasSupported) {
-            return;
-        }
         opts = opts || {};
         return (this._zr.painter as CanvasPainter).getRenderedCanvas({
             backgroundColor: (opts.backgroundColor || this._model.get('backgroundColor')) as ColorString,
@@ -774,9 +771,6 @@ class ECharts extends Eventful<ECEventDefinition> {
             return;
         }
 
-        if (!env.canvasSupported) {
-            return;
-        }
         const isSvg = opts.type === 'svg';
         const groupId = this.group;
         const mathMin = Math.min;
@@ -1642,24 +1636,14 @@ class ECharts extends Eventful<ECEventDefinition> {
                 render(this, ecModel, api, payload, updateParams);
 
                 // Set background
-                let backgroundColor = ecModel.get('backgroundColor') || 'transparent';
+                const backgroundColor = ecModel.get('backgroundColor') || 'transparent';
                 const darkMode = ecModel.get('darkMode');
 
-                // In IE8
-                if (!env.canvasSupported) {
-                    const colorArr = colorTool.parse(backgroundColor as ColorString);
-                    backgroundColor = colorTool.stringify(colorArr, 'rgb');
-                    if (colorArr[3] === 0) {
-                        backgroundColor = 'transparent';
-                    }
-                }
-                else {
-                    zr.setBackgroundColor(backgroundColor);
+                zr.setBackgroundColor(backgroundColor);
 
-                    // Force set dark mode.
-                    if (darkMode != null && darkMode !== 'auto') {
-                        zr.setDarkMode(darkMode);
-                    }
+                // Force set dark mode.
+                if (darkMode != null && darkMode !== 'auto') {
+                    zr.setDarkMode(darkMode);
                 }
 
                 lifecycle.trigger('afterupdate', ecModel, api);
@@ -2210,11 +2194,6 @@ class ECharts extends Eventful<ECEventDefinition> {
          */
         function updateBlend(seriesModel: SeriesModel, chartView: ChartView): void {
             const blendMode = seriesModel.get('blendMode') || null;
-            if (__DEV__) {
-                if (!env.canvasSupported && blendMode && blendMode !== 'source-over') {
-                    console.warn('Only canvas support blendMode');
-                }
-            }
             chartView.group.traverse(function (el: Displayable) {
                 // FIXME marker and other components
                 if (!el.isGroup) {

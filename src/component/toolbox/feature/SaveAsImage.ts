@@ -145,6 +145,4 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
     }
 }
 
-SaveAsImage.prototype.unusable = !env.canvasSupported;
-
 export default SaveAsImage;
