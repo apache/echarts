@@ -77,7 +77,17 @@ class PiePiece extends graphic.Sector {
             sector.setShape(sectorShape);
 
             const animationType = seriesModel.getShallow('animationType');
-            if (animationType === 'scale') {
+            if (seriesModel.ecModel.ssr) {
+                // Use scale animation in SSR mode(opacity?)
+                // Because CSS SVG animation doesn't support very customized shape animation.
+                graphic.initProps(sector, {
+                    scaleX: 0,
+                    scaleY: 0
+                }, seriesModel, { dataIndex: idx, isFrom: true});
+                sector.originX = sectorShape.cx;
+                sector.originY = sectorShape.cy;
+            }
+            else if (animationType === 'scale') {
                 sector.shape.r = layout.r0;
                 graphic.initProps(sector, {
                     shape: {

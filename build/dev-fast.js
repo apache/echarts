@@ -29,6 +29,7 @@ ${umdMark}
 (function () {
     var g = typeof self !== 'undefined' ? self : this;
     g.__DEV__ = true;
+    g.process = { env: { NODE_ENV: 'development' } };
 })();
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {

@@ -565,6 +565,10 @@ class ECharts extends Eventful<ECEventDefinition> {
         return this._zr;
     }
 
+    isSSR(): boolean {
+        return this._ssr;
+    }
+
     /**
      * Usage:
      * chart.setOption(option, notMerge, lazyUpdate);
@@ -611,6 +615,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             const theme = this._theme;
             const ecModel = this._model = new GlobalModel();
             ecModel.scheduler = this._scheduler;
+            ecModel.ssr = this._ssr;
             ecModel.init(null, null, null, theme, this._locale, optionManager);
         }
 
