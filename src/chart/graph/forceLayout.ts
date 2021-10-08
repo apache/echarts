@@ -147,7 +147,7 @@ export default function graphForceLayout(ecModel: GlobalModel) {
                     vec2.copy(points[1], p2);
                     if (isSelfLoopEdge(edge)) {
                     // Self-loop edge will be layout later in `layoutSelfLoopEdges`.
-                        return ;
+                        return;
                     }
                     else if (+e.curveness) {
                         points[2] = [
