@@ -93,7 +93,7 @@ export function circularLayout(
         const y12 = (p1[1] + p2[1]) / 2;
         if (isSelfLoopEdge(edge)) {
             // Self-loop edge will be layout later in `layoutSelfLoopEdges`.
-            return ;
+            return;
         }
         else if (+curveness) {
             curveness *= 3;
