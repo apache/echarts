@@ -31,7 +31,8 @@ import {
     ComponentMainType,
     ComponentSubType,
     DimensionLoose,
-    InterpolatableValue
+    InterpolatableValue,
+    CallbackSerieParams
 } from '../../util/types';
 import GlobalModel from '../Global';
 import { TooltipMarkupBlockFragment } from '../../component/tooltip/tooltipMarkup';
@@ -51,6 +52,24 @@ export interface DataFormatMixin extends DataHost {
 }
 
 export class DataFormatMixin {
+
+    getSerieParams(dataType?: SeriesDataType): CallbackSerieParams {
+        const data = this.getData(dataType);
+        const mainType = this.mainType;
+        const userOutput = data.userOutput && data.userOutput.get();
+
+        return {
+            index: (this as any).seriesIndex,
+            id: this.id,
+            name: this.name,
+            componentType: mainType,
+            componentSubType: this.subType,
+            componentIndex: this.componentIndex,
+            dataType,
+            dimensionNames: userOutput ? userOutput.fullDimensions : null,
+            encode: userOutput ? userOutput.encode : null,
+        };
+    }
 
     /**
      * Get params for formatter

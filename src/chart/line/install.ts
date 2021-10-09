@@ -55,4 +55,24 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         dataSample('line')
     );
 
+    registers.registerAction(
+        'polyLineClick', 'polyLineClick',
+        function() {}
+    );
+
+    registers.registerAction(
+        'polyLineMouseover', 'polyLineMouseover',
+        function() {}
+    );
+
+    registers.registerAction(
+        'polygonClick', 'polygonClick',
+        function() {}
+    );
+
+    registers.registerAction(
+        'polygonMouseover', 'polygonMouseover',
+        function() {}
+    );
+
 }

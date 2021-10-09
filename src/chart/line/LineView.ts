@@ -25,10 +25,10 @@ import SymbolClz from '../helper/Symbol';
 import lineAnimationDiff from './lineAnimationDiff';
 import * as graphic from '../../util/graphic';
 import * as modelUtil from '../../util/model';
-import {ECPolyline, ECPolygon} from './poly';
+import { ECPolyline, ECPolygon } from './poly';
 import ChartView from '../../view/Chart';
-import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
-import {createGridClipPath, createPolarClipPath} from '../helper/createClipPathFromCoordSys';
+import { prepareDataCoordInfo, getStackedOnPoint } from './helper';
+import { createGridClipPath, createPolarClipPath } from '../helper/createClipPathFromCoordSys';
 import LineSeriesModel, { LineSeriesOption } from './LineSeries';
 import type GlobalModel from '../../model/Global';
 import type ExtensionAPI from '../../core/ExtensionAPI';
@@ -43,20 +43,25 @@ import type {
     ECElement,
     DisplayState,
     LabelOption,
-    ParsedValue
+    ParsedValue,
+    ECElementEvent,
+    CallbackSerieParams
 } from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis, SPECIAL_STATES } from '../../util/states';
 import Model from '../../model/Model';
-import {setLabelStyle, getLabelStatesModels, labelInner} from '../../label/labelStyle';
-import {getDefaultLabel, getDefaultInterpolatedLabel} from '../helper/labelHelper';
+import { setLabelStyle, getLabelStatesModels, labelInner } from '../../label/labelStyle';
+import { getDefaultLabel, getDefaultInterpolatedLabel } from '../helper/labelHelper';
 
 import { getECData } from '../../util/innerStore';
 import { createFloat32Array } from '../../util/vendor';
 import { convertToColorString } from '../../util/format';
 import { lerp } from 'zrender/src/tool/color';
+import { findEventDispatcher } from '../../util/event';
+import { extend } from 'zrender/src/core/util';
+import Path from 'zrender/src/graphic/Path';
 
 type PolarArea = ReturnType<Polar['getArea']>;
 type Cartesian2DArea = ReturnType<Cartesian2D['getArea']>;
@@ -399,9 +404,9 @@ function canShowAllSymbolForCategory(
     const step = Math.max(1, Math.round(dataLen / 5));
     for (let dataIndex = 0; dataIndex < dataLen; dataIndex += step) {
         if (SymbolClz.getSymbolSize(
-                data, dataIndex
+            data, dataIndex
             // Only for cartesian, where `isHorizontal` exists.
-            )[categoryAxis.isHorizontal() ? 1 : 0]
+        )[categoryAxis.isHorizontal() ? 1 : 0]
             // Empirical number
             * 1.5 > availSize
         ) {
@@ -877,9 +882,46 @@ class LineView extends ChartView {
         this._points = points;
         this._step = step;
         this._valueOrigin = valueOrigin;
+        this.mouseEvent(seriesModel, api);
     }
 
-    dispose() {}
+    dispose() { 
+        this._polyline.off('click').off('mouseover');
+        this._polygon && this._polygon.off('click').off('mouseover');
+    }
+
+    mouseEvent(seriesModel: LineSeriesModel, api: ExtensionAPI) {
+        const bindEvent = (poly: Path, eventName: 'click' | 'mouseover', ecEventName: string) => {
+            poly.off(eventName).on(eventName, (e) => {
+                const el = e.target;
+                let params: CallbackSerieParams;
+                const dispatcher = findEventDispatcher(el, (parent) => {
+                    const ecData = getECData(parent);
+                    if (ecData && ecData.seriesIndex != null) {
+                        params = seriesModel.getSerieParams();
+                        return true;
+                    }
+                }, true);
+    
+                if (dispatcher) {
+                    api.dispatchAction({
+                        ...params,
+                        type: ecEventName,
+                    });
+                }
+            });
+        }
+
+        const polyline = this._polyline;
+        bindEvent(polyline, 'click', 'polyLineClick');
+        bindEvent(polyline, 'mouseover', 'polyLineMouseover');
+
+        const polygon = this._polygon;
+        if (polygon) {
+            bindEvent(polygon, 'click', 'polygonClick');
+            bindEvent(polygon, 'mouseover', 'polygonMouseover');
+        }
+    }
 
     highlight(
         seriesModel: LineSeriesModel,
@@ -1097,7 +1139,7 @@ class LineView extends ChartView {
                 const symbolPath = el.getSymbolPath();
                 const text = symbolPath.getTextContent();
 
-                el.attr({ scaleX: 0, scaleY: 0});
+                el.attr({ scaleX: 0, scaleY: 0 });
                 el.animateTo({
                     scaleX: 1,
                     scaleY: 1
