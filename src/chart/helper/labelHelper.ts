@@ -45,6 +45,10 @@ export function getDefaultLabel(
         }
         return vals.join(' ');
     }
+    else {
+        const rawVal = retrieveRawValue(data, dataIndex, 'value');
+        return rawVal != null ? rawVal + '' : null;
+    }
 }
 
 export function getDefaultInterpolatedLabel(
