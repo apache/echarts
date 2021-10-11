@@ -114,6 +114,19 @@ class ComponentView {
          // Do nothing;
     }
 
+    /**
+     * Traverse the new rendered elements.
+     *
+     * It will traverse the new added element in progressive rendering.
+     * And traverse all in normal rendering.
+     */
+    eachRendered(cb: (el: Element) => boolean | void) {
+        const group = this.group;
+        if (group) {
+            group.traverse(cb);
+        }
+    }
+
     static registerClass: clazzUtil.ClassManager['registerClass'];
 };
 

@@ -35,6 +35,7 @@ import {
 import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
 import { getLabelStatesModels } from '../../label/labelStyle';
+import Element from 'zrender/src/Element';
 
 interface LineLike extends graphic.Group {
     updateData(data: SeriesData, idx: number, scope?: LineDrawSeriesScope): void
@@ -98,15 +99,16 @@ class LineDraw {
 
     private _seriesScope: LineDrawSeriesScope;
 
+    private _progressiveEls: LineLike[];
+
     constructor(LineCtor?: LineLikeCtor) {
         this._LineCtor = LineCtor || LineGroup;
     }
 
-    isPersistent() {
-        return true;
-    };
-
     updateData(lineData: ListForLineDraw) {
+        // Remove progressive els.
+        this._progressiveEls = null;
+
         const lineDraw = this;
         const group = lineDraw.group;
 
@@ -154,6 +156,9 @@ class LineDraw {
     };
 
     incrementalUpdate(taskParams: StageHandlerProgressParams, lineData: ListForLineDraw) {
+
+        this._progressiveEls = [];
+
         function updateIncrementalAndHover(el: Displayable) {
             if (!el.isGroup && !isEffectObject(el)) {
                 el.incremental = true;
@@ -170,6 +175,8 @@ class LineDraw {
 
                 this.group.add(el);
                 lineData.setItemGraphicEl(idx, el);
+
+                this._progressiveEls.push(el);
             }
         }
     };
@@ -177,6 +184,10 @@ class LineDraw {
     remove() {
         this.group.removeAll();
     };
+
+    eachRendered(cb: (el: Element) => boolean | void) {
+        graphic.traverseElements(this._progressiveEls || this.group, cb);
+    }
 
     private _doAdd(
         lineData: ListForLineDraw,

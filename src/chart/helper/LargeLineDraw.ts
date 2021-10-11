@@ -20,7 +20,6 @@
 // TODO Batch by color
 
 import * as graphic from '../../util/graphic';
-import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as lineContain from 'zrender/src/contain/line';
 import * as quadraticContain from 'zrender/src/contain/quadratic';
 import { PathProps } from 'zrender/src/graphic/Path';
@@ -28,6 +27,7 @@ import SeriesData from '../../data/SeriesData';
 import { StageHandlerProgressParams, LineStyleOption, ColorString } from '../../util/types';
 import Model from '../../model/Model';
 import { getECData } from '../../util/innerStore';
+import Element from 'zrender/src/Element';
 
 class LargeLinesPathShape {
     polyline = false;
@@ -168,33 +168,19 @@ class LargeLinesPath extends graphic.Path {
 
 class LargeLineDraw {
     group = new graphic.Group();
-
-    _incremental?: IncrementalDisplayable;
-
-    isPersistent() {
-        return !this._incremental;
-    };
-
+    private _newAdded: LargeLinesPath[];
     /**
      * Update symbols draw by new data
      */
     updateData(data: LargeLinesData) {
-        this.group.removeAll();
+        this._clear();
 
-        const lineEl = new LargeLinesPath({
-            rectHover: true,
-            cursor: 'default'
-        });
+        const lineEl = this._create();
         lineEl.setShape({
             segs: data.getLayout('linesPoints')
         });
 
         this._setCommon(lineEl, data);
-
-        // Add back
-        this.group.add(lineEl);
-
-        this._incremental = null;
     };
 
     /**
@@ -202,54 +188,67 @@ class LargeLineDraw {
      */
     incrementalPrepareUpdate(data: LargeLinesData) {
         this.group.removeAll();
-
-        this._clearIncremental();
-
-        if (data.count() > 5e5) {
-            if (!this._incremental) {
-                this._incremental = new IncrementalDisplayable({
-                    silent: true
-                });
-            }
-            this.group.add(this._incremental);
-        }
-        else {
-            this._incremental = null;
-        }
+        this._clear();
     };
 
     /**
      * @override
      */
     incrementalUpdate(taskParams: StageHandlerProgressParams, data: LargeLinesData) {
-        const lineEl = new LargeLinesPath();
-        lineEl.setShape({
-            segs: data.getLayout('linesPoints')
-        });
+        const lastAdded = this._newAdded[0];
+        const linePoints = data.getLayout('linesPoints');
+        // Clear
+        this._newAdded = [];
 
-        this._setCommon(lineEl, data, !!this._incremental);
 
-        if (!this._incremental) {
-            lineEl.rectHover = true;
-            lineEl.cursor = 'default';
-            lineEl.__startIndex = taskParams.start;
-            this.group.add(lineEl);
+        const oldSegs = lastAdded && lastAdded.shape.segs;
+
+        // Merging the exists. Each element has 1e4 points.
+        // Consider the performance balance between too much elements and too much points in one shape(may affect hover optimization)
+        if (oldSegs && oldSegs.length < 2e4) {
+            const oldLen = oldSegs.length;
+            const newSegs = new Float32Array(oldLen + linePoints.length);
+            // Concat two array
+            newSegs.set(oldSegs);
+            newSegs.set(linePoints, oldLen);
+            lastAdded.setShape({
+                segs: newSegs
+            });
         }
         else {
-            this._incremental.addDisplayable(lineEl, true);
+            const lineEl = this._create();
+            lineEl.incremental = true;
+            lineEl.setShape({
+                segs: linePoints
+            });
+            this._setCommon(lineEl, data);
+            lineEl.__startIndex = taskParams.start;
         }
-    };
+    }
 
     /**
      * @override
      */
     remove() {
-        this._clearIncremental();
-        this._incremental = null;
-        this.group.removeAll();
-    };
+        this._clear();
+    }
 
-    _setCommon(lineEl: LargeLinesPath, data: LargeLinesData, isIncremental?: boolean) {
+    eachRendered(cb: (el: Element) => boolean | void) {
+        this._newAdded[0] && cb(this._newAdded[0]);
+    }
+
+    private _create() {
+        const lineEl = new LargeLinesPath({
+            rectHover: true,
+            cursor: 'default'
+        });
+        this._newAdded.push(lineEl);
+        this.group.add(lineEl);
+        return lineEl;
+    }
+
+
+    private _setCommon(lineEl: LargeLinesPath, data: LargeLinesData, isIncremental?: boolean) {
         const hostModel = data.hostModel;
 
         lineEl.setShape({
@@ -268,27 +267,22 @@ class LargeLineDraw {
         }
         lineEl.setStyle('fill', null);
 
-        if (!isIncremental) {
-            const ecData = getECData(lineEl);
-            // Enable tooltip
-            // PENDING May have performance issue when path is extremely large
-            ecData.seriesIndex = hostModel.seriesIndex;
-            lineEl.on('mousemove', function (e) {
-                ecData.dataIndex = null;
-                const dataIndex = lineEl.findDataIndex(e.offsetX, e.offsetY);
-                if (dataIndex > 0) {
-                    // Provide dataIndex for tooltip
-                    ecData.dataIndex = dataIndex + lineEl.__startIndex;
-                }
-            });
-        }
+        const ecData = getECData(lineEl);
+        // Enable tooltip
+        // PENDING May have performance issue when path is extremely large
+        ecData.seriesIndex = hostModel.seriesIndex;
+        lineEl.on('mousemove', function (e) {
+            ecData.dataIndex = null;
+            const dataIndex = lineEl.findDataIndex(e.offsetX, e.offsetY);
+            if (dataIndex > 0) {
+                // Provide dataIndex for tooltip
+                ecData.dataIndex = dataIndex + lineEl.__startIndex;
+            }
+        });
     };
 
-    _clearIncremental() {
-        const incremental = this._incremental;
-        if (incremental) {
-            incremental.clearDisplaybles();
-        }
+    private _clear() {
+        this.group.removeAll();
     };
 
 

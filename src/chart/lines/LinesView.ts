@@ -34,6 +34,7 @@ import { StageHandlerProgressParams, StageHandlerProgressExecutor } from '../../
 import SeriesData from '../../data/SeriesData';
 import type Polar from '../../coord/polar/Polar';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import Element from 'zrender/src/Element';
 
 class LinesView extends ChartView {
 
@@ -127,6 +128,10 @@ class LinesView extends ChartView {
         this._lineDraw.incrementalUpdate(taskParams, seriesModel.getData());
 
         this._finished = taskParams.end === seriesModel.getData().count();
+    }
+
+    eachRendered(cb: (el: Element) => boolean | void) {
+        this._lineDraw && this._lineDraw.eachRendered(cb);
     }
 
     updateTransform(seriesModel: LinesSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {

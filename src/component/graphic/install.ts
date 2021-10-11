@@ -46,16 +46,7 @@ import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { isEC4CompatibleStyle, convertFromEC4CompatibleStyle } from '../../util/styleCompat';
 import { EChartsExtensionInstallRegisters } from '../../extension';
 
-const TRANSFORM_PROPS = {
-    x: 1,
-    y: 1,
-    scaleX: 1,
-    scaleY: 1,
-    originX: 1,
-    originY: 1,
-    rotation: 1
-} as const;
-type TransformProp = keyof typeof TRANSFORM_PROPS;
+type TransformProp = 'x' | 'y' | 'scaleX' | 'scaleY' | 'originX' | 'originY' | 'skewX' | 'skewY';
 
 interface GraphicComponentBaseElementOption extends
         Partial<Pick<
@@ -133,6 +124,7 @@ interface GraphicComponentBaseElementOption extends
 
     tooltip?: CommonTooltipOption<unknown>;
 };
+
 interface GraphicComponentDisplayableOption extends
         GraphicComponentBaseElementOption,
         Partial<Pick<Displayable, 'zlevel' | 'z' | 'z2' | 'invisible' | 'cursor'>> {
@@ -200,11 +192,11 @@ type GraphicExtraElementInfo = Dictionary<unknown>;
 type ElementMap = zrUtil.HashMap<Element, string>;
 
 const inner = modelUtil.makeInner<{
-    __ecGraphicWidthOption: number;
-    __ecGraphicHeightOption: number;
-    __ecGraphicWidth: number;
-    __ecGraphicHeight: number;
-    __ecGraphicId: string;
+    widthOption: number;
+    heightOption: number;
+    width: number;
+    height: number;
+    id: string;
 }, Element>();
 
 
@@ -330,16 +322,12 @@ class GraphicComponentModel extends ComponentModel<GraphicComponentOption> {
         }, this);
 
         // Clean
-        for (let i = existList.length - 1; i >= 0; i--) {
-            if (existList[i] == null) {
-                existList.splice(i, 1);
-            }
-            else {
-                // $action should be volatile, otherwise option gotten from
-                // `getOption` will contain unexpected $action.
-                delete existList[i].$action;
-            }
-        }
+        thisOption.elements = zrUtil.filter(existList, (item) => {
+            // $action should be volatile, otherwise option gotten from
+            // `getOption` will contain unexpected $action.
+            item && delete item.$action;
+            return item != null;
+        });
     }
 
     /**
@@ -517,8 +505,8 @@ class GraphicComponentView extends ComponentView {
 
             if (el) {
                 const elInner = inner(el);
-                elInner.__ecGraphicWidthOption = (elOption as GraphicComponentGroupOption).width;
-                elInner.__ecGraphicHeightOption = (elOption as GraphicComponentGroupOption).height;
+                elInner.widthOption = (elOption as GraphicComponentGroupOption).width;
+                elInner.heightOption = (elOption as GraphicComponentGroupOption).height;
                 setEventData(el, graphicModel, elOption);
 
                 graphicUtil.setTooltipConfig({
@@ -555,13 +543,13 @@ class GraphicComponentView extends ComponentView {
             // Like 'position:absolut' in css, default 0.
             const elInner = inner(el);
             const parentElInner = inner(parentEl);
-            elInner.__ecGraphicWidth = parsePercent(
-                elInner.__ecGraphicWidthOption,
-                isParentRoot ? apiWidth : parentElInner.__ecGraphicWidth
+            elInner.width = parsePercent(
+                elInner.widthOption,
+                isParentRoot ? apiWidth : parentElInner.width
             ) || 0;
-            elInner.__ecGraphicHeight = parsePercent(
-                elInner.__ecGraphicHeightOption,
-                isParentRoot ? apiHeight : parentElInner.__ecGraphicHeight
+            elInner.height = parsePercent(
+                elInner.heightOption,
+                isParentRoot ? apiHeight : parentElInner.height
             ) || 0;
         }
 
@@ -583,8 +571,8 @@ class GraphicComponentView extends ComponentView {
                     height: apiHeight
                 }
                 : {
-                    width: parentElInner.__ecGraphicWidth,
-                    height: parentElInner.__ecGraphicHeight
+                    width: parentElInner.width,
+                    height: parentElInner.height
                 };
 
             // PENDING
@@ -641,7 +629,7 @@ function createEl(
     const el = new Clz(elOption);
     targetElParent.add(el);
     elMap.set(id, el);
-    inner(el).__ecGraphicId = id;
+    inner(el).id = id;
 }
 
 function removeEl(elExisting: Element, elMap: ElementMap): void {
@@ -650,7 +638,7 @@ function removeEl(elExisting: Element, elMap: ElementMap): void {
         elExisting.type === 'group' && elExisting.traverse(function (el) {
             removeEl(el, elMap);
         });
-        elMap.removeKey(inner(elExisting).__ecGraphicId);
+        elMap.removeKey(inner(elExisting).id);
         existElParent.remove(elExisting);
     }
 }

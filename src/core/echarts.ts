@@ -225,7 +225,6 @@ export interface SetOptionOpts {
     transition?: SetOptionTransitionOpt
 };
 
-
 export interface ResizeOpts {
     width?: number | 'auto', // Can be 'auto' (the same as null/undefined)
     height?: number | 'auto', // Can be 'auto' (the same as null/undefined)
@@ -2184,7 +2183,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                     }
                     const chartView = ecIns._chartsMap[seriesModel.__viewId];
                     if (chartView.__alive) {
-                        chartView.group.traverse(function (el: ECElement) {
+                        chartView.eachRendered((el: ECElement) => {
                             if (el.states.emphasis) {
                                 el.states.emphasis.hoverLayer = true;
                             }
@@ -2204,16 +2203,11 @@ class ECharts extends Eventful<ECEventDefinition> {
                     console.warn('Only canvas support blendMode');
                 }
             }
-            chartView.group.traverse(function (el: Displayable) {
+            chartView.eachRendered((el: Displayable) => {
                 // FIXME marker and other components
                 if (!el.isGroup) {
                     // DONT mark the element dirty. In case element is incremental and don't wan't to rerender.
                     el.style.blend = blendMode;
-                }
-                if ((el as IncrementalDisplayable).eachPendingDisplayable) {
-                    (el as IncrementalDisplayable).eachPendingDisplayable(function (displayable) {
-                        displayable.style.blend = blendMode;
-                    });
                 }
             });
         };
@@ -2222,13 +2216,14 @@ class ECharts extends Eventful<ECEventDefinition> {
             if (model.preventAutoZ) {
                 return;
             }
+            const z = model.get('z') || 0;
+            const zlevel = model.get('zlevel') || 0;
             // Set z and zlevel
-            _updateZ(
-                view.group,
-                model.get('z') || 0,
-                model.get('zlevel') || 0,
-                -Infinity
-            );
+            view.eachRendered((el) => {
+                _updateZ(el, z, zlevel, -Infinity);
+                // Don't traverse the children because it has been traversed in _updateZ.
+                return true;
+            });
         };
 
         function _updateZ(el: Element, z: number, zlevel: number, maxZ2: number): number {
@@ -2239,7 +2234,6 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             if (isGroup) {
                 // set z & zlevel of children elements of Group
-                // el.traverse((childEl: Element) => _updateZ(childEl, z, zlevel));
                 const children = (el as graphic.Group).childrenRef();
                 for (let i = 0; i < children.length; i++) {
                     maxZ2 = Math.max(_updateZ(children[i], z, zlevel, maxZ2), maxZ2);
@@ -2274,7 +2268,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         // Clear states without animation.
         // TODO States on component.
         function clearStates(model: ComponentModel, view: ComponentView | ChartView): void {
-            view.group.traverse(function (el: Displayable) {
+            view.eachRendered(function (el: Displayable) {
                 // Not applied on removed elements, it may still in fading.
                 if (graphic.isElementRemoved(el)) {
                     return;
@@ -2313,7 +2307,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 easing: stateAnimationModel.get('easing')
                 // additive: stateAnimationModel.get('additive')
             } : null;
-            view.group.traverse(function (el: Displayable) {
+            view.eachRendered(function (el: Displayable) {
                 if (el.states && el.states.emphasis) {
                     // Not applied on removed elements, it may still in fading.
                     if (graphic.isElementRemoved(el)) {
@@ -2445,7 +2439,6 @@ class ECharts extends Eventful<ECEventDefinition> {
     })();
 }
 
-
 const echartsProto = ECharts.prototype;
 echartsProto.on = createRegisterEventWithLowercaseECharts('on');
 echartsProto.off = createRegisterEventWithLowercaseECharts('off');
@@ -2464,30 +2457,6 @@ echartsProto.one = function (eventName: string, cb: Function, ctx?: any) {
     // @ts-ignore
     this.on.call(this, eventName, wrapped, ctx);
 };
-
-// /**
-//  * Encode visual infomation from data after data processing
-//  *
-//  * @param {module:echarts/model/Global} ecModel
-//  * @param {object} layout
-//  * @param {boolean} [layoutFilter] `true`: only layout,
-//  *                                 `false`: only not layout,
-//  *                                 `null`/`undefined`: all.
-//  * @param {string} taskBaseTag
-//  * @private
-//  */
-// function startVisualEncoding(ecIns, ecModel, api, payload, layoutFilter) {
-//     each(visualFuncs, function (visual, index) {
-//         let isLayout = visual.isLayout;
-//         if (layoutFilter == null
-//             || (layoutFilter === false && !isLayout)
-//             || (layoutFilter === true && isLayout)
-//         ) {
-//             visual.func(ecModel, api, payload);
-//         }
-//     });
-// }
-
 
 const MOUSE_EVENT_NAMES: ZRElementEventName[] = [
     'click', 'dblclick', 'mouseover', 'mouseout', 'mousemove',
