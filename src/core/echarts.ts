@@ -1007,7 +1007,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 else {
                     el && findEventDispatcher(el, (parent) => {
                         const ecData = getECData(parent);
-                        if (ecData && (ecData.dataIndex != null || ecData.seriesIndex != null)) {
+                        if (ecData && ecData.dataIndex != null) {
                             const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
                             params = (
                                 dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {}
