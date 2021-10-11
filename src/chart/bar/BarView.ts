@@ -19,14 +19,15 @@
 
 import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
-import {extend, defaults, each, map} from 'zrender/src/core/util';
+import {extend, each, map} from 'zrender/src/core/util';
 import {BuiltinTextPosition} from 'zrender/src/core/types';
 import {
     Rect,
     Sector,
     updateProps,
     initProps,
-    removeElementWithFadeOut
+    removeElementWithFadeOut,
+    traverseElements
 } from '../../util/graphic';
 import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
@@ -63,6 +64,7 @@ import {EventCallback} from 'zrender/src/core/Eventful';
 import { warn } from '../../util/log';
 import {createSectorCalculateTextPosition, SectorTextPosition, setSectorTextRotation} from '../../label/sectorLabel';
 import { saveOldStyle } from '../../animation/basicTrasition';
+import Element from 'zrender/src/Element';
 
 const _eventPos = [0, 0];
 
@@ -128,6 +130,8 @@ class BarView extends ChartView {
 
     private _model: BarSeriesModel;
 
+    private _progressiveEls: Element[];
+
     constructor() {
         super();
         this._isFirstFrame = true;
@@ -145,6 +149,9 @@ class BarView extends ChartView {
         if (coordinateSystemType === 'cartesian2d'
             || coordinateSystemType === 'polar'
         ) {
+            // Clear previously rendered progressive elements.
+            this._progressiveEls = null;
+
             this._isLargeDraw
                 ? this._renderLarge(seriesModel, ecModel, api)
                 : this._renderNormal(seriesModel, ecModel, api, payload);
@@ -163,8 +170,14 @@ class BarView extends ChartView {
     }
 
     incrementalRender(params: StageHandlerProgressParams, seriesModel: BarSeriesModel): void {
+        // Reset
+        this._progressiveEls = [];
         // Do not support progressive in normal mode.
         this._incrementalRenderLarge(params, seriesModel);
+    }
+
+    eachRendered(cb: (el: Element) => boolean | void) {
+        traverseElements(this._progressiveEls || this.group, cb);
     }
 
     private _updateDrawMode(seriesModel: BarSeriesModel): void {
@@ -409,7 +422,7 @@ class BarView extends ChartView {
 
     private _incrementalRenderLarge(params: StageHandlerProgressParams, seriesModel: BarSeriesModel): void {
         this._removeBackground();
-        createLarge(seriesModel, this.group, true);
+        createLarge(seriesModel, this.group, this._progressiveEls, true);
     }
 
     private _updateLargeClip(seriesModel: BarSeriesModel): void {
@@ -1069,6 +1082,7 @@ class LargePath extends Path<LargePathProps> {
 function createLarge(
     seriesModel: BarSeriesModel,
     group: Group,
+    progressiveEls?: Element[],
     incremental?: boolean
 ) {
     // TODO support polar
@@ -1100,6 +1114,8 @@ function createLarge(
         bgEl.__barWidth = barWidth;
         setLargeBackgroundStyle(bgEl, backgroundModel, data);
         group.add(bgEl);
+
+        progressiveEls && progressiveEls.push(bgEl);
     }
 
     const el = new LargePath({
@@ -1120,6 +1136,7 @@ function createLarge(
         el.on('mousedown', largePathUpdateDataIndex);
         el.on('mousemove', largePathUpdateDataIndex);
     }
+    progressiveEls && progressiveEls.push(el);
 }
 
 // Use throttle to avoid frequently traverse to find dataIndex.
