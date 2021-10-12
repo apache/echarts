@@ -111,6 +111,9 @@ export function makeValueReadable(
             ? (isNumberUserReadable(value) ? value + '' : '-')
             : '-';
     }
+    if (typeof value === 'boolean') {
+        return value ? 'true' : 'false';
+    }
     // By default.
     const numericResult = numericToNumber(value);
     return isNumberUserReadable(numericResult)
