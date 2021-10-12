@@ -35,7 +35,7 @@ export default function dataFilter(seriesType: string): StageHandler {
                 // If in any legend component the status is not selected.
                 for (let i = 0; i < legendModels.length; i++) {
                     // @ts-ignore FIXME: LegendModel
-                    if (!legendModels[i].isSelected(name, seriesModel)) {
+                    if (legendModels[i].isFiltered(name)) {
                         return false;
                     }
                 }

@@ -345,7 +345,7 @@ class LegendView extends ComponentView {
         const drawType = seriesModel.visualDrawType;
         const itemWidth = legendModel.get('itemWidth');
         const itemHeight = legendModel.get('itemHeight');
-        const isSelected = legendModel.isSelected(name, seriesModel);
+        const isSelected = legendModel.isSelected(name);
 
         const iconRotate = legendItemModel.get('symbolRotate');
         const symbolKeepAspect = legendItemModel.get('symbolKeepAspect');

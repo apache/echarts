@@ -40,7 +40,7 @@ export default function legendFilter(ecModel: GlobalModel) {
                 const name = data.getName(idx);
                 // If in any legend component the status is not selected.
                 for (let i = 0; i < legendModels.length; i++) {
-                    if (!legendModels[i].isSelected(name, series)) {
+                    if (legendModels[i].isFiltered(name)) {
                         return false;
                     }
                 }
@@ -50,7 +50,7 @@ export default function legendFilter(ecModel: GlobalModel) {
             // If in any legend component the status is not selected.
             // Because in legend series is assumed selected when it is not in the legend data.
             for (let i = 0; i < legendModels.length; i++) {
-                if (!legendModels[i].isSelected(series.name, series)) {
+                if (legendModels[i].isFiltered(series.name)) {
                     return false;
                 }
             }

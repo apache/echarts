@@ -350,6 +350,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
          * @private
          */
         this._availableNames = availableNames;
+        console.log('available names', availableNames);
 
         // If legend.data not specified in option, use availableNames as data,
         // which is convinient for user preparing option.
@@ -424,33 +425,15 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         });
     }
 
-    /**
-     * Check if a name is selected in legend.
-     *
-     * If `name` is the data name of a series colored by series and the series
-     * itself is selected, true is returned in this case.
-     *
-     * @param {string} name name of series or data
-     * @param {SeriesModel} series series model. If not defined, all series in
-     * ecModels will be looped through to match.
-     * @returns {boolean} if is selected
-     */
-    isSelected(name: string, series?: SeriesModel) {
+    isSelected(name: string) {
         const selected = this.option.selected;
-        if (selected.hasOwnProperty(name) && !selected[name]) {
-            // Explicitly filtered by the legend
-            return false;
-        }
-        const availableNames = this._availableNames;
+        return !(selected.hasOwnProperty(name) && !selected[name])
+            && zrUtil.indexOf(this._availableNames, name) >= 0;
+    }
 
-        /**
-         * If not explicitly filtered, data from series that are colored by
-         * series should consider selected according to the series name.
-         */
-        if (series && series.isColorBySeries()) {
-            name = series.name;
-        }
-        return zrUtil.indexOf(availableNames, name) >= 0;
+    isFiltered(name: string) {
+        const selected = this.option.selected;
+        return selected.hasOwnProperty(name) && !selected[name];
     }
 
     getOrient(): {index: 0, name: 'horizontal'}
