@@ -115,8 +115,10 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
         return selectors.point(data.getItemLayout(dataIndex));
     }
 
-    needsSeparateZLevel() {
-        return this.getData().count() > this.getProgressiveThreshold();
+    getZLevelKey() {
+        // Each progressive series has individual key.
+        return this.getData().count() > this.getProgressiveThreshold()
+            ? this.id : '';
     }
 
 

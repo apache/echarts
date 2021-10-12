@@ -291,7 +291,6 @@ let flushPendingActions: (this: ECharts, silent: boolean) => void;
 let triggerUpdatedEvent: (this: ECharts, silent: boolean) => void;
 let bindRenderedEvent: (zr: zrender.ZRenderType, ecIns: ECharts) => void;
 let bindMouseEvent: (zr: zrender.ZRenderType, ecIns: ECharts) => void;
-let clearColorPalette: (ecModel: GlobalModel) => void;
 let render: (
     ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload, updateParams: UpdateLifecycleParams
 ) => void;
@@ -2000,61 +1999,74 @@ class ECharts extends Eventful<ECEventDefinition> {
             });
         };
 
-        clearColorPalette = function (ecModel: GlobalModel): void {
+        function clearColorPalette(ecModel: GlobalModel): void {
             ecModel.clearColorPalette();
             ecModel.eachSeries(function (seriesModel) {
                 seriesModel.clearColorPalette();
             });
         };
 
-        // Allocate zlevels
+        // Allocate zlevels for series and components
         function allocateZlevels(ecModel: GlobalModel) {
             interface ZLevelItem {
                 z: number,
+                zlevel: number,
                 idx: number,
-                type: string
+                type: string,
+                key: string
             };
             const componentZLevels: ZLevelItem[] = [];
             const seriesZLevels: ZLevelItem[] = [];
-            let lastSeriesZLevel: number;
-            let isLastSeriesNeedsSeparate: boolean;
+            let hasSeperateZLevel = false;
             ecModel.eachComponent(function (componentType, componentModel) {
                 const zlevel = componentModel.get('zlevel') || 0;
+                const z = componentModel.get('z') || 0;
+                const zlevelKey = componentModel.getZLevelKey();
+                hasSeperateZLevel = hasSeperateZLevel || !!zlevelKey;
                 (componentType === 'series' ? seriesZLevels : componentZLevels).push({
-                    z: zlevel,
+                    zlevel,
+                    z,
                     idx: componentModel.componentIndex,
-                    type: componentType
+                    type: componentType,
+                    key: zlevelKey
                 });
             });
 
-            // Series after component
-            const zLevels: ZLevelItem[] = componentZLevels.concat(seriesZLevels);
+            if (hasSeperateZLevel) {
+                // Series after component
+                const zLevels: ZLevelItem[] = componentZLevels.concat(seriesZLevels);
+                let lastSeriesZLevel: number;
+                let lastSeriesKey: string;
 
-            timsort(zLevels, (a, b) => {
-                return a.z - b.z;
-            });
-            each(zLevels, item => {
-                const componentModel = ecModel.getComponent(item.type, item.idx);
-                let zlevel = item.z;
-                if (lastSeriesZLevel != null) {
-                    zlevel = Math.max(lastSeriesZLevel, zlevel);
-                }
-                if (componentModel.needsSeparateZLevel()) {
-                    if (zlevel === lastSeriesZLevel) {
-                        zlevel++;
+                timsort(zLevels, (a, b) => {
+                    if (a.zlevel === b.zlevel) {
+                        return a.z - b.z;
                     }
-                    isLastSeriesNeedsSeparate = true;
-                }
-                else if (isLastSeriesNeedsSeparate) {
-                    if (zlevel === lastSeriesZLevel) {
-                        zlevel++;
+                    return a.zlevel - b.zlevel;
+                });
+                each(zLevels, item => {
+                    const componentModel = ecModel.getComponent(item.type, item.idx);
+                    let zlevel = item.zlevel;
+                    const key = item.key;
+                    if (lastSeriesZLevel != null) {
+                        zlevel = Math.max(lastSeriesZLevel, zlevel);
                     }
-                    isLastSeriesNeedsSeparate = false;
-                }
-                lastSeriesZLevel = zlevel;
-                componentModel.setZLevel(zlevel);
-            });
-
+                    if (key) {
+                        if (zlevel === lastSeriesZLevel && key !== lastSeriesKey) {
+                            zlevel++;
+                        }
+                        lastSeriesKey = key;
+                    }
+                    else if (lastSeriesKey) {
+                        if (zlevel === lastSeriesZLevel) {
+                            zlevel++;
+                        }
+                        lastSeriesKey = '';
+                    }
+                    lastSeriesZLevel = zlevel;
+                    componentModel.setZLevel(zlevel);
+                });
+            }
         }
 
         render = (

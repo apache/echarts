@@ -311,8 +311,13 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
         };
     }
 
-    needsSeparateZLevel() {
-        return false;
+    /**
+     * Get key for zlevel.
+     * If developers don't configure zlevel. We will assign zlevel to series based on the key.
+     * For example, lines with trail effect and progressive series will in an individual zlevel.
+     */
+    getZLevelKey(): string {
+        return '';
     }
 
     setZLevel(zlevel: number) {
