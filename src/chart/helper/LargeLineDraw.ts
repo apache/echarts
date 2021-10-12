@@ -57,9 +57,19 @@ class LargeLinesPath extends graphic.Path {
     shape: LargeLinesPathShape;
 
     __startIndex: number;
+    private _off: number = 0;
+
+    hoverDataIdx: number = -1;
+
+    notClear: boolean;
 
     constructor(opts?: LargeLinesPathProps) {
         super(opts);
+    }
+
+    reset() {
+        this.notClear = false;
+        this._off = 0;
     }
 
     getDefaultStyle() {
@@ -76,9 +86,10 @@ class LargeLinesPath extends graphic.Path {
     buildPath(ctx: CanvasRenderingContext2D, shape: LargeLinesPathShape) {
         const segs = shape.segs;
         const curveness = shape.curveness;
+        let i;
 
         if (shape.polyline) {
-            for (let i = 0; i < segs.length;) {
+            for (i = this._off; i < segs.length;) {
                 const count = segs[i++];
                 if (count > 0) {
                     ctx.moveTo(segs[i++], segs[i++]);
@@ -89,7 +100,7 @@ class LargeLinesPath extends graphic.Path {
             }
         }
         else {
-            for (let i = 0; i < segs.length;) {
+            for (i = this._off; i < segs.length;) {
                 const x0 = segs[i++];
                 const y0 = segs[i++];
                 const x1 = segs[i++];
@@ -104,6 +115,10 @@ class LargeLinesPath extends graphic.Path {
                     ctx.lineTo(x1, y1);
                 }
             }
+        }
+        if (this.incremental) {
+            this._off = i;
+            this.notClear = true;
         }
     }
 
@@ -164,6 +179,45 @@ class LargeLinesPath extends graphic.Path {
 
         return -1;
     }
+
+    contain(x: number, y: number): boolean {
+        const localPos = this.transformCoordToLocal(x, y);
+        const rect = this.getBoundingRect();
+        x = localPos[0];
+        y = localPos[1];
+
+        if (rect.contain(x, y)) {
+            // Cache found data index.
+            const dataIdx = this.hoverDataIdx = this.findDataIndex(x, y);
+            return dataIdx >= 0;
+        }
+        this.hoverDataIdx = -1;
+        return false;
+    }
+
+    getBoundingRect() {
+        // Ignore stroke for large symbol draw.
+        let rect = this._rect;
+        if (!rect) {
+            const shape = this.shape;
+            const points = shape.segs;
+            let minX = Infinity;
+            let minY = Infinity;
+            let maxX = -Infinity;
+            let maxY = -Infinity;
+            for (let i = 0; i < points.length;) {
+                const x = points[i++];
+                const y = points[i++];
+                minX = Math.min(x, minX);
+                maxX = Math.max(x, maxX);
+                minY = Math.min(y, minY);
+                maxY = Math.max(y, maxY);
+            }
+
+            rect = this._rect = new graphic.BoundingRect(minX, minY, maxX, maxY);
+        }
+        return rect;
+    }
 }
 
 class LargeLineDraw {
@@ -197,9 +251,6 @@ class LargeLineDraw {
     incrementalUpdate(taskParams: StageHandlerProgressParams, data: LargeLinesData) {
         const lastAdded = this._newAdded[0];
         const linePoints = data.getLayout('linesPoints');
-        // Clear
-        this._newAdded = [];
-
 
         const oldSegs = lastAdded && lastAdded.shape.segs;
 
@@ -216,6 +267,9 @@ class LargeLineDraw {
             });
         }
         else {
+            // Clear
+            this._newAdded = [];
+
             const lineEl = this._create();
             lineEl.incremental = true;
             lineEl.setShape({
@@ -239,7 +293,6 @@ class LargeLineDraw {
 
     private _create() {
         const lineEl = new LargeLinesPath({
-            rectHover: true,
             cursor: 'default'
         });
         this._newAdded.push(lineEl);
@@ -273,7 +326,7 @@ class LargeLineDraw {
         ecData.seriesIndex = hostModel.seriesIndex;
         lineEl.on('mousemove', function (e) {
             ecData.dataIndex = null;
-            const dataIndex = lineEl.findDataIndex(e.offsetX, e.offsetY);
+            const dataIndex = lineEl.hoverDataIdx;
             if (dataIndex > 0) {
                 // Provide dataIndex for tooltip
                 ecData.dataIndex = dataIndex + lineEl.__startIndex;
@@ -282,6 +335,7 @@ class LargeLineDraw {
     };
 
     private _clear() {
+        this._newAdded = [];
         this.group.removeAll();
     };
 
