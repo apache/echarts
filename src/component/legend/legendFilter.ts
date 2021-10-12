@@ -1,7 +1,3 @@
-import SeriesModel from '../../model/Series';
-import GlobalModel from '../../model/Global';
-import LegendModel from './LegendModel';
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -20,6 +16,10 @@ import LegendModel from './LegendModel';
 * specific language governing permissions and limitations
 * under the License.
 */
+
+import SeriesModel from '../../model/Series';
+import GlobalModel from '../../model/Global';
+import LegendModel from './LegendModel';
 
 export default function legendFilter(ecModel: GlobalModel) {
 
@@ -40,7 +40,6 @@ export default function legendFilter(ecModel: GlobalModel) {
                 const name = data.getName(idx);
                 // If in any legend component the status is not selected.
                 for (let i = 0; i < legendModels.length; i++) {
-                    // @ts-ignore FIXME: LegendModel
                     if (!legendModels[i].isSelected(name, series)) {
                         return false;
                     }

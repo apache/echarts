@@ -321,15 +321,15 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
             availableNames.push(seriesName);
             let isPotential;
 
-            if (!seriesModel.isColorBySeries() && seriesModel.legendVisualProvider) {
+            if (seriesModel.legendVisualProvider) {
                 const provider = seriesModel.legendVisualProvider;
                 const names = provider.getAllNames();
 
-                if (!ecModel.isSeriesFiltered(seriesModel)) {
+                if (!seriesModel.isColorBySeries() && !ecModel.isSeriesFiltered(seriesModel)) {
                     availableNames = availableNames.concat(names);
                 }
 
-                if (names.length) {
+                if (!seriesModel.isColorBySeries() && names.length) {
                     potentialData = potentialData.concat(names);
                 }
                 else {
@@ -438,29 +438,19 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     isSelected(name: string, series?: SeriesModel) {
         const selected = this.option.selected;
         if (selected.hasOwnProperty(name) && !selected[name]) {
+            // Explicitly filtered by the legend
             return false;
         }
         const availableNames = this._availableNames;
-        if (zrUtil.indexOf(availableNames, name) >= 0) {
-            return true;
-        }
 
-        if (series) {
-            return isNameSpecified(series)
-                && zrUtil.indexOf(availableNames, series.name) >= 0;
+        /**
+         * If not explicitly filtered, data from series that are colored by
+         * series should consider selected according to the series name.
+         */
+        if (series && series.isColorBySeries()) {
+            name = series.name;
         }
-        else {
-            let isSelected = false;
-            this.ecModel.eachRawSeries(function (series) {
-                if (!isSelected && series.isColorBySeries()
-                    && isNameSpecified(series)
-                    && zrUtil.indexOf(availableNames, series.name) >= 0
-                ) {
-                    isSelected = true;
-                }
-            });
-            return isSelected;
-        }
+        return zrUtil.indexOf(availableNames, name) >= 0;
     }
 
     getOrient(): {index: 0, name: 'horizontal'}
