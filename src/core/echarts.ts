@@ -111,7 +111,6 @@ import {
     AnimationOption
 } from '../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
-import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import { seriesSymbolTask, dataSymbolTask } from '../visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from '../visual/helper';
 import { deprecateLog } from '../util/log';
@@ -2008,10 +2007,61 @@ class ECharts extends Eventful<ECEventDefinition> {
             });
         };
 
+        // Allocate zlevels
+        function allocateZlevels(ecModel: GlobalModel) {
+            interface ZLevelItem {
+                z: number,
+                idx: number,
+                type: string
+            };
+            const componentZLevels: ZLevelItem[] = [];
+            const seriesZLevels: ZLevelItem[] = [];
+            let lastSeriesZLevel: number;
+            let isLastSeriesNeedsSeparate: boolean;
+            ecModel.eachComponent(function (componentType, componentModel) {
+                const zlevel = componentModel.get('zlevel') || 0;
+                (componentType === 'series' ? seriesZLevels : componentZLevels).push({
+                    z: zlevel,
+                    idx: componentModel.componentIndex,
+                    type: componentType
+                });
+            });
+
+            // Series after component
+            const zLevels: ZLevelItem[] = componentZLevels.concat(seriesZLevels);
+
+            timsort(zLevels, (a, b) => {
+                return a.z - b.z;
+            });
+            each(zLevels, item => {
+                const componentModel = ecModel.getComponent(item.type, item.idx);
+                let zlevel = item.z;
+                if (lastSeriesZLevel != null) {
+                    zlevel = Math.max(lastSeriesZLevel, zlevel);
+                }
+                if (componentModel.needsSeparateZLevel()) {
+                    if (zlevel === lastSeriesZLevel) {
+                        zlevel++;
+                    }
+                    isLastSeriesNeedsSeparate = true;
+                }
+                else if (isLastSeriesNeedsSeparate) {
+                    if (zlevel === lastSeriesZLevel) {
+                        zlevel++;
+                    }
+                    isLastSeriesNeedsSeparate = false;
+                }
+                lastSeriesZLevel = zlevel;
+                componentModel.setZLevel(zlevel);
+            });
+
+        }
+
         render = (
             ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload,
             updateParams: UpdateLifecycleParams
         ) => {
+            allocateZlevels(ecModel);
 
             renderComponents(ecIns, ecModel, api, payload, updateParams);
 
@@ -2066,6 +2116,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             // TODO progressive?
             lifecycle.trigger('series:beforeupdate', ecModel, api, updateParams);
+
 
             let unfinished: boolean = false;
             ecModel.eachSeries(function (seriesModel) {
@@ -2220,13 +2271,13 @@ class ECharts extends Eventful<ECEventDefinition> {
             const zlevel = model.get('zlevel') || 0;
             // Set z and zlevel
             view.eachRendered((el) => {
-                _updateZ(el, z, zlevel, -Infinity);
+                doUpdateZ(el, z, zlevel, -Infinity);
                 // Don't traverse the children because it has been traversed in _updateZ.
                 return true;
             });
         };
 
-        function _updateZ(el: Element, z: number, zlevel: number, maxZ2: number): number {
+        function doUpdateZ(el: Element, z: number, zlevel: number, maxZ2: number): number {
             // Group may also have textContent
             const label = el.getTextContent();
             const labelLine = el.getTextGuideLine();
@@ -2236,7 +2287,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // set z & zlevel of children elements of Group
                 const children = (el as graphic.Group).childrenRef();
                 for (let i = 0; i < children.length; i++) {
-                    maxZ2 = Math.max(_updateZ(children[i], z, zlevel, maxZ2), maxZ2);
+                    maxZ2 = Math.max(doUpdateZ(children[i], z, zlevel, maxZ2), maxZ2);
                 }
             }
             else {

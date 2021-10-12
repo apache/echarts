@@ -311,6 +311,14 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
         };
     }
 
+    needsSeparateZLevel() {
+        return false;
+    }
+
+    setZLevel(zlevel: number) {
+        this.option.zlevel = zlevel;
+    }
+
     // // Interfaces for component / series with select ability.
     // select(dataIndex?: number[], dataType?: string): void {}
 

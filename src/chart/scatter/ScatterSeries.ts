@@ -115,6 +115,11 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
         return selectors.point(data.getItemLayout(dataIndex));
     }
 
+    needsSeparateZLevel() {
+        return this.getData().count() > this.getProgressiveThreshold();
+    }
+
+
     static defaultOption: ScatterSeriesOption = {
         coordinateSystem: 'cartesian2d',
         zlevel: 0,

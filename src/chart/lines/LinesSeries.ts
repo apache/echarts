@@ -372,6 +372,12 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         return progressiveThreshold;
     }
 
+    needsSeparateZLevel() {
+        const effectModel = this.getModel('effect');
+        return this.getData().count() > this.getProgressiveThreshold()
+            || (effectModel.get('show') && effectModel.get('trailLength') > 0);
+    }
+
     static defaultOption: LinesSeriesOption = {
         coordinateSystem: 'geo',
         zlevel: 0,

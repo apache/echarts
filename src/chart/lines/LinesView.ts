@@ -72,22 +72,15 @@ class LinesView extends ChartView {
                 motionBlur: false
             });
         }
-        if (this._showEffect(seriesModel) && trailLength) {
-            if (__DEV__) {
-                let notInIndividual = false;
-                ecModel.eachSeries(function (otherSeriesModel) {
-                    if (otherSeriesModel !== seriesModel && otherSeriesModel.get('zlevel') === zlevel) {
-                        notInIndividual = true;
-                    }
-                });
-                notInIndividual && console.warn('Lines with trail effect should have an individual zlevel');
-            }
-
+        if (this._showEffect(seriesModel) && trailLength > 0) {
             if (!isSvg) {
                 zr.configLayer(zlevel, {
                     motionBlur: true,
                     lastFrameAlpha: Math.max(Math.min(trailLength / 10 + 0.9, 1), 0)
                 });
+            }
+            else if (__DEV__) {
+                console.warn('SVG render mode doesn\'t support lines with trail effect');
             }
         }
 
