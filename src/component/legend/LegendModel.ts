@@ -438,7 +438,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     }
 
     static defaultOption: LegendOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 4,
         show: true,
 

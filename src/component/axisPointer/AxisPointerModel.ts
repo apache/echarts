@@ -80,7 +80,7 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
         // 'auto' means that show when triggered by tooltip or handle.
         show: 'auto',
 
-        zlevel: 0,
+        // zlevel: 0,
         z: 50,
 
         type: 'line', // 'line' 'shadow' 'cross' 'none'.

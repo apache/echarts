@@ -380,7 +380,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
 
     static defaultOption: LinesSeriesOption = {
         coordinateSystem: 'geo',
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         legendHoverLink: true,
 

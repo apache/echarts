@@ -301,7 +301,7 @@ class TimelineModel extends ComponentModel<TimelineOption> {
      */
     static defaultOption: TimelineOption = {
 
-        zlevel: 0,                  // 一级层叠
+        // zlevel: 0,                  // 一级层叠
         z: 4,                       // 二级层叠
         show: true,
 

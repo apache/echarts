@@ -23,7 +23,7 @@ import { AxisBaseOption } from './axisCommonTypes';
 
 const defaultOption: AxisBaseOption = {
     show: true,
-    zlevel: 0,
+    // zlevel: 0,
     z: 0,
     // Inverse the axis.
     inverse: false,

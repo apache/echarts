@@ -159,7 +159,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
 
     static defaultOption: DataZoomOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 4,                   // Higher than normal component (z: 2).
 
         filterMode: 'filter',

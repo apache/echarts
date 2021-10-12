@@ -122,7 +122,7 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
 
     static defaultOption: ScatterSeriesOption = {
         coordinateSystem: 'cartesian2d',
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         legendHoverLink: true,
 

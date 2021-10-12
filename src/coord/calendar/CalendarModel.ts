@@ -178,7 +178,7 @@ class CalendarModel extends ComponentModel<CalendarOption> {
     }
 
     static defaultOption: CalendarOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         left: 80,
         top: 60,

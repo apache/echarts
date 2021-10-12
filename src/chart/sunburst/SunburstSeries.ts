@@ -213,7 +213,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
     }
 
     static defaultOption: SunburstSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
 
         // 默认全局居中

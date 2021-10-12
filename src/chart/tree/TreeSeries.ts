@@ -245,7 +245,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
     }
 
     static defaultOption: TreeSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         coordinateSystem: 'view',
 

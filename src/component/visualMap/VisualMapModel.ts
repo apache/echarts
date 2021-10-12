@@ -610,7 +610,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     static defaultOption: VisualMapOption = {
         show: true,
 
-        zlevel: 0,
+        // zlevel: 0,
         z: 4,
 
         seriesIndex: 'all',
