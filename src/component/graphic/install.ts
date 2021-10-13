@@ -46,7 +46,7 @@ import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { isEC4CompatibleStyle, convertFromEC4CompatibleStyle } from '../../util/styleCompat';
 import { EChartsExtensionInstallRegisters } from '../../extension';
 
-type TransformProp = 'x' | 'y' | 'scaleX' | 'scaleY' | 'originX' | 'originY' | 'skewX' | 'skewY';
+type TransformProp = 'x' | 'y' | 'scaleX' | 'scaleY' | 'originX' | 'originY' | 'skewX' | 'skewY' | 'rotation';
 
 interface GraphicComponentBaseElementOption extends
         Partial<Pick<
