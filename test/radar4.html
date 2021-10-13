@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
     </head>
     <body>
@@ -36,10 +36,6 @@ under the License.
 
             require([
                 'echarts'
-                // 'echarts/chart/radar',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
@@ -103,6 +99,38 @@ under the License.
                                 } }
                             ],
                             center : ['75%', 210],
+                            radius : 150
+                        },
+                        {
+                            indicator: [{
+                                name: 'a',
+                                max: 13
+                            },
+                            {
+                                name: 'b',
+                                max: 1,
+                                min: 0
+                            },
+                            {
+                                name: 'c',
+                                max: 16000
+                            },
+                            {
+                                name: 'd',
+                                max: 30000
+                            },
+                            {
+                                name: 'e',
+                                max: 38000
+                            },
+                            {
+                                name: 'f',
+                                max: 52000
+                            },
+                            {
+                                name: 'g',
+                                max: 25000
+                            }],
                             radius : 150
                         }
                     ],
@@ -195,6 +223,22 @@ under the License.
                                     }
                                 }
                             ]
+                        },
+                        {
+                            name: 'join',
+                            polarIndex: 2,
+                            type: 'radar',
+                            data: [{
+                                value: [
+                                    3,
+                                    1,
+                                    1,
+                                    53,
+                                    66,
+                                    18,
+                                    0.0121
+                                ]
+                            }]
                         }
                     ]
                 });

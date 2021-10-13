@@ -20,6 +20,7 @@
 import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
 import {extend, defaults, each, map} from 'zrender/src/core/util';
+import {BuiltinTextPosition} from 'zrender/src/core/types';
 import {
     Rect,
     Sector,
@@ -34,7 +35,7 @@ import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import Sausage from '../../util/shape/sausage';
 import ChartView from '../../view/Chart';
-import List, {DefaultDataVisual} from '../../data/List';
+import SeriesData, {DefaultDataVisual} from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import {
@@ -46,7 +47,7 @@ import {
     OrdinalNumber,
     ParsedValue
 } from '../../util/types';
-import BarSeriesModel, {BarSeriesOption, BarDataItemOption} from './BarSeries';
+import BarSeriesModel, {BarSeriesOption, BarDataItemOption, PolarBarLabelPosition} from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
@@ -60,9 +61,9 @@ import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import {LayoutRect} from '../../util/layout';
 import {EventCallback} from 'zrender/src/core/Eventful';
 import { warn } from '../../util/log';
+import {createSectorCalculateTextPosition, SectorTextPosition, setSectorTextRotation} from '../../label/sectorLabel';
+import { saveOldStyle } from '../../animation/basicTrasition';
 
-const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
-const BAR_BORDER_RADIUS_QUERY = ['itemStyle', 'borderRadius'] as const;
 const _eventPos = [0, 0];
 
 const mathMax = Math.max;
@@ -87,7 +88,7 @@ type RealtimeSortConfig = {
 // Return a number, based on which the ordinal sorted.
 type OrderMapping = (dataIndex: number) => number;
 
-function getClipArea(coord: CoordSysOfBar, data: List) {
+function getClipArea(coord: CoordSysOfBar, data: SeriesData) {
     const coordSysClipArea = coord.getArea && coord.getArea();
     if (isCoordinateSystemType<Cartesian2D>(coord, 'cartesian2d')) {
         const baseAxis = coord.getBaseAxis();
@@ -114,12 +115,12 @@ class BarView extends ChartView {
     static type = 'bar' as const;
     type = BarView.type;
 
-    private _data: List;
+    private _data: SeriesData;
 
     private _isLargeDraw: boolean;
 
     private _isFirstFrame: boolean; // First frame after series added
-    private _onRendered: EventCallback<unknown, unknown>;
+    private _onRendered: EventCallback;
 
     private _backgroundGroup: Group;
 
@@ -243,7 +244,7 @@ class BarView extends ChartView {
                 }
 
                 // If dataZoom in filteMode: 'empty', the baseValue can be set as NaN in "axisProxy".
-                if (!data.hasValue(dataIndex)) {
+                if (!data.hasValue(dataIndex) || !isValidLayout[coord.type](layout)) {
                     return;
                 }
 
@@ -314,13 +315,12 @@ class BarView extends ChartView {
                     }
                     const bgLayout = getLayout[coord.type](data, newIndex);
                     const shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
-                    updateProps(bgEl, { shape: shape }, animationModel, newIndex);
+                    updateProps(bgEl, { shape }, animationModel, newIndex);
                 }
 
                 let el = oldData.getItemGraphicEl(oldIndex) as BarPossiblePath;
-                if (!data.hasValue(newIndex)) {
+                if (!data.hasValue(newIndex) || !isValidLayout[coord.type](layout)) {
                     group.remove(el);
-                    el = null;
                     return;
                 }
 
@@ -344,6 +344,9 @@ class BarView extends ChartView {
                         !!el,
                         roundCap
                     );
+                }
+                else {
+                    saveOldStyle(el);
                 }
 
                 // Not change anything if only order changed.
@@ -464,7 +467,7 @@ class BarView extends ChartView {
     }
 
     private _dataSort(
-        data: List<BarSeriesModel, DefaultDataVisual>,
+        data: SeriesData<BarSeriesModel, DefaultDataVisual>,
         baseAxis: Axis2D,
         orderMapping: OrderMapping
     ): OrdinalSortInfo {
@@ -495,7 +498,7 @@ class BarView extends ChartView {
     }
 
     private _isOrderChangedWithinSameData(
-        data: List<BarSeriesModel, DefaultDataVisual>,
+        data: SeriesData<BarSeriesModel, DefaultDataVisual>,
         orderMapping: OrderMapping,
         baseAxis: Axis2D
     ): boolean {
@@ -540,7 +543,7 @@ class BarView extends ChartView {
     }
 
     private _updateSortWithinSameData(
-        data: List<BarSeriesModel, DefaultDataVisual>,
+        data: SeriesData<BarSeriesModel, DefaultDataVisual>,
         orderMapping: OrderMapping,
         baseAxis: Axis2D,
         api: ExtensionAPI
@@ -563,7 +566,7 @@ class BarView extends ChartView {
     }
 
     private _dispatchInitSort(
-        data: List<BarSeriesModel, DefaultDataVisual>,
+        data: SeriesData<BarSeriesModel, DefaultDataVisual>,
         realtimeSortCfg: RealtimeSortConfig,
         api: ExtensionAPI
     ) {
@@ -581,12 +584,7 @@ class BarView extends ChartView {
             componentType: baseAxis.dim + 'Axis',
             isInitSort: true,
             axisId: baseAxis.index,
-            sortInfo: sortResult,
-            animation: {
-                // Update the axis label from the natural initial layout to
-                // sorted layout should has no animation.
-                duration: 0
-            }
+            sortInfo: sortResult
         });
     }
 
@@ -711,7 +709,7 @@ const clip: {
 
 interface ElementCreator {
     (
-        seriesModel: BarSeriesModel, data: List, newIndex: number,
+        seriesModel: BarSeriesModel, data: SeriesData, newIndex: number,
         layout: RectLayout | SectorLayout, isHorizontalOrRadial: boolean,
         animationModel: BarSeriesModel,
         axisModel: CartesianAxisModel | AngleAxisModel | RadiusAxisModel,
@@ -748,20 +746,18 @@ const elementCreator: {
         seriesModel, data, newIndex, layout: SectorLayout, isRadial: boolean,
         animationModel, axisModel, isUpdate, roundCap
     ) {
-        // Keep the same logic with bar in catesion: use end value to control
-        // direction. Notice that if clockwise is true (by default), the sector
-        // will always draw clockwisely, no matter whether endAngle is greater
-        // or less than startAngle.
-        const clockwise = layout.startAngle < layout.endAngle;
-
         const ShapeClass = (!isRadial && roundCap) ? Sausage : Sector;
-
         const sector = new ShapeClass({
-            shape: defaults({clockwise: clockwise}, layout),
+            shape: layout,
             z2: 1
         });
 
         sector.name = 'item';
+
+        const positionMap = createPolarPositionMapping(isRadial);
+        sector.calculateTextPosition = createSectorCalculateTextPosition(positionMap, {
+            isRoundCap: ShapeClass === Sausage
+        });
 
         // Animation
         if (animationModel) {
@@ -851,8 +847,30 @@ function updateRealtimeAnimation(
     }, axisAnimationModel, newIndex);
 }
 
+function checkPropertiesNotValid<T extends Record<string, any>>(obj: T, props: readonly (keyof T)[]) {
+    for (let i = 0; i < props.length; i++) {
+        if (!isFinite(obj[props[i]])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+const rectPropties = ['x', 'y', 'width', 'height'] as const;
+const polarPropties = ['cx', 'cy', 'r', 'startAngle', 'endAngle'] as const;
+const isValidLayout: Record<'cartesian2d' | 'polar', (layout: RectLayout | SectorLayout) => boolean> = {
+    cartesian2d(layout: RectLayout) {
+        return !checkPropertiesNotValid(layout, rectPropties);
+    },
+
+    polar(layout: SectorLayout) {
+        return !checkPropertiesNotValid(layout, polarPropties);
+    }
+} as const;
+
 interface GetLayout {
-    (data: List, dataIndex: number, itemModel?: Model<BarDataItemOption>): RectLayout | SectorLayout
+    (data: SeriesData, dataIndex: number, itemModel?: Model<BarDataItemOption>): RectLayout | SectorLayout
 }
 const getLayout: {
     [key in 'cartesian2d' | 'polar']: GetLayout
@@ -882,7 +900,8 @@ const getLayout: {
             r0: layout.r0,
             r: layout.r,
             startAngle: layout.startAngle,
-            endAngle: layout.endAngle
+            endAngle: layout.endAngle,
+            clockwise: layout.clockwise
         } as SectorLayout;
     }
 };
@@ -893,19 +912,37 @@ function isZeroOnPolar(layout: SectorLayout) {
         && layout.startAngle === layout.endAngle;
 }
 
+function createPolarPositionMapping(isRadial: boolean)
+    : (position: PolarBarLabelPosition) => SectorTextPosition {
+    return ((isRadial: boolean) => {
+        const arcOrAngle = isRadial ? 'Arc' : 'Angle';
+        return (position: PolarBarLabelPosition) => {
+            switch (position) {
+                case 'start':
+                case 'insideStart':
+                case 'end':
+                case 'insideEnd':
+                    return position + arcOrAngle as SectorTextPosition;
+                default:
+                    return position;
+            }
+        };
+    })(isRadial);
+}
+
 function updateStyle(
     el: BarPossiblePath,
-    data: List, dataIndex: number,
+    data: SeriesData, dataIndex: number,
     itemModel: Model<BarDataItemOption>,
     layout: RectLayout | SectorLayout,
     seriesModel: BarSeriesModel,
-    isHorizontal: boolean,
+    isHorizontalOrRadial: boolean,
     isPolar: boolean
 ) {
     const style = data.getItemVisual(dataIndex, 'style');
 
     if (!isPolar) {
-        (el as Rect).setShape('r', itemModel.get(BAR_BORDER_RADIUS_QUERY) || 0);
+        (el as Rect).setShape('r', itemModel.get(['itemStyle', 'borderRadius']) || 0);
     }
 
     el.useStyle(style);
@@ -913,33 +950,50 @@ function updateStyle(
     const cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && (el as Path).attr('cursor', cursorStyle);
 
-    if (!isPolar) {
-        const labelPositionOutside = isHorizontal
-            ? ((layout as RectLayout).height > 0 ? 'bottom' as const : 'top' as const)
-            : ((layout as RectLayout).width > 0 ? 'left' as const : 'right' as const);
-        const labelStatesModels = getLabelStatesModels(itemModel);
+    const labelPositionOutside = isPolar
+        ? (isHorizontalOrRadial
+            ? ((layout as SectorLayout).r >= (layout as SectorLayout).r0 ? 'endArc' as const : 'startArc' as const)
+            : ((layout as SectorLayout).endAngle >= (layout as SectorLayout).startAngle
+                ? 'endAngle' as const
+                : 'startAngle' as const
+            )
+        )
+        : (isHorizontalOrRadial
+            ? ((layout as RectLayout).height >= 0 ? 'bottom' as const : 'top' as const)
+            : ((layout as RectLayout).width >= 0 ? 'right' as const : 'left' as const));
 
-        setLabelStyle(
-            el, labelStatesModels,
-            {
-                labelFetcher: seriesModel,
-                labelDataIndex: dataIndex,
-                defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
-                inheritColor: style.fill as ColorString,
-                defaultOpacity: style.opacity,
-                defaultOutsidePosition: labelPositionOutside
-            }
-        );
+    const labelStatesModels = getLabelStatesModels(itemModel);
 
-        const label = el.getTextContent();
+    setLabelStyle(
+        el, labelStatesModels,
+        {
+            labelFetcher: seriesModel,
+            labelDataIndex: dataIndex,
+            defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
+            inheritColor: style.fill as ColorString,
+            defaultOpacity: style.opacity,
+            defaultOutsidePosition: labelPositionOutside as BuiltinTextPosition
+        }
+    );
 
-        setLabelValueAnimation(
-            label,
-            labelStatesModels,
-            seriesModel.getRawValue(dataIndex) as ParsedValue,
-            (value: number) => getDefaultInterpolatedLabel(data, value)
+    const label = el.getTextContent();
+    if (isPolar && label) {
+        const position = itemModel.get(['label', 'position']);
+        el.textConfig.inside = position === 'middle' ? true : null;
+        setSectorTextRotation(
+            el as Sector,
+            position === 'outside' ? labelPositionOutside : position,
+            createPolarPositionMapping(isHorizontalOrRadial),
+            itemModel.get(['label', 'rotate'])
         );
     }
+
+    setLabelValueAnimation(
+        label,
+        labelStatesModels,
+        seriesModel.getRawValue(dataIndex) as ParsedValue,
+        (value: number) => getDefaultInterpolatedLabel(data, value)
+    );
 
     const emphasisModel = itemModel.getModel(['emphasis']);
     enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
@@ -961,7 +1015,12 @@ function getLineWidth(
     itemModel: Model<BarDataItemOption>,
     rawLayout: RectLayout
 ) {
-    const lineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0;
+    // Has no border.
+    const borderColor = itemModel.get(['itemStyle', 'borderColor']);
+    if (!borderColor || borderColor === 'none') {
+        return 0;
+    }
+    const lineWidth = itemModel.get(['itemStyle', 'borderWidth']) || 0;
     // width or height may be NaN for empty data
     const width = isNaN(rawLayout.width) ? Number.MAX_VALUE : Math.abs(rawLayout.width);
     const height = isNaN(rawLayout.height) ? Number.MAX_VALUE : Math.abs(rawLayout.height);
@@ -1107,7 +1166,7 @@ function largePathFindDataIndex(largePath: LargePath, x: number, y: number) {
 function setLargeStyle(
     el: LargePath,
     seriesModel: BarSeriesModel,
-    data: List
+    data: SeriesData
 ) {
     const globalStyle = data.getVisual('style');
 
@@ -1121,7 +1180,7 @@ function setLargeStyle(
 function setLargeBackgroundStyle(
     el: LargePath,
     backgroundModel: Model<BarSeriesOption['backgroundStyle']>,
-    data: List
+    data: SeriesData
 ) {
     const borderColor = backgroundModel.get('borderColor') || backgroundModel.get('color');
     const itemStyle = backgroundModel.getItemStyle();

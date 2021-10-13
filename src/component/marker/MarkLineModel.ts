@@ -24,7 +24,8 @@ import {
     SeriesLineLabelOption,
     SymbolOptionMixin,
     ItemStyleOption,
-    StatesOptionMixin
+    StatesOptionMixin,
+    StatesMixinBase
 } from '../../util/types';
 
 interface MarkLineStateOption {
@@ -35,7 +36,8 @@ interface MarkLineStateOption {
     itemStyle?: ItemStyleOption
     label?: SeriesLineLabelOption
 }
-interface MarkLineDataItemOptionBase extends MarkLineStateOption, StatesOptionMixin<MarkLineStateOption> {
+interface MarkLineDataItemOptionBase extends MarkLineStateOption,
+    StatesOptionMixin<MarkLineStateOption, StatesMixinBase> {
     name?: string
 }
 
@@ -43,8 +45,8 @@ interface MarkLineDataItemOptionBase extends MarkLineStateOption, StatesOptionMi
 export interface MarkLine1DDataItemOption extends MarkLineDataItemOptionBase {
 
     // On cartesian coordinate system
-    xAxis?: number
-    yAxis?: number
+    xAxis?: number | string
+    yAxis?: number | string
 
     // Use statistic method
     type?: MarkerStatisticType
@@ -60,6 +62,8 @@ export interface MarkLine1DDataItemOption extends MarkLineDataItemOptionBase {
      */
     symbol?: string[] | string
     symbolSize?: number[] | number
+    symbolRotate?: number[] | number
+    symbolOffset?: number | string | (number | string)[]
 }
 
 // 2D markLine on any direction
@@ -77,11 +81,14 @@ export type MarkLine2DDataItemOption = [
 ];
 
 export interface MarkLineOption extends MarkerOption,
-    MarkLineStateOption, StatesOptionMixin<MarkLineStateOption> {
+    MarkLineStateOption,
+    StatesOptionMixin<MarkLineStateOption, StatesMixinBase> {
     mainType?: 'markLine'
 
     symbol?: string[] | string
     symbolSize?: number[] | number
+    symbolRotate?: number[] | number
+    symbolOffset?: number | string | (number | string)[]
 
     /**
      * Precision used on statistic method
@@ -112,6 +119,7 @@ class MarkLineModel extends MarkerModel<MarkLineOption> {
         symbolSize: [8, 16],
 
         //symbolRotate: 0,
+        symbolOffset: 0,
 
         precision: 2,
         tooltip: {

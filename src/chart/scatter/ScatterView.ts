@@ -25,7 +25,7 @@ import ChartView from '../../view/Chart';
 import ScatterSeriesModel from './ScatterSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { TaskProgressParams } from '../../core/task';
 import type { StageHandlerProgressExecutor } from '../../util/types';
 
@@ -99,7 +99,7 @@ class ScatterView extends ChartView {
         return seriesModel.get('clip', true) ? clipArea : null;
     }
 
-    _updateSymbolDraw(data: List, seriesModel: ScatterSeriesModel) {
+    _updateSymbolDraw(data: SeriesData, seriesModel: ScatterSeriesModel) {
         let symbolDraw = this._symbolDraw;
         const pipelineContext = seriesModel.pipelineContext;
         const isLargeDraw = pipelineContext.large;

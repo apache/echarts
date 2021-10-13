@@ -21,7 +21,7 @@ import * as layout from '../../util/layout';
 import {parsePercent, linearMap} from '../../util/number';
 import FunnelSeriesModel, { FunnelSeriesOption, FunnelDataItemOption } from './FunnelSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 
 function getViewRect(seriesModel: FunnelSeriesModel, api: ExtensionAPI) {
@@ -33,7 +33,7 @@ function getViewRect(seriesModel: FunnelSeriesModel, api: ExtensionAPI) {
     );
 }
 
-function getSortedIndices(data: List, sort: FunnelSeriesOption['sort']) {
+function getSortedIndices(data: SeriesData, sort: FunnelSeriesOption['sort']) {
     const valueDim = data.mapDimension('value');
     const valueArr = data.mapArray(valueDim, function (val: number) {
         return val;
@@ -58,7 +58,7 @@ function getSortedIndices(data: List, sort: FunnelSeriesOption['sort']) {
     return indices;
 }
 
-function labelLayout(data: List) {
+function labelLayout(data: SeriesData) {
     const seriesModel = data.hostModel;
     const orient = seriesModel.get('orient');
     data.each(function (idx) {

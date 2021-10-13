@@ -54,7 +54,7 @@ type LineStyleKeys = 'lineWidth'
     | 'lineJoin'
     | 'miterLimit';
 
-type LineStyleProps = Pick<PathStyleProps, LineStyleKeys>;
+export type LineStyleProps = Pick<PathStyleProps, LineStyleKeys>;
 
 class LineStyleMixin {
 

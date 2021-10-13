@@ -33,9 +33,15 @@ import Model from '../model/Model';
 import { AxisBaseModel } from './AxisBaseModel';
 import LogScale from '../scale/Log';
 import Axis from './Axis';
-import { AxisBaseOption, TimeAxisLabelFormatterOption } from './axisCommonTypes';
+import {
+    AxisBaseOption,
+    CategoryAxisBaseOption,
+    LogAxisBaseOption,
+    TimeAxisLabelFormatterOption,
+    ValueAxisBaseOption
+} from './axisCommonTypes';
 import type CartesianAxisModel from './cartesian/AxisModel';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
 import { Dictionary, DimensionName, ScaleTick, TimeScaleTick } from '../util/types';
 import { ensureScaleRawExtentInfo } from './scaleRawExtentInfo';
@@ -143,7 +149,8 @@ function adjustScaleForOverflow(
 // Precondition of calling this method:
 // The scale extent has been initailized using series data extent via
 // `scale.setExtent` or `scale.unionExtentFromData`;
-export function niceScaleExtent(scale: Scale, model: AxisBaseModel) {
+export function niceScaleExtent(scale: Scale, inModel: AxisBaseModel) {
+    const model = inModel as AxisBaseModel<LogAxisBaseOption>;
     const extentInfo = getScaleExtent(scale, model);
     const extent = extentInfo.extent;
     const splitNumber = model.get('splitNumber');
@@ -221,7 +228,8 @@ export function ifAxisCrossZero(axis: Axis) {
  *         return: {string} label string.
  */
 export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) => string {
-    const labelFormatter = axis.getLabelModel().get('formatter');
+    const labelFormatter = (axis.getLabelModel() as Model<ValueAxisBaseOption['axisLabel']>)
+        .get('formatter');
     const categoryTickStart = axis.type === 'category' ? axis.scale.getExtent()[0] : null;
 
     if (axis.scale.type === 'time') {
@@ -263,7 +271,7 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
                     } : null
                 );
             };
-        })(labelFormatter);
+        })(labelFormatter as (...args: any[]) => string);
     }
     else {
         return function (tick: ScaleTick) {
@@ -347,7 +355,7 @@ function rotateTextRect(textRect: RectLike, rotate: number) {
  * @return {number|String} Can be null|'auto'|number|function
  */
 export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel']>) {
-    const interval = model.get('interval');
+    const interval = (model as Model<CategoryAxisBaseOption['axisLabel']>).get('interval');
     return interval == null ? 'auto' : interval;
 }
 
@@ -361,7 +369,7 @@ export function shouldShowAllLabels(axis: Axis): boolean {
         && getOptionCategoryInterval(axis.getLabelModel()) === 0;
 }
 
-export function getDataDimensionsOnAxis(data: List, axisDim: string): DimensionName[] {
+export function getDataDimensionsOnAxis(data: SeriesData, axisDim: string): DimensionName[] {
     // Remove duplicated dat dimensions caused by `getStackedDimension`.
     const dataDimMap = {} as Dictionary<boolean>;
     // Currently `mapDimensionsAll` will contain stack result dimension ('__\0ecstackresult').
@@ -379,7 +387,7 @@ export function getDataDimensionsOnAxis(data: List, axisDim: string): DimensionN
     return zrUtil.keys(dataDimMap);
 }
 
-export function unionAxisExtentFromData(dataExtent: number[], data: List, axisDim: string): void {
+export function unionAxisExtentFromData(dataExtent: number[], data: SeriesData, axisDim: string): void {
     if (data) {
         zrUtil.each(getDataDimensionsOnAxis(data, axisDim), function (dim) {
             const seriesExtent = data.getApproximateExtent(dim);

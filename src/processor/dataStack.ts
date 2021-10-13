@@ -20,18 +20,22 @@
 import {createHashMap, each} from 'zrender/src/core/util';
 import GlobalModel from '../model/Global';
 import SeriesModel from '../model/Series';
-import { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../util/types';
-import List from '../data/List';
+import { SeriesOption, SeriesStackOptionMixin } from '../util/types';
+import SeriesData, { DataCalculationInfo } from '../data/SeriesData';
+import { addSafe } from '../util/number';
 
-interface StackInfo {
-    stackedDimension: DimensionName
-    isStackedByIndex: boolean
-    stackedByDimension: DimensionName
-    stackResultDimension: DimensionName
-    stackedOverDimension: DimensionName
-    data: List
+type StackInfo = Pick<
+    DataCalculationInfo<SeriesOption & SeriesStackOptionMixin>,
+    'stackedDimension'
+    | 'isStackedByIndex'
+    | 'stackedByDimension'
+    | 'stackResultDimension'
+    | 'stackedOverDimension'
+> & {
+    data: SeriesData
     seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>
-}
+};
+
 // (1) [Caution]: the logic is correct based on the premises:
 //     data processing stage is blocked in stream.
 //     See <module:echarts/stream/Scheduler#performDataProcessorTasks>
@@ -86,7 +90,7 @@ function calculateStack(stackInfoList: StackInfo[]) {
 
         // Should not write on raw data, because stack series model list changes
         // depending on legend selection.
-        const newData = targetData.map(dims, function (v0, v1, dataIndex) {
+        targetData.modify(dims, function (v0, v1, dataIndex) {
             let sum = targetData.get(targetStackInfo.stackedDimension, dataIndex) as number;
 
             // Consider `connectNulls` of line area, if value is NaN, stackedOver
@@ -125,7 +129,10 @@ function calculateStack(stackInfoList: StackInfo[]) {
                     if ((sum >= 0 && val > 0) // Positive stack
                         || (sum <= 0 && val < 0) // Negative stack
                     ) {
-                        sum += val;
+                        // The sum should be as less as possible to be effected
+                        // by floating arithmetic problem. A wrong result probably
+                        // filtered incorrectly by axis min/max.
+                        sum = addSafe(sum, val);
                         stackedOver = val;
                         break;
                     }
@@ -137,9 +144,5 @@ function calculateStack(stackInfoList: StackInfo[]) {
 
             return resultVal;
         });
-
-        (targetData.hostModel as SeriesModel).setData(newData);
-        // Update for consequent calculation
-        targetStackInfo.data = newData;
     });
 }

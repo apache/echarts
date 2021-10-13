@@ -82,7 +82,7 @@ export function makeValueReadable(
     valueType: DimensionType,
     useUTC: boolean
 ): string {
-    const USER_READABLE_DEFUALT_TIME_PATTERN = 'yyyy-MM-dd hh:mm:ss';
+    const USER_READABLE_DEFUALT_TIME_PATTERN = '{yyyy}-{MM}-{dd} {hh}:{mm}:{ss}';
 
     function stringToUserReadable(str: string): string {
         return (str && zrUtil.trim(str)) ? str : '-';
@@ -260,7 +260,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
  *           and `module:echarts/util/number#parseDate`.
  * @inner
  */
-export function formatTime(tpl: string, value: unknown, isUTC: boolean) {
+export function formatTime(tpl: string, value: unknown, isUTC?: boolean) {
     if (__DEV__) {
         deprecateReplaceLog('echarts.format.formatTime', 'echarts.time.format');
     }

@@ -37,7 +37,7 @@ import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 import { deprecateReplaceLog } from '../util/log';
 import { makeInner, interpolateRawValues } from '../util/model';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import { initProps, updateProps } from '../util/graphic';
 
 type TextCommonParams = {
@@ -293,7 +293,7 @@ function setLabelStyle<TLabelDataIndex>(
 export { setLabelStyle };
 
 export function getLabelStatesModels<LabelName extends string = 'label'>(
-    itemModel: Model<StatesOptionMixin<any> & Partial<Record<LabelName, any>>>,
+    itemModel: Model<StatesOptionMixin<any, any> & Partial<Record<LabelName, any>>>,
     labelName?: LabelName
 ): Record<DisplayState, LabelModel> {
     labelName = (labelName || 'label') as LabelName;
@@ -672,7 +672,6 @@ export function setLabelValueAnimation(
     const obj = labelInner(label);
     obj.prevValue = obj.value;
     obj.value = value;
-
     const normalLabelModel = labelStatesModels.normal;
 
     obj.valueAnimation = normalLabelModel.get('valueAnimation');
@@ -687,7 +686,7 @@ export function setLabelValueAnimation(
 export function animateLabelValue(
     textEl: ZRText,
     dataIndex: number,
-    data: List,
+    data: SeriesData,
     animatableModel: Model<AnimationOptionMixin>,
     labelFetcher: SetLabelStyleOpt<number>['labelFetcher']
 ) {
@@ -709,6 +708,7 @@ export function animateLabelValue(
             targetValue,
             percent
         );
+
         labelInnerStore.interpolatedValue = percent === 1 ? null : interpolated;
 
         const labelText = getLabelText({
@@ -722,7 +722,7 @@ export function animateLabelValue(
         setLabelText(textEl, labelText);
     }
 
-    (currValue == null
+    (labelInnerStore.prevValue == null
         ? initProps
         : updateProps
     )(textEl, {}, animatableModel, dataIndex, null, during);

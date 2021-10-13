@@ -32,7 +32,6 @@ import {
     DimensionName,
     OptionSourceHeader,
     DimensionDefinitionLoose,
-    OptionEncode,
     SOURCE_FORMAT_ARRAY_ROWS,
     SOURCE_FORMAT_OBJECT_ROWS,
     Dictionary,
@@ -45,6 +44,7 @@ import {
 } from '../util/types';
 import { DatasetOption } from '../component/dataset/install';
 import { getDataItemValue } from '../util/model';
+import { BE_ORDINAL, guessOrdinal } from './helper/sourceHelper';
 
 /**
  * [sourceFormat]
@@ -120,13 +120,6 @@ class SourceImpl {
     readonly dimensionsDefine: DimensionDefinition[];
 
     /**
-     * encode definition in option.
-     * can be null/undefined.
-     * Might be specified outside.
-     */
-    readonly encodeDefine: HashMap<OptionEncodeValue, DimensionName>;
-
-    /**
      * Only make sense in `SOURCE_FORMAT_ARRAY_ROWS`.
      * That is the same as `sourceHeader: number`,
      * which means from which line the real data start.
@@ -145,8 +138,6 @@ class SourceImpl {
      * Raw props from user option.
      */
     readonly metaRawOption: SourceMetaRawOption;
-
-    // readonly frozen: boolean;
 
 
     constructor(fields: {
@@ -176,42 +167,22 @@ class SourceImpl {
         // Visit config
         this.seriesLayoutBy = fields.seriesLayoutBy || SERIES_LAYOUT_BY_COLUMN;
         this.startIndex = fields.startIndex || 0;
-        this.dimensionsDefine = fields.dimensionsDefine;
         this.dimensionsDetectedCount = fields.dimensionsDetectedCount;
-        this.encodeDefine = fields.encodeDefine;
         this.metaRawOption = fields.metaRawOption;
-    }
 
-    // There is performance issue in some browser like Safari,
-    // an also slower than clone in Chrome.
-    // So DO NOT use `Object.freeze`.
-    /**
-     * When expose the source to thrid-party transform, it probably better to
-     * freeze to make sure immutability.
-     * If a third-party transform modify the raw upstream data structure, it might bring about
-     * "uncertain effect" when using multiple transforms with different combinations.
-     *
-     * [Caveat]
-     * `OptionManager.ts` have perform `clone` in `setOption`.
-     * The original user input object should better not be frozen in case they
-     * make other usages.
-     */
-    // freeze() {
-    //     assert(sourceFormatCanBeExposed(this));
-    //     const data = this.data as OptionSourceDataArrayRows;
-    //     if (this.frozen || !data || !isFunction(Object.freeze)) {
-    //         return;
-    //     }
-    //     // @ts-ignore
-    //     this.frozen = true;
-    //     // PENDING:
-    //     // There is a flaw that there might be non-primitive values like `Date`.
-    //     // Is it worth handling that?
-    //     for (let i = 0; i < data.length; i++) {
-    //         Object.freeze(data[i]);
-    //     }
-    //     Object.freeze(data);
-    // }
+        const dimensionsDefine = this.dimensionsDefine = fields.dimensionsDefine;
+
+        if (dimensionsDefine) {
+            for (let i = 0; i < dimensionsDefine.length; i++) {
+                const dim = dimensionsDefine[i];
+                if (dim.type == null) {
+                    if (guessOrdinal(this, i) === BE_ORDINAL.Must) {
+                        dim.type = 'ordinal';
+                    }
+                }
+            }
+        }
+    }
 
 }
 
@@ -219,12 +190,15 @@ export function isSourceInstance(val: unknown): val is Source {
     return val instanceof SourceImpl;
 }
 
+/**
+ * Create a source from option.
+ * NOTE: Created source is immutable. Don't change any properties in it.
+ */
 export function createSource(
     sourceData: OptionSourceData,
     thisMetaRawOption: SourceMetaRawOption,
     // can be null. If not provided, auto detect it from `sourceData`.
-    sourceFormat: SourceFormat,
-    encodeDefine: OptionEncode  // can be null
+    sourceFormat: SourceFormat
 ): Source {
     sourceFormat = sourceFormat || detectSourceFormat(sourceData);
     const seriesLayoutBy = thisMetaRawOption.seriesLayoutBy;
@@ -243,7 +217,6 @@ export function createSource(
         dimensionsDefine: determined.dimensionsDefine,
         startIndex: determined.startIndex,
         dimensionsDetectedCount: determined.dimensionsDetectedCount,
-        encodeDefine: makeEncodeDefine(encodeDefine),
         metaRawOption: clone(thisMetaRawOption)
     });
 
@@ -273,18 +246,8 @@ export function cloneSourceShallow(source: Source): Source {
         seriesLayoutBy: source.seriesLayoutBy,
         dimensionsDefine: clone(source.dimensionsDefine),
         startIndex: source.startIndex,
-        dimensionsDetectedCount: source.dimensionsDetectedCount,
-        encodeDefine: makeEncodeDefine(source.encodeDefine)
+        dimensionsDetectedCount: source.dimensionsDetectedCount
     });
-}
-
-function makeEncodeDefine(
-    encodeDefine: OptionEncode | HashMap<OptionEncodeValue, DimensionName>
-): HashMap<OptionEncodeValue, DimensionName> {
-    // null means user not specify `series.encode`.
-    return encodeDefine
-        ? createHashMap<OptionEncodeValue, DimensionName>(encodeDefine)
-        : null;
 }
 
 /**
@@ -515,4 +478,9 @@ function arrayRowsTravelFirst(
             cb(value0[i], i);
         }
     }
+}
+
+export function shouldRetrieveDataByName(source: Source): boolean {
+    const sourceFormat = source.sourceFormat;
+    return sourceFormat === SOURCE_FORMAT_OBJECT_ROWS || sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS;
 }

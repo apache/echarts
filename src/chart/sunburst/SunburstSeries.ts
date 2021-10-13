@@ -30,14 +30,15 @@ import {
     CallbackDataParams,
     StatesOptionMixin,
     OptionDataItemObject,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    SunburstColorByMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import Model from '../../model/Model';
 import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
 
-interface SunburstItemStyleOption extends ItemStyleOption {
+interface SunburstItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
     // can be 10
     // which means that both innerCornerRadius and outerCornerRadius are 10
     // can also be an array [20, 10]
@@ -64,19 +65,20 @@ interface SunburstDataParams extends CallbackDataParams {
     }[]
 }
 
-interface ExtraStateOption {
+interface SunburstStatesMixin {
     emphasis?: {
         focus?: DefaultEmphasisFocus | 'descendant' | 'ancestor'
     }
 }
 
-export interface SunburstStateOption {
-    itemStyle?: SunburstItemStyleOption
+export interface SunburstStateOption<TCbParams = never> {
+    itemStyle?: SunburstItemStyleOption<TCbParams>
     label?: SunburstLabelOption
 }
 
 export interface SunburstSeriesNodeItemOption extends
-    SunburstStateOption, StatesOptionMixin<SunburstStateOption, ExtraStateOption>,
+    SunburstStateOption<CallbackDataParams>,
+    StatesOptionMixin<SunburstStateOption<CallbackDataParams>, SunburstStatesMixin>,
     OptionDataItemObject<OptionDataValue>
 {
     nodeClick?: 'rootToNode' | 'link'
@@ -90,7 +92,19 @@ export interface SunburstSeriesNodeItemOption extends
 
     cursor?: string
 }
-export interface SunburstSeriesLevelOption extends SunburstStateOption, StatesOptionMixin<SunburstStateOption> {
+export interface SunburstSeriesLevelOption
+    extends SunburstStateOption, StatesOptionMixin<SunburstStateOption, SunburstStatesMixin> {
+
+    radius?: (number | string)[]
+    /**
+     * @deprecated use radius instead
+     */
+    r?: number | string
+    /**
+     * @deprecated use radius instead
+     */
+    r0?: number | string
+
     highlight?: {
         itemStyle?: SunburstItemStyleOption
         label?: SunburstLabelOption
@@ -104,7 +118,8 @@ interface SortParam {
     getValue(): number
 }
 export interface SunburstSeriesOption extends
-    SeriesOption<SunburstStateOption, ExtraStateOption>, SunburstStateOption,
+    SeriesOption<SunburstStateOption, SunburstStatesMixin>, SunburstStateOption,
+    SunburstColorByMixin,
     CircleLayoutOptionMixin {
 
     type?: 'sunburst'
@@ -148,6 +163,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
     ignoreStyleOnData = true;
 
     private _viewRoot: TreeNode;
+    private _levelModels: Model<SunburstSeriesLevelOption>[];
 
     getInitialData(option: SunburstSeriesOption, ecModel: GlobalModel) {
         // Create a virtual root.
@@ -155,16 +171,17 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
         completeTreeValue(root);
 
-        const levelModels = zrUtil.map(option.levels || [], function (levelDefine) {
-            return new Model(levelDefine, this, ecModel);
-        }, this);
+        const levelModels = this._levelModels
+            = zrUtil.map(option.levels || [], function (levelDefine) {
+                return new Model(levelDefine, this, ecModel);
+            }, this);
 
         // Make sure always a new tree is created when setOption,
         // in TreemapView, we check whether oldTree === newTree
         // to choose mappings approach among old shapes and new shapes.
         const tree = Tree.createTree(root, this, beforeLink);
 
-        function beforeLink(nodeData: List) {
+        function beforeLink(nodeData: SeriesData) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 const node = tree.getNodeByDataIndex(idx);
                 const levelModel = levelModels[node.depth];
@@ -189,6 +206,10 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         params.treePathInfo = wrapTreePathInfo<SunburstSeriesNodeItemOption['value']>(node, this);
 
         return params;
+    }
+
+    getLevelModel(node: TreeNode) {
+        return this._levelModels && this._levelModels[node.depth];
     }
 
     static defaultOption: SunburstSeriesOption = {
@@ -254,8 +275,6 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         animationDurationUpdate: 500,
 
         data: [],
-
-        levels: [],
 
         /**
          * Sort order.

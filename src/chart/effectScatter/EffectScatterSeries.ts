@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListFromArray from '../helper/createListFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import SeriesModel from '../../model/Series';
 import {
     SeriesOption,
@@ -32,23 +32,30 @@ import {
     SeriesLabelOption,
     StatesOptionMixin,
     SeriesEncodeOptionMixin,
-    CallbackDataParams
+    CallbackDataParams,
+    DefaultEmphasisFocus
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import type { SymbolDrawItemModelOption } from '../helper/SymbolDraw';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 type ScatterDataValue = OptionDataValue | OptionDataValue[];
 
-export interface EffectScatterStateOption {
-    itemStyle?: ItemStyleOption
+interface EffectScatterStatesOptionMixin {
+    emphasis?: {
+        focus?: DefaultEmphasisFocus
+        scale?: boolean
+    }
+}
+export interface EffectScatterStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
 
 export interface EffectScatterDataItemOption extends SymbolOptionMixin,
     EffectScatterStateOption,
-    StatesOptionMixin<EffectScatterStateOption> {
+    StatesOptionMixin<EffectScatterStateOption, EffectScatterStatesOptionMixin> {
     name?: string
 
     value?: ScatterDataValue
@@ -56,7 +63,9 @@ export interface EffectScatterDataItemOption extends SymbolOptionMixin,
     rippleEffect?: SymbolDrawItemModelOption['rippleEffect']
 }
 
-export interface EffectScatterSeriesOption extends SeriesOption<EffectScatterStateOption>, EffectScatterStateOption,
+export interface EffectScatterSeriesOption
+    extends SeriesOption<EffectScatterStateOption<CallbackDataParams>, EffectScatterStatesOptionMixin>,
+    EffectScatterStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin, SymbolOptionMixin<CallbackDataParams>,
     SeriesEncodeOptionMixin {
@@ -71,6 +80,7 @@ export interface EffectScatterSeriesOption extends SeriesOption<EffectScatterSta
      * When to show the effect
      */
     showEffectOn?: 'render' | 'emphasis'
+    clip?: boolean
 
     /**
      * Ripple effect config
@@ -87,11 +97,11 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
 
     hasSymbolVisual = true;
 
-    getInitialData(option: EffectScatterSeriesOption, ecModel: GlobalModel): List {
-        return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
+    getInitialData(option: EffectScatterSeriesOption, ecModel: GlobalModel): SeriesData {
+        return createSeriesData(null, this, {useEncodeDefaulter: true});
     }
 
-    brushSelector(dataIndex: number, data: List, selectors: BrushCommonSelectorsForSeries): boolean {
+    brushSelector(dataIndex: number, data: SeriesData, selectors: BrushCommonSelectorsForSeries): boolean {
         return selectors.point(data.getItemLayout(dataIndex));
     }
 
@@ -107,6 +117,7 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
 
         // When to show the effect, option: 'render'|'emphasis'
         showEffectOn: 'render',
+        clip: true,
 
         // Ripple effect config
         rippleEffect: {
@@ -114,9 +125,14 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
             // Scale of ripple
             scale: 2.5,
             // Brush type can be fill or stroke
-            brushType: 'fill'
+            brushType: 'fill',
+            // Ripple number
+            number: 3
         },
 
+        universalTransition: {
+            divideShape: 'clone'
+        },
         // Cartesian coordinate system
         // xAxisIndex: 0,
         // yAxisIndex: 0,

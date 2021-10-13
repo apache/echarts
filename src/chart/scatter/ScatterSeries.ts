@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListFromArray from '../helper/createListFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import SeriesModel from '../../model/Series';
 import {
     SeriesOption,
@@ -39,15 +39,15 @@ import {
     DefaultEmphasisFocus
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
-interface ScatterStateOption {
-    itemStyle?: ItemStyleOption
+interface ScatterStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
 
-interface ExtraStateOption {
+interface ScatterStatesOptionMixin {
     emphasis?: {
         focus?: DefaultEmphasisFocus
         scale?: boolean
@@ -55,11 +55,13 @@ interface ExtraStateOption {
 }
 
 export interface ScatterDataItemOption extends SymbolOptionMixin,
-    ScatterStateOption, StatesOptionMixin<ScatterStateOption, ExtraStateOption>,
+    ScatterStateOption, StatesOptionMixin<ScatterStateOption, ScatterStatesOptionMixin>,
     OptionDataItemObject<OptionDataValue> {
 }
 
-export interface ScatterSeriesOption extends SeriesOption<ScatterStateOption, ExtraStateOption>, ScatterStateOption,
+export interface ScatterSeriesOption
+    extends SeriesOption<ScatterStateOption<CallbackDataParams>, ScatterStatesOptionMixin>,
+    ScatterStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SeriesLargeOptionMixin, SeriesStackOptionMixin,
@@ -84,8 +86,8 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
 
     hasSymbolVisual = true;
 
-    getInitialData(option: ScatterSeriesOption, ecModel: GlobalModel): List {
-        return createListFromArray(this.getSource(), this, {
+    getInitialData(option: ScatterSeriesOption, ecModel: GlobalModel): SeriesData {
+        return createSeriesData(null, this, {
             useEncodeDefaulter: true
         });
     }
@@ -109,7 +111,7 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
         return progressiveThreshold;
     }
 
-    brushSelector(dataIndex: number, data: List, selectors: BrushCommonSelectorsForSeries): boolean {
+    brushSelector(dataIndex: number, data: SeriesData, selectors: BrushCommonSelectorsForSeries): boolean {
         return selectors.point(data.getItemLayout(dataIndex));
     }
 
@@ -144,6 +146,10 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
             itemStyle: {
                 borderColor: '#212121'
             }
+        },
+
+        universalTransition: {
+            divideShape: 'clone'
         }
         // progressive: null
     };

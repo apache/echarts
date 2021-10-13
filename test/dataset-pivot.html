@@ -22,7 +22,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/testHelper.js"></script>
         <script src="lib/jquery.min.js"></script>
@@ -66,13 +66,6 @@ under the License.
                 ['Cheese Cocoa', 24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
                 ['Walnut Brownie', 55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
             ];
-
-
-            function loadLifeData(cb) {
-                $.getJSON('data/life-expectancy-table.json', function (data) {
-                    cb(data);
-                })
-            }
         </script>
 
 
@@ -80,87 +73,88 @@ under the License.
 
 
         <script>
-            require(['echarts'], function (echarts) {
-                loadLifeData(function (data) {
-                    var sizeValue = '57%';
-                    var option = {
-                        legend: {},
-                        tooltip: {},
-                        toolbox: {
-                            feature: {
-                                dataZoom: {}
+            require([
+                'echarts',
+                'data/life-expectancy-table.json'
+            ], function (echarts, data) {
+                var sizeValue = '57%';
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    toolbox: {
+                        feature: {
+                            dataZoom: {}
+                        }
+                    },
+                    grid: [
+                        {right: sizeValue, bottom: sizeValue},
+                        {left: sizeValue, bottom: sizeValue},
+                        {right: sizeValue, top: sizeValue},
+                        {left: sizeValue, top: sizeValue}
+                    ],
+                    xAxis: [
+                        {type: 'value', gridIndex: 0, name: 'Income'},
+                        {type: 'category', gridIndex: 1, name: 'Country', boundaryGap: false, axisLabel: {rotate: 50, interval: 0}},
+                        {type: 'category', gridIndex: 2, name: 'Year', boundaryGap: false},
+                        {type: 'category', gridIndex: 3, name: 'Country', boundaryGap: false, axisLabel: {rotate: 50, interval: 0}}
+                    ],
+                    yAxis: [
+                        {type: 'value', gridIndex: 0, name: 'Life Expectency'},
+                        {type: 'value', gridIndex: 1, name: 'Income'},
+                        {type: 'value', gridIndex: 2, name: 'Population'},
+                        {type: 'category', gridIndex: 3, name: 'Year', boundaryGap: false}
+                    ],
+                    dataset: {
+                        source: data
+                    },
+                    series: [
+                        {
+                            type: 'scatter',
+                            symbolSize: 3,
+                            xAxisIndex: 0,
+                            yAxisIndex: 0,
+                            encode: {
+                                x: 'Income',
+                                y: 'Life Expectency'
                             }
                         },
-                        grid: [
-                            {right: sizeValue, bottom: sizeValue},
-                            {left: sizeValue, bottom: sizeValue},
-                            {right: sizeValue, top: sizeValue},
-                            {left: sizeValue, top: sizeValue}
-                        ],
-                        xAxis: [
-                            {type: 'value', gridIndex: 0, name: 'Income'},
-                            {type: 'category', gridIndex: 1, name: 'Country', boundaryGap: false, axisLabel: {rotate: 50, interval: 0}},
-                            {type: 'category', gridIndex: 2, name: 'Year', boundaryGap: false},
-                            {type: 'category', gridIndex: 3, name: 'Country', boundaryGap: false, axisLabel: {rotate: 50, interval: 0}}
-                        ],
-                        yAxis: [
-                            {type: 'value', gridIndex: 0, name: 'Life Expectency'},
-                            {type: 'value', gridIndex: 1, name: 'Income'},
-                            {type: 'value', gridIndex: 2, name: 'Population'},
-                            {type: 'category', gridIndex: 3, name: 'Year', boundaryGap: false}
-                        ],
-                        dataset: {
-                            source: data
-                        },
-                        series: [
-                            {
-                                type: 'scatter',
-                                symbolSize: 3,
-                                xAxisIndex: 0,
-                                yAxisIndex: 0,
-                                encode: {
-                                    x: 'Income',
-                                    y: 'Life Expectency'
-                                }
-                            },
-                            {
-                                type: 'scatter',
-                                symbolSize: 3,
-                                xAxisIndex: 1,
-                                yAxisIndex: 1,
-                                encode: {
-                                    x: 'Country',
-                                    y: 'Income'
-                                }
-                            },
-                            {
-                                type: 'scatter',
-                                symbolSize: 3,
-                                xAxisIndex: 2,
-                                yAxisIndex: 2,
-                                encode: {
-                                    x: 'Year',
-                                    y: 'Population'
-                                }
-                            },
-                            {
-                                type: 'scatter',
-                                symbolSize: 3,
-                                xAxisIndex: 3,
-                                yAxisIndex: 3,
-                                encode: {
-                                    x: 'Country',
-                                    y: 'Year'
-                                }
+                        {
+                            type: 'scatter',
+                            symbolSize: 3,
+                            xAxisIndex: 1,
+                            yAxisIndex: 1,
+                            encode: {
+                                x: 'Country',
+                                y: 'Income'
                             }
-                        ]
-                    };
+                        },
+                        {
+                            type: 'scatter',
+                            symbolSize: 3,
+                            xAxisIndex: 2,
+                            yAxisIndex: 2,
+                            encode: {
+                                x: 'Year',
+                                y: 'Population'
+                            }
+                        },
+                        {
+                            type: 'scatter',
+                            symbolSize: 3,
+                            xAxisIndex: 3,
+                            yAxisIndex: 3,
+                            encode: {
+                                x: 'Country',
+                                y: 'Year'
+                            }
+                        }
+                    ]
+                };
 
-                    testHelper.create(echarts, 'layout0', {
-                        option: option,
-                        height: 700,
-                        dataTable: data
-                    });
+                testHelper.create(echarts, 'layout0', {
+                    option: option,
+                    height: 700,
+                    dataTable: data
                 });
             });
         </script>

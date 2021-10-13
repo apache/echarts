@@ -18,11 +18,13 @@
 */
 
 
-import {each, createHashMap, assert} from 'zrender/src/core/util';
-import List, { ListDimensionType } from '../List';
+import {each, createHashMap, assert, map} from 'zrender/src/core/util';
+import SeriesData from '../SeriesData';
 import {
-    DimensionName, VISUAL_DIMENSIONS, DimensionType, DimensionUserOuput, DimensionUserOuputEncode, DimensionIndex
+    DimensionName, VISUAL_DIMENSIONS, DimensionType, DimensionIndex
 } from '../../util/types';
+import { DataStoreDimensionType } from '../DataStore';
+import { SeriesDataSchema } from './SeriesDataSchema';
 
 export type DimensionSummaryEncode = {
     defaultedLabel: DimensionName[],
@@ -37,21 +39,68 @@ export type DimensionSummary = {
     userOutput: DimensionUserOuput,
     // All of the data dim names that mapped by coordDim.
     dataDimsOnCoord: DimensionName[],
+    dataDimIndicesOnCoord: DimensionIndex[],
     encodeFirstDimNotExtra: {[coordDim: string]: DimensionName},
 };
 
-export function summarizeDimensions(data: List): DimensionSummary {
+export type DimensionUserOuputEncode = {
+    // index: coordDimIndex, value: dataDimIndex
+    [coordOrVisualDimName: string]: DimensionIndex[]
+};
+
+class DimensionUserOuput {
+    private _encode: DimensionUserOuputEncode;
+    private _cachedDimNames: DimensionName[];
+    private _schema?: SeriesDataSchema;
+
+    constructor(
+        encode: DimensionUserOuputEncode,
+        dimRequest?: SeriesDataSchema
+    ) {
+        this._encode = encode;
+        this._schema = dimRequest;
+    }
+
+    get(): {
+        fullDimensions: DimensionName[];
+        encode: DimensionUserOuputEncode;
+    } {
+        return {
+            // Do not generate full dimension name until fist used.
+            fullDimensions: this._getFullDimensionNames(),
+            encode: this._encode
+        };
+    }
+
+    /**
+     * Get all data store dimension names.
+     * Theoretically a series data store is defined both by series and used dataset (if any).
+     * If some dimensions are omitted for performance reason in `this.dimensions`,
+     * the dimension name may not be auto-generated if user does not specify a dimension name.
+     * In this case, the dimension name is `null`/`undefined`.
+     */
+    private _getFullDimensionNames(): DimensionName[] {
+        if (!this._cachedDimNames) {
+            this._cachedDimNames = this._schema
+                ? this._schema.makeOutputDimensionNames()
+                : [];
+        }
+        return this._cachedDimNames;
+    }
+};
+
+
+export function summarizeDimensions(
+    data: SeriesData,
+    schema?: SeriesDataSchema
+): DimensionSummary {
     const summary: DimensionSummary = {} as DimensionSummary;
     const encode = summary.encode = {} as DimensionSummaryEncode;
     const notExtraCoordDimMap = createHashMap<1, DimensionName>();
     let defaultedLabel = [] as DimensionName[];
     let defaultedTooltip = [] as DimensionName[];
 
-    // See the comment of `List.js#userOutput`.
-    const userOutput = summary.userOutput = {
-        dimensionNames: data.dimensions.slice(),
-        encode: {}
-    };
+    const userOutputEncode = {} as DimensionUserOuputEncode;
 
     each(data.dimensions, function (dimName) {
         const dimItem = data.getDimensionInfo(dimName);
@@ -78,7 +127,8 @@ export function summarizeDimensions(data: List): DimensionSummary {
 
                 // User output encode do not contain generated coords.
                 // And it only has index. User can use index to retrieve value from the raw item array.
-                getOrCreateEncodeArr(userOutput.encode, coordDim)[coordDimIndex] = dimItem.index;
+                getOrCreateEncodeArr(userOutputEncode, coordDim)[coordDimIndex] =
+                    data.getDimensionIndex(dimItem.name);
             }
             if (dimItem.defaultTooltip) {
                 defaultedTooltip.push(dimName);
@@ -107,6 +157,9 @@ export function summarizeDimensions(data: List): DimensionSummary {
     });
 
     summary.dataDimsOnCoord = dataDimsOnCoord;
+    summary.dataDimIndicesOnCoord = map(
+        dataDimsOnCoord, dimName => data.getDimensionInfo(dimName).storeDimIndex
+    );
     summary.encodeFirstDimNotExtra = encodeFirstDimNotExtra;
 
     const encodeLabel = encode.label;
@@ -127,6 +180,8 @@ export function summarizeDimensions(data: List): DimensionSummary {
     encode.defaultedLabel = defaultedLabel;
     encode.defaultedTooltip = defaultedTooltip;
 
+    summary.userOutput = new DimensionUserOuput(userOutputEncode, schema);
+
     return summary;
 }
 
@@ -140,7 +195,7 @@ function getOrCreateEncodeArr(
 }
 
 // FIXME:TS should be type `AxisType`
-export function getDimensionTypeByAxis(axisType: string): ListDimensionType {
+export function getDimensionTypeByAxis(axisType: string): DataStoreDimensionType {
     return axisType === 'category'
         ? 'ordinal'
         : axisType === 'time'

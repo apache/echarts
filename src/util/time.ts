@@ -37,8 +37,8 @@ export const defaultLeveledFormatter = {
     hour: '{HH}:{mm}',
     minute: '{HH}:{mm}',
     second: '{HH}:{mm}:{ss}',
-    millisecond: '{hh}:{mm}:{ss} {SSS}',
-    none: '{yyyy}-{MM}-{dd} {hh}:{mm}:{ss} {SSS}'
+    millisecond: '{HH}:{mm}:{ss} {SSS}',
+    none: '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss} {SSS}'
 };
 
 const fullDayFormatter = '{yyyy}-{MM}-{dd}';
@@ -318,7 +318,7 @@ export function secondsGetterName(isUTC: boolean) {
 }
 
 export function millisecondsGetterName(isUTC: boolean) {
-    return isUTC ? 'getUTCSeconds' : 'getSeconds';
+    return isUTC ? 'getUTCMilliseconds' : 'getMilliseconds';
 }
 
 export function fullYearSetterName(isUTC: boolean) {
@@ -346,5 +346,5 @@ export function secondsSetterName(isUTC: boolean) {
 }
 
 export function millisecondsSetterName(isUTC: boolean) {
-    return isUTC ? 'setUTCSeconds' : 'setSeconds';
+    return isUTC ? 'setUTCMilliseconds' : 'setMilliseconds';
 }

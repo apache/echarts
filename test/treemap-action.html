@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+
+
+
+
+
+        <script>
+
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    series: [
+                        {
+                            name:'矩形树图',
+                            type:'treemap',
+                            roam: false,
+                            emphasis: {
+                                itemStyle: {
+                                    borderColor: 'red'
+                                }
+                            },
+                            levels: [
+                                {
+                                    itemStyle: {
+                                        borderWidth: 0,
+                                        gapWidth: 30,
+                                        borderColor: '#999'
+                                    },
+                                },
+                                {
+                                    itemStyle: {
+                                        borderWidth: 15,
+                                        gapWidth: 40,
+                                        borderColor: '#333'
+                                    }
+                                },
+                                {
+                                    itemStyle: {
+                                        borderWidth: 10,
+                                        borderColor: '#555570'
+                                    }
+                                }
+                            ],
+                            data:[
+                                {
+                                    name: '三星',
+                                    value: 6,
+                                },
+                                {
+                                    name: '小米',
+                                    value: 4,
+                                    children: [
+                                        {
+                                            name: '小米0',
+                                            value: 10,
+                                            children: [
+                                                {
+                                                    itemStyle: {
+                                                        color: 'orange'
+                                                    },
+                                                    name: '小尺',
+                                                    value: 400
+                                                },
+                                                {
+                                                    name: '小寸',
+                                                    value: 200
+                                                },
+                                                {
+                                                    name: '小光年',
+                                                    value: 100
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            name: '小米1',
+                                            value: 4
+                                        },
+                                        {
+                                            name: '小米2',
+                                            value: 4
+                                        }
+                                    ]
+                                },
+                                {
+                                    name: '中兴',
+                                    value: 1
+                                }
+                            ]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    option: option,
+                    title: [
+                        'click to dispatchAction hightlight dataIndex 2',
+                        'broder color become **red**'
+                    ],
+                    buttons: [{
+                        text: 'highlight dataIndex: 2',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'highlight',
+                                seriesIndex: 0,
+                                dataIndex: 2
+                            });
+                        }
+                    }]
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+        <script>
+
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    series: [
+                        {
+                            type:'treemap',
+                            roam: false,
+                            label: {
+                                formatter: function (params) {
+                                    console.log('incb', params.name);
+                                    return params.name;
+                                }
+                            },
+                            emphasis: {
+                                itemStyle: {
+                                    borderColor: 'red'
+                                },
+                                label: {
+                                    formatter: function (params) {
+                                        return 'SERIES ' + params.name;
+                                    }
+                                }
+                            },
+                            levels: [{
+                                itemStyle: {
+                                    borderWidth: 0,
+                                    gapWidth: 30,
+                                    borderColor: '#999'
+                                },
+                                emphasis: {
+                                    label: {
+                                        formatter: function (params) {
+                                            return 'LEVEL0 ' + params.name;
+                                        }
+                                    }
+                                }
+                            }, {
+                                itemStyle: {
+                                    borderWidth: 15,
+                                    gapWidth: 40,
+                                    borderColor: '#333'
+                                },
+                                emphasis: {
+                                    label: {
+                                        formatter: function (params) {
+                                            return 'LEVEL1 ' + params.name;
+                                        }
+                                    }
+                                }
+                            }, {
+                                itemStyle: {
+                                    borderWidth: 10,
+                                    borderColor: '#555570'
+                                },
+                                emphasis: {
+                                    label: {
+                                        formatter: function (params) {
+                                            return 'LEVEL2 ' + params.name;
+                                        }
+                                    }
+                                }
+                            }],
+                            data:[{
+                                name: '三星',
+                                value: 6,
+                            }, {
+                                name: '小米',
+                                value: 4,
+                                children: [{
+                                    name: '小米0',
+                                    value: 10,
+                                    children: [{
+                                        itemStyle: {
+                                            color: 'orange'
+                                        },
+                                        emphasis: {
+                                            label: {
+                                                formatter: function (params) {
+                                                    return 'ITEM ' + params.name;
+                                                }
+                                            }
+                                        },
+                                        name: '小尺',
+                                        value: 400
+                                    }, {
+                                        name: '小寸',
+                                        value: 200
+                                    }, {
+                                        name: '小光年',
+                                        value: 100
+                                    }]
+                                }, {
+                                    name: '小米1',
+                                    value: 4
+                                }, {
+                                    name: '小米2',
+                                    value: 4
+                                }]
+                            }, {
+                                name: '中兴',
+                                value: 1
+                            }]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    option: option,
+                    height: 600,
+                    title: [
+                        'hover the rect, the label should be added with a prefix (SERIES/LEVELX/ITEM)'
+                    ]
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    series: [
+                        {
+                            name: 'Phone or length',
+                            type:'treemap',
+                            roam: false,
+                            leafDepth: 2,
+                            label: {
+                                formatter: function (params) {
+                                    console.log('incb', params.name);
+                                    return params.name;
+                                }
+                            },
+                            upperLabel: {
+                                show: true,
+                                height: 30,
+                                color: 'green'
+                            },
+                            emphasis: {
+                                itemStyle: {
+                                    borderColor: 'red'
+                                },
+                                label: {
+                                    formatter: function (params) {
+                                        return 'LABEL ' + params.name;
+                                    }
+                                },
+                                upperLabel: {
+                                    formatter: function (params) {
+                                        return 'UPPERLABEL ' + params.name;
+                                    }
+                                }
+                            },
+                            levels: [{
+                                itemStyle: {
+                                    borderWidth: 0,
+                                    gapWidth: 30,
+                                    borderColor: '#999'
+                                }
+                            }, {
+                                itemStyle: {
+                                    borderWidth: 15,
+                                    gapWidth: 40,
+                                    borderColor: '#333'
+                                }
+                            }, {
+                                itemStyle: {
+                                    borderWidth: 10,
+                                    borderColor: '#555570'
+                                }
+                            }],
+                            data:[{
+                                name: '三星',
+                                value: 6,
+                            }, {
+                                name: '小米',
+                                value: 4,
+                                children: [{
+                                    name: '小米0',
+                                    value: 10,
+                                    children: [{
+                                        itemStyle: {
+                                            color: 'orange'
+                                        },
+                                        name: '小尺',
+                                        value: 400
+                                    }, {
+                                        name: '小寸',
+                                        value: 200
+                                    }, {
+                                        name: '小光年',
+                                        value: 100
+                                    }]
+                                }, {
+                                    name: '小米1',
+                                    value: 4
+                                }, {
+                                    name: '小米2',
+                                    value: 4
+                                }]
+                            }, {
+                                name: '中兴',
+                                value: 1
+                            }]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    option: option,
+                    height: 600,
+                    title: [
+                        'hover the rect:',
+                        '**label** should be added with a prefix "LABEL"',
+                        '**upper label** should be added with a prefix "UPPERLABEL"',
+                        '**drill down icon** should remain'
+                    ]
+                });
+            });
+
+        </script>
+
+
+
+
+
+    </body>
+</html>

@@ -23,7 +23,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
@@ -45,6 +45,8 @@ under the License.
         <div id="main5"></div>
         <div id="main6"></div>
         <div id="main7"></div>
+        <div id="main8"></div>
+        <div id="main9"></div>
 
 
 
@@ -377,7 +379,7 @@ under the License.
                         },
                         data: [
                             {
-                                value: 0, 
+                                value: 0,
                                 name: ''
                             }
                         ]
@@ -435,7 +437,7 @@ under the License.
                         },
                         data: [
                             {
-                                value: 0, 
+                                value: 0,
                                 name: ''
                             }
                         ]
@@ -493,7 +495,7 @@ under the License.
                         },
                         data: [
                             {
-                                value: 0, 
+                                value: 0,
                                 name: ''
                             }
                         ]
@@ -546,6 +548,86 @@ under the License.
                 chart7.setOption(option7, true);
                 date = null;
             }, 1000);
+
+
+            var option8 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        anchor: {
+                            show: true,
+                            icon: "image://asset/echarts-logo.png",
+                            size: 50,
+                            showAbove: true
+                        },
+                        pointer: {
+                            icon: "image://asset/echarts-logo.png",
+                            length: "70%"
+                        },
+                        detail: {formatter: '{value}%'},
+                        data: [{value: 58.46, name: '完成率'}]
+                    }
+                ]
+            };
+
+            var chart8 = testHelper.create(echarts, 'main8', {
+                title: [
+                    'pointer.icon: "image://url"',
+                    'anchor.icon: "image://url"'
+                ],
+                option: option8
+                // height: 1200,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            var option9 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        pointer: {
+                            icon: 'emptyCircle',
+                            itemStyle: {
+                                borderWidth: 10,
+                                borderColor: '#f00'
+                            },
+                        },
+                        anchor: {
+                            // show: true
+                        },
+                        detail: {formatter: '{value}%'},
+                        data: [{value: 58.46, name: '完成率'}]
+                    }
+                ]
+            };
+
+            var chart9 = testHelper.create(echarts, 'main9', {
+                title: [
+                    'pointer.icon: emptyCircle',
+                    'anchor.show: false'
+                ],
+                option: option9
+            });
 
         });
         </script>

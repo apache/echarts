@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="lib/reset.css" />
@@ -73,14 +73,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var option = {
                     tooltip: {
@@ -160,14 +153,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var option = {
                     tooltip: {
@@ -212,14 +198,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var option = {
                     tooltip: {
@@ -256,14 +235,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var option = {
                     tooltip: {
@@ -324,14 +296,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var option = {
                     tooltip: {
@@ -373,10 +338,6 @@ under the License.
 
             require([
                 'echarts'
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip'
             ], function (echarts) {
 
                 var dom = document.getElementById('main');
@@ -550,14 +511,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/pie',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var option = {
                     tooltip: {
@@ -627,14 +581,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/pie',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var option = {
                     tooltip: {
@@ -689,14 +636,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var option = {
                     tooltip: {
@@ -735,14 +675,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var option = {
                     title: {
@@ -851,14 +784,7 @@ under the License.
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'zrender/vml/vml'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var option = {
                     tooltip: {
@@ -886,75 +812,6 @@ under the License.
                 createChart('click', echarts, option, baseTop);
             })
         </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <!--<script>
-
-            require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
-            ], function (echarts) {
-
-                option = {
-                    tooltip : {
-                        trigger: 'axis',
-                        axisPointer: {
-                            type: 'line',
-                            label: {
-                                backgroundColor: '#6a7985'
-                            }
-                        },
-                        alwaysShowContent: true
-                    },
-                    xAxis : [
-                        {
-                            type : 'category',
-                            boundaryGap : false,
-                            data : ['周一','周二','周三','周四','周五','周六','周日']
-                        }
-                    ],
-                    yAxis : [
-                        {
-                            type : 'value'
-                        }
-                    ],
-                    series : [
-                        {
-                            name:'搜索引擎',
-                            type:'line',
-                            stack: '总量',
-                            label: {
-                                normal: {
-                                    show: true,
-                                    position: 'top'
-                                }
-                            },
-                            areaStyle: {normal: {}},
-                            data:[820, 932, 456, 934, 1290, 1330]
-                        }
-                    ]
-                };
-
-                createChart('alwaysShowContent', echarts, option);
-            })
-        </script>-->
 
 
     </body>

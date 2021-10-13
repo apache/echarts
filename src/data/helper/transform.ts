@@ -42,7 +42,7 @@ export type DataTransformConfig = unknown;
 
 export interface DataTransformOption {
     type: DataTransformType;
-    config: DataTransformConfig;
+    config?: DataTransformConfig;
     // Print the result via `console.log` when transform performed. Only work in dev mode for debug.
     print?: boolean;
 }
@@ -533,7 +533,6 @@ function applySingleDataTransform(
         return createSource(
             result.data,
             resultMetaRawOption,
-            null,
             null
         );
     });

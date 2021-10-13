@@ -28,7 +28,8 @@ import {
     OptionDataValueNumeric,
     StatesOptionMixin,
     SeriesEncodeOptionMixin,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    CallbackDataParams
 } from '../../util/types';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -37,9 +38,8 @@ import { mixin } from 'zrender/src/core/util';
 // [min,  Q1,  median (or Q2),  Q3,  max]
 type BoxplotDataValue = OptionDataValueNumeric[];
 
-
-export interface BoxplotStateOption {
-    itemStyle?: ItemStyleOption
+export interface BoxplotStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
 
@@ -55,7 +55,9 @@ interface ExtraStateOption {
     }
 }
 
-export interface BoxplotSeriesOption extends SeriesOption<BoxplotStateOption, ExtraStateOption>, BoxplotStateOption,
+export interface BoxplotSeriesOption
+    extends SeriesOption<BoxplotStateOption<CallbackDataParams>, ExtraStateOption>,
+    BoxplotStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin, SeriesEncodeOptionMixin {
     type?: 'boxplot'
 

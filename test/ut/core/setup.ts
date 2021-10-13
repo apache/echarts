@@ -17,12 +17,4 @@
 * under the License.
 */
 
-// import { JSDOM } from 'jsdom';
-import { Image } from 'canvas';
-
-// const { window } = new JSDOM();
-
-// (global as any).window = window;
-// (global as any).navigator = window.navigator;
-// (global as any).document = window.document;
-(global as any).Image = Image;
+export {};

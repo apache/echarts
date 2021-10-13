@@ -32,7 +32,10 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import SingleAxisModel from './AxisModel';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
+import { AxisBaseModel } from '../AxisBaseModel';
+import { CategoryAxisBaseOption } from '../axisCommonTypes';
 
+export const singleDimensions = ['single'];
 /**
  * Create a single coordinates system.
  */
@@ -44,7 +47,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
     /**
      * Add it just for draw tooltip.
      */
-    readonly dimensions = ['single'];
+    readonly dimensions = singleDimensions;
 
     name: string;
 
@@ -79,7 +82,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
         );
 
         const isCategory = axis.type === 'category';
-        axis.onBand = isCategory && axisModel.get('boundaryGap');
+        axis.onBand = isCategory && (axisModel as AxisBaseModel<CategoryAxisBaseOption>).get('boundaryGap');
         axis.inverse = axisModel.get('inverse');
         axis.orient = axisModel.get('orient');
 

@@ -19,16 +19,17 @@
 
 // Symbol factory
 
-import * as zrUtil from 'zrender/src/core/util';
+import { each, isArray, retrieve2 } from 'zrender/src/core/util';
 import * as graphic from './graphic';
 import BoundingRect from 'zrender/src/core/BoundingRect';
-import {calculateTextPosition} from 'zrender/src/contain/text';
+import { calculateTextPosition } from 'zrender/src/contain/text';
 import { Dictionary } from 'zrender/src/core/types';
-import { ZRColor } from './types';
+import { SymbolOptionMixin, ZRColor } from './types';
+import { parsePercent } from './number';
 
-type ECSymbol = graphic.Path & {
+export type ECSymbol = graphic.Path & {
     __isEmptyBrush?: boolean
-    setColor: (color: ZRColor, innerColor?: string) => void
+    setColor: (color: ZRColor, innerColor?: ZRColor) => void
     getColor: () => ZRColor
 };
 type SymbolCtor = { new(): ECSymbol };
@@ -174,9 +175,7 @@ const Arrow = graphic.Path.extend({
  */
 // TODO Use function to build symbol path.
 const symbolCtors: Dictionary<SymbolCtor> = {
-    // Use small height rect to simulate line.
-    // Avoid using stroke.
-    line: graphic.Rect as unknown as SymbolCtor,
+    line: graphic.Line as unknown as SymbolCtor,
 
     rect: graphic.Rect as unknown as SymbolCtor,
 
@@ -196,16 +195,13 @@ const symbolCtors: Dictionary<SymbolCtor> = {
 };
 
 
-// NOTICE Only use fill. No line!
 const symbolShapeMakers: Dictionary<SymbolShapeMaker> = {
 
-    line: function (x, y, w, h, shape: graphic.Rect['shape']) {
-        const thickness = 2;
-        // A thin line
-        shape.x = x;
-        shape.y = y + h / 2 - thickness / 2;
-        shape.width = w;
-        shape.height = thickness;
+    line: function (x, y, w, h, shape: graphic.Line['shape']) {
+        shape.x1 = x;
+        shape.y1 = y + h / 2;
+        shape.x2 = x + w;
+        shape.y2 = y + h / 2;
     },
 
     rect: function (x, y, w, h, shape: graphic.Rect['shape']) {
@@ -268,7 +264,7 @@ const symbolShapeMakers: Dictionary<SymbolShapeMaker> = {
 };
 
 export const symbolBuildProxies: Dictionary<ECSymbol> = {};
-zrUtil.each(symbolCtors, function (Ctor, name) {
+each(symbolCtors, function (Ctor, name) {
     symbolBuildProxies[name] = new Ctor();
 });
 
@@ -293,7 +289,7 @@ const SymbolClz = graphic.Path.extend({
         return res;
     },
 
-    buildPath: function (ctx, shape, inBundle) {
+    buildPath(ctx, shape, inBundle) {
         let symbolType = shape.symbolType;
         if (symbolType !== 'none') {
             let proxySymbol = symbolBuildProxies[symbolType];
@@ -311,14 +307,17 @@ const SymbolClz = graphic.Path.extend({
 });
 
 // Provide setColor helper method to avoid determine if set the fill or stroke outside
-function symbolPathSetColor(this: ECSymbol, color: ZRColor, innerColor?: string) {
+function symbolPathSetColor(this: ECSymbol, color: ZRColor, innerColor?: ZRColor) {
     if (this.type !== 'image') {
         const symbolStyle = this.style;
         if (this.__isEmptyBrush) {
             symbolStyle.stroke = color;
             symbolStyle.fill = innerColor || '#fff';
-            // TODO Same width with lineStyle in LineView.
+            // TODO Same width with lineStyle in LineView
             symbolStyle.lineWidth = 2;
+        }
+        else if (this.shape.symbolType === 'line') {
+            symbolStyle.stroke = color;
         }
         else {
             symbolStyle.fill = color;
@@ -385,4 +384,27 @@ export function createSymbol(
     }
 
     return symbolPath as ECSymbol;
+}
+
+export function normalizeSymbolSize(symbolSize: number | number[]): [number, number] {
+    if (!isArray(symbolSize)) {
+        symbolSize = [+symbolSize, +symbolSize];
+    }
+    return [symbolSize[0] || 0, symbolSize[1] || 0];
+}
+
+export function normalizeSymbolOffset(
+    symbolOffset: SymbolOptionMixin['symbolOffset'],
+    symbolSize: number[]
+): [number, number] {
+    if (symbolOffset == null) {
+        return;
+    }
+    if (!isArray(symbolOffset)) {
+        symbolOffset = [symbolOffset, symbolOffset];
+    }
+    return [
+        parsePercent(symbolOffset[0], symbolSize[0]) || 0,
+        parsePercent(retrieve2(symbolOffset[1], symbolOffset[0]), symbolSize[1]) || 0
+    ];
 }

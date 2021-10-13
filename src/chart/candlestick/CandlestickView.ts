@@ -27,10 +27,11 @@ import CandlestickSeriesModel, { CandlestickDataItemOption } from './Candlestick
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { StageHandlerProgressParams } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import {CandlestickItemLayout} from './candlestickLayout';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
+import { saveOldStyle } from '../../animation/basicTrasition';
 
 const SKIP_PROPS = ['color', 'borderColor'] as const;
 
@@ -41,7 +42,7 @@ class CandlestickView extends ChartView {
 
     private _isLargeDraw: boolean;
 
-    private _data: List;
+    private _data: SeriesData;
 
     render(seriesModel: CandlestickSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         // If there is clipPath created in large mode. Remove it.
@@ -137,6 +138,8 @@ class CandlestickView extends ChartView {
                             points: itemLayout.ends
                         }
                     }, seriesModel, newIdx);
+
+                    saveOldStyle(el);
                 }
 
                 setBoxCommon(el, data, newIdx, isSimpleBox);
@@ -270,7 +273,7 @@ function isNormalBoxClipped(clipArea: CoordinateSystemClipArea, itemLayout: Cand
     return clipped;
 }
 
-function setBoxCommon(el: NormalBoxPath, data: List, dataIndex: number, isSimpleBox?: boolean) {
+function setBoxCommon(el: NormalBoxPath, data: SeriesData, dataIndex: number, isSimpleBox?: boolean) {
     const itemModel = data.getItemModel(dataIndex) as Model<CandlestickDataItemOption>;
 
     el.useStyle(data.getItemVisual(dataIndex, 'style'));
@@ -356,7 +359,7 @@ function createLarge(seriesModel: CandlestickSeriesModel, group: graphic.Group, 
     }
 }
 
-function setLargeStyle(sign: number, el: LargeBoxPath, seriesModel: CandlestickSeriesModel, data: List) {
+function setLargeStyle(sign: number, el: LargeBoxPath, seriesModel: CandlestickSeriesModel, data: SeriesData) {
     // TODO put in visual?
     const borderColor = seriesModel.get(['itemStyle', sign > 0 ? 'borderColor' : 'borderColor0'])
         || seriesModel.get(['itemStyle', sign > 0 ? 'color' : 'color0']);

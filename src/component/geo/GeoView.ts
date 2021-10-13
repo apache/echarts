@@ -25,6 +25,8 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import GeoModel from '../../coord/geo/GeoModel';
 import { Payload, ZRElementEvent, ECEventData } from '../../util/types';
 import { getECData } from '../../util/innerStore';
+import { findEventDispatcher } from '../../util/event';
+import Element from 'zrender/src/Element';
 
 class GeoView extends ComponentView {
 
@@ -37,41 +39,40 @@ class GeoView extends ComponentView {
 
     private _model: GeoModel;
 
+    focusBlurEnabled = true;
+
     init(ecModel: GlobalModel, api: ExtensionAPI) {
-        const mapDraw = new MapDraw(api);
-        this._mapDraw = mapDraw;
-
-        this.group.add(mapDraw.group);
-
         this._api = api;
     }
 
     render(
         geoModel: GeoModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload
     ): void {
-        const mapDraw = this._mapDraw;
-        if (geoModel.get('show')) {
-            mapDraw.draw(geoModel, ecModel, api, this, payload);
-        }
-        else {
-            this._mapDraw.group.removeAll();
-        }
-
-        mapDraw.group.on('click', this._handleRegionClick, this);
-        mapDraw.group.silent = geoModel.get('silent');
-
         this._model = geoModel;
 
+        if (!geoModel.get('show')) {
+            this._mapDraw && this._mapDraw.remove();
+            this._mapDraw = null;
+            return;
+        }
+
+        if (!this._mapDraw) {
+            this._mapDraw = new MapDraw(api);
+        }
+        const mapDraw = this._mapDraw;
+        mapDraw.draw(geoModel, ecModel, api, this, payload);
+        mapDraw.group.on('click', this._handleRegionClick, this);
+        mapDraw.group.silent = geoModel.get('silent');
+        this.group.add(mapDraw.group);
         this.updateSelectStatus(geoModel, ecModel, api);
     }
 
     private _handleRegionClick(e: ZRElementEvent) {
-        let current = e.target;
         let eventData: ECEventData;
-        // TODO extract a util function
-        while (current && (eventData = getECData(current).eventData) == null) {
-            current = current.__hostTarget || current.parent;
-        }
+
+        findEventDispatcher(e.target, current => {
+            return (eventData = getECData(current).eventData) != null;
+        }, true);
 
         if (eventData) {
             this._api.dispatchAction({
@@ -92,6 +93,10 @@ class GeoView extends ComponentView {
                 return true;
             }
         });
+    }
+
+    findHighDownDispatchers(name: string): Element[] {
+        return this._mapDraw && this._mapDraw.findHighDownDispatchers(name, this._model);
     }
 
     dispose(): void {

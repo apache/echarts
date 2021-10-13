@@ -23,7 +23,7 @@ import * as clazzUtil from '../util/clazz';
 import ComponentModel from '../model/Component';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../core/ExtensionAPI';
-import {Payload, ViewRootGroup, ECEvent, EventQueryItem} from '../util/types';
+import {Payload, ViewRootGroup, ECActionEvent, EventQueryItem, ECElementEvent} from '../util/types';
 import Element from 'zrender/src/Element';
 import SeriesModel from '../model/Series';
 
@@ -32,7 +32,7 @@ interface ComponentView {
      * Implement it if needed.
      */
     updateTransform?(
-        seriesModel: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload
+        model: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload
     ): void | {update: true};
 
     /**
@@ -40,8 +40,24 @@ interface ComponentView {
      * Implement it if needed.
      */
     filterForExposedEvent(
-        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
+        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECActionEvent | ECElementEvent
     ): boolean;
+
+    /**
+     * Find dispatchers for highlight/downplay by name.
+     * If this methods provided, hover link (within the same name) is enabled in component.
+     * That is, in component, a name can correspond to multiple dispatchers.
+     * Those dispatchers can have no common ancestor.
+     * The highlight/downplay state change will be applied on the
+     * dispatchers and their descendents.
+     *
+     * @return Must return an array but not null/undefined.
+     */
+    findHighDownDispatchers?(
+        name: string
+    ): Element[];
+
+    focusBlurEnabled?: boolean;
 }
 
 class ComponentView {

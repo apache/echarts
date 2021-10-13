@@ -62,6 +62,7 @@ const inner = makeInner<InnerStore, any>();
 
 export function createAxisLabels(axis: Axis): {
     labels: {
+        level?: number,
         formattedLabel: string,
         rawLabel: string,
         tickValue: number
@@ -176,6 +177,7 @@ function makeRealNumberLabels(axis: Axis) {
     return {
         labels: zrUtil.map(ticks, function (tick, idx) {
             return {
+                level: tick.level,
                 formattedLabel: labelFormatter(tick, idx),
                 rawLabel: axis.scale.getLabel(tick),
                 tickValue: tick.value

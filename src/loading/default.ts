@@ -82,7 +82,9 @@ export default function defaultLoading(
             fontWeight: opts.fontWeight,
             fontStyle: opts.fontStyle,
             fontFamily: opts.fontFamily
-        }
+        },
+        zlevel: opts.zlevel,
+        z: 10001
     });
 
     const labelRect = new graphic.Rect({

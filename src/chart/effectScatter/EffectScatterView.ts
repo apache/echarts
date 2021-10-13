@@ -41,8 +41,14 @@ class EffectScatterView extends ChartView {
     render(seriesModel: EffectScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const data = seriesModel.getData();
         const effectSymbolDraw = this._symbolDraw;
-        effectSymbolDraw.updateData(data);
+        effectSymbolDraw.updateData(data, {clipShape: this._getClipShape(seriesModel)});
         this.group.add(effectSymbolDraw.group);
+    }
+
+    _getClipShape(seriesModel: EffectScatterSeriesModel) {
+        const coordSys = seriesModel.coordinateSystem;
+        const clipArea = coordSys && coordSys.getArea && coordSys.getArea();
+        return seriesModel.get('clip', true) ? clipArea : null;
     }
 
     updateTransform(seriesModel: EffectScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {

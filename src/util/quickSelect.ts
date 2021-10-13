@@ -67,7 +67,6 @@ function select<T>(arr: T[], left: number, right: number, nth: number, compareFu
 
 /**
  * @example
- *     let quickSelect = require('echarts/core/quickSelect');
  *     let arr = [5, 2, 1, 4, 3]
  *     quickSelect(arr, 3);
  *     quickSelect(arr, 0, 3, 1, function (a, b) {return a - b});

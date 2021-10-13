@@ -38,6 +38,7 @@ export default function mapSymbolLayout(ecModel: GlobalModel) {
         zrUtil.each(mapSeries.seriesGroup, function (subMapSeries) {
             const geo = subMapSeries.coordinateSystem;
             const data = subMapSeries.originalData;
+
             if (subMapSeries.get('showLegendSymbol') && ecModel.getComponent('legend')) {
                 data.each(data.mapDimension('value'), function (value, idx) {
                     const name = data.getName(idx);
@@ -52,7 +53,7 @@ export default function mapSymbolLayout(ecModel: GlobalModel) {
 
                     const offset = mapSymbolOffsets[name] || 0;
 
-                    const point = geo.dataToPoint(region.center);
+                    const point = geo.dataToPoint(region.getCenter());
 
                     mapSymbolOffsets[name] = offset + 1;
 
@@ -64,7 +65,7 @@ export default function mapSymbolLayout(ecModel: GlobalModel) {
             }
         });
 
-        // Show label of those region not has legendSymbol(which is offset 0)
+        // Show label of those region not has legendIcon (which is offset 0)
         const data = mapSeries.getData();
         data.each(function (idx) {
             const name = data.getName(idx);
