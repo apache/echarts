@@ -23,15 +23,7 @@ const {build} = require('esbuild');
 const commander = require('commander');
 const outFilePath = path.resolve(__dirname, '../dist/echarts.js');
 
-const umdMark = '// ------------- WRAPPED UMD --------------- //';
-const umdWrapperHead = `
-${umdMark}
-(function () {
-    var g = typeof self !== 'undefined' ? self : this;
-    g.__DEV__ = true;
-    g.process = { env: { NODE_ENV: 'development' } };
-})();
-(function (root, factory) {
+const umdWrapperHead = `(function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define(['exports'], factory);
@@ -57,7 +49,8 @@ build({
     banner: umdWrapperHead,
     footer: umdWrapperTail,
     define: {
-        'process.env.NODE_ENV': '"development"'
+        'process.env.NODE_ENV': '"development"',
+        '__DEV__': 'true'
     },
     watch: {
         async onRebuild(error) {
