@@ -818,7 +818,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 if (chart.group === groupId) {
                     const canvas = isSvg
                         ? (chart.getZr().painter as SVGPainter).getSvgDom().innerHTML
-                        : chart.getRenderedCanvas(clone(opts));
+                        : chart.renderToCanvas(clone(opts));
                     const boundingRect = chart.getDom().getBoundingClientRect();
                     left = mathMin(boundingRect.left, left);
                     top = mathMin(boundingRect.top, top);
