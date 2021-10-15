@@ -413,7 +413,7 @@ export default class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
 
     static defaultOption: CustomSeriesOption = {
         coordinateSystem: 'cartesian2d', // Can be set as 'none'
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         legendHoverLink: true,
 

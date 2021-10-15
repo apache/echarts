@@ -35,6 +35,7 @@ import {
 } from '../util/types';
 import { SeriesTaskContext, SeriesTask } from '../core/Scheduler';
 import SeriesData from '../data/SeriesData';
+import { traverseElements } from '../util/graphic';
 
 const inner = modelUtil.makeInner<{
     updateMethod: keyof ChartView
@@ -191,6 +192,16 @@ class ChartView {
     // FIXME never used?
     updateVisual(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         this.render(seriesModel, ecModel, api, payload);
+    }
+
+    /**
+     * Traverse the new rendered elements.
+     *
+     * It will traverse the new added element in progressive rendering.
+     * And traverse all in normal rendering.
+     */
+    eachRendered(cb: (el: Element) => boolean | void) {
+        traverseElements(this.group, cb);
     }
 
     static markUpdateMethod(payload: Payload, methodName: keyof ChartView): void {

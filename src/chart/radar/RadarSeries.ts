@@ -150,7 +150,7 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
     }
 
     static defaultOption: RadarSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         colorBy: 'data',
         coordinateSystem: 'radar',

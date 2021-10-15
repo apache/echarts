@@ -132,7 +132,7 @@ class GeoModel extends ComponentModel<GeoOption> {
 
     static defaultOption: GeoOption = {
 
-        zlevel: 0,
+        // zlevel: 0,
 
         z: 0,
 

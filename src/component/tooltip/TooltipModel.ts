@@ -82,7 +82,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
     static dependencies = ['axisPointer'];
 
     static defaultOption: TooltipOption = {
-        zlevel: 0,
+        // zlevel: 0,
 
         z: 60,
 

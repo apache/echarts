@@ -201,6 +201,7 @@ export default class CustomChartView extends ChartView {
     readonly type = CustomChartView.type;
 
     private _data: SeriesData;
+    private _progressiveEls: Element[];
 
     render(
         customSeries: CustomSeriesModel,
@@ -208,6 +209,10 @@ export default class CustomChartView extends ChartView {
         api: ExtensionAPI,
         payload: Payload
     ): void {
+
+        // Clear previously rendered progressive elements.
+        this._progressiveEls = null;
+
         const oldData = this._data;
         const data = customSeries.getData();
         const group = this.group;
@@ -271,6 +276,8 @@ export default class CustomChartView extends ChartView {
     ): void {
         const data = customSeries.getData();
         const renderItem = makeRenderItem(customSeries, data, ecModel, api);
+        const progressiveEls: Element[] = this._progressiveEls = [];
+
         function setIncrementalAndHoverLayer(el: Displayable) {
             if (!el.isGroup) {
                 el.incremental = true;
@@ -281,8 +288,15 @@ export default class CustomChartView extends ChartView {
             const el = createOrUpdateItem(
                 null, null, idx, renderItem(idx, payload), customSeries, this.group, data
             );
-            el && el.traverse(setIncrementalAndHoverLayer);
+            if (el) {
+                el.traverse(setIncrementalAndHoverLayer);
+                progressiveEls.push(el);
+            }
         }
+    }
+
+    eachRendered(cb: (el: Element) => boolean | void) {
+        graphicUtil.traverseElements(this._progressiveEls || this.group, cb);
     }
 
     filterForExposedEvent(

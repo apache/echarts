@@ -174,7 +174,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
 
     static defaultOption: RadarOption = {
 
-        zlevel: 0,
+        // zlevel: 0,
 
         z: 0,
 

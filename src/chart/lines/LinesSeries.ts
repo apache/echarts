@@ -372,9 +372,18 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         return progressiveThreshold;
     }
 
+    getZLevelKey() {
+        const effectModel = this.getModel('effect');
+        const trailLength = effectModel.get('trailLength');
+        return this.getData().count() > this.getProgressiveThreshold()
+            // Each progressive series has individual key.
+            ? this.id
+            : (effectModel.get('show') && trailLength > 0 ? trailLength + '' : '');
+    }
+
     static defaultOption: LinesSeriesOption = {
         coordinateSystem: 'geo',
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         legendHoverLink: true,
 
