@@ -458,7 +458,10 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     isAnimationEnabled(): boolean {
-        if (env.node) {
+        const ecModel = this.ecModel;
+        // Disable animation if using echarts in node but not give ssr flag.
+        // In ssr mode, renderToString will generate svg with css animation.
+        if (env.node && !(ecModel && ecModel.ssr)) {
             return false;
         }
         let animationEnabled = this.getShallow('animation');

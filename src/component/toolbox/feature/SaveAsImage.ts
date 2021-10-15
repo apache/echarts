@@ -74,6 +74,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
         }
         // IE or old Edge
         else {
+            // @ts-ignore
             if (window.navigator.msSaveOrOpenBlob || isSvg) {
                 const parts = url.split(',');
                 // data:[<mime type>][;charset=<charset>][;base64],<encoded data>
@@ -88,13 +89,14 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
                 // (just a url-encoded string through `encodeURIComponent`)
                 base64Encoded && (bstr = window.atob(bstr));
                 const filename = title + '.' + type;
+                // @ts-ignore
                 if (window.navigator.msSaveOrOpenBlob) {
                     let n = bstr.length;
                     const u8arr = new Uint8Array(n);
                     while (n--) {
                         u8arr[n] = bstr.charCodeAt(n);
                     }
-                    const blob = new Blob([u8arr]);
+                    const blob = new Blob([u8arr]);// @ts-ignore
                     window.navigator.msSaveOrOpenBlob(blob, filename);
                 }
                 else {
@@ -142,7 +144,5 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
         return defaultOption;
     }
 }
-
-SaveAsImage.prototype.unusable = !env.canvasSupported;
 
 export default SaveAsImage;

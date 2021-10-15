@@ -192,6 +192,9 @@ class GlobalModel extends Model<ECUnitOption> {
     // Injectable properties:
     scheduler: Scheduler;
 
+    // If in ssr mode.
+    // TODO put in a better place?
+    ssr: boolean;
 
     init(
         option: ECBasicOption,

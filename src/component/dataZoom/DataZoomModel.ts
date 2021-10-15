@@ -244,10 +244,6 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
     private _doInit(inputRawOption: Opts): void {
         const thisOption = this.option;
 
-        // if (!env.canvasSupported) {
-        //     thisOption.realtime = false;
-        // }
-
         this._setDefaultThrottle(inputRawOption);
 
         this._updateRangeUse(inputRawOption);

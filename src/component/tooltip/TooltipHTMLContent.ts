@@ -189,16 +189,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: 
     enableTransition && transitionDuration && cssText.push(assembleTransition(transitionDuration, onlyFade));
 
     if (backgroundColor) {
-        if (env.canvasSupported) {
-            cssText.push('background-color:' + backgroundColor);
-        }
-        else {
-            // for ie
-            cssText.push(
-                'background-color:#' + toHex(backgroundColor)
-            );
-            cssText.push('filter:alpha(opacity=70)');
-        }
+        cssText.push('background-color:' + backgroundColor);
     }
 
     // Border style

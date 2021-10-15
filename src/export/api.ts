@@ -39,6 +39,8 @@ export * as helper from './api/helper';
 
 export {use} from '../extension';
 
+export {setPlatformAPI} from 'zrender/src/core/platform';
+
 //////////////// Helper Methods /////////////////////
 export {default as parseGeoJSON} from '../coord/geo/parseGeoJson';
 export {default as parseGeoJson} from '../coord/geo/parseGeoJson';

@@ -202,13 +202,6 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     optionUpdated(newOption: Opts, isInit?: boolean) {
         const thisOption = this.option;
 
-        // FIXME
-        // necessary?
-        // Disable realtime view update if canvas is not supported.
-        if (!env.canvasSupported) {
-            thisOption.realtime = false;
-        }
-
         !isInit && visualSolution.replaceVisualOption(
             thisOption, newOption, this.replacableOptionKeys
         );

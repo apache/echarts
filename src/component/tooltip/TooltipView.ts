@@ -171,7 +171,7 @@ class TooltipView extends ComponentView {
     private _updatePosition: ReturnType<typeof throttle> | TooltipView['_doUpdatePosition'];
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
-        if (env.node) {
+        if (env.node || !api.getDom()) {
             return;
         }
 
@@ -191,7 +191,7 @@ class TooltipView extends ComponentView {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        if (env.node) {
+        if (env.node || !api.getDom()) {
             return;
         }
 
@@ -301,7 +301,7 @@ class TooltipView extends ComponentView {
         api: ExtensionAPI,
         payload: ShowTipPayload
     ) {
-        if (payload.from === this.uid || env.node) {
+        if (payload.from === this.uid || env.node || !api.getDom()) {
             return;
         }
 
@@ -1013,7 +1013,7 @@ class TooltipView extends ComponentView {
     }
 
     dispose(ecModel: GlobalModel, api: ExtensionAPI) {
-        if (env.node) {
+        if (env.node || !api.getDom()) {
             return;
         }
         this._tooltipContent.dispose();
