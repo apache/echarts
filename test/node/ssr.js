@@ -61,7 +61,6 @@ chart.setOption({
         },
     ],
 });
-// chart.getZr().animation.update(true);
-const str = chart.getZr().painter.renderToString();
+const str = chart.renderToString();
 console.log(str);
 chart.dispose();

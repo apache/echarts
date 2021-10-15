@@ -111,7 +111,7 @@ import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import { seriesSymbolTask, dataSymbolTask } from '../visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from '../visual/helper';
-import { deprecateLog } from '../util/log';
+import { deprecateLog, deprecateReplaceLog } from '../util/log';
 import { handleLegacySelectEvents } from '../legacy/dataSelectAction';
 
 import { registerExternalTransform } from '../data/helper/transform';
@@ -656,10 +656,10 @@ class ECharts extends Eventful<ECEventDefinition> {
     }
 
     /**
-     * @DEPRECATED
+     * @deprecated
      */
     private setTheme(): void {
-        console.error('ECharts#setTheme() is DEPRECATED in ECharts 3.0');
+        deprecateLog('ECharts#setTheme() is DEPRECATED in ECharts 3.0');
     }
 
     // We don't want developers to use getModel directly.
@@ -687,16 +687,43 @@ class ECharts extends Eventful<ECEventDefinition> {
 
     /**
      * Get canvas which has all thing rendered
+     * @deprecated Use renderToCanvas instead.
      */
-    getRenderedCanvas(opts?: {
+    getRenderedCanvas(opts?: any): HTMLCanvasElement {
+        if (__DEV__) {
+            deprecateReplaceLog('getRenderedCanvas', 'renderToCanvas');
+        }
+        return this.renderToCanvas(opts);
+    }
+
+    renderToCanvas(opts?: {
         backgroundColor?: ZRColor
         pixelRatio?: number
     }): HTMLCanvasElement {
         opts = opts || {};
-        return (this._zr.painter as CanvasPainter).getRenderedCanvas({
+        const painter = this._zr.painter;
+        if (__DEV__) {
+            if (painter.type !== 'canvas') {
+                throw new Error('renderToCanvas can only been used in the canvas renderer.');
+            }
+        }
+        return (painter as CanvasPainter).getRenderedCanvas({
             backgroundColor: (opts.backgroundColor || this._model.get('backgroundColor')) as ColorString,
             pixelRatio: opts.pixelRatio || this.getDevicePixelRatio()
         });
+    }
+
+    renderToString(): string {
+        const painter = this._zr.painter;
+        if (__DEV__) {
+            if (!this._ssr) {
+                throw new Error('renderToString can only been used in SSR mode.');
+            }
+            if (painter.type !== 'svg') {
+                throw new Error('renderToString can only been used in the svg renderer.');
+            }
+        }
+        return painter.renderToString() as any;
     }
 
     /**
@@ -750,7 +777,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         const url = this._zr.painter.getType() === 'svg'
             ? this.getSvgDataURL()
-            : this.getRenderedCanvas(opts).toDataURL(
+            : this.renderToCanvas(opts).toDataURL(
                 'image/' + (opts && opts.type || 'png')
             );
 
