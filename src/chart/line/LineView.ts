@@ -44,8 +44,6 @@ import type {
     DisplayState,
     LabelOption,
     ParsedValue,
-    ECElementEvent,
-    CallbackSerieParams
 } from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';

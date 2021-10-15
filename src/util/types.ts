@@ -663,18 +663,6 @@ export interface OptionEncode extends OptionEncodeVisualDimensions {
 export type OptionEncodeValue = DimensionLoose | DimensionLoose[];
 export type EncodeDefaulter = (source: Source, dimCount: number) => OptionEncode;
 
-export interface CallbackSerieParams {
-    index: number;
-    id: string;
-    name: string;
-    componentType: string;
-    componentSubType: string;
-    componentIndex: number,
-    dataType?: string;
-    dimensionNames?: DimensionName[];
-    encode?: DimensionUserOuputEncode;
-}
-
 // TODO: TYPE Different callback param for different series
 export interface CallbackDataParams {
     // component main type
