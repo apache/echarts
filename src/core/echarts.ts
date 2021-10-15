@@ -26,7 +26,6 @@ import {
     bind,
     clone,
     setAsPrimitive,
-    createCanvas,
     extend,
     HashMap,
     createHashMap,
@@ -34,10 +33,8 @@ import {
     defaults,
     isDom,
     isArray,
-    $override,
     noop
 } from 'zrender/src/core/util';
-import * as colorTool from 'zrender/src/tool/color';
 import env from 'zrender/src/core/env';
 import timsort from 'zrender/src/core/timsort';
 import Eventful, { EventCallbackSingleParam } from 'zrender/src/core/Eventful';
@@ -113,7 +110,7 @@ import {
 import Displayable from 'zrender/src/graphic/Displayable';
 import { seriesSymbolTask, dataSymbolTask } from '../visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from '../visual/helper';
-import { deprecateLog } from '../util/log';
+import { deprecateLog, deprecateReplaceLog } from '../util/log';
 import { handleLegacySelectEvents } from '../legacy/dataSelectAction';
 
 import { registerExternalTransform } from '../data/helper/transform';
@@ -131,6 +128,7 @@ import lifecycle, {
     UpdateLifecycleParams,
     UpdateLifecycleTransitionOpt
 } from './lifecycle';
+import { platformApi, setPlatformAPI } from 'zrender/src/core/platform';
 
 declare let global: any;
 
@@ -324,6 +322,7 @@ type EChartsInitOpts = {
     renderer?: RendererType,
     devicePixelRatio?: number,
     useDirtyRect?: boolean,
+    ssr?: boolean,
     width?: number,
     height?: number
 };
@@ -339,6 +338,8 @@ class ECharts extends Eventful<ECEventDefinition> {
      * @readonly
      */
     group: string;
+
+    private _ssr: boolean;
 
     private _zr: zrender.ZRenderType;
 
@@ -426,8 +427,10 @@ class ECharts extends Eventful<ECEventDefinition> {
             devicePixelRatio: opts.devicePixelRatio,
             width: opts.width,
             height: opts.height,
+            ssr: opts.ssr,
             useDirtyRect: opts.useDirtyRect == null ? defaultUseDirtyRect : opts.useDirtyRect
         });
+        this._ssr = opts.ssr;
 
         // Expect 60 fps.
         this._throttledZrFlush = throttle(bind(zr.flush, zr), 17);
@@ -557,6 +560,10 @@ class ECharts extends Eventful<ECEventDefinition> {
         return this._zr;
     }
 
+    isSSR(): boolean {
+        return this._ssr;
+    }
+
     /**
      * Usage:
      * chart.setOption(option, notMerge, lazyUpdate);
@@ -603,6 +610,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             const theme = this._theme;
             const ecModel = this._model = new GlobalModel();
             ecModel.scheduler = this._scheduler;
+            ecModel.ssr = this._ssr;
             ecModel.init(null, null, null, theme, this._locale, optionManager);
         }
 
@@ -631,7 +639,10 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             // Ensure zr refresh sychronously, and then pixel in canvas can be
             // fetched after `setOption`.
-            this._zr.flush();
+            if (!this._ssr) {
+                // not use flush when using ssr mode.
+                this._zr.flush();
+            }
 
             this[PENDING_UPDATE] = null;
             this[IN_MAIN_PROCESS_KEY] = false;
@@ -642,10 +653,10 @@ class ECharts extends Eventful<ECEventDefinition> {
     }
 
     /**
-     * @DEPRECATED
+     * @deprecated
      */
     private setTheme(): void {
-        console.error('ECharts#setTheme() is DEPRECATED in ECharts 3.0');
+        deprecateLog('ECharts#setTheme() is DEPRECATED in ECharts 3.0');
     }
 
     // We don't want developers to use getModel directly.
@@ -673,19 +684,43 @@ class ECharts extends Eventful<ECEventDefinition> {
 
     /**
      * Get canvas which has all thing rendered
+     * @deprecated Use renderToCanvas instead.
      */
-    getRenderedCanvas(opts?: {
+    getRenderedCanvas(opts?: any): HTMLCanvasElement {
+        if (__DEV__) {
+            deprecateReplaceLog('getRenderedCanvas', 'renderToCanvas');
+        }
+        return this.renderToCanvas(opts);
+    }
+
+    renderToCanvas(opts?: {
         backgroundColor?: ZRColor
         pixelRatio?: number
     }): HTMLCanvasElement {
-        if (!env.canvasSupported) {
-            return;
-        }
         opts = opts || {};
-        return (this._zr.painter as CanvasPainter).getRenderedCanvas({
+        const painter = this._zr.painter;
+        if (__DEV__) {
+            if (painter.type !== 'canvas') {
+                throw new Error('renderToCanvas can only been used in the canvas renderer.');
+            }
+        }
+        return (painter as CanvasPainter).getRenderedCanvas({
             backgroundColor: (opts.backgroundColor || this._model.get('backgroundColor')) as ColorString,
             pixelRatio: opts.pixelRatio || this.getDevicePixelRatio()
         });
+    }
+
+    renderToSVGString(): string {
+        const painter = this._zr.painter;
+        if (__DEV__) {
+            if (!this._ssr) {
+                throw new Error('renderToSVGString can only been used in SSR mode.');
+            }
+            if (painter.type !== 'svg') {
+                throw new Error('renderToSVGString can only been used in the svg renderer.');
+            }
+        }
+        return painter.renderToString() as any;
     }
 
     /**
@@ -739,7 +774,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         const url = this._zr.painter.getType() === 'svg'
             ? this.getSvgDataURL()
-            : this.getRenderedCanvas(opts).toDataURL(
+            : this.renderToCanvas(opts).toDataURL(
                 'image/' + (opts && opts.type || 'png')
             );
 
@@ -763,9 +798,6 @@ class ECharts extends Eventful<ECEventDefinition> {
             return;
         }
 
-        if (!env.canvasSupported) {
-            return;
-        }
         const isSvg = opts.type === 'svg';
         const groupId = this.group;
         const mathMin = Math.min;
@@ -783,7 +815,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 if (chart.group === groupId) {
                     const canvas = isSvg
                         ? (chart.getZr().painter as SVGPainter).getSvgDom().innerHTML
-                        : chart.getRenderedCanvas(clone(opts));
+                        : chart.renderToCanvas(clone(opts));
                     const boundingRect = chart.getDom().getBoundingClientRect();
                     left = mathMin(boundingRect.left, left);
                     top = mathMin(boundingRect.top, top);
@@ -803,7 +835,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             bottom *= dpr;
             const width = right - left;
             const height = bottom - top;
-            const targetCanvas = createCanvas();
+            const targetCanvas = platformApi.createCanvas();
             const zr = zrender.init(targetCanvas, {
                 renderer: isSvg ? 'svg' : 'canvas'
             });
@@ -1118,7 +1150,10 @@ class ECharts extends Eventful<ECEventDefinition> {
         }
         this._disposed = true;
 
-        modelUtil.setAttribute(this.getDom(), DOM_ATTRIBUTE_KEY, '');
+        const dom = this.getDom();
+        if (dom) {
+            modelUtil.setAttribute(this.getDom(), DOM_ATTRIBUTE_KEY, '');
+        }
 
         const chart = this;
         const api = chart._api;
@@ -1628,24 +1663,14 @@ class ECharts extends Eventful<ECEventDefinition> {
                 render(this, ecModel, api, payload, updateParams);
 
                 // Set background
-                let backgroundColor = ecModel.get('backgroundColor') || 'transparent';
+                const backgroundColor = ecModel.get('backgroundColor') || 'transparent';
                 const darkMode = ecModel.get('darkMode');
 
-                // In IE8
-                if (!env.canvasSupported) {
-                    const colorArr = colorTool.parse(backgroundColor as ColorString);
-                    backgroundColor = colorTool.stringify(colorArr, 'rgb');
-                    if (colorArr[3] === 0) {
-                        backgroundColor = 'transparent';
-                    }
-                }
-                else {
-                    zr.setBackgroundColor(backgroundColor);
+                zr.setBackgroundColor(backgroundColor);
 
-                    // Force set dark mode.
-                    if (darkMode != null && darkMode !== 'auto') {
-                        zr.setDarkMode(darkMode);
-                    }
+                // Force set dark mode.
+                if (darkMode != null && darkMode !== 'auto') {
+                    zr.setDarkMode(darkMode);
                 }
 
                 lifecycle.trigger('afterupdate', ecModel, api);
@@ -2261,11 +2286,6 @@ class ECharts extends Eventful<ECEventDefinition> {
          */
         function updateBlend(seriesModel: SeriesModel, chartView: ChartView): void {
             const blendMode = seriesModel.get('blendMode') || null;
-            if (__DEV__) {
-                if (!env.canvasSupported && blendMode && blendMode !== 'source-over') {
-                    console.warn('Only canvas support blendMode');
-                }
-            }
             chartView.eachRendered((el: Displayable) => {
                 // FIXME marker and other components
                 if (!el.isGroup) {
@@ -2578,32 +2598,35 @@ export function init(
     theme?: string | object,
     opts?: EChartsInitOpts
 ): EChartsType {
-    if (__DEV__) {
-        if (!dom) {
-            throw new Error('Initialize failed: invalid dom.');
-        }
-    }
-
-    const existInstance = getInstanceByDom(dom);
-    if (existInstance) {
+    const isClient = !(opts && opts.ssr);
+    if (isClient) {
         if (__DEV__) {
-            console.warn('There is a chart instance already initialized on the dom.');
+            if (!dom) {
+                throw new Error('Initialize failed: invalid dom.');
+            }
         }
-        return existInstance;
-    }
 
-    if (__DEV__) {
-        if (isDom(dom)
-            && dom.nodeName.toUpperCase() !== 'CANVAS'
-            && (
-                (!dom.clientWidth && (!opts || opts.width == null))
-                || (!dom.clientHeight && (!opts || opts.height == null))
-            )
-        ) {
-            console.warn('Can\'t get DOM width or height. Please check '
-            + 'dom.clientWidth and dom.clientHeight. They should not be 0.'
-            + 'For example, you may need to call this in the callback '
-            + 'of window.onload.');
+        const existInstance = getInstanceByDom(dom);
+        if (existInstance) {
+            if (__DEV__) {
+                console.warn('There is a chart instance already initialized on the dom.');
+            }
+            return existInstance;
+        }
+
+        if (__DEV__) {
+            if (isDom(dom)
+                && dom.nodeName.toUpperCase() !== 'CANVAS'
+                && (
+                    (!dom.clientWidth && (!opts || opts.width == null))
+                    || (!dom.clientHeight && (!opts || opts.height == null))
+                )
+            ) {
+                console.warn('Can\'t get DOM width or height. Please check '
+                + 'dom.clientWidth and dom.clientHeight. They should not be 0.'
+                + 'For example, you may need to call this in the callback '
+                + 'of window.onload.');
+            }
         }
     }
 
@@ -2611,7 +2634,7 @@ export function init(
     chart.id = 'ec_' + idBase++;
     instances[chart.id] = chart;
 
-    modelUtil.setAttribute(dom, DOM_ATTRIBUTE_KEY, chart.id);
+    isClient && modelUtil.setAttribute(dom, DOM_ATTRIBUTE_KEY, chart.id);
 
     enableConnect(chart);
 
@@ -2890,7 +2913,8 @@ export function registerLoading(
  * But in node environment canvas may be created by node-canvas.
  * So we need to specify how to create a canvas instead of using document.createElement('canvas')
  *
- * Be careful of using it in the browser.
+ *
+ * @deprecated use setPlatformAPI({ createCanvas }) instead.
  *
  * @example
  *     let Canvas = require('canvas');
@@ -2901,7 +2925,12 @@ export function registerLoading(
  *     });
  */
 export function setCanvasCreator(creator: () => HTMLCanvasElement): void {
-    $override('createCanvas', creator);
+    if (__DEV__) {
+        deprecateLog('setCanvasCreator is deprecated. Use setPlatformAPI({ createCanvas }) instead.');
+    }
+    setPlatformAPI({
+        createCanvas: creator
+    });
 }
 
 /**

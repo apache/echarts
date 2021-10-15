@@ -68,7 +68,7 @@
   "dataZoom-axis-type": 3,
   "dataZoom-clip": 3,
   "dataZoom-extreme": 1,
-  "dataZoom-rainfall": 2,
+  "dataZoom-rainfall": 1,
   "dataZoom-rainfall-connect": 1,
   "dataZoom-rainfall-inside": 1,
   "dataZoom-scatter-category": 2,
