@@ -76,20 +76,12 @@ under the License.
                     ]
                 });
 
-                chart.on('polyLineClick',(params) => {
-                    console.log('polyLineClick', params);
+                chart.on('click', function (params) {
+                    console.log(params);
                 });
 
-                chart.on('polyLineMouseover',(params) => {
-                    console.log('polyLineMouseover', params);
-                });
-
-                chart.on('polygonClick',(params) => {
-                    console.log('polygonClick', params);
-                });
-
-                chart.on('polygonMouseover',(params) => {
-                    console.log('polygonMouseover', params);
+                chart.on('mouseover', function (params) {
+                    console.log(params);
                 });
             });
 

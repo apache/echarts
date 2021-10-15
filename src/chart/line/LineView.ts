@@ -59,9 +59,8 @@ import { getECData } from '../../util/innerStore';
 import { createFloat32Array } from '../../util/vendor';
 import { convertToColorString } from '../../util/format';
 import { lerp } from 'zrender/src/tool/color';
-import { findEventDispatcher } from '../../util/event';
-import { extend } from 'zrender/src/core/util';
-import Path from 'zrender/src/graphic/Path';
+import Element from 'zrender/src/Element';
+
 
 type PolarArea = ReturnType<Polar['getArea']>;
 type Cartesian2DArea = ReturnType<Cartesian2D['getArea']>;
@@ -882,45 +881,22 @@ class LineView extends ChartView {
         this._points = points;
         this._step = step;
         this._valueOrigin = valueOrigin;
-        this.mouseEvent(seriesModel, api);
+        this.mouseEvent(seriesModel, polyline, 'polyline');
+        polygon && this.mouseEvent(seriesModel, polygon, 'polygon');
     }
 
-    dispose() { 
-        this._polyline.off('click').off('mouseover');
-        this._polygon && this._polygon.off('click').off('mouseover');
-    }
+    dispose() { }
 
-    mouseEvent(seriesModel: LineSeriesModel, api: ExtensionAPI) {
-        const bindEvent = (poly: Path, eventName: 'click' | 'mouseover', ecEventName: string) => {
-            poly.off(eventName).on(eventName, (e) => {
-                const el = e.target;
-                let params: CallbackSerieParams;
-                const dispatcher = findEventDispatcher(el, (parent) => {
-                    const ecData = getECData(parent);
-                    if (ecData && ecData.seriesIndex != null) {
-                        params = seriesModel.getSerieParams();
-                        return true;
-                    }
-                }, true);
-    
-                if (dispatcher) {
-                    api.dispatchAction({
-                        ...params,
-                        type: ecEventName,
-                    });
-                }
-            });
-        }
-
-        const polyline = this._polyline;
-        bindEvent(polyline, 'click', 'polyLineClick');
-        bindEvent(polyline, 'mouseover', 'polyLineMouseover');
-
-        const polygon = this._polygon;
-        if (polygon) {
-            bindEvent(polygon, 'click', 'polygonClick');
-            bindEvent(polygon, 'mouseover', 'polygonMouseover');
-        }
+    mouseEvent(seriesModel: LineSeriesModel, el: Element, areaType: string) {
+        getECData(el).eventData = {
+            componentType: 'series',
+            componentSubType: 'line',
+            componentIndex: seriesModel.componentIndex,
+            seriesIndex: seriesModel.componentIndex,
+            seriesName: seriesModel.name,
+            seriesType: 'line',
+            areaType,
+        };
     }
 
     highlight(
