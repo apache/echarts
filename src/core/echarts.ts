@@ -26,7 +26,6 @@ import {
     bind,
     clone,
     setAsPrimitive,
-    createCanvas,
     extend,
     HashMap,
     createHashMap,
@@ -34,10 +33,8 @@ import {
     defaults,
     isDom,
     isArray,
-    $override,
     noop
 } from 'zrender/src/core/util';
-import * as colorTool from 'zrender/src/tool/color';
 import env from 'zrender/src/core/env';
 import timsort from 'zrender/src/core/timsort';
 import Eventful, { EventCallbackSingleParam } from 'zrender/src/core/Eventful';
@@ -132,6 +129,7 @@ import lifecycle, {
     UpdateLifecycleParams,
     UpdateLifecycleTransitionOpt
 } from './lifecycle';
+import { platformApi, setPlatformAPI } from 'zrender/src/core/platform';
 
 declare let global: any;
 
@@ -813,7 +811,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             bottom *= dpr;
             const width = right - left;
             const height = bottom - top;
-            const targetCanvas = createCanvas();
+            const targetCanvas = platformApi.createCanvas();
             const zr = zrender.init(targetCanvas, {
                 renderer: isSvg ? 'svg' : 'canvas'
             });
@@ -2856,7 +2854,8 @@ export function registerLoading(
  * But in node environment canvas may be created by node-canvas.
  * So we need to specify how to create a canvas instead of using document.createElement('canvas')
  *
- * Be careful of using it in the browser.
+ *
+ * @deprecated use setPlatformAPI({ createCanvas }) instead.
  *
  * @example
  *     let Canvas = require('canvas');
@@ -2867,7 +2866,12 @@ export function registerLoading(
  *     });
  */
 export function setCanvasCreator(creator: () => HTMLCanvasElement): void {
-    $override('createCanvas', creator);
+    if (__DEV__) {
+        deprecateLog('setCanvasCreator is deprecated. Use setPlatformAPI({ createCanvas }) instead.');
+    }
+    setPlatformAPI({
+        createCanvas: creator
+    });
 }
 
 /**

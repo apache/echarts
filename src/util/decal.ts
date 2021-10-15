@@ -21,7 +21,7 @@
 import WeakMap from 'zrender/src/core/WeakMap';
 import { ImagePatternObject, PatternObject, SVGPatternObject } from 'zrender/src/graphic/Pattern';
 import LRU from 'zrender/src/core/LRU';
-import {defaults, createCanvas, map, isArray} from 'zrender/src/core/util';
+import {defaults, map, isArray} from 'zrender/src/core/util';
 import {getLeastCommonMultiple} from './number';
 import {createSymbol} from './symbol';
 import ExtensionAPI from '../core/ExtensionAPI';
@@ -29,6 +29,7 @@ import type SVGPainter from 'zrender/src/svg/Painter';
 import { brushSingle } from 'zrender/src/canvas/graphic';
 import {DecalDashArrayX, DecalDashArrayY, InnerDecalObject, DecalObject} from './types';
 import { SVGVNode } from 'zrender/src/svg/core';
+import { platformApi } from 'zrender/src/core/platform';
 
 const decalMap = new WeakMap<DecalObject, PatternObject>();
 
@@ -129,7 +130,7 @@ export function createOrUpdatePatternFromDecal(
         const lineBlockLengthsX = getLineBlockLengthX(dashArrayX);
         const lineBlockLengthY = getLineBlockLengthY(dashArrayY);
 
-        const canvas = !isSVG && createCanvas();
+        const canvas = !isSVG && platformApi.createCanvas();
         const svgRoot: SVGVNode = isSVG && {
             tag: 'g',
             attrs: {},
