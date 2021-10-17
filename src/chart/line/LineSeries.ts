@@ -118,6 +118,8 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
     showAllSymbol?: 'auto' | boolean
 
     data?: (LineDataValue | LineDataItemOption)[]
+
+    enableLineEvent?: boolean
 }
 
 class LineSeriesModel extends SeriesModel<LineSeriesOption> {
@@ -212,7 +214,9 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         universalTransition: {
             divideShape: 'clone'
-        }
+        },
+
+        enableLineEvent: false,
     };
 
     getLegendIcon(opt: LegendIconParams): ECSymbol | Group {
