@@ -880,13 +880,13 @@ class LineView extends ChartView {
         this._step = step;
         this._valueOrigin = valueOrigin;
 
-        if (seriesModel.get('enableLineEvent')) {
-            this._mouseEvent(seriesModel, polyline);
-            polygon && this._mouseEvent(seriesModel, polygon);
+        if (seriesModel.get('triggerLineEvent')) {
+            this.packEventData(seriesModel, polyline);
+            polygon && this.packEventData(seriesModel, polygon);
         }
     }
 
-    private _mouseEvent(seriesModel: LineSeriesModel, el: Element) {
+    private packEventData(seriesModel: LineSeriesModel, el: Element) {
         getECData(el).eventData = {
             componentType: 'series',
             componentSubType: 'line',
