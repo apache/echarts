@@ -891,7 +891,7 @@ class LineView extends ChartView {
             componentType: 'series',
             componentSubType: 'line',
             componentIndex: seriesModel.componentIndex,
-            seriesIndex: seriesModel.componentIndex,
+            seriesIndex: seriesModel.seriesIndex,
             seriesName: seriesModel.name,
             seriesType: 'line',
         };
