@@ -31,7 +31,7 @@ import {
     ComponentMainType,
     ComponentSubType,
     DimensionLoose,
-    InterpolatableValue
+    InterpolatableValue,
 } from '../../util/types';
 import GlobalModel from '../Global';
 import { TooltipMarkupBlockFragment } from '../../component/tooltip/tooltipMarkup';
