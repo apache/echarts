@@ -201,11 +201,6 @@ export class ScaleRawExtentInfo {
         (min == null || !isFinite(min)) && (min = NaN);
         (max == null || !isFinite(max)) && (max = NaN);
 
-        if (min > max) {
-            min = NaN;
-            max = NaN;
-        }
-
         const isBlank = eqNaN(min)
             || eqNaN(max)
             || (isOrdinal && !axisDataLen);
