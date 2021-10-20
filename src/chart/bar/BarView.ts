@@ -30,7 +30,7 @@ import {
 } from '../../util/graphic';
 import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
-import { setLabelStyle, getLabelStatesModels, setLabelValueAnimation } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels, setLabelValueAnimation, labelInner } from '../../label/labelStyle';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import Sausage from '../../util/shape/sausage';
@@ -555,6 +555,10 @@ class BarView extends ChartView {
         const sortInfo = this._dataSort(data, baseAxis, orderMapping);
 
         if (this._isOrderDifferentInView(sortInfo, baseAxis)) {
+            data.eachItemGraphicEl(function (el: Path) {
+                const labelInnerStore = labelInner(el.getTextContent());
+                labelInnerStore.prevValue = labelInnerStore.value;
+            });
             this._removeOnRenderedListener(api);
             api.dispatchAction({
                 type: 'changeAxisOrder',

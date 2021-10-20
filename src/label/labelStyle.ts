@@ -691,9 +691,11 @@ export function animateLabelValue(
     labelFetcher: SetLabelStyleOpt<number>['labelFetcher']
 ) {
     const labelInnerStore = labelInner(textEl);
-    if (!labelInnerStore.valueAnimation) {
+    if (!labelInnerStore.valueAnimation || labelInnerStore.prevValue === labelInnerStore.value) {
+        // Value not changed, no new label animation
         return;
     }
+
     const defaultInterpolatedText = labelInnerStore.defaultInterpolatedText;
     // Consider the case that being animating, do not use the `obj.value`,
     // Otherwise it will jump to the `obj.value` when this new animation started.
@@ -725,5 +727,8 @@ export function animateLabelValue(
     (labelInnerStore.prevValue == null
         ? initProps
         : updateProps
-    )(textEl, {}, animatableModel, dataIndex, null, during);
+    )(textEl, {
+        // value is used to prevent animation from being aborted
+        value: targetValue
+    }, animatableModel, dataIndex, null, during);
 }
