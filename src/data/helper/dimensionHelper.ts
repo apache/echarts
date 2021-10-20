@@ -99,6 +99,7 @@ export function summarizeDimensions(
     const notExtraCoordDimMap = createHashMap<1, DimensionName>();
     let defaultedLabel = [] as DimensionName[];
     let defaultedTooltip = [] as DimensionName[];
+    let lastExtraCoord = '';
 
     const userOutputEncode = {} as DimensionUserOuputEncode;
 
@@ -129,6 +130,9 @@ export function summarizeDimensions(
                 // And it only has index. User can use index to retrieve value from the raw item array.
                 getOrCreateEncodeArr(userOutputEncode, coordDim)[coordDimIndex] =
                     data.getDimensionIndex(dimItem.name);
+            }
+            else {
+                lastExtraCoord = dimName;
             }
             if (dimItem.defaultTooltip) {
                 defaultedTooltip.push(dimName);
@@ -167,6 +171,10 @@ export function summarizeDimensions(
     // in this way. Use label.formatter instead. May be remove this approach someday.
     if (encodeLabel && encodeLabel.length) {
         defaultedLabel = encodeLabel.slice();
+    }
+
+    if (!defaultedLabel || !defaultedLabel.length) {
+        defaultedLabel = [lastExtraCoord];
     }
 
     const encodeTooltip = encode.tooltip;
