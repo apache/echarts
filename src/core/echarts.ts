@@ -2653,11 +2653,11 @@ export function dispose(chart: EChartsType | HTMLElement | string): void {
     }
 }
 
-export function getInstanceByDom(dom: HTMLElement): EChartsType {
+export function getInstanceByDom(dom: HTMLElement): EChartsType | undefined {
     return instances[modelUtil.getAttribute(dom, DOM_ATTRIBUTE_KEY)];
 }
 
-export function getInstanceById(key: string): EChartsType {
+export function getInstanceById(key: string): EChartsType | undefined {
     return instances[key];
 }
 
