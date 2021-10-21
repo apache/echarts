@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
+import ZRText, { TextProps, TextStyleProps } from 'zrender/src/graphic/Text';
 import { Dictionary } from 'zrender/src/core/types';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
 import Model from '../model/Model';
@@ -724,11 +724,12 @@ export function animateLabelValue(
         setLabelText(textEl, labelText);
     }
 
+    const el: ZRText & {percent?: number} = extend(textEl, {percent: 0});
     (labelInnerStore.prevValue == null
         ? initProps
         : updateProps
-    )(textEl, {
-        // value is used to prevent animation from being aborted
-        value: targetValue
+    )<TextProps & {percent?: number}>(el, {
+        // percent is used to prevent animation from being aborted #15916
+        percent: 1
     }, animatableModel, dataIndex, null, during);
 }
