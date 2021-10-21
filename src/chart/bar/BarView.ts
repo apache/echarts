@@ -223,6 +223,16 @@ class BarView extends ChartView {
         const isInitSort = payload && payload.isInitSort;
         const isChangeOrder = payload && payload.type === 'changeAxisOrder';
 
+        if (isChangeOrder) {
+            this._data.eachItemGraphicEl(function (el: Path) {
+                const textEl = el.getTextContent();
+                if (textEl) {
+                    const labelInnerStore = labelInner(textEl);
+                    labelInnerStore.prevValue = labelInnerStore.value;
+                }
+            });
+        }
+
         function createBackground(dataIndex: number) {
             const bgLayout = getLayout[coord.type](data, dataIndex);
             const bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
@@ -555,10 +565,6 @@ class BarView extends ChartView {
         const sortInfo = this._dataSort(data, baseAxis, orderMapping);
 
         if (this._isOrderDifferentInView(sortInfo, baseAxis)) {
-            data.eachItemGraphicEl(function (el: Path) {
-                const labelInnerStore = labelInner(el.getTextContent());
-                labelInnerStore.prevValue = labelInnerStore.value;
-            });
             this._removeOnRenderedListener(api);
             api.dispatchAction({
                 type: 'changeAxisOrder',

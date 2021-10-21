@@ -724,11 +724,11 @@ export function animateLabelValue(
         setLabelText(textEl, labelText);
     }
 
-    const el: ZRText & {percent?: number} = extend(textEl, {percent: 0});
+    (textEl as ZRText & {percent?: number}).percent = 0;
     (labelInnerStore.prevValue == null
         ? initProps
         : updateProps
-    )<TextProps & {percent?: number}>(el, {
+    )<TextProps & {percent?: number}>(textEl, {
         // percent is used to prevent animation from being aborted #15916
         percent: 1
     }, animatableModel, dataIndex, null, during);
