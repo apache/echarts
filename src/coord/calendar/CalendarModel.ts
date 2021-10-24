@@ -105,11 +105,12 @@ export interface CalendarOption extends ComponentOption, BoxLayoutOptionMixin {
         position?: 'start' | 'end'
 
         /**
-         * Week text content, defaults to 'en'; It supports Chinese, English, and custom; index 0 always means Sunday
-         * en: shortcut to English  ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-         * cn: shortcut to Chinese ['日', '一', '二', '三', '四', '五', '六']
+         * Week text content
+         * defaults to auto-detected locale by the browser or the specifed locale by `echarts.init` function;
+         * It supports the default built-in locale name: EN, ZH/CN; or ant other registed locale name; or customized array
+         * index 0 always means Sunday
          */
-        nameMap?: 'en' | 'cn' | string[]
+        nameMap?: 'en' | 'cn' | 'zh' | string[]
     }
 
     monthLabel?: Omit<LabelOption, 'position'> & {
@@ -124,9 +125,12 @@ export interface CalendarOption extends ComponentOption, BoxLayoutOptionMixin {
         position?: 'start' | 'end'
 
         /**
-         * Month text content, defaults to 'en'; It supports Chinese, English, and custom; Index 0 always means Jan;
+         * Month text content
+         * defaults to auto-detected locale by the browser or the specifed locale by `echarts.init` function;
+         * It supports the default built-in locale name: EN, ZH/CN; or ant other registed locale name; or customized array
+         * index 0 always means Jan
          */
-        nameMap?: 'en' | 'cn' | string[]
+        nameMap?: 'en' | 'cn' | 'zh' | string[]
 
         formatter?: string | ((params: CalendarMonthLabelFormatterCallbackParams) => string)
     }
@@ -214,7 +218,6 @@ class CalendarModel extends ComponentModel<CalendarOption> {
             // start end
             position: 'start',
             margin: '50%', // 50% of cellSize
-            nameMap: 'en',
             color: '#000'
         },
 
@@ -229,8 +232,6 @@ class CalendarModel extends ComponentModel<CalendarOption> {
             // center or left
             align: 'center',
 
-            // cn en []
-            nameMap: 'en',
             formatter: null,
             color: '#000'
         },

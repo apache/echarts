@@ -62,9 +62,17 @@ under the License.
                 }
                 return datas;
             }
-            require(['echarts'], function (echarts) {
+            require([
+                'echarts',
+                'i18n/langES-obj',
+                'i18n/langJA-obj'
+            ], function (echarts, langES, langJA) {
+                echarts.registerLocale('ES', langES);
+                echarts.registerLocale('JA', langJA);
 
-                var chart = echarts.init(document.getElementById('main'));
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    // locale: 'ES'
+                });
 
                 chart.setOption({
                     tooltip: {
@@ -82,7 +90,8 @@ under the License.
                     calendar: [
                     {
                         dayLabel: {
-                            position: 'start'
+                            position: 'start',
+                            nameMap: 'JA'
                         },
                         range: '2017-01'
                     },
@@ -96,7 +105,7 @@ under the License.
                     {
                         dayLabel: {
                             position: 'start',
-                            nameMap: 'cn'
+                            nameMap: 'en'
                         },
                         left: 550,
                         range: '2017-03'
