@@ -106,9 +106,10 @@ export interface CalendarOption extends ComponentOption, BoxLayoutOptionMixin {
 
         /**
          * Week text content
-         * defaults to auto-detected locale by the browser or the specifed locale by `echarts.init` function;
-         * It supports any registered locale name (case-sensitive) or customized array
-         * index 0 always means Sunday
+         *
+         * defaults to auto-detected locale by the browser or the specified locale by `echarts.init` function.
+         * It supports any registered locale name (case-sensitive) or customized array.
+         * index 0 always means Sunday.
          */
         nameMap?: string | string[]
     }
@@ -126,9 +127,10 @@ export interface CalendarOption extends ComponentOption, BoxLayoutOptionMixin {
 
         /**
          * Month text content
-         * defaults to auto-detected locale by the browser or the specifed locale by `echarts.init` function;
-         * It supports any registered locale name (case-sensitive) or customized array
-         * index 0 always means Jan
+         *
+         * defaults to auto-detected locale by the browser or the specified locale by `echarts.init` function.
+         * It supports any registered locale name (case-sensitive) or customized array.
+         * index 0 always means Jan.
          */
         nameMap?: string | string[]
 
