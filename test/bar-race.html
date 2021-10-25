@@ -345,13 +345,14 @@ under the License.
         <script>
         require(['echarts'],
             function (echarts) {
-                var data = [4000, 3000];
+                var data = [4000, 3000, 2000];
                 var option = {
                     xAxis: {
                     },
                     yAxis: {
                         type: 'category',
-                        data: ['a', 'b'],
+                        data: ['a', 'b', 'c'],
+                        max: 1,
                         inverse: true,
                         animationDuration: 300,
                         animationDurationUpdate: 300
@@ -380,7 +381,8 @@ under the License.
                         text: 'next',
                         onclick: function () {
                             data[0] += 300;
-                            data[1] += 1500;
+                            data[1] += 2000;
+                            data[2] += 2800;
                             chart.setOption({
                                 series: {
                                     data: data

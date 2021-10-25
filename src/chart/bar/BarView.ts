@@ -19,7 +19,7 @@
 
 import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
-import {extend, defaults, each, map} from 'zrender/src/core/util';
+import {extend, each, map} from 'zrender/src/core/util';
 import {BuiltinTextPosition} from 'zrender/src/core/types';
 import {
     Rect,
@@ -45,7 +45,8 @@ import {
     OrdinalSortInfo,
     Payload,
     OrdinalNumber,
-    ParsedValue
+    ParsedValue,
+    ECElement
 } from '../../util/types';
 import BarSeriesModel, {BarSeriesOption, BarDataItemOption, PolarBarLabelPosition} from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -223,16 +224,6 @@ class BarView extends ChartView {
         const isInitSort = payload && payload.isInitSort;
         const isChangeOrder = payload && payload.type === 'changeAxisOrder';
 
-        if (isChangeOrder) {
-            this._data.eachItemGraphicEl(function (el: Path) {
-                const textEl = el.getTextContent();
-                if (textEl) {
-                    const labelInnerStore = labelInner(textEl);
-                    labelInnerStore.prevValue = labelInnerStore.value;
-                }
-            });
-        }
-
         function createBackground(dataIndex: number) {
             const bgLayout = getLayout[coord.type](data, dataIndex);
             const bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
@@ -334,6 +325,18 @@ class BarView extends ChartView {
                     return;
                 }
 
+                const wasClipped = el && el.ignore;
+                if (realtimeSortCfg && wasClipped) {
+                    /**
+                     * If an elemeent was clipped, label animation has to be
+                     * enabled since it may not be fully clipped in the future,
+                     * leaving label animation never started, in which case,
+                     * the label will be the final value and doesn't have label
+                     * animation.
+                     */
+                    (el as ECElement).forceLabelAnimation = true;
+                }
+
                 let isClipped = false;
                 if (needsClip) {
                     isClipped = clip[coord.type](coordSysClipArea, layout);
@@ -359,6 +362,21 @@ class BarView extends ChartView {
                     saveOldStyle(el);
                 }
 
+                if (isChangeOrder) {
+                    const textEl = el.getTextContent();
+                    if (textEl) {
+                        const labelInnerStore = labelInner(textEl);
+                        if (labelInnerStore.prevValue != null) {
+                            /**
+                             * Set preValue to be value so that no new label
+                             * should be started, otherwise, it will take a full
+                             * `animationDurationUpdate` time to finish the
+                             * animation, which is not expected.
+                             */
+                            labelInnerStore.prevValue = labelInnerStore.value;
+                        }
+                    }
+                }
                 // Not change anything if only order changed.
                 // Especially not change label.
                 if (!isChangeOrder) {
