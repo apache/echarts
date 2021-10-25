@@ -224,6 +224,12 @@ function clipColorStops(colorStops: ColorStop[], maxSize: number): ColorStop[] {
             if (prevInRangeColorStop) {
                 newColorStops.push(lerpStop(prevInRangeColorStop, stop, maxSize));
             }
+            else if (prevOutOfRangeColorStop) { // If there are two stops and coord range is between these two stops
+                newColorStops.push(
+                    lerpStop(prevOutOfRangeColorStop, stop, 0),
+                    lerpStop(prevOutOfRangeColorStop, stop, maxSize)
+                );
+            }
             // All following stop will be out of range. So just ignore them.
             break;
         }
