@@ -36,9 +36,6 @@ export default {
         ],
         dayOfWeekAbbr: [
             'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'
-        ],
-        dayOfWeekShort: [
-            'S', 'M', 'T', 'W', 'T', 'F', 'S'
         ]
     },
     legend: {

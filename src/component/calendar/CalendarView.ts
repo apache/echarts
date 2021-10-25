@@ -511,8 +511,8 @@ class CalendarView extends ComponentView {
                 // case-sensitive
                 localeModel = getLocaleModel(nameMap as string) || localeModel;
             }
-            // Use the capital of `dayOfWeekAbbr` if `dayOfWeekShort` doesn't exist in the locale file.
-            const dayOfWeekShort = localeModel.get(['time', 'dayOfWeekShort']);
+            // Use the first letter of `dayOfWeekAbbr` if `dayOfWeekShort` doesn't exist in the locale file
+            const dayOfWeekShort = localeModel.get(['time', 'dayOfWeekShort' as any]);
             nameMap = dayOfWeekShort || map(
                 localeModel.get(['time', 'dayOfWeekAbbr']),
                 val => val[0]
