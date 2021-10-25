@@ -107,10 +107,10 @@ export interface CalendarOption extends ComponentOption, BoxLayoutOptionMixin {
         /**
          * Week text content
          * defaults to auto-detected locale by the browser or the specifed locale by `echarts.init` function;
-         * It supports the default built-in locale name: EN, ZH/CN; or ant other registed locale name; or customized array
+         * It supports any registered locale name (case-sensitive) or customized array
          * index 0 always means Sunday
          */
-        nameMap?: 'en' | 'cn' | 'zh' | string[]
+        nameMap?: string | string[]
     }
 
     monthLabel?: Omit<LabelOption, 'position'> & {
@@ -127,10 +127,10 @@ export interface CalendarOption extends ComponentOption, BoxLayoutOptionMixin {
         /**
          * Month text content
          * defaults to auto-detected locale by the browser or the specifed locale by `echarts.init` function;
-         * It supports the default built-in locale name: EN, ZH/CN; or ant other registed locale name; or customized array
+         * It supports any registered locale name (case-sensitive) or customized array
          * index 0 always means Jan
          */
-        nameMap?: 'en' | 'cn' | 'zh' | string[]
+        nameMap?: string | string[]
 
         formatter?: string | ((params: CalendarMonthLabelFormatterCallbackParams) => string)
     }

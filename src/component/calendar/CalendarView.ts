@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
+import { isString, extend, map } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {createTextStyle} from '../../label/labelStyle';
 import { formatTplSimple } from '../../util/format';
@@ -407,15 +407,13 @@ class CalendarView extends ComponentView {
 
         const termPoints = [this._tlpoints, this._blpoints];
 
-        if (!nameMap || zrUtil.isString(nameMap)) {
+        if (!nameMap || isString(nameMap)) {
             if (nameMap) {
-                const nameMapUpperCase = (nameMap as string).toUpperCase();
-                localeModel = getLocaleModel(nameMapUpperCase === 'CN' ? 'ZH' : nameMapUpperCase) || localeModel;
+                // case-sensitive
+                localeModel = getLocaleModel(nameMap as string) || localeModel;
             }
             // PENDING
             // for ZH locale, original form is `一月` but current form is `1月`
-            // Consider adding a new configuration for each locale?
-            // For example, `time.monthShortcut` or `calendar.month`
             nameMap = localeModel.get(['time', 'monthAbbr']) || [];
         }
 
@@ -448,7 +446,7 @@ class CalendarView extends ComponentView {
 
             const monthText = new graphic.Text({
                 z2: 30,
-                style: zrUtil.extend(
+                style: extend(
                     createTextStyle(monthLabel, {text: content}),
                     this._monthTextPositionControl(tmp, isCenter, orient, pos, margin)
                 )
@@ -508,21 +506,16 @@ class CalendarView extends ComponentView {
         let margin = dayLabel.get('margin');
         const firstDayOfWeek = coordSys.getFirstDayOfWeek();
 
-        if (!nameMap || zrUtil.isString(nameMap)) {
+        if (!nameMap || isString(nameMap)) {
             if (nameMap) {
-                const nameMapUpperCase = (nameMap as string).toUpperCase();
-                localeModel = getLocaleModel(nameMapUpperCase === 'CN' ? 'ZH' : nameMapUpperCase) || localeModel;
+                // case-sensitive
+                localeModel = getLocaleModel(nameMap as string) || localeModel;
             }
-            // PENDING:
-            // Current each word of `dayOfWeekAbbr` in `EN` locale is a bit long.
-            // Use the capital as shortcut.
-            // ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-            // ↓
-            // ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-            // Or consider adding a new configuration for each locale?
-            // For example, `time.dayOfWeekShortcut` or `calendar.dayOfWeek`
-            nameMap = zrUtil.map(
-                localeModel.get(['time', 'dayOfWeekAbbr']) || [],
+            debugger
+            // Use the capital of `dayOfWeekAbbr` if `dayOfWeekShort` doesn't exist in the locale file.
+            const dayOfWeekShort = localeModel.get(['time', 'dayOfWeekShort']);
+            nameMap = dayOfWeekShort || map(
+                localeModel.get(['time', 'dayOfWeekAbbr']),
                 val => val[0]
             );
         }
@@ -549,7 +542,7 @@ class CalendarView extends ComponentView {
             day = Math.abs((i + firstDayOfWeek) % 7);
             const weekText = new graphic.Text({
                 z2: 30,
-                style: zrUtil.extend(
+                style: extend(
                     createTextStyle(dayLabel, {text: nameMap[day]}),
                     this._weekTextPositionControl(point, orient, pos, margin, cellSize)
                 )
