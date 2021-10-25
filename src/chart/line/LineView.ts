@@ -224,6 +224,12 @@ function clipColorStops(colorStops: ColorStop[], maxSize: number): ColorStop[] {
             if (prevInRangeColorStop) {
                 newColorStops.push(lerpStop(prevInRangeColorStop, stop, maxSize));
             }
+            else if (prevOutOfRangeColorStop) { // If there are two stops and coord range is between these two stops
+                newColorStops.push(
+                    lerpStop(prevOutOfRangeColorStop, stop, 0),
+                    lerpStop(prevOutOfRangeColorStop, stop, maxSize)
+                );
+            }
             // All following stop will be out of range. So just ignore them.
             break;
         }
@@ -313,7 +319,7 @@ function getVisualGradient(
             : (outerColors[0] ? outerColors[0] : colorStops[0].color);
     }
 
-    const tinyExtent = 0; // Arbitrary value: 10px
+    const tinyExtent = 10; // Arbitrary value: 10px
     const minCoord = colorStopsInRange[0].coord - tinyExtent;
     const maxCoord = colorStopsInRange[inRangeStopLen - 1].coord + tinyExtent;
     const coordSpan = maxCoord - minCoord;
