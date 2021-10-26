@@ -267,6 +267,17 @@ class BarView extends ChartView {
                     false,
                     roundCap
                 );
+                if (realtimeSortCfg) {
+                    /**
+                     * Force label animation because even if the element is
+                     * ignored because it's clipped, it may not be clipped after
+                     * changing order. Then, if not using forceLabelAnimation,
+                     * the label animation was never started, in which case,
+                     * the label will be the final value and doesn't have label
+                     * animation.
+                     */
+                    (el as ECElement).forceLabelAnimation = true;
+                }
 
                 updateStyle(
                     el, data, dataIndex, itemModel, layout,
@@ -325,18 +336,6 @@ class BarView extends ChartView {
                     return;
                 }
 
-                const wasClipped = el && el.ignore;
-                if (realtimeSortCfg && wasClipped) {
-                    /**
-                     * If an elemeent was clipped, label animation has to be
-                     * enabled since it may not be fully clipped in the future,
-                     * leaving label animation never started, in which case,
-                     * the label will be the final value and doesn't have label
-                     * animation.
-                     */
-                    (el as ECElement).forceLabelAnimation = true;
-                }
-
                 let isClipped = false;
                 if (needsClip) {
                     isClipped = clip[coord.type](coordSysClipArea, layout);
@@ -360,6 +359,10 @@ class BarView extends ChartView {
                 }
                 else {
                     saveOldStyle(el);
+                }
+
+                if (realtimeSortCfg) {
+                    (el as ECElement).forceLabelAnimation = true;
                 }
 
                 if (isChangeOrder) {
