@@ -217,7 +217,7 @@ function packEventData(el: Element, seriesModel: TreemapSeriesModel, itemNode: T
         componentType: 'series',
         componentSubType: 'treemap',
         componentIndex: seriesModel.componentIndex,
-        seriesIndex: seriesModel.componentIndex,
+        seriesIndex: seriesModel.seriesIndex,
         seriesName: seriesModel.name,
         seriesType: 'treemap',
         selfType: 'breadcrumb', // Distinguish with click event on treemap node.

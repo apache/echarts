@@ -453,7 +453,7 @@ class LabelManager {
             const animationEnabled = seriesModel.isAnimationEnabled();
 
             chartView.group.traverse((child) => {
-                if (child.ignore) {
+                if (child.ignore && !(child as ECElement).forceLabelAnimation) {
                     return true;    // Stop traverse descendants.
                 }
 
@@ -504,10 +504,13 @@ class LabelManager {
         const guideLine = el.getTextGuideLine();
         // Animate
         if (textEl
-            && !textEl.ignore
-            && !textEl.invisible
-            && !(el as ECElement).disableLabelAnimation
-            && !isElementRemoved(el)
+            // `forceLabelAnimation` has the highest priority
+            && ((el as ECElement).forceLabelAnimation
+                || !textEl.ignore
+                && !textEl.invisible
+                && !(el as ECElement).disableLabelAnimation
+                && !isElementRemoved(el)
+            )
         ) {
             const layoutStore = labelLayoutInnerStore(textEl);
             const oldLayout = layoutStore.oldLayout;

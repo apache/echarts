@@ -210,22 +210,22 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
                         seriesLabel += labelModel.get(['data', 'allData']);
                     }
 
+                    const middleSeparator = labelModel.get(['data', 'separator', 'middle']);
+                    const endSeparator = labelModel.get(['data', 'separator', 'end']);
                     const dataLabels = [];
                     for (let i = 0; i < data.count(); i++) {
                         if (i < maxDataCnt) {
                             const name = data.getName(i);
-                            const value = retrieveRawValue(data, i);
+                            const value = data.getValues(i);
                             const dataLabel = labelModel.get(['data', name ? 'withName' : 'withoutName']);
                             dataLabels.push(
                                 replace(dataLabel, {
                                     name: name,
-                                    value: value
+                                    value: value.join(middleSeparator)
                                 })
                             );
                         }
                     }
-                    const middleSeparator = labelModel.get(['data', 'separator', 'middle']);
-                    const endSeparator = labelModel.get(['data', 'separator', 'end']);
                     seriesLabel += dataLabels.join(middleSeparator) + endSeparator;
 
                     seriesLabels.push(seriesLabel);

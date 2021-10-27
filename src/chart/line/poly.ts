@@ -56,8 +56,8 @@ function drawSegment(
     let k = 0;
     for (; k < segLen; k++) {
 
-        const x = points[idx * 2];
-        const y = points[idx * 2 + 1];
+        let x = points[idx * 2];
+        let y = points[idx * 2 + 1];
 
         if (idx >= allLen || idx < 0) {
             break;
@@ -76,8 +76,8 @@ function drawSegment(
             cpy0 = y;
         }
         else {
-            const dx = x - prevX;
-            const dy = y - prevY;
+            let dx = x - prevX;
+            let dy = y - prevY;
 
             // Ignore tiny segment.
             if ((dx * dx + dy * dy) < 0.5) {
@@ -89,6 +89,19 @@ function drawSegment(
                 let nextIdx = idx + dir;
                 let nextX = points[nextIdx * 2];
                 let nextY = points[nextIdx * 2 + 1];
+                // Ignore duplicate point
+                while (nextX === x && nextY === y && k < segLen) {
+                    k++;
+                    nextIdx += dir;
+                    idx += dir;
+                    nextX = points[nextIdx * 2];
+                    nextY = points[nextIdx * 2 + 1];
+                    x = points[idx * 2];
+                    y = points[idx * 2 + 1];
+                    dx = x - prevX;
+                    dy = y - prevY;
+                }
+
                 let tmpK = k + 1;
                 if (connectNulls) {
                     // Find next point not null
