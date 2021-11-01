@@ -88,6 +88,7 @@ export interface RadarOption extends ComponentOption, CircleLayoutOptionMixin {
 export type InnerIndicatorAxisOption = AxisBaseOption & {
     // TODO Use type?
     // axisType?: 'value' | 'log'
+    showName?: boolean
 };
 
 class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystemHostModel {
@@ -137,15 +138,13 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                 axisLabel: axisLabel,
                 // Compatible with 2 and use text
                 name: indicatorOpt.text,
+                showName: showName,
                 nameLocation: 'end',
                 nameGap: nameGap,
                 // min: 0,
                 nameTextStyle: iNameTextStyle,
                 triggerEvent: triggerEvent
             } as InnerIndicatorAxisOption, false);
-            if (!showName) {
-                innerIndicatorOpt.name = '';
-            }
             if (typeof nameFormatter === 'string') {
                 const indName = innerIndicatorOpt.name;
                 innerIndicatorOpt.name = nameFormatter.replace('{value}', indName != null ? indName : '');
