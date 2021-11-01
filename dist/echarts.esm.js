@@ -15521,7 +15521,8 @@ function setLabelValueAnimation(label, labelStatesModels, value, getDefaultText)
 function animateLabelValue(textEl, dataIndex, data, animatableModel, labelFetcher) {
   var labelInnerStore = labelInner(textEl);
 
-  if (!labelInnerStore.valueAnimation) {
+  if (!labelInnerStore.valueAnimation || labelInnerStore.prevValue === labelInnerStore.value) {
+    // Value not changed, no new label animation
     return;
   }
 
@@ -15542,7 +15543,11 @@ function animateLabelValue(textEl, dataIndex, data, animatableModel, labelFetche
     setLabelText(textEl, labelText);
   }
 
-  (labelInnerStore.prevValue == null ? initProps : updateProps)(textEl, {}, animatableModel, dataIndex, null, during);
+  textEl.percent = 0;
+  (labelInnerStore.prevValue == null ? initProps : updateProps)(textEl, {
+    // percent is used to prevent animation from being aborted #15916
+    percent: 1
+  }, animatableModel, dataIndex, null, during);
 }
 
 var PATH_COLOR = ['textStyle', 'color']; // TODO Performance improvement?
@@ -16590,7 +16595,6 @@ function millisecondsSetterName(isUTC) {
 }
 
 function getTextRect(text, font, align, verticalAlign, padding, rich, truncate, lineHeight) {
-  deprecateLog('getTextRect is deprecated.');
   var textEl = new ZRText({
     style: {
       text: text,
@@ -16682,7 +16686,7 @@ function makeValueReadable(value, valueType, useUTC) {
 
 
   var numericResult = numericToNumber(value);
-  return isNumberUserReadable(numericResult) ? addCommas(numericResult) : isStringSafe(value) ? stringToUserReadable(value) : '-';
+  return isNumberUserReadable(numericResult) ? addCommas(numericResult) : isStringSafe(value) ? stringToUserReadable(value) : typeof value === 'boolean' ? value + '' : '-';
 }
 var TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
 
@@ -29427,7 +29431,7 @@ var geoSourceManager = {
 var lifecycle = new Eventful();
 
 var hasWindow = typeof window !== 'undefined';
-var version$1 = '5.2.1';
+var version$1 = '5.2.2';
 var dependencies = {
   zrender: '5.2.1'
 };
@@ -36463,12 +36467,6 @@ function () {
 
     (min == null || !isFinite(min)) && (min = NaN);
     (max == null || !isFinite(max)) && (max = NaN);
-
-    if (min > max) {
-      min = NaN;
-      max = NaN;
-    }
-
     var isBlank = eqNaN(min) || eqNaN(max) || isOrdinal && !axisDataLen; // If data extent modified, need to recalculated to ensure cross zero.
 
     if (this._needCrossZero) {
@@ -38928,7 +38926,7 @@ function () {
       var ignoreLabelLineUpdate = chartView.ignoreLabelLineUpdate;
       var animationEnabled = seriesModel.isAnimationEnabled();
       chartView.group.traverse(function (child) {
-        if (child.ignore) {
+        if (child.ignore && !child.forceLabelAnimation) {
           return true; // Stop traverse descendants.
         }
 
@@ -38975,7 +38973,8 @@ function () {
     var textEl = el.getTextContent();
     var guideLine = el.getTextGuideLine(); // Animate
 
-    if (textEl && !textEl.ignore && !textEl.invisible && !el.disableLabelAnimation && !isElementRemoved(el)) {
+    if (textEl // `forceLabelAnimation` has the highest priority
+    && (el.forceLabelAnimation || !textEl.ignore && !textEl.invisible && !el.disableLabelAnimation && !isElementRemoved(el))) {
       var layoutStore = labelLayoutInnerStore(textEl);
       var oldLayout = layoutStore.oldLayout;
       var ecData = getECData(el);
@@ -41604,7 +41603,8 @@ function (_super) {
     hoverLayerThreshold: Infinity,
     universalTransition: {
       divideShape: 'clone'
-    }
+    },
+    triggerLineEvent: false
   };
   return LineSeriesModel;
 }(SeriesModel);
@@ -42442,7 +42442,20 @@ function drawSegment(ctx, points, start, segLen, allLen, dir, smooth, smoothMono
       if (smooth > 0) {
         var nextIdx = idx + dir;
         var nextX = points[nextIdx * 2];
-        var nextY = points[nextIdx * 2 + 1];
+        var nextY = points[nextIdx * 2 + 1]; // Ignore duplicate point
+
+        while (nextX === x && nextY === y && k < segLen) {
+          k++;
+          nextIdx += dir;
+          idx += dir;
+          nextX = points[nextIdx * 2];
+          nextY = points[nextIdx * 2 + 1];
+          x = points[idx * 2];
+          y = points[idx * 2 + 1];
+          dx = x - prevX;
+          dy = y - prevY;
+        }
+
         var tmpK = k + 1;
 
         if (connectNulls) {
@@ -43038,6 +43051,9 @@ function clipColorStops(colorStops, maxSize) {
     } else if (coord > maxSize) {
       if (prevInRangeColorStop) {
         newColorStops.push(lerpStop(prevInRangeColorStop, stop_1, maxSize));
+      } else if (prevOutOfRangeColorStop) {
+        // If there are two stops and coord range is between these two stops
+        newColorStops.push(lerpStop(prevOutOfRangeColorStop, stop_1, 0), lerpStop(prevOutOfRangeColorStop, stop_1, maxSize));
       } // All following stop will be out of range. So just ignore them.
 
 
@@ -43125,7 +43141,7 @@ function getVisualGradient(data, coordSys, api) {
     return colorStops[0].coord < 0 ? outerColors[1] ? outerColors[1] : colorStops[stopLen - 1].color : outerColors[0] ? outerColors[0] : colorStops[0].color;
   }
 
-  var tinyExtent = 0; // Arbitrary value: 10px
+  var tinyExtent = 10; // Arbitrary value: 10px
 
   var minCoord = colorStopsInRange[0].coord - tinyExtent;
   var maxCoord = colorStopsInRange[inRangeStopLen - 1].coord + tinyExtent;
@@ -43589,9 +43605,23 @@ function (_super) {
     this._points = points;
     this._step = step;
     this._valueOrigin = valueOrigin;
+
+    if (seriesModel.get('triggerLineEvent')) {
+      this.packEventData(seriesModel, polyline);
+      polygon && this.packEventData(seriesModel, polygon);
+    }
   };
 
-  LineView.prototype.dispose = function () {};
+  LineView.prototype.packEventData = function (seriesModel, el) {
+    getECData(el).eventData = {
+      componentType: 'series',
+      componentSubType: 'line',
+      componentIndex: seriesModel.componentIndex,
+      seriesIndex: seriesModel.seriesIndex,
+      seriesName: seriesModel.name,
+      seriesType: 'line'
+    };
+  };
 
   LineView.prototype.highlight = function (seriesModel, ecModel, api, payload) {
     var data = seriesModel.getData();
@@ -44839,6 +44869,19 @@ function (_super) {
       }
 
       var el = elementCreator[coord.type](seriesModel, data, dataIndex, layout, isHorizontalOrRadial, animationModel, baseAxis.model, false, roundCap);
+
+      if (realtimeSortCfg) {
+        /**
+         * Force label animation because even if the element is
+         * ignored because it's clipped, it may not be clipped after
+         * changing order. Then, if not using forceLabelAnimation,
+         * the label animation was never started, in which case,
+         * the label will be the final value and doesn't have label
+         * animation.
+         */
+        el.forceLabelAnimation = true;
+      }
+
       updateStyle(el, data, dataIndex, itemModel, layout, seriesModel, isHorizontalOrRadial, coord.type === 'polar');
 
       if (isInitSort) {
@@ -44904,6 +44947,28 @@ function (_super) {
         el = elementCreator[coord.type](seriesModel, data, newIndex, layout, isHorizontalOrRadial, animationModel, baseAxis.model, !!el, roundCap);
       } else {
         saveOldStyle(el);
+      }
+
+      if (realtimeSortCfg) {
+        el.forceLabelAnimation = true;
+      }
+
+      if (isChangeOrder) {
+        var textEl = el.getTextContent();
+
+        if (textEl) {
+          var labelInnerStore = labelInner(textEl);
+
+          if (labelInnerStore.prevValue != null) {
+            /**
+             * Set preValue to be value so that no new label
+             * should be started, otherwise, it will take a full
+             * `animationDurationUpdate` time to finish the
+             * animation, which is not expected.
+             */
+            labelInnerStore.prevValue = labelInnerStore.value;
+          }
+        }
       } // Not change anything if only order changed.
       // Especially not change label.
 
@@ -55687,7 +55752,7 @@ function packEventData(el, seriesModel, itemNode) {
     componentType: 'series',
     componentSubType: 'treemap',
     componentIndex: seriesModel.componentIndex,
-    seriesIndex: seriesModel.componentIndex,
+    seriesIndex: seriesModel.seriesIndex,
     seriesName: seriesModel.name,
     seriesType: 'treemap',
     selfType: 'breadcrumb',
@@ -76175,7 +76240,6 @@ function (_super) {
       // start end
       position: 'start',
       margin: '50%',
-      nameMap: 'en',
       color: '#000'
     },
     // month text style
@@ -76186,8 +76250,6 @@ function (_super) {
       margin: 5,
       // center or left
       align: 'center',
-      // cn en []
-      nameMap: 'en',
       formatter: null,
       color: '#000'
     },
@@ -76238,15 +76300,6 @@ function mergeAndNormalizeLayoutParams(target, raw) {
   });
 }
 
-var MONTH_TEXT = {
-  EN: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-  CN: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
-};
-var WEEK_TEXT = {
-  EN: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
-  CN: ['日', '一', '二', '三', '四', '五', '六']
-};
-
 var CalendarView =
 /** @class */
 function (_super) {
@@ -76265,7 +76318,9 @@ function (_super) {
     var coordSys = calendarModel.coordinateSystem; // range info
 
     var rangeData = coordSys.getRangeInfo();
-    var orient = coordSys.getOrient();
+    var orient = coordSys.getOrient(); // locale
+
+    var localeModel = ecModel.getLocaleModel();
 
     this._renderDayRect(calendarModel, rangeData, group); // _renderLines must be called prior to following function
 
@@ -76274,9 +76329,9 @@ function (_super) {
 
     this._renderYearText(calendarModel, rangeData, orient, group);
 
-    this._renderMonthText(calendarModel, orient, group);
+    this._renderMonthText(calendarModel, localeModel, orient, group);
 
-    this._renderWeekText(calendarModel, rangeData, orient, group);
+    this._renderWeekText(calendarModel, localeModel, rangeData, orient, group);
   }; // render day rect
 
 
@@ -76522,7 +76577,7 @@ function (_super) {
   }; // render month and year text
 
 
-  CalendarView.prototype._renderMonthText = function (calendarModel, orient, group) {
+  CalendarView.prototype._renderMonthText = function (calendarModel, localeModel, orient, group) {
     var monthLabel = calendarModel.getModel('monthLabel');
 
     if (!monthLabel.get('show')) {
@@ -76535,8 +76590,15 @@ function (_super) {
     var align = monthLabel.get('align');
     var termPoints = [this._tlpoints, this._blpoints];
 
-    if (isString(nameMap)) {
-      nameMap = MONTH_TEXT[nameMap.toUpperCase()] || [];
+    if (!nameMap || isString(nameMap)) {
+      if (nameMap) {
+        // case-sensitive
+        localeModel = getLocaleModel(nameMap) || localeModel;
+      } // PENDING
+      // for ZH locale, original form is `一月` but current form is `1月`
+
+
+      nameMap = localeModel.get(['time', 'monthAbbr']) || [];
     }
 
     var idx = pos === 'start' ? 0 : 1;
@@ -76599,7 +76661,7 @@ function (_super) {
   }; // render weeks
 
 
-  CalendarView.prototype._renderWeekText = function (calendarModel, rangeData, orient, group) {
+  CalendarView.prototype._renderWeekText = function (calendarModel, localeModel, rangeData, orient, group) {
     var dayLabel = calendarModel.getModel('dayLabel');
 
     if (!dayLabel.get('show')) {
@@ -76612,8 +76674,17 @@ function (_super) {
     var margin = dayLabel.get('margin');
     var firstDayOfWeek = coordSys.getFirstDayOfWeek();
 
-    if (isString(nameMap)) {
-      nameMap = WEEK_TEXT[nameMap.toUpperCase()] || [];
+    if (!nameMap || isString(nameMap)) {
+      if (nameMap) {
+        // case-sensitive
+        localeModel = getLocaleModel(nameMap) || localeModel;
+      } // Use the first letter of `dayOfWeekAbbr` if `dayOfWeekShort` doesn't exist in the locale file
+
+
+      var dayOfWeekShort = localeModel.get(['time', 'dayOfWeekShort']);
+      nameMap = dayOfWeekShort || map(localeModel.get(['time', 'dayOfWeekAbbr']), function (val) {
+        return val[0];
+      });
     }
 
     var start = coordSys.getNextNDay(rangeData.end.time, 7 - rangeData.lweek).time;
@@ -91209,22 +91280,22 @@ function ariaVisual(ecModel, api) {
             seriesLabel += labelModel.get(['data', 'allData']);
           }
 
+          var middleSeparator_1 = labelModel.get(['data', 'separator', 'middle']);
+          var endSeparator_1 = labelModel.get(['data', 'separator', 'end']);
           var dataLabels = [];
 
           for (var i = 0; i < data.count(); i++) {
             if (i < maxDataCnt) {
               var name_1 = data.getName(i);
-              var value = retrieveRawValue(data, i);
+              var value = data.getValues(i);
               var dataLabel = labelModel.get(['data', name_1 ? 'withName' : 'withoutName']);
               dataLabels.push(replace(dataLabel, {
                 name: name_1,
-                value: value
+                value: value.join(middleSeparator_1)
               }));
             }
           }
 
-          var middleSeparator_1 = labelModel.get(['data', 'separator', 'middle']);
-          var endSeparator_1 = labelModel.get(['data', 'separator', 'end']);
           seriesLabel += dataLabels.join(middleSeparator_1) + endSeparator_1;
           seriesLabels_1.push(seriesLabel);
         }
