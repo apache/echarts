@@ -111,7 +111,7 @@ interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
     maxInterval?: number;
 }
 
-export interface CategoryAxisBaseOption extends AxisBaseOptionCommon {
+export interface CategoryAxisBaseOption extends Omit<AxisBaseOptionCommon, 'scale'> {
     type?: 'category';
     boundaryGap?: boolean
     axisLabel?: AxisLabelOption<'category'> & {
@@ -142,12 +142,12 @@ export interface ValueAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'value';
     axisLabel?: AxisLabelOption<'value'>;
 }
-export interface LogAxisBaseOption extends NumericAxisBaseOptionCommon {
+export interface LogAxisBaseOption extends Omit<NumericAxisBaseOptionCommon, 'scale'> {
     type?: 'log';
     axisLabel?: AxisLabelOption<'log'>;
     logBase?: number;
 }
-export interface TimeAxisBaseOption extends NumericAxisBaseOptionCommon {
+export interface TimeAxisBaseOption extends Omit<NumericAxisBaseOptionCommon, 'scale'> {
     type?: 'time';
     axisLabel?: AxisLabelOption<'time'>;
 }

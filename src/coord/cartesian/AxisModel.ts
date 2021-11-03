@@ -58,15 +58,6 @@ export class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
         return this.getReferringComponents('grid', SINGLE_REFERRING).models[0] as GridModel;
     }
 
-    getNeedCrossZero(): boolean {
-        const option = this.option;
-
-        if (option.type === 'value') {
-            return !option.scale;
-        }
-
-        return !axisDefault[option.type].scale;
-    }
 }
 
 export interface CartesianAxisModel extends AxisModelCommonMixin<CartesianAxisOption>,
