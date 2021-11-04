@@ -27,7 +27,6 @@ import GridModel from './GridModel';
 import { AxisBaseModel } from '../AxisBaseModel';
 import {OrdinalSortInfo} from '../../util/types';
 import { SINGLE_REFERRING } from '../../util/model';
-import axisDefault from '../axisDefault';
 
 export type CartesianAxisPosition = 'top' | 'bottom' | 'left' | 'right';
 
