@@ -78,10 +78,6 @@ export interface AxisBaseOptionCommon extends ComponentOption,
      * + null/undefined: auto decide max value (consider pretty look and boundaryGap).
      */
     max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
-    // Optional value can be:
-    // + `false`: always include value 0.
-    // + `true`: the extent do not consider value 0.
-    scale?: boolean;
 
 }
 
@@ -111,7 +107,7 @@ interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
     maxInterval?: number;
 }
 
-export interface CategoryAxisBaseOption extends Omit<AxisBaseOptionCommon, 'scale'> {
+export interface CategoryAxisBaseOption extends AxisBaseOptionCommon {
     type?: 'category';
     boundaryGap?: boolean
     axisLabel?: AxisLabelOption<'category'> & {
@@ -141,13 +137,20 @@ export interface CategoryAxisBaseOption extends Omit<AxisBaseOptionCommon, 'scal
 export interface ValueAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'value';
     axisLabel?: AxisLabelOption<'value'>;
+
+    /**
+     * Optional value can be:
+     * + `false`: always include value 0.
+     * + `false`: always include value 0.
+     */
+     scale?: boolean;
 }
-export interface LogAxisBaseOption extends Omit<NumericAxisBaseOptionCommon, 'scale'> {
+export interface LogAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'log';
     axisLabel?: AxisLabelOption<'log'>;
     logBase?: number;
 }
-export interface TimeAxisBaseOption extends Omit<NumericAxisBaseOptionCommon, 'scale'> {
+export interface TimeAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'time';
     axisLabel?: AxisLabelOption<'time'>;
 }
