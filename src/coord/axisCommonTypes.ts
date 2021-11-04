@@ -78,10 +78,6 @@ export interface AxisBaseOptionCommon extends ComponentOption,
      * + null/undefined: auto decide max value (consider pretty look and boundaryGap).
      */
     max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
-    // Optional value can be:
-    // + `false`: always include value 0.
-    // + `true`: the extent do not consider value 0.
-    scale?: boolean;
 
 }
 
@@ -141,6 +137,13 @@ export interface CategoryAxisBaseOption extends AxisBaseOptionCommon {
 export interface ValueAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'value';
     axisLabel?: AxisLabelOption<'value'>;
+
+    /**
+     * Optional value can be:
+     * + `false`: always include value 0.
+     * + `false`: always include value 0.
+     */
+     scale?: boolean;
 }
 export interface LogAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'log';

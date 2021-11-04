@@ -19,7 +19,7 @@
 
 import Model from '../model/Model';
 import Axis from './Axis';
-import { AxisBaseOption } from './axisCommonTypes';
+import { AxisBaseOption, ValueAxisBaseOption } from './axisCommonTypes';
 import { CoordinateSystemHostModel } from './CoordinateSystem';
 
 
@@ -31,7 +31,7 @@ interface AxisModelCommonMixin<Opt extends AxisBaseOption> extends Pick<Model<Op
 class AxisModelCommonMixin<Opt extends AxisBaseOption> {
 
     getNeedCrossZero(): boolean {
-        const option = this.option;
+        const option: ValueAxisBaseOption = this.option;
         return !option.scale;
     }
 
