@@ -50,6 +50,7 @@ import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { getVisualFromData } from '../../visual/helper';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import SeriesDimensionDefine from '../../data/SeriesDimensionDefine';
+import { createClipPath } from '../../chart/helper/createClipPathFromCoordSys';
 
 // Item option for configuring line and each end of symbol.
 // Line option. be merged from configuration of two ends.
@@ -305,7 +306,12 @@ class MarkLineView extends MarkerView {
         const lineDrawMap = this.markerGroupMap;
         const lineDraw = lineDrawMap.get(seriesId)
             || lineDrawMap.set(seriesId, new LineDraw());
+        const clipPath = createClipPath(
+            (seriesModel.coordinateSystem as Cartesian2D), false, seriesModel
+        );
+        this.group.setClipPath(clipPath);
         this.group.add(lineDraw.group);
+
 
         const mlData = createList(coordSys, seriesModel, mlModel);
 
