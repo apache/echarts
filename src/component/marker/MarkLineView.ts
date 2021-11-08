@@ -192,7 +192,7 @@ function markLineFilter(
         }
     }
     return markerHelper.dataFilter(coordSys, item[0])
-        && markerHelper.dataFilter(coordSys, item[1]);
+        || markerHelper.dataFilter(coordSys, item[1]);
 }
 
 function updateSingleMarkerEndLayout(
