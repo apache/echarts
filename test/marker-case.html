@@ -70,7 +70,12 @@ under the License.
                         data: [
                             {xAxis: '2018-12-31'},
                             {xAxis: '2019-12-31'},
-                            {xAxis: '2020-12-31'}
+                            {xAxis: '2020-12-31'},
+                            [
+                                // not ok
+                                { coord: ['2019-7-31', 0] },
+                                { coord: ['2019-12-31', 160] }
+                            ]
                         ]
                     },
                     markPoint: {
