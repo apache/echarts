@@ -218,7 +218,6 @@ function avoidOverlap(
                 layout.rect.y -= (block.contentHeight - layout.rect.height) / 2;
                 layout.rect.width = block.width;
                 layout.rect.height = block.height;
-                console.log(block,layout.rect.width, layout.rect.height);
             }
 
             const dist = linePoints[1][0] - linePoints[2][0];
