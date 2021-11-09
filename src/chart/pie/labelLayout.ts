@@ -25,9 +25,10 @@ import { HorizontalAlign, ZRTextAlign } from '../../util/types';
 import { Sector, Polyline, Point } from '../../util/graphic';
 import ZRText from 'zrender/src/graphic/Text';
 import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
-import { each } from 'zrender/src/core/util';
+import { each, extend } from 'zrender/src/core/util';
 import { limitTurnAngle, limitSurfaceAngle } from '../../label/labelGuideHelper';
 import { shiftLayoutOnY } from '../../label/labelLayoutHelper';
+import { parsePlainText, parseRichText, RichTextContentBlock } from 'zrender/src/graphic/helper/parseText';
 
 const RADIAN = Math.PI / 180;
 
@@ -160,9 +161,6 @@ function avoidOverlap(
         }
     }
 
-    adjustSingleSide(rightList, cx, cy, r, 1, viewWidth, viewHeight, viewLeft, viewTop, rightmostX);
-    adjustSingleSide(leftList, cx, cy, r, -1, viewWidth, viewHeight, viewLeft, viewTop, leftmostX);
-
     for (let i = 0; i < labelLayoutList.length; i++) {
         const layout = labelLayoutList[i];
         const label = layout.label;
@@ -195,13 +193,32 @@ function avoidOverlap(
                 }
             }
             if (targetTextWidth < layout.rect.width) {
-                // TODOTODO
-                // layout.text = textContain.truncateText(layout.text, targetTextWidth, layout.font);
-                layout.label.style.width = targetTextWidth;
+                const style = layout.label.style;
+                /**
+                 * Parsing the rich text to get the constraining width.
+                 *
+                 * Consider the case where text is "{aabbcc|real names}", its
+                 * width is not determined by the characters of this string but
+                 * the parsed text in varied lines. Let's assume in this case,
+                 * "real" and "names" are separated into two lines due to
+                 * `overflow` being `'break'`. `style.width` should be the
+                 * `contentWidth` of the parsed rich text, which is also the
+                 * bigger one of the width of "real" and "names".
+                 */
+                const parstText = style.rich ? parseRichText : parsePlainText;
+                const block = parstText(style.text, extend(style, {
+                    width: targetTextWidth
+                }));
+                const padding = style.padding as number[];
+                const paddingH = padding ? padding[1] + padding[3] : 0;
+                style.width = block.contentWidth;
                 if (layout.labelAlignTo === 'edge') {
-                    realTextWidth = targetTextWidth;
-                    // realTextWidth = textContain.getWidth(layout.text, layout.font);
+                    realTextWidth = block.contentWidth + paddingH;
                 }
+                layout.rect.y -= (block.contentHeight - layout.rect.height) / 2;
+                layout.rect.width = block.width;
+                layout.rect.height = block.height;
+                console.log(block,layout.rect.width, layout.rect.height);
             }
 
             const dist = linePoints[1][0] - linePoints[2][0];
@@ -226,6 +243,9 @@ function avoidOverlap(
             linePoints[1][1] = linePoints[2][1] = label.y;
         }
     }
+
+    adjustSingleSide(rightList, cx, cy, r, 1, viewWidth, viewHeight, viewLeft, viewTop, rightmostX);
+    adjustSingleSide(leftList, cx, cy, r, -1, viewWidth, viewHeight, viewLeft, viewTop, leftmostX);
 }
 
 function isPositionCenter(sectorShape: LabelLayout) {
