@@ -641,7 +641,6 @@ class GaugeView extends ChartView {
                         width: isNaN(width) ? null : width,
                         height: isNaN(height) ? null : height,
                         align: 'center',
-                        verticalAlign: 'middle'
                     }, {inheritColor: detailColor})
                 });
                 setLabelValueAnimation(

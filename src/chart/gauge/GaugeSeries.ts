@@ -305,7 +305,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             borderWidth: 0,
             borderColor: '#ccc',
             width: 100,
-            height: null, // self-adaption
+            height: 40, // self-adaption
             padding: [5, 10],
             // x, y，单位px
             offsetCenter: [0, '40%'],
