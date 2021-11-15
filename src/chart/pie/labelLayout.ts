@@ -217,16 +217,9 @@ function avoidOverlap(
                 const block = parstText(style.text, extend(style, {
                     width: targetTextWidth - paddingV
                 }));
-                if (style.text.indexOf('App') === 0) {
-                    console.log(targetTextWidth, block)
-                }
                 realTextWidth = block.contentWidth + paddingH;
                 style.width = block.contentWidth;
-                const dx = block.contentWidth + paddingH - layout.rect.width;
                 const dy = block.contentHeight + paddingV - layout.rect.height;
-                // layout.rect.x += isAlignToEdge
-                //     ? 0
-                //     : (label.x < cx ? -dx : dx);
                 layout.rect.y -= dy / 2;
                 layout.rect.width = realTextWidth;
                 layout.rect.height = block.contentHeight + paddingV;
