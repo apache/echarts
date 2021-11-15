@@ -163,13 +163,9 @@ function avoidOverlap(
 
     for (let i = 0; i < labelLayoutList.length; i++) {
         const layout = labelLayoutList[i];
-        const label = layout.label;
-        if (isPositionCenter(layout)) {
-            continue;
-        }
-
-        const linePoints = layout.linePoints;
-        if (linePoints) {
+        if (!isPositionCenter(layout) && layout.linePoints) {
+            const label = layout.label;
+            const linePoints = layout.linePoints;
             const isAlignToEdge = layout.labelAlignTo === 'edge';
 
             let realTextWidth = layout.rect.width;
@@ -184,6 +180,14 @@ function avoidOverlap(
                             - linePoints[2][0] - layout.labelDistance;
                 }
             }
+            else if (layout.labelAlignTo === 'labelLine') {
+                if (label.x < cx) {
+                    targetTextWidth = leftmostX - viewLeft - layout.bleedMargin;
+                }
+                else {
+                    targetTextWidth = viewLeft + viewWidth - rightmostX - layout.bleedMargin;
+                }
+            }
             else {
                 if (label.x < cx) {
                     targetTextWidth = label.x - viewLeft - layout.bleedMargin;
@@ -192,8 +196,12 @@ function avoidOverlap(
                     targetTextWidth = viewLeft + viewWidth - label.x - layout.bleedMargin;
                 }
             }
+
             if (targetTextWidth < layout.rect.width) {
                 const style = layout.label.style;
+                const padding = style.padding as number[];
+                const paddingH = padding ? padding[1] + padding[3] : 0;
+                const paddingV = padding ? padding[0] + padding[2] : 0;
                 /**
                  * Parsing the rich text to get the constraining width.
                  *
@@ -207,19 +215,35 @@ function avoidOverlap(
                  */
                 const parstText = style.rich ? parseRichText : parsePlainText;
                 const block = parstText(style.text, extend(style, {
-                    width: targetTextWidth
+                    width: targetTextWidth - paddingV
                 }));
-                const padding = style.padding as number[];
-                const paddingH = padding ? padding[1] + padding[3] : 0;
-                style.width = block.contentWidth;
-                if (layout.labelAlignTo === 'edge') {
-                    realTextWidth = block.contentWidth + paddingH;
+                if (style.text.indexOf('App') === 0) {
+                    console.log(targetTextWidth, block)
                 }
-                layout.rect.y -= (block.contentHeight - layout.rect.height) / 2;
-                layout.rect.width = block.width;
-                layout.rect.height = block.height;
+                realTextWidth = block.contentWidth + paddingH;
+                style.width = block.contentWidth;
+                const dx = block.contentWidth + paddingH - layout.rect.width;
+                const dy = block.contentHeight + paddingV - layout.rect.height;
+                // layout.rect.x += isAlignToEdge
+                //     ? 0
+                //     : (label.x < cx ? -dx : dx);
+                layout.rect.y -= dy / 2;
+                layout.rect.width = realTextWidth;
+                layout.rect.height = block.contentHeight + paddingV;
             }
+        }
+    }
 
+    adjustSingleSide(rightList, cx, cy, r, 1, viewWidth, viewHeight, viewLeft, viewTop, rightmostX);
+    adjustSingleSide(leftList, cx, cy, r, -1, viewWidth, viewHeight, viewLeft, viewTop, leftmostX);
+
+    for (let i = 0; i < labelLayoutList.length; i++) {
+        const layout = labelLayoutList[i];
+        if (!isPositionCenter(layout) && layout.linePoints) {
+            const label = layout.label;
+            const linePoints = layout.linePoints;
+            const isAlignToEdge = layout.labelAlignTo === 'edge';
+            const realTextWidth = layout.rect.width;
             const dist = linePoints[1][0] - linePoints[2][0];
             if (isAlignToEdge) {
                 if (label.x < cx) {
@@ -242,9 +266,6 @@ function avoidOverlap(
             linePoints[1][1] = linePoints[2][1] = label.y;
         }
     }
-
-    adjustSingleSide(rightList, cx, cy, r, 1, viewWidth, viewHeight, viewLeft, viewTop, rightmostX);
-    adjustSingleSide(leftList, cx, cy, r, -1, viewWidth, viewHeight, viewLeft, viewTop, leftmostX);
 }
 
 function isPositionCenter(sectorShape: LabelLayout) {
