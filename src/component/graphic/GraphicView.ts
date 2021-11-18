@@ -37,8 +37,9 @@ import {
     GraphicComponentGroupOption,
     GraphicComponentElementOption
 } from './GraphicModel';
+import { applyLeaveTransition, applyUpdateTransition } from '../../animation/customGraphicTransitionHelper';
 
-const _nonShapeGraphicElements = {
+const nonShapeGraphicElements = {
     // Reserved but not supported in graphic component.
     path: null as unknown,
     compoundPath: null as unknown,
@@ -48,7 +49,7 @@ const _nonShapeGraphicElements = {
     image: graphicUtil.Image,
     text: graphicUtil.Text
 } as const;
-type NonShapeGraphicElementType = keyof typeof _nonShapeGraphicElements;
+type NonShapeGraphicElementType = keyof typeof nonShapeGraphicElements;
 
 export const inner = modelUtil.makeInner<{
     widthOption: number;
@@ -152,16 +153,34 @@ export class GraphicComponentView extends ComponentView {
 
             const $action = elOption.$action || 'merge';
             if ($action === 'merge') {
-                elExisting
-                    ? elExisting.attr(elOptionCleaned)
-                    : createEl(id, targetElParent, elOptionCleaned, elMap);
+                const isInit = !elExisting;
+                let el = elExisting;
+                if (isInit) {
+                    el = createEl(id, targetElParent, elOption.type, elMap);
+                }
+                el && applyUpdateTransition(
+                    el,
+                    elOptionCleaned,
+                    graphicModel,
+                    0,  // TODO Fixed dataIndex to be 0
+                    isInit
+                );
             }
             else if ($action === 'replace') {
-                removeEl(elExisting, elMap);
-                createEl(id, targetElParent, elOptionCleaned, elMap);
+                removeEl(elExisting, elMap, graphicModel);
+                const el = createEl(id, targetElParent, elOption.type, elMap);
+                if (el) {
+                    applyUpdateTransition(
+                        el,
+                        elOptionCleaned,
+                        graphicModel,
+                        0,  // TODO Fixed dataIndex to be 0
+                        true
+                    );
+                }
             }
             else if ($action === 'remove') {
-                removeEl(elExisting, elMap);
+                removeEl(elExisting, elMap, graphicModel);
             }
 
             const el = elMap.get(id);
@@ -266,8 +285,8 @@ export class GraphicComponentView extends ComponentView {
      */
     private _clear(): void {
         const elMap = this._elMap;
-        elMap.each(function (el) {
-            removeEl(el, elMap);
+        elMap.each((el) => {
+            removeEl(el, elMap, this._lastGraphicModel);
         });
         this._elMap = zrUtil.createHashMap();
     }
@@ -279,20 +298,19 @@ export class GraphicComponentView extends ComponentView {
 function createEl(
     id: string,
     targetElParent: graphicUtil.Group,
-    elOption: GraphicComponentElementOption,
+    graphicType: string,
     elMap: ElementMap
-): void {
-    const graphicType = elOption.type;
+): Element {
 
     if (__DEV__) {
         zrUtil.assert(graphicType, 'graphic type MUST be set');
     }
 
     const Clz = (
-        zrUtil.hasOwn(_nonShapeGraphicElements, graphicType)
+        zrUtil.hasOwn(nonShapeGraphicElements, graphicType)
             // Those graphic elements are not shapes. They should not be
             // overwritten by users, so do them first.
-            ? _nonShapeGraphicElements[graphicType as NonShapeGraphicElementType]
+            ? nonShapeGraphicElements[graphicType as NonShapeGraphicElementType]
             : graphicUtil.getShapeClass(graphicType)
     ) as { new(opt: GraphicComponentElementOption): Element; };
 
@@ -300,19 +318,21 @@ function createEl(
         zrUtil.assert(Clz, 'graphic type can not be found');
     }
 
-    const el = new Clz(elOption);
+    const el = new Clz({});
     targetElParent.add(el);
     elMap.set(id, el);
     inner(el).id = id;
+
+    return el;
 }
-function removeEl(elExisting: Element, elMap: ElementMap): void {
+function removeEl(elExisting: Element, elMap: ElementMap, graphicModel: GraphicComponentModel): void {
     const existElParent = elExisting && elExisting.parent;
     if (existElParent) {
         elExisting.type === 'group' && elExisting.traverse(function (el) {
-            removeEl(el, elMap);
+            removeEl(el, elMap, graphicModel);
         });
+        applyLeaveTransition(elExisting, graphicModel);
         elMap.removeKey(inner(elExisting).id);
-        existElParent.remove(elExisting);
     }
 }
 // Remove unnecessary props to avoid potential problems.

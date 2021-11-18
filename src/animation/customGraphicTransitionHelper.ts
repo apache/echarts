@@ -42,13 +42,13 @@ const LEGACY_TRANSFORM_PROPS = {
 type LegacyTransformProp = keyof typeof LEGACY_TRANSFORM_PROPS;
 
 export type CustomTransitionProps = string | string[];
-export interface ElementTransitionOptionMixin {
+export interface TransitionOptionMixin {
     transition?: CustomTransitionProps;
     enterFrom?: Dictionary<unknown>;
     leaveTo?: Dictionary<unknown>;
 };
 
-export type ElementTransformTransitionOptionMixin = {
+export type ElementTransitionOptionMixin = {
     transition?: ElementRootTransitionProp | ElementRootTransitionProp[];
     enterFrom?: Dictionary<number>;
     leaveTo?: Dictionary<number>;
@@ -72,16 +72,16 @@ interface LooseElementProps extends ElementProps {
 }
 
 type TransitionElementOption = Partial<Record<TransformProp, number>> & {
-    shape?: Dictionary<any> & ElementTransitionOptionMixin
-    style?: PathStyleProps & ElementTransitionOptionMixin
-    extra?: Dictionary<any> & ElementTransitionOptionMixin
+    shape?: Dictionary<any> & TransitionOptionMixin
+    style?: PathStyleProps & TransitionOptionMixin
+    extra?: Dictionary<any> & TransitionOptionMixin
     invisible?: boolean
     silent?: boolean
     autoBatch?: boolean
     ignore?: boolean
 
     during?: (params: TransitionDuringAPI) => void
-} & ElementTransformTransitionOptionMixin;
+} & ElementTransitionOptionMixin;
 
 const transitionInnerStore = makeInner<{
     leaveToProps: ElementProps;
@@ -141,7 +141,7 @@ export interface TransitionDuringAPI<
     getStyle<T extends keyof StyleOpt>(key: T): StyleOpt[T];
 };
 
-export function updateTransition(
+export function applyUpdateTransition(
     el: Element,
     elOption: TransitionElementOption,
     animatableModel?: Model<AnimationOptionMixin>,
@@ -171,20 +171,22 @@ export function updateTransition(
     styleOpt ? el.dirty() : el.markRedraw();
 }
 
-export function leaveTransition(
+export function applyLeaveTransition(
     el: Element,
-    seriesModel: Model<AnimationOptionMixin>
+    animatableModel: Model<AnimationOptionMixin>,
+    onRemove?: () => void
 ): void {
     if (el) {
         const parent = el.parent;
         const leaveToProps = transitionInnerStore(el).leaveToProps;
         leaveToProps
-            ? updateProps(el, leaveToProps, seriesModel, {
+            ? updateProps(el, leaveToProps, animatableModel, {
                 cb: function () {
                     parent.remove(el);
+                    onRemove && onRemove();
                 }
             })
-            : parent.remove(el);
+            : (parent.remove(el), onRemove && onRemove());
     }
 }
 
@@ -433,7 +435,7 @@ function prepareShapeOrExtraTransitionFrom(
     isInit: boolean
 ): void {
 
-    const attrOpt: Dictionary<unknown> & ElementTransitionOptionMixin = (elOption as any)[mainAttr];
+    const attrOpt: Dictionary<unknown> & TransitionOptionMixin = (elOption as any)[mainAttr];
     if (!attrOpt) {
         return;
     }
@@ -498,7 +500,7 @@ function prepareShapeOrExtraAllPropsFinal(
     elOption: TransitionElementOption,
     allProps: LooseElementProps
 ): void {
-    const attrOpt: Dictionary<unknown> & ElementTransitionOptionMixin = (elOption as any)[mainAttr];
+    const attrOpt: Dictionary<unknown> & TransitionOptionMixin = (elOption as any)[mainAttr];
     if (!attrOpt) {
         return;
     }

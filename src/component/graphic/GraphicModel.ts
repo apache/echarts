@@ -25,7 +25,8 @@ import {
     Dictionary,
     ZRStyleProps,
     OptionId,
-    CommonTooltipOption
+    CommonTooltipOption,
+    AnimationOptionMixin
 } from '../../util/types';
 import ComponentModel from '../../model/Component';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
@@ -35,6 +36,7 @@ import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import GlobalModel from '../../model/Global';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { copyLayoutParams, mergeLayoutParam } from '../../util/layout';
+import { ElementTransitionOptionMixin, TransitionOptionMixin } from '../../animation/customGraphicTransitionHelper';
 
 interface GraphicComponentBaseElementOption extends
     Partial<Pick<
@@ -116,9 +118,11 @@ interface GraphicComponentBaseElementOption extends
 export type TransformProp = 'x' | 'y' | 'scaleX' | 'scaleY' | 'originX' | 'originY' | 'skewX' | 'skewY' | 'rotation';
 
 export interface GraphicComponentDisplayableOption extends
-    GraphicComponentBaseElementOption, Partial<Pick<Displayable, 'zlevel' | 'z' | 'z2' | 'invisible' | 'cursor'>> {
+    GraphicComponentBaseElementOption,
+    ElementTransitionOptionMixin,
+    Partial<Pick<Displayable, 'zlevel' | 'z' | 'z2' | 'invisible' | 'cursor'>> {
 
-    style?: ZRStyleProps;
+    style?: ZRStyleProps & TransitionOptionMixin
 }
 // TODO: states?
 // interface GraphicComponentDisplayableOptionOnState extends Partial<Pick<
@@ -126,7 +130,8 @@ export interface GraphicComponentDisplayableOption extends
 // >> {
 //     style?: ZRStyleProps;
 // }
-export interface GraphicComponentGroupOption extends GraphicComponentBaseElementOption {
+export interface GraphicComponentGroupOption
+    extends GraphicComponentBaseElementOption, ElementTransitionOptionMixin {
     type?: 'group';
 
     /**
@@ -141,13 +146,13 @@ export interface GraphicComponentGroupOption extends GraphicComponentBaseElement
     // TODO: Can only set focus, blur on the root element.
     // children: Omit<GraphicComponentElementOption, 'focus' | 'blurScope'>[];
     children: GraphicComponentElementOption[];
-}
+};
 export interface GraphicComponentZRPathOption extends GraphicComponentDisplayableOption {
-    shape?: PathProps['shape'];
+    shape?: PathProps['shape'] & TransitionOptionMixin;
 }
 export interface GraphicComponentImageOption extends GraphicComponentDisplayableOption {
     type?: 'image';
-    style?: ImageStyleProps;
+    style?: ImageStyleProps & TransitionOptionMixin;
 }
 // TODO: states?
 // interface GraphicComponentImageOptionOnState extends GraphicComponentDisplayableOptionOnState {
@@ -174,11 +179,10 @@ export type GraphicComponentLooseOption = (GraphicComponentOption | GraphicCompo
     mainType?: 'graphic';
 };
 
-export interface GraphicComponentOption extends ComponentOption {
+export interface GraphicComponentOption extends ComponentOption, AnimationOptionMixin {
     // Note: elements is always behind its ancestors in this elements array.
     elements?: GraphicComponentElementOption[];
-}
-;
+};
 
 export function setKeyInfoToNewElOption(
     resultItem: ReturnType<typeof modelUtil.mappingToExists>[number],

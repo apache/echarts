@@ -90,7 +90,7 @@ import CustomSeriesModel, {
 } from './CustomSeries';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { CustomSeriesOption } from '../../export/option';
-import { leaveTransition, updateTransition } from '../../animation/customGraphicTransitionHelper';
+import { applyLeaveTransition, applyUpdateTransition } from '../../animation/customGraphicTransitionHelper';
 
 const EMPHASIS = 'emphasis' as const;
 const NORMAL = 'normal' as const;
@@ -218,7 +218,7 @@ export default class CustomChartView extends ChartView {
                 );
             })
             .remove(function (oldIdx) {
-                leaveTransition(oldData.getItemGraphicEl(oldIdx), customSeries);
+                applyLeaveTransition(oldData.getItemGraphicEl(oldIdx), customSeries);
             })
             .update(function (newIdx, oldIdx) {
                 const oldEl = oldData.getItemGraphicEl(oldIdx);
@@ -475,7 +475,7 @@ function updateElNormal(
         }
     }
 
-    updateTransition(el, elOption, seriesModel, dataIndex, isInit);
+    applyUpdateTransition(el, elOption, seriesModel, dataIndex, isInit);
 
 
     if (!isTextContent) {
@@ -1310,7 +1310,7 @@ function mergeChildren(
         // Do not supprot leave elements that are not mentioned in the latest
         // `renderItem` return. Otherwise users may not have a clear and simple
         // concept that how to contorl all of the elements.
-        leaveTransition(el.childAt(i), seriesModel);
+        applyLeaveTransition(el.childAt(i), seriesModel);
     }
 }
 
@@ -1364,7 +1364,7 @@ function processAddUpdate(
 function processRemove(this: DataDiffer<DiffGroupContext>, oldIndex: number): void {
     const context = this.context;
     const child = context.oldChildren[oldIndex];
-    leaveTransition(child, context.seriesModel);
+    applyLeaveTransition(child, context.seriesModel);
 }
 
 /**

@@ -65,8 +65,8 @@ import {
 } from '../../util/graphic';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import {
-    ElementTransformTransitionOptionMixin,
     ElementTransitionOptionMixin,
+    TransitionOptionMixin,
     TransitionBaseDuringAPI,
     TransitionDuringAPI
 } from '../../animation/customGraphicTransitionHelper';
@@ -104,7 +104,7 @@ type ShapeMorphingOption = {
 
 export interface CustomBaseElementOption extends Partial<Pick<
     Element, TransformProp | 'silent' | 'ignore' | 'textConfig'
->>, ElementTransformTransitionOptionMixin {
+>>, ElementTransitionOptionMixin {
     // element type, required.
     type: string;
     id?: string;
@@ -116,7 +116,7 @@ export interface CustomBaseElementOption extends Partial<Pick<
     // `false` means remove the clipPath
     clipPath?: CustomBaseZRPathOption | false;
     // `extra` can be set in any el option for custom prop for annimation duration.
-    extra?: Dictionary<unknown> & ElementTransitionOptionMixin;
+    extra?: Dictionary<unknown> & TransitionOptionMixin;
     // updateDuringAnimation
     during?(params: TransitionBaseDuringAPI): void;
 };
@@ -124,7 +124,7 @@ export interface CustomBaseElementOption extends Partial<Pick<
 export interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<
     Displayable, 'zlevel' | 'z' | 'z2' | 'invisible'
 >> {
-    style?: ZRStyleProps & ElementTransitionOptionMixin;
+    style?: ZRStyleProps & TransitionOptionMixin;
     during?(params: TransitionDuringAPI): void;
     /**
      * @deprecated
@@ -139,7 +139,7 @@ export interface CustomDisplayableOptionOnState extends Partial<Pick<
     Displayable, TransformProp | 'textConfig' | 'z2'
 >> {
     // `false` means remove emphasis trigger.
-    style?: (ZRStyleProps & ElementTransitionOptionMixin) | false;
+    style?: (ZRStyleProps & TransitionOptionMixin) | false;
 
 
     during?(params: TransitionDuringAPI): void;
@@ -156,7 +156,7 @@ export interface CustomGroupOption extends CustomBaseElementOption {
 export interface CustomBaseZRPathOption<T extends PathProps['shape'] = PathProps['shape']>
     extends CustomDisplayableOption, ShapeMorphingOption {
     autoBatch?: boolean;
-    shape?: T & ElementTransitionOptionMixin;
+    shape?: T & TransitionOptionMixin;
     style?: PathProps['style']
     during?(params: TransitionDuringAPI<PathStyleProps, T>): void;
 }
@@ -201,22 +201,22 @@ export type CustomPathOption = CreateCustomBuitinPathOption<keyof BuiltinShapes>
     | CustomSVGPathOption;
 
 export interface CustomImageOptionOnState extends CustomDisplayableOptionOnState {
-    style?: ImageStyleProps & ElementTransitionOptionMixin;
+    style?: ImageStyleProps & TransitionOptionMixin;
 }
 export interface CustomImageOption extends CustomDisplayableOption {
     type: 'image';
-    style?: ImageStyleProps & ElementTransitionOptionMixin;
+    style?: ImageStyleProps & TransitionOptionMixin;
     emphasis?: CustomImageOptionOnState;
     blur?: CustomImageOptionOnState;
     select?: CustomImageOptionOnState;
 }
 
 export interface CustomTextOptionOnState extends CustomDisplayableOptionOnState {
-    style?: TextStyleProps & ElementTransitionOptionMixin;
+    style?: TextStyleProps & TransitionOptionMixin;
 }
 export interface CustomTextOption extends CustomDisplayableOption {
     type: 'text';
-    style?: TextStyleProps & ElementTransitionOptionMixin;
+    style?: TextStyleProps & TransitionOptionMixin;
     emphasis?: CustomTextOptionOnState;
     blur?: CustomTextOptionOnState;
     select?: CustomTextOptionOnState;
