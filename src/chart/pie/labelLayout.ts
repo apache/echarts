@@ -28,7 +28,7 @@ import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
 import { each, extend } from 'zrender/src/core/util';
 import { limitTurnAngle, limitSurfaceAngle } from '../../label/labelGuideHelper';
 import { shiftLayoutOnY } from '../../label/labelLayoutHelper';
-import { parsePlainText, parseRichText, RichTextContentBlock } from 'zrender/src/graphic/helper/parseText';
+import { parsePlainText, parseRichText } from 'zrender/src/graphic/helper/parseText';
 
 const RADIAN = Math.PI / 180;
 
@@ -222,7 +222,9 @@ function avoidOverlap(
                 const dy = block.contentHeight + paddingV - layout.rect.height;
                 layout.rect.y -= dy / 2;
                 layout.rect.width = realTextWidth;
-                layout.rect.height = block.contentHeight + paddingV;
+                // Add the same margin as in `pieLabelLayout`.
+                const margin = (label.style.margin || 0) + 2.1;
+                layout.rect.height = block.contentHeight + paddingV + margin;
             }
         }
     }
