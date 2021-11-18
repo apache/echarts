@@ -25,7 +25,6 @@ import {
     Dictionary,
     ZRStyleProps,
     OptionId,
-    OptionPreprocessor,
     CommonTooltipOption
 } from '../../util/types';
 import ComponentModel from '../../model/Component';
@@ -228,7 +227,6 @@ function mergeNewElOptionToExist(
     const $action = newElOption.$action || 'merge';
     if ($action === 'merge') {
         if (existElOption) {
-
             if (__DEV__) {
                 const newType = newElOption.type;
                 zrUtil.assert(
