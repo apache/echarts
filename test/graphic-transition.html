@@ -159,7 +159,7 @@ under the License.
                         type: 'circle',
                         x: 100,
                         y: 50,
-                        transition: ['x', 'y'],
+                        transition: 'all',
                         shape: {
                             cx: 0,
                             cy: 0,
@@ -184,7 +184,14 @@ under the License.
                             chart.setOption({
                                 graphic: {
                                     elements: [{
-                                        x: 200
+                                        x: Math.random() * chart.getWidth(),
+                                        y: Math.random() * chart.getHeight(),
+                                        shape: {
+                                            r: Math.random() * 30 + 50
+                                        },
+                                        style: {
+                                            fill: echarts.color.random()
+                                        }
                                     }]
                                 }
                             })

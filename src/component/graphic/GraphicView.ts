@@ -38,7 +38,7 @@ import {
     GraphicComponentGroupOption,
     GraphicComponentElementOption
 } from './GraphicModel';
-import { applyLeaveTransition, applyUpdateTransition } from '../../animation/customGraphicTransition';
+import { applyLeaveTransition, applyUpdateTransition, isTransitionAll } from '../../animation/customGraphicTransition';
 import { updateProps } from '../../animation/basicTrasition';
 
 const nonShapeGraphicElements = {
@@ -303,7 +303,7 @@ export class GraphicComponentView extends ComponentView {
                 for (let k = 0; k < xy.length; k++) {
                     const key = xy[k];
                     const val = layoutPos[key];
-                    if (transition && (transition === 'all' || zrUtil.indexOf(transition, key) >= 0)) {
+                    if (transition && (isTransitionAll(transition) || zrUtil.indexOf(transition, key) >= 0)) {
                         animatePos[key] = val;
                     }
                     else {

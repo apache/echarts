@@ -158,6 +158,10 @@ export function applyLeaveTransition(
     }
 }
 
+export function isTransitionAll(transition: TransitionProps): transition is 'all' {
+    return transition === 'all';
+}
+
 
 function applyPropsDirectly(
     el: Element,
@@ -405,7 +409,7 @@ function prepareShapeOrExtraTransitionFrom(
         const attrTransition = attrOpt.transition;
         if (attrTransition) {
             !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
-            if (attrTransition === 'all') {
+            if (isTransitionAll(attrTransition)) {
                 extend(transFromPropsInAttr, elPropsInAttr);
             }
             else {
@@ -417,7 +421,7 @@ function prepareShapeOrExtraTransitionFrom(
                 }
             }
         }
-        else if (transition === 'all' || indexOf(transition, mainAttr) >= 0) {
+        else if (isTransitionAll(transition) || indexOf(transition, mainAttr) >= 0) {
             !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
             const elPropsInAttrKeys = keys(elPropsInAttr);
             for (let i = 0; i < elPropsInAttrKeys.length; i++) {
@@ -482,7 +486,7 @@ function prepareTransformTransitionFrom(
 
     if (!isInit) {
         const transition = elOption.transition;
-        const transitionKeys = transition === 'all'
+        const transitionKeys = isTransitionAll(transition)
             ? TRANSFORM_PROPS
             : normalizeToArray(transition || []);
         for (let i = 0; i < transitionKeys.length; i++) {
@@ -562,8 +566,10 @@ function prepareStyleTransitionFrom(
     }
 
     if (!isInit && fromElStyle) {
-        if (styleOpt.transition) {
-            const transitionKeys = normalizeToArray(styleOpt.transition);
+        const styleTransition = styleOpt.transition;
+        const elTransition = elOption.transition;
+        if (styleTransition && !isTransitionAll(styleTransition)) {
+            const transitionKeys = normalizeToArray(styleTransition);
             !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
             for (let i = 0; i < transitionKeys.length; i++) {
                 const key = transitionKeys[i];
@@ -574,7 +580,11 @@ function prepareStyleTransitionFrom(
         }
         else if (
             (fromEl as Displayable).getAnimationStyleProps
-            && indexOf(elOption.transition, 'style') >= 0
+            && (
+                isTransitionAll(elTransition)
+                || isTransitionAll(styleTransition)
+                || indexOf(elTransition, 'style') >= 0
+            )
         ) {
             const animationProps = (fromEl as Displayable).getAnimationStyleProps();
             const animationStyleProps = animationProps ? animationProps.style : null;
