@@ -49,8 +49,8 @@ under the License.
                 graphic: {
                     elements: [{
                         type: 'circle',
-                        x: 100,
-                        y: 50,
+                        left: 'left',
+                        y: 100,
                         transition: ['x', 'y'],
                         shape: {
                             cx: 0,
@@ -76,6 +76,8 @@ under the License.
                             chart.setOption({
                                 graphic: {
                                     elements: [{
+                                        left: null,
+                                        top: null,
                                         x: 200
                                     }]
                                 }
@@ -90,6 +92,8 @@ under the License.
                             chart.setOption({
                                 graphic: {
                                     elements: [{
+                                        left: null,
+                                        top: null,
                                         y: 200
                                     }]
                                 }
@@ -103,6 +107,8 @@ under the License.
                             chart.setOption({
                                 graphic: {
                                     elements: [{
+                                        left: null,
+                                        top: null,
                                         x: 100,
                                         y: 50
                                     }]
@@ -119,6 +125,20 @@ under the License.
                                     elements: [{
                                         left: 'center',
                                         top: 'center'
+                                    }]
+                                }
+                            })
+                        }
+                    },
+
+                    {
+                        text: 'Move to top right',
+                        onclick() {
+                            chart.setOption({
+                                graphic: {
+                                    elements: [{
+                                        left: 'right',
+                                        top: 'top'
                                     }]
                                 }
                             })

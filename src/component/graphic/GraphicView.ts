@@ -39,6 +39,7 @@ import {
     GraphicComponentElementOption
 } from './GraphicModel';
 import { applyLeaveTransition, applyUpdateTransition } from '../../animation/customGraphicTransition';
+import { updateProps } from '../../animation/basicTrasition';
 
 const nonShapeGraphicElements = {
     // Reserved but not supported in graphic component.
@@ -57,6 +58,7 @@ export const inner = modelUtil.makeInner<{
     heightOption: number;
     width: number;
     height: number;
+    isNew: boolean;
     id: string;
 }, Element>();
 // ------------------------
@@ -162,6 +164,9 @@ export class GraphicComponentView extends ComponentView {
                 if (isInit) {
                     el = createEl(id, targetElParent, elOption.type, elMap);
                 }
+                else {
+                    el && (inner(el).isNew = false);
+                }
                 if (el) {
                     applyUpdateTransition(
                         el,
@@ -231,6 +236,8 @@ export class GraphicComponentView extends ComponentView {
         const apiWidth = api.getWidth();
         const apiHeight = api.getHeight();
 
+        const xy = ['x', 'y'] as const;
+
         // Top-down to calculate percentage width/height of group
         for (let i = 0; i < elOptions.length; i++) {
             const elOption = elOptions[i];
@@ -277,14 +284,37 @@ export class GraphicComponentView extends ComponentView {
                     height: parentElInner.height
                 };
 
+
+
             // PENDING
             // Currently, when `bounding: 'all'`, the union bounding rect of the group
             // does not include the rect of [0, 0, group.width, group.height], which
             // is probably weird for users. Should we make a break change for it?
-            layoutUtil.positionElement(
+            const layoutPos = {} as Record<'x' | 'y', number>;
+            const layouted = layoutUtil.positionElement(
                 el, elOption, containerInfo, null,
-                { hv: elOption.hv, boundingMode: elOption.bounding }
+                { hv: elOption.hv, boundingMode: elOption.bounding },
+                layoutPos
             );
+
+            if (!inner(el).isNew && layouted) {
+                const transition = elOption.transition;
+                const animatePos = {} as Record<'x' | 'y', number>;
+                for (let k = 0; k < xy.length; k++) {
+                    const key = xy[k];
+                    const val = layoutPos[key];
+                    if (transition && (transition === 'all' || zrUtil.indexOf(transition, key) >= 0)) {
+                        animatePos[key] = val;
+                    }
+                    else {
+                        el[key] = val;
+                    }
+                }
+                updateProps(el, animatePos, graphicModel, 0);
+            }
+            else {
+                el.attr(layoutPos);
+            }
         }
     }
 
@@ -330,6 +360,7 @@ function createEl(
     targetElParent.add(el);
     elMap.set(id, el);
     inner(el).id = id;
+    inner(el).isNew = true;
 
     return el;
 }
