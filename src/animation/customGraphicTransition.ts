@@ -29,7 +29,7 @@ import { initProps, updateProps } from './basicTrasition';
 import { Path } from '../util/graphic';
 import { warn } from '../util/log';
 import { AnimationOptionMixin, ZRStyleProps } from '../util/types';
-import { Dictionary } from 'zrender/lib/core/types';
+import { Dictionary } from 'zrender/src/core/types';
 import { PathStyleProps } from 'zrender';
 
 const LEGACY_TRANSFORM_PROPS_MAP = {

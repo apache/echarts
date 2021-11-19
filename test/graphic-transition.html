@@ -210,8 +210,51 @@ under the License.
 
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
-            var option;
-            // Enter transition
+            var option = {
+                graphic: {
+                    elements: [{
+                        type: 'circle',
+                        x: 200,
+                        y: 200,
+                        shape: {
+                            cx: 0,
+                            cy: 0,
+                            r: 100
+                        },
+                        style: {
+                            fill: 'gray'
+                        }
+                    }]
+                }
+            }
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'Transition all'
+                ],
+                option: option,
+                buttons: [
+                    {
+                        text: 'Randomize',
+                        onclick() {
+                            chart.setOption({
+                                graphic: {
+                                    elements: [{
+                                        x: Math.random() * chart.getWidth(),
+                                        y: Math.random() * chart.getHeight(),
+                                        shape: {
+                                            r: Math.random() * 30 + 50
+                                        },
+                                        style: {
+                                            fill: echarts.color.random()
+                                        }
+                                    }]
+                                }
+                            })
+                        }
+                    },
+                ]
+            });
         });
         </script>
 
