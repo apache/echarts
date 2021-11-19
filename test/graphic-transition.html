@@ -51,6 +51,7 @@ under the License.
                         type: 'circle',
                         x: 100,
                         y: 50,
+                        transition: ['x', 'y'],
                         shape: {
                             cx: 0,
                             cy: 0,
@@ -65,7 +66,7 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'Basic transition'
+                    'Transform transition'
                 ],
                 option: option,
                 buttons: [
@@ -75,8 +76,6 @@ under the License.
                             chart.setOption({
                                 graphic: {
                                     elements: [{
-                                        type: 'circle',
-                                        transition: ['x', 'y'],
                                         x: 200
                                     }]
                                 }
@@ -91,8 +90,6 @@ under the License.
                             chart.setOption({
                                 graphic: {
                                     elements: [{
-                                        type: 'circle',
-                                        transition: ['x', 'y'],
                                         y: 200
                                     }]
                                 }
@@ -106,10 +103,22 @@ under the License.
                             chart.setOption({
                                 graphic: {
                                     elements: [{
-                                        type: 'circle',
-                                        transition: ['x', 'y'],
                                         x: 100,
                                         y: 50
+                                    }]
+                                }
+                            })
+                        }
+                    },
+
+                    {
+                        text: 'Move to center',
+                        onclick() {
+                            chart.setOption({
+                                graphic: {
+                                    elements: [{
+                                        left: 'center',
+                                        top: 'center'
                                     }]
                                 }
                             })
@@ -121,6 +130,51 @@ under the License.
         });
         </script>
 
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option = {
+                graphic: {
+                    elements: [{
+                        type: 'circle',
+                        x: 100,
+                        y: 50,
+                        transition: ['x', 'y'],
+                        shape: {
+                            cx: 0,
+                            cy: 0,
+                            r: 50
+                        },
+                        style: {
+                            fill: 'orange'
+                        }
+                    }]
+                }
+            }
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'Transition all'
+                ],
+                option: option,
+                buttons: [
+                    {
+                        text: 'Randomize',
+                        onclick() {
+                            chart.setOption({
+                                graphic: {
+                                    elements: [{
+                                        x: 200
+                                    }]
+                                }
+                            })
+                        }
+                    },
+                ]
+            });
+
+        });
+        </script>
 
 
 

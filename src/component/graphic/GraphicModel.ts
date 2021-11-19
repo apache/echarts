@@ -210,6 +210,7 @@ export function setKeyInfoToNewElOption(
     newElOption.parentOption = null;
 }
 
+const TRANSITION_PROPS = ['transition', 'enterFrom', 'leaveTo'] as const;
 function isSetLoc(
     obj: GraphicComponentElementOption,
     props: ('left' | 'right' | 'top' | 'bottom')[]
@@ -247,6 +248,13 @@ function mergeNewElOptionToExist(
             mergeLayoutParam(existElOption, newElOptCopy, { ignoreSize: true });
             // Will be used in render.
             copyLayoutParams(newElOption, existElOption);
+
+            // Copy transition info to new option so it can be used in the transition.
+            // DO IT AFTER merge
+            copyTransitionInfo(newElOption, existElOption);
+            copyTransitionInfo(newElOption, existElOption, 'shape');
+            copyTransitionInfo(newElOption, existElOption, 'style');
+            copyTransitionInfo(newElOption, existElOption, 'extra');
         }
         else {
             existList[index] = newElOptCopy;
@@ -258,6 +266,31 @@ function mergeNewElOptionToExist(
     else if ($action === 'remove') {
         // null will be cleaned later.
         existElOption && (existList[index] = null);
+    }
+}
+
+function copyTransitionInfo(
+    target: GraphicComponentElementOption, source: GraphicComponentElementOption, targetProp?: string
+) {
+    if (targetProp) {
+        if (!(target as any)[targetProp]
+            && (source as any)[targetProp]
+        ) {
+            // TODO avoid creating this empty object when there is no transition configuration.
+            (target as any)[targetProp] = {};
+        }
+        target = (target as any)[targetProp];
+        source = (source as any)[targetProp];
+    }
+    if (!target || !source) {
+        return;
+    }
+
+    for (let i = 0; i < TRANSITION_PROPS.length; i++) {
+        const prop = TRANSITION_PROPS[i];
+        if (target[prop] == null && source[prop] != null) {
+            (target as any)[prop] = source[prop];
+        }
     }
 }
 

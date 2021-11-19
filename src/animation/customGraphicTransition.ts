@@ -18,12 +18,10 @@
 */
 
 // Helpers for custom graphic elements in custom series and graphic components.
-
-import Transformable from 'zrender/src/core/Transformable';
 import Element, { ElementProps } from 'zrender/src/Element';
 
 import { makeInner, normalizeToArray } from '../util/model';
-import { assert, bind, eqNaN, hasOwn, indexOf, isArrayLike, keys } from 'zrender/src/core/util';
+import { assert, bind, eqNaN, extend, hasOwn, indexOf, isArrayLike, keys } from 'zrender/src/core/util';
 import { cloneValue } from 'zrender/src/animation/Animator';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
 import Model from '../model/Model';
@@ -40,7 +38,6 @@ const LEGACY_TRANSFORM_PROPS_MAP = {
     origin: ['originX', 'originY']
 } as const;
 const LEGACY_TRANSFORM_PROPS = keys(LEGACY_TRANSFORM_PROPS_MAP);
-type LegacyTransformProp = keyof typeof LEGACY_TRANSFORM_PROPS_MAP;
 
 const TRANSFORM_PROPS_MAP = {
     x: 1,
@@ -55,19 +52,20 @@ type TransformProp = keyof typeof TRANSFORM_PROPS_MAP;
 const TRANSFORM_PROPS = keys(TRANSFORM_PROPS_MAP);
 const transformPropNamesStr = TRANSFORM_PROPS.join(', ');
 
-export type CustomTransitionProps = string | string[];
+export type TransitionProps = string | string[];
+export type ElementRootTransitionProp = TransformProp | 'shape' | 'extra' | 'style';
+
 export interface TransitionOptionMixin {
-    transition?: CustomTransitionProps;
+    transition?: TransitionProps | 'all';
     enterFrom?: Dictionary<unknown>;
     leaveTo?: Dictionary<unknown>;
 };
 
 export type ElementTransitionOptionMixin = {
-    transition?: ElementRootTransitionProp | ElementRootTransitionProp[];
+    transition?: ElementRootTransitionProp | ElementRootTransitionProp[] | 'all';
     enterFrom?: Dictionary<number>;
     leaveTo?: Dictionary<number>;
 };
-type ElementRootTransitionProp = TransformProp | 'shape' | 'extra' | 'style';
 
 interface LooseElementProps extends ElementProps {
     style?: ZRStyleProps;
@@ -90,18 +88,6 @@ const transitionInnerStore = makeInner<{
     leaveToProps: ElementProps;
     userDuring: (params: TransitionDuringAPI) => void;
 }, Element>();
-
-
-function setTransformPropToTransitionFrom(
-    transitionFrom: Partial<Pick<Transformable, TransformProp>>,
-    name: TransformProp,
-    fromTransformable?: Transformable // If provided, retrieve from the element.
-): void {
-    if (fromTransformable) {
-        transitionFrom[name] = fromTransformable[name];
-    }
-}
-
 
 export interface TransitionBaseDuringAPI {
     // Usually other props do not need to be changed in animation during.
@@ -182,32 +168,7 @@ function applyPropsDirectly(
     const styleOpt = (allPropsFinal as Displayable).style;
 
     if (elDisplayable && styleOpt) {
-
-        // PENDING: here the input style object is used directly.
-        // Good for performance but bad for compatibility control.
-        elDisplayable.useStyle(styleOpt);
-        // When style object changed, how to trade the existing animation?
-        // It is probably complicated and not needed to cover all the cases.
-        // But still need consider the case:
-        // (1) When using init animation on `style.opacity`, and before the animation
-        //     ended users triggers an update by mousewhel. At that time the init
-        //     animation should better be continued rather than terminated.
-        //     So after `useStyle` called, we should change the animation target manually
-        //     to continue the effect of the init animation.
-        // (2) PENDING: If the previous animation targeted at a `val1`, and currently we need
-        //     to update the value to `val2` and no animation declared, should be terminate
-        //     the previous animation or just modify the target of the animation?
-        //     Therotically That will happen not only on `style` but also on `shape` and
-        //     `transfrom` props. But we haven't handle this case at present yet.
-        // (3) PENDING: Is it proper to visit `animators` and `targetName`?
-        const animators = elDisplayable.animators;
-        for (let i = 0; i < animators.length; i++) {
-            const animator = animators[i];
-            // targetName is the "topKey".
-            if (animator.targetName === 'style') {
-                animator.changeTarget(elDisplayable.style);
-            }
-        }
+        elDisplayable.setStyle(styleOpt);
     }
 
     if (allPropsFinal) {
@@ -438,17 +399,25 @@ function prepareShapeOrExtraTransitionFrom(
         }
     }
 
+
     if (!isInit && elPropsInAttr) {
-        if (attrOpt.transition) {
+        const transition = elOption.transition;
+        const attrTransition = attrOpt.transition;
+        if (attrTransition) {
             !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
-            const transitionKeys = normalizeToArray(attrOpt.transition);
-            for (let i = 0; i < transitionKeys.length; i++) {
-                const key = transitionKeys[i];
-                const elVal = elPropsInAttr[key];
-                transFromPropsInAttr[key] = elVal;
+            if (attrTransition === 'all') {
+                extend(transFromPropsInAttr, elPropsInAttr);
+            }
+            else {
+                const transitionKeys = normalizeToArray(attrTransition);
+                for (let i = 0; i < transitionKeys.length; i++) {
+                    const key = transitionKeys[i];
+                    const elVal = elPropsInAttr[key];
+                    transFromPropsInAttr[key] = elVal;
+                }
             }
         }
-        else if (indexOf(elOption.transition, mainAttr) >= 0) {
+        else if (transition === 'all' || indexOf(transition, mainAttr) >= 0) {
             !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
             const elPropsInAttrKeys = keys(elPropsInAttr);
             for (let i = 0; i < elPropsInAttrKeys.length; i++) {
@@ -512,25 +481,21 @@ function prepareTransformTransitionFrom(
     }
 
     if (!isInit) {
-        if (elOption.transition) {
-            const transitionKeys = normalizeToArray(elOption.transition);
-            for (let i = 0; i < transitionKeys.length; i++) {
-                const key = transitionKeys[i];
-                if (key === 'style' || key === 'shape' || key === 'extra') {
-                    continue;
-                }
-                const elVal = el[key];
-                if (__DEV__) {
-                    checkTransformPropRefer(key, 'el.transition');
-                }
-                // Do not clone, animator will perform that clone.
-                transFromProps[key] = elVal;
+        const transition = elOption.transition;
+        const transitionKeys = transition === 'all'
+            ? TRANSFORM_PROPS
+            : normalizeToArray(transition || []);
+        for (let i = 0; i < transitionKeys.length; i++) {
+            const key = transitionKeys[i];
+            if (key === 'style' || key === 'shape' || key === 'extra') {
+                continue;
             }
-        }
-        // This default transition see [STRATEGY_TRANSITION]
-        else {
-            setTransformPropToTransitionFrom(transFromProps, 'x', el);
-            setTransformPropToTransitionFrom(transFromProps, 'y', el);
+            const elVal = el[key];
+            if (__DEV__) {
+                checkTransformPropRefer(key, 'el.transition');
+            }
+            // Do not clone, animator will perform that clone.
+            transFromProps[key] = elVal;
         }
     }
 
