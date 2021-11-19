@@ -18,16 +18,17 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
+import { TextStyleProps } from 'zrender/src/graphic/Text';
+import Displayable from 'zrender/src/graphic/Displayable';
+import Element from 'zrender/src/Element';
 import * as modelUtil from '../../util/model';
 import * as graphicUtil from '../../util/graphic';
 import * as layoutUtil from '../../util/layout';
 import { parsePercent } from '../../util/number';
-import Element from 'zrender/src/Element';
 import GlobalModel from '../../model/Global';
 import ComponentView from '../../view/Component';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { getECData } from '../../util/innerStore';
-import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { isEC4CompatibleStyle, convertFromEC4CompatibleStyle } from '../../util/styleCompat';
 import {
     ElementMap,
@@ -106,6 +107,9 @@ export class GraphicComponentView extends ComponentView {
         const elMap = this._elMap;
         const rootGroup = this.group;
 
+        const globalZ = graphicModel.get('z');
+        const globalZLevel = graphicModel.get('zlevel');
+
         // Top-down tranverse to assign graphic settings to each elements.
         zrUtil.each(elOptionsToUpdate, function (elOption) {
             const id = modelUtil.convertOptionIdName(elOption.id, null);
@@ -158,13 +162,16 @@ export class GraphicComponentView extends ComponentView {
                 if (isInit) {
                     el = createEl(id, targetElParent, elOption.type, elMap);
                 }
-                el && applyUpdateTransition(
-                    el,
-                    elOptionCleaned,
-                    graphicModel,
-                    0,  // TODO Fixed dataIndex to be 0
-                    isInit
-                );
+                if (el) {
+                    applyUpdateTransition(
+                        el,
+                        elOptionCleaned,
+                        graphicModel,
+                        0,  // TODO Fixed dataIndex to be 0
+                        isInit
+                    );
+                    updateZ(el, elOption, globalZ, globalZLevel);
+                }
             }
             else if ($action === 'replace') {
                 removeEl(elExisting, elMap, graphicModel);
@@ -177,6 +184,7 @@ export class GraphicComponentView extends ComponentView {
                         0,  // TODO Fixed dataIndex to be 0
                         true
                     );
+                    updateZ(el, elOption, globalZ, globalZLevel);
                 }
             }
             else if ($action === 'remove') {
@@ -334,6 +342,22 @@ function removeEl(elExisting: Element, elMap: ElementMap, graphicModel: GraphicC
         applyLeaveTransition(elExisting, graphicModel);
         elMap.removeKey(inner(elExisting).id);
     }
+}
+
+function updateZ(el: Element, elOption: GraphicComponentElementOption, defaultZ: number, defaultZlevel: number) {
+    if (el.isGroup) {
+        return;
+    }
+
+    const elDisplayable = el as Displayable;
+    // We should not support configure z and zlevel in the element level.
+    // But seems we didn't limit it previously. So here still use it to avoid breaking.
+    elDisplayable.z = zrUtil.retrieve2((elOption as any).z, defaultZ);
+    elDisplayable.zlevel = zrUtil.retrieve2((elOption as any).zlevel, defaultZlevel);
+    // z2 must not be null/undefined, otherwise sort error may occur.
+    const optZ2 = (elOption as GraphicComponentDisplayableOption).z2;
+    optZ2 != null && (elDisplayable.z2 = optZ2 || 0);
+
 }
 // Remove unnecessary props to avoid potential problems.
 function getCleanedElOption(

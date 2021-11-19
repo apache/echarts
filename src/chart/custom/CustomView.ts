@@ -491,9 +491,7 @@ function updateElOnState(
     el: Element,
     elStateOpt: CustomElementOptionOnState,
     styleOpt: CustomElementOptionOnState['style'],
-    attachedTxInfo: AttachedTxInfo,
-    isRoot: boolean,
-    isTextContent: boolean
+    attachedTxInfo: AttachedTxInfo
 ): void {
     const elDisplayable = el.isGroup ? null : el as Displayable;
     const txCfgOpt = attachedTxInfo && attachedTxInfo[state].cfg;
@@ -1009,7 +1007,7 @@ function doCreateOrUpdateEl(
         if (stateName !== NORMAL) {
             const otherStateOpt = retrieveStateOption(elOption, stateName);
             const otherStyleOpt = retrieveStyleOptionOnState(elOption, otherStateOpt, stateName);
-            updateElOnState(stateName, el, otherStateOpt, otherStyleOpt, attachedTxInfoTmp, isRoot, false);
+            updateElOnState(stateName, el, otherStateOpt, otherStyleOpt, attachedTxInfoTmp);
         }
     }
 
@@ -1161,7 +1159,7 @@ function doCreateOrUpdateAttachedTx(
                         textContent,
                         txConOptOtherState,
                         retrieveStyleOptionOnState(txConOptNormal, txConOptOtherState, stateName),
-                        null, false, true
+                        null
                     );
                 }
             }

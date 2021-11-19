@@ -99,6 +99,22 @@ under the License.
                             })
                         }
                     },
+
+                    {
+                        text: 'Move to x: 100, y: 50',
+                        onclick() {
+                            chart.setOption({
+                                graphic: {
+                                    elements: [{
+                                        type: 'circle',
+                                        transition: ['x', 'y'],
+                                        x: 100,
+                                        y: 50
+                                    }]
+                                }
+                            })
+                        }
+                    }
                 ]
             });
 
@@ -114,11 +130,34 @@ under the License.
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
+            // Enter transition
+        });
+        </script>
 
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            // Leave transition
+        });
+        </script>
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            // Replace transition
         });
         </script>
 
 
+        <script>
+            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+                var option;
+
+                // During transition
+            });
+        </script>
     </body>
 </html>
 

@@ -123,6 +123,7 @@ export interface GraphicComponentDisplayableOption extends
     Partial<Pick<Displayable, 'zlevel' | 'z' | 'z2' | 'invisible' | 'cursor'>> {
 
     style?: ZRStyleProps & TransitionOptionMixin
+    z2?: number
 }
 // TODO: states?
 // interface GraphicComponentDisplayableOptionOnState extends Partial<Pick<

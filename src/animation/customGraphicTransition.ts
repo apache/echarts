@@ -34,12 +34,26 @@ import { AnimationOptionMixin, ZRStyleProps } from '../util/types';
 import { Dictionary } from 'zrender/lib/core/types';
 import { PathStyleProps } from 'zrender';
 
-const LEGACY_TRANSFORM_PROPS = {
+const LEGACY_TRANSFORM_PROPS_MAP = {
     position: ['x', 'y'],
     scale: ['scaleX', 'scaleY'],
     origin: ['originX', 'originY']
 } as const;
-type LegacyTransformProp = keyof typeof LEGACY_TRANSFORM_PROPS;
+const LEGACY_TRANSFORM_PROPS = keys(LEGACY_TRANSFORM_PROPS_MAP);
+type LegacyTransformProp = keyof typeof LEGACY_TRANSFORM_PROPS_MAP;
+
+const TRANSFORM_PROPS_MAP = {
+    x: 1,
+    y: 1,
+    scaleX: 1,
+    scaleY: 1,
+    originX: 1,
+    originY: 1,
+    rotation: 1
+} as const;
+type TransformProp = keyof typeof TRANSFORM_PROPS_MAP;
+const TRANSFORM_PROPS = keys(TRANSFORM_PROPS_MAP);
+const transformPropNamesStr = TRANSFORM_PROPS.join(', ');
 
 export type CustomTransitionProps = string | string[];
 export interface TransitionOptionMixin {
@@ -54,17 +68,6 @@ export type ElementTransitionOptionMixin = {
     leaveTo?: Dictionary<number>;
 };
 type ElementRootTransitionProp = TransformProp | 'shape' | 'extra' | 'style';
-
-export const TRANSFORM_PROPS = {
-    x: 1,
-    y: 1,
-    scaleX: 1,
-    scaleY: 1,
-    originX: 1,
-    originY: 1,
-    rotation: 1
-} as const;
-export type TransformProp = keyof typeof TRANSFORM_PROPS;
 
 interface LooseElementProps extends ElementProps {
     style?: ZRStyleProps;
@@ -88,30 +91,6 @@ const transitionInnerStore = makeInner<{
     userDuring: (params: TransitionDuringAPI) => void;
 }, Element>();
 
-const transformPropNamesStr = keys(TRANSFORM_PROPS).join(', ');
-
-function setLegacyTransformProp(
-    elOption: TransitionElementOption,
-    targetProps: Partial<Pick<Transformable, TransformProp>>,
-    legacyName: LegacyTransformProp
-): void {
-    const legacyArr = (elOption as any)[legacyName];
-    const xyName = LEGACY_TRANSFORM_PROPS[legacyName];
-    if (legacyArr) {
-        targetProps[xyName[0]] = legacyArr[0];
-        targetProps[xyName[1]] = legacyArr[1];
-    }
-}
-
-function setTransformProp(
-    elOption: TransitionElementOption,
-    allProps: Partial<Pick<Transformable, TransformProp>>,
-    name: TransformProp
-): void {
-    if (elOption[name] != null) {
-        allProps[name] = elOption[name];
-    }
-}
 
 function setTransformPropToTransitionFrom(
     transitionFrom: Partial<Pick<Transformable, TransformProp>>,
@@ -158,10 +137,13 @@ export function applyUpdateTransition(
 
     prepareShapeOrExtraTransitionFrom('shape', el, elOption, transFromProps, isInit);
     prepareShapeOrExtraAllPropsFinal('shape', elOption, propsToSet);
+
     prepareTransformTransitionFrom(el, elOption, transFromProps, isInit);
     prepareTransformAllPropsFinal(el, elOption, propsToSet);
+
     prepareShapeOrExtraTransitionFrom('extra', el, elOption, transFromProps, isInit);
     prepareShapeOrExtraAllPropsFinal('extra', elOption, propsToSet);
+
     prepareStyleTransitionFrom(el, elOption, styleOpt, transFromProps, isInit);
     (propsToSet as DisplayableProps).style = styleOpt;
     applyPropsDirectly(el, propsToSet);
@@ -291,14 +273,14 @@ const transitionDuringAPI: TransitionDuringAPI = {
     // Usually other props do not need to be changed in animation during.
     setTransform(key: TransformProp, val: unknown) {
         if (__DEV__) {
-            assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `setTransform`.');
+            assert(hasOwn(TRANSFORM_PROPS_MAP, key), 'Only ' + transformPropNamesStr + ' available in `setTransform`.');
         }
         tmpDuringScope.el[key] = val as number;
         return this;
     },
     getTransform(key: TransformProp): number {
         if (__DEV__) {
-            assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `getTransform`.');
+            assert(hasOwn(TRANSFORM_PROPS_MAP, key), 'Only ' + transformPropNamesStr + ' available in `getTransform`.');
         }
         return tmpDuringScope.el[key];
     },
@@ -463,10 +445,6 @@ function prepareShapeOrExtraTransitionFrom(
             for (let i = 0; i < transitionKeys.length; i++) {
                 const key = transitionKeys[i];
                 const elVal = elPropsInAttr[key];
-                if (__DEV__) {
-                    checkNonStyleTansitionRefer(key, (attrOpt as any)[key], elVal);
-                }
-                // Do not clone, see `checkNonStyleTansitionRefer`.
                 transFromPropsInAttr[key] = elVal;
             }
         }
@@ -544,9 +522,8 @@ function prepareTransformTransitionFrom(
                 const elVal = el[key];
                 if (__DEV__) {
                     checkTransformPropRefer(key, 'el.transition');
-                    checkNonStyleTansitionRefer(key, elOption[key], elVal);
                 }
-                // Do not clone, see `checkNonStyleTansitionRefer`.
+                // Do not clone, animator will perform that clone.
                 transFromProps[key] = elVal;
             }
         }
@@ -576,17 +553,22 @@ function prepareTransformAllPropsFinal(
     elOption: TransitionElementOption,
     allProps: ElementProps
 ): void {
-    setLegacyTransformProp(elOption, allProps, 'position');
-    setLegacyTransformProp(elOption, allProps, 'scale');
-    setLegacyTransformProp(elOption, allProps, 'origin');
+    for (let i = 0; i < LEGACY_TRANSFORM_PROPS.length; i++) {
+        const legacyName = LEGACY_TRANSFORM_PROPS[i];
+        const xyName = LEGACY_TRANSFORM_PROPS_MAP[legacyName];
+        const legacyArr = (elOption as any)[legacyName];
+        if (legacyArr) {
+            allProps[xyName[0]] = legacyArr[0];
+            allProps[xyName[1]] = legacyArr[1];
+        }
+    }
 
-    setTransformProp(elOption, allProps, 'x');
-    setTransformProp(elOption, allProps, 'y');
-    setTransformProp(elOption, allProps, 'scaleX');
-    setTransformProp(elOption, allProps, 'scaleY');
-    setTransformProp(elOption, allProps, 'originX');
-    setTransformProp(elOption, allProps, 'originY');
-    setTransformProp(elOption, allProps, 'rotation');
+    for (let i = 0; i < TRANSFORM_PROPS.length; i++) {
+        const key = TRANSFORM_PROPS[i];
+        if (elOption[key] != null) {
+            allProps[key] = elOption[key];
+        }
+    }
 }
 
 function prepareStyleTransitionFrom(
@@ -657,26 +639,6 @@ function prepareStyleTransitionFrom(
     }
 }
 
-let checkNonStyleTansitionRefer: (propName: string, optVal: unknown, elVal: unknown) => void;
-if (__DEV__) {
-    checkNonStyleTansitionRefer = function (propName: string, optVal: unknown, elVal: unknown): void {
-        if (!isArrayLike(optVal)) {
-            assert(
-                optVal != null && isFinite(optVal as number),
-                'Prop `' + propName + '` must refer to a finite number or ArrayLike for transition.'
-            );
-        }
-        else {
-            // Try not to copy array for performance, but if user use the same object in different
-            // call of `renderItem`, it will casue animation transition fail.
-            assert(
-                optVal !== elVal,
-                'Prop `' + propName + '` must use different Array object each time for transition.'
-            );
-        }
-    };
-}
-
 function isNonStyleTransitionEnabled(optVal: unknown, elVal: unknown): boolean {
     // The same as `checkNonStyleTansitionRefer`.
     return !isArrayLike(optVal)
@@ -687,11 +649,10 @@ function isNonStyleTransitionEnabled(optVal: unknown, elVal: unknown): boolean {
 let checkTransformPropRefer: (key: string, usedIn: string) => void;
 if (__DEV__) {
     checkTransformPropRefer = function (key: string, usedIn: string): void {
-        assert(
-            hasOwn(TRANSFORM_PROPS, key),
-            'Prop `' + key + '` is not a permitted in `' + usedIn + '`. '
-                + 'Only `' + keys(TRANSFORM_PROPS).join('`, `') + '` are permitted.'
-        );
+        if (!hasOwn(TRANSFORM_PROPS_MAP, key)) {
+            warn('Prop `' + key + '` is not a permitted in `' + usedIn + '`. '
+               + 'Only `' + keys(TRANSFORM_PROPS_MAP).join('`, `') + '` are permitted.');
+        }
     };
 }
 
