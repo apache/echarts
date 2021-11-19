@@ -69,7 +69,7 @@ import {
     TransitionOptionMixin,
     TransitionBaseDuringAPI,
     TransitionDuringAPI
-} from '../../animation/customGraphicTransitionHelper';
+} from '../../animation/customGraphicTransition';
 import { TransformProp } from 'zrender/lib/core/Transformable';
 
 export type CustomExtraElementInfo = Dictionary<unknown>;

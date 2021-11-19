@@ -90,7 +90,7 @@ import CustomSeriesModel, {
 } from './CustomSeries';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { CustomSeriesOption } from '../../export/option';
-import { applyLeaveTransition, applyUpdateTransition } from '../../animation/customGraphicTransitionHelper';
+import { applyLeaveTransition, applyUpdateTransition } from '../../animation/customGraphicTransition';
 
 const EMPHASIS = 'emphasis' as const;
 const NORMAL = 'normal' as const;

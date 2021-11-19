@@ -36,7 +36,7 @@ import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import GlobalModel from '../../model/Global';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { copyLayoutParams, mergeLayoutParam } from '../../util/layout';
-import { ElementTransitionOptionMixin, TransitionOptionMixin } from '../../animation/customGraphicTransitionHelper';
+import { ElementTransitionOptionMixin, TransitionOptionMixin } from '../../animation/customGraphicTransition';
 
 interface GraphicComponentBaseElementOption extends
     Partial<Pick<

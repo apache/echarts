@@ -37,7 +37,7 @@ import {
     GraphicComponentGroupOption,
     GraphicComponentElementOption
 } from './GraphicModel';
-import { applyLeaveTransition, applyUpdateTransition } from '../../animation/customGraphicTransitionHelper';
+import { applyLeaveTransition, applyUpdateTransition } from '../../animation/customGraphicTransition';
 
 const nonShapeGraphicElements = {
     // Reserved but not supported in graphic component.
