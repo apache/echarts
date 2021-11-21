@@ -52,11 +52,14 @@ type TransformProp = keyof typeof TRANSFORM_PROPS_MAP;
 const TRANSFORM_PROPS = keys(TRANSFORM_PROPS_MAP);
 const transformPropNamesStr = TRANSFORM_PROPS.join(', ');
 
+// '' means root
+const ELEMENT_TRANSITION_PROPS = ['', 'style', 'shape', 'extra'] as const;
+
 export type TransitionProps = string | string[];
 export type ElementRootTransitionProp = TransformProp | 'shape' | 'extra' | 'style';
 
 export interface TransitionOptionMixin {
-    transition?: TransitionProps | 'all';
+    transition?: TransitionProps | 'all'
     enterFrom?: Dictionary<unknown>;
     leaveTo?: Dictionary<unknown>;
 };
@@ -106,13 +109,17 @@ export interface TransitionDuringAPI<
     getStyle<T extends keyof StyleOpt>(key: T): StyleOpt[T];
 };
 
+
 export function applyUpdateTransition(
     el: Element,
     elOption: TransitionElementOption,
     animatableModel?: Model<AnimationOptionMixin>,
-    dataIndex?: number,
-    isInit?: boolean
+    opts?: { dataIndex?: number, isInit?: boolean, clearStyle?: boolean}
 ) {
+    opts = opts || {};
+    const {dataIndex, isInit, clearStyle} = opts;
+
+    const hasAnimation = animatableModel.isAnimationEnabled();
     // Save the meta info for further morphing. Like apply on the sub morphing elements.
     const store = transitionInnerStore(el);
     const styleOpt = elOption.style;
@@ -121,22 +128,65 @@ export function applyUpdateTransition(
     const transFromProps = {} as ElementProps;
     const propsToSet = {} as ElementProps;
 
-    prepareShapeOrExtraTransitionFrom('shape', el, elOption, transFromProps, isInit);
-    prepareShapeOrExtraAllPropsFinal('shape', elOption, propsToSet);
-
-    prepareTransformTransitionFrom(el, elOption, transFromProps, isInit);
     prepareTransformAllPropsFinal(el, elOption, propsToSet);
-
-    prepareShapeOrExtraTransitionFrom('extra', el, elOption, transFromProps, isInit);
+    prepareShapeOrExtraAllPropsFinal('shape', elOption, propsToSet);
     prepareShapeOrExtraAllPropsFinal('extra', elOption, propsToSet);
 
-    prepareStyleTransitionFrom(el, elOption, styleOpt, transFromProps, isInit);
+    if (!isInit && hasAnimation) {
+        prepareTransformTransitionFrom(el, elOption, transFromProps);
+        prepareShapeOrExtraTransitionFrom('shape', el, elOption, transFromProps);
+        prepareShapeOrExtraTransitionFrom('extra', el, elOption, transFromProps);
+        prepareStyleTransitionFrom(el, elOption, styleOpt, transFromProps);
+    }
+
     (propsToSet as DisplayableProps).style = styleOpt;
-    applyPropsDirectly(el, propsToSet);
-    applyPropsTransition(el, dataIndex, animatableModel, transFromProps, isInit);
+
+    applyPropsDirectly(el, propsToSet, clearStyle);
     applyMiscProps(el, elOption);
 
+    if (hasAnimation) {
+        if (isInit) {
+            const enterFromProps: ElementProps = {};
+            for (let i = 0; i < ELEMENT_TRANSITION_PROPS.length; i++) {
+                const propName = ELEMENT_TRANSITION_PROPS[i];
+                const prop: TransitionOptionMixin = propName ? elOption[propName] : elOption;
+                if (prop && prop.enterFrom) {
+                    if (propName) {
+                        (enterFromProps as any)[propName] = (enterFromProps as any)[propName] || {};
+                    }
+                    extend(propName ? (enterFromProps as any)[propName] : enterFromProps, prop.enterFrom);
+                }
+            }
+            initProps(el, enterFromProps, animatableModel, {
+                dataIndex: dataIndex || 0, isFrom: true
+            });
+        }
+        else {
+            applyPropsTransition(el, dataIndex || 0, animatableModel, transFromProps);
+        }
+    }
+    // Store leave to be used in leave transition.
+    updateLeaveTo(el, elOption);
+
     styleOpt ? el.dirty() : el.markRedraw();
+}
+
+export function updateLeaveTo(el: Element, elOption: TransitionElementOption) {
+    // Try merge to previous set leaveTo
+    let leaveToProps: ElementProps = transitionInnerStore(el).leaveToProps;
+    for (let i = 0; i < ELEMENT_TRANSITION_PROPS.length; i++) {
+        const propName = ELEMENT_TRANSITION_PROPS[i];
+        const prop: TransitionOptionMixin = propName ? elOption[propName] : elOption;
+        if (prop && prop.leaveTo) {
+            if (!leaveToProps) {
+                leaveToProps = transitionInnerStore(el).leaveToProps = {};
+            }
+            if (propName) {
+                (leaveToProps as any)[propName] = (leaveToProps as any)[propName] || {};
+            }
+            extend(propName ? (leaveToProps as any)[propName] : leaveToProps, prop.leaveTo);
+        }
+    }
 }
 
 export function applyLeaveTransition(
@@ -166,13 +216,38 @@ export function isTransitionAll(transition: TransitionProps): transition is 'all
 function applyPropsDirectly(
     el: Element,
     // Can be null/undefined
-    allPropsFinal: ElementProps
+    allPropsFinal: ElementProps,
+    clearStyle: boolean
 ) {
-    const elDisplayable = el.isGroup ? null : el as Displayable;
     const styleOpt = (allPropsFinal as Displayable).style;
+    if (!el.isGroup && styleOpt) {
+        if (clearStyle) {
+            (el as Displayable).useStyle({});
 
-    if (elDisplayable && styleOpt) {
-        elDisplayable.setStyle(styleOpt);
+            // When style object changed, how to trade the existing animation?
+            // It is probably complicated and not needed to cover all the cases.
+            // But still need consider the case:
+            // (1) When using init animation on `style.opacity`, and before the animation
+            //     ended users triggers an update by mousewhel. At that time the init
+            //     animation should better be continued rather than terminated.
+            //     So after `useStyle` called, we should change the animation target manually
+            //     to continue the effect of the init animation.
+            // (2) PENDING: If the previous animation targeted at a `val1`, and currently we need
+            //     to update the value to `val2` and no animation declared, should be terminate
+            //     the previous animation or just modify the target of the animation?
+            //     Therotically That will happen not only on `style` but also on `shape` and
+            //     `transfrom` props. But we haven't handle this case at present yet.
+            // (3) PENDING: Is it proper to visit `animators` and `targetName`?
+            const animators = el.animators;
+            for (let i = 0; i < animators.length; i++) {
+                const animator = animators[i];
+                // targetName is the "topKey".
+                if (animator.targetName === 'style') {
+                    animator.changeTarget((el as Displayable).style);
+                }
+            }
+        }
+        (el as Displayable).setStyle(styleOpt);
     }
 
     if (allPropsFinal) {
@@ -189,8 +264,7 @@ function applyPropsTransition(
     dataIndex: number,
     model: Model<AnimationOptionMixin>,
     // Can be null/undefined
-    transFromProps: ElementProps,
-    isInit: boolean
+    transFromProps: ElementProps
 ): void {
     if (transFromProps) {
         // NOTE: Do not use `el.updateDuringAnimation` here becuase `el.updateDuringAnimation` will
@@ -206,9 +280,7 @@ function applyPropsTransition(
             isFrom: true,
             during: cfgDuringCall
         };
-        isInit
-            ? initProps(el, transFromProps, model, cfg)
-            : updateProps(el, transFromProps, model, cfg);
+        updateProps(el, transFromProps, model, cfg);
     }
 }
 
@@ -377,9 +449,8 @@ function duringCall(
 function prepareShapeOrExtraTransitionFrom(
     mainAttr: 'shape' | 'extra',
     fromEl: Element,
-    elOption: TransitionElementOption,
-    transFromProps: LooseElementProps,
-    isInit: boolean
+    elOption: ElementTransitionOptionMixin,
+    transFromProps: LooseElementProps
 ): void {
 
     const attrOpt: Dictionary<unknown> & TransitionOptionMixin = (elOption as any)[mainAttr];
@@ -390,21 +461,8 @@ function prepareShapeOrExtraTransitionFrom(
     const elPropsInAttr = (fromEl as LooseElementProps)[mainAttr];
     let transFromPropsInAttr: Dictionary<unknown>;
 
-    const enterFrom = attrOpt.enterFrom;
-    if (isInit && enterFrom) {
-        !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
-        const enterFromKeys = keys(enterFrom);
-        for (let i = 0; i < enterFromKeys.length; i++) {
-            // `enterFrom` props are not necessarily also declared in `shape`/`style`/...,
-            // for example, `opacity` can only declared in `enterFrom` but not in `style`.
-            const key = enterFromKeys[i];
-            // Do not clone, animator will perform that clone.
-            transFromPropsInAttr[key] = enterFrom[key];
-        }
-    }
 
-
-    if (!isInit && elPropsInAttr) {
+    if (elPropsInAttr) {
         const transition = elOption.transition;
         const attrTransition = attrOpt.transition;
         if (attrTransition) {
@@ -433,17 +491,6 @@ function prepareShapeOrExtraTransitionFrom(
             }
         }
     }
-
-    const leaveTo = attrOpt.leaveTo;
-    if (leaveTo) {
-        const leaveToProps = getOrCreateLeaveToPropsFromEl(fromEl);
-        const leaveToPropsInAttr: Dictionary<unknown> = leaveToProps[mainAttr] || (leaveToProps[mainAttr] = {});
-        const leaveToKeys = keys(leaveTo);
-        for (let i = 0; i < leaveToKeys.length; i++) {
-            const key = leaveToKeys[i];
-            leaveToPropsInAttr[key] = leaveTo[key];
-        }
-    }
 }
 
 function prepareShapeOrExtraAllPropsFinal(
@@ -468,52 +515,23 @@ function prepareShapeOrExtraAllPropsFinal(
 function prepareTransformTransitionFrom(
     el: Element,
     elOption: TransitionElementOption,
-    transFromProps: ElementProps,
-    isInit: boolean
+    transFromProps: ElementProps
 ): void {
-    const enterFrom = elOption.enterFrom;
-    if (isInit && enterFrom) {
-        const enterFromKeys = keys(enterFrom);
-        for (let i = 0; i < enterFromKeys.length; i++) {
-            const key = enterFromKeys[i] as TransformProp;
-            if (__DEV__) {
-                checkTransformPropRefer(key, 'el.enterFrom');
-            }
-            // Do not clone, animator will perform that clone.
-            transFromProps[key] = enterFrom[key] as number;
+    const transition = elOption.transition;
+    const transitionKeys = isTransitionAll(transition)
+        ? TRANSFORM_PROPS
+        : normalizeToArray(transition || []);
+    for (let i = 0; i < transitionKeys.length; i++) {
+        const key = transitionKeys[i];
+        if (key === 'style' || key === 'shape' || key === 'extra') {
+            continue;
         }
-    }
-
-    if (!isInit) {
-        const transition = elOption.transition;
-        const transitionKeys = isTransitionAll(transition)
-            ? TRANSFORM_PROPS
-            : normalizeToArray(transition || []);
-        for (let i = 0; i < transitionKeys.length; i++) {
-            const key = transitionKeys[i];
-            if (key === 'style' || key === 'shape' || key === 'extra') {
-                continue;
-            }
-            const elVal = el[key];
-            if (__DEV__) {
-                checkTransformPropRefer(key, 'el.transition');
-            }
-            // Do not clone, animator will perform that clone.
-            transFromProps[key] = elVal;
+        const elVal = el[key];
+        if (__DEV__) {
+            checkTransformPropRefer(key, 'el.transition');
         }
-    }
-
-    const leaveTo = elOption.leaveTo;
-    if (leaveTo) {
-        const leaveToProps = getOrCreateLeaveToPropsFromEl(el);
-        const leaveToKeys = keys(leaveTo);
-        for (let i = 0; i < leaveToKeys.length; i++) {
-            const key = leaveToKeys[i] as TransformProp;
-            if (__DEV__) {
-                checkTransformPropRefer(key, 'el.leaveTo');
-            }
-            leaveToProps[key] = leaveTo[key] as number;
-        }
+        // Do not clone, animator will perform that clone.
+        transFromProps[key] = elVal;
     }
 }
 
@@ -544,8 +562,7 @@ function prepareStyleTransitionFrom(
     fromEl: Element,
     elOption: TransitionElementOption,
     styleOpt: TransitionElementOption['style'],
-    transFromProps: LooseElementProps,
-    isInit: boolean
+    transFromProps: LooseElementProps
 ): void {
     if (!styleOpt) {
         return;
@@ -554,18 +571,7 @@ function prepareStyleTransitionFrom(
     const fromElStyle = (fromEl as LooseElementProps).style as LooseElementProps['style'];
     let transFromStyleProps: LooseElementProps['style'];
 
-    const enterFrom = styleOpt.enterFrom;
-    if (isInit && enterFrom) {
-        const enterFromKeys = keys(enterFrom);
-        !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
-        for (let i = 0; i < enterFromKeys.length; i++) {
-            const key = enterFromKeys[i];
-            // Do not clone, animator will perform that clone.
-            (transFromStyleProps as any)[key] = enterFrom[key];
-        }
-    }
-
-    if (!isInit && fromElStyle) {
+    if (fromElStyle) {
         const styleTransition = styleOpt.transition;
         const elTransition = elOption.transition;
         if (styleTransition && !isTransitionAll(styleTransition)) {
@@ -601,17 +607,6 @@ function prepareStyleTransitionFrom(
             }
         }
     }
-
-    const leaveTo = styleOpt.leaveTo;
-    if (leaveTo) {
-        const leaveToKeys = keys(leaveTo);
-        const leaveToProps = getOrCreateLeaveToPropsFromEl(fromEl);
-        const leaveToStyleProps = leaveToProps.style || (leaveToProps.style = {});
-        for (let i = 0; i < leaveToKeys.length; i++) {
-            const key = leaveToKeys[i];
-            (leaveToStyleProps as any)[key] = leaveTo[key];
-        }
-    }
 }
 
 function isNonStyleTransitionEnabled(optVal: unknown, elVal: unknown): boolean {
@@ -630,9 +625,3 @@ if (__DEV__) {
         }
     };
 }
-
-function getOrCreateLeaveToPropsFromEl(el: Element): LooseElementProps {
-    const innerEl = transitionInnerStore(el);
-    return innerEl.leaveToProps || (innerEl.leaveToProps = {});
-}
-

@@ -38,7 +38,12 @@ import {
     GraphicComponentGroupOption,
     GraphicComponentElementOption
 } from './GraphicModel';
-import { applyLeaveTransition, applyUpdateTransition, isTransitionAll } from '../../animation/customGraphicTransition';
+import {
+    applyLeaveTransition,
+    applyUpdateTransition,
+    isTransitionAll,
+    updateLeaveTo
+} from '../../animation/customGraphicTransition';
 import { updateProps } from '../../animation/basicTrasition';
 
 const nonShapeGraphicElements = {
@@ -172,8 +177,7 @@ export class GraphicComponentView extends ComponentView {
                         el,
                         elOptionCleaned,
                         graphicModel,
-                        0,  // TODO Fixed dataIndex to be 0
-                        isInit
+                        { isInit }
                     );
                     updateZ(el, elOption, globalZ, globalZLevel);
                 }
@@ -186,13 +190,13 @@ export class GraphicComponentView extends ComponentView {
                         el,
                         elOptionCleaned,
                         graphicModel,
-                        0,  // TODO Fixed dataIndex to be 0
-                        true
+                        { isInit: true}
                     );
                     updateZ(el, elOption, globalZ, globalZLevel);
                 }
             }
             else if ($action === 'remove') {
+                updateLeaveTo(elExisting, elOption);
                 removeEl(elExisting, elMap, graphicModel);
             }
 

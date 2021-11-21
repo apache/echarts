@@ -39,6 +39,7 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
 
 
 
@@ -184,10 +185,10 @@ under the License.
                             chart.setOption({
                                 graphic: {
                                     elements: [{
-                                        x: Math.random() * chart.getWidth(),
-                                        y: Math.random() * chart.getHeight(),
+                                        x: Math.random() * (chart.getWidth() - 100) + 50,
+                                        y: Math.random() * (chart.getHeight() - 100) + 50,
                                         shape: {
-                                            r: Math.random() * 30 + 50
+                                            r: Math.random() * 40 + 10
                                         },
                                         style: {
                                             fill: echarts.color.random()
@@ -210,47 +211,74 @@ under the License.
 
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
+
+            var elements = [{
+                type: 'circle',
+                name: 'target',
+                x: 300,
+                y: 100,
+                shape: {
+                    cx: 0,
+                    cy: 0,
+                    r: 100
+                },
+                style: {
+                    fill: 'gray'
+                }
+            }]
             var option = {
                 graphic: {
-                    elements: [{
-                        type: 'circle',
-                        x: 200,
-                        y: 200,
-                        shape: {
-                            cx: 0,
-                            cy: 0,
-                            r: 100
-                        },
-                        style: {
-                            fill: 'gray'
-                        }
-                    }]
+                    elements: elements
                 }
             }
 
-            var chart = testHelper.create(echarts, 'main1', {
+            var chart = testHelper.create(echarts, 'main2', {
                 title: [
-                    'Transition all'
+                    'Enter transition'
                 ],
                 option: option,
                 buttons: [
                     {
-                        text: 'Randomize',
+                        text: 'Create',
                         onclick() {
-                            chart.setOption({
-                                graphic: {
-                                    elements: [{
-                                        x: Math.random() * chart.getWidth(),
-                                        y: Math.random() * chart.getHeight(),
-                                        shape: {
-                                            r: Math.random() * 30 + 50
-                                        },
-                                        style: {
-                                            fill: echarts.color.random()
-                                        }
-                                    }]
+                            elements[1] = {
+                                type: 'circle',
+                                name: 'center',
+                                x: 300,
+                                y: 100,
+                                enterFrom: {
+                                    x: 0,
+                                    y: 100,
+                                    shape: {
+                                        r: 0
+                                    }
+                                },
+                                shape: {
+                                    cx: 0,
+                                    cy: 0,
+                                    r: 80
+                                },
+                                style: {
+                                    fill: 'orange'
                                 }
-                            })
+                            };
+                            chart.setOption(option)
+                        }
+                    },
+                    {
+                        text: 'Remove',
+                        onclick() {
+                            elements[1] = {
+                                leaveTo: {
+                                    x: 500,
+                                    y: 100,
+                                    shape: {
+                                        r: 0
+                                    }
+                                },
+                                $action: 'remove'
+                            };
+                            chart.setOption(option)
                         }
                     },
                 ]

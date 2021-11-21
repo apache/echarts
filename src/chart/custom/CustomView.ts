@@ -485,36 +485,13 @@ function updateElNormal(
                 (styleOpt as PathStyleProps).decal = decalPattern;
             }
         }
-
-        // Clear style
-        el.useStyle({});
-
-        // When style object changed, how to trade the existing animation?
-        // It is probably complicated and not needed to cover all the cases.
-        // But still need consider the case:
-        // (1) When using init animation on `style.opacity`, and before the animation
-        //     ended users triggers an update by mousewhel. At that time the init
-        //     animation should better be continued rather than terminated.
-        //     So after `useStyle` called, we should change the animation target manually
-        //     to continue the effect of the init animation.
-        // (2) PENDING: If the previous animation targeted at a `val1`, and currently we need
-        //     to update the value to `val2` and no animation declared, should be terminate
-        //     the previous animation or just modify the target of the animation?
-        //     Therotically That will happen not only on `style` but also on `shape` and
-        //     `transfrom` props. But we haven't handle this case at present yet.
-        // (3) PENDING: Is it proper to visit `animators` and `targetName`?
-        const animators = el.animators;
-        for (let i = 0; i < animators.length; i++) {
-            const animator = animators[i];
-            // targetName is the "topKey".
-            if (animator.targetName === 'style') {
-                animator.changeTarget(el.style);
-            }
-        }
     }
 
-    applyUpdateTransition(el, elOption, seriesModel, dataIndex, isInit);
-
+    applyUpdateTransition(el, elOption, seriesModel, {
+        dataIndex,
+        isInit,
+        clearStyle: true
+    });
 
     if (!isTextContent) {
         // `elOption.info` enables user to mount some info on
