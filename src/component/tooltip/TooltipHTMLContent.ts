@@ -46,7 +46,7 @@ const CSS_TRANSITION_VENDOR = toCSSVendorPrefix(TRANSITION_VENDOR, 'transition')
 const CSS_TRANSFORM_VENDOR = toCSSVendorPrefix(TRANSFORM_VENDOR, 'transform');
 
 // eslint-disable-next-line
-const gCssText = `position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;${env.transform3dSupported ? 'will-change:transform;' : ''}`;
+const gCssText = `position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;`;
 
 function mirrorPos(pos: string): string {
     pos = pos === 'left'
@@ -118,13 +118,13 @@ function assembleTransition(duration: number, onlyFade?: boolean): string {
     return CSS_TRANSITION_VENDOR + ':' + transitionText;
 }
 
-function assembleTransform(x: number, y: number, toString?: boolean) {
+function assembleTransform(x: number, y: number, toString?: boolean, enableTransform?: boolean) {
     // If using float on style, the final width of the dom might
     // keep changing slightly while mouse move. So `toFixed(0)` them.
     const x0 = x.toFixed(0) + 'px';
     const y0 = y.toFixed(0) + 'px';
     // not support transform, use `left` and `top` instead.
-    if (!env.transformSupported) {
+    if (!enableTransform && !env.transformSupported) {
         return toString
             ? `top:${y0};left:${x0};`
             : [['top', y0], ['left', x0]];
@@ -174,6 +174,7 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
 
 function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: boolean, onlyFade?: boolean) {
     const cssText: string[] = [];
+    const enableTransformPosition = tooltipModel.get('positioning') !== 'legacy';
     const transitionDuration = tooltipModel.get('transitionDuration');
     const backgroundColor = tooltipModel.get('backgroundColor');
     const shadowBlur = tooltipModel.get('shadowBlur');
@@ -187,6 +188,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: 
     cssText.push('box-shadow:' + boxShadow);
     // Animation transition. Do not animate when transitionDuration is 0.
     enableTransition && transitionDuration && cssText.push(assembleTransition(transitionDuration, onlyFade));
+    enableTransformPosition && env.transform3dSupported && cssText.push('will-change:transform;');
 
     if (backgroundColor) {
         if (env.canvasSupported) {
@@ -388,10 +390,11 @@ class TooltipHTMLContent {
             style.display = 'none';
         }
         else {
+            const enableTransform = tooltipModel.get('positioning') !== 'legacy';
             style.cssText = gCssText
                 + assembleCssText(tooltipModel, !this._firstShow, this._longHide)
                 // initial transform
-                + assembleTransform(styleCoord[0], styleCoord[1], true)
+                + assembleTransform(styleCoord[0], styleCoord[1], true, enableTransform)
                 + `border-color:${convertToColorString(nearPointColor)};`
                 + (tooltipModel.get('extraCssText') || '')
                 // If mouse occasionally move over the tooltip, a mouseout event will be

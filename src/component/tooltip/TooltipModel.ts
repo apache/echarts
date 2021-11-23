@@ -61,6 +61,12 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
     renderMode?: 'auto' | TooltipRenderMode   // TODO richText renamed canvas?
 
     /**
+     * 'transform': use css transform3d to position the tooltip
+     * 'legacy': use css left and top to position the tooltip
+     */
+    positioning?: 'transform' | 'legacy';
+
+    /**
      * If append popup dom to document.body
      * Only available when renderMode is html
      */
@@ -103,6 +109,8 @@ class TooltipModel extends ComponentModel<TooltipOption> {
         displayMode: 'single', // 'single' | 'multipleByCoordSys'
 
         renderMode: 'auto', // 'auto' | 'html' | 'richText'
+
+        positioning: 'transform', // 'transform' | 'legacy'
 
         // whether restraint content inside viewRect.
         // If renderMode: 'richText', default true.
