@@ -46,11 +46,19 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
     }
 
     function applyKeyframeAnimationOnProp(propName: typeof ELEMENT_ANIMATABLE_PROPS[number]) {
+        if (propName && !(el as any)[propName]) {
+            return;
+        }
+
         const animator = el.animate(propName, animationOpts.loop);
         each(keyframes, kf => {
             // Stop current animation.
             const animators = el.animators;
             const kfValues = propName ? kf[propName] : kf;
+            if (!kfValues) {
+                return;
+            }
+
             let propKeys = keys(kfValues);
             if (!propName) {
                 // PENDING performance?
