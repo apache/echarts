@@ -219,11 +219,11 @@ function avoidOverlap(
                 }));
                 realTextWidth = block.contentWidth + paddingH;
                 style.width = block.contentWidth;
-                const dy = block.contentHeight + paddingV - layout.rect.height;
+                const margin = (label.style.margin || 0) + 2.1;
+                const dy = block.contentHeight + paddingV + margin - layout.rect.height;
                 layout.rect.y -= dy / 2;
                 layout.rect.width = realTextWidth;
                 // Add the same margin as in `pieLabelLayout`.
-                const margin = (label.style.margin || 0) + 2.1;
                 layout.rect.height = block.contentHeight + paddingV + margin;
             }
         }
