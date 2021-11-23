@@ -58,12 +58,15 @@ under the License.
             for (var i = 0; i < count; i++) {
                 text += 'XY';
                 data.push({
-                    name: text + i,
+                    name: i + text + i,
                     value: Math.random()
                 });
             }
 
             var optionNone = {
+                tooltip: {
+                    show: true
+                },
                 series: [{
                     type: 'pie',
                     radius: '50%',
@@ -141,6 +144,7 @@ under the License.
                         length2: 15
                     },
                     label: {
+                        bleedMargin: 20,
                         edgeDistance: 20,
                         position: 'outer',
                         alignTo: 'labelLine'
@@ -184,7 +188,58 @@ under the License.
                     right: 0,
                     top: '50%',
                     bottom: 0
-                }]
+                }],
+                graphic: {
+                    elements: [{
+                        type: 'rect',
+                        shape: {
+                            x: 20,
+                            y: 0,
+                            width: window.innerWidth / 2 - 40,
+                            height: 200
+                        },
+                        style: {
+                            fill: 'none',
+                            stroke: '#f00'
+                        }
+                    }, {
+                        type: 'rect',
+                        shape: {
+                            x: window.innerWidth / 2 + 20,
+                            y: 0,
+                            width: window.innerWidth / 2 - 40,
+                            height: 200
+                        },
+                        style: {
+                            fill: 'none',
+                            stroke: '#f00'
+                        }
+                    }, {
+                        type: 'rect',
+                        shape: {
+                            x: 20 ,
+                            y: 200,
+                            width: window.innerWidth / 2 - 40,
+                            height: 200
+                        },
+                        style: {
+                            fill: 'none',
+                            stroke: '#f00'
+                        }
+                    }, {
+                        type: 'rect',
+                        shape: {
+                            x: window.innerWidth / 2 + 20,
+                            y: 200,
+                            width: window.innerWidth / 2 - 40,
+                            height: 200
+                        },
+                        style: {
+                            fill: 'none',
+                            stroke: '#f00'
+                        }
+                    }]
+                }
             };
 
             var chartNone = testHelper.create(echarts, 'main-none', {

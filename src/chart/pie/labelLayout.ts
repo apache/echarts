@@ -168,7 +168,6 @@ function avoidOverlap(
             const linePoints = layout.linePoints;
             const isAlignToEdge = layout.labelAlignTo === 'edge';
 
-            let realTextWidth = layout.rect.width;
             let targetTextWidth;
             if (isAlignToEdge) {
                 if (label.x < cx) {
@@ -215,14 +214,13 @@ function avoidOverlap(
                  */
                 const parstText = style.rich ? parseRichText : parsePlainText;
                 const block = parstText(style.text, extend(style, {
-                    width: targetTextWidth - paddingV
+                    width: targetTextWidth - paddingH
                 }));
-                realTextWidth = block.contentWidth + paddingH;
                 style.width = block.contentWidth;
                 const margin = (label.style.margin || 0) + 2.1;
                 const dy = block.contentHeight + paddingV + margin - layout.rect.height;
                 layout.rect.y -= dy / 2;
-                layout.rect.width = realTextWidth;
+                layout.rect.width = block.contentWidth + paddingH;
                 // Add the same margin as in `pieLabelLayout`.
                 layout.rect.height = block.contentHeight + paddingV + margin;
             }

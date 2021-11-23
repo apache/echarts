@@ -841,27 +841,9 @@ under the License.
                 };
 
                 var chart = testHelper.create(echarts, 'main9', {
+                    width: 1200,
                     title: 'Labels (rich text) should not be outside of the canvas',
-                    option: option,
-                    info: {
-                        label: {
-                            position: 'outer',
-                            alignTo: 'edge',
-                            margin: 20,
-                            fontSize: 30,
-                            padding: [5, 20],
-                            backgroundColor: 'rgba(0, 0, 255, 0.2)',
-                            rich: {
-                                a: {
-                                    fontSize: 46,
-                                    borderColor: 'rgba(0, 0, 255, 0.8)',
-                                    borderWidth: 1,
-                                    borderRadius: 10
-                                }
-                            },
-                            overflow: 'break'
-                        }
-                    }
+                    option: option
                 });
             });
 
@@ -920,19 +902,9 @@ under the License.
                 };
 
                 var chart = testHelper.create(echarts, 'main10', {
+                    width: 1200,
                     title: 'Labels (plain text) should not be outside of the canvas',
-                    option: option,
-                    info: {
-                        label: {
-                            position: 'outer',
-                            alignTo: 'edge',
-                            margin: 20,
-                            fontSize: 30,
-                            padding: [5, 20],
-                            backgroundColor: 'rgba(0, 0, 255, 0.2)',
-                            overflow: 'break'
-                        }
-                    }
+                    option: option
                 });
             });
 
