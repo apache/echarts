@@ -234,7 +234,7 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main2', {
                 title: [
-                    'Enter transition'
+                    'Enter / Leave transition'
                 ],
                 option: option,
                 buttons: [
@@ -253,6 +253,13 @@ under the License.
                                         r: 0
                                     }
                                 },
+                                leaveTo: {
+                                    x: 500,
+                                    y: 100,
+                                    shape: {
+                                        r: 0
+                                    }
+                                },
                                 shape: {
                                     cx: 0,
                                     cy: 0,
@@ -266,9 +273,21 @@ under the License.
                         }
                     },
                     {
-                        text: 'Remove',
+                        text: 'Replace',
                         onclick() {
                             elements[1] = {
+                                type: 'circle',
+                                name: 'center',
+                                $action: 'replace',
+                                x: 300,
+                                y: 100,
+                                enterFrom: {
+                                    x: 0,
+                                    y: 100,
+                                    shape: {
+                                        r: 0
+                                    }
+                                },
                                 leaveTo: {
                                     x: 500,
                                     y: 100,
@@ -276,6 +295,22 @@ under the License.
                                         r: 0
                                     }
                                 },
+                                shape: {
+                                    cx: 0,
+                                    cy: 0,
+                                    r: 80
+                                },
+                                style: {
+                                    fill: echarts.color.random()
+                                }
+                            };
+                            chart.setOption(option)
+                        }
+                    },
+                    {
+                        text: 'Remove',
+                        onclick() {
+                            elements[1] = {
                                 $action: 'remove'
                             };
                             chart.setOption(option)
@@ -283,22 +318,6 @@ under the License.
                     },
                 ]
             });
-        });
-        </script>
-
-        <script>
-        require(['echarts'/*, 'map/js/china' */], function (echarts) {
-            var option;
-
-            // Leave transition
-        });
-        </script>
-
-        <script>
-        require(['echarts'/*, 'map/js/china' */], function (echarts) {
-            var option;
-
-            // Replace transition
         });
         </script>
 

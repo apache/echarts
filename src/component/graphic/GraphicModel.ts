@@ -32,11 +32,13 @@ import ComponentModel from '../../model/Component';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { PathProps } from 'zrender/src/graphic/Path';
-import { ImageStyleProps } from 'zrender/src/graphic/Image';
+import { ImageStyleProps, ImageProps } from 'zrender/src/graphic/Image';
+import { TextStyleProps, TextProps } from 'zrender/src/graphic/Text';
 import GlobalModel from '../../model/Global';
-import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { copyLayoutParams, mergeLayoutParam } from '../../util/layout';
 import { ElementTransitionOptionMixin, TransitionOptionMixin } from '../../animation/customGraphicTransition';
+import { ElementKeyframeAnimationOption } from '../../animation/customGraphicKeyframeAnimation';
+import { GroupProps } from 'zrender/src/graphic/Group';
 
 interface GraphicComponentBaseElementOption extends
     Partial<Pick<
@@ -112,6 +114,7 @@ interface GraphicComponentBaseElementOption extends
     $action?: 'merge' | 'replace' | 'remove';
 
     tooltip?: CommonTooltipOption<unknown>;
+
 };
 
 
@@ -147,13 +150,17 @@ export interface GraphicComponentGroupOption
     // TODO: Can only set focus, blur on the root element.
     // children: Omit<GraphicComponentElementOption, 'focus' | 'blurScope'>[];
     children: GraphicComponentElementOption[];
+
+    animation?: ElementKeyframeAnimationOption<GroupProps>
 };
 export interface GraphicComponentZRPathOption extends GraphicComponentDisplayableOption {
     shape?: PathProps['shape'] & TransitionOptionMixin;
+    animation?: ElementKeyframeAnimationOption<PathProps>;
 }
 export interface GraphicComponentImageOption extends GraphicComponentDisplayableOption {
     type?: 'image';
     style?: ImageStyleProps & TransitionOptionMixin;
+    animation?: ElementKeyframeAnimationOption<ImageProps>;
 }
 // TODO: states?
 // interface GraphicComponentImageOptionOnState extends GraphicComponentDisplayableOptionOnState {
@@ -163,6 +170,7 @@ interface GraphicComponentTextOption
     extends Omit<GraphicComponentDisplayableOption, 'textContent' | 'textConfig'> {
     type?: 'text';
     style?: TextStyleProps;
+    animation?: ElementKeyframeAnimationOption<TextProps>;
 }
 export type GraphicComponentElementOption =
     GraphicComponentGroupOption |

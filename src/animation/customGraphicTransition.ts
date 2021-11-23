@@ -17,11 +17,11 @@
 * under the License.
 */
 
-// Helpers for custom graphic elements in custom series and graphic components.
+// Helpers for creating transitions in custom series and graphic components.
 import Element, { ElementProps } from 'zrender/src/Element';
 
 import { makeInner, normalizeToArray } from '../util/model';
-import { assert, bind, eqNaN, extend, hasOwn, indexOf, isArrayLike, keys } from 'zrender/src/core/util';
+import { assert, bind, each, eqNaN, extend, hasOwn, indexOf, isArrayLike, keys } from 'zrender/src/core/util';
 import { cloneValue } from 'zrender/src/animation/Animator';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
 import Model from '../model/Model';
@@ -53,7 +53,7 @@ const TRANSFORM_PROPS = keys(TRANSFORM_PROPS_MAP);
 const transformPropNamesStr = TRANSFORM_PROPS.join(', ');
 
 // '' means root
-const ELEMENT_TRANSITION_PROPS = ['', 'style', 'shape', 'extra'] as const;
+export const ELEMENT_ANIMATABLE_PROPS = ['', 'style', 'shape', 'extra'] as const;
 
 export type TransitionProps = string | string[];
 export type ElementRootTransitionProp = TransformProp | 'shape' | 'extra' | 'style';
@@ -147,8 +147,7 @@ export function applyUpdateTransition(
     if (hasAnimation) {
         if (isInit) {
             const enterFromProps: ElementProps = {};
-            for (let i = 0; i < ELEMENT_TRANSITION_PROPS.length; i++) {
-                const propName = ELEMENT_TRANSITION_PROPS[i];
+            each(ELEMENT_ANIMATABLE_PROPS, propName => {
                 const prop: TransitionOptionMixin = propName ? elOption[propName] : elOption;
                 if (prop && prop.enterFrom) {
                     if (propName) {
@@ -156,7 +155,7 @@ export function applyUpdateTransition(
                     }
                     extend(propName ? (enterFromProps as any)[propName] : enterFromProps, prop.enterFrom);
                 }
-            }
+            });
             initProps(el, enterFromProps, animatableModel, {
                 dataIndex: dataIndex || 0, isFrom: true
             });
@@ -174,8 +173,8 @@ export function applyUpdateTransition(
 export function updateLeaveTo(el: Element, elOption: TransitionElementOption) {
     // Try merge to previous set leaveTo
     let leaveToProps: ElementProps = transitionInnerStore(el).leaveToProps;
-    for (let i = 0; i < ELEMENT_TRANSITION_PROPS.length; i++) {
-        const propName = ELEMENT_TRANSITION_PROPS[i];
+    for (let i = 0; i < ELEMENT_ANIMATABLE_PROPS.length; i++) {
+        const propName = ELEMENT_ANIMATABLE_PROPS[i];
         const prop: TransitionOptionMixin = propName ? elOption[propName] : elOption;
         if (prop && prop.leaveTo) {
             if (!leaveToProps) {
@@ -303,8 +302,6 @@ function applyMiscProps(
 // Use it to avoid it be exposed to user.
 const tmpDuringScope = {} as {
     el: Element;
-    isShapeDirty: boolean;
-    isStyleDirty: boolean;
 };
 const transitionDuringAPI: TransitionDuringAPI = {
     // Usually other props do not need to be changed in animation during.
@@ -325,10 +322,10 @@ const transitionDuringAPI: TransitionDuringAPI = {
         if (__DEV__) {
             assertNotReserved(key);
         }
-        const shape = (tmpDuringScope.el as Path).shape
-            || ((tmpDuringScope.el as Path).shape = {});
+        const el = tmpDuringScope.el as Path;
+        const shape = el.shape || (el.shape = {});
         shape[key] = val;
-        tmpDuringScope.isShapeDirty = true;
+        el.dirtyShape && el.dirtyShape();
         return this;
     },
     getShape(key: any): any {
@@ -344,7 +341,8 @@ const transitionDuringAPI: TransitionDuringAPI = {
         if (__DEV__) {
             assertNotReserved(key);
         }
-        const style = (tmpDuringScope.el as Displayable).style;
+        const el = tmpDuringScope.el as Displayable;
+        const style = el.style;
         if (style) {
             if (__DEV__) {
                 if (eqNaN(val)) {
@@ -352,7 +350,7 @@ const transitionDuringAPI: TransitionDuringAPI = {
                 }
             }
             style[key] = val;
-            tmpDuringScope.isStyleDirty = true;
+            el.dirtyStyle && el.dirtyStyle();
         }
         return this;
     },
@@ -427,20 +425,9 @@ function duringCall(
     }
 
     tmpDuringScope.el = el;
-    tmpDuringScope.isShapeDirty = false;
-    tmpDuringScope.isStyleDirty = false;
 
     // Give no `this` to user in "during" calling.
     scopeUserDuring(transitionDuringAPI);
-
-    if (tmpDuringScope.isShapeDirty && (el as Path).dirtyShape) {
-        (el as Path).dirtyShape();
-    }
-    if (tmpDuringScope.isStyleDirty && (el as Displayable).dirtyStyle) {
-        (el as Displayable).dirtyStyle();
-    }
-    // markRedraw() will be called by default in during.
-    // FIXME `this.markRedraw();` directly ?
 
     // FIXME: if in future meet the case that some prop will be both modified in `during` and `state`,
     // consider the issue that the prop might be incorrect when return to "normal" state.
