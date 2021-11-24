@@ -196,33 +196,32 @@ function avoidOverlap(
                 }
             }
 
-            if (targetTextWidth < layout.rect.width) {
-                const style = layout.label.style;
-                const padding = style.padding as number[];
-                const paddingH = padding ? padding[1] + padding[3] : 0;
-                const paddingV = padding ? padding[0] + padding[2] : 0;
-                /**
-                 * Parsing the rich text to get the constraining width.
-                 *
-                 * Consider the case where text is "{aabbcc|real names}", its
-                 * width is not determined by the characters of this string but
-                 * the parsed text in varied lines. Let's assume in this case,
-                 * "real" and "names" are separated into two lines due to
-                 * `overflow` being `'break'`. `style.width` should be the
-                 * `contentWidth` of the parsed rich text, which is also the
-                 * bigger one of the width of "real" and "names".
-                 */
-                const parstText = style.rich ? parseRichText : parsePlainText;
-                const block = parstText(style.text, extend(style, {
-                    width: targetTextWidth - paddingH
-                }));
-                style.width = block.contentWidth;
-                const margin = (label.style.margin || 0) + 2.1;
-                const dy = block.contentHeight + paddingV + margin - layout.rect.height;
-                layout.rect.y -= dy / 2;
-                layout.rect.width = block.contentWidth + paddingH;
-                // Add the same margin as in `pieLabelLayout`.
-                layout.rect.height = block.contentHeight + paddingV + margin;
+            const style = layout.label.style;
+            const padding = style.padding as number[];
+            const paddingH = padding ? padding[1] + padding[3] : 0;
+            const paddingV = padding ? padding[0] + padding[2] : 0;
+            const wrapWidth = targetTextWidth - paddingH;
+
+            if (wrapWidth < layout.rect.width) {
+                // Temporarily set background to be null to calculate
+                // the bounding box without backgroud.
+                const oldBgColor = layout.label.style.backgroundColor;
+                layout.label.setStyle('backgroundColor', null);
+                layout.label.setStyle('width', wrapWidth);
+
+                // This is the real bounding box of the text
+                const rect = layout.label.getBoundingRect();
+                targetTextWidth = rect.width + paddingH;
+
+                layout.rect.width = targetTextWidth;
+                layout.rect.y -= (rect.height - layout.rect.height) / 2;
+                layout.rect.height = rect.height + paddingV;
+
+                // For background width
+                layout.label.setStyle('width', rect.width);
+
+                // Revert background color
+                layout.label.setStyle('backgroundColor', oldBgColor);
             }
         }
     }
