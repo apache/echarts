@@ -21,7 +21,7 @@ import { AnimationEasing } from 'zrender/src/animation/easing';
 import Element from 'zrender/src/Element';
 import { keys, filter, each } from 'zrender/src/core/util';
 import { ELEMENT_ANIMATABLE_PROPS } from './customGraphicTransition';
-import { ElementAnimationOption } from '../util/types';
+import { AnimationOption } from '../util/types';
 
 // Helpers for creating keyframe based animations in custom series and graphic components.
 
@@ -30,7 +30,7 @@ type AnimationKeyframe<T extends Record<string, any>> = T & {
     percent?: number    // 0 - 1
 };
 
-export interface ElementKeyframeAnimationOption<Props extends Record<string, any>> extends ElementAnimationOption {
+export interface ElementKeyframeAnimationOption<Props extends Record<string, any>> extends AnimationOption {
     // Animation configuration for keyframe based animation.
     loop?: boolean
     keyframes?: AnimationKeyframe<Props>[]

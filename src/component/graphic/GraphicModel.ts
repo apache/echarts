@@ -151,16 +151,16 @@ export interface GraphicComponentGroupOption
     // children: Omit<GraphicComponentElementOption, 'focus' | 'blurScope'>[];
     children: GraphicComponentElementOption[];
 
-    animation?: ElementKeyframeAnimationOption<GroupProps>
+    keyframeAnimation?: ElementKeyframeAnimationOption<GroupProps>
 };
 export interface GraphicComponentZRPathOption extends GraphicComponentDisplayableOption {
     shape?: PathProps['shape'] & TransitionOptionMixin;
-    animation?: ElementKeyframeAnimationOption<PathProps>;
+    keyframeAnimation?: ElementKeyframeAnimationOption<PathProps>;
 }
 export interface GraphicComponentImageOption extends GraphicComponentDisplayableOption {
     type?: 'image';
     style?: ImageStyleProps & TransitionOptionMixin;
-    animation?: ElementKeyframeAnimationOption<ImageProps>;
+    keyframeAnimation?: ElementKeyframeAnimationOption<ImageProps>;
 }
 // TODO: states?
 // interface GraphicComponentImageOptionOnState extends GraphicComponentDisplayableOptionOnState {
@@ -170,7 +170,7 @@ interface GraphicComponentTextOption
     extends Omit<GraphicComponentDisplayableOption, 'textContent' | 'textConfig'> {
     type?: 'text';
     style?: TextStyleProps;
-    animation?: ElementKeyframeAnimationOption<TextProps>;
+    keyframeAnimation?: ElementKeyframeAnimationOption<TextProps>;
 }
 export type GraphicComponentElementOption =
     GraphicComponentGroupOption |

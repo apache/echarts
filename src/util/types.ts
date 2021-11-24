@@ -820,12 +820,7 @@ export interface AnimationOption {
     delay?: number
     // additive?: boolean
 }
-export interface ElementAnimationOption extends AnimationOption {
-    // Animation configuration of enter, update and leave transition.
-    enter?: AnimationOption
-    update?: AnimationOption
-    leave?: AnimationOption
-}
+
 /**
  * Mixin of option set to control the animation of series.
  */

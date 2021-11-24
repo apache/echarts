@@ -228,8 +228,8 @@ export class GraphicComponentView extends ComponentView {
                     itemTooltipOption: elOption.tooltip
                 });
 
-                if (elOption.animation) {
-                    applyKeyframeAnimation(el, elOption.animation);
+                if (elOption.keyframeAnimation) {
+                    applyKeyframeAnimation(el, elOption.keyframeAnimation);
                 }
             }
         });
