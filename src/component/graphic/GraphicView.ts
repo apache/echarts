@@ -60,12 +60,11 @@ const nonShapeGraphicElements = {
 type NonShapeGraphicElementType = keyof typeof nonShapeGraphicElements;
 
 export const inner = modelUtil.makeInner<{
-    widthOption: number;
-    heightOption: number;
     width: number;
     height: number;
     isNew: boolean;
     id: string;
+    option: GraphicComponentElementOption
 }, Element>();
 // ------------------------
 // View
@@ -184,7 +183,7 @@ export class GraphicComponentView extends ComponentView {
                 }
             }
             else if ($action === 'replace') {
-                removeEl(elExisting, elMap, graphicModel);
+                removeEl(elExisting, elOption, elMap, graphicModel);
                 const el = createEl(id, targetElParent, elOption.type, elMap);
                 if (el) {
                     applyUpdateTransition(
@@ -198,7 +197,7 @@ export class GraphicComponentView extends ComponentView {
             }
             else if ($action === 'remove') {
                 updateLeaveTo(elExisting, elOption);
-                removeEl(elExisting, elMap, graphicModel);
+                removeEl(elExisting, elOption, elMap, graphicModel);
             }
 
             const el = elMap.get(id);
@@ -217,8 +216,7 @@ export class GraphicComponentView extends ComponentView {
 
             if (el) {
                 const elInner = inner(el);
-                elInner.widthOption = (elOption as GraphicComponentGroupOption).width;
-                elInner.heightOption = (elOption as GraphicComponentGroupOption).height;
+                elInner.option = elOption;
                 setEventData(el, graphicModel, elOption);
 
                 graphicUtil.setTooltipConfig({
@@ -262,11 +260,11 @@ export class GraphicComponentView extends ComponentView {
             const elInner = inner(el);
             const parentElInner = inner(parentEl);
             elInner.width = parsePercent(
-                elInner.widthOption,
+                (elInner.option as GraphicComponentGroupOption).width,
                 isParentRoot ? apiWidth : parentElInner.width
             ) || 0;
             elInner.height = parsePercent(
-                elInner.heightOption,
+                (elInner.option as GraphicComponentGroupOption).height,
                 isParentRoot ? apiHeight : parentElInner.height
             ) || 0;
         }
@@ -333,7 +331,7 @@ export class GraphicComponentView extends ComponentView {
     private _clear(): void {
         const elMap = this._elMap;
         elMap.each((el) => {
-            removeEl(el, elMap, this._lastGraphicModel);
+            removeEl(el, inner(el).option, elMap, this._lastGraphicModel);
         });
         this._elMap = zrUtil.createHashMap();
     }
@@ -373,13 +371,18 @@ function createEl(
 
     return el;
 }
-function removeEl(elExisting: Element, elMap: ElementMap, graphicModel: GraphicComponentModel): void {
+function removeEl(
+    elExisting: Element,
+    elOption: GraphicComponentElementOption,
+    elMap: ElementMap,
+    graphicModel: GraphicComponentModel
+): void {
     const existElParent = elExisting && elExisting.parent;
     if (existElParent) {
         elExisting.type === 'group' && elExisting.traverse(function (el) {
-            removeEl(el, elMap, graphicModel);
+            removeEl(el, elOption, elMap, graphicModel);
         });
-        applyLeaveTransition(elExisting, graphicModel);
+        applyLeaveTransition(elExisting, elOption, graphicModel);
         elMap.removeKey(inner(elExisting).id);
     }
 }

@@ -23,6 +23,7 @@ import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { ZRenderType } from 'zrender/src/zrender';
 import { BarGridLayoutOptionForCustomSeries, BarGridLayoutResult } from '../../layout/barGrid';
 import {
+    AnimationOption,
     BlurScope,
     CallbackDataParams,
     Dictionary,
@@ -119,6 +120,10 @@ export interface CustomBaseElementOption extends Partial<Pick<
     extra?: Dictionary<unknown> & TransitionOptionMixin;
     // updateDuringAnimation
     during?(params: TransitionBaseDuringAPI): void;
+
+    enterAnimation?: AnimationOption
+    updateAnimation?: AnimationOption
+    leaveAnimation?: AnimationOption
 };
 
 export interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<

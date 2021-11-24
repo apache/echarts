@@ -26,7 +26,8 @@ import {
     ZRStyleProps,
     OptionId,
     CommonTooltipOption,
-    AnimationOptionMixin
+    AnimationOptionMixin,
+    AnimationOption
 } from '../../util/types';
 import ComponentModel from '../../model/Component';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
@@ -115,6 +116,9 @@ interface GraphicComponentBaseElementOption extends
 
     tooltip?: CommonTooltipOption<unknown>;
 
+    enterAnimation?: AnimationOption
+    updateAnimation?: AnimationOption
+    leaveAnimation?: AnimationOption
 };
 
 
@@ -223,7 +227,6 @@ export function setKeyInfoToNewElOption(
     newElOption.parentOption = null;
 }
 
-const TRANSITION_PROPS = ['transition', 'enterFrom', 'leaveTo'] as const;
 function isSetLoc(
     obj: GraphicComponentElementOption,
     props: ('left' | 'right' | 'top' | 'bottom')[]
@@ -282,8 +285,13 @@ function mergeNewElOptionToExist(
     }
 }
 
+const TRANSITION_PROPS_TO_COPY = ['transition', 'enterFrom', 'leaveTo'];
+const ROOT_TRANSITION_PROPS_TO_COPY =
+    TRANSITION_PROPS_TO_COPY.concat(['enterAnimation', 'updateAnimation', 'leaveAnimation']);
 function copyTransitionInfo(
-    target: GraphicComponentElementOption, source: GraphicComponentElementOption, targetProp?: string
+    target: GraphicComponentElementOption,
+    source: GraphicComponentElementOption,
+    targetProp?: string
 ) {
     if (targetProp) {
         if (!(target as any)[targetProp]
@@ -299,10 +307,11 @@ function copyTransitionInfo(
         return;
     }
 
-    for (let i = 0; i < TRANSITION_PROPS.length; i++) {
-        const prop = TRANSITION_PROPS[i];
-        if (target[prop] == null && source[prop] != null) {
-            (target as any)[prop] = source[prop];
+    const props = targetProp ? TRANSITION_PROPS_TO_COPY : ROOT_TRANSITION_PROPS_TO_COPY;
+    for (let i = 0; i < props.length; i++) {
+        const prop = props[i];
+        if ((target as any)[prop] == null && (source as any)[prop] != null) {
+            (target as any)[prop] = (source as any)[prop];
         }
     }
 }

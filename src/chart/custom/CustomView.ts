@@ -223,7 +223,8 @@ export default class CustomChartView extends ChartView {
                 );
             })
             .remove(function (oldIdx) {
-                applyLeaveTransition(oldData.getItemGraphicEl(oldIdx), customSeries);
+                const el = oldData.getItemGraphicEl(oldIdx);
+                applyLeaveTransition(el, customInnerStore(el).option, customSeries);
             })
             .update(function (newIdx, oldIdx) {
                 const oldEl = oldData.getItemGraphicEl(oldIdx);
@@ -1059,8 +1060,8 @@ function doesElNeedRecreate(el: Element, elOption: CustomElementOption, seriesMo
             && elOptionType !== elInner.customGraphicType
         )
         || (elOptionType === 'path'
-            && hasOwnPathData(elOptionShape)
-            && getPathData(elOptionShape) !== elInner.customPathData
+            && hasOwnPathData(elOptionShape as CustomSVGPathOption['shape'])
+            && getPathData(elOptionShape as CustomSVGPathOption['shape']) !== elInner.customPathData
         )
         || (elOptionType === 'image'
             && hasOwn(elOptionStyle, 'image')
@@ -1323,7 +1324,8 @@ function mergeChildren(
         // Do not supprot leave elements that are not mentioned in the latest
         // `renderItem` return. Otherwise users may not have a clear and simple
         // concept that how to contorl all of the elements.
-        applyLeaveTransition(el.childAt(i), seriesModel);
+        const child = el.childAt(i);
+        applyLeaveTransition(child, customInnerStore(el).option, seriesModel);
     }
 }
 
@@ -1377,7 +1379,7 @@ function processAddUpdate(
 function processRemove(this: DataDiffer<DiffGroupContext>, oldIndex: number): void {
     const context = this.context;
     const child = context.oldChildren[oldIndex];
-    applyLeaveTransition(child, context.seriesModel);
+    applyLeaveTransition(child, customInnerStore(child).option, context.seriesModel);
 }
 
 /**

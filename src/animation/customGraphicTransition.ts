@@ -18,14 +18,14 @@
 */
 
 // Helpers for creating transitions in custom series and graphic components.
-import Element, { ElementProps } from 'zrender/src/Element';
+import Element, { ElementAnimateConfig, ElementProps } from 'zrender/src/Element';
 
 import { makeInner, normalizeToArray } from '../util/model';
 import { assert, bind, each, eqNaN, extend, hasOwn, indexOf, isArrayLike, keys } from 'zrender/src/core/util';
 import { cloneValue } from 'zrender/src/animation/Animator';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
 import Model from '../model/Model';
-import { initProps, updateProps } from './basicTrasition';
+import { getAnimationConfig, updateProps } from './basicTrasition';
 import { Path } from '../util/graphic';
 import { warn } from '../util/log';
 import { AnimationOption, AnimationOptionMixin, ZRStyleProps } from '../util/types';
@@ -58,8 +58,8 @@ export const ELEMENT_ANIMATABLE_PROPS = ['', 'style', 'shape', 'extra'] as const
 export type TransitionProps = string | string[];
 export type ElementRootTransitionProp = TransformProp | 'shape' | 'extra' | 'style';
 
-export interface TransitionOptionMixin<T = unknown> {
-    transition?: TransitionProps | 'all'
+export interface TransitionOptionMixin<T = Record<string, any>> {
+    transition?: (keyof T & string) | ((keyof T & string)[]) | 'all'
 
     enterFrom?: T;
     leaveTo?: T;
@@ -108,6 +108,20 @@ export interface TransitionDuringAPI<
     getStyle<T extends keyof StyleOpt>(key: T): StyleOpt[T];
 };
 
+function getElementAnimationConfig(
+    animationType: 'enter' | 'update' | 'leave',
+    elOption: TransitionElementOption,
+    parentModel: Model<AnimationOptionMixin>,
+    dataIndex?: number
+) {
+    const animationProp = `${animationType}Animation` as const;
+    const config: ElementAnimateConfig = getAnimationConfig(animationType, parentModel, dataIndex) || {};
+    config.setToFinal = true;
+    config.scope = animationType;
+    extend(config, elOption[animationProp]);
+    return config;
+}
+
 
 export function applyUpdateTransition(
     el: Element,
@@ -155,12 +169,13 @@ export function applyUpdateTransition(
                     extend(propName ? (enterFromProps as any)[propName] : enterFromProps, prop.enterFrom);
                 }
             });
-            initProps(el, enterFromProps, animatableModel, {
-                dataIndex: dataIndex || 0, isFrom: true
-            });
+            const config = getElementAnimationConfig('enter', elOption, animatableModel, dataIndex);
+            if (config.duration > 0) {
+                el.animateFrom(enterFromProps, config);
+            }
         }
         else {
-            applyPropsTransition(el, dataIndex || 0, animatableModel, transFromProps);
+            applyPropsTransition(el, elOption, dataIndex || 0, animatableModel, transFromProps);
         }
     }
     // Store leave to be used in leave transition.
@@ -189,20 +204,27 @@ export function updateLeaveTo(el: Element, elOption: TransitionElementOption) {
 
 export function applyLeaveTransition(
     el: Element,
+    elOption: TransitionElementOption,
     animatableModel: Model<AnimationOptionMixin>,
     onRemove?: () => void
 ): void {
     if (el) {
         const parent = el.parent;
         const leaveToProps = transitionInnerStore(el).leaveToProps;
-        leaveToProps
-            ? updateProps(el, leaveToProps, animatableModel, {
-                cb: function () {
-                    parent.remove(el);
-                    onRemove && onRemove();
-                }
-            })
-            : (parent.remove(el), onRemove && onRemove());
+        if (leaveToProps) {
+            // TODO TODO use leave after leaveAnimation in series is introduced
+            // TODO Data index?
+            const config = getElementAnimationConfig('update', elOption, animatableModel, 0);
+            config.done = () => {
+                parent.remove(el);
+                onRemove && onRemove();
+            };
+            el.animateTo(leaveToProps, config);
+        }
+        else {
+            parent.remove(el);
+            onRemove && onRemove();
+        }
     }
 }
 
@@ -259,6 +281,7 @@ function applyPropsDirectly(
 
 function applyPropsTransition(
     el: Element,
+    elOption: TransitionElementOption,
     dataIndex: number,
     model: Model<AnimationOptionMixin>,
     // Can be null/undefined
@@ -273,12 +296,12 @@ function applyPropsTransition(
         const userDuring = transitionInnerStore(el).userDuring;
         // For simplicity, if during not specified, the previous during will not work any more.
         const cfgDuringCall = userDuring ? bind(duringCall, { el: el, userDuring: userDuring }) : null;
-        const cfg = {
-            dataIndex: dataIndex,
-            isFrom: true,
-            during: cfgDuringCall
-        };
-        updateProps(el, transFromProps, model, cfg);
+
+        const config = getElementAnimationConfig('update', elOption, model, dataIndex);
+        if (config.duration > 0) {
+            config.during = cfgDuringCall;
+            el.animateFrom(transFromProps, config);
+        }
     }
 }
 
@@ -446,7 +469,6 @@ function prepareShapeOrExtraTransitionFrom(
 
     const elPropsInAttr = (fromEl as LooseElementProps)[mainAttr];
     let transFromPropsInAttr: Dictionary<unknown>;
-
 
     if (elPropsInAttr) {
         const transition = elOption.transition;
