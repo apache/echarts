@@ -26,113 +26,285 @@ under the License.
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
-        <script src="data/pie-texture.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <script src="lib/dat.gui.min.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
-            .test-title {
-                background: #146402;
-                color: #fff;
-            }
-            #main9, #main10 {
-                border: 1px solid red;
-            }
         </style>
 
-        <div id="main0-0"></div>
-        <div id="main1-0"></div>
-        <div id="main2-0"></div>
-        <div id="main0-1"></div>
-        <div id="main1-1"></div>
-        <div id="main2-1"></div>
+
+
+        <div id="main-none"></div>
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+
+
+
+
+
+
+
 
         <script>
+        require(['echarts'], function (echarts) {
+            var count = 20;
+            var data = [];
+            var text = '';
+            for (var i = 0; i < count; i++) {
+                text += 'XY';
+                data.push({
+                    name: i + text + i,
+                    value: Math.random()
+                });
+            }
 
-            require([
-                'echarts'
-            ], function (echarts) {
-                var aligns = ['none', 'labelLine', 'edge'];
-                for (var r = 0; r < 2; ++r) {
-                    for (var a = 0; a < aligns.length; a++) {
-                        var align = aligns[a];
-                        var data = [
-                        {
-                            name: 'Apples dhuasi hduias huidas huida dhuasi hduias huid as hidusah huidas cjibjdf8k',
-                            value: 78
-                        },
-                        {
-                            name: '{a|Dorro quisam dsjahui fdhjs hudsa huds}',
-                            value: 60
-                        },
-                        {
-                            name: '{a|Neque dasdaw pordsaro estdsas qui dolorem}',
-                            value: 48
-                        },
-                        {
-                            name: 'Oranges',
-                            value: 40
-                        },
-                        {
-                            name: 'Pears',
-                            value: 32
-                        },
-                        {
-                            name: 'quia dolorsit amet consectetur adipisci',
-                            value: 27
-                        }
-                    ];
-                        var option = {
-                            series: [
-                                {
-                                    type: 'pie',
-                                    radius: '80%',
-                                    center: ['50%', '50%'],
-                                    data: data,
-                                    label: {
-                                        position: 'outer',
-                                        alignTo: align,
-                                        edgeDistance: 20,
-                                        fontSize: 30,
-                                        padding: [10, 30],
-                                        backgroundColor: 'rgba(0, 0, 255, 0.2)',
-                                        rich: r && {
-                                            a: {
-                                                fontSize: 40,
-                                                borderColor: 'rgba(0, 0, 255, 0.8)',
-                                                borderWidth: 1,
-                                                borderRadius: 10
-                                            }
-                                        },
-                                        overflow: 'break'
-                                    },
-                                    labelLine: {
-                                        length2: 30
-                                    },
-                                    left: 0,
-                                    right: 0,
-                                    top: 0,
-                                    bottom: 0,
-                                    animationDuration: 0
-                                }
-                            ]
-                        };
+            var optionNone = {
+                tooltip: {
+                    show: true
+                },
+                series: [{
+                    type: 'pie',
+                    radius: '50%',
+                    data: data,
 
-                        var rich = r ? 'richText' : 'plainText';
-                        var chart = testHelper.create(echarts, 'main' + a + '-' + r, {
-                            width: 1200,
-                            title: [
-                                'Labels should not be outside of the canvas',
-                                'alignTo: **' + align + ', ' + rich + '**'
-                            ],
-                            option: option
-                        });
+                    labelLine: {
+                        length2: 15
+                    },
+                    label: {
+                        edgeDistance: 20,
+                        position: 'outer'
                     }
+                }]
+            };
+
+            var option0 = {
+                series: [{
+                    type: 'pie',
+                    radius: '50%',
+                    data: data,
+
+                    labelLine: {
+                        length2: 15
+                    },
+                    label: {
+                        edgeDistance: 20,
+                        position: 'outer',
+                        alignTo: 'labelLine'
+                    }
+                }]
+            };
+
+            var option1 = {
+                series: [{
+                    type: 'pie',
+                    radius: '50%',
+                    data: data,
+
+                    labelLine: {
+                        length2: 15
+                    },
+                    label: {
+                        edgeDistance: 20,
+                        position: 'outer',
+                        alignTo: 'edge'
+                    }
+                }]
+            };
+
+            var option2 = {
+                series: [{
+                    type: 'pie',
+                    radius: '25%',
+                    center: ['50%', '50%'],
+                    data: data,
+
+                    labelLine: {
+                        length2: 15
+                    },
+                    label: {
+                        position: 'outer',
+                        alignTo: 'edge'
+                    },
+                    left: 0,
+                    right: '50%',
+                    top: 0,
+                    bottom: '50%'
+                }, {
+                    type: 'pie',
+                    radius: '25%',
+                    center: ['50%', '50%'],
+                    data: data,
+
+                    labelLine: {
+                        length2: 15
+                    },
+                    label: {
+                        bleedMargin: 20,
+                        edgeDistance: 20,
+                        position: 'outer',
+                        alignTo: 'labelLine'
+                    },
+                    left: '50%',
+                    right: 0,
+                    top: 0,
+                    bottom: '50%'
+                }, {
+                    type: 'pie',
+                    radius: '25%',
+                    center: ['50%', '50%'],
+                    data: data,
+
+                    labelLine: {
+                        length2: 15
+                    },
+                    label: {
+                        position: 'outer',
+                        alignTo: 'edge'
+                    },
+                    left: 0,
+                    right: '50%',
+                    top: '50%',
+                    bottom: 0
+                }, {
+                    type: 'pie',
+                    radius: '25%',
+                    center: ['50%', '50%'],
+                    data: data,
+
+                    labelLine: {
+                        length2: 15
+                    },
+                    label: {
+                        edgeDistance: 20,
+                        position: 'outer',
+                        alignTo: 'labelLine'
+                    },
+                    left: '50%',
+                    right: 0,
+                    top: '50%',
+                    bottom: 0
+                }],
+                graphic: {
+                    elements: [{
+                        type: 'rect',
+                        shape: {
+                            x: 20,
+                            y: 0,
+                            width: window.innerWidth / 2 - 40,
+                            height: 200
+                        },
+                        style: {
+                            fill: 'none',
+                            stroke: '#f00'
+                        }
+                    }, {
+                        type: 'rect',
+                        shape: {
+                            x: window.innerWidth / 2 + 20,
+                            y: 0,
+                            width: window.innerWidth / 2 - 40,
+                            height: 200
+                        },
+                        style: {
+                            fill: 'none',
+                            stroke: '#f00'
+                        }
+                    }, {
+                        type: 'rect',
+                        shape: {
+                            x: 20 ,
+                            y: 200,
+                            width: window.innerWidth / 2 - 40,
+                            height: 200
+                        },
+                        style: {
+                            fill: 'none',
+                            stroke: '#f00'
+                        }
+                    }, {
+                        type: 'rect',
+                        shape: {
+                            x: window.innerWidth / 2 + 20,
+                            y: 200,
+                            width: window.innerWidth / 2 - 40,
+                            height: 200
+                        },
+                        style: {
+                            fill: 'none',
+                            stroke: '#f00'
+                        }
+                    }]
                 }
+            };
+
+            var chartNone = testHelper.create(echarts, 'main-none', {
+                title: 'alignTo: "none"',
+                option: optionNone
             });
 
+            var chart0 = testHelper.create(echarts, 'main0', {
+                title: 'alignTo: "labelLine"',
+                option: option0
+            });
+
+            var chart1 = testHelper.create(echarts, 'main1', {
+                title: 'alignTo: "edge"',
+                option: option1
+            });
+
+            var chart2 = testHelper.create(echarts, 'main2', {
+                title: 'Multiple charts',
+                option: option2
+            });
+
+            var gui = new dat.GUI();
+            var config = {
+                length2: 15,
+                edgeDistance: 20,
+                overflow: 'truncate'
+            };
+
+            function update() {
+                const newOpt = {
+                    series: [{
+                        labelLine: {
+                            length2: config.length2
+                        },
+                        label: {
+                            edgeDistance: config.edgeDistance,
+                            overflow: config.overflow
+                        }
+                    }]
+                }
+                chart0.setOption(newOpt);
+                chart1.setOption(newOpt);
+                chartNone.setOption(newOpt);
+
+                const newOpt2 = { series: [] };
+                for (var i = 0; i < 4; ++i) {
+                    newOpt2.series.push({
+                        labelLine: {
+                            length2: config.length2,
+                        },
+                        label: {
+                            edgeDistance: config.edgeDistance,
+                            overflow: config.overflow
+                        }
+                    })
+                }
+                chart2.setOption(newOpt2);
+            }
+
+            gui.add(config, 'length2', 0, 300).onChange(update);
+            gui.add(config, 'edgeDistance', 0, 300).onChange(update);
+            gui.add(config, 'overflow', ['truncate', 'break', 'breakAll']).onChange(update);
+        });
         </script>
     </body>
 </html>
+

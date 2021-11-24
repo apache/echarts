@@ -213,9 +213,11 @@ function avoidOverlap(
                 const rect = layout.label.getBoundingRect();
                 targetTextWidth = rect.width + paddingH;
 
-                layout.rect.width = targetTextWidth;
-                layout.rect.y -= (rect.height - layout.rect.height) / 2;
+                // Adjust label position for adjustSingleSide
+                const dy = rect.height + paddingV - layout.rect.height;
+                layout.label.y += dy / 2;
                 layout.rect.height = rect.height + paddingV;
+                layout.rect.width = targetTextWidth;
 
                 // For background width
                 layout.label.setStyle('width', rect.width);
