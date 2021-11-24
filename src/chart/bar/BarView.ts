@@ -31,7 +31,7 @@ import {
 } from '../../util/graphic';
 import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
-import { setLabelStyle, getLabelStatesModels, setLabelValueAnimation } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels, setLabelValueAnimation, labelInner } from '../../label/labelStyle';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import Sausage from '../../util/shape/sausage';
@@ -46,7 +46,8 @@ import {
     OrdinalSortInfo,
     Payload,
     OrdinalNumber,
-    ParsedValue
+    ParsedValue,
+    ECElement
 } from '../../util/types';
 import BarSeriesModel, {BarSeriesOption, BarDataItemOption, PolarBarLabelPosition} from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -279,6 +280,17 @@ class BarView extends ChartView {
                     false,
                     roundCap
                 );
+                if (realtimeSortCfg) {
+                    /**
+                     * Force label animation because even if the element is
+                     * ignored because it's clipped, it may not be clipped after
+                     * changing order. Then, if not using forceLabelAnimation,
+                     * the label animation was never started, in which case,
+                     * the label will be the final value and doesn't have label
+                     * animation.
+                     */
+                    (el as ECElement).forceLabelAnimation = true;
+                }
 
                 updateStyle(
                     el, data, dataIndex, itemModel, layout,
@@ -362,6 +374,25 @@ class BarView extends ChartView {
                     saveOldStyle(el);
                 }
 
+                if (realtimeSortCfg) {
+                    (el as ECElement).forceLabelAnimation = true;
+                }
+
+                if (isChangeOrder) {
+                    const textEl = el.getTextContent();
+                    if (textEl) {
+                        const labelInnerStore = labelInner(textEl);
+                        if (labelInnerStore.prevValue != null) {
+                            /**
+                             * Set preValue to be value so that no new label
+                             * should be started, otherwise, it will take a full
+                             * `animationDurationUpdate` time to finish the
+                             * animation, which is not expected.
+                             */
+                            labelInnerStore.prevValue = labelInnerStore.value;
+                        }
+                    }
+                }
                 // Not change anything if only order changed.
                 // Especially not change label.
                 if (!isChangeOrder) {

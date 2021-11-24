@@ -45,7 +45,7 @@ import { mixin, clone, merge } from 'zrender/src/core/util';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface Model<Opt = ModelOption>
     extends LineStyleMixin, ItemStyleMixin, TextStyleMixin, AreaStyleMixin {}
-class Model<Opt = ModelOption> {    // TODO: TYPE use unkown insteadof any?
+class Model<Opt = ModelOption> {    // TODO: TYPE use unknown instead of any?
 
     // [Caution]: Becuase this class or desecendants can be used as `XXX.extend(subProto)`,
     // the class members must not be initialized in constructor or declaration place.

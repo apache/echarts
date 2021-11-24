@@ -117,6 +117,8 @@ export function makeValueReadable(
         ? addCommas(numericResult)
         : zrUtil.isStringSafe(value)
         ? stringToUserReadable(value)
+        : typeof value === 'boolean'
+        ? value + ''
         : '-';
 }
 

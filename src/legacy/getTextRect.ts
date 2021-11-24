@@ -31,8 +31,6 @@ export function getTextRect(
     truncate?: boolean,
     lineHeight?: number
 ) {
-    deprecateLog('getTextRect is deprecated.');
-
     const textEl = new Text({
         style: {
             text,

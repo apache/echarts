@@ -116,8 +116,17 @@ export interface ECElement extends Element {
 
     z2EmphasisLift?: number;
     z2SelectLift?: number;
+
     /**
-     * Force disable animation on any condition
+     * Force enable animation.
+     * This property is useful when an ignored/invisible/removed element
+     * should have label animation, like the case in the bar-racing charts.
+     * `forceLabelAnimation` has higher priority than `disableLabelAnimation`.
+     */
+    forceLabelAnimation?: boolean;
+    /**
+     * Force disable animation.
+     * `forceLabelAnimation` has higher priority than `disableLabelAnimation`.
      */
     disableLabelAnimation?: boolean
     /**

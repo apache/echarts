@@ -62,9 +62,25 @@ under the License.
                 }
                 return datas;
             }
-            require(['echarts'], function (echarts) {
+            require([
+                'echarts',
+                'i18n/langES-obj',
+                'i18n/langJA-obj',
+                'i18n/langTH-obj',
+                'i18n/langFR-obj',
+                'i18n/langFI-obj',
+                'i18n/langRU-obj'
+            ], function (echarts, langES, langJA, langTH, langFR, langFI, langRU) {
+                echarts.registerLocale('ES', langES);
+                echarts.registerLocale('JA', langJA);
+                echarts.registerLocale('TH', langTH);
+                echarts.registerLocale('FR', langFR);
+                echarts.registerLocale('FI', langFI);
+                echarts.registerLocale('RU', langRU);
 
-                var chart = echarts.init(document.getElementById('main'));
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    locale: 'RU'
+                });
 
                 chart.setOption({
                     tooltip: {
@@ -82,7 +98,8 @@ under the License.
                     calendar: [
                     {
                         dayLabel: {
-                            position: 'start'
+                            position: 'start',
+                            nameMap: 'JA'
                         },
                         range: '2017-01'
                     },
@@ -96,7 +113,7 @@ under the License.
                     {
                         dayLabel: {
                             position: 'start',
-                            nameMap: 'cn'
+                            nameMap: 'ES'
                         },
                         left: 550,
                         range: '2017-03'
@@ -104,7 +121,7 @@ under the License.
                     {
                         dayLabel: {
                             firstDay: 1,
-                            nameMap: 'cn'
+                            nameMap: 'EN'
                         },
                         left: 750,
                         range: '2017-04'
@@ -112,7 +129,8 @@ under the License.
 
                     {
                         dayLabel: {
-                            position: 'start'
+                            position: 'start',
+                            nameMap: 'TH'
                         },
                         top: 320,
                         orient: 'vertical',
@@ -120,7 +138,8 @@ under the License.
                     },
                     {
                         dayLabel: {
-                            position: 'end'
+                            position: 'end',
+                            nameMap: 'FR'
                         },
                         top: 320,
                         left: 300,
@@ -141,10 +160,13 @@ under the License.
                         yearLabel: {
                             margin: 0
                         },
+                        monthLabel: {
+                            nameMap: 'EN'
+                        },
                         dayLabel: {
                             margin: 10,
                             position: 'end',
-                            nameMap: 'cn',
+                            nameMap: 'FI',
                             firstDay: 1
                         },
                         top: 320,
@@ -172,8 +194,12 @@ under the License.
                         range: ['2017-12-01', '2018-01-31']
                     },
                     {
+                        monthLabel: {
+                            nameMap: 'ZH'
+                        },
                         dayLabel: {
-                            firstDay: 1
+                            firstDay: 1,
+                            nameMap: 'RU'
                         },
                         top: 500,
                         range: '2017'
