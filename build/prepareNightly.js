@@ -40,6 +40,7 @@ function updateVersion(version) {
         if (isNext) {
             // Increase minor version for next branch.
             minor++;
+            patch = 0;
         }
         else {
             // Increase main version for master branch.
