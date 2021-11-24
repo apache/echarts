@@ -31,12 +31,12 @@ import {
 import ComponentModel from '../../model/Component';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
 import Displayable from 'zrender/src/graphic/Displayable';
-import { PathProps } from 'zrender/src/graphic/Path';
+import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps, ImageProps } from 'zrender/src/graphic/Image';
 import { TextStyleProps, TextProps } from 'zrender/src/graphic/Text';
 import GlobalModel from '../../model/Global';
 import { copyLayoutParams, mergeLayoutParam } from '../../util/layout';
-import { ElementTransitionOptionMixin, TransitionOptionMixin } from '../../animation/customGraphicTransition';
+import { TransitionOptionMixin } from '../../animation/customGraphicTransition';
 import { ElementKeyframeAnimationOption } from '../../animation/customGraphicKeyframeAnimation';
 import { GroupProps } from 'zrender/src/graphic/Group';
 
@@ -122,10 +122,9 @@ export type TransformProp = 'x' | 'y' | 'scaleX' | 'scaleY' | 'originX' | 'origi
 
 export interface GraphicComponentDisplayableOption extends
     GraphicComponentBaseElementOption,
-    ElementTransitionOptionMixin,
     Partial<Pick<Displayable, 'zlevel' | 'z' | 'z2' | 'invisible' | 'cursor'>> {
 
-    style?: ZRStyleProps & TransitionOptionMixin
+    style?: ZRStyleProps
     z2?: number
 }
 // TODO: states?
@@ -135,7 +134,7 @@ export interface GraphicComponentDisplayableOption extends
 //     style?: ZRStyleProps;
 // }
 export interface GraphicComponentGroupOption
-    extends GraphicComponentBaseElementOption, ElementTransitionOptionMixin {
+    extends GraphicComponentBaseElementOption, TransitionOptionMixin<GroupProps> {
     type?: 'group';
 
     /**
@@ -153,13 +152,18 @@ export interface GraphicComponentGroupOption
 
     keyframeAnimation?: ElementKeyframeAnimationOption<GroupProps>
 };
-export interface GraphicComponentZRPathOption extends GraphicComponentDisplayableOption {
-    shape?: PathProps['shape'] & TransitionOptionMixin;
+export interface GraphicComponentZRPathOption
+    extends GraphicComponentDisplayableOption, TransitionOptionMixin<PathProps> {
+    shape?: PathProps['shape'] & TransitionOptionMixin<PathProps['shape']>;
+    style?: PathStyleProps & TransitionOptionMixin<PathStyleProps>
+
     keyframeAnimation?: ElementKeyframeAnimationOption<PathProps>;
 }
-export interface GraphicComponentImageOption extends GraphicComponentDisplayableOption {
+export interface GraphicComponentImageOption
+    extends GraphicComponentDisplayableOption, TransitionOptionMixin<ImageProps> {
     type?: 'image';
-    style?: ImageStyleProps & TransitionOptionMixin;
+    style?: ImageStyleProps & TransitionOptionMixin<ImageStyleProps>;
+
     keyframeAnimation?: ElementKeyframeAnimationOption<ImageProps>;
 }
 // TODO: states?
@@ -167,9 +171,10 @@ export interface GraphicComponentImageOption extends GraphicComponentDisplayable
 //     style?: ImageStyleProps;
 // }
 interface GraphicComponentTextOption
-    extends Omit<GraphicComponentDisplayableOption, 'textContent' | 'textConfig'> {
+    extends Omit<GraphicComponentDisplayableOption, 'textContent' | 'textConfig'>, TransitionOptionMixin<TextProps> {
     type?: 'text';
-    style?: TextStyleProps;
+    style?: TextStyleProps & TransitionOptionMixin<TextStyleProps>;
+
     keyframeAnimation?: ElementKeyframeAnimationOption<TextProps>;
 }
 export type GraphicComponentElementOption =

@@ -18,7 +18,7 @@
 */
 
 import Displayable from 'zrender/src/graphic/Displayable';
-import { ImageStyleProps } from 'zrender/src/graphic/Image';
+import { ImageProps, ImageStyleProps } from 'zrender/src/graphic/Image';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { ZRenderType } from 'zrender/src/zrender';
 import { BarGridLayoutOptionForCustomSeries, BarGridLayoutResult } from '../../layout/barGrid';
@@ -63,9 +63,9 @@ import {
     Ring,
     Sector
 } from '../../util/graphic';
-import { TextStyleProps } from 'zrender/src/graphic/Text';
+import { TextProps, TextStyleProps } from 'zrender/src/graphic/Text';
+import { GroupProps } from 'zrender/src/graphic/Group';
 import {
-    ElementTransitionOptionMixin,
     TransitionOptionMixin,
     TransitionBaseDuringAPI,
     TransitionDuringAPI
@@ -104,7 +104,7 @@ type ShapeMorphingOption = {
 
 export interface CustomBaseElementOption extends Partial<Pick<
     Element, TransformProp | 'silent' | 'ignore' | 'textConfig'
->>, ElementTransitionOptionMixin {
+>> {
     // element type, required.
     type: string;
     id?: string;
@@ -124,7 +124,7 @@ export interface CustomBaseElementOption extends Partial<Pick<
 export interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<
     Displayable, 'zlevel' | 'z' | 'z2' | 'invisible'
 >> {
-    style?: ZRStyleProps & TransitionOptionMixin;
+    style?: ZRStyleProps;
     during?(params: TransitionDuringAPI): void;
     /**
      * @deprecated
@@ -139,12 +139,9 @@ export interface CustomDisplayableOptionOnState extends Partial<Pick<
     Displayable, TransformProp | 'textConfig' | 'z2'
 >> {
     // `false` means remove emphasis trigger.
-    style?: (ZRStyleProps & TransitionOptionMixin) | false;
-
-
-    during?(params: TransitionDuringAPI): void;
+    style?: ZRStyleProps | false;
 }
-export interface CustomGroupOption extends CustomBaseElementOption {
+export interface CustomGroupOption extends CustomBaseElementOption, TransitionOptionMixin<GroupProps>{
     type: 'group';
     width?: number;
     height?: number;
@@ -154,10 +151,10 @@ export interface CustomGroupOption extends CustomBaseElementOption {
     $mergeChildren?: false | 'byName' | 'byIndex';
 }
 export interface CustomBaseZRPathOption<T extends PathProps['shape'] = PathProps['shape']>
-    extends CustomDisplayableOption, ShapeMorphingOption {
+    extends CustomDisplayableOption, ShapeMorphingOption, TransitionOptionMixin<PathProps & {shape: T}> {
     autoBatch?: boolean;
-    shape?: T & TransitionOptionMixin;
-    style?: PathProps['style']
+    shape?: T & TransitionOptionMixin<T>;
+    style?: PathProps['style'] & TransitionOptionMixin<PathStyleProps>
     during?(params: TransitionDuringAPI<PathStyleProps, T>): void;
 }
 
@@ -201,22 +198,22 @@ export type CustomPathOption = CreateCustomBuitinPathOption<keyof BuiltinShapes>
     | CustomSVGPathOption;
 
 export interface CustomImageOptionOnState extends CustomDisplayableOptionOnState {
-    style?: ImageStyleProps & TransitionOptionMixin;
+    style?: ImageStyleProps;
 }
-export interface CustomImageOption extends CustomDisplayableOption {
+export interface CustomImageOption extends CustomDisplayableOption, TransitionOptionMixin<ImageProps> {
     type: 'image';
-    style?: ImageStyleProps & TransitionOptionMixin;
+    style?: ImageStyleProps & TransitionOptionMixin<ImageStyleProps>;
     emphasis?: CustomImageOptionOnState;
     blur?: CustomImageOptionOnState;
     select?: CustomImageOptionOnState;
 }
 
 export interface CustomTextOptionOnState extends CustomDisplayableOptionOnState {
-    style?: TextStyleProps & TransitionOptionMixin;
+    style?: TextStyleProps;
 }
-export interface CustomTextOption extends CustomDisplayableOption {
+export interface CustomTextOption extends CustomDisplayableOption, TransitionOptionMixin<TextProps> {
     type: 'text';
-    style?: TextStyleProps & TransitionOptionMixin;
+    style?: TextStyleProps & TransitionOptionMixin<TextStyleProps>;
     emphasis?: CustomTextOptionOnState;
     blur?: CustomTextOptionOnState;
     select?: CustomTextOptionOnState;

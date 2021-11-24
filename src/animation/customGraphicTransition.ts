@@ -28,7 +28,7 @@ import Model from '../model/Model';
 import { initProps, updateProps } from './basicTrasition';
 import { Path } from '../util/graphic';
 import { warn } from '../util/log';
-import { AnimationOptionMixin, ZRStyleProps } from '../util/types';
+import { AnimationOption, AnimationOptionMixin, ZRStyleProps } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import { PathStyleProps } from 'zrender';
 
@@ -58,16 +58,15 @@ export const ELEMENT_ANIMATABLE_PROPS = ['', 'style', 'shape', 'extra'] as const
 export type TransitionProps = string | string[];
 export type ElementRootTransitionProp = TransformProp | 'shape' | 'extra' | 'style';
 
-export interface TransitionOptionMixin {
+export interface TransitionOptionMixin<T = unknown> {
     transition?: TransitionProps | 'all'
-    enterFrom?: Dictionary<unknown>;
-    leaveTo?: Dictionary<unknown>;
-};
 
-export type ElementTransitionOptionMixin = {
-    transition?: ElementRootTransitionProp | ElementRootTransitionProp[] | 'all';
-    enterFrom?: Dictionary<number>;
-    leaveTo?: Dictionary<number>;
+    enterFrom?: T;
+    leaveTo?: T;
+
+    enterAnimation?: AnimationOption
+    updateAnimation?: AnimationOption
+    leaveAnimation?: AnimationOption
 };
 
 interface LooseElementProps extends ElementProps {
@@ -85,7 +84,7 @@ type TransitionElementOption = Partial<Record<TransformProp, number>> & {
     ignore?: boolean
 
     during?: (params: TransitionDuringAPI) => void
-} & ElementTransitionOptionMixin;
+} & TransitionOptionMixin;
 
 const transitionInnerStore = makeInner<{
     leaveToProps: ElementProps;
@@ -436,7 +435,7 @@ function duringCall(
 function prepareShapeOrExtraTransitionFrom(
     mainAttr: 'shape' | 'extra',
     fromEl: Element,
-    elOption: ElementTransitionOptionMixin,
+    elOption: TransitionOptionMixin,
     transFromProps: LooseElementProps
 ): void {
 
@@ -513,12 +512,12 @@ function prepareTransformTransitionFrom(
         if (key === 'style' || key === 'shape' || key === 'extra') {
             continue;
         }
-        const elVal = el[key];
+        const elVal = (el as any)[key];
         if (__DEV__) {
             checkTransformPropRefer(key, 'el.transition');
         }
         // Do not clone, animator will perform that clone.
-        transFromProps[key] = elVal;
+        (transFromProps as any)[key] = elVal;
     }
 }
 
