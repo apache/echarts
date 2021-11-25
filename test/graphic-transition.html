@@ -347,7 +347,7 @@ under the License.
                             y: y,
                             enterFrom: {
                                 extra: {
-                                    p: 0
+                                    time: 0
                                 }
                             },
                             enterAnimation: {
@@ -355,10 +355,10 @@ under the License.
                                 easing: 'linear'
                             },
                             extra: {
-                                p: 1e6
+                                time: 1e6
                             },
                             during(api) {
-                                const r = Math.sin(rand * 100 + api.getExtra('p') / 200) * 5 + 5;
+                                const r = Math.sin(rand * 100 + api.getExtra('time') / 200) * 5 + 5;
                                 api.setShape('r', r);
                             },
                             shape: {

@@ -24,6 +24,7 @@ import { ELEMENT_ANIMATABLE_PROPS } from './customGraphicTransition';
 import { AnimationOption, AnimationOptionMixin } from '../util/types';
 import { Model } from '../echarts.all';
 import { getAnimationConfig } from './basicTrasition';
+import { warn } from '../util/log';
 
 // Helpers for creating keyframe based animations in custom series and graphic components.
 
@@ -63,6 +64,8 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
         }
 
         const animator = el.animate(propName, animationOpts.loop);
+        let endFrameIsSet = false;
+        let hasAnimation = false;
         each(keyframes, kf => {
             // Stop current animation.
             const animators = el.animators;
@@ -88,8 +91,25 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
                 }
             }
 
+            if (__DEV__) {
+                if (kf.percent >= 1) {
+                    endFrameIsSet = true;
+                }
+            }
+
+            hasAnimation = true;
             animator.whenWithKeys(duration * kf.percent, kfValues, propKeys, kf.easing);
         });
+        if (!hasAnimation) {
+            return;
+        }
+
+        if (__DEV__) {
+            if (!endFrameIsSet) {
+                warn('End frame with percent: 1 is missing in the keyframeAnimation.', true);
+            }
+        }
+
         animator
             .delay(animationOpts.delay || 0)
             .start(animationOpts.easing);
