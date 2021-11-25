@@ -46,7 +46,6 @@ import {
 } from '../../animation/customGraphicTransition';
 import { updateProps } from '../../animation/basicTrasition';
 import { applyKeyframeAnimation } from '../../animation/customGraphicKeyframeAnimation';
-import { graphic } from '../../echarts.all';
 
 const nonShapeGraphicElements = {
     // Reserved but not supported in graphic component.
@@ -217,6 +216,8 @@ export class GraphicComponentView extends ComponentView {
 
             if (el) {
                 const elInner = inner(el);
+                const keyframeAnimation = elOption.keyframeAnimation;
+
                 elInner.option = elOption;
                 setEventData(el, graphicModel, elOption);
 
@@ -227,7 +228,7 @@ export class GraphicComponentView extends ComponentView {
                     itemTooltipOption: elOption.tooltip
                 });
 
-                applyKeyframeAnimation(el, elOption.keyframeAnimation, graphicModel);
+                keyframeAnimation && applyKeyframeAnimation(el, keyframeAnimation, graphicModel);
             }
         });
     }
@@ -289,8 +290,6 @@ export class GraphicComponentView extends ComponentView {
                     width: parentElInner.width,
                     height: parentElInner.height
                 };
-
-
 
             // PENDING
             // Currently, when `bounding: 'all'`, the union bounding rect of the group

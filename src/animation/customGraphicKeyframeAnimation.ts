@@ -42,9 +42,8 @@ export interface ElementKeyframeAnimationOption<Props extends Record<string, any
 export function applyKeyframeAnimation<T extends Record<string, any>>(
     el: Element, animationOpts: ElementKeyframeAnimationOption<T>, animatableModel: Model<AnimationOptionMixin>
 ) {
-    if (!animationOpts) {
-        return;
-    }
+    // Stop previous keyframe animation.
+    el.stopAnimation('keyframe');
 
     const keyframes = animationOpts.keyframes;
     let duration = animationOpts.duration;
@@ -63,9 +62,8 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
             return;
         }
 
-        const animator = el.animate(propName, animationOpts.loop);
+        let animator: ReturnType<Element['animate']>;
         let endFrameIsSet = false;
-        let hasAnimation = false;
         each(keyframes, kf => {
             // Stop current animation.
             const animators = el.animators;
@@ -85,11 +83,6 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
             if (!propKeys.length) {
                 return;
             }
-            for (let i = 0; i < animators.length; i++) {
-                if (animators[i] !== animator) {
-                    animators[i].stopTracks(propKeys);
-                }
-            }
 
             if (__DEV__) {
                 if (kf.percent >= 1) {
@@ -97,10 +90,20 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
                 }
             }
 
-            hasAnimation = true;
+            if (!animator) {
+                animator = el.animate(propName, animationOpts.loop);
+                animator.scope = 'keyframe';
+            }
+            for (let i = 0; i < animators.length; i++) {
+                // Stop all other animation that is not keyframe.
+                if (animators[i] !== animator && animators[i].targetName === animator.targetName) {
+                    animators[i].stopTracks(propKeys);
+                }
+            }
+
             animator.whenWithKeys(duration * kf.percent, kfValues, propKeys, kf.easing);
         });
-        if (!hasAnimation) {
+        if (!animator) {
             return;
         }
 

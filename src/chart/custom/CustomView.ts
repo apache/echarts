@@ -86,10 +86,10 @@ import CustomSeriesModel, {
     customInnerStore,
     PrepareCustomInfo,
     CustomPathOption,
-    CustomRootElementOption
+    CustomRootElementOption,
+    CustomSeriesOption
 } from './CustomSeries';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
-import { CustomSeriesOption } from '../../export/option';
 import {
     applyLeaveTransition,
     applyUpdateTransition,
