@@ -25,7 +25,7 @@ import { assert, bind, each, eqNaN, extend, hasOwn, indexOf, isArrayLike, keys }
 import { cloneValue } from 'zrender/src/animation/Animator';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
 import Model from '../model/Model';
-import { getAnimationConfig, updateProps } from './basicTrasition';
+import { getAnimationConfig } from './basicTrasition';
 import { Path } from '../util/graphic';
 import { warn } from '../util/log';
 import { AnimationOption, AnimationOptionMixin, ZRStyleProps } from '../util/types';
@@ -110,14 +110,23 @@ export interface TransitionDuringAPI<
 
 function getElementAnimationConfig(
     animationType: 'enter' | 'update' | 'leave',
+    el: Element,
     elOption: TransitionElementOption,
     parentModel: Model<AnimationOptionMixin>,
     dataIndex?: number
 ) {
     const animationProp = `${animationType}Animation` as const;
     const config: ElementAnimateConfig = getAnimationConfig(animationType, parentModel, dataIndex) || {};
-    config.setToFinal = true;
-    config.scope = animationType;
+
+    const userDuring = transitionInnerStore(el).userDuring;
+    // Only set when duration is > 0 and it's need to be animated.
+    if (config.duration > 0) {
+        // For simplicity, if during not specified, the previous during will not work any more.
+        config.during = userDuring ? bind(duringCall, { el: el, userDuring: userDuring }) : null;
+        config.setToFinal = true;
+        config.scope = animationType;
+    }
+
     extend(config, elOption[animationProp]);
     return config;
 }
@@ -169,7 +178,7 @@ export function applyUpdateTransition(
                     extend(propName ? (enterFromProps as any)[propName] : enterFromProps, prop.enterFrom);
                 }
             });
-            const config = getElementAnimationConfig('enter', elOption, animatableModel, dataIndex);
+            const config = getElementAnimationConfig('enter', el, elOption, animatableModel, dataIndex);
             if (config.duration > 0) {
                 el.animateFrom(enterFromProps, config);
             }
@@ -214,7 +223,7 @@ export function applyLeaveTransition(
         if (leaveToProps) {
             // TODO TODO use leave after leaveAnimation in series is introduced
             // TODO Data index?
-            const config = getElementAnimationConfig('update', elOption, animatableModel, 0);
+            const config = getElementAnimationConfig('update', el, elOption, animatableModel, 0);
             config.done = () => {
                 parent.remove(el);
                 onRemove && onRemove();
@@ -288,18 +297,8 @@ function applyPropsTransition(
     transFromProps: ElementProps
 ): void {
     if (transFromProps) {
-        // NOTE: Do not use `el.updateDuringAnimation` here becuase `el.updateDuringAnimation` will
-        // be called mutiple time in each animation frame. For example, if both "transform" props
-        // and shape props and style props changed, it will generate three animator and called
-        // one-by-one in each animation frame.
-        // We use the during in `animateTo/From` params.
-        const userDuring = transitionInnerStore(el).userDuring;
-        // For simplicity, if during not specified, the previous during will not work any more.
-        const cfgDuringCall = userDuring ? bind(duringCall, { el: el, userDuring: userDuring }) : null;
-
-        const config = getElementAnimationConfig('update', elOption, model, dataIndex);
+        const config = getElementAnimationConfig('update', el, elOption, model, dataIndex);
         if (config.duration > 0) {
-            config.during = cfgDuringCall;
             el.animateFrom(transFromProps, config);
         }
     }
@@ -506,7 +505,7 @@ function prepareShapeOrExtraAllPropsFinal(
     elOption: TransitionElementOption,
     allProps: LooseElementProps
 ): void {
-    const attrOpt: Dictionary<unknown> & TransitionOptionMixin = (elOption as any)[mainAttr];
+    const attrOpt: Dictionary<unknown> = (elOption as any)[mainAttr];
     if (!attrOpt) {
         return;
     }

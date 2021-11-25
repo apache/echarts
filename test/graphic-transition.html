@@ -28,6 +28,7 @@ under the License.
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
+        <script src="lib/perlin.js"></script>
         <!-- <script src="ut/lib/canteen.js"></script> -->
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
@@ -40,6 +41,8 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
 
 
 
@@ -324,9 +327,62 @@ under the License.
 
         <script>
             require(['echarts'/*, 'map/js/china' */], function (echarts) {
+                // During transition
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Enter / Leave transition'
+                    ]
+                });
+
+                const width = chart.getWidth();
+                const height = chart.getHeight();
+
+                const elements = [];
+                for (let x = 20; x < width; x += 40) {
+                    for (let y = 20; y < height; y += 40) {
+                        const rand = noise.perlin2(x / 200, y / 200 + 10);
+                        elements.push({
+                            type: 'circle',
+                            x: x,
+                            y: y,
+                            enterFrom: {
+                                extra: {
+                                    p: 0
+                                }
+                            },
+                            enterAnimation: {
+                                duration: 1e6,
+                                easing: 'linear'
+                            },
+                            extra: {
+                                p: 1e6
+                            },
+                            during(api) {
+                                const r = Math.sin(rand * 100 + api.getExtra('p') / 200) * 5 + 5;
+                                api.setShape('r', r);
+                            },
+                            shape: {
+                                cx: 0,
+                                cy: 0,
+                                r: 10
+                            }
+                        });
+                    }
+                }
+
+                chart.setOption({
+                    graphic: {
+                        elements
+                    }
+                })
+            });
+        </script>
+
+        <script>
+            require(['echarts'/*, 'map/js/china' */], function (echarts) {
                 var option;
 
-                // During transition
+                // Different animation config
             });
         </script>
     </body>

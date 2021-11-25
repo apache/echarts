@@ -46,6 +46,7 @@ import {
 } from '../../animation/customGraphicTransition';
 import { updateProps } from '../../animation/basicTrasition';
 import { applyKeyframeAnimation } from '../../animation/customGraphicKeyframeAnimation';
+import { graphic } from '../../echarts.all';
 
 const nonShapeGraphicElements = {
     // Reserved but not supported in graphic component.
@@ -226,9 +227,7 @@ export class GraphicComponentView extends ComponentView {
                     itemTooltipOption: elOption.tooltip
                 });
 
-                if (elOption.keyframeAnimation) {
-                    applyKeyframeAnimation(el, elOption.keyframeAnimation);
-                }
+                applyKeyframeAnimation(el, elOption.keyframeAnimation, graphicModel);
             }
         });
     }

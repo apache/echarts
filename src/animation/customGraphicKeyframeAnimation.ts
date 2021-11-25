@@ -21,7 +21,9 @@ import { AnimationEasing } from 'zrender/src/animation/easing';
 import Element from 'zrender/src/Element';
 import { keys, filter, each } from 'zrender/src/core/util';
 import { ELEMENT_ANIMATABLE_PROPS } from './customGraphicTransition';
-import { AnimationOption } from '../util/types';
+import { AnimationOption, AnimationOptionMixin } from '../util/types';
+import { Model } from '../echarts.all';
+import { getAnimationConfig } from './basicTrasition';
 
 // Helpers for creating keyframe based animations in custom series and graphic components.
 
@@ -37,10 +39,20 @@ export interface ElementKeyframeAnimationOption<Props extends Record<string, any
 }
 
 export function applyKeyframeAnimation<T extends Record<string, any>>(
-    el: Element, animationOpts?: ElementKeyframeAnimationOption<T>
+    el: Element, animationOpts: ElementKeyframeAnimationOption<T>, animatableModel: Model<AnimationOptionMixin>
 ) {
+    if (!animationOpts) {
+        return;
+    }
+
     const keyframes = animationOpts.keyframes;
-    const duration = animationOpts.duration;
+    let duration = animationOpts.duration;
+
+    if (animatableModel && duration == null) {
+        const config = getAnimationConfig('enter', animatableModel, 0);
+        duration = config && config.duration;
+    }
+
     if (!keyframes || !duration) {
         return;
     }
@@ -62,7 +74,13 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
             let propKeys = keys(kfValues);
             if (!propName) {
                 // PENDING performance?
-                propKeys = filter(propKeys, key => key !== 'percent' && key !== 'easing');
+                propKeys = filter(
+                    propKeys, key => key !== 'percent' && key !== 'easing'
+                    && key !== 'shape' && key !== 'style' && key !== 'extra'
+                );
+            }
+            if (!propKeys.length) {
+                return;
             }
             for (let i = 0; i < animators.length; i++) {
                 if (animators[i] !== animator) {
