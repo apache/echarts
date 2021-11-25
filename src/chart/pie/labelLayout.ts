@@ -166,10 +166,18 @@ function avoidOverlap(
         if (!isPositionCenter(layout) && layout.linePoints) {
             const label = layout.label;
             const linePoints = layout.linePoints;
-            const isAlignToEdge = layout.labelAlignTo === 'edge';
+            const style = layout.label.style;
+            const padding = style.padding as number[];
+            const paddingH = padding ? padding[1] + padding[3] : 0;
+            const paddingV = padding ? padding[0] + padding[2] : 0;
 
             let targetTextWidth;
-            if (isAlignToEdge) {
+
+            if (style.width != null) {
+                // User-specified width has higher priority.
+                targetTextWidth = style.width + paddingH;
+            }
+            else if (layout.labelAlignTo === 'edge') {
                 if (label.x < cx) {
                     targetTextWidth = linePoints[2][0] - layout.labelDistance
                             - viewLeft - layout.edgeDistance;
@@ -196,34 +204,33 @@ function avoidOverlap(
                 }
             }
 
-            const style = layout.label.style;
-            const padding = style.padding as number[];
-            const paddingH = padding ? padding[1] + padding[3] : 0;
-            const paddingV = padding ? padding[0] + padding[2] : 0;
-            const wrapWidth = targetTextWidth - paddingH;
-
-            if (wrapWidth < layout.rect.width) {
+            if (targetTextWidth < layout.rect.width + paddingH) {
                 // Temporarily set background to be null to calculate
                 // the bounding box without backgroud.
                 const oldBgColor = layout.label.style.backgroundColor;
                 layout.label.setStyle('backgroundColor', null);
-                layout.label.setStyle('width', wrapWidth);
+                const oldWidth = style.width;
+                layout.label.setStyle('width', targetTextWidth - paddingH);
 
                 // This is the real bounding box of the text
                 const rect = layout.label.getBoundingRect();
-                targetTextWidth = rect.width + paddingH;
 
                 // Adjust label position for adjustSingleSide
                 const dy = rect.height + paddingV - layout.rect.height;
                 layout.label.y += dy / 2;
                 layout.rect.height = rect.height + paddingV;
-                layout.rect.width = targetTextWidth;
-
-                // For background width
-                layout.label.setStyle('width', rect.width);
 
                 // Revert background color
                 layout.label.setStyle('backgroundColor', oldBgColor);
+
+                // For background width, force using user-specified width.
+                const width = oldWidth != null && style.backgroundColor
+                    ? oldWidth
+                    : rect.width;
+                // For background width
+                layout.label.setStyle('width', width);
+                // For labelLines);
+                layout.rect.width = width + paddingH;
             }
         }
     }
@@ -429,6 +436,17 @@ export default function pieLabelLayout(
             const margin = (label.style.margin || 0) + 2.1;
             textRect.y -= margin / 2;
             textRect.height += margin;
+
+            // textRect should contain the padding but
+            // getBoundingRect does not include padding when no background.
+            const bgColorDrawn = !!(label.style.backgroundColor);
+            if (!bgColorDrawn) {
+                const padding = label.style.padding as number[];
+                const paddingH = padding ? padding[1] + padding[3] : 0;
+                const paddingV = padding ? padding[0] + padding[2] : 0;
+                textRect.height += paddingV;
+                textRect.width += paddingH;
+            }
 
             labelLayoutList.push({
                 label,
