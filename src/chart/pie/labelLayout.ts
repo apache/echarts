@@ -209,28 +209,34 @@ function avoidOverlap(
                 // the bounding box without backgroud.
                 const oldBgColor = layout.label.style.backgroundColor;
                 layout.label.setStyle('backgroundColor', null);
+                const oldInnerHeight = layout.rect.height - (oldBgColor ? paddingV : 0);
                 const oldWidth = style.width;
+
+                // Set constraining width
                 layout.label.setStyle('width', targetTextWidth - paddingH);
 
-                // This is the real bounding box of the text
-                const rect = layout.label.getBoundingRect();
-
-                // Adjust label position for adjustSingleSide
-                const dy = rect.height + paddingV - layout.rect.height;
-                layout.label.y += dy / 2;
-                layout.rect.height = rect.height + paddingV;
+                // This is the real bounding box of the text without padding
+                const innerRect = layout.label.getBoundingRect();
+                const innerHeight = innerRect.height;
 
                 // Revert background color
                 layout.label.setStyle('backgroundColor', oldBgColor);
+                // outerHeight contains padding if there is background color
+                const outerHeight = layout.label.getBoundingRect().height;
 
                 // For background width, force using user-specified width.
                 const width = oldWidth != null && style.backgroundColor
                     ? oldWidth
-                    : rect.width;
+                    : innerRect.width;
                 // For background width
                 layout.label.setStyle('width', width);
                 // For labelLines);
-                layout.rect.width = width + paddingH;
+                layout.rect.width = width;
+
+                // Adjust label position for adjustSingleSide
+                const margin = (label.style.margin || 0) + 2.1;
+                layout.rect.height = outerHeight + margin;
+                layout.rect.y -= (innerHeight - oldInnerHeight) / 2;
             }
         }
     }
@@ -244,7 +250,9 @@ function avoidOverlap(
             const label = layout.label;
             const linePoints = layout.linePoints;
             const isAlignToEdge = layout.labelAlignTo === 'edge';
-            const realTextWidth = layout.rect.width;
+            const padding = label.style.padding as number[];
+            const paddingH = padding ? padding[1] + padding[3] : 0;
+            const realTextWidth = layout.rect.width + paddingH;
             const dist = linePoints[1][0] - linePoints[2][0];
             if (isAlignToEdge) {
                 if (label.x < cx) {
@@ -436,17 +444,6 @@ export default function pieLabelLayout(
             const margin = (label.style.margin || 0) + 2.1;
             textRect.y -= margin / 2;
             textRect.height += margin;
-
-            // textRect should contain the padding but
-            // getBoundingRect does not include padding when no background.
-            const bgColorDrawn = !!(label.style.backgroundColor);
-            if (!bgColorDrawn) {
-                const padding = label.style.padding as number[];
-                const paddingH = padding ? padding[1] + padding[3] : 0;
-                const paddingV = padding ? padding[0] + padding[2] : 0;
-                textRect.height += paddingV;
-                textRect.width += paddingH;
-            }
 
             labelLayoutList.push({
                 label,
