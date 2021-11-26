@@ -165,6 +165,7 @@ function avoidOverlap(
         const layout = labelLayoutList[i];
         if (!isPositionCenter(layout) && layout.linePoints) {
             const label = layout.label;
+            const textRect = layout.rect;
             const linePoints = layout.linePoints;
             const style = layout.label.style;
             const bgColor = style.backgroundColor;
@@ -205,27 +206,27 @@ function avoidOverlap(
                 }
             }
 
-            // layout.rect.width already contains paddingH if bgColor is set
-            const oldOuterWidth = layout.rect.width + (bgColor ? 0 : paddingH);
+            // textRect.width already contains paddingH if bgColor is set
+            const oldOuterWidth = textRect.width + (bgColor ? 0 : paddingH);
             if (targetTextWidth < oldOuterWidth) {
                 const oldWidth = style.width;
-                const oldHeight = layout.rect.height;
+                const oldHeight = textRect.height;
 
                 // Temporarily set background to be null to calculate
                 // the bounding box without backgroud.
-                layout.label.setStyle('backgroundColor', null);
+                label.setStyle('backgroundColor', null);
                 // Set constraining width
-                layout.label.setStyle('width', targetTextWidth - paddingH);
+                label.setStyle('width', targetTextWidth - paddingH);
 
                 // This is the real bounding box of the text without padding
-                const innerRect = layout.label.getBoundingRect();
+                const innerRect = label.getBoundingRect();
                 innerRect.applyTransform(label.getComputedTransform());
                 const innerHeight = innerRect.height;
                 // outerHeight contains padding if there is background color
                 const outerHeight = innerHeight + (bgColor ? paddingV : 0);
 
                 // Revert background color
-                layout.label.setStyle('backgroundColor', bgColor);
+                label.setStyle('backgroundColor', bgColor);
 
                 // For background width, force using user-specified width
                 const width = oldWidth != null && style.backgroundColor
@@ -234,15 +235,15 @@ function avoidOverlap(
                     // change wrapping again and make outerHeight wrong
                     : Math.ceil(innerRect.width);
                 // For background width
-                layout.label.setStyle('width', width);
+                label.setStyle('width', width);
                 // For labelLines. It should contain padding when background
                 // color is set to match the originally labelLayoutList
-                layout.rect.width = width + (bgColor ? paddingH : 0);
+                textRect.width = width + (bgColor ? paddingH : 0);
 
                 // Adjust label position for adjustSingleSide
                 const margin = (label.style.margin || 0) + 2.1;
-                layout.rect.height = outerHeight + margin;
-                layout.rect.y -= (layout.rect.height - oldHeight) / 2;
+                textRect.height = outerHeight + margin;
+                textRect.y -= (textRect.height - oldHeight) / 2;
             }
         }
     }
@@ -258,7 +259,7 @@ function avoidOverlap(
             const isAlignToEdge = layout.labelAlignTo === 'edge';
             const padding = label.style.padding as number[];
             const paddingH = padding ? padding[1] + padding[3] : 0;
-            // layout.rect.width already contains paddingH if bgColor is set
+            // textRect.width already contains paddingH if bgColor is set
             const extraPaddingH = label.style.backgroundColor ? 0 : paddingH;
             const realTextWidth = layout.rect.width + extraPaddingH;
             const dist = linePoints[1][0] - linePoints[2][0];
