@@ -717,7 +717,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 throw new Error('renderToSVGString can only been used in the svg renderer.');
             }
         }
-        return painter.renderToString() as any;
+        return painter.renderToString();
     }
 
     /**
