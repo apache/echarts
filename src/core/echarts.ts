@@ -701,7 +701,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         const painter = this._zr.painter;
         if (__DEV__) {
             if (painter.type !== 'canvas') {
-                throw new Error('renderToCanvas can only been used in the canvas renderer.');
+                throw new Error('renderToCanvas can only be used in the canvas renderer.');
             }
         }
         return (painter as CanvasPainter).getRenderedCanvas({
@@ -714,7 +714,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         const painter = this._zr.painter;
         if (__DEV__) {
             if (painter.type !== 'svg') {
-                throw new Error('renderToSVGString can only been used in the svg renderer.');
+                throw new Error('renderToSVGString can only be used in the svg renderer.');
             }
         }
         return painter.renderToString();
