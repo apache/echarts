@@ -167,6 +167,7 @@ function avoidOverlap(
             const label = layout.label;
             const linePoints = layout.linePoints;
             const style = layout.label.style;
+            const bgColor = style.backgroundColor;
             const padding = style.padding as number[];
             const paddingH = padding ? padding[1] + padding[3] : 0;
             const paddingV = padding ? padding[0] + padding[2] : 0;
@@ -204,39 +205,44 @@ function avoidOverlap(
                 }
             }
 
-            if (targetTextWidth < layout.rect.width + paddingH) {
+            // layout.rect.width already contains paddingH if bgColor is set
+            const oldOuterWidth = layout.rect.width + (bgColor ? 0 : paddingH);
+            if (targetTextWidth < oldOuterWidth) {
+                const oldWidth = style.width;
+                const oldHeight = layout.rect.height;
+
                 // Temporarily set background to be null to calculate
                 // the bounding box without backgroud.
-                const oldBgColor = layout.label.style.backgroundColor;
                 layout.label.setStyle('backgroundColor', null);
-                const oldInnerHeight = layout.rect.height - (oldBgColor ? paddingV : 0);
-                const oldWidth = style.width;
-
                 // Set constraining width
                 layout.label.setStyle('width', targetTextWidth - paddingH);
 
                 // This is the real bounding box of the text without padding
                 const innerRect = layout.label.getBoundingRect();
+                innerRect.applyTransform(label.getComputedTransform());
                 const innerHeight = innerRect.height;
+                // outerHeight contains padding if there is background color
+                const outerHeight = innerHeight + (bgColor ? paddingV : 0);
 
                 // Revert background color
-                layout.label.setStyle('backgroundColor', oldBgColor);
-                // outerHeight contains padding if there is background color
-                const outerHeight = layout.label.getBoundingRect().height;
+                layout.label.setStyle('backgroundColor', bgColor);
 
-                // For background width, force using user-specified width.
+                // For background width, force using user-specified width
                 const width = oldWidth != null && style.backgroundColor
                     ? oldWidth
-                    : innerRect.width;
+                    // Use ceil in case of fractional width, otherwise it may
+                    // change wrapping again and make outerHeight wrong
+                    : Math.ceil(innerRect.width);
                 // For background width
                 layout.label.setStyle('width', width);
-                // For labelLines);
-                layout.rect.width = width;
+                // For labelLines. It should contain padding when background
+                // color is set to match the originally labelLayoutList
+                layout.rect.width = width + (bgColor ? paddingH : 0);
 
                 // Adjust label position for adjustSingleSide
                 const margin = (label.style.margin || 0) + 2.1;
                 layout.rect.height = outerHeight + margin;
-                layout.rect.y -= (innerHeight - oldInnerHeight) / 2;
+                layout.rect.y -= (layout.rect.height - oldHeight) / 2;
             }
         }
     }
@@ -252,7 +258,9 @@ function avoidOverlap(
             const isAlignToEdge = layout.labelAlignTo === 'edge';
             const padding = label.style.padding as number[];
             const paddingH = padding ? padding[1] + padding[3] : 0;
-            const realTextWidth = layout.rect.width + paddingH;
+            // layout.rect.width already contains paddingH if bgColor is set
+            const extraPaddingH = label.style.backgroundColor ? 0 : paddingH;
+            const realTextWidth = layout.rect.width + extraPaddingH;
             const dist = linePoints[1][0] - linePoints[2][0];
             if (isAlignToEdge) {
                 if (label.x < cx) {
