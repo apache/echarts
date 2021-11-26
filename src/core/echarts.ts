@@ -713,9 +713,6 @@ class ECharts extends Eventful<ECEventDefinition> {
     renderToSVGString(): string {
         const painter = this._zr.painter;
         if (__DEV__) {
-            if (!this._ssr) {
-                throw new Error('renderToSVGString can only been used in SSR mode.');
-            }
             if (painter.type !== 'svg') {
                 throw new Error('renderToSVGString can only been used in the svg renderer.');
             }
