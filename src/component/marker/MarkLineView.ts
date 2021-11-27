@@ -51,6 +51,7 @@ import { getVisualFromData } from '../../visual/helper';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import SeriesDimensionDefine from '../../data/SeriesDimensionDefine';
 import { createClipPath } from '../../chart/helper/createClipPathFromCoordSys';
+import { linePolygonIntersect } from '../../util/graphic';
 
 // Item option for configuring line and each end of symbol.
 // Line option. be merged from configuration of two ends.
@@ -190,6 +191,16 @@ function markLineFilter(
             || ifMarkLineHasOnlyDim(0, fromCoord, toCoord, coordSys))
         ) {
             return true;
+        }
+        const lineStart = coordSys.dataToPoint(item[0].coord);
+        const lineEnd = coordSys.dataToPoint(item[1].coord);
+        const area = (coordSys as Cartesian2D).getArea();
+        const isIntersect = linePolygonIntersect(
+            lineStart[0], lineStart[1], lineEnd[0], lineEnd[1],
+            [[area.x, area.y], [area.width + area.x, area.height + area.y]]
+        );
+        if (isIntersect) {
+            return isIntersect;
         }
     }
     return markerHelper.dataFilter(coordSys, item[0])

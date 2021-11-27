@@ -149,7 +149,7 @@ export interface CoordinateSystem {
 
     getArea?: () => CoordinateSystemClipArea
 
-    // Only `coord/View.js` implements `getBoundingRect`.
+    // Only `coord/View.ts` implements `getBoundingRect`.
     // But if other coord sys implement it, should follow this signature.
     getBoundingRect?: () => BoundingRect;
 
