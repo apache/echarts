@@ -1,6 +1,6 @@
-name: 🐞 Bug Report
+name: Bug Report
 description: Report your bug to Apache ECharts
-title: ""
+title: "[Bug]: "
 labels: [bug]
 body:
 - type: markdown

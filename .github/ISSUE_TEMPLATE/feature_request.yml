@@ -1,6 +1,6 @@
-name: 🐞 Feature Request
+name: Feature Request
 description: File a bug/issue
-title: ""
+title: "[Feature]: "
 labels: [new-feature]
 body:
 - type: markdown
