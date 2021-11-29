@@ -54,7 +54,7 @@ body:
 
     placeholder: |
       1. How do you create your chart.
-      2. What's the option.
+      2. What's the echarts option you are using.
       3. User interactions before the error happens.
 
   validations:
