@@ -164,22 +164,21 @@ function avoidOverlap(
     for (let i = 0; i < labelLayoutList.length; i++) {
         const layout = labelLayoutList[i];
         if (!isPositionCenter(layout) && layout.linePoints) {
+            const style = layout.label.style;
+            if (style.width != null) {
+                continue;
+            }
+
             const label = layout.label;
             const textRect = layout.rect;
             const linePoints = layout.linePoints;
-            const style = layout.label.style;
             const bgColor = style.backgroundColor;
             const padding = style.padding as number[];
             const paddingH = padding ? padding[1] + padding[3] : 0;
-            const paddingV = padding ? padding[0] + padding[2] : 0;
+            const overflow = style.overflow;
 
             let targetTextWidth;
-
-            if (style.width != null) {
-                // User-specified width has higher priority.
-                targetTextWidth = style.width + paddingH;
-            }
-            else if (layout.labelAlignTo === 'edge') {
+            if (layout.labelAlignTo === 'edge') {
                 if (label.x < cx) {
                     targetTextWidth = linePoints[2][0] - layout.labelDistance
                             - viewLeft - layout.edgeDistance;
@@ -209,40 +208,37 @@ function avoidOverlap(
             // textRect.width already contains paddingH if bgColor is set
             const oldOuterWidth = textRect.width + (bgColor ? 0 : paddingH);
             if (targetTextWidth < oldOuterWidth) {
-                const oldWidth = style.width;
                 const oldHeight = textRect.height;
+                if (overflow && overflow.match('break')) {
+                    const oldWidth = style.width;
+                    const oldEllipsis = style.ellipsis;
 
-                // Temporarily set background to be null to calculate
-                // the bounding box without backgroud.
-                label.setStyle('backgroundColor', null);
-                // Set constraining width
-                label.setStyle('width', targetTextWidth - paddingH);
+                    // Temporarily set background to be null to calculate
+                    // the bounding box without backgroud.
+                    label.setStyle('backgroundColor', null);
+                    label.setStyle('ellipsis', '');
 
-                // This is the real bounding box of the text without padding
-                const innerRect = label.getBoundingRect();
-                innerRect.applyTransform(label.getComputedTransform());
-                const innerHeight = innerRect.height;
-                // outerHeight contains padding if there is background color
-                const outerHeight = innerHeight + (bgColor ? paddingV : 0);
+                    // Set constraining width
+                    label.setStyle('width', targetTextWidth - paddingH);
 
-                // Revert background color
-                label.setStyle('backgroundColor', bgColor);
+                    if (oldWidth == null) {
+                        // This is the real bounding box of the text without padding
+                        const innerRect = label.getBoundingRect();
+                        innerRect.applyTransform(label.getComputedTransform());
+                        label.setStyle('width', Math.ceil(innerRect.width));
+                    }
 
-                // For background width, force using user-specified width
-                const width = oldWidth != null && style.backgroundColor
-                    ? oldWidth
-                    // Use ceil in case of fractional width, otherwise it may
-                    // change wrapping again and make outerHeight wrong
-                    : Math.ceil(innerRect.width);
-                // For background width
-                label.setStyle('width', width);
-                // For labelLines. It should contain padding when background
-                // color is set to match the originally labelLayoutList
-                textRect.width = width + (bgColor ? paddingH : 0);
+                    label.setStyle('backgroundColor', bgColor);
+                    label.setStyle('ellipsis', oldEllipsis);
+                }
+                else {
+                    label.setStyle('width', targetTextWidth - paddingH);
+                }
 
-                // Adjust label position for adjustSingleSide
+                const newRect = label.getBoundingRect();
+                textRect.width = newRect.width;
                 const margin = (label.style.margin || 0) + 2.1;
-                textRect.height = outerHeight + margin;
+                textRect.height = newRect.height + margin;
                 textRect.y -= (textRect.height - oldHeight) / 2;
             }
         }

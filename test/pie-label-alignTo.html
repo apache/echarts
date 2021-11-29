@@ -56,9 +56,9 @@ under the License.
             var data = [];
             var text = '';
             for (var i = 0; i < count; i++) {
-                text += 'XY';
+                text += String.fromCharCode(65 + i) + String.fromCharCode(97 + i);
                 data.push({
-                    name: i + text + i,
+                    name: i + text,
                     value: Math.random()
                 });
             }
