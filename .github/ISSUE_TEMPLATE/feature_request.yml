@@ -1,6 +1,6 @@
 name: Feature Request
-description: File a bug/issue
-title: "[Feature]: "
+description: Request a new Feature to Apache ECharts
+title: "[Feature] "
 labels: [new-feature]
 body:
 - type: markdown
