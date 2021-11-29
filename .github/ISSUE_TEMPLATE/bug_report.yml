@@ -1,12 +1,12 @@
 name: Bug Report
-description: Report a Bug to Apache ECharts
+description: Report a bug to Apache ECharts
 title: "[Bug] "
 labels: [bug]
 body:
 - type: markdown
   attributes:
     value: |
-      The issue list is reserved exclusively for bug reports.
+      The issue list is reserved exclusively for bug reports and feature requests.
 
       For usage questions, please use the following resources:
 
@@ -53,8 +53,8 @@ body:
       What do we need to do after opening your repro in order to make the bug happen? Clear and concise reproduction instructions are important for us to be able to triage your issue in a timely manner. Note that you can use [Markdown](https://guides.github.com/features/mastering-markdown/) to format lists and code.
 
     placeholder: |
-      1. How do you create your chart.
-      2. What's the echarts option you are using.
+      1. How do you create the chart.
+      2. What's the chart option
       3. User interactions before the error happens.
 
   validations:
