@@ -25,10 +25,10 @@ import SymbolClz from '../helper/Symbol';
 import lineAnimationDiff from './lineAnimationDiff';
 import * as graphic from '../../util/graphic';
 import * as modelUtil from '../../util/model';
-import {ECPolyline, ECPolygon} from './poly';
+import { ECPolyline, ECPolygon } from './poly';
 import ChartView from '../../view/Chart';
-import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
-import {createGridClipPath, createPolarClipPath} from '../helper/createClipPathFromCoordSys';
+import { prepareDataCoordInfo, getStackedOnPoint } from './helper';
+import { createGridClipPath, createPolarClipPath } from '../helper/createClipPathFromCoordSys';
 import LineSeriesModel, { LineSeriesOption } from './LineSeries';
 import type GlobalModel from '../../model/Global';
 import type ExtensionAPI from '../../core/ExtensionAPI';
@@ -43,20 +43,22 @@ import type {
     ECElement,
     DisplayState,
     LabelOption,
-    ParsedValue
+    ParsedValue,
 } from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis, SPECIAL_STATES } from '../../util/states';
 import Model from '../../model/Model';
-import {setLabelStyle, getLabelStatesModels, labelInner} from '../../label/labelStyle';
-import {getDefaultLabel, getDefaultInterpolatedLabel} from '../helper/labelHelper';
+import { setLabelStyle, getLabelStatesModels, labelInner } from '../../label/labelStyle';
+import { getDefaultLabel, getDefaultInterpolatedLabel } from '../helper/labelHelper';
 
 import { getECData } from '../../util/innerStore';
 import { createFloat32Array } from '../../util/vendor';
 import { convertToColorString } from '../../util/format';
 import { lerp } from 'zrender/src/tool/color';
+import Element from 'zrender/src/Element';
+
 
 type PolarArea = ReturnType<Polar['getArea']>;
 type Cartesian2DArea = ReturnType<Cartesian2D['getArea']>;
@@ -222,6 +224,12 @@ function clipColorStops(colorStops: ColorStop[], maxSize: number): ColorStop[] {
             if (prevInRangeColorStop) {
                 newColorStops.push(lerpStop(prevInRangeColorStop, stop, maxSize));
             }
+            else if (prevOutOfRangeColorStop) { // If there are two stops and coord range is between these two stops
+                newColorStops.push(
+                    lerpStop(prevOutOfRangeColorStop, stop, 0),
+                    lerpStop(prevOutOfRangeColorStop, stop, maxSize)
+                );
+            }
             // All following stop will be out of range. So just ignore them.
             break;
         }
@@ -311,7 +319,7 @@ function getVisualGradient(
             : (outerColors[0] ? outerColors[0] : colorStops[0].color);
     }
 
-    const tinyExtent = 0; // Arbitrary value: 10px
+    const tinyExtent = 10; // Arbitrary value: 10px
     const minCoord = colorStopsInRange[0].coord - tinyExtent;
     const maxCoord = colorStopsInRange[inRangeStopLen - 1].coord + tinyExtent;
     const coordSpan = maxCoord - minCoord;
@@ -399,9 +407,9 @@ function canShowAllSymbolForCategory(
     const step = Math.max(1, Math.round(dataLen / 5));
     for (let dataIndex = 0; dataIndex < dataLen; dataIndex += step) {
         if (SymbolClz.getSymbolSize(
-                data, dataIndex
+            data, dataIndex
             // Only for cartesian, where `isHorizontal` exists.
-            )[categoryAxis.isHorizontal() ? 1 : 0]
+        )[categoryAxis.isHorizontal() ? 1 : 0]
             // Empirical number
             * 1.5 > availSize
         ) {
@@ -877,9 +885,23 @@ class LineView extends ChartView {
         this._points = points;
         this._step = step;
         this._valueOrigin = valueOrigin;
+
+        if (seriesModel.get('triggerLineEvent')) {
+            this.packEventData(seriesModel, polyline);
+            polygon && this.packEventData(seriesModel, polygon);
+        }
     }
 
-    dispose() {}
+    private packEventData(seriesModel: LineSeriesModel, el: Element) {
+        getECData(el).eventData = {
+            componentType: 'series',
+            componentSubType: 'line',
+            componentIndex: seriesModel.componentIndex,
+            seriesIndex: seriesModel.seriesIndex,
+            seriesName: seriesModel.name,
+            seriesType: 'line',
+        };
+    }
 
     highlight(
         seriesModel: LineSeriesModel,
@@ -1097,7 +1119,7 @@ class LineView extends ChartView {
                 const symbolPath = el.getSymbolPath();
                 const text = symbolPath.getTextContent();
 
-                el.attr({ scaleX: 0, scaleY: 0});
+                el.attr({ scaleX: 0, scaleY: 0 });
                 el.animateTo({
                     scaleX: 1,
                     scaleY: 1

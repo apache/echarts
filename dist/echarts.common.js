@@ -16453,7 +16453,6 @@
     }
 
     function getTextRect(text, font, align, verticalAlign, padding, rich, truncate, lineHeight) {
-      deprecateLog('getTextRect is deprecated.');
       var textEl = new ZRText({
         style: {
           text: text,
@@ -16545,7 +16544,7 @@
 
 
       var numericResult = numericToNumber(value);
-      return isNumberUserReadable(numericResult) ? addCommas(numericResult) : isStringSafe(value) ? stringToUserReadable(value) : '-';
+      return isNumberUserReadable(numericResult) ? addCommas(numericResult) : isStringSafe(value) ? stringToUserReadable(value) : typeof value === 'boolean' ? value + '' : '-';
     }
     var TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
 
@@ -29103,7 +29102,7 @@
     var lifecycle = new Eventful();
 
     var hasWindow = typeof window !== 'undefined';
-    var version$1 = '5.2.1';
+    var version$1 = '5.2.2';
     var dependencies = {
       zrender: '5.2.1'
     };
@@ -36104,12 +36103,6 @@
 
         (min == null || !isFinite(min)) && (min = NaN);
         (max == null || !isFinite(max)) && (max = NaN);
-
-        if (min > max) {
-          min = NaN;
-          max = NaN;
-        }
-
         var isBlank = eqNaN(min) || eqNaN(max) || isOrdinal && !axisDataLen; // If data extent modified, need to recalculated to ensure cross zero.
 
         if (this._needCrossZero) {
@@ -40484,7 +40477,8 @@
         hoverLayerThreshold: Infinity,
         universalTransition: {
           divideShape: 'clone'
-        }
+        },
+        triggerLineEvent: false
       };
       return LineSeriesModel;
     }(SeriesModel);
@@ -41322,7 +41316,20 @@
           if (smooth > 0) {
             var nextIdx = idx + dir;
             var nextX = points[nextIdx * 2];
-            var nextY = points[nextIdx * 2 + 1];
+            var nextY = points[nextIdx * 2 + 1]; // Ignore duplicate point
+
+            while (nextX === x && nextY === y && k < segLen) {
+              k++;
+              nextIdx += dir;
+              idx += dir;
+              nextX = points[nextIdx * 2];
+              nextY = points[nextIdx * 2 + 1];
+              x = points[idx * 2];
+              y = points[idx * 2 + 1];
+              dx = x - prevX;
+              dy = y - prevY;
+            }
+
             var tmpK = k + 1;
 
             if (connectNulls) {
@@ -41918,6 +41925,9 @@
         } else if (coord > maxSize) {
           if (prevInRangeColorStop) {
             newColorStops.push(lerpStop(prevInRangeColorStop, stop_1, maxSize));
+          } else if (prevOutOfRangeColorStop) {
+            // If there are two stops and coord range is between these two stops
+            newColorStops.push(lerpStop(prevOutOfRangeColorStop, stop_1, 0), lerpStop(prevOutOfRangeColorStop, stop_1, maxSize));
           } // All following stop will be out of range. So just ignore them.
 
 
@@ -42005,7 +42015,7 @@
         return colorStops[0].coord < 0 ? outerColors[1] ? outerColors[1] : colorStops[stopLen - 1].color : outerColors[0] ? outerColors[0] : colorStops[0].color;
       }
 
-      var tinyExtent = 0; // Arbitrary value: 10px
+      var tinyExtent = 10; // Arbitrary value: 10px
 
       var minCoord = colorStopsInRange[0].coord - tinyExtent;
       var maxCoord = colorStopsInRange[inRangeStopLen - 1].coord + tinyExtent;
@@ -42469,9 +42479,23 @@
         this._points = points;
         this._step = step;
         this._valueOrigin = valueOrigin;
+
+        if (seriesModel.get('triggerLineEvent')) {
+          this.packEventData(seriesModel, polyline);
+          polygon && this.packEventData(seriesModel, polygon);
+        }
       };
 
-      LineView.prototype.dispose = function () {};
+      LineView.prototype.packEventData = function (seriesModel, el) {
+        getECData(el).eventData = {
+          componentType: 'series',
+          componentSubType: 'line',
+          componentIndex: seriesModel.componentIndex,
+          seriesIndex: seriesModel.seriesIndex,
+          seriesName: seriesModel.name,
+          seriesType: 'line'
+        };
+      };
 
       LineView.prototype.highlight = function (seriesModel, ecModel, api, payload) {
         var data = seriesModel.getData();
@@ -43719,6 +43743,19 @@
           }
 
           var el = elementCreator[coord.type](seriesModel, data, dataIndex, layout, isHorizontalOrRadial, animationModel, baseAxis.model, false, roundCap);
+
+          if (realtimeSortCfg) {
+            /**
+             * Force label animation because even if the element is
+             * ignored because it's clipped, it may not be clipped after
+             * changing order. Then, if not using forceLabelAnimation,
+             * the label animation was never started, in which case,
+             * the label will be the final value and doesn't have label
+             * animation.
+             */
+            el.forceLabelAnimation = true;
+          }
+
           updateStyle(el, data, dataIndex, itemModel, layout, seriesModel, isHorizontalOrRadial, coord.type === 'polar');
 
           if (isInitSort) {
@@ -43784,6 +43821,28 @@
             el = elementCreator[coord.type](seriesModel, data, newIndex, layout, isHorizontalOrRadial, animationModel, baseAxis.model, !!el, roundCap);
           } else {
             saveOldStyle(el);
+          }
+
+          if (realtimeSortCfg) {
+            el.forceLabelAnimation = true;
+          }
+
+          if (isChangeOrder) {
+            var textEl = el.getTextContent();
+
+            if (textEl) {
+              var labelInnerStore = labelInner(textEl);
+
+              if (labelInnerStore.prevValue != null) {
+                /**
+                 * Set preValue to be value so that no new label
+                 * should be started, otherwise, it will take a full
+                 * `animationDurationUpdate` time to finish the
+                 * animation, which is not expected.
+                 */
+                labelInnerStore.prevValue = labelInnerStore.value;
+              }
+            }
           } // Not change anything if only order changed.
           // Especially not change label.
 
@@ -61674,22 +61733,22 @@
                 seriesLabel += labelModel.get(['data', 'allData']);
               }
 
+              var middleSeparator_1 = labelModel.get(['data', 'separator', 'middle']);
+              var endSeparator_1 = labelModel.get(['data', 'separator', 'end']);
               var dataLabels = [];
 
               for (var i = 0; i < data.count(); i++) {
                 if (i < maxDataCnt) {
                   var name_1 = data.getName(i);
-                  var value = retrieveRawValue(data, i);
+                  var value = data.getValues(i);
                   var dataLabel = labelModel.get(['data', name_1 ? 'withName' : 'withoutName']);
                   dataLabels.push(replace(dataLabel, {
                     name: name_1,
-                    value: value
+                    value: value.join(middleSeparator_1)
                   }));
                 }
               }
 
-              var middleSeparator_1 = labelModel.get(['data', 'separator', 'middle']);
-              var endSeparator_1 = labelModel.get(['data', 'separator', 'end']);
               seriesLabel += dataLabels.join(middleSeparator_1) + endSeparator_1;
               seriesLabels_1.push(seriesLabel);
             }

@@ -14,24 +14,16 @@ Apache ECharts is a free, powerful charting and visualization library offering a
 
 You may choose one of the following methods:
 
-+ Download from the official website in [中文下载页](https://echarts.apache.org/zh/download.html)
-+ Download from the official website in [English](https://echarts.apache.org/en/download.html)
++ Download from the [official website](https://echarts.apache.org/download.html)
 + `npm install echarts --save`
 + CDN: [jsDelivr CDN](https://www.jsdelivr.com/package/npm/echarts?path=dist)
 
 ## Docs
 
-+ Tutorial
-    + [中文](https://echarts.apache.org/zh/tutorial.html)
-    + [English](https://echarts.apache.org/en/tutorial.html)
-
-+ API
-    + [中文](https://echarts.apache.org/zh/api.html)
-    + [English](https://echarts.apache.org/en/api.html)
-
-+ Option Manual
-    + [中文](https://echarts.apache.org/zh/option.html)
-    + [English](https://echarts.apache.org/en/option.html)
++ [Get Started](https://echarts.apache.org/handbook)
++ [API](https://echarts.apache.org/api.html)
++ [Option Manual](https://echarts.apache.org/option.html)
++ [Examples](https://echarts.apache.org/examples)
 
 ## Get Help
 
