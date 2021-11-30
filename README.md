@@ -21,17 +21,10 @@ You may choose one of the following methods:
 
 ## Docs
 
-+ Tutorial
-    + [中文](https://echarts.apache.org/zh/tutorial.html)
-    + [English](https://echarts.apache.org/en/tutorial.html)
-
-+ API
-    + [中文](https://echarts.apache.org/zh/api.html)
-    + [English](https://echarts.apache.org/en/api.html)
-
-+ Option Manual
-    + [中文](https://echarts.apache.org/zh/option.html)
-    + [English](https://echarts.apache.org/en/option.html)
++ [Get Started](https://echarts.apache.org/handbook)
++ [API](https://echarts.apache.org/api.html)
++ [Option Manual](https://echarts.apache.org/option.html)
++ [Examples](https://echarts.apache.org/examples)
 
 ## Get Help
 
