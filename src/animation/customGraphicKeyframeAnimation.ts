@@ -21,10 +21,11 @@ import { AnimationEasing } from 'zrender/src/animation/easing';
 import Element from 'zrender/src/Element';
 import { keys, filter, each } from 'zrender/src/core/util';
 import { ELEMENT_ANIMATABLE_PROPS } from './customGraphicTransition';
-import { AnimationOption, AnimationOptionMixin } from '../util/types';
+import { AnimationOption, AnimationOptionMixin, Dictionary } from '../util/types';
 import { Model } from '../echarts.all';
 import { getAnimationConfig } from './basicTrasition';
 import { warn } from '../util/log';
+import { makeInner } from '../util/model';
 
 // Helpers for creating keyframe based animations in custom series and graphic components.
 
@@ -33,10 +34,24 @@ type AnimationKeyframe<T extends Record<string, any>> = T & {
     percent?: number    // 0 - 1
 };
 
+type StateToRestore = Dictionary<any>;
+const getStateToRestore = makeInner<StateToRestore, Element>();
+
 export interface ElementKeyframeAnimationOption<Props extends Record<string, any>> extends AnimationOption {
     // Animation configuration for keyframe based animation.
     loop?: boolean
     keyframes?: AnimationKeyframe<Props>[]
+}
+
+/**
+ * Stopped previous keyframe animation and restore the attributes.
+ * Avoid new keyframe animation starts with wrong internal state when the percent: 0 is not set.
+ */
+export function stopPreviousKeyframeAnimationAndRestore(el: Element) {
+    // Stop previous keyframe animation.
+    el.stopAnimation('keyframe');
+    // Restore
+    el.attr(getStateToRestore(el));
 }
 
 export function applyKeyframeAnimation<T extends Record<string, any>>(
@@ -47,9 +62,6 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
     if (!animatableModel.isAnimationEnabled()) {
         return;
     }
-
-    // Stop previous keyframe animation.
-    el.stopAnimation('keyframe');
 
     const keyframes = animationOpts.keyframes;
     let duration = animationOpts.duration;
@@ -63,8 +75,10 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
         return;
     }
 
-    function applyKeyframeAnimationOnProp(propName: typeof ELEMENT_ANIMATABLE_PROPS[number]) {
-        if (propName && !(el as any)[propName]) {
+    const stateToRestore: StateToRestore = getStateToRestore(el);
+
+    function applyKeyframeAnimationOnProp(targetPropName: typeof ELEMENT_ANIMATABLE_PROPS[number]) {
+        if (targetPropName && !(el as any)[targetPropName]) {
             return;
         }
 
@@ -73,13 +87,13 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
         each(keyframes, kf => {
             // Stop current animation.
             const animators = el.animators;
-            const kfValues = propName ? kf[propName] : kf;
+            const kfValues = targetPropName ? kf[targetPropName] : kf;
             if (!kfValues) {
                 return;
             }
 
             let propKeys = keys(kfValues);
-            if (!propName) {
+            if (!targetPropName) {
                 // PENDING performance?
                 propKeys = filter(
                     propKeys, key => key !== 'percent' && key !== 'easing'
@@ -97,7 +111,7 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
             }
 
             if (!animator) {
-                animator = el.animate(propName, animationOpts.loop);
+                animator = el.animate(targetPropName, animationOpts.loop);
                 animator.scope = 'keyframe';
             }
             for (let i = 0; i < animators.length; i++) {
@@ -106,6 +120,14 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
                     animators[i].stopTracks(propKeys);
                 }
             }
+
+            targetPropName && (stateToRestore[targetPropName] = stateToRestore[targetPropName] || {});
+
+            const savedTarget = targetPropName ? stateToRestore[targetPropName] : stateToRestore;
+            each(propKeys, key => {
+                // Save original value.
+                savedTarget[key] = ((targetPropName ? (el as any)[targetPropName] : el) || {})[key];
+            });
 
             animator.whenWithKeys(duration * kf.percent, kfValues, propKeys, kf.easing);
         });

@@ -45,7 +45,10 @@ import {
     updateLeaveTo
 } from '../../animation/customGraphicTransition';
 import { updateProps } from '../../animation/basicTrasition';
-import { applyKeyframeAnimation } from '../../animation/customGraphicKeyframeAnimation';
+import {
+    applyKeyframeAnimation,
+    stopPreviousKeyframeAnimationAndRestore
+} from '../../animation/customGraphicKeyframeAnimation';
 
 const nonShapeGraphicElements = {
     // Reserved but not supported in graphic component.
@@ -154,6 +157,7 @@ export class GraphicComponentView extends ComponentView {
             // Remove unnecessary props to avoid potential problems.
             const elOptionCleaned = getCleanedElOption(elOption);
 
+
             // For simple, do not support parent change, otherwise reorder is needed.
             if (__DEV__) {
                 elExisting && zrUtil.assert(
@@ -171,6 +175,8 @@ export class GraphicComponentView extends ComponentView {
                 }
                 else {
                     el && (inner(el).isNew = false);
+                    // Stop and restore before update any other attributes.
+                    stopPreviousKeyframeAnimationAndRestore(el);
                 }
                 if (el) {
                     applyUpdateTransition(
