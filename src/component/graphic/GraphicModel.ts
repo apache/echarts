@@ -40,6 +40,7 @@ import { copyLayoutParams, mergeLayoutParam } from '../../util/layout';
 import { TransitionOptionMixin } from '../../animation/customGraphicTransition';
 import { ElementKeyframeAnimationOption } from '../../animation/customGraphicKeyframeAnimation';
 import { GroupProps } from 'zrender/src/graphic/Group';
+import { TransformProp } from 'zrender/src/core/Transformable';
 
 interface GraphicComponentBaseElementOption extends
     Partial<Pick<
@@ -121,8 +122,6 @@ interface GraphicComponentBaseElementOption extends
     leaveAnimation?: AnimationOption
 };
 
-
-export type TransformProp = 'x' | 'y' | 'scaleX' | 'scaleY' | 'originX' | 'originY' | 'skewX' | 'skewY' | 'rotation';
 
 export interface GraphicComponentDisplayableOption extends
     GraphicComponentBaseElementOption,

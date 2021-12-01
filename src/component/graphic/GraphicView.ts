@@ -218,6 +218,8 @@ export class GraphicComponentView extends ComponentView {
                 const elInner = inner(el);
                 const keyframeAnimation = elOption.keyframeAnimation;
 
+                el.setTextConfig(textConfig);
+
                 elInner.option = elOption;
                 setEventData(el, graphicModel, elOption);
 

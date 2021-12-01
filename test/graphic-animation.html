@@ -44,7 +44,7 @@ under the License.
 
 
 
-
+<!--
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option = {
@@ -89,7 +89,56 @@ under the License.
             });
 
         });
-        </script>
+        </script> -->
+
+        <script>
+            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+                var option = {
+                    graphic: {
+                        elements: [{
+                            type: 'text',
+                            x: 100,
+                            y: 100,
+                            style: {
+                                text: 'Apache ECharts',
+                                fontSize: 50,
+                                fontWeight: 'bold',
+                                lineDash: [0, 200],
+                                lineDashOffset: 0,
+                                fill: 'transparent',
+                                stroke: '#000',
+                                lineWidth: 1
+                            },
+                            keyframeAnimation: {
+                                duration: 4000,
+                                loop: true,
+                                keyframes: [{
+                                    percent: 0.7,
+                                    style: {
+                                        fill: 'transparent',
+                                        lineDashOffset: 200,
+                                        lineDash: [200, 0]
+                                    }
+                                }, {
+                                    percent: 1,
+                                    style: {
+                                        fill: 'black'
+                                    }
+                                }]
+                            },
+                        }]
+                    }
+                }
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Text Stroke'
+                    ],
+                    option: option
+                });
+
+            });
+            </script>
     </body>
 </html>
 

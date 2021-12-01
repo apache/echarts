@@ -40,8 +40,14 @@ export interface ElementKeyframeAnimationOption<Props extends Record<string, any
 }
 
 export function applyKeyframeAnimation<T extends Record<string, any>>(
-    el: Element, animationOpts: ElementKeyframeAnimationOption<T>, animatableModel: Model<AnimationOptionMixin>
+    el: Element,
+    animationOpts: ElementKeyframeAnimationOption<T>,
+    animatableModel: Model<AnimationOptionMixin>
 ) {
+    if (!animatableModel.isAnimationEnabled()) {
+        return;
+    }
+
     // Stop previous keyframe animation.
     el.stopAnimation('keyframe');
 
