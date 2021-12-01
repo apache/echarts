@@ -19,6 +19,7 @@
 
 // @ts-nocheck
 /* global BMap */
+/* global BMapGL */
 
 import {
     util as zrUtil,
@@ -26,14 +27,13 @@ import {
     matrix
 } from 'echarts';
 
+let BMAP_NS;
+
 function BMapCoordSys(bmap, api) {
     this._bmap = bmap;
     this.dimensions = ['lng', 'lat'];
     this._mapOffset = [0, 0];
-
     this._api = api;
-
-    this._projection = new BMap.MercatorProjection();
 }
 
 BMapCoordSys.prototype.dimensions = ['lng', 'lat'];
@@ -43,7 +43,7 @@ BMapCoordSys.prototype.setZoom = function (zoom) {
 };
 
 BMapCoordSys.prototype.setCenter = function (center) {
-    this._center = this._projection.lngLatToPoint(new BMap.Point(center[0], center[1]));
+    this._center = this._bmap.pointToOverlayPixel(new BMAP_NS.Point(center[0], center[1]));
 };
 
 BMapCoordSys.prototype.setMapOffset = function (mapOffset) {
@@ -55,17 +55,7 @@ BMapCoordSys.prototype.getBMap = function () {
 };
 
 BMapCoordSys.prototype.dataToPoint = function (data) {
-    const point = new BMap.Point(data[0], data[1]);
-    // TODO mercator projection is toooooooo slow
-    // let mercatorPoint = this._projection.lngLatToPoint(point);
-
-    // let width = this._api.getZr().getWidth();
-    // let height = this._api.getZr().getHeight();
-    // let divider = Math.pow(2, 18 - 10);
-    // return [
-    //     Math.round((mercatorPoint.x - this._center.x) / divider + width / 2),
-    //     Math.round((this._center.y - mercatorPoint.y) / divider + height / 2)
-    // ];
+    const point = new BMAP_NS.Point(data[0], data[1]);
     const px = this._bmap.pointToOverlayPixel(point);
     const mapOffset = this._mapOffset;
     return [px.x - mapOffset[0], px.y - mapOffset[1]];
@@ -131,20 +121,13 @@ function createOverlayCtor() {
         this._root = root;
     }
 
-    Overlay.prototype = new BMap.Overlay();
-    /**
-     * 初始化
-     *
-     * @param {BMap.Map} map
-     * @override
-     */
+    Overlay.prototype = new BMAP_NS.Overlay();
+
     Overlay.prototype.initialize = function (map) {
         map.getPanes().labelPane.appendChild(this._root);
         return this._root;
     };
-    /**
-     * @override
-     */
+
     Overlay.prototype.draw = function () {};
 
     return Overlay;
@@ -158,8 +141,11 @@ BMapCoordSys.create = function (ecModel, api) {
     ecModel.eachComponent('bmap', function (bmapModel) {
         const painter = api.getZr().painter;
         const viewportRoot = painter.getViewportRoot();
-        if (typeof BMap === 'undefined') {
-            throw new Error('BMap api is not loaded');
+        const isGL = bmapModel.get('isGL');
+        BMAP_NS = isGL ? BMapGL : BMap;
+
+        if (typeof BMAP_NS === 'undefined') {
+            throw new Error('BMap' + (isGL ? 'GL' : '') + ' api is not loaded');
         }
         Overlay = Overlay || createOverlayCtor();
         if (bmapCoordSys) {
@@ -190,7 +176,7 @@ BMapCoordSys.create = function (ecModel, api) {
                 delete mapOptions.mapType;
             }
 
-            bmap = bmapModel.__bmap = new BMap.Map(bmapRoot, mapOptions);
+            bmap = bmapModel.__bmap = new BMAP_NS.Map(bmapRoot, mapOptions);
 
             const overlay = new Overlay(viewportRoot);
             bmap.addOverlay(overlay);
@@ -211,7 +197,7 @@ BMapCoordSys.create = function (ecModel, api) {
             const bmapZoom = bmap.getZoom();
             const centerOrZoomChanged = bmapModel.centerOrZoomChanged([bmapCenter.lng, bmapCenter.lat], bmapZoom);
             if (centerOrZoomChanged) {
-                const pt = new BMap.Point(center[0], center[1]);
+                const pt = new BMAP_NS.Point(center[0], center[1]);
                 bmap.centerAndZoom(pt, zoom);
             }
         }

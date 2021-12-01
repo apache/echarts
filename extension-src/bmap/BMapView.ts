@@ -36,32 +36,9 @@ export default echarts.extendComponentView({
         let rendering = true;
 
         const bmap = bMapModel.getBMap();
-        const viewportRoot = api.getZr().painter.getViewportRoot();
-        const coordSys = bMapModel.coordinateSystem;
-        const moveHandler = function (type, target) {
-            if (rendering) {
-                return;
-            }
-            const offsetEl = viewportRoot.parentNode.parentNode.parentNode;
-            const mapOffset = [
-                -parseInt(offsetEl.style.left, 10) || 0,
-                -parseInt(offsetEl.style.top, 10) || 0
-            ];
-            // only update style when map offset changed
-            const viewportRootStyle = viewportRoot.style;
-            const offsetLeft = mapOffset[0] + 'px';
-            const offsetTop = mapOffset[1] + 'px';
-            if (viewportRootStyle.left !== offsetLeft) {
-                viewportRootStyle.left = offsetLeft;
-            }
-            if (viewportRootStyle.top !== offsetTop) {
-                viewportRootStyle.top = offsetTop;
-            }
 
-            coordSys.setMapOffset(mapOffset);
-            bMapModel.__mapOffset = mapOffset;
-
-            api.dispatchAction({
+        const updateChart = function () {
+            rendering || api.dispatchAction({
                 type: 'bmapRoam',
                 animation: {
                     duration: 0
@@ -69,27 +46,52 @@ export default echarts.extendComponentView({
             });
         };
 
-        function zoomEndHandler() {
-            if (rendering) {
-                return;
-            }
-            api.dispatchAction({
-                type: 'bmapRoam',
-                animation: {
-                    duration: 0
-                }
-            });
-        }
-
         bmap.removeEventListener('moving', this._oldMoveHandler);
         bmap.removeEventListener('moveend', this._oldMoveHandler);
-        bmap.removeEventListener('zoomend', this._oldZoomEndHandler);
-        bmap.addEventListener('moving', moveHandler);
-        bmap.addEventListener('moveend', moveHandler);
-        bmap.addEventListener('zoomend', zoomEndHandler);
+        bmap.removeEventListener('zoomend', this._oldUpdateHandler);
+        bmap.removeEventListener('update', this._oldUpdateHandler);
 
-        this._oldMoveHandler = moveHandler;
-        this._oldZoomEndHandler = zoomEndHandler;
+        if (bMapModel.get('isGL')) {
+            bmap.addEventListener('update', updateChart);
+        }
+        else {
+            const viewportRoot = api.getZr().painter.getViewportRoot();
+            const coordSys = bMapModel.coordinateSystem;
+            const moveHandler = function () {
+                if (rendering) {
+                    return;
+                }
+                const offsetEl = viewportRoot.parentNode.parentNode.parentNode;
+                const offsetElStyle = offsetEl.style;
+                const mapOffset = [
+                    -parseInt(offsetElStyle.left, 10) || 0,
+                    -parseInt(offsetElStyle.top, 10) || 0
+                ];
+                // only update style when map offset changed
+                const viewportRootStyle = viewportRoot.style;
+                const offsetLeft = mapOffset[0] + 'px';
+                const offsetTop = mapOffset[1] + 'px';
+                if (viewportRootStyle.left !== offsetLeft) {
+                    viewportRootStyle.left = offsetLeft;
+                }
+                if (viewportRootStyle.top !== offsetTop) {
+                    viewportRootStyle.top = offsetTop;
+                }
+
+                coordSys.setMapOffset(mapOffset);
+                bMapModel.__mapOffset = mapOffset;
+
+                updateChart();
+            };
+
+            bmap.addEventListener('moving', moveHandler);
+            bmap.addEventListener('moveend', moveHandler);
+            bmap.addEventListener('zoomend', updateChart);
+
+            this._oldMoveHandler = moveHandler;
+        }
+
+        this._oldUpdateHandler = updateChart;
 
         const roam = bMapModel.get('roam');
         if (roam && roam !== 'scale') {

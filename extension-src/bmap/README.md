@@ -22,7 +22,7 @@ ECharts 百度地图扩展，可以在百度地图上展现 [点图](https://ech
 
 ```html
 <!--引入百度地图的jssdk，这里需要使用你在百度地图开发者平台申请的 ak-->
-<script src="http://api.map.baidu.com/api?v=2.0&ak="></script>
+<script src="https://api.map.baidu.com/api?v=2.0&ak="></script>
 <!-- 引入 ECharts -->
 <script src="dist/echarts.min.js"></script>
 <!-- 引入百度地图扩展 -->
@@ -52,8 +52,12 @@ option = {
         zoom: 14,
         // 是否开启拖拽缩放，可以只设置 'scale' 或者 'move'
         roam: true,
-        // 百度地图的自定义样式，见 http://developer.baidu.com/map/jsdevelop-11.htm
+        // 百度地图2.0的自定义样式，见 https://lbsyun.baidu.com/custom/index.htm
         mapStyle: {}
+        // 百度地图3.0起支持的自定义样式V2，见http://lbsyun.baidu.com/index.php?title=open/custom
+        mapStyleV2: {},
+        // 是否是GL。见 https://lbsyun.baidu.com/index.php?title=jspopularGL
+        isGL: false
     },
     series: [{
         type: 'scatter',
