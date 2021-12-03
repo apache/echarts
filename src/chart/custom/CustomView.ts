@@ -95,6 +95,10 @@ import {
     applyUpdateTransition,
     ElementRootTransitionProp
 } from '../../animation/customGraphicTransition';
+import {
+    applyKeyframeAnimation,
+    stopPreviousKeyframeAnimationAndRestore
+} from '../../animation/customGraphicKeyframeAnimation';
 
 const EMPHASIS = 'emphasis' as const;
 const NORMAL = 'normal' as const;
@@ -442,6 +446,9 @@ function updateElNormal(
     isTextContent: boolean
 ): void {
 
+    // Stop and restore before update any other attributes.
+    stopPreviousKeyframeAnimationAndRestore(el);
+
     const txCfgOpt = attachedTxInfo && attachedTxInfo.normal.cfg;
     if (txCfgOpt) {
         // PENDING: whether use user object directly rather than clone?
@@ -493,6 +500,8 @@ function updateElNormal(
         isInit,
         clearStyle: true
     });
+
+    applyKeyframeAnimation(el, elOption.keyframeAnimation, seriesModel);
 
     if (!isTextContent) {
         // `elOption.info` enables user to mount some info on

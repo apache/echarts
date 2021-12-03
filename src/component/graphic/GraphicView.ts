@@ -222,7 +222,6 @@ export class GraphicComponentView extends ComponentView {
 
             if (el) {
                 const elInner = inner(el);
-                const keyframeAnimation = elOption.keyframeAnimation;
 
                 el.setTextConfig(textConfig);
 
@@ -236,7 +235,7 @@ export class GraphicComponentView extends ComponentView {
                     itemTooltipOption: elOption.tooltip
                 });
 
-                keyframeAnimation && applyKeyframeAnimation(el, keyframeAnimation, graphicModel);
+                applyKeyframeAnimation(el, elOption.keyframeAnimation, graphicModel);
             }
         });
     }

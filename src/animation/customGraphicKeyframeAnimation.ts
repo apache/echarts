@@ -19,7 +19,7 @@
 
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import Element from 'zrender/src/Element';
-import { keys, filter, each } from 'zrender/src/core/util';
+import { keys, filter, each, isArray } from 'zrender/src/core/util';
 import { ELEMENT_ANIMATABLE_PROPS } from './customGraphicTransition';
 import { AnimationOption, AnimationOptionMixin, Dictionary } from '../util/types';
 import { Model } from '../echarts.all';
@@ -56,10 +56,17 @@ export function stopPreviousKeyframeAnimationAndRestore(el: Element) {
 
 export function applyKeyframeAnimation<T extends Record<string, any>>(
     el: Element,
-    animationOpts: ElementKeyframeAnimationOption<T>,
+    animationOpts: ElementKeyframeAnimationOption<T> | ElementKeyframeAnimationOption<T>[],
     animatableModel: Model<AnimationOptionMixin>
 ) {
-    if (!animatableModel.isAnimationEnabled()) {
+    if (!animatableModel.isAnimationEnabled() || !animationOpts) {
+        return;
+    }
+
+    if (isArray(animationOpts)) {
+        each(animationOpts, singleAnimationOpts => {
+            applyKeyframeAnimation(el, singleAnimationOpts, animatableModel);
+        });
         return;
     }
 
@@ -77,7 +84,7 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
 
     const stateToRestore: StateToRestore = getStateToRestore(el);
 
-    function applyKeyframeAnimationOnProp(targetPropName: typeof ELEMENT_ANIMATABLE_PROPS[number]) {
+    each(ELEMENT_ANIMATABLE_PROPS, (targetPropName) => {
         if (targetPropName && !(el as any)[targetPropName]) {
             return;
         }
@@ -144,7 +151,5 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
         animator
             .delay(animationOpts.delay || 0)
             .start(animationOpts.easing);
-    }
-
-    each(ELEMENT_ANIMATABLE_PROPS, applyKeyframeAnimationOnProp);
+    });
 }

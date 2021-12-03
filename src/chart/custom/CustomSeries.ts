@@ -72,6 +72,7 @@ import {
     TransitionDuringAPI
 } from '../../animation/customGraphicTransition';
 import { TransformProp } from 'zrender/src/core/Transformable';
+import { ElementKeyframeAnimationOption } from '../../animation/customGraphicKeyframeAnimation';
 
 export type CustomExtraElementInfo = Dictionary<unknown>;
 
@@ -154,6 +155,8 @@ export interface CustomGroupOption extends CustomBaseElementOption, TransitionOp
     diffChildrenByName?: boolean;
     children: CustomElementOption[];
     $mergeChildren?: false | 'byName' | 'byIndex';
+
+    keyframeAnimation?: ElementKeyframeAnimationOption<GroupProps> | ElementKeyframeAnimationOption<GroupProps>[]
 }
 export interface CustomBaseZRPathOption<T extends PathProps['shape'] = PathProps['shape']>
     extends CustomDisplayableOption, ShapeMorphingOption, TransitionOptionMixin<PathProps & {shape: T}> {
@@ -161,6 +164,9 @@ export interface CustomBaseZRPathOption<T extends PathProps['shape'] = PathProps
     shape?: T & TransitionOptionMixin<T>;
     style?: PathProps['style'] & TransitionOptionMixin<PathStyleProps>
     during?(params: TransitionDuringAPI<PathStyleProps, T>): void;
+
+    keyframeAnimation?: ElementKeyframeAnimationOption<PathProps & { shape: T }>
+        | ElementKeyframeAnimationOption<PathProps & { shape: T }>[]
 }
 
 interface BuiltinShapes {
@@ -211,6 +217,8 @@ export interface CustomImageOption extends CustomDisplayableOption, TransitionOp
     emphasis?: CustomImageOptionOnState;
     blur?: CustomImageOptionOnState;
     select?: CustomImageOptionOnState;
+
+    keyframeAnimation?: ElementKeyframeAnimationOption<ImageProps> | ElementKeyframeAnimationOption<ImageProps>[]
 }
 
 export interface CustomTextOptionOnState extends CustomDisplayableOptionOnState {
@@ -222,6 +230,8 @@ export interface CustomTextOption extends CustomDisplayableOption, TransitionOpt
     emphasis?: CustomTextOptionOnState;
     blur?: CustomTextOptionOnState;
     select?: CustomTextOptionOnState;
+
+    keyframeAnimation?: ElementKeyframeAnimationOption<TextProps> | ElementKeyframeAnimationOption<TextProps>[]
 }
 
 export type CustomElementOption = CustomPathOption

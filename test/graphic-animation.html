@@ -93,6 +93,79 @@ under the License.
 
         <script>
             require(['echarts'/*, 'map/js/china' */], function (echarts) {
+                let greenCirclePosition = 100;
+                var option = {
+                    graphic: {
+                        elements: [{
+                            type: 'circle',
+                            x: greenCirclePosition,
+                            y: 50,
+                            transition: 'all',
+                            shape: {
+                                cx: 0,
+                                cy: 0,
+                                r: 50
+                            },
+                            style: {
+                                fill: 'green'
+                            },
+                        }, {
+                            type: 'circle',
+                            x: 100,
+                            y: 200,
+                            shape: {
+                                cx: 0,
+                                cy: 0,
+                                r: 50
+                            },
+                            keyframeAnimation: {
+                                duration: 1000,
+                                loop: true,
+                                keyframes: [{
+                                    percent: 0,
+                                    x: 100
+                                }, {
+                                    percent: 0.5,
+                                    easing: 'sinusoidalInOut',
+                                    x: 500
+                                }, {
+                                    percent: 1,
+                                    easing: 'sinusoidalInOut',
+                                    x: 100
+                                }]
+                            },
+                            style: {
+                                fill: 'orange'
+                            }
+                        }]
+                    }
+                }
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Update on other elements should not affect the keyframe animation'
+                    ],
+                    buttons: [{
+                        text: 'Move Green Circle',
+                        onclick() {
+                            greenCirclePosition = 500 - greenCirclePosition;
+                            chart.setOption({
+                                graphic: {
+                                    elements: [{
+                                        x: greenCirclePosition
+                                    }]
+                                }
+                            });
+                        }
+                    }],
+                    option: option
+                });
+
+            });
+        </script>
+
+        <script>
+            require(['echarts'/*, 'map/js/china' */], function (echarts) {
                 var option = {
                     graphic: {
                         elements: [{
@@ -110,7 +183,7 @@ under the License.
                                 lineWidth: 1
                             },
                             keyframeAnimation: {
-                                duration: 4000,
+                                duration: 3000,
                                 loop: true,
                                 keyframes: [{
                                     percent: 0.7,
@@ -118,6 +191,12 @@ under the License.
                                         fill: 'transparent',
                                         lineDashOffset: 200,
                                         lineDash: [200, 0]
+                                    }
+                                }, {
+                                    // Hold a bit.
+                                    percent: 0.8,
+                                    style: {
+                                        fill: 'transparent'
                                     }
                                 }, {
                                     percent: 1,
@@ -130,15 +209,15 @@ under the License.
                     }
                 }
 
-                var chart = testHelper.create(echarts, 'main1', {
+                var chart = testHelper.create(echarts, 'main2', {
                     title: [
-                        'Text Stroke'
+                        'Text Stroke Animation'
                     ],
                     option: option
                 });
 
             });
-            </script>
+        </script>
     </body>
 </html>
 
