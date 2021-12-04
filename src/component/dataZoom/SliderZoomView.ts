@@ -43,6 +43,7 @@ import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
 import {createTextStyle} from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
+import { getECData } from '../../util/innerStore';
 
 const Rect = graphic.Rect;
 
@@ -174,7 +175,7 @@ class SliderZoomView extends DataZoomView {
         // is 'dataZoom', origin this._range should be maintained, otherwise 'pan'
         // or 'zoom' info will be missed because of 'throttle' of this.dispatchAction,
         if (!payload || payload.type !== 'dataZoom' || payload.from !== this.uid) {
-            this._buildView();
+            this._buildView(dataZoomModel);
         }
 
         this._updateView();
@@ -193,7 +194,7 @@ class SliderZoomView extends DataZoomView {
         zr.off('mouseup', this._onBrushEnd);
     }
 
-    private _buildView() {
+    private _buildView(dataZoomModel: SliderZoomModel) {
         const thisGroup = this.group;
 
         thisGroup.removeAll();
@@ -215,6 +216,10 @@ class SliderZoomView extends DataZoomView {
         thisGroup.add(barGroup);
 
         this._positionGroup();
+        getECData(thisGroup).eventData = {
+            componentType: 'dataZoom',
+            componentIndex: dataZoomModel.componentIndex,
+        };
     }
 
     private _resetLocation() {
