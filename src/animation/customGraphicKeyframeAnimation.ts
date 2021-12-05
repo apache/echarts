@@ -150,6 +150,6 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
 
         animator
             .delay(animationOpts.delay || 0)
-            .start(animationOpts.easing);
+            .start(animationOpts.easing, duration);
     });
 }
