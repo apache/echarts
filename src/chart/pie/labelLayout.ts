@@ -88,7 +88,7 @@ function adjustSingleSide(
             const deltaX = newX - item.label.x;
             const newTargetWidth = item.targetTextWidth - deltaX * dir;
             // text x is changed, so need to recalculate width.
-            wrapText(item, newTargetWidth);
+            layoutText(item, newTargetWidth, true);
             item.label.x = newX;
         }
     }
@@ -207,7 +207,7 @@ function avoidOverlap(
             }
             layout.targetTextWidth = targetTextWidth;
 
-            wrapText(layout, targetTextWidth);
+            layoutText(layout, targetTextWidth);
         }
     }
 
@@ -249,7 +249,21 @@ function avoidOverlap(
     }
 }
 
-function wrapText(layout: LabelLayout, targetTextWidth: number) {
+/**
+ * Set max width of each label, and then wrap each label to the max width.
+ *
+ * @param layout label layout
+ * @param availableWidth max width for the label to display
+ * @param forceRecalculate recaculate the text layout even if the current width
+ * is smaller than `availableWidth`. This is useful when the text was previously
+ * wrapped by calling `layoutText` but now `availableWidth` changed, in which
+ * case, previous wrapping should be redo.
+ */
+function layoutText(
+    layout: LabelLayout,
+    availableWidth: number,
+    forceRecalculate: boolean = false
+) {
     const label = layout.label;
     const style = label.style;
     const textRect = layout.rect;
@@ -260,7 +274,7 @@ function wrapText(layout: LabelLayout, targetTextWidth: number) {
 
     // textRect.width already contains paddingH if bgColor is set
     const oldOuterWidth = textRect.width + (bgColor ? 0 : paddingH);
-    if (targetTextWidth < oldOuterWidth) {
+    if (availableWidth < oldOuterWidth || forceRecalculate) {
         const oldHeight = textRect.height;
         if (overflow && overflow.match('break')) {
             const oldWidth = style.width;
@@ -272,7 +286,7 @@ function wrapText(layout: LabelLayout, targetTextWidth: number) {
             label.setStyle('ellipsis', '');
 
             // Set constraining width
-            label.setStyle('width', targetTextWidth - paddingH);
+            label.setStyle('width', availableWidth - paddingH);
 
             if (oldWidth == null) {
                 // This is the real bounding box of the text without padding
@@ -285,7 +299,7 @@ function wrapText(layout: LabelLayout, targetTextWidth: number) {
             label.setStyle('ellipsis', oldEllipsis);
         }
         else {
-            label.setStyle('width', targetTextWidth - paddingH);
+            label.setStyle('width', availableWidth - paddingH);
         }
 
         const newRect = label.getBoundingRect();
