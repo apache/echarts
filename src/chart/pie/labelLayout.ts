@@ -47,7 +47,13 @@ interface LabelLayout {
     labelAlignTo: PieSeriesOption['label']['alignTo']
     edgeDistance: number
     bleedMargin: PieSeriesOption['label']['bleedMargin']
-    rect: BoundingRect,
+    rect: BoundingRect
+    /**
+     * user-set style.width.
+     * This is useful because label.style.width might be changed
+     * by layoutText.
+     */
+    labelStyleWidth: number
     targetTextWidth?: number
 }
 
@@ -170,8 +176,7 @@ function avoidOverlap(
     for (let i = 0; i < labelLayoutList.length; i++) {
         const layout = labelLayoutList[i];
         if (!isPositionCenter(layout) && layout.linePoints) {
-            const style = layout.label.style;
-            if (style.width != null) {
+            if (layout.labelStyleWidth != null) {
                 continue;
             }
 
@@ -257,7 +262,8 @@ function avoidOverlap(
  * @param forceRecalculate recaculate the text layout even if the current width
  * is smaller than `availableWidth`. This is useful when the text was previously
  * wrapped by calling `layoutText` but now `availableWidth` changed, in which
- * case, previous wrapping should be redo.
+ * case, previous wrapping should be redo. `forceRecalculate` is ignored if
+ * `labelStyleWidth` is set.
  */
 function layoutText(
     layout: LabelLayout,
@@ -274,10 +280,11 @@ function layoutText(
 
     // textRect.width already contains paddingH if bgColor is set
     const oldOuterWidth = textRect.width + (bgColor ? 0 : paddingH);
-    if (availableWidth < oldOuterWidth || forceRecalculate) {
+    if (availableWidth < oldOuterWidth
+        || forceRecalculate && layout.labelStyleWidth == null
+    ) {
         const oldHeight = textRect.height;
         if (overflow && overflow.match('break')) {
-            const oldWidth = style.width;
             const oldEllipsis = style.ellipsis;
 
             // Temporarily set background to be null to calculate
@@ -288,7 +295,7 @@ function layoutText(
             // Set constraining width
             label.setStyle('width', availableWidth - paddingH);
 
-            if (oldWidth == null) {
+            if (layout.labelStyleWidth == null) {
                 // This is the real bounding box of the text without padding
                 const innerRect = label.getBoundingRect();
                 innerRect.applyTransform(label.getComputedTransform());
@@ -298,7 +305,7 @@ function layoutText(
             label.setStyle('backgroundColor', bgColor);
             label.setStyle('ellipsis', oldEllipsis);
         }
-        else {
+        else if (availableWidth < oldOuterWidth) {
             label.setStyle('width', availableWidth - paddingH);
         }
 
@@ -493,7 +500,8 @@ export default function pieLabelLayout(
                 labelAlignTo: labelAlignTo,
                 edgeDistance: edgeDistance,
                 bleedMargin: bleedMargin,
-                rect: textRect
+                rect: textRect,
+                labelStyleWidth: label.style.width
             });
         }
         else {
