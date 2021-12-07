@@ -54,6 +54,7 @@ interface LabelLayout {
      * by layoutText.
      */
     labelStyleWidth: number
+    unconstrainedWidth: number
     targetTextWidth?: number
 }
 
@@ -305,8 +306,30 @@ function layoutText(
             label.setStyle('backgroundColor', bgColor);
             label.setStyle('ellipsis', oldEllipsis);
         }
-        else if (availableWidth < oldOuterWidth) {
-            label.setStyle('width', availableWidth - paddingH);
+        else {
+            const availableInnerWidth = availableWidth - paddingH;
+            if (availableWidth < oldOuterWidth) {
+                // Current text is too wide, use `availableWidth` as max width.
+                label.setStyle('width', availableInnerWidth);
+            }
+            else if (forceRecalculate) {
+                // Current available width is enough, but the text may have
+                // already wrapped with a smaller available width.
+                label.setStyle('width',
+                    availableInnerWidth > layout.unconstrainedWidth
+                        // Current available is larger than text width,
+                        // so don't constrain width (otherwise it may have
+                        // empty space in the background).
+                        ? null
+                        // Current available is smaller than text width,
+                        // so use current available width as constraining width.
+                        : availableInnerWidth
+                );
+            }
+            else {
+                // Current available width is enough, so no need to constrain.
+                label.setStyle('width', null);
+            }
         }
 
         const newRect = label.getBoundingRect();
@@ -501,6 +524,7 @@ export default function pieLabelLayout(
                 edgeDistance: edgeDistance,
                 bleedMargin: bleedMargin,
                 rect: textRect,
+                unconstrainedWidth: textRect.width,
                 labelStyleWidth: label.style.width
             });
         }
