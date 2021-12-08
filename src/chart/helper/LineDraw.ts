@@ -252,7 +252,7 @@ function isPointNaN(pt: number[]) {
 }
 
 function lineNeedsDraw(pts: number[][]) {
-    return !isPointNaN(pts[0]) && !isPointNaN(pts[1]);
+    return pts && !isPointNaN(pts[0]) && !isPointNaN(pts[1]);
 }
 
 

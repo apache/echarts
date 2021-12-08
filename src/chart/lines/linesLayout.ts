@@ -30,6 +30,9 @@ const linesLayout: StageHandler = {
 
     reset: function (seriesModel: LinesSeriesModel) {
         const coordSys = seriesModel.coordinateSystem;
+        if (!coordSys) {
+            return;
+        }
         const isPolyline = seriesModel.get('polyline');
         const isLarge = seriesModel.pipelineContext.large;
         return {
