@@ -51,7 +51,7 @@ interface LabelLayout {
     /**
      * user-set style.width.
      * This is useful because label.style.width might be changed
-     * by layoutText.
+     * by constrainTextWidth.
      */
     labelStyleWidth: number
     unconstrainedWidth: number
@@ -95,7 +95,7 @@ function adjustSingleSide(
             const deltaX = newX - item.label.x;
             const newTargetWidth = item.targetTextWidth - deltaX * dir;
             // text x is changed, so need to recalculate width.
-            layoutText(item, newTargetWidth, true);
+            constrainTextWidth(item, newTargetWidth, true);
             item.label.x = newX;
         }
     }
@@ -213,7 +213,7 @@ function avoidOverlap(
             }
             layout.targetTextWidth = targetTextWidth;
 
-            layoutText(layout, targetTextWidth);
+            constrainTextWidth(layout, targetTextWidth);
         }
     }
 
@@ -262,15 +262,19 @@ function avoidOverlap(
  * @param availableWidth max width for the label to display
  * @param forceRecalculate recaculate the text layout even if the current width
  * is smaller than `availableWidth`. This is useful when the text was previously
- * wrapped by calling `layoutText` but now `availableWidth` changed, in which
- * case, previous wrapping should be redo. `forceRecalculate` is ignored if
- * `labelStyleWidth` is set.
+ * wrapped by calling `constrainTextWidth` but now `availableWidth` changed, in
+ * which case, previous wrapping should be redo.
  */
-function layoutText(
+function constrainTextWidth(
     layout: LabelLayout,
     availableWidth: number,
     forceRecalculate: boolean = false
 ) {
+    if (layout.labelStyleWidth != null) {
+        // User-defined style.width has the highest priority.
+        return;
+    }
+
     const label = layout.label;
     const style = label.style;
     const textRect = layout.rect;
@@ -281,55 +285,45 @@ function layoutText(
 
     // textRect.width already contains paddingH if bgColor is set
     const oldOuterWidth = textRect.width + (bgColor ? 0 : paddingH);
-    if (availableWidth < oldOuterWidth
-        || forceRecalculate && layout.labelStyleWidth == null
-    ) {
+    if (availableWidth < oldOuterWidth || forceRecalculate) {
         const oldHeight = textRect.height;
         if (overflow && overflow.match('break')) {
-            const oldEllipsis = style.ellipsis;
-
             // Temporarily set background to be null to calculate
             // the bounding box without backgroud.
             label.setStyle('backgroundColor', null);
-            label.setStyle('ellipsis', '');
-
             // Set constraining width
             label.setStyle('width', availableWidth - paddingH);
 
-            if (layout.labelStyleWidth == null) {
-                // This is the real bounding box of the text without padding
-                const innerRect = label.getBoundingRect();
-                innerRect.applyTransform(label.getComputedTransform());
-                label.setStyle('width', Math.ceil(innerRect.width));
-            }
+            // This is the real bounding box of the text without padding
+            const innerRect = label.getBoundingRect();
 
+            label.setStyle('width', Math.ceil(innerRect.width));
             label.setStyle('backgroundColor', bgColor);
-            label.setStyle('ellipsis', oldEllipsis);
         }
         else {
             const availableInnerWidth = availableWidth - paddingH;
-            if (availableWidth < oldOuterWidth) {
+            let newWidth = availableWidth < oldOuterWidth
                 // Current text is too wide, use `availableWidth` as max width.
-                label.setStyle('width', availableInnerWidth);
-            }
-            else if (forceRecalculate) {
-                // Current available width is enough, but the text may have
-                // already wrapped with a smaller available width.
-                label.setStyle('width',
-                    availableInnerWidth > layout.unconstrainedWidth
-                        // Current available is larger than text width,
-                        // so don't constrain width (otherwise it may have
-                        // empty space in the background).
-                        ? null
-                        // Current available is smaller than text width,
-                        // so use current available width as constraining width.
-                        : availableInnerWidth
+                ? availableInnerWidth
+                : (
+                    // Current available width is enough, but the text may have
+                    // already been wrapped with a smaller available width.
+                    forceRecalculate
+                        ? (availableInnerWidth > layout.unconstrainedWidth
+                            // Current available is larger than text width,
+                            // so don't constrain width (otherwise it may have
+                            // empty space in the background).
+                            ? null
+                            // Current available is smaller than text width, so
+                            // use the current available width as constraining
+                            // width.
+                            : availableInnerWidth
+                        )
+                    // Current available width is enough, so no need to
+                    // constrain.
+                    : null
                 );
-            }
-            else {
-                // Current available width is enough, so no need to constrain.
-                label.setStyle('width', null);
-            }
+            label.setStyle('width', newWidth);
         }
 
         const newRect = label.getBoundingRect();
