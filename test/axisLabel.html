@@ -315,10 +315,6 @@ under the License.
 
         <script>
 
-            var chart;
-            var myChart;
-            var option;
-
             require([
                 'echarts'/*, 'map/js/china' */
             ], function (echarts) {
@@ -326,6 +322,7 @@ under the License.
                 var option = {
                     backgroundColor: '#eee',
                     "xAxis": {
+                        triggerEvent: true,
                         "type": "category",
                         "data": [
                             "2018-10-08",
@@ -365,10 +362,13 @@ under the License.
                     ]
                 }
 
-                testHelper.create(echarts, 'main4', {
+                var chart = testHelper.create(echarts, 'main4', {
                     title: 'Label of yAxis should be RED, but 0 label does not display',
                     option: option,
                     recordCanvas: true
+                });
+                chart.on('click', function (params) {
+                    console.log(params);
                 });
             });
 
