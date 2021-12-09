@@ -10,7 +10,8 @@ Apache ECharts is a free, powerful charting and visualization library offering a
 
 [![License](https://img.shields.io/npm/l/echarts?color=5470c6)](https://github.com/apache/echarts/graphs/contributors) [![Last npm release](https://img.shields.io/npm/v/echarts?color=91cc75)](https://www.npmjs.com/package/echarts) [![Npm downloads](https://img.shields.io/npm/dm/echarts.svg?label=npm%20downloads&style=flat&color=fac858)](https://www.npmjs.com/package/echarts) [![Contributors](https://img.shields.io/github/contributors/apache/echarts?color=3ba272)](https://github.com/apache/echarts/graphs/contributors)
 
-[![Build Status](https://github.com/apache/echarts/actions/workflows/ci.yml/badge.svg)](https://travis-ci.org/apache/echarts)
+[![Build Status](https://github.com/apache/echarts/actions/workflows/ci.yml/badge.svg)](https://github.com/apache/echarts/actions/workflows/ci.yml)
+
 ## Get Apache ECharts
 
 You may choose one of the following methods:
