@@ -41,7 +41,7 @@ body:
   attributes:
     label: Link to Minimal Reproduction
     description: |
-      If the reproduction does not need a build setup, please provide a link to [JSFiddle](https://jsfiddle.net/cnBob/ndk8642w/2/), [JSBin](https://jsbin.com/) or [CodePen](https://codepen.io). If it requires a build setup, you can use [CodeSandbox](https://codesandbox.io/) or provide a GitHub repo.
+      If the reproduction does not need a build setup, please provide a link to [JSFiddle](https://jsfiddle.net/cnBob/ndk8642w/2/), [JSBin](https://jsbin.com/) or [CodePen](https://codepen.io/Ovilia/pen/dyYWXWM). If it requires a build setup, you can use [CodeSandbox](https://codesandbox.io/s/mystifying-bash-2uthz) or provide a GitHub repo.
 
   validations:
     required: false
