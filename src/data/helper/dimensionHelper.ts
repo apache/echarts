@@ -116,6 +116,7 @@ export function summarizeDimensions(
             getOrCreateEncodeArr(encode, coordDim)[coordDimIndex] = dimName;
 
             if (!dimItem.isExtraCoord) {
+                lastExtraCoord = dimName;
                 notExtraCoordDimMap.set(coordDim, 1);
 
                 // Use the last coord dim (and label friendly) as default label,
@@ -130,9 +131,6 @@ export function summarizeDimensions(
                 // And it only has index. User can use index to retrieve value from the raw item array.
                 getOrCreateEncodeArr(userOutputEncode, coordDim)[coordDimIndex] =
                     data.getDimensionIndex(dimItem.name);
-            }
-            else {
-                lastExtraCoord = dimName;
             }
             if (dimItem.defaultTooltip) {
                 defaultedTooltip.push(dimName);
@@ -173,7 +171,7 @@ export function summarizeDimensions(
         defaultedLabel = encodeLabel.slice();
     }
 
-    if (!defaultedLabel || !defaultedLabel.length) {
+    if (!defaultedLabel.length && lastExtraCoord) {
         defaultedLabel = [lastExtraCoord];
     }
 
