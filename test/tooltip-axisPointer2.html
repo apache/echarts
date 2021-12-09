@@ -1130,6 +1130,19 @@ under the License.
                     ['1997-10-13', 0.2]
                 ];
 
+                var data3 = [
+                    ['1997-10-4', true],
+                    ['1997-10-5', true],
+                    ['1997-10-6', false],
+                    ['1997-10-7', false],
+                    ['1997-10-8', false],
+                    ['1997-10-9', true],
+                    ['1997-10-10', true],
+                    ['1997-10-11', false],
+                    ['1997-10-12', true],
+                    ['1997-10-13', true]
+                ];
+
                 var option = {
                     tooltip: {
                         trigger: 'axis',
@@ -1152,13 +1165,17 @@ under the License.
                     }, {
                         type: 'line',
                         data: data2
+                    }, {
+                        type: 'line',
+                        data: data3
                     }]
                 };
 
                 var chart = testHelper.create(echarts, 'main1', {
                     title: [
                         'Two pionts on the same xAxis tick, both of them',
-                        'should be displayed in tooltip'
+                        'should be displayed in tooltip',
+                        'and boolean values should be displayed'
                     ],
                     option: option,
                     width: 800,

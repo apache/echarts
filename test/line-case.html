@@ -38,6 +38,8 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
 
 
 
@@ -450,6 +452,95 @@ under the License.
             });
         });
         </script>
+
+
+        <script>
+            require([
+                'echarts',
+                'ecStat'
+            ], function (echarts, ecStat) {
+                var data = [
+                    [1, 5],
+                    [4, 10],
+                    [4,5],
+                    [6, 5]
+                ];
+                echarts.registerTransform(ecStat.transform.regression);
+
+                var option = {
+                    dataset: [{
+                        source: data
+                    }, {
+                        transform: {
+                            type: 'ecStat:regression',
+                            config: { method: 'polynomial', order: 3 }
+                        }
+                    }],
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    },
+                    xAxis: {},
+                    yAxis: {},
+                    series: [{
+                        name: 'scatter',
+                        type: 'scatter'
+                    }, {
+                        name: 'line',
+                        type: 'line',
+                        datasetIndex: 1,
+                        symbolSize: 0.1,
+                        symbol: 'circle',
+                        label: { show: true, fontSize: 16 },
+                        smooth: true,
+                        labelLayout: { dx: -20 },
+                        encode: { label: 2, tooltip: 1 }
+                    }]
+                };
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Polyline with smooth should been displayed',
+                        'Test case from https://github.com/apache/echarts/issues/15371'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var data = [
+                    [0, 0],
+                    [10, 10],
+                    [10, 10],
+                    [20, 0]
+                ];
+
+                var option = {
+                    xAxis: {
+                        type: 'value'
+                    },
+                    yAxis: {},
+                    series: [{
+                        name: 'line',
+                        type: 'line',
+                        data,
+                        smooth: true
+                    }]
+                };
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Smoothed polyline should been displayed when having duplicat points.'
+                    ],
+                    option: option
+                });
+            });
+            </script>
 
 
     </body>
