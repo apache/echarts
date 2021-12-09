@@ -78,7 +78,7 @@ body:
   attributes:
     label: Environment
     description: |
-      examples:
+      e.g.
         - **OS**: macOS Monterey
         - **Browser**: Chrome 96.0.4664.55
         - **Framework** Vue@3
