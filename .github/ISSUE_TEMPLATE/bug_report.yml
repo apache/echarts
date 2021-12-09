@@ -39,7 +39,7 @@ body:
 
 - type: input
   attributes:
-    label: Link to minimal reproduction
+    label: Link to Minimal Reproduction
     description: |
       If the reproduction does not need a build setup, please provide a link to [JSFiddle](https://jsfiddle.net/cnBob/ndk8642w/2/), [JSBin](https://jsbin.com/) or [CodePen](https://codepen.io). If it requires a build setup, you can use [CodeSandbox](https://codesandbox.io/) or provide a GitHub repo.
 
@@ -48,7 +48,7 @@ body:
 
 - type: textarea
   attributes:
-    label: Steps To Reproduce
+    label: Steps to Reproduce
     description: |
       What do we need to do after opening your repo in order to make the bug happen? Clear and concise reproduction instructions are important for us to be able to triage your issue in a timely manner. Note that you can use [Markdown](https://guides.github.com/features/mastering-markdown/) to format lists and code.
 
