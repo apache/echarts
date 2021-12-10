@@ -21,7 +21,7 @@ import * as graphicUtil from '../../util/graphic';
 import {getFont} from '../../label/labelStyle';
 import Model from '../Model';
 import { LabelOption, ColorString } from '../../util/types';
-import ZRText from 'zrender/src/graphic/Text';
+import ZRText, {TextStyleProps} from 'zrender/src/graphic/Text';
 
 const PATH_COLOR = ['textStyle', 'color'] as const;
 
@@ -65,13 +65,13 @@ class TextStyleMixin {
     }
 
     getTextRect(this: Model<LabelRectRelatedOption> & TextStyleMixin, text: string): graphicUtil.BoundingRect {
-        const style = {
+        const style: TextStyleProps = {
             text: text,
             verticalAlign: this.getShallow('verticalAlign')
                 || this.getShallow('baseline')
-        } as any;
+        };
         for (let i = 0; i < textStyleParams.length; i++) {
-            style[textStyleParams[i]] = this.getShallow(textStyleParams[i]);
+            (style as any)[textStyleParams[i]] = this.getShallow(textStyleParams[i]);
         }
         tmpText.useStyle(style);
         tmpText.update();
