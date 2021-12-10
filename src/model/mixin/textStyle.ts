@@ -28,15 +28,12 @@ const PATH_COLOR = ['textStyle', 'color'] as const;
 export type LabelFontOption = Pick<LabelOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>;
 type LabelRectRelatedOption = Pick<LabelOption,
     'align' | 'verticalAlign' | 'padding' | 'lineHeight' | 'baseline' | 'rich'
-    | 'width' | 'height'
-> & LabelFontOption & {
-    overflow?: 'break' | 'breakAll' | 'truncate' | 'none',
-    ellipsis?: string
-};
+    | 'width' | 'height' | 'overflow'
+> & LabelFontOption;
 
 const textStyleParams = [
     'fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'padding',
-    'lineHeight', 'rich', 'width', 'height', 'overflow', 'ellipsis'
+    'lineHeight', 'rich', 'width', 'height', 'overflow'
 ] as const;
 
 // TODO Performance improvement?
