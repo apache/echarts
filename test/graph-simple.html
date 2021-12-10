@@ -1,4 +1,5 @@
 
+
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -20,6 +21,7 @@ under the License.
 
 <html>
     <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.00, minimum-scale=1.00, maximum-scale=2.00">
         <meta charset="utf-8">
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
@@ -39,12 +41,14 @@ under the License.
                 'echarts',
                 'theme/vintage'
             ], function (echarts) {
-
+               
                 function getOption(focusNodeAdjacency) {
                     return {
+                        
                         tooltip: {},
                         animationDurationUpdate: 1500,
                         animationEasingUpdate: 'quinticInOut',
+                       
                         series : [
                             {
                                 type: 'graph',
@@ -54,6 +58,10 @@ under the License.
                                     normal: {
                                         show: true
                                     }
+                                },
+                                scaleLimit: {
+                                    min: 0.4,
+                                    max: 3
                                 },
                                 edgeSymbol: ['circle', 'arrow'],
                                 edgeSymbolSize: [4, 10],
@@ -72,6 +80,8 @@ under the License.
                                 },
                                 focusNodeAdjacency: focusNodeAdjacency,
                                 data: [{
+                               
+
                                     name: '节点1',
                                     x: 300,
                                     y: 300,

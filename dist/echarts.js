@@ -864,7 +864,7 @@
         Draggable.prototype._dragStart = function (e) {
             var draggingTarget = e.target;
             while (draggingTarget && !draggingTarget.draggable) {
-                draggingTarget = draggingTarget.parent;
+                draggingTarget = draggingTarget.parent || draggingTarget.__hostTarget;
             }
             if (draggingTarget) {
                 this._draggingTarget = draggingTarget;
@@ -8742,7 +8742,7 @@
     }
     function isLatin(ch) {
         var code = ch.charCodeAt(0);
-        return code >= 0x21 && code <= 0xFF;
+        return code >= 0x21 && code <= 0x17F;
     }
     var breakCharMap = reduce(',&?/;] '.split(''), function (obj, ch) {
         obj[ch] = true;
@@ -13297,11 +13297,9 @@
         Circle.prototype.getDefaultShape = function () {
             return new CircleShape();
         };
-        Circle.prototype.buildPath = function (ctx, shape, inBundle) {
-            if (inBundle) {
-                ctx.moveTo(shape.cx + shape.r, shape.cy);
-            }
+        Circle.prototype.buildPath = function (ctx, shape) {
             ctx.arc(shape.cx, shape.cy, shape.r, 0, Math.PI * 2);
+            ctx.closePath();
         };
         return Circle;
     }(Path));
@@ -13858,7 +13856,7 @@
     function someVectorAt(shape, t, isTangent) {
         var cpx2 = shape.cpx2;
         var cpy2 = shape.cpy2;
-        if (cpx2 === null || cpy2 === null) {
+        if (cpx2 != null || cpy2 != null) {
             return [
                 (isTangent ? cubicDerivativeAt : cubicAt)(shape.x1, shape.cpx1, shape.cpx2, shape.x2, t),
                 (isTangent ? cubicDerivativeAt : cubicAt)(shape.y1, shape.cpy1, shape.cpy2, shape.y2, t)
@@ -24751,6 +24749,8 @@
       var fn = obj[fnAttr];
 
       if (fn && fn[ORIGIN_METHOD]) {
+        // Clear throttle
+        fn.clear && fn.clear();
         obj[fnAttr] = fn[ORIGIN_METHOD];
       }
     }
@@ -26770,11 +26770,12 @@
         if (isImageReady(image)) {
             var canvasPattern = ctx.createPattern(image, pattern.repeat || 'repeat');
             if (typeof DOMMatrix === 'function'
+                && canvasPattern
                 && canvasPattern.setTransform) {
                 var matrix = new DOMMatrix();
+                matrix.translateSelf((pattern.x || 0), (pattern.y || 0));
                 matrix.rotateSelf(0, 0, (pattern.rotation || 0) / Math.PI * 180);
                 matrix.scaleSelf((pattern.scaleX || 1), (pattern.scaleY || 1));
-                matrix.translateSelf((pattern.x || 0), (pattern.y || 0));
                 canvasPattern.setTransform(matrix);
             }
             return canvasPattern;
@@ -36386,7 +36387,7 @@
         this._dataMin = dataExtent[0];
         this._dataMax = dataExtent[1];
         var isOrdinal = this._isOrdinal = scale.type === 'ordinal';
-        this._needCrossZero = model.getNeedCrossZero && model.getNeedCrossZero();
+        this._needCrossZero = scale.type === 'interval' && model.getNeedCrossZero && model.getNeedCrossZero();
         var modelMinRaw = this._modelMinRaw = model.get('min', true);
 
         if (isFunction(modelMinRaw)) {
@@ -39129,16 +39130,20 @@
         var maxEditLength = newLen + oldLen;
         var bestPath = [{ newPos: -1, components: [] }];
         var oldPos = extractCommon(bestPath[0], newArr, oldArr, 0, equals);
-        if (bestPath[0].newPos + 1 >= newLen && oldPos + 1 >= oldLen) {
+        if (!oldLen
+            || !newLen
+            || (bestPath[0].newPos + 1 >= newLen && oldPos + 1 >= oldLen)) {
             var indices = [];
-            for (var i = 0; i < newArr.length; i++) {
+            var allCleared = !newLen && oldLen > 0;
+            var allCreated = !oldLen && newLen > 0;
+            for (var i = 0; i < (allCleared ? oldArr : newArr).length; i++) {
                 indices.push(i);
             }
             return [{
                     indices: indices,
-                    count: newArr.length,
-                    added: false,
-                    removed: false
+                    count: indices.length,
+                    added: allCreated,
+                    removed: allCleared
                 }];
         }
         function execEditLength() {
@@ -39363,6 +39368,7 @@
         function SVGPathRebuilder() {
         }
         SVGPathRebuilder.prototype.reset = function () {
+            this._start = true;
             this._d = [];
             this._str = '';
         };
@@ -39382,7 +39388,6 @@
             this.ellipse(cx, cy, r, r, 0, startAngle, endAngle, anticlockwise);
         };
         SVGPathRebuilder.prototype.ellipse = function (cx, cy, rx, ry, psi, startAngle, endAngle, anticlockwise) {
-            var firstCmd = this._d.length === 0;
             var dTheta = endAngle - startAngle;
             var clockwise = !anticlockwise;
             var dThetaPositive = Math.abs(dTheta);
@@ -39409,16 +39414,16 @@
                     dTheta = -PI2$7 + 1e-4;
                 }
                 large = true;
-                if (firstCmd) {
-                    this._d.push('M', x0, y0);
-                }
+            }
+            if (this._start) {
+                this._add('M', x0, y0);
             }
             var x = round4(cx + rx * mathCos$4(startAngle + dTheta));
             var y = round4(cy + ry * mathSin$4(startAngle + dTheta));
             if (isNaN(x0) || isNaN(y0) || isNaN(rx) || isNaN(ry) || isNaN(psi) || isNaN(degree) || isNaN(x) || isNaN(y)) {
                 return '';
             }
-            this._d.push('A', round4(rx), round4(ry), mathRound(psi * degree), +large, +clockwise, x, y);
+            this._add('A', round4(rx), round4(ry), mathRound(psi * degree), +large, +clockwise, x, y);
         };
         SVGPathRebuilder.prototype.rect = function (x, y, w, h) {
             this._add('M', x, y);
@@ -39443,6 +39448,7 @@
                 }
                 this._d.push(round4(val));
             }
+            this._start = cmd === 'Z';
         };
         SVGPathRebuilder.prototype.generateStr = function () {
             this._str = this._invalid ? '' : this._d.join(' ');
@@ -42496,17 +42502,19 @@
               if (smoothMonotone === 'x') {
                 lenPrevSeg = Math.abs(dx0);
                 lenNextSeg = Math.abs(dx1);
-                cpx1 = x - lenPrevSeg * smooth;
+                var dir_1 = vx > 0 ? 1 : -1;
+                cpx1 = x - dir_1 * lenPrevSeg * smooth;
                 cpy1 = y;
-                nextCpx0 = x + lenPrevSeg * smooth;
+                nextCpx0 = x + dir_1 * lenNextSeg * smooth;
                 nextCpy0 = y;
               } else if (smoothMonotone === 'y') {
                 lenPrevSeg = Math.abs(dy0);
                 lenNextSeg = Math.abs(dy1);
+                var dir_2 = vy > 0 ? 1 : -1;
                 cpx1 = x;
-                cpy1 = y - lenPrevSeg * smooth;
+                cpy1 = y - dir_2 * lenPrevSeg * smooth;
                 nextCpx0 = x;
-                nextCpy0 = y + lenPrevSeg * smooth;
+                nextCpy0 = y + dir_2 * lenNextSeg * smooth;
               } else {
                 lenPrevSeg = Math.sqrt(dx0 * dx0 + dy0 * dy0);
                 lenNextSeg = Math.sqrt(dx1 * dx1 + dy1 * dy1); // Use ratio of seg length
@@ -47610,7 +47618,6 @@
       }
     }, defaultOption);
     var timeAxis = merge({
-      scale: true,
       splitNumber: 6,
       axisLabel: {
         // To eliminate labels that are not nice
@@ -47627,7 +47634,6 @@
       }
     }, valueAxis);
     var logAxis = defaults({
-      scale: true,
       logBase: 10
     }, valueAxis);
     var axisDefault = {
@@ -62540,6 +62546,7 @@
       };
 
       ParallelView.prototype.dispose = function (ecModel, api) {
+        clear(this, '_throttledDispatchExpand');
         each(this._handlers, function (handler, eventName) {
           api.getZr().off(eventName, handler);
         });
@@ -73193,6 +73200,8 @@
           this._handle = null;
           this._payloadInfo = null;
         }
+
+        clear(this, '_doDispatchAxisPointer');
       };
       /**
        * @protected
@@ -87385,14 +87394,16 @@
 
 
     function dispatchAction$1(api, batch) {
-      api.dispatchAction({
-        type: 'dataZoom',
-        animation: {
-          easing: 'cubicOut',
-          duration: 100
-        },
-        batch: batch
-      });
+      if (!api.isDisposed()) {
+        api.dispatchAction({
+          type: 'dataZoom',
+          animation: {
+            easing: 'cubicOut',
+            duration: 100
+          },
+          batch: batch
+        });
+      }
     }
 
     function containsPoint(coordSysModel, e, x, y) {
@@ -88012,46 +88023,56 @@
           return;
         }
 
-        var otherDataExtent = data.getDataExtent(otherDim); // Nice extent.
+        var polygonPts = this._shadowPolygonPts;
+        var polylinePts = this._shadowPolylinePts; // Not re-render if data doesn't change.
 
-        var otherOffset = (otherDataExtent[1] - otherDataExtent[0]) * 0.3;
-        otherDataExtent = [otherDataExtent[0] - otherOffset, otherDataExtent[1] + otherOffset];
-        var otherShadowExtent = [0, size[1]];
-        var thisShadowExtent = [0, size[0]];
-        var areaPoints = [[size[0], 0], [0, 0]];
-        var linePoints = [];
-        var step = thisShadowExtent[1] / (data.count() - 1);
-        var thisCoord = 0; // Optimize for large data shadow
+        if (data !== this._shadowData || otherDim !== this._shadowDim) {
+          var otherDataExtent_1 = data.getDataExtent(otherDim); // Nice extent.
 
-        var stride = Math.round(data.count() / size[0]);
-        var lastIsEmpty;
-        data.each([otherDim], function (value, index) {
-          if (stride > 0 && index % stride) {
-            thisCoord += step;
-            return;
-          } // FIXME
-          // Should consider axis.min/axis.max when drawing dataShadow.
-          // FIXME
-          // 应该使用统一的空判断？还是在list里进行空判断？
+          var otherOffset = (otherDataExtent_1[1] - otherDataExtent_1[0]) * 0.3;
+          otherDataExtent_1 = [otherDataExtent_1[0] - otherOffset, otherDataExtent_1[1] + otherOffset];
+          var otherShadowExtent_1 = [0, size[1]];
+          var thisShadowExtent = [0, size[0]];
+          var areaPoints_1 = [[size[0], 0], [0, 0]];
+          var linePoints_1 = [];
+          var step_1 = thisShadowExtent[1] / (data.count() - 1);
+          var thisCoord_1 = 0; // Optimize for large data shadow
+
+          var stride_1 = Math.round(data.count() / size[0]);
+          var lastIsEmpty_1;
+          data.each([otherDim], function (value, index) {
+            if (stride_1 > 0 && index % stride_1) {
+              thisCoord_1 += step_1;
+              return;
+            } // FIXME
+            // Should consider axis.min/axis.max when drawing dataShadow.
+            // FIXME
+            // 应该使用统一的空判断？还是在list里进行空判断？
 
 
-          var isEmpty = value == null || isNaN(value) || value === ''; // See #4235.
+            var isEmpty = value == null || isNaN(value) || value === ''; // See #4235.
 
-          var otherCoord = isEmpty ? 0 : linearMap(value, otherDataExtent, otherShadowExtent, true); // Attempt to draw data shadow precisely when there are empty value.
+            var otherCoord = isEmpty ? 0 : linearMap(value, otherDataExtent_1, otherShadowExtent_1, true); // Attempt to draw data shadow precisely when there are empty value.
 
-          if (isEmpty && !lastIsEmpty && index) {
-            areaPoints.push([areaPoints[areaPoints.length - 1][0], 0]);
-            linePoints.push([linePoints[linePoints.length - 1][0], 0]);
-          } else if (!isEmpty && lastIsEmpty) {
-            areaPoints.push([thisCoord, 0]);
-            linePoints.push([thisCoord, 0]);
-          }
+            if (isEmpty && !lastIsEmpty_1 && index) {
+              areaPoints_1.push([areaPoints_1[areaPoints_1.length - 1][0], 0]);
+              linePoints_1.push([linePoints_1[linePoints_1.length - 1][0], 0]);
+            } else if (!isEmpty && lastIsEmpty_1) {
+              areaPoints_1.push([thisCoord_1, 0]);
+              linePoints_1.push([thisCoord_1, 0]);
+            }
 
-          areaPoints.push([thisCoord, otherCoord]);
-          linePoints.push([thisCoord, otherCoord]);
-          thisCoord += step;
-          lastIsEmpty = isEmpty;
-        });
+            areaPoints_1.push([thisCoord_1, otherCoord]);
+            linePoints_1.push([thisCoord_1, otherCoord]);
+            thisCoord_1 += step_1;
+            lastIsEmpty_1 = isEmpty;
+          });
+          polygonPts = this._shadowPolygonPts = areaPoints_1;
+          polylinePts = this._shadowPolylinePts = linePoints_1;
+        }
+
+        this._shadowData = data;
+        this._shadowDim = otherDim;
         var dataZoomModel = this.dataZoomModel;
 
         function createDataShadowGroup(isSelectedArea) {
@@ -88059,7 +88080,7 @@
           var group = new Group();
           var polygon = new Polygon({
             shape: {
-              points: areaPoints
+              points: polygonPts
             },
             segmentIgnoreThreshold: 1,
             style: model.getModel('areaStyle').getAreaStyle(),
@@ -88068,7 +88089,7 @@
           });
           var polyline = new Polyline({
             shape: {
-              points: linePoints
+              points: polylinePts
             },
             segmentIgnoreThreshold: 1,
             style: model.getModel('lineStyle').getLineStyle(),

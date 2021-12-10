@@ -128,11 +128,16 @@ under the License.
                         data: data1,
                         itemStyle: itemStyle,
                         step: 'end'
-                    }, {
+                    },
+                    {
                         name: 'line2',
                         type: 'pie',
                         stack: 'all',
                         symbol: 'circle',
+                        scaleLimit: {
+                            min: 0.4,
+                            max: 2
+                        },
                         symbolSize: 10,
                         data: echarts.util.map(data2, function (val) {
                             return {name: val, value: val};
