@@ -28,11 +28,19 @@ const PATH_COLOR = ['textStyle', 'color'] as const;
 export type LabelFontOption = Pick<LabelOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>;
 type LabelRectRelatedOption = Pick<LabelOption,
     'align' | 'verticalAlign' | 'padding' | 'lineHeight' | 'baseline' | 'rich'
-    | 'width' | 'height' | 'overflow' | 'ellipsis'
-> & LabelFontOption;
+    | 'width' | 'height'
+> & LabelFontOption & {
+    overflow?: 'break' | 'breakAll' | 'truncate' | 'none',
+    ellipsis?: string
+};
+
+const textStyleParams = [
+    'fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'padding',
+    'lineHeight', 'rich', 'width', 'height', 'overflow', 'ellipsis'
+] as const;
 
 // TODO Performance improvement?
-const tmpRichText = new ZRText();
+const tmpText = new ZRText();
 class TextStyleMixin {
     /**
      * Get color property or get color from option.textStyle.color
@@ -60,23 +68,17 @@ class TextStyleMixin {
     }
 
     getTextRect(this: Model<LabelRectRelatedOption> & TextStyleMixin, text: string): graphicUtil.BoundingRect {
-        tmpRichText.useStyle({
-            text,
-            fontStyle: this.getShallow('fontStyle'),
-            fontWeight: this.getShallow('fontWeight'),
-            fontSize: this.getShallow('fontSize'),
-            fontFamily: this.getShallow('fontFamily'),
-            verticalAlign: this.getShallow('verticalAlign') || this.getShallow('baseline'),
-            padding: this.getShallow('padding') as number[],
-            lineHeight: this.getShallow('lineHeight'),
-            rich: this.getShallow('rich'),
-            width: this.getShallow('width') as number,
-            height: this.getShallow('height') as number,
-            overflow: this.getShallow('overflow'),
-            ellipsis: this.getShallow('ellipsis')
-        });
-        tmpRichText.update();
-        return tmpRichText.getBoundingRect();
+        const style = {
+            text: text,
+            verticalAlign: this.getShallow('verticalAlign')
+                || this.getShallow('baseline')
+        } as any;
+        for (let i = 0; i < textStyleParams.length; i++) {
+            style[textStyleParams[i]] = this.getShallow(textStyleParams[i]);
+        }
+        tmpText.useStyle(style);
+        tmpText.update();
+        return tmpText.getBoundingRect();
     }
 };
 
