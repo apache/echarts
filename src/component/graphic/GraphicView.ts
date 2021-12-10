@@ -67,6 +67,7 @@ export const inner = modelUtil.makeInner<{
     height: number;
     isNew: boolean;
     id: string;
+    type: string;
     option: GraphicComponentElementOption
 }, Element>();
 // ------------------------
@@ -167,7 +168,9 @@ export class GraphicComponentView extends ComponentView {
             }
 
             const $action = elOption.$action || 'merge';
-            if ($action === 'merge') {
+            const isMerge = $action === 'merge';
+            const isReplace = $action === 'replace';
+            if (isMerge) {
                 const isInit = !elExisting;
                 let el = elExisting;
                 if (isInit) {
@@ -188,7 +191,7 @@ export class GraphicComponentView extends ComponentView {
                     updateZ(el, elOption, globalZ, globalZLevel);
                 }
             }
-            else if ($action === 'replace') {
+            else if (isReplace) {
                 removeEl(elExisting, elOption, elMap, graphicModel);
                 const el = createEl(id, targetElParent, elOption.type, elMap);
                 if (el) {
@@ -209,18 +212,49 @@ export class GraphicComponentView extends ComponentView {
             const el = elMap.get(id);
 
             if (el && textContentOption) {
-                if ($action === 'merge') {
+                if (isMerge) {
                     const textContentExisting = el.getTextContent();
                     textContentExisting
                         ? textContentExisting.attr(textContentOption)
                         : el.setTextContent(new graphicUtil.Text(textContentOption));
                 }
-                else if ($action === 'replace') {
+                else if (isReplace) {
                     el.setTextContent(new graphicUtil.Text(textContentOption));
                 }
             }
 
             if (el) {
+                const clipPathOption = elOption.clipPath;
+                if (clipPathOption) {
+                    const clipPathType = clipPathOption.type;
+                    let clipPath: graphicUtil.Path;
+                    let isInit = false;
+                    if (isMerge) {
+                        const oldClipPath = el.getClipPath();
+                        isInit = !oldClipPath
+                            || inner(oldClipPath).type !== clipPathType;
+                        clipPath = isInit ? newEl(clipPathType) as graphicUtil.Path : oldClipPath;
+                    }
+                    else if (isReplace) {
+                        isInit = true;
+                        clipPath = newEl(clipPathType) as graphicUtil.Path;
+                    }
+
+                    el.setClipPath(clipPath);
+
+                    applyUpdateTransition(
+                        clipPath,
+                        clipPathOption,
+                        graphicModel,
+                        { isInit}
+                    );
+                    applyKeyframeAnimation(
+                        clipPath,
+                        clipPathOption.keyframeAnimation,
+                        graphicModel
+                    );
+                }
+
                 const elInner = inner(el);
 
                 el.setTextConfig(textConfig);
@@ -345,13 +379,8 @@ export class GraphicComponentView extends ComponentView {
         this._clear();
     }
 }
-function createEl(
-    id: string,
-    targetElParent: graphicUtil.Group,
-    graphicType: string,
-    elMap: ElementMap
-): Element {
 
+function newEl(graphicType: string) {
     if (__DEV__) {
         zrUtil.assert(graphicType, 'graphic type MUST be set');
     }
@@ -365,10 +394,22 @@ function createEl(
     ) as { new(opt: GraphicComponentElementOption): Element; };
 
     if (__DEV__) {
-        zrUtil.assert(Clz, 'graphic type can not be found');
+        zrUtil.assert(Clz, `graphic type ${graphicType} can not be found`);
     }
 
     const el = new Clz({});
+    inner(el).type = graphicType;
+    return el;
+}
+function createEl(
+    id: string,
+    targetElParent: graphicUtil.Group,
+    graphicType: string,
+    elMap: ElementMap
+): Element {
+
+    const el = newEl(graphicType);
+
     targetElParent.add(el);
     elMap.set(id, el);
     inner(el).id = id;
@@ -413,7 +454,7 @@ function getCleanedElOption(
 ): Omit<GraphicComponentElementOption, 'textContent'> {
     elOption = zrUtil.extend({}, elOption);
     zrUtil.each(
-        ['id', 'parentId', '$action', 'hv', 'bounding', 'textContent'].concat(layoutUtil.LOCATION_PARAMS),
+        ['id', 'parentId', '$action', 'hv', 'bounding', 'textContent', 'clipPath'].concat(layoutUtil.LOCATION_PARAMS),
         function (name) {
             delete (elOption as any)[name];
         }

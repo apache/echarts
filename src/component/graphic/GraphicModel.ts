@@ -110,7 +110,11 @@ interface GraphicComponentBaseElementOption extends
      */
     info?: GraphicExtraElementInfo;
 
-    textContent?: GraphicComponentTextOption;
+
+    // `false` means remove the clipPath
+    clipPath?: Omit<GraphicComponentZRPathOption, 'clipPath'> | false;
+
+    textContent?: Omit<GraphicComponentTextOption, 'clipPath'>;
     textConfig?: ElementTextConfig;
 
     $action?: 'merge' | 'replace' | 'remove';
@@ -270,6 +274,9 @@ function mergeNewElOptionToExist(
             copyTransitionInfo(newElOption, existElOption, 'shape');
             copyTransitionInfo(newElOption, existElOption, 'style');
             copyTransitionInfo(newElOption, existElOption, 'extra');
+
+            // Copy clipPath
+            newElOption.clipPath = existElOption.clipPath;
         }
         else {
             existList[index] = newElOptCopy;

@@ -51,8 +51,11 @@ import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
 import { isNumeric, getRandomIdBase, getPrecision, round } from './number';
-import { interpolateNumber } from 'zrender/src/animation/Animator';
 import { warn } from './log';
+
+function interpolateNumber(p0: number, p1: number, percent: number): number {
+    return (p1 - p0) * percent + p0;
+}
 
 /**
  * Make the name displayable. But we should

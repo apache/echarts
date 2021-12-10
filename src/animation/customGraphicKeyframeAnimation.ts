@@ -91,10 +91,21 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
 
         let animator: ReturnType<Element['animate']>;
         let endFrameIsSet = false;
+
+        // Sort keyframes by percent.
+        keyframes.sort((a, b) => a.percent - b.percent);
+
         each(keyframes, kf => {
             // Stop current animation.
             const animators = el.animators;
             const kfValues = targetPropName ? kf[targetPropName] : kf;
+
+            if (__DEV__) {
+                if (kf.percent >= 1) {
+                    endFrameIsSet = true;
+                }
+            }
+
             if (!kfValues) {
                 return;
             }
@@ -111,14 +122,8 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
                 return;
             }
 
-            if (__DEV__) {
-                if (kf.percent >= 1) {
-                    endFrameIsSet = true;
-                }
-            }
-
             if (!animator) {
-                animator = el.animate(targetPropName, animationOpts.loop);
+                animator = el.animate(targetPropName, animationOpts.loop, true);
                 animator.scope = 'keyframe';
             }
             for (let i = 0; i < animators.length; i++) {
