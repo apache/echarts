@@ -28,6 +28,7 @@ const PATH_COLOR = ['textStyle', 'color'] as const;
 export type LabelFontOption = Pick<LabelOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>;
 type LabelRectRelatedOption = Pick<LabelOption,
     'align' | 'verticalAlign' | 'padding' | 'lineHeight' | 'baseline' | 'rich'
+    | 'width' | 'height' | 'overflow' | 'ellipsis'
 > & LabelFontOption;
 
 // TODO Performance improvement?
@@ -68,7 +69,11 @@ class TextStyleMixin {
             verticalAlign: this.getShallow('verticalAlign') || this.getShallow('baseline'),
             padding: this.getShallow('padding') as number[],
             lineHeight: this.getShallow('lineHeight'),
-            rich: this.getShallow('rich')
+            rich: this.getShallow('rich'),
+            width: this.getShallow('width') as number,
+            height: this.getShallow('height') as number,
+            overflow: this.getShallow('overflow'),
+            ellipsis: this.getShallow('ellipsis')
         });
         tmpRichText.update();
         return tmpRichText.getBoundingRect();

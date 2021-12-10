@@ -1078,6 +1078,9 @@ export interface TextCommonOption extends ShadowOptionMixin {
     textShadowOffsetY?: number
 
     tag?: string
+
+    overflow?: 'break' | 'breakAll' | 'truncate' | 'none'
+    ellipsis?: string
 }
 
 export interface LabelFormatterCallback<T = CallbackDataParams> {
