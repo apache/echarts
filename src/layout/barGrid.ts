@@ -17,23 +17,19 @@
 * under the License.
 */
 
-/* global Float32Array */
-
-import * as zrUtil from 'zrender/src/core/util';
-import {parsePercent} from '../util/number';
-import {isDimensionStacked} from '../data/helper/dataStackHelper';
+import { each, defaults, keys } from 'zrender/src/core/util';
+import { parsePercent } from '../util/number';
+import { isDimensionStacked } from '../data/helper/dataStackHelper';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
 import BarSeriesModel from '../chart/bar/BarSeries';
 import Axis2D from '../coord/cartesian/Axis2D';
 import GlobalModel from '../model/Global';
 import type Cartesian2D from '../coord/cartesian/Cartesian2D';
 import { StageHandler, Dictionary } from '../util/types';
+import { createFloat32Array } from '../util/vendor';
 
 const STACK_PREFIX = '__ec_stack_';
 const LARGE_BAR_MIN_WIDTH = 0.5;
-
-const LargeArr = typeof Float32Array !== 'undefined' ? Float32Array : Array;
-
 
 function getSeriesStackId(seriesModel: BarSeriesModel): string {
     return seriesModel.get('stack') || STACK_PREFIX + seriesModel.seriesIndex;
@@ -102,7 +98,7 @@ export function getLayoutOnAxis(opt: LayoutOption): BarGridLayoutResult {
     const bandWidth = baseAxis.getBandWidth();
 
     for (let i = 0; i < opt.count || 0; i++) {
-        params.push(zrUtil.defaults({
+        params.push(defaults({
             bandWidth: bandWidth,
             axisKey: axisKey,
             stackId: STACK_PREFIX + i
@@ -149,7 +145,7 @@ function getValueAxesMinGaps(barSeries: BarSeriesModel[]) {
      * series.
      */
     const axisValues: Dictionary<number[]> = {};
-    zrUtil.each(barSeries, function (seriesModel) {
+    each(barSeries, function (seriesModel) {
         const cartesian = seriesModel.coordinateSystem as Cartesian2D;
         const baseAxis = cartesian.getBaseAxis();
         if (baseAxis.type !== 'time' && baseAxis.type !== 'value') {
@@ -204,7 +200,7 @@ export function makeColumnLayout(barSeries: BarSeriesModel[]) {
     const axisMinGaps = getValueAxesMinGaps(barSeries);
 
     const seriesInfoList: LayoutSeriesInfo[] = [];
-    zrUtil.each(barSeries, function (seriesModel) {
+    each(barSeries, function (seriesModel) {
         const cartesian = seriesModel.coordinateSystem as Cartesian2D;
         const baseAxis = cartesian.getBaseAxis();
         const axisExtent = baseAxis.getExtent();
@@ -270,7 +266,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
     // Columns info on each category axis. Key is cartesian name
     const columnsMap: Dictionary<ColumnOnAxisInfo> = {};
 
-    zrUtil.each(seriesInfoList, function (seriesInfo, idx) {
+    each(seriesInfoList, function (seriesInfo, idx) {
         const axisKey = seriesInfo.axisKey;
         const bandWidth = seriesInfo.bandWidth;
         const columnsOnAxis: ColumnOnAxisInfo = columnsMap[axisKey] || {
@@ -319,7 +315,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
 
     const result: BarWidthAndOffset = {};
 
-    zrUtil.each(columnsMap, function (columnsOnAxis, coordSysName) {
+    each(columnsMap, function (columnsOnAxis, coordSysName) {
 
         result[coordSysName] = {};
 
@@ -327,7 +323,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
         const bandWidth = columnsOnAxis.bandWidth;
         let categoryGapPercent = columnsOnAxis.categoryGap;
         if (categoryGapPercent == null) {
-            const columnCount = zrUtil.keys(stacks).length;
+            const columnCount = keys(stacks).length;
             // More columns in one group
             // the spaces between group is smaller. Or the column will be too thin.
             categoryGapPercent = Math.max((35 - columnCount * 4), 15) + '%';
@@ -343,7 +339,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
         autoWidth = Math.max(autoWidth, 0);
 
         // Find if any auto calculated bar exceeded maxBarWidth
-        zrUtil.each(stacks, function (column) {
+        each(stacks, function (column) {
             const maxWidth = column.maxWidth;
             const minWidth = column.minWidth;
 
@@ -393,7 +389,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
 
         let widthSum = 0;
         let lastColumn: StackInfo;
-        zrUtil.each(stacks, function (column, idx) {
+        each(stacks, function (column, idx) {
             if (!column.width) {
                 column.width = autoWidth;
             }
@@ -405,7 +401,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
         }
 
         let offset = -widthSum / 2;
-        zrUtil.each(stacks, function (column, stackId) {
+        each(stacks, function (column, stackId) {
             result[coordSysName][stackId] = result[coordSysName][stackId] || {
                 bandWidth: bandWidth,
                 offset: offset,
@@ -449,7 +445,7 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
 
     const lastStackCoords: Dictionary<{p: number, n: number}[]> = {};
 
-    zrUtil.each(seriesModels, function (seriesModel) {
+    each(seriesModels, function (seriesModel) {
 
         const data = seriesModel.getData();
         const cartesian = seriesModel.coordinateSystem as Cartesian2D;
@@ -582,9 +578,9 @@ export const largeLayout: StageHandler = {
         return {
             progress: function (params, data) {
                 const count = params.count;
-                const largePoints = new LargeArr(count * 2);
-                const largeBackgroundPoints = new LargeArr(count * 2);
-                const largeDataIndices = new LargeArr(count);
+                const largePoints = createFloat32Array(count * 2);
+                const largeBackgroundPoints = createFloat32Array(count * 2);
+                const largeDataIndices = createFloat32Array(count);
                 let dataIndex;
                 let coord: number[] = [];
                 const valuePair = [];
