@@ -20,11 +20,11 @@ import { bind, each, clone, trim, isString, isFunction, isArray, isObject } from
 import env from 'zrender/src/core/env';
 import TooltipHTMLContent from './TooltipHTMLContent';
 import TooltipRichContent from './TooltipRichContent';
-import * as formatUtil from '../../util/format';
+import { convertToColorString, formatTpl, TooltipMarker } from '../../util/format';
 import { parsePercent } from '../../util/number';
-import * as graphic from '../../util/graphic';
+import { Rect } from '../../util/graphic';
 import findPointFromSeries from '../axisPointer/findPointFromSeries';
-import * as layoutUtil from '../../util/layout';
+import { getLayoutRect } from '../../util/layout';
 import Model from '../../model/Model';
 import * as globalListener from '../axisPointer/globalListener';
 import * as axisHelper from '../../coord/axisHelper';
@@ -50,16 +50,15 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import TooltipModel, { TooltipOption } from './TooltipModel';
 import Element from 'zrender/src/Element';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-// import { isDimensionStacked } from '../../data/helper/dataStackHelper';
 import { ECData, getECData } from '../../util/innerStore';
 import { shouldTooltipConfine } from './helper';
 import { DataByCoordSys, DataByAxis } from '../axisPointer/axisTrigger';
 import { normalizeTooltipFormatResult } from '../../model/mixin/dataFormat';
 import { createTooltipMarkup, buildTooltipMarkup, TooltipMarkupStyleCreator } from './tooltipMarkup';
 import { findEventDispatcher } from '../../util/event';
-import { throttle, ThrottleController } from '../../util/throttle';
+import { clear, createOrUpdate } from '../../util/throttle';
 
-const proxyRect = new graphic.Rect({
+const proxyRect = new Rect({
     shape: { x: -1, y: -1, width: 2, height: 2 }
 });
 
@@ -133,7 +132,7 @@ type TooltipCallbackDataParams = CallbackDataParams & {
     // TODO: TYPE Value type
     axisValue?: string | number
     axisValueLabel?: string
-    marker?: formatUtil.TooltipMarker
+    marker?: TooltipMarker
 };
 
 class TooltipView extends ComponentView {
@@ -164,9 +163,6 @@ class TooltipView extends ComponentView {
     private _lastDataByCoordSys: DataByCoordSys[];
     private _cbParamsList: TooltipCallbackDataParams[];
 
-    private _updatePosition: TooltipView['_doUpdatePosition'];
-    private _throttledUpdatePosition: TooltipView['_doUpdatePosition'] & ThrottleController;
-
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         if (env.node || !api.getDom()) {
             return;
@@ -175,17 +171,11 @@ class TooltipView extends ComponentView {
         const tooltipModel = ecModel.getComponent('tooltip') as TooltipModel;
         const renderMode = this._renderMode = getTooltipRenderMode(tooltipModel.get('renderMode'));
 
-        const isRichTextMode = renderMode === 'richText';
-
-        this._tooltipContent = isRichTextMode
+        this._tooltipContent = renderMode === 'richText'
             ? new TooltipRichContent(api)
             : new TooltipHTMLContent(api.getDom(), api, {
                 appendToBody: tooltipModel.get('appendToBody', true)
             });
-
-        if (!isRichTextMode) {
-            this._throttledUpdatePosition = throttle(bind(this._doUpdatePosition, this), 50);
-        }
     }
 
     render(
@@ -226,13 +216,12 @@ class TooltipView extends ComponentView {
         // In Chrome with devtools open and Firefox, tooltip looks laggy and shakes. See #14695 #16101
         // To avoid frequent triggering,
         // consider throttling it in 50ms when transition is enabled
-        this._updatePosition = (...args: any[]) => {
-            const ctx = this;
-            const updateFn = tooltipModel.get('transitionDuration')
-                ? ctx._throttledUpdatePosition
-                : ctx._doUpdatePosition;
-            return updateFn.apply(ctx, args);
-        };
+        if (this._renderMode !== 'richText' && tooltipModel.get('transitionDuration')) {
+            createOrUpdate(this, '_updatePosition', 50, 'fixRate');
+        }
+        else {
+            clear(this, '_updatePosition');
+        }
     }
 
     private _initGlobalListener() {
@@ -590,7 +579,7 @@ class TooltipView extends ComponentView {
                     // Pre-create marker style for makers. Users can assemble richText
                     // text in `formatter` callback and use those markers style.
                     cbParams.marker = markupStyleCreator.makeTooltipMarker(
-                        'item', formatUtil.convertToColorString(cbParams.color), renderMode
+                        'item', convertToColorString(cbParams.color), renderMode
                     );
 
                     const seriesTooltipResult = normalizeTooltipFormatResult(
@@ -686,7 +675,7 @@ class TooltipView extends ComponentView {
         // Pre-create marker style for makers. Users can assemble richText
         // text in `formatter` callback and use those markers style.
         params.marker = markupStyleCreator.makeTooltipMarker(
-            'item', formatUtil.convertToColorString(params.color), renderMode
+            'item', convertToColorString(params.color), renderMode
         );
 
         const seriesTooltipResult = normalizeTooltipFormatResult(
@@ -827,7 +816,7 @@ class TooltipView extends ComponentView {
                 if (isTimeAxis) {
                     html = timeFormat(params0.axisValue, html, useUTC);
                 }
-                html = formatUtil.formatTpl(html, params, true);
+                html = formatTpl(html, params, true);
             }
             else if (isFunction(formatter)) {
                 const callback = bind(function (cbTicket: string, html: string | HTMLElement | HTMLElement[]) {
@@ -875,7 +864,7 @@ class TooltipView extends ComponentView {
         }
     }
 
-    private _doUpdatePosition(
+    _updatePosition(
         tooltipModel: Model<TooltipOption>,
         positionExpr: TooltipOption['position'],
         x: number,  // Mouse x
@@ -911,7 +900,7 @@ class TooltipView extends ComponentView {
             const boxLayoutPosition = positionExpr as BoxLayoutOptionMixin;
             boxLayoutPosition.width = contentSize[0];
             boxLayoutPosition.height = contentSize[1];
-            const layoutRect = layoutUtil.getLayoutRect(
+            const layoutRect = getLayoutRect(
                 boxLayoutPosition, { width: viewWidth, height: viewHeight }
             );
             x = layoutRect.x;
@@ -1021,8 +1010,7 @@ class TooltipView extends ComponentView {
         if (env.node || !api.getDom()) {
             return;
         }
-        const throttledUpdatePosition = this._throttledUpdatePosition;
-        throttledUpdatePosition && throttledUpdatePosition.clear();
+        clear(this, '_updatePosition');
         this._tooltipContent.dispose();
         globalListener.unregister('itemTooltip', api);
     }
