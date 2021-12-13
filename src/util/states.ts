@@ -38,7 +38,18 @@ import {
     DownplayPayload,
     ComponentMainType
 } from './types';
-import { extend, indexOf, isArrayLike, isObject, keys, isArray, each } from 'zrender/src/core/util';
+import {
+    extend,
+    indexOf,
+    isArrayLike,
+    isObject,
+    keys,
+    isArray,
+    each,
+    isString,
+    isGradientObject,
+    map
+} from 'zrender/src/core/util';
 import { getECData } from './innerStore';
 import * as colorTool from 'zrender/src/tool/color';
 import SeriesData from '../data/SeriesData';
@@ -96,16 +107,25 @@ function hasFillOrStroke(fillOrStroke: string | PatternObject | GradientObject) 
 }
 // Most lifted color are duplicated.
 const liftedColorCache = new LRU<string>(100);
-function liftColor(color: string): string {
-    if (typeof color !== 'string') {
-        return color;
+function liftColor(color: GradientObject): GradientObject;
+function liftColor(color: string): string;
+function liftColor(color: string | GradientObject): string | GradientObject {
+    if (isString(color)) {
+        let liftedColor = liftedColorCache.get(color);
+        if (!liftedColor) {
+            liftedColor = colorTool.lift(color, -0.1);
+            liftedColorCache.put(color, liftedColor);
+        }
+        return liftedColor;
     }
-    let liftedColor = liftedColorCache.get(color);
-    if (!liftedColor) {
-        liftedColor = colorTool.lift(color, -0.1);
-        liftedColorCache.put(color, liftedColor);
+    else if (isGradientObject(color)) {
+        const ret = extend({}, color) as GradientObject;
+        ret.colorStops = map(color.colorStops, stop => ({
+            offset: stop.offset,
+            color: colorTool.lift(stop.color, -0.1)
+        }));
+        return ret;
     }
-    return liftedColor;
 }
 
 function doChangeHoverState(el: ECElement, stateName: DisplayState, hoverStateEnum: 0 | 1 | 2) {
