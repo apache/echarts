@@ -177,15 +177,6 @@ class HeatmapView extends ChartView {
             const xAxis = coordSys.getAxis('x');
             const yAxis = coordSys.getAxis('y');
 
-            if (__DEV__) {
-                if (!(xAxis.type === 'category' && yAxis.type === 'category')) {
-                    throw new Error('Heatmap on cartesian must have two category axes');
-                }
-                if (!(xAxis.onBand && yAxis.onBand)) {
-                    throw new Error('Heatmap on cartesian must have two axes with boundaryGap true');
-                }
-            }
-
             width = xAxis.getBandWidth();
             height = yAxis.getBandWidth();
             xAxisExtent = xAxis.scale.getExtent();
