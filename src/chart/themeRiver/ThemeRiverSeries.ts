@@ -76,6 +76,11 @@ export interface ThemeRiverSeriesOption
      * [date, value, name]
      */
     data?: ThemerRiverDataItem[]
+    /**
+     * center mode symmetrical or asymmetical
+     * default symmetrical
+     */
+     centerMode?: 'symmetrical'|'wiggle'
 }
 
 class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
@@ -134,14 +139,12 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             });
         });
         const layerNum = layerData.length;
-
         for (let k = 0; k < layerNum; ++k) {
             const name = layerData[k].name;
             for (let j = 0; j < layerData[k].dataList.length; ++j) {
                 const timeValue = layerData[k].dataList[j][0] + '';
                 timeValueKeys[timeValue] = k;
             }
-
             for (const timeValue in timeValueKeys) {
                 if (timeValueKeys.hasOwnProperty(timeValue) && timeValueKeys[timeValue] !== k) {
                     timeValueKeys[timeValue] = k;
@@ -300,6 +303,9 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
 
         colorBy: 'data',
         coordinateSystem: 'singleAxis',
+
+        //default center mode 
+        centerMode:'symmetrical',
 
         // gap in axis's orthogonal orientation
         boundaryGap: ['10%', '10%'],

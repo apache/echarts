@@ -82,6 +82,7 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
     const coordSys = seriesModel.coordinateSystem;
     // the data in each layer are organized into a series.
     const layerSeries = seriesModel.getLayerSeries();
+    const centerMode = seriesModel.get('centerMode');
 
     // the points in each layer.
     const timeDim = data.mapDimension('single');
@@ -95,7 +96,13 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
     });
 
     const base = computeBaseline(layerPoints);
-    const baseLine = base.y0;
+    var baseLine;
+    if (centerMode === 'symmetrical') {
+        baseLine = base.y0Symmetric;
+    } 
+    else if (centerMode === 'wiggle') {
+        baseLine = base.y0Wiggle;
+    }
     const ky = height / base.max;
 
     // set layout information for each item.
@@ -131,35 +138,42 @@ function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel
 function computeBaseline(data: number[][][]) {
     const layerNum = data.length;
     const pointNum = data[0].length;
-    const sums = [];
-    const y0 = [];
+    const sums = [];//sums of each vertical row at a single time point 
+    const sumsWiggle = [];
+    const y0Symmetric = [];
+    const y0Wiggle = [];
     let max = 0;
 
     for (let i = 0; i < pointNum; ++i) {
         let temp = 0;
+        let tempWiggle = 0;
         for (let j = 0; j < layerNum; ++j) {
             temp += data[j][i][1];
+            tempWiggle += (layerNum - (j + 1)) * data[j][i][1];
         }
         if (temp > max) {
             max = temp;
         }
         sums.push(temp);
+        sumsWiggle.push(tempWiggle);
     }
-
-    for (let k = 0; k < pointNum; ++k) {
-        y0[k] = (max - sums[k]) / 2;
+    
+    for (let k = 0 ; k < pointNum; ++k) { 
+        y0Symmetric[k] = (max - sums[k]) / 2;      
+        y0Wiggle[k] = max / 2 - sumsWiggle[k] / layerNum;
     }
     max = 0;
 
     for (let l = 0; l < pointNum; ++l) {
-        const sum = sums[l] + y0[l];
+        const sum = sums[l] + y0Symmetric[l];
         if (sum > max) {
             max = sum;
         }
     }
 
     return {
-        y0,
+        y0Symmetric,
+        y0Wiggle,
         max
     };
 }
