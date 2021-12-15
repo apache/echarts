@@ -188,7 +188,7 @@ export class GraphicComponentView extends ComponentView {
                         graphicModel,
                         { isInit }
                     );
-                    updateZ(el, elOption, globalZ, globalZLevel);
+                    updateCommonAttrs(el, elOption, globalZ, globalZLevel);
                 }
             }
             else if (isReplace) {
@@ -201,7 +201,7 @@ export class GraphicComponentView extends ComponentView {
                         graphicModel,
                         { isInit: true}
                     );
-                    updateZ(el, elOption, globalZ, globalZLevel);
+                    updateCommonAttrs(el, elOption, globalZ, globalZLevel);
                 }
             }
             else if ($action === 'remove') {
@@ -433,7 +433,12 @@ function removeEl(
     }
 }
 
-function updateZ(el: Element, elOption: GraphicComponentElementOption, defaultZ: number, defaultZlevel: number) {
+function updateCommonAttrs(
+    el: Element,
+    elOption: GraphicComponentElementOption,
+    defaultZ: number,
+    defaultZlevel: number
+) {
     if (el.isGroup) {
         return;
     }
@@ -446,6 +451,16 @@ function updateZ(el: Element, elOption: GraphicComponentElementOption, defaultZ:
     // z2 must not be null/undefined, otherwise sort error may occur.
     const optZ2 = (elOption as GraphicComponentDisplayableOption).z2;
     optZ2 != null && (elDisplayable.z2 = optZ2 || 0);
+
+    zrUtil.each(zrUtil.keys(elOption), key => {
+        const val = (elOption as any)[key];
+        // Assign event handlers.
+        // PENDING: should enumerate all event names or use pattern matching?
+        if (key.indexOf('on') === 0 && zrUtil.isFunction(val)) {
+            (el as any)[key] = val;
+        }
+    });
+    el.draggable = elOption.draggable;
 
 }
 // Remove unnecessary props to avoid potential problems.

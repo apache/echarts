@@ -41,30 +41,16 @@ import { TransitionOptionMixin } from '../../animation/customGraphicTransition';
 import { ElementKeyframeAnimationOption } from '../../animation/customGraphicKeyframeAnimation';
 import { GroupProps } from 'zrender/src/graphic/Group';
 import { TransformProp } from 'zrender/src/core/Transformable';
+import { ElementEventNameWithOn } from 'zrender/src/core/types';
 
 interface GraphicComponentBaseElementOption extends
     Partial<Pick<
         Element, TransformProp |
         'silent' |
         'ignore' |
-        'draggable' |
         'textConfig' |
-        'onclick' |
-        'ondblclick' |
-        'onmouseover' |
-        'onmouseout' |
-        'onmousemove' |
-        'onmousewheel' |
-        'onmousedown' |
-        'onmouseup' |
-        'oncontextmenu' |
-        'ondrag' |
-        'ondragstart' |
-        'ondragend' |
-        'ondragenter' |
-        'ondragleave' |
-        'ondragover' |
-        'ondrop'
+        'draggable' |
+        ElementEventNameWithOn
     >>,
     /**
      * left/right/top/bottom: (like 12, '22%', 'center', default undefined)
