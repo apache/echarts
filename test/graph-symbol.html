@@ -59,11 +59,15 @@ under the License.
                             layout: 'force',
                             symbolSize: 50,
                             roam: true,
+                            scaleLimit: {
+                                min: 0.4,
+                                max: 3
+                            },
                             categories: [{
                                 name: '类目1',
                                 symbol:'rect',
                                 symbolRotate: Math.PI / 6
-                            }, {
+                            },{
                                 name: '类目2',
                                 symbol:'circle'
                             }, {
