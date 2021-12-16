@@ -864,7 +864,7 @@
         Draggable.prototype._dragStart = function (e) {
             var draggingTarget = e.target;
             while (draggingTarget && !draggingTarget.draggable) {
-                draggingTarget = draggingTarget.parent || draggingTarget.__hostTarget;
+                draggingTarget = draggingTarget.parent;
             }
             if (draggingTarget) {
                 this._draggingTarget = draggingTarget;
@@ -8641,7 +8641,7 @@
     }
     function isLatin(ch) {
         var code = ch.charCodeAt(0);
-        return code >= 0x21 && code <= 0x17F;
+        return code >= 0x21 && code <= 0xFF;
     }
     var breakCharMap = reduce(',&?/;] '.split(''), function (obj, ch) {
         obj[ch] = true;
@@ -13159,9 +13159,11 @@
         Circle.prototype.getDefaultShape = function () {
             return new CircleShape();
         };
-        Circle.prototype.buildPath = function (ctx, shape) {
+        Circle.prototype.buildPath = function (ctx, shape, inBundle) {
+            if (inBundle) {
+                ctx.moveTo(shape.cx + shape.r, shape.cy);
+            }
             ctx.arc(shape.cx, shape.cy, shape.r, 0, Math.PI * 2);
-            ctx.closePath();
         };
         return Circle;
     }(Path));
@@ -13718,7 +13720,7 @@
     function someVectorAt(shape, t, isTangent) {
         var cpx2 = shape.cpx2;
         var cpy2 = shape.cpy2;
-        if (cpx2 != null || cpy2 != null) {
+        if (cpx2 === null || cpy2 === null) {
             return [
                 (isTangent ? cubicDerivativeAt : cubicAt)(shape.x1, shape.cpx1, shape.cpx2, shape.x2, t),
                 (isTangent ? cubicDerivativeAt : cubicAt)(shape.y1, shape.cpy1, shape.cpy2, shape.y2, t)
@@ -25545,12 +25547,11 @@
         if (isImageReady(image)) {
             var canvasPattern = ctx.createPattern(image, pattern.repeat || 'repeat');
             if (typeof DOMMatrix === 'function'
-                && canvasPattern
                 && canvasPattern.setTransform) {
                 var matrix = new DOMMatrix();
-                matrix.translateSelf((pattern.x || 0), (pattern.y || 0));
                 matrix.rotateSelf(0, 0, (pattern.rotation || 0) / Math.PI * 180);
                 matrix.scaleSelf((pattern.scaleX || 1), (pattern.scaleY || 1));
+                matrix.translateSelf((pattern.x || 0), (pattern.y || 0));
                 canvasPattern.setTransform(matrix);
             }
             return canvasPattern;
@@ -35127,7 +35128,7 @@
         this._dataMin = dataExtent[0];
         this._dataMax = dataExtent[1];
         var isOrdinal = this._isOrdinal = scale.type === 'ordinal';
-        this._needCrossZero = scale.type === 'interval' && model.getNeedCrossZero && model.getNeedCrossZero();
+        this._needCrossZero = model.getNeedCrossZero && model.getNeedCrossZero();
         var modelMinRaw = this._modelMinRaw = model.get('min', true);
 
         if (isFunction(modelMinRaw)) {
@@ -39056,19 +39057,17 @@
               if (smoothMonotone === 'x') {
                 lenPrevSeg = Math.abs(dx0);
                 lenNextSeg = Math.abs(dx1);
-                var dir_1 = vx > 0 ? 1 : -1;
-                cpx1 = x - dir_1 * lenPrevSeg * smooth;
+                cpx1 = x - lenPrevSeg * smooth;
                 cpy1 = y;
-                nextCpx0 = x + dir_1 * lenNextSeg * smooth;
+                nextCpx0 = x + lenPrevSeg * smooth;
                 nextCpy0 = y;
               } else if (smoothMonotone === 'y') {
                 lenPrevSeg = Math.abs(dy0);
                 lenNextSeg = Math.abs(dy1);
-                var dir_2 = vy > 0 ? 1 : -1;
                 cpx1 = x;
-                cpy1 = y - dir_2 * lenPrevSeg * smooth;
+                cpy1 = y - lenPrevSeg * smooth;
                 nextCpx0 = x;
-                nextCpy0 = y + dir_2 * lenNextSeg * smooth;
+                nextCpy0 = y + lenPrevSeg * smooth;
               } else {
                 lenPrevSeg = Math.sqrt(dx0 * dx0 + dy0 * dy0);
                 lenNextSeg = Math.sqrt(dx1 * dx1 + dy1 * dy1); // Use ratio of seg length
@@ -43728,6 +43727,7 @@
       }
     }, defaultOption);
     var timeAxis = merge({
+      scale: true,
       splitNumber: 6,
       axisLabel: {
         // To eliminate labels that are not nice
@@ -43744,6 +43744,7 @@
       }
     }, valueAxis);
     var logAxis = defaults({
+      scale: true,
       logBase: 10
     }, valueAxis);
     var axisDefault = {
