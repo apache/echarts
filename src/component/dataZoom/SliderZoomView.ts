@@ -28,7 +28,7 @@ import sliderMove from '../helper/sliderMove';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import {
-    LayoutOrient, Payload, ZRTextVerticalAlign, ZRTextAlign, ZRElementEvent, ParsedValue
+    LayoutOrient, Payload, ZRTextVerticalAlign, ZRTextAlign, ZRElementEvent, ParsedValue, ECEventData
 } from '../../util/types';
 import SliderZoomModel from './SliderZoomModel';
 import { RectLike } from 'zrender/src/core/BoundingRect';
@@ -43,7 +43,7 @@ import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
 import {createTextStyle} from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
-import { getECData } from '../../util/innerStore';
+import { ECData, getECData } from '../../util/innerStore';
 
 const Rect = graphic.Rect;
 
@@ -131,6 +131,8 @@ class SliderZoomView extends DataZoomView {
     private _shadowDim: string;
     private _shadowPolygonPts: number[][];
     private _shadowPolylinePts: number[][];
+    private _ecData: ECData;
+    private _dataInterval: [number, number];
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.api = api;
@@ -216,10 +218,21 @@ class SliderZoomView extends DataZoomView {
         thisGroup.add(barGroup);
 
         this._positionGroup();
-        getECData(thisGroup).eventData = {
+        this._ecData = getECData(this.group);
+        const eventData: ECEventData = {
             componentType: 'dataZoom',
             componentIndex: dataZoomModel.componentIndex,
         };
+        const axisProxy = dataZoomModel.findRepresentativeAxisProxy();
+        if (axisProxy) {
+            const percentRange = axisProxy.getDataPercentWindow();
+            const valueRange = axisProxy.getDataValueWindow();
+            eventData.start = percentRange[0];
+            eventData.end = percentRange[1];
+            eventData.startValue = valueRange[0];
+            eventData.endValue = valueRange[1];
+        }
+        this._ecData.eventData = eventData;
     }
 
     private _resetLocation() {
@@ -809,7 +822,7 @@ class SliderZoomView extends DataZoomView {
                 const axis = axisProxy.getAxisModel().axis;
                 const range = this._range;
 
-                const dataInterval = nonRealtime
+                this._dataInterval = nonRealtime
                     // See #4434, data and axis are not processed and reset yet in non-realtime mode.
                     ? axisProxy.calculateDataWindow({
                         start: range[0], end: range[1]
@@ -817,8 +830,8 @@ class SliderZoomView extends DataZoomView {
                     : axisProxy.getDataValueWindow();
 
                 labelTexts = [
-                    this._formatLabel(dataInterval[0], axis),
-                    this._formatLabel(dataInterval[1], axis)
+                    this._formatLabel(this._dataInterval[0], axis),
+                    this._formatLabel(this._dataInterval[1], axis)
                 ];
             }
         }
@@ -1041,6 +1054,14 @@ class SliderZoomView extends DataZoomView {
      */
     _dispatchZoomAction(realtime: boolean) {
         const range = this._range;
+        this._ecData.eventData = {
+            componentType: 'dataZoom',
+            start: range[0],
+            end: range[1],
+            startValue: this._dataInterval[0],
+            endValue: this._dataInterval[1],
+            componentIndex: this.dataZoomModel.componentIndex,
+        };
 
         this.api.dispatchAction({
             type: 'dataZoom',
