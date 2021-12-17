@@ -21,7 +21,7 @@
 import Element, { ElementAnimateConfig, ElementProps } from 'zrender/src/Element';
 
 import { makeInner, normalizeToArray } from '../util/model';
-import { assert, bind, each, eqNaN, extend, hasOwn, indexOf, isArrayLike, keys } from 'zrender/src/core/util';
+import { assert, bind, each, eqNaN, extend, hasOwn, indexOf, isArrayLike, keys, reduce } from 'zrender/src/core/util';
 import { cloneValue } from 'zrender/src/animation/Animator';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
 import Model from '../model/Model';
@@ -30,7 +30,8 @@ import { Path } from '../util/graphic';
 import { warn } from '../util/log';
 import { AnimationOption, AnimationOptionMixin, ZRStyleProps } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
-import { PathStyleProps } from 'zrender';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
+import { TRANSFORMABLE_PROPS, TransformProp } from 'zrender/src/core/Transformable';
 
 const LEGACY_TRANSFORM_PROPS_MAP = {
     position: ['x', 'y'],
@@ -39,18 +40,11 @@ const LEGACY_TRANSFORM_PROPS_MAP = {
 } as const;
 const LEGACY_TRANSFORM_PROPS = keys(LEGACY_TRANSFORM_PROPS_MAP);
 
-const TRANSFORM_PROPS_MAP = {
-    x: 1,
-    y: 1,
-    scaleX: 1,
-    scaleY: 1,
-    originX: 1,
-    originY: 1,
-    rotation: 1
-} as const;
-type TransformProp = keyof typeof TRANSFORM_PROPS_MAP;
-const TRANSFORM_PROPS = keys(TRANSFORM_PROPS_MAP);
-const transformPropNamesStr = TRANSFORM_PROPS.join(', ');
+const TRANSFORM_PROPS_MAP = reduce(TRANSFORMABLE_PROPS, (obj, key) => {
+    obj[key] = 1;
+    return obj;
+}, {} as Record<TransformProp, 1>);
+const transformPropNamesStr = TRANSFORMABLE_PROPS.join(', ');
 
 // '' means root
 export const ELEMENT_ANIMATABLE_PROPS = ['', 'style', 'shape', 'extra'] as const;
@@ -526,7 +520,7 @@ function prepareTransformTransitionFrom(
 ): void {
     const transition = elOption.transition;
     const transitionKeys = isTransitionAll(transition)
-        ? TRANSFORM_PROPS
+        ? TRANSFORMABLE_PROPS
         : normalizeToArray(transition || []);
     for (let i = 0; i < transitionKeys.length; i++) {
         const key = transitionKeys[i];
@@ -557,8 +551,8 @@ function prepareTransformAllPropsFinal(
         }
     }
 
-    for (let i = 0; i < TRANSFORM_PROPS.length; i++) {
-        const key = TRANSFORM_PROPS[i];
+    for (let i = 0; i < TRANSFORMABLE_PROPS.length; i++) {
+        const key = TRANSFORMABLE_PROPS[i];
         if (elOption[key] != null) {
             allProps[key] = elOption[key];
         }
