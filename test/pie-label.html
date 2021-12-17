@@ -796,7 +796,10 @@ under the License.
                 };
 
                 var chart = testHelper.create(echarts, 'main9', {
-                    title: 'the first label shoud be rendered correctly when it\'s followed by several zero values',
+                    title: [
+                        'The first label shoud be rendered correctly when it\'s followed by several zero values',
+                        'Test case from issue #16208',
+                    ],
                     height: 300,
                     option: option
                 });
