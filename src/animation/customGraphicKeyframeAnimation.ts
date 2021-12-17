@@ -19,7 +19,7 @@
 
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import Element from 'zrender/src/Element';
-import { keys, filter, each, isArray } from 'zrender/src/core/util';
+import { keys, filter, each, isArray, indexOf } from 'zrender/src/core/util';
 import { ELEMENT_ANIMATABLE_PROPS } from './customGraphicTransition';
 import { AnimationOption, AnimationOptionMixin, Dictionary } from '../util/types';
 import { Model } from '../echarts.all';
@@ -37,6 +37,8 @@ type AnimationKeyframe<T extends Record<string, any>> = T & {
 type StateToRestore = Dictionary<any>;
 const getStateToRestore = makeInner<StateToRestore, Element>();
 
+const KEYFRAME_EXCLUDE_KEYS = ['percent', 'easing', 'shape', 'style', 'extra'] as const;
+
 export interface ElementKeyframeAnimationOption<Props extends Record<string, any>> extends AnimationOption {
     // Animation configuration for keyframe based animation.
     loop?: boolean
@@ -44,7 +46,7 @@ export interface ElementKeyframeAnimationOption<Props extends Record<string, any
 }
 
 /**
- * Stopped previous keyframe animation and restore the attributes.
+ * Stop previous keyframe animation and restore the attributes.
  * Avoid new keyframe animation starts with wrong internal state when the percent: 0 is not set.
  */
 export function stopPreviousKeyframeAnimationAndRestore(el: Element) {
@@ -113,10 +115,7 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
             let propKeys = keys(kfValues);
             if (!targetPropName) {
                 // PENDING performance?
-                propKeys = filter(
-                    propKeys, key => key !== 'percent' && key !== 'easing'
-                    && key !== 'shape' && key !== 'style' && key !== 'extra'
-                );
+                propKeys = filter(propKeys, key => indexOf(KEYFRAME_EXCLUDE_KEYS, key) < 0);
             }
             if (!propKeys.length) {
                 return;
