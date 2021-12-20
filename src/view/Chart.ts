@@ -152,7 +152,7 @@ class ChartView {
      * Highlight series or specified data item.
      */
     highlight(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
-        toggleHighlight(seriesModel.getData(), payload, 'emphasis');
+        toggleHighlight(seriesModel.getData(payload?.dataType), payload, 'emphasis');
     }
 
     /**
