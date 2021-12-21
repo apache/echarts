@@ -25,10 +25,9 @@ import { HorizontalAlign, ZRTextAlign } from '../../util/types';
 import { Sector, Polyline, Point } from '../../util/graphic';
 import ZRText from 'zrender/src/graphic/Text';
 import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
-import { each, extend } from 'zrender/src/core/util';
+import { each } from 'zrender/src/core/util';
 import { limitTurnAngle, limitSurfaceAngle } from '../../label/labelGuideHelper';
 import { shiftLayoutOnY } from '../../label/labelLayoutHelper';
-import { parsePlainText, parseRichText } from 'zrender/src/graphic/helper/parseText';
 
 const RADIAN = Math.PI / 180;
 
@@ -302,7 +301,7 @@ function constrainTextWidth(
         }
         else {
             const availableInnerWidth = availableWidth - paddingH;
-            let newWidth = availableWidth < oldOuterWidth
+            const newWidth = availableWidth < oldOuterWidth
                 // Current text is too wide, use `availableWidth` as max width.
                 ? availableInnerWidth
                 : (
