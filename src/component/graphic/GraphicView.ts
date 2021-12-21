@@ -460,6 +460,10 @@ function updateCommonAttrs(
     });
     el.draggable = elOption.draggable;
 
+    // Other attributes
+    elOption.name != null && (el.name = elOption.name);
+    elOption.id != null && ((el as any).id = elOption.id);
+
 }
 // Remove unnecessary props to avoid potential problems.
 function getCleanedElOption(
