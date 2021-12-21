@@ -130,7 +130,11 @@ export function applyUpdateTransition(
     el: Element,
     elOption: TransitionElementOption,
     animatableModel?: Model<AnimationOptionMixin>,
-    opts?: { dataIndex?: number, isInit?: boolean, clearStyle?: boolean}
+    opts?: {
+        dataIndex?: number,
+        isInit?: boolean,
+        clearStyle?: boolean
+    }
 ) {
     opts = opts || {};
     const {dataIndex, isInit, clearStyle} = opts;

@@ -442,8 +442,7 @@ function updateElNormal(
     elOption: CustomElementOption,
     attachedTxInfo: AttachedTxInfo,
     seriesModel: CustomSeriesModel,
-    isInit: boolean,
-    isTextContent: boolean
+    isInit: boolean
 ): void {
 
     // Stop and restore before update any other attributes.
@@ -502,13 +501,6 @@ function updateElNormal(
     });
 
     applyKeyframeAnimation(el, elOption.keyframeAnimation, seriesModel);
-
-    if (!isTextContent) {
-        // `elOption.info` enables user to mount some info on
-        // elements and use them in event handlers.
-        // Update them only when user specified, otherwise, remain.
-        hasOwn(elOption, 'info') && (customInnerStore(el).info = elOption.info);
-    }
 }
 
 function updateElOnState(
@@ -937,7 +929,7 @@ function createOrUpdateItem(
         group.remove(existsEl);
         return;
     }
-    const el = doCreateOrUpdateEl(api, existsEl, dataIndex, elOption, seriesModel, group, true);
+    const el = doCreateOrUpdateEl(api, existsEl, dataIndex, elOption, seriesModel, group);
     el && data.setItemGraphicEl(dataIndex, el);
 
     el && enableHoverEmphasis(el, elOption.focus, elOption.blurScope);
@@ -951,8 +943,7 @@ function doCreateOrUpdateEl(
     dataIndex: number,
     elOption: CustomElementOption,
     seriesModel: CustomSeriesModel,
-    group: ViewRootGroup,
-    isRoot: boolean
+    group: ViewRootGroup
 ): Element {
 
     if (__DEV__) {
@@ -1023,9 +1014,12 @@ function doCreateOrUpdateEl(
         elOption,
         attachedTxInfoTmp,
         seriesModel,
-        isInit,
-        false
+        isInit
     );
+    // `elOption.info` enables user to mount some info on
+    // elements and use them in event handlers.
+    // Update them only when user specified, otherwise, remain.
+    hasOwn(elOption, 'info') && (customInnerStore(el).info = elOption.info);
 
     for (let i = 0; i < STATES.length; i++) {
         const stateName = STATES[i];
@@ -1120,7 +1114,7 @@ function doCreateOrUpdateClipPath(
             el.setClipPath(clipPath);
         }
         updateElNormal(
-            null, clipPath, dataIndex, clipPathOpt, null, seriesModel, isInit, false
+            null, clipPath, dataIndex, clipPathOpt, null, seriesModel, isInit
         );
     }
     // If not define `clipPath` in option, do nothing unnecessary.
@@ -1171,9 +1165,7 @@ function doCreateOrUpdateAttachedTx(
                 textContent.clearStates();
             }
 
-            updateElNormal(
-                null, textContent, dataIndex, txConOptNormal, null, seriesModel, isInit, true
-            );
+            updateElNormal(null, textContent, dataIndex, txConOptNormal, null, seriesModel, isInit);
             const txConStlOptNormal = txConOptNormal && (txConOptNormal as CustomDisplayableOption).style;
             for (let i = 0; i < STATES.length; i++) {
                 const stateName = STATES[i];
@@ -1325,8 +1317,7 @@ function mergeChildren(
             dataIndex,
             newChildren[index] as CustomElementOption,
             seriesModel,
-            el,
-            false
+            el
         );
     }
     for (let i = el.childCount() - 1; i >= index; i--) {
@@ -1380,8 +1371,7 @@ function processAddUpdate(
         context.dataIndex,
         childOption,
         context.seriesModel,
-        context.group,
-        false
+        context.group
     );
 }
 

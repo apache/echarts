@@ -76,6 +76,8 @@ export function applyKeyframeAnimation<T extends Record<string, any>>(
     let duration = animationOpts.duration;
 
     if (animatableModel && duration == null) {
+        // Default to use duration of config.
+        // NOTE: animation config from payload will be ignored because they are mainly for transitions.
         const config = getAnimationConfig('enter', animatableModel, 0);
         duration = config && config.duration;
     }
