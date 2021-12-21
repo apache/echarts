@@ -112,7 +112,7 @@ function adjustSingleSide(
             const item = items[i];
             const semi = item.label.y > cy ? bottomSemi : topSemi;
             const dy = Math.abs(item.label.y - cy);
-            if (dy > semi.maxY) {
+            if (dy >= semi.maxY) {
                 const dx = item.label.x - cx - item.len2 * dir;
                 // horizontal r is always same with original r because x is not changed.
                 const rA = r + item.len;
