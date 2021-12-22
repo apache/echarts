@@ -64,7 +64,7 @@
   },
   "dependencies": {
     "tslib": "2.3.0",
-    "zrender": "npm:zrender-nightly@^5.3.0-dev.20211220"
+    "zrender": "npm:zrender-nightly@^5.3.0-dev.20211222"
   },
   "devDependencies": {
     "@babel/code-frame": "7.10.4",
