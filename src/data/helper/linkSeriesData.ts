@@ -26,6 +26,7 @@ import { curry, each, assert, extend, map, keys } from 'zrender/src/core/util';
 import SeriesData from '../SeriesData';
 import { makeInner } from '../../util/model';
 import { SeriesDataType } from '../../util/types';
+import {warn} from "../../util/log";
 
 // That is: { dataType: data },
 // like: { node: nodeList, edge: edgeList }.
@@ -132,10 +133,18 @@ function cloneShallowInjection(opt: LinkSeriesDataOpt, res: SeriesData): SeriesD
  * @param [dataType] If not specified, return mainData.
  */
 function getLinkedData(this: SeriesData, dataType?: SeriesDataType): SeriesData {
+    const seriesDataTypeList = ["main" , "node" , "edge"]
+    console.log(dataType)
     const mainData = inner(this).mainData;
-    return (dataType == null || mainData == null)
-        ? mainData
-        : inner(mainData).datas[dataType];
+    if (dataType == null || mainData == null){
+        return mainData
+    }
+    if (!seriesDataTypeList.includes(dataType)){
+        warn(`${dataType} is not a valid type,please check spelling or consult the documentation`)
+        return mainData
+    }
+
+    return inner(mainData).datas[dataType]
 }
 
 /**

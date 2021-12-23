@@ -152,14 +152,14 @@ class ChartView {
      * Highlight series or specified data item.
      */
     highlight(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
-        toggleHighlight(seriesModel.getData(payload && payload.dataType), payload, 'emphasis');
+        toggleHighlight(seriesModel.getData(payload.dataType), payload, 'emphasis');
     }
 
     /**
      * Downplay series or specified data item.
      */
     downplay(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
-        toggleHighlight(seriesModel.getData(), payload, 'normal');
+        toggleHighlight(seriesModel.getData(payload.dataType), payload, 'normal');
     }
 
     /**

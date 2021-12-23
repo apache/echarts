@@ -1,4 +1,7 @@
+<<<<<<< HEAD
+=======
 
+>>>>>>> c05c8aa4a661a8fbb7156693556699505b5840f8
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -150,8 +153,13 @@ under the License.
             'circular.rotateLabel': false
         };
 
-        // set edge or node highlight width dataIndex
-        chart.dispatchAction({type: 'highlight',dataIndex: [0,1,2,3], dataType: 'edge'})
+
+        // set edge or node highlight with dataIndex
+        chart.dispatchAction({type: 'highlight',dataIndex: [0,1,2,3],dataType:'edge'})
+
+        // wrong dataType test case
+        chart.dispatchAction({type: 'highlight',dataIndex: [0,1,2,3],dataType:'edges'})
+
         // chart.dispatchAction({type: 'highlight',dataIndex: [0,1,2,3], dataType: 'node'})
 
         chart.on('click', function (params) {
