@@ -134,7 +134,6 @@ function cloneShallowInjection(opt: LinkSeriesDataOpt, res: SeriesData): SeriesD
  */
 function getLinkedData(this: SeriesData, dataType?: SeriesDataType): SeriesData {
     const seriesDataTypeList = ["main" , "node" , "edge"]
-    console.log(dataType)
     const mainData = inner(this).mainData;
     if (dataType == null || mainData == null){
         return mainData
