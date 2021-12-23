@@ -32,7 +32,7 @@ import {
     getRawSourceItemGetter, getRawSourceDataCounter, getRawSourceValueGetter
 } from './dataProvider';
 import { parseDataValue } from './dataValueHelper';
-import { consoleLog, makePrintable, throwError } from '../../util/log';
+import { log, makePrintable, throwError } from '../../util/log';
 import { createSource, Source, SourceMetaRawOption, detectSourceFormat } from '../Source';
 
 
@@ -443,7 +443,7 @@ function applySingleDataTransform(
                     makePrintable(extSource.dimensions)
                 ].join('\n');
             }).join('\n');
-            consoleLog(printStrArr);
+            log(printStrArr);
         }
     }
 

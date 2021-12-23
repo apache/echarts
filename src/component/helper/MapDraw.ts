@@ -540,7 +540,10 @@ class MapDraw {
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
                 dx: e.dx,
-                dy: e.dy
+                dy: e.dy,
+                animation: {
+                    duration: 0
+                }
             }));
         }, this);
 
@@ -552,7 +555,10 @@ class MapDraw {
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
                 zoom: e.scale,
                 originX: e.originX,
-                originY: e.originY
+                originY: e.originY,
+                animation: {
+                    duration: 0
+                }
             }));
 
         }, this);

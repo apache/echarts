@@ -421,11 +421,15 @@ class GaugeView extends ChartView {
         if (showProgress || showPointer) {
             data.diff(oldData)
                 .add(function (idx) {
+                    const val = data.get(valueDim, idx) as number;
                     if (showPointer) {
                         const pointer = createPointer(idx, startAngle);
+                        // TODO hide pointer on NaN value?
                         graphic.initProps(pointer, {
-                            rotation: -(linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, true)
-                                + Math.PI / 2)
+                            rotation: -(
+                                (isNaN(+val) ? angleExtent[0] : linearMap(val, valueExtent, angleExtent, true))
+                                + Math.PI / 2
+                            )
                         }, seriesModel);
                         group.add(pointer);
                         data.setItemGraphicEl(idx, pointer);
@@ -436,7 +440,7 @@ class GaugeView extends ChartView {
                         const isClip = progressModel.get('clip');
                         graphic.initProps(progress, {
                             shape: {
-                                endAngle: linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, isClip)
+                                endAngle: linearMap(val, valueExtent, angleExtent, isClip)
                             }
                         }, seriesModel);
                         group.add(progress);
@@ -447,6 +451,7 @@ class GaugeView extends ChartView {
                     }
                 })
                 .update(function (newIdx, oldIdx) {
+                    const val = data.get(valueDim, newIdx) as number;
                     if (showPointer) {
                         const previousPointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
                         const previousRotate = previousPointer ? previousPointer.rotation : startAngle;
@@ -454,7 +459,7 @@ class GaugeView extends ChartView {
                         pointer.rotation = previousRotate;
                         graphic.updateProps(pointer, {
                             rotation: -(
-                                linearMap(data.get(valueDim, newIdx) as number, valueExtent, angleExtent, true)
+                                (isNaN(+val) ? angleExtent[0] : linearMap(val, valueExtent, angleExtent, true))
                                     + Math.PI / 2
                             )
                         }, seriesModel);
@@ -469,9 +474,7 @@ class GaugeView extends ChartView {
                         const isClip = progressModel.get('clip');
                         graphic.updateProps(progress, {
                             shape: {
-                                endAngle: linearMap(
-                                    data.get(valueDim, newIdx) as number, valueExtent, angleExtent, isClip
-                                )
+                                endAngle: linearMap(val, valueExtent, angleExtent, isClip)
                             }
                         }, seriesModel);
                         group.add(progress);

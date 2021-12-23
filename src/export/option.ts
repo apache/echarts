@@ -94,7 +94,7 @@ import type {
     CustomSeriesRenderItem
 } from '../chart/custom/CustomSeries';
 
-import type { GraphicComponentLooseOption as GraphicComponentOption } from '../component/graphic/install';
+import { GraphicComponentLooseOption as GraphicComponentOption } from '../component/graphic/GraphicModel';
 import type { DatasetOption as DatasetComponentOption } from '../component/dataset/install';
 
 import type {ToolboxBrushFeatureOption} from '../component/toolbox/feature/Brush';

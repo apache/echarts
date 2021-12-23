@@ -115,9 +115,7 @@
                 + '</div>';
         }
 
-        if (opt.option) {
-            chart = testHelper.createChart(echarts, chartContainer, opt.option, opt, opt.setOptionOpts);
-        }
+        chart = testHelper.createChart(echarts, chartContainer, opt.option, opt, opt.setOptionOpts);
 
         var dataTables = opt.dataTables;
         if (!dataTables && opt.dataTable) {

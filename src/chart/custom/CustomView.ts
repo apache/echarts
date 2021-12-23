@@ -18,8 +18,7 @@
 */
 
 import {
-    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each,
-    keys, bind, eqNaN, indexOf
+    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, indexOf
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../../util/graphic';
 import { setDefaultStateProxy, enableHoverEmphasis } from '../../util/states';
@@ -45,7 +44,7 @@ import {
     OrdinalRawValue,
     InnerDecalObject
 } from '../../util/types';
-import Element, { ElementProps, ElementTextConfig } from 'zrender/src/Element';
+import Element, { ElementTextConfig } from 'zrender/src/Element';
 import prepareCartesian2d from '../../coord/cartesian/prepareCustom';
 import prepareGeo from '../../coord/geo/prepareCustom';
 import prepareSingleAxis from '../../coord/single/prepareCustom';
@@ -54,7 +53,7 @@ import prepareCalendar from '../../coord/calendar/prepareCustom';
 import SeriesData, { DefaultDataVisual } from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
+import Displayable from 'zrender/src/graphic/Displayable';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
@@ -67,14 +66,10 @@ import {
     warnDeprecated
 } from '../../util/styleCompat';
 import { ItemStyleProps } from '../../model/mixin/itemStyle';
-import { warn, throwError } from '../../util/log';
+import { throwError } from '../../util/log';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
 import CustomSeriesModel, {
-    CustomDuringAPI,
-    TransformProp,
-    TRANSFORM_PROPS,
     CustomImageOption,
-    CustomBaseElementOption,
     CustomElementOption,
     CustomElementOptionOnState,
     CustomSVGPathOption,
@@ -89,22 +84,21 @@ import CustomSeriesModel, {
     STYLE_VISUAL_TYPE,
     NON_STYLE_VISUAL_PROPS,
     customInnerStore,
-    LooseElementProps,
     PrepareCustomInfo,
     CustomPathOption,
-    CustomRootElementOption
+    CustomRootElementOption,
+    CustomSeriesOption
 } from './CustomSeries';
-import {
-    prepareShapeOrExtraAllPropsFinal,
-    prepareShapeOrExtraTransitionFrom,
-    prepareStyleTransitionFrom,
-    prepareTransformAllPropsFinal,
-    prepareTransformTransitionFrom
-} from './prepare';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
-import { CustomSeriesOption } from '../../export/option';
-
-const transformPropNamesStr = keys(TRANSFORM_PROPS).join(', ');
+import {
+    applyLeaveTransition,
+    applyUpdateTransition,
+    ElementRootTransitionProp
+} from '../../animation/customGraphicTransition';
+import {
+    applyKeyframeAnimation,
+    stopPreviousKeyframeAnimationAndRestore
+} from '../../animation/customGraphicKeyframeAnimation';
 
 const EMPHASIS = 'emphasis' as const;
 const NORMAL = 'normal' as const;
@@ -123,6 +117,7 @@ const PATH_LABEL = {
     blur: [BLUR, 'label'],
     select: [SELECT, 'label']
 } as const;
+const DEFAULT_TRANSITION: ElementRootTransitionProp[] = ['x', 'y'];
 // Use prefix to avoid index to be the same as el.name,
 // which will cause weird update animation.
 const GROUP_DIFF_PREFIX = 'e\0\0';
@@ -232,7 +227,8 @@ export default class CustomChartView extends ChartView {
                 );
             })
             .remove(function (oldIdx) {
-                doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
+                const el = oldData.getItemGraphicEl(oldIdx);
+                applyLeaveTransition(el, customInnerStore(el).option, customSeries);
             })
             .update(function (newIdx, oldIdx) {
                 const oldEl = oldData.getItemGraphicEl(oldIdx);
@@ -446,15 +442,22 @@ function updateElNormal(
     elOption: CustomElementOption,
     attachedTxInfo: AttachedTxInfo,
     seriesModel: CustomSeriesModel,
-    isInit: boolean,
-    isTextContent: boolean
+    isInit: boolean
 ): void {
+
+    // Stop and restore before update any other attributes.
+    stopPreviousKeyframeAnimationAndRestore(el);
 
     const txCfgOpt = attachedTxInfo && attachedTxInfo.normal.cfg;
     if (txCfgOpt) {
         // PENDING: whether use user object directly rather than clone?
         // TODO:5.0 textConfig transition animation?
         el.setTextConfig(txCfgOpt);
+    }
+
+    // Default transition ['x', 'y']
+    if (elOption && elOption.transition == null) {
+        elOption.transition = DEFAULT_TRANSITION;
     }
 
     // Do some normalization on style.
@@ -482,274 +485,22 @@ function updateElNormal(
         (styleOpt as InnerCustomZRPathOptionStyle).__decalPattern = decalPattern;
     }
 
-    // Save the meta info for further morphing. Like apply on the sub morphing elements.
-    const store = customInnerStore(el);
-    store.userDuring = elOption.during;
-
-    const transFromProps = {} as ElementProps;
-    const propsToSet = {} as ElementProps;
-
-    prepareShapeOrExtraTransitionFrom('shape', el, elOption, transFromProps, isInit);
-    prepareShapeOrExtraAllPropsFinal('shape', elOption, propsToSet);
-    prepareTransformTransitionFrom(el, elOption, transFromProps, isInit);
-    prepareTransformAllPropsFinal(el, elOption, propsToSet);
-    prepareShapeOrExtraTransitionFrom('extra', el, elOption, transFromProps, isInit);
-    prepareShapeOrExtraAllPropsFinal('extra', elOption, propsToSet);
-    prepareStyleTransitionFrom(el, elOption, styleOpt, transFromProps, isInit);
-    (propsToSet as DisplayableProps).style = styleOpt;
-    applyPropsDirectly(el, propsToSet);
-    applyPropsTransition(el, dataIndex, seriesModel, transFromProps, isInit);
-    applyMiscProps(el, elOption, isTextContent);
-
-    styleOpt ? el.dirty() : el.markRedraw();
-}
-
-function applyMiscProps(
-    el: Element, elOption: CustomElementOption, isTextContent: boolean
-) {
-    // Merge by default.
-    hasOwn(elOption, 'silent') && (el.silent = elOption.silent);
-    hasOwn(elOption, 'ignore') && (el.ignore = elOption.ignore);
     if (isDisplayable(el)) {
-        hasOwn(elOption, 'invisible') && (el.invisible = (elOption as CustomDisplayableOption).invisible);
-    }
-    if (isPath(el)) {
-        hasOwn(elOption, 'autoBatch') && (el.autoBatch = (elOption as CustomBaseZRPathOption).autoBatch);
-    }
-
-    if (!isTextContent) {
-        // `elOption.info` enables user to mount some info on
-        // elements and use them in event handlers.
-        // Update them only when user specified, otherwise, remain.
-        hasOwn(elOption, 'info') && (customInnerStore(el).info = elOption.info);
-    }
-}
-
-function applyPropsDirectly(
-    el: Element,
-    // Can be null/undefined
-    allPropsFinal: ElementProps
-) {
-    const elDisplayable = el.isGroup ? null : el as Displayable;
-    const styleOpt = (allPropsFinal as Displayable).style;
-
-    if (elDisplayable && styleOpt) {
-
-        // PENDING: here the input style object is used directly.
-        // Good for performance but bad for compatibility control.
-        elDisplayable.useStyle(styleOpt);
-
-        const decalPattern = (styleOpt as InnerCustomZRPathOptionStyle).__decalPattern;
-        if (decalPattern) {
-            elDisplayable.style.decal = decalPattern;
-        }
-
-        // When style object changed, how to trade the existing animation?
-        // It is probably complicated and not needed to cover all the cases.
-        // But still need consider the case:
-        // (1) When using init animation on `style.opacity`, and before the animation
-        //     ended users triggers an update by mousewhel. At that time the init
-        //     animation should better be continued rather than terminated.
-        //     So after `useStyle` called, we should change the animation target manually
-        //     to continue the effect of the init animation.
-        // (2) PENDING: If the previous animation targeted at a `val1`, and currently we need
-        //     to update the value to `val2` and no animation declared, should be terminate
-        //     the previous animation or just modify the target of the animation?
-        //     Therotically That will happen not only on `style` but also on `shape` and
-        //     `transfrom` props. But we haven't handle this case at present yet.
-        // (3) PENDING: Is it proper to visit `animators` and `targetName`?
-        const animators = elDisplayable.animators;
-        for (let i = 0; i < animators.length; i++) {
-            const animator = animators[i];
-            // targetName is the "topKey".
-            if (animator.targetName === 'style') {
-                animator.changeTarget(elDisplayable.style);
+        if (styleOpt) {
+            const decalPattern = (styleOpt as InnerCustomZRPathOptionStyle).__decalPattern;
+            if (decalPattern) {
+                (styleOpt as PathStyleProps).decal = decalPattern;
             }
         }
     }
 
-    if (allPropsFinal) {
-        // Not set style here.
-        (allPropsFinal as DisplayableProps).style = null;
-        // Set el to the final state firstly.
-        allPropsFinal && el.attr(allPropsFinal);
-        (allPropsFinal as DisplayableProps).style = styleOpt;
-    }
-}
+    applyUpdateTransition(el, elOption, seriesModel, {
+        dataIndex,
+        isInit,
+        clearStyle: true
+    });
 
-function applyPropsTransition(
-    el: Element,
-    dataIndex: number,
-    seriesModel: CustomSeriesModel,
-    // Can be null/undefined
-    transFromProps: ElementProps,
-    isInit: boolean
-): void {
-    if (transFromProps) {
-        // NOTE: Do not use `el.updateDuringAnimation` here becuase `el.updateDuringAnimation` will
-        // be called mutiple time in each animation frame. For example, if both "transform" props
-        // and shape props and style props changed, it will generate three animator and called
-        // one-by-one in each animation frame.
-        // We use the during in `animateTo/From` params.
-        const userDuring = customInnerStore(el).userDuring;
-        // For simplicity, if during not specified, the previous during will not work any more.
-        const cfgDuringCall = userDuring ? bind(duringCall, { el: el, userDuring: userDuring }) : null;
-        const cfg = {
-            dataIndex: dataIndex,
-            isFrom: true,
-            during: cfgDuringCall
-        };
-        isInit
-            ? graphicUtil.initProps(el, transFromProps, seriesModel, cfg)
-            : graphicUtil.updateProps(el, transFromProps, seriesModel, cfg);
-    }
-}
-
-
-// Use it to avoid it be exposed to user.
-const tmpDuringScope = {} as {
-    el: Element;
-    isShapeDirty: boolean;
-    isStyleDirty: boolean;
-};
-const customDuringAPI: CustomDuringAPI = {
-    // Usually other props do not need to be changed in animation during.
-    setTransform(key: TransformProp, val: unknown) {
-        if (__DEV__) {
-            assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `setTransform`.');
-        }
-        tmpDuringScope.el[key] = val as number;
-        return this;
-    },
-    getTransform(key: TransformProp): number {
-        if (__DEV__) {
-            assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `getTransform`.');
-        }
-        return tmpDuringScope.el[key];
-    },
-    setShape(key: any, val: unknown) {
-        if (__DEV__) {
-            assertNotReserved(key);
-        }
-        const shape = (tmpDuringScope.el as graphicUtil.Path).shape
-            || ((tmpDuringScope.el as graphicUtil.Path).shape = {});
-        shape[key] = val;
-        tmpDuringScope.isShapeDirty = true;
-        return this;
-    },
-    getShape(key: any): any {
-        if (__DEV__) {
-            assertNotReserved(key);
-        }
-        const shape = (tmpDuringScope.el as graphicUtil.Path).shape;
-        if (shape) {
-            return shape[key];
-        }
-    },
-    setStyle(key: any, val: unknown) {
-        if (__DEV__) {
-            assertNotReserved(key);
-        }
-        const style = (tmpDuringScope.el as Displayable).style;
-        if (style) {
-            if (__DEV__) {
-                if (eqNaN(val)) {
-                    warn('style.' + key + ' must not be assigned with NaN.');
-                }
-            }
-            style[key] = val;
-            tmpDuringScope.isStyleDirty = true;
-        }
-        return this;
-    },
-    getStyle(key: any): any {
-        if (__DEV__) {
-            assertNotReserved(key);
-        }
-        const style = (tmpDuringScope.el as Displayable).style;
-        if (style) {
-            return style[key];
-        }
-    },
-    setExtra(key: any, val: unknown) {
-        if (__DEV__) {
-            assertNotReserved(key);
-        }
-        const extra = (tmpDuringScope.el as LooseElementProps).extra
-            || ((tmpDuringScope.el as LooseElementProps).extra = {});
-        extra[key] = val;
-        return this;
-    },
-    getExtra(key: string): unknown {
-        if (__DEV__) {
-            assertNotReserved(key);
-        }
-        const extra = (tmpDuringScope.el as LooseElementProps).extra;
-        if (extra) {
-            return extra[key];
-        }
-    }
-};
-
-function assertNotReserved(key: string) {
-    if (__DEV__) {
-        if (key === 'transition' || key === 'enterFrom' || key === 'leaveTo') {
-            throw new Error('key must not be "' + key + '"');
-        }
-    }
-}
-
-function duringCall(
-    this: {
-        el: Element;
-        userDuring: CustomBaseElementOption['during']
-    }
-): void {
-    // Do not provide "percent" until some requirements come.
-    // Because consider thies case:
-    // enterFrom: {x: 100, y: 30}, transition: 'x'.
-    // And enter duration is different from update duration.
-    // Thus it might be confused about the meaning of "percent" in during callback.
-    const scope = this;
-    const el = scope.el;
-    if (!el) {
-        return;
-    }
-    // If el is remove from zr by reason like legend, during still need to called,
-    // becuase el will be added back to zr and the prop value should not be incorrect.
-
-    const latestUserDuring = customInnerStore(el).userDuring;
-    const scopeUserDuring = scope.userDuring;
-    // Ensured a during is only called once in each animation frame.
-    // If a during is called multiple times in one frame, maybe some users' calulation logic
-    // might be wrong (not sure whether this usage exists).
-    // The case of a during might be called twice can be: by default there is a animator for
-    // 'x', 'y' when init. Before the init animation finished, call `setOption` to start
-    // another animators for 'style'/'shape'/'extra'.
-    if (latestUserDuring !== scopeUserDuring) {
-        // release
-        scope.el = scope.userDuring = null;
-        return;
-    }
-
-    tmpDuringScope.el = el;
-    tmpDuringScope.isShapeDirty = false;
-    tmpDuringScope.isStyleDirty = false;
-
-    // Give no `this` to user in "during" calling.
-    scopeUserDuring(customDuringAPI);
-
-    if (tmpDuringScope.isShapeDirty && (el as graphicUtil.Path).dirtyShape) {
-        (el as graphicUtil.Path).dirtyShape();
-    }
-    if (tmpDuringScope.isStyleDirty && (el as Displayable).dirtyStyle) {
-        (el as Displayable).dirtyStyle();
-    }
-    // markRedraw() will be called by default in during.
-    // FIXME `this.markRedraw();` directly ?
-
-    // FIXME: if in future meet the case that some prop will be both modified in `during` and `state`,
-    // consider the issue that the prop might be incorrect when return to "normal" state.
+    applyKeyframeAnimation(el, elOption.keyframeAnimation, seriesModel);
 }
 
 function updateElOnState(
@@ -757,9 +508,7 @@ function updateElOnState(
     el: Element,
     elStateOpt: CustomElementOptionOnState,
     styleOpt: CustomElementOptionOnState['style'],
-    attachedTxInfo: AttachedTxInfo,
-    isRoot: boolean,
-    isTextContent: boolean
+    attachedTxInfo: AttachedTxInfo
 ): void {
     const elDisplayable = el.isGroup ? null : el as Displayable;
     const txCfgOpt = attachedTxInfo && attachedTxInfo[state].cfg;
@@ -1180,7 +929,7 @@ function createOrUpdateItem(
         group.remove(existsEl);
         return;
     }
-    const el = doCreateOrUpdateEl(api, existsEl, dataIndex, elOption, seriesModel, group, true);
+    const el = doCreateOrUpdateEl(api, existsEl, dataIndex, elOption, seriesModel, group);
     el && data.setItemGraphicEl(dataIndex, el);
 
     el && enableHoverEmphasis(el, elOption.focus, elOption.blurScope);
@@ -1194,8 +943,7 @@ function doCreateOrUpdateEl(
     dataIndex: number,
     elOption: CustomElementOption,
     seriesModel: CustomSeriesModel,
-    group: ViewRootGroup,
-    isRoot: boolean
+    group: ViewRootGroup
 ): Element {
 
     if (__DEV__) {
@@ -1266,16 +1014,19 @@ function doCreateOrUpdateEl(
         elOption,
         attachedTxInfoTmp,
         seriesModel,
-        isInit,
-        false
+        isInit
     );
+    // `elOption.info` enables user to mount some info on
+    // elements and use them in event handlers.
+    // Update them only when user specified, otherwise, remain.
+    hasOwn(elOption, 'info') && (customInnerStore(el).info = elOption.info);
 
     for (let i = 0; i < STATES.length; i++) {
         const stateName = STATES[i];
         if (stateName !== NORMAL) {
             const otherStateOpt = retrieveStateOption(elOption, stateName);
             const otherStyleOpt = retrieveStyleOptionOnState(elOption, otherStateOpt, stateName);
-            updateElOnState(stateName, el, otherStateOpt, otherStyleOpt, attachedTxInfoTmp, isRoot, false);
+            updateElOnState(stateName, el, otherStateOpt, otherStyleOpt, attachedTxInfoTmp);
         }
     }
 
@@ -1312,8 +1063,8 @@ function doesElNeedRecreate(el: Element, elOption: CustomElementOption, seriesMo
             && elOptionType !== elInner.customGraphicType
         )
         || (elOptionType === 'path'
-            && hasOwnPathData(elOptionShape)
-            && getPathData(elOptionShape) !== elInner.customPathData
+            && hasOwnPathData(elOptionShape as CustomSVGPathOption['shape'])
+            && getPathData(elOptionShape as CustomSVGPathOption['shape']) !== elInner.customPathData
         )
         || (elOptionType === 'image'
             && hasOwn(elOptionStyle, 'image')
@@ -1363,7 +1114,7 @@ function doCreateOrUpdateClipPath(
             el.setClipPath(clipPath);
         }
         updateElNormal(
-            null, clipPath, dataIndex, clipPathOpt, null, seriesModel, isInit, false
+            null, clipPath, dataIndex, clipPathOpt, null, seriesModel, isInit
         );
     }
     // If not define `clipPath` in option, do nothing unnecessary.
@@ -1414,9 +1165,7 @@ function doCreateOrUpdateAttachedTx(
                 textContent.clearStates();
             }
 
-            updateElNormal(
-                null, textContent, dataIndex, txConOptNormal, null, seriesModel, isInit, true
-            );
+            updateElNormal(null, textContent, dataIndex, txConOptNormal, null, seriesModel, isInit);
             const txConStlOptNormal = txConOptNormal && (txConOptNormal as CustomDisplayableOption).style;
             for (let i = 0; i < STATES.length; i++) {
                 const stateName = STATES[i];
@@ -1427,7 +1176,7 @@ function doCreateOrUpdateAttachedTx(
                         textContent,
                         txConOptOtherState,
                         retrieveStyleOptionOnState(txConOptNormal, txConOptOtherState, stateName),
-                        null, false, true
+                        null
                     );
                 }
             }
@@ -1568,15 +1317,15 @@ function mergeChildren(
             dataIndex,
             newChildren[index] as CustomElementOption,
             seriesModel,
-            el,
-            false
+            el
         );
     }
     for (let i = el.childCount() - 1; i >= index; i--) {
         // Do not supprot leave elements that are not mentioned in the latest
         // `renderItem` return. Otherwise users may not have a clear and simple
         // concept that how to contorl all of the elements.
-        doRemoveEl(el.childAt(i), seriesModel, el);
+        const child = el.childAt(i);
+        applyLeaveTransition(child, customInnerStore(el).option, seriesModel);
     }
 }
 
@@ -1622,32 +1371,14 @@ function processAddUpdate(
         context.dataIndex,
         childOption,
         context.seriesModel,
-        context.group,
-        false
+        context.group
     );
 }
 
 function processRemove(this: DataDiffer<DiffGroupContext>, oldIndex: number): void {
     const context = this.context;
     const child = context.oldChildren[oldIndex];
-    doRemoveEl(child, context.seriesModel, context.group);
-}
-
-function doRemoveEl(
-    el: Element,
-    seriesModel: CustomSeriesModel,
-    group: ViewRootGroup
-): void {
-    if (el) {
-        const leaveToProps = customInnerStore(el).leaveToProps;
-        leaveToProps
-            ? graphicUtil.updateProps(el, leaveToProps, seriesModel, {
-                cb: function () {
-                    group.remove(el);
-                }
-            })
-            : group.remove(el);
-    }
+    applyLeaveTransition(child, customInnerStore(child).option, context.seriesModel);
 }
 
 /**

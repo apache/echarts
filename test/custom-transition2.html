@@ -214,7 +214,7 @@ under the License.
                 var textOpt = {
                     type: 'text',
                     extra: { },
-                    transition: [], // disable the default transition of x y.
+                    // transition: [], // disable the default transition of x y.
                     style: { x: 20, y: 20, fontSize: 20, stroke: 'green' },
                     during: function (apiDuring) {
                         var x = apiDuring.getExtra('x');
@@ -227,7 +227,7 @@ under the License.
                     shape: { cx: 0, cy: 0, r: 10 },
                     extra: { },
                     style: { fill: 'red' },
-                    transition: [], // disable the default transition of x y.
+                    // transition: [], // disable the default transition of x y.
                     during: function (apiDuring) {
                         var x = apiDuring.getExtra('x');
                         var y = apiDuring.getExtra('y');
