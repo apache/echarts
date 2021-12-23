@@ -710,14 +710,19 @@ class ECharts extends Eventful<ECEventDefinition> {
         });
     }
 
-    renderToSVGString(): string {
+    renderToSVGString(opts?: {
+        useViewBox?: boolean
+    }): string {
+        opts = opts || {};
         const painter = this._zr.painter;
         if (__DEV__) {
             if (painter.type !== 'svg') {
                 throw new Error('renderToSVGString can only be used in the svg renderer.');
             }
         }
-        return painter.renderToString();
+        return (painter as SVGPainter).renderToString({
+            useViewBox: opts.useViewBox
+        });
     }
 
     /**
