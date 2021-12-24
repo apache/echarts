@@ -23,7 +23,6 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="data/basicChartsOptions.js"></script>
         <script src="lib/dat.gui.min.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
@@ -53,46 +52,49 @@ under the License.
 
 
         <div id="main">
-            <h1>Tests ESM bundle importing in browser</h1>
+            <h1>Tests ESM lib files importing in browser partially</h1>
         </div>
 
+        <script type="importmap">
+            {
+                "imports": {
+                    "echarts/": "../",
+                    "zrender/": "../node_modules/zrender/",
+                    "tslib": "../node_modules/tslib/tslib.es6.js"
+                }
+            }
+        </script>
+        <script>
+            if (typeof process === 'undefined' || !process.env) {
+                window.process = {
+                    env: {
+                        NODE_ENV: 'development'
+                    }
+                };
+            }
+        </script>
+
         <script type="module">
-            import * as echarts from '../dist/echarts.esm.min.js';
+            import * as echarts from 'echarts/lib/echarts';
+            import 'echarts/lib/chart/pie.js';
+
+            const chartsOptions = [{
+                series: [{
+                    type: 'pie',
+                    data: [{
+                        name: 'A',
+                        value: 5
+                    }, {
+                        name: 'B',
+                        value: 3
+                    }, {
+                        name: 'C',
+                        value: 1
+                    }]
+                }]
+            }]
             const charts = [];
-            allChartsOptions.forEach(function (chartOption) {
-                chartOption.series.forEach(function (series) {
-                    series.selectedMode = 'single';
-                    series.select = {
-                        itemStyle: {
-                            borderWidth: 3
-                        }
-                    }
-
-                    if (series.renderItem) {
-                        const oldRenderItem = series.renderItem;
-                        series.renderItem = function () {
-                            const ret = oldRenderItem.apply(this, arguments);
-                            ret.focus = 'self';
-                            return ret;
-                        }
-                    }
-
-                    if (series.type === 'treemap') {
-                        series.itemStyle = {
-                            borderColor: 'rgba(100, 100, 200, 0.1)',
-                        };
-                        series.nodeClick = null;
-                        series.select = {
-                            itemStyle: {
-                                strokeColor: '#000',
-                                strokeWidth: 1
-                            }
-                        }
-                    }
-                    else if (series.type === 'pie') {
-                        series.data[0].selected = true;
-                    }
-                });
+            chartsOptions.forEach(function (chartOption) {
                 const dom = document.createElement('div');
                 dom.className = 'chart';
                 document.querySelector('#main').appendChild(dom);
