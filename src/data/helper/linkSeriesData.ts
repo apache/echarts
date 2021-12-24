@@ -133,17 +133,10 @@ function cloneShallowInjection(opt: LinkSeriesDataOpt, res: SeriesData): SeriesD
  * @param [dataType] If not specified, return mainData.
  */
 function getLinkedData(this: SeriesData, dataType?: SeriesDataType): SeriesData {
-    const seriesDataTypeList = ["main" , "node" , "edge"]
     const mainData = inner(this).mainData;
-    if (dataType == null || mainData == null){
-        return mainData
-    }
-    if (!seriesDataTypeList.includes(dataType)){
-        warn(`${dataType} is not a valid type,please check spelling or consult the documentation`)
-        return mainData
-    }
-
-    return inner(mainData).datas[dataType]
+    return (dataType == null || mainData == null)
+        ? mainData
+        : inner(mainData).datas[dataType];
 }
 
 /**
