@@ -276,13 +276,6 @@ async function transformLibFiles(rooltFolder, replacement) {
 /**
  * 1. Transform zrender/src to zrender/lib
  * 2. Add .js extensions
- *
- * FIXME. Comment in the named import statement is not supported.
- *
- * import {
- *   AAAA,
- *   // BBB
- * } from 'foo';
  */
 function singleTransformImport(code, replacement) {
     return transformImport(
