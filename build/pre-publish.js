@@ -288,11 +288,11 @@ function singleTransformImport(code, replacement) {
     return transformImport(
         code.replace(/([\"\'])zrender\/src\//g, `$1zrender/${replacement}/`),
         (moduleName) => {
-            // Ignore 'tslib'
-            if (moduleName === 'tslib') {
+            // Ignore 'tslib' and 'echarts' in the extensions.
+            if (moduleName === 'tslib' || moduleName === 'echarts') {
                 return moduleName;
             }
-            else if (moduleName === 'zrender' || moduleName === 'zrender/lib/export') {
+            else if (moduleName === 'zrender/lib/export') {
                 throw new Error('Should not import the whole zrender library.');
             }
             else if (moduleName.endsWith('.ts')) {
