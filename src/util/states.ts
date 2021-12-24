@@ -525,6 +525,12 @@ export function blurSeriesFromHighlightPayload(
 ) {
     const seriesIndex = seriesModel.seriesIndex;
     const data = seriesModel.getData(payload.dataType);
+    if (!data) {
+        if (__DEV__) {
+            error(`Unknown dataType ${payload.dataType}`);
+        }
+        return;
+    }
     let dataIndex = queryDataIndex(data, payload);
     // Pick the first one if there is multiple/none exists.
     dataIndex = (isArray(dataIndex) ? dataIndex[0] : dataIndex) || 0;

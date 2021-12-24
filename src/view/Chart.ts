@@ -35,6 +35,7 @@ import {
 } from '../util/types';
 import { SeriesTaskContext, SeriesTask } from '../core/Scheduler';
 import SeriesData from '../data/SeriesData';
+import { error } from '../util/log';
 
 const inner = modelUtil.makeInner<{
     updateMethod: keyof ChartView
@@ -152,6 +153,13 @@ class ChartView {
      * Highlight series or specified data item.
      */
     highlight(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
+        const data = seriesModel.getData(payload && payload.dataType);
+        if (!data) {
+            if (__DEV__) {
+                error(`Unknown dataType ${payload.dataType}`);
+            }
+            return;
+        }
         toggleHighlight(seriesModel.getData(payload && payload.dataType), payload, 'emphasis');
     }
 
@@ -159,7 +167,14 @@ class ChartView {
      * Downplay series or specified data item.
      */
     downplay(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
-        toggleHighlight(seriesModel.getData(), payload, 'normal');
+        const data = seriesModel.getData(payload && payload.dataType);
+        if (!data) {
+            if (__DEV__) {
+                error(`Unknown dataType ${payload.dataType}`);
+            }
+            return;
+        }
+        toggleHighlight(data, payload, 'normal');
     }
 
     /**
