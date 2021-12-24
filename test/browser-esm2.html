@@ -53,11 +53,30 @@ under the License.
 
 
         <div id="main">
-            <h1>Tests ESM bundle importing in browser</h1>
+            <h1>Tests ESM lib files importing in browser</h1>
         </div>
 
+        <script type="importmap">
+            {
+                "imports": {
+                    "echarts/": "../",
+                    "zrender/": "../node_modules/zrender/",
+                    "tslib": "../node_modules/tslib/tslib.es6.js"
+                }
+            }
+        </script>
+        <script>
+            if (typeof process === 'undefined' || !process.env) {
+                window.process = {
+                    env: {
+                        NODE_ENV: 'development'
+                    }
+                };
+            }
+        </script>
+
         <script type="module">
-            import * as echarts from '../dist/echarts.esm.min.js';
+            import * as echarts from '../index.js';
             const charts = [];
             allChartsOptions.forEach(function (chartOption) {
                 chartOption.series.forEach(function (series) {
