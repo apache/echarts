@@ -160,7 +160,7 @@ class ChartView {
             }
             return;
         }
-        toggleHighlight(seriesModel.getData(payload && payload.dataType), payload, 'emphasis');
+        toggleHighlight(data, payload, 'emphasis');
     }
 
     /**
