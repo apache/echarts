@@ -91,40 +91,36 @@ export function enableClassExtend(rootClz: ExtendableConstructor, mandatoryMetho
         }
 
         const superClass = this;
-        // For backward compat, we both support ts class inheritance and this
-        // "extend" approach.
-        // The constructor should keep the same behavior as ts class inheritance:
-        // If this constructor/$constructor is not declared, auto invoke the super
-        // constructor.
-        // If this constructor/$constructor is declared, it is responsible for
-        // calling the super constructor.
-        function ExtendedClass(this: any, ...args: any[]) {
-            if (!proto.$constructor) {
+        let ExtendedClass: any;
 
-                if (!isESClass(superClass)) {
-                    // Will throw error if superClass is an es6 native class.
-                    superClass.apply(this, arguments);
+        if (isESClass(superClass)) {
+            ExtendedClass = class extends superClass {
+                constructor() {
+                    super(...arguments as any);
                 }
-                else {
-                    const ins = zrUtil.createObject(
-                        // @ts-ignore
-                        ExtendedClass.prototype, new superClass(...args)
-                    );
-                    return ins;
-                }
-            }
-            else {
-                proto.$constructor.apply(this, arguments);
-            }
+            };
         }
-        ExtendedClass[IS_EXTENDED_CLASS] = true;
+        else {
+            // For backward compat, we both support ts class inheritance and this
+            // "extend" approach.
+            // The constructor should keep the same behavior as ts class inheritance:
+            // If this constructor/$constructor is not declared, auto invoke the super
+            // constructor.
+            // If this constructor/$constructor is declared, it is responsible for
+            // calling the super constructor.
+            ExtendedClass = function (this: any) {
+                (proto.$constructor || superClass).apply(this, arguments);
+            };
+
+            zrUtil.inherits(ExtendedClass, this);
+        }
 
         zrUtil.extend(ExtendedClass.prototype, proto);
+        ExtendedClass[IS_EXTENDED_CLASS] = true;
 
         ExtendedClass.extend = this.extend;
         ExtendedClass.superCall = superCall;
         ExtendedClass.superApply = superApply;
-        zrUtil.inherits(ExtendedClass, this);
         ExtendedClass.superClass = superClass;
 
         return ExtendedClass as unknown as ExtendableConstructor;
@@ -228,11 +224,8 @@ export interface ClassManager {
  * ```
  */
 export function enableClassManagement(
-    target: ClassManager,
-    options?: {registerWhenExtend?: boolean}
+    target: ClassManager
 ): void {
-
-    options = options || {};
 
     /**
      * Component model classes
@@ -295,7 +288,7 @@ export function enableClassManagement(
             throw new Error(
                 !subType
                     ? mainType + '.' + 'type should be specified.'
-                    : 'Component ' + mainType + '.' + (subType || '') + ' not exists. Load it first.'
+                    : 'Component ' + mainType + '.' + (subType || '') + ' is used but not imported.'
             );
         }
 
@@ -353,17 +346,6 @@ export function enableClassManagement(
             container[IS_CONTAINER] = true;
         }
         return container as SubclassContainer;
-    }
-
-    // FIXME:TS remove `registerWhenExtend` finally when ts migration completed?
-    if (options.registerWhenExtend) {
-        const originalExtend = (target as any).extend;
-        if (originalExtend) {
-            (target as any).extend = function (proto: any) {
-                const ExtendedClass = originalExtend.call(this, proto);
-                return target.registerClass(ExtendedClass);
-            };
-        }
     }
 }
 

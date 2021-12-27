@@ -33,27 +33,27 @@ import {
     OptionDataItemObject,
     GraphEdgeItemObject,
     OptionDataValueNumeric,
-    DefaultExtraEmpasisState
+    DefaultEmphasisFocus,
+    CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { LayoutRect } from '../../util/layout';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
 
-export interface SankeyNodeStateOption {
+export interface SankeyNodeStateOption<TCbParams = never> {
     label?: SeriesLabelOption
-    itemStyle?: ItemStyleOption
+    itemStyle?: ItemStyleOption<TCbParams>
 }
 
 export interface SankeyEdgeStateOption {
     lineStyle?: SankeyEdgeStyleOption
 }
 
-interface SankeyBothStateOption extends SankeyNodeStateOption, SankeyEdgeStateOption {
-}
+interface SankeyBothStateOption<TCbParams> extends SankeyNodeStateOption<TCbParams>, SankeyEdgeStateOption {}
 
 interface SankeyEdgeStyleOption extends LineStyleOption {
     curveness?: number
@@ -61,7 +61,7 @@ interface SankeyEdgeStyleOption extends LineStyleOption {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus'] | 'adjacency'
+        focus?: DefaultEmphasisFocus | 'adjacency'
     }
 }
 
@@ -92,7 +92,8 @@ export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStat
 }
 
 export interface SankeySeriesOption
-    extends SeriesOption<SankeyBothStateOption, ExtraStateOption>, SankeyBothStateOption,
+    extends SeriesOption<SankeyBothStateOption<CallbackDataParams>, ExtraStateOption>,
+    SankeyBothStateOption<CallbackDataParams>,
     BoxLayoutOptionMixin {
     type?: 'sankey'
 
@@ -119,6 +120,7 @@ export interface SankeySeriesOption
     draggable?: boolean
     /**
      * Will be allEdges if true.
+     * @deprecated
      */
     focusNodeAdjacency?: FocusNodeAdjacency
     /**
@@ -147,9 +149,6 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
     /**
      * Init a graph data structure from data in option series
-     *
-     * @param  {Object} option  the object used to config echarts view
-     * @return {module:echarts/data/List} storage initial data
      */
     getInitialData(option: SankeySeriesOption, ecModel: GlobalModel) {
         const links = option.edges || option.links;
@@ -172,7 +171,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             const graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
             return graph.data;
         }
-        function beforeLink(nodeData: List, edgeData: List) {
+        function beforeLink(nodeData: SeriesData, edgeData: SeriesData) {
             nodeData.wrapMethod('getItemModel', function (model: Model, idx: number) {
                 const seriesModel = model.parentModel as SankeySeriesModel;
                 const layout = seriesModel.getData().getItemLayout(idx);
@@ -203,7 +202,8 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
     }
 
     setNodePosition(dataIndex: number, localPosition: number[]) {
-        const dataItem = this.option.data[dataIndex];
+        const nodes = this.option.data || this.option.nodes;
+        const dataItem = nodes[dataIndex];
         dataItem.localX = localPosition[0];
         dataItem.localY = localPosition[1];
     }
@@ -237,7 +237,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         // dataType === 'node' or empty do not show tooltip by default
         if (dataType === 'edge') {
             const params = this.getDataParams(dataIndex, dataType);
-            const rawDataOpt = params.data;
+            const rawDataOpt = params.data as SankeyEdgeItemOption;
             const edgeValue = params.value;
             const edgeName = rawDataOpt.source + ' -- ' + rawDataOpt.target;
             return createTooltipMarkup('nameValue', {
@@ -250,21 +250,16 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         else {
             const node = this.getGraph().getNodeByIndex(dataIndex);
             const value = node.getLayout().value;
-            const name = this.getDataParams(dataIndex, dataType).data.name;
+            const name = (this.getDataParams(dataIndex, dataType).data as SankeyNodeItemOption).name;
             return createTooltipMarkup('nameValue', {
-                name: name,
+                name: name != null ? name + '' : null,
                 value: value,
                 noValue: noValue(value)
             });
         }
     }
 
-    optionUpdated() {
-        const option = this.option;
-        if (option.focusNodeAdjacency === true) {
-            option.focusNodeAdjacency = 'allEdges';
-        }
-    }
+    optionUpdated() {}
 
     // Override Series.getDataParams()
     getDataParams(dataIndex: number, dataType: 'node' | 'edge') {
@@ -278,7 +273,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
     }
 
     static defaultOption: SankeySeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
 
         coordinateSystem: 'view',
@@ -294,8 +289,6 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
         nodeGap: 8,
         draggable: true,
-
-        focusNodeAdjacency: false,
 
         layoutIterations: 32,
 
@@ -335,7 +328,5 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         animationDuration: 1000
     };
 }
-
-SeriesModel.registerClass(SankeySeriesModel);
 
 export default SankeySeriesModel;

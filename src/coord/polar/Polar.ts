@@ -22,9 +22,11 @@ import AngleAxis from './AngleAxis';
 import PolarModel from './PolarModel';
 import { CoordinateSystem, CoordinateSystemMaster, CoordinateSystemClipArea } from '../CoordinateSystem';
 import GlobalModel from '../../model/Global';
-import { ParsedModelFinder } from '../../util/model';
+import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
+
+export const polarDimensions = ['radius', 'angle'];
 
 interface Polar {
     update(ecModel: GlobalModel, api: ExtensionAPI): void
@@ -33,7 +35,7 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
 
     readonly name: string;
 
-    readonly dimensions = ['radius', 'angle'];
+    readonly dimensions = polarDimensions;
 
     readonly type = 'polar';
 
@@ -246,7 +248,7 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
     }
 }
 
-function getCoordSys(finder: ParsedModelFinder) {
+function getCoordSys(finder: ParsedModelFinderKnown) {
     const seriesModel = finder.seriesModel;
     const polarModel = finder.polarModel as PolarModel;
     return polarModel && polarModel.coordinateSystem

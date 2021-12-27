@@ -19,15 +19,15 @@
 
 
 import {retrieveRawValue} from '../../data/helper/dataProvider';
-import List from '../../data/List';
-import { ParsedValue } from '../../util/types';
+import SeriesData from '../../data/SeriesData';
+import { InterpolatableValue } from '../../util/types';
 import { isArray } from 'zrender/src/core/util';
 
 /**
  * @return label string. Not null/undefined
  */
 export function getDefaultLabel(
-    data: List,
+    data: SeriesData,
     dataIndex: number
 ): string {
     const labelDims = data.mapDimensionsAll('defaultedLabel');
@@ -35,7 +35,8 @@ export function getDefaultLabel(
 
     // Simple optimization (in lots of cases, label dims length is 1)
     if (len === 1) {
-        return retrieveRawValue(data, dataIndex, labelDims[0]);
+        const rawVal = retrieveRawValue(data, dataIndex, labelDims[0]);
+        return rawVal != null ? rawVal + '' : null;
     }
     else if (len) {
         const vals = [];
@@ -47,8 +48,8 @@ export function getDefaultLabel(
 }
 
 export function getDefaultInterpolatedLabel(
-    data: List,
-    interpolatedValue: ParsedValue | ParsedValue[]
+    data: SeriesData,
+    interpolatedValue: InterpolatableValue
 ): string {
     const labelDims = data.mapDimensionsAll('defaultedLabel');
     if (!isArray(interpolatedValue)) {
@@ -57,9 +58,9 @@ export function getDefaultInterpolatedLabel(
 
     const vals = [];
     for (let i = 0; i < labelDims.length; i++) {
-        const dimInfo = data.getDimensionInfo(labelDims[i]);
-        if (dimInfo) {
-            vals.push(interpolatedValue[dimInfo.index]);
+        const dimIndex = data.getDimensionIndex(labelDims[i]);
+        if (dimIndex >= 0) {
+            vals.push(interpolatedValue[dimIndex]);
         }
     }
     return vals.join(' ');

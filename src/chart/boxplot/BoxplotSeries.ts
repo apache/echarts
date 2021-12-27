@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import {WhiskerBoxCommonMixin} from '../helper/whiskerBoxCommon';
 import {
@@ -28,18 +27,19 @@ import {
     SeriesLabelOption,
     OptionDataValueNumeric,
     StatesOptionMixin,
-    DefaultExtraEmpasisState,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    DefaultEmphasisFocus,
+    CallbackDataParams
 } from '../../util/types';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import { mixin } from 'zrender/src/core/util';
 
 // [min,  Q1,  median (or Q2),  Q3,  max]
 type BoxplotDataValue = OptionDataValueNumeric[];
 
-
-export interface BoxplotStateOption {
-    itemStyle?: ItemStyleOption
+export interface BoxplotStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
 
@@ -50,12 +50,14 @@ export interface BoxplotDataItemOption
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus']
+        focus?: DefaultEmphasisFocus
         scale?: boolean
     }
 }
 
-export interface BoxplotSeriesOption extends SeriesOption<BoxplotStateOption, ExtraStateOption>, BoxplotStateOption,
+export interface BoxplotSeriesOption
+    extends SeriesOption<BoxplotStateOption<CallbackDataParams>, ExtraStateOption>,
+    BoxplotStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin, SeriesEncodeOptionMixin {
     type?: 'boxplot'
 
@@ -100,7 +102,7 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
     visualDrawType = 'stroke' as const;
 
     static defaultOption: BoxplotSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
@@ -132,8 +134,6 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
 interface BoxplotSeriesModel extends WhiskerBoxCommonMixin<BoxplotSeriesOption> {
     getBaseAxis(): Axis2D
 }
-zrUtil.mixin(BoxplotSeriesModel, WhiskerBoxCommonMixin, true);
-
-SeriesModel.registerClass(BoxplotSeriesModel);
+mixin(BoxplotSeriesModel, WhiskerBoxCommonMixin, true);
 
 export default BoxplotSeriesModel;

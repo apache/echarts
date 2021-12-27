@@ -26,12 +26,11 @@ import {linearMap, asc, parsePercent} from '../../util/number';
 import * as layout from '../../util/layout';
 import sliderMove from '../helper/sliderMove';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import {
     LayoutOrient, Payload, ZRTextVerticalAlign, ZRTextAlign, ZRElementEvent, ParsedValue
 } from '../../util/types';
 import SliderZoomModel from './SliderZoomModel';
-import ComponentView from '../../view/Component';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import Axis from '../../coord/Axis';
 import SeriesModel from '../../model/Series';
@@ -42,6 +41,8 @@ import { createSymbol, symbolBuildProxies } from '../../util/symbol';
 import { deprecateLog } from '../../util/log';
 import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
+import {createTextStyle} from '../../label/labelStyle';
+import SeriesData from '../../data/SeriesData';
 
 const Rect = graphic.Rect;
 
@@ -57,7 +58,8 @@ const SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'candlestick', 'scatter'];
 
 const REALTIME_ANIMATION_CONFIG = {
     easing: 'cubicOut',
-    duration: 100
+    duration: 100,
+    delay: 0
 } as const;
 
 // const NORMAL_ANIMATION_CONFIG = {
@@ -122,6 +124,12 @@ class SliderZoomView extends DataZoomView {
         otherDim: string
         otherAxisInverse: boolean
     };
+
+    // Cached raw data. Avoid rendering data shadow multiple times.
+    private _shadowData: SeriesData;
+    private _shadowDim: string;
+    private _shadowPolygonPts: number[][];
+    private _shadowPolylinePts: number[][];
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.api = api;
@@ -349,7 +357,6 @@ class SliderZoomView extends DataZoomView {
         const size = this._size;
         const seriesModel = info.series;
         const data = seriesModel.getRawData();
-
         const otherDim: string = seriesModel.getShadowDim
             ? seriesModel.getShadowDim() // @see candlestick
             : info.otherDim;
@@ -358,57 +365,68 @@ class SliderZoomView extends DataZoomView {
             return;
         }
 
-        let otherDataExtent = data.getDataExtent(otherDim);
-        // Nice extent.
-        const otherOffset = (otherDataExtent[1] - otherDataExtent[0]) * 0.3;
-        otherDataExtent = [
-            otherDataExtent[0] - otherOffset,
-            otherDataExtent[1] + otherOffset
-        ];
-        const otherShadowExtent = [0, size[1]];
+        let polygonPts = this._shadowPolygonPts;
+        let polylinePts = this._shadowPolylinePts;
+        // Not re-render if data doesn't change.
+        if (data !== this._shadowData || otherDim !== this._shadowDim) {
+            let otherDataExtent = data.getDataExtent(otherDim);
+            // Nice extent.
+            const otherOffset = (otherDataExtent[1] - otherDataExtent[0]) * 0.3;
+            otherDataExtent = [
+                otherDataExtent[0] - otherOffset,
+                otherDataExtent[1] + otherOffset
+            ];
+            const otherShadowExtent = [0, size[1]];
 
-        const thisShadowExtent = [0, size[0]];
+            const thisShadowExtent = [0, size[0]];
 
-        const areaPoints = [[size[0], 0], [0, 0]];
-        const linePoints: number[][] = [];
-        const step = thisShadowExtent[1] / (data.count() - 1);
-        let thisCoord = 0;
+            const areaPoints = [[size[0], 0], [0, 0]];
+            const linePoints: number[][] = [];
+            const step = thisShadowExtent[1] / (data.count() - 1);
+            let thisCoord = 0;
 
-        // Optimize for large data shadow
-        const stride = Math.round(data.count() / size[0]);
-        let lastIsEmpty: boolean;
-        data.each([otherDim], function (value: ParsedValue, index) {
-            if (stride > 0 && (index % stride)) {
+            // Optimize for large data shadow
+            const stride = Math.round(data.count() / size[0]);
+            let lastIsEmpty: boolean;
+            data.each([otherDim], function (value: ParsedValue, index) {
+                if (stride > 0 && (index % stride)) {
+                    thisCoord += step;
+                    return;
+                }
+
+                // FIXME
+                // Should consider axis.min/axis.max when drawing dataShadow.
+
+                // FIXME
+                // 应该使用统一的空判断？还是在list里进行空判断？
+                const isEmpty = value == null || isNaN(value as number) || value === '';
+                // See #4235.
+                const otherCoord = isEmpty
+                    ? 0 : linearMap(value as number, otherDataExtent, otherShadowExtent, true);
+
+                // Attempt to draw data shadow precisely when there are empty value.
+                if (isEmpty && !lastIsEmpty && index) {
+                    areaPoints.push([areaPoints[areaPoints.length - 1][0], 0]);
+                    linePoints.push([linePoints[linePoints.length - 1][0], 0]);
+                }
+                else if (!isEmpty && lastIsEmpty) {
+                    areaPoints.push([thisCoord, 0]);
+                    linePoints.push([thisCoord, 0]);
+                }
+
+                areaPoints.push([thisCoord, otherCoord]);
+                linePoints.push([thisCoord, otherCoord]);
+
                 thisCoord += step;
-                return;
-            }
+                lastIsEmpty = isEmpty;
+            });
 
-            // FIXME
-            // Should consider axis.min/axis.max when drawing dataShadow.
+            polygonPts = this._shadowPolygonPts = areaPoints;
+            polylinePts = this._shadowPolylinePts = linePoints;
 
-            // FIXME
-            // 应该使用统一的空判断？还是在list里进行空判断？
-            const isEmpty = value == null || isNaN(value as number) || value === '';
-            // See #4235.
-            const otherCoord = isEmpty
-                ? 0 : linearMap(value as number, otherDataExtent, otherShadowExtent, true);
-
-            // Attempt to draw data shadow precisely when there are empty value.
-            if (isEmpty && !lastIsEmpty && index) {
-                areaPoints.push([areaPoints[areaPoints.length - 1][0], 0]);
-                linePoints.push([linePoints[linePoints.length - 1][0], 0]);
-            }
-            else if (!isEmpty && lastIsEmpty) {
-                areaPoints.push([thisCoord, 0]);
-                linePoints.push([thisCoord, 0]);
-            }
-
-            areaPoints.push([thisCoord, otherCoord]);
-            linePoints.push([thisCoord, otherCoord]);
-
-            thisCoord += step;
-            lastIsEmpty = isEmpty;
-        });
+        }
+        this._shadowData = data;
+        this._shadowDim = otherDim;
 
         const dataZoomModel = this.dataZoomModel;
 
@@ -416,14 +434,14 @@ class SliderZoomView extends DataZoomView {
             const model = dataZoomModel.getModel(isSelectedArea ? 'selectedDataBackground' : 'dataBackground');
             const group = new graphic.Group();
             const polygon = new graphic.Polygon({
-                shape: {points: areaPoints},
+                shape: {points: polygonPts},
                 segmentIgnoreThreshold: 1,
                 style: model.getModel('areaStyle').getAreaStyle(),
                 silent: true,
                 z2: -20
             });
             const polyline = new graphic.Polyline({
-                shape: {points: linePoints},
+                shape: {points: polylinePts},
                 segmentIgnoreThreshold: 1,
                 style: model.getModel('lineStyle').getLineStyle(),
                 silent: true,
@@ -547,7 +565,11 @@ class SliderZoomView extends DataZoomView {
         // Left and right handle to resize
         each([0, 1] as const, function (handleIndex) {
             let iconStr = dataZoomModel.get('handleIcon');
-            if (!symbolBuildProxies[iconStr] && iconStr.indexOf('path://') < 0) {
+            if (
+                !symbolBuildProxies[iconStr]
+                && iconStr.indexOf('path://') < 0
+                && iconStr.indexOf('image://') < 0
+            ) {
                 // Compatitable with the old icon parsers. Which can use a path string without path://
                 iconStr = 'path://' + iconStr;
                 if (__DEV__) {
@@ -595,13 +617,13 @@ class SliderZoomView extends DataZoomView {
                 handleLabels[handleIndex] = new graphic.Text({
                 silent: true,
                 invisible: true,
-                style: {
+                style: createTextStyle(textStyleModel, {
                     x: 0, y: 0, text: '',
                     verticalAlign: 'middle',
                     align: 'center',
                     fill: textStyleModel.getTextColor(),
                     font: textStyleModel.getFont()
-                },
+                }),
                 z2: 10
             }));
 
@@ -1061,7 +1083,5 @@ function getOtherDim(thisDim: 'x' | 'y' | 'radius' | 'angle' | 'single' | 'z') {
 function getCursor(orient: LayoutOrient) {
     return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
 }
-
-ComponentView.registerClass(SliderZoomView);
 
 export default SliderZoomView;

@@ -27,6 +27,7 @@ import {
 import { ComponentMainType } from '../../../src/util/types';
 import Group from 'zrender/src/graphic/Group';
 import Element from 'zrender/src/Element';
+import GlobalModel from '../../../src/model/Global';
 
 
 export function createChart(params?: {
@@ -45,6 +46,16 @@ export function createChart(params?: {
         'bottom:0',
         'right:0'
     ].join(';');
+    Object.defineProperty(el, 'clientWidth', {
+        get() {
+            return params.width || 500;
+        }
+    });
+    Object.defineProperty(el, 'clientHeight', {
+        get() {
+            return params.height || 400;
+        }
+    });
     const chart = init(el, params.theme, params.opts);
     return chart;
 };
@@ -78,10 +89,6 @@ export function getHeadEl(): HTMLElement {
 export const curry = zrUtilCurry;
 
 export const bind = zrUtilBind;
-
-export function isValueFinite(val: unknown): boolean {
-    return val != null && val !== '' && isFinite(val as number);
-}
 
 // /**
 //  * @public
@@ -137,9 +144,13 @@ export function getViewGroup(
     mainType: ComponentMainType,
     index?: number
 ): Group {
-    const component = chart.getModel().getComponent(mainType, index);
+    const component = getECModel(chart).getComponent(mainType, index);
     return component ? chart[
         mainType === 'series' ? '_chartsMap' : '_componentsMap'
     ][component.__viewId].group : null;
 }
 
+export function getECModel(chart: EChartsType): GlobalModel {
+    // @ts-ignore
+    return chart.getModel();
+}

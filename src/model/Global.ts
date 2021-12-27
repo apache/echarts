@@ -46,20 +46,22 @@ import SeriesModel from './Series';
 import {
     Payload,
     OptionPreprocessor,
-    ECOption,
+    ECBasicOption,
     ECUnitOption,
     ThemeOption,
     ComponentOption,
     ComponentMainType,
     ComponentSubType,
     OptionId,
-    OptionName
+    OptionName,
+    AriaOptionMixin
 } from '../util/types';
 import OptionManager from './OptionManager';
-import Scheduler from '../stream/Scheduler';
+import Scheduler from '../core/Scheduler';
 import { concatInternalOptions } from './internalComponentCreator';
-import { LocaleOption } from '../locale';
+import { LocaleOption } from '../core/locale';
 import {PaletteMixin} from './mixin/palette';
+import { error } from '../util/log';
 
 export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
@@ -76,6 +78,79 @@ let assertSeriesInitialized: (ecModel: GlobalModel) => void;
 let initBase: (ecModel: GlobalModel, baseOption: ECUnitOption) => void;
 
 const OPTION_INNER_KEY = '\0_ec_inner';
+const OPTION_INNER_VALUE = 1;
+
+const BUITIN_COMPONENTS_MAP = {
+    grid: 'GridComponent',
+    polar: 'PolarComponent',
+    geo: 'GeoComponent',
+    singleAxis: 'SingleAxisComponent',
+    parallel: 'ParallelComponent',
+    calendar: 'CalendarComponent',
+    graphic: 'GraphicComponent',
+    toolbox: 'ToolboxComponent',
+    tooltip: 'TooltipComponent',
+    axisPointer: 'AxisPointerComponent',
+    brush: 'BrushComponent',
+    title: 'TitleComponent',
+    timeline: 'TimelineComponent',
+    markPoint: 'MarkPointComponent',
+    markLine: 'MarkLineComponent',
+    markArea: 'MarkAreaComponent',
+    legend: 'LegendComponent',
+    dataZoom: 'DataZoomComponent',
+    visualMap: 'VisualMapComponent',
+    // aria: 'AriaComponent',
+    // dataset: 'DatasetComponent',
+
+    // Dependencies
+    xAxis: 'GridComponent',
+    yAxis: 'GridComponent',
+    angleAxis: 'PolarComponent',
+    radiusAxis: 'PolarComponent'
+} as const;
+
+const BUILTIN_CHARTS_MAP = {
+    line: 'LineChart',
+    bar: 'BarChart',
+    pie: 'PieChart',
+    scatter: 'ScatterChart',
+    radar: 'RadarChart',
+    map: 'MapChart',
+    tree: 'TreeChart',
+    treemap: 'TreemapChart',
+    graph: 'GraphChart',
+    gauge: 'GaugeChart',
+    funnel: 'FunnelChart',
+    parallel: 'ParallelChart',
+    sankey: 'SankeyChart',
+    boxplot: 'BoxplotChart',
+    candlestick: 'CandlestickChart',
+    effectScatter: 'EffectScatterChart',
+    lines: 'LinesChart',
+    heatmap: 'HeatmapChart',
+    pictorialBar: 'PictorialBarChart',
+    themeRiver: 'ThemeRiverChart',
+    sunburst: 'SunburstChart',
+    custom: 'CustomChart'
+} as const;
+
+const componetsMissingLogPrinted: Record<string, boolean> = {};
+
+function checkMissingComponents(option: ECUnitOption) {
+    each(option, function (componentOption, mainType: ComponentMainType) {
+        if (!ComponentModel.hasClass(mainType)) {
+            const componentImportName = BUITIN_COMPONENTS_MAP[mainType as keyof typeof BUITIN_COMPONENTS_MAP];
+            if (componentImportName && !componetsMissingLogPrinted[componentImportName]) {
+                error(`Component ${mainType} is used but not imported.
+import { ${componentImportName} } from 'echarts/components';
+echarts.use([${componentImportName}]);`);
+                componetsMissingLogPrinted[componentImportName] = true;
+            }
+        }
+    });
+}
+
 class GlobalModel extends Model<ECUnitOption> {
     // @readonly
     option: ECUnitOption;
@@ -117,9 +192,12 @@ class GlobalModel extends Model<ECUnitOption> {
     // Injectable properties:
     scheduler: Scheduler;
 
+    // If in ssr mode.
+    // TODO put in a better place?
+    ssr: boolean;
 
     init(
-        option: ECOption,
+        option: ECBasicOption,
         parentModel: Model,
         ecModel: GlobalModel,
         theme: object,
@@ -134,14 +212,18 @@ class GlobalModel extends Model<ECUnitOption> {
     }
 
     setOption(
-        option: ECOption,
+        option: ECBasicOption,
         opts: GlobalModelSetOptionOpts,
         optionPreprocessorFuncs: OptionPreprocessor[]
     ): void {
-        assert(
-            !(OPTION_INNER_KEY in option),
-            'please use chart.getOption()'
-        );
+
+        if (__DEV__) {
+            assert(option != null, 'option is null/undefined');
+            assert(
+                option[OPTION_INNER_KEY] !== OPTION_INNER_VALUE,
+                'please use chart.getOption()'
+            );
+        }
 
         const innerOpt = normalizeSetOptionInput(opts);
 
@@ -173,6 +255,9 @@ class GlobalModel extends Model<ECUnitOption> {
 
         if (!type || type === 'recreate') {
             const baseOption = optionManager.mountOption(type === 'recreate');
+            if (__DEV__) {
+                checkMissingComponents(baseOption);
+            }
 
             if (!this.option || type === 'recreate') {
                 initBase(this, baseOption);
@@ -321,9 +406,30 @@ class GlobalModel extends Model<ECUnitOption> {
                     // or it has been removed in previous `replaceMerge` and left a "hole" in this component index.
                 }
                 else {
+                    const isSeriesType = mainType === 'series';
                     const ComponentModelClass = (ComponentModel as ComponentModelConstructor).getClass(
-                        mainType, resultItem.keyInfo.subType, true
+                        mainType, resultItem.keyInfo.subType,
+                        !isSeriesType // Give a more detailed warn later if series don't exists
                     );
+
+                    if (!ComponentModelClass) {
+                        if (__DEV__) {
+                            const subType = resultItem.keyInfo.subType;
+                            const seriesImportName = BUILTIN_CHARTS_MAP[subType as keyof typeof BUILTIN_CHARTS_MAP];
+                            if (!componetsMissingLogPrinted[subType]) {
+                                componetsMissingLogPrinted[subType] = true;
+                                if (seriesImportName) {
+                                    error(`Series ${subType} is used but not imported.
+import { ${seriesImportName} } from 'echarts/charts';
+echarts.use([${seriesImportName}]);`);
+                                }
+                                else {
+                                    error(`Unkown series ${subType}`);
+                                }
+                            }
+                        }
+                        return;
+                    }
 
                     if (componentModel && componentModel.constructor === ComponentModelClass) {
                         componentModel.name = resultItem.keyInfo.name;
@@ -425,11 +531,6 @@ class GlobalModel extends Model<ECUnitOption> {
 
     getLocaleModel(): Model<LocaleOption> {
         return this._locale;
-    }
-
-    getLocale(localePosition: Parameters<Model<LocaleOption>['get']>[0]): any {
-        const locale = this.getLocaleModel();
-        return locale.get(localePosition as any);
     }
 
     setUpdatePayload(payload: Payload) {
@@ -655,7 +756,7 @@ class GlobalModel extends Model<ECUnitOption> {
      */
     getSeries(): SeriesModel[] {
         return filter(
-            this._componentsMap.get('series').slice() as SeriesModel[],
+            this._componentsMap.get('series') as SeriesModel[],
             oneSeries => !!oneSeries
         );
     }
@@ -802,11 +903,11 @@ class GlobalModel extends Model<ECUnitOption> {
             }
         };
 
-        initBase = function (ecModel: GlobalModel, baseOption: ECUnitOption): void {
+        initBase = function (ecModel: GlobalModel, baseOption: ECUnitOption & AriaOptionMixin): void {
             // Using OPTION_INNER_KEY to mark that this option can not be used outside,
             // i.e. `chart.setOption(chart.getModel().option);` is forbiden.
             ecModel.option = {} as ECUnitOption;
-            ecModel.option[OPTION_INNER_KEY] = 1;
+            ecModel.option[OPTION_INNER_KEY] = OPTION_INNER_VALUE;
 
             // Init with series: [], in case of calling findSeries method
             // before series initialized.
@@ -894,6 +995,7 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
         if (name === 'colorLayer' && notMergeColorLayer) {
             return;
         }
+
         // If it is component model mainType, the model handles that merge later.
         // otherwise, merge them here.
         if (!ComponentModel.hasClass(name)) {
@@ -917,7 +1019,7 @@ function queryByIdOrName<T extends { id?: string, name?: string }>(
     cmpts: T[]
 ): T[] {
     // Here is a break from echarts4: string and number are
-    // traded as equal.
+    // treated as equal.
     if (isArray(idOrName)) {
         const keyMap = createHashMap<boolean>();
         each(idOrName, function (idOrNameItem) {

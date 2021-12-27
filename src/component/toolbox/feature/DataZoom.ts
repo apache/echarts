@@ -24,16 +24,13 @@ import BrushController, { BrushControllerEvents, BrushDimensionMinMax } from '..
 import BrushTargetManager, { BrushTargetInfoCartesian2D } from '../../helper/BrushTargetManager';
 import * as history from '../../dataZoom/history';
 import sliderMove from '../../helper/sliderMove';
-// Use dataZoomSelect
-import '../../dataZoomSelect';
 import {
     ToolboxFeature,
     ToolboxFeatureModel,
-    ToolboxFeatureOption,
-    registerFeature
+    ToolboxFeatureOption
 } from '../featureManager';
 import GlobalModel from '../../../model/Global';
-import ExtensionAPI from '../../../ExtensionAPI';
+import ExtensionAPI from '../../../core/ExtensionAPI';
 import { Payload, Dictionary, ComponentOption, ItemStyleOption } from '../../../util/types';
 import Cartesian2D from '../../../coord/cartesian/Cartesian2D';
 import CartesianAxisModel from '../../../coord/cartesian/AxisModel';
@@ -43,7 +40,7 @@ import {
 } from '../../dataZoom/helper';
 import {
     ModelFinderObject, ModelFinderIndexQuery, makeInternalComponentId,
-    ModelFinderIdQuery, parseFinder
+    ModelFinderIdQuery, parseFinder, ParsedModelFinderKnown
 } from '../../../util/model';
 import ToolboxModel from '../ToolboxModel';
 import { registerInternalOptionCreator } from '../../../model/internalComponentCreator';
@@ -76,9 +73,9 @@ type ToolboxDataZoomFeatureModel = ToolboxFeatureModel<ToolboxDataZoomFeatureOpt
 
 class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
 
-    brushController: BrushController;
+    _brushController: BrushController;
 
-    isZoomActive: boolean;
+    _isZoomActive: boolean;
 
     render(
         featureModel: ToolboxDataZoomFeatureModel,
@@ -86,9 +83,9 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
         api: ExtensionAPI,
         payload: Payload
     ) {
-        if (!this.brushController) {
-            this.brushController = new BrushController(api.getZr());
-            this.brushController.on('brush', zrUtil.bind(this._onBrush, this))
+        if (!this._brushController) {
+            this._brushController = new BrushController(api.getZr());
+            this._brushController.on('brush', zrUtil.bind(this._onBrush, this))
                 .mount();
         }
         updateZoomBtnStatus(featureModel, ecModel, this, payload, api);
@@ -107,14 +104,14 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        this.brushController.unmount();
+        this._brushController && this._brushController.unmount();
     }
 
     dispose(
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        this.brushController.dispose();
+        this._brushController && this._brushController.dispose();
     }
 
     private _onBrush(eventParam: BrushControllerEvents['brush']): void {
@@ -125,7 +122,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
         const snapshot: history.DataZoomStoreSnapshot = {};
         const ecModel = this.ecModel;
 
-        this.brushController.updateCovers([]); // remove cover
+        this._brushController.updateCovers([]); // remove cover
 
         const brushTargetManager = new BrushTargetManager(
             makeAxisFinder(this.model),
@@ -188,9 +185,6 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
         }
     };
 
-    /**
-     * @internal
-     */
     _dispatchZoomAction(snapshot: history.DataZoomStoreSnapshot): void {
         const batch: DataZoomPayloadBatchItem[] = [];
 
@@ -216,7 +210,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
                 back: 'M22,1.4L9.9,13.5l12.3,12.3 M10.3,13.5H54.9v44.6 H10.3v-26'
             },
             // `zoom`, `back`
-            title: ecModel.getLocale(['toolbox', 'dataZoom', 'title']),
+            title: ecModel.getLocaleModel().get(['toolbox', 'dataZoom', 'title']),
             brushStyle: {
                 borderWidth: 0,
                 color: 'rgba(210,219,238,0.2)'
@@ -229,7 +223,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
 
 const handlers: { [key in IconType]: (this: DataZoomFeature) => void } = {
     zoom: function () {
-        const nextActive = !this.isZoomActive;
+        const nextActive = !this._isZoomActive;
 
         this.api.dispatchAction({
             type: 'takeGlobalCursor',
@@ -283,14 +277,14 @@ function updateZoomBtnStatus(
     payload: Payload,
     api: ExtensionAPI
 ) {
-    let zoomActive = view.isZoomActive;
+    let zoomActive = view._isZoomActive;
 
     if (payload && payload.type === 'takeGlobalCursor') {
         zoomActive = payload.key === 'dataZoomSelect'
             ? payload.dataZoomSelectActive : false;
     }
 
-    view.isZoomActive = zoomActive;
+    view._isZoomActive = zoomActive;
 
     featureModel.setIconStatus('zoom', zoomActive ? 'emphasis' : 'normal');
 
@@ -308,7 +302,7 @@ function updateZoomBtnStatus(
             : 'rect';
     });
 
-    view.brushController
+    view._brushController
         .setPanels(panels)
         .enableBrush(
             (zoomActive && panels.length)
@@ -320,18 +314,17 @@ function updateZoomBtnStatus(
         );
 }
 
-registerFeature('dataZoom', DataZoomFeature);
-
 registerInternalOptionCreator('dataZoom', function (ecModel: GlobalModel): ComponentOption[] {
     const toolboxModel = ecModel.getComponent('toolbox', 0) as ToolboxModel;
-    if (!toolboxModel) {
+    const featureDataZoomPath = ['feature', 'dataZoom'] as const;
+    if (!toolboxModel || toolboxModel.get(featureDataZoomPath) == null) {
         return;
     }
-    const dzFeatureModel = toolboxModel.getModel(['feature', 'dataZoom'] as any) as ToolboxDataZoomFeatureModel;
+    const dzFeatureModel = toolboxModel.getModel(featureDataZoomPath as any) as ToolboxDataZoomFeatureModel;
     const dzOptions = [] as ComponentOption[];
 
     const finder = makeAxisFinder(dzFeatureModel);
-    const finderResult = parseFinder(ecModel, finder);
+    const finderResult = parseFinder(ecModel, finder) as ParsedModelFinderKnown;
 
     each(finderResult.xAxisModels, axisModel => buildInternalOptions(axisModel, 'xAxis', 'xAxisIndex'));
     each(finderResult.yAxisModels, axisModel => buildInternalOptions(axisModel, 'yAxis', 'yAxisIndex'));

@@ -17,5 +17,8 @@
 * under the License.
 */
 
-import './heatmap/HeatmapSeries';
-import './heatmap/HeatmapView';
+
+import { use } from '../extension';
+import { install } from './heatmap/install';
+
+use(install);

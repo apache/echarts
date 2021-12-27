@@ -18,7 +18,6 @@
 */
 
 import BaseBarSeriesModel, {BaseBarSeriesOption} from './BaseBarSeries';
-import SeriesModel from '../../model/Series';
 import {
     ItemStyleOption,
     OptionDataValue,
@@ -27,30 +26,45 @@ import {
     OptionDataItemObject,
     SeriesSamplingOptionMixin,
     SeriesLabelOption,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    DefaultStatesMixinEmpasis,
+    CallbackDataParams
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import createSeriesData from '../helper/createSeriesData';
 import type Polar from '../../coord/polar/Polar';
 import { inheritDefaultOption } from '../../util/component';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
+export type PolarBarLabelPosition = SeriesLabelOption['position']
+    | 'start' | 'insideStart' | 'middle' | 'end' | 'insideEnd';
 
-export interface BarStateOption {
-    itemStyle?: BarItemStyleOption
-    label?: SeriesLabelOption
+export type BarSeriesLabelOption = Omit<SeriesLabelOption, 'position'>
+    & {position?: PolarBarLabelPosition | 'outside'};
+
+export interface BarStateOption<TCbParams = never> {
+    itemStyle?: BarItemStyleOption<TCbParams>
+    label?: BarSeriesLabelOption
 }
 
-export interface BarItemStyleOption extends ItemStyleOption {
+interface BarStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
+
+export interface BarItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
     // Border radius is not supported for bar on polar
     borderRadius?: number | number[]
 }
-export interface BarDataItemOption extends BarStateOption, StatesOptionMixin<BarStateOption>,
+export interface BarDataItemOption extends BarStateOption,
+    StatesOptionMixin<BarStateOption, BarStatesMixin>,
     OptionDataItemObject<OptionDataValue> {
     cursor?: string
 }
 
-export interface BarSeriesOption extends BaseBarSeriesOption<BarStateOption>, BarStateOption,
+export interface BarSeriesOption
+    extends BaseBarSeriesOption<BarStateOption<CallbackDataParams>, BarStatesMixin>,
+    BarStateOption<CallbackDataParams>,
     SeriesStackOptionMixin, SeriesSamplingOptionMixin, SeriesEncodeOptionMixin {
 
     type?: 'bar'
@@ -84,6 +98,13 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
 
     coordinateSystem: Cartesian2D | Polar;
 
+    getInitialData(): SeriesData {
+        return createSeriesData(null, this, {
+            useEncodeDefaulter: true,
+            createInvertedIndices: !!this.get('realtimeSort', true) || null
+        });
+    }
+
     /**
      * @override
      */
@@ -107,7 +128,7 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
         return progressiveThreshold;
     }
 
-    brushSelector(dataIndex: number, data: List, selectors: BrushCommonSelectorsForSeries): boolean {
+    brushSelector(dataIndex: number, data: SeriesData, selectors: BrushCommonSelectorsForSeries): boolean {
         return selectors.rect(data.getItemLayout(dataIndex));
     }
 
@@ -139,10 +160,8 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
         },
 
         realtimeSort: false
-    });
+    } as BarSeriesOption);
 
 }
-
-SeriesModel.registerClass(BarSeriesModel);
 
 export default BarSeriesModel;

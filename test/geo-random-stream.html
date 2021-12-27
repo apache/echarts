@@ -22,7 +22,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
@@ -58,86 +58,77 @@ under the License.
             }
 
             require([
-                'echarts'
-                // 'echarts/chart/map',
-                // 'echarts/chart/scatter',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/geo',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/markPoint',
-                // 'echarts/component/tooltip'
+                'echarts',
+                'map/js/china'
             ], function (echarts) {
 
-                require(['map/js/china'], function () {
-                    var chart = echarts.init(document.getElementById('main'));
+                var chart = echarts.init(document.getElementById('main'));
 
-                    chart.setOption({
-                        tooltip: {},
-                        legend: {
-                            orient: 'vertical',
-                            left: 'left',
-                            data:['categoryA','categoryB','categoryC']
-                        },
-                        // visualMap: {
-                        //     min: 0,
-                        //     max: 1500,
-                        //     left: 'left',
-                        //     top: 'bottom',
-                        //     text: ['High','Low'],
-                        //     seriesIndex: [1, 2, 3],
-                        //     inRange: {
-                        //         color: ['#006edd', '#e0ffff']
-                        //     },
-                        //     calculable : true
-                        // },
-                        geo: {
-                            map: 'china',
-                            roam: true,
-                            label: {
-                                normal: {
-                                    show: true,
-                                    textStyle: {
-                                        color: 'rgba(0,0,0,0.4)'
-                                    }
-                                }
-                            },
-                            itemStyle: {
-                                normal:{
-                                    borderColor: 'rgba(0, 0, 0, 0.2)'
-                                },
-                                emphasis:{
-                                    color: null,
-                                    areaColor: null,
-                                    shadowOffsetX: 0,
-                                    shadowOffsetY: 0,
-                                    shadowBlur: 20,
-                                    borderWidth: 0,
-                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                chart.setOption({
+                    tooltip: {},
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        data:['categoryA','categoryB','categoryC']
+                    },
+                    // visualMap: {
+                    //     min: 0,
+                    //     max: 1500,
+                    //     left: 'left',
+                    //     top: 'bottom',
+                    //     text: ['High','Low'],
+                    //     seriesIndex: [1, 2, 3],
+                    //     inRange: {
+                    //         color: ['#006edd', '#e0ffff']
+                    //     },
+                    //     calculable : true
+                    // },
+                    geo: {
+                        map: 'china',
+                        roam: true,
+                        label: {
+                            normal: {
+                                show: true,
+                                textStyle: {
+                                    color: 'rgba(0,0,0,0.4)'
                                 }
                             }
                         },
-                        series : [{
-                            name: 'pm2.5',
-                            type: 'scatter',
-                            stream: true,
-                            coordinateSystem: 'geo',
-                            data: data,
-                            symbolSize: 4,
-                            // symbol: 'rect',
-                            itemStyle: {
-                                normal: {
-                                    // color: '#ddb926'
-                                    color: '#dda'
-                                }
+                        itemStyle: {
+                            normal:{
+                                borderColor: 'rgba(0, 0, 0, 0.2)'
                             },
-                            progressive: 100
-                        }]
-                    });
+                            emphasis:{
+                                color: null,
+                                areaColor: null,
+                                shadowOffsetX: 0,
+                                shadowOffsetY: 0,
+                                shadowBlur: 20,
+                                borderWidth: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    },
+                    series : [{
+                        name: 'pm2.5',
+                        type: 'scatter',
+                        stream: true,
+                        coordinateSystem: 'geo',
+                        data: data,
+                        symbolSize: 4,
+                        // symbol: 'rect',
+                        itemStyle: {
+                            normal: {
+                                // color: '#ddb926'
+                                color: '#dda'
+                            }
+                        },
+                        progressive: 100
+                    }]
+                });
 
-                    chart.on('click', function (param) {
-                        alert('asdf');
-                    });
+                chart.on('click', function (param) {
+                    alert('asdf');
                 });
             });
 

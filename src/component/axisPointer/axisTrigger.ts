@@ -21,7 +21,7 @@ import {makeInner, ModelFinderObject} from '../../util/model';
 import * as modelHelper from './modelHelper';
 import findPointFromSeries from './findPointFromSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { Dictionary, Payload, CommonAxisPointerOption, HighlightPayload, DownplayPayload } from '../../util/types';
 import AxisPointerModel, { AxisPointerOption } from './AxisPointerModel';
 import { each, curry, bind, extend, Curry1 } from 'zrender/src/core/util';

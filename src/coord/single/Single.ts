@@ -27,12 +27,15 @@ import {getLayoutRect} from '../../util/layout';
 import {each} from 'zrender/src/core/util';
 import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import SingleAxisModel from './AxisModel';
-import { ParsedModelFinder } from '../../util/model';
+import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
+import { AxisBaseModel } from '../AxisBaseModel';
+import { CategoryAxisBaseOption } from '../axisCommonTypes';
 
+export const singleDimensions = ['single'];
 /**
  * Create a single coordinates system.
  */
@@ -44,7 +47,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
     /**
      * Add it just for draw tooltip.
      */
-    readonly dimensions = ['single'];
+    readonly dimensions = singleDimensions;
 
     name: string;
 
@@ -79,7 +82,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
         );
 
         const isCategory = axis.type === 'category';
-        axis.onBand = isCategory && axisModel.get('boundaryGap');
+        axis.onBand = isCategory && (axisModel as AxisBaseModel<CategoryAxisBaseOption>).get('boundaryGap');
         axis.inverse = axisModel.get('inverse');
         axis.orient = axisModel.get('orient');
 
@@ -249,7 +252,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
     }
 }
 
-function getCoordSys(finder: ParsedModelFinder): Single {
+function getCoordSys(finder: ParsedModelFinderKnown): Single {
     const seriesModel = finder.seriesModel;
     const singleModel = finder.singleAxisModel as SingleAxisModel;
     return singleModel && singleModel.coordinateSystem

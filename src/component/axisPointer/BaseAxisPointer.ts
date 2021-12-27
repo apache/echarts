@@ -26,7 +26,7 @@ import * as throttleUtil from '../../util/throttle';
 import {makeInner} from '../../util/model';
 import { AxisPointer } from './AxisPointer';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
 import Element from 'zrender/src/Element';
 import { VerticalAlign, HorizontalAlign, CommonAxisPointerOption } from '../../util/types';
@@ -493,6 +493,8 @@ class BaseAxisPointer implements AxisPointer {
             this._handle = null;
             this._payloadInfo = null;
         }
+
+        throttleUtil.clear(this, '_doDispatchAxisPointer');
     }
 
     /**

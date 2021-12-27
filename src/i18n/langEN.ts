@@ -101,7 +101,7 @@ export default {
             graph: 'Relationship graph',
             sankey: 'Sankey diagram',
             funnel: 'Funnel chart',
-            gauge: 'Guage',
+            gauge: 'Gauge',
             pictorialBar: 'Pictorial bar',
             themeRiver: 'Theme River Map',
             sunburst: 'Sunburst'

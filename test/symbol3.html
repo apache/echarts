@@ -24,7 +24,7 @@ under the License.
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="lib/reset.css" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
@@ -34,6 +34,7 @@ under the License.
     </head>
     <body>
         <div id="main0"></div>
+        <div id="main1"></div>
 
         <script>
             require([
@@ -94,9 +95,52 @@ under the License.
                     }]
                 };
 
+                var series = {
+                    name: 'Original',
+                    type: 'scatter',
+                    symbol: 'circle',
+                    data: (function() {
+                        function random(max) {
+                            return +(Math.random() * max).toFixed(3);
+                        }
+                        var seriesData = [];
+                        for (var i = 0; i < 20; i++) {
+                            seriesData.push([random(10), random(10), random(20)]);
+                        }
+                        return seriesData;
+                    })()
+                };
+
+                var option2 = {
+                    legend: {},
+                    xAxis: {},
+                    yAxis: {},
+                    tooltip: {
+                        formatter: function(params) {
+                            return params.marker + params.seriesName
+                                + (params.seriesName === 'Offset' ? '<br/>offset: ' + params.value[2] : '');
+                        }
+                    },
+                    series: [
+                        series,
+                        Object.assign({}, series, {
+                            name: 'Offset',
+                            symbol: 'circle',
+                            // symbolOffset: 20,
+                            symbolOffset: function(data) {
+                                return data[2]
+                            }
+                        })
+                    ]
+                };
+
                 var chart = testHelper.create(echarts, 'main0', {
                     title: 'Rotates the symbol as we need',
                     option: option
+                });
+                var chart2 = testHelper.create(echarts, 'main1', {
+                    title: 'Symbol should have various offset',
+                    option: option2
                 });
             });
         </script>

@@ -31,6 +31,8 @@ import SeriesModel from '../../model/Series';
 export type ParallelLayoutDirection = 'horizontal' | 'vertical';
 
 export interface ParallelCoordinateSystemOption extends ComponentOption, BoxLayoutOptionMixin {
+    mainType?: 'parallel';
+
     layout?: ParallelLayoutDirection;
 
     axisExpandable?: boolean;
@@ -75,7 +77,7 @@ class ParallelModel extends ComponentModel<ParallelCoordinateSystemOption> {
     static layoutMode = 'box' as const;
 
     static defaultOption: ParallelCoordinateSystemOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 0,
         left: 80,
         top: 60,
@@ -170,7 +172,5 @@ class ParallelModel extends ComponentModel<ParallelCoordinateSystemOption> {
     }
 
 }
-
-ComponentModel.registerClass(ParallelModel);
 
 export default ParallelModel;

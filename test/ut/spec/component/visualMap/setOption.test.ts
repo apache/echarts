@@ -18,9 +18,9 @@
 * under the License.
 */
 
-import { createChart } from '../../../core/utHelper';
+import { createChart, getECModel } from '../../../core/utHelper';
 import { EChartsType } from '../../../../../src/echarts';
-import { EChartsFullOption } from '../../../../../src/option';
+import { EChartsOption } from '../../../../../src/export/option';
 import { ContinousVisualMapOption } from '../../../../../src/component/visualMap/ContinuousModel';
 import { PiecewiseVisualMapOption } from '../../../../../src/component/visualMap/PiecewiseModel';
 import VisualMapModel from '../../../../../src/component/visualMap/VisualMapModel';
@@ -94,15 +94,15 @@ describe('vsiaulMap_setOption', function () {
             visualMap: {}
         });
 
-        expectTheSame(chart.getOption());
+        expectTheSame(chart.getOption() as EChartsOption);
 
         chart.setOption({
             series: [{data: [[44, 55]]}] // visualMap depends series
         });
 
-        expectTheSame(chart.getOption());
+        expectTheSame(chart.getOption() as EChartsOption);
 
-        function expectTheSame(option: EChartsFullOption) {
+        function expectTheSame(option: EChartsOption) {
             const visualMapOptionGotten = option.visualMap as (ContinousVisualMapOption | PiecewiseVisualMapOption)[];
             expect(visualMapOptionGotten.length).toEqual(1);
             expect(visualMapOptionGotten[0].inRange.color).toEqual(['red', 'blue', 'yellow']);
@@ -256,7 +256,7 @@ describe('vsiaulMap_setOption', function () {
             ]
         });
 
-        const ecModel = chart.getModel();
+        const ecModel = getECModel(chart);
 
         function getVisual(idx: number, visualType: 'color' | 'opacity' | 'symbol') {
             return (ecModel.getComponent('visualMap', idx) as VisualMapModel)

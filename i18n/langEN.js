@@ -32,7 +32,7 @@
         typeof exports.nodeName !== 'string'
     ) {
         // CommonJS
-        factory(exports, require('echarts'));
+        factory(exports, require('echarts/lib/echarts'));
     } else {
         // Browser globals
         factory({}, root.echarts);
@@ -124,7 +124,7 @@ var localeObj = {
             graph: 'Relationship graph',
             sankey: 'Sankey diagram',
             funnel: 'Funnel chart',
-            gauge: 'Guage',
+            gauge: 'Gauge',
             pictorialBar: 'Pictorial bar',
             themeRiver: 'Theme River Map',
             sunburst: 'Sunburst'
@@ -163,6 +163,7 @@ var localeObj = {
         }
     }
 };
+
     echarts.registerLocale('EN', localeObj);
         
 });

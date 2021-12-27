@@ -19,14 +19,14 @@
 
 import GlobalModel from '../model/Global';
 import {ParsedModelFinder} from '../util/model';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import { DimensionDefinitionLoose, ScaleDataValue, DimensionName } from '../util/types';
 import Axis from './Axis';
 import { BoundingRect } from '../util/graphic';
 import { MatrixArray } from 'zrender/src/core/matrix';
 import ComponentModel from '../model/Component';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import { PrepareCustomInfo } from '../chart/custom';
+import type { PrepareCustomInfo } from '../chart/custom/CustomSeries';
 
 
 export interface CoordinateSystemCreator {
@@ -126,14 +126,12 @@ export interface CoordinateSystem {
      * Some coord sys (like Parallel) might do not have `pointToData`,
      * or the meaning of this kind of features is not clear yet.
      * @param point point Point in global pixel coordinate system.
-     * @param reserved Defined by the coordinate system itself
-     * @param out
+     * @param clamp Clamp range
      * @return data
      */
     pointToData?(
         point: number[],
-        reserved?: any,
-        out?: number[]
+        clamp?: boolean
     ): number | number[];
 
     // @param point Point in global pixel coordinate system.

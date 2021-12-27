@@ -18,7 +18,6 @@
 */
 
 import BaseBarSeriesModel, { BaseBarSeriesOption } from './BaseBarSeries';
-import SeriesModel from '../../model/Series';
 import {
     OptionDataValue,
     ItemStyleOption,
@@ -27,7 +26,7 @@ import {
     SeriesStackOptionMixin,
     StatesOptionMixin,
     OptionDataItemObject,
-    DefaultExtraEmpasisState
+    DefaultEmphasisFocus
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { inheritDefaultOption } from '../../util/component';
@@ -93,7 +92,7 @@ interface PictorialBarSeriesSymbolOption {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus']
+        focus?: DefaultEmphasisFocus
         scale?: boolean
     }
 }
@@ -175,7 +174,5 @@ class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOptio
         return super.getInitialData.apply(this, arguments as any);
     }
 }
-
-SeriesModel.registerClass(PictorialBarSeriesModel);
 
 export default PictorialBarSeriesModel;

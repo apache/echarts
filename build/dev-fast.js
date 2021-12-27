@@ -18,18 +18,12 @@
 * under the License.
 */
 
-const chokidar = require('chokidar');
 const path = require('path');
 const {build} = require('esbuild');
-const fs = require('fs');
-const debounce = require('lodash.debounce');
-
+const commander = require('commander');
 const outFilePath = path.resolve(__dirname, '../dist/echarts.js');
 
-const umdMark = '// ------------- WRAPPED UMD --------------- //';
-const umdWrapperHead = `
-${umdMark}
-(function (root, factory) {
+const umdWrapperHead = `(function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define(['exports'], factory);
@@ -46,48 +40,28 @@ ${umdMark}
 const umdWrapperTail = `
 }));`;
 
-async function wrapUMDCode() {
-    const code = fs.readFileSync(outFilePath, 'utf-8');
-    if (code.indexOf(umdMark) >= 0) {
-        return;
-    }
-
-    fs.writeFileSync(
-        outFilePath,
-        // Replaced __DEV__ with a same length string to avoid breaking source map
-        umdWrapperHead + code.replace(/__DEV__/g, "\'_DEV_\'") + umdWrapperTail,
-        'utf-8'
-    );
-
-    const sourceMap = JSON.parse(fs.readFileSync(outFilePath + '.map', 'utf-8'));
-    // Fast trick for fixing source map
-    sourceMap.mappings = umdWrapperHead.split('\n').map(() => '').join(';') + sourceMap.mappings;
-
-    fs.writeFileSync(outFilePath + '.map', JSON.stringify(sourceMap), 'utf-8');
-}
-
-function rebuild() {
-    build({
-        stdio: 'inherit',
-        entryPoints: [path.resolve(__dirname, '../src/echarts.all.ts')],
-        outfile: outFilePath,
-        format: 'cjs',
-        sourcemap: true,
-        bundle: true,
-    }).catch(e => {
-        console.error(e.toString());
-    }).then(async () => {
-        console.time('Wrap UMD');
-        await wrapUMDCode();
-        console.timeEnd('Wrap UMD');
-    })
-}
-
-const debouncedRebuild = debounce(rebuild, 100);
-
-chokidar.watch([
-    path.resolve(__dirname, '../src/**/*.ts'),
-    path.resolve(__dirname, '../node_modules/zrender/src/**/*.ts'),
-], {
-    persistent: true
-}).on('all', debouncedRebuild);
+build({
+    entryPoints: [path.resolve(__dirname, '../src/echarts.all.ts')],
+    outfile: outFilePath,
+    format: 'cjs',
+    sourcemap: true,
+    bundle: true,
+    banner: umdWrapperHead,
+    footer: umdWrapperTail,
+    define: {
+        'process.env.NODE_ENV': '"development"',
+        '__DEV__': 'true'
+    },
+    watch: {
+        async onRebuild(error) {
+            if (error) {
+                console.error('watch build failed:', error)
+            }
+            else {
+                console.log('Bundled with esbuild')
+            }
+        },
+    },
+}).then(async () => {
+    console.log('Bundled with esbuild')
+}).catch(e => console.error(e.toString()))

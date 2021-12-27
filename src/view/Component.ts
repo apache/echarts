@@ -22,8 +22,8 @@ import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
 import ComponentModel from '../model/Component';
 import GlobalModel from '../model/Global';
-import ExtensionAPI from '../ExtensionAPI';
-import {Payload, ViewRootGroup, ECEvent, EventQueryItem} from '../util/types';
+import ExtensionAPI from '../core/ExtensionAPI';
+import {Payload, ViewRootGroup, ECActionEvent, EventQueryItem, ECElementEvent} from '../util/types';
 import Element from 'zrender/src/Element';
 import SeriesModel from '../model/Series';
 
@@ -32,7 +32,7 @@ interface ComponentView {
      * Implement it if needed.
      */
     updateTransform?(
-        seriesModel: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload
+        model: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload
     ): void | {update: true};
 
     /**
@@ -40,8 +40,24 @@ interface ComponentView {
      * Implement it if needed.
      */
     filterForExposedEvent(
-        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
+        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECActionEvent | ECElementEvent
     ): boolean;
+
+    /**
+     * Find dispatchers for highlight/downplay by name.
+     * If this methods provided, hover link (within the same name) is enabled in component.
+     * That is, in component, a name can correspond to multiple dispatchers.
+     * Those dispatchers can have no common ancestor.
+     * The highlight/downplay state change will be applied on the
+     * dispatchers and their descendents.
+     *
+     * @return Must return an array but not null/undefined.
+     */
+    findHighDownDispatchers?(
+        name: string
+    ): Element[];
+
+    focusBlurEnabled?: boolean;
 }
 
 class ComponentView {
@@ -98,6 +114,19 @@ class ComponentView {
          // Do nothing;
     }
 
+    /**
+     * Traverse the new rendered elements.
+     *
+     * It will traverse the new added element in progressive rendering.
+     * And traverse all in normal rendering.
+     */
+    eachRendered(cb: (el: Element) => boolean | void) {
+        const group = this.group;
+        if (group) {
+            group.traverse(cb);
+        }
+    }
+
     static registerClass: clazzUtil.ClassManager['registerClass'];
 };
 
@@ -107,6 +136,6 @@ export type ComponentViewConstructor = typeof ComponentView
     & clazzUtil.ClassManager;
 
 clazzUtil.enableClassExtend(ComponentView as ComponentViewConstructor);
-clazzUtil.enableClassManagement(ComponentView as ComponentViewConstructor, {registerWhenExtend: true});
+clazzUtil.enableClassManagement(ComponentView as ComponentViewConstructor);
 
 export default ComponentView;

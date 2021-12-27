@@ -17,14 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import { use } from '../extension';
+import { install } from './singleAxis/install';
 
-import '../coord/single/singleCreator';
-import './axis/SingleAxisView';
-import '../coord/single/AxisModel';
-import './axisPointer';
-import './axisPointer/SingleAxisPointer';
-
-echarts.extendComponentView({
-    type: 'single'
-});
+use(install);

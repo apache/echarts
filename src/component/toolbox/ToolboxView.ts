@@ -27,8 +27,8 @@ import * as listComponentHelper from '../helper/listComponent';
 import ComponentView from '../../view/Component';
 import ToolboxModel from './ToolboxModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
-import { DisplayState, Dictionary, ECElement, Payload } from '../../util/types';
+import ExtensionAPI from '../../core/ExtensionAPI';
+import { DisplayState, Dictionary, Payload } from '../../util/types';
 import {
     ToolboxFeature,
     getFeature,
@@ -39,6 +39,7 @@ import {
 import { getUID } from '../../util/component';
 import Displayable from 'zrender/src/graphic/Displayable';
 import ZRText from 'zrender/src/graphic/Text';
+import { getECData } from '../../util/innerStore';
 
 type IconPath = ToolboxFeatureModel['iconPaths'][string];
 
@@ -126,17 +127,21 @@ class ToolboxView extends ComponentView {
             feature.ecModel = ecModel;
             feature.api = api;
 
-            if (feature instanceof ToolboxFeature) {
-                if (!featureName && oldName) {
-                    feature.dispose && feature.dispose(ecModel, api);
-                    return;
-                }
-
-                if (!featureModel.get('show') || feature.unusable) {
-                    feature.remove && feature.remove(ecModel, api);
-                    return;
-                }
+            const isToolboxFeature = feature instanceof ToolboxFeature;
+            if (!featureName && oldName) {
+                isToolboxFeature
+                    && (feature as ToolboxFeature).dispose
+                    && (feature as ToolboxFeature).dispose(ecModel, api);
+                return;
             }
+
+            if (!featureModel.get('show') || (isToolboxFeature && (feature as ToolboxFeature).unusable)) {
+                isToolboxFeature
+                    && (feature as ToolboxFeature).remove
+                    && (feature as ToolboxFeature).remove(ecModel, api);
+                return;
+            }
+
             createIconPaths(featureModel, feature, featureName);
 
             featureModel.setIconStatus = function (this: ToolboxFeatureModel, iconName: string, status: DisplayState) {
@@ -224,23 +229,14 @@ class ToolboxView extends ComponentView {
                 });
                 path.setTextContent(textContent);
 
-                const tooltipModel = toolboxModel.getModel('tooltip');
-                if (tooltipModel && tooltipModel.get('show')) {
-                    (path as ECElement).tooltip = zrUtil.extend({
-                        content: titlesMap[iconName],
-                        formatter: tooltipModel.get('formatter', true)
-                            || function () {
-                                return titlesMap[iconName];
-                            },
-                        formatterParams: {
-                            componentType: 'toolbox',
-                            name: iconName,
-                            title: titlesMap[iconName],
-                            $vars: ['name', 'title']
-                        },
-                        position: tooltipModel.get('position', true) || 'bottom'
-                    }, tooltipModel.option);
-                }
+                graphic.setTooltipConfig({
+                    el: path,
+                    componentModel: toolboxModel,
+                    itemName: iconName,
+                    formatterParamsExtra: {
+                        title: titlesMap[iconName]
+                    }
+                });
 
                 // graphic.enableHoverEmphasis(path);
 
@@ -358,9 +354,8 @@ class ToolboxView extends ComponentView {
     }
 }
 
-ComponentView.registerClass(ToolboxView);
-
 
 function isUserFeatureName(featureName: string): boolean {
     return featureName.indexOf('my') === 0;
 }
+export default ToolboxView;

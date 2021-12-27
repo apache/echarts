@@ -117,8 +117,6 @@ export interface BrushPanelConfig {
 // `true` represents global panel;
 type BrushPanelConfigOrGlobal = BrushPanelConfig | typeof BRUSH_PANEL_GLOBAL;
 
-interface BrushPanelElement extends graphic.Group {
-}
 
 interface BrushCover extends graphic.Group {
     __brushOption: BrushCoverConfig;
@@ -188,7 +186,9 @@ export interface BrushControllerEvents {
  *         removeOnClick: boolean
  *     }
  */
-class BrushController extends Eventful<BrushControllerEvents> {
+class BrushController extends Eventful<{
+    [key in keyof BrushControllerEvents]: (params: BrushControllerEvents[key]) => void | undefined
+}> {
 
     readonly group: graphic.Group;
 

@@ -32,13 +32,14 @@ import {
     ZRColor,
     BorderOptionMixin,
     OptionDataValue,
-    BuiltinVisualProperty
+    BuiltinVisualProperty,
+    DimensionIndex
 } from '../../util/types';
 import ComponentModel from '../../model/Component';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import SeriesModel from '../../model/Series';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
 const mapVisual = VisualMapping.mapVisual;
 const eachVisual = VisualMapping.eachVisual;
@@ -56,6 +57,9 @@ export interface VisualMapOption<T extends VisualOptionBase = VisualOptionBase> 
     ComponentOption,
     BoxLayoutOptionMixin,
     BorderOptionMixin {
+
+    mainType?: 'visualMap'
+
     show?: boolean
 
     align?: string
@@ -153,7 +157,7 @@ export interface VisualMeta {
     stops: { value: number, color: ColorString}[]
     outerColors: ColorString[]
 
-    dimension?: number
+    dimension?: DimensionIndex
 }
 
 class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends ComponentModel<Opts> {
@@ -198,13 +202,6 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     optionUpdated(newOption: Opts, isInit?: boolean) {
         const thisOption = this.option;
 
-        // FIXME
-        // necessary?
-        // Disable realtime view update if canvas is not supported.
-        if (!env.canvasSupported) {
-            thisOption.realtime = false;
-        }
-
         !isInit && visualSolution.replaceVisualOption(
             thisOption, newOption, this.replacableOptionKeys
         );
@@ -231,6 +228,13 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         this.targetVisuals = visualSolution.createVisualMappings(
             this.option.target, stateList, supplementVisualOption
         );
+    }
+
+    /**
+     * @public
+     */
+    getItemSymbol(): string {
+        return null;
     }
 
     /**
@@ -367,25 +371,41 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     }
 
     /**
+     * PENDING:
+     * delete this method if no outer usage.
+     *
      * Return  Concrete dimention. If return null/undefined, no dimension used.
      */
-    getDataDimension(list: List) {
+    // getDataDimension(data: SeriesData) {
+    //     const optDim = this.option.dimension;
+
+    //     if (optDim != null) {
+    //         return data.getDimension(optDim);
+    //     }
+
+    //     const dimNames = data.dimensions;
+    //     for (let i = dimNames.length - 1; i >= 0; i--) {
+    //         const dimName = dimNames[i];
+    //         const dimInfo = data.getDimensionInfo(dimName);
+    //         if (!dimInfo.isCalculationCoord) {
+    //             return dimName;
+    //         }
+    //     }
+    // }
+
+    getDataDimensionIndex(data: SeriesData): DimensionIndex {
         const optDim = this.option.dimension;
-        const listDimensions = list.dimensions;
-        if (optDim == null && !listDimensions.length) {
-            return;
-        }
 
         if (optDim != null) {
-            return list.getDimension(optDim);
+            return data.getDimensionIndex(optDim);
         }
 
-        const dimNames = list.dimensions;
+        const dimNames = data.dimensions;
         for (let i = dimNames.length - 1; i >= 0; i--) {
             const dimName = dimNames[i];
-            const dimInfo = list.getDimensionInfo(dimName);
+            const dimInfo = data.getDimensionInfo(dimName);
             if (!dimInfo.isCalculationCoord) {
-                return dimName;
+                return dimInfo.storeDimIndex;
             }
         }
     }
@@ -480,6 +500,8 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
             const symbolSizeExists = (controller.inRange || {}).symbolSize
                 || (controller.outOfRange || {}).symbolSize;
             const inactiveColor = this.get('inactiveColor');
+            const itemSymbol = this.getItemSymbol();
+            const defaultSymbol = itemSymbol || 'roundRect';
 
             each(this.stateList, function (state: VisualState) {
 
@@ -498,7 +520,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
                 if (visuals.symbol == null) {
                     visuals.symbol = symbolExists
                         && zrUtil.clone(symbolExists)
-                        || (isCategory ? 'roundRect' : ['roundRect']);
+                        || (isCategory ? defaultSymbol : [defaultSymbol]);
                 }
                 if (visuals.symbolSize == null) {
                     visuals.symbolSize = symbolSizeExists
@@ -506,9 +528,9 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
                         || (isCategory ? itemSize[0] : [itemSize[0], itemSize[0]]);
                 }
 
-                // Filter square and none.
+                // Filter none
                 visuals.symbol = mapVisual(visuals.symbol, function (symbol) {
-                    return (symbol === 'none' || symbol === 'square') ? 'roundRect' : symbol;
+                    return symbol === 'none' ? defaultSymbol : symbol;
                 });
 
                 // Normalize symbolSize
@@ -581,7 +603,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     static defaultOption: VisualMapOption = {
         show: true,
 
-        zlevel: 0,
+        // zlevel: 0,
         z: 4,
 
         seriesIndex: 'all',

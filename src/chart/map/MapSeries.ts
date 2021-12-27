@@ -19,7 +19,7 @@
 
 
 import * as zrUtil from 'zrender/src/core/util';
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import SeriesModel from '../../model/Series';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
@@ -32,20 +32,26 @@ import {
     ParsedValue,
     SeriesOnGeoOptionMixin,
     StatesOptionMixin,
-    SeriesLabelOption
+    SeriesLabelOption,
+    StatesMixinBase,
+    CallbackDataParams
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import Model from '../../model/Model';
 import Geo from '../../coord/geo/Geo';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import {createSymbol, ECSymbol} from '../../util/symbol';
+import {LegendIconParams} from '../../component/legend/LegendModel';
+import {Group} from '../../util/graphic';
 
-export interface MapStateOption {
-    itemStyle?: GeoItemStyleOption
+export interface MapStateOption<TCbParams = never> {
+    itemStyle?: GeoItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
-export interface MapDataItemOption extends MapStateOption, StatesOptionMixin<MapStateOption>,
+export interface MapDataItemOption extends MapStateOption,
+    StatesOptionMixin<MapStateOption, StatesMixinBase>,
     OptionDataItemObject<OptionDataValueNumeric> {
     cursor?: string
 }
@@ -53,8 +59,8 @@ export interface MapDataItemOption extends MapStateOption, StatesOptionMixin<Map
 export type MapValueCalculationType = 'sum' | 'average' | 'min' | 'max';
 
 export interface MapSeriesOption extends
-    SeriesOption<MapStateOption>, MapStateOption,
-
+    SeriesOption<MapStateOption<CallbackDataParams>, StatesMixinBase>,
+    MapStateOption<CallbackDataParams>,
     GeoCommonOptionMixin,
     // If `geoIndex` is not specified, a exclusive geo will be
     // created. Otherwise use the specified geo component, and
@@ -79,7 +85,7 @@ export interface MapSeriesOption extends
     // @deprecated. Only for echarts2 backward compat.
     geoCoord?: Dictionary<number[]>;
 
-    data?: OptionDataValueNumeric[] | OptionDataValueNumeric[][] | MapDataItemOption[]
+    data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | MapDataItemOption)[]
 
 
     nameProperty?: string;
@@ -98,7 +104,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
     // -----------------
     // Injected outside
-    originalData: List;
+    originalData: SeriesData;
     mainSeries: MapSeries;
     // Only first map series of same mapType will drawMap.
     needsDrawMap: boolean = false;
@@ -106,8 +112,8 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     seriesGroup: MapSeries[] = [];
 
 
-    getInitialData(this: MapSeries, option: MapSeriesOption): List {
-        const data = createListSimply(this, {
+    getInitialData(this: MapSeries, option: MapSeriesOption): SeriesData {
+        const data = createSeriesDataSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
@@ -212,7 +218,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             const geo = this.coordinateSystem;
             const region = geo.getRegion(name);
 
-            return region && geo.dataToPoint(region.center);
+            return region && geo.dataToPoint(region.getCenter());
         }
     };
 
@@ -224,9 +230,33 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         this.option.center = center;
     }
 
+    getLegendIcon(opt: LegendIconParams): ECSymbol | Group {
+        const iconType = opt.icon || 'roundRect';
+        const icon = createSymbol(
+            iconType,
+            0,
+            0,
+            opt.itemWidth,
+            opt.itemHeight,
+            opt.itemStyle.fill
+        );
+
+        icon.setStyle(opt.itemStyle);
+        // Map do not use itemStyle.borderWidth as border width
+        icon.style.stroke = 'none';
+        // No rotation because no series visual symbol for map
+
+        if (iconType.indexOf('empty') > -1) {
+            icon.style.stroke = icon.style.fill;
+            icon.style.fill = '#fff';
+            icon.style.lineWidth = 2;
+        }
+        return icon;
+    }
+
     static defaultOption: MapSeriesOption = {
         // 一级层叠
-        zlevel: 0,
+        // zlevel: 0,
         // 二级层叠
         z: 2,
 
@@ -251,7 +281,10 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
         // Aspect is width / height. Inited to be geoJson bbox aspect
         // This parameter is used for scale this aspect
-        aspectScale: 0.75,
+        // Default value:
+        // for geoSVG source: 1,
+        // for geoJSON source: 0.75.
+        aspectScale: null,
 
         ///// Layout with center and size
         // If you wan't to put map in a fixed size box with right aspect ratio
@@ -310,7 +343,5 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     };
 
 }
-
-SeriesModel.registerClass(MapSeries);
 
 export default MapSeries;

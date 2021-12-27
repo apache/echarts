@@ -17,16 +17,20 @@
 * under the License.
 */
 
-import * as echarts from '../../../echarts';
+/* global document */
+
+import * as echarts from '../../../core/echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../../model/Global';
 import SeriesModel from '../../../model/Series';
-import { ToolboxFeature, registerFeature, ToolboxFeatureOption } from '../featureManager';
+import { ToolboxFeature, ToolboxFeatureOption } from '../featureManager';
 import { ColorString, ECUnitOption, SeriesOption, Payload, Dictionary } from '../../../util/types';
-import ExtensionAPI from '../../../ExtensionAPI';
+import ExtensionAPI from '../../../core/ExtensionAPI';
 import { addEventListener } from 'zrender/src/core/event';
 import Axis from '../../../coord/Axis';
 import Cartesian2D from '../../../coord/cartesian/Cartesian2D';
+
+/* global document */
 
 const BLOCK_SPLITER = new Array(60).join('-');
 const ITEM_SPLITER = '\t';
@@ -447,8 +451,8 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
 
             // eslint-disable-next-line
             icon: 'M17.5,17.3H33 M17.5,17.3H33 M45.4,29.5h-28 M11.5,2v56H51V14.8L38.4,2H11.5z M38.4,2.2v12.7H51 M45.4,41.7h-28',
-            title: ecModel.getLocale(['toolbox', 'dataView', 'title']),
-            lang: ecModel.getLocale(['toolbox', 'dataView', 'lang']),
+            title: ecModel.getLocaleModel().get(['toolbox', 'dataView', 'title']),
+            lang: ecModel.getLocaleModel().get(['toolbox', 'dataView', 'lang']),
             backgroundColor: '#fff',
             textColor: '#000',
             textareaColor: '#fff',
@@ -487,8 +491,8 @@ function tryMergeDataOption(newData: DataList, originalData: DataList) {
     });
 }
 
-registerFeature('dataView', DataView);
 
+// TODO: SELF REGISTERED.
 echarts.registerAction({
     type: 'changeDataView',
     event: 'dataViewChanged',

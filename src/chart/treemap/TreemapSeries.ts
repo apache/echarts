@@ -34,12 +34,13 @@ import {
     OptionId,
     OptionName,
     DecalObject,
-    DefaultExtraEmpasisState,
-    SeriesLabelOption
+    SeriesLabelOption,
+    DefaultEmphasisFocus,
+    AriaOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { normalizeToArray } from '../../util/model';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
@@ -57,7 +58,7 @@ interface TreemapSeriesLabelOption extends SeriesLabelOption {
     formatter?: string | ((params: CallbackDataParams) => string)
 }
 
-interface TreemapSeriesItemStyleOption extends ItemStyleOption {
+interface TreemapSeriesItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
     borderRadius?: number | number[]
 
     colorAlpha?: number
@@ -75,17 +76,22 @@ interface TreePathInfo {
 }
 
 interface TreemapSeriesCallbackDataParams extends CallbackDataParams {
+    /**
+     * @deprecated
+     */
     treePathInfo?: TreePathInfo[]
+
+    treeAncestors?: TreePathInfo[]
 }
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus'] | 'descendant' | 'ancestor'
+        focus?: DefaultEmphasisFocus | 'descendant' | 'ancestor'
     }
 }
 
-export interface TreemapStateOption {
-    itemStyle?: TreemapSeriesItemStyleOption
+export interface TreemapStateOption<TCbParams = never> {
+    itemStyle?: TreemapSeriesItemStyleOption<TCbParams>
     label?: TreemapSeriesLabelOption
     upperLabel?: TreemapSeriesLabelOption
 }
@@ -96,6 +102,9 @@ export interface TreemapSeriesVisualOption {
      */
     visualDimension?: number | string
 
+    /**
+     * @deprecated Use colorBy instead
+     */
     colorMappingBy?: 'value' | 'index' | 'id'
 
     visualMin?: number
@@ -139,7 +148,8 @@ export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
 }
 
 export interface TreemapSeriesOption
-    extends SeriesOption<TreemapStateOption, ExtraStateOption>, TreemapStateOption,
+    extends SeriesOption<TreemapStateOption<TreemapSeriesCallbackDataParams>, ExtraStateOption>,
+    TreemapStateOption<TreemapSeriesCallbackDataParams>,
     BoxLayoutOptionMixin,
     RoamOptionMixin,
     TreemapSeriesVisualOption {
@@ -189,7 +199,7 @@ export interface TreemapSeriesOption
         show?: boolean
         height?: number
 
-        emptyItemWidth: number  // With of empty width
+        emptyItemWidth?: number  // With of empty width
         itemStyle?: BreadcrumbItemStyleOption
 
         emphasis?: {
@@ -366,10 +376,10 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         // to choose mappings approach among old shapes and new shapes.
         const tree = Tree.createTree(root, this, beforeLink);
 
-        function beforeLink(nodeData: List) {
+        function beforeLink(nodeData: SeriesData) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 const node = tree.getNodeByDataIndex(idx);
-                const levelModel = levelModels[node.depth];
+                const levelModel = node ? levelModels[node.depth] : null;
                 // If no levelModel, we also need `designatedVisualModel`.
                 model.parentModel = levelModel || designatedVisualModel;
                 return model;
@@ -411,7 +421,9 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         const params = super.getDataParams.apply(this, arguments as any) as TreemapSeriesCallbackDataParams;
 
         const node = this.getData().tree.getNodeByDataIndex(dataIndex);
-        params.treePathInfo = wrapTreePathInfo(node, this);
+        params.treeAncestors = wrapTreePathInfo(node, this);
+        // compatitable the previous code.
+        params.treePathInfo = params.treeAncestors;
 
         return params;
     }
@@ -535,7 +547,9 @@ function completeTreeValue(dataNode: TreemapSeriesNodeItemOption) {
  */
 function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
     const globalColorList = normalizeToArray(ecModel.get('color')) as ColorString[];
-    const globalDecalList = normalizeToArray(ecModel.get('decals')) as DecalObject[];
+    const globalDecalList = normalizeToArray(
+        (ecModel as Model<AriaOptionMixin>).get(['aria', 'decal', 'decals'])
+    ) as DecalObject[];
 
     if (!globalColorList) {
         return;
@@ -571,7 +585,5 @@ function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
 
     return levels;
 }
-
-SeriesModel.registerClass(TreemapSeriesModel);
 
 export default TreemapSeriesModel;

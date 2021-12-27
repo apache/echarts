@@ -21,7 +21,7 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
     </head>
     <body>
@@ -37,10 +37,6 @@ under the License.
 
             require([
                 'echarts'
-                // 'echarts/chart/scatter',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/visualMapPiecewise'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -86,7 +82,8 @@ under the License.
                             dimension: 3,
                             seriesIndex: 0,
                             max: 10,
-                            color: ['red', 'pink', 'black']
+                            color: ['red', 'pink', 'black'],
+                            itemSymbol: 'circle'
                         },
                         {
                             right: 0,
@@ -98,7 +95,8 @@ under the License.
                             backgroundColor: '#eee',
                             inRange: {
                                 symbol: ['rect', 'line', 'path://M 100 100 L 300 100 L 200 300 z']
-                            }
+                            },
+                            itemSymbol: 'diamond'
                         },
                         {
                             left: 'center',
@@ -116,9 +114,10 @@ under the License.
                                 {
                                     gte: 0,
                                     color: 'green',
-                                    symbol: 'rect'
+                                    // symbol: 'rect'
                                 }
-                            ]
+                            ],
+                            itemSymbol: 'circle'
                         }
                     ],
                     series: [

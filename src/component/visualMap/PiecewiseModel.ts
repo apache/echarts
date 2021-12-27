@@ -24,7 +24,6 @@ import visualDefault from '../../visual/visualDefault';
 import {reformIntervals} from '../../util/number';
 import { VisualOptionPiecewise, BuiltinVisualProperty } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
-import ComponentModel from '../../model/Component';
 import { inheritDefaultOption } from '../../util/component';
 
 
@@ -248,6 +247,13 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
     /**
      * @public
      */
+    getItemSymbol(): string {
+        return this.get('itemSymbol');
+    }
+
+    /**
+     * @public
+     */
     getSelectedMapKey(piece: InnerVisualPiece) {
         return this._mode === 'categories'
             ? piece.value + '' : piece.index + '';
@@ -310,7 +316,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
             const dataIndices: number[] = [];
             const data = seriesModel.getData();
 
-            data.each(this.getDataDimension(data), function (value: number, dataIndex: number) {
+            data.each(this.getDataDimensionIndex(data), function (value: number, dataIndex: number) {
                 // Should always base on model pieceList, because it is order sensitive.
                 const pIdx = VisualMapping.findPieceIndex(value, pieceList);
                 pIdx === pieceIndex && dataIndices.push(dataIndex);
@@ -590,7 +596,5 @@ function normalizeReverse(thisOption: PiecewiseVisualMapOption, pieceList: Inner
             pieceList.reverse();
     }
 }
-
-ComponentModel.registerClass(PiecewiseModel);
 
 export default PiecewiseModel;

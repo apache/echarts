@@ -18,12 +18,12 @@
 * under the License.
 */
 
-import { createChart, isValueFinite } from '../../core/utHelper';
-import { EChartsType } from '../../../../src/echarts';
-import CartesianAxisModel from '../../../../src/coord/cartesian/AxisModel';
-import IntervalScale from '../../../../src/scale/Interval';
-import { intervalScaleNiceTicks } from '../../../../src/scale/helper';
-import { getPrecisionSafe } from '../../../../src/util/number';
+import { createChart, getECModel } from '../../core/utHelper';
+import { EChartsType } from '@/src/echarts';
+import CartesianAxisModel from '@/src/coord/cartesian/AxisModel';
+import IntervalScale from '@/src/scale/Interval';
+import { intervalScaleNiceTicks } from '@/src/scale/helper';
+import { getPrecisionSafe } from '@/src/util/number';
 
 
 describe('scale_interval', function () {
@@ -57,7 +57,7 @@ describe('scale_interval', function () {
                 series: [{type: 'line', data: []}]
             });
 
-            const yAxis = chart.getModel().getComponent('yAxis', 0) as CartesianAxisModel;
+            const yAxis = getECModel(chart).getComponent('yAxis', 0) as CartesianAxisModel;
             const scale = yAxis.axis.scale;
             const ticks = scale.getTicks();
 
@@ -91,7 +91,7 @@ describe('scale_interval', function () {
                 ]
             });
 
-            const yAxis = chart.getModel().getComponent('yAxis', 0) as CartesianAxisModel;
+            const yAxis = getECModel(chart).getComponent('yAxis', 0) as CartesianAxisModel;
             const scale = yAxis.axis.scale as IntervalScale;
             const ticks = scale.getTicks();
             const labels = yAxis.axis.getViewLabels().map(function (item) {
@@ -124,10 +124,10 @@ describe('scale_interval', function () {
             const resultInterval = result.interval;
             const niceTickExtent = result.niceTickExtent;
 
-            expect(isValueFinite(resultInterval)).toEqual(true);
-            expect(isValueFinite(intervalPrecision)).toEqual(true);
-            expect(isValueFinite(niceTickExtent[0])).toEqual(true);
-            expect(isValueFinite(niceTickExtent[1])).toEqual(true);
+            expect(resultInterval).toBeFinite();
+            expect(intervalPrecision).toBeFinite();
+            expect(niceTickExtent[0]).toBeFinite();
+            expect(niceTickExtent[1]).toBeFinite();
 
             expect(niceTickExtent[0]).toBeGreaterThanOrEqual(extent[0]);
             expect(niceTickExtent[1]).not.toBeGreaterThan(extent[1]);

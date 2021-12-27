@@ -21,7 +21,7 @@ import { assert, isArray, eqNaN, isFunction } from 'zrender/src/core/util';
 import Scale from '../scale/Scale';
 import { AxisBaseModel } from './AxisBaseModel';
 import { parsePercent } from 'zrender/src/contain/text';
-import { AxisBaseOption } from './axisCommonTypes';
+import { AxisBaseOption, CategoryAxisBaseOption } from './axisCommonTypes';
 import { ScaleDataValue } from '../util/types';
 
 
@@ -96,7 +96,7 @@ export class ScaleRawExtentInfo {
         this._dataMax = dataExtent[1];
 
         const isOrdinal = this._isOrdinal = scale.type === 'ordinal';
-        this._needCrossZero = model.getNeedCrossZero && model.getNeedCrossZero();
+        this._needCrossZero = scale.type === 'interval' && model.getNeedCrossZero && model.getNeedCrossZero();
 
         const modelMinRaw = this._modelMinRaw = model.get('min', true);
         if (isFunction(modelMinRaw)) {
@@ -129,7 +129,7 @@ export class ScaleRawExtentInfo {
             this._axisDataLen = model.getCategories().length;
         }
         else {
-            const boundaryGap = model.get('boundaryGap');
+            const boundaryGap = (model as AxisBaseModel<CategoryAxisBaseOption>).get('boundaryGap');
             const boundaryGapArr = isArray(boundaryGap)
                 ? boundaryGap : [boundaryGap || 0, boundaryGap || 0];
 
@@ -200,11 +200,6 @@ export class ScaleRawExtentInfo {
 
         (min == null || !isFinite(min)) && (min = NaN);
         (max == null || !isFinite(max)) && (max = NaN);
-
-        if (min > max) {
-            min = NaN;
-            max = NaN;
-        }
 
         const isBlank = eqNaN(min)
             || eqNaN(max)

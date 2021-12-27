@@ -42,6 +42,8 @@ export interface ToolboxTooltipFormatterParams {
 export interface ToolboxOption extends ComponentOption,
     BoxLayoutOptionMixin,
     BorderOptionMixin {
+    mainType?: 'toolbox'
+
     show?: boolean
 
     orient?: LayoutOrient
@@ -71,7 +73,7 @@ export interface ToolboxOption extends ComponentOption,
     /**
      * Write all supported features in the final export option.
      */
-    feature?: Dictionary<featureManager.ToolboxFeatureOption>
+    feature?: Partial<Dictionary<featureManager.ToolboxFeatureOption>>
 }
 
 class ToolboxModel extends ComponentModel<ToolboxOption> {
@@ -105,7 +107,7 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
 
         z: 6,
 
-        zlevel: 0,
+        // zlevel: 0,
 
         orient: 'horizontal',
 
@@ -146,11 +148,10 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
         // feature
 
         tooltip: {
-            show: false
+            show: false,
+            position: 'bottom'
         }
     };
 }
-
-ComponentModel.registerClass(ToolboxModel);
 
 export default ToolboxModel;

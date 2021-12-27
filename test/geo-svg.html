@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main_simple_geo_svg_coord"></div>
+        <div id="main_simple_geo_svg_viewBox_svgWH"></div>
+        <div id="main_geo_json_focus_blur"></div>
+        <div id="main_geo_svg_emphasis_select"></div>
+        <div id="main_pure_geo_svg"></div>
+        <div id="main_pure_map_svg"></div>
+        <div id="main_map_geo_svg"></div>
+        <div id="main_geo_svg_click_finder"></div>
+        <div id="main_geo_svg_multiple_geo"></div>
+
+
+
+
+
+        <script>
+            function listenAndPrintEvent(chart) {
+                if (!chart) {
+                    return;
+                }
+                const out = {
+                };
+                chart.on('geoselectchanged', function (params) {
+                    out.geoselectechanged = {
+                        allSelected: params.allSelected
+                    };
+                    console.log('geoselectechanged', params);
+                    chart.__testHelper.updateInfo(out, 'event');
+                });
+                chart.on('selectchanged', function (params) {
+                    out.selectechanged = {
+                        selected: params.selected
+                    };
+                    console.log('selectechanged', params);
+                    chart.__testHelper.updateInfo(out, 'event');
+                });
+                chart.on('click', function (params) {
+                    out.click = {
+                        componentIndex: params.componentIndex,
+                        componentType: params.componentType,
+                        geoIndex: params.geoIndex,
+                        name: params.name
+                    };
+                    console.log('click', params);
+                    chart.__testHelper.updateInfo(out, 'event');
+                });
+            }
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            const svg = [
+                '<?xml version="1.0" encoding="utf-8"?>',
+                '<svg xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" fill-rule="evenodd" xml:space="preserve">',
+                '<path name="left_rect" d="M 0,0 L 0,100 100,100 100,0 Z" fill="#765" stroke="rgb(56,93,138)" stroke-width="0" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '<path name="right_rect" d="M 150,0 L 150,100 250,100 250,0 Z" fill="#567" stroke="rgb(56,93,138)" stroke-width="0" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join('')
+
+            echarts.registerMap('testGeoSVG_coord', { svg: svg });
+
+            option = {
+                animation: false,
+                tooltip: {
+                },
+                geo: {
+                    map: 'testGeoSVG_coord',
+                    roam: true,
+                    top: 0,
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                },
+                series: [{
+                    type: 'scatter',
+                    geoIndex: 0,
+                    coordinateSystem: 'geo',
+                    symbolSize: 30,
+                    data: [{
+                        value: [200, 50],
+                        itemStyle: {
+                            color: 'blue'
+                        }
+                    }]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_simple_geo_svg_coord', {
+                title: [
+                    'A **blue circle** should be in the center of the right rect.',
+                    '**Click** inside the rect or outside the rect.',
+                    'Check SVG coord displayed (via convertFromPixel).',
+                    '(The left rect is 100*100 and left-top corner is (0,0))',
+                    '**Click btn1**, check Pixel.point[1] should be around 100',
+                    '**Click btn2**, check Pixel.point[1] should be around 200'
+                ],
+                option: option,
+                infoKey: 'SVG coord',
+                info: {},
+                height: 200,
+                buttons: [{
+                    text: 'converToPixel({ geoIndex: 0 }, "left_rect")',
+                    onclick: function () {
+                        var point = chart.convertToPixel({ geoIndex: 0 }, 'left_rect');
+                        console.log(point);
+                        chart.__testHelper.updateInfo(
+                            { point: point },
+                            'Pixel'
+                        );
+                    }
+                }, {
+                    text: 'convertToPixel({ geoIndex: 0 }, [100, 100])',
+                    onclick: function () {
+                        var point = chart.convertToPixel({ geoIndex: 0 }, [100, 100]);
+                        console.log(point);
+                        chart.__testHelper.updateInfo(
+                            { point: point },
+                            'Pixel'
+                        );
+                    }
+                }]
+            });
+
+            if (chart) {
+                chart.getZr().on('click', function (event) {
+                    var x = event.offsetX;
+                    var y = event.offsetY;
+                    console.log(x, y);
+                    var svgCoord = chart.convertFromPixel({ geoIndex: 0 }, [x, y]);
+                    console.log(svgCoord);
+                    chart.__testHelper.updateInfo(
+                        { x: svgCoord[0], y: svgCoord[1] },
+                        'SVG coord'
+                    );
+                });
+            }
+
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            const xmlHeader = '<?xml version="1.0" encoding="utf-8"?>';
+            const svgTagCommonAttr = ' xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" fill-rule="evenodd" xml:space="preserve" ';
+
+            // Both svgWdith svgHeight viewBox
+            const svg1 = [
+                xmlHeader,
+                '<svg ' + svgTagCommonAttr,
+                'viewBox="99500 99500 1000 1000"',
+                'width="5px" height="5px"',
+                '>',
+                '<circle cx="100000" cy="100000" r="500" fill="blue" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join(' ');
+            // Both svgWdith svgHeight viewBox and clip
+            const svg2 = [
+                xmlHeader,
+                '<svg ' + svgTagCommonAttr,
+                'viewBox="99500 99500 500 500"',
+                'width="5px" height="5px"',
+                '>',
+                '<circle cx="100000" cy="100000" r="500" fill="blue" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join(' ');
+            // Only svgWdith svgHeight
+            const svg3 = [
+                xmlHeader,
+                '<svg ' + svgTagCommonAttr,
+                'width="100000" height="100000"',
+                '>',
+                '<circle cx="100000" cy="100000" r="100000" fill="blue" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join(' ');
+            // Only viewBox
+            const svg4 = [
+                xmlHeader,
+                '<svg ' + svgTagCommonAttr,
+                'viewBox="99500 99500 500 500"',
+                '>',
+                '<circle cx="100000" cy="100000" r="500" fill="blue" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join(' ');
+            // Neither viewBox and svgWidth svgHeight
+            const svg5 = [
+                xmlHeader,
+                '<svg ' + svgTagCommonAttr,
+                '>',
+                '<circle cx="100000" cy="100000" r="500" fill="blue" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join(' ');
+            // Both viewBox but only svgHeight no svgWidth
+            const svg6 = [
+                xmlHeader,
+                '<svg ' + svgTagCommonAttr,
+                'viewBox="99500 99500 1000 1000"',
+                'height="500"',
+                '>',
+                '<circle cx="100000" cy="100000" r="500" fill="blue" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join(' ');
+
+            echarts.registerMap('testGeoSVG_viewBox_svgWH_1', { svg: svg1 });
+            echarts.registerMap('testGeoSVG_viewBox_svgWH_2', { svg: svg2 });
+            echarts.registerMap('testGeoSVG_viewBox_svgWH_3', { svg: svg3 });
+            echarts.registerMap('testGeoSVG_viewBox_svgWH_4', { svg: svg4 });
+            echarts.registerMap('testGeoSVG_viewBox_svgWH_5', { svg: svg5 });
+            echarts.registerMap('testGeoSVG_viewBox_svgWH_6', { svg: svg6 });
+
+            const RECT_SIZE = 50;
+            const Y_TOP = 10;
+            const X_LEFT = 10;
+            const GAP = 20;
+
+            var _itemIndex = 0;
+            var _graphicOptionArr = [];
+            var _geoOptionArr = [];
+
+            function makeItem(text, mapType) {
+                var x = X_LEFT + (RECT_SIZE + GAP) * _itemIndex++;
+                _graphicOptionArr.push({
+                    type: 'rect',
+                    silent: true,
+                    shape: { x: x, y: Y_TOP, width: RECT_SIZE, height: RECT_SIZE },
+                    style: { stroke: 'red', lineWidth: 1, fill: null }
+                }, {
+                    type: 'text',
+                    silent: true,
+                    style: {
+                        text: text, x: x + RECT_SIZE / 2, y: Y_TOP + RECT_SIZE + GAP,
+                        fill: '#000', textAlign: 'center', textVerticalAlign: 'middle'
+                    }
+                });
+                _geoOptionArr.push({
+                    map: mapType,
+                    left: x, top: Y_TOP, width: RECT_SIZE, height: RECT_SIZE,
+                    itemStyle: { color: 'blue' }
+                });
+            }
+
+            makeItem('circle', 'testGeoSVG_viewBox_svgWH_1');
+            makeItem('1/4 sector', 'testGeoSVG_viewBox_svgWH_2');
+            makeItem('1/4 sector', 'testGeoSVG_viewBox_svgWH_3');
+            makeItem('1/4 sector', 'testGeoSVG_viewBox_svgWH_4');
+            makeItem('circle', 'testGeoSVG_viewBox_svgWH_5');
+            makeItem('thin ellipse', 'testGeoSVG_viewBox_svgWH_6');
+
+            option = {
+                animation: false,
+                tooltip: {
+                },
+                graphic: _graphicOptionArr,
+                geo: _geoOptionArr
+            };
+
+            var chart = testHelper.create(echarts, 'main_simple_geo_svg_viewBox_svgWH', {
+                title: [
+                    'viewBox test:',
+                    'Check each shape should be inside each red rect.',
+                    'Check each shape be correspondence with the text.',
+                ],
+                option: option,
+                height: 100
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            const testGeoJson1 = {
+                'type': 'FeatureCollection',
+                'features': [
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Polygon',
+                            'coordinates': [
+                                [[2000, 2000], [5000, 2000], [5000, 5000], [2000, 5000]]
+                            ]
+                        },
+                        'properties': {
+                            'name': 'Afghanistan'
+                        }
+                    },
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Polygon',
+                            'coordinates': [
+                                [[6000, 2300], [9300, 2300], [9000, 5000]]
+                            ]
+                        },
+                        'properties': {
+                            'name': 'BBB'
+                        }
+                    }
+                ]
+            };
+
+            echarts.registerMap('testGeoJson2', testGeoJson1);
+
+            option = {
+                tooltip: {
+                },
+                geo: {
+                    map: 'testGeoJson2',
+                    roam: true,
+                    selectedMode: 'single',
+                    label: {
+                        show: true
+                    },
+                    emphasis: {
+                        focus: 'self'
+                    },
+                    // height: '100%',
+                    // center
+                    // layoutCenter: ['30%', 40],
+                    // layoutSize: 40,
+                    // boundingCoords
+                    zoom: 1,
+                    aspectScale: 1
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main_geo_json_focus_blur', {
+                title: [
+                    'check geoJSON focus-blur',
+                    '**Click** them, check click info'
+                ],
+                option: option,
+                info: {},
+                infoKey: 'event',
+                height: 200
+            });
+
+            listenAndPrintEvent(chart);
+
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            const svg = [
+                '<?xml version="1.0" encoding="utf-8"?>',
+                '<svg xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" fill-rule="evenodd" xml:space="preserve">',
+                '<path name="a" d="M 0,0 L 0,100 100,100 100,0 Z" transform="rotate(45)" fill="rgb(16,193,138)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '<path name="a" d="M 110,0 L 110,100 210,100 210,0 Z" fill="rgb(16,193,138)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '<g name="b">',
+                    '<path d="M 0,110 L 0,210 100,110 Z" fill="rgb(16,193,138)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                    '<path d="M 110,110 L 110,210 210,110 Z" fill="rgb(16,193,138)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</g>',
+                '<radialGradient id="XMLID_1_" cx="0" cy="220" r="59.4363" gradientUnits="userSpaceOnUse">',
+                    '<stop  offset="0" style="stop-color:#E6E6E6"/>',
+                    '<stop  offset="1" style="stop-color:#4D4D4D"/>',
+                '</radialGradient>',
+                '<path name="c" d="M 0,220 L 0,320 100,220 Z" fill="url(#XMLID_1_)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '<radialGradient id="XMLID_2_" cx="110" cy="220" r="59.4363" gradientUnits="userSpaceOnUse">',
+                    '<stop  offset="0" style="stop-color:#E6E6E6"/>',
+                    '<stop  offset="1" style="stop-color:#4D4D4D"/>',
+                '</radialGradient>',
+                '<path name="c" d="M 110,220 L 110,320 210,220 Z" fill="url(#XMLID_2_)" stroke="green" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join('')
+
+            echarts.registerMap('testGeoSVG_select_hover', { svg: svg });
+
+            option = {
+                // tooltip: {
+                // },
+                geo: {
+                    map: 'testGeoSVG_select_hover',
+                    roam: true,
+                    selectedMode: 'single',
+                    // height: '100%',
+                    // center
+                    // layoutCenter: ['30%', 40],
+                    // layoutSize: 40,
+                    // boundingCoords
+                    zoom: 1,
+                    aspectScale: 1,
+                    label: {
+                        show: true
+                    },
+                    emphasis: {
+                        focus: 'self',
+                        label: {
+                            show: true,
+                            fontSize: 100
+                        }
+                    },
+                    select: {
+                        itemStyle: {
+                            color: 'red'
+                        }
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main_geo_svg_emphasis_select', {
+                title: [
+                    'click buttons',
+                    'hover check',
+                    'check focus-blur',
+                    'check label no scale/rotate'
+                ],
+                option: option,
+                info: {},
+                infoKey: 'event',
+                height: 200,
+                button: [{
+                    text: 'highlight a',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'highlight', geoIndex: 0, name: 'a' });
+                    }
+                }, {
+                    text: 'downplay a',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'downplay', geoIndex: 0, name: 'a' });
+                    }
+                }, {
+                    text: 'select a',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'geoSelect', geoIndex: 0, name: 'a' });
+                    }
+                }, {
+                    text: 'unselect a',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'geoUnSelect', geoIndex: 0, name: 'a' });
+                    }
+                }, {
+                    text: 'highlight b',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'highlight', geoIndex: 0, name: 'b' });
+                    }
+                }, {
+                    text: 'downplay b',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'downplay', geoIndex: 0, name: 'b' });
+                    }
+                }, {
+                    text: 'select b',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'geoSelect', geoIndex: 0, name: 'b' });
+                    }
+                }, {
+                    text: 'unselect b',
+                    onclick: function () {
+                        chart.dispatchAction({ type: 'geoUnSelect', geoIndex: 0, name: 'b' });
+                    }
+                }]
+            });
+
+            listenAndPrintEvent(chart);
+
+            if (chart) {
+                chart.on('highlight', function () {
+                });
+            }
+
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'data/svg/flight-seats.svg'
+            ], function (echarts, svg) {
+                echarts.registerMap('flight-seats', {
+                    svg: svg
+                });
+
+                option = {
+                    tooltip: {
+                    },
+                    geo: {
+                        map: 'flight-seats',
+                        roam: true,
+                        selectedMode: 'multiple',
+                        tooltip: {
+                            show: true
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: null,
+                                borderColor: '#780705',
+                                borderWidth: 3
+                            },
+                            label: {
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        },
+                        select: {
+                            itemStyle: {
+                                color: '#b50205'
+                            },
+                            label: {
+                                show: false,
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_pure_geo_svg', {
+                    title: [
+                        'pure geo component with svg resource',
+                        'click seat: check **allSelected** correct.',
+                        'hover seat: check **tooltip** and **label** correct.'
+                    ],
+                    option: option,
+                    info: {},
+                    infoKey: 'event',
+                    height: 300
+                });
+
+                listenAndPrintEvent(chart);
+
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'data/svg/seatmap-example.svg'
+            ], function (echarts, svg) {
+                echarts.registerMap('seatmap', {
+                    svg: svg
+                });
+
+                option = {
+                    tooltip: {
+                    },
+                    series: {
+                        type: 'map',
+                        map: 'seatmap',
+                        roam: true,
+                        selectedMode: 'multiple',
+                        // height: 100,
+                        // zoom: 1.5
+                        emphasis: {
+                            label: {
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        },
+                        select: {
+                            itemStyle: {
+                                color: '#b50205'
+                            },
+                            label: {
+                                show: false,
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_pure_map_svg', {
+                    title: [
+                        'pure map series with svg resource',
+                        'Hover seat: check **tooltip** correct.'
+                    ],
+                    option: option,
+                    info: {},
+                    infoKey: 'event',
+                    height: 300
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+
+                listenAndPrintEvent(chart);
+            });
+        </script>
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'data/svg/seatmap-example.svg'
+            ], function (echarts, svg) {
+                var option;
+                echarts.registerMap('seatmap', {
+                    svg: svg
+                });
+
+                option = {
+                    tooltip: {
+                    },
+                    geo: {
+                        map: 'seatmap',
+                        roam: true,
+                        selectedMode: 'multiple',
+                        // height: 100,
+                        // zoom: 1.5
+                        tooltip: {
+                            show: true
+                        },
+                        emphasis: {
+                            label: {
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        },
+                        select: {
+                            itemStyle: {
+                                color: '#b50205'
+                            },
+                            label: {
+                                show: false,
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        }
+                    },
+                    series: {
+                        type: 'map',
+                        selectedMode: 'multiple',
+                        coordinateSystem: 'geo',
+                        geoIndex: 0
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_map_geo_svg', {
+                    title: [
+                        'map series on declared geo with svg resource',
+                        'Hover seat: check **tooltip** correct.'
+                    ],
+                    option: option,
+                    info: {},
+                    infoKey: 'event',
+                    height: 300
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+
+                listenAndPrintEvent(chart);
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            const svg = [
+                '<?xml version="1.0" encoding="utf-8"?>',
+                '<svg xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" fill-rule="evenodd" xml:space="preserve">',
+                '<path name="a" d="M 0,0 L 0,100 100,100 100,0 Z" fill="green" stroke="rgb(56,93,138)" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '<path name="b" d="M 150,0 L 150,100 250,100 250,0 Z" fill="blue" stroke="rgb(56,93,138)" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join('')
+
+            echarts.registerMap('testGeoSVGclick', { svg: svg });
+
+            var option = {
+                geo: {
+                    map: 'testGeoSVGclick',
+                    selectedMode: 'single',
+                    zoom: 1,
+                    aspectScale: 1,
+                    label: {
+                        show: true
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main_geo_svg_click_finder', {
+                title: [
+                    'Click green rect, should display click event.',
+                    'Click blue rect, should display nothing.'
+                ],
+                option: option,
+                info: {},
+                infoKey: 'click event',
+                height: 200
+            });
+
+            if (chart) {
+                chart.on('click', { geoIndex: 0, name: 'a' }, function (params) {
+                    console.log(params);
+                    chart.__testHelper.updateInfo({
+                        componentIndex: params.componentIndex,
+                        componentType: params.componentType,
+                        geoIndex: params.geoIndex,
+                        name: params.name
+                    }, 'click event');
+                });
+            }
+
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            const svg = [
+                '<?xml version="1.0" encoding="utf-8"?>',
+                '<svg xmlns="http://www.w3.org/2000/svg" xmlns:ooo="http://xml.openoffice.org/svg/export" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" fill-rule="evenodd" xml:space="preserve">',
+                '<path name="a" d="M 0,0 L 0,100 100,100 100,0 Z" fill="green" stroke="rgb(56,93,138)" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>',
+                '</svg>'
+            ].join('')
+
+            echarts.registerMap('testGeoSVG_for_multiple_test', { svg: svg });
+
+            var option = {
+                geo: [{
+                    id: 'g1',
+                    map: 'testGeoSVG_for_multiple_test',
+                    selectedMode: 'single',
+                    layoutCenter: ['25%', '50%'],
+                    layoutSize: 20,
+                    select: {
+                        itemStyle: { color: 'red' }
+                    }
+                }, {
+                    id: 'g2',
+                    map: 'testGeoSVG_for_multiple_test',
+                    selectedMode: 'single',
+                    layoutCenter: ['50%', '50%'],
+                    layoutSize: 20,
+                    select: {
+                        itemStyle: { color: 'red' }
+                    },
+                }, {
+                    id: 'g3',
+                    map: 'testGeoSVG_for_multiple_test',
+                    selectedMode: 'single',
+                    layoutCenter: ['75%', '50%'],
+                    layoutSize: 20,
+                    select: {
+                        itemStyle: { color: 'red' }
+                    },
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_geo_svg_multiple_geo', {
+                title: [
+                    'Select the three rect to red.',
+                    'click btn. Check all of the existing rect removed,',
+                    'and only one new green rect generated.'
+                ],
+                option: option,
+                height: 200,
+                buttons: [{
+                    text: 'change geo (replaceMerge)',
+                    onclick: function (params) {
+                        chart.setOption({
+                            geo: {
+                                id: 'g4',
+                                map: 'testGeoSVG_for_multiple_test',
+                                selectedMode: 'single',
+                                layoutCenter: ['40%', '50%'],
+                                layoutSize: 40,
+                                select: {
+                                    itemStyle: { color: 'red' }
+                                }
+                            }
+                        }, { replaceMerge: 'geo' });
+                    }
+                }]
+            });
+
+        });
+        </script>
+
+
+
+
+
+
+    </body>
+</html>
+

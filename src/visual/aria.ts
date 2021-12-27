@@ -18,17 +18,16 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import {retrieveRawValue} from '../data/helper/dataProvider';
 import GlobalModel from '../model/Global';
 import Model from '../model/Model';
 import SeriesModel from '../model/Series';
-import {AriaOption} from '../component/aria';
-import {TitleOption} from '../component/title';
 import {makeInner} from '../util/model';
-import {Dictionary, DecalObject, InnerDecalObject} from '../util/types';
-import {LocaleOption} from '../locale';
+import {Dictionary, DecalObject, InnerDecalObject, AriaOption} from '../util/types';
+import {LocaleOption} from '../core/locale';
 import { getDecalFromPalette } from '../model/mixin/palette';
+import type {TitleOption} from '../component/title/install';
 
 const DEFAULT_OPTION: AriaOption = {
     label: {
@@ -68,8 +67,8 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
             // Each type of series use one scope.
             // Pie and funnel are using diferrent scopes
             const paletteScopeGroupByType = zrUtil.createHashMap<object>();
-            ecModel.eachSeries(function (seriesModel) {
-                if (!seriesModel.useColorPaletteOnData) {
+            ecModel.eachSeries((seriesModel: SeriesModel) => {
+                if (seriesModel.isColorBySeries()) {
                     return;
                 }
                 let decalScope = paletteScopeGroupByType.get(seriesModel.type);
@@ -80,7 +79,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
                 inner(seriesModel).scope = decalScope;
             });
 
-            ecModel.eachRawSeries(seriesModel => {
+            ecModel.eachRawSeries((seriesModel: SeriesModel) => {
                 if (ecModel.isSeriesFiltered(seriesModel)) {
                     return;
                 }
@@ -92,7 +91,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
 
                 const data = seriesModel.getData();
 
-                if (seriesModel.useColorPaletteOnData) {
+                if (!seriesModel.isColorBySeries()) {
                     const dataAll = seriesModel.getRawData();
                     const idxMap: Dictionary<number> = {};
                     const decalScope = inner(seriesModel).scope;
@@ -211,22 +210,22 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
                         seriesLabel += labelModel.get(['data', 'allData']);
                     }
 
+                    const middleSeparator = labelModel.get(['data', 'separator', 'middle']);
+                    const endSeparator = labelModel.get(['data', 'separator', 'end']);
                     const dataLabels = [];
                     for (let i = 0; i < data.count(); i++) {
                         if (i < maxDataCnt) {
                             const name = data.getName(i);
-                            const value = retrieveRawValue(data, i);
+                            const value = data.getValues(i);
                             const dataLabel = labelModel.get(['data', name ? 'withName' : 'withoutName']);
                             dataLabels.push(
                                 replace(dataLabel, {
                                     name: name,
-                                    value: value
+                                    value: value.join(middleSeparator)
                                 })
                             );
                         }
                     }
-                    const middleSeparator = labelModel.get(['data', 'separator', 'middle']);
-                    const endSeparator = labelModel.get(['data', 'separator', 'end']);
                     seriesLabel += dataLabels.join(middleSeparator) + endSeparator;
 
                     seriesLabels.push(seriesLabel);

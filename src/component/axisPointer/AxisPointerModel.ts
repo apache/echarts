@@ -59,6 +59,8 @@ interface AxisPointerLink {
 
 // TODO: TYPE AxisPointerOption for each axis
 export interface AxisPointerOption extends ComponentOption, Omit<CommonAxisPointerOption, 'type'> {
+    mainType?: 'axisPointer'
+
     type?: 'line' | 'shadow' | 'cross' | 'none'
 
     link?: AxisPointerLink[]
@@ -78,7 +80,7 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
         // 'auto' means that show when triggered by tooltip or handle.
         show: 'auto',
 
-        zlevel: 0,
+        // zlevel: 0,
         z: 50,
 
         type: 'line', // 'line' 'shadow' 'cross' 'none'.

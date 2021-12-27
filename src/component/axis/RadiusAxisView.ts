@@ -225,4 +225,4 @@ function layoutAxis(polar: Polar, radiusAxisModel: RadiusAxisModel, axisAngle: n
     };
 }
 
-AxisView.registerClass(RadiusAxisView);
+export default RadiusAxisView;

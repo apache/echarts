@@ -20,17 +20,16 @@
 // TODO Axis scale
 
 import * as zrUtil from 'zrender/src/core/util';
-import Polar from './Polar';
+import Polar, { polarDimensions } from './Polar';
 import {parsePercent} from '../../util/number';
 import {
     createScaleByModel,
     niceScaleExtent,
     getDataDimensionsOnAxis
 } from '../../coord/axisHelper';
-import CoordinateSystem from '../../CoordinateSystem';
 
 import PolarModel from './PolarModel';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import GlobalModel from '../../model/Global';
 import OrdinalScale from '../../scale/Ordinal';
 import RadiusAxis from './RadiusAxis';
@@ -39,6 +38,8 @@ import { PolarAxisModel, AngleAxisModel, RadiusAxisModel } from './AxisModel';
 import SeriesModel from '../../model/Series';
 import { SeriesOption } from '../../util/types';
 import { SINGLE_REFERRING } from '../../util/model';
+import { AxisBaseModel } from '../AxisBaseModel';
+import { CategoryAxisBaseOption } from '../axisCommonTypes';
 
 /**
  * Resize method bound to the polar
@@ -116,7 +117,8 @@ function isAngleAxisModel(axisModel: AngleAxisModel | PolarAxisModel): axisModel
 function setAxis(axis: RadiusAxis | AngleAxis, axisModel: PolarAxisModel) {
     axis.type = axisModel.get('type');
     axis.scale = createScaleByModel(axisModel);
-    axis.onBand = axisModel.get('boundaryGap') && axis.type === 'category';
+    axis.onBand = (axisModel as AxisBaseModel<CategoryAxisBaseOption>).get('boundaryGap')
+        && axis.type === 'category';
     axis.inverse = axisModel.get('inverse');
 
     if (isAngleAxisModel(axisModel)) {
@@ -133,7 +135,7 @@ function setAxis(axis: RadiusAxis | AngleAxis, axisModel: PolarAxisModel) {
 
 const polarCreator = {
 
-    dimensions: Polar.prototype.dimensions,
+    dimensions: polarDimensions,
 
     create: function (ecModel: GlobalModel, api: ExtensionAPI) {
         const polarList: Polar[] = [];
@@ -187,4 +189,4 @@ const polarCreator = {
     }
 };
 
-CoordinateSystem.register('polar', polarCreator);
+export default polarCreator;

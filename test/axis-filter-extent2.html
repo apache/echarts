@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+        <div id="main-stack-extreme"></div>
+        <div id="main2"></div>
+
+        <script>
+        require(['echarts'], function (echarts) {
+
+
+            var option = {
+                "dataset": [{
+                    "source": [
+                        ["Calendar",   "L1", "L2",  "L3",  "L4", "L5", "L6"],
+                        ["2021-04-09", 3.14, 66.82, 30.04, 0.00, 0.00, 0.00],
+                        ["2021-04-10", 2.96, 72.59, 24.44, 0.00, 0.00, 0.00],
+                        ["2021-04-11", 3.62, 73.19, 23.19, 0.00, 0.00, 0.00],
+                        ["2021-04-12", 5.32, 72.87, 21.81, 0.00, 0.00, 0.00],
+                        ["2021-04-13", 3.51, 73.25, 23.24, 0.00, 0.00, 0.00],
+                        // If using javascript add,
+                        // The sum is 100.00000000000001, over 100.
+                        ["2021-04-15", 7.98, 69.15, 22.87, 0.00, 0.00, 0.00],
+                        // Over 100.
+                        ["2021-04-14", 2.82, 71.75, 125.45, 0.00, 0.00, 0.00],
+                    ]
+                }],
+                "tooltip": {
+                    "trigger": "axis"
+                },
+                "legend": {
+                },
+                "toolbox": {
+                    "feature": {
+                        // dataZoom: {
+                            // filterMode: 'none'
+                        // }
+                    }
+                },
+                // dataZoom: {
+                //     filterMode: 'none',
+                //     yAxisIndex: 0
+                // },
+                "xAxis": [
+                    {
+                    "type": "category",
+                    "boundaryGap": false
+                    }
+                ],
+                "yAxis": [
+                    {
+                        "type": "value",
+                        "min": 0,
+                        "max": 100,
+                        "axisLabel": { "formatter": "{value} %" }
+                    }
+                ],
+                "series": [{
+                    "type": "line",
+                    "stack": "总量",
+                    "smooth": true,
+                    "areaStyle": {},
+                    "emphasis": {
+                        "focus": "series"
+                    }
+                }, {
+                    "type": "line",
+                    "stack": "总量",
+                    "smooth": true,
+                    "areaStyle": {},
+                    "emphasis": {
+                        "focus": "series"
+                    }
+                }, {
+                    "type": "line",
+                    "stack": "总量",
+                    "smooth": true,
+                    "areaStyle": {},
+                    "emphasis": {
+                        "focus": "series"
+                    }
+                }, {
+                    "type": "line",
+                    "stack": "总量",
+                    "smooth": true,
+                    "areaStyle": {},
+                    "emphasis": {
+                        "focus": "series"
+                    }
+                }, {
+                    "type": "line",
+                    "stack": "总量",
+                    "smooth": true,
+                    "areaStyle": {},
+                    "emphasis": {
+                        "focus": "series"
+                    }
+                }, {
+                    "type": "line",
+                    "stack": "总量",
+                    "smooth": true,
+                    "areaStyle": {},
+                    "emphasis": {
+                        "focus": "series"
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main-stack-extreme', {
+                title: [
+                    'No dataZoom declared but toolbox declared.',
+                    'The top area should no filterd',
+                    'The last point is over 100'
+                ],
+                option: option,
+                height: 300
+            });
+        });
+        </script>
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var option = option = {
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    },
+                    yAxis: {
+                        type: 'value',
+                        // it works
+                        // max: 820
+                        // less than the min value of data
+                        max: 500
+                    },
+                    series: [
+                        {
+                            data: [820, 932, 901, 934, 1290, 1330, 1320],
+                            type: 'line'
+                        },
+                        {
+                            data: [820, 932, 901, 934, 1290, 1330, 1320],
+                            type: 'bar'
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'The **line** series should be **invisible**',
+                        'The **bar** series should be **partially visible**',
+                        'The y-axis should be shown',
+                        'The max value of y-axis should be 500'
+                    ],
+                    option: option,
+                    height: 300
+                });
+            });
+        </script>
+
+
+    </body>
+</html>
+

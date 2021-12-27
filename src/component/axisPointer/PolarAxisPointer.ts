@@ -22,15 +22,15 @@ import * as graphic from '../../util/graphic';
 import * as viewHelper from './viewHelper';
 import * as matrix from 'zrender/src/core/matrix';
 import AxisBuilder from '../axis/AxisBuilder';
-import AxisView from '../axis/AxisView';
-import {OptionDataValue,
+import {
+    OptionDataValue,
     ScaleDataValue,
     CommonAxisPointerOption,
     ZRTextAlign,
     ZRTextVerticalAlign
 } from '../../util/types';
 import { PolarAxisModel } from '../../coord/polar/AxisModel';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import Polar from '../../coord/polar/Polar';
 import AngleAxis from '../../coord/polar/AngleAxis';
 import RadiusAxis from '../../coord/polar/RadiusAxis';
@@ -190,8 +190,5 @@ const pointerShapeBuilder = {
             };
     }
 };
-
-// @ts-ignore
-AxisView.registerAxisPointerClass('PolarAxisPointer', PolarAxisPointer);
 
 export default PolarAxisPointer;

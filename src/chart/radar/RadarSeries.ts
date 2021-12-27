@@ -18,7 +18,7 @@
 */
 
 import SeriesModel from '../../model/Series';
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
@@ -32,10 +32,11 @@ import {
     StatesOptionMixin,
     OptionDataItemObject,
     SeriesEncodeOptionMixin,
-    CallbackDataParams
+    CallbackDataParams,
+    DefaultStatesMixinEmpasis
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import Radar from '../../coord/radar/Radar';
 import {
     createTooltipMarkup, retrieveVisualColorForTooltipMarker
@@ -43,18 +44,24 @@ import {
 
 type RadarSeriesDataValue = OptionDataValue[];
 
-export interface RadarSeriesStateOption {
+interface RadarStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
+export interface RadarSeriesStateOption<TCbParams = never> {
     lineStyle?: LineStyleOption
     areaStyle?: AreaStyleOption
     label?: SeriesLabelOption
-    itemStyle?: ItemStyleOption
+    itemStyle?: ItemStyleOption<TCbParams>
 }
 export interface RadarSeriesDataItemOption extends SymbolOptionMixin,
-    RadarSeriesStateOption, StatesOptionMixin<RadarSeriesStateOption>,
+    RadarSeriesStateOption<CallbackDataParams>,
+    StatesOptionMixin<RadarSeriesStateOption<CallbackDataParams>, RadarStatesMixin>,
     OptionDataItemObject<RadarSeriesDataValue> {
 }
 
-export interface RadarSeriesOption extends SeriesOption<RadarSeriesStateOption>, RadarSeriesStateOption,
+export interface RadarSeriesOption
+    extends SeriesOption<RadarSeriesStateOption, RadarStatesMixin>,
+    RadarSeriesStateOption,
     SymbolOptionMixin<CallbackDataParams>, SeriesEncodeOptionMixin {
     type?: 'radar'
     coordinateSystem?: 'radar'
@@ -74,8 +81,6 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
 
     coordinateSystem: Radar;
 
-    useColorPaletteOnData = true;
-
     hasSymbolVisual = true;
 
     // Overwrite
@@ -90,8 +95,8 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
 
     }
 
-    getInitialData(option: RadarSeriesOption, ecModel: GlobalModel): List {
-        return createListSimply(this, {
+    getInitialData(option: RadarSeriesOption, ecModel: GlobalModel): SeriesData {
+        return createSeriesDataSimply(this, {
             generateCoord: 'indicator_',
             generateCoordCount: Infinity
         });
@@ -145,14 +150,16 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
     }
 
     static defaultOption: RadarSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
+        colorBy: 'data',
         coordinateSystem: 'radar',
         legendHoverLink: true,
         radarIndex: 0,
         lineStyle: {
             width: 2,
-            type: 'solid'
+            type: 'solid',
+            join: 'round'
         },
         label: {
             position: 'top'
@@ -160,12 +167,9 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
         // areaStyle: {
         // },
         // itemStyle: {}
-        symbol: 'emptyCircle',
-        symbolSize: 4
+        symbolSize: 8
         // symbolRotate: null
     };
 }
-
-SeriesModel.registerClass(RadarSeriesModel);
 
 export default RadarSeriesModel;

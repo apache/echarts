@@ -27,19 +27,23 @@ import {
     ColorString,
     ZRColor,
     OptionDataValue,
-    SeriesDataType
+    SeriesDataType,
+    ComponentMainType,
+    ComponentSubType,
+    DimensionLoose,
+    InterpolatableValue,
 } from '../../util/types';
 import GlobalModel from '../Global';
 import { TooltipMarkupBlockFragment } from '../../component/tooltip/tooltipMarkup';
-import { makePrintable } from '../../util/log';
+import { error, makePrintable } from '../../util/log';
 
 const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
 
 export interface DataFormatMixin extends DataHost {
     ecModel: GlobalModel;
-    mainType: string;
-    subType: string;
+    mainType: ComponentMainType;
+    subType: ComponentSubType;
     componentIndex: number;
     id: string;
     name: string;
@@ -66,7 +70,7 @@ export class DataFormatMixin {
         const borderColor = style && style.stroke as ColorString;
         const mainType = this.mainType;
         const isSeries = mainType === 'series';
-        const userOutput = data.userOutput;
+        const userOutput = data.userOutput && data.userOutput.get();
 
         return {
             componentType: mainType,
@@ -83,7 +87,7 @@ export class DataFormatMixin {
             value: rawValue,
             color: color,
             borderColor: borderColor,
-            dimensionNames: userOutput ? userOutput.dimensionNames : null,
+            dimensionNames: userOutput ? userOutput.fullDimensions : null,
             encode: userOutput ? userOutput.encode : null,
 
             // Param name list for mapping `a`, `b`, `c`, `d`, `e`
@@ -107,7 +111,9 @@ export class DataFormatMixin {
         dataType?: SeriesDataType,
         labelDimIndex?: number,
         formatter?: string | ((params: object) => string),
-        extendParams?: Partial<CallbackDataParams>
+        extendParams?: {
+            interpolatedValue: InterpolatableValue
+        }
     ): string {
         status = status || 'normal';
         const data = this.getData(dataType);
@@ -115,10 +121,10 @@ export class DataFormatMixin {
         const params = this.getDataParams(dataIndex, dataType);
 
         if (extendParams) {
-            zrUtil.extend(params, extendParams);
+            params.value = extendParams.interpolatedValue;
         }
 
-        if (labelDimIndex != null && (params.value instanceof Array)) {
+        if (labelDimIndex != null && zrUtil.isArray(params.value)) {
             params.value = params.value[labelDimIndex];
         }
 
@@ -141,12 +147,29 @@ export class DataFormatMixin {
 
             // Support 'aaa{@[3]}bbb{@product}ccc'.
             // Do not support '}' in dim name util have to.
-            return str.replace(DIMENSION_LABEL_REG, function (origin, dim) {
-                const len = dim.length;
-                if (dim.charAt(0) === '[' && dim.charAt(len - 1) === ']') {
-                    dim = +dim.slice(1, len - 1); // Also: '[]' => 0
+            return str.replace(DIMENSION_LABEL_REG, function (origin, dimStr: string) {
+                const len = dimStr.length;
+
+                let dimLoose: DimensionLoose = dimStr;
+                if (dimLoose.charAt(0) === '[' && dimLoose.charAt(len - 1) === ']') {
+                    dimLoose = +dimLoose.slice(1, len - 1); // Also support: '[]' => 0
+                    if (__DEV__) {
+                        if (isNaN(dimLoose)) {
+                            error(`Invalide label formatter: @${dimStr}, only support @[0], @[1], @[2], ...`);
+                        }
+                    }
                 }
-                return retrieveRawValue(data, dataIndex, dim);
+
+                let val = retrieveRawValue(data, dataIndex, dimLoose) as OptionDataValue;
+
+                if (extendParams && zrUtil.isArray(extendParams.interpolatedValue)) {
+                    const dimIndex = data.getDimensionIndex(dimLoose);
+                    if (dimIndex >= 0) {
+                        val = extendParams.interpolatedValue[dimIndex];
+                    }
+                }
+
+                return val != null ? val + '' : '';
             });
         }
     }

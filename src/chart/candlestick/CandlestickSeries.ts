@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import {WhiskerBoxCommonMixin} from '../helper/whiskerBoxCommon';
 import {
@@ -29,16 +28,17 @@ import {
     ColorString,
     SeriesLabelOption,
     SeriesLargeOptionMixin,
-    OptionDataValueNumeric,
     StatesOptionMixin,
-    DefaultExtraEmpasisState,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    DefaultEmphasisFocus,
+    OptionDataValue
 } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
+import { mixin } from 'zrender/src/core/util';
 
-type CandlestickDataValue = OptionDataValueNumeric[];
+type CandlestickDataValue = OptionDataValue[];
 
 interface CandlestickItemStyleOption extends ItemStyleOption {
     color0?: ZRColor
@@ -55,7 +55,7 @@ export interface CandlestickDataItemOption
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus']
+        focus?: DefaultEmphasisFocus
         scale?: boolean
     }
 }
@@ -99,7 +99,7 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
     ];
 
     static defaultOption: CandlestickSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
@@ -112,13 +112,13 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
         clip: true,
 
         itemStyle: {
-            color: '#c23531', // 阳线 positive
-            color0: '#314656', // 阴线 negative     '#c23531', '#314656'
-            borderWidth: 1,
-            // FIXME
-            // ec2中使用的是lineStyle.color 和 lineStyle.color0
-            borderColor: '#c23531',
-            borderColor0: '#314656'
+            color: '#eb5454', // positive
+            color0: '#47b262', // negative
+            borderColor: '#eb5454',
+            borderColor0: '#47b262',
+            // borderColor: '#d24040',
+            // borderColor0: '#398f4f',
+            borderWidth: 1
         },
 
         emphasis: {
@@ -151,14 +151,12 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
         return 'open';
     }
 
-    brushSelector(dataIndex: number, data: List, selectors: BrushCommonSelectorsForSeries): boolean {
+    brushSelector(dataIndex: number, data: SeriesData, selectors: BrushCommonSelectorsForSeries): boolean {
         const itemLayout = data.getItemLayout(dataIndex);
         return itemLayout && selectors.rect(itemLayout.brushRect);
     }
 }
 
-zrUtil.mixin(CandlestickSeriesModel, WhiskerBoxCommonMixin, true);
-
-SeriesModel.registerClass(CandlestickSeriesModel);
+mixin(CandlestickSeriesModel, WhiskerBoxCommonMixin, true);
 
 export default CandlestickSeriesModel;

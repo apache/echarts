@@ -25,7 +25,7 @@ import type Polar from '../coord/polar/Polar';
 import AngleAxis from '../coord/polar/AngleAxis';
 import RadiusAxis from '../coord/polar/RadiusAxis';
 import GlobalModel from '../model/Global';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import { Dictionary } from '../util/types';
 
 type PolarAxis = AngleAxis | RadiusAxis;
@@ -183,7 +183,15 @@ function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: Extension
                 // Consider that positive angle is anti-clockwise,
                 // while positive radian of sector is clockwise
                 startAngle: -startAngle * Math.PI / 180,
-                endAngle: -endAngle * Math.PI / 180
+                endAngle: -endAngle * Math.PI / 180,
+
+                /**
+                 * Keep the same logic with bar in catesion: use end value to
+                 * control direction. Notice that if clockwise is true (by
+                 * default), the sector will always draw clockwisely, no matter
+                 * whether endAngle is greater or less than startAngle.
+                 */
+                clockwise: startAngle >= endAngle
             });
 
         }

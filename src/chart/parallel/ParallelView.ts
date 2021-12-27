@@ -20,15 +20,17 @@
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import ParallelSeriesModel, { ParallelSeriesDataItemOption } from './ParallelSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { StageHandlerProgressParams, ParsedValue, Payload } from '../../util/types';
 import Parallel from '../../coord/parallel/Parallel';
 import { OptionAxisType } from '../../coord/axisCommonTypes';
 import { numericToNumber } from '../../util/number';
 import { eqNaN } from 'zrender/src/core/util';
+import { saveOldStyle } from '../../animation/basicTrasition';
+import Element from 'zrender/src/Element';
 
 const DEFAULT_SMOOTH = 0.3;
 
@@ -41,9 +43,11 @@ class ParallelView extends ChartView {
 
     private _dataGroup = new graphic.Group();
 
-    private _data: List;
+    private _data: SeriesData;
 
     private _initialized = false;
+
+    private _progressiveEls: Element[];
 
     init() {
         this.group.add(this._dataGroup);
@@ -58,6 +62,10 @@ class ParallelView extends ChartView {
         api: ExtensionAPI,
         payload: Payload
     ) {
+
+        // Clear previously rendered progressive elements.
+        this._progressiveEls = null;
+
         const dataGroup = this._dataGroup;
         const data = seriesModel.getData();
         const oldData = this._data;
@@ -83,6 +91,8 @@ class ParallelView extends ChartView {
             data.setItemGraphicEl(newDataIndex, line);
 
             graphic.updateProps(line, {shape: {points: points}}, seriesModel, newDataIndex);
+
+            saveOldStyle(line);
 
             updateElCommon(line, data, newDataIndex, seriesScope);
         }
@@ -120,11 +130,13 @@ class ParallelView extends ChartView {
         const coordSys = seriesModel.coordinateSystem;
         const dimensions = coordSys.dimensions;
         const seriesScope = makeSeriesScope(seriesModel);
+        const progressiveEls: Element[] = this._progressiveEls = [];
 
         for (let dataIndex = taskParams.start; dataIndex < taskParams.end; dataIndex++) {
             const line = addEl(data, this._dataGroup, dataIndex, dimensions, coordSys);
             line.incremental = true;
             updateElCommon(line, data, dataIndex, seriesScope);
+            progressiveEls.push(line);
         }
     }
 
@@ -157,7 +169,7 @@ function createGridClipShape(coordSys: Parallel, seriesModel: ParallelSeriesMode
     return rectEl;
 }
 
-function createLinePoints(data: List, dataIndex: number, dimensions: string[], coordSys: Parallel) {
+function createLinePoints(data: SeriesData, dataIndex: number, dimensions: string[], coordSys: Parallel) {
     const points = [];
     for (let i = 0; i < dimensions.length; i++) {
         const dimName = dimensions[i];
@@ -169,7 +181,9 @@ function createLinePoints(data: List, dataIndex: number, dimensions: string[], c
     return points;
 }
 
-function addEl(data: List, dataGroup: graphic.Group, dataIndex: number, dimensions: string[], coordSys: Parallel) {
+function addEl(
+    data: SeriesData, dataGroup: graphic.Group, dataIndex: number, dimensions: string[], coordSys: Parallel
+) {
     const points = createLinePoints(data, dataIndex, dimensions, coordSys);
     const line = new graphic.Polyline({
         shape: {points: points},
@@ -192,7 +206,7 @@ function makeSeriesScope(seriesModel: ParallelSeriesModel): ParallelDrawSeriesSc
 
 function updateElCommon(
     el: graphic.Polyline,
-    data: List,
+    data: SeriesData,
     dataIndex: number,
     seriesScope: ParallelDrawSeriesScope
 ) {
@@ -234,7 +248,5 @@ function isEmptyValue(val: ParsedValue, axisType: OptionAxisType) {
         ? val == null
         : (val == null || isNaN(val as number)); // axisType === 'value'
 }
-
-ChartView.registerClass(ParallelView);
 
 export default ParallelView;

@@ -32,7 +32,7 @@ import {
 import env from 'zrender/src/core/env';
 import GlobalModel from '../model/Global';
 import ComponentModel, {ComponentModelConstructor} from '../model/Component';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import {
     ComponentOption,
     ComponentMainType,
@@ -44,15 +44,18 @@ import {
     Payload,
     OptionId,
     OptionName,
-    ParsedValue
+    InterpolatableValue
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
-import { isNumeric, getRandomIdBase, getPrecisionSafe, round } from './number';
-import { interpolateNumber } from 'zrender/src/animation/Animator';
+import { isNumeric, getRandomIdBase, getPrecision, round } from './number';
 import { warn } from './log';
+
+function interpolateNumber(p0: number, p1: number, percent: number): number {
+    return (p1 - p0) * percent + p0;
+}
 
 /**
  * Make the name displayable. But we should
@@ -686,7 +689,7 @@ export function compressBatches(
  *                         each of which can be Array or primary type.
  * @return dataIndex If not found, return undefined/null.
  */
-export function queryDataIndex(data: List, payload: Payload & {
+export function queryDataIndex(data: SeriesData, payload: Payload & {
     dataIndexInside?: number | number[]
     dataIndex?: number | number[]
     name?: string | string[]
@@ -774,8 +777,8 @@ export type ModelFinderObject = {
     xAxisIndex?: ModelFinderIndexQuery, xAxisId?: ModelFinderIdQuery, xAxisName?: ModelFinderNameQuery
     yAxisIndex?: ModelFinderIndexQuery, yAxisId?: ModelFinderIdQuery, yAxisName?: ModelFinderNameQuery
     gridIndex?: ModelFinderIndexQuery, gridId?: ModelFinderIdQuery, gridName?: ModelFinderNameQuery
-       // ... (can be extended)
-    [key: string]: unknown
+    dataIndex?: number, dataIndexInside?: number
+    // ... (can be extended)
 };
 /**
  * {
@@ -786,7 +789,12 @@ export type ModelFinderObject = {
  *     ...
  * }
  */
-type ParsedModelFinderKnown = {
+export type ParsedModelFinder = {
+    // other components
+    [key: string]: ComponentModel | ComponentModel[] | undefined;
+};
+
+export type ParsedModelFinderKnown = ParsedModelFinder & {
     seriesModels?: SeriesModel[];
     seriesModel?: SeriesModel;
     xAxisModels?: CartesianAxisModel[];
@@ -797,10 +805,6 @@ type ParsedModelFinderKnown = {
     gridModel?: GridModel;
     dataIndex?: number;
     dataIndexInside?: number;
-};
-export type ParsedModelFinder = ParsedModelFinderKnown & {
-    // other components
-    [key: string]: ComponentModel | ComponentModel[];
 };
 
 /**
@@ -818,44 +822,8 @@ export function parseFinder(
         enableNone?: boolean;
     }
 ): ParsedModelFinder {
-    let finder: ModelFinderObject;
-    if (isString(finderInput)) {
-        const obj = {};
-        (obj as any)[finderInput + 'Index'] = 0;
-        finder = obj;
-    }
-    else {
-        finder = finderInput;
-    }
-
-    const queryOptionMap = createHashMap<QueryReferringUserOption, ComponentMainType>();
-    const result = {} as ParsedModelFinder;
-    let mainTypeSpecified = false;
-
-    each(finder, function (value, key) {
-        // Exclude 'dataIndex' and other illgal keys.
-        if (key === 'dataIndex' || key === 'dataIndexInside') {
-            result[key] = value as number;
-            return;
-        }
-
-        const parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
-        const mainType = parsedKey[1];
-        const queryType = (parsedKey[2] || '').toLowerCase() as keyof QueryReferringUserOption;
-
-        if (
-            !mainType
-            || !queryType
-            || (opt && opt.includeMainTypes && indexOf(opt.includeMainTypes, mainType) < 0)
-        ) {
-            return;
-        }
-
-        mainTypeSpecified = mainTypeSpecified || !!mainType;
-
-        const queryOption = queryOptionMap.get(mainType) || queryOptionMap.set(mainType, {});
-        queryOption[queryType] = value as any;
-    });
+    const { mainTypeSpecified, queryOptionMap, others } = preParseFinder(finderInput, opt);
+    const result = others as ParsedModelFinderKnown;
 
     const defaultMainType = opt ? opt.defaultMainType : null;
     if (!mainTypeSpecified && defaultMainType) {
@@ -879,6 +847,60 @@ export function parseFinder(
 
     return result;
 }
+
+export function preParseFinder(
+    finderInput: ModelFinder,
+    opt?: {
+        // If pervided, types out of this list will be ignored.
+        includeMainTypes?: ComponentMainType[];
+    }
+): {
+    mainTypeSpecified: boolean;
+    queryOptionMap: HashMap<QueryReferringUserOption, ComponentMainType>;
+    others: Partial<Pick<ParsedModelFinderKnown, 'dataIndex' | 'dataIndexInside'>>
+} {
+    let finder: ModelFinderObject;
+    if (isString(finderInput)) {
+        const obj = {};
+        (obj as any)[finderInput + 'Index'] = 0;
+        finder = obj;
+    }
+    else {
+        finder = finderInput;
+    }
+
+    const queryOptionMap = createHashMap<QueryReferringUserOption, ComponentMainType>();
+    const others = {} as Partial<Pick<ParsedModelFinderKnown, 'dataIndex' | 'dataIndexInside'>>;
+    let mainTypeSpecified = false;
+
+    each(finder, function (value, key) {
+        // Exclude 'dataIndex' and other illgal keys.
+        if (key === 'dataIndex' || key === 'dataIndexInside') {
+            others[key] = value as number;
+            return;
+        }
+
+        const parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
+        const mainType = parsedKey[1];
+        const queryType = (parsedKey[2] || '').toLowerCase() as keyof QueryReferringUserOption;
+
+        if (
+            !mainType
+            || !queryType
+            || (opt && opt.includeMainTypes && indexOf(opt.includeMainTypes, mainType) < 0)
+        ) {
+            return;
+        }
+
+        mainTypeSpecified = mainTypeSpecified || !!mainType;
+
+        const queryOption = queryOptionMap.get(mainType) || queryOptionMap.set(mainType, {});
+        queryOption[queryType] = value as any;
+    });
+
+    return { mainTypeSpecified, queryOptionMap, others };
+}
+
 
 export type QueryReferringUserOption = {
     index?: ModelFinderIndexQuery,
@@ -1003,18 +1025,22 @@ export function groupData<T, R extends string | number>(
  *
  * @param data         data
  * @param labelModel   label model of the text element
- * @param sourceValue  start value
+ * @param sourceValue  start value. May be null/undefined when init.
  * @param targetValue  end value
  * @param percent      0~1 percentage; 0 uses start value while 1 uses end value
  * @return             interpolated values
+ *                     If `sourceValue` and `targetValue` are `number`, return `number`.
+ *                     If `sourceValue` and `targetValue` are `string`, return `string`.
+ *                     If `sourceValue` and `targetValue` are `(string | number)[]`, return `(string | number)[]`.
+ *                     Other cases do not supported.
  */
 export function interpolateRawValues(
-    data: List,
+    data: SeriesData,
     precision: number | 'auto',
-    sourceValue: ParsedValue[] | ParsedValue,
-    targetValue: ParsedValue[] | ParsedValue,
+    sourceValue: InterpolatableValue,
+    targetValue: InterpolatableValue,
     percent: number
-): (string | number)[] | string | number {
+): InterpolatableValue {
     const isAutoPrecision = precision == null || precision === 'auto';
 
     if (targetValue == null) {
@@ -1030,8 +1056,8 @@ export function interpolateRawValues(
         return round(
             value,
             isAutoPrecision ? Math.max(
-                getPrecisionSafe(sourceValue as number || 0),
-                getPrecisionSafe(targetValue as number)
+                getPrecision(sourceValue as number || 0),
+                getPrecision(targetValue as number)
             )
             : precision as number
         );
@@ -1041,26 +1067,25 @@ export function interpolateRawValues(
     }
     else {
         const interpolated = [];
-        const leftArr = sourceValue as (string | number)[] || [];
+        const leftArr = sourceValue as (string | number)[];
         const rightArr = targetValue as (string | number[]);
-        const length = Math.max(leftArr.length, rightArr.length);
+        const length = Math.max(leftArr ? leftArr.length : 0, rightArr.length);
         for (let i = 0; i < length; ++i) {
             const info = data.getDimensionInfo(i);
             // Don't interpolate ordinal dims
-            if (info.type === 'ordinal') {
-                interpolated[i] = (percent < 1 ? leftArr : rightArr)[i] as number;
+            if (info && info.type === 'ordinal') {
+                // In init, there is no `sourceValue`, but should better not to get undefined result.
+                interpolated[i] = (percent < 1 && leftArr ? leftArr : rightArr)[i] as number;
             }
             else {
                 const leftVal = leftArr && leftArr[i] ? leftArr[i] as number : 0;
                 const rightVal = rightArr[i] as number;
-                const value = leftArr == null
-                    ? (targetValue as [])[i]
-                    : interpolateNumber(leftVal, rightVal, percent);
+                const value = interpolateNumber(leftVal, rightVal, percent);
                 interpolated[i] = round(
                     value,
                     isAutoPrecision ? Math.max(
-                        getPrecisionSafe(leftVal),
-                        getPrecisionSafe(rightVal)
+                        getPrecision(leftVal),
+                        getPrecision(rightVal)
                     )
                     : precision as number
                 );

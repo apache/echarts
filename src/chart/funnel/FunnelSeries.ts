@@ -18,7 +18,7 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import {defaultEmphasis} from '../../util/model';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
@@ -36,26 +36,33 @@ import {
     LayoutOrient,
     VerticalAlign,
     SeriesLabelOption,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    DefaultStatesMixinEmpasis,
+    CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
-import ComponentModel from '../../model/Component';
-
+import SeriesData from '../../data/SeriesData';
 
 type FunnelLabelOption = Omit<SeriesLabelOption, 'position'> & {
     position?: LabelOption['position']
         | 'outer' | 'inner' | 'center' | 'rightTop' | 'rightBottom' | 'leftTop' | 'leftBottom'
 };
 
-export interface FunnelStateOption {
-    itemStyle?: ItemStyleOption
+interface FunnelStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
+
+export interface FunnelCallbackDataParams extends CallbackDataParams {
+    percent: number
+}
+export interface FunnelStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: FunnelLabelOption
     labelLine?: LabelLineOption
 }
 
 export interface FunnelDataItemOption
-    extends FunnelStateOption, StatesOptionMixin<FunnelStateOption>,
+    extends FunnelStateOption, StatesOptionMixin<FunnelStateOption, FunnelStatesMixin>,
     OptionDataItemObject<OptionDataValueNumeric> {
 
     itemStyle?: ItemStyleOption & {
@@ -64,7 +71,9 @@ export interface FunnelDataItemOption
     }
 }
 
-export interface FunnelSeriesOption extends SeriesOption<FunnelStateOption>, FunnelStateOption,
+export interface FunnelSeriesOption
+    extends SeriesOption<FunnelStateOption<FunnelCallbackDataParams>, FunnelStatesMixin>,
+    FunnelStateOption<FunnelCallbackDataParams>,
     BoxLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'funnel'
 
@@ -92,8 +101,6 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
     static type = 'series.funnel' as const;
     type = FunnelSeriesModel.type;
 
-    useColorPaletteOnData = true;
-
     init(option: FunnelSeriesOption) {
         super.init.apply(this, arguments as any);
 
@@ -106,8 +113,8 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
         this._defaultLabelLine(option);
     }
 
-    getInitialData(this: FunnelSeriesModel, option: FunnelSeriesOption, ecModel: GlobalModel): List {
-        return createListSimply(this, {
+    getInitialData(this: FunnelSeriesModel, option: FunnelSeriesOption, ecModel: GlobalModel): SeriesData {
+        return createSeriesDataSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
@@ -127,9 +134,9 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
     }
 
     // Overwrite
-    getDataParams(dataIndex: number) {
+    getDataParams(dataIndex: number): FunnelCallbackDataParams {
         const data = this.getData();
-        const params = super.getDataParams(dataIndex);
+        const params = super.getDataParams(dataIndex) as FunnelCallbackDataParams;
         const valueDim = data.mapDimension('value');
         const sum = data.getSum(valueDim);
         // Percent is 0 if sum is 0
@@ -140,9 +147,10 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
     }
 
     static defaultOption: FunnelSeriesOption = {
-        zlevel: 0,                  // 一级层叠
+        // zlevel: 0,                  // 一级层叠
         z: 2,                       // 二级层叠
         legendHoverLink: true,
+        colorBy: 'data',
         left: 80,
         top: 60,
         right: 80,
@@ -190,7 +198,5 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
     };
 
 }
-
-ComponentModel.registerClass(FunnelSeriesModel);
 
 export default FunnelSeriesModel;

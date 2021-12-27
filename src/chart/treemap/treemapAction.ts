@@ -17,13 +17,12 @@
 * under the License.
 */
 
-
-import * as echarts from '../../echarts';
 import * as helper from '../helper/treeHelper';
 import { Payload } from '../../util/types';
 import TreemapSeriesModel from './TreemapSeries';
 import { TreeNode } from '../../data/Tree';
 import { RectLike } from 'zrender/src/core/BoundingRect';
+import { EChartsExtensionInstallRegisters } from '../../extension';
 
 const noop = function () {};
 
@@ -52,34 +51,37 @@ export interface TreemapRootToNodePayload extends Payload {
     direction?: 'rollUp' | 'drillDown'
 }
 
-for (let i = 0; i < actionTypes.length; i++) {
-    echarts.registerAction({
-        type: actionTypes[i],
-        update: 'updateView'
-    }, noop);
-}
+export function installTreemapAction(registers: EChartsExtensionInstallRegisters) {
+    for (let i = 0; i < actionTypes.length; i++) {
+        registers.registerAction({
+            type: actionTypes[i],
+            update: 'updateView'
+        }, noop);
+    }
 
-echarts.registerAction(
-    {type: 'treemapRootToNode', update: 'updateView'},
-    function (payload, ecModel) {
+    registers.registerAction(
+        {type: 'treemapRootToNode', update: 'updateView'},
+        function (payload, ecModel) {
 
-        ecModel.eachComponent(
-            {mainType: 'series', subType: 'treemap', query: payload},
-            handleRootToNode
-        );
+            ecModel.eachComponent(
+                {mainType: 'series', subType: 'treemap', query: payload},
+                handleRootToNode
+            );
 
-        function handleRootToNode(model: TreemapSeriesModel, index: number) {
-            const types = ['treemapZoomToNode', 'treemapRootToNode'];
-            const targetInfo = helper.retrieveTargetInfo(payload, types, model);
+            function handleRootToNode(model: TreemapSeriesModel, index: number) {
+                const types = ['treemapZoomToNode', 'treemapRootToNode'];
+                const targetInfo = helper.retrieveTargetInfo(payload, types, model);
 
-            if (targetInfo) {
-                const originViewRoot = model.getViewRoot();
-                if (originViewRoot) {
-                    payload.direction = helper.aboveViewRoot(originViewRoot, targetInfo.node)
-                        ? 'rollUp' : 'drillDown';
+                if (targetInfo) {
+                    const originViewRoot = model.getViewRoot();
+                    if (originViewRoot) {
+                        payload.direction = helper.aboveViewRoot(originViewRoot, targetInfo.node)
+                            ? 'rollUp' : 'drillDown';
+                    }
+                    model.resetViewRoot(targetInfo.node);
                 }
-                model.resetViewRoot(targetInfo.node);
             }
         }
-    }
-);
+    );
+
+}

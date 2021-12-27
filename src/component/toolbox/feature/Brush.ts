@@ -21,11 +21,10 @@ import * as zrUtil from 'zrender/src/core/util';
 import {
     ToolboxFeatureModel,
     ToolboxFeatureOption,
-    registerFeature,
     ToolboxFeature
 } from '../featureManager';
 import GlobalModel from '../../../model/Global';
-import ExtensionAPI from '../../../ExtensionAPI';
+import ExtensionAPI from '../../../core/ExtensionAPI';
 import BrushModel from '../../brush/BrushModel';
 import { BrushTypeUncertain } from '../../helper/BrushController';
 
@@ -144,13 +143,11 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
                 /* eslint-enable */
             },
             // `rect`, `polygon`, `lineX`, `lineY`, `keep`, `clear`
-            title: ecModel.getLocale(['toolbox', 'brush', 'title'])
+            title: ecModel.getLocaleModel().get(['toolbox', 'brush', 'title'])
         };
 
         return defaultOption;
     }
 }
-
-registerFeature('brush', BrushFeature);
 
 export default BrushFeature;

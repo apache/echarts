@@ -17,14 +17,15 @@
 * under the License.
 */
 
-import { createChart, getGraphicElements } from '../../../core/utHelper';
+import { createChart, getGraphicElements, getECModel } from '../../../core/utHelper';
 // import { imageURI } from './setOptionImageURI';
 import { EChartsType } from '../../../../../src/echarts';
 import Element from 'zrender/src/Element';
-import { EChartsFullOption } from '../../../../../src/option';
+import { EChartsOption } from '../../../../../src/export/option';
 import {
-    GraphicComponentOption, GraphicComponentImageOption
-} from '../../../../../src/component/graphic';
+    GraphicComponentOption,
+    GraphicComponentImageOption
+} from '../../../../../src/component/graphic/GraphicModel';
 import Group from 'zrender/src/graphic/Group';
 import { Dictionary } from 'zrender/src/core/types';
 
@@ -338,8 +339,8 @@ describe('graphic_setOption', function () {
                 ]
             });
 
-            expect(!!chart.getModel().getComponent('graphic')).toEqual(true);
-            expect(chart.getModel().getComponent('graphic', 1) == null).toEqual(true);
+            expect(!!getECModel(chart).getComponent('graphic')).toEqual(true);
+            expect(getECModel(chart).getComponent('graphic', 1) == null).toEqual(true);
         });
 
 
@@ -1049,7 +1050,7 @@ describe('graphic_setOption', function () {
 
     describe('boundingAndRotation', function () {
 
-        function getOption(): EChartsFullOption {
+        function getOption(): EChartsOption {
             return {
                 legend: {
                     data: ['高度(km)与气温(°C)变化关系']

@@ -17,17 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
-import * as zrUtil from 'zrender/src/core/util';
+import { use } from '../extension';
+import { install } from './sunburst/install';
 
-import './sunburst/SunburstSeries';
-import './sunburst/SunburstView';
-import './sunburst/sunburstAction';
-
-import sunburstLayout from './sunburst/sunburstLayout';
-import sunburstVisual from './sunburst/sunburstVisual';
-import dataFilter from '../processor/dataFilter';
-
-echarts.registerLayout(zrUtil.curry(sunburstLayout, 'sunburst'));
-echarts.registerProcessor(zrUtil.curry(dataFilter, 'sunburst'));
-echarts.registerVisual(sunburstVisual);
+use(install);

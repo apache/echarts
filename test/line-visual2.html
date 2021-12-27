@@ -1,0 +1,540 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+        <meta name="viewport" content="user-scalable=no,width=device-width,height=device-height">
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['pm0.5', 'pm2.5']
+                    },
+                    grid: {
+                        top: '18%',
+                        left: '3%',
+                        right: '8%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['4-1', '4-2', '4-3', '4-4', '4-5', '4-6']
+                    },
+                    yAxis: {
+                        type: 'log',
+                        axisLabel: {
+                            formatter: function(value) {
+                                return value === 0.1 ? 0 : value
+                            }
+                        }
+                    },
+                    series: [{
+                            name: 'pm0.5',
+                            type: 'line',
+                            areaStyle: {
+                                //color: 'cyan'
+                            },
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            // lineStyle: {
+                            //     color: '#FEC171'
+                            // },
+                            data: [15, 200, 3000, 50000, 1200000],
+                            markLine: {
+                                data: [{
+                                    name: `Y 轴值为 150 的水平线`,
+                                    yAxis: 150
+                                }],
+                                lineStyle: {
+                                    color: '#30B08F'
+                                }
+                            }
+                        },
+                        {
+                            name: 'pm2.5',
+                            type: 'line',
+                            areaStyle: {
+                                // color: 'blue'
+                            },
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            // lineStyle: {
+                            //     color: '#409EFF'
+                            // },
+                            data: [1200000, 50000, 3000, 200, 15],
+                            markLine: {
+                                data: [{
+                                    name: `X 轴值为 4-2 的水平线`,
+                                    xAxis: '4-2'
+                                }],
+                                lineStyle: {
+                                    color: 'red'
+                                }
+                            }
+                        }
+                    ],
+                    visualMap: {
+                        // show: false,
+                        pieces: [{
+                            gte: 0,
+                            lte: 150,
+                            color: '#30B08F'
+                        }, {
+                            gt: 150,
+                            color: '#C03639'
+                        }],
+                        outOfRange: {
+                            color: 'gray'
+                        },
+                        right: '10%',
+                        bottom: '10%',
+                        orient: 'vertical'
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }]
+                };
+
+                testHelper.create(echarts, 'main0', {
+                    title: [
+                        'The series with log axis should be rendered without errors in console',
+                        'https://github.com/apache/echarts/issues/14601'
+                    ],
+                    option: option
+                });
+
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    xAxis: {
+                        data: [0, 1]
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            name: '会员数-周同比',
+                            type: 'line',
+                            data: [
+                                {
+                                    value: null
+                                },
+                                {
+                                    value: null
+                                }
+                            ],
+                            areaStyle: {
+                                color: {
+                                    type: 'linear',
+                                    x: 0,
+                                    y: 0,
+                                    x2: 0,
+                                    y2: 1,
+                                    index: 6,
+                                    colorStops: [
+                                        {
+                                            offset: 0,
+                                            color: 'rgba(235, 83, 46, 0.30)'
+                                        },
+                                        {
+                                            offset: 1,
+                                            color: 'rgba(235, 83, 6, 0.05)'
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Nothing should be rendered without errors in console',
+                        'https://github.com/apache/echarts/issues/14534'
+                    ],
+                    option: option
+                });
+            });
+
+        </script>
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: {
+                        type: 'time'
+                    },
+                    yAxis: {
+                        //type: 'log',
+                        //logBase: 2
+                    },
+                    visualMap: {
+                        top: 50,
+                        right: 10,
+                        pieces: [
+                            {
+                                "gte": 300,
+                                "lt": 400,
+                                "color": "#FF2E00"
+                            },
+                            {
+                                "gte": 400,
+                                "color": "#D00000"
+                            }
+                        ],
+                        outOfRange: {
+                            color: '#999'
+                        }
+                    },
+                    dataZoom: [{
+                        startValue: '2014-06-01'
+                    }, {
+                        type: 'inside'
+                    }],
+                    series: {
+                        name: 'Beijing AQI',
+                        type: 'line',
+                        data: [
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626943980000,
+                                    128
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944040000,
+                                    186
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944100000,
+                                    262
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944160000,
+                                    231
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944220000,
+                                    65
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944280000,
+                                    200
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944340000,
+                                    31
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944400000,
+                                    241
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944460000,
+                                    103
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944520000,
+                                    172
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944580000,
+                                    241
+                                ]
+                            },
+                            {
+                                "name": "474eb6f5",
+                                "value": [
+                                    1626944640000,
+                                    222
+                                ]
+                            }
+                        ]
+                    }
+                };
+
+                testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Line color should be correct when visualMap is enabled',
+                        'Test case from https://github.com/apache/echarts/issues/15407'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    title: {
+                        text: 'Awesome Chart'
+                    },
+                    xAxis: {
+                        data: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                    },
+                    yAxis: {},
+                    series: [{
+                        type: 'line',
+                        data:[220, 182, 191, 234, 290, 330, 310]
+                    }]
+                };
+
+                var $x = ["2020-08-20","2020-08-21","2020-08-24","2020-08-25","2020-08-26","2020-08-27","2020-08-28","2020-08-31","2020-09-01","2020-09-02","2020-09-03","2020-09-04","2020-09-07","2020-09-08","2020-09-09","2020-09-10","2020-09-11","2020-09-14","2020-09-15","2020-09-16","2020-09-17","2020-09-18","2020-09-21","2020-09-22","2020-09-23","2020-09-24","2020-09-25","2020-09-28","2020-09-29","2020-09-30","2020-10-09","2020-10-12","2020-10-13","2020-10-14","2020-10-15","2020-10-16","2020-10-19","2020-10-20","2020-10-21","2020-10-22","2020-10-23","2020-10-26","2020-10-27","2020-10-28","2020-10-29","2020-10-30","2020-11-02","2020-11-03","2020-11-04","2020-11-05","2020-11-06","2020-11-09","2020-11-10","2020-11-11","2020-11-12","2020-11-13","2020-11-16","2020-11-17","2020-11-18","2020-11-19","2020-11-20","2020-11-23","2020-11-24","2020-11-25","2020-11-26","2020-11-27","2020-11-30","2020-12-01","2020-12-02","2020-12-03","2020-12-04","2020-12-07","2020-12-08","2020-12-09","2020-12-10","2020-12-11","2020-12-14","2020-12-15","2020-12-16","2020-12-17","2020-12-18","2020-12-21","2020-12-22","2020-12-23","2020-12-24","2020-12-25","2020-12-28","2020-12-29","2020-12-30","2020-12-31","2021-01-04","2021-01-05","2021-01-06","2021-01-07","2021-01-08","2021-01-11","2021-01-12","2021-01-13","2021-01-14","2021-01-15","2021-01-18","2021-01-19","2021-01-20","2021-01-21","2021-01-22","2021-01-25","2021-01-26","2021-01-27","2021-01-28","2021-01-29","2021-02-01","2021-02-02","2021-02-03","2021-02-04","2021-02-05","2021-02-08","2021-02-09","2021-02-10","2021-02-18","2021-02-19","2021-02-22","2021-02-23","2021-02-24","2021-02-25","2021-02-26","2021-03-01","2021-03-02","2021-03-03","2021-03-04","2021-03-05","2021-03-08","2021-03-09","2021-03-10","2021-03-11","2021-03-12","2021-03-15","2021-03-16","2021-03-17","2021-03-18","2021-03-19","2021-03-22","2021-03-23","2021-03-24","2021-03-25","2021-03-26","2021-03-29","2021-03-30","2021-03-31","2021-04-01","2021-04-02"];
+                var $s1 = [-80.65,-86.61,-41.83,-39.31,-100.97,-58.66,-26.04,-32.31,14.12,39.83,19.21,-16.46,-61.23,-44.61,-83.63,-108.42,-87.37,-16.75,86.01,127.74,138.77,167.67,129.31,57.86,9.14,-75.93,-65.58,-64.7,20.89,39.63,97.85,122.55,145.86,105.62,72.92,17.18,-5.71,13.87,7.41,3.13,3.08,7.94,79.47,113.11,107.02,38.1,70.76,88.18,120.21,177.45,218.19,218.29,109.89,36.9,15.74,12.81,75.08,67.41,-34.81,-36.21,5.89,101.44,142.1,87.73,67.8,2.28,-16.82,-27.88,-66.38,-71.15,-12.86,37.25,83.19,55.59,27.63,5.28,36.55,57.71,50.83,48.45,124.18,178.82,145.43,164.9,172.07,257.96,207.87,31.93,22.09,4.51,102.32,187.61,221.54,258.44,191.55,154.41,207.77,74.65,-19.92,31.42,80.91,-10.89,-28.15,-10.46,96.9,109.09,77.61,61.25,-26.26,-141.56,-163.44,-53.97,-4.73,-37.68,-141.14,-68.32,46.82,99.67,138.99,76.05,62.87,-55.7,-207.52,-249,-312.76,-226.17,-178.23,-56.33,-105.31,-87.22,-161.42,-154.39,-74.05,-1.99,44.09,54.57,27.83,73.24,63.51,-11.81,-32.16,-71.25,-114.45,-85.86,24.54,37.87,70.85,5.39,-6.17,-19.2];
+                var $s2 = [-55.49,-68.41,-61.64,-62.43,-90,-87.95,-79.76,-78.58,-56.39,-34.33,-27.7,-30.23,-44.81,-42.91,-57.64,-78.61,-87.8,-72.7,-31.45,7.92,41.01,83.05,104.38,102.8,94.82,57.47,38.31,16.42,25.8,26.09,46.42,65.78,95.32,105.37,110.95,97.78,84.58,82.19,70.97,57.39,44.26,34.51,56.02,80.42,93.87,79.69,92.03,106.32,131.8,170.17,207.85,231.99,210.5,181.18,161.55,147.01,155.14,143.67,88.45,56.76,50.55,81.03,112.24,106.37,98.84,74.3,59.59,49.39,24.13,-1.54,-2.91,4.93,25.82,29.11,25.45,21.39,36.92,54.57,62.69,65.07,95.86,134.43,148.59,175.69,198.91,254.38,268.96,214.63,189.98,163.54,181.34,215.44,238.47,263.28,258.15,253.43,287.76,254.08,200.49,187.08,181.75,131.91,96.99,71.55,93.33,105.24,100.14,95.11,61.05,-0.14,-39.99,-28.82,-22.62,-42.43,-98.76,-100.84,-59.76,-14.19,31.96,37.23,44.13,11.11,-55.07,-105.27,-171.08,-195.65,-216.26,-200.89,-222.13,-219.2,-241.55,-236.55,-199.42,-152.76,-112.2,-82.32,-68.81,-29.28,1.88,-1.44,-2.75,-21.51,-52.42,-60.72,-31.75,-21.33,-0.96,-14.81,-17.06,-15.39];
+                var $visualMap1 = [{"gt":1,"lte":3,"color":"#ff0000"},{"gt":4,"lte":6,"color":"#ff0000"},{"gt":7,"lte":9,"color":"#ff0000"},{"gt":12,"lte":13,"color":"#ff0000"},{"gt":15,"lte":21,"color":"#ff0000"},{"gt":25,"lte":32,"color":"#ff0000"},{"gt":36,"lte":37,"color":"#ff0000"},{"gt":40,"lte":43,"color":"#ff0000"},{"gt":45,"lte":51,"color":"#ff0000"},{"gt":55,"lte":56,"color":"#ff0000"},{"gt":59,"lte":62,"color":"#ff0000"},{"gt":69,"lte":72,"color":"#ff0000"},{"gt":75,"lte":77,"color":"#ff0000"},{"gt":79,"lte":81,"color":"#ff0000"},{"gt":82,"lte":85,"color":"#ff0000"},{"gt":89,"lte":93,"color":"#ff0000"},{"gt":95,"lte":96,"color":"#ff0000"},{"gt":98,"lte":100,"color":"#ff0000"},{"gt":102,"lte":105,"color":"#ff0000"},{"gt":110,"lte":112,"color":"#ff0000"},{"gt":114,"lte":118,"color":"#ff0000"},{"gt":124,"lte":127,"color":"#ff0000"},{"gt":128,"lte":129,"color":"#ff0000"},{"gt":130,"lte":135,"color":"#ff0000"},{"gt":136,"lte":137,"color":"#ff0000"},{"gt":142,"lte":146,"color":"#ff0000"}];
+                var $visualMap2 = [{"gt":1,"lte":2,"color":"#ff0000"},{"gt":4,"lte":10,"color":"#ff0000"},{"gt":12,"lte":13,"color":"#ff0000"},{"gt":16,"lte":22,"color":"#ff0000"},{"gt":27,"lte":34,"color":"#ff0000"},{"gt":41,"lte":44,"color":"#ff0000"},{"gt":45,"lte":51,"color":"#ff0000"},{"gt":55,"lte":56,"color":"#ff0000"},{"gt":60,"lte":62,"color":"#ff0000"},{"gt":70,"lte":73,"color":"#ff0000"},{"gt":75,"lte":86,"color":"#ff0000"},{"gt":89,"lte":93,"color":"#ff0000"},{"gt":95,"lte":96,"color":"#ff0000"},{"gt":103,"lte":105,"color":"#ff0000"},{"gt":110,"lte":112,"color":"#ff0000"},{"gt":115,"lte":120,"color":"#ff0000"},{"gt":126,"lte":127,"color":"#ff0000"},{"gt":128,"lte":129,"color":"#ff0000"},{"gt":130,"lte":138,"color":"#ff0000"},{"gt":143,"lte":146,"color":"#ff0000"},{"gt":148,"lte":149,"color":"#ff0000"}];
+
+                option = {
+                    dataZoom: [
+                    {
+                        show: true,
+                        type: 'slider',
+                        top: '90%',
+                        start: 85,
+                        end: 100
+                    }
+                    ],
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: $x
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLabel: {
+                            formatter: '{value} W'
+                        },
+                        axisPointer: {
+                            snap: true
+                        }
+                    },
+                    visualMap: [{
+                        show: false,
+                        seriesIndex: 0, // $s1
+                        dimension: 0,
+                        pieces: $visualMap1,
+                        outOfRange: {
+                            color: 'green'
+                        },
+                    }, {
+                        show: false,
+                        seriesIndex: 1, // $s2
+                        dimension: 0,
+                        pieces: $visualMap2, //pieces的值由动态数据决定
+                        outOfRange: {
+                            color: 'green'
+                        },
+                    }],
+                    series: [
+                        {
+                            name: '用电量1',
+                            type: 'line',
+                            smooth: true,
+                            data: $s1,
+                            symbol: "none",
+
+                        },{
+                            name: '用电量2',
+                            type: 'line',
+                            smooth: true,
+                            data: $s2,
+                            lineStyle: {
+                                opacity: 1,
+                                width: 1.5,
+                                type: 'dotted'  // 这个是虚线 dashed， dotted更密集
+                            },
+                            symbol: "none",
+                        }
+                    ]
+                };
+                const myChart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Graident should have sharp stop on line chart in Chrome with GPU Acceleration enabled.',
+                        'https://github.com/apache/echarts/issues/15680'
+                    ],
+                    button: [{
+                        text: 'zoomToLast',
+                        onclick() {
+                            myChart.setOption({
+                                dataZoom: {
+                                    start: 99,
+                                    end: 100
+                                }
+                            })
+                        }
+                    }, {
+                        text: 'zoomToFirst',
+                        onclick() {
+                            myChart.setOption({
+                                dataZoom: {
+                                    start: 0,
+                                    end: 1
+                                }
+                            })
+                        }
+                    }, {
+                        text: 'zoomToAll',
+                        onclick() {
+                            myChart.setOption({
+                                dataZoom: {
+                                    start: 0,
+                                    end: 100
+                                }
+                            })
+                        }
+                    }],
+                    option: option
+                });
+            })
+
+        </script>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                const option = {
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+
+                    visualMap: {
+                        type: "piecewise",
+                        pieces: [{
+                                    gte: -1,
+                                    lte: 1,
+                                    color: '#000'
+                                }],
+                        outOfRange: { color: '#F43915' }
+                    },
+                    series: [
+                        {
+                        data: [0.2, 0.24, 0.18, 0.15, 0.18, 0.27, 0.25],
+                        type: 'line'
+                        }
+                    ]
+                };
+                const myChart = testHelper.create(echarts, 'main4', {
+                    title: [
+                        'Gradient should be black.',
+                        'https://github.com/apache/echarts/issues/15885'
+                    ],
+                    option: option
+                });
+            })
+        </script>
+    </body>
+</html>

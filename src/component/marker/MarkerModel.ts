@@ -32,7 +32,7 @@ import {
 } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { makeInner, defaultEmphasis } from '../../util/model';
 import { createTooltipMarkup } from '../tooltip/tooltipMarkup';
 
@@ -109,7 +109,7 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
 
     __hostSeries: SeriesModel;
 
-    private _data: List;
+    private _data: SeriesData;
 
     /**
      * @overrite
@@ -217,11 +217,11 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
         });
     }
 
-    getData(): List<this> {
-        return this._data as List<this>;
+    getData(): SeriesData<this> {
+        return this._data as SeriesData<this>;
     }
 
-    setData(data: List) {
+    setData(data: SeriesData) {
         this._data = data;
     }
 

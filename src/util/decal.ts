@@ -19,24 +19,26 @@
 */
 
 import WeakMap from 'zrender/src/core/WeakMap';
-import { PatternObject } from 'zrender/src/graphic/Pattern';
+import { ImagePatternObject, PatternObject, SVGPatternObject } from 'zrender/src/graphic/Pattern';
 import LRU from 'zrender/src/core/LRU';
-import {defaults, createCanvas, map, isArray} from 'zrender/src/core/util';
+import {defaults, map, isArray} from 'zrender/src/core/util';
 import {getLeastCommonMultiple} from './number';
 import {createSymbol} from './symbol';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import type SVGPainter from 'zrender/src/svg/Painter';
 import { brushSingle } from 'zrender/src/canvas/graphic';
 import {DecalDashArrayX, DecalDashArrayY, InnerDecalObject, DecalObject} from './types';
+import { SVGVNode } from 'zrender/src/svg/core';
+import { platformApi } from 'zrender/src/core/platform';
 
 const decalMap = new WeakMap<DecalObject, PatternObject>();
 
-const decalCache = new LRU<HTMLCanvasElement | SVGElement>(100);
+const decalCache = new LRU<HTMLCanvasElement | SVGVNode>(100);
 
 const decalKeys = [
     'symbol', 'symbolSize', 'symbolKeepAspect',
     'color', 'backgroundColor',
-    'dashArrayX', 'dashArrayY', 'dashLineOffset',
+    'dashArrayX', 'dashArrayY',
     'maxTileWidth', 'maxTileHeight'
 ];
 
@@ -75,7 +77,6 @@ export function createOrUpdatePatternFromDecal(
         backgroundColor: null,
         dashArrayX: 5,
         dashArrayY: 5,
-        dashLineOffset: 0,
         rotation: 0,
         maxTileWidth: 512,
         maxTileHeight: 512
@@ -118,8 +119,8 @@ export function createOrUpdatePatternFromDecal(
             cacheKey = keys.join(',') + (isSVG ? '-svg' : '');
             const cache = decalCache.get(cacheKey);
             if (cache) {
-                isSVG ? pattern.svgElement = cache as SVGElement
-                    : pattern.image = cache as HTMLCanvasElement;
+                isSVG ? (pattern as SVGPatternObject).svgElement = cache as SVGVNode
+                    : (pattern as ImagePatternObject).image = cache as HTMLCanvasElement;
             }
         }
 
@@ -129,8 +130,13 @@ export function createOrUpdatePatternFromDecal(
         const lineBlockLengthsX = getLineBlockLengthX(dashArrayX);
         const lineBlockLengthY = getLineBlockLengthY(dashArrayY);
 
-        const canvas = !isSVG && createCanvas();
-        const svgRoot = isSVG && (zr.painter as SVGPainter).createSVGElement('g');
+        const canvas = !isSVG && platformApi.createCanvas();
+        const svgRoot: SVGVNode = isSVG && {
+            tag: 'g',
+            attrs: {},
+            key: 'dcl',
+            children: []
+        };
         const pSize = getPatternSize();
         let ctx: CanvasRenderingContext2D;
         if (canvas) {
@@ -144,10 +150,10 @@ export function createOrUpdatePatternFromDecal(
             decalCache.put(cacheKey, canvas || svgRoot);
         }
 
-        pattern.image = canvas;
-        pattern.svgElement = svgRoot;
-        pattern.svgWidth = pSize.width;
-        pattern.svgHeight = pSize.height;
+        (pattern as ImagePatternObject).image = canvas;
+        (pattern as SVGPatternObject).svgElement = svgRoot;
+        (pattern as SVGPatternObject).svgWidth = pSize.width;
+        (pattern as SVGPatternObject).svgHeight = pSize.height;
 
         /**
          * Get minumum length that can make a repeatable pattern.
@@ -285,7 +291,10 @@ export function createOrUpdatePatternFromDecal(
                     decalOpt.symbolKeepAspect
                 );
                 if (isSVG) {
-                    svgRoot.appendChild((zr.painter as SVGPainter).paintOne(symbol));
+                    const symbolVNode = (zr.painter as SVGPainter).renderOneToVNode(symbol);
+                    if (symbolVNode) {
+                        svgRoot.children.push(symbolVNode);
+                    }
                 }
                 else {
                     // Paint to canvas for all other renderers.

@@ -22,13 +22,14 @@ import {getECData} from '../../util/innerStore';
 import * as layout from '../../util/layout';
 import {wrapTreePathInfo} from '../helper/treeHelper';
 import TreemapSeriesModel, { TreemapSeriesNodeItemOption, TreemapSeriesOption } from './TreemapSeries';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import { curry, defaults } from 'zrender/src/core/util';
 import { ZRElementEvent, BoxLayoutOptionMixin, ECElement } from '../../util/types';
 import Element from 'zrender/src/Element';
 import Model from '../../model/Model';
 import { convertOptionIdName } from '../../util/model';
+import { Z2_EMPHASIS_LIFT } from '../../util/states';
 
 const TEXT_PADDING = 8;
 const ITEM_GAP = 8;
@@ -180,7 +181,7 @@ class Breadcrumb {
                 textConfig: {
                     position: 'inside'
                 },
-                z: 10,
+                z2: Z2_EMPHASIS_LIFT * 1e4,    // A very large z2
                 onclick: curry(onSelect, itemNode)
             });
             (el as ECElement).disableLabelAnimation = true;
@@ -216,7 +217,7 @@ function packEventData(el: Element, seriesModel: TreemapSeriesModel, itemNode: T
         componentType: 'series',
         componentSubType: 'treemap',
         componentIndex: seriesModel.componentIndex,
-        seriesIndex: seriesModel.componentIndex,
+        seriesIndex: seriesModel.seriesIndex,
         seriesName: seriesModel.name,
         seriesType: 'treemap',
         selfType: 'breadcrumb', // Distinguish with click event on treemap node.

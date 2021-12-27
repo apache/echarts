@@ -29,6 +29,9 @@
 import * as zrUtil from 'zrender/src/core/util';
 
 const RADIAN_EPSILON = 1e-4;
+// Although chrome already enlarge this number to 100 for `toFixed`, but
+// we sill follow the spec for compatibility.
+const ROUND_SUPPORTED_PRECISION_MAX = 20;
 
 function _trim(str: string): string {
     return str.replace(/^\s+|\s+$/g, '');
@@ -47,13 +50,18 @@ export function linearMap(
     range: number[],
     clamp?: boolean
 ): number {
-    const subDomain = domain[1] - domain[0];
-    const subRange = range[1] - range[0];
+    const d0 = domain[0];
+    const d1 = domain[1];
+    const r0 = range[0];
+    const r1 = range[1];
+
+    const subDomain = d1 - d0;
+    const subRange = r1 - r0;
 
     if (subDomain === 0) {
         return subRange === 0
-            ? range[0]
-            : (range[0] + range[1]) / 2;
+            ? r0
+            : (r0 + r1) / 2;
     }
 
     // Avoid accuracy problem in edge, such as
@@ -63,32 +71,32 @@ export function linearMap(
     // is a hotspot.
     if (clamp) {
         if (subDomain > 0) {
-            if (val <= domain[0]) {
-                return range[0];
+            if (val <= d0) {
+                return r0;
             }
-            else if (val >= domain[1]) {
-                return range[1];
+            else if (val >= d1) {
+                return r1;
             }
         }
         else {
-            if (val >= domain[0]) {
-                return range[0];
+            if (val >= d0) {
+                return r0;
             }
-            else if (val <= domain[1]) {
-                return range[1];
+            else if (val <= d1) {
+                return r1;
             }
         }
     }
     else {
-        if (val === domain[0]) {
-            return range[0];
+        if (val === d0) {
+            return r0;
         }
-        if (val === domain[1]) {
-            return range[1];
+        if (val === d1) {
+            return r1;
         }
     }
 
-    return (val - domain[0]) / subDomain * subRange + range[0];
+    return (val - d0) / subDomain * subRange + r0;
 }
 
 /**
@@ -133,7 +141,8 @@ export function round(x: number | string, precision?: number, returnStr?: boolea
         precision = 10;
     }
     // Avoid range error
-    precision = Math.min(Math.max(0, precision), 20);
+    precision = Math.min(Math.max(0, precision), ROUND_SUPPORTED_PRECISION_MAX);
+    // PENDING: 1.005.toFixed(2) is '1.00' rather than '1.01'
     x = (+x).toFixed(precision);
     return (returnStr ? x : +x);
 }
@@ -150,42 +159,49 @@ export function asc<T extends number[]>(arr: T): T {
 }
 
 /**
- * Get precision
+ * Get precision.
  */
 export function getPrecision(val: string | number): number {
     val = +val;
     if (isNaN(val)) {
         return 0;
     }
+
     // It is much faster than methods converting number to string as follows
     //      let tmp = val.toString();
     //      return tmp.length - 1 - tmp.indexOf('.');
     // especially when precision is low
-    let e = 1;
-    let count = 0;
-    while (Math.round(val * e) / e !== val) {
-        e *= 10;
-        count++;
+    // Notice:
+    // (1) If the loop count is over about 20, it is slower than `getPrecisionSafe`.
+    //     (see https://jsbench.me/2vkpcekkvw/1)
+    // (2) If the val is less than for example 1e-15, the result may be incorrect.
+    //     (see test/ut/spec/util/number.test.ts `getPrecision_equal_random`)
+    if (val > 1e-14) {
+        let e = 1;
+        for (let i = 0; i < 15; i++, e *= 10) {
+            if (Math.round(val * e) / e === val) {
+                return i;
+            }
+        }
     }
-    return count;
+
+    return getPrecisionSafe(val);
 }
 
 /**
  * Get precision with slow but safe method
  */
 export function getPrecisionSafe(val: string | number): number {
-    const str = val.toString();
+    // toLowerCase for: '3.4E-12'
+    const str = val.toString().toLowerCase();
 
     // Consider scientific notation: '3.4e-12' '3.4e+12'
     const eIndex = str.indexOf('e');
-    if (eIndex > 0) {
-        const precision = +str.slice(eIndex + 1);
-        return precision < 0 ? -precision : 0;
-    }
-    else {
-        const dotIndex = str.indexOf('.');
-        return dotIndex < 0 ? 0 : str.length - 1 - dotIndex;
-    }
+    const exp = eIndex > 0 ? +str.slice(eIndex + 1) : 0;
+    const significandPartLen = eIndex > 0 ? eIndex : str.length;
+    const dotIndex = str.indexOf('.');
+    const decimalPartLen = dotIndex < 0 ? 0 : significandPartLen - 1 - dotIndex;
+    return Math.max(0, decimalPartLen - exp);
 }
 
 /**
@@ -263,6 +279,20 @@ export function getPercentWithPrecision(valueList: number[], idx: number, precis
     return seats[idx] / digits;
 }
 
+/**
+ * Solve the floating point adding problem like 0.1 + 0.2 === 0.30000000000000004
+ * See <http://0.30000000000000004.com/>
+ */
+export function addSafe(val0: number, val1: number): number {
+    const maxPrecision = Math.max(getPrecision(val0), getPrecision(val1));
+    // const multiplier = Math.pow(10, maxPrecision);
+    // return (Math.round(val0 * multiplier) + Math.round(val1 * multiplier)) / multiplier;
+    const sum = val0 + val1;
+    // // PENDING: support more?
+    return maxPrecision > ROUND_SUPPORTED_PRECISION_MAX
+        ? sum : round(sum, maxPrecision);
+}
+
 // Number.MAX_SAFE_INTEGER, ie do not support.
 export const MAX_SAFE_INTEGER = 9007199254740991;
 
@@ -329,7 +359,7 @@ export function parseDate(value: unknown): Date {
                 +match[4] || 0,
                 +(match[5] || 0),
                 +match[6] || 0,
-                +match[7] || 0
+                match[7] ? +match[7].substring(0, 3) : 0
             );
         }
         // Timezoneoffset of Javascript Date has considered DST (Daylight Saving Time,
@@ -351,7 +381,7 @@ export function parseDate(value: unknown): Date {
                 hour,
                 +(match[5] || 0),
                 +match[6] || 0,
-                +match[7] || 0
+                match[7] ? +match[7].substring(0, 3) : 0
             ));
         }
     }

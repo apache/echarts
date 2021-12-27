@@ -37,6 +37,8 @@ import { MULTIPLE_REFERRING, SINGLE_REFERRING } from '../../util/model';
 
 export interface DataZoomOption extends ComponentOption {
 
+    mainType?: 'dataZoom'
+
     /**
      * Default auto by axisIndex
      */
@@ -99,11 +101,11 @@ export interface DataZoomOption extends ComponentOption {
     /**
      * Start value. If startValue specified, start is ignored
      */
-    startValue?: number
+    startValue?: number | string | Date
     /**
      * End value. If endValue specified, end is ignored.
      */
-    endValue?: number
+    endValue?: number | string | Date
     /**
      * Min span percent, 0 - 100
      * The range of dataZoom can not be smaller than that.
@@ -157,7 +159,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
 
     static defaultOption: DataZoomOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 4,                   // Higher than normal component (z: 2).
 
         filterMode: 'filter',
@@ -241,10 +243,6 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
     private _doInit(inputRawOption: Opts): void {
         const thisOption = this.option;
-
-        // if (!env.canvasSupported) {
-        //     thisOption.realtime = false;
-        // }
 
         this._setDefaultThrottle(inputRawOption);
 
@@ -505,7 +503,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
     setCalculatedRange(opt: RangeOption): void {
         const option = this.option;
         each(['start', 'startValue', 'end', 'endValue'] as const, function (name) {
-            option[name] = opt[name];
+            (option as any)[name] = opt[name];
         });
     }
 
@@ -588,7 +586,7 @@ function retrieveRawOption<T extends DataZoomOption>(option: T) {
     each(
         ['start', 'end', 'startValue', 'endValue', 'throttle'] as const,
         function (name) {
-            option.hasOwnProperty(name) && (ret[name] = option[name]);
+            option.hasOwnProperty(name) && ((ret as any)[name] = option[name]);
         }
     );
     return ret;

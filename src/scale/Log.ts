@@ -24,14 +24,13 @@ import * as scaleHelper from './helper';
 
 // Use some method of IntervalScale
 import IntervalScale from './Interval';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import { DimensionName, ScaleTick } from '../util/types';
 
 const scaleProto = Scale.prototype;
 // FIXME:TS refactor: not good to call it directly with `this`?
 const intervalScaleProto = IntervalScale.prototype;
 
-const getPrecisionSafe = numberUtil.getPrecisionSafe;
 const roundingErrorFix = numberUtil.round;
 
 const mathFloor = Math.floor;
@@ -119,7 +118,7 @@ class LogScale extends Scale {
         scaleProto.unionExtent.call(this, extent);
     }
 
-    unionExtentFromData(data: List, dim: DimensionName): void {
+    unionExtentFromData(data: SeriesData, dim: DimensionName): void {
         // TODO
         // filter value that <= 0
         this.unionExtent(data.getApproximateExtent(dim));
@@ -201,7 +200,7 @@ proto.getLabel = intervalScaleProto.getLabel;
 
 
 function fixRoundingError(val: number, originalVal: number): number {
-    return roundingErrorFix(val, getPrecisionSafe(originalVal));
+    return roundingErrorFix(val, numberUtil.getPrecision(originalVal));
 }
 
 

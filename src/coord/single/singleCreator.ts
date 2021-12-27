@@ -21,10 +21,9 @@
  * Single coordinate system creator.
  */
 
-import Single from './Single';
-import CoordinateSystem from '../../CoordinateSystem';
+import Single, { singleDimensions } from './Single';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import SingleAxisModel from './AxisModel';
 import SeriesModel from '../../model/Series';
 import { SeriesOption } from '../../util/types';
@@ -61,7 +60,9 @@ function create(ecModel: GlobalModel, api: ExtensionAPI) {
     return singles;
 }
 
-CoordinateSystem.register('single', {
+const singleCreator = {
     create: create,
-    dimensions: Single.prototype.dimensions
-});
+    dimensions: singleDimensions
+};
+
+export default singleCreator;

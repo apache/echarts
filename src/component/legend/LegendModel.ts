@@ -26,13 +26,17 @@ import {
     BoxLayoutOptionMixin,
     BorderOptionMixin,
     ColorString,
-    ItemStyleOption,
     LabelOption,
     LayoutOrient,
-    CommonTooltipOption
+    CommonTooltipOption,
+    ItemStyleOption,
+    LineStyleOption
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
+import { ItemStyleProps } from '../../model/mixin/itemStyle';
+import { LineStyleProps } from './../../model/mixin/lineStyle';
+import {PathStyleProps} from 'zrender/src/graphic/Path';
 
 type LegendDefaultSelectorOptionsProps = {
     type: string;
@@ -42,13 +46,13 @@ const getDefaultSelectorOptions = function (ecModel: GlobalModel, type: string):
     if (type === 'all') {
         return {
             type: 'all',
-            title: ecModel.getLocale(['legend', 'selector', 'all'])
+            title: ecModel.getLocaleModel().get(['legend', 'selector', 'all'])
         };
     }
     else if (type === 'inverse') {
         return {
             type: 'inverse',
-            title: ecModel.getLocale(['legend', 'selector', 'inverse'])
+            title: ecModel.getLocaleModel().get(['legend', 'selector', 'inverse'])
         };
     }
 };
@@ -59,7 +63,66 @@ export interface LegendSelectorButtonOption {
     title?: string
 }
 
-interface DataItem {
+/**
+ * T: the type to be extended
+ * ET: extended type for keys of T
+ * ST: special type for T to be extended
+ */
+type ExtendPropertyType<T, ET, ST extends { [key in keyof T]: any }> = {
+    [key in keyof T]: key extends keyof ST ? T[key] | ET | ST[key] : T[key] | ET
+};
+
+export interface LegendItemStyleOption extends ExtendPropertyType<ItemStyleOption, 'inherit', {
+    borderWidth: 'auto'
+}> {}
+
+export interface LegendLineStyleOption extends ExtendPropertyType<LineStyleOption, 'inherit', {
+    width: 'auto'
+}> {
+    inactiveColor?: ColorString
+    inactiveWidth?: number
+}
+
+export interface LegendStyleOption {
+    /**
+     * Icon of the legend items.
+     * @default 'roundRect'
+     */
+    icon?: string
+
+    /**
+     * Color when legend item is not selected
+     */
+    inactiveColor?: ColorString
+    /**
+     * Border color when legend item is not selected
+     */
+    inactiveBorderColor?: ColorString
+    /**
+     * Border color when legend item is not selected
+     */
+    inactiveBorderWidth?: number | 'auto'
+
+    /**
+     * Legend label formatter
+     */
+    formatter?: string | ((name: string) => string)
+
+    itemStyle?: LegendItemStyleOption
+
+    lineStyle?: LegendLineStyleOption
+
+    textStyle?: LabelOption
+
+    symbolRotate?: number | 'inherit'
+
+    /**
+     * @deprecated
+     */
+    symbolKeepAspect?: boolean
+}
+
+interface DataItem extends LegendStyleOption {
     name?: string
     icon?: string
     textStyle?: LabelOption
@@ -74,7 +137,31 @@ export interface LegendTooltipFormatterParams {
     name: string
     $vars: ['name']
 }
-export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
+
+export interface LegendIconParams {
+    itemWidth: number
+    itemHeight: number
+    /**
+     * symbolType is from legend.icon, legend.data.icon, or series visual
+     */
+    icon: string
+    iconRotate: number | 'inherit'
+    symbolKeepAspect: boolean
+    itemStyle: PathStyleProps
+    lineStyle: LineStyleProps
+}
+
+export interface LegendSymbolStyleOption {
+    itemStyle?: ItemStyleProps
+    lineStyle?: LineStyleProps
+}
+
+export interface LegendOption extends ComponentOption, LegendStyleOption,
+    BoxLayoutOptionMixin, BorderOptionMixin
+{
+
+    mainType?: 'legend'
+
     show?: boolean
 
     orient?: LayoutOrient
@@ -107,23 +194,6 @@ export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, Bor
      * Height of legend symbol
      */
     itemHeight?: number
-    /**
-     * Color when legend item is not selected
-     */
-    inactiveColor?: ColorString
-    /**
-     * Border color when legend item is not selected
-     */
-    inactiveBorderColor?: ColorString
-
-    itemStyle?: ItemStyleOption
-
-    /**
-     * Legend label formatter
-     */
-    formatter?: string | ((name: string) => string)
-
-    textStyle?: LabelOption
 
     selectedMode?: boolean | 'single' | 'multiple'
     /**
@@ -160,8 +230,6 @@ export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, Bor
     selectorButtonGap?: number
 
     data?: (string | DataItem)[]
-
-    symbolKeepAspect?: boolean
 
     /**
      * Tooltip option
@@ -370,7 +438,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     }
 
     static defaultOption: LegendOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 4,
         show: true,
 
@@ -391,13 +459,35 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         itemGap: 10,
         itemWidth: 25,
         itemHeight: 14,
+        symbolRotate: 'inherit',
+        symbolKeepAspect: true,
 
         inactiveColor: '#ccc',
-
         inactiveBorderColor: '#ccc',
+        inactiveBorderWidth: 'auto',
 
         itemStyle: {
-            borderWidth: 0
+            color: 'inherit',
+            opacity: 'inherit',
+            borderColor: 'inherit',
+            borderWidth: 'auto',
+            borderCap: 'inherit',
+            borderJoin: 'inherit',
+            borderDashOffset: 'inherit',
+            borderMiterLimit: 'inherit'
+        },
+
+        lineStyle: {
+            width: 'auto',
+            color: 'inherit',
+            inactiveColor: '#ccc',
+            inactiveWidth: 2,
+            opacity: 'inherit',
+            type: 'inherit',
+            cap: 'inherit',
+            join: 'inherit',
+            dashOffset: 'inherit',
+            miterLimit: 'inherit'
         },
 
         textStyle: {
@@ -412,7 +502,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
             borderRadius: 10,
             padding: [3, 5, 3, 5],
             fontSize: 12,
-            fontFamily: ' sans-serif',
+            fontFamily: 'sans-serif',
             color: '#666',
             borderWidth: 1,
             borderColor: '#666'
@@ -437,7 +527,5 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         }
     };
 }
-
-ComponentModel.registerClass(LegendModel);
 
 export default LegendModel;

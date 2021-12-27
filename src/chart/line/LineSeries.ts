@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListFromArray from '../helper/createListFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import SeriesModel from '../../model/Series';
 import {
     SeriesOnCartesianOptionMixin,
@@ -32,44 +32,48 @@ import {
     SymbolOptionMixin,
     SeriesSamplingOptionMixin,
     StatesOptionMixin,
-    DefaultExtraEmpasisState,
     SeriesEncodeOptionMixin,
-    CallbackDataParams
+    CallbackDataParams,
+    DefaultEmphasisFocus
 } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
+import {createSymbol, ECSymbol} from '../../util/symbol';
+import {Group} from '../../util/graphic';
+import {LegendIconParams} from '../../component/legend/LegendModel';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
-interface ExtraStateOption {
+interface LineStateOptionMixin {
     emphasis?: {
-        focus?: DefaultExtraEmpasisState['focus']
+        focus?: DefaultEmphasisFocus
         scale?: boolean
     }
 }
 
-export interface LineStateOption {
-    itemStyle?: ItemStyleOption
+export interface LineStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
+    endLabel?: LineEndLabelOption
 }
 
 export interface LineDataItemOption extends SymbolOptionMixin,
-    LineStateOption, StatesOptionMixin<LineStateOption, ExtraStateOption> {
+    LineStateOption, StatesOptionMixin<LineStateOption, LineStateOptionMixin> {
     name?: string
 
     value?: LineDataValue
 }
 
 export interface LineEndLabelOption extends SeriesLabelOption {
-    valueAnimation: boolean
+    valueAnimation?: boolean
 }
 
 
-export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraStateOption & {
+export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackDataParams>, LineStateOptionMixin & {
     emphasis?: {
-        lineStyle?: LineStyleOption | {
-            width?: 'bolder'
+        lineStyle?: Omit<LineStyleOption, 'width'> & {
+            width?: LineStyleOption['width'] | 'bolder'
         }
         areaStyle?: AreaStyleOption
     }
@@ -77,7 +81,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
         lineStyle?: LineStyleOption
         areaStyle?: AreaStyleOption
     }
-}>, LineStateOption,
+}>, LineStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
@@ -102,7 +106,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
 
     step?: false | 'start' | 'end' | 'middle'
 
-    smooth?: boolean
+    smooth?: boolean | number
 
     smoothMonotone?: 'x' | 'y' | 'none'
 
@@ -111,9 +115,11 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     showSymbol?: boolean
     // false | 'auto': follow the label interval strategy.
     // true: show all symbols.
-    showAllSymbol?: 'auto'
+    showAllSymbol?: 'auto' | boolean
 
     data?: (LineDataValue | LineDataItemOption)[]
+
+    triggerLineEvent?: boolean
 }
 
 class LineSeriesModel extends SeriesModel<LineSeriesOption> {
@@ -125,22 +131,21 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
     coordinateSystem: Cartesian2D | Polar;
 
     hasSymbolVisual = true;
-    legendSymbol = 'line';
 
-    getInitialData(option: LineSeriesOption): List {
+    getInitialData(option: LineSeriesOption): SeriesData {
         if (__DEV__) {
             const coordSys = option.coordinateSystem;
             if (coordSys !== 'polar' && coordSys !== 'cartesian2d') {
                 throw new Error('Line not support coordinateSystem besides cartesian and polar');
             }
         }
-        return createListFromArray(this.getSource(), this, {
+        return createSeriesData(null, this, {
             useEncodeDefaulter: true
         });
     }
 
     static defaultOption: LineSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 3,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
@@ -150,6 +155,9 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         label: {
             position: 'top'
         },
+
+        // itemStyle: {
+        // },
 
         endLabel: {
             show: false,
@@ -163,10 +171,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         },
 
         emphasis: {
-            scale: true,
-            lineStyle: {
-                width: 'bolder'
-            }
+            scale: true
         },
         // areaStyle: {
             // origin of areaStyle. Valid values:
@@ -202,10 +207,62 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         // Disable progressive
         progressive: 0,
-        hoverLayerThreshold: Infinity
-    };
-}
+        hoverLayerThreshold: Infinity,
 
-SeriesModel.registerClass(LineSeriesModel);
+        universalTransition: {
+            divideShape: 'clone'
+        },
+
+        triggerLineEvent: false,
+    };
+
+    getLegendIcon(opt: LegendIconParams): ECSymbol | Group {
+        const group = new Group();
+
+        const line = createSymbol(
+            'line',
+            0,
+            opt.itemHeight / 2,
+            opt.itemWidth,
+            0,
+            opt.lineStyle.stroke,
+            false
+        );
+        group.add(line);
+        line.setStyle(opt.lineStyle);
+
+        const visualType = this.getData().getVisual('symbol');
+        const visualRotate = this.getData().getVisual('symbolRotate');
+        const symbolType = visualType === 'none' ? 'circle' : visualType;
+
+        // Symbol size is 80% when there is a line
+        const size = opt.itemHeight * 0.8;
+        const symbol = createSymbol(
+            symbolType,
+            (opt.itemWidth - size) / 2,
+            (opt.itemHeight - size) / 2,
+            size,
+            size,
+            opt.itemStyle.fill
+        );
+        group.add(symbol);
+
+        symbol.setStyle(opt.itemStyle);
+
+        const symbolRotate = opt.iconRotate === 'inherit'
+            ? visualRotate
+            : (opt.iconRotate || 0);
+        symbol.rotation = symbolRotate * Math.PI / 180;
+        symbol.setOrigin([opt.itemWidth / 2, opt.itemHeight / 2]);
+
+        if (symbolType.indexOf('empty') > -1) {
+            symbol.style.stroke = symbol.style.fill;
+            symbol.style.fill = '#fff';
+            symbol.style.lineWidth = 2;
+        }
+
+        return group;
+    }
+}
 
 export default LineSeriesModel;

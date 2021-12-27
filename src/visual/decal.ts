@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import GlobalModel from '../model/Global';
 import {createOrUpdatePatternFromDecal} from '../util/decal';
 

@@ -18,7 +18,6 @@
 */
 
 import DataZoomModel, {DataZoomOption} from './DataZoomModel';
-import ComponentModel from '../../model/Component';
 import { inheritDefaultOption } from '../../util/component';
 
 export interface InsideDataZoomOption extends DataZoomOption {
@@ -61,7 +60,5 @@ class InsideZoomModel extends DataZoomModel<InsideDataZoomOption> {
         preventDefaultMouseMove: true
     });
 }
-
-ComponentModel.registerClass(InsideZoomModel);
 
 export default InsideZoomModel;

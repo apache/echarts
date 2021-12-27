@@ -23,7 +23,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
@@ -214,7 +214,7 @@ under the License.
                 var textOpt = {
                     type: 'text',
                     extra: { },
-                    transition: [], // disable the default transition of x y.
+                    // transition: [], // disable the default transition of x y.
                     style: { x: 20, y: 20, fontSize: 20, stroke: 'green' },
                     during: function (apiDuring) {
                         var x = apiDuring.getExtra('x');
@@ -227,7 +227,7 @@ under the License.
                     shape: { cx: 0, cy: 0, r: 10 },
                     extra: { },
                     style: { fill: 'red' },
-                    transition: [], // disable the default transition of x y.
+                    // transition: [], // disable the default transition of x y.
                     during: function (apiDuring) {
                         var x = apiDuring.getExtra('x');
                         var y = apiDuring.getExtra('y');

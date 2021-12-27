@@ -35,21 +35,23 @@ import {
 import IntervalScale from '../../scale/Interval';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
-import CoordinateSystemManager from '../../CoordinateSystem';
-import {ParsedModelFinder, SINGLE_REFERRING} from '../../util/model';
+import {ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
 import GridModel from './GridModel';
 import CartesianAxisModel from './AxisModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { Dictionary } from 'zrender/src/core/types';
 import {CoordinateSystemMaster} from '../CoordinateSystem';
 import { ScaleDataValue } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import OrdinalScale from '../../scale/Ordinal';
 import { isCartesian2DSeries, findAxisModels } from './cartesianAxisHelper';
 import { round } from '../../util/number';
+import { CategoryAxisBaseOption, LogAxisBaseOption } from '../axisCommonTypes';
+import { AxisBaseModel } from '../AxisBaseModel';
+import { Model } from '../../echarts.all';
 
 
 type Cartesian2DDimensionName = 'x' | 'y';
@@ -130,7 +132,7 @@ class Grid implements CoordinateSystemMaster {
             }
             else {
                 const extentRound = round(extent[1] - extent[0]);
-                const preferredInterval = axis.model.get('interval')
+                const preferredInterval = (axis.model as Model<LogAxisBaseOption>).get('interval')
                     || (extentRound - (extentRound % maxSplitNumber)) / maxSplitNumber;
                 (axis.scale as IntervalScale).niceTicks(
                     maxSplitNumber + 1, null, null,
@@ -337,7 +339,7 @@ class Grid implements CoordinateSystemMaster {
             : null;
     }
 
-    private _findConvertTarget(finder: ParsedModelFinder): {
+    private _findConvertTarget(finder: ParsedModelFinderKnown): {
         cartesian: Cartesian2D,
         axis: Axis2D
     } {
@@ -470,7 +472,7 @@ class Grid implements CoordinateSystemMaster {
                 );
 
                 const isCategory = axis.type === 'category';
-                axis.onBand = isCategory && axisModel.get('boundaryGap');
+                axis.onBand = isCategory && (axisModel as AxisBaseModel<CategoryAxisBaseOption>).get('boundaryGap');
                 axis.inverse = axisModel.get('inverse');
 
                 // Inject axis into axisModel
@@ -502,7 +504,7 @@ class Grid implements CoordinateSystemMaster {
             axis.scale.setExtent(Infinity, -Infinity);
             if (axis.type === 'category') {
                 const categorySortInfo = axis.model.get('categorySortInfo');
-                (axis.scale as OrdinalScale).setCategorySortInfo(categorySortInfo);
+                (axis.scale as OrdinalScale).setSortInfo(categorySortInfo);
             }
         });
 
@@ -532,7 +534,7 @@ class Grid implements CoordinateSystemMaster {
             }
         }, this);
 
-        function unionExtent(data: List, axis: Axis2D): void {
+        function unionExtent(data: SeriesData, axis: Axis2D): void {
             each(getDataDimensionsOnAxis(data, axis.dim), function (dim) {
                 axis.scale.unionExtentFromData(data, dim);
             });
@@ -701,7 +703,5 @@ function updateAxisTransform(axis: Axis2D, coordBase: number) {
             return axisExtentSum - coord + coordBase;
         };
 }
-
-CoordinateSystemManager.register('cartesian2d', Grid);
 
 export default Grid;

@@ -21,7 +21,7 @@ import ComponentView from '../../view/Component';
 import { HashMap, createHashMap, each } from 'zrender/src/core/util';
 import MarkerModel from './MarkerModel';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { makeInner } from '../../util/model';
 import SeriesModel from '../../model/Series';
 import Group from 'zrender/src/graphic/Group';
@@ -73,7 +73,10 @@ abstract class MarkerView extends ComponentView {
 
     blurSeries(seriesModelList: SeriesModel[]) {
         each(seriesModelList, seriesModel => {
-            const markerModel = MarkerModel.getMarkerModelFromSeries(seriesModel, this.type as 'markPoint' | 'markLine' | 'markArea');
+            const markerModel = MarkerModel.getMarkerModelFromSeries(
+                seriesModel,
+                this.type as 'markPoint' | 'markLine' | 'markArea'
+            );
             if (markerModel) {
                 const data = markerModel.getData();
                 data.eachItemGraphicEl(function (el) {

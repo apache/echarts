@@ -18,7 +18,7 @@
 */
 
 import ComponentModel from '../../model/Component';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import {
     ComponentOption,
     BoxLayoutOptionMixin,
@@ -102,6 +102,7 @@ export interface TimelineDataItemOption extends SymbolOptionMixin {
 }
 
 export interface TimelineOption extends ComponentOption, BoxLayoutOptionMixin, SymbolOptionMixin {
+    mainType?: 'timeline'
 
     backgroundColor?: ZRColor
     borderColor?: ColorString
@@ -170,7 +171,7 @@ class TimelineModel extends ComponentModel<TimelineOption> {
 
     layoutMode = 'box';
 
-    private _data: List<TimelineModel>;
+    private _data: SeriesData<TimelineModel>;
 
     private _names: string[];
 
@@ -274,7 +275,7 @@ class TimelineModel extends ComponentModel<TimelineOption> {
             value: 'number'
         })[axisType] || 'number';
 
-        const data = this._data = new List([{
+        const data = this._data = new SeriesData([{
             name: 'value', type: dimType
         }], this);
 
@@ -300,7 +301,7 @@ class TimelineModel extends ComponentModel<TimelineOption> {
      */
     static defaultOption: TimelineOption = {
 
-        zlevel: 0,                  // 一级层叠
+        // zlevel: 0,                  // 一级层叠
         z: 4,                       // 二级层叠
         show: true,
 
@@ -333,7 +334,5 @@ class TimelineModel extends ComponentModel<TimelineOption> {
     };
 
 }
-
-ComponentModel.registerClass(TimelineModel);
 
 export default TimelineModel;

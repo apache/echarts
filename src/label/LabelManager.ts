@@ -28,7 +28,7 @@ import {
     isElementRemoved
 } from '../util/graphic';
 import { getECData } from '../util/innerStore';
-import ExtensionAPI from '../ExtensionAPI';
+import ExtensionAPI from '../core/ExtensionAPI';
 import {
     ZRTextAlign,
     ZRTextVerticalAlign,
@@ -81,6 +81,8 @@ interface SavedLabelAttr {
 
     x: number
     y: number
+    scaleX: number
+    scaleY: number
     rotation: number
 
     style: {
@@ -254,6 +256,8 @@ class LabelManager {
 
                 x: dummyTransformable.x,
                 y: dummyTransformable.y,
+                scaleX: dummyTransformable.scaleX,
+                scaleY: dummyTransformable.scaleY,
                 rotation: dummyTransformable.rotation,
 
                 style: {
@@ -334,6 +338,8 @@ class LabelManager {
             labelItem.computedLayoutOption = layoutOption;
 
             const degreeToRadian = Math.PI / 180;
+            // TODO hostEl should always exists.
+            // Or label should not have parent because the x, y is all in global space.
             if (hostEl) {
                 hostEl.setTextConfig({
                     // Force to set local false.
@@ -384,6 +390,9 @@ class LabelManager {
 
             label.rotation = layoutOption.rotate != null
                 ? layoutOption.rotate * degreeToRadian : defaultLabelAttr.rotation;
+
+            label.scaleX = defaultLabelAttr.scaleX;
+            label.scaleY = defaultLabelAttr.scaleY;
 
             for (let k = 0; k < LABEL_OPTION_TO_STYLE_KEYS.length; k++) {
                 const key = LABEL_OPTION_TO_STYLE_KEYS[k];
@@ -444,7 +453,7 @@ class LabelManager {
             const animationEnabled = seriesModel.isAnimationEnabled();
 
             chartView.group.traverse((child) => {
-                if (child.ignore) {
+                if (child.ignore && !(child as ECElement).forceLabelAnimation) {
                     return true;    // Stop traverse descendants.
                 }
 
@@ -495,10 +504,13 @@ class LabelManager {
         const guideLine = el.getTextGuideLine();
         // Animate
         if (textEl
-            && !textEl.ignore
-            && !textEl.invisible
-            && !(el as ECElement).disableLabelAnimation
-            && !isElementRemoved(el)
+            // `forceLabelAnimation` has the highest priority
+            && ((el as ECElement).forceLabelAnimation
+                || !textEl.ignore
+                && !textEl.invisible
+                && !(el as ECElement).disableLabelAnimation
+                && !isElementRemoved(el)
+            )
         ) {
             const layoutStore = labelLayoutInnerStore(textEl);
             const oldLayout = layoutStore.oldLayout;
@@ -552,7 +564,7 @@ class LabelManager {
                 extendWithKeys(layoutEmphasis, textEl.states.emphasis, LABEL_LAYOUT_PROPS);
             }
 
-            animateLabelValue(textEl, dataIndex, data, seriesModel);
+            animateLabelValue(textEl, dataIndex, data, seriesModel, seriesModel);
         }
 
         if (guideLine && !guideLine.ignore && !guideLine.invisible) {

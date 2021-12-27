@@ -24,10 +24,9 @@ import AxisView from './AxisView';
 import * as cartesianAxisHelper from '../../coord/cartesian/cartesianAxisHelper';
 import {rectCoordAxisBuildSplitArea, rectCoordAxisHandleRemove} from './axisSplitHelper';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
-import ComponentView from '../../view/Component';
 import { Payload } from '../../util/types';
 
 const axisBuilderAttrs = [
@@ -91,7 +90,14 @@ class CartesianAxisView extends AxisView {
             }
         }, this);
 
-        graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
+        // THIS is a special case for bar racing chart.
+        // Update the axis label from the natural initial layout to
+        // sorted layout should has no animation.
+        const isInitialSortFromBarRacing = payload && payload.type === 'changeAxisOrder' && payload.isInitSort;
+
+        if (!isInitialSortFromBarRacing) {
+            graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
+        }
 
         super.render(axisModel, ecModel, api, payload);
     }
@@ -227,16 +233,13 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
     }
 };
 
-class CartesianXAxisView extends CartesianAxisView {
+export class CartesianXAxisView extends CartesianAxisView {
     static type = 'xAxis';
     type = CartesianXAxisView.type;
 }
-class CartesianYAxisView extends CartesianAxisView {
+export class CartesianYAxisView extends CartesianAxisView {
     static type = 'yAxis';
     type = CartesianXAxisView.type;
 }
-
-ComponentView.registerClass(CartesianXAxisView);
-ComponentView.registerClass(CartesianYAxisView);
 
 export default CartesianAxisView;

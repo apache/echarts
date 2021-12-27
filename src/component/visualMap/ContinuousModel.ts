@@ -20,7 +20,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import VisualMapModel, { VisualMapOption, VisualMeta } from './VisualMapModel';
 import * as numberUtil from '../../util/number';
-import ComponentModel from '../../model/Component';
 import { VisualMappingOption } from '../../visual/VisualMapping';
 import { inheritDefaultOption } from '../../util/component';
 import { ItemStyleOption } from '../../util/types';
@@ -204,7 +203,7 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
             const dataIndices: number[] = [];
             const data = seriesModel.getData();
 
-            data.each(this.getDataDimension(data), function (value, dataIndex) {
+            data.each(this.getDataDimensionIndex(data), function (value, dataIndex) {
                 range[0] <= value && value <= range[1] && dataIndices.push(dataIndex);
             }, this);
 
@@ -337,7 +336,5 @@ function getColorStopValues(
 
     return stopValues;
 }
-
-ComponentModel.registerClass(ContinuousModel);
 
 export default ContinuousModel;

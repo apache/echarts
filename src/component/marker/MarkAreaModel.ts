@@ -18,8 +18,7 @@
 */
 
 import MarkerModel, { MarkerOption, MarkerStatisticType, MarkerPositionOption } from './MarkerModel';
-import { SeriesLabelOption, ItemStyleOption, StatesOptionMixin } from '../../util/types';
-import ComponentModel from '../../model/Component';
+import { SeriesLabelOption, ItemStyleOption, StatesOptionMixin, StatesMixinBase } from '../../util/types';
 import GlobalModel from '../../model/Global';
 
 
@@ -28,7 +27,8 @@ interface MarkAreaStateOption {
     label?: SeriesLabelOption
 }
 
-interface MarkAreaDataItemOptionBase extends MarkAreaStateOption, StatesOptionMixin<MarkAreaStateOption> {
+interface MarkAreaDataItemOptionBase extends MarkAreaStateOption,
+    StatesOptionMixin<MarkAreaStateOption, StatesMixinBase> {
     name?: string
 }
 
@@ -56,7 +56,9 @@ export type MarkArea2DDataItemOption = [
     MarkArea2DDataItemDimOption
 ];
 
-export interface MarkAreaOption extends MarkerOption, MarkAreaStateOption, StatesOptionMixin<MarkAreaStateOption> {
+export interface MarkAreaOption extends MarkerOption, MarkAreaStateOption,
+    StatesOptionMixin<MarkAreaStateOption, StatesMixinBase> {
+    mainType?: 'markArea'
 
     precision?: number
 
@@ -77,7 +79,7 @@ class MarkAreaModel extends MarkerModel<MarkAreaOption> {
     }
 
     static defaultOption: MarkAreaOption = {
-        zlevel: 0,
+        // zlevel: 0,
         // PENDING
         z: 1,
         tooltip: {
@@ -104,7 +106,5 @@ class MarkAreaModel extends MarkerModel<MarkAreaOption> {
         }
     };
 }
-
-ComponentModel.registerClass(MarkAreaModel);
 
 export default MarkAreaModel;

@@ -26,9 +26,10 @@ import DataDiffer from '../../data/DataDiffer';
 import ChartView from '../../view/Chart';
 import ThemeRiverSeriesModel from './ThemeRiverSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { ColorString } from '../../util/types';
+import { saveOldStyle } from '../../animation/basicTrasition';
 
 type LayerSeries = ReturnType<ThemeRiverSeriesModel['getLayerSeries']>;
 
@@ -134,6 +135,8 @@ class ThemeRiverView extends ChartView {
                         stackedOnPoints: points1
                     }
                 }, seriesModel);
+
+                saveOldStyle(polygon);
             }
 
             setLabelStyle(polygon, getLabelStatesModels(seriesModel), {
@@ -192,5 +195,4 @@ function createGridClipShape(rect: RectLike, seriesModel: ThemeRiverSeriesModel,
     return rectEl;
 }
 
-
-ChartView.registerClass(ThemeRiverView);
+export default ThemeRiverView;

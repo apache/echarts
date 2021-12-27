@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
-import axisModelCreator, { AxisModelExtendedInCreator } from '../axisModelCreator';
+import { AxisModelExtendedInCreator } from '../axisModelCreator';
 import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 import Axis2D from './Axis2D';
 import { AxisBaseOption } from '../axisCommonTypes';
@@ -28,19 +28,25 @@ import { AxisBaseModel } from '../AxisBaseModel';
 import {OrdinalSortInfo} from '../../util/types';
 import { SINGLE_REFERRING } from '../../util/model';
 
-
 export type CartesianAxisPosition = 'top' | 'bottom' | 'left' | 'right';
 
-export interface CartesianAxisOption extends AxisBaseOption {
+export type CartesianAxisOption = AxisBaseOption & {
     gridIndex?: number;
     gridId?: string;
     position?: CartesianAxisPosition;
     // Offset is for multiple axis on the same position.
     offset?: number;
-    categorySortInfo?: OrdinalSortInfo[];
-}
+    categorySortInfo?: OrdinalSortInfo;
+};
 
-class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
+export type XAXisOption = CartesianAxisOption & {
+    mainType?: 'xAxis'
+};
+export type YAXisOption = CartesianAxisOption & {
+    mainType?: 'yAxis'
+};
+
+export class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
     implements AxisBaseModel<CartesianAxisOption> {
 
     static type = 'cartesian2dAxis';
@@ -50,21 +56,12 @@ class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
     getCoordSysModel(): GridModel {
         return this.getReferringComponents('grid', SINGLE_REFERRING).models[0] as GridModel;
     }
+
 }
 
-interface CartesianAxisModel extends AxisModelCommonMixin<CartesianAxisOption>,
-    AxisModelExtendedInCreator<CartesianAxisOption> {}
+export interface CartesianAxisModel extends AxisModelCommonMixin<CartesianAxisOption>,
+    AxisModelExtendedInCreator {}
 
 zrUtil.mixin(CartesianAxisModel, AxisModelCommonMixin);
-
-const extraOption: CartesianAxisOption = {
-    // gridIndex: 0,
-    // gridId: '',
-    offset: 0,
-    categorySortInfo: []
-};
-
-axisModelCreator<CartesianAxisOption, typeof CartesianAxisModel>('x', CartesianAxisModel, extraOption);
-axisModelCreator<CartesianAxisOption, typeof CartesianAxisModel>('y', CartesianAxisModel, extraOption);
 
 export default CartesianAxisModel;

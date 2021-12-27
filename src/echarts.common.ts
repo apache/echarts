@@ -17,29 +17,56 @@
 * under the License.
 */
 
-export * from './echarts';
-export * from './export';
+import {use} from './extension';
 
-import './component/dataset';
+export * from './export/core';
 
-import './chart/line';
-import './chart/bar';
-import './chart/pie';
-import './chart/scatter';
-import './component/graphic';
-import './component/tooltip';
-import './component/axisPointer';
-import './component/legendScroll';
+import {install as SVGRenderer} from './renderer/installSVGRenderer';
+import {install as CanvasRenderer} from './renderer/installCanvasRenderer';
 
-import './component/grid';
-import './component/title';
+import {install as LineChart} from './chart/line/install';
+import {install as BarChart} from './chart/bar/install';
+import {install as PieChart} from './chart/pie/install';
+import {install as ScatterChart} from './chart/scatter/install';
 
-import './component/markPoint';
-import './component/markLine';
-import './component/markArea';
-import './component/dataZoom';
-import './component/toolbox';
-import './component/aria';
 
-// import 'zrender/vml/vml';
-import 'zrender/src/svg/svg';
+import {install as GridComponent} from './component/grid/install';
+import {install as GraphicComponent} from './component/graphic/install';
+import {install as ToolboxComponent} from './component/toolbox/install';
+import {install as TooltipComponent} from './component/tooltip/install';
+import {install as AxisPointerComponent} from './component/axisPointer/install';
+import {install as TitleComponent} from './component/title/install';
+import {install as MarkPointComponent} from './component/marker/installMarkPoint';
+import {install as MarkLineComponent} from './component/marker/installMarkLine';
+import {install as MarkAreaComponent} from './component/marker/installMarkArea';
+import {install as LegendComponent} from './component/legend/install';
+import {install as DataZoomComponent} from './component/dataZoom/install';
+import {install as AriaComponent} from './component/aria/install';
+import {install as DatasetComponent} from './component/dataset/install';
+
+
+use([CanvasRenderer]);
+use([SVGRenderer]);
+
+use([
+    LineChart,
+    BarChart,
+    PieChart,
+    ScatterChart
+]);
+
+use([
+    GraphicComponent,
+    TooltipComponent,
+    AxisPointerComponent,
+    LegendComponent,
+    GridComponent,
+    TitleComponent,
+    MarkPointComponent,
+    MarkLineComponent,
+    MarkAreaComponent,
+    DataZoomComponent,
+    ToolboxComponent,
+    AriaComponent,
+    DatasetComponent
+]);

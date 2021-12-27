@@ -17,6 +17,9 @@
 * under the License.
 */
 
+const { pathsToModuleNameMapper } = require('ts-jest/utils');
+const { compilerOptions } = require('./tsconfig')
+
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'jsdom',
@@ -32,6 +35,10 @@ module.exports = {
     globals: {
         '__DEV__': true
     },
+    // Not exclude node_modules because zrender also needs to be transformed.
+    transformIgnorePatterns: [
+        "node_modules/(?!zrender/)"
+    ],
     testMatch: [
         '**/spec/api/*.test.ts',
         '**/spec/component/**/*.test.ts',
@@ -40,5 +47,8 @@ module.exports = {
         '**/spec/model/*.test.ts',
         '**/spec/scale/*.test.ts',
         '**/spec/util/*.test.ts'
-    ]
+    ],
+    moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
+        prefix: '<rootDir>/'
+    })
 };

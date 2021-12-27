@@ -17,13 +17,7 @@
 * under the License.
 */
 
-import './dataZoom/typeDefaulter';
+import { use } from '../extension';
+import { install } from './dataZoom/installDataZoomInside';
 
-import './dataZoom/DataZoomModel';
-import './dataZoom/DataZoomView';
-
-import './dataZoom/InsideZoomModel';
-import './dataZoom/InsideZoomView';
-
-import './dataZoom/dataZoomProcessor';
-import './dataZoom/dataZoomAction';
+use(install);

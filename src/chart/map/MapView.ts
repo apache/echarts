@@ -23,19 +23,11 @@ import MapDraw from '../../component/helper/MapDraw';
 import ChartView from '../../view/Chart';
 import MapSeries, { MapDataItemOption } from './MapSeries';
 import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../ExtensionAPI';
+import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, DisplayState, ECElement } from '../../util/types';
-import Model from '../../model/Model';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
-import { Z2_EMPHASIS_LIFT } from '../../util/states';
+import { setStatesFlag, Z2_EMPHASIS_LIFT } from '../../util/states';
 
-interface HighDownRecord {
-    recordVersion: number;
-    labelModel: Model;
-    hoverLabelModel: Model;
-    emphasisText: string;
-    normalText: string;
-};
 
 class MapView extends ChartView {
 
@@ -62,6 +54,10 @@ class MapView extends ChartView {
 
         if (mapModel.getHostGeoModel()) {
             return;
+        }
+
+        if (this._mapDraw && payload && payload.type === 'geoRoam') {
+            this._mapDraw.resetForLabelLayout();
         }
 
         // Not update map if it is an roam action from self
@@ -187,7 +183,7 @@ class MapView extends ChartView {
                 }
 
                 (regionGroup as ECElement).onHoverStateChange = function (toState) {
-                    circle.useState(toState);
+                    setStatesFlag(circle, toState);
                 };
             }
 
@@ -195,46 +191,5 @@ class MapView extends ChartView {
         });
     }
 }
-
-// function onRegionHighDown(this: RegionGroupExtend, toHighOrDown: boolean): void {
-//     let highDownRecord = this[HIGH_DOWN_PROP];
-//     if (highDownRecord && highDownRecord.recordVersion === this[RECORD_VERSION_PROP]) {
-//         enterRegionHighDown(highDownRecord, toHighOrDown);
-//     }
-// }
-
-// function enterRegionHighDown(highDownRecord: HighDownRecord, toHighOrDown: boolean): void {
-//     let circle = highDownRecord.circle;
-//     let labelModel = highDownRecord.labelModel;
-//     let hoverLabelModel = highDownRecord.hoverLabelModel;
-//     let emphasisText = highDownRecord.emphasisText;
-//     let normalText = highDownRecord.normalText;
-
-//     if (toHighOrDown) {
-//         circle.style.extendFrom(
-//             graphic.setTextStyle({}, hoverLabelModel, {
-//                 text: hoverLabelModel.get('show') ? emphasisText : null
-//             }, {isRectText: true, useInsideStyle: false}, true)
-//         );
-//         // Make label upper than others if overlaps.
-//         circle[ORIGINAL_Z2] = circle.z2;
-//         circle.z2 += graphic.Z2_EMPHASIS_LIFT;
-//     }
-//     else {
-//         graphic.setTextStyle(circle.style, labelModel, {
-//             text: labelModel.get('show') ? normalText : null,
-//             textPosition: labelModel.getShallow('position') || 'bottom'
-//         }, {isRectText: true, useInsideStyle: false});
-//         // Trigger normalize style like padding.
-//         circle.markRedraw();
-
-//         if (circle[ORIGINAL_Z2] != null) {
-//             circle.z2 = circle[ORIGINAL_Z2];
-//             circle[ORIGINAL_Z2] = null;
-//         }
-//     }
-// }
-
-ChartView.registerClass(MapView);
 
 export default MapView;

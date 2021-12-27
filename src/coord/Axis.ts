@@ -25,17 +25,18 @@ import {
     calculateCategoryInterval
 } from './axisTickLabelBuilder';
 import Scale from '../scale/Scale';
-import { DimensionName, ScaleDataValue } from '../util/types';
+import { DimensionName, ScaleDataValue, ScaleTick } from '../util/types';
 import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
-import { AxisBaseOption, OptionAxisType } from './axisCommonTypes';
+import { AxisBaseOption, CategoryAxisBaseOption, OptionAxisType } from './axisCommonTypes';
 import { AxisBaseModel } from './AxisBaseModel';
 
 const NORMALIZED_EXTENT = [0, 1] as [number, number];
 
 interface TickCoord {
     coord: number;
-    tickValue?: number;
+    // That is `scaleTick.value`.
+    tickValue?: ScaleTick['value'];
 }
 
 /**
@@ -62,7 +63,7 @@ class Axis {
 
     // Injected outside
     model: AxisBaseModel;
-    onBand: AxisBaseOption['boundaryGap'] = false;
+    onBand: CategoryAxisBaseOption['boundaryGap'] = false;
     inverse: AxisBaseOption['inverse'] = false;
 
 
@@ -179,7 +180,7 @@ class Axis {
             return {
                 coord: this.dataToCoord(
                     this.scale.type === 'ordinal'
-                        ? (this.scale as OrdinalScale).getRawIndex(tickVal)
+                        ? (this.scale as OrdinalScale).getRawOrdinalNumber(tickVal)
                         : tickVal
                 ),
                 tickValue: tickVal

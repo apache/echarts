@@ -23,6 +23,7 @@ import Polar from './Polar';
 import { AngleAxisModel, RadiusAxisModel } from './AxisModel';
 
 export interface PolarOption extends ComponentOption, CircleLayoutOptionMixin {
+    mainType?: 'polar';
 }
 
 class PolarModel extends ComponentModel<PolarOption> {
@@ -49,7 +50,7 @@ class PolarModel extends ComponentModel<PolarOption> {
 
     static defaultOption: PolarOption = {
 
-        zlevel: 0,
+        // zlevel: 0,
 
         z: 0,
 
@@ -58,7 +59,5 @@ class PolarModel extends ComponentModel<PolarOption> {
         radius: '80%'
     };
 }
-
-ComponentModel.registerClass(PolarModel);
 
 export default PolarModel;

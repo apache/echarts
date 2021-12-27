@@ -30,7 +30,6 @@ import {
 } from '../helper/BrushController';
 import { ModelFinderObject } from '../../util/model';
 
-
 const DEFAULT_OUT_OF_BRUSH_COLOR = '#ddd';
 
 /**
@@ -64,6 +63,11 @@ export interface BrushAreaParam extends ModelFinderObject {
     // coord ranges, used in multiple cartesian in one grid.
     // Only for output to users.
     coordRanges?: BrushAreaRange[];
+
+    __rangeOffset?: {
+        offset: BrushDimensionMinMax[] | BrushDimensionMinMax,
+        xyMinMax: BrushDimensionMinMax[]
+    }
 }
 
 /**
@@ -87,6 +91,8 @@ export interface BrushAreaParamInternal extends BrushAreaParam {
 export type BrushToolboxIconType = BrushType | 'keep' | 'clear';
 
 export interface BrushOption extends ComponentOption, ModelFinderObject {
+    mainType?: 'brush';
+
     // Default value see preprocessor.
     toolbox?: BrushToolboxIconType[];
 
@@ -212,8 +218,6 @@ class BrushModel extends ComponentModel<BrushOption> {
     }
 
 }
-
-ComponentModel.registerClass(BrushModel);
 
 
 function generateBrushOption(
