@@ -26,7 +26,6 @@ import { curry, each, assert, extend, map, keys } from 'zrender/src/core/util';
 import SeriesData from '../SeriesData';
 import { makeInner } from '../../util/model';
 import { SeriesDataType } from '../../util/types';
-import {warn} from "../../util/log";
 
 // That is: { dataType: data },
 // like: { node: nodeList, edge: edgeList }.
