@@ -138,7 +138,9 @@ export function round(x: number | string, precision: number, returnStr: false): 
 export function round(x: number | string, precision: number, returnStr: true): string;
 export function round(x: number | string, precision?: number, returnStr?: boolean): string | number {
     if (precision == null) {
-        precision = 10;
+        // auto adjust round precision by decimal place length only when the number is using scientific
+        const exp = String(x).split('e')[1];
+        precision = Number(-exp) || 10;
     }
     // Avoid range error
     precision = Math.min(Math.max(0, precision), ROUND_SUPPORTED_PRECISION_MAX);
