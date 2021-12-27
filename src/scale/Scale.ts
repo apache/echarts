@@ -153,7 +153,8 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
         // FIXME:TS make them in a "opt", the same with `niceExtent`?
         splitNumber?: number,
         minInterval?: number,
-        maxInterval?: number
+        maxInterval?: number,
+        preferredInterval?: number
     ): void;
 
     abstract niceExtent(
