@@ -32,7 +32,7 @@ import labelLayout from './labelLayout';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getSectorCornerRadius } from '../helper/pieHelper';
-import {saveOldStyle} from '../../animation/basicTrasition';
+import { saveOldStyle } from '../../animation/basicTrasition';
 import { getBasicPieLayout } from './pieLayout';
 
 /**
@@ -62,7 +62,7 @@ class PiePiece extends graphic.Sector {
         // cornerRadius & innerCornerRadius doesn't exist in the item layout. Use `0` if null value is specified.
         // see `setItemLayout` in `pieLayout.ts`.
         const sectorShape = extend(
-            getSectorCornerRadius(itemModel.getModel('itemStyle'), layout, true),
+            getSectorCornerRadius(itemModel.getModel('itemStyle'), true),
             layout
         );
 
@@ -141,15 +141,15 @@ class PiePiece extends graphic.Sector {
         sector.ensureState('emphasis').shape = {
             r: layout.r + (emphasisModel.get('scale')
                 ? (emphasisModel.get('scaleSize') || 0) : 0),
-            ...getSectorCornerRadius(emphasisModel.getModel('itemStyle'), layout)
+            ...getSectorCornerRadius(emphasisModel.getModel('itemStyle'))
         };
         extend(sector.ensureState('select'), {
             x: dx,
             y: dy,
-            shape: getSectorCornerRadius(itemModel.getModel(['select', 'itemStyle']), layout)
+            shape: getSectorCornerRadius(itemModel.getModel(['select', 'itemStyle']))
         });
         extend(sector.ensureState('blur'), {
-            shape: getSectorCornerRadius(itemModel.getModel(['blur', 'itemStyle']), layout)
+            shape: getSectorCornerRadius(itemModel.getModel(['blur', 'itemStyle']))
         });
 
         const labelLine = sector.getTextGuideLine();

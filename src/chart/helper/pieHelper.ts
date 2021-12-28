@@ -18,24 +18,16 @@
 */
 
 import Model from '../../model/Model';
-import Sector from 'zrender/src/graphic/shape/Sector';
-import { isArray } from 'zrender/src/core/util';
-import { parsePercent } from 'zrender/src/contain/text';
 
 export function getSectorCornerRadius(
     model: Model<{ borderRadius?: string | number | (string | number)[] }>,
-    shape: Pick<Sector['shape'], 'r0' | 'r'>,
     zeroIfNull?: boolean
 ) {
-    let cornerRadius = model.get('borderRadius');
+    const cornerRadius = model.get('borderRadius');
     if (cornerRadius == null) {
-        return zeroIfNull ? {innerCornerRadius: 0, cornerRadius: 0} : null;
-    }
-    if (!isArray(cornerRadius)) {
-        cornerRadius = [cornerRadius, cornerRadius];
+        return zeroIfNull ? { cornerRadius: 0 } : null;
     }
     return {
-        innerCornerRadius: parsePercent(cornerRadius[0], shape.r0),
-        cornerRadius: parsePercent(cornerRadius[1], shape.r)
+        cornerRadius: cornerRadius as number | number[]
     };
 }

@@ -99,7 +99,7 @@ class SunburstPiece extends graphic.Sector {
             normalStyle.decal = createOrUpdatePatternFromDecal(decal, api);
         }
 
-        const cornerRadius = getSectorCornerRadius(itemModel.getModel('itemStyle'), sectorShape, true);
+        const cornerRadius = getSectorCornerRadius(itemModel.getModel('itemStyle'), true);
         zrUtil.extend(sectorShape, cornerRadius);
 
         zrUtil.each(SPECIAL_STATES, function (stateName) {
@@ -107,7 +107,7 @@ class SunburstPiece extends graphic.Sector {
             const itemStyleModel = itemModel.getModel([stateName, 'itemStyle']);
             state.style = itemStyleModel.getItemStyle();
             // border radius
-            const cornerRadius = getSectorCornerRadius(itemStyleModel, sectorShape);
+            const cornerRadius = getSectorCornerRadius(itemStyleModel);
             if (cornerRadius) {
                 state.shape = cornerRadius;
             }
