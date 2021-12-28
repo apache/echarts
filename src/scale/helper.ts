@@ -79,7 +79,10 @@ function increaseInterval(interval: number) {
     const exp10 = Math.pow(10, numberUtil.quantityExponent(interval));
     // Increase interval
     let f = interval / exp10;
-    if (f === 2) {
+    if (!f) {
+        f = 1;
+    }
+    else if (f === 2) {
         f = 3;
     }
     else if (f === 3) {
@@ -112,9 +115,18 @@ export function alignScaleTicks(
     const fixedMax = parseAxisModelMinMax(scale, axisModel.get('max', true) as ScaleDataValue);
 
     niceScaleExtent(scale, axisModel);
-    const rawExtent = intervalScaleProto.getExtent.call(scale);
+    const extent = intervalScaleProto.getExtent.call(scale);
+    const rawExtent = getScaleExtent(scale, axisModel).extent;
     const isMinFixed = fixedMin != null;
     const isMaxFixed = fixedMax != null;
+    // Need to update the rawExtent.
+    // Because value in rawExtent may be not parsed. e.g. 'dataMin', 'dataMax'
+    if (isMinFixed) {
+        rawExtent[0] = extent[0];
+    }
+    if (isMaxFixed) {
+        rawExtent[1] = extent[1];
+    }
 
     let interval = intervalScaleProto.getInterval.call(scale);
     let min: number = rawExtent[0];
@@ -145,9 +157,18 @@ export function alignScaleTicks(
         if (nicedSplitNumber > alignToSplitNumber) {
             interval = increaseInterval(interval);
         }
-        // PENDING
         max = Math.ceil(rawExtent[1] / interval) * interval;
         min = numberUtil.round(max - interval * alignToSplitNumber);
+
+        // Not change the result that crossing zero.
+        if (min < 0 && rawExtent[0] >= 0) {
+            min = 0;
+            max = numberUtil.round(interval * alignToSplitNumber);
+        }
+        else if (max > 0 && rawExtent[1] <= 0) {
+            max = 0;
+            min = numberUtil.round((-interval * alignToSplitNumber));
+        }
     }
 
     // Adjust min, max based on the extent of alignTo. When min or max is set in alignTo scale
