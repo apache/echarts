@@ -149,7 +149,10 @@ function adjustScaleForOverflow(
 // Precondition of calling this method:
 // The scale extent has been initailized using series data extent via
 // `scale.setExtent` or `scale.unionExtentFromData`;
-export function niceScaleExtent(scale: Scale, inModel: AxisBaseModel) {
+export function niceScaleExtent(
+    scale: Scale,
+    inModel: AxisBaseModel
+) {
     const model = inModel as AxisBaseModel<LogAxisBaseOption>;
     const extentInfo = getScaleExtent(scale, model);
     const extent = extentInfo.extent;
@@ -160,15 +163,16 @@ export function niceScaleExtent(scale: Scale, inModel: AxisBaseModel) {
     }
 
     const scaleType = scale.type;
+    const interval = model.get('interval');
+    const isIntervalOrTime = scaleType === 'interval' || scaleType === 'time';
+
     scale.setExtent(extent[0], extent[1]);
-    scale.niceExtent({
+    scale.calcNiceExtent({
         splitNumber: splitNumber,
         fixMin: extentInfo.fixMin,
         fixMax: extentInfo.fixMax,
-        minInterval: (scaleType === 'interval' || scaleType === 'time')
-            ? model.get('minInterval') : null,
-        maxInterval: (scaleType === 'interval' || scaleType === 'time')
-            ? model.get('maxInterval') : null
+        minInterval: isIntervalOrTime ? model.get('minInterval') : null,
+        maxInterval: isIntervalOrTime ? model.get('maxInterval') : null
     });
 
     // If some one specified the min, max. And the default calculated interval
@@ -176,7 +180,6 @@ export function niceScaleExtent(scale: Scale, inModel: AxisBaseModel) {
     // in angle axis with angle 0 - 360. Interval calculated in interval scale is hard
     // to be 60.
     // FIXME
-    const interval = model.get('interval');
     if (interval != null) {
         (scale as IntervalScale).setInterval && (scale as IntervalScale).setInterval(interval);
     }

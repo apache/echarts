@@ -483,6 +483,20 @@ export function nice(val: number, round?: boolean): number {
     return exponent >= -20 ? +val.toFixed(exponent < 0 ? -exponent : 0) : val;
 }
 
+// /**
+//  * Check if value is a nice number.
+//  * @param val
+//  */
+// export function isValueNice(val: number) {
+//     const exp10 = Math.pow(10, quantityExponent(Math.abs(val)));
+//     const f = Math.abs(val / exp10);
+//     return f === 0
+//         || f === 1
+//         || f === 2
+//         || f === 3
+//         || f === 5;
+// }
+
 /**
  * This code was copied from "d3.js"
  * <https://github.com/d3/d3/blob/9cc9a875e636a1dcf36cc1e07bdf77e1ad6e2c74/src/arrays/quantile.js>.

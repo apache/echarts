@@ -34,6 +34,7 @@ import { ScaleDataValue } from '../../util/types';
 import { ParsedModelFinder } from '../../util/model';
 import { parseAxisModelMinMax } from '../scaleRawExtentInfo';
 import { map, each } from 'zrender/src/core/util';
+import { alignScaleTicks } from '../../scale/helper';
 
 
 class Radar implements CoordinateSystem, CoordinateSystemMaster {
@@ -172,71 +173,16 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
         }, this);
 
         const splitNumber = radarModel.get('splitNumber');
-
-        function increaseInterval(interval: number) {
-            const exp10 = Math.pow(10, Math.floor(Math.log(interval) / Math.LN10));
-            // Increase interval
-            let f = interval / exp10;
-            if (f === 2) {
-                f = 5;
-            }
-            else { // f is 2 or 5
-                f *= 2;
-            }
-            return f * exp10;
-        }
+        const dummyScale = new IntervalScale();
+        dummyScale.setExtent(0, splitNumber);
+        dummyScale.setInterval(1);
         // Force all the axis fixing the maxSplitNumber.
         each(indicatorAxes, function (indicatorAxis, idx) {
-            const rawExtent = getScaleExtent(indicatorAxis.scale, indicatorAxis.model).extent;
-            niceScaleExtent(indicatorAxis.scale, indicatorAxis.model);
-
-            const axisModel = indicatorAxis.model;
-            const scale = indicatorAxis.scale as IntervalScale;
-            const fixedMin = parseAxisModelMinMax(scale, axisModel.get('min', true) as ScaleDataValue);
-            const fixedMax = parseAxisModelMinMax(scale, axisModel.get('max', true) as ScaleDataValue);
-            let interval = scale.getInterval();
-
-            if (fixedMin != null && fixedMax != null) {
-                // User set min, max, divide to get new interval
-                scale.setExtent(+fixedMin, +fixedMax);
-                scale.setInterval(
-                    (fixedMax - fixedMin) / splitNumber
-                );
-            }
-            else if (fixedMin != null) {
-                let max;
-                // User set min, expand extent on the other side
-                do {
-                    max = fixedMin + interval * splitNumber;
-                    scale.setExtent(+fixedMin, max);
-                    // Interval must been set after extent
-                    // FIXME
-                    scale.setInterval(interval);
-
-                    interval = increaseInterval(interval);
-                } while (max < rawExtent[1] && isFinite(max) && isFinite(rawExtent[1]));
-            }
-            else if (fixedMax != null) {
-                let min;
-                // User set min, expand extent on the other side
-                do {
-                    min = fixedMax - interval * splitNumber;
-                    scale.setExtent(min, +fixedMax);
-                    scale.setInterval(interval);
-                    interval = increaseInterval(interval);
-                } while (min > rawExtent[0] && isFinite(min) && isFinite(rawExtent[0]));
-            }
-            else {
-                const nicedSplitNumber = scale.getTicks().length - 1;
-                if (nicedSplitNumber > splitNumber) {
-                    interval = increaseInterval(interval);
-                }
-                // TODO
-                const max = Math.ceil(rawExtent[1] / interval) * interval;
-                const min = numberUtil.round(max - interval * splitNumber);
-                scale.setExtent(min, max);
-                scale.setInterval(interval);
-            }
+            alignScaleTicks(
+                indicatorAxis.scale as IntervalScale,
+                indicatorAxis.model,
+                dummyScale
+            );
         });
     }
 

@@ -280,9 +280,9 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
         return this._ordinalMeta;
     }
 
-    niceTicks() {}
+    calcNiceTicks() {}
 
-    niceExtent() {}
+    calcNiceExtent() {}
 
 }
 
