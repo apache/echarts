@@ -208,7 +208,7 @@ export function alignScaleTicks(
         ) {
             warn(
                 // eslint-disable-next-line
-                `The ticks may be not displayed nice if when set min: ${axisModel.get('min')}, max: ${axisModel.get('max')} and alignTicks: true`
+                `The ticks may be not readable when set min: ${axisModel.get('min')}, max: ${axisModel.get('max')} and alignTicks: true`
             );
         }
     }
