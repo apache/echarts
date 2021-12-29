@@ -18,17 +18,14 @@
 */
 
 import { NumericAxisBaseOptionCommon } from '../coord/axisCommonTypes';
-import * as numberUtil from '../util/number';
+import {getPrecisionSafe, getPrecision, round, nice, quantityExponent} from '../util/number';
 import IntervalScale from './Interval';
-import { parseAxisModelMinMax } from '../coord/scaleRawExtentInfo';
-import { ScaleDataValue } from '../util/types';
-import { getScaleExtent, niceScaleExtent } from '../coord/axisHelper';
+import { getScaleExtent } from '../coord/axisHelper';
 import { AxisBaseModel } from '../coord/AxisBaseModel';
 import LogScale from './Log';
 import Scale from './Scale';
 import { warn } from '../util/log';
 
-const roundNumber = numberUtil.round;
 const mathLog = Math.log;
 
 type intervalScaleNiceTicksResult = {
@@ -36,6 +33,16 @@ type intervalScaleNiceTicksResult = {
     intervalPrecision: number,
     niceTickExtent: [number, number]
 };
+
+function isValueNice(val: number) {
+    const exp10 = Math.pow(10, quantityExponent(Math.abs(val)));
+    const f = Math.abs(val / exp10);
+    return f === 0
+        || f === 1
+        || f === 2
+        || f === 3
+        || f === 5;
+}
 
 export function isIntervalOrLogScale(scale: Scale): scale is LogScale | IntervalScale {
     return scale.type === 'interval' || scale.type === 'log';
@@ -55,7 +62,7 @@ export function intervalScaleNiceTicks(
     const result = {} as intervalScaleNiceTicksResult;
 
     const span = extent[1] - extent[0];
-    let interval = result.interval = numberUtil.nice(span / splitNumber, true);
+    let interval = result.interval = nice(span / splitNumber, true);
     if (minInterval != null && interval < minInterval) {
         interval = result.interval = minInterval;
     }
@@ -66,8 +73,8 @@ export function intervalScaleNiceTicks(
     const precision = result.intervalPrecision = getIntervalPrecision(interval);
     // Niced extent inside original extent
     const niceTickExtent = result.niceTickExtent = [
-        roundNumber(Math.ceil(extent[0] / interval) * interval, precision),
-        roundNumber(Math.floor(extent[1] / interval) * interval, precision)
+        round(Math.ceil(extent[0] / interval) * interval, precision),
+        round(Math.floor(extent[1] / interval) * interval, precision)
     ];
 
     fixExtent(niceTickExtent, extent);
@@ -76,7 +83,7 @@ export function intervalScaleNiceTicks(
 }
 
 function increaseInterval(interval: number) {
-    const exp10 = Math.pow(10, numberUtil.quantityExponent(interval));
+    const exp10 = Math.pow(10, quantityExponent(interval));
     // Increase interval
     let f = interval / exp10;
     if (!f) {
@@ -111,14 +118,24 @@ export function alignScaleTicks(
     const alignToSplitNumber = alignToTicks.length - 1;
     const alignToInterval = intervalScaleProto.getInterval.call(alignToScale);
 
-    const fixedMin = parseAxisModelMinMax(scale, axisModel.get('min', true) as ScaleDataValue);
-    const fixedMax = parseAxisModelMinMax(scale, axisModel.get('max', true) as ScaleDataValue);
+    const scaleExtent = getScaleExtent(scale, axisModel);
+    let rawExtent = scaleExtent.extent;
+    const isMinFixed = scaleExtent.fixMin;
+    const isMaxFixed = scaleExtent.fixMax;
 
-    niceScaleExtent(scale, axisModel);
+    if (scale.type === 'log') {
+        const logBase = mathLog((scale as LogScale).base);
+        rawExtent = [mathLog(rawExtent[0]) / logBase, mathLog(rawExtent[1]) / logBase];
+    }
+
+    scale.setExtent(rawExtent[0], rawExtent[1]);
+    scale.calcNiceExtent({
+        splitNumber: alignToSplitNumber,
+        fixMin: isMinFixed,
+        fixMax: isMaxFixed
+    });
     const extent = intervalScaleProto.getExtent.call(scale);
-    const rawExtent = getScaleExtent(scale, axisModel).extent;
-    const isMinFixed = fixedMin != null;
-    const isMaxFixed = fixedMax != null;
+
     // Need to update the rawExtent.
     // Because value in rawExtent may be not parsed. e.g. 'dataMin', 'dataMax'
     if (isMinFixed) {
@@ -157,18 +174,20 @@ export function alignScaleTicks(
         if (nicedSplitNumber > alignToSplitNumber) {
             interval = increaseInterval(interval);
         }
-        max = Math.ceil(rawExtent[1] / interval) * interval;
-        min = numberUtil.round(max - interval * alignToSplitNumber);
 
+        const range = interval * alignToSplitNumber;
+        max = Math.ceil(rawExtent[1] / interval) * interval;
+        min = round(max - range);
         // Not change the result that crossing zero.
         if (min < 0 && rawExtent[0] >= 0) {
             min = 0;
-            max = numberUtil.round(interval * alignToSplitNumber);
+            max = round(range);
         }
         else if (max > 0 && rawExtent[1] <= 0) {
             max = 0;
-            min = numberUtil.round((-interval * alignToSplitNumber));
+            min = -round(range);
         }
+
     }
 
     // Adjust min, max based on the extent of alignTo. When min or max is set in alignTo scale
@@ -184,13 +203,12 @@ export function alignScaleTicks(
 
     if (__DEV__) {
         const ticks = intervalScaleProto.getTicks.call(scale);
-        // if (ticks.length !== alignToScale.getTicks().length) {
-        //     debugger
-        // }
-        if (ticks[1] && ticks[1].value % interval) {
+        if (ticks[1]
+            && (!isValueNice(interval) || getPrecisionSafe(ticks[1].value) > getPrecisionSafe(interval))
+        ) {
             warn(
                 // eslint-disable-next-line
-                `The ticks may be not displayed nice if when set min: ${fixedMin}, max: ${fixedMax} and alignTicks: true`
+                `The ticks may be not displayed nice if when set min: ${axisModel.get('min')}, max: ${axisModel.get('max')} and alignTicks: true`
             );
         }
     }
@@ -201,7 +219,7 @@ export function alignScaleTicks(
  */
 export function getIntervalPrecision(interval: number): number {
     // Tow more digital for tick.
-    return numberUtil.getPrecision(interval) + 2;
+    return getPrecision(interval) + 2;
 }
 
 function clamp(

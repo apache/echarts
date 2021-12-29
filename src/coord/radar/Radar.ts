@@ -22,17 +22,12 @@
 import IndicatorAxis from './IndicatorAxis';
 import IntervalScale from '../../scale/Interval';
 import * as numberUtil from '../../util/number';
-import {
-    getScaleExtent,
-    niceScaleExtent
-} from '../axisHelper';
 import { CoordinateSystemMaster, CoordinateSystem } from '../CoordinateSystem';
 import RadarModel from './RadarModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { ScaleDataValue } from '../../util/types';
 import { ParsedModelFinder } from '../../util/model';
-import { parseAxisModelMinMax } from '../scaleRawExtentInfo';
 import { map, each } from 'zrender/src/core/util';
 import { alignScaleTicks } from '../../scale/helper';
 
