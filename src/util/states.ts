@@ -126,6 +126,8 @@ function liftColor(color: string | GradientObject): string | GradientObject {
         }));
         return ret;
     }
+    // Change nothing.
+    return color;
 }
 
 function doChangeHoverState(el: ECElement, stateName: DisplayState, hoverStateEnum: 0 | 1 | 2) {
