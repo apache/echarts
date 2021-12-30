@@ -354,6 +354,7 @@ export default function pieLabelLayout(
     const viewLeft = viewRect.x;
     const viewTop = viewRect.y;
     const viewHeight = viewRect.height;
+    const seriesStartAngle = seriesModel.get('startAngle') * RADIAN;
 
     function setNotShow(el: {ignore: boolean}) {
         el.ignore = true;
@@ -473,7 +474,9 @@ export default function pieLabelLayout(
                 && labelPosition !== 'outer'
             ) {
                 labelRotate = radialAngle + Math.PI / 2;
-                if (labelRotate > Math.PI / 2) {
+                if (labelRotate > Math.PI / 2 && labelRotate < Math.PI * 1.5
+                    || labelRotate < -Math.PI && labelRotate > -Math.PI * 1.5
+                ) {
                     labelRotate -= Math.PI;
                 }
             }
