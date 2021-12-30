@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #aaa;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+
+            .chart {
+                width: 260px;
+                height: 150px;
+                display: inline-block;
+            }
+        </style>
+
+        <h1>Ticks of right axis should be aligned and the ticks looks nice. All data are random</h1>
+        <div id="main-default"></div>
+        <h1>Min is fixed on the left axis</h1>
+        <div id="main-min"></div>
+        <h1>Max is fixed on the left axis</h1>
+        <div id="main-max"></div>
+        <h1>Min, max are both fixed on the left axis.</h1>
+        <div id="main-min-max"></div>
+        <h1>Min is fixed to -50 on the right axis</h1>
+        <div id="main-right-min"></div>
+        <h1>Max is fixed to 50 on the right axis</h1>
+        <div id="main-right-max"></div>
+        <h1>Min, max are both fixed to -50/50 on the right axis.</h1>
+        <div id="main-right-min-max"></div>
+        <h1>Min is fixed to 'dataMin' on the right axis</h1>
+        <div id="main-right-min2"></div>
+        <h1>Max is fixed to 'dataMax' on the right axis</h1>
+        <div id="main-right-max2"></div>
+        <h1>Min, max are both fixed to 'dataMin'/'dataMax' on the right axis.</h1>
+        <div id="main-right-min-max2"></div>
+        <h1>Right axis should follow split numbers from left axis.</h1>
+        <div id="main-split-number"></div>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+
+
+            function makeOption(leftMin, leftMax, rightMin, rightMax, splitNumber) {
+
+                const seriesData = [];
+
+                for (let d = 0; d < 2; d++) {
+                    const data = [];
+                    seriesData.push(data);
+                    const minY = Math.random() * 100 - 50;
+                    const range = Math.random() * 100;
+                    for (let k = 0; k < 10; k++) {
+                        data.push(minY + range * Math.random());
+                    }
+                }
+
+                return {
+                    animation: false,
+                    grid: {
+                        top: 10,
+                        bottom: 20,
+                        containLabel: true,
+                        left: 5,
+                        right: 5
+                    },
+                    xAxis: {
+                        data: new Array(10).fill(10).map((a, idx) => idx + '')
+                    },
+                    yAxis: [{
+                        splitNumber,
+                        showMinLabel: true,
+                        showMaxLabel: true,
+                        min: leftMin,
+                        max: leftMax,
+                        axisLabel: {
+                            fontSize: 10,
+                            formatter: (val) => +val.toFixed(2)
+                        }
+                    }, {
+                        alignTicks: true,
+                        showMinLabel: true,
+                        showMaxLabel: true,
+                        min: rightMin,
+                        max: rightMax,
+                        axisLabel: {
+                            fontSize: 10,
+                            formatter: (val) => +val.toFixed(2)
+                        }
+                    }],
+                    series: [{
+                        type: 'bar',
+                        yAxisIndex: 0,
+                        data: seriesData[0]
+                    }, {
+                        type: 'line',
+                        yAxisIndex: 1,
+                        showSymbol: false,
+                        data: seriesData[1]
+                    }]
+                }
+            }
+
+            function makeTestCharts(containerId, leftMin, leftMax, rightMin, rightMax) {
+                const container = document.querySelector(containerId);
+                for (let i = 0; i < 15; i++) {
+                    const dom = document.createElement('div');
+                    dom.className = 'chart';
+                    const option = makeOption(leftMin, leftMax, rightMin, rightMax);
+                    container.appendChild(dom);
+                    const chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            }
+
+            makeTestCharts('#main-default')
+            makeTestCharts('#main-min', 'dataMin');
+            makeTestCharts('#main-max', undefined, 'dataMax');
+            makeTestCharts('#main-min-max', 'dataMin', 'dataMax');
+            makeTestCharts('#main-right-min', undefined, undefined, -50);
+            makeTestCharts('#main-right-max', undefined, undefined, undefined, 50);
+            makeTestCharts('#main-right-min-max', undefined, undefined, -50, 50);
+            makeTestCharts('#main-right-min2', undefined, undefined, 'dataMin');
+            makeTestCharts('#main-right-max2', undefined, undefined, undefined, 'dataMax');
+            makeTestCharts('#main-right-min-max2', undefined, undefined, 'dataMin', 'dataMax');
+
+            // Different split numbers
+            for (let i = 0; i < 15; i++) {
+                const splitNumber = i + 2;
+                const dom = document.createElement('div');
+                dom.className = 'chart';
+                const option = makeOption(undefined, undefined, undefined, undefined, splitNumber);
+                document.querySelector('#main-split-number').appendChild(dom);
+                const chart = echarts.init(dom);
+                chart.setOption(option);
+            }
+        });
+        </script>
+
+
+    </body>
+</html>
+

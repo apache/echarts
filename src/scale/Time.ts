@@ -144,9 +144,8 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
 
     /**
      * @override
-     * @param expandToNicedExtent Whether expand the ticks to niced extent.
      */
-    getTicks(expandToNicedExtent?: boolean): TimeScaleTick[] {
+    getTicks(): TimeScaleTick[] {
         const interval = this._interval;
         const extent = this._extent;
 
@@ -180,7 +179,7 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
         return ticks;
     }
 
-    niceExtent(
+    calcNiceExtent(
         opt?: {
             splitNumber?: number,
             fixMin?: boolean,
@@ -203,10 +202,10 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             extent[0] = extent[1] - ONE_DAY;
         }
 
-        this.niceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
+        this.calcNiceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
     }
 
-    niceTicks(approxTickNum: number, minInterval: number, maxInterval: number): void {
+    calcNiceTicks(approxTickNum: number, minInterval: number, maxInterval: number): void {
         approxTickNum = approxTickNum || 10;
 
         const extent = this._extent;

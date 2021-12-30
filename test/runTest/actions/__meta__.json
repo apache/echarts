@@ -8,6 +8,7 @@
   "aria-pie": 2,
   "axes": 0,
   "axis": 1,
+  "axis-align-ticks": 4,
   "axis-boundaryGap": 1,
   "axis-interval": 3,
   "axis-interval2": 3,
