@@ -22,8 +22,6 @@ import IntervalScale from './Interval';
 import LogScale from './Log';
 import Scale from './Scale';
 
-export const mathLog = Math.log;
-
 type intervalScaleNiceTicksResult = {
     interval: number,
     intervalPrecision: number,

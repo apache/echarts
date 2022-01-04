@@ -5,7 +5,9 @@ import { getScaleExtent } from './axisHelper';
 import { AxisBaseModel } from './AxisBaseModel';
 import LogScale from '../scale/Log';
 import { warn } from '../util/log';
-import { mathLog, increaseInterval, isValueNice } from '../scale/helper';
+import { increaseInterval, isValueNice } from '../scale/helper';
+
+const mathLog = Math.log;
 
 
 export function alignScaleTicks(
