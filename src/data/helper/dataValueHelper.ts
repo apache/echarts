@@ -167,11 +167,13 @@ export class SortOrderComparator {
             rvalFloat = this._incomparable;
         }
         if (lvalNotNumeric && rvalNotNumeric) {
-            if (isString(lval)) {
-                lvalFloat = isString(rval) ? lval as unknown as number : 0;
+            const lvalIsStr = isString(lval);
+            const rvalIsStr = isString(rval);
+            if (lvalIsStr) {
+                lvalFloat = rvalIsStr ? lval as unknown as number : 0;
             }
-            if (isString(rval)) {
-                rvalFloat = isString(lval) ? rval as unknown as number : 0;
+            if (rvalIsStr) {
+                rvalFloat = lvalIsStr ? rval as unknown as number : 0;
             }
         }
 
