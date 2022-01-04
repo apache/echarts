@@ -50,7 +50,7 @@ import { isCartesian2DSeries, findAxisModels } from './cartesianAxisHelper';
 import { CategoryAxisBaseOption, NumericAxisBaseOptionCommon } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { isIntervalOrLogScale } from '../../scale/helper';
-import { alignScaleTicks } from "../axisAlignTicks";
+import { alignScaleTicks } from '../axisAlignTicks';
 import IntervalScale from '../../scale/Interval';
 import LogScale from '../../scale/Log';
 
