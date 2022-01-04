@@ -39,6 +39,7 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
 
 
 
@@ -119,7 +120,52 @@ under the License.
         });
         </script>
 
+        <script>
+            require([
+                'echarts',
+                'map/json/china-new.json'
+            ], function (echarts, chinaJson) {
+                var option;
+                echarts.registerMap('china', chinaJson)
 
+                option = {
+                    legend: {
+                        show: true,
+                        data: ['销售额']
+                    },
+                    series: {
+                        name: '销售额',
+                        type: 'map',
+                        map: 'china',
+                        label: {
+                            show: true,
+                            // formatter: '{b}'
+                        },
+                        data: [
+                            {
+                                name: '上海',
+                                value: 506772
+                            },
+                            {
+                                name: '内蒙古',
+                                value: 79776
+                            },
+                            {
+                                name: '台湾',
+                                value: 68885
+                            }
+                        ]
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Should show all labels when legend is enabled and no label formatter specified',
+                    ],
+                    option: option
+                });
+            });
+            </script>
     </body>
 </html>
 
