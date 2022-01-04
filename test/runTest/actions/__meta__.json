@@ -141,6 +141,7 @@
   "pie-alignTo": 4,
   "pie-animation": 2,
   "pie-calculable": 1,
+  "pie-cornerRadius": 1,
   "pie-label-extreme": 2,
   "polar-rounded": 3,
   "polarLine": 1,
