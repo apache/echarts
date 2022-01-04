@@ -29,7 +29,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { ScaleDataValue } from '../../util/types';
 import { ParsedModelFinder } from '../../util/model';
 import { map, each, isString, isNumber } from 'zrender/src/core/util';
-import { alignScaleTicks } from '../../scale/helper';
+import { alignScaleTicks } from "../axisAlignTicks";
 
 
 class Radar implements CoordinateSystem, CoordinateSystemMaster {
