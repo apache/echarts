@@ -22,6 +22,7 @@
 import createRenderPlanner from '../helper/createRenderPlanner';
 import { StageHandler } from '../../util/types';
 import LinesSeriesModel, {LinesDataItemOption} from './LinesSeries';
+import { logError } from 'zrender/src/core/util';
 
 const linesLayout: StageHandler = {
     seriesType: 'lines',
@@ -31,6 +32,9 @@ const linesLayout: StageHandler = {
     reset: function (seriesModel: LinesSeriesModel) {
         const coordSys = seriesModel.coordinateSystem;
         if (!coordSys) {
+            if (__DEV__) {
+                logError('The lines series must have a coordinate system.');
+            }
             return;
         }
         const isPolyline = seriesModel.get('polyline');
