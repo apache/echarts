@@ -28,6 +28,6 @@ export function getSectorCornerRadius(
         return zeroIfNull ? { cornerRadius: 0 } : null;
     }
     return {
-        cornerRadius: cornerRadius as number | number[]
+        cornerRadius
     };
 }
