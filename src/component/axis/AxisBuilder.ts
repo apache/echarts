@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {retrieve, defaults, extend, each, isObject, map} from 'zrender/src/core/util';
+import {retrieve, defaults, extend, each, isObject, map, isString, isNumber, isFunction} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
 import {createTextStyle} from '../../label/labelStyle';
@@ -287,15 +287,13 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         if (arrows != null) {
             let arrowSize = axisModel.get(['axisLine', 'symbolSize']);
 
-            if (typeof arrows === 'string') {
+            if (isString(arrows)) {
                 // Use the same arrow for start and end point
                 arrows = [arrows, arrows];
             }
-            if (typeof arrowSize === 'string'
-                || typeof arrowSize === 'number'
-            ) {
+            if (isString(arrowSize) || isNumber(arrowSize)) {
                 // Use the same size for width and height
-                arrowSize = [arrowSize, arrowSize];
+                arrowSize = [arrowSize as number, arrowSize as number];
             }
 
             const arrowOffset = normalizeSymbolOffset(axisModel.get(['axisLine', 'symbolOffset']) || 0, arrowSize);
@@ -789,7 +787,7 @@ function buildAxisLabel(
                 verticalAlign: itemLabelModel.getShallow('verticalAlign', true)
                     || itemLabelModel.getShallow('baseline', true)
                     || labelLayout.textVerticalAlign,
-                fill: typeof textColor === 'function'
+                fill: isFunction(textColor)
                     ? textColor(
                         // (1) In category axis with data zoom, tick is not the original
                         // index of axis.data. So tick should not be exposed to user

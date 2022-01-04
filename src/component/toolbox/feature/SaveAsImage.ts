@@ -24,6 +24,7 @@ import { ToolboxFeature, ToolboxFeatureOption } from '../featureManager';
 import { ZRColor } from '../../../util/types';
 import GlobalModel from '../../../model/Global';
 import ExtensionAPI from '../../../core/ExtensionAPI';
+import { isFunction } from 'zrender/src/core/util';
 
 export interface ToolboxSaveAsImageFeatureOption extends ToolboxFeatureOption {
     icon?: string
@@ -58,8 +59,9 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
             excludeComponents: model.get('excludeComponents'),
             pixelRatio: model.get('pixelRatio')
         });
+        const browser = env.browser;
         // Chrome, Firefox, New Edge
-        if (typeof MouseEvent === 'function' && (env.browser.newEdge || (!env.browser.ie && !env.browser.edge))) {
+        if (isFunction(MouseEvent) && (browser.newEdge || (!browser.ie && !browser.edge))) {
             const $a = document.createElement('a');
             $a.download = title + '.' + type;
             $a.target = '_blank';

@@ -49,7 +49,8 @@ import OrdinalScale from '../../scale/Ordinal';
 import { isCartesian2DSeries, findAxisModels } from './cartesianAxisHelper';
 import { CategoryAxisBaseOption, NumericAxisBaseOptionCommon } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
-import { alignScaleTicks, isIntervalOrLogScale } from '../../scale/helper';
+import { isIntervalOrLogScale } from '../../scale/helper';
+import { alignScaleTicks } from '../axisAlignTicks';
 import IntervalScale from '../../scale/Interval';
 import LogScale from '../../scale/Log';
 

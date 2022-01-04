@@ -20,6 +20,7 @@
 import { StageHandler, SeriesOption, SeriesSamplingOptionMixin } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
+import { isFunction, isString } from 'zrender/src/core/util';
 
 
 type Sampler = (frame: ArrayLike<number>) => number;
@@ -99,10 +100,10 @@ export default function dataSample(seriesType: string): StageHandler {
                         seriesModel.setData(data.lttbDownSample(data.mapDimension(valueAxis.dim), 1 / rate));
                     }
                     let sampler;
-                    if (typeof sampling === 'string') {
+                    if (isString(sampling)) {
                         sampler = samplers[sampling];
                     }
-                    else if (typeof sampling === 'function') {
+                    else if (isFunction(sampling)) {
                         sampler = sampling;
                     }
                     if (sampler) {

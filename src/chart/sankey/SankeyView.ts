@@ -29,6 +29,7 @@ import SeriesData from '../../data/SeriesData';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
+import { isString } from 'zrender/src/core/util';
 
 class SankeyPathShape {
     x1 = 0;
@@ -206,14 +207,16 @@ class SankeyView extends ChartView {
                 case 'gradient':
                     const sourceColor = edge.node1.getVisual('color');
                     const targetColor = edge.node2.getVisual('color');
-                    if (typeof sourceColor === 'string' && typeof targetColor === 'string') {
-                        curve.style.fill = new graphic.LinearGradient(0, 0, +(orient === 'horizontal'), +(orient === 'vertical'), [{
-                            color: sourceColor,
-                            offset: 0
-                        }, {
-                            color: targetColor,
-                            offset: 1
-                        }]);
+                    if (isString(sourceColor) && isString(targetColor)) {
+                        curve.style.fill = new graphic.LinearGradient(
+                            0, 0, +(orient === 'horizontal'), +(orient === 'vertical'), [{
+                                color: sourceColor,
+                                offset: 0
+                            }, {
+                                color: targetColor,
+                                offset: 1
+                            }]
+                        );
                     }
             }
 

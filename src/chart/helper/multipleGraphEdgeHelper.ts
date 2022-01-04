@@ -42,7 +42,7 @@ const createCurveness = function (seriesModel, appendLength) {
     let curvenessList = [];
 
     // handler the function set
-    if (typeof autoCurvenessParmas === 'number') {
+    if (zrUtil.isNumber(autoCurvenessParmas)) {
         length = autoCurvenessParmas;
     }
     else if (zrUtil.isArray(autoCurvenessParmas)) {

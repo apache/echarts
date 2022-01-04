@@ -325,7 +325,7 @@ class LabelManager {
             const defaultLabelAttr = labelItem.defaultAttr;
             let layoutOption;
             // TODO A global layout option?
-            if (typeof labelItem.layoutOption === 'function') {
+            if (isFunction(labelItem.layoutOption)) {
                 layoutOption = labelItem.layoutOption(
                     prepareLayoutCallbackParams(labelItem, hostEl)
                 );

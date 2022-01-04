@@ -137,12 +137,12 @@ export class DataFormatMixin {
             );
         }
 
-        if (typeof formatter === 'function') {
+        if (zrUtil.isFunction(formatter)) {
             params.status = status;
             params.dimensionIndex = labelDimIndex;
             return formatter(params);
         }
-        else if (typeof formatter === 'string') {
+        else if (zrUtil.isString(formatter)) {
             const str = formatTpl(formatter, params);
 
             // Support 'aaa{@[3]}bbb{@product}ccc'.

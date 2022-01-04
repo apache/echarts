@@ -270,11 +270,11 @@ class GeoModel extends ComponentModel<GeoOption> {
         const params = {
             name: name
         } as GeoLabelFormatterDataParams;
-        if (typeof formatter === 'function') {
+        if (zrUtil.isFunction(formatter)) {
             params.status = status;
             return formatter(params);
         }
-        else if (typeof formatter === 'string') {
+        else if (zrUtil.isString(formatter)) {
             return formatter.replace('{a}', name != null ? name : '');
         }
     }

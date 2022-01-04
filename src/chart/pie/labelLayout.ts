@@ -25,7 +25,7 @@ import { HorizontalAlign, ZRTextAlign } from '../../util/types';
 import { Sector, Polyline, Point } from '../../util/graphic';
 import ZRText from 'zrender/src/graphic/Text';
 import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
-import { each } from 'zrender/src/core/util';
+import { each, isNumber } from 'zrender/src/core/util';
 import { limitTurnAngle, limitSurfaceAngle } from '../../label/labelGuideHelper';
 import { shiftLayoutOnY } from '../../label/labelLayoutHelper';
 
@@ -352,7 +352,7 @@ export default function pieLabelLayout(
 
         let labelRotate;
         const rotate = labelModel.get('rotate');
-        if (typeof rotate === 'number') {
+        if (isNumber(rotate)) {
             labelRotate = rotate * (Math.PI / 180);
         }
         else if (labelPosition === 'center') {

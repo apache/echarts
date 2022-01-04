@@ -242,7 +242,7 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
             };
         })(labelFormatter as TimeAxisLabelFormatterOption);
     }
-    else if (typeof labelFormatter === 'string') {
+    else if (zrUtil.isString(labelFormatter)) {
         return (function (tpl) {
             return function (tick: ScaleTick) {
                 // For category axis, get raw value; for numeric axis,
@@ -254,7 +254,7 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
             };
         })(labelFormatter);
     }
-    else if (typeof labelFormatter === 'function') {
+    else if (zrUtil.isFunction(labelFormatter)) {
         return (function (cb) {
             return function (tick: ScaleTick, idx: number) {
                 // The original intention of `idx` is "the index of the tick in all ticks".

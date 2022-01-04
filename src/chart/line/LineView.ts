@@ -124,7 +124,7 @@ function getBoundingDiff(points1: ArrayLike<number>, points2: ArrayLike<number>)
 }
 
 function getSmooth(smooth: number | boolean) {
-    return typeof smooth === 'number' ? smooth : (smooth ? 0.5 : 0);
+    return zrUtil.isNumber(smooth) ? smooth : (smooth ? 0.5 : 0);
 }
 
 function getStackedOnPoints(
@@ -1064,11 +1064,11 @@ class LineView extends ChartView {
 
         const seriesModel = data.hostModel;
         let seriesDuration = seriesModel.get('animationDuration');
-        if (typeof seriesDuration === 'function') {
+        if (zrUtil.isFunction(seriesDuration)) {
             seriesDuration = seriesDuration(null);
         }
         const seriesDalay = seriesModel.get('animationDelay') || 0;
-        const seriesDalayValue = typeof seriesDalay === 'function'
+        const seriesDalayValue = zrUtil.isFunction(seriesDalay)
             ? seriesDalay(null)
             : seriesDalay;
 
@@ -1113,7 +1113,7 @@ class LineView extends ChartView {
                     ratio = 1 - ratio;
                 }
 
-                const delay = typeof seriesDalay === 'function' ? seriesDalay(idx)
+                const delay = zrUtil.isFunction(seriesDalay) ? seriesDalay(idx)
                     : (seriesDuration * ratio) + seriesDalayValue;
 
                 const symbolPath = el.getSymbolPath();
