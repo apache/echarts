@@ -366,7 +366,7 @@ class LegendView extends ComponentView {
 
         const textStyleModel = legendItemModel.getModel('textStyle');
 
-        if (typeof seriesModel.getLegendIcon === 'function'
+        if (zrUtil.isFunction(seriesModel.getLegendIcon)
             && (!legendIconType || legendIconType === 'inherit')
         ) {
             // Series has specific way to define legend icon
@@ -404,10 +404,10 @@ class LegendView extends ComponentView {
 
         const formatter = legendModel.get('formatter');
         let content = name;
-        if (typeof formatter === 'string' && formatter) {
+        if (zrUtil.isString(formatter) && formatter) {
             content = formatter.replace('{name}', name != null ? name : '');
         }
-        else if (typeof formatter === 'function') {
+        else if (zrUtil.isFunction(formatter)) {
             content = formatter(name);
         }
 

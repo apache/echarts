@@ -205,7 +205,7 @@ function initChildren(node: TreeNode, sortOrder?: SunburstSeriesOption['sort']) 
  *                                   See SunburstSeries.js for details.
  */
 function sort(children: TreeNode[], sortOrder: SunburstSeriesOption['sort']) {
-    if (typeof sortOrder === 'function') {
+    if (zrUtil.isFunction(sortOrder)) {
         const sortTargets = zrUtil.map(children, (child, idx) => {
             const value = child.getValue() as number;
             return {

@@ -29,6 +29,7 @@ import { AnimationEasing } from 'zrender/src/animation/easing';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import Model from '../model/Model';
 import {
+    isFunction,
     isObject,
     retrieve2
 } from 'zrender/src/core/util';
@@ -101,13 +102,13 @@ export function getAnimationConfig(
             animationPayload.easing != null && (easing = animationPayload.easing);
             animationPayload.delay != null && (delay = animationPayload.delay);
         }
-        if (typeof delay === 'function') {
+        if (isFunction(delay)) {
             delay = delay(
                 dataIndex as number,
                 extraDelayParams
             );
         }
-        if (typeof duration === 'function') {
+        if (isFunction(duration)) {
             duration = duration(dataIndex as number);
         }
         const config = {
@@ -136,7 +137,7 @@ function animateOrSetProps<Props>(
 ) {
     let isFrom = false;
     let removeOpt: AnimationOption;
-    if (typeof dataIndex === 'function') {
+    if (isFunction(dataIndex)) {
         during = cb;
         cb = dataIndex;
         dataIndex = null;

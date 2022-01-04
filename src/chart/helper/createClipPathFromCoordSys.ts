@@ -24,6 +24,7 @@ import { SeriesOption } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
+import { isFunction } from 'zrender/src/core/util';
 
 type SeriesModelWithLineWidth = SeriesModel<SeriesOption & {
     lineStyle?: { width?: number }
@@ -80,7 +81,7 @@ function createGridClipPath(
             clipPath.shape.height = 0;
         }
 
-        const duringCb = typeof during === 'function'
+        const duringCb = isFunction(during)
             ? (percent: number) => {
                 during(percent, clipPath);
             }

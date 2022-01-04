@@ -489,7 +489,7 @@ class VisualMapping<VisualOption
                     // but currently value type can exactly be string or number.
                     // Compromise for numeric-like string (like '12'), especially
                     // in the case that visualMap.categories is ['22', '33'].
-                    || (typeof pieceValue === 'string' && pieceValue === value + '')
+                    || (zrUtil.isString(pieceValue) && pieceValue === value + '')
                 ) {
                     return i;
                 }

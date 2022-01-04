@@ -83,7 +83,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
                 if (ecModel.isSeriesFiltered(seriesModel)) {
                     return;
                 }
-                if (typeof seriesModel.enableAriaDecal === 'function') {
+                if (zrUtil.isFunction(seriesModel.enableAriaDecal)) {
                     // Let series define how to use decal palette on data
                     seriesModel.enableAriaDecal();
                     return;
@@ -242,7 +242,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
     }
 
     function replace(str: string, keyValues: object) {
-        if (typeof str !== 'string') {
+        if (!zrUtil.isString(str)) {
             return str;
         }
 

@@ -19,7 +19,7 @@
 
 import { ParsedValue, DimensionType } from '../../util/types';
 import { parseDate, numericToNumber } from '../../util/number';
-import { createHashMap, trim, hasOwn } from 'zrender/src/core/util';
+import { createHashMap, trim, hasOwn, isString, isNumber } from 'zrender/src/core/util';
 import { throwError } from '../../util/log';
 
 
@@ -51,7 +51,7 @@ export function parseDataValue(
 
     if (dimType === 'time'
         // spead up when using timestamp
-        && typeof value !== 'number'
+        && !isNumber(value)
         && value != null
         && value !== '-'
     ) {
@@ -87,7 +87,7 @@ const valueParserMap = createHashMap<RawValueParser, RawValueParserType>({
         return +parseDate(val);
     },
     'trim': function (val) {
-        return typeof val === 'string' ? trim(val) : val;
+        return isString(val) ? trim(val) : val;
     }
 });
 
@@ -115,7 +115,7 @@ class FilterOrderComparator implements FilterComparator {
     private _rvalFloat: number;
     private _opFn: (lval: unknown, rval: unknown) => boolean;
     constructor(op: OrderRelationOperator, rval: unknown) {
-        if (typeof rval !== 'number') {
+        if (!isNumber(rval)) {
             let errMsg = '';
             if (__DEV__) {
                 errMsg = 'rvalue of "<", ">", "<=", ">=" can only be number in filter.';
@@ -128,7 +128,7 @@ class FilterOrderComparator implements FilterComparator {
     // Performance sensitive.
     evaluate(lval: unknown): boolean {
         // Most cases is 'number', and typeof maybe 10 times faseter than parseFloat.
-        return typeof lval === 'number'
+        return isNumber(lval)
             ? this._opFn(lval, this._rvalFloat)
             : this._opFn(numericToNumber(lval), this._rvalFloat);
     }
@@ -155,10 +155,8 @@ export class SortOrderComparator {
     // Performance sensitive.
     evaluate(lval: unknown, rval: unknown): -1 | 0 | 1 {
         // Most cases is 'number', and typeof maybe 10 times faseter than parseFloat.
-        const lvalTypeof = typeof lval;
-        const rvalTypeof = typeof rval;
-        let lvalFloat = lvalTypeof === 'number' ? lval : numericToNumber(lval);
-        let rvalFloat = rvalTypeof === 'number' ? rval : numericToNumber(rval);
+        let lvalFloat = isNumber(lval) ? lval : numericToNumber(lval);
+        let rvalFloat = isNumber(rval) ? rval : numericToNumber(rval);
         const lvalNotNumeric = isNaN(lvalFloat as number);
         const rvalNotNumeric = isNaN(rvalFloat as number);
 
@@ -169,13 +167,11 @@ export class SortOrderComparator {
             rvalFloat = this._incomparable;
         }
         if (lvalNotNumeric && rvalNotNumeric) {
-            const lvalIsStr = lvalTypeof === 'string';
-            const rvalIsStr = rvalTypeof === 'string';
-            if (lvalIsStr) {
-                lvalFloat = rvalIsStr ? lval : 0;
+            if (isString(lval)) {
+                lvalFloat = isString(rval) ? lval as unknown as number : 0;
             }
-            if (rvalIsStr) {
-                rvalFloat = lvalIsStr ? rval : 0;
+            if (isString(rval)) {
+                rvalFloat = isString(lval) ? rval as unknown as number : 0;
             }
         }
 

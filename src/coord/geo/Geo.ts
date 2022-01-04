@@ -172,7 +172,7 @@ class Geo extends View {
     }
 
     dataToPoint(data: number[] | string, noRoam?: boolean, out?: number[]): number[] {
-        if (typeof data === 'string') {
+        if (zrUtil.isString(data)) {
             // Map area name to geoCoord
             data = this.getGeoCoord(data);
         }

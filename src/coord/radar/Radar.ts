@@ -28,7 +28,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { ScaleDataValue } from '../../util/types';
 import { ParsedModelFinder } from '../../util/model';
-import { map, each } from 'zrender/src/core/util';
+import { map, each, isString, isNumber } from 'zrender/src/core/util';
 import { alignScaleTicks } from '../../scale/helper';
 
 
@@ -133,7 +133,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
 
         // radius may be single value like `20`, `'80%'`, or array like `[10, '80%']`
         let radius = radarModel.get('radius');
-        if (typeof radius === 'string' || typeof radius === 'number') {
+        if (isString(radius) || isNumber(radius)) {
             radius = [0, radius];
         }
         this.r0 = numberUtil.parsePercent(radius[0], viewSize);

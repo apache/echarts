@@ -33,7 +33,8 @@ import {
     defaults,
     isDom,
     isArray,
-    noop
+    noop,
+    isString
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import timsort from 'zrender/src/core/timsort';
@@ -400,7 +401,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         opts = opts || {};
 
         // Get theme by name
-        if (typeof theme === 'string') {
+        if (isString(theme)) {
             theme = themeStorage[theme] as object;
         }
 
@@ -2698,7 +2699,7 @@ export const disconnect = disConnect;
  * Dispose a chart instance
  */
 export function dispose(chart: EChartsType | HTMLElement | string): void {
-    if (typeof chart === 'string') {
+    if (isString(chart)) {
         chart = instances[chart];
     }
     else if (!(chart instanceof ECharts)) {
@@ -2788,7 +2789,7 @@ export function registerAction(
     eventName: string | ActionHandler,
     action?: ActionHandler
 ): void {
-    if (typeof eventName === 'function') {
+    if (isFunction(eventName)) {
         action = eventName;
         eventName = '';
     }

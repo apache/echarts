@@ -143,7 +143,7 @@ class EffectLine extends graphic.Group {
 
             if (period > 0) {
                 let delayNum: number;
-                if (typeof delayExpr === 'function') {
+                if (zrUtil.isFunction(delayExpr)) {
                     delayNum = delayExpr(idx);
                 }
                 else {

@@ -78,7 +78,7 @@ import {TimeAxisLabelFormatterOption} from '../coord/axisCommonTypes';
 import { warn } from '../util/log';
 import { LocaleOption } from '../core/locale';
 import Model from '../model/Model';
-import { filter, map } from 'zrender/src/core/util';
+import { filter, isNumber, map } from 'zrender/src/core/util';
 
 // FIXME 公用？
 const bisect = function (
@@ -234,7 +234,7 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
 
     parse(val: number | string | Date): number {
         // val might be float.
-        return typeof val === 'number' ? val : +numberUtil.parseDate(val);
+        return isNumber(val) ? val : +numberUtil.parseDate(val);
     }
 
     contain(val: number): boolean {

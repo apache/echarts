@@ -31,7 +31,7 @@ import SeriesData from '../../data/SeriesData';
 import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
-import {extend} from 'zrender/src/core/util';
+import {extend, isFunction, isString} from 'zrender/src/core/util';
 import {setCommonECData} from '../../util/innerStore';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
@@ -61,10 +61,10 @@ function parsePosition(seriesModel: GaugeSeriesModel, api: ExtensionAPI): PosInf
 function formatLabel(value: number, labelFormatter: string | ((value: number) => string)): string {
     let label = value == null ? '' : (value + '');
     if (labelFormatter) {
-        if (typeof labelFormatter === 'string') {
+        if (isString(labelFormatter)) {
             label = labelFormatter.replace('{value}', label);
         }
-        else if (typeof labelFormatter === 'function') {
+        else if (isFunction(labelFormatter)) {
             label = labelFormatter(value);
         }
     }
