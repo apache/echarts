@@ -150,7 +150,7 @@ under the License.
                     }]
                 };
                 var chart = testHelper.create(echarts, 'scatter-clip-polar', {
-                    title: 'Scatter Clip on Polar',
+                    title: ['Scatter Clip on Polar', 'Shrink the page, this red point shouldn\'t be clipped'],
                     option: option,
                     height: 400,
                     buttons: makeToggleChartButtons(function (clip) {
