@@ -178,6 +178,7 @@
   "tooltip-link": 2,
   "tooltip-rich": 1,
   "tooltip-setOption": 2,
+  "tooltip-valueFormatter": 3,
   "tree-image": 1,
   "tree-legend": 1,
   "tree-radial": 1,
