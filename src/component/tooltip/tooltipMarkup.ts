@@ -201,27 +201,28 @@ function getBuilder(frag: TooltipMarkupBlockFragment): TooltipMarkupFragmentBuil
 
 function getBlockGapLevel(frag: TooltipMarkupBlockFragment) {
     if (isSectionFragment(frag)) {
-        let thisGapLevelBetweenSubBlocks = 0;
+        let gapLevel = 0;
         const subBlockLen = frag.blocks.length;
-        const thisBlockHasInnerGap = subBlockLen > 1 || (subBlockLen > 0 && !frag.noHeader);
+        const hasInnerGap = subBlockLen > 1 || (subBlockLen > 0 && !frag.noHeader);
         each(frag.blocks, function (subBlock) {
             const subGapLevel = getBlockGapLevel(subBlock);
             // If the some of the sub-blocks have some gaps (like 10px) inside, this block
             // should use a larger gap (like 20px) to distinguish those sub-blocks.
-            if (subGapLevel >= thisGapLevelBetweenSubBlocks) {
-                thisGapLevelBetweenSubBlocks = subGapLevel + (
-                    (
-                        thisBlockHasInnerGap && (
+            if (subGapLevel >= gapLevel) {
+                gapLevel = subGapLevel + (
+                    +(
+                        hasInnerGap && (
                             // 0 always can not be readable gap level.
                             !subGapLevel
                             // If no header, always keep the sub gap level. Otherwise
                             // look weird in case `multipleSeries`.
-                            || (subBlock.type === 'section' && !subBlock.noHeader)
+                            || (isSectionFragment(subBlock) && !subBlock.noHeader)
                         )
-                    ) ? 1 : 0
+                    )
                 );
             }
         });
+        return gapLevel;
     }
     return 0;
 }
@@ -271,7 +272,7 @@ function buildSection(
         ? subMarkupTextList.join(gaps.richText)
         : wrapBlockHTML(
             subMarkupTextList.join(''),
-            topMarginForOuterGap
+            noHeader ? topMarginForOuterGap : gaps.html
         );
 
     if (noHeader) {

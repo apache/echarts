@@ -38,6 +38,8 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
 
 
 
@@ -77,9 +79,6 @@ under the License.
                     'Basic valueFormatter of item tooltip'
                 ],
                 option: option
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
 
             chart.dispatchAction({
@@ -90,7 +89,185 @@ under the License.
         });
         </script>
 
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option;
 
+                option = {
+                    animation: false,
+                    tooltip: {
+                        position: 'top',
+                        tooltip: {
+                            valueFormatter: 'placeholder'
+                        },
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+                    },
+                    yAxis: [{
+                        type: 'value'
+                    }, {
+                        type: 'value',
+                        alignTicks: true
+                    }],
+                    series: [
+                        {
+                            data: [50, 80, 70, 20, 30, 10, 100],
+                            tooltip: {
+                                valueFormatter: (val) => '¥' + val
+                            },
+                            type: 'bar'
+                        },
+                        {
+                            data: [10, 8, 12, 7, 12, 8, 5],
+                            tooltip: {
+                                valueFormatter: (val) => '$' + val
+                            },
+                            yAxisIndex: 1,
+                            type: 'bar'
+                        },
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Different valueFormatter on series.'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+				'data/large-data.json'
+            ], function (echarts, packedData) {
+                var option;
+
+                function round2(val) {
+                    return Math.round(val * 100) / 100;
+                }
+
+                function round3(val) {
+                    return Math.round(val * 1000) / 1000;
+                }
+
+                function prepData(packed) {
+                    console.time('prep');
+
+                    // epoch,idl,recv,send,read,writ,used,free
+
+                    var numFields = packed[0];
+                    packed = packed.slice(numFields + 1);
+
+                    var repeatTimes = 5;
+
+                    var data = new Float64Array((packed.length / numFields) * 4 * repeatTimes);
+
+                    var off = 0;
+                    var date = packed[0];
+                    for (let repeat = 0; repeat < repeatTimes; repeat++) {
+                        for (let i = 0, j = 0; i < packed.length; i += numFields, j++) {
+                            date += 1;
+                            data[off++] = date * 60 * 1000;
+                            data[off++] = round3(100 - packed[i + 1]);
+                            data[off++] = round2(
+                                (100 * packed[i + 5]) / (packed[i + 5] + packed[i + 6])
+                            );
+                            data[off++] = packed[i + 3];
+                        }
+                    }
+                    console.timeEnd('prep');
+
+                    return data;
+                }
+
+
+                option = {
+                    animation: false,
+                    dataset: {
+                        source: prepData(packedData),
+                        dimensions: ['date', 'cpu', 'ram', 'tcpout']
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {},
+                    grid: {
+                        containLabel: true,
+                        left: 0,
+                        top: 50,
+                        right: 0,
+                        bottom: 30
+                    },
+                    xAxis: {
+                        type: 'time'
+                    },
+                    yAxis: [{
+                        type: 'value',
+                        max: 100,
+                        axisLabel: {
+                            formatter: '{value} %'
+                        }
+                    }, {
+                        type: 'value',
+                        alignTicks: true,
+                        axisLabel: {
+                            formatter: '{value} MB'
+                        }
+                    }],
+                    series: [{
+                        name: 'CPU',
+                        type: 'line',
+                        showSymbol: false,
+                        tooltip: {
+                            valueFormatter: (value) => value + ' %'
+                        },
+                        lineStyle: { width: 1 },
+                        emphasis: { lineStyle: { width: 1 } },
+                        encode: {
+                            x: 'date',
+                            y: 'cpu'
+                        }
+                    }, {
+                        name: 'RAM',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        tooltip: {
+                            valueFormatter: (value) => value + ' MB'
+                        },
+                        showSymbol: false,
+                        lineStyle: { width: 1 },
+                        emphasis: { lineStyle: { width: 1 } },
+                        encode: {
+                            x: 'date',
+                            y: 'ram'
+                        }
+                    }, {
+                        name: 'TCP Out',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        showSymbol: false,
+                        lineStyle: { width: 1 },
+                        emphasis: { lineStyle: { width: 1 } },
+                        encode: {
+                            x: 'date',
+                            y: 'tcpout'
+                        }
+                    }]
+                };
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Axis trigger'
+                    ],
+                    option: option
+                });
+            });
+            </script>
     </body>
 </html>
 
