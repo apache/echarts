@@ -16,7 +16,7 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-import { bind, each, clone, trim, isString, isFunction, isArray, isObject } from 'zrender/src/core/util';
+import { bind, each, clone, trim, isString, isFunction, isArray, isObject, extend } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import TooltipHTMLContent from './TooltipHTMLContent';
 import TooltipRichContent from './TooltipRichContent';
@@ -585,11 +585,16 @@ class TooltipView extends ComponentView {
                     const seriesTooltipResult = normalizeTooltipFormatResult(
                         series.formatTooltip(dataIndex, true, null)
                     );
-                    if (seriesTooltipResult.markupFragment) {
-                        axisSectionMarkup.blocks.push(seriesTooltipResult.markupFragment);
+                    const frag = seriesTooltipResult.frag;
+                    if (frag) {
+                        const valueFormatter = buildTooltipModel(
+                            [series as Model<TooltipableOption>],
+                            globalTooltipModel
+                        ).get('valueFormatter');
+                        axisSectionMarkup.blocks.push(valueFormatter ? extend({ valueFormatter }, frag) : frag);
                     }
-                    if (seriesTooltipResult.markupText) {
-                        markupTextArrLegacy.push(seriesTooltipResult.markupText);
+                    if (seriesTooltipResult.text) {
+                        markupTextArrLegacy.push(seriesTooltipResult.text);
                     }
                     cbParamsList.push(cbParams);
                 });
@@ -682,16 +687,17 @@ class TooltipView extends ComponentView {
             dataModel.formatTooltip(dataIndex, false, dataType)
         );
         const orderMode = tooltipModel.get('order');
-        const markupText = seriesTooltipResult.markupFragment
-            ? buildTooltipMarkup(
-                seriesTooltipResult.markupFragment,
+        const valueFormatter = tooltipModel.get('valueFormatter');
+        const frag = seriesTooltipResult.frag;
+        const markupText = frag ? buildTooltipMarkup(
+                valueFormatter ? extend({ valueFormatter }, frag) : frag,
                 markupStyleCreator,
                 renderMode,
                 orderMode,
                 ecModel.get('useUTC'),
                 tooltipModel.get('textStyle')
             )
-            : seriesTooltipResult.markupText;
+            : seriesTooltipResult.text;
 
         const asyncTicket = 'item_' + dataModel.name + '_' + dataIndex;
 
