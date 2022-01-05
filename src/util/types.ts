@@ -618,6 +618,7 @@ export type OptionDataItemObject<T> = {
     groupId?: OptionId;
     value?: T[] | T;
     selected?: boolean;
+    selectable?: boolean;
 };
 // Compat number because it is usually used and not easy to
 // restrict it in practise.
@@ -919,7 +920,6 @@ export interface ItemStyleOption<TCbParams = never> extends ShadowOptionMixin, B
     color?: ZRColor | (TCbParams extends never ? never : ((params: TCbParams) => ZRColor))
     opacity?: number
     decal?: DecalObject | 'none'
-    selectable?: boolean
 }
 
 /**

@@ -603,7 +603,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             const selectedMap = this.option.selectedMap || (this.option.selectedMap = {});
             const self = this;
             data.each(idx => {
-                if ((data.getItemModel(idx) as Model).get(['itemStyle', 'selectable']) === false) {
+                if ((data.getItemModel(idx) as Model).get('selectable') === false) {
                     return;
                 }
                 const nameOrId = getSelectionKey(data, idx);
@@ -616,7 +616,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             const selectedMap = this.option.selectedMap || (this.option.selectedMap = {});
             for (let i = 0; i < len; i++) {
                 const dataIndex = innerDataIndices[i];
-                if ((data.getItemModel(dataIndex) as Model).get(['itemStyle', 'selectable']) === false) {
+                if ((data.getItemModel(dataIndex) as Model).get('selectable') === false) {
                     return;
                 }
                 // TODO diffrent types of data share same object.
@@ -627,7 +627,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         }
         else if (selectedMode === 'single' || selectedMode === true) {
             const lastDataIndex = innerDataIndices[len - 1];
-            if ((data.getItemModel(lastDataIndex) as Model).get(['itemStyle', 'selectable']) === false) {
+            if ((data.getItemModel(lastDataIndex) as Model).get('selectable') === false) {
                 return;
             }
             const nameOrId = getSelectionKey(data, lastDataIndex);
