@@ -116,6 +116,19 @@ under the License.
                     data1.push([Math.random() * 10, Math.random() * 360]);
                 }
 
+                data1.push({
+                    value: [5, 82],
+                    name: 'This point shouldn\'t be clipped',
+                    itemStyle: {
+                        color: 'red'
+                    },
+                    label: {
+                        show: true,
+                        formatter: '👆{b}👆',
+                        position: 'bottom'
+                    }
+                });
+
                 var option = {
                     polar: {},
                     angleAxis: {
