@@ -19,7 +19,7 @@
 
 
 import * as zrUtil from 'zrender/src/core/util';
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import SeriesModel from '../../model/Series';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
@@ -32,11 +32,13 @@ import {
     ParsedValue,
     SeriesOnGeoOptionMixin,
     StatesOptionMixin,
-    SeriesLabelOption
+    SeriesLabelOption,
+    StatesMixinBase,
+    CallbackDataParams
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import Model from '../../model/Model';
 import Geo from '../../coord/geo/Geo';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
@@ -44,11 +46,12 @@ import {createSymbol, ECSymbol} from '../../util/symbol';
 import {LegendIconParams} from '../../component/legend/LegendModel';
 import {Group} from '../../util/graphic';
 
-export interface MapStateOption {
-    itemStyle?: GeoItemStyleOption
+export interface MapStateOption<TCbParams = never> {
+    itemStyle?: GeoItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
-export interface MapDataItemOption extends MapStateOption, StatesOptionMixin<MapStateOption>,
+export interface MapDataItemOption extends MapStateOption,
+    StatesOptionMixin<MapStateOption, StatesMixinBase>,
     OptionDataItemObject<OptionDataValueNumeric> {
     cursor?: string
 }
@@ -56,8 +59,8 @@ export interface MapDataItemOption extends MapStateOption, StatesOptionMixin<Map
 export type MapValueCalculationType = 'sum' | 'average' | 'min' | 'max';
 
 export interface MapSeriesOption extends
-    SeriesOption<MapStateOption>, MapStateOption,
-
+    SeriesOption<MapStateOption<CallbackDataParams>, StatesMixinBase>,
+    MapStateOption<CallbackDataParams>,
     GeoCommonOptionMixin,
     // If `geoIndex` is not specified, a exclusive geo will be
     // created. Otherwise use the specified geo component, and
@@ -101,7 +104,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
     // -----------------
     // Injected outside
-    originalData: List;
+    originalData: SeriesData;
     mainSeries: MapSeries;
     // Only first map series of same mapType will drawMap.
     needsDrawMap: boolean = false;
@@ -109,8 +112,8 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     seriesGroup: MapSeries[] = [];
 
 
-    getInitialData(this: MapSeries, option: MapSeriesOption): List {
-        const data = createListSimply(this, {
+    getInitialData(this: MapSeries, option: MapSeriesOption): SeriesData {
+        const data = createSeriesDataSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
@@ -253,7 +256,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
     static defaultOption: MapSeriesOption = {
         // 一级层叠
-        zlevel: 0,
+        // zlevel: 0,
         // 二级层叠
         z: 2,
 

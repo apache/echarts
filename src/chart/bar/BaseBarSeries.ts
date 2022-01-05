@@ -18,20 +18,20 @@
 */
 
 import SeriesModel from '../../model/Series';
-import createListFromArray from '../helper/createListFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import {
     SeriesOption,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
     ScaleDataValue,
-    DefaultExtraStateOpts
+    DefaultStatesMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
 
-export interface BaseBarSeriesOption<StateOption, ExtraStateOption = DefaultExtraStateOpts>
+export interface BaseBarSeriesOption<StateOption, ExtraStateOption = DefaultStatesMixin>
     extends SeriesOption<StateOption, ExtraStateOption>,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin {
@@ -78,8 +78,8 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
     static type = 'series.__base_bar__';
     type = BaseBarSeriesModel.type;
 
-    getInitialData(option: Opts, ecModel: GlobalModel): List {
-        return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
+    getInitialData(option: Opts, ecModel: GlobalModel): SeriesData {
+        return createSeriesData(null, this, {useEncodeDefaulter: true});
     }
 
     getMarkerPosition(value: ScaleDataValue[]) {
@@ -98,7 +98,7 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
     }
 
     static defaultOption: BaseBarSeriesOption<unknown, unknown> = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,

@@ -25,9 +25,10 @@ import ChartView from '../../view/Chart';
 import ScatterSeriesModel from './ScatterSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { TaskProgressParams } from '../../core/task';
 import type { StageHandlerProgressExecutor } from '../../util/types';
+import Element from 'zrender/src/Element';
 
 class ScatterView extends ChartView {
     static readonly type = 'scatter';
@@ -78,7 +79,7 @@ class ScatterView extends ChartView {
         // PENDING
         this.group.dirty();
 
-        if (!this._finished || data.count() > 1e4 || !this._symbolDraw.isPersistent()) {
+        if (!this._finished || data.count() > 1e4) {
             return {
                 update: true
             };
@@ -93,13 +94,17 @@ class ScatterView extends ChartView {
         }
     }
 
+    eachRendered(cb: (el: Element) => boolean | void) {
+        this._symbolDraw && this._symbolDraw.eachRendered(cb);
+    }
+
     _getClipShape(seriesModel: ScatterSeriesModel) {
         const coordSys = seriesModel.coordinateSystem;
         const clipArea = coordSys && coordSys.getArea && coordSys.getArea();
         return seriesModel.get('clip', true) ? clipArea : null;
     }
 
-    _updateSymbolDraw(data: List, seriesModel: ScatterSeriesModel) {
+    _updateSymbolDraw(data: SeriesData, seriesModel: ScatterSeriesModel) {
         let symbolDraw = this._symbolDraw;
         const pipelineContext = seriesModel.pipelineContext;
         const isLargeDraw = pipelineContext.large;

@@ -33,7 +33,7 @@ import {
 import { EChartsType } from './echarts';
 import SeriesModel from '../model/Series';
 import ChartView from '../view/Chart';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 
 export type GeneralTask = Task<TaskContext>;
 export type SeriesTask = Task<SeriesTaskContext>;
@@ -76,7 +76,7 @@ type PerformStageTaskOpt = {
 
 export interface SeriesTaskContext extends TaskContext {
     model?: SeriesModel;
-    data?: List;
+    data?: SeriesData;
     view?: ChartView;
     ecModel?: GlobalModel;
     api?: ExtensionAPI;

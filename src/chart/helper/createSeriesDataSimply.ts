@@ -17,8 +17,8 @@
 * under the License.
 */
 
-import createDimensions, {CreateDimensionsParams} from '../../data/helper/createDimensions';
-import List from '../../data/List';
+import prepareSeriesDataSchema, {PrepareSeriesDataSchemaParams} from '../../data/helper/createDimensions';
+import SeriesData from '../../data/SeriesData';
 import {extend, isArray} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 
@@ -32,18 +32,22 @@ import SeriesModel from '../../model/Series';
  *     dimensionsCount: 5
  * });
  */
-export default function createListSimply(
+export default function createSeriesDataSimply(
     seriesModel: SeriesModel,
-    opt: CreateDimensionsParams | CreateDimensionsParams['coordDimensions'],
+    opt: PrepareSeriesDataSchemaParams | PrepareSeriesDataSchemaParams['coordDimensions'],
     nameList?: string[]
-): List {
-    opt = isArray(opt) && {coordDimensions: opt} || extend({}, opt);
+): SeriesData {
+    opt = isArray(opt) && {
+        coordDimensions: opt
+    } || extend({
+        encodeDefine: seriesModel.getEncode()
+    }, opt);
 
     const source = seriesModel.getSource();
 
-    const dimensionsInfo = createDimensions(source, opt as CreateDimensionsParams);
+    const { dimensions } = prepareSeriesDataSchema(source, opt as PrepareSeriesDataSchemaParams);
 
-    const list = new List(dimensionsInfo, seriesModel);
+    const list = new SeriesData(dimensions, seriesModel);
     list.initData(source, nameList);
 
     return list;

@@ -18,7 +18,7 @@
 */
 
 import { isFunction, extend, createHashMap } from 'zrender/src/core/util';
-import { StageHandler, CallbackDataParams, ZRColor, Dictionary, InnerDecalObject, SeriesOption }
+import { StageHandler, CallbackDataParams, ZRColor, Dictionary, InnerDecalObject }
     from '../util/types';
 import makeStyleMapper from '../model/mixin/makeStyleMapper';
 import { ITEM_STYLE_KEY_MAP } from '../model/mixin/itemStyle';
@@ -103,10 +103,10 @@ const seriesStyleTask: StageHandler = {
                 globalStyle[colorKey] = colorPalette;
                 data.setVisual('colorFromPalette', true);
             }
-            globalStyle.fill = (globalStyle.fill === 'auto' || typeof globalStyle.fill === 'function')
+            globalStyle.fill = (globalStyle.fill === 'auto' || isFunction(globalStyle.fill))
                 ? colorPalette
                 : globalStyle.fill;
-            globalStyle.stroke = (globalStyle.stroke === 'auto' || typeof globalStyle.stroke === 'function')
+            globalStyle.stroke = (globalStyle.stroke === 'auto' || isFunction(globalStyle.stroke))
                 ? colorPalette
                 : globalStyle.stroke;
         }

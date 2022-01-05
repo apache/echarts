@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import SeriesModel from '../../model/Series';
 import {
     SeriesOption,
@@ -28,10 +28,12 @@ import {
     ItemStyleOption,
     OptionDataValueNumeric,
     StatesOptionMixin,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    DefaultStatesMixinEmpasis,
+    CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
 // [percent, color]
 type GaugeColorStop = [number, ColorString];
@@ -102,11 +104,15 @@ interface DetailOption extends LabelOption {
     valueAnimation?: boolean
 }
 
-export interface GaugeStateOption {
-    itemStyle?: ItemStyleOption
+interface GaugeStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
+export interface GaugeStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
 }
 
-export interface GaugeDataItemOption extends GaugeStateOption, StatesOptionMixin<GaugeStateOption> {
+export interface GaugeDataItemOption extends GaugeStateOption,
+    StatesOptionMixin<GaugeStateOption<CallbackDataParams>, GaugeStatesMixin> {
     name?: string
     value?: OptionDataValueNumeric
     pointer?: PointerOption
@@ -114,7 +120,8 @@ export interface GaugeDataItemOption extends GaugeStateOption, StatesOptionMixin
     title?: TitleOption
     detail?: DetailOption
 }
-export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, GaugeStateOption,
+export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption, GaugeStatesMixin>,
+    GaugeStateOption<CallbackDataParams>,
     CircleLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'gauge'
 
@@ -183,12 +190,12 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
 
     visualStyleAccessPath = 'itemStyle';
 
-    getInitialData(option: GaugeSeriesOption, ecModel: GlobalModel): List {
-        return createListSimply(this, ['value']);
+    getInitialData(option: GaugeSeriesOption, ecModel: GlobalModel): SeriesData {
+        return createSeriesDataSimply(this, ['value']);
     }
 
     static defaultOption: GaugeSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         colorBy: 'data',
         // 默认全局居中

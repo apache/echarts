@@ -96,7 +96,7 @@ class TitleModel extends ComponentModel<TitleOption> {
     readonly layoutMode = {type: 'box', ignoreSize: true} as const;
 
     static defaultOption: TitleOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 6,
         show: true,
 

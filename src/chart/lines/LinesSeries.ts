@@ -20,8 +20,8 @@
 /* global Uint32Array, Float64Array, Float32Array */
 
 import SeriesModel from '../../model/Series';
-import List from '../../data/List';
-import { concatArray, mergeAll, map } from 'zrender/src/core/util';
+import SeriesData from '../../data/SeriesData';
+import { concatArray, mergeAll, map, isNumber } from 'zrender/src/core/util';
 import CoordinateSystem from '../../core/CoordinateSystem';
 import {
     SeriesOption,
@@ -33,7 +33,11 @@ import {
     LineStyleOption,
     OptionDataValue,
     StatesOptionMixin,
-    SeriesLineLabelOption
+    SeriesLineLabelOption,
+    DimensionDefinitionLoose,
+    DefaultStatesMixinEmpasis,
+    ZRColor,
+    CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import type { LineDrawModelOption } from '../helper/LineDraw';
@@ -71,7 +75,7 @@ type LinesCoords = number[][];
 
 type LinesValue = OptionDataValue | OptionDataValue[];
 
-interface LinesLineStyleOption extends LineStyleOption {
+interface LinesLineStyleOption<TClr> extends LineStyleOption<TClr> {
     curveness?: number
 }
 
@@ -81,12 +85,16 @@ interface LegacyDataItemOption {
     name: string
 }
 
-export interface LinesStateOption {
-    lineStyle?: LinesLineStyleOption
+interface LinesStatesMixin {
+    emphasis?: DefaultStatesMixinEmpasis
+}
+export interface LinesStateOption<TCbParams = never> {
+    lineStyle?: LinesLineStyleOption<(TCbParams extends never ? never : (params: TCbParams) => ZRColor) | ZRColor>
     label?: SeriesLineLabelOption
 }
 
-export interface LinesDataItemOption extends LinesStateOption, StatesOptionMixin<LinesStateOption> {
+export interface LinesDataItemOption extends LinesStateOption<CallbackDataParams>,
+    StatesOptionMixin<LinesStateOption<CallbackDataParams>, LinesStatesMixin> {
     name?: string
 
     fromName?: string
@@ -98,10 +106,12 @@ export interface LinesDataItemOption extends LinesStateOption, StatesOptionMixin
     coords?: LinesCoords
 
     value?: LinesValue
+
+    effect?: LineDrawModelOption['effect']
 }
 
-export interface LinesSeriesOption extends SeriesOption<LinesStateOption>, LinesStateOption,
-
+export interface LinesSeriesOption
+    extends SeriesOption<LinesStateOption, LinesStatesMixin>, LinesStateOption,
     SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesOnPolarOptionMixin,
     SeriesOnCalendarOptionMixin, SeriesLargeOptionMixin {
 
@@ -129,6 +139,8 @@ export interface LinesSeriesOption extends SeriesOption<LinesStateOption>, Lines
         // Stored as a flat array. In format
         // Points Count(2) | x | y | x | y | Points Count(3) | x |  y | x | y | x | y |
         | ArrayLike<number>
+
+    dimensions?: DimensionDefinitionLoose | DimensionDefinitionLoose[]
 }
 
 class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
@@ -247,7 +259,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         }
         // Stored as a typed array. In format
         // Points Count(2) | x | y | x | y | Points Count(3) | x |  y | x | y | x | y |
-        if (typeof data[0] === 'number') {
+        if (isNumber(data[0])) {
             const len = data.length;
             // Store offset and len of each segment
             const coordsOffsetAndLenStorage = new Uint32Arr(len) as Uint32Array;
@@ -298,7 +310,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
             }
         }
 
-        const lineData = new List(['value'], this);
+        const lineData = new SeriesData(['value'], this);
         lineData.hasItemOption = false;
 
         lineData.initData(option.data, [], function (dataItem, dimName, dataIndex, dimIndex) {
@@ -360,9 +372,18 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         return progressiveThreshold;
     }
 
+    getZLevelKey() {
+        const effectModel = this.getModel('effect');
+        const trailLength = effectModel.get('trailLength');
+        return this.getData().count() > this.getProgressiveThreshold()
+            // Each progressive series has individual key.
+            ? this.id
+            : (effectModel.get('show') && trailLength > 0 ? trailLength + '' : '');
+    }
+
     static defaultOption: LinesSeriesOption = {
         coordinateSystem: 'geo',
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         legendHoverLink: true,
 

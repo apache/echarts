@@ -117,6 +117,8 @@ export function makeValueReadable(
         ? addCommas(numericResult)
         : zrUtil.isStringSafe(value)
         ? stringToUserReadable(value)
+        : typeof value === 'boolean'
+        ? value + ''
         : '-';
 }
 
@@ -260,7 +262,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
  *           and `module:echarts/util/number#parseDate`.
  * @inner
  */
-export function formatTime(tpl: string, value: unknown, isUTC: boolean) {
+export function formatTime(tpl: string, value: unknown, isUTC?: boolean) {
     if (__DEV__) {
         deprecateReplaceLog('echarts.format.formatTime', 'echarts.time.format');
     }
@@ -275,14 +277,14 @@ export function formatTime(tpl: string, value: unknown, isUTC: boolean) {
     }
 
     const date = parseDate(value);
-    const utc = isUTC ? 'UTC' : '';
-    const y = (date as any)['get' + utc + 'FullYear']();
-    const M = (date as any)['get' + utc + 'Month']() + 1;
-    const d = (date as any)['get' + utc + 'Date']();
-    const h = (date as any)['get' + utc + 'Hours']();
-    const m = (date as any)['get' + utc + 'Minutes']();
-    const s = (date as any)['get' + utc + 'Seconds']();
-    const S = (date as any)['get' + utc + 'Milliseconds']();
+    const getUTC = isUTC ? 'getUTC' : 'get';
+    const y = (date as any)[getUTC + 'FullYear']();
+    const M = (date as any)[getUTC + 'Month']() + 1;
+    const d = (date as any)[getUTC + 'Date']();
+    const h = (date as any)[getUTC + 'Hours']();
+    const m = (date as any)[getUTC + 'Minutes']();
+    const s = (date as any)[getUTC + 'Seconds']();
+    const S = (date as any)[getUTC + 'Milliseconds']();
 
     tpl = tpl.replace('MM', pad(M, 2))
         .replace('M', M)

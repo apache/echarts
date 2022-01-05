@@ -24,7 +24,7 @@ import GlobalModel from '../model/Global';
 import Model from '../model/Model';
 import SeriesModel from '../model/Series';
 import {makeInner} from '../util/model';
-import {Dictionary, DecalObject, InnerDecalObject, AriaOption, SeriesOption} from '../util/types';
+import {Dictionary, DecalObject, InnerDecalObject, AriaOption} from '../util/types';
 import {LocaleOption} from '../core/locale';
 import { getDecalFromPalette } from '../model/mixin/palette';
 import type {TitleOption} from '../component/title/install';
@@ -83,7 +83,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
                 if (ecModel.isSeriesFiltered(seriesModel)) {
                     return;
                 }
-                if (typeof seriesModel.enableAriaDecal === 'function') {
+                if (zrUtil.isFunction(seriesModel.enableAriaDecal)) {
                     // Let series define how to use decal palette on data
                     seriesModel.enableAriaDecal();
                     return;
@@ -210,22 +210,22 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
                         seriesLabel += labelModel.get(['data', 'allData']);
                     }
 
+                    const middleSeparator = labelModel.get(['data', 'separator', 'middle']);
+                    const endSeparator = labelModel.get(['data', 'separator', 'end']);
                     const dataLabels = [];
                     for (let i = 0; i < data.count(); i++) {
                         if (i < maxDataCnt) {
                             const name = data.getName(i);
-                            const value = retrieveRawValue(data, i);
+                            const value = data.getValues(i);
                             const dataLabel = labelModel.get(['data', name ? 'withName' : 'withoutName']);
                             dataLabels.push(
                                 replace(dataLabel, {
                                     name: name,
-                                    value: value
+                                    value: value.join(middleSeparator)
                                 })
                             );
                         }
                     }
-                    const middleSeparator = labelModel.get(['data', 'separator', 'middle']);
-                    const endSeparator = labelModel.get(['data', 'separator', 'end']);
                     seriesLabel += dataLabels.join(middleSeparator) + endSeparator;
 
                     seriesLabels.push(seriesLabel);
@@ -242,7 +242,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
     }
 
     function replace(str: string, keyValues: object) {
-        if (typeof str !== 'string') {
+        if (!zrUtil.isString(str)) {
             return str;
         }
 

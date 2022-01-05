@@ -37,7 +37,9 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { Dictionary, DimensionName, ScaleDataValue } from '../../util/types';
 import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import ParallelAxisModel, { ParallelActiveState } from './AxisModel';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
+import { AxisBaseModel } from '../AxisBaseModel';
+import { CategoryAxisBaseOption } from '../axisCommonTypes';
 
 const each = zrUtil.each;
 const mathMin = Math.min;
@@ -131,7 +133,8 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
             ));
 
             const isCategory = axis.type === 'category';
-            axis.onBand = isCategory && axisModel.get('boundaryGap');
+            axis.onBand = isCategory
+                && (axisModel as AxisBaseModel<CategoryAxisBaseOption>).get('boundaryGap');
             axis.inverse = axisModel.get('inverse');
 
             // Injection
@@ -357,7 +360,7 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
      * @param end the next dataIndex of the last dataIndex will be travel.
      */
     eachActiveState(
-        data: List,
+        data: SeriesData,
         callback: (activeState: ParallelActiveState, dataIndex: number) => void,
         start?: number,
         end?: number

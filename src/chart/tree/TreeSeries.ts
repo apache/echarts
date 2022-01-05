@@ -33,7 +33,7 @@ import {
     CallbackDataParams,
     DefaultEmphasisFocus
 } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import View from '../../coord/View';
 import { LayoutRect } from '../../util/layout';
 import Model from '../../model/Model';
@@ -44,8 +44,8 @@ interface CurveLineStyleOption extends LineStyleOption{
     curveness?: number
 }
 
-export interface TreeSeriesStateOption {
-    itemStyle?: ItemStyleOption
+export interface TreeSeriesStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     /**
      * Line style of the edge between node and it's parent.
      */
@@ -53,7 +53,7 @@ export interface TreeSeriesStateOption {
     label?: SeriesLabelOption
 }
 
-interface ExtraStateOption {
+interface TreeStatesMixin {
     emphasis?: {
         focus?: DefaultEmphasisFocus | 'ancestor' | 'descendant'
         scale?: boolean
@@ -61,7 +61,8 @@ interface ExtraStateOption {
 }
 
 export interface TreeSeriesNodeItemOption extends SymbolOptionMixin<CallbackDataParams>,
-    TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption, ExtraStateOption>,
+    TreeSeriesStateOption<CallbackDataParams>,
+    StatesOptionMixin<TreeSeriesStateOption<CallbackDataParams>, TreeStatesMixin>,
     OptionDataItemObject<OptionDataValue> {
 
     children?: TreeSeriesNodeItemOption[]
@@ -75,12 +76,12 @@ export interface TreeSeriesNodeItemOption extends SymbolOptionMixin<CallbackData
 /**
  * Configuration of leaves nodes.
  */
-export interface TreeSeriesLeavesOption extends TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption> {
-
+export interface TreeSeriesLeavesOption
+    extends TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption, TreeStatesMixin> {
 }
 
 export interface TreeSeriesOption extends
-    SeriesOption<TreeSeriesStateOption, ExtraStateOption>, TreeSeriesStateOption,
+    SeriesOption<TreeSeriesStateOption, TreeStatesMixin>, TreeSeriesStateOption,
     SymbolOptionMixin, BoxLayoutOptionMixin, RoamOptionMixin {
     type?: 'tree'
 
@@ -141,10 +142,8 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 
     /**
      * Init a tree data structure from data in option series
-     * @param  option  the object used to config echarts view
-     * @return storage initial data
      */
-    getInitialData(option: TreeSeriesOption): List {
+    getInitialData(option: TreeSeriesOption): SeriesData {
 
         //create an virtual root
         const root: TreeSeriesNodeItemOption = {
@@ -157,7 +156,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 
         const tree = Tree.createTree(root, this, beforeLink);
 
-        function beforeLink(nodeData: List) {
+        function beforeLink(nodeData: SeriesData) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 const node = tree.getNodeByDataIndex(idx);
                 if (!(node && node.children.length && node.isExpand)) {
@@ -246,7 +245,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
     }
 
     static defaultOption: TreeSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         coordinateSystem: 'view',
 

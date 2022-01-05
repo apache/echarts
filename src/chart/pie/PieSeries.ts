@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListSimply from '../helper/createListSimply';
+import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import { getPercentWithPrecision } from '../../util/number';
@@ -38,9 +38,9 @@ import {
     SeriesLabelOption,
     DefaultEmphasisFocus
 } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
-interface PieItemStyleOption extends ItemStyleOption {
+interface PieItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
     // can be 10
     // which means that both innerCornerRadius and outerCornerRadius are 10
     // can also be an array [20, 10]
@@ -52,9 +52,13 @@ interface PieItemStyleOption extends ItemStyleOption {
     borderRadius?: (number | string)[] | number | string
 }
 
-export interface PieStateOption {
+export interface PieCallbackDataParams extends CallbackDataParams {
+    percent: number
+}
+
+export interface PieStateOption<TCbParams = never> {
     // TODO: TYPE Color Callback
-    itemStyle?: PieItemStyleOption
+    itemStyle?: PieItemStyleOption<TCbParams>
     label?: PieLabelOption
     labelLine?: PieLabelLineOption
 }
@@ -91,11 +95,11 @@ interface ExtraStateOption {
 export interface PieDataItemOption extends
     OptionDataItemObject<OptionDataValueNumeric>,
     PieStateOption, StatesOptionMixin<PieStateOption, ExtraStateOption> {
-
     cursor?: string
 }
 export interface PieSeriesOption extends
-    Omit<SeriesOption<PieStateOption, ExtraStateOption>, 'labelLine'>, PieStateOption,
+    Omit<SeriesOption<PieStateOption<PieCallbackDataParams>, ExtraStateOption>, 'labelLine'>,
+    PieStateOption<PieCallbackDataParams>,
     CircleLayoutOptionMixin,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {
@@ -154,8 +158,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
     /**
      * @overwrite
      */
-    getInitialData(this: PieSeriesModel): List {
-        return createListSimply(this, {
+    getInitialData(this: PieSeriesModel): SeriesData {
+        return createSeriesDataSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
@@ -164,9 +168,9 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
     /**
      * @overwrite
      */
-    getDataParams(dataIndex: number): CallbackDataParams {
+    getDataParams(dataIndex: number): PieCallbackDataParams {
         const data = this.getData();
-        const params = super.getDataParams(dataIndex);
+        const params = super.getDataParams(dataIndex) as PieCallbackDataParams;
         // FIXME toFixed?
 
         const valueList: number[] = [];
@@ -198,7 +202,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
     }
 
     static defaultOption: Omit<PieSeriesOption, 'type'> = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         legendHoverLink: true,
         colorBy: 'data',

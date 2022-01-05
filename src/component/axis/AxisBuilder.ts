@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {retrieve, defaults, extend, each, isObject} from 'zrender/src/core/util';
+import {retrieve, defaults, extend, each, isObject, map, isString, isNumber, isFunction} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
 import {createTextStyle} from '../../label/labelStyle';
@@ -33,6 +33,7 @@ import { AxisBaseOption } from '../../coord/axisCommonTypes';
 import Element from 'zrender/src/Element';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import OrdinalScale from '../../scale/Ordinal';
+import { prepareLayoutList, hideOverlap } from '../../label/labelLayoutHelper';
 
 const PI = Math.PI;
 
@@ -286,15 +287,13 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         if (arrows != null) {
             let arrowSize = axisModel.get(['axisLine', 'symbolSize']);
 
-            if (typeof arrows === 'string') {
+            if (isString(arrows)) {
                 // Use the same arrow for start and end point
                 arrows = [arrows, arrows];
             }
-            if (typeof arrowSize === 'string'
-                || typeof arrowSize === 'number'
-            ) {
+            if (isString(arrowSize) || isNumber(arrowSize)) {
                 // Use the same size for width and height
-                arrowSize = [arrowSize, arrowSize];
+                arrowSize = [arrowSize as number, arrowSize as number];
             }
 
             const arrowOffset = normalizeSymbolOffset(axisModel.get(['axisLine', 'symbolOffset']) || 0, arrowSize);
@@ -347,6 +346,20 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         fixMinMaxLabelShow(axisModel, labelEls, ticksEls);
 
         buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection);
+
+        // This bit fixes the label overlap issue for the time chart.
+        // See https://github.com/apache/echarts/issues/14266 for more.
+        if (axisModel.get(['axisLabel', 'hideOverlap'])) {
+            const labelList = prepareLayoutList(map(labelEls, label => ({
+                label,
+                priority: label.z2,
+                defaultAttr: {
+                    ignore: label.ignore
+                }
+            })));
+
+            hideOverlap(labelList);
+        }
     },
 
     axisName(opt, axisModel, group, transformGroup) {
@@ -766,7 +779,7 @@ function buildAxisLabel(
             y: opt.labelOffset + opt.labelDirection * labelMargin,
             rotation: labelLayout.rotation,
             silent: silent,
-            z2: 10,
+            z2: 10 + (labelItem.level || 0),
             style: createTextStyle(itemLabelModel, {
                 text: formattedLabel,
                 align: itemLabelModel.getShallow('align', true)
@@ -774,7 +787,7 @@ function buildAxisLabel(
                 verticalAlign: itemLabelModel.getShallow('verticalAlign', true)
                     || itemLabelModel.getShallow('baseline', true)
                     || labelLayout.textVerticalAlign,
-                fill: typeof textColor === 'function'
+                fill: isFunction(textColor)
                     ? textColor(
                         // (1) In category axis with data zoom, tick is not the original
                         // index of axis.data. So tick should not be exposed to user

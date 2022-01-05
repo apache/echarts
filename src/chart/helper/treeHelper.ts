@@ -34,7 +34,7 @@ export function retrieveTargetInfo(
         const root = seriesModel.getData().tree.root;
         let targetNode = payload.targetNode;
 
-        if (typeof targetNode === 'string') {
+        if (zrUtil.isString(targetNode)) {
             targetNode = root.getNodeById(targetNode);
         }
 

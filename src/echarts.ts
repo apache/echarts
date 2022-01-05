@@ -27,7 +27,7 @@ import {install as DatasetComponent} from './component/dataset/install';
 // Default to have canvas renderer and dataset for compitatble reason.
 use([CanvasRenderer, DatasetComponent]);
 
-// Compatitable with the following code
+// TODO: Compatitable with the following code
 // import echarts from 'echarts/lib/echarts'
 export default {
     init() {

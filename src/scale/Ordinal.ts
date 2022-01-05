@@ -26,7 +26,7 @@
 
 import Scale from './Scale';
 import OrdinalMeta from '../data/OrdinalMeta';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import * as scaleHelper from './helper';
 import {
     OrdinalRawValue,
@@ -36,11 +36,11 @@ import {
     OrdinalScaleTick,
     ScaleTick
 } from '../util/types';
-import { AxisBaseOption } from '../coord/axisCommonTypes';
-import { isArray, map, isObject } from 'zrender/src/core/util';
+import { CategoryAxisBaseOption } from '../coord/axisCommonTypes';
+import { isArray, map, isObject, isString } from 'zrender/src/core/util';
 
 type OrdinalScaleSetting = {
-    ordinalMeta?: OrdinalMeta | AxisBaseOption['data'];
+    ordinalMeta?: OrdinalMeta | CategoryAxisBaseOption['data'];
     extent?: [number, number];
 };
 
@@ -130,7 +130,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
     }
 
     parse(val: OrdinalRawValue | OrdinalNumber): OrdinalNumber {
-        return typeof val === 'string'
+        return isString(val)
             ? this._ordinalMeta.getOrdinal(val)
             // val might be float.
             : Math.round(val);
@@ -263,7 +263,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
         return this._extent[1] - this._extent[0] + 1;
     }
 
-    unionExtentFromData(data: List, dim: DimensionLoose) {
+    unionExtentFromData(data: SeriesData, dim: DimensionLoose) {
         this.unionExtent(data.getApproximateExtent(dim));
     }
 
@@ -280,9 +280,9 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
         return this._ordinalMeta;
     }
 
-    niceTicks() {}
+    calcNiceTicks() {}
 
-    niceExtent() {}
+    calcNiceExtent() {}
 
 }
 

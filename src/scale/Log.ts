@@ -24,7 +24,7 @@ import * as scaleHelper from './helper';
 
 // Use some method of IntervalScale
 import IntervalScale from './Interval';
-import List from '../data/List';
+import SeriesData from '../data/SeriesData';
 import { DimensionName, ScaleTick } from '../util/types';
 
 const scaleProto = Scale.prototype;
@@ -59,7 +59,7 @@ class LogScale extends Scale {
     /**
      * @param Whether expand the ticks to niced extent.
      */
-    getTicks(expandToNicedExtent: boolean): ScaleTick[] {
+    getTicks(expandToNicedExtent?: boolean): ScaleTick[] {
         const originalScale = this._originalScale;
         const extent = this._extent;
         const originalExtent = originalScale.getExtent();
@@ -118,7 +118,7 @@ class LogScale extends Scale {
         scaleProto.unionExtent.call(this, extent);
     }
 
-    unionExtentFromData(data: List, dim: DimensionName): void {
+    unionExtentFromData(data: SeriesData, dim: DimensionName): void {
         // TODO
         // filter value that <= 0
         this.unionExtent(data.getApproximateExtent(dim));
@@ -128,7 +128,7 @@ class LogScale extends Scale {
      * Update interval and extent of intervals for nice ticks
      * @param approxTickNum default 10 Given approx tick number
      */
-    niceTicks(approxTickNum: number): void {
+    calcNiceTicks(approxTickNum: number): void {
         approxTickNum = approxTickNum || 10;
         const extent = this._extent;
         const span = extent[1] - extent[0];
@@ -158,14 +158,14 @@ class LogScale extends Scale {
         this._niceExtent = niceExtent;
     }
 
-    niceExtent(opt: {
+    calcNiceExtent(opt: {
         splitNumber: number, // By default 5.
         fixMin?: boolean,
         fixMax?: boolean,
         minInterval?: number,
         maxInterval?: number
     }): void {
-        intervalScaleProto.niceExtent.call(this, opt);
+        intervalScaleProto.calcNiceExtent.call(this, opt);
 
         this._fixMin = opt.fixMin;
         this._fixMax = opt.fixMax;
@@ -197,7 +197,6 @@ class LogScale extends Scale {
 const proto = LogScale.prototype;
 proto.getMinorTicks = intervalScaleProto.getMinorTicks;
 proto.getLabel = intervalScaleProto.getLabel;
-
 
 function fixRoundingError(val: number, originalVal: number): number {
     return roundingErrorFix(val, numberUtil.getPrecision(originalVal));

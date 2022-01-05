@@ -31,9 +31,10 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import { StageHandlerProgressParams, StageHandlerProgressExecutor } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import type Polar from '../../coord/polar/Polar';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import Element from 'zrender/src/Element';
 
 class LinesView extends ChartView {
 
@@ -71,26 +72,19 @@ class LinesView extends ChartView {
                 motionBlur: false
             });
         }
-        if (this._showEffect(seriesModel) && trailLength) {
-            if (__DEV__) {
-                let notInIndividual = false;
-                ecModel.eachSeries(function (otherSeriesModel) {
-                    if (otherSeriesModel !== seriesModel && otherSeriesModel.get('zlevel') === zlevel) {
-                        notInIndividual = true;
-                    }
-                });
-                notInIndividual && console.warn('Lines with trail effect should have an individual zlevel');
-            }
-
+        if (this._showEffect(seriesModel) && trailLength > 0) {
             if (!isSvg) {
                 zr.configLayer(zlevel, {
                     motionBlur: true,
                     lastFrameAlpha: Math.max(Math.min(trailLength / 10 + 0.9, 1), 0)
                 });
             }
+            else if (__DEV__) {
+                console.warn('SVG render mode doesn\'t support lines with trail effect');
+            }
         }
 
-        lineDraw.updateData(data as List);
+        lineDraw.updateData(data as SeriesData);
 
         const clipPath = seriesModel.get('clip', true) && createClipPath(
             (seriesModel.coordinateSystem as Polar | Cartesian2D), false, seriesModel
@@ -129,6 +123,10 @@ class LinesView extends ChartView {
         this._finished = taskParams.end === seriesModel.getData().count();
     }
 
+    eachRendered(cb: (el: Element) => boolean | void) {
+        this._lineDraw && this._lineDraw.eachRendered(cb);
+    }
+
     updateTransform(seriesModel: LinesSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const data = seriesModel.getData();
         const pipelineContext = seriesModel.pipelineContext;
@@ -156,7 +154,7 @@ class LinesView extends ChartView {
         }
     }
 
-    _updateLineDraw(data: List, seriesModel: LinesSeriesModel) {
+    _updateLineDraw(data: SeriesData, seriesModel: LinesSeriesModel) {
         let lineDraw = this._lineDraw;
         const hasEffect = this._showEffect(seriesModel);
         const isPolyline = !!seriesModel.get('polyline');

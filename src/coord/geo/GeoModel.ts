@@ -35,14 +35,15 @@ import {
     AnimationOptionMixin,
     StatesOptionMixin,
     Dictionary,
-    CommonTooltipOption
+    CommonTooltipOption,
+    StatesMixinBase
 } from '../../util/types';
 import { NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
 import geoSourceManager from './geoSourceManager';
 
 
-export interface GeoItemStyleOption extends ItemStyleOption {
+export interface GeoItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
     areaColor?: ZRColor;
 };
 interface GeoLabelOption extends LabelOption {
@@ -58,7 +59,7 @@ interface GeoLabelFormatterDataParams {
     status: DisplayState;
 }
 
-export interface RegoinOption extends GeoStateOption, StatesOptionMixin<GeoStateOption> {
+export interface RegoinOption extends GeoStateOption, StatesOptionMixin<GeoStateOption, StatesMixinBase> {
     name?: string
     selected?: boolean
     tooltip?: CommonTooltipOption<GeoTooltipFormatterParams>
@@ -102,7 +103,7 @@ export interface GeoOption extends
     // For lens animation on geo.
     AnimationOptionMixin,
     GeoCommonOptionMixin,
-    StatesOptionMixin<GeoStateOption>, GeoStateOption {
+    StatesOptionMixin<GeoStateOption, StatesMixinBase>, GeoStateOption {
     mainType?: 'geo';
 
     show?: boolean;
@@ -131,7 +132,7 @@ class GeoModel extends ComponentModel<GeoOption> {
 
     static defaultOption: GeoOption = {
 
-        zlevel: 0,
+        // zlevel: 0,
 
         z: 0,
 
@@ -269,11 +270,11 @@ class GeoModel extends ComponentModel<GeoOption> {
         const params = {
             name: name
         } as GeoLabelFormatterDataParams;
-        if (typeof formatter === 'function') {
+        if (zrUtil.isFunction(formatter)) {
             params.status = status;
             return formatter(params);
         }
-        else if (typeof formatter === 'string') {
+        else if (zrUtil.isString(formatter)) {
             return formatter.replace('{a}', name != null ? name : '');
         }
     }

@@ -38,6 +38,8 @@ import { PolarAxisModel, AngleAxisModel, RadiusAxisModel } from './AxisModel';
 import SeriesModel from '../../model/Series';
 import { SeriesOption } from '../../util/types';
 import { SINGLE_REFERRING } from '../../util/model';
+import { AxisBaseModel } from '../AxisBaseModel';
+import { CategoryAxisBaseOption } from '../axisCommonTypes';
 
 /**
  * Resize method bound to the polar
@@ -115,7 +117,8 @@ function isAngleAxisModel(axisModel: AngleAxisModel | PolarAxisModel): axisModel
 function setAxis(axis: RadiusAxis | AngleAxis, axisModel: PolarAxisModel) {
     axis.type = axisModel.get('type');
     axis.scale = createScaleByModel(axisModel);
-    axis.onBand = axisModel.get('boundaryGap') && axis.type === 'category';
+    axis.onBand = (axisModel as AxisBaseModel<CategoryAxisBaseOption>).get('boundaryGap')
+        && axis.type === 'category';
     axis.inverse = axisModel.get('inverse');
 
     if (isAngleAxisModel(axisModel)) {

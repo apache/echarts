@@ -28,24 +28,23 @@ import { AxisBaseModel } from '../AxisBaseModel';
 import {OrdinalSortInfo} from '../../util/types';
 import { SINGLE_REFERRING } from '../../util/model';
 
-
 export type CartesianAxisPosition = 'top' | 'bottom' | 'left' | 'right';
 
-export interface CartesianAxisOption extends AxisBaseOption {
+export type CartesianAxisOption = AxisBaseOption & {
     gridIndex?: number;
     gridId?: string;
     position?: CartesianAxisPosition;
     // Offset is for multiple axis on the same position.
     offset?: number;
     categorySortInfo?: OrdinalSortInfo;
-}
+};
 
-export interface XAXisOption extends CartesianAxisOption {
+export type XAXisOption = CartesianAxisOption & {
     mainType?: 'xAxis'
-}
-export interface YAXisOption extends CartesianAxisOption {
+};
+export type YAXisOption = CartesianAxisOption & {
     mainType?: 'yAxis'
-}
+};
 
 export class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
     implements AxisBaseModel<CartesianAxisOption> {
@@ -57,10 +56,11 @@ export class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
     getCoordSysModel(): GridModel {
         return this.getReferringComponents('grid', SINGLE_REFERRING).models[0] as GridModel;
     }
+
 }
 
 export interface CartesianAxisModel extends AxisModelCommonMixin<CartesianAxisOption>,
-    AxisModelExtendedInCreator<CartesianAxisOption> {}
+    AxisModelExtendedInCreator {}
 
 zrUtil.mixin(CartesianAxisModel, AxisModelCommonMixin);
 

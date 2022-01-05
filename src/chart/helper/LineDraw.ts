@@ -19,7 +19,7 @@
 
 import * as graphic from '../../util/graphic';
 import LineGroup from './Line';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import {
     StageHandlerProgressParams,
     LineStyleOption,
@@ -29,20 +29,22 @@ import {
     ZRStyleProps,
     StatesOptionMixin,
     DisplayState,
-    LabelOption
+    LabelOption,
+    StatesMixinBase
 } from '../../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
 import { getLabelStatesModels } from '../../label/labelStyle';
+import Element from 'zrender/src/Element';
 
 interface LineLike extends graphic.Group {
-    updateData(data: List, idx: number, scope?: LineDrawSeriesScope): void
-    updateLayout(data: List, idx: number): void
+    updateData(data: SeriesData, idx: number, scope?: LineDrawSeriesScope): void
+    updateLayout(data: SeriesData, idx: number): void
     fadeOut?(cb: () => void): void
 }
 
 interface LineLikeCtor {
-    new(data: List, idx: number, scope?: LineDrawSeriesScope): LineLike
+    new(data: SeriesData, idx: number, scope?: LineDrawSeriesScope): LineLike
 }
 
 interface LineDrawStateOption {
@@ -50,7 +52,8 @@ interface LineDrawStateOption {
     label?: LineLabelOption
 }
 
-export interface LineDrawModelOption extends LineDrawStateOption, StatesOptionMixin<LineDrawStateOption> {
+export interface LineDrawModelOption extends LineDrawStateOption,
+    StatesOptionMixin<LineDrawStateOption, StatesMixinBase> {
     // If has effect
     effect?: {
         show?: boolean
@@ -76,7 +79,7 @@ export interface LineDrawModelOption extends LineDrawStateOption, StatesOptionMi
     }
 }
 
-type ListForLineDraw = List<Model<LineDrawModelOption & AnimationOptionMixin>>;
+type ListForLineDraw = SeriesData<Model<LineDrawModelOption & AnimationOptionMixin>>;
 
 export interface LineDrawSeriesScope {
     lineStyle?: ZRStyleProps
@@ -96,15 +99,16 @@ class LineDraw {
 
     private _seriesScope: LineDrawSeriesScope;
 
+    private _progressiveEls: LineLike[];
+
     constructor(LineCtor?: LineLikeCtor) {
         this._LineCtor = LineCtor || LineGroup;
     }
 
-    isPersistent() {
-        return true;
-    };
-
     updateData(lineData: ListForLineDraw) {
+        // Remove progressive els.
+        this._progressiveEls = null;
+
         const lineDraw = this;
         const group = lineDraw.group;
 
@@ -152,6 +156,9 @@ class LineDraw {
     };
 
     incrementalUpdate(taskParams: StageHandlerProgressParams, lineData: ListForLineDraw) {
+
+        this._progressiveEls = [];
+
         function updateIncrementalAndHover(el: Displayable) {
             if (!el.isGroup && !isEffectObject(el)) {
                 el.incremental = true;
@@ -168,6 +175,8 @@ class LineDraw {
 
                 this.group.add(el);
                 lineData.setItemGraphicEl(idx, el);
+
+                this._progressiveEls.push(el);
             }
         }
     };
@@ -175,6 +184,10 @@ class LineDraw {
     remove() {
         this.group.removeAll();
     };
+
+    eachRendered(cb: (el: Element) => boolean | void) {
+        graphic.traverseElements(this._progressiveEls || this.group, cb);
+    }
 
     private _doAdd(
         lineData: ListForLineDraw,
@@ -239,7 +252,7 @@ function isPointNaN(pt: number[]) {
 }
 
 function lineNeedsDraw(pts: number[][]) {
-    return !isPointNaN(pts[0]) && !isPointNaN(pts[1]);
+    return pts && !isPointNaN(pts[0]) && !isPointNaN(pts[1]);
 }
 
 

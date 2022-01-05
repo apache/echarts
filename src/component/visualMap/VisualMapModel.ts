@@ -32,13 +32,14 @@ import {
     ZRColor,
     BorderOptionMixin,
     OptionDataValue,
-    BuiltinVisualProperty
+    BuiltinVisualProperty,
+    DimensionIndex
 } from '../../util/types';
 import ComponentModel from '../../model/Component';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import SeriesModel from '../../model/Series';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 
 const mapVisual = VisualMapping.mapVisual;
 const eachVisual = VisualMapping.eachVisual;
@@ -156,7 +157,7 @@ export interface VisualMeta {
     stops: { value: number, color: ColorString}[]
     outerColors: ColorString[]
 
-    dimension?: number
+    dimension?: DimensionIndex
 }
 
 class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends ComponentModel<Opts> {
@@ -200,13 +201,6 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
      */
     optionUpdated(newOption: Opts, isInit?: boolean) {
         const thisOption = this.option;
-
-        // FIXME
-        // necessary?
-        // Disable realtime view update if canvas is not supported.
-        if (!env.canvasSupported) {
-            thisOption.realtime = false;
-        }
 
         !isInit && visualSolution.replaceVisualOption(
             thisOption, newOption, this.replacableOptionKeys
@@ -377,25 +371,41 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     }
 
     /**
+     * PENDING:
+     * delete this method if no outer usage.
+     *
      * Return  Concrete dimention. If return null/undefined, no dimension used.
      */
-    getDataDimension(list: List) {
+    // getDataDimension(data: SeriesData) {
+    //     const optDim = this.option.dimension;
+
+    //     if (optDim != null) {
+    //         return data.getDimension(optDim);
+    //     }
+
+    //     const dimNames = data.dimensions;
+    //     for (let i = dimNames.length - 1; i >= 0; i--) {
+    //         const dimName = dimNames[i];
+    //         const dimInfo = data.getDimensionInfo(dimName);
+    //         if (!dimInfo.isCalculationCoord) {
+    //             return dimName;
+    //         }
+    //     }
+    // }
+
+    getDataDimensionIndex(data: SeriesData): DimensionIndex {
         const optDim = this.option.dimension;
-        const listDimensions = list.dimensions;
-        if (optDim == null && !listDimensions.length) {
-            return;
-        }
 
         if (optDim != null) {
-            return list.getDimension(optDim);
+            return data.getDimensionIndex(optDim);
         }
 
-        const dimNames = list.dimensions;
+        const dimNames = data.dimensions;
         for (let i = dimNames.length - 1; i >= 0; i--) {
             const dimName = dimNames[i];
-            const dimInfo = list.getDimensionInfo(dimName);
+            const dimInfo = data.getDimensionInfo(dimName);
             if (!dimInfo.isCalculationCoord) {
-                return dimName;
+                return dimInfo.storeDimIndex;
             }
         }
     }
@@ -593,7 +603,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     static defaultOption: VisualMapOption = {
         show: true,
 
-        zlevel: 0,
+        // zlevel: 0,
         z: 4,
 
         seriesIndex: 'all',

@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import * as zrUtil from 'zrender/src/core/util';
 import {defaultEmphasis} from '../../util/model';
 import Model from '../../model/Model';
@@ -62,8 +62,8 @@ interface GraphEdgeLineStyleOption extends LineStyleOption {
     curveness?: number
 }
 
-export interface GraphNodeStateOption {
-    itemStyle?: ItemStyleOption
+export interface GraphNodeStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
 
@@ -71,16 +71,16 @@ export interface GraphNodeStateOption {
 interface ExtraEmphasisState {
     focus?: DefaultEmphasisFocus | 'adjacency'
 }
-interface ExtraNodeStateOption {
+interface GraphNodeStatesMixin {
     emphasis?: ExtraEmphasisState
 }
 
-interface ExtraEdgeStateOption {
+interface GraphEdgeStatesMixin {
     emphasis?: ExtraEmphasisState
 }
 
 export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOption,
-    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption, ExtraNodeStateOption> {
+    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption, GraphNodeStatesMixin> {
 
     id?: string
     name?: string
@@ -114,7 +114,7 @@ export interface GraphEdgeStateOption {
 }
 export interface GraphEdgeItemOption extends
         GraphEdgeStateOption,
-        StatesOptionMixin<GraphEdgeStateOption, ExtraEdgeStateOption>,
+        StatesOptionMixin<GraphEdgeStateOption, GraphEdgeStatesMixin>,
         GraphEdgeItemObject<OptionDataValueNumeric> {
 
     value?: number
@@ -130,13 +130,14 @@ export interface GraphEdgeItemOption extends
 }
 
 export interface GraphCategoryItemOption extends SymbolOptionMixin,
-    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption> {
+    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption, GraphNodeStatesMixin> {
     name?: string
 
     value?: OptionDataValue
 }
 
-export interface GraphSeriesOption extends SeriesOption,
+export interface GraphSeriesOption
+    extends SeriesOption<GraphNodeStateOption<CallbackDataParams>, GraphNodeStatesMixin>,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SymbolOptionMixin<CallbackDataParams>,
@@ -177,7 +178,7 @@ export interface GraphSeriesOption extends SeriesOption,
     edgeLabel?: SeriesLineLabelOption
     label?: SeriesLabelOption
 
-    itemStyle?: ItemStyleOption
+    itemStyle?: ItemStyleOption<CallbackDataParams>
     lineStyle?: GraphEdgeLineStyleOption
 
     emphasis?: {
@@ -230,7 +231,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
 
     static readonly dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar'];
 
-    private _categoriesData: List;
+    private _categoriesData: SeriesData;
     private _categoriesModels: Model<GraphCategoryItemOption>[];
 
     /**
@@ -272,7 +273,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         defaultEmphasis(option, 'edgeLabel', ['show']);
     }
 
-    getInitialData(option: GraphSeriesOption, ecModel: GlobalModel): List {
+    getInitialData(option: GraphSeriesOption, ecModel: GlobalModel): SeriesData {
         const edges = option.edges || option.links || [];
         const nodes = option.data || option.nodes || [];
         const self = this;
@@ -287,7 +288,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
             return graph.data;
         }
 
-        function beforeLink(nodeData: List, edgeData: List) {
+        function beforeLink(nodeData: SeriesData, edgeData: SeriesData) {
             // Overwrite nodeData.getItemModel to
             nodeData.wrapMethod('getItemModel', function (model) {
                 const categoriesModels = self._categoriesModels;
@@ -335,10 +336,10 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     }
 
     getEdgeData() {
-        return this.getGraph().edgeData as List<GraphSeriesModel, LineDataVisual>;
+        return this.getGraph().edgeData as SeriesData<GraphSeriesModel, LineDataVisual>;
     }
 
-    getCategoriesData(): List {
+    getCategoriesData(): SeriesData {
         return this._categoriesData;
     }
 
@@ -380,7 +381,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
                 value: 0
             }, category);
         });
-        const categoriesData = new List(['value'], this);
+        const categoriesData = new SeriesData(['value'], this);
         categoriesData.initData(categories);
 
         this._categoriesData = categoriesData;
@@ -405,7 +406,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     }
 
     static defaultOption: GraphSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
 
         coordinateSystem: 'view',

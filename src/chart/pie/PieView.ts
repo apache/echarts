@@ -26,7 +26,7 @@ import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, ColorString } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import labelLayout from './labelLayout';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
@@ -40,7 +40,7 @@ import { getBasicPieLayout } from './pieLayout';
  */
 class PiePiece extends graphic.Sector {
 
-    constructor(data: List, idx: number, startAngle: number) {
+    constructor(data: SeriesData, idx: number, startAngle: number) {
         super();
 
         this.z2 = 2;
@@ -52,7 +52,7 @@ class PiePiece extends graphic.Sector {
         this.updateData(data, idx, startAngle, true);
     }
 
-    updateData(data: List, idx: number, startAngle?: number, firstCreate?: boolean): void {
+    updateData(data: SeriesData, idx: number, startAngle?: number, firstCreate?: boolean): void {
         const sector = this;
 
         const seriesModel = data.hostModel as PieSeriesModel;
@@ -77,7 +77,17 @@ class PiePiece extends graphic.Sector {
             sector.setShape(sectorShape);
 
             const animationType = seriesModel.getShallow('animationType');
-            if (animationType === 'scale') {
+            if (seriesModel.ecModel.ssr) {
+                // Use scale animation in SSR mode(opacity?)
+                // Because CSS SVG animation doesn't support very customized shape animation.
+                graphic.initProps(sector, {
+                    scaleX: 0,
+                    scaleY: 0
+                }, seriesModel, { dataIndex: idx, isFrom: true});
+                sector.originX = sectorShape.cx;
+                sector.originY = sectorShape.cy;
+            }
+            else if (animationType === 'scale') {
                 sector.shape.r = layout.r0;
                 graphic.initProps(sector, {
                     shape: {
@@ -158,7 +168,7 @@ class PiePiece extends graphic.Sector {
         enableHoverEmphasis(this, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
     }
 
-    private _updateLabel(seriesModel: PieSeriesModel, data: List, idx: number): void {
+    private _updateLabel(seriesModel: PieSeriesModel, data: SeriesData, idx: number): void {
         const sector = this;
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const labelLineModel = itemModel.getModel('labelLine');
@@ -223,7 +233,7 @@ class PieView extends ChartView {
     ignoreLabelLineUpdate = true;
 
     private _sectorGroup: graphic.Group;
-    private _data: List;
+    private _data: SeriesData;
     private _emptyCircleSector: graphic.Sector;
 
     init(): void {

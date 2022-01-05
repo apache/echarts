@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import createListFromArray from '../helper/createListFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import SeriesModel from '../../model/Series';
 import {
     SeriesOnCartesianOptionMixin,
@@ -36,7 +36,7 @@ import {
     CallbackDataParams,
     DefaultEmphasisFocus
 } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 import {createSymbol, ECSymbol} from '../../util/symbol';
@@ -45,21 +45,21 @@ import {LegendIconParams} from '../../component/legend/LegendModel';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
-interface ExtraStateOption {
+interface LineStateOptionMixin {
     emphasis?: {
         focus?: DefaultEmphasisFocus
         scale?: boolean
     }
 }
 
-export interface LineStateOption {
-    itemStyle?: ItemStyleOption
+export interface LineStateOption<TCbParams = never> {
+    itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
     endLabel?: LineEndLabelOption
 }
 
 export interface LineDataItemOption extends SymbolOptionMixin,
-    LineStateOption, StatesOptionMixin<LineStateOption, ExtraStateOption> {
+    LineStateOption, StatesOptionMixin<LineStateOption, LineStateOptionMixin> {
     name?: string
 
     value?: LineDataValue
@@ -70,10 +70,10 @@ export interface LineEndLabelOption extends SeriesLabelOption {
 }
 
 
-export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraStateOption & {
+export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackDataParams>, LineStateOptionMixin & {
     emphasis?: {
-        lineStyle?: LineStyleOption | {
-            width?: 'bolder'
+        lineStyle?: Omit<LineStyleOption, 'width'> & {
+            width?: LineStyleOption['width'] | 'bolder'
         }
         areaStyle?: AreaStyleOption
     }
@@ -81,7 +81,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
         lineStyle?: LineStyleOption
         areaStyle?: AreaStyleOption
     }
-}>, LineStateOption,
+}>, LineStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
@@ -115,9 +115,11 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     showSymbol?: boolean
     // false | 'auto': follow the label interval strategy.
     // true: show all symbols.
-    showAllSymbol?: 'auto'
+    showAllSymbol?: 'auto' | boolean
 
     data?: (LineDataValue | LineDataItemOption)[]
+
+    triggerLineEvent?: boolean
 }
 
 class LineSeriesModel extends SeriesModel<LineSeriesOption> {
@@ -130,20 +132,20 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
     hasSymbolVisual = true;
 
-    getInitialData(option: LineSeriesOption): List {
+    getInitialData(option: LineSeriesOption): SeriesData {
         if (__DEV__) {
             const coordSys = option.coordinateSystem;
             if (coordSys !== 'polar' && coordSys !== 'cartesian2d') {
                 throw new Error('Line not support coordinateSystem besides cartesian and polar');
             }
         }
-        return createListFromArray(this.getSource(), this, {
+        return createSeriesData(null, this, {
             useEncodeDefaulter: true
         });
     }
 
     static defaultOption: LineSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 3,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
@@ -169,10 +171,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         },
 
         emphasis: {
-            scale: true,
-            lineStyle: {
-                width: 'bolder'
-            }
+            scale: true
         },
         // areaStyle: {
             // origin of areaStyle. Valid values:
@@ -212,7 +211,9 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         universalTransition: {
             divideShape: 'clone'
-        }
+        },
+
+        triggerLineEvent: false,
     };
 
     getLegendIcon(opt: LegendIconParams): ECSymbol | Group {

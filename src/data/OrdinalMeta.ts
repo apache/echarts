@@ -17,10 +17,11 @@
 * under the License.
 */
 
-import {createHashMap, isObject, map, HashMap} from 'zrender/src/core/util';
+import {createHashMap, isObject, map, HashMap, isString} from 'zrender/src/core/util';
 import Model from '../model/Model';
 import { OrdinalNumber, OrdinalRawValue } from '../util/types';
 
+let uidBase = 0;
 
 class OrdinalMeta {
 
@@ -32,6 +33,8 @@ class OrdinalMeta {
 
     private _map: HashMap<OrdinalNumber>;
 
+    readonly uid: number;
+
 
     constructor(opt: {
         categories?: OrdinalRawValue[],
@@ -41,6 +44,7 @@ class OrdinalMeta {
         this.categories = opt.categories || [];
         this._needCollect = opt.needCollect;
         this._deduplication = opt.deduplication;
+        this.uid = ++uidBase;
     }
 
     static createByAxisModel(axisModel: Model): OrdinalMeta {
@@ -73,7 +77,7 @@ class OrdinalMeta {
         // consider a common case: a value is 2017, which is a number but is
         // expected to be tread as a category. This case usually happen in dataset,
         // where it happent to be no need of the index feature.
-        if (typeof category !== 'string' && !needCollect) {
+        if (!isString(category) && !needCollect) {
             return category;
         }
 

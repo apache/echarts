@@ -259,7 +259,7 @@ class SunburstPiece extends graphic.Sector {
                     rotate += Math.PI;
                 }
             }
-            else if (typeof rotateType === 'number') {
+            else if (zrUtil.isNumber(rotateType)) {
                 rotate = rotateType * Math.PI / 180;
             }
 

@@ -36,15 +36,16 @@ import { mixin, clone, merge } from 'zrender/src/core/util';
 
 // Since model.option can be not only `Dictionary` but also primary types,
 // we do this conditional type to avoid getting type 'never';
-type Key<Opt> = Opt extends Dictionary<any>
-    ? keyof Opt : string;
-type Value<Opt, R> = Opt extends Dictionary<any>
-    ? (R extends keyof Opt ? Opt[R] : ModelOption)
-    : ModelOption;
+// type Key<Opt> = Opt extends Dictionary<any>
+//     ? keyof Opt : string;
+// type Value<Opt, R> = Opt extends Dictionary<any>
+//     ? (R extends keyof Opt ? Opt[R] : ModelOption)
+//     : ModelOption;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface Model<Opt = ModelOption>
     extends LineStyleMixin, ItemStyleMixin, TextStyleMixin, AreaStyleMixin {}
-class Model<Opt = ModelOption> {    // TODO: TYPE use unkown insteadof any?
+class Model<Opt = ModelOption> {    // TODO: TYPE use unknown instead of any?
 
     // [Caution]: Becuase this class or desecendants can be used as `XXX.extend(subProto)`,
     // the class members must not be initialized in constructor or declaration place.
@@ -165,47 +166,6 @@ class Model<Opt = ModelOption> {    // TODO: TYPE use unkown insteadof any?
 
         return new Model(obj, parentModel, this.ecModel);
     }
-
-    /**
-     * Squash option stack into one.
-     * parentModel will be removed after squashed.
-     *
-     * NOTE: resolveParentPath will not be applied here for simplicity. DON'T use this function
-     * if resolveParentPath is modified.
-     *
-     * @param deepMerge If do deep merge. Default to be false.
-     */
-    // squash(
-    //     deepMerge?: boolean,
-    //     handleCallback?: (func: () => object) => object
-    // ) {
-    //     const optionStack = [];
-    //     let model: Model = this;
-    //     while (model) {
-    //         if (model.option) {
-    //             optionStack.push(model.option);
-    //         }
-    //         model = model.parentModel;
-    //     }
-
-    //     const newOption = {} as Opt;
-    //     let option;
-    //     while (option = optionStack.pop()) {    // Top down merge
-    //         if (isFunction(option) && handleCallback) {
-    //             option = handleCallback(option);
-    //         }
-    //         if (deepMerge) {
-    //             merge(newOption, option);
-    //         }
-    //         else {
-    //             extend(newOption, option);
-    //         }
-    //     }
-
-    //     // Remove parentModel
-    //     this.option = newOption;
-    //     this.parentModel = null;
-    // }
 
     /**
      * If model has option

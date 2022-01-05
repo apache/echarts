@@ -115,9 +115,7 @@
                 + '</div>';
         }
 
-        if (opt.option) {
-            chart = testHelper.createChart(echarts, chartContainer, opt.option, opt, opt.setOptionOpts);
-        }
+        chart = testHelper.createChart(echarts, chartContainer, opt.option, opt, opt.setOptionOpts);
 
         var dataTables = opt.dataTables;
         if (!dataTables && opt.dataTable) {
@@ -312,6 +310,10 @@
      * @param checkFn {Function} param: a function `assert`.
      */
     testHelper.printAssert = function (chartOrDomId, checkerFn) {
+        if (!chartOrDomId) {
+            return;
+        }
+
         var hostDOMEl;
         var chart;
         if (typeof chartOrDomId === 'string') {

@@ -42,6 +42,7 @@ under the License.
 
     <div id="main0"></div>
     <div id="main1"></div>
+    <div id="main2"></div>
 
     <script>
 
@@ -57,6 +58,10 @@ under the License.
         ], function (echarts) {
             var chart;
             var myChart;
+
+            const obj = {};
+            const payload = JSON.parse('{"__proto__":{"polluted":"Polluted!"}}');
+
 
             const datasetSource1 = [['2019-04-14', 17], ['2019-04-16', 13], ['2019-04-17', 5]];
             const datasetSource2 = [['2019-04-13', 0], ['2019-04-18', 23]];
@@ -262,6 +267,107 @@ under the License.
                     text: 'Click to trigger extraneous lines bug',
                     onClick: () => {
                         myChart.setOption(option2, true);
+                    }
+                }
+            });
+        });
+
+    </script>
+
+    <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var chart;
+            var myChart;
+
+            const option1 = {
+                xAxis: {
+                    type: "time",
+                    axisLabel: {},
+                },
+                yAxis: {
+                    axisLabel: {},
+                },
+                dataset: [
+                    {
+                    dimensions: ["time", "mean_load15"],
+                    source: [
+                        ["2021-09-07T07:53:00Z", 0.215],
+                        ["2021-09-07T07:54:00Z", 0.2073684210526316],
+                        ["2021-09-07T07:55:00Z", 0.20450000000000004],
+                    ],
+                    },
+                ],
+                series: [
+                    {
+                        type: "line",
+                        name: "mean_load15",
+                        encode: {
+                            x: "time",
+                            y: "mean_load15",
+                        },
+                        datasetIndex: 0,
+                        smooth: true,
+                        lineStyle: {
+                            width: 1,
+                        },
+                        itemStyle: {},
+                        showSymbol: false,
+                    },
+                ],
+                };
+
+                const option2 = {
+                    xAxis: {
+                        type: "time",
+                        axisLabel: {},
+                    },
+                    yAxis: {
+                        axisLabel: {},
+                    },
+                    dataset: [
+                        {
+                        dimensions: ["time", "mean_load15"],
+                        source: [
+                            ["2021-09-02T09:52:00Z", 0.197453237410072],
+                            ["2021-09-02T11:33:00Z", 0.10109900990098977],
+                            ["2021-09-02T13:14:00Z", 0.13159405940594063],
+                            ["2021-09-02T14:55:00Z", 0.11086633663366334],
+                            ["2021-09-02T16:36:00Z", 0.1571930693069309],
+                            ["2021-09-02T18:17:00Z", 0.14914356435643553],
+                        ],
+                    },
+                ],
+                series: [
+                    {
+                        type: "line",
+                        name: "mean_load15",
+                        encode: {
+                            x: "time",
+                            y: "mean_load15",
+                        },
+                        datasetIndex: 0,
+                        smooth: true,
+                        itemStyle: {},
+                        showSymbol: false,
+                    },
+                ],
+            };
+
+            chart = myChart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'Case from https://github.com/apache/echarts/issues/15685'
+                ],
+                option: option2,
+                button: {
+                    text: 'Update twice',
+                    onClick: () => {
+                        myChart.setOption(option1, true);
+
+                        setTimeout(() => {
+                            myChart.setOption(option2, true);
+                        }, 50)
                     }
                 }
             });

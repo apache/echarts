@@ -20,15 +20,15 @@
 import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis } from '../../util/states';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
-import type List from '../../data/List';
+import type SeriesData from '../../data/SeriesData';
 
 class Polyline extends graphic.Group {
-    constructor(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
+    constructor(lineData: SeriesData, idx: number, seriesScope: LineDrawSeriesScope) {
         super();
         this._createPolyline(lineData, idx, seriesScope);
     }
 
-    private _createPolyline(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
+    private _createPolyline(lineData: SeriesData, idx: number, seriesScope: LineDrawSeriesScope) {
         // let seriesModel = lineData.hostModel;
         const points = lineData.getItemLayout(idx);
 
@@ -43,7 +43,7 @@ class Polyline extends graphic.Group {
         this._updateCommonStl(lineData, idx, seriesScope);
     };
 
-    updateData(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
+    updateData(lineData: SeriesData, idx: number, seriesScope: LineDrawSeriesScope) {
         const seriesModel = lineData.hostModel;
 
         const line = this.childAt(0) as graphic.Polyline;
@@ -57,7 +57,7 @@ class Polyline extends graphic.Group {
         this._updateCommonStl(lineData, idx, seriesScope);
     };
 
-    _updateCommonStl(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
+    _updateCommonStl(lineData: SeriesData, idx: number, seriesScope: LineDrawSeriesScope) {
         const line = this.childAt(0) as graphic.Polyline;
         const itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
 
@@ -77,7 +77,7 @@ class Polyline extends graphic.Group {
         enableHoverEmphasis(this);
     };
 
-    updateLayout(lineData: List, idx: number) {
+    updateLayout(lineData: SeriesData, idx: number) {
         const polyline = this.childAt(0) as graphic.Polyline;
         polyline.setShape('points', lineData.getItemLayout(idx));
     };

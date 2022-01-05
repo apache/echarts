@@ -24,7 +24,8 @@ import {
     SeriesLineLabelOption,
     SymbolOptionMixin,
     ItemStyleOption,
-    StatesOptionMixin
+    StatesOptionMixin,
+    StatesMixinBase
 } from '../../util/types';
 
 interface MarkLineStateOption {
@@ -35,7 +36,8 @@ interface MarkLineStateOption {
     itemStyle?: ItemStyleOption
     label?: SeriesLineLabelOption
 }
-interface MarkLineDataItemOptionBase extends MarkLineStateOption, StatesOptionMixin<MarkLineStateOption> {
+interface MarkLineDataItemOptionBase extends MarkLineStateOption,
+    StatesOptionMixin<MarkLineStateOption, StatesMixinBase> {
     name?: string
 }
 
@@ -79,7 +81,8 @@ export type MarkLine2DDataItemOption = [
 ];
 
 export interface MarkLineOption extends MarkerOption,
-    MarkLineStateOption, StatesOptionMixin<MarkLineStateOption> {
+    MarkLineStateOption,
+    StatesOptionMixin<MarkLineStateOption, StatesMixinBase> {
     mainType?: 'markLine'
 
     symbol?: string[] | string
@@ -109,7 +112,7 @@ class MarkLineModel extends MarkerModel<MarkLineOption> {
     }
 
     static defaultOption: MarkLineOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 5,
 
         symbol: ['circle', 'arrow'],

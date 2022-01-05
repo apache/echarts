@@ -33,7 +33,7 @@ import ExtensionAPI from '../core/ExtensionAPI';
 import SeriesModel from '../model/Series';
 import { createHashMap, HashMap } from 'zrender/src/core/util';
 import { TaskPlanCallbackReturn, TaskProgressParams } from '../core/task';
-import List, {ListDimensionType} from '../data/List';
+import SeriesData from '../data/SeriesData';
 import { Dictionary, ElementEventName, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { TooltipMarker } from './format';
@@ -47,6 +47,8 @@ import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Source } from '../data/Source';
 import Model from '../model/Model';
+import { DataStoreDimensionType } from '../data/DataStore';
+import { DimensionUserOuputEncode } from '../data/helper/dimensionHelper';
 
 
 
@@ -57,6 +59,7 @@ import Model from '../model/Model';
 export {Dictionary};
 
 export type RendererType = 'canvas' | 'svg';
+export type NullUndefined = null | undefined;
 
 export type LayoutOrient = 'vertical' | 'horizontal';
 export type HorizontalAlign = 'left' | 'center' | 'right';
@@ -113,8 +116,17 @@ export interface ECElement extends Element {
 
     z2EmphasisLift?: number;
     z2SelectLift?: number;
+
     /**
-     * Force disable animation on any condition
+     * Force enable animation.
+     * This property is useful when an ignored/invisible/removed element
+     * should have label animation, like the case in the bar-racing charts.
+     * `forceLabelAnimation` has higher priority than `disableLabelAnimation`.
+     */
+    forceLabelAnimation?: boolean;
+    /**
+     * Force disable animation.
+     * `forceLabelAnimation` has higher priority than `disableLabelAnimation`.
      */
     disableLabelAnimation?: boolean
     /**
@@ -128,7 +140,7 @@ export interface ECElement extends Element {
 }
 
 export interface DataHost {
-    getData(dataType?: SeriesDataType): List;
+    getData(dataType?: SeriesDataType): SeriesData;
 }
 
 export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {}
@@ -300,8 +312,8 @@ export interface StageHandlerInternal extends StageHandler {
 
 export type StageHandlerProgressParams = TaskProgressParams;
 export interface StageHandlerProgressExecutor {
-    dataEach?: (data: List, idx: number) => void;
-    progress?: (params: StageHandlerProgressParams, data: List) => void;
+    dataEach?: (data: SeriesData, idx: number) => void;
+    progress?: (params: StageHandlerProgressParams, data: SeriesData) => void;
 }
 export type StageHandlerPlanReturn = TaskPlanCallbackReturn;
 export interface StageHandlerPlan {
@@ -355,11 +367,11 @@ export type OrdinalSortInfo = {
 /**
  * `OptionDataValue` is the primitive value in `series.data` or `dataset.source`.
  * `OptionDataValue` are parsed (see `src/data/helper/dataValueHelper.parseDataValue`)
- * into `ParsedValue` and stored into `data/List` storage.
+ * into `ParsedValue` and stored into `data/SeriesData` storage.
  * Note:
  * (1) The term "parse" does not mean `src/scale/Scale['parse']`.
  * (2) If a category dimension is not mapped to any axis, its raw value will NOT be
- * parsed to `OrdinalNumber` but keep the original `OrdinalRawValue` in `src/data/List` storage.
+ * parsed to `OrdinalNumber` but keep the original `OrdinalRawValue` in `src/data/SeriesData` storage.
  */
 export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
 export type ParsedValueNumeric = number | OrdinalNumber;
@@ -374,6 +386,7 @@ export type ParsedValueNumeric = number | OrdinalNumber;
 export type ScaleDataValue = ParsedValueNumeric | OrdinalRawValue | Date;
 
 export interface ScaleTick {
+    level?: number,
     value: number
 };
 export interface TimeScaleTick extends ScaleTick {
@@ -414,7 +427,7 @@ export type DimensionIndex = number;
 export type DimensionIndexLoose = DimensionIndex | string;
 export type DimensionName = string;
 export type DimensionLoose = DimensionName | DimensionIndexLoose;
-export type DimensionType = ListDimensionType;
+export type DimensionType = DataStoreDimensionType;
 
 export const VISUAL_DIMENSIONS = createHashMap<number, keyof DataVisualDimensions>([
     'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'seriesName'
@@ -428,15 +441,12 @@ export interface DataVisualDimensions {
     label?: DimensionIndex;
     itemName?: DimensionIndex;
     itemId?: DimensionIndex;
-    // Group id is used for linking the aggregate relationship between two set of data.
-    // Which is useful in prepresenting the transition key of drilldown/up animation.
-    // Or hover linking.
     itemGroupId?: DimensionIndex;
     seriesName?: DimensionIndex;
 }
 
 export type DimensionDefinition = {
-    type?: ListDimensionType,
+    type?: DataStoreDimensionType,
     name?: DimensionName,
     displayName?: string
 };
@@ -650,6 +660,11 @@ export interface OptionEncodeVisualDimensions {
     itemId?: OptionEncodeValue;
     seriesName?: OptionEncodeValue;
     // Notice: `value` is coordDim, not nonCoordDim.
+
+    // Group id is used for linking the aggregate relationship between two set of data.
+    // Which is useful in prepresenting the transition key of drilldown/up animation.
+    // Or hover linking.
+    itemGroupId?: OptionEncodeValue;
 }
 export interface OptionEncode extends OptionEncodeVisualDimensions {
     [coordDim: string]: OptionEncodeValue | undefined
@@ -688,16 +703,6 @@ export interface CallbackDataParams {
     $vars: string[];
 }
 export type InterpolatableValue = ParsedValue | ParsedValue[];
-export type DimensionUserOuputEncode = {
-    [coordOrVisualDimName: string]:
-        // index: coordDimIndex, value: dataDimIndex
-        DimensionIndex[]
-};
-export type DimensionUserOuput = {
-    // The same as `data.dimensions`
-    dimensionNames: DimensionName[]
-    encode: DimensionUserOuputEncode
-};
 
 export type DecalDashArrayX = number | (number | number[])[];
 export type DecalDashArrayY = number | number[];
@@ -760,60 +765,6 @@ export interface ColorPaletteOptionMixin {
     color?: ZRColor | ZRColor[]
     colorLayer?: ZRColor[][]
 }
-
-export interface AriaLabelOption {
-    enabled?: boolean;
-    description?: string;
-    general?: {
-        withTitle?: string;
-        withoutTitle?: string;
-    };
-    series?: {
-        maxCount?: number;
-        single?: {
-            prefix?: string;
-            withName?: string;
-            withoutName?: string;
-        };
-        multiple?: {
-            prefix?: string;
-            withName?: string;
-            withoutName?: string;
-            separator?: {
-                middle?: string;
-                end?: string;
-            }
-        }
-    };
-    data?: {
-        maxCount?: number;
-        allData?: string;
-        partialData?: string;
-        withName?: string;
-        withoutName?: string;
-        separator?: {
-            middle?: string;
-            end?: string;
-        }
-    }
-}
-
-// Extending is for compating ECharts 4
-export interface AriaOption extends AriaLabelOption {
-    mainType?: 'aria';
-
-    enabled?: boolean;
-    label?: AriaLabelOption;
-    decal?: {
-        show?: boolean;
-        decals?: DecalObject | DecalObject[];
-    };
-}
-
-export interface AriaOptionMixin {
-    aria?: AriaOption
-}
-
 /**
  * Mixin of option set to control the box layout of each component.
  */
@@ -869,6 +820,7 @@ export interface AnimationOption {
     delay?: number
     // additive?: boolean
 }
+
 /**
  * Mixin of option set to control the animation of series.
  */
@@ -942,29 +894,29 @@ export type SymbolOffsetCallback<T> = (rawValue: any, params: T) => string | num
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
  */
-export interface SymbolOptionMixin<T = unknown> {
+export interface SymbolOptionMixin<T = never> {
     /**
      * type of symbol, like `cirlce`, `rect`, or custom path and image.
      */
-    symbol?: string | (unknown extends T ? never : SymbolCallback<T>)
+    symbol?: string | (T extends never ? never : SymbolCallback<T>)
     /**
      * Size of symbol.
      */
-    symbolSize?: number | number[] | (unknown extends T ? never : SymbolSizeCallback<T>)
+    symbolSize?: number | number[] | (T extends never ? never : SymbolSizeCallback<T>)
 
-    symbolRotate?: number | (unknown extends T ? never : SymbolRotateCallback<T>)
+    symbolRotate?: number | (T extends never ? never : SymbolRotateCallback<T>)
 
     symbolKeepAspect?: boolean
 
-    symbolOffset?: string | number | (string | number)[] | (unknown extends T ? never : SymbolOffsetCallback<T>)
+    symbolOffset?: string | number | (string | number)[] | (T extends never ? never : SymbolOffsetCallback<T>)
 }
 
 /**
  * ItemStyleOption is a most common used set to config element styles.
  * It includes both fill and stroke style.
  */
-export interface ItemStyleOption extends ShadowOptionMixin, BorderOptionMixin {
-    color?: ZRColor
+export interface ItemStyleOption<TCbParams = never> extends ShadowOptionMixin, BorderOptionMixin {
+    color?: ZRColor | (TCbParams extends never ? never : ((params: TCbParams) => ZRColor))
     opacity?: number
     decal?: DecalObject | 'none'
     selectable?: boolean
@@ -1504,15 +1456,16 @@ export type BlurScope = 'coordinateSystem' | 'series' | 'global';
  */
 export type InnerFocus = DefaultEmphasisFocus | ArrayLike<number> | Dictionary<ArrayLike<number>>;
 
-export interface DefaultExtraStateOpts {
-    emphasis: any
-    select: any
-    blur: any
+export interface DefaultStatesMixin {
+    // FIXME
+    emphasis?: any
+    select?: any
+    blur?: any
 }
 
 export type DefaultEmphasisFocus = 'none' | 'self' | 'series';
 
-export interface DefaultExtraEmpasisState {
+export interface DefaultStatesMixinEmpasis {
     /**
      * self: Focus self and blur all others.
      * series: Focus series and blur all other series.
@@ -1520,19 +1473,20 @@ export interface DefaultExtraEmpasisState {
     focus?: DefaultEmphasisFocus
 }
 
-interface ExtraStateOptsBase {
-    emphasis?: {
-        focus?: string
-    },
-    select?: any
-    blur?: any
+export interface StatesMixinBase {
+    emphasis?: unknown
+    select?: unknown
+    blur?: unknown
 }
 
-export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> {
+export interface StatesOptionMixin<
+    StateOption,
+    StatesMixin extends StatesMixinBase
+> {
     /**
      * Emphasis states
      */
-    emphasis?: StateOption & ExtraStateOpts['emphasis'] & {
+    emphasis?: StateOption & StatesMixin['emphasis'] & {
         /**
          * Scope of blurred element when focus.
          *
@@ -1547,11 +1501,11 @@ export interface StatesOptionMixin<StateOption, ExtraStateOpts extends ExtraStat
     /**
      * Select states
      */
-    select?: StateOption & ExtraStateOpts['select']
+    select?: StateOption & StatesMixin['select']
     /**
      * Blur states.
      */
-    blur?: StateOption & ExtraStateOpts['blur']
+    blur?: StateOption & StatesMixin['blur']
 }
 
 export interface UniversalTransitionOption {
@@ -1579,11 +1533,13 @@ export interface UniversalTransitionOption {
 }
 
 export interface SeriesOption<
-    StateOption=any, ExtraStateOpts extends ExtraStateOptsBase = DefaultExtraStateOpts> extends
+    StateOption = unknown,
+    StatesMixin extends StatesMixinBase = DefaultStatesMixin
+> extends
     ComponentOption,
     AnimationOptionMixin,
     ColorPaletteOptionMixin,
-    StatesOptionMixin<StateOption, ExtraStateOpts>
+    StatesOptionMixin<StateOption, StatesMixin>
 {
     mainType?: 'series'
 
@@ -1710,3 +1666,58 @@ export interface SeriesEncodeOptionMixin {
 }
 
 export type SeriesEncodableModel = SeriesModel<SeriesOption & SeriesEncodeOptionMixin>;
+
+
+// TODO Move to aria component
+export interface AriaLabelOption {
+    enabled?: boolean;
+    description?: string;
+    general?: {
+        withTitle?: string;
+        withoutTitle?: string;
+    };
+    series?: {
+        maxCount?: number;
+        single?: {
+            prefix?: string;
+            withName?: string;
+            withoutName?: string;
+        };
+        multiple?: {
+            prefix?: string;
+            withName?: string;
+            withoutName?: string;
+            separator?: {
+                middle?: string;
+                end?: string;
+            }
+        }
+    };
+    data?: {
+        maxCount?: number;
+        allData?: string;
+        partialData?: string;
+        withName?: string;
+        withoutName?: string;
+        separator?: {
+            middle?: string;
+            end?: string;
+        }
+    }
+}
+
+// Extending is for compating ECharts 4
+export interface AriaOption extends AriaLabelOption {
+    mainType?: 'aria';
+
+    enabled?: boolean;
+    label?: AriaLabelOption;
+    decal?: {
+        show?: boolean;
+        decals?: DecalObject | DecalObject[];
+    };
+}
+
+export interface AriaOptionMixin {
+    aria?: AriaOption
+}

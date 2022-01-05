@@ -24,12 +24,12 @@ import type Element from 'zrender/src/Element';
 
 interface LabelLayoutListPrepareInput {
     label: ZRText
-    labelLine: Polyline
-    computedLayoutOption: LabelLayoutOption
+    labelLine?: Polyline
+    computedLayoutOption?: LabelLayoutOption
     priority: number
     defaultAttr: {
         ignore: boolean
-        labelGuideIgnore: boolean
+        labelGuideIgnore?: boolean
     }
 }
 
@@ -44,7 +44,7 @@ export interface LabelLayoutInfo {
     layoutOption: LabelLayoutOption
     defaultAttr: {
         ignore: boolean
-        labelGuideIgnore: boolean
+        labelGuideIgnore?: boolean
     }
     transform: number[]
 }

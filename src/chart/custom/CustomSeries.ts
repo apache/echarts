@@ -18,11 +18,12 @@
 */
 
 import Displayable from 'zrender/src/graphic/Displayable';
-import { ImageStyleProps } from 'zrender/src/graphic/Image';
+import { ImageProps, ImageStyleProps } from 'zrender/src/graphic/Image';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { ZRenderType } from 'zrender/src/zrender';
 import { BarGridLayoutOptionForCustomSeries, BarGridLayoutResult } from '../../layout/barGrid';
 import {
+    AnimationOption,
     BlurScope,
     CallbackDataParams,
     Dictionary,
@@ -43,10 +44,10 @@ import {
     TextCommonOption,
     ZRStyleProps
 } from '../../util/types';
-import Element, { ElementProps } from 'zrender/src/Element';
-import List, { DefaultDataVisual } from '../../data/List';
+import Element from 'zrender/src/Element';
+import SeriesData, { DefaultDataVisual } from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
-import createListFromArray from '../helper/createListFromArray';
+import createSeriesData from '../helper/createSeriesData';
 import { makeInner } from '../../util/model';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import SeriesModel from '../../model/Series';
@@ -63,25 +64,17 @@ import {
     Ring,
     Sector
 } from '../../util/graphic';
-import { TextStyleProps } from 'zrender/src/graphic/Text';
-
-
-export interface LooseElementProps extends ElementProps {
-    style?: ZRStyleProps;
-    shape?: Dictionary<unknown>;
-}
+import { TextProps, TextStyleProps } from 'zrender/src/graphic/Text';
+import { GroupProps } from 'zrender/src/graphic/Group';
+import {
+    TransitionOptionMixin,
+    TransitionBaseDuringAPI,
+    TransitionDuringAPI
+} from '../../animation/customGraphicTransition';
+import { TransformProp } from 'zrender/src/core/Transformable';
+import { ElementKeyframeAnimationOption } from '../../animation/customGraphicKeyframeAnimation';
 
 export type CustomExtraElementInfo = Dictionary<unknown>;
-export const TRANSFORM_PROPS = {
-    x: 1,
-    y: 1,
-    scaleX: 1,
-    scaleY: 1,
-    originX: 1,
-    originY: 1,
-    rotation: 1
-} as const;
-export type TransformProp = keyof typeof TRANSFORM_PROPS;
 
 // Also compat with ec4, where
 // `visual('color') visual('borderColor')` is supported.
@@ -102,19 +95,7 @@ export const NON_STYLE_VISUAL_PROPS = {
 } as const;
 export type NonStyleVisualProps = keyof typeof NON_STYLE_VISUAL_PROPS;
 
-// Do not declare "Dictionary" in TransitionAnyOption to restrict the type check.
-export type TransitionAnyOption = {
-    transition?: TransitionAnyProps;
-    enterFrom?: Dictionary<unknown>;
-    leaveTo?: Dictionary<unknown>;
-};
-type TransitionAnyProps = string | string[];
-type TransitionTransformOption = {
-    transition?: ElementRootTransitionProp | ElementRootTransitionProp[];
-    enterFrom?: Dictionary<unknown>;
-    leaveTo?: Dictionary<unknown>;
-};
-type ElementRootTransitionProp = TransformProp | 'shape' | 'extra' | 'style';
+// Do not declare "Dictionary" in ElementTransitionOptions to restrict the type check.
 type ShapeMorphingOption = {
     /**
      * If do shape morphing animation when type is changed.
@@ -123,27 +104,9 @@ type ShapeMorphingOption = {
     morph?: boolean
 };
 
-export interface CustomBaseDuringAPI {
-    // Usually other props do not need to be changed in animation during.
-    setTransform(key: TransformProp, val: number): this
-    getTransform(key: TransformProp): number;
-    setExtra(key: string, val: unknown): this
-    getExtra(key: string): unknown
-}
-export interface CustomDuringAPI<
-    StyleOpt extends any = any,
-    ShapeOpt extends any = any
-> extends CustomBaseDuringAPI {
-    setShape<T extends keyof ShapeOpt>(key: T, val: ShapeOpt[T]): this;
-    getShape<T extends keyof ShapeOpt>(key: T): ShapeOpt[T];
-    setStyle<T extends keyof StyleOpt>(key: T, val: StyleOpt[T]): this
-    getStyle<T extends keyof StyleOpt>(key: T): StyleOpt[T];
-};
-
-
 export interface CustomBaseElementOption extends Partial<Pick<
     Element, TransformProp | 'silent' | 'ignore' | 'textConfig'
->>, TransitionTransformOption {
+>> {
     // element type, required.
     type: string;
     id?: string;
@@ -155,19 +118,20 @@ export interface CustomBaseElementOption extends Partial<Pick<
     // `false` means remove the clipPath
     clipPath?: CustomBaseZRPathOption | false;
     // `extra` can be set in any el option for custom prop for annimation duration.
-    extra?: Dictionary<unknown> & TransitionAnyOption;
+    extra?: Dictionary<unknown> & TransitionOptionMixin;
     // updateDuringAnimation
-    during?(params: CustomBaseDuringAPI): void;
+    during?(params: TransitionBaseDuringAPI): void;
 
-    focus?: 'none' | 'self' | 'series' | ArrayLike<number>
-    blurScope?: BlurScope
+    enterAnimation?: AnimationOption
+    updateAnimation?: AnimationOption
+    leaveAnimation?: AnimationOption
 };
 
 export interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<
     Displayable, 'zlevel' | 'z' | 'z2' | 'invisible'
 >> {
-    style?: ZRStyleProps & TransitionAnyOption;
-    during?(params: CustomDuringAPI): void;
+    style?: ZRStyleProps;
+    during?(params: TransitionDuringAPI): void;
     /**
      * @deprecated
      */
@@ -181,40 +145,42 @@ export interface CustomDisplayableOptionOnState extends Partial<Pick<
     Displayable, TransformProp | 'textConfig' | 'z2'
 >> {
     // `false` means remove emphasis trigger.
-    style?: (ZRStyleProps & TransitionAnyOption) | false;
-
-
-    during?(params: CustomDuringAPI): void;
+    style?: ZRStyleProps | false;
 }
-export interface CustomGroupOption extends CustomBaseElementOption {
+export interface CustomGroupOption extends CustomBaseElementOption, TransitionOptionMixin<GroupProps>{
     type: 'group';
     width?: number;
     height?: number;
     // @deprecated
     diffChildrenByName?: boolean;
-    children: CustomChildElementOption[];
+    children: CustomElementOption[];
     $mergeChildren?: false | 'byName' | 'byIndex';
+
+    keyframeAnimation?: ElementKeyframeAnimationOption<GroupProps> | ElementKeyframeAnimationOption<GroupProps>[]
 }
 export interface CustomBaseZRPathOption<T extends PathProps['shape'] = PathProps['shape']>
-    extends CustomDisplayableOption, ShapeMorphingOption {
+    extends CustomDisplayableOption, ShapeMorphingOption, TransitionOptionMixin<PathProps & {shape: T}> {
     autoBatch?: boolean;
-    shape?: T & TransitionAnyOption;
-    style?: PathProps['style']
-    during?(params: CustomDuringAPI<PathStyleProps, T>): void;
+    shape?: T & TransitionOptionMixin<T>;
+    style?: PathProps['style'] & TransitionOptionMixin<PathStyleProps>
+    during?(params: TransitionDuringAPI<PathStyleProps, T>): void;
+
+    keyframeAnimation?: ElementKeyframeAnimationOption<PathProps & { shape: T }>
+        | ElementKeyframeAnimationOption<PathProps & { shape: T }>[]
 }
 
 interface BuiltinShapes {
-    'circle': Circle['shape']
-    'rect': Rect['shape']
-    'sector': Sector['shape']
-    'poygon': Polygon['shape']
-    'polyline': Polyline['shape']
-    'line': Line['shape']
-    'arc': Arc['shape']
-    'bezierCurve': BezierCurve['shape']
-    'ring': Ring['shape']
-    'ellipse': Ellipse['shape'],
-    'compoundPath': CompoundPath['shape']
+    circle: Partial<Circle['shape']>
+    rect: Partial<Rect['shape']>
+    sector: Partial<Sector['shape']>
+    polygon: Partial<Polygon['shape']>
+    polyline: Partial<Polyline['shape']>
+    line: Partial<Line['shape']>
+    arc: Partial<Arc['shape']>
+    bezierCurve: Partial<BezierCurve['shape']>
+    ring: Partial<Ring['shape']>
+    ellipse: Partial<Ellipse['shape']>
+    compoundPath: Partial<CompoundPath['shape']>
 }
 
 interface CustomSVGPathShapeOption {
@@ -243,25 +209,29 @@ export type CustomPathOption = CreateCustomBuitinPathOption<keyof BuiltinShapes>
     | CustomSVGPathOption;
 
 export interface CustomImageOptionOnState extends CustomDisplayableOptionOnState {
-    style?: ImageStyleProps & TransitionAnyOption;
+    style?: ImageStyleProps;
 }
-export interface CustomImageOption extends CustomDisplayableOption {
+export interface CustomImageOption extends CustomDisplayableOption, TransitionOptionMixin<ImageProps> {
     type: 'image';
-    style?: ImageStyleProps & TransitionAnyOption;
+    style?: ImageStyleProps & TransitionOptionMixin<ImageStyleProps>;
     emphasis?: CustomImageOptionOnState;
     blur?: CustomImageOptionOnState;
     select?: CustomImageOptionOnState;
+
+    keyframeAnimation?: ElementKeyframeAnimationOption<ImageProps> | ElementKeyframeAnimationOption<ImageProps>[]
 }
 
 export interface CustomTextOptionOnState extends CustomDisplayableOptionOnState {
-    style?: TextStyleProps & TransitionAnyOption;
+    style?: TextStyleProps;
 }
-export interface CustomTextOption extends CustomDisplayableOption {
+export interface CustomTextOption extends CustomDisplayableOption, TransitionOptionMixin<TextProps> {
     type: 'text';
-    style?: TextStyleProps & TransitionAnyOption;
+    style?: TextStyleProps & TransitionOptionMixin<TextStyleProps>;
     emphasis?: CustomTextOptionOnState;
     blur?: CustomTextOptionOnState;
     select?: CustomTextOptionOnState;
+
+    keyframeAnimation?: ElementKeyframeAnimationOption<TextProps> | ElementKeyframeAnimationOption<TextProps>[]
 }
 
 export type CustomElementOption = CustomPathOption
@@ -270,7 +240,10 @@ export type CustomElementOption = CustomPathOption
     | CustomGroupOption;
 
 // Can only set focus, blur on the root element.
-export type CustomChildElementOption = Omit<CustomElementOption, 'focus' | 'blurScope'>;
+export type CustomRootElementOption = CustomElementOption & {
+    focus?: 'none' | 'self' | 'series' | ArrayLike<number>
+    blurScope?: BlurScope
+};
 
 export type CustomElementOptionOnState = CustomDisplayableOptionOnState
     | CustomImageOptionOnState;
@@ -287,7 +260,13 @@ export interface CustomSeriesRenderItemAPI extends
 
     value(dim: DimensionLoose, dataIndexInside?: number): ParsedValue;
     ordinalRawValue(dim: DimensionLoose, dataIndexInside?: number): ParsedValue | OrdinalRawValue;
+    /**
+     * @deprecated
+     */
     style(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
+    /**
+     * @deprecated
+     */
     styleEmphasis(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
     visual<VT extends NonStyleVisualProps | StyleVisualProps>(
         visualType: VT,
@@ -310,7 +289,7 @@ export interface CustomSeriesRenderItemCoordinateSystemAPI {
     ): number[];
     size?(
         dataSize: OptionDataValue | OptionDataValue[],
-        dataItem: OptionDataValue | OptionDataValue[]
+        dataItem?: OptionDataValue | OptionDataValue[]
     ): number | number[];
 }
 
@@ -330,18 +309,16 @@ export interface CustomSeriesRenderItemParams {
 
     actionType?: string;
 }
-type CustomSeriesRenderItem = (
+
+export type CustomSeriesRenderItemReturn = CustomRootElementOption | undefined | null;
+
+export type CustomSeriesRenderItem = (
     params: CustomSeriesRenderItemParams,
     api: CustomSeriesRenderItemAPI
-) => CustomElementOption;
-
-interface CustomSeriesStateOption {
-    itemStyle?: ItemStyleOption;
-    label?: LabelOption;
-}
+) => CustomSeriesRenderItemReturn;
 
 export interface CustomSeriesOption extends
-    SeriesOption<never>,    // don't support StateOption in custom series.
+    SeriesOption<unknown>,    // don't support StateOption in custom series.
     SeriesEncodeOptionMixin,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
@@ -356,11 +333,32 @@ export interface CustomSeriesOption extends
 
     renderItem?: CustomSeriesRenderItem;
 
+    /**
+     * @deprecated
+     */
+    itemStyle?: ItemStyleOption;
+    /**
+     * @deprecated
+     */
+    label?: LabelOption;
+
+    /**
+     * @deprecated
+     */
+    emphasis?: {
+        /**
+         * @deprecated
+         */
+        itemStyle?: ItemStyleOption;
+        /**
+         * @deprecated
+         */
+        label?: LabelOption;
+    }
+
     // Only works on polar and cartesian2d coordinate system.
     clip?: boolean;
 }
-
-export interface LegacyCustomSeriesOption extends SeriesOption<CustomSeriesStateOption>, CustomSeriesStateOption {}
 
 export const customInnerStore = makeInner<{
     info: CustomExtraElementInfo;
@@ -369,9 +367,7 @@ export const customInnerStore = makeInner<{
     customImagePath: CustomImageOption['style']['image'];
     // customText: string;
     txConZ2Set: number;
-    leaveToProps: ElementProps;
     option: CustomElementOption;
-    userDuring: CustomBaseElementOption['during'];
 }, Element>();
 
 export default class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
@@ -388,7 +384,7 @@ export default class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
 
     static defaultOption: CustomSeriesOption = {
         coordinateSystem: 'cartesian2d', // Can be set as 'none'
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         legendHoverLink: true,
 
@@ -413,8 +409,8 @@ export default class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
         this.currentZ = this.get('z', true);
     }
 
-    getInitialData(option: CustomSeriesOption, ecModel: GlobalModel): List {
-        return createListFromArray(this.getSource(), this);
+    getInitialData(option: CustomSeriesOption, ecModel: GlobalModel): SeriesData {
+        return createSeriesData(null, this);
     }
 
     getDataParams(dataIndex: number, dataType?: SeriesDataType, el?: Element): CallbackDataParams & {

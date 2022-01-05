@@ -54,5 +54,4 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         registers.PRIORITY.PROCESSOR.STATISTIC,
         dataSample('line')
     );
-
 }

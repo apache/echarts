@@ -17,10 +17,10 @@
 * under the License.
 */
 
-import { EChartsType } from '../../../../src/echarts';
+import { EChartsType } from '@/src/echarts';
 import { createChart, removeChart, getECModel } from '../../core/utHelper';
-import { EChartsOption } from '../../../../src/export/option';
-import { retrieveRawValue } from '../../../../src/data/helper/dataProvider';
+import { EChartsOption } from '@/src/export/option';
+import { retrieveRawValue } from '@/src/data/helper/dataProvider';
 
 
 describe('dataTransform', function () {

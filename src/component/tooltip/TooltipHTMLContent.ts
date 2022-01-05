@@ -18,7 +18,6 @@
 */
 
 import { isString, indexOf, each, bind, isArray, isDom } from 'zrender/src/core/util';
-import { toHex } from 'zrender/src/tool/color';
 import { normalizeEvent } from 'zrender/src/core/event';
 import { transformLocalCoord } from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
@@ -28,7 +27,7 @@ import type { ZRenderType } from 'zrender/src/zrender';
 import type { TooltipOption } from './TooltipModel';
 import Model from '../../model/Model';
 import type { ZRRawEvent } from 'zrender/src/core/types';
-import type { ColorString, ZRColor } from '../../util/types';
+import type { ZRColor } from '../../util/types';
 import type CanvasPainter from 'zrender/src/canvas/Painter';
 import type SVGPainter from 'zrender/src/svg/Painter';
 import {
@@ -189,16 +188,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: 
     enableTransition && transitionDuration && cssText.push(assembleTransition(transitionDuration, onlyFade));
 
     if (backgroundColor) {
-        if (env.canvasSupported) {
-            cssText.push('background-color:' + backgroundColor);
-        }
-        else {
-            // for ie
-            cssText.push(
-                'background-color:#' + toHex(backgroundColor)
-            );
-            cssText.push('filter:alpha(opacity=70)');
-        }
+        cssText.push('background-color:' + backgroundColor);
     }
 
     // Border style
@@ -517,21 +507,6 @@ class TooltipHTMLContent {
 
     dispose() {
         this.el.parentNode.removeChild(this.el);
-    }
-
-    getOuterSize() {
-        let width = this.el.clientWidth;
-        let height = this.el.clientHeight;
-
-        // Consider browser compatibility.
-        // IE8 does not support getComputedStyle.
-        const stl = getComputedStyle(this.el);
-        if (stl) {
-            width += parseInt(stl.borderLeftWidth, 10) + parseInt(stl.borderRightWidth, 10);
-            height += parseInt(stl.borderTopWidth, 10) + parseInt(stl.borderBottomWidth, 10);
-        }
-
-        return {width: width, height: height};
     }
 
 }

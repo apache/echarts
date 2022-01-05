@@ -18,29 +18,27 @@
 */
 
 
-import completeDimensions from '../../../../src/data/helper/completeDimensions';
-import { createSource } from '../../../../src/data/Source';
-import { SOURCE_FORMAT_ARRAY_ROWS, SERIES_LAYOUT_BY_COLUMN } from '../../../../src/util/types';
+import SeriesDimensionDefine from '@/src/data/SeriesDimensionDefine';
+import createDimensions from '@/src/data/helper/createDimensions';
+import { createSource } from '@/src/data/Source';
+import { SOURCE_FORMAT_ARRAY_ROWS, SERIES_LAYOUT_BY_COLUMN } from '@/src/util/types';
 
-type ParametersOfCompleteDimensions = Parameters<typeof completeDimensions>;
+type ParametersOfCreateDimensions = Parameters<typeof createDimensions>;
 
-describe('completeDimensions', function () {
+describe('createDimensions', function () {
 
-    function doCompleteDimensions(
-        sysDims: ParametersOfCompleteDimensions[0],
-        data: ParametersOfCompleteDimensions[1],
-        opt: ParametersOfCompleteDimensions[2]
-    ) {
-        const result = completeDimensions(sysDims, data, opt);
-        if (result) {
-            for (let i = 0; i < result.length; i++) {
-                const item = result[i];
-                if (item && item.hasOwnProperty('dimsDef') && (item as any).dimsDef == null) {
-                    delete (item as any).dimsDef;
-                }
+    function doCreateDimensions(
+        source: ParametersOfCreateDimensions[0],
+        opt: ParametersOfCreateDimensions[1]
+    ): SeriesDimensionDefine[] {
+        const result = createDimensions(source, opt);
+        for (let i = 0; i < result.dimensions.length; i++) {
+            const item = result.dimensions[i];
+            if (item && item.hasOwnProperty('dimsDef') && (item as any).dimsDef == null) {
+                delete (item as any).dimsDef;
             }
         }
-        return result;
+        return result.dimensions;
     }
 
     it('namesMoreThanDimCount', function () {
@@ -77,12 +75,12 @@ describe('completeDimensions', function () {
                 sourceHeader: 0,
                 dimensions: void 0
             },
-            SOURCE_FORMAT_ARRAY_ROWS,
-            null
+            SOURCE_FORMAT_ARRAY_ROWS
         );
 
         const opt = {
-            'dimsDef': [
+            'coordDimensions': sysDims,
+            'dimensionsDefine': [
                 {
                     'name': 'date',
                     'displayName': 'date'
@@ -128,7 +126,7 @@ describe('completeDimensions', function () {
                     'displayName': 'sma9'
                 }
             ],
-            'encodeDef': {
+            'encodeDefine': {
                 'x': 'date',
                 'y': [
                     'haOpen',
@@ -143,10 +141,10 @@ describe('completeDimensions', function () {
                     'close'
                 ]
             },
-            'dimCount': 5
+            'dimensionsCount': 5
         };
 
-        const result: unknown = [
+        const result: SeriesDimensionDefine[] = [
             {
                 'otherDims': {
                     'tooltip': false,
@@ -157,7 +155,7 @@ describe('completeDimensions', function () {
                 'coordDim': 'x',
                 'coordDimIndex': 0,
                 'type': 'ordinal',
-                'ordinalMeta': undefined
+                'storeDimIndex': 0
             },
             {
                 'otherDims': {
@@ -167,7 +165,8 @@ describe('completeDimensions', function () {
                 'name': 'open',
                 'coordDim': 'value',
                 'coordDimIndex': 0,
-                'isExtraCoord': true
+                'isExtraCoord': true,
+                'storeDimIndex': 1
             },
             {
                 'otherDims': {
@@ -177,7 +176,8 @@ describe('completeDimensions', function () {
                 'name': 'high',
                 'coordDim': 'value0',
                 'coordDimIndex': 0,
-                'isExtraCoord': true
+                'isExtraCoord': true,
+                'storeDimIndex': 2
             },
             {
                 'otherDims': {
@@ -187,7 +187,8 @@ describe('completeDimensions', function () {
                 'name': 'low',
                 'coordDim': 'value1',
                 'coordDimIndex': 0,
-                'isExtraCoord': true
+                'isExtraCoord': true,
+                'storeDimIndex': 3
             },
             {
                 'otherDims': {
@@ -197,7 +198,8 @@ describe('completeDimensions', function () {
                 'name': 'close',
                 'coordDim': 'value2',
                 'coordDimIndex': 0,
-                'isExtraCoord': true
+                'isExtraCoord': true,
+                'storeDimIndex': 4
             },
             {
                 'otherDims': {},
@@ -205,7 +207,8 @@ describe('completeDimensions', function () {
                 'name': 'volume',
                 'coordDim': 'value3',
                 'coordDimIndex': 0,
-                'isExtraCoord': true
+                'isExtraCoord': true,
+                'storeDimIndex': 5
             },
             {
                 'otherDims': {},
@@ -214,7 +217,7 @@ describe('completeDimensions', function () {
                 'coordDim': 'y',
                 'coordDimIndex': 0,
                 'type': 'float',
-                'ordinalMeta': undefined
+                'storeDimIndex': 6
             },
             {
                 'otherDims': {},
@@ -223,7 +226,7 @@ describe('completeDimensions', function () {
                 'coordDim': 'y',
                 'coordDimIndex': 3,
                 'type': 'float',
-                'ordinalMeta': undefined
+                'storeDimIndex': 7
             },
             {
                 'otherDims': {},
@@ -232,7 +235,7 @@ describe('completeDimensions', function () {
                 'coordDim': 'y',
                 'coordDimIndex': 2,
                 'type': 'float',
-                'ordinalMeta': undefined
+                'storeDimIndex': 8
             },
             {
                 'otherDims': {},
@@ -241,7 +244,7 @@ describe('completeDimensions', function () {
                 'coordDim': 'y',
                 'coordDimIndex': 1,
                 'type': 'float',
-                'ordinalMeta': undefined
+                'storeDimIndex': 9
             },
             {
                 'otherDims': {},
@@ -249,135 +252,153 @@ describe('completeDimensions', function () {
                 'name': 'sma9',
                 'coordDim': 'value4',
                 'coordDimIndex': 0,
-                'isExtraCoord': true
+                'isExtraCoord': true,
+                'storeDimIndex': 10
             }
         ];
 
-        expect(doCompleteDimensions(sysDims, source, opt)).toEqual(result);
+        expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new SeriesDimensionDefine(a)));
     });
 
 
     it('differentData', function () {
         function doTest(
-            sysDims: ParametersOfCompleteDimensions[0],
-            data: ParametersOfCompleteDimensions[1],
-            opt: ParametersOfCompleteDimensions[2],
-            result: unknown
+            source: ParametersOfCreateDimensions[0],
+            opt: ParametersOfCreateDimensions[1],
+            result: SeriesDimensionDefine[]
         ) {
-            expect(doCompleteDimensions(sysDims, data, opt)).toEqual(result);
+            expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new SeriesDimensionDefine(a)));
         }
 
         // test dimcount
-        doTest(['x', 'y'], [], null, [
+        doTest([], { coordDimensions: ['x', 'y']}, [
             {
                 'otherDims': {},
                 'coordDim': 'x',
                 'coordDimIndex': 0,
-                'name': 'x'
+                'name': 'x',
+                'storeDimIndex': 0
             },
             {
                 'otherDims': {},
                 'coordDim': 'y',
                 'coordDimIndex': 0,
-                'name': 'y'
+                'name': 'y',
+                'storeDimIndex': 1
             }
         ]);
 
-        doTest(['x', 'y'], [12], null, [
+        doTest([12], { coordDimensions: ['x', 'y']}, [
             {
                 'otherDims': {},
                 'coordDim': 'x',
                 'coordDimIndex': 0,
-                'name': 'x'
+                'name': 'x',
+                'storeDimIndex': 0
             },
             {
                 'otherDims': {},
                 'coordDim': 'y',
                 'coordDimIndex': 0,
-                'name': 'y'
+                'name': 'y',
+                'storeDimIndex': 1
             }
         ]);
 
-        doTest(['x', 'y'], [12, 4], null, [
+        doTest([12, 4], { coordDimensions: ['x', 'y']}, [
             {
                 'otherDims': {},
                 'coordDim': 'x',
                 'coordDimIndex': 0,
-                'name': 'x'
+                'name': 'x',
+                'storeDimIndex': 0
             },
             {
                 'otherDims': {},
                 'coordDim': 'y',
                 'coordDimIndex': 0,
-                'name': 'y'
+                'name': 'y',
+                'storeDimIndex': 1
             }
         ]);
 
-        doTest(['x'], [[32, 55]], null, [
+        doTest([[32, 55]], { coordDimensions: ['x']}, [
             {
                 'otherDims': {},
                 'coordDim': 'x',
                 'coordDimIndex': 0,
-                'name': 'x'
+                'name': 'x',
+                'storeDimIndex': 0
             }
         ]);
 
-        doTest(['x', 'y', 'z'], [[32, 55]], null, [
+        doTest([[32, 55]], { coordDimensions: ['x', 'y', 'z']}, [
             {
                 'otherDims': {},
                 'coordDim': 'x',
                 'coordDimIndex': 0,
-                'name': 'x'
+                'name': 'x',
+                'storeDimIndex': 0
             },
             {
                 'otherDims': {},
                 'coordDim': 'y',
                 'coordDimIndex': 0,
-                'name': 'y'
+                'name': 'y',
+                'storeDimIndex': 1
             },
             {
                 'otherDims': {},
                 'coordDim': 'z',
                 'coordDimIndex': 0,
-                'name': 'z'
+                'name': 'z',
+                'storeDimIndex': 2
             }
         ]);
 
-        doTest(['x'], [[32, 55], [99, 11]], null, [
+        doTest([[32, 55], [99, 11]], { coordDimensions: ['x']}, [
             {
                 'otherDims': {},
                 'coordDim': 'x',
                 'coordDimIndex': 0,
-                'name': 'x'
+                'name': 'x',
+                'storeDimIndex': 0
             }
         ]);
 
-        doTest(['x', 'y'], [[32, 55], [99, 11]], {dimCount: 4}, [
+        doTest([[32, 55], [99, 11]], {
+            dimensionsCount: 4,
+            coordDimensions: ['x', 'y']
+        }, [
             {
                 'otherDims': {},
                 'coordDim': 'x',
                 'coordDimIndex': 0,
-                'name': 'x'
+                'name': 'x',
+                'storeDimIndex': 0
             },
             {
                 'otherDims': {},
                 'coordDim': 'y',
                 'coordDimIndex': 0,
-                'name': 'y'
+                'name': 'y',
+                'storeDimIndex': 1
             },
             {
                 'otherDims': {},
                 'coordDim': 'value',
                 'coordDimIndex': 0,
                 'isExtraCoord': true,
-                'name': 'value'
+                'name': 'value',
+                'storeDimIndex': 2
             },
             {
                 'otherDims': {},
                 'coordDim': 'value0',
                 'coordDimIndex': 0,
                 'isExtraCoord': true,
-                'name': 'value0'
+                'name': 'value0',
+                'storeDimIndex': 3
             }
         ]);
     });
@@ -391,12 +412,11 @@ describe('completeDimensions', function () {
 
     it('differentSysDims', function () {
         function doTest(
-            sysDims: ParametersOfCompleteDimensions[0],
-            data: ParametersOfCompleteDimensions[1],
-            opt: ParametersOfCompleteDimensions[2],
-            result: unknown
+            source: ParametersOfCreateDimensions[0],
+            opt: ParametersOfCreateDimensions[1],
+            result: SeriesDimensionDefine[]
         ) {
-            expect(doCompleteDimensions(sysDims, data, opt)).toEqual(result);
+            expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new SeriesDimensionDefine(a)));
         }
 
         const data = [
@@ -405,41 +425,43 @@ describe('completeDimensions', function () {
         ];
 
         doTest(
-            ['x', 'y'], data, null,
+            data, { coordDimensions: ['x', 'y'] },
             [
                 {
                     'otherDims': {},
                     'coordDim': 'x',
                     'coordDimIndex': 0,
                     'name': 'x',
-                    'type': 'ordinal'
+                    'type': 'ordinal',
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'y',
                     'coordDimIndex': 0,
-                    'name': 'y'
+                    'name': 'y',
+                    'storeDimIndex': 1
                 }
             ]
         );
 
         doTest(
-            ['value'], data, null,
+            data, { coordDimensions: ['value'] },
             [
                 {
                     'otherDims': {},
                     'coordDim': 'value',
                     'coordDimIndex': 0,
                     'name': 'value',
-                    'type': 'ordinal'
+                    'type': 'ordinal',
+                    'storeDimIndex': 0
                 }
             ]
         );
 
         doTest(
-            [{name: 'time', type: 'time' as const}, 'value'],
             data,
-            null,
+            { coordDimensions: [{name: 'time', type: 'time' as const}, 'value'] },
             [
                 {
                     'otherDims': {},
@@ -447,28 +469,32 @@ describe('completeDimensions', function () {
                     'type': 'time',
                     'coordDimIndex': 0,
                     'ordinalMeta': undefined,
-                    'coordDim': 'time'
+                    'coordDim': 'time',
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'value',
                     'coordDimIndex': 0,
-                    'name': 'value'
+                    'name': 'value',
+                    'storeDimIndex': 1
                 }
             ]
         );
 
         doTest(
-            [{
-                name: 'y',
-                otherDims: {
-                    tooltip: false
-                },
-                dimsDef: ['base']
-            }, {
-                name: 'x',
-                dimsDef: ['open', 'close']
-            }], data, {},
+            data, {
+                coordDimensions: [{
+                    name: 'y',
+                    otherDims: {
+                        tooltip: false
+                    },
+                    dimsDef: ['base']
+                }, {
+                    name: 'x',
+                    dimsDef: ['open', 'close']
+                }]
+            },
             [
                 {
                     'otherDims': {
@@ -480,7 +506,8 @@ describe('completeDimensions', function () {
                     'coordDim': 'y',
                     'type': 'ordinal',
                     'displayName': 'base',
-                    'ordinalMeta': undefined
+                    'ordinalMeta': undefined,
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
@@ -489,24 +516,26 @@ describe('completeDimensions', function () {
                     'defaultTooltip': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'x',
-                    'displayName': 'open'
+                    'displayName': 'open',
+                    'storeDimIndex': 1
                 }
             ]
         );
 
         doTest(
-            [{
-                name: 'y',
-                otherDims: {
-                    tooltip: false
-                },
-                dimsDef: ['base']
-            }, {
-                name: 'x',
-                dimsDef: ['open', 'close']
-            }], data, {
-                dimsDef: ['基础', '打开', '关闭'],
-                encodeDef: {
+            data, {
+                dimensionsDefine: ['基础', '打开', '关闭'],
+                coordDimensions: [{
+                    name: 'y',
+                    otherDims: {
+                        tooltip: false
+                    },
+                    dimsDef: ['base']
+                }, {
+                    name: 'x',
+                    dimsDef: ['open', 'close']
+                }],
+                encodeDefine: {
                     tooltip: [1, 2, 0]
                 }
             },
@@ -520,7 +549,8 @@ describe('completeDimensions', function () {
                     'ordinalMeta': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'y',
-                    'type': 'ordinal'
+                    'type': 'ordinal',
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {
@@ -530,7 +560,8 @@ describe('completeDimensions', function () {
                     'displayName': '打开',
                     'coordDimIndex': 0,
                     'ordinalMeta': undefined,
-                    'coordDim': 'x'
+                    'coordDim': 'x',
+                    'storeDimIndex': 1
                 },
                 {
                     'otherDims': {
@@ -540,24 +571,26 @@ describe('completeDimensions', function () {
                     'displayName': '关闭',
                     'ordinalMeta': undefined,
                     'coordDimIndex': 1,
-                    'coordDim': 'x'
+                    'coordDim': 'x',
+                    'storeDimIndex': 2
                 }
             ]
         );
 
         doTest(
-            [{
-                name: 'y',
-                otherDims: {
-                    tooltip: false
-                },
-                dimsDef: ['base']
-            }, {
-                name: 'x',
-                dimsDef: ['open', 'close']
-            }], data, {
-                dimsDef: ['基础', null, '关闭'],
-                encodeDef: {
+            data, {
+                coordDimensions: [{
+                    name: 'y',
+                    otherDims: {
+                        tooltip: false
+                    },
+                    dimsDef: ['base']
+                }, {
+                    name: 'x',
+                    dimsDef: ['open', 'close']
+                }],
+                dimensionsDefine: ['基础', null, '关闭'],
+                encodeDefine: {
                     x: [0, 4]
                 }
             },
@@ -569,7 +602,8 @@ describe('completeDimensions', function () {
                     'coordDimIndex': 0,
                     'coordDim': 'x',
                     'ordinalMeta': undefined,
-                    'type': 'ordinal'
+                    'type': 'ordinal',
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {
@@ -580,7 +614,8 @@ describe('completeDimensions', function () {
                     'ordinalMeta': undefined,
                     'defaultTooltip': undefined,
                     'coordDimIndex': 0,
-                    'coordDim': 'y'
+                    'coordDim': 'y',
+                    'storeDimIndex': 1
                 },
                 {
                     'otherDims': {},
@@ -588,7 +623,8 @@ describe('completeDimensions', function () {
                     'displayName': '关闭',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'coordDim': 'value'
+                    'coordDim': 'value',
+                    'storeDimIndex': 2
                 }
             ]
         );
@@ -605,18 +641,20 @@ describe('completeDimensions', function () {
 
     it('dimsDef', function () {
         function doTest(
-            sysDims: ParametersOfCompleteDimensions[0],
-            data: ParametersOfCompleteDimensions[1],
-            opt: ParametersOfCompleteDimensions[2],
-            result: unknown
+            source: ParametersOfCreateDimensions[0],
+            opt: ParametersOfCreateDimensions[1],
+            result: SeriesDimensionDefine[]
         ) {
-            expect(doCompleteDimensions(sysDims, data, opt)).toEqual(result);
+            expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new SeriesDimensionDefine(a)));
         }
 
         const data = [['iw', 332, 4434, 323, 59], ['vrr', 44, 11, 144, 55]];
         doTest(
-            ['x', 'y', 'value'], data,
-            {dimsDef: ['挨克思', null, '歪溜']},
+            data,
+            {
+                dimensionsDefine: ['挨克思', null, '歪溜'],
+                coordDimensions: ['x', 'y', 'value']
+            },
             [
                 {
                     'otherDims': {},
@@ -624,27 +662,33 @@ describe('completeDimensions', function () {
                     'name': '挨克思',
                     'type': 'ordinal',
                     'coordDim': 'x',
-                    'coordDimIndex': 0
+                    'coordDimIndex': 0,
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'y',
                     'coordDimIndex': 0,
-                    'name': 'y'
+                    'name': 'y',
+                    'storeDimIndex': 1
                 },
                 {
                     'otherDims': {},
                     'displayName': '歪溜',
                     'name': '歪溜',
                     'coordDim': 'value',
-                    'coordDimIndex': 0
+                    'coordDimIndex': 0,
+                    'storeDimIndex': 2
                 }
             ]
         );
 
         doTest(
-            ['x', 'y', 'value'], data,
-            {dimsDef: ['挨克思', null, {type: 'ordinal' as const}]}, // no name but only type
+            data,
+            {
+                dimensionsDefine: ['挨克思', null, {type: 'ordinal' as const}],
+                coordDimensions: ['x', 'y', 'value']
+            }, // no name but only type
             [
                 {
                     'otherDims': {},
@@ -652,27 +696,33 @@ describe('completeDimensions', function () {
                     'name': '挨克思',
                     'type': 'ordinal',
                     'coordDim': 'x',
-                    'coordDimIndex': 0
+                    'coordDimIndex': 0,
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'y',
                     'coordDimIndex': 0,
-                    'name': 'y'
+                    'name': 'y',
+                    'storeDimIndex': 1
                 },
                 {
                     'otherDims': {},
                     'name': 'value',
                     'coordDim': 'value',
                     'type': 'ordinal',
-                    'coordDimIndex': 0
+                    'coordDimIndex': 0,
+                    'storeDimIndex': 2
                 }
             ]
         );
 
         doTest(
-            [{name: 'time', type: 'time' as const}, 'value'], data,
-            {dimsDef: [{name: '泰亩', type: 'ordinal'}, {name: '歪溜', type: 'float'}]},
+            data,
+            {
+                dimensionsDefine: [{name: '泰亩', type: 'ordinal'}, {name: '歪溜', type: 'float'}],
+                coordDimensions: [{name: 'time', type: 'time' as const}, 'value']
+            },
             [
                 {
                     'otherDims': {},
@@ -681,7 +731,8 @@ describe('completeDimensions', function () {
                     'type': 'ordinal',
                     'ordinalMeta': undefined,
                     'coordDimIndex': 0,
-                    'coordDim': 'time'
+                    'coordDim': 'time',
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
@@ -689,7 +740,38 @@ describe('completeDimensions', function () {
                     'name': '歪溜',
                     'type': 'float',
                     'coordDim': 'value',
-                    'coordDimIndex': 0
+                    'coordDimIndex': 0,
+                    'storeDimIndex': 1
+                }
+            ]
+        );
+
+        // Duplicate name
+        doTest(
+            data,
+            {
+                dimensionsDefine: [{name: '泰亩', type: 'ordinal'}, {name: '泰亩', type: 'float'}],
+                coordDimensions: [{name: 'time', type: 'time' as const}, 'value']
+            },
+            [
+                {
+                    'otherDims': {},
+                    'displayName': '泰亩',
+                    'name': '泰亩',
+                    'type': 'ordinal',
+                    'ordinalMeta': undefined,
+                    'coordDimIndex': 0,
+                    'coordDim': 'time',
+                    'storeDimIndex': 0
+                },
+                {
+                    'otherDims': {},
+                    'displayName': '泰亩',
+                    'name': '泰亩0',
+                    'type': 'float',
+                    'coordDim': 'value',
+                    'coordDimIndex': 0,
+                    'storeDimIndex': 1
                 }
             ]
         );
@@ -705,20 +787,19 @@ describe('completeDimensions', function () {
 
     it('encodeDef', function () {
         function doTest(
-            sysDims: ParametersOfCompleteDimensions[0],
-            data: ParametersOfCompleteDimensions[1],
-            opt: ParametersOfCompleteDimensions[2],
-            result: unknown
+            source: ParametersOfCreateDimensions[0],
+            opt: ParametersOfCreateDimensions[1],
+            result: SeriesDimensionDefine[]
         ) {
-            expect(doCompleteDimensions(sysDims, data, opt)).toEqual(result);
+            expect(doCreateDimensions(source, opt)).toEqual(result.map(a => new SeriesDimensionDefine(a)));
         }
 
         const data = [['iw', 332, 4434, 323, 'd8', 59], ['vrr', 44, 11, 144, '-', 55]];
 
         doTest(
-            null, data,
+            data,
             {
-                encodeDef: {
+                encodeDefine: {
                     x: 2,
                     y: [1, 4],
                     tooltip: 2,
@@ -732,16 +813,17 @@ describe('completeDimensions', function () {
                     'coordDimIndex': 0,
                     'name': 'value',
                     'isExtraCoord': true,
-                    'type': 'ordinal'
+                    'type': 'ordinal',
+                    'storeDimIndex': 0
                 }
             ]
         );
 
         doTest(
-            null, data,
+            data,
             {
-                dimsDef: ['挨克思', null, '歪溜'],
-                encodeDef: {
+                dimensionsDefine: ['挨克思', null, '歪溜'],
+                encodeDefine: {
                     x: 2,
                     y: [1, 4],
                     tooltip: 2,
@@ -756,13 +838,15 @@ describe('completeDimensions', function () {
                     'type': 'ordinal',
                     'coordDim': 'value',
                     'coordDimIndex': 0,
-                    'isExtraCoord': true
+                    'isExtraCoord': true,
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'y',
                     'coordDimIndex': 0,
-                    'name': 'y'
+                    'name': 'y',
+                    'storeDimIndex': 1
                 },
                 {
                     'otherDims': {
@@ -771,16 +855,18 @@ describe('completeDimensions', function () {
                     'displayName': '歪溜',
                     'name': '歪溜',
                     'coordDim': 'x',
-                    'coordDimIndex': 0
+                    'coordDimIndex': 0,
+                    'storeDimIndex': 2
                 }
             ]
         );
 
         doTest(
-            ['x', {name: 'y', type: 'time' as const}, 'z'], data,
+            data,
             {
-                dimsDef: ['挨克思', null, '歪溜'],
-                encodeDef: {
+                dimensionsDefine: ['挨克思', null, '歪溜'],
+                coordDimensions: ['x', {name: 'y', type: 'time' as const}, 'z'],
+                encodeDefine: {
                     x: 2,
                     y: [1, 4],
                     tooltip: 2,
@@ -794,7 +880,8 @@ describe('completeDimensions', function () {
                     'name': '挨克思',
                     'type': 'ordinal',
                     'coordDim': 'z',
-                    'coordDimIndex': 0
+                    'coordDimIndex': 0,
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
@@ -802,7 +889,8 @@ describe('completeDimensions', function () {
                     'coordDimIndex': 0,
                     'name': 'y',
                     'type': 'time',
-                    'ordinalMeta': undefined
+                    'ordinalMeta': undefined,
+                    'storeDimIndex': 1
                 },
                 {
                     'otherDims': {
@@ -811,17 +899,19 @@ describe('completeDimensions', function () {
                     'displayName': '歪溜',
                     'name': '歪溜',
                     'coordDim': 'x',
-                    'coordDimIndex': 0
+                    'coordDimIndex': 0,
+                    'storeDimIndex': 2
                 }
             ]
         );
 
         doTest(
-            [{name: 'time', type: 'time' as const}, 'value'], data,
+            data,
             {
                 // dimsDef type 'ordinal' has higher priority then sysDims type 'time'.
-                dimsDef: [{name: '泰亩', type: 'ordinal'}, {name: '歪溜', type: 'float'}],
-                encodeDef: {
+                dimensionsDefine: [{name: '泰亩', type: 'ordinal'}, {name: '歪溜', type: 'float'}],
+                coordDimensions: [{name: 'time', type: 'time' as const}, 'value'],
+                encodeDefine: {
                     tooltip: 2
                 }
             },
@@ -833,7 +923,8 @@ describe('completeDimensions', function () {
                     'type': 'ordinal',
                     'ordinalMeta': undefined,
                     'coordDimIndex': 0,
-                    'coordDim': 'time'
+                    'coordDim': 'time',
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
@@ -841,17 +932,19 @@ describe('completeDimensions', function () {
                     'name': '歪溜',
                     'type': 'float',
                     'coordDim': 'value',
-                    'coordDimIndex': 0
+                    'coordDimIndex': 0,
+                    'storeDimIndex': 1
                 }
             ]
         );
 
         doTest(
-            [{name: 'time', type: 'time' as const}, 'value'], data,
+            data,
             {
                 // dimsDef type 'ordinal' has higher priority then sysDims type 'time'.
-                dimsDef: [{name: '泰亩', type: 'ordinal'}, {name: '歪溜', type: 'float'}],
-                encodeDef: {
+                dimensionsDefine: [{name: '泰亩', type: 'ordinal'}, {name: '歪溜', type: 'float'}],
+                coordDimensions: [{name: 'time', type: 'time' as const}, 'value'],
+                encodeDefine: {
                     tooltip: 2
                 }
             },
@@ -863,7 +956,8 @@ describe('completeDimensions', function () {
                     'type': 'ordinal',
                     'ordinalMeta': undefined,
                     'coordDimIndex': 0,
-                    'coordDim': 'time'
+                    'coordDim': 'time',
+                    'storeDimIndex': 0
                 },
                 {
                     'otherDims': {},
@@ -871,7 +965,8 @@ describe('completeDimensions', function () {
                     'name': '歪溜',
                     'type': 'float',
                     'coordDim': 'value',
-                    'coordDimIndex': 0
+                    'coordDimIndex': 0,
+                    'storeDimIndex': 1
                 }
             ]
         );

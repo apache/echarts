@@ -27,11 +27,11 @@ import GaugeSeriesModel, { GaugeDataItemOption } from './GaugeSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { ColorString, ECElement } from '../../util/types';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
-import {extend} from 'zrender/src/core/util';
+import {extend, isFunction, isString} from 'zrender/src/core/util';
 import {setCommonECData} from '../../util/innerStore';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
@@ -61,10 +61,10 @@ function parsePosition(seriesModel: GaugeSeriesModel, api: ExtensionAPI): PosInf
 function formatLabel(value: number, labelFormatter: string | ((value: number) => string)): string {
     let label = value == null ? '' : (value + '');
     if (labelFormatter) {
-        if (typeof labelFormatter === 'string') {
+        if (isString(labelFormatter)) {
             label = labelFormatter.replace('{value}', label);
         }
-        else if (typeof labelFormatter === 'function') {
+        else if (isFunction(labelFormatter)) {
             label = labelFormatter(value);
         }
     }
@@ -78,7 +78,7 @@ class GaugeView extends ChartView {
     static type = 'gauge' as const;
     type = GaugeView.type;
 
-    private _data: List;
+    private _data: SeriesData;
     private _progressEls: graphic.Path[];
 
     private _titleEls: graphic.Text[];
@@ -421,11 +421,15 @@ class GaugeView extends ChartView {
         if (showProgress || showPointer) {
             data.diff(oldData)
                 .add(function (idx) {
+                    const val = data.get(valueDim, idx) as number;
                     if (showPointer) {
                         const pointer = createPointer(idx, startAngle);
+                        // TODO hide pointer on NaN value?
                         graphic.initProps(pointer, {
-                            rotation: -(linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, true)
-                                + Math.PI / 2)
+                            rotation: -(
+                                (isNaN(+val) ? angleExtent[0] : linearMap(val, valueExtent, angleExtent, true))
+                                + Math.PI / 2
+                            )
                         }, seriesModel);
                         group.add(pointer);
                         data.setItemGraphicEl(idx, pointer);
@@ -436,7 +440,7 @@ class GaugeView extends ChartView {
                         const isClip = progressModel.get('clip');
                         graphic.initProps(progress, {
                             shape: {
-                                endAngle: linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, isClip)
+                                endAngle: linearMap(val, valueExtent, angleExtent, isClip)
                             }
                         }, seriesModel);
                         group.add(progress);
@@ -447,6 +451,7 @@ class GaugeView extends ChartView {
                     }
                 })
                 .update(function (newIdx, oldIdx) {
+                    const val = data.get(valueDim, newIdx) as number;
                     if (showPointer) {
                         const previousPointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
                         const previousRotate = previousPointer ? previousPointer.rotation : startAngle;
@@ -454,7 +459,7 @@ class GaugeView extends ChartView {
                         pointer.rotation = previousRotate;
                         graphic.updateProps(pointer, {
                             rotation: -(
-                                linearMap(data.get(valueDim, newIdx) as number, valueExtent, angleExtent, true)
+                                (isNaN(+val) ? angleExtent[0] : linearMap(val, valueExtent, angleExtent, true))
                                     + Math.PI / 2
                             )
                         }, seriesModel);
@@ -469,9 +474,7 @@ class GaugeView extends ChartView {
                         const isClip = progressModel.get('clip');
                         graphic.updateProps(progress, {
                             shape: {
-                                endAngle: linearMap(
-                                    data.get(valueDim, newIdx) as number, valueExtent, angleExtent, isClip
-                                )
+                                endAngle: linearMap(val, valueExtent, angleExtent, isClip)
                             }
                         }, seriesModel);
                         group.add(progress);

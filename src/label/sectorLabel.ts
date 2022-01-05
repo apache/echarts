@@ -1,7 +1,27 @@
+
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import {calculateTextPosition, TextPositionCalculationResult} from 'zrender/src/contain/text';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import {BuiltinTextPosition, TextAlign, TextVerticalAlign} from 'zrender/src/core/types';
-import {isArray} from 'zrender/src/core/util';
+import {isArray, isNumber} from 'zrender/src/core/util';
 import {ElementCalculateTextPosition, ElementTextConfig} from 'zrender/src/Element';
 import { Sector } from '../util/graphic';
 
@@ -24,8 +44,18 @@ export type SectorLike = {
 };
 
 export function createSectorCalculateTextPosition<T extends (string | (number | string)[])>(
-    positionMapping: (seriesLabelPosition: T) => SectorTextPosition
+    positionMapping: (seriesLabelPosition: T) => SectorTextPosition,
+    opts?: {
+        /**
+         * If has round cap on two ends. If so, label should have an extra offset
+         */
+        isRoundCap?: boolean
+    }
 ): ElementCalculateTextPosition {
+
+    opts = opts || {};
+    const isRoundCap = opts.isRoundCap;
+
     return function (
         this: Sector,
         out: TextPositionCalculationResult,
@@ -57,82 +87,86 @@ export function createSectorCalculateTextPosition<T extends (string | (number | 
         const startAngle = sector.startAngle;
         const endAngle = sector.endAngle;
         const middleAngle = (startAngle + endAngle) / 2;
+        const extraDist = isRoundCap ? Math.abs(r - r0) / 2 : 0;
+
+        const mathCos = Math.cos;
+        const mathSin = Math.sin;
 
         // base position: top-left
-        let x = cx + r * Math.cos(startAngle);
-        let y = cy + r * Math.sin(startAngle);
+        let x = cx + r * mathCos(startAngle);
+        let y = cy + r * mathSin(startAngle);
 
         let textAlign: TextAlign = 'left';
         let textVerticalAlign: TextVerticalAlign = 'top';
 
         switch (mappedSectorPosition) {
             case 'startArc':
-                x = cx + (r0 - distance) * Math.cos(middleAngle);
-                y = cy + (r0 - distance) * Math.sin(middleAngle);
+                x = cx + (r0 - distance) * mathCos(middleAngle);
+                y = cy + (r0 - distance) * mathSin(middleAngle);
                 textAlign = 'center';
                 textVerticalAlign = 'top';
                 break;
 
             case 'insideStartArc':
-                x = cx + (r0 + distance) * Math.cos(middleAngle);
-                y = cy + (r0 + distance) * Math.sin(middleAngle);
+                x = cx + (r0 + distance) * mathCos(middleAngle);
+                y = cy + (r0 + distance) * mathSin(middleAngle);
                 textAlign = 'center';
                 textVerticalAlign = 'bottom';
                 break;
 
             case 'startAngle':
-                x = cx + middleR * Math.cos(startAngle)
-                    + adjustAngleDistanceX(startAngle, distance, false);
-                y = cy + middleR * Math.sin(startAngle)
-                    + adjustAngleDistanceY(startAngle, distance, false);
+                x = cx + middleR * mathCos(startAngle)
+                    + adjustAngleDistanceX(startAngle, distance + extraDist, false);
+                y = cy + middleR * mathSin(startAngle)
+                    + adjustAngleDistanceY(startAngle, distance + extraDist, false);
                 textAlign = 'right';
                 textVerticalAlign = 'middle';
                 break;
 
             case 'insideStartAngle':
-                x = cx + middleR * Math.cos(startAngle)
-                    + adjustAngleDistanceX(startAngle, -distance, false);
-                y = cy + middleR * Math.sin(startAngle)
-                    + adjustAngleDistanceY(startAngle, -distance, false);
+                x = cx + middleR * mathCos(startAngle)
+                    + adjustAngleDistanceX(startAngle, -distance + extraDist, false);
+                y = cy + middleR * mathSin(startAngle)
+                    + adjustAngleDistanceY(startAngle, -distance + extraDist, false);
                 textAlign = 'left';
                 textVerticalAlign = 'middle';
                 break;
 
             case 'middle':
-                x = cx + middleR * Math.cos(middleAngle);
-                y = cy + middleR * Math.sin(middleAngle);
+                x = cx + middleR * mathCos(middleAngle);
+                y = cy + middleR * mathSin(middleAngle);
                 textAlign = 'center';
                 textVerticalAlign = 'middle';
                 break;
 
             case 'endArc':
-                x = cx + (r + distance) * Math.cos(middleAngle);
-                y = cy + (r + distance) * Math.sin(middleAngle);
+                x = cx + (r + distance) * mathCos(middleAngle);
+                y = cy + (r + distance) * mathSin(middleAngle);
                 textAlign = 'center';
                 textVerticalAlign = 'bottom';
                 break;
 
             case 'insideEndArc':
-                x = cx + (r - distance) * Math.cos(middleAngle);
-                y = cy + (r - distance) * Math.sin(middleAngle);
+                x = cx + (r - distance) * mathCos(middleAngle);
+                y = cy + (r - distance) * mathSin(middleAngle);
                 textAlign = 'center';
                 textVerticalAlign = 'top';
                 break;
 
             case 'endAngle':
-                x = cx + middleR * Math.cos(endAngle)
-                    + adjustAngleDistanceX(endAngle, distance, true);
-                y = cy + middleR * Math.sin(endAngle)
-                    + adjustAngleDistanceY(endAngle, distance, true);
+                x = cx + middleR * mathCos(endAngle)
+                    + adjustAngleDistanceX(endAngle, distance + extraDist, true);
+                y = cy + middleR * mathSin(endAngle)
+                    + adjustAngleDistanceY(endAngle, distance + extraDist, true);
                 textAlign = 'left';
                 textVerticalAlign = 'middle';
                 break;
 
             case 'insideEndAngle':
-                x = cx + middleR * Math.cos(endAngle)
-                    + adjustAngleDistanceX(endAngle, -distance, true);
-                y = cy + middleR * Math.sin(endAngle)
-                    + adjustAngleDistanceY(endAngle, -distance, true);
+                x = cx + middleR * mathCos(endAngle)
+                    + adjustAngleDistanceX(endAngle, -distance + extraDist, true);
+                y = cy + middleR * mathSin(endAngle)
+                    + adjustAngleDistanceY(endAngle, -distance + extraDist, true);
                 textAlign = 'right';
                 textVerticalAlign = 'middle';
                 break;
@@ -161,7 +195,7 @@ export function setSectorTextRotation<T extends (string | (number | string)[])>(
     positionMapping: (seriesLabelPosition: T) => SectorTextPosition,
     rotateType: number | 'auto'
 ) {
-    if (typeof rotateType === 'number') {
+    if (isNumber(rotateType)) {
         // user-set rotation
         sector.setTextConfig({
             rotation: rotateType

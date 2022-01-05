@@ -19,23 +19,24 @@
 
 import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
-import {extend, defaults, each, map} from 'zrender/src/core/util';
+import {extend, each, map} from 'zrender/src/core/util';
 import {BuiltinTextPosition} from 'zrender/src/core/types';
 import {
     Rect,
     Sector,
     updateProps,
     initProps,
-    removeElementWithFadeOut
+    removeElementWithFadeOut,
+    traverseElements
 } from '../../util/graphic';
 import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
-import { setLabelStyle, getLabelStatesModels, setLabelValueAnimation } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels, setLabelValueAnimation, labelInner } from '../../label/labelStyle';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import Sausage from '../../util/shape/sausage';
 import ChartView from '../../view/Chart';
-import List, {DefaultDataVisual} from '../../data/List';
+import SeriesData, {DefaultDataVisual} from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import {
@@ -45,7 +46,8 @@ import {
     OrdinalSortInfo,
     Payload,
     OrdinalNumber,
-    ParsedValue
+    ParsedValue,
+    ECElement
 } from '../../util/types';
 import BarSeriesModel, {BarSeriesOption, BarDataItemOption, PolarBarLabelPosition} from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -63,6 +65,7 @@ import {EventCallback} from 'zrender/src/core/Eventful';
 import { warn } from '../../util/log';
 import {createSectorCalculateTextPosition, SectorTextPosition, setSectorTextRotation} from '../../label/sectorLabel';
 import { saveOldStyle } from '../../animation/basicTrasition';
+import Element from 'zrender/src/Element';
 
 const _eventPos = [0, 0];
 
@@ -88,7 +91,7 @@ type RealtimeSortConfig = {
 // Return a number, based on which the ordinal sorted.
 type OrderMapping = (dataIndex: number) => number;
 
-function getClipArea(coord: CoordSysOfBar, data: List) {
+function getClipArea(coord: CoordSysOfBar, data: SeriesData) {
     const coordSysClipArea = coord.getArea && coord.getArea();
     if (isCoordinateSystemType<Cartesian2D>(coord, 'cartesian2d')) {
         const baseAxis = coord.getBaseAxis();
@@ -115,7 +118,7 @@ class BarView extends ChartView {
     static type = 'bar' as const;
     type = BarView.type;
 
-    private _data: List;
+    private _data: SeriesData;
 
     private _isLargeDraw: boolean;
 
@@ -127,6 +130,8 @@ class BarView extends ChartView {
     private _backgroundEls: (Rect | Sector)[];
 
     private _model: BarSeriesModel;
+
+    private _progressiveEls: Element[];
 
     constructor() {
         super();
@@ -145,6 +150,9 @@ class BarView extends ChartView {
         if (coordinateSystemType === 'cartesian2d'
             || coordinateSystemType === 'polar'
         ) {
+            // Clear previously rendered progressive elements.
+            this._progressiveEls = null;
+
             this._isLargeDraw
                 ? this._renderLarge(seriesModel, ecModel, api)
                 : this._renderNormal(seriesModel, ecModel, api, payload);
@@ -163,8 +171,14 @@ class BarView extends ChartView {
     }
 
     incrementalRender(params: StageHandlerProgressParams, seriesModel: BarSeriesModel): void {
+        // Reset
+        this._progressiveEls = [];
         // Do not support progressive in normal mode.
         this._incrementalRenderLarge(params, seriesModel);
+    }
+
+    eachRendered(cb: (el: Element) => boolean | void) {
+        traverseElements(this._progressiveEls || this.group, cb);
     }
 
     private _updateDrawMode(seriesModel: BarSeriesModel): void {
@@ -266,6 +280,17 @@ class BarView extends ChartView {
                     false,
                     roundCap
                 );
+                if (realtimeSortCfg) {
+                    /**
+                     * Force label animation because even if the element is
+                     * ignored because it's clipped, it may not be clipped after
+                     * changing order. Then, if not using forceLabelAnimation,
+                     * the label animation was never started, in which case,
+                     * the label will be the final value and doesn't have label
+                     * animation.
+                     */
+                    (el as ECElement).forceLabelAnimation = true;
+                }
 
                 updateStyle(
                     el, data, dataIndex, itemModel, layout,
@@ -349,6 +374,25 @@ class BarView extends ChartView {
                     saveOldStyle(el);
                 }
 
+                if (realtimeSortCfg) {
+                    (el as ECElement).forceLabelAnimation = true;
+                }
+
+                if (isChangeOrder) {
+                    const textEl = el.getTextContent();
+                    if (textEl) {
+                        const labelInnerStore = labelInner(textEl);
+                        if (labelInnerStore.prevValue != null) {
+                            /**
+                             * Set preValue to be value so that no new label
+                             * should be started, otherwise, it will take a full
+                             * `animationDurationUpdate` time to finish the
+                             * animation, which is not expected.
+                             */
+                            labelInnerStore.prevValue = labelInnerStore.value;
+                        }
+                    }
+                }
                 // Not change anything if only order changed.
                 // Especially not change label.
                 if (!isChangeOrder) {
@@ -409,7 +453,7 @@ class BarView extends ChartView {
 
     private _incrementalRenderLarge(params: StageHandlerProgressParams, seriesModel: BarSeriesModel): void {
         this._removeBackground();
-        createLarge(seriesModel, this.group, true);
+        createLarge(seriesModel, this.group, this._progressiveEls, true);
     }
 
     private _updateLargeClip(seriesModel: BarSeriesModel): void {
@@ -467,7 +511,7 @@ class BarView extends ChartView {
     }
 
     private _dataSort(
-        data: List<BarSeriesModel, DefaultDataVisual>,
+        data: SeriesData<BarSeriesModel, DefaultDataVisual>,
         baseAxis: Axis2D,
         orderMapping: OrderMapping
     ): OrdinalSortInfo {
@@ -498,7 +542,7 @@ class BarView extends ChartView {
     }
 
     private _isOrderChangedWithinSameData(
-        data: List<BarSeriesModel, DefaultDataVisual>,
+        data: SeriesData<BarSeriesModel, DefaultDataVisual>,
         orderMapping: OrderMapping,
         baseAxis: Axis2D
     ): boolean {
@@ -543,7 +587,7 @@ class BarView extends ChartView {
     }
 
     private _updateSortWithinSameData(
-        data: List<BarSeriesModel, DefaultDataVisual>,
+        data: SeriesData<BarSeriesModel, DefaultDataVisual>,
         orderMapping: OrderMapping,
         baseAxis: Axis2D,
         api: ExtensionAPI
@@ -566,7 +610,7 @@ class BarView extends ChartView {
     }
 
     private _dispatchInitSort(
-        data: List<BarSeriesModel, DefaultDataVisual>,
+        data: SeriesData<BarSeriesModel, DefaultDataVisual>,
         realtimeSortCfg: RealtimeSortConfig,
         api: ExtensionAPI
     ) {
@@ -709,7 +753,7 @@ const clip: {
 
 interface ElementCreator {
     (
-        seriesModel: BarSeriesModel, data: List, newIndex: number,
+        seriesModel: BarSeriesModel, data: SeriesData, newIndex: number,
         layout: RectLayout | SectorLayout, isHorizontalOrRadial: boolean,
         animationModel: BarSeriesModel,
         axisModel: CartesianAxisModel | AngleAxisModel | RadiusAxisModel,
@@ -746,23 +790,18 @@ const elementCreator: {
         seriesModel, data, newIndex, layout: SectorLayout, isRadial: boolean,
         animationModel, axisModel, isUpdate, roundCap
     ) {
-        // Keep the same logic with bar in catesion: use end value to control
-        // direction. Notice that if clockwise is true (by default), the sector
-        // will always draw clockwisely, no matter whether endAngle is greater
-        // or less than startAngle.
-        const clockwise = layout.startAngle < layout.endAngle;
-
         const ShapeClass = (!isRadial && roundCap) ? Sausage : Sector;
-
         const sector = new ShapeClass({
-            shape: defaults({clockwise: clockwise}, layout),
+            shape: layout,
             z2: 1
         });
 
         sector.name = 'item';
 
         const positionMap = createPolarPositionMapping(isRadial);
-        sector.calculateTextPosition = createSectorCalculateTextPosition<PolarBarLabelPosition>(positionMap);
+        sector.calculateTextPosition = createSectorCalculateTextPosition(positionMap, {
+            isRoundCap: ShapeClass === Sausage
+        });
 
         // Animation
         if (animationModel) {
@@ -875,7 +914,7 @@ const isValidLayout: Record<'cartesian2d' | 'polar', (layout: RectLayout | Secto
 } as const;
 
 interface GetLayout {
-    (data: List, dataIndex: number, itemModel?: Model<BarDataItemOption>): RectLayout | SectorLayout
+    (data: SeriesData, dataIndex: number, itemModel?: Model<BarDataItemOption>): RectLayout | SectorLayout
 }
 const getLayout: {
     [key in 'cartesian2d' | 'polar']: GetLayout
@@ -905,7 +944,8 @@ const getLayout: {
             r0: layout.r0,
             r: layout.r,
             startAngle: layout.startAngle,
-            endAngle: layout.endAngle
+            endAngle: layout.endAngle,
+            clockwise: layout.clockwise
         } as SectorLayout;
     }
 };
@@ -936,7 +976,7 @@ function createPolarPositionMapping(isRadial: boolean)
 
 function updateStyle(
     el: BarPossiblePath,
-    data: List, dataIndex: number,
+    data: SeriesData, dataIndex: number,
     itemModel: Model<BarDataItemOption>,
     layout: RectLayout | SectorLayout,
     seriesModel: BarSeriesModel,
@@ -1073,6 +1113,7 @@ class LargePath extends Path<LargePathProps> {
 function createLarge(
     seriesModel: BarSeriesModel,
     group: Group,
+    progressiveEls?: Element[],
     incremental?: boolean
 ) {
     // TODO support polar
@@ -1104,6 +1145,8 @@ function createLarge(
         bgEl.__barWidth = barWidth;
         setLargeBackgroundStyle(bgEl, backgroundModel, data);
         group.add(bgEl);
+
+        progressiveEls && progressiveEls.push(bgEl);
     }
 
     const el = new LargePath({
@@ -1124,6 +1167,7 @@ function createLarge(
         el.on('mousedown', largePathUpdateDataIndex);
         el.on('mousemove', largePathUpdateDataIndex);
     }
+    progressiveEls && progressiveEls.push(el);
 }
 
 // Use throttle to avoid frequently traverse to find dataIndex.
@@ -1170,7 +1214,7 @@ function largePathFindDataIndex(largePath: LargePath, x: number, y: number) {
 function setLargeStyle(
     el: LargePath,
     seriesModel: BarSeriesModel,
-    data: List
+    data: SeriesData
 ) {
     const globalStyle = data.getVisual('style');
 
@@ -1184,7 +1228,7 @@ function setLargeStyle(
 function setLargeBackgroundStyle(
     el: LargePath,
     backgroundModel: Model<BarSeriesOption['backgroundStyle']>,
-    data: List
+    data: SeriesData
 ) {
     const borderColor = backgroundModel.get('borderColor') || backgroundModel.get('color');
     const itemStyle = backgroundModel.getItemStyle();

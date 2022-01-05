@@ -17,6 +17,9 @@
 * under the License.
 */
 
+const { pathsToModuleNameMapper } = require('ts-jest/utils');
+const { compilerOptions } = require('./tsconfig')
+
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'jsdom',
@@ -44,5 +47,8 @@ module.exports = {
         '**/spec/model/*.test.ts',
         '**/spec/scale/*.test.ts',
         '**/spec/util/*.test.ts'
-    ]
+    ],
+    moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
+        prefix: '<rootDir>/'
+    })
 };

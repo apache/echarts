@@ -46,7 +46,7 @@ import { ViewCoordSysTransformInfoPart } from '../../coord/View';
 import { GeoSVGGraphicRecord, GeoSVGResource } from '../../coord/geo/GeoSVGResource';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Element from 'zrender/src/Element';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import { GeoJSONRegion } from '../../coord/geo/Region';
 import { SVGNodeTagLower } from 'zrender/src/tool/parseSVG';
 import { makeInner } from '../../util/model';
@@ -62,7 +62,7 @@ interface ViewBuildContext {
     api: ExtensionAPI;
     geo: Geo;
     mapOrGeoModel: GeoModel | MapSeries;
-    data: List;
+    data: SeriesData;
     isVisualEncodedByVisualMap: boolean;
     isGeo: boolean;
     transformInfoRaw: ViewCoordSysTransformInfoPart;
@@ -540,7 +540,10 @@ class MapDraw {
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
                 dx: e.dx,
-                dy: e.dy
+                dy: e.dy,
+                animation: {
+                    duration: 0
+                }
             }));
         }, this);
 
@@ -552,7 +555,10 @@ class MapDraw {
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
                 zoom: e.scale,
                 originX: e.originX,
-                originY: e.originY
+                originY: e.originY,
+                animation: {
+                    duration: 0
+                }
             }));
 
         }, this);

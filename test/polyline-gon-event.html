@@ -1,4 +1,3 @@
-
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -21,22 +20,19 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/facePrint.js"></script>
     </head>
     <body>
         <style>
             html, body, #main {
                 width: 100%;
                 height: 100%;
-                margin: 0;
-            }
-            #main {
-                background: #fff;
             }
         </style>
-        <h3>click axis labe should console log</h3>
+        <div id="info"></div>
         <div id="main"></div>
         <script>
 
@@ -44,38 +40,52 @@ under the License.
 
                 var chart = echarts.init(document.getElementById('main'));
 
+                var xAxisData = [];
+                var data = [];
+
+                for (var i = 0; i < 10; i++) {
+                    xAxisData.push('类目' + i);
+                    data.push(1);
+                }
                 chart.setOption({
-                    angleAxis: {
-                        triggerEvent: true
+                    xAxis: {
+                        data: xAxisData
                     },
-                    radiusAxis: {
-                        type: 'category',
-                        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-                        z: 10,
-                        triggerEvent: true
+                    yAxis: {
+                        splitArea: {
+                            show: true
+                        }
                     },
-                    polar: {
-                    },
-                    tooltip: {},
-                    series: [{
-                        type: 'bar',
-                        data: [1, 2, 4, 3, 6, 5, 7],
-                        coordinateSystem: 'polar',
-                        itemStyle: {
-                            normal: {
-                                color: '#00f'
-                            }
+                    series: [
+                        {
+                            name: 'line',
+                            type: 'line',
+                            areaStyle: {},
+                            stack: 'a',
+                            data: data,
+                            triggerLineEvent: true
                         },
-                        barWidth: '50%'
-                    }]
+                        {
+                            name: 'line1',
+                            type: 'line',
+                            stack: 'a',
+                            areaStyle: {},
+                            data: data.map(function (d) {
+                                return d * 2;
+                            })
+                        },
+                    ]
                 });
 
                 chart.on('click', function (params) {
                     console.log(params);
                 });
 
-                window.onresize = chart.resize;
+                chart.on('mouseover', function (params) {
+                    console.log(params);
+                });
             });
+
         </script>
     </body>
 </html>

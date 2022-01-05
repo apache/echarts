@@ -20,7 +20,7 @@
 import * as graphic from '../../util/graphic';
 import SymbolClz from './Symbol';
 import { isObject } from 'zrender/src/core/util';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import type Displayable from 'zrender/src/graphic/Displayable';
 import {
     StageHandlerProgressParams,
@@ -39,6 +39,7 @@ import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
 import { ScatterSeriesOption } from '../scatter/ScatterSeries';
 import { getLabelStatesModels } from '../../label/labelStyle';
+import Element from 'zrender/src/Element';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
@@ -49,15 +50,15 @@ interface UpdateOpt {
 }
 
 interface SymbolLike extends graphic.Group {
-    updateData(data: List, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): void
+    updateData(data: SeriesData, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): void
     fadeOut?(cb: () => void): void
 }
 
 interface SymbolLikeCtor {
-    new(data: List, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): SymbolLike
+    new(data: SeriesData, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): SymbolLike
 }
 
-function symbolNeedsDraw(data: List, point: number[], idx: number, opt: UpdateOpt) {
+function symbolNeedsDraw(data: SeriesData, point: number[], idx: number, opt: UpdateOpt) {
     return point && !isNaN(point[0]) && !isNaN(point[1])
         && !(opt.isIgnore && opt.isIgnore(idx))
         // We do not set clipShape on group, because it will cut part of
@@ -130,7 +131,7 @@ export interface SymbolDrawSeriesScope {
     fadeIn?: boolean
 }
 
-function makeSeriesScope(data: List): SymbolDrawSeriesScope {
+function makeSeriesScope(data: SeriesData): SymbolDrawSeriesScope {
     const seriesModel = data.hostModel as Model<ScatterSeriesOption>;
     const emphasisModel = seriesModel.getModel('emphasis');
     return {
@@ -149,7 +150,7 @@ function makeSeriesScope(data: List): SymbolDrawSeriesScope {
     };
 }
 
-export type ListForSymbolDraw = List<Model<SymbolDrawItemModelOption & AnimationOptionMixin>>;
+export type ListForSymbolDraw = SeriesData<Model<SymbolDrawItemModelOption & AnimationOptionMixin>>;
 
 class SymbolDraw {
     group = new graphic.Group();
@@ -162,6 +163,8 @@ class SymbolDraw {
 
     private _getSymbolPoint: UpdateOpt['getSymbolPoint'];
 
+    private _progressiveEls: SymbolLike[];
+
     constructor(SymbolCtor?: SymbolLikeCtor) {
         this._SymbolCtor = SymbolCtor || SymbolClz as SymbolLikeCtor;
     }
@@ -170,6 +173,9 @@ class SymbolDraw {
      * Update symbols draw by new data
      */
     updateData(data: ListForSymbolDraw, opt?: UpdateOpt) {
+        // Remove progressive els.
+        this._progressiveEls = null;
+
         opt = normalizeUpdateOpt(opt);
 
         const group = this.group;
@@ -252,10 +258,6 @@ class SymbolDraw {
         this._data = data;
     };
 
-    isPersistent() {
-        return true;
-    };
-
     updateLayout() {
         const data = this._data;
         if (data) {
@@ -278,6 +280,10 @@ class SymbolDraw {
      * Update symbols draw by new data
      */
     incrementalUpdate(taskParams: StageHandlerProgressParams, data: ListForSymbolDraw, opt?: UpdateOpt) {
+
+        // Clear
+        this._progressiveEls = [];
+
         opt = normalizeUpdateOpt(opt);
 
         function updateIncrementalAndHover(el: Displayable) {
@@ -294,9 +300,14 @@ class SymbolDraw {
                 el.setPosition(point);
                 this.group.add(el);
                 data.setItemGraphicEl(idx, el);
+                this._progressiveEls.push(el);
             }
         }
     };
+
+    eachRendered(cb: (el: Element) => boolean | void) {
+        graphic.traverseElements(this._progressiveEls || this.group, cb);
+    }
 
     remove(enableAnimation?: boolean) {
         const group = this.group;

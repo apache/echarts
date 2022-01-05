@@ -23,9 +23,9 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
-import linkList from './helper/linkList';
-import List from './List';
-import createDimensions from './helper/createDimensions';
+import linkSeriesData from './helper/linkSeriesData';
+import SeriesData from './SeriesData';
+import prepareSeriesDataSchema from './helper/createDimensions';
 import {
     DimensionLoose, ParsedValue, OptionDataValue,
     OptionDataItemObject
@@ -106,7 +106,7 @@ export class TreeNode {
         cb?: TreeTraverseCallback<Ctx> | Ctx,
         context?: Ctx
     ) {
-        if (typeof options === 'function') {
+        if (zrUtil.isFunction(options)) {
             context = cb as Ctx;
             cb = options;
             options = null;
@@ -210,7 +210,7 @@ export class TreeNode {
 
     getValue(dimension?: DimensionLoose): ParsedValue {
         const data = this.hostTree.data;
-        return data.get(data.getDimension(dimension || 'value'), this.dataIndex);
+        return data.getStore().get(data.getDimensionIndex(dimension || 'value'), this.dataIndex);
     }
 
     setLayout(layout: any, merge?: boolean) {
@@ -228,6 +228,7 @@ export class TreeNode {
     getModel<T = unknown>(): Model<T>
     // @depcrecated
     // getModel<T = unknown, S extends keyof T = keyof T>(path: S): Model<T[S]>
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     getModel<T = unknown>(path?: string): Model {
         if (this.dataIndex < 0) {
             return;
@@ -323,7 +324,7 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
 
     root: TreeNode;
 
-    data: List;
+    data: SeriesData;
 
     hostModel: HostModel;
 
@@ -412,10 +413,10 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
      *     ]
      * }
      */
-    static createTree<T extends TreeNodeOption, HostModel extends Model, LevelOption>(
+    static createTree<T extends TreeNodeOption, HostModel extends Model>(
         dataRoot: T,
         hostModel: HostModel,
-        beforeLink?: (data: List) => void
+        beforeLink?: (data: SeriesData) => void
     ) {
 
         const tree = new Tree(hostModel);
@@ -447,17 +448,17 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
 
         tree.root.updateDepthAndHeight(0);
 
-        const dimensionsInfo = createDimensions(listData, {
+        const { dimensions } = prepareSeriesDataSchema(listData, {
             coordDimensions: ['value'],
             dimensionsCount: dimMax
         });
 
-        const list = new List(dimensionsInfo, hostModel);
+        const list = new SeriesData(dimensions, hostModel);
         list.initData(listData);
 
         beforeLink && beforeLink(list);
 
-        linkList({
+        linkSeriesData({
             mainData: list,
             struct: tree,
             structAttr: 'tree'

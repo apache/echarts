@@ -21,7 +21,7 @@ import {isDimensionStacked} from '../../data/helper/dataStackHelper';
 import {map} from 'zrender/src/core/util';
 import type Polar from '../../coord/polar/Polar';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
-import List from '../../data/List';
+import SeriesData from '../../data/SeriesData';
 import Axis from '../../coord/Axis';
 import type { LineSeriesOption } from './LineSeries';
 
@@ -39,7 +39,7 @@ interface CoordInfo {
 
 export function prepareDataCoordInfo(
     coordSys: Cartesian2D | Polar,
-    data: List,
+    data: SeriesData,
     valueOrigin?: LineSeriesOption['areaStyle']['origin']
 ): CoordInfo {
     const baseAxis = coordSys.getBaseAxis();
@@ -109,7 +109,7 @@ function getValueStart(valueAxis: Axis, valueOrigin: LineSeriesOption['areaStyle
 export function getStackedOnPoint(
     dataCoordInfo: CoordInfo,
     coordSys: Cartesian2D | Polar,
-    data: List,
+    data: SeriesData,
     idx: number
 ) {
     let value = NaN;

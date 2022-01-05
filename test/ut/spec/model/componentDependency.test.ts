@@ -18,8 +18,8 @@
 * under the License.
 */
 
-import ComponentModel, { ComponentModelConstructor } from '../../../../src/model/Component';
-import { ComponentMainType } from '../../../../src/util/types';
+import ComponentModel, { ComponentModelConstructor } from '@/src/model/Component';
+import { ComponentMainType } from '@/src/util/types';
 
 const componentModelConstructor = ComponentModel as ComponentModelConstructor;
 
