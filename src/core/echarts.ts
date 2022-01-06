@@ -1546,10 +1546,6 @@ class ECharts extends Eventful<ECEventDefinition> {
                 });
             }
 
-            if (isHighDownPayload(payload)) {
-                allLeaveBlur(ecIns._api);
-            }
-
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
                 const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
@@ -1875,6 +1871,11 @@ class ECharts extends Eventful<ECEventDefinition> {
             const isSelectChange = isSelectChangePayload(payload);
             const isHighDown = isHighDownPayload(payload);
 
+            // Only leave blur once if there are multiple batches.
+            if (isHighDown) {
+                allLeaveBlur(this._api);
+            }
+
             each(payloads, (batchItem) => {
                 // Action can specify the event by return it.
                 eventObj = actionWrap.action(batchItem, this._model, this._api) as ECActionEvent;
@@ -2156,7 +2157,6 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             // TODO progressive?
             lifecycle.trigger('series:beforeupdate', ecModel, api, updateParams);
-
 
             let unfinished: boolean = false;
             ecModel.eachSeries(function (seriesModel) {
