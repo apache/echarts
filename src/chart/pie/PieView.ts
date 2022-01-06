@@ -62,7 +62,7 @@ class PiePiece extends graphic.Sector {
         // cornerRadius & innerCornerRadius doesn't exist in the item layout. Use `0` if null value is specified.
         // see `setItemLayout` in `pieLayout.ts`.
         const sectorShape = extend(
-            getSectorCornerRadius(itemModel.getModel('itemStyle'), true),
+            getSectorCornerRadius(itemModel.getModel('itemStyle'), layout, true),
             layout
         );
 
@@ -138,18 +138,17 @@ class PiePiece extends graphic.Sector {
 
         this._updateLabel(seriesModel, data, idx);
 
-        sector.ensureState('emphasis').shape = {
+        sector.ensureState('emphasis').shape = extend({
             r: layout.r + (emphasisModel.get('scale')
-                ? (emphasisModel.get('scaleSize') || 0) : 0),
-            ...getSectorCornerRadius(emphasisModel.getModel('itemStyle'))
-        };
+                ? (emphasisModel.get('scaleSize') || 0) : 0)
+        }, getSectorCornerRadius(emphasisModel.getModel('itemStyle'), layout));
         extend(sector.ensureState('select'), {
             x: dx,
             y: dy,
-            shape: getSectorCornerRadius(itemModel.getModel(['select', 'itemStyle']))
+            shape: getSectorCornerRadius(itemModel.getModel(['select', 'itemStyle']), layout)
         });
         extend(sector.ensureState('blur'), {
-            shape: getSectorCornerRadius(itemModel.getModel(['blur', 'itemStyle']))
+            shape: getSectorCornerRadius(itemModel.getModel(['blur', 'itemStyle']), layout)
         });
 
         const labelLine = sector.getTextGuideLine();
