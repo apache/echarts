@@ -618,7 +618,6 @@ export type OptionDataItemObject<T> = {
     groupId?: OptionId;
     value?: T[] | T;
     selected?: boolean;
-    selectable?: boolean;
 };
 // Compat number because it is usually used and not easy to
 // restrict it in practise.
@@ -1501,7 +1500,9 @@ export interface StatesOptionMixin<
     /**
      * Select states
      */
-    select?: StateOption & StatesMixin['select']
+    select?: StateOption & StatesMixin['select'] & {
+        disable?: boolean
+    }
     /**
      * Blur states.
      */
