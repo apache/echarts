@@ -354,7 +354,6 @@ export default function pieLabelLayout(
     const viewLeft = viewRect.x;
     const viewTop = viewRect.y;
     const viewHeight = viewRect.height;
-    const seriesStartAngle = seriesModel.get('startAngle') * RADIAN;
 
     function setNotShow(el: {ignore: boolean}) {
         el.ignore = true;
@@ -456,33 +455,31 @@ export default function pieLabelLayout(
                     : (nx > 0 ? 'left' : 'right'));
         }
 
-        let labelRotate;
+        const PI = Math.PI;
+        let labelRotate = 0;
         const rotate = labelModel.get('rotate');
         if (typeof rotate === 'number') {
-            labelRotate = rotate * (Math.PI / 180);
+            labelRotate = rotate * (PI / 180);
         }
         else if (labelPosition === 'center') {
             labelRotate = 0;
         }
-        else {
-            const radialAngle = nx < 0 ? -midAngle + Math.PI : -midAngle;
-            if (rotate === 'radial' || rotate === true) {
-                labelRotate = radialAngle;
+        else if (rotate === 'radial' || rotate === true) {
+            const radialAngle = nx < 0 ? -midAngle + PI : -midAngle;
+            labelRotate = radialAngle;
+        }
+        else if (rotate === 'tangential'
+            && labelPosition !== 'outside' && labelPosition !== 'outer'
+        ) {
+            let rad = Math.atan2(nx, ny);
+            if (rad < 0) {
+                rad = PI * 2 + rad;
             }
-            else if (rotate === 'tangential'
-                && labelPosition !== 'outside'
-                && labelPosition !== 'outer'
-            ) {
-                labelRotate = radialAngle + Math.PI / 2;
-                if (labelRotate > Math.PI / 2 && labelRotate < Math.PI * 1.5
-                    || labelRotate < -Math.PI && labelRotate > -Math.PI * 1.5
-                ) {
-                    labelRotate -= Math.PI;
-                }
+            const isDown = ny > 0;
+            if (isDown) {
+                rad = PI + rad;
             }
-            else {
-                labelRotate = 0;
-            }
+            labelRotate = rad - PI;
         }
 
         hasLabelRotate = !!labelRotate;
