@@ -1501,7 +1501,7 @@ export interface StatesOptionMixin<
      * Select states
      */
     select?: StateOption & StatesMixin['select'] & {
-        disable?: boolean
+        disabled?: boolean
     }
     /**
      * Blur states.
