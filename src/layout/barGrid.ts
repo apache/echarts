@@ -29,7 +29,6 @@ import { StageHandler, Dictionary } from '../util/types';
 import { createFloat32Array } from '../util/vendor';
 
 const STACK_PREFIX = '__ec_stack_';
-const LARGE_BAR_MIN_WIDTH = 0.5;
 
 function getSeriesStackId(seriesModel: BarSeriesModel): string {
     return seriesModel.get('stack') || STACK_PREFIX + seriesModel.seriesIndex;
@@ -120,7 +119,7 @@ export function prepareLayoutBarSeries(seriesType: string, ecModel: GlobalModel)
     const seriesModels: BarSeriesModel[] = [];
     ecModel.eachSeriesByType(seriesType, function (seriesModel: BarSeriesModel) {
         // Check series coordinate, do layout for cartesian2d only
-        if (isOnCartesian(seriesModel) && !canDoLargeLayout(seriesModel)) {
+        if (isOnCartesian(seriesModel)) {
             seriesModels.push(seriesModel);
         }
     });
@@ -231,9 +230,9 @@ export function makeColumnLayout(barSeries: BarSeriesModel[]) {
             seriesModel.get('barMaxWidth'), bandWidth
         );
         const barMinWidth = parsePercent(
-            // barMinWidth by default is 1 in cartesian. Because in value axis,
-            // the auto-calculated bar width might be less than 1.
-            seriesModel.get('barMinWidth') || 1, bandWidth
+            // barMinWidth by default is 0.5 / 1 in cartesian. Because in value axis,
+            // the auto-calculated bar width might be less than 0.5 / 1.
+            seriesModel.get('barMinWidth') || (isInLargeMode(seriesModel) ? 0.5 : 1), bandWidth
         );
         const barGap = seriesModel.get('barGap');
         const barCategoryGap = seriesModel.get('barCategoryGap');
@@ -443,8 +442,6 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
     const seriesModels = prepareLayoutBarSeries(seriesType, ecModel);
     const barWidthAndOffset = makeColumnLayout(seriesModels);
 
-    const lastStackCoords: Dictionary<{p: number, n: number}[]> = {};
-
     each(seriesModels, function (seriesModel) {
 
         const data = seriesModel.getData();
@@ -455,211 +452,145 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
         const columnLayoutInfo = barWidthAndOffset[getAxisKey(baseAxis)][stackId];
         const columnOffset = columnLayoutInfo.offset;
         const columnWidth = columnLayoutInfo.width;
-        const valueAxis = cartesian.getOtherAxis(baseAxis);
 
-        const barMinHeight = seriesModel.get('barMinHeight') || 0;
-
-        lastStackCoords[stackId] = lastStackCoords[stackId] || [];
-
-        const valueDim = data.mapDimension(valueAxis.dim);
-        const baseDim = data.mapDimension(baseAxis.dim);
-        const stacked = isDimensionStacked(data, valueDim);
-        const isValueAxisH = valueAxis.isHorizontal();
-
-        const valueAxisStart = getValueAxisStart(baseAxis, valueAxis);
-
-        const store = data.getStore();
-        const valueDimIdx = data.getDimensionIndex(valueDim);
-        const baseDimIdx = data.getDimensionIndex(baseDim);
-
-        const isLarge = isInLargeMode(seriesModel);
-        const drawBackground = seriesModel.get('showBackground', true);
-        const count = store.count();
-        const largePoints = isLarge && createFloat32Array(count * 3);
-        const largeBackgroundPoints = isLarge && drawBackground && createFloat32Array(count * 3);
-        const largeDataIndices = isLarge && createFloat32Array(count);
-        const coordLayout = cartesian.master.getRect();
-        const bgSize = isValueAxisH ? coordLayout.width : coordLayout.height;
-
-        for (let idx = 0, len = count; idx < len; idx++) {
-            const value = store.get(valueDimIdx, idx);
-            const baseValue = store.get(baseDimIdx, idx) as number;
-            const idx3 = idx * 3;
-
-            const sign = value >= 0 ? 'p' : 'n' as 'p' | 'n';
-            let baseCoord = valueAxisStart;
-
-            // Because of the barMinHeight, we can not use the value in
-            // stackResultDimension directly.
-            if (stacked) {
-                // Only ordinal axis can be stacked.
-                if (!lastStackCoords[stackId][baseValue]) {
-                    lastStackCoords[stackId][baseValue] = {
-                        p: valueAxisStart, // Positive stack
-                        n: valueAxisStart  // Negative stack
-                    };
-                }
-                // Should also consider #4243
-                baseCoord = lastStackCoords[stackId][baseValue][sign];
-            }
-
-            let x;
-            let y;
-            let width;
-            let height;
-
-            if (isValueAxisH) {
-                const coord = cartesian.dataToPoint([value, baseValue]);
-                x = baseCoord;
-                y = coord[1] + columnOffset;
-                width = coord[0] - valueAxisStart;
-                height = columnWidth;
-
-                if (Math.abs(width) < barMinHeight) {
-                    width = (width < 0 ? -1 : 1) * barMinHeight;
-                }
-                // Ignore stack from NaN value
-                if (!isNaN(width)) {
-                    stacked && (lastStackCoords[stackId][baseValue][sign] += width);
-                }
-            }
-            else {
-                const coord = cartesian.dataToPoint([baseValue, value]);
-                x = coord[0] + columnOffset;
-                y = baseCoord;
-                width = columnWidth;
-                height = coord[1] - valueAxisStart;
-
-                if (Math.abs(height) < barMinHeight) {
-                    // Include zero to has a positive bar
-                    height = (height <= 0 ? -1 : 1) * barMinHeight;
-                }
-                // Ignore stack from NaN value
-                if (!isNaN(height)) {
-                    stacked && (lastStackCoords[stackId][baseValue][sign] += height);
-                }
-            }
-
-            if (!isLarge) {
-                data.setItemLayout(idx, { x, y, width, height });
-            }
-            else {
-                largePoints[idx3] = x;
-                largePoints[idx3 + 1] = y;
-                largePoints[idx3 + 2] = isValueAxisH ? width : height;
-
-                if (largeBackgroundPoints) {
-                    largeBackgroundPoints[idx3] = isValueAxisH ? coordLayout.x : x;
-                    largeBackgroundPoints[idx3 + 1] = isValueAxisH ? y : coordLayout.y;
-                    largeBackgroundPoints[idx3 + 2] = bgSize;
-                }
-
-                largeDataIndices[idx] = idx;
-            }
-        }
-
-        if (isLarge) {
-            data.setLayout({
-                largePoints,
-                largeDataIndices,
-                largeBackgroundPoints,
-                barWidth: columnWidth,
-                valueAxisHorizontal: isValueAxisH
-            });
-        }
-        else {
-            data.setLayout({
-                bandWidth: columnLayoutInfo.bandWidth,
-                offset: columnOffset,
-                size: columnWidth
-            });
-        }
+        data.setLayout({
+            bandWidth: columnLayoutInfo.bandWidth,
+            offset: columnOffset,
+            size: columnWidth
+        });
     });
 }
 
 // TODO: Do not support stack in large mode yet.
-export const largeLayout: StageHandler = {
+export function createProgressiveLayout(seriesType: string): StageHandler {
+    return {
+        seriesType,
 
-    seriesType: 'bar',
+        plan: createRenderPlanner(),
 
-    plan: createRenderPlanner(),
+        reset: function (seriesModel: BarSeriesModel) {
+            if (!isOnCartesian(seriesModel)) {
+                return;
+            }
 
-    reset: function (seriesModel: BarSeriesModel) {
-        if (!isOnCartesian(seriesModel) || !canDoLargeLayout(seriesModel)) {
-            return;
-        }
+            const data = seriesModel.getData();
 
-        const data = seriesModel.getData();
-        const cartesian = seriesModel.coordinateSystem as Cartesian2D;
-        const coordLayout = cartesian.master.getRect();
-        const baseAxis = cartesian.getBaseAxis();
-        const valueAxis = cartesian.getOtherAxis(baseAxis);
-        const valueDimIdx = data.getDimensionIndex(data.mapDimension(valueAxis.dim));
-        const baseDimIdx = data.getDimensionIndex(data.mapDimension(baseAxis.dim));
-        const valueAxisHorizontal = valueAxis.isHorizontal();
-        const drawBackground = seriesModel.get('showBackground', true);
+            const cartesian = seriesModel.coordinateSystem as Cartesian2D;
+            const baseAxis = cartesian.getBaseAxis();
+            const valueAxis = cartesian.getOtherAxis(baseAxis);
+            const valueDimIdx = data.getDimensionIndex(data.mapDimension(valueAxis.dim));
+            const baseDimIdx = data.getDimensionIndex(data.mapDimension(baseAxis.dim));
+            const drawBackground = seriesModel.get('showBackground', true);
+            const valueDim = data.mapDimension(valueAxis.dim);
+            const stackResultDim = data.getCalculationInfo('stackResultDimension');
+            const stacked = isDimensionStacked(data, valueDim) && !!data.getCalculationInfo('stackedOnSeries');
+            const isValueAxisH = valueAxis.isHorizontal();
+            const valueAxisStart = getValueAxisStart(baseAxis, valueAxis);
+            const isLarge = isInLargeMode(seriesModel);
+            const barMinHeight = seriesModel.get('barMinHeight') || 0;
 
-        let barWidth = retrieveColumnLayout(
-            makeColumnLayout([seriesModel]), baseAxis, seriesModel
-        ).width;
-        if (!(barWidth > LARGE_BAR_MIN_WIDTH)) { // jshint ignore:line
-            barWidth = LARGE_BAR_MIN_WIDTH;
-        }
+            const stackedDimIdx = stackResultDim && data.getDimensionIndex(stackResultDim);
 
-        return {
-            progress: function (params, data) {
-                const count = params.count;
-                const largePoints = createFloat32Array(count * 3);
-                const largeBackgroundPoints = drawBackground && createFloat32Array(count * 3);
-                const largeDataIndices = createFloat32Array(count);
-                let dataIndex;
-                let coord: number[] = [];
-                const valuePair = [];
-                let pointsOffset = 0;
-                let idxOffset = 0;
-                const store = data.getStore();
-                const valueStart = getValueAxisStart(baseAxis, valueAxis);
+            // Layout info.
+            const columnWidth = data.getLayout('size');
+            const columnOffset = data.getLayout('offset');
 
-                const valueDim = +!valueAxisHorizontal;
-                const baseDim = +valueAxisHorizontal;
-                const bgSize = valueAxisHorizontal ? coordLayout.width : coordLayout.height;
-                while ((dataIndex = params.next()) != null) {
-                    valuePair[valueDim] = store.get(valueDimIdx, dataIndex);
-                    valuePair[baseDim] = store.get(baseDimIdx, dataIndex);
+            return {
+                progress: function (params, data) {
+                    const count = params.count;
+                    const largePoints = isLarge && createFloat32Array(count * 3);
+                    const largeBackgroundPoints = isLarge && drawBackground && createFloat32Array(count * 3);
+                    const largeDataIndices = isLarge && createFloat32Array(count);
+                    const coordLayout = cartesian.master.getRect();
+                    const bgSize = isValueAxisH ? coordLayout.width : coordLayout.height;
 
-                    coord = cartesian.dataToPoint(valuePair, null);
-                    largePoints[pointsOffset] = valueAxisHorizontal ? valueStart : coord[0];
-                    largePoints[pointsOffset + 1] = valueAxisHorizontal ? coord[1] : valueStart;
-                    largePoints[pointsOffset + 2] = coord[valueDim] - valueStart;
+                    let dataIndex;
+                    const store = data.getStore();
 
-                    if (largeBackgroundPoints) {
-                        largeBackgroundPoints[pointsOffset] = valueAxisHorizontal ? coordLayout.x : coord[0];
-                        largeBackgroundPoints[pointsOffset + 1] = valueAxisHorizontal ? coord[1] : coordLayout.y;
-                        largeBackgroundPoints[pointsOffset + 2] = bgSize;
+                    let idxOffset = 0;
+
+                    while ((dataIndex = params.next()) != null) {
+                        const value = store.get(stacked ? stackedDimIdx : valueDimIdx, dataIndex);
+                        const baseValue = store.get(baseDimIdx, dataIndex) as number;
+
+                        let baseCoord = valueAxisStart;
+                        let startValue;
+
+                        // Because of the barMinHeight, we can not use the value in
+                        // stackResultDimension directly.
+                        if (stacked) {
+                            startValue = +value - (store.get(valueDimIdx, dataIndex) as number);
+                        }
+
+                        let x;
+                        let y;
+                        let width;
+                        let height;
+
+                        if (isValueAxisH) {
+                            const coord = cartesian.dataToPoint([value, baseValue]);
+                            if (stacked) {
+                                const startCoord = cartesian.dataToPoint([startValue, baseValue]);
+                                baseCoord = startCoord[0];
+                            }
+                            x = baseCoord;
+                            y = coord[1] + columnOffset;
+                            width = coord[0] - baseCoord;
+                            height = columnWidth;
+
+                            if (Math.abs(width) < barMinHeight) {
+                                width = (width < 0 ? -1 : 1) * barMinHeight;
+                            }
+                        }
+                        else {
+                            const coord = cartesian.dataToPoint([baseValue, value]);
+                            if (stacked) {
+                                const startCoord = cartesian.dataToPoint([baseValue, startValue]);
+                                baseCoord = startCoord[1];
+                            }
+                            x = coord[0] + columnOffset;
+                            y = baseCoord;
+                            width = columnWidth;
+                            height = coord[1] - baseCoord;
+
+                            if (Math.abs(height) < barMinHeight) {
+                                // Include zero to has a positive bar
+                                height = (height <= 0 ? -1 : 1) * barMinHeight;
+                            }
+                        }
+
+                        if (!isLarge) {
+                            data.setItemLayout(dataIndex, { x, y, width, height });
+                        }
+                        else {
+                            largePoints[idxOffset] = x;
+                            largePoints[idxOffset + 1] = y;
+                            largePoints[idxOffset + 2] = isValueAxisH ? width : height;
+
+                            if (largeBackgroundPoints) {
+                                largeBackgroundPoints[idxOffset] = isValueAxisH ? coordLayout.x : x;
+                                largeBackgroundPoints[idxOffset + 1] = isValueAxisH ? y : coordLayout.y;
+                                largeBackgroundPoints[idxOffset + 2] = bgSize;
+                            }
+
+                            largeDataIndices[dataIndex] = dataIndex;
+                        }
+
+                        idxOffset += 3;
                     }
 
-                    // Data index might not be in order, depends on `progressiveChunkMode`.
-                    largeDataIndices[idxOffset++] = dataIndex;
-
-                    pointsOffset += 3;
+                    if (isLarge) {
+                        data.setLayout({
+                            largePoints,
+                            largeDataIndices,
+                            largeBackgroundPoints,
+                            valueAxisHorizontal: isValueAxisH
+                        });
+                    }
                 }
-
-                data.setLayout({
-                    largePoints,
-                    largeDataIndices,
-                    largeBackgroundPoints,
-                    barWidth,
-                    valueAxisHorizontal
-                });
-            }
-        };
-    }
-};
-
-function canDoLargeLayout(seriesModel: BarSeriesModel) {
-    return isInLargeMode(seriesModel)
-        // Use normal layout when using stack.
-        && !seriesModel.get('stack');
+            };
+        }
+    };
 }
 
 function isOnCartesian(seriesModel: BarSeriesModel) {

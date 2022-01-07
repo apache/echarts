@@ -49,7 +49,7 @@ import {
     ParsedValue,
     ECElement
 } from '../../util/types';
-import BarSeriesModel, {BarSeriesOption, BarDataItemOption, PolarBarLabelPosition} from './BarSeries';
+import BarSeriesModel, {BarDataItemOption, PolarBarLabelPosition} from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
@@ -1097,13 +1097,14 @@ class LargePath extends Path<LargePathProps> {
         const points = shape.points;
         const baseDimIdx = this.baseDimIdx;
         const valueDimIdx = 1 - this.baseDimIdx;
-        const startPoint: number[] = [];
+        const startPoint = [];
         const size = [];
+        const barWidth = this.barWidth;
 
         for (let i = 0; i < points.length; i += 3) {
-            size[baseDimIdx] = this.barWidth;
+            size[baseDimIdx] = barWidth;
             size[valueDimIdx] = points[i + 2];
-            startPoint[baseDimIdx] = points[i + baseDimIdx] - size[baseDimIdx] / 2;
+            startPoint[baseDimIdx] = points[i + baseDimIdx];
             startPoint[valueDimIdx] = points[i + valueDimIdx];
             ctx.rect(startPoint[0], startPoint[1], size[0], size[1]);
         }
@@ -1118,12 +1119,10 @@ function createLarge(
 ) {
     // TODO support polar
     const data = seriesModel.getData();
-    const startPoint = [];
     const baseDimIdx = data.getLayout('valueAxisHorizontal') ? 1 : 0;
-    startPoint[1 - baseDimIdx] = data.getLayout('valueAxisStart');
 
     const largeDataIndices = data.getLayout('largeDataIndices');
-    const barWidth = data.getLayout('barWidth');
+    const barWidth = data.getLayout('size');
 
     const backgroundModel = seriesModel.getModel('backgroundStyle');
     const bgPoints = data.getLayout('largeBackgroundPoints');
@@ -1179,27 +1178,23 @@ function largePathFindDataIndex(largePath: LargePath, x: number, y: number) {
     const valueDimIdx = 1 - baseDimIdx;
     const points = largePath.shape.points;
     const largeDataIndices = largePath.largeDataIndices;
-    const barWidthHalf = Math.abs(largePath.barWidth / 2);
-
-    _eventPos[0] = x;
-    _eventPos[1] = y;
-    const pointerBaseVal = _eventPos[baseDimIdx];
-    const pointerValueVal = _eventPos[1 - baseDimIdx];
-    const baseLowerBound = pointerBaseVal - barWidthHalf;
-    const baseUpperBound = pointerBaseVal + barWidthHalf;
+    const startPoint = [];
+    const size = [];
+    const barWidth = largePath.barWidth;
 
     for (let i = 0, len = points.length / 3; i < len; i++) {
         const ii = i * 3;
-        const barBaseVal = points[ii + baseDimIdx];
-        const startValueVal = points[ii + valueDimIdx];
-        const barValueVal = startValueVal + points[ii + 2];
-        if (
-            barBaseVal >= baseLowerBound && barBaseVal <= baseUpperBound
-            && (
-                startValueVal <= barValueVal
-                    ? (pointerValueVal >= startValueVal && pointerValueVal <= barValueVal)
-                    : (pointerValueVal >= barValueVal && pointerValueVal <= startValueVal)
-            )
+        size[baseDimIdx] = barWidth;
+        size[valueDimIdx] = points[ii + 2];
+        startPoint[baseDimIdx] = points[ii + baseDimIdx];
+        startPoint[valueDimIdx] = points[ii + valueDimIdx];
+        if (size[valueDimIdx] < 0) {
+            startPoint[valueDimIdx] += size[valueDimIdx];
+            size[valueDimIdx] = -size[valueDimIdx];
+        }
+
+        if (x >= startPoint[0] && x <= startPoint[0] + size[0]
+            && y >= startPoint[1] && y <= startPoint[1] + size[1]
         ) {
             return largeDataIndices[i];
         }

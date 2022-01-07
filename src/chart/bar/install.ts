@@ -19,7 +19,7 @@
 
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import * as zrUtil from 'zrender/src/core/util';
-import {layout, largeLayout} from '../../layout/barGrid';
+import {layout, createProgressiveLayout} from '../../layout/barGrid';
 import dataSample from '../../processor/dataSample';
 
 import BarSeries from './BarSeries';
@@ -32,9 +32,8 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerSeriesModel(BarSeries);
 
     registers.registerLayout(registers.PRIORITY.VISUAL.LAYOUT, zrUtil.curry(layout, 'bar'));
-    // Use higher prority to avoid to be blocked by other overall layout, which do not
-    // only exist in this module, but probably also exist in other modules, like `barPolar`.
-    registers.registerLayout(registers.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, largeLayout);
+    // Do layout after other overall layout, which can preapre some informations.
+    registers.registerLayout(registers.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, createProgressiveLayout('bar'));
 
     // Down sample after filter
     registers.registerProcessor(
