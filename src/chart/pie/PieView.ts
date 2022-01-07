@@ -32,7 +32,7 @@ import labelLayout from './labelLayout';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getSectorCornerRadius } from '../helper/pieHelper';
-import {saveOldStyle} from '../../animation/basicTrasition';
+import { saveOldStyle } from '../../animation/basicTrasition';
 import { getBasicPieLayout } from './pieLayout';
 
 /**
@@ -138,11 +138,10 @@ class PiePiece extends graphic.Sector {
 
         this._updateLabel(seriesModel, data, idx);
 
-        sector.ensureState('emphasis').shape = {
+        sector.ensureState('emphasis').shape = extend({
             r: layout.r + (emphasisModel.get('scale')
-                ? (emphasisModel.get('scaleSize') || 0) : 0),
-            ...getSectorCornerRadius(emphasisModel.getModel('itemStyle'), layout)
-        };
+                ? (emphasisModel.get('scaleSize') || 0) : 0)
+        }, getSectorCornerRadius(emphasisModel.getModel('itemStyle'), layout));
         extend(sector.ensureState('select'), {
             x: dx,
             y: dy,
