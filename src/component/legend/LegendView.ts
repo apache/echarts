@@ -46,8 +46,7 @@ import {
     SymbolOptionMixin
 } from '../../util/types';
 import Model from '../../model/Model';
-import {LineStyleProps, LINE_STYLE_KEY_MAP} from '../../model/mixin/lineStyle';
-import {ITEM_STYLE_KEY_MAP} from '../../model/mixin/itemStyle';
+import {LineStyleProps} from '../../model/mixin/lineStyle';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import SeriesModel from '../../model/Series';
 
@@ -244,7 +243,7 @@ class LegendView extends ComponentView {
 
                         const idx = provider.indexOfName(name);
 
-                        const style = provider.getItemVisual(idx, 'style') as PathStyleProps;
+                        let style = provider.getItemVisual(idx, 'style') as PathStyleProps;
                         const legendIcon = provider.getItemVisual(idx, 'legendIcon');
 
                         const colorArr = parse(style.fill as ColorString);
@@ -253,7 +252,7 @@ class LegendView extends ComponentView {
                         if (colorArr && colorArr[3] === 0) {
                             colorArr[3] = 0.2;
                             // TODO color is set to 0, 0, 0, 0. Should show correct RGBA
-                            style.fill = stringify(colorArr, 'rgba');
+                            style = zrUtil.extend(zrUtil.extend({}, style), { fill: stringify(colorArr, 'rgba') });
                         }
 
                         const itemGroup = this._createItem(
