@@ -19,7 +19,6 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import ExtensionAPI from '../core/ExtensionAPI';
-import {retrieveRawValue} from '../data/helper/dataProvider';
 import GlobalModel from '../model/Global';
 import Model from '../model/Model';
 import SeriesModel from '../model/Series';

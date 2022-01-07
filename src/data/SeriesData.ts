@@ -1269,15 +1269,9 @@ class SeriesData<
     setLayout(key: string, val: any): void;
     setLayout(kvObj: Dictionary<any>): void;
     setLayout(key: string | Dictionary<any>, val?: any): void {
-        if (isObject(key)) {
-            for (const name in key) {
-                if (key.hasOwnProperty(name)) {
-                    this.setLayout(name, key[name]);
-                }
-            }
-            return;
-        }
-        this._layout[key] = val;
+        isObject(key)
+            ? zrUtil.extend(this._layout, key)
+            : (this._layout[key] = val);
     }
 
     /**
