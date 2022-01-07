@@ -1155,6 +1155,13 @@ class LineView extends ChartView {
         if (anyStateShowEndLabel(seriesModel)) {
             const data = seriesModel.getData();
             const polyline = this._polyline;
+            // series may be filtered.
+            const points = data.getLayout('points');
+            if (!points) {
+                polyline.removeTextContent();
+                this._endLabel = null;
+                return;
+            }
             let endLabel = this._endLabel;
             if (!endLabel) {
                 endLabel = this._endLabel = new graphic.Text({
@@ -1166,7 +1173,7 @@ class LineView extends ChartView {
             }
 
             // Find last non-NaN data to display data
-            const dataIndex = getLastIndexNotNull(data.getLayout('points'));
+            const dataIndex = getLastIndexNotNull(points);
             if (dataIndex >= 0) {
                 setLabelStyle(
                     polyline,
@@ -1214,6 +1221,7 @@ class LineView extends ChartView {
             }
 
             const points = data.getLayout('points');
+
             const seriesModel = data.hostModel as LineSeriesModel;
             const connectNulls = seriesModel.get('connectNulls');
             const precision = endLabelModel.get('precision');
