@@ -47,7 +47,6 @@ export class Region {
     getCenter(): number[] {
         return;
     }
-
 }
 
 
