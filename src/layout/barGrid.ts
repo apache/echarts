@@ -120,7 +120,7 @@ export function prepareLayoutBarSeries(seriesType: string, ecModel: GlobalModel)
     const seriesModels: BarSeriesModel[] = [];
     ecModel.eachSeriesByType(seriesType, function (seriesModel: BarSeriesModel) {
         // Check series coordinate, do layout for cartesian2d only
-        if (isOnCartesian(seriesModel) && !isInLargeMode(seriesModel)) {
+        if (isOnCartesian(seriesModel) && !canDoLargeLayout(seriesModel)) {
             seriesModels.push(seriesModel);
         }
     });
@@ -461,25 +461,31 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
 
         lastStackCoords[stackId] = lastStackCoords[stackId] || [];
 
-        data.setLayout({
-            bandWidth: columnLayoutInfo.bandWidth,
-            offset: columnOffset,
-            size: columnWidth
-        });
 
         const valueDim = data.mapDimension(valueAxis.dim);
         const baseDim = data.mapDimension(baseAxis.dim);
         const stacked = isDimensionStacked(data, valueDim);
         const isValueAxisH = valueAxis.isHorizontal();
 
-        const valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
+        const valueAxisStart = getValueAxisStart(baseAxis, valueAxis);
 
         const store = data.getStore();
         const valueDimIdx = data.getDimensionIndex(valueDim);
         const baseDimIdx = data.getDimensionIndex(baseDim);
-        for (let idx = 0, len = store.count(); idx < len; idx++) {
+
+        const isLarge = isInLargeMode(seriesModel);
+        const drawBackground = seriesModel.get('showBackground', true);
+        const count = store.count();
+        const largePoints = isLarge && createFloat32Array(count * 3);
+        const largeBackgroundPoints = isLarge && drawBackground && createFloat32Array(count * 3);
+        const largeDataIndices = isLarge && createFloat32Array(count);
+        const coordLayout = cartesian.master.getRect();
+        const bgSize = isValueAxisH ? coordLayout.width : coordLayout.height;
+
+        for (let idx = 0, len = count; idx < len; idx++) {
             const value = store.get(valueDimIdx, idx);
             const baseValue = store.get(baseDimIdx, idx) as number;
+            const idx3 = idx * 3;
 
             const sign = value >= 0 ? 'p' : 'n' as 'p' | 'n';
             let baseCoord = valueAxisStart;
@@ -535,14 +541,40 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
                 }
             }
 
-            data.setItemLayout(idx, {
-                x: x,
-                y: y,
-                width: width,
-                height: height
-            });
+            if (!isLarge) {
+                data.setItemLayout(idx, { x, y, width, height });
+            }
+            else {
+                largePoints[idx3] = x;
+                largePoints[idx3 + 1] = y;
+                largePoints[idx3 + 2] = isValueAxisH ? width : height;
+
+                if (largeBackgroundPoints) {
+                    largeBackgroundPoints[idx3] = isValueAxisH ? coordLayout.x : x;
+                    largeBackgroundPoints[idx3 + 1] = isValueAxisH ? y : coordLayout.y;
+                    largeBackgroundPoints[idx3 + 2] = bgSize;
+                }
+
+                largeDataIndices[idx] = idx;
+            }
         }
 
+        if (isLarge) {
+            data.setLayout({
+                largePoints,
+                largeDataIndices,
+                largeBackgroundPoints,
+                barWidth: columnWidth,
+                valueAxisHorizontal: isValueAxisH
+            });
+        }
+        else {
+            data.setLayout({
+                bandWidth: columnLayoutInfo.bandWidth,
+                offset: columnOffset,
+                size: columnWidth
+            });
+        }
     });
 }
 
@@ -554,7 +586,7 @@ export const largeLayout: StageHandler = {
     plan: createRenderPlanner(),
 
     reset: function (seriesModel: BarSeriesModel) {
-        if (!isOnCartesian(seriesModel) || !isInLargeMode(seriesModel)) {
+        if (!isOnCartesian(seriesModel) || !canDoLargeLayout(seriesModel)) {
             return;
         }
 
@@ -563,10 +595,10 @@ export const largeLayout: StageHandler = {
         const coordLayout = cartesian.master.getRect();
         const baseAxis = cartesian.getBaseAxis();
         const valueAxis = cartesian.getOtherAxis(baseAxis);
-        const valueDimI = data.getDimensionIndex(data.mapDimension(valueAxis.dim));
-        const baseDimI = data.getDimensionIndex(data.mapDimension(baseAxis.dim));
+        const valueDimIdx = data.getDimensionIndex(data.mapDimension(valueAxis.dim));
+        const baseDimIdx = data.getDimensionIndex(data.mapDimension(baseAxis.dim));
         const valueAxisHorizontal = valueAxis.isHorizontal();
-        const valueDimIdx = valueAxisHorizontal ? 0 : 1;
+        const drawBackground = seriesModel.get('showBackground', true);
 
         let barWidth = retrieveColumnLayout(
             makeColumnLayout([seriesModel]), baseAxis, seriesModel
@@ -578,8 +610,8 @@ export const largeLayout: StageHandler = {
         return {
             progress: function (params, data) {
                 const count = params.count;
-                const largePoints = createFloat32Array(count * 2);
-                const largeBackgroundPoints = createFloat32Array(count * 2);
+                const largePoints = createFloat32Array(count * 3);
+                const largeBackgroundPoints = drawBackground && createFloat32Array(count * 3);
                 const largeDataIndices = createFloat32Array(count);
                 let dataIndex;
                 let coord: number[] = [];
@@ -587,35 +619,49 @@ export const largeLayout: StageHandler = {
                 let pointsOffset = 0;
                 let idxOffset = 0;
                 const store = data.getStore();
+                const valueStart = getValueAxisStart(baseAxis, valueAxis);
 
+                const valueDim = +!valueAxisHorizontal;
+                const baseDim = +valueAxisHorizontal;
+                const bgSize = valueAxisHorizontal ? coordLayout.width : coordLayout.height;
                 while ((dataIndex = params.next()) != null) {
-                    valuePair[valueDimIdx] = store.get(valueDimI, dataIndex);
-                    valuePair[1 - valueDimIdx] = store.get(baseDimI, dataIndex);
+                    valuePair[valueDim] = store.get(valueDimIdx, dataIndex);
+                    valuePair[baseDim] = store.get(baseDimIdx, dataIndex);
 
                     coord = cartesian.dataToPoint(valuePair, null);
+                    largePoints[pointsOffset] = valueAxisHorizontal ? valueStart : coord[0];
+                    largePoints[pointsOffset + 1] = valueAxisHorizontal ? coord[1] : valueStart;
+                    largePoints[pointsOffset + 2] = coord[valueDim] - valueStart;
+
+                    if (largeBackgroundPoints) {
+                        largeBackgroundPoints[pointsOffset] = valueAxisHorizontal ? coordLayout.x : coord[0];
+                        largeBackgroundPoints[pointsOffset + 1] = valueAxisHorizontal ? coord[1] : coordLayout.y;
+                        largeBackgroundPoints[pointsOffset + 2] = bgSize;
+                    }
+
                     // Data index might not be in order, depends on `progressiveChunkMode`.
-                    largeBackgroundPoints[pointsOffset] =
-                        valueAxisHorizontal ? coordLayout.x + coordLayout.width : coord[0];
-                    largePoints[pointsOffset++] = coord[0];
-                    largeBackgroundPoints[pointsOffset] =
-                        valueAxisHorizontal ? coord[1] : coordLayout.y + coordLayout.height;
-                    largePoints[pointsOffset++] = coord[1];
                     largeDataIndices[idxOffset++] = dataIndex;
+
+                    pointsOffset += 3;
                 }
 
                 data.setLayout({
-                    largePoints: largePoints,
-                    largeDataIndices: largeDataIndices,
-                    largeBackgroundPoints: largeBackgroundPoints,
-                    barWidth: barWidth,
-                    valueAxisStart: getValueAxisStart(baseAxis, valueAxis, false),
-                    backgroundStart: valueAxisHorizontal ? coordLayout.x : coordLayout.y,
-                    valueAxisHorizontal: valueAxisHorizontal
+                    largePoints,
+                    largeDataIndices,
+                    largeBackgroundPoints,
+                    barWidth,
+                    valueAxisHorizontal
                 });
             }
         };
     }
 };
+
+function canDoLargeLayout(seriesModel: BarSeriesModel) {
+    return isInLargeMode(seriesModel)
+        // Use normal layout when using stack.
+        && !seriesModel.get('stack');
+}
 
 function isOnCartesian(seriesModel: BarSeriesModel) {
     return seriesModel.coordinateSystem && seriesModel.coordinateSystem.type === 'cartesian2d';
@@ -626,6 +672,6 @@ function isInLargeMode(seriesModel: BarSeriesModel) {
 }
 
 // See cases in `test/bar-start.html` and `#7412`, `#8747`.
-function getValueAxisStart(baseAxis: Axis2D, valueAxis: Axis2D, stacked?: boolean) {
+function getValueAxisStart(baseAxis: Axis2D, valueAxis: Axis2D) {
     return valueAxis.toGlobalCoord(valueAxis.dataToCoord(valueAxis.type === 'log' ? 1 : 0));
 }

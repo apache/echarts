@@ -395,7 +395,7 @@ class BarView extends ChartView {
                 }
                 // Not change anything if only order changed.
                 // Especially not change label.
-                if (!isChangeOrder) {
+                else {
                     updateStyle(
                         el, data, newIndex, itemModel, layout,
                         seriesModel, isHorizontalOrRadial, coord.type === 'polar'
@@ -459,13 +459,13 @@ class BarView extends ChartView {
     private _updateLargeClip(seriesModel: BarSeriesModel): void {
         // Use clipPath in large mode.
         const clipPath = seriesModel.get('clip', true)
-            ? createClipPath(seriesModel.coordinateSystem, false, seriesModel)
-            : null;
+            && createClipPath(seriesModel.coordinateSystem, false, seriesModel);
+        const group = this.group;
         if (clipPath) {
-            this.group.setClipPath(clipPath);
+            group.setClipPath(clipPath);
         }
         else {
-            this.group.removeClipPath();
+            group.removeClipPath();
         }
     }
 
@@ -488,20 +488,17 @@ class BarView extends ChartView {
         else {
             const orderMapping = (idx: number) => {
                 const el = (data.getItemGraphicEl(idx) as Rect);
-                if (el) {
-                    const shape = el.shape;
-                    // If data is NaN, shape.xxx may be NaN, so use || 0 here in case
-                    return (
+                const shape = el && el.shape;
+                return (shape && (
+                    // The result should be consistent with the initial sort by data value.
+                    // Do not support the case that both positive and negative exist.
+                    Math.abs(
                         baseAxis.isHorizontal()
-                            // The result should be consistent with the initial sort by data value.
-                            // Do not support the case that both positive and negative exist.
-                            ? Math.abs(shape.height)
-                            : Math.abs(shape.width)
-                    ) || 0;
-                }
-                else {
-                    return 0;
-                }
+                            ? shape.height
+                            : shape.width
+                    )
+                // If data is NaN, shape.xxx may be NaN, so use || 0 here in case
+                )) || 0;
             };
             this._onRendered = () => {
                 this._updateSortWithinSameData(data, orderMapping, baseAxis, api);
@@ -526,8 +523,8 @@ class BarView extends ChartView {
             mappedValue = mappedValue == null ? NaN : mappedValue;
             info.push({
                 dataIndex: dataIdx,
-                mappedValue: mappedValue,
-                ordinalNumber: ordinalNumber
+                mappedValue,
+                ordinalNumber
             });
         });
 
@@ -996,15 +993,15 @@ function updateStyle(
 
     const labelPositionOutside = isPolar
         ? (isHorizontalOrRadial
-            ? ((layout as SectorLayout).r >= (layout as SectorLayout).r0 ? 'endArc' as const : 'startArc' as const)
+            ? ((layout as SectorLayout).r >= (layout as SectorLayout).r0 ? 'endArc' : 'startArc')
             : ((layout as SectorLayout).endAngle >= (layout as SectorLayout).startAngle
-                ? 'endAngle' as const
-                : 'startAngle' as const
+                ? 'endAngle'
+                : 'startAngle'
             )
         )
         : (isHorizontalOrRadial
-            ? ((layout as RectLayout).height >= 0 ? 'bottom' as const : 'top' as const)
-            : ((layout as RectLayout).width >= 0 ? 'right' as const : 'left' as const));
+            ? ((layout as RectLayout).height >= 0 ? 'bottom' : 'top')
+            : ((layout as RectLayout).width >= 0 ? 'right' : 'left'));
 
     const labelStatesModels = getLabelStatesModels(itemModel);
 
@@ -1081,11 +1078,10 @@ class LargePath extends Path<LargePathProps> {
     type = 'largeBar';
 
     shape: LagePathShape;
-;
-    __startPoint: number[];
-    __baseDimIdx: number;
-    __largeDataIndices: ArrayLike<number>;
-    __barWidth: number;
+
+    baseDimIdx: number;
+    largeDataIndices: ArrayLike<number>;
+    barWidth: number;
 
     constructor(opts?: LargePathProps) {
         super(opts);
@@ -1099,11 +1095,13 @@ class LargePath extends Path<LargePathProps> {
         // Drawing lines is more efficient than drawing
         // a whole line or drawing rects.
         const points = shape.points;
-        const startPoint = this.__startPoint;
-        const baseDimIdx = this.__baseDimIdx;
+        const baseDimIdx = this.baseDimIdx;
+        const valueDimIdx = 1 - this.baseDimIdx;
+        const startPoint: number[] = [];
 
-        for (let i = 0; i < points.length; i += 2) {
+        for (let i = 0; i < points.length; i += 3) {
             startPoint[baseDimIdx] = points[i + baseDimIdx];
+            startPoint[valueDimIdx] = points[i + valueDimIdx] + points[i + 2];
             ctx.moveTo(startPoint[0], startPoint[1]);
             ctx.lineTo(points[i], points[i + 1]);
         }
@@ -1126,23 +1124,20 @@ function createLarge(
     const barWidth = data.getLayout('barWidth');
 
     const backgroundModel = seriesModel.getModel('backgroundStyle');
-    const drawBackground = seriesModel.get('showBackground', true);
+    const bgPoints = data.getLayout('largeBackgroundPoints');
 
-    if (drawBackground) {
-        const points = data.getLayout('largeBackgroundPoints');
-        const backgroundStartPoint: number[] = [];
-        backgroundStartPoint[1 - baseDimIdx] = data.getLayout('backgroundStart');
-
+    if (bgPoints) {
         const bgEl = new LargePath({
-            shape: {points: points},
+            shape: {
+                points: bgPoints
+            },
             incremental: !!incremental,
             silent: true,
             z2: 0
         });
-        bgEl.__startPoint = backgroundStartPoint;
-        bgEl.__baseDimIdx = baseDimIdx;
-        bgEl.__largeDataIndices = largeDataIndices;
-        bgEl.__barWidth = barWidth;
+        bgEl.baseDimIdx = baseDimIdx;
+        bgEl.largeDataIndices = largeDataIndices;
+        bgEl.barWidth = barWidth;
         setLargeBackgroundStyle(bgEl, backgroundModel, data);
         group.add(bgEl);
 
@@ -1151,12 +1146,12 @@ function createLarge(
 
     const el = new LargePath({
         shape: {points: data.getLayout('largePoints')},
-        incremental: !!incremental
+        incremental: !!incremental,
+        z2: 1
     });
-    el.__startPoint = startPoint;
-    el.__baseDimIdx = baseDimIdx;
-    el.__largeDataIndices = largeDataIndices;
-    el.__barWidth = barWidth;
+    el.baseDimIdx = baseDimIdx;
+    el.largeDataIndices = largeDataIndices;
+    el.barWidth = barWidth;
     group.add(el);
     setLargeStyle(el, seriesModel, data);
 
@@ -1178,12 +1173,11 @@ const largePathUpdateDataIndex = throttle(function (this: LargePath, event: ZREl
 }, 30, false);
 
 function largePathFindDataIndex(largePath: LargePath, x: number, y: number) {
-    const baseDimIdx = largePath.__baseDimIdx;
+    const baseDimIdx = largePath.baseDimIdx;
     const valueDimIdx = 1 - baseDimIdx;
     const points = largePath.shape.points;
-    const largeDataIndices = largePath.__largeDataIndices;
-    const barWidthHalf = Math.abs(largePath.__barWidth / 2);
-    const startValueVal = largePath.__startPoint[valueDimIdx];
+    const largeDataIndices = largePath.largeDataIndices;
+    const barWidthHalf = Math.abs(largePath.barWidth / 2);
 
     _eventPos[0] = x;
     _eventPos[1] = y;
@@ -1192,10 +1186,11 @@ function largePathFindDataIndex(largePath: LargePath, x: number, y: number) {
     const baseLowerBound = pointerBaseVal - barWidthHalf;
     const baseUpperBound = pointerBaseVal + barWidthHalf;
 
-    for (let i = 0, len = points.length / 2; i < len; i++) {
-        const ii = i * 2;
+    for (let i = 0, len = points.length / 3; i < len; i++) {
+        const ii = i * 3;
         const barBaseVal = points[ii + baseDimIdx];
-        const barValueVal = points[ii + valueDimIdx];
+        const startValueVal = points[ii + valueDimIdx];
+        const barValueVal = startValueVal + points[ii + 2];
         if (
             barBaseVal >= baseLowerBound && barBaseVal <= baseUpperBound
             && (
