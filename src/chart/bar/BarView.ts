@@ -1098,12 +1098,14 @@ class LargePath extends Path<LargePathProps> {
         const baseDimIdx = this.baseDimIdx;
         const valueDimIdx = 1 - this.baseDimIdx;
         const startPoint: number[] = [];
+        const size = [];
 
         for (let i = 0; i < points.length; i += 3) {
-            startPoint[baseDimIdx] = points[i + baseDimIdx];
-            startPoint[valueDimIdx] = points[i + valueDimIdx] + points[i + 2];
-            ctx.moveTo(startPoint[0], startPoint[1]);
-            ctx.lineTo(points[i], points[i + 1]);
+            size[baseDimIdx] = this.barWidth;
+            size[valueDimIdx] = points[i + 2];
+            startPoint[baseDimIdx] = points[i + baseDimIdx] - size[baseDimIdx] / 2;
+            startPoint[valueDimIdx] = points[i + valueDimIdx];
+            ctx.rect(startPoint[0], startPoint[1], size[0], size[1]);
         }
     }
 }
@@ -1138,7 +1140,7 @@ function createLarge(
         bgEl.baseDimIdx = baseDimIdx;
         bgEl.largeDataIndices = largeDataIndices;
         bgEl.barWidth = barWidth;
-        setLargeBackgroundStyle(bgEl, backgroundModel, data);
+        bgEl.useStyle(backgroundModel.getItemStyle());
         group.add(bgEl);
 
         progressiveEls && progressiveEls.push(bgEl);
@@ -1153,7 +1155,7 @@ function createLarge(
     el.largeDataIndices = largeDataIndices;
     el.barWidth = barWidth;
     group.add(el);
-    setLargeStyle(el, seriesModel, data);
+    el.useStyle(data.getVisual('style'));
 
     // Enable tooltip and user mouse/touch event handlers.
     getECData(el).seriesIndex = seriesModel.seriesIndex;
@@ -1204,34 +1206,6 @@ function largePathFindDataIndex(largePath: LargePath, x: number, y: number) {
     }
 
     return -1;
-}
-
-function setLargeStyle(
-    el: LargePath,
-    seriesModel: BarSeriesModel,
-    data: SeriesData
-) {
-    const globalStyle = data.getVisual('style');
-
-    el.useStyle(extend({}, globalStyle));
-    // Use stroke instead of fill.
-    el.style.fill = null;
-    el.style.stroke = globalStyle.fill;
-    el.style.lineWidth = data.getLayout('barWidth');
-}
-
-function setLargeBackgroundStyle(
-    el: LargePath,
-    backgroundModel: Model<BarSeriesOption['backgroundStyle']>,
-    data: SeriesData
-) {
-    const borderColor = backgroundModel.get('borderColor') || backgroundModel.get('color');
-    const itemStyle = backgroundModel.getItemStyle();
-
-    el.useStyle(itemStyle);
-    el.style.fill = null;
-    el.style.stroke = borderColor;
-    el.style.lineWidth = data.getLayout('barWidth') as number;
 }
 
 function createBackgroundShape(

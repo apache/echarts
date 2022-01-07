@@ -461,7 +461,6 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
 
         lastStackCoords[stackId] = lastStackCoords[stackId] || [];
 
-
         const valueDim = data.mapDimension(valueAxis.dim);
         const baseDim = data.mapDimension(baseAxis.dim);
         const stacked = isDimensionStacked(data, valueDim);
