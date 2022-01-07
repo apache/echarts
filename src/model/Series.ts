@@ -178,7 +178,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // Props about data selection
     // ---------------------------------------
     private _selectedDataIndicesMap: Dictionary<number> = {};
-
+    private isSelectSeries: boolean;
     readonly preventUsingHoverLayer: boolean;
 
     static protoInitialize = (function () {
@@ -566,6 +566,14 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         }
 
         const data = this.getData(dataType);
+        if ((data.getItemModel(dataIndex) as Model).get(['select', 'disabled']) === true) {
+            return false;
+        }
+
+        if (this.isSelectSeries) {
+            return true;
+        }
+
         const nameOrId = getSelectionKey(data, dataIndex);
         return selectedMap[nameOrId] || false;
     }
@@ -597,19 +605,10 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         }
 
         if (selectedMode === 'series') {
-            const selectedMap = this.option.selectedMap || (this.option.selectedMap = {});
-            const self = this;
-            data.each(idx => {
-                if ((data.getItemModel(idx) as Model).get(['select', 'disabled']) === true) {
-                    return;
-                }
-                const nameOrId = getSelectionKey(data, idx);
-                selectedMap[nameOrId] = true;
-                self._selectedDataIndicesMap[nameOrId] = data.getRawIndex(idx);
-
-            });
+            this.isSelectSeries = true;
         }
         else if (selectedMode === 'multiple') {
+            this.isSelectSeries = false;
             const selectedMap = this.option.selectedMap || (this.option.selectedMap = {});
             for (let i = 0; i < len; i++) {
                 const dataIndex = innerDataIndices[i];
@@ -623,6 +622,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             }
         }
         else if (selectedMode === 'single' || selectedMode === true) {
+            this.isSelectSeries = false;
             const lastDataIndex = innerDataIndices[len - 1];
             if ((data.getItemModel(lastDataIndex) as Model).get(['select', 'disabled']) === true) {
                 return;
