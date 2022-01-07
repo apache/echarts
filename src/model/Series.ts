@@ -523,11 +523,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
         const data = this.getData(dataType);
         if (selectedMode === 'series') {
-            data.each(idx => {
-                const nameOrId = getSelectionKey(data, idx);
-                selectedMap[nameOrId] = false;
-                this._selectedDataIndicesMap[nameOrId] = -1;
-            });
+            this.option.selectedMap = {};
+            this._selectedDataIndicesMap = {};
             return;
         }
 
