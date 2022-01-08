@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { Payload, SelectChangedPayload } from '../util/types';
+import { Dictionary, Payload, SelectChangedPayload } from '../util/types';
 import SeriesModel from '../model/Series';
 import { extend, each, isArray } from 'zrender/src/core/util';
 import GlobalModel from '../model/Global';
@@ -86,7 +86,7 @@ function handleSeriesLegacySelectEvents(
                         type: legacyEventName,
                         seriesId: seriesModel.id,
                         name: isArray(dataIndex) ? data.getName(dataIndex[0]) : data.getName(dataIndex),
-                        selected: extend({}, seriesModel.option.selectedMap)
+                        selected: extend({}, seriesModel.option as Dictionary<boolean>)
                     });
                 }
             }
