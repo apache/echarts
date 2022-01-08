@@ -390,6 +390,7 @@ class GlobalModel extends Model<ECUnitOption> {
             let cmptsCountByMainType = 0;
 
             let tooltipExists: boolean;
+            let tooltipWarningLogged: boolean;
 
             each(mappingResult, function (resultItem, index) {
                 let componentModel = resultItem.existing;
@@ -437,7 +438,10 @@ echarts.use([${seriesImportName}]);`);
                     if (mainType === 'tooltip') {
                         if (tooltipExists) {
                             if (__DEV__) {
-                                warn('Currently only one tooltip component is allowed.', !oldCmptList);
+                                if (!tooltipWarningLogged) {
+                                    warn('Currently only one tooltip component is allowed.');
+                                    tooltipWarningLogged = true;
+                                }
                             }
                             return;
                         }
