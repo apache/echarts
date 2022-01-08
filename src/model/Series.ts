@@ -56,6 +56,7 @@ import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatToo
 import {ECSymbol} from '../util/symbol';
 import {Group} from '../util/graphic';
 import {LegendIconParams} from '../component/legend/LegendModel';
+import { isString } from 'zrender/src/core/util';
 
 const inner = modelUtil.makeInner<{
     data: SeriesData
@@ -178,7 +179,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // Props about data selection
     // ---------------------------------------
     private _selectedDataIndicesMap: Dictionary<number> = {};
-    private isSelectSeries: boolean;
     readonly preventUsingHoverLayer: boolean;
 
     static protoInitialize = (function () {
@@ -515,7 +515,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     unselect(innerDataIndices: number[], dataType?: SeriesDataType): void {
-        const selectedMap = this.option.selectedMap;
+        const selectedMap = this.option.selectedMap as Dictionary<boolean>;
         if (!selectedMap) {
             return;
         }
@@ -570,7 +570,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             return false;
         }
 
-        if (this.isSelectSeries) {
+        if (selectedMap === 'all') {
             return true;
         }
 
@@ -605,11 +605,13 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         }
 
         if (selectedMode === 'series') {
-            this.isSelectSeries = true;
+            this.option.selectedMap = 'all';
         }
         else if (selectedMode === 'multiple') {
-            this.isSelectSeries = false;
-            const selectedMap = this.option.selectedMap || (this.option.selectedMap = {});
+            if (isString(this.option.selectedMap)) {
+                this.option.selectedMap = {};
+            }
+            const selectedMap = (this.option.selectedMap || (this.option.selectedMap = {}));
             for (let i = 0; i < len; i++) {
                 const dataIndex = innerDataIndices[i];
                 if ((data.getItemModel(dataIndex) as Model).get(['select', 'disabled']) === true) {
@@ -622,7 +624,9 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             }
         }
         else if (selectedMode === 'single' || selectedMode === true) {
-            this.isSelectSeries = false;
+            if (isString(this.option.selectedMap)) {
+                this.option.selectedMap = {};
+            }
             const lastDataIndex = innerDataIndices[len - 1];
             if ((data.getItemModel(lastDataIndex) as Model).get(['select', 'disabled']) === true) {
                 return;

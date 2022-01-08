@@ -1611,7 +1611,7 @@ export interface SeriesOption<
      * Map of selected data
      * key is name or index of data.
      */
-    selectedMap?: Dictionary<boolean>
+    selectedMap?: Dictionary<boolean> | 'all'
     selectedMode?: 'single' | 'multiple' | 'series' | boolean
 }
 
