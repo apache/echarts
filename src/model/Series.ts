@@ -56,7 +56,7 @@ import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatToo
 import {ECSymbol} from '../util/symbol';
 import {Group} from '../util/graphic';
 import {LegendIconParams} from '../component/legend/LegendModel';
-import { isString } from 'zrender/src/core/util';
+import { isObject, isString } from 'zrender/src/core/util';
 
 const inner = modelUtil.makeInner<{
     data: SeriesData
@@ -515,14 +515,14 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     unselect(innerDataIndices: number[], dataType?: SeriesDataType): void {
-        const selectedMap = this.option.selectedMap as Dictionary<boolean>;
+        const selectedMap = this.option.selectedMap;
         if (!selectedMap) {
             return;
         }
         const selectedMode = this.option.selectedMode;
 
         const data = this.getData(dataType);
-        if (selectedMode === 'series') {
+        if (selectedMode === 'series' || selectedMap === 'all') {
             this.option.selectedMap = {};
             this._selectedDataIndicesMap = {};
             return;
@@ -547,6 +547,9 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     getSelectedDataIndices(): number[] {
+        if (this.option.selectedMap === 'all') {
+            return [].slice.call(this.getData().getIndices());
+        }
         const selectedDataIndicesMap = this._selectedDataIndicesMap;
         const nameOrIds = zrUtil.keys(selectedDataIndicesMap);
         const dataIndices = [];
@@ -598,20 +601,21 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     private _innerSelect(data: SeriesData, innerDataIndices: number[]) {
-        const selectedMode = this.option.selectedMode;
+        const option = this.option;
+        const selectedMode = option.selectedMode;
         const len = innerDataIndices.length;
         if (!selectedMode || !len) {
             return;
         }
 
         if (selectedMode === 'series') {
-            this.option.selectedMap = 'all';
+            option.selectedMap = 'all';
         }
         else if (selectedMode === 'multiple') {
-            if (isString(this.option.selectedMap)) {
-                this.option.selectedMap = {};
+            if (!isObject(option.selectedMap)) {
+                option.selectedMap = {};
             }
-            const selectedMap = (this.option.selectedMap || (this.option.selectedMap = {}));
+            const selectedMap = option.selectedMap;
             for (let i = 0; i < len; i++) {
                 const dataIndex = innerDataIndices[i];
                 if ((data.getItemModel(dataIndex) as Model).get(['select', 'disabled']) === true) {
@@ -624,15 +628,15 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             }
         }
         else if (selectedMode === 'single' || selectedMode === true) {
-            if (isString(this.option.selectedMap)) {
-                this.option.selectedMap = {};
+            if (isString(option.selectedMap)) {
+                option.selectedMap = {};
             }
             const lastDataIndex = innerDataIndices[len - 1];
             if ((data.getItemModel(lastDataIndex) as Model).get(['select', 'disabled']) === true) {
                 return;
             }
             const nameOrId = getSelectionKey(data, lastDataIndex);
-            this.option.selectedMap = {
+            option.selectedMap = {
                 [nameOrId]: true
             };
             this._selectedDataIndicesMap = {
