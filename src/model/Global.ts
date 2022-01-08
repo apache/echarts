@@ -433,12 +433,11 @@ echarts.use([${seriesImportName}]);`);
                         return;
                     }
 
-                    // Before multiple tooltips get supported,
-                    // we do this check to avoid unexpected exception.
+                    // TODO Before multiple tooltips get supported, we do this check to avoid unexpected exception.
                     if (mainType === 'tooltip') {
                         if (tooltipExists) {
                             if (__DEV__) {
-                                warn('Currently only one tooltip component is allowed.');
+                                warn('Currently only one tooltip component is allowed.', !oldCmptList);
                             }
                             return;
                         }
