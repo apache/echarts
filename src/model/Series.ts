@@ -29,7 +29,8 @@ import {
     SeriesDataType,
     SeriesEncodeOptionMixin,
     OptionEncodeValue,
-    ColorBy
+    ColorBy,
+    StatesOptionMixin
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {PaletteMixin} from './mixin/palette';
@@ -56,7 +57,6 @@ import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatToo
 import {ECSymbol} from '../util/symbol';
 import {Group} from '../util/graphic';
 import {LegendIconParams} from '../component/legend/LegendModel';
-import { isObject, isString } from 'zrender/src/core/util';
 
 const inner = modelUtil.makeInner<{
     data: SeriesData
@@ -569,7 +569,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         }
 
         const data = this.getData(dataType);
-        if ((data.getItemModel(dataIndex) as Model).get(['select', 'disabled']) === true) {
+        if (data.getItemModel<StatesOptionMixin<unknown, unknown>>(dataIndex).get(['select', 'disabled'])) {
             return false;
         }
 
@@ -612,14 +612,14 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             option.selectedMap = 'all';
         }
         else if (selectedMode === 'multiple') {
-            if (!isObject(option.selectedMap)) {
+            if (!zrUtil.isObject(option.selectedMap)) {
                 option.selectedMap = {};
             }
             const selectedMap = option.selectedMap;
             for (let i = 0; i < len; i++) {
                 const dataIndex = innerDataIndices[i];
-                if ((data.getItemModel(dataIndex) as Model).get(['select', 'disabled']) === true) {
-                    return;
+                if (data.getItemModel<StatesOptionMixin<unknown, unknown>>(dataIndex).get(['select', 'disabled'])) {
+                    continue;
                 }
                 // TODO diffrent types of data share same object.
                 const nameOrId = getSelectionKey(data, dataIndex);
@@ -628,11 +628,11 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             }
         }
         else if (selectedMode === 'single' || selectedMode === true) {
-            if (isString(option.selectedMap)) {
+            if (zrUtil.isString(option.selectedMap)) {
                 option.selectedMap = {};
             }
             const lastDataIndex = innerDataIndices[len - 1];
-            if ((data.getItemModel(lastDataIndex) as Model).get(['select', 'disabled']) === true) {
+            if (data.getItemModel<StatesOptionMixin<unknown, unknown>>(lastDataIndex).get(['select', 'disabled'])) {
                 return;
             }
             const nameOrId = getSelectionKey(data, lastDataIndex);
