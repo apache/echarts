@@ -309,6 +309,17 @@ class MapDraw {
 
             const centerPt = transformPoint(region.getCenter());
 
+            // Only stroke can be used for line.
+            // Using fill in style if stroke not exits.
+            // TODO Not sure yet. Perhaps a separate `lineStyle`?
+            function fixLineStyle(styleHost: { style: graphic.Path['style'] }) {
+                const style = styleHost.style;
+                if (style) {
+                    style.stroke = (style.stroke || style.fill);
+                    style.fill = null;
+                }
+            }
+
             function createCompoundPath(subpaths: graphic.Path[], isLine?: boolean) {
                 if (!subpaths.length) {
                     return;
@@ -328,13 +339,9 @@ class MapDraw {
                     viewBuildCtx, compoundPath, regionName, regionModel, mapOrGeoModel, dataIdx, centerPt
                 );
 
-                // Only stroke can be used for line.
-                // Using fill in style if stroke not exits.
-                // TODO Not sure yet. Perhaps a separate `lineStyle`?
                 if (isLine) {
-                    const style = compoundPath.style;
-                    style.stroke = (style.stroke || style.fill);
-                    style.fill = null;
+                    fixLineStyle(compoundPath);
+                    zrUtil.each(compoundPath.states, fixLineStyle);
                 }
             }
 
