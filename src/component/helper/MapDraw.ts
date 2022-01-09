@@ -235,12 +235,20 @@ class MapDraw {
         const mapOrGeoModel = viewBuildCtx.mapOrGeoModel;
         const data = viewBuildCtx.data;
 
-        const transformPoint = function (point: number[]): number[] {
+        function transformPoint(point: number[]): number[] {
             return [
                 point[0] * transformInfoRaw.scaleX + transformInfoRaw.x,
                 point[1] * transformInfoRaw.scaleY + transformInfoRaw.y
             ];
         };
+
+        function transformPoints(inPoints: number[][]): number[][] {
+            const outPoints = [];
+            for (let i = 0; i < inPoints.length; ++i) {
+                outPoints.push(transformPoint(inPoints[i]));
+            }
+            return outPoints;
+        }
 
         regionsGroup.removeAll();
 
@@ -268,56 +276,70 @@ class MapDraw {
                 regionsInfoByName.set(regionName, { dataIdx, regionModel });
             }
 
-            const compoundPath = new graphic.CompoundPath({
-                segmentIgnoreThreshold: 1,
-                shape: {
-                    paths: []
-                }
-            });
-            regionGroup.add(compoundPath);
+            const polygonSubpaths: graphic.Polygon[] = [];
+            const polylineSubpaths: graphic.Polyline[] = [];
 
             zrUtil.each(region.geometries, function (geometry) {
-                if (geometry.type !== 'polygon') {
-                    return;
-                }
-                const points = [];
-                for (let i = 0; i < geometry.exterior.length; ++i) {
-                    points.push(transformPoint(geometry.exterior[i]));
-                }
-                compoundPath.shape.paths.push(new graphic.Polygon({
-                    segmentIgnoreThreshold: 1,
-                    shape: {
-                        points: points
-                    }
-                }));
-
-                for (let i = 0; i < (geometry.interiors ? geometry.interiors.length : 0); ++i) {
-                    const interior = geometry.interiors[i];
-                    const points = [];
-                    for (let j = 0; j < interior.length; ++j) {
-                        points.push(transformPoint(interior[j]));
-                    }
-                    compoundPath.shape.paths.push(new graphic.Polygon({
-                        segmentIgnoreThreshold: 1,
+                // Polygon and MultiPolygon
+                if (geometry.type === 'polygon') {
+                    polygonSubpaths.push(new graphic.Polygon({
                         shape: {
-                            points: points
+                            points: transformPoints(geometry.exterior)
                         }
                     }));
+                    zrUtil.each(geometry.interiors, (interior) => {
+                        polygonSubpaths.push(new graphic.Polygon({
+                            shape: {
+                                points: transformPoints(interior)
+                            }
+                        }));
+                    });
+                }
+                // LineString and MultiLineString
+                else {
+                    zrUtil.each(geometry.points, points => {
+                        polylineSubpaths.push(new graphic.Polyline({
+                            shape: {
+                                points: transformPoints(points)
+                            }
+                        }));
+                    });
                 }
             });
 
-            applyOptionStyleForRegion(
-                viewBuildCtx, compoundPath, dataIdx, regionModel
-            );
+            const centerPt = transformPoint(region.getCenter());
 
-            if (compoundPath instanceof Displayable) {
-                compoundPath.culling = true;
+            function createCompoundPath(subpaths: graphic.Path[], isLine?: boolean) {
+                if (!subpaths.length) {
+                    return;
+                }
+                const compoundPath = new graphic.CompoundPath({
+                    culling: true,
+                    segmentIgnoreThreshold: 1,
+                    shape: {
+                        paths: subpaths
+                    }
+                });
+                regionGroup.add(compoundPath);
+                applyOptionStyleForRegion(
+                    viewBuildCtx, compoundPath, dataIdx, regionModel
+                );
+                resetLabelForRegion(
+                    viewBuildCtx, compoundPath, regionName, regionModel, mapOrGeoModel, dataIdx, centerPt
+                );
+
+                // Only stroke can be used for line.
+                // Using fill in style if stroke not exits.
+                // TODO Not sure yet. Perhaps a separate `lineStyle`?
+                if (isLine) {
+                    const style = compoundPath.style;
+                    style.stroke = (style.stroke || style.fill);
+                    style.fill = null;
+                }
             }
 
-            const centerPt = transformPoint(region.getCenter());
-            resetLabelForRegion(
-                viewBuildCtx, compoundPath, regionName, regionModel, mapOrGeoModel, dataIdx, centerPt
-            );
+            createCompoundPath(polygonSubpaths);
+            createCompoundPath(polylineSubpaths, true);
         });
 
         // Ensure children have been added to `regionGroup` before calling them.
@@ -726,7 +748,7 @@ function resetLabelForRegion(
             el,
             getLabelStatesModels(regionModel),
             {
-                labelFetcher: labelFetcher,
+                labelFetcher,
                 labelDataIndex: query,
                 defaultText: regionName
             },

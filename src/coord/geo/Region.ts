@@ -25,13 +25,23 @@ import * as polygonContain from 'zrender/src/contain/polygon';
 import { GeoJSON, GeoSVGGraphicRoot } from './geoTypes';
 import * as matrix from 'zrender/src/core/matrix';
 import Element from 'zrender/src/Element';
+import { each } from 'zrender/src/core/util';
 
 const TMP_TRANSFORM = [] as number[];
 
-export class Region {
+function transformPoints(points: number[][], transform: matrix.MatrixArray) {
+    for (let p = 0; p < points.length; p++) {
+        vec2.applyTransform(points[p], points[p], transform);
+    }
+}
+
+export abstract class Region {
 
     readonly name: string;
     readonly type: 'geoJSON' | 'geoSVG';
+
+    protected _center: number[];
+    protected _rect: BoundingRect;
 
     constructor(
         name: string
@@ -39,34 +49,54 @@ export class Region {
         this.name = name;
     }
 
+    setCenter(center: number[]) {
+        this._center = center;
+    }
+
     /**
      * Get center point in data unit. That is,
      * for GeoJSONRegion, the unit is lat/lng,
      * for GeoSVGRegion, the unit is SVG local coord.
      */
-    getCenter(): number[] {
-        return;
+    getCenter() {
+        let center = this._center;
+        if (!center) {
+            // In most cases there are no need to calculate this center.
+            // So calculate only when called.
+            center = this._center = this.calcCenter();
+        }
+        return center;
     }
+
+
+    abstract calcCenter(): number[];
 }
 
+export class GeoJSONPolygonGeometry {
+    readonly type = 'polygon';
+    exterior: number[][];
+    interiors?: number[][][];
+    constructor(exterior: number[][], interiors: number[][][]) {
+        this.exterior = exterior;
+        this.interiors = interiors;
+    }
+}
+export class GeoJSONLineStringGeometry {
+    readonly type = 'linestring';
+    points: number[][][];
+    constructor(points: number[][][]) {
+        this.points = points;
+    }
+}
 
 export class GeoJSONRegion extends Region {
 
     readonly type = 'geoJSON';
 
-    readonly geometries: {
-        type: 'polygon'; // FIXME:TS Is there other types?
-        exterior: number[][];
-        interiors?: number[][][];
-    }[];
-
-    private _center: number[];
+    readonly geometries: (GeoJSONPolygonGeometry | GeoJSONLineStringGeometry)[];
 
     // Injected outside.
     properties: GeoJSON['features'][0]['properties'];
-
-    private _rect: BoundingRect;
-
 
     constructor(
         name: string,
@@ -77,17 +107,15 @@ export class GeoJSONRegion extends Region {
 
         this.geometries = geometries;
 
-        if (!cp) {
-            const rect = this.getBoundingRect();
-            cp = [
-                rect.x + rect.width / 2,
-                rect.y + rect.height / 2
-            ];
-        }
-        else {
-            cp = [cp[0], cp[1]];
-        }
-        this._center = cp;
+        this._center = cp && [cp[0], cp[1]];
+    }
+
+    calcCenter() {
+        const rect = this.getBoundingRect();
+        return [
+            rect.x + rect.width / 2,
+            rect.y + rect.height / 2
+        ];
     }
 
     getBoundingRect(): BoundingRect {
@@ -102,20 +130,23 @@ export class GeoJSONRegion extends Region {
         const min2 = [] as number[];
         const max2 = [] as number[];
         const geometries = this.geometries;
-        let i = 0;
-        for (; i < geometries.length; i++) {
-            // Only support polygon
-            if (geometries[i].type !== 'polygon') {
-                continue;
-            }
-            // Doesn't consider hole
-            const exterior = geometries[i].exterior;
-            bbox.fromPoints(exterior, min2, max2);
+
+        function updateBBoxFromPoints(points: number[][]) {
+            bbox.fromPoints(points, min2, max2);
             vec2.min(min, min, min2);
             vec2.max(max, max, max2);
         }
+        each(geometries, geo => {
+            if (geo.type === 'polygon') {
+                // Doesn't consider hole
+                updateBBoxFromPoints(geo.exterior);
+            }
+            else {
+                each(geo.points, updateBBoxFromPoints);
+            }
+        });
         // No data
-        if (i === 0) {
+        if (!geometries.length) {
             min[0] = min[1] = max[0] = max[1] = 0;
         }
 
@@ -131,12 +162,13 @@ export class GeoJSONRegion extends Region {
             return false;
         }
         loopGeo: for (let i = 0, len = geometries.length; i < len; i++) {
+            const geo = geometries[i];
             // Only support polygon.
-            if (geometries[i].type !== 'polygon') {
+            if (geo.type !== 'polygon') {
                 continue;
             }
-            const exterior = geometries[i].exterior;
-            const interiors = geometries[i].interiors;
+            const exterior = geo.exterior;
+            const interiors = geo.interiors;
             if (polygonContain.contain(exterior, coord[0], coord[1])) {
                 // Not in the region if point is in the hole.
                 for (let k = 0; k < (interiors ? interiors.length : 0); k++) {
@@ -163,19 +195,17 @@ export class GeoJSONRegion extends Region {
         const transform = rect.calculateTransform(target);
         const geometries = this.geometries;
         for (let i = 0; i < geometries.length; i++) {
-            // Only support polygon.
-            if (geometries[i].type !== 'polygon') {
-                continue;
+            const geo = geometries[i];
+            if (geo.type === 'polygon') {
+                transformPoints(geo.exterior, transform);
+                each(geo.interiors, interior => {
+                    transformPoints(interior, transform);
+                });
             }
-            const exterior = geometries[i].exterior;
-            const interiors = geometries[i].interiors;
-            for (let p = 0; p < exterior.length; p++) {
-                vec2.applyTransform(exterior[p], exterior[p], transform);
-            }
-            for (let h = 0; h < (interiors ? interiors.length : 0); h++) {
-                for (let p = 0; p < interiors[h].length; p++) {
-                    vec2.applyTransform(interiors[h][p], interiors[h][p], transform);
-                }
+            else {
+                each(geo.points, points => {
+                    transformPoints(points, transform);
+                });
             }
         }
         rect = this._rect;
@@ -194,22 +224,11 @@ export class GeoJSONRegion extends Region {
         newRegion.transformTo = null; // Simply avoid to be called.
         return newRegion;
     }
-
-    getCenter() {
-        return this._center;
-    }
-
-    setCenter(center: number[]) {
-        this._center = center;
-    }
-
 }
 
 export class GeoSVGRegion extends Region {
 
     readonly type = 'geoSVG';
-
-    private _center: number[];
 
     // Can only be used to calculate, but not be modified.
     // Becuase this el may not belongs to this view,
@@ -224,17 +243,7 @@ export class GeoSVGRegion extends Region {
         this._elOnlyForCalculate = elOnlyForCalculate;
     }
 
-    getCenter() {
-        let center = this._center;
-        if (!center) {
-            // In most cases there are no need to calculate this center.
-            // So calculate only when called.
-            center = this._center = this._calculateCenter();
-        }
-        return center;
-    }
-
-    private _calculateCenter(): number[] {
+    calcCenter(): number[] {
         const el = this._elOnlyForCalculate;
         const rect = el.getBoundingRect();
         const center = [

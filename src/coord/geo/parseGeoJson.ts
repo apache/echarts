@@ -22,7 +22,7 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
-import { GeoJSONRegion } from './Region';
+import { GeoJSONLineStringGeometry, GeoJSONPolygonGeometry, GeoJSONRegion } from './Region';
 import { GeoJSONCompressed, GeoJSON } from './geoTypes';
 
 
@@ -114,27 +114,26 @@ export default function parseGeoJSON(geoJson: GeoJSON | GeoJSONCompressed, nameP
         const geo = featureObj.geometry;
 
         const geometries = [] as GeoJSONRegion['geometries'];
-        if (geo.type === 'Polygon') {
-            const coordinates = geo.coordinates;
-            geometries.push({
-                type: 'polygon',
+        switch (geo.type) {
+            case 'Polygon':
+                const coordinates = geo.coordinates;
                 // According to the GeoJSON specification.
                 // First must be exterior, and the rest are all interior(holes).
-                exterior: coordinates[0],
-                interiors: coordinates.slice(1)
-            });
-        }
-        if (geo.type === 'MultiPolygon') {
-            const coordinates = geo.coordinates;
-            zrUtil.each(coordinates, function (item) {
-                if (item[0]) {
-                    geometries.push({
-                        type: 'polygon',
-                        exterior: item[0],
-                        interiors: item.slice(1)
-                    });
-                }
-            });
+                geometries.push(new GeoJSONPolygonGeometry(coordinates[0], coordinates.slice(1)));
+                break;
+            case 'MultiPolygon':
+                zrUtil.each(geo.coordinates, function (item) {
+                    if (item[0]) {
+                        geometries.push(new GeoJSONPolygonGeometry(item[0], item.slice(1)));
+                    }
+                });
+                break;
+            case 'LineString':
+                geometries.push(new GeoJSONLineStringGeometry([geo.coordinates]));
+                break;
+            case 'MultiLineString':
+                geometries.push(new GeoJSONLineStringGeometry(geo.coordinates));
+
         }
 
         const region = new GeoJSONRegion(
