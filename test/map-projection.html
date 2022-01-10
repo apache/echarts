@@ -24,7 +24,7 @@ under the License.
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
-        <script src="https://cdn.jsdelivr.net/npm/d3-geo@3"></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3-geo@3/dist/d3-geo.js"></script>
 
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
@@ -96,16 +96,31 @@ under the License.
                 }
                 return points;
             }
+            function normalizePoint(pt) {
+                if (pt[0] === -180) {
+                    pt[0] += 1e-2;
+                }
+                if (pt[0] === 180) {
+                    pt[0] -= 1e-2;
+                }
+                if (pt[1] === -80) {
+                    pt[1] += 1e-2;
+                }
+                if (pt[1] === 80) {
+                    pt[1] -= 1e-2;
+                }
+                return pt;
+            }
             // Add graticule
             var graticuleLineStrings = [];
             for (var lat = -80; lat <= 80; lat += 10) {
                 graticuleLineStrings.push(
-                    createLineString([-180, lat], [180, lat])
+                    createLineString(normalizePoint([-180, lat]), normalizePoint([180, lat]))
                 );
             }
             for (var lng = -180; lng <= 180; lng += 10) {
                 graticuleLineStrings.push(
-                    createLineString([lng, -80], [lng, 80])
+                    createLineString(normalizePoint([lng, -80]), normalizePoint([lng, 80]))
                 );
             }
 
@@ -349,36 +364,47 @@ under the License.
 
             [
                 // Azimuthal Projections
-                'geoAzimuthalEqualArea',
-                'geoAzimuthalEquidistant',
+                ['geoAzimuthalEqualArea'],
+                ['geoAzimuthalEquidistant'],
                 // 'geoGnomonic',
-                'geoOrthographic',
-                'geoStereographic',
+                ['geoOrthographic'],
+                ['geoStereographic', d3.geoStereographic().rotate([-27, 0])],
 
                 // Equal-Earth
-                'geoEqualEarth',
+                ['geoEqualEarth'],
 
                 // Conic Projections
-                'geoConicConformal',
-                'geoConicEqualArea',
-                'geoConicEquidistant',
+                ['geoConicConformal'],
+                ['geoConicEqualArea'],
+                ['geoConicEquidistant'],
 
                 // Cylindrical Projections
-                'geoEquirectangular',
-                'geoMercator',
-                'geoTransverseMercator',
-                'geoNaturalEarth1'
-            ].forEach(projectionName => {
-                var projection = d3[projectionName]();
+                ['geoEquirectangular'],
+                ['geoMercator'],
+                ['geoTransverseMercator', d3.geoStereographic()],
+                ['geoNaturalEarth1']
+            ].forEach(([projectionName, projection]) => {
+                projection = projection || d3[projectionName]();
                 const dom = document.createElement('div');
                 dom.className = 'chart';
                 document.querySelector('#main').appendChild(dom);
 
                 const chart = echarts.init(dom);
                 const option = createOption(projectionName, {
-                    project: (pt) => projection(pt),
+                    project: (pt) => {
+                        return projection(pt)
+                    },
                     unproject: (pt) => projection.invert(pt)
                 });
+                if (projectionName === 'geoStereographic') {
+                    // TODO
+                    option.series[0].center = projection([0, 0]);
+                    option.series[0].zoom = 30;
+                }
+                else if (projectionName === 'geoTransverseMercator') {
+                    option.series[0].center = projection([0, 0]);
+                    option.series[0].zoom = 4000;
+                }
                 chart.setOption(option);
             });
 

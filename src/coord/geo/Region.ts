@@ -19,16 +19,17 @@
 
 
 import BoundingRect from 'zrender/src/core/BoundingRect';
-import * as bbox from 'zrender/src/core/bbox';
 import * as vec2 from 'zrender/src/core/vector';
 import * as polygonContain from 'zrender/src/contain/polygon';
 import { GeoJSON, GeoSVGGraphicRoot } from './geoTypes';
 import * as matrix from 'zrender/src/core/matrix';
 import Element from 'zrender/src/Element';
-import { each, map } from 'zrender/src/core/util';
+import { each } from 'zrender/src/core/util';
 import { GeoProjection } from './GeoModel';
 
 const TMP_TRANSFORM = [] as number[];
+const mathMin = Math.min;
+const mathMax = Math.max;
 
 function transformPoints(points: number[][], transform: matrix.MatrixArray) {
     for (let p = 0; p < points.length; p++) {
@@ -89,6 +90,23 @@ export class GeoJSONLineStringGeometry {
         this.points = points;
     }
 }
+function updateBBoxFromPoints(
+    points: ArrayLike<number>[],
+    min: vec2.VectorArray,
+    max: vec2.VectorArray,
+    projection: GeoProjection
+) {
+    for (let i = 0; i < points.length; i++) {
+        let p = points[i];
+        if (projection) {
+            p = projection.project(p as number[]);
+        }
+        if (isFinite(p[0]) && isFinite(p[1])) {
+            vec2.min(min, min, p as vec2.VectorArray);
+            vec2.max(max, max, p as vec2.VectorArray);
+        }
+    }
+}
 
 export class GeoJSONRegion extends Region {
 
@@ -126,32 +144,23 @@ export class GeoJSONRegion extends Region {
             return rect;
         }
 
-        const MAX_NUMBER = Number.MAX_VALUE;
-        const min = [MAX_NUMBER, MAX_NUMBER];
-        const max = [-MAX_NUMBER, -MAX_NUMBER];
-        const min2 = [] as number[];
-        const max2 = [] as number[];
+        const min = [Infinity, Infinity];
+        const max = [-Infinity, -Infinity];
         const geometries = this.geometries;
 
-        function updateBBoxFromPoints(points: number[][]) {
-            if (projection) {
-                points = map(points, projection.project);
-            }
-            bbox.fromPoints(points, min2, max2);
-            vec2.min(min, min, min2);
-            vec2.max(max, max, max2);
-        }
         each(geometries, geo => {
             if (geo.type === 'polygon') {
                 // Doesn't consider hole
-                updateBBoxFromPoints(geo.exterior);
+                updateBBoxFromPoints(geo.exterior, min, max, projection);
             }
             else {
-                each(geo.points, updateBBoxFromPoints);
+                each(geo.points, (points) => {
+                    updateBBoxFromPoints(points, min, max, projection);
+                });
             }
         });
-        // No data
-        if (!geometries.length) {
+        // Normalie invalid bounding.
+        if (!(isFinite(min[0]) && isFinite(min[1]) && isFinite(max[0]) && isFinite(max[1]))) {
             min[0] = min[1] = max[0] = max[1] = 0;
         }
         rect = new BoundingRect(
