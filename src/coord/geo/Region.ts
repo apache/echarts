@@ -25,7 +25,8 @@ import * as polygonContain from 'zrender/src/contain/polygon';
 import { GeoJSON, GeoSVGGraphicRoot } from './geoTypes';
 import * as matrix from 'zrender/src/core/matrix';
 import Element from 'zrender/src/Element';
-import { each } from 'zrender/src/core/util';
+import { each, map } from 'zrender/src/core/util';
+import { GeoProjection } from './GeoModel';
 
 const TMP_TRANSFORM = [] as number[];
 
@@ -118,9 +119,10 @@ export class GeoJSONRegion extends Region {
         ];
     }
 
-    getBoundingRect(): BoundingRect {
-        const rect = this._rect;
-        if (rect) {
+    getBoundingRect(projection?: GeoProjection): BoundingRect {
+        let rect = this._rect;
+        // Always recalculate if using projection.
+        if (rect && !projection) {
             return rect;
         }
 
@@ -132,6 +134,9 @@ export class GeoJSONRegion extends Region {
         const geometries = this.geometries;
 
         function updateBBoxFromPoints(points: number[][]) {
+            if (projection) {
+                points = map(points, projection.project);
+            }
             bbox.fromPoints(points, min2, max2);
             vec2.min(min, min, min2);
             vec2.max(max, max, max2);
@@ -149,10 +154,14 @@ export class GeoJSONRegion extends Region {
         if (!geometries.length) {
             min[0] = min[1] = max[0] = max[1] = 0;
         }
-
-        return (this._rect = new BoundingRect(
+        rect = new BoundingRect(
             min[0], min[1], max[0] - min[0], max[1] - min[1]
-        ));
+        );
+        if (!projection) {
+            this._rect = rect;
+        }
+
+        return rect;
     }
 
     contain(coord: number[]): boolean {
@@ -182,6 +191,13 @@ export class GeoJSONRegion extends Region {
         return false;
     }
 
+    /**
+     * Transform the raw coords to target bounding.
+     * @param x
+     * @param y
+     * @param width
+     * @param height
+     */
     transformTo(x: number, y: number, width: number, height: number): void {
         let rect = this.getBoundingRect();
         const aspect = rect.width / rect.height;
@@ -216,6 +232,8 @@ export class GeoJSONRegion extends Region {
             rect.y + rect.height / 2
         ];
     }
+
+
 
     cloneShallow(name: string): GeoJSONRegion {
         name == null && (name = this.name);

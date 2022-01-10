@@ -25,8 +25,9 @@ import { GeoJSONRegion, Region } from './Region';
 import { GeoResource, NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING } from '../../util/model';
-import GeoModel from './GeoModel';
+import GeoModel, { GeoProjection } from './GeoModel';
 import { resizeGeoType } from './geoCreator';
+import { warn } from '../../util/log';
 
 const GEO_DEFAULT_PARAMS: {
     [type in GeoResource['type']]: {
@@ -64,6 +65,7 @@ class Geo extends View {
     readonly regions: Region[];
     readonly aspectScale: number;
 
+    projection: GeoProjection;
     // Injected outside
     model: GeoModel;
     resize: resizeGeoType;
@@ -72,6 +74,7 @@ class Geo extends View {
         name: string,
         map: string,
         opt: {
+            projection?: GeoProjection;
             // Specify name alias
             nameMap?: NameMap;
             nameProperty?: string;
@@ -82,35 +85,52 @@ class Geo extends View {
 
         this.map = map;
 
-        const source = geoSourceManager.load(map, opt.nameMap, opt.nameProperty);
+        let projection = opt.projection;
+        const source = geoSourceManager.load(
+            map,
+            opt.nameMap,
+            opt.nameProperty
+        );
         const resource = geoSourceManager.getGeoResource(map);
-        this.resourceType = resource ? resource.type : null;
+        const resourceType = this.resourceType = resource ? resource.type : null;
+        const regions = this.regions = source.regions;
 
-        const defaultParmas = GEO_DEFAULT_PARAMS[resource.type];
+        const defaultParams = GEO_DEFAULT_PARAMS[resource.type];
 
         this._regionsMap = source.regionsMap;
-        this._invertLongitute = defaultParmas.invertLongitute;
         this.regions = source.regions;
-        this.aspectScale = zrUtil.retrieve2(opt.aspectScale, defaultParmas.aspectScale);
 
-        const boundingRect = source.boundingRect;
+        if (resourceType === 'geoSVG' && projection) {
+            if (__DEV__) {
+                warn(`Map ${map} with SVG source can't use projection. Only GeoJSON source supports projection.`);
+            }
+            projection = null;
+        }
+        this.projection = projection;
+
+        let boundingRect;
+        if (projection) {
+            // Can't reuse the raw bounding rect
+            for (let i = 0; i < regions.length; i++) {
+                const regionRect = (regions[i] as GeoJSONRegion).getBoundingRect(projection);
+                boundingRect = boundingRect || regionRect.clone();
+                boundingRect.union(regionRect);
+            }
+        }
+        else {
+            boundingRect = source.boundingRect;
+        }
         this.setBoundingRect(boundingRect.x, boundingRect.y, boundingRect.width, boundingRect.height);
-    }
 
-    /**
-     * Whether contain the given [lng, lat] coord.
-     */
-    // Never used yet.
-    // containCoord(coord: number[]) {
-    //     const regions = this.regions;
-    //     for (let i = 0; i < regions.length; i++) {
-    //         const region = regions[i];
-    //         if (region.type === 'geoJSON' && (region as GeoJSONRegion).contain(coord)) {
-    //             return true;
-    //         }
-    //     }
-    //     return false;
-    // }
+
+        // aspectScale and invertLongitute actually is the parameters default raw projection.
+        // So we ignore them if projection is given.
+
+        // Ignore default aspect scale if projection exits.
+        this.aspectScale = projection ? 1 : zrUtil.retrieve2(opt.aspectScale, defaultParams.aspectScale);
+        // Not invert longitute if projection exits.
+        this._invertLongitute = projection ? false : defaultParams.invertLongitute;
+    }
 
     protected _transformTo(x: number, y: number, width: number, height: number): void {
         let rect = this.getBoundingRect();
@@ -177,8 +197,27 @@ class Geo extends View {
             data = this.getGeoCoord(data);
         }
         if (data) {
-            return View.prototype.dataToPoint.call(this, data, noRoam, out);
+            const projection = this.projection;
+            return super.dataToPoint(
+                projection ? projection.project(data) : data,
+                noRoam, out
+            );
         }
+    }
+
+    pointToData(point: number[]) {
+        const projection = this.projection;
+        if (projection) {
+            point = projection.project(point);
+        }
+        return this.pointToProjected(point);
+    }
+
+    /**
+     * Point to projected data. Same with pointToData when projection is used.
+     */
+    pointToProjected(point: number[]) {
+        return super.pointToData(point);
     }
 
     convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: number[]): number[] {
@@ -190,7 +229,6 @@ class Geo extends View {
         const coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.pointToData(pixel) : null;
     }
-
 };
 
 zrUtil.mixin(Geo, View);

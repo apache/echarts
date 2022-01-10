@@ -108,6 +108,17 @@ function getFixedItemStyle(model: Model<GeoItemStyleOption>) {
 
     return itemStyle;
 }
+// Only stroke can be used for line.
+// Using fill in style if stroke not exits.
+// TODO Not sure yet. Perhaps a separate `lineStyle`?
+function fixLineStyle(styleHost: { style: graphic.Path['style'] }) {
+    const style = styleHost.style;
+    if (style) {
+        style.stroke = (style.stroke || style.fill);
+        style.fill = null;
+    }
+}
+
 class MapDraw {
 
     private uid: string;
@@ -234,8 +245,12 @@ class MapDraw {
         const transformInfoRaw = viewBuildCtx.transformInfoRaw;
         const mapOrGeoModel = viewBuildCtx.mapOrGeoModel;
         const data = viewBuildCtx.data;
+        const projection = viewBuildCtx.geo.projection;
 
         function transformPoint(point: number[]): number[] {
+            if (projection) {
+                point = projection.project(point);
+            }
             return [
                 point[0] * transformInfoRaw.scaleX + transformInfoRaw.x,
                 point[1] * transformInfoRaw.scaleY + transformInfoRaw.y
@@ -308,17 +323,6 @@ class MapDraw {
             });
 
             const centerPt = transformPoint(region.getCenter());
-
-            // Only stroke can be used for line.
-            // Using fill in style if stroke not exits.
-            // TODO Not sure yet. Perhaps a separate `lineStyle`?
-            function fixLineStyle(styleHost: { style: graphic.Path['style'] }) {
-                const style = styleHost.style;
-                if (style) {
-                    style.stroke = (style.stroke || style.fill);
-                    style.fill = null;
-                }
-            }
 
             function createCompoundPath(subpaths: graphic.Path[], isLine?: boolean) {
                 if (!subpaths.length) {

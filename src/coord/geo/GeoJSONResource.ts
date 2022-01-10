@@ -18,7 +18,7 @@
 */
 
 
-import { each, isString, createHashMap } from 'zrender/src/core/util';
+import { each, isString, createHashMap, hasOwn } from 'zrender/src/core/util';
 import parseGeoJson from './parseGeoJson';
 // Built-in GEO fixer.
 import fixNanhai from './fix/nanhai';
@@ -80,7 +80,7 @@ export class GeoJSONResource implements GeoResource {
             let regionName = region.name;
 
             // Try use the alias in geoNameMap
-            if (nameMap && nameMap.hasOwnProperty(regionName)) {
+            if (nameMap && hasOwn(nameMap, regionName)) {
                 region = region.cloneShallow(regionName = nameMap[regionName]);
             }
 

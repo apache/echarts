@@ -22,7 +22,7 @@ import Geo, { geo2DDimensions } from './Geo';
 import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
 import geoSourceManager from './geoSourceManager';
-import GeoModel, { GeoOption, RegoinOption } from './GeoModel';
+import GeoModel, { GeoCommonOptionMixin, GeoOption, RegoinOption } from './GeoModel';
 import MapSeries, { MapSeriesOption } from '../../chart/map/MapSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { CoordinateSystemCreator } from '../CoordinateSystem';
@@ -32,6 +32,7 @@ import { SeriesOption, SeriesOnGeoOptionMixin } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
 import ComponentModel from '../../model/Component';
+import { Model } from '../../echarts.all';
 
 
 export type resizeGeoType = typeof resizeGeo;
@@ -135,15 +136,21 @@ class GeoCreator implements CoordinateSystemCreator {
     create(ecModel: GlobalModel, api: ExtensionAPI): Geo[] {
         const geoList = [] as Geo[];
 
+        function getCommonGeoProperties(model: Model<GeoCommonOptionMixin>) {
+            return {
+                nameProperty: model.get('nameProperty'),
+                aspectScale: model.get('aspectScale'),
+                projection: model.get('projection')
+            };
+        }
+
         // FIXME Create each time may be slow
         ecModel.eachComponent('geo', function (geoModel: GeoModel, idx) {
-            const name = geoModel.get('map');
+            const mapName = geoModel.get('map');
 
-            const geo = new Geo(name + idx, name, {
-                nameMap: geoModel.get('nameMap'),
-                nameProperty: geoModel.get('nameProperty'),
-                aspectScale: geoModel.get('aspectScale')
-            });
+            const geo = new Geo(mapName + idx, mapName, zrUtil.extend({
+                nameMap: geoModel.get('nameMap')
+            }, getCommonGeoProperties(geoModel)));
 
             geo.zoomLimit = geoModel.get('scaleLimit');
             geoList.push(geo);
@@ -185,11 +192,9 @@ class GeoCreator implements CoordinateSystemCreator {
                 return singleMapSeries.get('nameMap');
             });
 
-            const geo = new Geo(mapType, mapType, {
-                nameMap: zrUtil.mergeAll(nameMapList),
-                nameProperty: mapSeries[0].get('nameProperty'),
-                aspectScale: mapSeries[0].get('aspectScale')
-            });
+            const geo = new Geo(mapType, mapType, zrUtil.extend({
+                nameMap: zrUtil.mergeAll(nameMapList)
+            }, getCommonGeoProperties(mapSeries[0])));
 
             geo.zoomLimit = zrUtil.retrieve.apply(null, zrUtil.map(mapSeries, function (singleMapSeries) {
                 return singleMapSeries.get('scaleLimit');
