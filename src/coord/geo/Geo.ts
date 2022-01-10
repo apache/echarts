@@ -198,17 +198,17 @@ class Geo extends View {
         }
         if (data) {
             const projection = this.projection;
-            return super.dataToPoint(
-                projection ? projection.project(data) : data,
-                noRoam, out
-            );
+            if (projection) {
+                data = projection.project(data);
+            }
+            return this.projectedToPoint(data);
         }
     }
 
     pointToData(point: number[]) {
         const projection = this.projection;
         if (projection) {
-            point = projection.project(point);
+            point = projection.unproject(point);
         }
         return this.pointToProjected(point);
     }
@@ -218,6 +218,10 @@ class Geo extends View {
      */
     pointToProjected(point: number[]) {
         return super.pointToData(point);
+    }
+
+    projectedToPoint(projected: number[], noRoam?: boolean, out?: number[]) {
+        return super.dataToPoint(projected, noRoam, out);
     }
 
     convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: number[]): number[] {

@@ -48,7 +48,9 @@ export function updateCenterAndZoom(
     const center = view.getCenter();
     let zoom = payload.zoom;
 
-    const point = view.dataToPoint(center);
+    const point = (view as Geo).projectedToPoint
+        ? (view as Geo).projectedToPoint(center)
+        : view.dataToPoint(center);
 
     if (payload.dx != null && payload.dy != null) {
         point[0] -= payload.dx;
