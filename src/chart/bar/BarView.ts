@@ -67,8 +67,6 @@ import {createSectorCalculateTextPosition, SectorTextPosition, setSectorTextRota
 import { saveOldStyle } from '../../animation/basicTrasition';
 import Element from 'zrender/src/Element';
 
-const _eventPos = [0, 0];
-
 const mathMax = Math.max;
 const mathMin = Math.min;
 

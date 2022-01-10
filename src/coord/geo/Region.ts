@@ -34,7 +34,48 @@ function transformPoints(points: number[][], transform: matrix.MatrixArray) {
         vec2.applyTransform(points[p], points[p], transform);
     }
 }
+function updateBBoxFromPoints(
+    points: ArrayLike<number>[],
+    min: vec2.VectorArray,
+    max: vec2.VectorArray,
+    projection: GeoProjection
+) {
+    for (let i = 0; i < points.length; i++) {
+        let p = points[i];
+        if (projection) {
+            // projection may return null point.
+            p = projection.project(p as number[]);
+        }
+        if (p && isFinite(p[0]) && isFinite(p[1])) {
+            vec2.min(min, min, p as vec2.VectorArray);
+            vec2.max(max, max, p as vec2.VectorArray);
+        }
+    }
+}
 
+function centroid(points: number[][]) {
+    let signedArea = 0;
+    let cx = 0;
+    let cy = 0;
+    const len = points.length;
+    let x0 = points[len - 1][0];
+    let y0 = points[len - 1][1];
+    // Polygon should been closed.
+    for (let i = 0; i < len; i++) {
+        const x1 = points[i][0];
+        const y1 = points[i][1];
+        const a = x0 * y1 - x1 * y0;
+        signedArea += a;
+        cx += (x0 + x1) * a;
+        cy += (y0 + y1) * a;
+        x0 = x1;
+        y0 = y1;
+    }
+
+    return signedArea
+        ? [cx / signedArea / 3, cy / signedArea / 3, signedArea]
+        : [points[0][0] || 0, points[0][1] || 0];
+}
 export abstract class Region {
 
     readonly name: string;
@@ -88,25 +129,6 @@ export class GeoJSONLineStringGeometry {
         this.points = points;
     }
 }
-function updateBBoxFromPoints(
-    points: ArrayLike<number>[],
-    min: vec2.VectorArray,
-    max: vec2.VectorArray,
-    projection: GeoProjection
-) {
-    for (let i = 0; i < points.length; i++) {
-        let p = points[i];
-        if (projection) {
-            // projection may return null point.
-            p = projection.project(p as number[]);
-        }
-        if (p && isFinite(p[0]) && isFinite(p[1])) {
-            vec2.min(min, min, p as vec2.VectorArray);
-            vec2.max(max, max, p as vec2.VectorArray);
-        }
-    }
-}
-
 export class GeoJSONRegion extends Region {
 
     readonly type = 'geoJSON';
@@ -129,6 +151,25 @@ export class GeoJSONRegion extends Region {
     }
 
     calcCenter() {
+        const geometries = this.geometries;
+        let largestGeo: GeoJSONPolygonGeometry;
+        let largestGeoSize = 0;
+        for (let i = 0; i < geometries.length; i++) {
+            const geo = geometries[i] as GeoJSONPolygonGeometry;
+            const exterior = geo.exterior;
+            // Simple trick to use points count instead of polygon area as region size.
+            // Ignore linestring
+            const size = exterior && exterior.length;
+            if (size > largestGeoSize) {
+                largestGeo = geo;
+                largestGeoSize = size;
+            }
+        }
+        if (largestGeo) {
+            return centroid(largestGeo.exterior);
+        }
+
+        // from bounding rect by default.
         const rect = this.getBoundingRect();
         return [
             rect.x + rect.width / 2,
