@@ -618,9 +618,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             const selectedMap = option.selectedMap;
             for (let i = 0; i < len; i++) {
                 const dataIndex = innerDataIndices[i];
-                if (data.getItemModel<StatesOptionMixin<unknown, unknown>>(dataIndex).get(['select', 'disabled'])) {
-                    continue;
-                }
                 // TODO diffrent types of data share same object.
                 const nameOrId = getSelectionKey(data, dataIndex);
                 selectedMap[nameOrId] = true;
@@ -632,9 +629,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
                 option.selectedMap = {};
             }
             const lastDataIndex = innerDataIndices[len - 1];
-            if (data.getItemModel<StatesOptionMixin<unknown, unknown>>(lastDataIndex).get(['select', 'disabled'])) {
-                return;
-            }
             const nameOrId = getSelectionKey(data, lastDataIndex);
             option.selectedMap = {
                 [nameOrId]: true
