@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3-geo@3/dist/d3-geo.js"></script>
+
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
+
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            body {
+                margin: 0;
+            }
+            #main {
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                right: 0;
+            }
+        </style>
+
+
+
+        <div id="main"></div>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts',
+            './data/map/json/world.json',
+            './data/usa.json'
+        ], function (echarts, worldJson, usaJson) {
+
+            var d3Projections =  [
+                ['default'],
+                // Azimuthal Projections
+                ['geoAzimuthalEqualArea'],
+                ['geoAzimuthalEquidistant'],
+                // 'geoGnomonic',
+                ['geoOrthographic'],
+                ['geoStereographic', d3.geoStereographic().rotate([-27, 0])],
+
+
+                // Conic Projections
+                ['geoConicConformal'],
+                ['geoConicEqualArea'],
+                ['geoConicEquidistant'],
+
+                // Cylindrical Projections
+                ['geoEquirectangular'],
+                ['geoMercator'],
+                ['geoTransverseMercator', d3.geoStereographic()],
+                // Equal-Earth
+                ['geoEqualEarth'],
+                ['geoNaturalEarth1']
+            ];
+
+            function createLineString(start, end) {
+                var dx = end[0] - start[0];
+                var dy = end[1] - start[1];
+                var segs = 100;
+                var stepX = dx / segs;
+                var stepY = dy / segs;
+                var points = [];
+                // TODO needs adaptive sampling on the -180 / 180 of azimuthal projections.
+                for (let i = 0; i <= segs; i++) {
+                    points.push([
+                        start[0] + i * stepX,
+                        start[1] + i * stepY
+                    ]);
+                }
+                return points;
+            }
+            function normalizePoint(pt) {
+                if (pt[0] === -180) {
+                    pt[0] += 1e-2;
+                }
+                if (pt[0] === 180) {
+                    pt[0] -= 1e-2;
+                }
+                if (pt[1] === -80) {
+                    pt[1] += 1e-2;
+                }
+                if (pt[1] === 80) {
+                    pt[1] -= 1e-2;
+                }
+                return pt;
+            }
+            // Add graticule
+            var graticuleLineStrings = [];
+            for (var lat = -80; lat <= 80; lat += 10) {
+                graticuleLineStrings.push(
+                    createLineString(normalizePoint([-180, lat]), normalizePoint([180, lat]))
+                );
+            }
+            for (var lng = -180; lng <= 180; lng += 10) {
+                graticuleLineStrings.push(
+                    createLineString(normalizePoint([lng, -80]), normalizePoint([lng, 80]))
+                );
+            }
+
+            worldJson.features.unshift({
+                geometry: {
+                    type: 'MultiLineString',
+                    coordinates: graticuleLineStrings
+                },
+                properties: {
+                    name: 'graticule'
+                }
+            });
+
+
+            echarts.registerMap('world', worldJson);
+
+            function createWorldOption(name, projection) {
+                return {
+                    series : [
+                        {
+                            type: 'map',
+                            map: 'world',
+                            roam: false,
+                            itemStyle: {
+                                borderColor: '#fff',
+                                areaColor: '#000'
+                            },
+                            projection,
+                            universalTransition: true,
+                            animationDurationUpdate: 2000,
+                            data:[
+                                {
+                                    name: 'graticule',
+                                    itemStyle: {
+                                        borderColor: '#ddd'
+                                    },
+                                    emphasis: {
+                                        itemStyle: {
+                                            borderColor: '#ddd'
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                };
+            }
+
+            var chart = echarts.init(document.querySelector('#main'));
+
+            var config = {
+                projection: 'default'
+            };
+
+            function updateProjection(projectionName) {
+                var projection = d3Projections.find(item => item[0] === projectionName)[1]
+                    || d3[projectionName] && d3[projectionName]();
+                var projectionOpt = projection && {
+                    project: (pt) => {
+                        return projection(pt)
+                    },
+                    unproject: (pt) => projection.invert(pt)
+                };
+                var option = createWorldOption(projectionName, projectionOpt);
+                if (projectionName === 'geoStereographic') {
+                    // TODO
+                    option.series[0].center = projection([0, 0]);
+                    option.series[0].zoom = 30;
+                }
+                else if (projectionName === 'geoTransverseMercator') {
+                    option.series[0].center = projection([0, 0]);
+                    option.series[0].zoom = 4000;
+                }
+                else {
+                    option.series[0].center = null,
+                    option.series[0].zoom = 1;
+                }
+                option.title = {
+                    text: projectionName,
+                    left: 'center',
+                    top: 0,
+                    textStyle: {
+                        fontSize: 14
+                    }
+                };
+                chart.setOption(option);
+            }
+
+            updateProjection(config.projection);
+
+            var gui = new dat.GUI();
+            gui.add(config, 'projection',  d3Projections.map(item => item[0])).onChange(function () {
+                updateProjection(config.projection);
+            })
+        });
+        </script>
+
+
+    </body>
+</html>
+
