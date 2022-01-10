@@ -28,8 +28,6 @@ import { each } from 'zrender/src/core/util';
 import { GeoProjection } from './GeoModel';
 
 const TMP_TRANSFORM = [] as number[];
-const mathMin = Math.min;
-const mathMax = Math.max;
 
 function transformPoints(points: number[][], transform: matrix.MatrixArray) {
     for (let p = 0; p < points.length; p++) {
@@ -99,9 +97,10 @@ function updateBBoxFromPoints(
     for (let i = 0; i < points.length; i++) {
         let p = points[i];
         if (projection) {
+            // projection may return null point.
             p = projection.project(p as number[]);
         }
-        if (isFinite(p[0]) && isFinite(p[1])) {
+        if (p && isFinite(p[0]) && isFinite(p[1])) {
             vec2.min(min, min, p as vec2.VectorArray);
             vec2.max(max, max, p as vec2.VectorArray);
         }
@@ -241,8 +240,6 @@ export class GeoJSONRegion extends Region {
             rect.y + rect.height / 2
         ];
     }
-
-
 
     cloneShallow(name: string): GeoJSONRegion {
         name == null && (name = this.name);

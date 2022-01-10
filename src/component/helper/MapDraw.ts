@@ -249,9 +249,10 @@ class MapDraw {
 
         function transformPoint(point: number[]): number[] {
             if (projection) {
+                // projection may return null point.
                 point = projection.project(point);
             }
-            return [
+            return point && [
                 point[0] * transformInfoRaw.scaleX + transformInfoRaw.x,
                 point[1] * transformInfoRaw.scaleY + transformInfoRaw.y
             ];
@@ -260,7 +261,8 @@ class MapDraw {
         function transformPoints(inPoints: number[][]): number[][] {
             const outPoints = [];
             for (let i = 0; i < inPoints.length; ++i) {
-                outPoints.push(transformPoint(inPoints[i]));
+                const newPt = transformPoint(inPoints[i]);
+                newPt && outPoints.push(newPt);
             }
             return outPoints;
         }

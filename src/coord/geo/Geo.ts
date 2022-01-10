@@ -199,18 +199,20 @@ class Geo extends View {
         if (data) {
             const projection = this.projection;
             if (projection) {
+                // projection may return null point.
                 data = projection.project(data);
             }
-            return this.projectedToPoint(data);
+            return data && this.projectedToPoint(data);
         }
     }
 
     pointToData(point: number[]) {
         const projection = this.projection;
         if (projection) {
+            // projection may return null point.
             point = projection.unproject(point);
         }
-        return this.pointToProjected(point);
+        return point && this.pointToProjected(point);
     }
 
     /**
