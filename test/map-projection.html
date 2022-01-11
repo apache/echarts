@@ -87,13 +87,15 @@ under the License.
             ], function (echarts, worldJson) {
                 echarts.registerMap('world', worldJson)
 
-                const projection = d3.geoMercator()
+                const projection = d3.geoProjection((x, y) => ([x, y]))
                     .rotate([-115, 0]);
 
                 option = {
                     series: {
                         type: 'map',
                         map: 'world',
+                        top: 0,
+                        bottom: 0,
                         itemStyle: {
                             areaColor: '#eee',
                             borderColor: '#000'
@@ -681,7 +683,8 @@ under the License.
                 );
             }
 
-            var projection = d3.geoStereographic().rotate([-27, 0]);
+            // var projection = d3.geoStereographic().rotate([-27, 0]);
+            var projection = d3.geoOrthographic();
 
             // Clone
             worldJson = JSON.parse(JSON.stringify(worldJson));
@@ -706,9 +709,7 @@ under the License.
                         borderColor: '#fff',
                         areaColor: '#000'
                     },
-                    center: projection([0, 0]),
                     roam: false,
-                    zoom: 30,
                     data: [
                         {
                             name: 'graticule',
@@ -760,7 +761,7 @@ under the License.
                     const x = e.offsetX;
                     const y = e.offsetY;
 
-                    projection.rotate([oRot[0] - (x - ox) / 10, oRot[1] - (y - oy) / 10]);
+                    projection.rotate([oRot[0] + (x - ox) / 4, oRot[1] - (y - oy) / 4]);
 
                     chart.setOption({
                         series: [{
