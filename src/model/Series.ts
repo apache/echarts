@@ -569,22 +569,9 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         }
 
         const data = this.getData(dataType);
-        
-        if (selectedMap === 'all') {
-            return !data.getItemModel<StatesOptionMixin<unknown, unknown>>(dataIndex).get(['select', 'disabled']);
-        }
 
-        const nameOrId = getSelectionKey(data, dataIndex);
-
-        if (selectedMap[nameOrId] != null) {
-            if (data.getItemModel<StatesOptionMixin<unknown, unknown>>(dataIndex).get(['select', 'disabled'])) {
-                return !selectedMap[nameOrId];
-            }
-
-            return selectedMap[nameOrId];
-        }
-
-        return false;
+        return (selectedMap === 'all' || selectedMap[getSelectionKey(data, dataIndex)])
+            && !data.getItemModel<StatesOptionMixin<unknown, unknown>>(dataIndex).get(['select', 'disabled'])
     }
 
     isUniversalTransitionEnabled(): boolean {
