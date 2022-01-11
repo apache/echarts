@@ -38,6 +38,7 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
+        <div id="main3"></div>
 
 
 
@@ -51,7 +52,7 @@ under the License.
             ], function (echarts, chinaJson) {
                 echarts.registerMap('china', chinaJson)
 
-                const projection = d3.geoMercator();
+                const projection = d3.geoMercator()
                 option = {
                     series: {
                         type: 'map',
@@ -72,6 +73,44 @@ under the License.
                 var chart = testHelper.create(echarts, 'main0', {
                     title: [
                         'China with Mercator projection'
+                    ],
+                    height: 500,
+                    option: option
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+                './data/map/json/world.json'
+            ], function (echarts, worldJson) {
+                echarts.registerMap('world', worldJson)
+
+                const projection = d3.geoMercator()
+                    .rotate([-115, 0]);
+
+                option = {
+                    series: {
+                        type: 'map',
+                        map: 'world',
+                        itemStyle: {
+                            areaColor: '#eee',
+                            borderColor: '#000'
+                        },
+                        projection: {
+                            project: (pt) => {
+                                return projection(pt)
+                            },
+                            unproject: (pt) => projection.invert(pt),
+                            stream: projection.stream
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Move China to Center'
                     ],
                     height: 500,
                     option: option
@@ -578,7 +617,7 @@ under the License.
                     ]
                 };
 
-                var chart = testHelper.create(echarts, 'main1', {
+                var chart = testHelper.create(echarts, 'main2', {
                     title: [
                         'Projection of Geo',
                         'Bubbles position should also be projected.'
@@ -689,12 +728,13 @@ under the License.
                         },
                         unproject(pt) {
                             return projection.invert(pt);
-                        }
+                        },
+                        stream: projection.stream
                     }
                 }]
             };
 
-            var chart = testHelper.create(echarts, 'main2', {
+            var chart = testHelper.create(echarts, 'main3', {
                 title: [
                     'Update projection through interaction'
                 ],
@@ -730,7 +770,8 @@ under the License.
                                 },
                                 unproject(pt) {
                                     return projection.invert(pt);
-                                }
+                                },
+                                stream: projection.stream
                             }
                         }]
                     })

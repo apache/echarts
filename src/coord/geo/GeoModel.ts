@@ -38,7 +38,7 @@ import {
     CommonTooltipOption,
     StatesMixinBase
 } from '../../util/types';
-import { NameMap } from './geoTypes';
+import { GeoProjection, NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
 import geoSourceManager from './geoSourceManager';
 
@@ -72,10 +72,6 @@ export interface GeoTooltipFormatterParams {
     $vars: ['name']
 }
 
-export interface GeoProjection {
-    project(point: number[]): number[]
-    unproject(point: number[]): number[]
-}
 
 export interface GeoCommonOptionMixin extends RoamOptionMixin {
     // Map name

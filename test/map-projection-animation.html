@@ -192,7 +192,8 @@ under the License.
                     project: (pt) => {
                         return projection(pt)
                     },
-                    unproject: (pt) => projection.invert(pt)
+                    unproject: (pt) => projection.invert(pt),
+                    stream: projection.stream
                 };
                 var option = createWorldOption(projectionName, projectionOpt);
                 if (projectionName === 'geoStereographic') {

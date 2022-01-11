@@ -50,6 +50,7 @@ import SeriesData from '../../data/SeriesData';
 import { GeoJSONRegion } from '../../coord/geo/Region';
 import { SVGNodeTagLower } from 'zrender/src/tool/parseSVG';
 import { makeInner } from '../../util/model';
+import { GeoProjection, ProjectionStream } from '../../coord/geo/geoTypes';
 
 interface RegionsGroup extends graphic.Group {
 }
@@ -246,11 +247,12 @@ class MapDraw {
         const mapOrGeoModel = viewBuildCtx.mapOrGeoModel;
         const data = viewBuildCtx.data;
         const projection = viewBuildCtx.geo.projection;
+        const projectionStream = projection && projection.stream;
 
-        function transformPoint(point: number[]): number[] {
-            if (projection) {
+        function transformPoint(point: number[], project: GeoProjection['project']): number[] {
+            if (project) {
                 // projection may return null point.
-                point = projection.project(point);
+                point = project(point);
             }
             return point && [
                 point[0] * transformInfoRaw.scaleX + transformInfoRaw.x,
@@ -258,13 +260,23 @@ class MapDraw {
             ];
         };
 
-        function transformPoints(inPoints: number[][]): number[][] {
+        function transformPolygonPoints(inPoints: number[][]): number[][] {
             const outPoints = [];
+            // If projectionStream is provided. Use it instead of single point project.
+            const project = !projectionStream && projection && projection.project;
             for (let i = 0; i < inPoints.length; ++i) {
-                const newPt = transformPoint(inPoints[i]);
+                const newPt = transformPoint(inPoints[i], project);
                 newPt && outPoints.push(newPt);
             }
             return outPoints;
+        }
+
+        function getPolyShape(points: number[][]) {
+            return {
+                shape: {
+                    points: transformPolygonPoints(points)
+                }
+            };
         }
 
         regionsGroup.removeAll();
@@ -299,32 +311,27 @@ class MapDraw {
             zrUtil.each(region.geometries, function (geometry) {
                 // Polygon and MultiPolygon
                 if (geometry.type === 'polygon') {
-                    polygonSubpaths.push(new graphic.Polygon({
-                        shape: {
-                            points: transformPoints(geometry.exterior)
-                        }
-                    }));
-                    zrUtil.each(geometry.interiors, (interior) => {
-                        polygonSubpaths.push(new graphic.Polygon({
-                            shape: {
-                                points: transformPoints(interior)
-                            }
-                        }));
+                    let polys = [geometry.exterior].concat(geometry.interiors || []);
+                    if (projectionStream) {
+                        polys = projectPolys(polys, projectionStream);
+                    }
+                    zrUtil.each(polys, (poly) => {
+                        polygonSubpaths.push(new graphic.Polygon(getPolyShape(poly)));
                     });
                 }
                 // LineString and MultiLineString
                 else {
-                    zrUtil.each(geometry.points, points => {
-                        polylineSubpaths.push(new graphic.Polyline({
-                            shape: {
-                                points: transformPoints(points)
-                            }
-                        }));
+                    let points = geometry.points;
+                    if (projectionStream) {
+                        points = projectPolys(points, projectionStream, true);
+                    }
+                    zrUtil.each(points, points => {
+                        polylineSubpaths.push(new graphic.Polyline(getPolyShape(points)));
                     });
                 }
             });
 
-            const centerPt = transformPoint(region.getCenter());
+            const centerPt = transformPoint(region.getCenter(), projection && projection.project);
 
             function createCompoundPath(subpaths: graphic.Path[], isLine?: boolean) {
                 if (!subpaths.length) {
@@ -879,6 +886,39 @@ function resetStateTriggerForRegion(
     }
 
     return focus;
+}
+
+function projectPolys(
+    polys: number[][][], // Polygons include exterior and interiors. Or polylines.
+    createStream: (outStream: ProjectionStream) => ProjectionStream,
+    isLine?: boolean
+) {
+    const outPolys: number[][][] = [];
+    let newPoly: number[][];
+    const stream = createStream({
+        polygonStart() {},
+        polygonEnd() {},
+        lineStart() {
+            newPoly = [];
+        },
+        lineEnd() {
+            outPolys.push(newPoly);
+        },
+        point(x, y) {
+            newPoly.push([x, y]);
+        },
+        sphere() {}
+    });
+    !isLine && stream.polygonStart();
+    zrUtil.each(polys, polygon => {
+        stream.lineStart();
+        for (let i = 0; i < polygon.length; i++) {
+            stream.point(polygon[i][0], polygon[i][1]);
+        }
+        stream.lineEnd();
+    });
+    !isLine && stream.polygonEnd();
+    return outPolys;
 }
 
 export default MapDraw;

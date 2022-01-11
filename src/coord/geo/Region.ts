@@ -21,11 +21,10 @@
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import * as vec2 from 'zrender/src/core/vector';
 import * as polygonContain from 'zrender/src/contain/polygon';
-import { GeoJSON, GeoSVGGraphicRoot } from './geoTypes';
+import { GeoJSON, GeoProjection, GeoSVGGraphicRoot } from './geoTypes';
 import * as matrix from 'zrender/src/core/matrix';
 import Element from 'zrender/src/Element';
 import { each } from 'zrender/src/core/util';
-import { GeoProjection } from './GeoModel';
 
 const TMP_TRANSFORM = [] as number[];
 

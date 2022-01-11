@@ -22,10 +22,10 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import View from '../View';
 import geoSourceManager from './geoSourceManager';
 import { GeoJSONRegion, Region } from './Region';
-import { GeoResource, NameMap } from './geoTypes';
+import { GeoProjection, GeoResource, NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING } from '../../util/model';
-import GeoModel, { GeoProjection } from './GeoModel';
+import GeoModel from './GeoModel';
 import { resizeGeoType } from './geoCreator';
 import { warn } from '../../util/log';
 
@@ -100,7 +100,7 @@ class Geo extends View {
         this._regionsMap = source.regionsMap;
         this.regions = source.regions;
 
-        if (projection) {
+        if (__DEV__ && projection) {
             // Do some check
             if (resourceType === 'geoSVG') {
                 if (__DEV__) {
