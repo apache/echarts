@@ -618,9 +618,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             }
         }
         else if (selectedMode === 'single' || selectedMode === true) {
-            if (zrUtil.isString(option.selectedMap)) {
-                option.selectedMap = {};
-            }
             const lastDataIndex = innerDataIndices[len - 1];
             const nameOrId = getSelectionKey(data, lastDataIndex);
             option.selectedMap = {
