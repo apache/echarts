@@ -1507,7 +1507,9 @@ export interface StatesOptionMixin<
     /**
      * Select states
      */
-    select?: StateOption & StatesMixin['select']
+    select?: StateOption & StatesMixin['select'] & {
+        disabled?: boolean
+    }
     /**
      * Blur states.
      */
@@ -1616,8 +1618,8 @@ export interface SeriesOption<
      * Map of selected data
      * key is name or index of data.
      */
-    selectedMap?: Dictionary<boolean>
-    selectedMode?: 'single' | 'multiple' | boolean
+    selectedMap?: Dictionary<boolean> | 'all'
+    selectedMode?: 'single' | 'multiple' | 'series' | boolean
 }
 
 export interface SeriesOnCartesianOptionMixin {

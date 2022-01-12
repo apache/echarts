@@ -17,9 +17,9 @@
 * under the License.
 */
 
-import { Payload, SelectChangedPayload } from '../util/types';
+import { Dictionary, Payload, SelectChangedPayload } from '../util/types';
 import SeriesModel from '../model/Series';
-import { extend, each, isArray } from 'zrender/src/core/util';
+import { extend, each, isArray, isString } from 'zrender/src/core/util';
 import GlobalModel from '../model/Global';
 import { deprecateReplaceLog, deprecateLog } from '../util/log';
 import Eventful from 'zrender/src/core/Eventful';
@@ -77,6 +77,7 @@ function handleSeriesLegacySelectEvents(
             mainType: 'series', subType: 'pie'
         }, function (seriesModel: SeriesModel) {
             const seriesIndex = seriesModel.seriesIndex;
+            const selectedMap = seriesModel.option.selectedMap;
             const selected = payload.selected;
             for (let i = 0; i < selected.length; i++) {
                 if (selected[i].seriesIndex === seriesIndex) {
@@ -86,7 +87,7 @@ function handleSeriesLegacySelectEvents(
                         type: legacyEventName,
                         seriesId: seriesModel.id,
                         name: isArray(dataIndex) ? data.getName(dataIndex[0]) : data.getName(dataIndex),
-                        selected: extend({}, seriesModel.option.selectedMap)
+                        selected: isString(selectedMap) ? selectedMap : extend({}, selectedMap)
                     });
                 }
             }
