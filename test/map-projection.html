@@ -87,7 +87,7 @@ under the License.
             ], function (echarts, worldJson) {
                 echarts.registerMap('world', worldJson)
 
-                const projection = d3.geoProjection((x, y) => ([x, y]))
+                const projection = d3.geoProjection((x, y) => ([x, y / 0.75]))
                     .rotate([-115, 0]);
 
                 option = {

@@ -889,36 +889,45 @@ function resetStateTriggerForRegion(
 }
 
 function projectPolys(
-    polys: number[][][], // Polygons include exterior and interiors. Or polylines.
+    rings: number[][][], // Polygons include exterior and interiors. Or polylines.
     createStream: (outStream: ProjectionStream) => ProjectionStream,
     isLine?: boolean
 ) {
-    const outPolys: number[][][] = [];
-    let newPoly: number[][];
+    const polygons: number[][][] = [];
+    let curPoly: number[][];
+
+    function startPolygon() {
+        curPoly = [];
+    }
+    function endPolygon() {
+        if (curPoly.length) {
+            polygons.push(curPoly);
+            curPoly = [];
+        }
+    }
     const stream = createStream({
-        polygonStart() {},
-        polygonEnd() {},
-        lineStart() {
-            newPoly = [];
-        },
-        lineEnd() {
-            outPolys.push(newPoly);
-        },
+        polygonStart: startPolygon,
+        polygonEnd: endPolygon,
+        lineStart: startPolygon,
+        lineEnd: endPolygon,
         point(x, y) {
-            newPoly.push([x, y]);
+            // May have NaN values from stream.
+            if (isFinite(x) && isFinite(y)) {
+                curPoly.push([x, y]);
+            }
         },
         sphere() {}
     });
     !isLine && stream.polygonStart();
-    zrUtil.each(polys, polygon => {
+    zrUtil.each(rings, ring => {
         stream.lineStart();
-        for (let i = 0; i < polygon.length; i++) {
-            stream.point(polygon[i][0], polygon[i][1]);
+        for (let i = 0; i < ring.length; i++) {
+            stream.point(ring[i][0], ring[i][1]);
         }
         stream.lineEnd();
     });
     !isLine && stream.polygonEnd();
-    return outPolys;
+    return polygons;
 }
 
 export default MapDraw;

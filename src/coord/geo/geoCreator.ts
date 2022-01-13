@@ -33,6 +33,7 @@ import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
 import ComponentModel from '../../model/Component';
 import { Model } from '../../echarts.all';
+import * as vector from 'zrender/src/core/vector';
 
 
 export type resizeGeoType = typeof resizeGeo;
@@ -44,14 +45,48 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
 
     const boundingCoords = geoModel.get('boundingCoords');
     if (boundingCoords != null) {
-        const leftTop = boundingCoords[0];
-        const rightBottom = boundingCoords[1];
-        if (isNaN(leftTop[0]) || isNaN(leftTop[1]) || isNaN(rightBottom[0]) || isNaN(rightBottom[1])) {
+        let leftTop = boundingCoords[0];
+        let rightBottom = boundingCoords[1];
+        if (!(
+            isFinite(leftTop[0]) && isFinite(leftTop[1])
+            && isFinite(rightBottom[0]) && isFinite(rightBottom[1])
+        )) {
             if (__DEV__) {
                 console.error('Invalid boundingCoords');
             }
         }
         else {
+            // Sample around the lng/lat rect and use projection to calculate actual bounding rect.
+            const projection = this.projection;
+            if (projection) {
+                const xMin = leftTop[0];
+                const yMin = leftTop[1];
+                const xMax = rightBottom[0];
+                const yMax = rightBottom[1];
+                leftTop = [Infinity, Infinity];
+                rightBottom = [-Infinity, -Infinity];
+
+                // TODO better way?
+                const sampleLine = (x0: number, y0: number, x1: number, y1: number) => {
+                    const dx = x1 - x0;
+                    const dy = y1 - y0;
+                    for (let i = 0; i <= 100; i++) {
+                        const p = i / 100;
+                        const pt = projection.project([x0 + dx * p, y0 + dy * p]);
+                        vector.min(leftTop, leftTop, pt);
+                        vector.max(rightBottom, rightBottom, pt);
+                    }
+                };
+                // Top
+                sampleLine(xMin, yMin, xMax, yMin);
+                // Right
+                sampleLine(xMax, yMin, xMax, yMax);
+                // Bottom
+                sampleLine(xMax, yMax, xMin, yMax);
+                // Left
+                sampleLine(xMin, yMax, xMax, yMin);
+            }
+
             this.setBoundingRect(leftTop[0], leftTop[1], rightBottom[0] - leftTop[0], rightBottom[1] - leftTop[1]);
         }
     }

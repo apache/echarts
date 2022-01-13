@@ -89,7 +89,7 @@ export interface GeoCommonOptionMixin extends RoamOptionMixin {
     // Like: `40` or `'50%'`.
     layoutSize?: number | string;
 
-    // Define left-top, right-bottom coords to control view
+    // Define left-top, right-bottom lng/lat coords to control view
     // For example, [ [180, 90], [-180, -90] ]
     // higher priority than center and zoom
     boundingCoords?: number[][];

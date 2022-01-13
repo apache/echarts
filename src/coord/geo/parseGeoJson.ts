@@ -37,42 +37,55 @@ function decode(json: GeoJSONCompressed | GeoJSON): GeoJSON {
     }
 
     const features = jsonCompressed.features;
-
-    for (let f = 0; f < features.length; f++) {
-        const feature = features[f];
+    zrUtil.each(features, feature => {
         const geometry = feature.geometry;
+        const encodeOffsets = geometry.encodeOffsets;
+        const coordinates = geometry.coordinates;
 
-        if (geometry.type === 'Polygon') {
-            const coordinates = geometry.coordinates;
-            for (let c = 0; c < coordinates.length; c++) {
-                coordinates[c] = decodePolygon(
-                    coordinates[c],
-                    geometry.encodeOffsets[c],
-                    encodeScale
-                ) as any;
-            }
+        // Geometry may be appeded manually in the script after json loaded.
+        // In this case this geometry is usually not encoded.
+        if (!encodeOffsets) {
+            return;
         }
-        else if (geometry.type === 'MultiPolygon') {
-            const coordinates = geometry.coordinates;
-            for (let c = 0; c < coordinates.length; c++) {
-                const coordinate = coordinates[c];
-                for (let c2 = 0; c2 < coordinate.length; c2++) {
-                    coordinate[c2] = decodePolygon(
-                        coordinate[c2],
-                        geometry.encodeOffsets[c][c2],
-                        encodeScale
-                    ) as any;
-                }
-            }
+
+        switch (geometry.type) {
+            case 'LineString':
+                decodeRing(coordinates as string, encodeOffsets as number[], encodeScale);
+                break;
+            case 'Polygon':
+                decodeRings(coordinates as string[], encodeOffsets as number[][], encodeScale);
+                break;
+            case 'MultiLineString':
+                decodeRings(coordinates as string[], encodeOffsets as number[][], encodeScale);
+                break;
+            case 'MultiPolygon':
+                zrUtil.each(
+                    coordinates as string[][],
+                    (rings, idx) => decodeRings(rings, (encodeOffsets as number[][][])[idx], encodeScale)
+                );
         }
-    }
+    });
     // Has been decoded
     jsonCompressed.UTF8Encoding = false;
 
-    return jsonCompressed as GeoJSON;
+    return jsonCompressed as unknown as GeoJSON;
 }
 
-function decodePolygon(
+function decodeRings(
+    rings: string[],
+    encodeOffsets: number[][],
+    encodeScale: number
+) {
+    for (let c = 0; c < rings.length; c++) {
+        rings[c] = decodeRing(
+            rings[c],
+            encodeOffsets[c],
+            encodeScale
+        ) as any;
+    }
+}
+
+function decodeRing(
     coordinate: string,
     encodeOffsets: number[],
     encodeScale: number
