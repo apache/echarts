@@ -23,6 +23,7 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="data/map/encode.js"></script>
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
@@ -76,13 +77,21 @@ under the License.
         require([
             'echarts',
         ], function (echarts) {
-            echarts.registerMap('Polygon', createGeoJSONFromGeo('Polygon', {
+
+            function cloneJSON(json) {
+                return JSON.parse(JSON.stringify(json));
+            }
+            function prepareAndRegisterMap(name, json) {
+                echarts.registerMap(name, createGeoJSONFromGeo(name, cloneJSON(json)));
+                echarts.registerMap(name + 'Compressed', encode(createGeoJSONFromGeo(name + 'Compressed', cloneJSON(json))));
+            }
+            prepareAndRegisterMap('Polygon', {
                 "type": "Polygon",
                 "coordinates": [
                     [[30, 10], [40, 40], [20, 40], [10, 20], [30, 10]]
                 ]
-            }));
-            echarts.registerMap('MultiPolygon', createGeoJSONFromGeo('MultiPolygon', {
+            });
+            prepareAndRegisterMap('MultiPolygon', {
                 "type": "MultiPolygon",
                 "coordinates": [
                     [
@@ -92,21 +101,21 @@ under the License.
                         [[15, 5], [40, 10], [10, 20], [5, 10], [15, 5]]
                     ]
                 ]
-            }));
-            echarts.registerMap('LineString', createGeoJSONFromGeo('LineString', {
+            });
+            prepareAndRegisterMap('LineString', {
                 "type": "LineString",
                 "coordinates": [
                     [30, 10], [10, 30], [40, 40]
                 ]
-            }));
-            echarts.registerMap('MultiLineString', createGeoJSONFromGeo('MultiLineString', {
+            });
+            prepareAndRegisterMap('MultiLineString', {
                 "type": "MultiLineString",
                 "coordinates": [
                     [[10, 10], [20, 20], [10, 40]],
                     [[40, 40], [30, 30], [40, 20], [30, 10]]
                 ]
-            }));
-            echarts.registerMap('HoleyMultiPolygon', createGeoJSONFromGeo('HoleyMultiPolygon', {
+            });
+            prepareAndRegisterMap('HoleyMultiPolygon', {
                 "type": "MultiPolygon",
                 "coordinates": [
                     [
@@ -117,24 +126,26 @@ under the License.
                         [[30, 20], [20, 15], [20, 25], [30, 20]]
                     ]
                 ]
-            }));
+            });
             ['Polygon', 'MultiPolygon', 'LineString', 'MultiLineString', 'HoleyMultiPolygon'].forEach(map => {
-                const dom = document.createElement('div');
-                dom.className = 'chart';
-                document.querySelector('#geometries').appendChild(dom);
-                const chart = echarts.init(dom);
-                chart.setOption({
-                    title: {
-                        text: map,
-                        textStyle: {
-                            fontSize: 14
-                        }
-                    },
-                    series: [{
-                        type: 'map',
-                        map: map
-                    }]
-                });
+                ['', 'Compressed'].forEach(isCompressed => {
+                    const dom = document.createElement('div');
+                    dom.className = 'chart';
+                    document.querySelector('#geometries').appendChild(dom);
+                    const chart = echarts.init(dom);
+                    chart.setOption({
+                        title: {
+                            text: map + isCompressed,
+                            textStyle: {
+                                fontSize: 14
+                            }
+                        },
+                        series: [{
+                            type: 'map',
+                            map: map
+                        }]
+                    });
+                })
             });
         });
         </script>

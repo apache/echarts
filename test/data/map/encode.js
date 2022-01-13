@@ -100,6 +100,10 @@ function encodePoint(val, prev){
     return String.fromCharCode(delta + 64);
 }
 
-
-
-module.exports = encode;
+// Export for testing.
+if (typeof module !== 'undefined') {
+    module.exports = encode;
+}
+else {
+    window.encodeGeoJSON = encode;
+}

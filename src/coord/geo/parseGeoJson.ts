@@ -50,7 +50,8 @@ function decode(json: GeoJSONCompressed | GeoJSON): GeoJSON {
 
         switch (geometry.type) {
             case 'LineString':
-                decodeRing(coordinates as string, encodeOffsets as number[], encodeScale);
+                (geometry as any).coordinates =
+                    decodeRing(coordinates as string, encodeOffsets as number[], encodeScale);
                 break;
             case 'Polygon':
                 decodeRings(coordinates as string[], encodeOffsets as number[][], encodeScale);

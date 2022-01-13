@@ -41,14 +41,16 @@ function decode(json) {
 
         switch (geometry.type) {
             case 'LineString':
-                decodeRing(coordinates, encodeOffsets, encodeScale);
+                geometry.coordinates = decodeRing(coordinates, encodeOffsets, encodeScale);
                 break;
             case 'Polygon':
             case 'MultiLineString':
                 decodeRings(coordinates, encodeOffsets, encodeScale);
                 break;
             case 'MultiPolygon':
-                zrUtil.each(coordinates, (rings, idx) => decodeRings(rings, encodeOffsets[idx], encodeScale));
+                zrUtil.each(coordinates, function (rings, idx) {
+                    return decodeRings(rings, encodeOffsets[idx], encodeScale)
+                });
         }
     });
     // Has been decoded
@@ -89,4 +91,10 @@ function decodeRing(coordinate, encodeOffsets, encodeScale) {
     return result;
 }
 
-module.exports = decode;
+// Export for testing.
+if (typeof module !== 'undefined') {
+    module.exports = decode;
+}
+else {
+    window.decodeGeoJSON = decode;
+}
