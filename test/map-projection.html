@@ -52,7 +52,6 @@ under the License.
             ], function (echarts, chinaJson) {
                 echarts.registerMap('china', chinaJson)
 
-                const projection = d3.geoMercator()
                 option = {
                     series: {
                         type: 'map',
@@ -62,10 +61,8 @@ under the License.
                             borderColor: '#000'
                         },
                         projection: {
-                            project: (pt) => {
-                                return projection(pt)
-                            },
-                            unproject: (pt) => projection.invert(pt)
+                            project: (point) => [point[0] / 180 * Math.PI, -Math.log(Math.tan((Math.PI / 2 + point[1] / 180 * Math.PI) / 2))],
+                            unproject: (point) => [point[0] * 180 / Math.PI, 2 * 180 / Math.PI * Math.atan(Math.exp(point[1])) - 90]
                         }
                     }
                 };
