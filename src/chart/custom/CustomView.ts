@@ -21,7 +21,7 @@ import {
     hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, indexOf
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../../util/graphic';
-import { setDefaultStateProxy, enableHoverEmphasis } from '../../util/states';
+import { setDefaultStateProxy, toggleHoverEmphasis } from '../../util/states';
 import * as labelStyleHelper from '../../label/labelStyle';
 import {getDefaultLabel} from '../helper/labelHelper';
 import {getLayoutOnAxis} from '../../layout/barGrid';
@@ -932,7 +932,12 @@ function createOrUpdateItem(
     const el = doCreateOrUpdateEl(api, existsEl, dataIndex, elOption, seriesModel, group);
     el && data.setItemGraphicEl(dataIndex, el);
 
-    el && enableHoverEmphasis(el, elOption.focus, elOption.blurScope);
+    el && toggleHoverEmphasis(
+        el,
+        elOption.focus,
+        elOption.blurScope,
+        elOption.emphasisDisabled
+    );
 
     return el;
 }

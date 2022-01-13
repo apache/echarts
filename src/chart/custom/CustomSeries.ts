@@ -243,6 +243,8 @@ export type CustomElementOption = CustomPathOption
 export type CustomRootElementOption = CustomElementOption & {
     focus?: 'none' | 'self' | 'series' | ArrayLike<number>
     blurScope?: BlurScope
+
+    emphasisDisabled?: boolean
 };
 
 export type CustomElementOptionOnState = CustomDisplayableOptionOnState

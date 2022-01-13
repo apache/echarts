@@ -30,7 +30,8 @@ import {
     StatesOptionMixin,
     DisplayState,
     LabelOption,
-    StatesMixinBase
+    DefaultEmphasisFocus,
+    BlurScope
 } from '../../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
@@ -53,7 +54,11 @@ interface LineDrawStateOption {
 }
 
 export interface LineDrawModelOption extends LineDrawStateOption,
-    StatesOptionMixin<LineDrawStateOption, StatesMixinBase> {
+    StatesOptionMixin<LineDrawStateOption, {
+        emphasis?: {
+            focus?: DefaultEmphasisFocus
+        }
+    }> {
     // If has effect
     effect?: {
         show?: boolean
@@ -88,6 +93,10 @@ export interface LineDrawSeriesScope {
     selectLineStyle?: ZRStyleProps
 
     labelStatesModels: Record<DisplayState, Model<LabelOption>>
+
+    focus?: DefaultEmphasisFocus
+    blurScope?: BlurScope
+    emphasisDisabled?: boolean;
 }
 
 class LineDraw {
@@ -237,11 +246,16 @@ function isEffectObject(el: Displayable) {
 
 function makeSeriesScope(lineData: ListForLineDraw): LineDrawSeriesScope {
     const hostModel = lineData.hostModel;
+    const emphasisModel = hostModel.getModel('emphasis');
     return {
         lineStyle: hostModel.getModel('lineStyle').getLineStyle(),
-        emphasisLineStyle: hostModel.getModel(['emphasis', 'lineStyle']).getLineStyle(),
+        emphasisLineStyle: emphasisModel.getModel(['lineStyle']).getLineStyle(),
         blurLineStyle: hostModel.getModel(['blur', 'lineStyle']).getLineStyle(),
         selectLineStyle: hostModel.getModel(['select', 'lineStyle']).getLineStyle(),
+
+        emphasisDisabled: emphasisModel.get('disabled'),
+        blurScope: emphasisModel.get('blurScope'),
+        focus: emphasisModel.get('focus'),
 
         labelStatesModels: getLabelStatesModels(hostModel)
     };

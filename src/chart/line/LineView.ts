@@ -43,12 +43,12 @@ import type {
     ECElement,
     DisplayState,
     LabelOption,
-    ParsedValue,
+    ParsedValue
 } from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea, isCoordinateSystemType } from '../../coord/CoordinateSystem';
-import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis, SPECIAL_STATES } from '../../util/states';
+import { setStatesStylesFromModel, setStatesFlag, toggleHoverEmphasis, SPECIAL_STATES } from '../../util/states';
 import Model from '../../model/Model';
 import { setLabelStyle, getLabelStatesModels, labelInner } from '../../label/labelStyle';
 import { getDefaultLabel, getDefaultInterpolatedLabel } from '../helper/labelHelper';
@@ -803,8 +803,10 @@ class LineView extends ChartView {
             }
         }
 
-        const focus = seriesModel.get(['emphasis', 'focus']);
-        const blurScope = seriesModel.get(['emphasis', 'blurScope']);
+        const emphasisModel = seriesModel.getModel('emphasis');
+        const focus = emphasisModel.get('focus');
+        const blurScope = emphasisModel.get('blurScope');
+        const emphasisDisabled = emphasisModel.get('disabled');
 
         polyline.useStyle(zrUtil.defaults(
             // Use color in lineStyle first
@@ -825,7 +827,7 @@ class LineView extends ChartView {
 
         // Needs seriesIndex for focus
         getECData(polyline).seriesIndex = seriesModel.seriesIndex;
-        enableHoverEmphasis(polyline, focus, blurScope);
+        toggleHoverEmphasis(polyline, focus, blurScope, emphasisDisabled);
 
         const smooth = getSmooth(seriesModel.get('smooth'));
         const smoothMonotone = seriesModel.get('smoothMonotone');
@@ -864,7 +866,7 @@ class LineView extends ChartView {
             setStatesStylesFromModel(polygon, seriesModel, 'areaStyle');
             // Needs seriesIndex for focus
             getECData(polygon).seriesIndex = seriesModel.seriesIndex;
-            enableHoverEmphasis(polygon, focus, blurScope);
+            toggleHoverEmphasis(polygon, focus, blurScope, emphasisDisabled);
         }
 
         const changePolyState = (toState: DisplayState) => {
@@ -899,7 +901,7 @@ class LineView extends ChartView {
             componentIndex: seriesModel.componentIndex,
             seriesIndex: seriesModel.seriesIndex,
             seriesName: seriesModel.name,
-            seriesType: 'line',
+            seriesType: 'line'
         };
     }
 
