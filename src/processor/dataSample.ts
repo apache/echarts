@@ -94,7 +94,7 @@ export default function dataSample(seriesType: string): StageHandler {
                 const size = Math.abs(extent[1] - extent[0]) * (dpr || 1);
                 const rate = Math.round(count / size);
 
-                if (rate > 1) {
+                if (Infinity !== rate && rate > 1) {
                     if (sampling === 'lttb') {
                         seriesModel.setData(data.lttbDownSample(data.mapDimension(valueAxis.dim), 1 / rate));
                     }
