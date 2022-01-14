@@ -20,7 +20,7 @@
 import {createSymbol, normalizeSymbolOffset, normalizeSymbolSize} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
-import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
+import { enterEmphasis, leaveEmphasis, toggleHoverEmphasis } from '../../util/states';
 import {getDefaultLabel} from './labelHelper';
 import SeriesData from '../../data/SeriesData';
 import { ColorString, BlurScope, AnimationOption, ZRColor } from '../../util/types';
@@ -220,6 +220,7 @@ class Symbol extends graphic.Group {
         let selectItemStyle;
         let focus;
         let blurScope: BlurScope;
+        let emphasisDisabled: boolean;
 
         let labelStatesModels;
 
@@ -237,6 +238,7 @@ class Symbol extends graphic.Group {
 
             hoverScale = seriesScope.hoverScale;
             cursorStyle = seriesScope.cursorStyle;
+            emphasisDisabled = seriesScope.emphasisDisabled;
         }
 
         if (!seriesScope || data.hasItemOption) {
@@ -250,6 +252,7 @@ class Symbol extends graphic.Group {
 
             focus = emphasisModel.get('focus');
             blurScope = emphasisModel.get('blurScope');
+            emphasisDisabled = emphasisModel.get('disabled');
 
             labelStatesModels = getLabelStatesModels(itemModel);
 
@@ -343,7 +346,7 @@ class Symbol extends graphic.Group {
         }
         this.setSymbolScale(1);
 
-        enableHoverEmphasis(this, focus, blurScope);
+        toggleHoverEmphasis(this, focus, blurScope, emphasisDisabled);
     }
 
     setSymbolScale(scale: number) {

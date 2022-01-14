@@ -19,7 +19,7 @@
 
 import {createSymbol, normalizeSymbolOffset, normalizeSymbolSize} from '../../util/symbol';
 import {Group, Path} from '../../util/graphic';
-import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
+import { enterEmphasis, leaveEmphasis, toggleHoverEmphasis } from '../../util/states';
 import SymbolClz from './Symbol';
 import SeriesData from '../../data/SeriesData';
 import type { ZRColor, ECElement } from '../../util/types';
@@ -173,6 +173,7 @@ class EffectSymbol extends Group {
 
         const symbolStyle = data.getItemVisual(idx, 'style');
         const color = symbolStyle && symbolStyle.fill;
+        const emphasisModel = itemModel.getModel('emphasis');
 
         rippleGroup.setScale(symbolSize);
 
@@ -203,8 +204,6 @@ class EffectSymbol extends Group {
         effectCfg.rippleEffectColor = itemModel.get(['rippleEffect', 'color']);
         effectCfg.rippleNumber = itemModel.get(['rippleEffect', 'number']);
 
-        this.off('mouseover').off('mouseout').off('emphasis').off('normal');
-
         if (effectCfg.showEffectOn === 'render') {
             this._effectCfg
                 ? this.updateEffectAnimation(effectCfg)
@@ -234,11 +233,15 @@ class EffectSymbol extends Group {
 
         this._effectCfg = effectCfg;
 
-        enableHoverEmphasis(this);
+        toggleHoverEmphasis(
+            this,
+            emphasisModel.get('focus'),
+            emphasisModel.get('blurScope'),
+            emphasisModel.get('disabled')
+        );
     };
 
     fadeOut(cb: () => void) {
-        this.off('mouseover').off('mouseout');
         cb && cb();
     };
 

@@ -21,7 +21,7 @@
 
 import { extend, retrieve3 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
+import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -164,7 +164,9 @@ class PiePiece extends graphic.Sector {
             y: dy
         });
 
-        enableHoverEmphasis(this, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+        toggleHoverEmphasis(
+            this, emphasisModel.get('focus'), emphasisModel.get('blurScope'), emphasisModel.get('disabled')
+        );
     }
 
     private _updateLabel(seriesModel: PieSeriesModel, data: SeriesData, idx: number): void {

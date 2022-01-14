@@ -30,7 +30,7 @@ import {
     traverseElements
 } from '../../util/graphic';
 import { getECData } from '../../util/innerStore';
-import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
+import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import { setLabelStyle, getLabelStatesModels, setLabelValueAnimation, labelInner } from '../../label/labelStyle';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
@@ -1037,7 +1037,7 @@ function updateStyle(
     );
 
     const emphasisModel = itemModel.getModel(['emphasis']);
-    enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+    toggleHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
     setStatesStylesFromModel(el, itemModel);
 
     if (isZeroOnPolar(layout as SectorLayout)) {

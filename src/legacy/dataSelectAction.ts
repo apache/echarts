@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { Dictionary, Payload, SelectChangedPayload } from '../util/types';
+import { Payload, SelectChangedPayload } from '../util/types';
 import SeriesModel from '../model/Series';
 import { extend, each, isArray, isString } from 'zrender/src/core/util';
 import GlobalModel from '../model/Global';

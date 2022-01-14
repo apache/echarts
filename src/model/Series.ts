@@ -571,7 +571,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const data = this.getData(dataType);
 
         return (selectedMap === 'all' || selectedMap[getSelectionKey(data, dataIndex)])
-            && !data.getItemModel<StatesOptionMixin<unknown, unknown>>(dataIndex).get(['select', 'disabled'])
+            && !data.getItemModel<StatesOptionMixin<unknown, unknown>>(dataIndex).get(['select', 'disabled']);
     }
 
     isUniversalTransitionEnabled(): boolean {

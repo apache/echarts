@@ -22,7 +22,7 @@ import Group from 'zrender/src/graphic/Group';
 import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
 import * as modelUtil from '../util/model';
-import { enterEmphasis, leaveEmphasis, getHighlightDigit } from '../util/states';
+import { enterEmphasis, leaveEmphasis, getHighlightDigit, isHighDownDispatcher } from '../util/states';
 import {createTask, TaskResetCallbackReturn} from '../core/task';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
 import SeriesModel from '../model/Series';
@@ -216,7 +216,7 @@ class ChartView {
  * Set state of single element
  */
 function elSetState(el: Element, state: DisplayState, highlightDigit: number) {
-    if (el) {
+    if (el && isHighDownDispatcher(el)) {
         (state === 'emphasis' ? enterEmphasis : leaveEmphasis)(el, highlightDigit);
     }
 }

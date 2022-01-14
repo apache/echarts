@@ -78,7 +78,7 @@ import {
     findComponentHighDownDispatchers,
     blurComponent,
     handleGlobalMouseOverForHighDown,
-    handleGlboalMouseOutForHighDown
+    handleGlobalMouseOutForHighDown
 } from '../util/states';
 import * as modelUtil from '../util/model';
 import {throttle} from '../util/throttle';
@@ -1554,7 +1554,10 @@ class ECharts extends Eventful<ECEventDefinition> {
                 };
                 if (isHighDownPayload(payload)) {
                     if (model instanceof SeriesModel) {
-                        if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
+                        if (
+                            payload.type === HIGHLIGHT_ACTION_TYPE
+                            && !payload.notBlur && !model.get(['emphasis', 'disabled'])
+                        ) {
                             blurSeriesFromHighlightPayload(model, payload, ecIns._api);
                         }
                     }
@@ -2006,7 +2009,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 const el = e.target;
                 const dispatcher = findEventDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
-                    handleGlboalMouseOutForHighDown(dispatcher, e, ecIns._api);
+                    handleGlobalMouseOutForHighDown(dispatcher, e, ecIns._api);
                     markStatusToUpdate(ecIns);
                 }
             }).on('click', function (e) {

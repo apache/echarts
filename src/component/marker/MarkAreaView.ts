@@ -23,11 +23,11 @@ import * as colorUtil from 'zrender/src/tool/color';
 import SeriesData from '../../data/SeriesData';
 import * as numberUtil from '../../util/number';
 import * as graphic from '../../util/graphic';
-import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
+import { toggleHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
 import { retrieve, mergeAll, map, curry, filter, HashMap, extend, isString } from 'zrender/src/core/util';
-import { ParsedValue, ScaleDataValue, ZRColor } from '../../util/types';
+import { ScaleDataValue, ZRColor } from '../../util/types';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import MarkAreaModel, { MarkArea2DDataItemOption } from './MarkAreaModel';
 import SeriesModel from '../../model/Series';
@@ -346,7 +346,7 @@ class MarkAreaView extends MarkerView {
 
             setStatesStylesFromModel(polygon, itemModel);
 
-            enableHoverEmphasis(polygon);
+            toggleHoverEmphasis(polygon, null, null, itemModel.get(['emphasis', 'disabled']));
 
             getECData(polygon).dataModel = maModel;
         });

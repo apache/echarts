@@ -19,7 +19,7 @@
 
 import PointerPath from './PointerPath';
 import * as graphic from '../../util/graphic';
-import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
+import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import {createTextStyle, setLabelValueAnimation, animateLabelValue} from '../../label/labelStyle';
 import ChartView from '../../view/Chart';
 import {parsePercent, round, linearMap} from '../../util/number';
@@ -489,6 +489,9 @@ class GaugeView extends ChartView {
             data.each(function (idx) {
                 const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
                 const emphasisModel = itemModel.getModel('emphasis');
+                const focus = emphasisModel.get('focus');
+                const blurScope = emphasisModel.get('blurScope');
+                const emphasisDisabled = emphasisModel.get('disabled');
                 if (showPointer) {
                     const pointer = data.getItemGraphicEl(idx) as ECSymbol;
                     const symbolStyle = data.getItemVisual(idx, 'style');
@@ -517,7 +520,7 @@ class GaugeView extends ChartView {
 
                     (pointer as ECElement).z2EmphasisLift = 0;
                     setStatesStylesFromModel(pointer, itemModel);
-                    enableHoverEmphasis(pointer, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+                    toggleHoverEmphasis(pointer, focus, blurScope, emphasisDisabled);
                 }
 
                 if (showProgress) {
@@ -526,7 +529,7 @@ class GaugeView extends ChartView {
                     progress.setStyle(itemModel.getModel(['progress', 'itemStyle']).getItemStyle());
                     (progress as ECElement).z2EmphasisLift = 0;
                     setStatesStylesFromModel(progress, itemModel);
-                    enableHoverEmphasis(progress, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+                    toggleHoverEmphasis(progress, focus, blurScope, emphasisDisabled);
                 }
             });
 

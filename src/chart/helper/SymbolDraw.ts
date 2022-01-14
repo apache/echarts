@@ -120,6 +120,7 @@ export interface SymbolDrawSeriesScope {
 
     focus?: DefaultEmphasisFocus
     blurScope?: BlurScope
+    emphasisDisabled?: boolean
 
     labelStatesModels: Record<DisplayState, Model<LabelOption>>
 
@@ -141,6 +142,7 @@ function makeSeriesScope(data: SeriesData): SymbolDrawSeriesScope {
 
         focus: emphasisModel.get('focus'),
         blurScope: emphasisModel.get('blurScope'),
+        emphasisDisabled: emphasisModel.get('disabled'),
 
         hoverScale: emphasisModel.get('scale'),
 

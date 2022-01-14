@@ -18,7 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
-import { enableHoverEmphasis } from '../../util/states';
+import { toggleHoverEmphasis } from '../../util/states';
 import HeatmapLayer from './HeatmapLayer';
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
@@ -206,8 +206,10 @@ class HeatmapView extends ChartView {
         let blurStyle = seriesModel.getModel(['blur', 'itemStyle']).getItemStyle();
         let selectStyle = seriesModel.getModel(['select', 'itemStyle']).getItemStyle();
         let labelStatesModels = getLabelStatesModels(seriesModel);
-        let focus = seriesModel.get(['emphasis', 'focus']);
-        let blurScope = seriesModel.get(['emphasis', 'blurScope']);
+        const emphasisModel = seriesModel.getModel('emphasis');
+        let focus = emphasisModel.get('focus');
+        let blurScope = emphasisModel.get('blurScope');
+        let emphasisDisabled = emphasisModel.get('disabled');
 
         const dataDims = isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')
             ? [
@@ -277,6 +279,7 @@ class HeatmapView extends ChartView {
 
                 focus = emphasisModel.get('focus');
                 blurScope = emphasisModel.get('blurScope');
+                emphasisDisabled = emphasisModel.get('disabled');
 
                 labelStatesModels = getLabelStatesModels(itemModel);
             }
@@ -301,7 +304,7 @@ class HeatmapView extends ChartView {
             rect.ensureState('blur').style = blurStyle;
             rect.ensureState('select').style = selectStyle;
 
-            enableHoverEmphasis(rect, focus, blurScope);
+            toggleHoverEmphasis(rect, focus, blurScope, emphasisDisabled);
 
             rect.incremental = incremental;
             // PENDING

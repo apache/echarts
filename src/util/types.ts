@@ -1503,6 +1503,11 @@ export interface StatesOptionMixin<
          * Default to be coordinate system.
          */
         blurScope?: BlurScope
+
+        /**
+         * If emphasis state is disabled.
+         */
+        disabled?: boolean
     }
     /**
      * Select states

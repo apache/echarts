@@ -18,7 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
-import { enterEmphasis, leaveEmphasis, enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
+import { enterEmphasis, leaveEmphasis, toggleHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import { LayoutOrient, ECElement } from '../../util/types';
 import { PathProps } from 'zrender/src/graphic/Path';
 import SankeySeriesModel, { SankeyEdgeItemOption, SankeyNodeItemOption } from './SankeySeries';
@@ -229,10 +229,11 @@ class SankeyView extends ChartView {
             edgeData.setItemGraphicEl(edge.dataIndex, curve);
 
             const focus = emphasisModel.get('focus');
-            enableHoverEmphasis(
+            toggleHoverEmphasis(
                 curve,
                 focus === 'adjacency' ? edge.getAdjacentDataIndices() : focus,
-                emphasisModel.get('blurScope')
+                emphasisModel.get('blurScope'),
+                emphasisModel.get('disabled')
             );
 
             getECData(curve).dataType = 'edge';
@@ -280,10 +281,11 @@ class SankeyView extends ChartView {
             getECData(rect).dataType = 'node';
 
             const focus = emphasisModel.get('focus');
-            enableHoverEmphasis(
+            toggleHoverEmphasis(
                 rect,
                 focus === 'adjacency' ? node.getAdjacentDataIndices() : focus,
-                emphasisModel.get('blurScope')
+                emphasisModel.get('blurScope'),
+                emphasisModel.get('disabled')
             );
         });
 

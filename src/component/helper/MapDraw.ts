@@ -23,7 +23,7 @@ import * as roamHelper from '../../component/helper/roamHelper';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
 import {
-    enableHoverEmphasis,
+    toggleHoverEmphasis,
     enableComponentHighDownFeatures,
     setDefaultStateProxy
 } from '../../util/states';
@@ -836,9 +836,7 @@ function resetStateTriggerForRegion(
     // @ts-ignore FIXME:TS fix the "compatible with each other"?
     const emphasisModel = regionModel.getModel('emphasis');
     const focus = emphasisModel.get('focus');
-    enableHoverEmphasis(
-        el, focus, emphasisModel.get('blurScope')
-    );
+    toggleHoverEmphasis(el, focus, emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
     if (viewBuildCtx.isGeo) {
         enableComponentHighDownFeatures(el, mapOrGeoModel as GeoModel, regionName);
     }
