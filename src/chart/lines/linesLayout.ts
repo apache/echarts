@@ -22,7 +22,7 @@
 import createRenderPlanner from '../helper/createRenderPlanner';
 import { StageHandler } from '../../util/types';
 import LinesSeriesModel, {LinesDataItemOption} from './LinesSeries';
-import { logError } from 'zrender/src/core/util';
+import { error } from '../../util/log';
 
 const linesLayout: StageHandler = {
     seriesType: 'lines',
@@ -33,7 +33,7 @@ const linesLayout: StageHandler = {
         const coordSys = seriesModel.coordinateSystem;
         if (!coordSys) {
             if (__DEV__) {
-                logError('The lines series must have a coordinate system.');
+                error('The lines series must have a coordinate system.');
             }
             return;
         }
