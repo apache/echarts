@@ -18,12 +18,11 @@
 */
 
 
-import { each, isString, createHashMap } from 'zrender/src/core/util';
+import { each, isString, createHashMap, hasOwn } from 'zrender/src/core/util';
 import parseGeoJson from './parseGeoJson';
 // Built-in GEO fixer.
 import fixNanhai from './fix/nanhai';
 import fixTextCoord from './fix/textCoord';
-import fixGeoCoord from './fix/geoCoord';
 import fixDiaoyuIsland from './fix/diaoyuIsland';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import { GeoJSONRegion } from './Region';
@@ -80,7 +79,7 @@ export class GeoJSONResource implements GeoResource {
             let regionName = region.name;
 
             // Try use the alias in geoNameMap
-            if (nameMap && nameMap.hasOwnProperty(regionName)) {
+            if (nameMap && hasOwn(nameMap, regionName)) {
                 region = region.cloneShallow(regionName = nameMap[regionName]);
             }
 
@@ -114,7 +113,6 @@ export class GeoJSONResource implements GeoResource {
             const regionName = region.name;
 
             fixTextCoord(mapName, region);
-            fixGeoCoord(mapName, region);
             fixDiaoyuIsland(mapName, region);
 
             // Some area like Alaska in USA map needs to be tansformed

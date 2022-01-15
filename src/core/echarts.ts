@@ -122,7 +122,6 @@ import { findEventDispatcher } from '../util/event';
 import decal from '../visual/decal';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
-import geoSourceManager from '../coord/geo/geoSourceManager';
 import lifecycle, {
     LifecycleEvents,
     UpdateLifecycleTransitionItem,
@@ -130,6 +129,8 @@ import lifecycle, {
     UpdateLifecycleTransitionOpt
 } from './lifecycle';
 import { platformApi, setPlatformAPI } from 'zrender/src/core/platform';
+import { getImpl } from './impl';
+import type geoSourceManager from '../coord/geo/geoSourceManager';
 
 declare let global: any;
 
@@ -2939,20 +2940,23 @@ export function setCanvasCreator(creator: () => HTMLCanvasElement): void {
     });
 }
 
+type RegisterMapParams = Parameters<typeof geoSourceManager.registerMap>;
 /**
  * The parameters and usage: see `geoSourceManager.registerMap`.
  * Compatible with previous `echarts.registerMap`.
  */
 export function registerMap(
-    mapName: Parameters<typeof geoSourceManager.registerMap>[0],
-    geoJson: Parameters<typeof geoSourceManager.registerMap>[1],
-    specialAreas?: Parameters<typeof geoSourceManager.registerMap>[2]
+    mapName: RegisterMapParams[0],
+    geoJson: RegisterMapParams[1],
+    specialAreas?: RegisterMapParams[2]
 ): void {
-    geoSourceManager.registerMap(mapName, geoJson, specialAreas);
+    const registerMap = getImpl('registerMap');
+    registerMap && registerMap(mapName, geoJson, specialAreas);
 }
 
 export function getMap(mapName: string) {
-    return geoSourceManager.getMapForUser(mapName);
+    const getMap = getImpl('getMap');
+    return getMap && getMap(mapName);
 }
 
 export const registerTransform = registerExternalTransform;

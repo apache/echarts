@@ -17,24 +17,30 @@
 * under the License.
 */
 
-import { Dictionary } from 'zrender/src/core/types';
-import { GeoJSONRegion } from '../Region';
+import { error } from '../util/log';
 
-const geoCoordMap = {
-    'Russia': [100, 60],
-    'United States': [-99, 38],
-    'United States of America': [-99, 38]
-} as Dictionary<number[]>;
 
-export default function fixGeoCoords(mapType: string, region: GeoJSONRegion) {
-    if (mapType === 'world') {
-        const geoCoord = geoCoordMap[region.name];
-        if (geoCoord) {
-            const cp = [
-                geoCoord[0],
-                geoCoord[1]
-            ];
-            region.setCenter(cp);
+// Implementation of exported APIs. For example registerMap, getMap.
+// The implentations will be registered when installing the component.
+// Avoid these code being bundled to the core module.
+
+const implsStore: Record<string, any> = {};
+
+// TODO Type
+export function registerImpl(name: string, impl: any) {
+    if (__DEV__) {
+        if (implsStore[name]) {
+            error(`Already has an implementation of ${name}.`);
         }
     }
+    implsStore[name] = impl;
+}
+
+export function getImpl(name: string) {
+    if (__DEV__) {
+        if (!implsStore[name]) {
+            error(`Implementation of ${name} doesn't exists.`);
+        }
+    }
+    return implsStore[name];
 }

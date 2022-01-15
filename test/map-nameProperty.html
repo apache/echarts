@@ -40,6 +40,7 @@ under the License.
                 'echarts',
                 './data/usa.json'
             ], function (echarts, geojson) {
+
                 geojson.features.forEach(function (feature) {
                     feature.properties = {
                         NAME: feature.properties.name

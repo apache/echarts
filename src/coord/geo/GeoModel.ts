@@ -38,7 +38,7 @@ import {
     CommonTooltipOption,
     StatesMixinBase
 } from '../../util/types';
-import { NameMap } from './geoTypes';
+import { GeoProjection, NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
 import geoSourceManager from './geoSourceManager';
 
@@ -72,6 +72,7 @@ export interface GeoTooltipFormatterParams {
     $vars: ['name']
 }
 
+
 export interface GeoCommonOptionMixin extends RoamOptionMixin {
     // Map name
     map: string;
@@ -88,13 +89,21 @@ export interface GeoCommonOptionMixin extends RoamOptionMixin {
     // Like: `40` or `'50%'`.
     layoutSize?: number | string;
 
-    // Define left-top, right-bottom coords to control view
+    // Define left-top, right-bottom lng/lat coords to control view
     // For example, [ [180, 90], [-180, -90] ]
     // higher priority than center and zoom
     boundingCoords?: number[][];
 
     nameMap?: NameMap;
     nameProperty?: string;
+
+    /**
+     * Use raw projection by default
+     * Only available for GeoJSON source.
+     *
+     * NOTE: `center` needs to be the projected coord if projection is used.
+     */
+    projection?: GeoProjection;
 }
 
 export interface GeoOption extends
