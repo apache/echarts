@@ -159,7 +159,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
 
     static defaultOption: DataZoomOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 4,                   // Higher than normal component (z: 2).
 
         filterMode: 'filter',
@@ -243,10 +243,6 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
     private _doInit(inputRawOption: Opts): void {
         const thisOption = this.option;
-
-        // if (!env.canvasSupported) {
-        //     thisOption.realtime = false;
-        // }
 
         this._setDefaultThrottle(inputRawOption);
 

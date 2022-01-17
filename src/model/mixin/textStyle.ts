@@ -21,17 +21,23 @@ import * as graphicUtil from '../../util/graphic';
 import {getFont} from '../../label/labelStyle';
 import Model from '../Model';
 import { LabelOption, ColorString } from '../../util/types';
-import ZRText from 'zrender/src/graphic/Text';
+import ZRText, {TextStyleProps} from 'zrender/src/graphic/Text';
 
 const PATH_COLOR = ['textStyle', 'color'] as const;
 
 export type LabelFontOption = Pick<LabelOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>;
 type LabelRectRelatedOption = Pick<LabelOption,
     'align' | 'verticalAlign' | 'padding' | 'lineHeight' | 'baseline' | 'rich'
+    | 'width' | 'height' | 'overflow'
 > & LabelFontOption;
 
+const textStyleParams = [
+    'fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'padding',
+    'lineHeight', 'rich', 'width', 'height', 'overflow'
+] as const;
+
 // TODO Performance improvement?
-const tmpRichText = new ZRText();
+const tmpText = new ZRText();
 class TextStyleMixin {
     /**
      * Get color property or get color from option.textStyle.color
@@ -59,19 +65,17 @@ class TextStyleMixin {
     }
 
     getTextRect(this: Model<LabelRectRelatedOption> & TextStyleMixin, text: string): graphicUtil.BoundingRect {
-        tmpRichText.useStyle({
-            text,
-            fontStyle: this.getShallow('fontStyle'),
-            fontWeight: this.getShallow('fontWeight'),
-            fontSize: this.getShallow('fontSize'),
-            fontFamily: this.getShallow('fontFamily'),
-            verticalAlign: this.getShallow('verticalAlign') || this.getShallow('baseline'),
-            padding: this.getShallow('padding') as number[],
-            lineHeight: this.getShallow('lineHeight'),
-            rich: this.getShallow('rich')
-        });
-        tmpRichText.update();
-        return tmpRichText.getBoundingRect();
+        const style: TextStyleProps = {
+            text: text,
+            verticalAlign: this.getShallow('verticalAlign')
+                || this.getShallow('baseline')
+        };
+        for (let i = 0; i < textStyleParams.length; i++) {
+            (style as any)[textStyleParams[i]] = this.getShallow(textStyleParams[i]);
+        }
+        tmpText.useStyle(style);
+        tmpText.update();
+        return tmpText.getBoundingRect();
     }
 };
 

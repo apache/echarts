@@ -23,7 +23,7 @@
  * TODO Default cartesian
  */
 
-import {isObject, each, indexOf, retrieve3} from 'zrender/src/core/util';
+import {isObject, each, indexOf, retrieve3, map, keys} from 'zrender/src/core/util';
 import {getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,
@@ -47,14 +47,21 @@ import { ScaleDataValue } from '../../util/types';
 import SeriesData from '../../data/SeriesData';
 import OrdinalScale from '../../scale/Ordinal';
 import { isCartesian2DSeries, findAxisModels } from './cartesianAxisHelper';
-import { CategoryAxisBaseOption } from '../axisCommonTypes';
+import { CategoryAxisBaseOption, NumericAxisBaseOptionCommon } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
+import { isIntervalOrLogScale } from '../../scale/helper';
+import { alignScaleTicks } from '../axisAlignTicks';
+import IntervalScale from '../../scale/Interval';
+import LogScale from '../../scale/Log';
 
 
 type Cartesian2DDimensionName = 'x' | 'y';
 
 type FinderAxisIndex = {xAxisIndex?: number, yAxisIndex?: number};
-type AxesMap = {x: Axis2D[], y: Axis2D[]};
+type AxesMap = {
+    x: Axis2D[],
+    y: Axis2D[]
+};
 
 class Grid implements CoordinateSystemMaster {
 
@@ -92,12 +99,55 @@ class Grid implements CoordinateSystemMaster {
 
         this._updateScale(ecModel, this.model);
 
-        each(axesMap.x, function (xAxis) {
-            niceScaleExtent(xAxis.scale, xAxis.model);
-        });
-        each(axesMap.y, function (yAxis) {
-            niceScaleExtent(yAxis.scale, yAxis.model);
-        });
+        function updateAxisTicks(axes: Record<number, Axis2D>) {
+            let alignTo: Axis2D;
+            // Axis is added in order of axisIndex.
+            const axesIndices = keys(axes);
+            const len = axesIndices.length;
+            if (!len) {
+                return;
+            }
+            const axisNeedsAlign: Axis2D[] = [];
+            // Process once and calculate the ticks for those don't use alignTicks.
+            for (let i = len - 1; i >= 0; i--) {
+                const idx = +axesIndices[i];    // Convert to number.
+                const axis = axes[idx];
+                const model = axis.model as AxisBaseModel<NumericAxisBaseOptionCommon>;
+                const scale = axis.scale;
+                if (// Only value and log axis without interval support alignTicks.
+                    isIntervalOrLogScale(scale)
+                    && model.get('alignTicks')
+                    && model.get('interval') == null
+                ) {
+                    axisNeedsAlign.push(axis);
+                }
+                else {
+                    niceScaleExtent(scale, model);
+                    if (isIntervalOrLogScale(scale)) {  // Can only align to interval or log axis.
+                        alignTo = axis;
+                    }
+                }
+            };
+            // All axes has set alignTicks. Pick the first one.
+            // PENDING. Should we find the axis that both set interval, min, max and align to this one?
+            if (axisNeedsAlign.length) {
+                if (!alignTo) {
+                    alignTo = axisNeedsAlign.pop();
+                    niceScaleExtent(alignTo.scale, alignTo.model);
+                }
+
+                each(axisNeedsAlign, axis => {
+                    alignScaleTicks(
+                        axis.scale as IntervalScale | LogScale,
+                        axis.model,
+                        alignTo.scale as IntervalScale | LogScale
+                    );
+                });
+            }
+        }
+
+        updateAxisTicks(axesMap.x);
+        updateAxisTicks(axesMap.y);
 
         // Key: axisDim_axisIndex, value: boolean, whether onZero target.
         const onZeroRecords = {} as Dictionary<boolean>;
@@ -177,15 +227,6 @@ class Grid implements CoordinateSystemMaster {
         const axesMapOnDim = this._axesMap[dim];
         if (axesMapOnDim != null) {
             return axesMapOnDim[axisIndex || 0];
-            // if (axisIndex == null) {
-            //     Find first axis
-            //     for (let name in axesMapOnDim) {
-            //         if (axesMapOnDim.hasOwnProperty(name)) {
-            //             return axesMapOnDim[name];
-            //         }
-            //     }
-            // }
-            // return axesMapOnDim[axisIndex];
         }
     }
 
@@ -445,10 +486,8 @@ class Grid implements CoordinateSystemMaster {
                 const xAxis = cartesian.getAxis('x');
                 const yAxis = cartesian.getAxis('y');
 
-                if (data.type === 'list') {
-                    unionExtent(data, xAxis);
-                    unionExtent(data, yAxis);
-                }
+                unionExtent(data, xAxis);
+                unionExtent(data, yAxis);
             }
         }, this);
 

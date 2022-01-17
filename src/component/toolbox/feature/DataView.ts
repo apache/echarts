@@ -341,9 +341,9 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         const optionToContent = model.get('optionToContent');
         const contentToOption = model.get('contentToOption');
         const result = getContentFromModel(ecModel);
-        if (typeof optionToContent === 'function') {
+        if (zrUtil.isFunction(optionToContent)) {
             const htmlOrDom = optionToContent(api.getOption());
-            if (typeof htmlOrDom === 'string') {
+            if (zrUtil.isString(htmlOrDom)) {
                 viewMain.innerHTML = htmlOrDom;
             }
             else if (zrUtil.isDom(htmlOrDom)) {
@@ -395,7 +395,7 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
 
             let newOption;
             try {
-                if (typeof contentToOption === 'function') {
+                if (zrUtil.isFunction(contentToOption)) {
                     newOption = contentToOption(viewMain, api.getOption());
                 }
                 else {

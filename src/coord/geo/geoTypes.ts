@@ -74,13 +74,13 @@ type GeoJSONGeometry =
     // | GeoJSONGeometryGeometryCollection
 
 type GeoJSONGeometryCompressed =
-    GeoJSONGeometryPoint
-    | GeoJSONGeometryMultiPoint
-    | GeoJSONGeometryLineString
-    | GeoJSONGeometryMultiLineString
+    // GeoJSONGeometryPoint
+    // | GeoJSONGeometryMultiPoint
     // Currenly only Polygon and MultiPolygon can be parsed from compression.
     | GeoJSONGeometryPolygonCompressed
-    | GeoJSONGeometryMultiPolygonCompressed;
+    | GeoJSONGeometryMultiPolygonCompressed
+    | GeoJSONGeometryLineStringCompressed
+    | GeoJSONGeometryMultiLineStringCompressed;
     // Do not support `GeometryCollection` yet.
     // | GeoJSONGeometryGeometryCollection
 
@@ -96,9 +96,19 @@ interface GeoJSONGeometryLineString {
     type: 'LineString';
     coordinates: number[][];
 };
+interface GeoJSONGeometryLineStringCompressed {
+    type: 'LineString';
+    coordinates: string;
+    encodeOffsets: number[]
+};
 interface GeoJSONGeometryMultiLineString {
     type: 'MultiLineString';
     coordinates: number[][][];
+};
+interface GeoJSONGeometryMultiLineStringCompressed {
+    type: 'MultiLineString';
+    coordinates: string[];
+    encodeOffsets: number[][];
 };
 export interface GeoJSONGeometryPolygon {
     type: 'Polygon';
@@ -138,4 +148,34 @@ export interface GeoResource {
 
 export interface GeoSVGGraphicRoot extends Group {
     isGeoSVGGraphicRoot: boolean;
+}
+
+/**
+ * Geo stream interface compatitable with d3-geo
+ * See the API detail in https://github.com/d3/d3-geo#streams
+ */
+ export interface ProjectionStream {
+    point(x: number, y: number): void;
+    lineStart(): void;
+    lineEnd(): void;
+    polygonStart(): void;
+    polygonEnd(): void;
+    /**
+     * Not supported yet.
+     */
+    sphere(): void
+}
+
+export interface GeoProjection {
+    project(point: number[]): number[]
+    unproject(point: number[]): number[]
+    /**
+     * Projection stream compatitable to d3-geo projection stream.
+     *
+     * When rotate projection is used. It may have antimeridian artifacts.
+     * So we need to introduce the fule projection stream to do antimeridian clipping.
+     *
+     * project will be ignored if projectStream is given.
+     */
+    stream?(outStream: ProjectionStream): ProjectionStream
 }

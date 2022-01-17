@@ -17,4 +17,4 @@
 * under the License.
 */
 
-export * from './lib/export/components';
+export * from './lib/export/components.js';

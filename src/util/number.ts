@@ -118,7 +118,7 @@ export function parsePercent(percent: number | string, all: number): number {
             percent = '100%';
             break;
     }
-    if (typeof percent === 'string') {
+    if (zrUtil.isString(percent)) {
         if (_trim(percent).match(/%$/)) {
             return parseFloat(percent) / 100 * all;
         }
@@ -335,7 +335,7 @@ export function parseDate(value: unknown): Date {
     if (value instanceof Date) {
         return value;
     }
-    else if (typeof value === 'string') {
+    else if (zrUtil.isString(value)) {
         // Different browsers parse date in different way, so we parse it manually.
         // Some other issues:
         // new Date('1970-01-01') is UTC,
@@ -585,7 +585,7 @@ export function numericToNumber(val: unknown): number {
     const valFloat = parseFloat(val as string);
     return (
         valFloat == val // eslint-disable-line eqeqeq
-        && (valFloat !== 0 || typeof val !== 'string' || val.indexOf('x') <= 0) // For case ' 0x0 '.
+        && (valFloat !== 0 || !zrUtil.isString(val) || val.indexOf('x') <= 0) // For case ' 0x0 '.
     ) ? valFloat : NaN;
 }
 

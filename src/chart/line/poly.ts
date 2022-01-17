@@ -136,18 +136,20 @@ function drawSegment(
                     if (smoothMonotone === 'x') {
                         lenPrevSeg = Math.abs(dx0);
                         lenNextSeg = Math.abs(dx1);
-                        cpx1 = x - lenPrevSeg * smooth;
+                        const dir = vx > 0 ? 1 : -1;
+                        cpx1 = x - dir * lenPrevSeg * smooth;
                         cpy1 = y;
-                        nextCpx0 = x + lenPrevSeg * smooth;
+                        nextCpx0 = x + dir * lenNextSeg * smooth;
                         nextCpy0 = y;
                     }
                     else if (smoothMonotone === 'y') {
                         lenPrevSeg = Math.abs(dy0);
                         lenNextSeg = Math.abs(dy1);
+                        const dir = vy > 0 ? 1 : -1;
                         cpx1 = x;
-                        cpy1 = y - lenPrevSeg * smooth;
+                        cpy1 = y - dir * lenPrevSeg * smooth;
                         nextCpx0 = x;
-                        nextCpy0 = y + lenPrevSeg * smooth;
+                        nextCpy0 = y + dir * lenNextSeg * smooth;
                     }
                     else {
                         lenPrevSeg = Math.sqrt(dx0 * dx0 + dy0 * dy0);

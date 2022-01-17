@@ -25,8 +25,6 @@ import {
     ColorString,
     BuiltinVisualProperty,
     VisualOptionPiecewise,
-    VisualOptionCategory,
-    VisualOptionLinear,
     VisualOptionUnit,
     ParsedValue
 } from '../util/types';
@@ -155,9 +153,7 @@ interface VisualMappingInnerOption extends VisualMappingOption {
     visual?: VisualValue[] | Dictionary<VisualValue>
 }
 
-class VisualMapping<VisualOption
-    extends VisualOptionPiecewise | VisualOptionCategory | VisualOptionUnit | VisualOptionLinear = {}
-> {
+class VisualMapping {
 
     option: VisualMappingInnerOption;
 
@@ -489,7 +485,7 @@ class VisualMapping<VisualOption
                     // but currently value type can exactly be string or number.
                     // Compromise for numeric-like string (like '12'), especially
                     // in the case that visualMap.categories is ['22', '33'].
-                    || (typeof pieceValue === 'string' && pieceValue === value + '')
+                    || (zrUtil.isString(pieceValue) && pieceValue === value + '')
                 ) {
                     return i;
                 }
@@ -634,7 +630,7 @@ function makePartialColorVisualHandler(
     };
 }
 
-function doMapToArray(this: VisualMapping<VisualOptionLinear>, normalized: NormalizedValue): VisualValue {
+function doMapToArray(this: VisualMapping, normalized: NormalizedValue): VisualValue {
     const visual = this.option.visual as VisualValue[];
     return visual[
         Math.round(linearMap(normalized, [0, 1], [0, visual.length - 1], true))
@@ -647,7 +643,7 @@ function makeApplyVisual(visualType: string): VisualHandler['applyVisual'] {
     };
 }
 
-function doMapCategory(this: VisualMapping<VisualOptionCategory>, normalized: NormalizedValue): VisualValue {
+function doMapCategory(this: VisualMapping, normalized: NormalizedValue): VisualValue {
     const visual = this.option.visual as Dictionary<any>;
     return visual[
         (this.option.loop && normalized !== CATEGORY_DEFAULT_VISUAL_INDEX)
