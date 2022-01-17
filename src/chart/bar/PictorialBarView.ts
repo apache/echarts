@@ -327,7 +327,9 @@ function prepareBarLength(
         outputSymbolMeta.repeatCutLength = layout[valueDim.wh];
     }
 
-    outputSymbolMeta.pxSign = boundingLength > 0 ? 1 : boundingLength < 0 ? -1 : 0;
+    // if 'pxSign' means sign of pixel,  it can't be zero, or symbolScale will be zero
+    // and when borderWidth be settled, the actual linewidth will be NaN
+    outputSymbolMeta.pxSign = boundingLength > 0 ? 1 : -1;
 }
 
 function convertToCoordOnAxis(axis: Axis2D, value: number) {

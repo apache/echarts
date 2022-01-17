@@ -51,50 +51,54 @@ class SausagePath extends Path<SausagePathProps> {
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: SausageShape) {
-        const x = shape.cx;
-        const y = shape.cy;
+        const cx = shape.cx;
+        const cy = shape.cy;
         const r0 = Math.max(shape.r0 || 0, 0);
         const r = Math.max(shape.r, 0);
         const dr = (r - r0) * 0.5;
         const rCenter = r0 + dr;
-        const startAngle = shape.startAngle;
+        let startAngle = shape.startAngle;
         const endAngle = shape.endAngle;
         const clockwise = shape.clockwise;
+
+        const PI2 = Math.PI * 2;
+        const lessThanCircle = clockwise
+            ? endAngle - startAngle < PI2
+            : startAngle - endAngle < PI2;
+
+        if (!lessThanCircle) {
+            // Normalize angles
+            startAngle = endAngle - (clockwise ? PI2 : -PI2);
+        }
 
         const unitStartX = Math.cos(startAngle);
         const unitStartY = Math.sin(startAngle);
         const unitEndX = Math.cos(endAngle);
         const unitEndY = Math.sin(endAngle);
 
-        const lessThanCircle = clockwise
-            ? endAngle - startAngle < Math.PI * 2
-            : startAngle - endAngle < Math.PI * 2;
-
         if (lessThanCircle) {
-            ctx.moveTo(unitStartX * r0 + x, unitStartY * r0 + y);
-
+            ctx.moveTo(unitStartX * r0 + cx, unitStartY * r0 + cy);
             ctx.arc(
-                unitStartX * rCenter + x, unitStartY * rCenter + y, dr,
+                unitStartX * rCenter + cx, unitStartY * rCenter + cy, dr,
                 -Math.PI + startAngle, startAngle, !clockwise
             );
         }
+        else {
+            ctx.moveTo(unitStartX * r + cx, unitStartY * r + cy);
+        }
 
-        ctx.arc(x, y, r, startAngle, endAngle, !clockwise);
-
-        ctx.moveTo(unitEndX * r + x, unitEndY * r + y);
+        ctx.arc(cx, cy, r, startAngle, endAngle, !clockwise);
 
         ctx.arc(
-            unitEndX * rCenter + x, unitEndY * rCenter + y, dr,
+            unitEndX * rCenter + cx, unitEndY * rCenter + cy, dr,
             endAngle - Math.PI * 2, endAngle - Math.PI, !clockwise
         );
 
         if (r0 !== 0) {
-            ctx.arc(x, y, r0, endAngle, startAngle, clockwise);
-
-            ctx.moveTo(unitStartX * r0 + x, unitEndY * r0 + y);
+            ctx.arc(cx, cy, r0, endAngle, startAngle, clockwise);
         }
 
-        ctx.closePath();
+        // ctx.closePath();
     }
 }
 

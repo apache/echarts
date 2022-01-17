@@ -43,6 +43,9 @@ function defaultsShow(opt: object, show: boolean) {
 
 export interface RadarIndicatorOption {
     name?: string
+    /**
+     * @deprecated Use `name` instead.
+     */
     text?: string
     min?: number
     max?: number
@@ -88,6 +91,7 @@ export interface RadarOption extends ComponentOption, CircleLayoutOptionMixin {
 export type InnerIndicatorAxisOption = AxisBaseOption & {
     // TODO Use type?
     // axisType?: 'value' | 'log'
+    showName?: boolean
 };
 
 class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystemHostModel {
@@ -137,6 +141,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                 axisLabel: axisLabel,
                 // Compatible with 2 and use text
                 name: indicatorOpt.text,
+                showName: showName,
                 nameLocation: 'end',
                 nameGap: nameGap,
                 // min: 0,
