@@ -110,10 +110,10 @@ class Graph {
         const edgesMap = this._edgesMap;
 
         // PNEDING
-        if (typeof n1 === 'number') {
+        if (zrUtil.isNumber(n1)) {
             n1 = this.nodes[n1];
         }
-        if (typeof n2 === 'number') {
+        if (zrUtil.isNumber(n2)) {
             n2 = this.nodes[n2];
         }
 

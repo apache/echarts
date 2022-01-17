@@ -542,7 +542,7 @@ under the License.
                                 }]
                             },
                             data:[
-                                {name: '北京',value: Math.round(Math.random()*1000)},
+                                {name: '北京',value: Math.round(Math.random()*1000), select: {disabled: true}},
                                 {name: '天津',value: Math.round(Math.random()*1000)},
                                 {name: '上海',value: Math.round(Math.random()*1000)},
                                 {name: '重庆',value: Math.round(Math.random()*1000)},
@@ -550,7 +550,7 @@ under the License.
                                 {name: '河南',value: Math.round(Math.random()*1000)},
                                 {name: '云南',value: Math.round(Math.random()*1000)},
                                 {name: '辽宁',value: Math.round(Math.random()*1000)},
-                                {name: '黑龙江',value: Math.round(Math.random()*1000)},
+                                {name: '黑龙江',value: Math.round(Math.random()*1000), select: {disabled: true}},
                                 {name: '湖南',value: Math.round(Math.random()*1000)},
                                 {name: '安徽',value: Math.round(Math.random()*1000)},
                                 {name: '山东',value: Math.round(Math.random()*1000)},
@@ -562,7 +562,7 @@ under the License.
                                 {name: '广西',value: Math.round(Math.random()*1000)},
                                 {name: '甘肃',value: Math.round(Math.random()*1000)},
                                 {name: '山西',value: Math.round(Math.random()*1000)},
-                                {name: '内蒙古',value: Math.round(Math.random()*1000)},
+                                {name: '内蒙古',value: Math.round(Math.random()*1000), select: {disabled: true}},
                                 {name: '陕西',value: Math.round(Math.random()*1000)},
                                 {name: '吉林',value: Math.round(Math.random()*1000)},
                                 {name: '福建',value: Math.round(Math.random()*1000)},
@@ -621,9 +621,9 @@ under the License.
                     ]
                 });
 
-                chart.on('click', function (param) {
-                    alert('asdf');
-                });
+                // chart.on('click', function (param) {
+                //     alert('asdf');
+                // });
                 // setTimeout(function () {
                 //     chart.setOption({
                 //         series: [{

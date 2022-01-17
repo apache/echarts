@@ -40,6 +40,7 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
+        <div id="main3"></div>
 
 
 
@@ -540,7 +541,74 @@ under the License.
                     option: option
                 });
             });
-            </script>
+        </script>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                option = {
+                    toolbox: {
+                            top: 10,
+                            left: 'center',
+                            show: true,
+                            orient: 'horizontal',
+                            showTitle: true,
+                            feature: {
+                                saveAsImage: {
+                                type: 'png',
+                                backgroundColor: 'pink',
+                                name: 'hwbtest',
+                                title: '保存'
+                                },
+                                restore: {},
+                                dataView: {},
+                                dataZoom: {}
+                            }
+                            },
+                        grid: {
+                            left: '10%',
+                            right: '15%',
+                            bottom: '15%',
+                        },
+                        xAxis: {
+                            type: 'category',
+                            boundaryGap: false,
+                            data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                        },
+                        yAxis: {
+                            type: 'value'
+                        },
+                        series: [
+                            {
+                                name: '邮件营销',
+                                type: 'line',
+                                data: [110, 132, 101, 134, 90, 230, 210],
+                                endLabel: {
+                                    show:true,
+                                    formatter: '{a}: {b}'
+                                }
+                            },
+                            {
+                                name: '销量',
+                                type: 'line',
+                                data: [210, 232, 201,234, 290, 240, 230],
+                                endLabel: {
+                                    show:true,
+                                    formatter: '{a}: {b}'
+                                }
+                            }
+                        ]
+                    };
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Should have no error when dataZoom on one points.',
+                        'Case from https://github.com/apache/echarts/issues/16094'
+                    ],
+                    option: option
+                });
+            });
+        </script>
 
 
     </body>

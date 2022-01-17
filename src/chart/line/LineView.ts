@@ -43,12 +43,12 @@ import type {
     ECElement,
     DisplayState,
     LabelOption,
-    ParsedValue,
+    ParsedValue
 } from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea, isCoordinateSystemType } from '../../coord/CoordinateSystem';
-import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis, SPECIAL_STATES } from '../../util/states';
+import { setStatesStylesFromModel, setStatesFlag, toggleHoverEmphasis, SPECIAL_STATES } from '../../util/states';
 import Model from '../../model/Model';
 import { setLabelStyle, getLabelStatesModels, labelInner } from '../../label/labelStyle';
 import { getDefaultLabel, getDefaultInterpolatedLabel } from '../helper/labelHelper';
@@ -124,7 +124,7 @@ function getBoundingDiff(points1: ArrayLike<number>, points2: ArrayLike<number>)
 }
 
 function getSmooth(smooth: number | boolean) {
-    return typeof smooth === 'number' ? smooth : (smooth ? 0.5 : 0);
+    return zrUtil.isNumber(smooth) ? smooth : (smooth ? 0.5 : 0);
 }
 
 function getStackedOnPoints(
@@ -803,8 +803,10 @@ class LineView extends ChartView {
             }
         }
 
-        const focus = seriesModel.get(['emphasis', 'focus']);
-        const blurScope = seriesModel.get(['emphasis', 'blurScope']);
+        const emphasisModel = seriesModel.getModel('emphasis');
+        const focus = emphasisModel.get('focus');
+        const blurScope = emphasisModel.get('blurScope');
+        const emphasisDisabled = emphasisModel.get('disabled');
 
         polyline.useStyle(zrUtil.defaults(
             // Use color in lineStyle first
@@ -825,7 +827,7 @@ class LineView extends ChartView {
 
         // Needs seriesIndex for focus
         getECData(polyline).seriesIndex = seriesModel.seriesIndex;
-        enableHoverEmphasis(polyline, focus, blurScope);
+        toggleHoverEmphasis(polyline, focus, blurScope, emphasisDisabled);
 
         const smooth = getSmooth(seriesModel.get('smooth'));
         const smoothMonotone = seriesModel.get('smoothMonotone');
@@ -864,7 +866,7 @@ class LineView extends ChartView {
             setStatesStylesFromModel(polygon, seriesModel, 'areaStyle');
             // Needs seriesIndex for focus
             getECData(polygon).seriesIndex = seriesModel.seriesIndex;
-            enableHoverEmphasis(polygon, focus, blurScope);
+            toggleHoverEmphasis(polygon, focus, blurScope, emphasisDisabled);
         }
 
         const changePolyState = (toState: DisplayState) => {
@@ -899,7 +901,7 @@ class LineView extends ChartView {
             componentIndex: seriesModel.componentIndex,
             seriesIndex: seriesModel.seriesIndex,
             seriesName: seriesModel.name,
-            seriesType: 'line',
+            seriesType: 'line'
         };
     }
 
@@ -1064,11 +1066,11 @@ class LineView extends ChartView {
 
         const seriesModel = data.hostModel;
         let seriesDuration = seriesModel.get('animationDuration');
-        if (typeof seriesDuration === 'function') {
+        if (zrUtil.isFunction(seriesDuration)) {
             seriesDuration = seriesDuration(null);
         }
         const seriesDalay = seriesModel.get('animationDelay') || 0;
-        const seriesDalayValue = typeof seriesDalay === 'function'
+        const seriesDalayValue = zrUtil.isFunction(seriesDalay)
             ? seriesDalay(null)
             : seriesDalay;
 
@@ -1113,7 +1115,7 @@ class LineView extends ChartView {
                     ratio = 1 - ratio;
                 }
 
-                const delay = typeof seriesDalay === 'function' ? seriesDalay(idx)
+                const delay = zrUtil.isFunction(seriesDalay) ? seriesDalay(idx)
                     : (seriesDuration * ratio) + seriesDalayValue;
 
                 const symbolPath = el.getSymbolPath();
@@ -1155,6 +1157,13 @@ class LineView extends ChartView {
         if (anyStateShowEndLabel(seriesModel)) {
             const data = seriesModel.getData();
             const polyline = this._polyline;
+            // series may be filtered.
+            const points = data.getLayout('points');
+            if (!points) {
+                polyline.removeTextContent();
+                this._endLabel = null;
+                return;
+            }
             let endLabel = this._endLabel;
             if (!endLabel) {
                 endLabel = this._endLabel = new graphic.Text({
@@ -1166,7 +1175,7 @@ class LineView extends ChartView {
             }
 
             // Find last non-NaN data to display data
-            const dataIndex = getLastIndexNotNull(data.getLayout('points'));
+            const dataIndex = getLastIndexNotNull(points);
             if (dataIndex >= 0) {
                 setLabelStyle(
                     polyline,
@@ -1214,6 +1223,7 @@ class LineView extends ChartView {
             }
 
             const points = data.getLayout('points');
+
             const seriesModel = data.hostModel as LineSeriesModel;
             const connectNulls = seriesModel.get('connectNulls');
             const precision = endLabelModel.get('precision');

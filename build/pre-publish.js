@@ -39,6 +39,7 @@ const transformDEVUtil = require('./transform-dev');
 const preamble = require('./preamble');
 const dts = require('@lang/rollup-plugin-dts').default;
 const rollup = require('rollup');
+const { transformImport } = require('zrender/build/transformImport');
 
 const ecDir = nodePath.resolve(__dirname, '..');
 const tmpDir = nodePath.resolve(ecDir, 'pre-publish-tmp');
@@ -109,8 +110,8 @@ const compileWorkList = [
             transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), esmDir);
             transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), esmDir);
 
-            await transformDistributionFiles(nodePath.resolve(ecDir, esmDir), esmDir);
-            await transformDistributionFiles(nodePath.resolve(ecDir, 'types'), esmDir);
+            await transformLibFiles(nodePath.resolve(ecDir, esmDir), esmDir);
+            await transformLibFiles(nodePath.resolve(ecDir, 'types'), esmDir);
             fsExtra.removeSync(tmpDir);
         }
     },
@@ -131,7 +132,7 @@ const compileWorkList = [
             fsExtra.removeSync(extensionESMDir);
         },
         after: async function () {
-            await transformDistributionFiles(extensionESMDir, 'lib');
+            await transformLibFiles(extensionESMDir, 'lib');
         }
     }
 ];
@@ -245,15 +246,15 @@ function transformRootFolderInEntry(entryFile, replacement) {
     fs.writeFileSync(
         entryFile,
         // Also transform zrender.
-        singleTransformZRRootFolder(code, replacement),
+        singleTransformImport(code, replacement),
         'utf-8'
     );
 }
 
 /**
- * Transform `zrender/src` to `zrender/esm` in all files
+ * Transform `zrender/src` to `zrender/lib` in all files
  */
-async function transformDistributionFiles(rooltFolder, replacement) {
+async function transformLibFiles(rooltFolder, replacement) {
     const files = await readFilePaths({
         patterns: ['**/*.js', '**/*.d.ts'],
         cwd: rooltFolder
@@ -262,7 +263,7 @@ async function transformDistributionFiles(rooltFolder, replacement) {
     // TODO More robust way?
     for (let fileName of files) {
         let code = fs.readFileSync(fileName, 'utf-8');
-        code = singleTransformZRRootFolder(code, replacement);
+        code = singleTransformImport(code, replacement);
         // For lower ts version, not use import type
         // TODO Use https://github.com/sandersn/downlevel-dts ?
         // if (fileName.endsWith('.d.ts')) {
@@ -272,8 +273,33 @@ async function transformDistributionFiles(rooltFolder, replacement) {
     }
 }
 
-function singleTransformZRRootFolder(code, replacement) {
-    return code.replace(/([\"\'])zrender\/src\//g, `$1zrender/${replacement}/`);
+/**
+ * 1. Transform zrender/src to zrender/lib
+ * 2. Add .js extensions
+ */
+function singleTransformImport(code, replacement) {
+    return transformImport(
+        code.replace(/([\"\'])zrender\/src\//g, `$1zrender/${replacement}/`),
+        (moduleName) => {
+            // Ignore 'tslib' and 'echarts' in the extensions.
+            if (moduleName === 'tslib' || moduleName === 'echarts') {
+                return moduleName;
+            }
+            else if (moduleName === 'zrender/lib/export') {
+                throw new Error('Should not import the whole zrender library.');
+            }
+            else if (moduleName.endsWith('.ts')) {
+                // Replace ts with js
+                return moduleName.replace(/\.ts$/, '.js');
+            }
+            else if (moduleName.endsWith('.js')) {
+                return moduleName;
+            }
+            else {
+                return moduleName + '.js'
+            }
+        }
+    );
 }
 
 // function singleTransformImportType(code) {

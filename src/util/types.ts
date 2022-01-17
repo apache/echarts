@@ -765,60 +765,6 @@ export interface ColorPaletteOptionMixin {
     color?: ZRColor | ZRColor[]
     colorLayer?: ZRColor[][]
 }
-
-export interface AriaLabelOption {
-    enabled?: boolean;
-    description?: string;
-    general?: {
-        withTitle?: string;
-        withoutTitle?: string;
-    };
-    series?: {
-        maxCount?: number;
-        single?: {
-            prefix?: string;
-            withName?: string;
-            withoutName?: string;
-        };
-        multiple?: {
-            prefix?: string;
-            withName?: string;
-            withoutName?: string;
-            separator?: {
-                middle?: string;
-                end?: string;
-            }
-        }
-    };
-    data?: {
-        maxCount?: number;
-        allData?: string;
-        partialData?: string;
-        withName?: string;
-        withoutName?: string;
-        separator?: {
-            middle?: string;
-            end?: string;
-        }
-    }
-}
-
-// Extending is for compating ECharts 4
-export interface AriaOption extends AriaLabelOption {
-    mainType?: 'aria';
-
-    enabled?: boolean;
-    label?: AriaLabelOption;
-    decal?: {
-        show?: boolean;
-        decals?: DecalObject | DecalObject[];
-    };
-}
-
-export interface AriaOptionMixin {
-    aria?: AriaOption
-}
-
 /**
  * Mixin of option set to control the box layout of each component.
  */
@@ -874,6 +820,7 @@ export interface AnimationOption {
     delay?: number
     // additive?: boolean
 }
+
 /**
  * Mixin of option set to control the animation of series.
  */
@@ -1306,6 +1253,13 @@ export interface CommonTooltipOption<FormatterParams> {
     alwaysShowContent?: boolean
 
     formatter?: string | TooltipFormatterCallback<FormatterParams>
+
+    /**
+     * Formatter of value.
+     *
+     * Will be ignored if tooltip.formatter is specified.
+     */
+    valueFormatter?: (value: OptionDataValue | OptionDataValue[]) => string
     /**
      * Absolution pixel [x, y] array. Or relative percent string [x, y] array.
      * If trigger is 'item'. position can be set to 'inside' / 'top' / 'left' / 'right' / 'bottom',
@@ -1549,11 +1503,18 @@ export interface StatesOptionMixin<
          * Default to be coordinate system.
          */
         blurScope?: BlurScope
+
+        /**
+         * If emphasis state is disabled.
+         */
+        disabled?: boolean
     }
     /**
      * Select states
      */
-    select?: StateOption & StatesMixin['select']
+    select?: StateOption & StatesMixin['select'] & {
+        disabled?: boolean
+    }
     /**
      * Blur states.
      */
@@ -1662,8 +1623,8 @@ export interface SeriesOption<
      * Map of selected data
      * key is name or index of data.
      */
-    selectedMap?: Dictionary<boolean>
-    selectedMode?: 'single' | 'multiple' | boolean
+    selectedMap?: Dictionary<boolean> | 'all'
+    selectedMode?: 'single' | 'multiple' | 'series' | boolean
 }
 
 export interface SeriesOnCartesianOptionMixin {
@@ -1718,3 +1679,58 @@ export interface SeriesEncodeOptionMixin {
 }
 
 export type SeriesEncodableModel = SeriesModel<SeriesOption & SeriesEncodeOptionMixin>;
+
+
+// TODO Move to aria component
+export interface AriaLabelOption {
+    enabled?: boolean;
+    description?: string;
+    general?: {
+        withTitle?: string;
+        withoutTitle?: string;
+    };
+    series?: {
+        maxCount?: number;
+        single?: {
+            prefix?: string;
+            withName?: string;
+            withoutName?: string;
+        };
+        multiple?: {
+            prefix?: string;
+            withName?: string;
+            withoutName?: string;
+            separator?: {
+                middle?: string;
+                end?: string;
+            }
+        }
+    };
+    data?: {
+        maxCount?: number;
+        allData?: string;
+        partialData?: string;
+        withName?: string;
+        withoutName?: string;
+        separator?: {
+            middle?: string;
+            end?: string;
+        }
+    }
+}
+
+// Extending is for compating ECharts 4
+export interface AriaOption extends AriaLabelOption {
+    mainType?: 'aria';
+
+    enabled?: boolean;
+    label?: AriaLabelOption;
+    decal?: {
+        show?: boolean;
+        decals?: DecalObject | DecalObject[];
+    };
+}
+
+export interface AriaOptionMixin {
+    aria?: AriaOption
+}

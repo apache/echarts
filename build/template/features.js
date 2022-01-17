@@ -17,4 +17,4 @@
 * under the License.
 */
 
-export * from './lib/export/features';
+export * from './lib/export/features.js';

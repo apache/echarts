@@ -22,7 +22,7 @@ import Group from 'zrender/src/graphic/Group';
 import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
 import * as modelUtil from '../util/model';
-import { enterEmphasis, leaveEmphasis, getHighlightDigit } from '../util/states';
+import { enterEmphasis, leaveEmphasis, getHighlightDigit, isHighDownDispatcher } from '../util/states';
 import {createTask, TaskResetCallbackReturn} from '../core/task';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
 import SeriesModel from '../model/Series';
@@ -35,6 +35,7 @@ import {
 } from '../util/types';
 import { SeriesTaskContext, SeriesTask } from '../core/Scheduler';
 import SeriesData from '../data/SeriesData';
+import { traverseElements } from '../util/graphic';
 import { error } from '../util/log';
 
 const inner = modelUtil.makeInner<{
@@ -147,7 +148,11 @@ class ChartView {
 
     init(ecModel: GlobalModel, api: ExtensionAPI): void {}
 
-    render(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {}
+    render(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
+        if (__DEV__) {
+            throw new Error('render method must been implemented');
+        }
+    }
 
     /**
      * Highlight series or specified data item.
@@ -204,6 +209,16 @@ class ChartView {
         this.render(seriesModel, ecModel, api, payload);
     }
 
+    /**
+     * Traverse the new rendered elements.
+     *
+     * It will traverse the new added element in progressive rendering.
+     * And traverse all in normal rendering.
+     */
+    eachRendered(cb: (el: Element) => boolean | void) {
+        traverseElements(this.group, cb);
+    }
+
     static markUpdateMethod(payload: Payload, methodName: keyof ChartView): void {
         inner(payload).updateMethod = methodName;
     }
@@ -216,7 +231,7 @@ class ChartView {
  * Set state of single element
  */
 function elSetState(el: Element, state: DisplayState, highlightDigit: number) {
-    if (el) {
+    if (el && isHighDownDispatcher(el)) {
         (state === 'emphasis' ? enterEmphasis : leaveEmphasis)(el, highlightDigit);
     }
 }

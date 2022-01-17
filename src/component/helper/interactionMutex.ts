@@ -19,6 +19,7 @@
 
 // @ts-nocheck
 import * as echarts from '../../core/echarts';
+import { noop } from 'zrender/src/core/util';
 
 const ATTR = '\0_ec_interaction_mutex';
 
@@ -54,5 +55,5 @@ function getStore(zr) {
 // TODO: SELF REGISTERED.
 echarts.registerAction(
     {type: 'takeGlobalCursor', event: 'globalCursorTaken', update: 'update'},
-    function () {}
+    noop
 );

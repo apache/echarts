@@ -116,22 +116,30 @@ under the License.
                         name: 'bar',
                         type: 'bar',
                         stack: 'one',
+                        large: true,
+                        largeThreshold: 10,
                         data: data[0]
                     }, {
                         show: false,
                         name: 'bar2',
                         type: 'bar',
                         stack: 'one',
+                        large: true,
+                        largeThreshold: 10,
                         data: data[1]
                     }, {
                         name: 'bar3',
                         type: 'bar',
                         stack: 'two',
+                        large: true,
+                        largeThreshold: 10,
                         data: data[2]
                     }, {
                         name: 'bar4',
                         type: 'bar',
                         stack: 'two',
+                        large: true,
+                        largeThreshold: 10,
                         data: data[3],
                         silent: true
                     }],
@@ -188,6 +196,7 @@ under the License.
                         type: 'bar',
                         large: true,
                         largeThreshold: 2,
+                        showBackground: true,
                         data: [
                             ['mm', 33],
                             ['yy', -44],
@@ -198,6 +207,7 @@ under the License.
                         type: 'bar',
                         large: true,
                         largeThreshold: 2,
+                        showBackground: true,
                         xAxisIndex: 1,
                         yAxisIndex: 1,
                         encode: {
@@ -216,7 +226,7 @@ under the License.
                 var chart = testHelper.create(echarts, 'main1', {
                     option: option,
                     title: [
-                        'bar in large mode',
+                        'bar in large mode with background',
                         'click bar should alert',
                         'tooltip should be ok'
                     ]

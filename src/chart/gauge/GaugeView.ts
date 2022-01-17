@@ -19,7 +19,7 @@
 
 import PointerPath from './PointerPath';
 import * as graphic from '../../util/graphic';
-import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
+import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import {createTextStyle, setLabelValueAnimation, animateLabelValue} from '../../label/labelStyle';
 import ChartView from '../../view/Chart';
 import {parsePercent, round, linearMap} from '../../util/number';
@@ -31,7 +31,7 @@ import SeriesData from '../../data/SeriesData';
 import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
-import {extend} from 'zrender/src/core/util';
+import {extend, isFunction, isString} from 'zrender/src/core/util';
 import {setCommonECData} from '../../util/innerStore';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
@@ -61,10 +61,10 @@ function parsePosition(seriesModel: GaugeSeriesModel, api: ExtensionAPI): PosInf
 function formatLabel(value: number, labelFormatter: string | ((value: number) => string)): string {
     let label = value == null ? '' : (value + '');
     if (labelFormatter) {
-        if (typeof labelFormatter === 'string') {
+        if (isString(labelFormatter)) {
             label = labelFormatter.replace('{value}', label);
         }
-        else if (typeof labelFormatter === 'function') {
+        else if (isFunction(labelFormatter)) {
             label = labelFormatter(value);
         }
     }
@@ -421,11 +421,15 @@ class GaugeView extends ChartView {
         if (showProgress || showPointer) {
             data.diff(oldData)
                 .add(function (idx) {
+                    const val = data.get(valueDim, idx) as number;
                     if (showPointer) {
                         const pointer = createPointer(idx, startAngle);
+                        // TODO hide pointer on NaN value?
                         graphic.initProps(pointer, {
-                            rotation: -(linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, true)
-                                + Math.PI / 2)
+                            rotation: -(
+                                (isNaN(+val) ? angleExtent[0] : linearMap(val, valueExtent, angleExtent, true))
+                                + Math.PI / 2
+                            )
                         }, seriesModel);
                         group.add(pointer);
                         data.setItemGraphicEl(idx, pointer);
@@ -436,7 +440,7 @@ class GaugeView extends ChartView {
                         const isClip = progressModel.get('clip');
                         graphic.initProps(progress, {
                             shape: {
-                                endAngle: linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, isClip)
+                                endAngle: linearMap(val, valueExtent, angleExtent, isClip)
                             }
                         }, seriesModel);
                         group.add(progress);
@@ -447,6 +451,7 @@ class GaugeView extends ChartView {
                     }
                 })
                 .update(function (newIdx, oldIdx) {
+                    const val = data.get(valueDim, newIdx) as number;
                     if (showPointer) {
                         const previousPointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
                         const previousRotate = previousPointer ? previousPointer.rotation : startAngle;
@@ -454,7 +459,7 @@ class GaugeView extends ChartView {
                         pointer.rotation = previousRotate;
                         graphic.updateProps(pointer, {
                             rotation: -(
-                                linearMap(data.get(valueDim, newIdx) as number, valueExtent, angleExtent, true)
+                                (isNaN(+val) ? angleExtent[0] : linearMap(val, valueExtent, angleExtent, true))
                                     + Math.PI / 2
                             )
                         }, seriesModel);
@@ -469,9 +474,7 @@ class GaugeView extends ChartView {
                         const isClip = progressModel.get('clip');
                         graphic.updateProps(progress, {
                             shape: {
-                                endAngle: linearMap(
-                                    data.get(valueDim, newIdx) as number, valueExtent, angleExtent, isClip
-                                )
+                                endAngle: linearMap(val, valueExtent, angleExtent, isClip)
                             }
                         }, seriesModel);
                         group.add(progress);
@@ -486,6 +489,9 @@ class GaugeView extends ChartView {
             data.each(function (idx) {
                 const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
                 const emphasisModel = itemModel.getModel('emphasis');
+                const focus = emphasisModel.get('focus');
+                const blurScope = emphasisModel.get('blurScope');
+                const emphasisDisabled = emphasisModel.get('disabled');
                 if (showPointer) {
                     const pointer = data.getItemGraphicEl(idx) as ECSymbol;
                     const symbolStyle = data.getItemVisual(idx, 'style');
@@ -514,7 +520,7 @@ class GaugeView extends ChartView {
 
                     (pointer as ECElement).z2EmphasisLift = 0;
                     setStatesStylesFromModel(pointer, itemModel);
-                    enableHoverEmphasis(pointer, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+                    toggleHoverEmphasis(pointer, focus, blurScope, emphasisDisabled);
                 }
 
                 if (showProgress) {
@@ -523,7 +529,7 @@ class GaugeView extends ChartView {
                     progress.setStyle(itemModel.getModel(['progress', 'itemStyle']).getItemStyle());
                     (progress as ECElement).z2EmphasisLift = 0;
                     setStatesStylesFromModel(progress, itemModel);
-                    enableHoverEmphasis(progress, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+                    toggleHoverEmphasis(progress, focus, blurScope, emphasisDisabled);
                 }
             });
 

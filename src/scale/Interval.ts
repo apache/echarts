@@ -215,7 +215,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
     /**
      * @param splitNumber By default `5`.
      */
-    niceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number): void {
+    calcNiceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number): void {
         splitNumber = splitNumber || 5;
         const extent = this._extent;
         let span = extent[1] - extent[0];
@@ -238,7 +238,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         this._niceExtent = result.niceTickExtent;
     }
 
-    niceExtent(opt: {
+    calcNiceExtent(opt: {
         splitNumber: number, // By default 5.
         fixMin?: boolean,
         fixMax?: boolean,
@@ -275,8 +275,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
             extent[1] = 1;
         }
 
-        this.niceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
-
+        this.calcNiceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
         // let extent = this._extent;
         const interval = this._interval;
 
@@ -288,6 +287,9 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         }
     }
 
+    setNiceExtent(min: number, max: number) {
+        this._niceExtent = [min, max];
+    }
 }
 
 Scale.registerClass(IntervalScale);

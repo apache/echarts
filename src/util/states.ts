@@ -38,7 +38,18 @@ import {
     DownplayPayload,
     ComponentMainType
 } from './types';
-import { extend, indexOf, isArrayLike, isObject, keys, isArray, each } from 'zrender/src/core/util';
+import {
+    extend,
+    indexOf,
+    isArrayLike,
+    isObject,
+    keys,
+    isArray,
+    each,
+    isString,
+    isGradientObject,
+    map
+} from 'zrender/src/core/util';
 import { getECData } from './innerStore';
 import * as colorTool from 'zrender/src/tool/color';
 import SeriesData from '../data/SeriesData';
@@ -51,7 +62,6 @@ import ExtensionAPI from '../core/ExtensionAPI';
 import ComponentModel from '../model/Component';
 import { error } from './log';
 
-
 // Reserve 0 as default.
 let _highlightNextDigit = 1;
 
@@ -63,6 +73,10 @@ const getSavedStates = makeInner<{
     selectFill?: ZRColor
     selectStroke?: ZRColor
 }, Path>();
+
+const getComponentStates = makeInner<{
+    isBlured: boolean
+}, SeriesModel | ComponentModel>();
 
 export const HOVER_STATE_NORMAL: 0 = 0;
 export const HOVER_STATE_BLUR: 1 = 1;
@@ -96,16 +110,27 @@ function hasFillOrStroke(fillOrStroke: string | PatternObject | GradientObject) 
 }
 // Most lifted color are duplicated.
 const liftedColorCache = new LRU<string>(100);
-function liftColor(color: string): string {
-    if (typeof color !== 'string') {
-        return color;
+function liftColor(color: GradientObject): GradientObject;
+function liftColor(color: string): string;
+function liftColor(color: string | GradientObject): string | GradientObject {
+    if (isString(color)) {
+        let liftedColor = liftedColorCache.get(color);
+        if (!liftedColor) {
+            liftedColor = colorTool.lift(color, -0.1);
+            liftedColorCache.put(color, liftedColor);
+        }
+        return liftedColor;
     }
-    let liftedColor = liftedColorCache.get(color);
-    if (!liftedColor) {
-        liftedColor = colorTool.lift(color, -0.1);
-        liftedColorCache.put(color, liftedColor);
+    else if (isGradientObject(color)) {
+        const ret = extend({}, color) as GradientObject;
+        ret.colorStops = map(color.colorStops, stop => ({
+            offset: stop.offset,
+            color: colorTool.lift(stop.color, -0.1)
+        }));
+        return ret;
     }
-    return liftedColor;
+    // Change nothing.
+    return color;
 }
 
 function doChangeHoverState(el: ECElement, stateName: DisplayState, hoverStateEnum: 0 | 1 | 2) {
@@ -216,7 +241,7 @@ function getFromStateStyle(
             // Dont consider the animation to emphasis state.
             && animator.__fromStateTransition.indexOf(toStateName) < 0
             && animator.targetName === 'style') {
-            animator.saveFinalToTarget(fromState, props);
+            animator.saveTo(fromState, props);
         }
     }
     return fromState;
@@ -403,13 +428,17 @@ function shouldSilent(el: Element, e: ElementEvent) {
 export function allLeaveBlur(api: ExtensionAPI) {
     const model = api.getModel();
     model.eachComponent(function (componentType, componentModel) {
-        const view = componentType === 'series'
-            ? api.getViewOfSeriesModel(componentModel as SeriesModel)
-            : api.getViewOfComponentModel(componentModel);
-        // Leave blur anyway
-        view.group.traverse(function (child) {
-            singleLeaveBlur(child);
-        });
+        const componentStates = getComponentStates(componentModel);
+        if (componentStates.isBlured) {
+            const view = componentType === 'series'
+                ? api.getViewOfSeriesModel(componentModel as SeriesModel)
+                : api.getViewOfComponentModel(componentModel);
+            // Leave blur anyway
+            view.group.traverse(function (child) {
+                singleLeaveBlur(child);
+            });
+        }
+        componentStates.isBlured = false;
     });
 }
 
@@ -480,6 +509,8 @@ export function blurSeries(
             }
 
             blurredSeries.push(seriesModel);
+
+            getComponentStates(seriesModel).isBlured = true;
         }
     });
 
@@ -507,6 +538,8 @@ export function blurComponent(
     if (!componentModel) {
         return;
     }
+
+    getComponentStates(componentModel).isBlured = true;
 
     const view = api.getViewOfComponentModel(componentModel);
     if (!view || !view.focusBlurEnabled) {
@@ -647,7 +680,7 @@ export function handleGlobalMouseOverForHighDown(
     }
 }
 
-export function handleGlboalMouseOutForHighDown(
+export function handleGlobalMouseOutForHighDown(
     dispatcher: Element,
     e: ElementEvent,
     api: ExtensionAPI
@@ -742,6 +775,15 @@ export function enableHoverEmphasis(el: Element, focus?: InnerFocus, blurScope?:
     enableHoverFocus(el, focus, blurScope);
 }
 
+export function disableHoverEmphasis(el: Element) {
+    setAsHighDownDispatcher(el, false);
+}
+
+export function toggleHoverEmphasis(el: Element, focus: InnerFocus, blurScope: BlurScope, isDisabled: boolean) {
+    isDisabled ? disableHoverEmphasis(el)
+        : enableHoverEmphasis(el, focus, blurScope);
+}
+
 export function enableHoverFocus(el: Element, focus: InnerFocus, blurScope: BlurScope) {
     const ecData = getECData(el);
     if (focus != null) {
@@ -788,7 +830,12 @@ export function setStatesStylesFromModel(
 
 
 /**
- * @parame el
+ *
+ * Set element as highlight / downplay dispatcher.
+ * It will be checked when element recieved mouseover event or from highlight action.
+ * It's in change of all highlight/downplay behavior of it's children.
+ *
+ * @param el
  * @param el.highDownSilentOnTouch
  *        In touch device, mouseover event will be trigger on touchstart event
  *        (see module:zrender/dom/HandlerProxy). By this mechanism, we can

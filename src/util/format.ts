@@ -277,14 +277,14 @@ export function formatTime(tpl: string, value: unknown, isUTC?: boolean) {
     }
 
     const date = parseDate(value);
-    const utc = isUTC ? 'UTC' : '';
-    const y = (date as any)['get' + utc + 'FullYear']();
-    const M = (date as any)['get' + utc + 'Month']() + 1;
-    const d = (date as any)['get' + utc + 'Date']();
-    const h = (date as any)['get' + utc + 'Hours']();
-    const m = (date as any)['get' + utc + 'Minutes']();
-    const s = (date as any)['get' + utc + 'Seconds']();
-    const S = (date as any)['get' + utc + 'Milliseconds']();
+    const getUTC = isUTC ? 'getUTC' : 'get';
+    const y = (date as any)[getUTC + 'FullYear']();
+    const M = (date as any)[getUTC + 'Month']() + 1;
+    const d = (date as any)[getUTC + 'Date']();
+    const h = (date as any)[getUTC + 'Hours']();
+    const m = (date as any)[getUTC + 'Minutes']();
+    const s = (date as any)[getUTC + 'Seconds']();
+    const S = (date as any)[getUTC + 'Milliseconds']();
 
     tpl = tpl.replace('MM', pad(M, 2))
         .replace('M', M)

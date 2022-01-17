@@ -137,12 +137,12 @@ export class DataFormatMixin {
             );
         }
 
-        if (typeof formatter === 'function') {
+        if (zrUtil.isFunction(formatter)) {
             params.status = status;
             params.dimensionIndex = labelDimIndex;
             return formatter(params);
         }
-        else if (typeof formatter === 'string') {
+        else if (zrUtil.isString(formatter)) {
             const str = formatTpl(formatter, params);
 
             // Support 'aaa{@[3]}bbb{@product}ccc'.
@@ -220,14 +220,11 @@ type TooltipFormatResult =
 /**
  * For backward compat, normalize the return from `formatTooltip`.
  */
-export function normalizeTooltipFormatResult(
-    result: TooltipFormatResult
-    // markersExisting: Dictionary<ColorString>
-): {
+export function normalizeTooltipFormatResult(result: TooltipFormatResult): {
     // If `markupFragment` exists, `markupText` should be ignored.
-    markupFragment: TooltipMarkupBlockFragment;
+    frag: TooltipMarkupBlockFragment;
     // Can be `null`/`undefined`, means no tooltip.
-    markupText: string;
+    text: string;
     // Merged with `markersExisting`.
     // markers: Dictionary<ColorString>;
 } {
@@ -256,8 +253,8 @@ export function normalizeTooltipFormatResult(
     }
 
     return {
-        markupText: markupText,
+        text: markupText,
         // markers: markers || markersExisting,
-        markupFragment: markupFragment
+        frag: markupFragment
     };
 }

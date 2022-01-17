@@ -321,6 +321,25 @@ under the License.
                         }
                     },
                     {
+                        text: 'set radius for all corners',
+                        onclick: function () {
+                            isCircular = true;
+                            var val = [5, 15, 0, 20];
+                            chart.setOption({
+                                title: {
+                                    text: 'cornerRadius [' + val + ']'
+                                },
+                                series: [{
+                                    radius: ['40%', '75%'],
+                                    itemStyle: { borderRadius: val },
+                                    emphasis: {
+                                        itemStyle: { borderRadius: [20, 5, 10, 30] }
+                                    }
+                                }]
+                            });
+                        }
+                    },
+                    {
                         text: 'reset',
                         onclick: function () {
                             outerCornerRadius = 5;

@@ -17,9 +17,9 @@
 * under the License.
 */
 
-import Model from '../../model/Model';
-import Sector from 'zrender/src/graphic/shape/Sector';
-import { isArray } from 'zrender/src/core/util';
+import type Model from '../../model/Model';
+import type Sector from 'zrender/src/graphic/shape/Sector';
+import { isArray, map } from 'zrender/src/core/util';
 import { parsePercent } from 'zrender/src/contain/text';
 
 export function getSectorCornerRadius(
@@ -29,13 +29,13 @@ export function getSectorCornerRadius(
 ) {
     let cornerRadius = model.get('borderRadius');
     if (cornerRadius == null) {
-        return zeroIfNull ? {innerCornerRadius: 0, cornerRadius: 0} : null;
+        return zeroIfNull ? { cornerRadius: 0 } : null;
     }
     if (!isArray(cornerRadius)) {
-        cornerRadius = [cornerRadius, cornerRadius];
+        cornerRadius = [cornerRadius, cornerRadius, cornerRadius, cornerRadius];
     }
+    const dr = Math.abs(shape.r || 0 - shape.r0 || 0);
     return {
-        innerCornerRadius: parsePercent(cornerRadius[0], shape.r0),
-        cornerRadius: parsePercent(cornerRadius[1], shape.r)
+        cornerRadius: map(cornerRadius, cr => parsePercent(cr, dr))
     };
 }

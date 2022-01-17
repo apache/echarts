@@ -30,11 +30,13 @@ import {
     StatesOptionMixin,
     DisplayState,
     LabelOption,
-    StatesMixinBase
+    DefaultEmphasisFocus,
+    BlurScope
 } from '../../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
 import { getLabelStatesModels } from '../../label/labelStyle';
+import Element from 'zrender/src/Element';
 
 interface LineLike extends graphic.Group {
     updateData(data: SeriesData, idx: number, scope?: LineDrawSeriesScope): void
@@ -52,7 +54,11 @@ interface LineDrawStateOption {
 }
 
 export interface LineDrawModelOption extends LineDrawStateOption,
-    StatesOptionMixin<LineDrawStateOption, StatesMixinBase> {
+    StatesOptionMixin<LineDrawStateOption, {
+        emphasis?: {
+            focus?: DefaultEmphasisFocus
+        }
+    }> {
     // If has effect
     effect?: {
         show?: boolean
@@ -87,6 +93,10 @@ export interface LineDrawSeriesScope {
     selectLineStyle?: ZRStyleProps
 
     labelStatesModels: Record<DisplayState, Model<LabelOption>>
+
+    focus?: DefaultEmphasisFocus
+    blurScope?: BlurScope
+    emphasisDisabled?: boolean;
 }
 
 class LineDraw {
@@ -98,15 +108,16 @@ class LineDraw {
 
     private _seriesScope: LineDrawSeriesScope;
 
+    private _progressiveEls: LineLike[];
+
     constructor(LineCtor?: LineLikeCtor) {
         this._LineCtor = LineCtor || LineGroup;
     }
 
-    isPersistent() {
-        return true;
-    };
-
     updateData(lineData: ListForLineDraw) {
+        // Remove progressive els.
+        this._progressiveEls = null;
+
         const lineDraw = this;
         const group = lineDraw.group;
 
@@ -154,6 +165,9 @@ class LineDraw {
     };
 
     incrementalUpdate(taskParams: StageHandlerProgressParams, lineData: ListForLineDraw) {
+
+        this._progressiveEls = [];
+
         function updateIncrementalAndHover(el: Displayable) {
             if (!el.isGroup && !isEffectObject(el)) {
                 el.incremental = true;
@@ -170,6 +184,8 @@ class LineDraw {
 
                 this.group.add(el);
                 lineData.setItemGraphicEl(idx, el);
+
+                this._progressiveEls.push(el);
             }
         }
     };
@@ -177,6 +193,10 @@ class LineDraw {
     remove() {
         this.group.removeAll();
     };
+
+    eachRendered(cb: (el: Element) => boolean | void) {
+        graphic.traverseElements(this._progressiveEls || this.group, cb);
+    }
 
     private _doAdd(
         lineData: ListForLineDraw,
@@ -226,11 +246,16 @@ function isEffectObject(el: Displayable) {
 
 function makeSeriesScope(lineData: ListForLineDraw): LineDrawSeriesScope {
     const hostModel = lineData.hostModel;
+    const emphasisModel = hostModel.getModel('emphasis');
     return {
         lineStyle: hostModel.getModel('lineStyle').getLineStyle(),
-        emphasisLineStyle: hostModel.getModel(['emphasis', 'lineStyle']).getLineStyle(),
+        emphasisLineStyle: emphasisModel.getModel(['lineStyle']).getLineStyle(),
         blurLineStyle: hostModel.getModel(['blur', 'lineStyle']).getLineStyle(),
         selectLineStyle: hostModel.getModel(['select', 'lineStyle']).getLineStyle(),
+
+        emphasisDisabled: emphasisModel.get('disabled'),
+        blurScope: emphasisModel.get('blurScope'),
+        focus: emphasisModel.get('focus'),
 
         labelStatesModels: getLabelStatesModels(hostModel)
     };
@@ -241,7 +266,7 @@ function isPointNaN(pt: number[]) {
 }
 
 function lineNeedsDraw(pts: number[][]) {
-    return !isPointNaN(pts[0]) && !isPointNaN(pts[1]);
+    return pts && !isPointNaN(pts[0]) && !isPointNaN(pts[1]);
 }
 
 

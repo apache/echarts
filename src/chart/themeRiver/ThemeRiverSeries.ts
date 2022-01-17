@@ -295,7 +295,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
     }
 
     static defaultOption: ThemeRiverSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
 
         colorBy: 'data',

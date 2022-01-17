@@ -406,7 +406,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     }
 
     static defaultOption: GraphSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
 
         coordinateSystem: 'view',

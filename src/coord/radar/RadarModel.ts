@@ -148,11 +148,14 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                 nameTextStyle: iNameTextStyle,
                 triggerEvent: triggerEvent
             } as InnerIndicatorAxisOption, false);
-            if (typeof nameFormatter === 'string') {
+            if (!showName) {
+                innerIndicatorOpt.name = '';
+            }
+            if (zrUtil.isString(nameFormatter)) {
                 const indName = innerIndicatorOpt.name;
                 innerIndicatorOpt.name = nameFormatter.replace('{value}', indName != null ? indName : '');
             }
-            else if (typeof nameFormatter === 'function') {
+            else if (zrUtil.isFunction(nameFormatter)) {
                 innerIndicatorOpt.name = nameFormatter(
                     innerIndicatorOpt.name, innerIndicatorOpt
                 );
@@ -176,7 +179,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
 
     static defaultOption: RadarOption = {
 
-        zlevel: 0,
+        // zlevel: 0,
 
         z: 0,
 

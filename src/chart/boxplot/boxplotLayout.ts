@@ -90,7 +90,6 @@ function groupSeriesByAxis(ecModel: GlobalModel) {
  * Calculate offset and box width for each series.
  */
 function calculateBase(groupItem: GroupItem) {
-    let extent;
     const baseAxis = groupItem.axis;
     const seriesModels = groupItem.seriesModels;
     const seriesCount = seriesModels.length;
@@ -108,8 +107,8 @@ function calculateBase(groupItem: GroupItem) {
         each(seriesModels, function (seriesModel) {
             maxDataCount = Math.max(maxDataCount, seriesModel.getData().count());
         });
-        extent = baseAxis.getExtent(),
-        Math.abs(extent[1] - extent[0]) / maxDataCount;
+        const extent = baseAxis.getExtent();
+        bandWidth = Math.abs(extent[1] - extent[0]) / maxDataCount;
     }
 
     each(seriesModels, function (seriesModel) {
