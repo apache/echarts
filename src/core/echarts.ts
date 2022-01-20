@@ -111,7 +111,7 @@ import {
 import Displayable from 'zrender/src/graphic/Displayable';
 import { seriesSymbolTask, dataSymbolTask } from '../visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from '../visual/helper';
-import { deprecateLog, deprecateReplaceLog } from '../util/log';
+import { deprecateLog, deprecateReplaceLog, error } from '../util/log';
 import { handleLegacySelectEvents } from '../legacy/dataSelectAction';
 
 import { registerExternalTransform } from '../data/helper/transform';
@@ -490,8 +490,15 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             this[IN_MAIN_PROCESS_KEY] = true;
 
-            prepare(this);
-            updateMethods.update.call(this, null, this[PENDING_UPDATE].updateParams);
+            try {
+                prepare(this);
+                updateMethods.update.call(this, null, this[PENDING_UPDATE].updateParams);
+            }
+            catch (e) {
+                this[IN_MAIN_PROCESS_KEY] = false;
+                this[PENDING_UPDATE] = null;
+                throw e;
+            }
 
             // At present, in each frame, zrender performs:
             //   (1) animation step forward.
@@ -502,11 +509,9 @@ class ECharts extends Eventful<ECEventDefinition> {
             this._zr.flush();
 
             this[IN_MAIN_PROCESS_KEY] = false;
-
             this[PENDING_UPDATE] = null;
 
             flushPendingActions.call(this, silent);
-
             triggerUpdatedEvent.call(this, silent);
         }
         // Avoid do both lazy update and progress in one frame.
@@ -586,9 +591,13 @@ class ECharts extends Eventful<ECEventDefinition> {
     setOption<Opt extends ECBasicOption>(option: Opt, opts?: SetOptionOpts): void;
     /* eslint-disable-next-line */
     setOption<Opt extends ECBasicOption>(option: Opt, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
-        if (__DEV__) {
-            assert(!this[IN_MAIN_PROCESS_KEY], '`setOption` should not be called during main process.');
+        if (this[IN_MAIN_PROCESS_KEY]) {
+            if (__DEV__) {
+                error('`setOption` should not be called during main process.');
+            }
+            return;
         }
+
         if (this._disposed) {
             disposedWarning(this.id);
             return;
@@ -635,9 +644,16 @@ class ECharts extends Eventful<ECEventDefinition> {
             this.getZr().wakeUp();
         }
         else {
-            prepare(this);
+            try {
+                prepare(this);
+                updateMethods.update.call(this, null, updateParams);
+            }
+            catch (e) {
+                this[PENDING_UPDATE] = null;
+                this[IN_MAIN_PROCESS_KEY] = false;
 
-            updateMethods.update.call(this, null, updateParams);
+                throw e;
+            }
 
             // Ensure zr refresh sychronously, and then pixel in canvas can be
             // fetched after `setOption`.
@@ -1196,9 +1212,13 @@ class ECharts extends Eventful<ECEventDefinition> {
      * Resize the chart
      */
     resize(opts?: ResizeOpts): void {
-        if (__DEV__) {
-            assert(!this[IN_MAIN_PROCESS_KEY], '`resize` should not be called during main process.');
+        if (this[IN_MAIN_PROCESS_KEY]) {
+            if (__DEV__) {
+                error('`setOption` should not be called during main process.');
+            }
+            return;
         }
+
         if (this._disposed) {
             disposedWarning(this.id);
             return;
@@ -1232,15 +1252,20 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         this[IN_MAIN_PROCESS_KEY] = true;
 
-        needPrepare && prepare(this);
-
-        updateMethods.update.call(this, {
-            type: 'resize',
-            animation: extend({
-                // Disable animation
-                duration: 0
-            }, opts && opts.animation)
-        });
+        try {
+            needPrepare && prepare(this);
+            updateMethods.update.call(this, {
+                type: 'resize',
+                animation: extend({
+                    // Disable animation
+                    duration: 0
+                }, opts && opts.animation)
+            });
+        }
+        catch (e) {
+            this[IN_MAIN_PROCESS_KEY] = false;
+            throw e;
+        }
 
         this[IN_MAIN_PROCESS_KEY] = false;
 
@@ -1908,14 +1933,20 @@ class ECharts extends Eventful<ECEventDefinition> {
             });
 
             if (updateMethod !== 'none' && !isHighDown && !isSelectChange && !cptType) {
-                // Still dirty
-                if (this[PENDING_UPDATE]) {
-                    prepare(this);
-                    updateMethods.update.call(this, payload);
-                    this[PENDING_UPDATE] = null;
+                try {
+                    // Still dirty
+                    if (this[PENDING_UPDATE]) {
+                        prepare(this);
+                        updateMethods.update.call(this, payload);
+                        this[PENDING_UPDATE] = null;
+                    }
+                    else {
+                        updateMethods[updateMethod as keyof typeof updateMethods].call(this, payload);
+                    }
                 }
-                else {
-                    updateMethods[updateMethod as keyof typeof updateMethods].call(this, payload);
+                catch (e) {
+                    this[IN_MAIN_PROCESS_KEY] = false;
+                    throw e;
                 }
             }
 
