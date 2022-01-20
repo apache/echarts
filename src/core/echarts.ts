@@ -1214,7 +1214,7 @@ class ECharts extends Eventful<ECEventDefinition> {
     resize(opts?: ResizeOpts): void {
         if (this[IN_MAIN_PROCESS_KEY]) {
             if (__DEV__) {
-                error('`setOption` should not be called during main process.');
+                error('`resize` should not be called during main process.');
             }
             return;
         }
