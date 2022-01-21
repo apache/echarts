@@ -92,7 +92,7 @@ export function increaseInterval(interval: number) {
     else { // f is 1 or 5
         f *= 2;
     }
-    return f * exp10;
+    return round(f * exp10);
 }
 
 /**
