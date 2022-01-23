@@ -138,10 +138,10 @@ type ModelFinder = modelUtil.ModelFinder;
 
 const hasWindow = typeof window !== 'undefined';
 
-export const version = '5.2.2';
+export const version = '5.3.0';
 
 export const dependencies = {
-    zrender: '5.2.1'
+    zrender: '5.3.0'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
