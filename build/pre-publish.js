@@ -119,6 +119,7 @@ const compileWorkList = [
         logLabel: 'extension ts -> js-esm',
         compilerOptionsOverride: {
             module: 'ES2015',
+            declaration: false,
             rootDir: extensionSrcDir,
             outDir: extensionESMDir
         },
