@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// DEPRECATED
+// Preserved for echarts-gl
 import { Dictionary } from 'zrender/src/core/types';
 import { GeoJSONRegion } from '../Region';
 
