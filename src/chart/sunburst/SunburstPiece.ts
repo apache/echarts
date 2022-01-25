@@ -239,8 +239,8 @@ class SunburstPiece extends graphic.Sector {
             state.style.align = textAlign;
             state.style.verticalAlign = getLabelAttr(labelStateModel, 'verticalAlign') || 'middle';
 
-            // set the position of label in center when angle is 2π
-            if (textAlign === 'center' && angle === 2 * Math.PI) {
+            // set the position of label in center when angle is 2π & r0 is 0
+            if (textAlign === 'center' && angle === 2 * Math.PI && layout.r0 === 0) {
                 state.x = layout.cx;
                 state.y = layout.cy;
             }
