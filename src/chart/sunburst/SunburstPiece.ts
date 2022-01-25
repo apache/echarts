@@ -239,8 +239,15 @@ class SunburstPiece extends graphic.Sector {
             state.style.align = textAlign;
             state.style.verticalAlign = getLabelAttr(labelStateModel, 'verticalAlign') || 'middle';
 
-            state.x = r * dx + layout.cx;
-            state.y = r * dy + layout.cy;
+            // set the position of label in center when angle is 2π
+            if (textAlign === 'center' && angle === 2 * Math.PI) {
+                state.x = layout.cx;
+                state.y = layout.cy;
+            }
+            else {
+                state.x = r * dx + layout.cx;
+                state.y = r * dy + layout.cy;
+            }
 
             const rotateType = getLabelAttr(labelStateModel, 'rotate');
             let rotate = 0;
