@@ -160,6 +160,14 @@ function turnPointsIntoStep(
     const stepPt: number[] = [];
     const pt: number[] = [];
     const nextPt: number[] = [];
+    const points_ = [];
+    for (i = 0; i < points.length; i += 2) {
+        if (!isNaN(points[i]) && !isNaN(points[i + 1])) {
+            points_.push(points[i], points[i + 1]);
+        }
+    }
+    points = points_;
+    for (i = 0; i < points.length - 2; i += 2) {
     for (; i < points.length - 2; i += 2) {
         nextPt[0] = points[i + 2];
         nextPt[1] = points[i + 3];
