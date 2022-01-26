@@ -24,6 +24,33 @@
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.dataTool = {}, global.echarts));
 }(this, (function (exports, echarts) { 'use strict';
 
+    var BUILTIN_OBJECT = reduce([
+        'Function',
+        'RegExp',
+        'Date',
+        'Error',
+        'CanvasGradient',
+        'CanvasPattern',
+        'Image',
+        'Canvas'
+    ], function (obj, val) {
+        obj['[object ' + val + ']'] = true;
+        return obj;
+    }, {});
+    var TYPED_ARRAY = reduce([
+        'Int8',
+        'Uint8',
+        'Uint8Clamped',
+        'Int16',
+        'Uint16',
+        'Int32',
+        'Uint32',
+        'Float32',
+        'Float64'
+    ], function (obj, val) {
+        obj['[object ' + val + 'Array]'] = true;
+        return obj;
+    }, {});
     var arrayProto = Array.prototype;
     var nativeSlice = arrayProto.slice;
     var nativeMap = arrayProto.map;
@@ -46,6 +73,15 @@
             }
             return result;
         }
+    }
+    function reduce(arr, cb, memo, context) {
+        if (!(arr && cb)) {
+            return;
+        }
+        for (var i = 0, len = arr.length; i < len; i++) {
+            memo = cb.call(context, memo, arr[i], i, arr);
+        }
+        return memo;
     }
     function bindPolyfill(func, context) {
         var args = [];

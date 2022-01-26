@@ -45,9 +45,7 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerComponentView(GeoView);
 
     registers.registerImpl('registerMap', registerMap);
-    registers.registerImpl('getMap', (mapName: string) => {
-        geoSourceManager.getMapForUser(mapName);
-    });
+    registers.registerImpl('getMap', (mapName: string) => geoSourceManager.getMapForUser(mapName));
 
 
     function makeAction(
