@@ -170,7 +170,8 @@ class Grid implements CoordinateSystemMaster {
     resize(gridModel: GridModel, api: ExtensionAPI, ignoreContainLabel?: boolean): void {
 
         const boxLayoutParams = gridModel.getBoxLayoutParams();
-        const isContainLabel = !ignoreContainLabel && gridModel.get('containLabel');
+        const containLabel = gridModel.get('containLabel');
+        const isContainLabel = !ignoreContainLabel && !!containLabel;
 
         const gridRect = getLayoutRect(
             boxLayoutParams, {
@@ -186,18 +187,26 @@ class Grid implements CoordinateSystemMaster {
 
         // Minus label size
         if (isContainLabel) {
+            const formatContainLabel = isObject(containLabel) ? containLabel : {
+                left: containLabel,
+                top: containLabel,
+                right: containLabel,
+                bottom: containLabel
+            };
             each(axesList, function (axis) {
                 if (!axis.model.get(['axisLabel', 'inside'])) {
                     const labelUnionRect = estimateLabelUnionRect(axis);
                     if (labelUnionRect) {
                         const dim: 'height' | 'width' = axis.isHorizontal() ? 'height' : 'width';
                         const margin = axis.model.get(['axisLabel', 'margin']);
-                        gridRect[dim] -= labelUnionRect[dim] + margin;
+                        if (formatContainLabel[axis.position]) {
+                            gridRect[dim] -= labelUnionRect[dim] + margin;
+                        }
                         if (axis.position === 'top') {
-                            gridRect.y += labelUnionRect.height + margin;
+                            gridRect.y += formatContainLabel.top ? (labelUnionRect.height + margin) : 0;
                         }
                         else if (axis.position === 'left') {
-                            gridRect.x += labelUnionRect.width + margin;
+                            gridRect.x += formatContainLabel.left ? (labelUnionRect.width + margin) : 0;
                         }
                     }
                 }
