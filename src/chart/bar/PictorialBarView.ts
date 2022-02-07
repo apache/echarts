@@ -416,7 +416,7 @@ function prepareLineWidth(
         valueLineWidth *= symbolScale[opt.valueDim.index];
     }
 
-    outputSymbolMeta.valueLineWidth = valueLineWidth;
+    outputSymbolMeta.valueLineWidth = valueLineWidth || 0;
 }
 
 function prepareLayoutInfo(
