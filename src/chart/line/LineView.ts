@@ -168,7 +168,6 @@ function turnPointsIntoStep(
     }
     points = points_;
     for (i = 0; i < points.length - 2; i += 2) {
-    for (; i < points.length - 2; i += 2) {
         nextPt[0] = points[i + 2];
         nextPt[1] = points[i + 3];
         pt[0] = points[i];
