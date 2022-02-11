@@ -147,7 +147,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
     }
 
     static defaultOption: FunnelSeriesOption = {
-        zlevel: 0,                  // 一级层叠
+        // zlevel: 0,                  // 一级层叠
         z: 2,                       // 二级层叠
         legendHoverLink: true,
         colorBy: 'data',

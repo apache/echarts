@@ -121,7 +121,7 @@ class ParallelSeriesModel extends SeriesModel<ParallelSeriesOption> {
     }
 
     static defaultOption: ParallelSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
 
         coordinateSystem: 'parallel',

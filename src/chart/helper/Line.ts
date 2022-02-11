@@ -22,11 +22,18 @@ import * as vector from 'zrender/src/core/vector';
 import * as symbolUtil from '../../util/symbol';
 import ECLinePath from './LinePath';
 import * as graphic from '../../util/graphic';
-import { enableHoverEmphasis, enterEmphasis, leaveEmphasis, SPECIAL_STATES } from '../../util/states';
+import { toggleHoverEmphasis, enterEmphasis, leaveEmphasis, SPECIAL_STATES } from '../../util/states';
 import {getLabelStatesModels, setLabelStyle} from '../../label/labelStyle';
 import {round} from '../../util/number';
 import SeriesData from '../../data/SeriesData';
-import { ZRTextAlign, ZRTextVerticalAlign, LineLabelOption, ColorString } from '../../util/types';
+import {
+    ZRTextAlign,
+    ZRTextVerticalAlign,
+    LineLabelOption,
+    ColorString,
+    DefaultEmphasisFocus,
+    BlurScope
+} from '../../util/types';
 import SeriesModel from '../../model/Series';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
@@ -206,13 +213,21 @@ class Line extends graphic.Group {
 
         let labelStatesModels = seriesScope && seriesScope.labelStatesModels;
 
+        let emphasisDisabled = seriesScope && seriesScope.emphasisDisabled;
+        let focus = (seriesScope && seriesScope.focus) as DefaultEmphasisFocus;
+        let blurScope = (seriesScope && seriesScope.blurScope) as BlurScope;
+
         // Optimization for large dataset
         if (!seriesScope || lineData.hasItemOption) {
             const itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
+            const emphasisModel = itemModel.getModel('emphasis');
 
-            emphasisLineStyle = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
+            emphasisLineStyle = emphasisModel.getModel('lineStyle').getLineStyle();
             blurLineStyle = itemModel.getModel(['blur', 'lineStyle']).getLineStyle();
             selectLineStyle = itemModel.getModel(['select', 'lineStyle']).getLineStyle();
+            emphasisDisabled = emphasisModel.get('disabled');
+            focus = emphasisModel.get('focus');
+            blurScope = emphasisModel.get('blurScope');
 
             labelStatesModels = getLabelStatesModels(itemModel);
         }
@@ -296,7 +311,7 @@ class Line extends graphic.Group {
             inside: false   // Can't be inside for stroke element.
         });
 
-        enableHoverEmphasis(this);
+        toggleHoverEmphasis(this, focus, blurScope, emphasisDisabled);
     }
 
     highlight() {

@@ -35,6 +35,24 @@
         '[object Float64Array]': 1
     };
 
+    var params = {};
+    var parts = location.search.slice(1).split('&');
+    for (var i = 0; i < parts.length; ++i) {
+        var kv = parts[i].split('=');
+        params[kv[0]] = kv[1];
+    }
+
+    if ('__SEED_RANDOM__' in params) {
+        require(['../node_modules/seedrandom/seedrandom.js'], function (seedrandom) {
+            var myRandom = new seedrandom('echarts-random');
+            // Fixed random generator
+            Math.random = function () {
+                const val = myRandom();
+                return val;
+            };
+        });
+    }
+
     var testHelper = {};
 
 
@@ -115,9 +133,7 @@
                 + '</div>';
         }
 
-        if (opt.option) {
-            chart = testHelper.createChart(echarts, chartContainer, opt.option, opt, opt.setOptionOpts);
-        }
+        chart = testHelper.createChart(echarts, chartContainer, opt.option, opt, opt.setOptionOpts);
 
         var dataTables = opt.dataTables;
         if (!dataTables && opt.dataTable) {

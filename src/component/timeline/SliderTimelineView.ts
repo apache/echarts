@@ -351,7 +351,7 @@ class SliderTimelineView extends TimelineView {
 
         const dataExtent = data.getDataExtent('value');
         scale.setExtent(dataExtent[0], dataExtent[1]);
-        scale.niceTicks();
+        scale.calcNiceTicks();
 
         const axis = new TimelineAxis('value', scale, layoutInfo.axisExtent as [number, number], axisType);
         axis.model = timelineModel;

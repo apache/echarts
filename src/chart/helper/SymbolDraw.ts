@@ -39,6 +39,7 @@ import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
 import { ScatterSeriesOption } from '../scatter/ScatterSeries';
 import { getLabelStatesModels } from '../../label/labelStyle';
+import Element from 'zrender/src/Element';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
@@ -119,6 +120,7 @@ export interface SymbolDrawSeriesScope {
 
     focus?: DefaultEmphasisFocus
     blurScope?: BlurScope
+    emphasisDisabled?: boolean
 
     labelStatesModels: Record<DisplayState, Model<LabelOption>>
 
@@ -140,6 +142,7 @@ function makeSeriesScope(data: SeriesData): SymbolDrawSeriesScope {
 
         focus: emphasisModel.get('focus'),
         blurScope: emphasisModel.get('blurScope'),
+        emphasisDisabled: emphasisModel.get('disabled'),
 
         hoverScale: emphasisModel.get('scale'),
 
@@ -162,6 +165,8 @@ class SymbolDraw {
 
     private _getSymbolPoint: UpdateOpt['getSymbolPoint'];
 
+    private _progressiveEls: SymbolLike[];
+
     constructor(SymbolCtor?: SymbolLikeCtor) {
         this._SymbolCtor = SymbolCtor || SymbolClz as SymbolLikeCtor;
     }
@@ -170,6 +175,9 @@ class SymbolDraw {
      * Update symbols draw by new data
      */
     updateData(data: ListForSymbolDraw, opt?: UpdateOpt) {
+        // Remove progressive els.
+        this._progressiveEls = null;
+
         opt = normalizeUpdateOpt(opt);
 
         const group = this.group;
@@ -252,10 +260,6 @@ class SymbolDraw {
         this._data = data;
     };
 
-    isPersistent() {
-        return true;
-    };
-
     updateLayout() {
         const data = this._data;
         if (data) {
@@ -278,6 +282,10 @@ class SymbolDraw {
      * Update symbols draw by new data
      */
     incrementalUpdate(taskParams: StageHandlerProgressParams, data: ListForSymbolDraw, opt?: UpdateOpt) {
+
+        // Clear
+        this._progressiveEls = [];
+
         opt = normalizeUpdateOpt(opt);
 
         function updateIncrementalAndHover(el: Displayable) {
@@ -294,9 +302,14 @@ class SymbolDraw {
                 el.setPosition(point);
                 this.group.add(el);
                 data.setItemGraphicEl(idx, el);
+                this._progressiveEls.push(el);
             }
         }
     };
+
+    eachRendered(cb: (el: Element) => boolean | void) {
+        graphic.traverseElements(this._progressiveEls || this.group, cb);
+    }
 
     remove(enableAnimation?: boolean) {
         const group = this.group;

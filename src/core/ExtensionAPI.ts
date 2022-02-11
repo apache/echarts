@@ -35,6 +35,7 @@ const availableMethods: (keyof EChartsType)[] = [
     'getHeight',
     'getDevicePixelRatio',
     'dispatchAction',
+    'isSSR',
     'isDisposed',
     'on',
     'off',

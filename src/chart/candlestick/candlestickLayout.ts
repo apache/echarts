@@ -17,8 +17,6 @@
 * under the License.
 */
 
-/* global Float32Array */
-
 import {subPixelOptimize} from '../../util/graphic';
 import createRenderPlanner from '../helper/createRenderPlanner';
 import {parsePercent} from '../../util/number';
@@ -28,8 +26,7 @@ import CandlestickSeriesModel from './CandlestickSeries';
 import SeriesData from '../../data/SeriesData';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import DataStore from '../../data/DataStore';
-
-const LargeArr = typeof Float32Array !== 'undefined' ? Float32Array : Array;
+import { createFloat32Array } from '../../util/vendor';
 
 export interface CandlestickItemLayout {
     sign: number
@@ -166,7 +163,7 @@ const candlestickLayout: StageHandler = {
 
         function largeProgress(params: StageHandlerProgressParams, data: SeriesData) {
             // Structure: [sign, x, yhigh, ylow, sign, x, yhigh, ylow, ...]
-            const points = new LargeArr(params.count * 4);
+            const points = createFloat32Array(params.count * 4);
             let offset = 0;
             let point;
             const tmpIn: number[] = [];

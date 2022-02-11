@@ -185,14 +185,14 @@ class ToolboxView extends ComponentView {
             const titles = featureModel.get('title') || {};
             let iconsMap: Dictionary<string>;
             let titlesMap: Dictionary<string>;
-            if (typeof icons === 'string') {
+            if (zrUtil.isString(icons)) {
                 iconsMap = {};
                 iconsMap[featureName] = icons;
             }
             else {
                 iconsMap = icons;
             }
-            if (typeof titles === 'string') {
+            if (zrUtil.isString(titles)) {
                 titlesMap = {};
                 titlesMap[featureName] = titles as string;
             }

@@ -81,7 +81,7 @@ export interface AxisBaseOptionCommon extends ComponentOption,
 
 }
 
-interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
+export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
     /*
      * The gap at both ends of the axis.
      * [GAP, GAP], where
@@ -105,6 +105,14 @@ interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
      * Specify max interval when auto calculate tick interval.
      */
     maxInterval?: number;
+
+    /**
+     * If align ticks to the first axis that is not use alignTicks
+     * If all axes has alignTicks: true. The first one will be applied.
+     *
+     * Will be ignored if interval is set.
+     */
+    alignTicks?: boolean
 }
 
 export interface CategoryAxisBaseOption extends AxisBaseOptionCommon {

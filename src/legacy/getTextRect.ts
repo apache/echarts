@@ -18,7 +18,6 @@
 */
 
 import { Text } from '../util/graphic';
-import { deprecateLog } from '../util/log';
 
 type TextStyleProps = Text['style'];
 export function getTextRect(

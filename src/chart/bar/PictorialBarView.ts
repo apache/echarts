@@ -19,9 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import {
-    enableHoverEmphasis
-} from '../../util/states';
+import { toggleHoverEmphasis } from '../../util/states';
 import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
 import {parsePercent, isNumeric} from '../../util/number';
 import ChartView from '../../view/Chart';
@@ -418,7 +416,7 @@ function prepareLineWidth(
         valueLineWidth *= symbolScale[opt.valueDim.index];
     }
 
-    outputSymbolMeta.valueLineWidth = valueLineWidth;
+    outputSymbolMeta.valueLineWidth = valueLineWidth || 0;
 }
 
 function prepareLayoutInfo(
@@ -930,7 +928,7 @@ function updateCommon(
         }
     );
 
-    enableHoverEmphasis(bar, focus, blurScope);
+    toggleHoverEmphasis(bar, focus, blurScope, emphasisModel.get('disabled'));
 }
 
 function toIntTimes(times: number) {

@@ -19,7 +19,7 @@
 
 /* global Uint8ClampedArray */
 
-import * as zrUtil from 'zrender/src/core/util';
+import { platformApi } from 'zrender/src/core/platform';
 
 const GRADIENT_LEVELS = 256;
 
@@ -43,7 +43,7 @@ class HeatmapLayer {
     };
 
     constructor() {
-        const canvas = zrUtil.createCanvas();
+        const canvas = platformApi.createCanvas();
         this.canvas = canvas;
     }
 
@@ -127,7 +127,7 @@ class HeatmapLayer {
      * get canvas of a black circle brush used for canvas to draw later
      */
     _getBrush() {
-        const brushCanvas = this._brushCanvas || (this._brushCanvas = zrUtil.createCanvas());
+        const brushCanvas = this._brushCanvas || (this._brushCanvas = platformApi.createCanvas());
         // set brush size
         const r = this.pointSize + this.blurSize;
         const d = r * 2;
