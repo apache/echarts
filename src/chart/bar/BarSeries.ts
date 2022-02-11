@@ -27,7 +27,7 @@ import {
     SeriesSamplingOptionMixin,
     SeriesLabelOption,
     SeriesEncodeOptionMixin,
-    DefaultStatesMixinEmpasis,
+    DefaultStatesMixinEmphasis,
     CallbackDataParams
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -49,7 +49,7 @@ export interface BarStateOption<TCbParams = never> {
 }
 
 interface BarStatesMixin {
-    emphasis?: DefaultStatesMixinEmpasis
+    emphasis?: DefaultStatesMixinEmphasis
 }
 
 export interface BarItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
