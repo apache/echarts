@@ -1,4 +1,5 @@
 /*
+/*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
 * distributed with this work for additional information
@@ -219,7 +220,13 @@ class SunburstPiece extends graphic.Sector {
             }
             else {
                 if (!textAlign || textAlign === 'center') {
-                    r = (layout.r + layout.r0) / 2;
+                    // set the position of label in center when angle is 2π & r0 is 0
+                    if (angle === 2 * Math.PI && layout.r0 === 0) {
+                        r = 0;
+                    }
+                    else {
+                        r = (layout.r + layout.r0) / 2;
+                    }
                     textAlign = 'center';
                 }
                 else if (textAlign === 'left') {
@@ -239,15 +246,8 @@ class SunburstPiece extends graphic.Sector {
             state.style.align = textAlign;
             state.style.verticalAlign = getLabelAttr(labelStateModel, 'verticalAlign') || 'middle';
 
-            // set the position of label in center when angle is 2π & r0 is 0
-            if (textAlign === 'center' && angle === 2 * Math.PI && layout.r0 === 0) {
-                state.x = layout.cx;
-                state.y = layout.cy;
-            }
-            else {
-                state.x = r * dx + layout.cx;
-                state.y = r * dy + layout.cy;
-            }
+            state.x = r * dx + layout.cx;
+            state.y = r * dy + layout.cy;
 
             const rotateType = getLabelAttr(labelStateModel, 'rotate');
             let rotate = 0;
