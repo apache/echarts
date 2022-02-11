@@ -22,7 +22,7 @@ import { toggleHoverEmphasis } from '../../util/states';
 import HeatmapLayer from './HeatmapLayer';
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
-import HeatmapSeriesModel, { HeatmapDataItemOption } from './HeatmapSeries';
+import HeatmapSeriesModel, { BorderRadius, HeatmapDataItemOption } from './HeatmapSeries';
 import type GlobalModel from '../../model/Global';
 import type ExtensionAPI from '../../core/ExtensionAPI';
 import type VisualMapModel from '../../component/visualMap/VisualMapModel';
@@ -31,9 +31,10 @@ import type ContinuousModel from '../../component/visualMap/ContinuousModel';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import { StageHandlerProgressParams, Dictionary, OptionDataValue } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
-import type Calendar from '../../coord/calendar/Calendar';
+import Calendar from '../../coord/calendar/Calendar';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import Element from 'zrender/src/Element';
+import { RectLike, RectShape } from 'zrender';
 
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {
@@ -205,6 +206,8 @@ class HeatmapView extends ChartView {
         let emphasisStyle = seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
         let blurStyle = seriesModel.getModel(['blur', 'itemStyle']).getItemStyle();
         let selectStyle = seriesModel.getModel(['select', 'itemStyle']).getItemStyle();
+        const itemStyle = seriesModel.getModel(['itemStyle']);
+        const borderRadius = itemStyle.get('borderRadius');
         let labelStatesModels = getLabelStatesModels(seriesModel);
         const emphasisModel = seriesModel.getModel('emphasis');
         let focus = emphasisModel.get('focus');
@@ -245,13 +248,21 @@ class HeatmapView extends ChartView {
                     dataDimY
                 ]);
 
+                const shape: RectShape & {
+                    r?: BorderRadius
+                } = {
+                    x: Math.floor(Math.round(point[0]) - width / 2),
+                    y: Math.floor(Math.round(point[1]) - height / 2),
+                    width: Math.ceil(width),
+                    height: Math.ceil(height)
+                };
+
+                if (borderRadius) {
+                    shape.r = borderRadius;
+                }
+
                 rect = new graphic.Rect({
-                    shape: {
-                        x: Math.floor(Math.round(point[0]) - width / 2),
-                        y: Math.floor(Math.round(point[1]) - height / 2),
-                        width: Math.ceil(width),
-                        height: Math.ceil(height)
-                    },
+                    shape,
                     style
                 });
             }
@@ -260,10 +271,17 @@ class HeatmapView extends ChartView {
                 if (isNaN(data.get(dataDims[1], idx) as number)) {
                     continue;
                 }
+                const shape: RectLike & {
+                    r?: BorderRadius
+                } = coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape;
+
+                if (borderRadius) {
+                    shape.r = borderRadius;
+                }
 
                 rect = new graphic.Rect({
                     z2: 1,
-                    shape: coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape,
+                    shape,
                     style
                 });
             }

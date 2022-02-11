@@ -30,7 +30,7 @@ import {
     StatesOptionMixin,
     SeriesEncodeOptionMixin,
     SeriesOnCalendarOptionMixin,
-    DefaultStatesMixinEmpasis,
+    DefaultStatesMixinEmphasis,
     CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
@@ -41,14 +41,18 @@ import type Calendar from '../../coord/calendar/Calendar';
 
 type HeatmapDataValue = OptionDataValue[];
 
+export type BorderRadius = number | number[];
+
 export interface HeatmapStateOption<TCbParams = never> {
     // Available on cartesian2d coordinate system
-    itemStyle?: ItemStyleOption<TCbParams>
+    itemStyle?: ItemStyleOption<TCbParams> & {
+        borderRadius?: BorderRadius
+    }
     label?: SeriesLabelOption
 }
 
 interface FunnelStatesMixin {
-    emphasis?: DefaultStatesMixinEmpasis
+    emphasis?: DefaultStatesMixinEmphasis
 }
 export interface HeatmapDataItemOption extends HeatmapStateOption,
     StatesOptionMixin<HeatmapStateOption, FunnelStatesMixin> {
